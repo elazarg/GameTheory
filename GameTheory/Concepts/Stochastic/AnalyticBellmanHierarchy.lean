@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
+import GameTheory.Concepts.Stochastic.BellmanCurveGate
 import GameTheory.Concepts.Stochastic.BellmanGermFinkBridge
 import Math.AlgebraicSelection
 import Mathlib.Analysis.Analytic.Order
@@ -22,9 +23,11 @@ and therefore a fixed limit `H`.  Otherwise the analytic order is a unique
 natural number `n < q`, and the corresponding nonzero leading vector is the
 next lower hierarchy coefficient.
 
-This file performs only that standard analytic extraction.  Proving that a
-lower-order coefficient forces a harmonic/rank response, and recursively
-assembling those responses along public histories, belongs to the global
+The extraction is followed by a finite progress alternative.  A lower-order
+coefficient is already represented by processed endpoint-harmonic jets,
+strictly lowers the remaining harmonic dimension, or produces a fixed
+bounded transition monitor with a power-law charge.  Recursively assembling
+these local responses along public histories belongs to the global
 game-theoretic invariant.
 -/
 
@@ -374,12 +377,42 @@ structure EndpointHarmonicJetSpan
 
 namespace EndpointHarmonicJetSpan
 
+/-- No harmonic jet has yet been processed. -/
+noncomputable def empty (germ : G.AnalyticBellmanGerm) :
+    germ.EndpointHarmonicJetSpan where
+  carrier := ⊥
+  carrier_le := bot_le
+
 /-- Remaining harmonic dimension.  It is the well-founded rank spent by
 linearly new harmonic jets. -/
 noncomputable def rank {germ : G.AnalyticBellmanGerm}
     (span : germ.EndpointHarmonicJetSpan) : ℕ :=
-  Module.finrank ℝ germ.endpointHarmonicSubmodule -
+    Module.finrank ℝ germ.endpointHarmonicSubmodule -
     Module.finrank ℝ span.carrier
+
+omit [DecidableEq G.State] in
+@[simp]
+theorem rank_empty (germ : G.AnalyticBellmanGerm) :
+    (empty germ).rank =
+      Module.finrank ℝ germ.endpointHarmonicSubmodule := by
+  change
+    Module.finrank ℝ germ.endpointHarmonicSubmodule -
+        Module.finrank ℝ (⊥ :
+          Submodule ℝ (G.State → Payoff ι)) =
+      Module.finrank ℝ germ.endpointHarmonicSubmodule
+  rw [finrank_bot, Nat.sub_zero]
+
+/-- Rank order used by the harmonic-jet response recursion. -/
+def RankLt {germ : G.AnalyticBellmanGerm}
+    (child parent : germ.EndpointHarmonicJetSpan) : Prop :=
+  child.rank < parent.rank
+
+omit [DecidableEq G.State] in
+/-- Harmonic-jet response recursion is well founded because every new
+direction strictly lowers a natural-number rank. -/
+theorem rankLt_wellFounded (germ : G.AnalyticBellmanGerm) :
+    WellFounded (RankLt (germ := germ)) :=
+  wellFounded_lt.onFun
 
 /-- Adjoin one endpoint-harmonic jet to the processed span. -/
 noncomputable def extend {germ : G.AnalyticBellmanGerm}
@@ -1455,6 +1488,50 @@ theorem finiteBiasSeed_or_lowerValueJet
   · exact Or.inl (germ.finiteBiasSeed_of_hasFiniteBiasOrder horder)
   · exact Or.inr (germ.lowerValueJet_of_not_hasFiniteBiasOrder horder)
 
+/-- Typed first response of the analytic Bellman hierarchy relative to the
+endpoint-harmonic directions already processed.
+
+This is the local datum consumed by a public-response constructor.  It makes
+the progress measure explicit without claiming that any one response already
+supplies the global punishment strategy. -/
+inductive FirstHierarchyResponse
+    (germ : G.AnalyticBellmanGerm)
+    (span : germ.EndpointHarmonicJetSpan) : Type
+  | finiteBias (seed : germ.FiniteBiasSeed)
+  | processedJet
+      (jet : germ.LowerValueJet)
+      (processed : jet.factor 0 ∈ span.carrier)
+  | lowerRank
+      (jet : germ.LowerValueJet)
+      (harmonic : jet.factor 0 ∈ germ.endpointHarmonicSubmodule)
+      (decreases :
+        (span.extend (jet.factor 0) harmonic).rank < span.rank)
+  | transitionMonitor
+      (charge : germ.StateKernelMonitorPowerCharge)
+
+/-- Every analytic Bellman germ has one checked first hierarchy response:
+finite bias, an already processed harmonic jet, a strict harmonic-rank
+decrease, or an operational fixed transition monitor. -/
+theorem exists_firstHierarchyResponse
+    (germ : G.AnalyticBellmanGerm)
+    (span : germ.EndpointHarmonicJetSpan) :
+    Nonempty (germ.FirstHierarchyResponse span) := by
+  rcases germ.finiteBiasSeed_or_lowerValueJet with hseed | hjet
+  · obtain ⟨seed⟩ := hseed
+    exact ⟨FirstHierarchyResponse.finiteBias seed⟩
+  · obtain ⟨jet⟩ := hjet
+    rcases
+      jet.redundant_or_rankDecrease_or_stateKernelMonitorPowerCharge span with
+      hprocessed | hresponse
+    · exact ⟨FirstHierarchyResponse.processedJet jet hprocessed⟩
+    · rcases hresponse with hdecrease | hcharge
+      · obtain ⟨harmonic, hdecrease⟩ := hdecrease
+        exact
+          ⟨FirstHierarchyResponse.lowerRank
+            jet harmonic hdecrease⟩
+      · obtain ⟨charge⟩ := hcharge
+        exact ⟨FirstHierarchyResponse.transitionMonitor charge⟩
+
 omit [DecidableEq G.State] in
 /-- On a positive Bellman-germ point, the raw value formula agrees with
 Fink's relative bias around the endpoint value. -/
@@ -1476,6 +1553,33 @@ theorem finkRelativeBias_finkPointAt_eq_rawRelativeBiasCurve
   ring
 
 end AnalyticBellmanGerm
+
+/-- Gate G and the first analytic hierarchy response compose without an
+intermediate choice or uncoupled coordinate selection. -/
+theorem exists_analyticBellmanGermWithFirstHierarchyResponse
+    [∀ i, Nonempty (G.Act i)]
+    (hselection : G.HasBellmanSignCellCurveSelection) :
+    ∃ germ : G.AnalyticBellmanGerm,
+      Nonempty
+        (germ.FirstHierarchyResponse
+          (AnalyticBellmanGerm.EndpointHarmonicJetSpan.empty germ)) := by
+  obtain ⟨germ⟩ := G.exists_analyticBellmanGerm hselection
+  exact
+    ⟨germ,
+      germ.exists_firstHierarchyResponse
+        (AnalyticBellmanGerm.EndpointHarmonicJetSpan.empty germ)⟩
+
+/-- Coordinatewise convergent Puiseux selection therefore reaches the same
+typed first hierarchy response after the checked common ramification. -/
+theorem exists_analyticBellmanGermWithFirstHierarchyResponse_of_coordinatewisePuiseux
+    [∀ i, Nonempty (G.Act i)]
+    (hselection : G.HasBellmanCoordinatewisePuiseuxSelection) :
+    ∃ germ : G.AnalyticBellmanGerm,
+      Nonempty
+        (germ.FirstHierarchyResponse
+          (AnalyticBellmanGerm.EndpointHarmonicJetSpan.empty germ)) :=
+  G.exists_analyticBellmanGermWithFirstHierarchyResponse
+    hselection.toSignCellCurveSelection
 
 end StochasticGame
 end GameTheory
