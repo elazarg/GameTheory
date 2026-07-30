@@ -38,6 +38,39 @@ theorem pmf_map_eq_of_eq_on_support
   simpa only [Function.comp_apply] using
     congrArg PMF.pure (heq value hvalue)
 
+/-- Primitive finite event-ratio lemma.  If the mass on one projection
+fiber factors as the fiber mass times a candidate conditional law, and the
+candidate is supported on that fiber, then `condOn` is that candidate. -/
+theorem condOn_eq_of_apply_eq_mul
+    {α β : Type} [Finite α] [Finite β]
+    (joint candidate : PMF α) (proj : α → β) (base : β)
+    (hbase : joint.map proj base ≠ 0)
+    (hcandidate :
+      ∀ value, proj value ≠ base → candidate value = 0)
+    (hmass :
+      ∀ value, proj value = base →
+        joint value = joint.map proj base * candidate value) :
+    Math.ProbabilityMassFunction.condOn joint proj base =
+      candidate := by
+  apply PMF.ext
+  intro value
+  rw [Math.ProbabilityMassFunction.condOn_apply
+    joint proj base value hbase]
+  by_cases hvalue : proj value = base
+  · rw [if_pos hvalue, hmass value hvalue]
+    have hbaseTop : joint.map proj base ≠ ⊤ :=
+      PMF.apply_ne_top (joint.map proj) base
+    calc
+      (joint.map proj base * candidate value) /
+          joint.map proj base =
+          candidate value *
+            (joint.map proj base * (joint.map proj base)⁻¹) := by
+        simp only [div_eq_mul_inv]
+        ac_rfl
+      _ = candidate value := by
+        rw [ENNReal.mul_inv_cancel hbase hbaseTop, mul_one]
+  · rw [if_neg hvalue, hcandidate value hvalue]
+
 /-- Projecting a deterministic-horizon history law to its fixed prefix
 recovers the shorter history law. -/
 theorem histDist_add_map_terminalPrefix
@@ -137,6 +170,105 @@ def IsStoppedSuffixConditionalKernelAdd
               G.RootHorizonStoppedSuffix fuel
                 (fuel + suffixLength))
 
+/-- The proposed suffix law at one stopped base, tagged back into the common
+dependent stopped-path space. -/
+def stoppedSuffixCandidateAdd
+    [Fintype ι] {fuel suffixLength : ℕ}
+    (profile : G.BehaviorProfile)
+    (base : G.BoundedStoppedHistory fuel) :
+    PMF (G.RootHorizonStoppedSuffix fuel
+      (fuel + suffixLength)) :=
+  (G.histDist (G.afterHistoryProfile profile base.2)
+    base.2.2 (fuel + suffixLength - base.1.val)).map
+    fun suffix =>
+      (⟨base, suffix⟩ :
+        G.RootHorizonStoppedSuffix fuel
+          (fuel + suffixLength))
+
+/-- The tagged candidate has the intended deterministic base marginal. -/
+theorem stoppedSuffixCandidateAdd_map_fst
+    [Fintype ι] {fuel suffixLength : ℕ}
+    (profile : G.BehaviorProfile)
+    (base : G.BoundedStoppedHistory fuel) :
+    (G.stoppedSuffixCandidateAdd
+        (suffixLength := suffixLength) profile base).map Sigma.fst =
+      PMF.pure base := by
+  unfold stoppedSuffixCandidateAdd
+  rw [PMF.map_comp]
+  change
+    (G.histDist (G.afterHistoryProfile profile base.2)
+      base.2.2 (fuel + suffixLength - base.1.val)).map
+        (fun _suffix => base) =
+      PMF.pure base
+  exact PMF.map_const _ _
+
+/-- The primitive eventwise product identity needed for strong stopping.
+It says exactly that every point mass over a supported stopped base is the
+base mass times the rebased suffix mass. -/
+def IsStoppedSuffixEventRatioAdd
+    [Fintype ι] {fuel suffixLength : ℕ}
+    (profile : G.BehaviorProfile) (initial : G.State)
+    (selector : G.BoundedPublicStopSelector fuel) : Prop :=
+  let joint :=
+    (G.histDist profile initial (fuel + suffixLength)).map
+      (G.rootStoppedPathOfHistory selector
+        (Nat.le_add_right fuel suffixLength))
+  ∀ base,
+    base ∈ (G.stoppedHistoryLaw profile initial selector).support →
+      ∀ path, path.1 = base →
+        joint path =
+          G.stoppedHistoryLaw profile initial selector base *
+            G.stoppedSuffixCandidateAdd
+              (suffixLength := suffixLength) profile base path
+
+/-- The event-ratio identity implies the support-local conditional kernel
+identity. -/
+theorem stoppedSuffixConditionalKernelAdd_of_eventRatio
+    [Fintype ι] [Finite G.State] [∀ who, Finite (G.Act who)]
+    {fuel suffixLength : ℕ}
+    (profile : G.BehaviorProfile) (initial : G.State)
+    (selector : G.BoundedPublicStopSelector fuel)
+    (hratio :
+      G.IsStoppedSuffixEventRatioAdd
+        (suffixLength := suffixLength) profile initial selector) :
+    G.IsStoppedSuffixConditionalKernelAdd
+      (suffixLength := suffixLength) profile initial selector := by
+  let joint :=
+    (G.histDist profile initial (fuel + suffixLength)).map
+      (G.rootStoppedPathOfHistory selector
+        (Nat.le_add_right fuel suffixLength))
+  intro base hbase
+  let candidate :=
+    G.stoppedSuffixCandidateAdd
+      (suffixLength := suffixLength) profile base
+  have hbaseMarginal :
+      joint.map Sigma.fst =
+        G.stoppedHistoryLaw profile initial selector :=
+    G.rootStoppedPath_base_marginal_add
+      profile initial selector
+  have hbaseNonzero : joint.map Sigma.fst base ≠ 0 := by
+    rw [hbaseMarginal]
+    simpa [PMF.mem_support_iff] using hbase
+  have hcandidate :
+      ∀ path, path.1 ≠ base → candidate path = 0 := by
+    intro path hpath
+    apply Math.ProbabilityMassFunction.eq_zero_of_pushforward_eq_zero
+      candidate Sigma.fst (b := path.1)
+    · unfold Math.ProbabilityMassFunction.pushforward
+      rw [show candidate.map Sigma.fst = PMF.pure base from
+          G.stoppedSuffixCandidateAdd_map_fst
+            (suffixLength := suffixLength) profile base]
+      simp [hpath]
+    · rfl
+  have hmass :
+      ∀ path, path.1 = base →
+        joint path = joint.map Sigma.fst base * candidate path := by
+    intro path hpath
+    rw [hbaseMarginal]
+    exact hratio base hbase path hpath
+  exact condOn_eq_of_apply_eq_mul
+    joint candidate Sigma.fst base hbaseNonzero hcandidate hmass
+
 /-- Conditional strong stopping kernels imply the full stopped-suffix
 factorization. -/
 theorem rootStoppedPath_factorization_add_of_conditionalKernel
@@ -183,6 +315,25 @@ theorem rootStoppedPath_factorization_add_of_conditionalKernel
     _ =
         G.rootHorizonStoppedSuffixLaw profile initial selector
           (fuel + suffixLength) := rfl
+
+/-- The primitive event-ratio identity is sufficient for the full stopped
+suffix PMF factorization at additive root horizons. -/
+theorem rootStoppedPath_factorization_add_of_eventRatio
+    [Fintype ι] [Finite G.State] [∀ who, Finite (G.Act who)]
+    {fuel suffixLength : ℕ}
+    (profile : G.BehaviorProfile) (initial : G.State)
+    (selector : G.BoundedPublicStopSelector fuel)
+    (hratio :
+      G.IsStoppedSuffixEventRatioAdd
+        (suffixLength := suffixLength) profile initial selector) :
+    (G.histDist profile initial (fuel + suffixLength)).map
+        (G.rootStoppedPathOfHistory selector
+          (Nat.le_add_right fuel suffixLength)) =
+      G.rootHorizonStoppedSuffixLaw profile initial selector
+        (fuel + suffixLength) := by
+  apply G.rootStoppedPath_factorization_add_of_conditionalKernel
+  exact G.stoppedSuffixConditionalKernelAdd_of_eventRatio
+    profile initial selector hratio
 
 /-- Equality of a longer bounded prefix implies equality of every strictly
 shorter bounded prefix. -/
@@ -516,6 +667,23 @@ theorem causalDispatcherJointLawAt_iff_factorization
           G.reconstruct_actual_rootStoppedPath
             profile initial selector hfuel
         factorization := factorization }
+
+/-- Eventwise product masses supply the complete joint-law interface. -/
+theorem causalDispatcherJointLawAt_add_of_eventRatio
+    [Fintype ι] [Finite G.State] [∀ who, Finite (G.Act who)]
+    {fuel suffixLength : ℕ}
+    (profile : G.BehaviorProfile) (initial : G.State)
+    (selector : G.BoundedPublicStopSelector fuel)
+    (hratio :
+      G.IsStoppedSuffixEventRatioAdd
+        (suffixLength := suffixLength) profile initial selector) :
+    G.CausalDispatcherJointLawAt profile initial selector
+      (Nat.le_add_right fuel suffixLength) :=
+  (G.causalDispatcherJointLawAt_iff_factorization
+    profile initial selector
+      (Nat.le_add_right fuel suffixLength)).2
+    (G.rootStoppedPath_factorization_add_of_eventRatio
+      profile initial selector hratio)
 
 /-- Rebasing at an empty public prefix is the original profile. -/
 @[simp] theorem afterHistoryProfile_empty
