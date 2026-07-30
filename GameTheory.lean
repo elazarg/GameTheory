@@ -137,6 +137,7 @@ import GameTheory.Concepts.Stochastic.FinkTangentBridge
 import GameTheory.Concepts.Stochastic.FinkTangentCounterexample
 import GameTheory.Concepts.Stochastic.FinkSelectionCounterexample
 import GameTheory.Concepts.Stochastic.FinkObstruction
+import GameTheory.Concepts.Stochastic.BellmanGermFinkBridge
 import GameTheory.Concepts.Stochastic.OrientedResponseExtraction
 import GameTheory.Concepts.Stochastic.FinkMonitor
 import GameTheory.Concepts.Stochastic.FinkMarkovEndpoint

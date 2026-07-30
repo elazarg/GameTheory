@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.BellmanGerm
 import GameTheory.Concepts.Stochastic.FinkLimit
+import Math.CoordinatewisePuiseuxCurve
 import Math.Probability
 
 /-!
@@ -63,14 +64,16 @@ theorem tendsto_bellmanAssignment_fink
 
 /-- At a fixed payoff bound, compact Fink selection supplies a Bellman
 assignment with zero discount-complement coordinate in the closure of the
-positive-discount polynomial solution set. -/
-theorem exists_vanishingDiscount_bellmanEndpoint_of_bound
+strictly positive-discount polynomial solution set. -/
+theorem exists_vanishingDiscount_bellmanEndpoint_pos_of_bound
     [∀ i, Nonempty (G.Act i)]
     (U : ℝ) (hU : 0 ≤ U)
     (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U) :
     ∃ assign₀ : BellmanVar G → ℝ,
       assign₀ BellmanVar.disc = 0 ∧
-        assign₀ ∈ closure G.polynomialBellmanSolutionSet := by
+        assign₀ ∈ closure
+          (G.polynomialBellmanSolutionSet ∩
+            {assign | 0 < assign BellmanVar.disc}) := by
   obtain ⟨z, zlim, φ, hfix, _hφ, hzlim, hβlim⟩ :=
     G.exists_convergent_approachOne_finkFixedPoint_subsequence
       U hU hpay
@@ -95,17 +98,37 @@ theorem exists_vanishingDiscount_bellmanEndpoint_of_bound
       (approachOneDiscount_le_one (φ n)) hpay
       (z (φ n))
     exact hfix (φ n)
+  have hdisc_pos :
+      ∀ n, 0 < assign n BellmanVar.disc := by
+    intro n
+    simp only [assign, bellmanAssignment]
+    exact sub_pos.mpr (approachOneDiscount_lt_one (φ n))
   refine ⟨assign₀, ?_, mem_closure_of_tendsto htend
-    (Eventually.of_forall hsolution)⟩
+    (Eventually.of_forall fun n => ⟨hsolution n, hdisc_pos n⟩)⟩
   simp [assign₀, bellmanAssignment]
 
-/-- Finiteness of the game data supplies the payoff bound in
-`exists_vanishingDiscount_bellmanEndpoint_of_bound`. -/
-theorem exists_vanishingDiscount_bellmanEndpoint
-    [∀ i, Nonempty (G.Act i)] :
+/-- Forgetting strict positivity recovers the ordinary endpoint theorem. -/
+theorem exists_vanishingDiscount_bellmanEndpoint_of_bound
+    [∀ i, Nonempty (G.Act i)]
+    (U : ℝ) (hU : 0 ≤ U)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U) :
     ∃ assign₀ : BellmanVar G → ℝ,
       assign₀ BellmanVar.disc = 0 ∧
         assign₀ ∈ closure G.polynomialBellmanSolutionSet := by
+  obtain ⟨assign₀, hdisc, hclosure⟩ :=
+    G.exists_vanishingDiscount_bellmanEndpoint_pos_of_bound U hU hpay
+  exact ⟨assign₀, hdisc,
+    closure_mono inter_subset_left hclosure⟩
+
+/-- Finiteness of the game data supplies the payoff bound in
+`exists_vanishingDiscount_bellmanEndpoint_of_bound`. -/
+theorem exists_vanishingDiscount_bellmanEndpoint_pos
+    [∀ i, Nonempty (G.Act i)] :
+    ∃ assign₀ : BellmanVar G → ℝ,
+      assign₀ BellmanVar.disc = 0 ∧
+        assign₀ ∈ closure
+          (G.polynomialBellmanSolutionSet ∩
+            {assign | 0 < assign BellmanVar.disc}) := by
   let payoffCoordinate : G.State × G.JointAct × ι → ℝ := fun p =>
     G.stagePayoff p.1 p.2.1 p.2.2
   obtain ⟨C, hC⟩ :=
@@ -115,11 +138,22 @@ theorem exists_vanishingDiscount_bellmanEndpoint
   have hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U := by
     intro s a who
     exact (hC (s, a, who)).trans (le_max_left C 0)
-  exact G.exists_vanishingDiscount_bellmanEndpoint_of_bound
+  exact G.exists_vanishingDiscount_bellmanEndpoint_pos_of_bound
     U hU hpay
 
+/-- The positive endpoint theorem implies the ordinary closure statement. -/
+theorem exists_vanishingDiscount_bellmanEndpoint
+    [∀ i, Nonempty (G.Act i)] :
+    ∃ assign₀ : BellmanVar G → ℝ,
+      assign₀ BellmanVar.disc = 0 ∧
+        assign₀ ∈ closure G.polynomialBellmanSolutionSet := by
+  obtain ⟨assign₀, hdisc, hclosure⟩ :=
+    G.exists_vanishingDiscount_bellmanEndpoint_pos
+  exact ⟨assign₀, hdisc,
+    closure_mono inter_subset_left hclosure⟩
+
 /-- Every game has a vanishing-discount endpoint and one complete Bellman
-sign cell approaching it from within the polynomial solution set. -/
+sign cell approaching it through strictly positive discount complement. -/
 theorem exists_vanishingDiscount_bellmanSignCell
     [∀ i, Nonempty (G.Act i)] :
     ∃ (assign₀ : BellmanVar G → ℝ)
@@ -128,12 +162,58 @@ theorem exists_vanishingDiscount_bellmanSignCell
         signCell G.bellmanConstraintPoly τ ⊆
           G.polynomialBellmanSolutionSet ∧
         assign₀ ∈ closure
-          (signCell G.bellmanConstraintPoly τ) := by
+          (signCell G.bellmanConstraintPoly τ ∩
+            {assign | 0 < assign BellmanVar.disc}) := by
   obtain ⟨assign₀, hdisc, hclosure⟩ :=
-    G.exists_vanishingDiscount_bellmanEndpoint
-  obtain ⟨τ, hsubset, hcell⟩ :=
-    G.exists_bellmanSignCell_subset_of_mem_closure hclosure
+    G.exists_vanishingDiscount_bellmanEndpoint_pos
+  let T :=
+    selectedPatterns G.bellmanConstraintPoly
+      G.polynomialBellmanSolutionSet
+  have hrepresentation :
+      G.polynomialBellmanSolutionSet =
+        ⋃ τ ∈ T, signCell G.bellmanConstraintPoly τ := by
+    exact signInvariant_eq_iUnion_signCell
+      G.signInvariant_polynomialBellmanSolutionSet
+  have hpositiveRepresentation :
+      G.polynomialBellmanSolutionSet ∩
+          {assign | 0 < assign BellmanVar.disc} =
+        ⋃ τ ∈ T,
+          signCell G.bellmanConstraintPoly τ ∩
+            {assign | 0 < assign BellmanVar.disc} := by
+    rw [hrepresentation]
+    simp only [iUnion_inter]
+  rw [hpositiveRepresentation,
+    T.closure_biUnion
+      (fun τ =>
+        signCell G.bellmanConstraintPoly τ ∩
+          {assign | 0 < assign BellmanVar.disc})] at hclosure
+  rw [Set.mem_iUnion] at hclosure
+  obtain ⟨τ, hclosure⟩ := hclosure
+  rw [Set.mem_iUnion] at hclosure
+  obtain ⟨hτ, hcell⟩ := hclosure
+  have hsubset :
+      signCell G.bellmanConstraintPoly τ ⊆
+        G.polynomialBellmanSolutionSet := by
+    apply signCell_subset_of_mem_selectedPatterns
+      G.signInvariant_polynomialBellmanSolutionSet
+    simpa [T] using hτ
   exact ⟨assign₀, τ, hdisc, hsubset, hcell⟩
+
+/-- Coordinatewise Newton--Puiseux data for one selected curve in every
+Bellman sign cell.
+
+The same unramified curve occurs in every coordinate. The coordinatewise
+denominators may differ; finiteness synchronizes them automatically. -/
+def HasBellmanCoordinatewisePuiseuxSelection : Prop :=
+  ∀ (assign₀ : BellmanVar G → ℝ)
+      (τ : SignPattern G.BellmanConstraint),
+    assign₀ BellmanVar.disc = 0 →
+    assign₀ ∈ closure
+      (signCell G.bellmanConstraintPoly τ ∩
+        {assign | 0 < assign BellmanVar.disc}) →
+    HasCoordinatewiseRamifiedSelectionAt
+      (signCell G.bellmanConstraintPoly τ)
+      G.bellmanDiscountCoordinate assign₀
 
 /-- The exact remaining Gate G property: every selected Bellman sign cell
 approaching a zero-discount endpoint admits one coupled analytic right arc
@@ -143,10 +223,21 @@ def HasBellmanSignCellCurveSelection : Prop :=
       (τ : SignPattern G.BellmanConstraint),
     assign₀ BellmanVar.disc = 0 →
     assign₀ ∈ closure
-      (signCell G.bellmanConstraintPoly τ) →
+      (signCell G.bellmanConstraintPoly τ ∩
+        {assign | 0 < assign BellmanVar.disc}) →
     HasPositiveCoordinateAnalyticArcAt
       (signCell G.bellmanConstraintPoly τ)
       G.bellmanDiscountCoordinate assign₀
+
+/-- Coordinatewise convergent Puiseux expansions of one selected Bellman
+curve synchronize to the coupled analytic arc required by Gate G. -/
+theorem HasBellmanCoordinatewisePuiseuxSelection.toSignCellCurveSelection
+    (h : G.HasBellmanCoordinatewisePuiseuxSelection) :
+    G.HasBellmanSignCellCurveSelection := by
+  intro assign₀ τ hdisc hclosure
+  exact
+    (h assign₀ τ hdisc hclosure).toPositiveCoordinateAnalyticArc
+      hdisc
 
 /-- Sign-compatible analytic curve selection constructs an analytic Bellman
 germ for every finite game. -/
@@ -163,6 +254,14 @@ theorem exists_analyticBellmanGerm
   exact
     ⟨G.analyticBellmanGermOfPowerCurve
       harcSolution.toHasAnalyticPowerCurveAt⟩
+
+/-- Coordinatewise convergent Newton--Puiseux for one common selected curve
+is sufficient for an analytic Bellman germ. -/
+theorem exists_analyticBellmanGerm_of_coordinatewisePuiseuxSelection
+    [∀ i, Nonempty (G.Act i)]
+    (hselection : G.HasBellmanCoordinatewisePuiseuxSelection) :
+    Nonempty G.AnalyticBellmanGerm :=
+  G.exists_analyticBellmanGerm hselection.toSignCellCurveSelection
 
 end StochasticGame
 end GameTheory
