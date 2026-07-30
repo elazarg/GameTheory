@@ -2897,6 +2897,15 @@ memory.
   adopts `GameTheory.Evolutionary` for ESS/NSS and a one-way bridge into Core.
   ESS is not added to the Core concept surface, and no dynamics or Analysis
   carrier is bundled with it.
-- **Next action:** promote the static definitions separately from their Core
-  Nash bridge, keep the hostile payoff as experiment evidence, add reciprocal
-  reachability probes, and complete the bounded nine-declaration D-EVOL ledger.
+- **Promotion:** `GameTheory.Evolutionary.Basic` now owns the game-free static
+  definitions and facts; `GameTheory.Evolutionary.Nash` owns the one-way Core
+  bridge; the public root re-exports their umbrella. Full Phase 2/3
+  reachability audits pass with Basic input/boundary counts `2/6`, bridge
+  input/boundary counts `3/4`, and two rejected reverse probes from each of
+  Core and Protocol. The stable root is 119 nonblank lines and the focused
+  build completes in 1,722 jobs.
+- **Promotion validation:** the full build completes in 3,349 jobs, and the
+  complete nine-row D-EVOL ledger passes the declaration-coverage audit.
+- **Next action:** keep the hostile payoff as experiment evidence and admit no
+  population dynamics until a named analytic theorem reserves a new
+  experiment. Continue with the D-KNOW inventory and minimal D8 obligations.

@@ -1545,9 +1545,10 @@ direct bridge baselines on actual reuse or composition.
 
 The checked-in `Phase4StaticHarvest.md` completed a narrower static-harvest
 package than the transform-and-analysis list above. Subsequent delivery closed
-T1-T4 and EXP-043/D16 settled knowledge ownership in a separate stable
-epistemic branch. The remaining original items are the minimal public D8
-transformation surface and the evolutionary static/dynamic ownership probe.
+T1-T4, EXP-043/D16 settled knowledge ownership in a separate stable epistemic
+branch, and EXP-044/D17 settled ESS/NSS in a separate stable evolutionary
+branch with dynamics reserved for Analysis. The remaining original item is the
+minimal public D8 transformation surface.
 
 The RFC continues to govern architecture and disproof conditions. Mutable
 delivery order, frozen-obligation status, v1 declaration accounting, mature

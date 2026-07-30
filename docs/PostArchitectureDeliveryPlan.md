@@ -264,7 +264,7 @@ recovery creates pressure to work around them.
 | W1-F | named language transfers | **complete; T1, T3, and T4 closed** | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
 | W1-G | perfect-recall-facing Kuhn surface | **complete** | both constructive directions, realizable history-law equality, arbitrary outcome pushforwards, and expected utility are exposed under the sharp no-revisit/recall hypotheses |
 | W1-H | minimal D8 transformation surface | partial | player/strategy reindexing and only the preservation maps used by real consumers are public and transport-audited |
-| W1-I | overdue knowledge and evolutionary ownership probes | **knowledge complete (EXP-043/D16); evolutionary open** | Aumann/`InfoState` is settled in a separate stable branch; ESS/static-dynamic still must validate its proposed home or record a replacement |
+| W1-I | overdue knowledge and evolutionary ownership probes | **complete (EXP-043/D16; EXP-044/D17)** | Aumann/`InfoState` and ESS/static-dynamic ownership are settled in separate stable branches with explicit reverse-dependency probes |
 
 Recommended dependency order:
 
@@ -352,7 +352,7 @@ theory.
 | bargaining | Nash solution affine invariance on an honest feasible utility set | native convex feasible-set branch under `Analysis` when topology is used |
 | finite fair division | round-robin EF1 and one envy-cycle or maximin-share result | coordinated mechanism branch; no measurable cake assumptions |
 | knowledge and epistemic games | **passed (EXP-043/D16):** Aumann agreement over finite-cell partitions | recover S5 and approximate common knowledge in `Epistemic`; any Protocol bridge must state the extra state-view premise |
-| evolutionary stability | ESS implies symmetric Nash | separate static branch; dynamics do not enter until their scalar/topology needs are measured |
+| evolutionary stability | **passed (EXP-044/D17):** ESS implies canonical symmetric Nash | recover static ESS/NSS in `Evolutionary`; dynamics do not enter until a named theorem measures scalar/topology needs |
 | contracts | one incentive or participation theorem with explicit outside option | mechanism branch sharing only actual report/deviation vocabulary |
 
 Coalitional foundations and the Shapley characterization are already validated;
@@ -429,7 +429,7 @@ the protected recovery waves.
 | graphical and network games | no local-interaction representation | compile a tree graphical game to `GameForm` and preserve local payoff/Nash facts | language/domain branch over the static core |
 | algorithmic game theory and complexity | executable support is enumeration-oriented and v1 has no complexity layer | one verified reduction or certificate family with explicit size/cost theorem | `Finite`, `GameTheoryMath`, and an experiment-gated complexity vocabulary |
 | Stackelberg and security games | one NFG Stackelberg example, no domain theory | finite leader-follower value with explicit tie-breaking and a checked response certificate | coordinated static/mechanism branch |
-| evolutionary and population dynamics | ESS is present; replicator and population dynamics are not | ESS-to-symmetric-Nash parity, then simplex invariance for one finite replicator dynamic | stable evolutionary root plus opt-in `Analysis` |
+| evolutionary and population dynamics | static ESS/NSS parity is complete; replicator and population dynamics are absent | simplex invariance for one finite replicator dynamic, without moving ESS under Analysis | stable `Evolutionary` root plus opt-in `Analysis.Evolutionary` |
 | network formation and cooperative cost sharing | coalitional values exist, formation dynamics and cost-sharing mechanisms do not | one potential or core theorem on a finite network-formation game | cooperative or static branch, decided by the theorem's native data |
 | richer matching and market design | stable matching exists, but school choice, matching with contracts, exchange, and richer market constraints do not | deferred acceptance with one strategyproofness or rural-hospitals extension beyond the pinned model | `GameTheory.Cooperative`/market-design branch over native preferences |
 | cooperative solution depth | v1 has core, Shapley, Banzhaf, and balancedness, but no nucleolus or least-core family | finite least-core or nucleolus characterization with an independently checkable optimization certificate | `GameTheory.Cooperative`; optimization remains a named Analysis/Finite bridge |
@@ -528,8 +528,8 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. resolve the remaining evolutionary ownership probe and inventory the
-   D-KNOW declarations behind the passed knowledge gate;
+1. inventory the remaining D-KNOW declarations behind the passed knowledge
+   gate and finish the minimal D8 transformation obligations;
 2. add exact broad-package ledgers for the first NFG/FOSG and static recovery
    batches, using the generated index only as a review queue;
 3. consolidate moving delivery probes without rewriting historical phase

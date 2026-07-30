@@ -23,6 +23,7 @@ GameTheory/Protocol      execution, histories, information, assessment,
                          static-form compilation
 GameTheory/Epistemic     finite information partitions, posteriors,
                          self-evident events, and Aumann agreement
+GameTheory/Evolutionary  static ESS/NSS and the canonical symmetric-Nash bridge
 GameTheory/Finite        executable rational frontend and its correctness layer
 GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theory
   /Protocol              analytic behavioral-assessment consistency bridge
@@ -52,13 +53,16 @@ GameTheory/Experimental  architecture spikes, never re-exported
 GameTheoryMath           independently reusable, game-free mathematics
 ```
 
-The root `GameTheory` import re-exports Core, Protocol, Epistemic, and Finite.
-Epistemic is deliberately independent of Protocol: Protocol information is
-history-local, whereas epistemic cells partition a state space. Analysis is
-stable but deliberately opt-in so its fixed-point and topology dependencies
-cannot leak across the audited boundary. Repeated is also opt-in: its stable
-root remains analysis-light, while `GameTheory.Analysis.Repeated` is the
-one-way bridge for feasible-payoff geometry and the discounted folk theorem.
+The root `GameTheory` import re-exports Core, Protocol, Epistemic,
+Evolutionary, and Finite. Epistemic is deliberately independent of Protocol:
+Protocol information is history-local, whereas epistemic cells partition a
+state space. Evolutionary keeps ESS/NSS static and imports Core only in its
+one-way Nash bridge; population dynamics remain reserved for a future opt-in
+Analysis root. Analysis is stable but deliberately opt-in so its fixed-point
+and topology dependencies cannot leak across the audited boundary. Repeated is
+also opt-in: its stable root remains analysis-light, while
+`GameTheory.Analysis.Repeated` is the one-way bridge for feasible-payoff
+geometry and the discounted folk theorem.
 `GameTheory.Analysis.Protocol` is the separate one-way bridge for pointwise
 Kreps-Wilson consistency over stable behavioral assessments; its EFG adapter
 supplies finite history instances and canonical continuation contexts without

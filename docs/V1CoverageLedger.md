@@ -90,7 +90,7 @@ credit.
 | nonconstant-payoff finite-EFG rationality stress | **complete (EXP-035)** | arbitrary whole-policy deviations have value `1 / 2` under the canonical Bayes belief |
 | well-founded strategic SPE/one-shot equivalence | **complete (EXP-036)** | every whole-policy deviation and typed one-shot deviation are equivalent at all histories under `ActsOnceWhereItMatters` |
 | knowledge/`InfoState` hostile probe promised by Phase 0 | **complete (EXP-043/D16)** | separate stable `Epistemic` branch; Protocol counterexample retained as evidence |
-| ESS/static-vs-dynamic hostile probe promised by Phase 0 | **overdue** | Wave 1 ownership experiment |
+| ESS/static-vs-dynamic hostile probe promised by Phase 0 | **complete (EXP-044/D17)** | stable `Evolutionary` definitions plus one-way canonical Nash bridge |
 | correlated-equilibrium existence | **open, expected cheap** | Wave 2/Analysis; first try mixed-Nash existence plus Nash-to-CE |
 | general fixed-point support stack | **deferred by consumer** | Wave 5; recover only for a selected theorem |
 | exact mixed-equilibrium solver | **not a release goal** | D10/D13 reopening only |
@@ -124,7 +124,7 @@ declaration-based.
 | D-COMM | `Concepts/Communication/**`, `Core/Babbling.lean`, `Languages/ElectronicMailGame.lean` | 5 | static core or Protocol according to timing | assigned | not started | babbling equilibrium without a second solution concept |
 | D-KNOW | `Concepts/Knowledge/**` | 2 | stable `Epistemic` branch; a Protocol bridge only with an explicit state-view premise | validated by EXP-043/D16 | partial | inventory S5 and approximate-common-knowledge declarations behind the promoted Aumann slice |
 | D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | validated for deterministic and finite public-signal theory | partial | monitoring equilibrium/rank hierarchy and uniform results; no infinite realized-path law |
-| D-EVOL | `Concepts/Classes/EvolutionaryStability.lean` | 1 | separate evolutionary branch | assigned, overdue probe | not started | ESS implies symmetric Nash; classify dynamics separately; OpenGame material stays in L-OPEN |
+| D-EVOL | `Concepts/Classes/EvolutionaryStability.lean` | 1 | stable `Evolutionary`; dynamics only in future opt-in Analysis | validated by EXP-044/D17 | complete | [nine-declaration ledger](coverage/D-EVOL-static.md); no pinned population dynamics to recover |
 
 ### Languages and sequential theory
 
@@ -196,8 +196,8 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Resolve the remaining evolutionary ownership probe and complete the
-   D-KNOW declaration inventory.
+1. Complete the D-KNOW declaration inventory and the minimal D8
+   transformation obligations.
 2. Add exact broad-package ledgers for the first NFG/FOSG and static recovery
    batches, seeded but never classified by the generated index.
 3. Start broad NFG/FOSG recovery from their passed gates while keeping broader

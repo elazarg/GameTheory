@@ -1,6 +1,6 @@
 # D17: evolutionary stability is static; dynamics are opt-in
 
-- **Status:** adopted; promotion pending
+- **Status:** adopted and promoted
 - **Date:** 2026-07-30
 - **Experiment IDs:** EXP-044
 
@@ -87,3 +87,14 @@ Protocol- and Analysis-blind. Population states, finite replicator vector
 fields, forward invariance, trajectories, and convergence belong to a future
 `GameTheory.Analysis.Evolutionary` root only after a named dynamics theorem
 measures their scalar, finite-dimensional, and topological needs.
+
+That promotion is complete. `GameTheory.Evolutionary.Basic` owns the seven
+payoff-kernel declarations without importing any game-semantic module.
+`GameTheory.Evolutionary.Nash` owns the symmetric presentation and the single
+Nash bridge; the public root re-exports the umbrella. The stable root has 119
+nonblank lines. Full Phase 2/3 audits pass: Basic reaches both intended
+definitions and rejects six game/analytic probes; the bridge reaches all three
+intended static symbols and rejects four sequential/analytic probes; Core and
+Protocol each reject both reverse-dependency probes. The stable flagship uses
+only `propext`, `Classical.choice`, and `Quot.sound`. The focused build
+completes in 1,722 jobs and the full build in 3,349.

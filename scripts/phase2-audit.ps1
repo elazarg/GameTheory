@@ -109,10 +109,14 @@ $RepeatedFiles = @(@(Select-Files 'GameTheory/Repeated') +
   @('GameTheory/Repeated.lean') | Sort-Object -Unique)
 $EpistemicFiles = @(@(Select-Files 'GameTheory/Epistemic') +
   @('GameTheory/Epistemic.lean') | Sort-Object -Unique)
+$EvolutionaryFiles = @(@(Select-Files 'GameTheory/Evolutionary') +
+  @('GameTheory/Evolutionary.lean') | Sort-Object -Unique)
 Report 'TRANSPORT_GAMETHEORYMATH_SOURCE' (Count-Pattern $MathFiles $TransportPattern)
 Report 'TRANSPORT_ANALYSIS_SOURCE' (Count-Pattern $AnalysisFiles $TransportPattern)
 Report 'TRANSPORT_REPEATED_SOURCE' (Count-Pattern $RepeatedFiles $TransportPattern)
 Report 'TRANSPORT_EPISTEMIC_SOURCE' (Count-Pattern $EpistemicFiles $TransportPattern)
+Report 'TRANSPORT_EVOLUTIONARY_SOURCE' `
+  (Count-Pattern $EvolutionaryFiles $TransportPattern)
 Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
 Report 'TRANSPORT_PHASE3_SOURCE' (Count-Pattern $Phase3Files $TransportPattern)
 Report 'TRANSPORT_PHASE2_PROBE' (Count-Pattern $Phase2ProbeFiles $TransportPattern)
@@ -147,6 +151,7 @@ Report 'TRANSPORT_POST_ARCHITECTURE' `
 # is worse than a mis-bucketed one: nothing measures it, so it drifts unseen.
 $Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $PostArchitectureFiles +
   $Phase2Files + $Phase3Files + $AnalysisFiles + $RepeatedFiles + $EpistemicFiles +
+  $EvolutionaryFiles +
   @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
 Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
@@ -220,6 +225,18 @@ foreach ($f in $EpistemicFiles) {
 }
 Report 'EPISTEMIC_FORBIDDEN_IMPORTS' $epistemicBad
 
+$EvolutionaryForbidden = 'GameTheory\.Protocol|GameTheory\.Finite|' +
+  'GameTheory\.Languages|GameTheory\.Repeated|GameTheory\.Epistemic|' +
+  'GameTheory\.Examples|GameTheory\.Tests|GameTheory\.Experimental|' +
+  'GameTheory\.Analysis|FixedPointTheorems'
+$evolutionaryBad = 0
+foreach ($f in $EvolutionaryFiles) {
+  foreach ($imp in Get-Imports $f) {
+    if ($imp -match $EvolutionaryForbidden) { $evolutionaryBad++ }
+  }
+}
+Report 'EVOLUTIONARY_FORBIDDEN_IMPORTS' $evolutionaryBad
+
 $mathBad = 0
 foreach ($f in $MathFiles) {
   foreach ($imp in Get-Imports $f) {
@@ -284,6 +301,7 @@ Report 'NONBLANK_TESTS' (Measure-Nonblank (Select-Files 'GameTheory/Tests'))
 Report 'NONBLANK_ANALYSIS' (Measure-Nonblank $AnalysisFiles)
 Report 'NONBLANK_REPEATED' (Measure-Nonblank $RepeatedFiles)
 Report 'NONBLANK_EPISTEMIC' (Measure-Nonblank $EpistemicFiles)
+Report 'NONBLANK_EVOLUTIONARY' (Measure-Nonblank $EvolutionaryFiles)
 Report 'NONBLANK_GAMETHEORYMATH' (Measure-Nonblank $MathFiles)
 Report 'NONBLANK_PHASE2_PROBE' `
   (Measure-Nonblank (Select-Files 'GameTheory/Experimental/Phase2'))
@@ -413,6 +431,78 @@ if (-not $SkipReachability) {
     }
   }
   Report 'EPISTEMIC_BOUNDARY_PROBES_REJECTED' $epistemicBoundaryRejected
+
+  # D17 keeps the payoff-kernel definitions independent of game semantics,
+  # then exposes one deliberate bridge into the canonical static concepts.
+  $evolutionaryBasicInputs = @(
+    'GameTheory.Evolutionary.IsESS',
+    'GameTheory.Evolutionary.IsNSS')
+  $evolutionaryBasicBoundary = @(
+    'GameTheory.GameForm',
+    'GameTheory.IsNash',
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.Analysis.nash_exists',
+    'stdSimplex',
+    'Polynomial')
+  $evolutionaryBasicOutput = Run-Probe 'GameTheory.Evolutionary.Basic' `
+    ($evolutionaryBasicInputs + $evolutionaryBasicBoundary)
+  $evolutionaryBasicInputsReached = 0
+  foreach ($constant in $evolutionaryBasicInputs) {
+    if (-not (Is-Unreachable $evolutionaryBasicOutput $constant)) {
+      $evolutionaryBasicInputsReached++
+    }
+  }
+  Report 'EVOLUTIONARY_BASIC_INPUT_PROBES_REACHED' `
+    $evolutionaryBasicInputsReached
+  $evolutionaryBasicBoundaryRejected = 0
+  foreach ($constant in $evolutionaryBasicBoundary) {
+    if (Is-Unreachable $evolutionaryBasicOutput $constant) {
+      $evolutionaryBasicBoundaryRejected++
+    }
+  }
+  Report 'EVOLUTIONARY_BASIC_BOUNDARY_PROBES_REJECTED' `
+    $evolutionaryBasicBoundaryRejected
+
+  $evolutionaryBridgeInputs = @(
+    'GameTheory.Evolutionary.IsESS',
+    'GameTheory.IsNash',
+    'GameTheory.Evolutionary.IsESS.isNash_symmetric')
+  $evolutionaryBridgeBoundary = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.Analysis.nash_exists',
+    'stdSimplex',
+    'Polynomial')
+  $evolutionaryBridgeOutput = Run-Probe 'GameTheory.Evolutionary' `
+    ($evolutionaryBridgeInputs + $evolutionaryBridgeBoundary)
+  $evolutionaryBridgeInputsReached = 0
+  foreach ($constant in $evolutionaryBridgeInputs) {
+    if (-not (Is-Unreachable $evolutionaryBridgeOutput $constant)) {
+      $evolutionaryBridgeInputsReached++
+    }
+  }
+  Report 'EVOLUTIONARY_BRIDGE_INPUT_PROBES_REACHED' `
+    $evolutionaryBridgeInputsReached
+  $evolutionaryBridgeBoundaryRejected = 0
+  foreach ($constant in $evolutionaryBridgeBoundary) {
+    if (Is-Unreachable $evolutionaryBridgeOutput $constant) {
+      $evolutionaryBridgeBoundaryRejected++
+    }
+  }
+  Report 'EVOLUTIONARY_BRIDGE_BOUNDARY_PROBES_REJECTED' `
+    $evolutionaryBridgeBoundaryRejected
+
+  $coreEvolutionaryRejected = 0
+  $coreEvolutionaryConstants = @(
+    'GameTheory.Evolutionary.IsESS',
+    'GameTheory.Evolutionary.IsESS.isNash_symmetric')
+  $coreEvolutionaryOutput =
+    Run-Probe 'GameTheory.Core' $coreEvolutionaryConstants
+  foreach ($constant in $coreEvolutionaryConstants) {
+    if (Is-Unreachable $coreEvolutionaryOutput $constant) {
+      $coreEvolutionaryRejected++
+    }
+  }
+  Report 'CORE_EVOLUTIONARY_PROBES_REJECTED' $coreEvolutionaryRejected
   Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
@@ -434,6 +524,7 @@ if ($VerifyExpected) {
     TRANSPORT_ANALYSIS_SOURCE = 0
     TRANSPORT_REPEATED_SOURCE = 0
     TRANSPORT_EPISTEMIC_SOURCE = 0
+    TRANSPORT_EVOLUTIONARY_SOURCE = 0
     TRANSPORT_GAMETHEORYMATH_SOURCE = 0
     TRANSPORT_POST_ARCHITECTURE = 0
     ANALYSIS_IMPORTED_OUTSIDE_ROOT = 0
@@ -450,6 +541,7 @@ if ($VerifyExpected) {
     SIGNATURE_PROBABILITY_IMPORTS = 0
     REPEATED_FORBIDDEN_IMPORTS = 0
     EPISTEMIC_FORBIDDEN_IMPORTS = 0
+    EVOLUTIONARY_FORBIDDEN_IMPORTS = 0
     GAMETHEORYMATH_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
     REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
@@ -468,6 +560,11 @@ if ($VerifyExpected) {
     $Expected['GAMETHEORYMATH_GAME_REJECTED'] = 1
     $Expected['EPISTEMIC_INPUT_PROBES_REACHED'] = 3
     $Expected['EPISTEMIC_BOUNDARY_PROBES_REJECTED'] = 5
+    $Expected['EVOLUTIONARY_BASIC_INPUT_PROBES_REACHED'] = 2
+    $Expected['EVOLUTIONARY_BASIC_BOUNDARY_PROBES_REJECTED'] = 6
+    $Expected['EVOLUTIONARY_BRIDGE_INPUT_PROBES_REACHED'] = 3
+    $Expected['EVOLUTIONARY_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 4
+    $Expected['CORE_EVOLUTIONARY_PROBES_REJECTED'] = 2
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

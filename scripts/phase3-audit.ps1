@@ -111,6 +111,8 @@ Report 'ROOT_REEXPORTS_PROTOCOL' `
   (@($rootImports | Where-Object { $_ -eq 'GameTheory.Protocol' }).Count)
 Report 'ROOT_REEXPORTS_EPISTEMIC' `
   (@($rootImports | Where-Object { $_ -eq 'GameTheory.Epistemic' }).Count)
+Report 'ROOT_REEXPORTS_EVOLUTIONARY' `
+  (@($rootImports | Where-Object { $_ -eq 'GameTheory.Evolutionary' }).Count)
 Report 'ROOT_FORBIDDEN_IMPORTS' `
   (@($rootImports | Where-Object {
     $_ -match 'GameTheory\.Languages|GameTheory\.Tests|GameTheory\.Experimental' }).Count)
@@ -287,6 +289,20 @@ if (-not $SkipReachability) {
     }
   }
   Report 'PROTOCOL_EPISTEMIC_PROBES_REJECTED' $protocolEpistemicRejected
+
+  $protocolEvolutionaryRejected = 0
+  $protocolEvolutionaryConstants = @(
+    'GameTheory.Evolutionary.IsESS',
+    'GameTheory.Evolutionary.IsESS.isNash_symmetric')
+  $protocolEvolutionaryOutput =
+    Run-Probe 'GameTheory.Protocol' $protocolEvolutionaryConstants
+  foreach ($constant in $protocolEvolutionaryConstants) {
+    if (Is-Unreachable $protocolEvolutionaryOutput $constant) {
+      $protocolEvolutionaryRejected++
+    }
+  }
+  Report 'PROTOCOL_EVOLUTIONARY_PROBES_REJECTED' `
+    $protocolEvolutionaryRejected
 
   $sequentialBridgeInputsReached = 0
   $sequentialBridgeConstants = @(
@@ -479,6 +495,7 @@ if ($VerifyExpected) {
     LANGUAGE_FORBIDDEN_IMPORTS = 0
     ROOT_REEXPORTS_PROTOCOL = 1
     ROOT_REEXPORTS_EPISTEMIC = 1
+    ROOT_REEXPORTS_EVOLUTIONARY = 1
     ROOT_FORBIDDEN_IMPORTS = 0
     TRANSPORT_PROTOCOL = 0
     TRANSPORT_LANGUAGES = 0
@@ -500,6 +517,7 @@ if ($VerifyExpected) {
     $Expected['REPEATED_INPUT_PROBES_REACHED'] = 2
     $Expected['PROTOCOL_ANALYSIS_PROBES_REJECTED'] = 2
     $Expected['PROTOCOL_EPISTEMIC_PROBES_REJECTED'] = 2
+    $Expected['PROTOCOL_EVOLUTIONARY_PROBES_REJECTED'] = 2
     $Expected['SEQUENTIAL_BRIDGE_INPUTS_REACHED'] = 3
     $Expected['SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED'] = 2
     $Expected['EFG_SYNTAX_SOLUTION_PROBES_REJECTED'] = 3
