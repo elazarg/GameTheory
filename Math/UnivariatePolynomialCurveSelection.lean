@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import Math.AlgebraicSelection
 import Math.AnalyticCoordinateCurve
+import Math.PolynomialSignCell
 import Mathlib.Analysis.Analytic.Polynomial
 import Mathlib.Data.Sign.Defs
 
@@ -114,5 +115,117 @@ theorem hasAnalyticPowerCurveAt_univariateSignCell
   refine ⟨1, id, eta, by positivity, heta, analyticAt_id, rfl, ?_⟩
   intro t ht
   exact ⟨hinterval ht, by simp⟩
+
+/-- A polynomial coordinate curve in a finite-dimensional assignment
+space. -/
+def polynomialCoordinateCurve
+    {σ : Type*} (coordinate : σ → Polynomial ℝ) :
+    ℝ → (σ → ℝ) :=
+  fun t i => (coordinate i).eval t
+
+/-- Pull a multivariate polynomial back along a polynomial coordinate
+curve. -/
+def polynomialCurvePullback
+    {σ : Type*} (coordinate : σ → Polynomial ℝ)
+    (p : MvPolynomial σ ℝ) :
+    Polynomial ℝ :=
+  MvPolynomial.eval₂Hom Polynomial.C coordinate p
+
+@[simp]
+theorem eval_polynomialCurvePullback
+    {σ : Type*} (coordinate : σ → Polynomial ℝ)
+    (p : MvPolynomial σ ℝ) (t : ℝ) :
+    (polynomialCurvePullback coordinate p).eval t =
+      MvPolynomial.eval (polynomialCoordinateCurve coordinate t) p := by
+  change
+    Polynomial.evalRingHom t
+        (MvPolynomial.eval₂Hom Polynomial.C coordinate p) =
+      MvPolynomial.eval₂Hom (RingHom.id ℝ)
+        (polynomialCoordinateCurve coordinate t) p
+  rw [MvPolynomial.map_eval₂Hom]
+  have hconst :
+      (Polynomial.evalRingHom t).comp Polynomial.C =
+        RingHom.id ℝ := by
+    ext x
+    simp
+  have hcoordinate :
+      (fun i => Polynomial.evalRingHom t (coordinate i)) =
+        polynomialCoordinateCurve coordinate t := rfl
+  exact MvPolynomial.eval₂Hom_congr hconst hcoordinate rfl
+
+/-- Pullback identifies a multivariate sign cell along a polynomial curve
+with an ordinary univariate sign cell. -/
+theorem preimage_signCell_polynomialCoordinateCurve
+    {I σ : Type*} (P : I → MvPolynomial σ ℝ)
+    (τ : I → SignType) (coordinate : σ → Polynomial ℝ) :
+    polynomialCoordinateCurve coordinate ⁻¹'
+        PolynomialSignCell.signCell P τ =
+      univariateSignCell
+        (fun i => polynomialCurvePullback coordinate (P i)) τ := by
+  ext t
+  simp only [Set.mem_preimage, PolynomialSignCell.mem_signCell,
+    mem_univariateSignCell]
+  constructor
+  · intro h i
+    have hi := congrFun h i
+    change
+      SignType.sign
+          (MvPolynomial.eval
+            (polynomialCoordinateCurve coordinate t) (P i)) =
+        τ i at hi
+    rw [eval_polynomialCurvePullback]
+    exact hi
+  · intro h
+    funext i
+    change
+      SignType.sign
+          (MvPolynomial.eval
+            (polynomialCoordinateCurve coordinate t) (P i)) =
+        τ i
+    rw [← eval_polynomialCurvePullback]
+    exact h i
+
+/-- Any polynomial arc which approaches a prescribed multivariate sign cell
+and has one exact power coordinate supplies a checked analytic power curve
+in that cell.
+
+This is a finite certificate for line, monomial, and polynomially
+parameterized singular branches. -/
+theorem hasAnalyticPowerCurveAt_signCell_of_polynomialCoordinateCurve
+    {I σ : Type*} [Finite I] [Fintype σ]
+    {P : I → MvPolynomial σ ℝ} {τ : I → SignType}
+    {coordinate : σ → Polynomial ℝ} {parameter : σ}
+    {q : ℕ} (hq : 0 < q)
+    (hparameter : coordinate parameter = Polynomial.X ^ q)
+    (hclosure :
+      0 ∈ closure
+        ((polynomialCoordinateCurve coordinate) ⁻¹'
+          PolynomialSignCell.signCell P τ ∩ Set.Ioi 0)) :
+    HasAnalyticPowerCurveAt
+      (PolynomialSignCell.signCell P τ)
+      (ContinuousLinearMap.proj parameter)
+      (polynomialCoordinateCurve coordinate 0) := by
+  rw [preimage_signCell_polynomialCoordinateCurve] at hclosure
+  have hmem :=
+    eventually_mem_univariateSignCell_of_mem_closure_right hclosure
+  obtain ⟨eta, heta, hinterval⟩ :=
+    mem_nhdsGT_iff_exists_Ioo_subset.mp hmem
+  have hcurve :
+      AnalyticAt ℝ (polynomialCoordinateCurve coordinate) 0 := by
+    rw [analyticAt_pi_iff]
+    intro i
+    exact (AnalyticOnNhd.eval_polynomial (coordinate i))
+      0 (Set.mem_univ 0)
+  refine ⟨q, polynomialCoordinateCurve coordinate, eta, hq, heta,
+    hcurve, rfl, ?_⟩
+  intro t ht
+  refine ⟨?_, ?_⟩
+  · have hpre :
+        t ∈ polynomialCoordinateCurve coordinate ⁻¹'
+          PolynomialSignCell.signCell P τ := by
+      rw [preimage_signCell_polynomialCoordinateCurve]
+      exact hinterval ht
+    exact hpre
+  · simp [polynomialCoordinateCurve, hparameter]
 
 end Math
