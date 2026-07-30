@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Concepts.Stochastic.AnalyticBellmanHierarchy
 import GameTheory.Concepts.Stochastic.FinkObstructionFarkas
 import GameTheory.Concepts.Stochastic.OrientedResponseExtraction
-import Math.Probability.OccupationFlowAlternative
+import Math.Probability.AnalyticOccupationFlow
 
 /-!
 # Analytic coordinates for Fink obstruction systems
@@ -75,6 +75,22 @@ def rawPureDeviationContinuationGainCurve
     ∑ destination,
       (germ.rawPureDeviationStateKernelCurve t s who d destination -
         germ.rawStateKernelCurve t s destination) * W destination who
+
+/-- Actual analytic occupation columns of the baseline transitions and all
+pure deviations. These use arrival mass minus source mass and therefore
+represent operational transitions, not formal signed perturbations. -/
+def rawAnalyticOccupationColumn
+    (germ : G.AnalyticBellmanGerm) :
+    ℝ →
+      (G.State ⊕ (Σ who : ι, G.State × G.Act who)) →
+      G.State → ℝ
+  | t, Sum.inl source, destination =>
+      germ.rawStateKernelCurve t source destination -
+        if destination = source then 1 else 0
+  | t, Sum.inr e, destination =>
+      germ.rawPureDeviationStateKernelCurve
+          t e.2.1 e.1 e.2.2 destination -
+        if destination = e.2.1 then 1 else 0
 
 omit [DecidableEq G.State] in
 theorem analytic_rawPureDeviationProfileWeight
@@ -146,6 +162,30 @@ theorem analytic_rawPureDeviationContinuationGainCurve
           ((analyticAt_pi_iff.mp
             germ.analytic_rawStateKernelCurve) s)) destination))).mul
       analyticAt_const)
+
+theorem analytic_rawAnalyticOccupationColumn
+    (germ : G.AnalyticBellmanGerm) :
+    ∀ index destination,
+      AnalyticAt ℝ
+        (fun t =>
+          germ.rawAnalyticOccupationColumn t index destination) 0 := by
+  intro index destination
+  cases index with
+  | inl source =>
+      exact
+        (((analyticAt_pi_iff.mp
+          ((analyticAt_pi_iff.mp
+            germ.analytic_rawStateKernelCurve) source)) destination).sub
+          analyticAt_const)
+  | inr e =>
+      exact
+        (((analyticAt_pi_iff.mp
+          ((analyticAt_pi_iff.mp
+            ((analyticAt_pi_iff.mp
+              ((analyticAt_pi_iff.mp
+                germ.analytic_rawPureDeviationStateKernelCurve)
+                e.2.1)) e.1)) e.2.2)) destination).sub
+          analyticAt_const)
 
 omit [DecidableEq G.State] in
 /-- At a valid positive point, raw pure-deviation joint mass is the real
@@ -230,6 +270,91 @@ theorem rawPureDeviationContinuationGainCurve_eq_finkPointAt
   rw [germ.rawPureDeviationStateKernelCurve_eq_finkPointAt ht,
     germ.rawStateKernelCurve_eq_finkStateKernel ht]
   ring
+
+/-- At a valid positive parameter, the raw analytic occupation columns are
+exactly the semantic baseline-and-pure-deviation occupation columns. -/
+theorem rawAnalyticOccupationColumn_eq_finkPointAt
+    (germ : G.AnalyticBellmanGerm)
+    {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) germ.radius) :
+    germ.rawAnalyticOccupationColumn t =
+      stochasticOccupationColumn
+        (G.finkStateKernel (germ.finkPointAt ht))
+        (fun e : Σ who : ι, G.State × G.Act who =>
+          G.finkPureDeviationStateKernel
+            (germ.finkPointAt ht) e.2.1 e.1 e.2.2)
+        (fun e : Σ who : ι, G.State × G.Act who => e.2.1) := by
+  funext index destination
+  cases index with
+  | inl source =>
+      simp only [rawAnalyticOccupationColumn,
+        stochasticOccupationColumn, actualOccupationColumn,
+        occupationKernel, occupationSource]
+      rw [germ.rawStateKernelCurve_eq_finkStateKernel ht]
+      rfl
+  | inr e =>
+      simp only [rawAnalyticOccupationColumn,
+        stochasticOccupationColumn, actualOccupationColumn,
+        occupationKernel, occupationSource]
+      rw [germ.rawPureDeviationStateKernelCurve_eq_finkPointAt ht]
+      rfl
+
+/-- Actual analytic occupation columns retain zero total mass throughout a
+small punctured right neighborhood. -/
+theorem eventually_sum_rawAnalyticOccupationColumn_eq_zero
+    (germ : G.AnalyticBellmanGerm) :
+    ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+      ∀ index,
+        ∑ destination,
+          germ.rawAnalyticOccupationColumn t index destination = 0 := by
+  have hradius_nhds :
+      ∀ᶠ t in nhds (0 : ℝ), t < germ.radius :=
+    Iio_mem_nhds germ.radius_pos
+  have hradius :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0), t < germ.radius :=
+    hradius_nhds.filter_mono nhdsWithin_le_nhds
+  filter_upwards [self_mem_nhdsWithin, hradius] with t htpos htradius
+  have ht : t ∈ Ioo (0 : ℝ) germ.radius :=
+    ⟨htpos, htradius⟩
+  intro index
+  cases index with
+  | inl source =>
+      have hdelta :
+          (∑ destination : G.State,
+            if destination = source then (1 : ℝ) else 0) = 1 := by
+        simp
+      have hkernel :
+          (∑ destination,
+            germ.rawStateKernelCurve t source destination) = 1 := by
+        calc
+          _ = ∑ destination,
+              (G.finkStateKernel
+                (germ.finkPointAt ht) source destination).toReal := by
+            apply Finset.sum_congr rfl
+            intro destination _
+            rw [germ.rawStateKernelCurve_eq_finkStateKernel ht]
+          _ = 1 := Math.Probability.pmf_toReal_sum_one _
+      simp only [rawAnalyticOccupationColumn]
+      rw [Finset.sum_sub_distrib, hkernel, hdelta, sub_self]
+  | inr e =>
+      have hdelta :
+          (∑ destination : G.State,
+            if destination = e.2.1 then (1 : ℝ) else 0) = 1 := by
+        simp
+      have hkernel :
+          (∑ destination,
+            germ.rawPureDeviationStateKernelCurve
+              t e.2.1 e.1 e.2.2 destination) = 1 := by
+        calc
+          _ = ∑ destination,
+              (G.finkPureDeviationStateKernel
+                (germ.finkPointAt ht)
+                e.2.1 e.1 e.2.2 destination).toReal := by
+            apply Finset.sum_congr rfl
+            intro destination _
+            rw [germ.rawPureDeviationStateKernelCurve_eq_finkPointAt ht]
+          _ = 1 := Math.Probability.pmf_toReal_sum_one _
+      simp only [rawAnalyticOccupationColumn]
+      rw [Finset.sum_sub_distrib, hkernel, hdelta, sub_self]
 
 /-- Raw mixing coordinate of one potential supported action. -/
 def rawFinkActionCoordinate
@@ -1087,6 +1212,32 @@ theorem stageCharge_of_transitionInvisible
     rw [hsame destination, sub_self, zero_mul]
   simpa only [rawFinkObstructionMass, C.response_supported, if_true,
     hcontinuation, add_zero] using hevidence.2.2
+
+/-- The actual transition selected by the analytic Fink response has one
+stable analytic occupation classification.
+
+The first branch supplies a pole-cleared nonnegative circulation using the
+selected transition. The second supplies a bounded analytic potential whose
+drift is nonnegative on every other baseline or deviation transition and is
+an exact positive power law on the selected transition. -/
+theorem analyticCirculation_xor_boundedPotential
+    {germ : G.AnalyticBellmanGerm}
+    {H K : G.State → Payoff ι}
+    (C : AnalyticOrientedFinkObstructionResponse germ H K) :
+    Xor
+      (Nonempty
+        (AnalyticPositiveCirculation
+          germ.rawAnalyticOccupationColumn
+          (Sum.inr C.response)))
+      (Nonempty
+        (AnalyticBoundedOccupationSeparator
+          germ.rawAnalyticOccupationColumn
+          (Sum.inr C.response))) := by
+  exact analyticPositiveCirculation_xor_boundedSeparator
+    germ.rawAnalyticOccupationColumn
+    (Sum.inr C.response)
+    germ.analytic_rawAnalyticOccupationColumn
+    germ.eventually_sum_rawAnalyticOccupationColumn_eq_zero
 
 /-- At every valid positive parameter, the response selected from the
 analytic obstruction enters the exact actual-flow alternative.

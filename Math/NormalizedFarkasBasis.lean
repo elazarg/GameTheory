@@ -1358,6 +1358,167 @@ theorem analyticAt_parametricSupportEquationResidual
       (analyticAt_parametricSupportDeterminant
         A support hA)
 
+/-- Feasibility of a finite normalized-Farkas system with analytic
+coefficients has an eventually constant truth value on the punctured right
+neighborhood.
+
+Every feasible fiber has an extreme feasible point and hence a support
+Cramer representation. There are only finitely many supports. For each
+support, its determinant-zero status and all cleared feasibility atoms
+stabilize analytically, so the finite disjunction of feasible supports
+stabilizes as well. -/
+theorem analytic_normalizedFarkas_feasibility_eventually_stabilizes
+    {Row Col : Type*}
+    [Finite Row] [Fintype Col]
+    (balance : ℝ → Matrix Row Col ℝ)
+    (mass : ℝ → Col → ℝ) {x₀ : ℝ}
+    (hbalance :
+      ∀ i j, AnalyticAt ℝ (fun x => balance x i j) x₀)
+    (hmass :
+      ∀ j, AnalyticAt ℝ (fun x => mass x j) x₀) :
+    (∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+      (normalizedFarkasCertificateSet
+        (balance x) (mass x)).Nonempty) ∨
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        ¬(normalizedFarkasCertificateSet
+          (balance x) (mass x)).Nonempty := by
+  classical
+  letI : Fintype Row := Fintype.ofFinite Row
+  let A : ℝ → Matrix (Sum Row Unit) Col ℝ := fun x =>
+    normalizedFarkasMatrix (balance x) (mass x)
+  let rhs : ℝ → Sum Row Unit → ℝ := fun _ =>
+    normalizedFarkasRhs
+  let determinant : Finset Col → ℝ → ℝ := fun support =>
+    parametricSupportDeterminant A support
+  let determinantSq : Finset Col → ℝ → ℝ := fun support x =>
+    determinant support x ^ 2
+  let inequality : Finset Col → Col → ℝ → ℝ :=
+    fun support j =>
+      parametricSupportCoordinateNumerator A rhs support j
+  let equality : Finset Col → Sum Row Unit → ℝ → ℝ :=
+    fun support i =>
+      parametricSupportEquationResidual A rhs support i
+  have hA :
+      ∀ i j, AnalyticAt ℝ (fun x => A x i j) x₀ := by
+    intro i j
+    cases i with
+    | inl i => exact hbalance i j
+    | inr _ => exact hmass j
+  have hrhs :
+      ∀ i, AnalyticAt ℝ (fun x => rhs x i) x₀ :=
+    fun _ => analyticAt_const
+  have hdeterminant :
+      ∀ support, AnalyticAt ℝ (determinant support) x₀ :=
+    fun support =>
+      analyticAt_parametricSupportDeterminant A support hA
+  have hdeterminantSq :
+      ∀ support, AnalyticAt ℝ (determinantSq support) x₀ :=
+    fun support => (hdeterminant support).pow 2
+  have hdeterminantSq_nonneg :
+      ∀ support,
+        ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+          0 ≤ determinantSq support x :=
+    fun support =>
+      Filter.Eventually.of_forall fun x =>
+        sq_nonneg (determinant support x)
+  have hinequality :
+      ∀ support j,
+        AnalyticAt ℝ (inequality support j) x₀ :=
+    fun support j =>
+      analyticAt_parametricSupportCoordinateNumerator
+        A rhs support j hA hrhs
+  have hequality :
+      ∀ support i,
+        AnalyticAt ℝ (equality support i) x₀ :=
+    fun support i =>
+      analyticAt_parametricSupportEquationResidual
+        A rhs support i hA hrhs
+  obtain ⟨atomsGood, hatoms⟩ :=
+    finite_analytic_constraint_predicate_stabilizes
+      inequality equality hinequality hequality
+  obtain ⟨determinantZero, hdeterminantZero⟩ :=
+    finite_analytic_nonnegative_family_eventually_active_set
+      determinantSq hdeterminantSq hdeterminantSq_nonneg
+  let supportGood : Finset Col → Prop := fun support =>
+    atomsGood support ∧ ¬determinantZero support
+  have hsupport :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        ∀ support,
+          ((determinant support x ≠ 0 ∧
+              supportCramerVector (A x) (rhs x) support ∈
+                standardFeasibleSet (A x) (rhs x)) ↔
+            supportGood support) := by
+    filter_upwards [hatoms, hdeterminantZero] with x hxAtoms hxDet
+    intro support
+    have hdet_iff :
+        determinant support x ≠ 0 ↔
+          ¬determinantZero support := by
+      constructor
+      · intro hdet hzero
+        have hsq_zero :
+            determinantSq support x = 0 :=
+          (hxDet support).1.mpr hzero
+        exact hdet (sq_eq_zero_iff.mp hsq_zero)
+      · intro hnotZero hdet
+        apply hnotZero
+        apply (hxDet support).1.mp
+        simp [determinantSq, hdet]
+    constructor
+    · rintro ⟨hdet, hfeasible⟩
+      refine ⟨?_, hdet_iff.mp hdet⟩
+      apply (hxAtoms support).mp
+      have hatomsFeasible :=
+        (supportCramer_feasible_iff_atoms
+          (A x) (rhs x) support hdet).mp hfeasible
+      exact ⟨by
+        simpa [inequality,
+          parametricSupportCoordinateNumerator] using
+            hatomsFeasible.1, by
+        simpa [equality,
+          parametricSupportEquationResidual] using
+            hatomsFeasible.2⟩
+    · rintro ⟨hatomsGood, hdetGood⟩
+      have hdet : determinant support x ≠ 0 :=
+        hdet_iff.mpr hdetGood
+      refine ⟨hdet, ?_⟩
+      apply (supportCramer_feasible_iff_atoms
+        (A x) (rhs x) support hdet).mpr
+      have hatomsAt := (hxAtoms support).mpr hatomsGood
+      exact ⟨by
+        simpa [inequality,
+          parametricSupportCoordinateNumerator] using
+            hatomsAt.1, by
+        simpa [equality,
+          parametricSupportEquationResidual] using
+            hatomsAt.2⟩
+  by_cases hgood : ∃ support, supportGood support
+  · left
+    obtain ⟨support, hsupportGood⟩ := hgood
+    filter_upwards [hsupport] with x hx
+    have hcandidate := (hx support).mpr hsupportGood
+    exact ⟨supportCramerVector (A x) (rhs x) support, by
+      simpa [A, rhs, normalizedFarkasCertificateSet] using
+        hcandidate.2⟩
+  · right
+    filter_upwards [hsupport] with x hx
+    rintro ⟨z, hz⟩
+    let objective : Col → ℝ := fun _ => 0
+    have hzOptimal :
+        IsStandardOptimal
+          (A x) (rhs x) objective z := by
+      refine ⟨by
+        simpa [A, rhs, normalizedFarkasCertificateSet] using hz, ?_⟩
+      intro w hw
+      simp [objective]
+    obtain ⟨zExtreme, hzExtreme, hzExtremeOptimal, _⟩ :=
+      exists_extreme_standardOptimal_of_standardOptimal
+        (A x) (rhs x) objective hzOptimal
+    obtain ⟨support, hdet, _heq, hcandidateOptimal⟩ :=
+      exists_supportCramerBasis_of_extreme_optimal
+        (A x) (rhs x) objective hzExtreme hzExtremeOptimal
+    exact hgood ⟨support,
+      (hx support).mp ⟨hdet, hcandidateOptimal.1⟩⟩
+
 /-- Full moving basic-support closure.  If an analytic target value is
 attained by an extreme optimizer of each nearby standard-form problem, one
 fixed support Cramer candidate is eventually feasible and attains that full
