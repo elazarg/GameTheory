@@ -59,6 +59,12 @@ A ledger is complete only when:
 Generated declaration indices may seed a ledger, but classification is a
 mathematical review and is never inferred from matching names.
 
+If one pinned file declares the same source spelling more than once in
+different namespaces, disambiguate the ledger cell as ``name@line`` using the
+line in `PinnedDeclarations.tsv`. Exact spellings take precedence over the
+suffix matching retained for older fully qualified ledger names. The
+`@line` suffix is ledger metadata, not part of the Lean declaration name.
+
 ## Machine-readable coverage gate
 
 `FamilyScopes.tsv` is the exact, non-overlapping ownership routing for every
@@ -73,6 +79,13 @@ Regenerate and verify it with:
 pwsh -NoProfile -File scripts/coverage-audit.ps1 -UpdateIndex
 pwsh -NoProfile -File scripts/coverage-audit.ps1 -VerifyExpected
 ```
+
+Seed a new broad-family review queue with
+`scripts/seed-coverage-ledger.ps1`. It excludes declarations already claimed
+by bounded ledgers and writes only `unreviewed` rows. The caller supplies the
+family, output name, destination, contract, and owner; manual review must then
+replace those dispositions. The script refuses to overwrite an existing
+ledger.
 
 The audit rejects:
 

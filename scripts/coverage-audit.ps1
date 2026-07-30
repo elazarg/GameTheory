@@ -246,13 +246,28 @@ $matchedRows = @()
 $missingDeclarations = 0
 foreach ($row in $ledgerIndex.Rows) {
   if ($null -eq $row.Path) { continue }
-  $candidates = @($declarations | Where-Object {
-    $_.Path -eq $row.Path -and (
-      $_.Declaration -eq $row.Declaration -or
-      $_.Declaration.EndsWith(".$($row.Declaration)") -or
-      $row.Declaration.EndsWith(".$($_.Declaration)")
-    )
+  $declaration = $row.Declaration
+  $lineNumber = $null
+  $qualified = [regex]::Match($declaration, '^(?<name>.+)@(?<line>[0-9]+)$')
+  if ($qualified.Success) {
+    $declaration = $qualified.Groups['name'].Value
+    $lineNumber = [int] $qualified.Groups['line'].Value
+  }
+  $pathCandidates = @($declarations | Where-Object {
+    $_.Path -eq $row.Path -and
+      ($null -eq $lineNumber -or $_.Line -eq $lineNumber)
   })
+  $exactCandidates = @($pathCandidates | Where-Object {
+    $_.Declaration -ceq $declaration
+  })
+  $candidates = if ($exactCandidates.Count -gt 0) {
+    $exactCandidates
+  } else {
+    @($pathCandidates | Where-Object {
+      $_.Declaration.EndsWith(".$declaration", [StringComparison]::Ordinal) -or
+      $declaration.EndsWith(".$($_.Declaration)", [StringComparison]::Ordinal)
+    })
+  }
   if ($candidates.Count -eq 1) {
     $matchedRows += [pscustomobject]@{
       Key = "$($candidates[0].Path)`t$($candidates[0].Line)"

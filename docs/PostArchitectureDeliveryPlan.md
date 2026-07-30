@@ -224,9 +224,10 @@ They do not independently invent shared definitions.
 
 ## 5. Wave 0: make coverage accountable
 
-Status: in progress; exact file ownership, generated declaration indexing, and
-the structural coverage audit are present. Broad package ledgers and the
-consolidated moving delivery audit remain.
+Status: in progress; exact file ownership, generated declaration indexing, the
+structural coverage audit, and exact L-NFG/L-FOSG review queues are present.
+Static broad-package ledgers, manual classification, and the consolidated
+moving delivery audit remain.
 
 The family ledger covers the pinned `GameTheory/` and `Math/` trees and records
 current integration and recovery status. Wave 0 closes when:
@@ -527,8 +528,9 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. add exact broad-package ledgers for the first NFG/FOSG and static recovery
-   batches, using the generated index only as a review queue;
+1. review the exact L-NFG/L-FOSG queues and add exact broad-package ledgers for
+   the first static recovery batches, using the generated index only as a
+   review queue;
 2. consolidate moving delivery probes without rewriting historical phase
    measurements;
 3. resume the broader revelation/information-design inventory and open the
