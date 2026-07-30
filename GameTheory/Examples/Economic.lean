@@ -12,6 +12,8 @@ are refuted by exhaustive enumeration of those same payoff tables.
 
 import GameTheory.Finite.Correctness
 import Mathlib.Tactic.DeriveFintype
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.Ring
 
 namespace GameTheory.Examples.Economic
 
@@ -235,5 +237,163 @@ theorem bertrandDuopoly_bothPriceOne_isNash :
       bothPriceOne := by
   rw [← TableGame.isNash_eq_true_iff]
   decide
+
+/-! ## Braess-style welfare loss -/
+
+/-- Actions before the additional shortcut is available. -/
+inductive RestrictedRoute
+  | a
+  | b
+  deriving DecidableEq, Fintype, Repr
+
+/-- Actions after adding the shortcut `c`. -/
+inductive AugmentedRoute
+  | a
+  | b
+  | c
+  deriving DecidableEq, Fintype, Repr
+
+/-- The restricted coordination game. -/
+def braessRestricted : TableGame (Fin 2) where
+  Action _ := RestrictedRoute
+  actionFintype _ := inferInstance
+  actionDecEq _ := inferInstance
+  payoff profile _ := if profile 0 = profile 1 then 3 else 0
+
+/-- The augmented game, where `c` strictly dominates both old actions but
+mutual use of it lowers welfare. -/
+def braessAugmented : TableGame (Fin 2) where
+  Action _ := AugmentedRoute
+  actionFintype _ := inferInstance
+  actionDecEq _ := inferInstance
+  payoff profile i :=
+    match profile i, profile (opponent i) with
+    | .a, .a => 3
+    | .a, .b => 0
+    | .a, .c => 1
+    | .b, .a => 0
+    | .b, .b => 3
+    | .b, .c => 1
+    | .c, .a => 5
+    | .c, .b => 5
+    | .c, .c => 2
+
+/-- Both players use old route `a`. -/
+def braessRestrictedAA : Profile braessRestricted.sig := fun _ => .a
+
+/-- Both players use the new shortcut `c`. -/
+def braessAugmentedCC : Profile braessAugmented.sig := fun _ => .c
+
+/-- Both players retain route `a` after the shortcut is added. -/
+def braessAugmentedAA : Profile braessAugmented.sig := fun _ => .a
+
+#guard braessRestricted.enumerateNash.card = 2
+#guard braessAugmented.enumerateNash.card = 1
+#guard braessRestricted.isNash braessRestrictedAA
+#guard braessAugmented.isNash braessAugmentedCC
+#guard !braessAugmented.isNash braessAugmentedAA
+#guard braessAugmented.isDominantProfile braessAugmentedCC
+
+/-- Coordinating on `a` is Nash before the shortcut is available. -/
+theorem braessRestrictedAA_isNash :
+    IsNash braessRestricted.toForm (euPreference braessRestricted.utility)
+      braessRestrictedAA := by
+  rw [← TableGame.isNash_eq_true_iff]
+  decide
+
+/-- Mutual use of the dominant shortcut is the augmented equilibrium. -/
+theorem braessAugmentedCC_isNash :
+    IsNash braessAugmented.toForm (euPreference braessAugmented.utility)
+      braessAugmentedCC := by
+  rw [← TableGame.isNash_eq_true_iff]
+  decide
+
+/-- The old coordination profile ceases to be Nash after adding `c`. -/
+theorem braessAugmentedAA_not_isNash :
+    ¬ IsNash braessAugmented.toForm (euPreference braessAugmented.utility)
+      braessAugmentedAA := by
+  rw [← TableGame.isNash_eq_true_iff]
+  decide
+
+/-- Total equilibrium welfare falls from six to four after the dominant
+shortcut is introduced. -/
+theorem braessWelfareDecreases :
+    braessRestricted.payoff braessRestrictedAA 0 +
+          braessRestricted.payoff braessRestrictedAA 1 >
+      braessAugmented.payoff braessAugmentedCC 0 +
+          braessAugmented.payoff braessAugmentedCC 1 := by
+  change (3 : ℚ) + 3 > 2 + 2
+  norm_num
+
+/-! ## Parametric public goods -/
+
+/-- Payoff in a linear public-goods game. -/
+noncomputable def publicGoodsPayoff {n : ℕ} (endowment mpcr : ℝ)
+    (contributions : Fin n → ℝ) (who : Fin n) : ℝ :=
+  endowment + mpcr * ∑ j, contributions j - contributions who
+
+/-- Replace one player's contribution by zero without exposing a raw
+function-update representation. -/
+def removeContribution {n : ℕ} (contributions : Fin n → ℝ)
+    (who : Fin n) : Fin n → ℝ :=
+  fun j => if j = who then 0 else contributions j
+
+@[simp]
+theorem removeContribution_self {n : ℕ} (contributions : Fin n → ℝ)
+    (who : Fin n) :
+    removeContribution contributions who who = 0 := by
+  simp [removeContribution]
+
+@[simp]
+theorem removeContribution_of_ne {n : ℕ} (contributions : Fin n → ℝ)
+    {who other : Fin n} (hne : other ≠ who) :
+    removeContribution contributions who other = contributions other := by
+  simp [removeContribution, hne]
+
+theorem sum_removeContribution {n : ℕ} (contributions : Fin n → ℝ)
+    (who : Fin n) :
+    ∑ j, removeContribution contributions who j =
+      ∑ j, contributions j - contributions who := by
+  classical
+  calc
+    ∑ j, removeContribution contributions who j =
+        (∑ j ∈ Finset.univ.erase who,
+          removeContribution contributions who j) +
+          removeContribution contributions who who :=
+      (Finset.sum_erase_add _ _ (Finset.mem_univ who)).symm
+    _ = ∑ j ∈ Finset.univ.erase who, contributions j := by
+      rw [removeContribution_self, add_zero]
+      apply Finset.sum_congr rfl
+      intro j hj
+      exact removeContribution_of_ne contributions (Finset.mem_erase.mp hj).1
+    _ = ∑ j, contributions j - contributions who := by
+      rw [← Finset.sum_erase_add _ _ (Finset.mem_univ who)]
+      ring
+
+/-- When the marginal per-capita return is below one, a player with a
+nonnegative contribution weakly benefits by free-riding. -/
+theorem publicGoods_freeRide {n : ℕ} (endowment mpcr : ℝ)
+    (hmpcr : mpcr < 1) (contributions : Fin n → ℝ) (who : Fin n)
+    (hcontribution : 0 ≤ contributions who) :
+    publicGoodsPayoff endowment mpcr
+        (removeContribution contributions who) who ≥
+      publicGoodsPayoff endowment mpcr contributions who := by
+  rw [publicGoodsPayoff, publicGoodsPayoff, sum_removeContribution]
+  simp only [removeContribution_self]
+  have hgain : 0 ≤ (1 - mpcr) * contributions who :=
+    mul_nonneg (by linarith) hcontribution
+  nlinarith
+
+/-- Full cooperation strictly improves every player's payoff over universal
+defection when the aggregate return on one contribution exceeds its cost. -/
+theorem publicGoods_cooperationPareto {n : ℕ} (endowment mpcr c : ℝ)
+    (hc : 0 < c) (hreturn : 1 < mpcr * (n : ℝ)) (who : Fin n) :
+    publicGoodsPayoff endowment mpcr (fun _ => c) who >
+      publicGoodsPayoff endowment mpcr (fun _ => 0) who := by
+  simp only [publicGoodsPayoff, Finset.sum_const, Finset.card_fin,
+    nsmul_eq_mul, mul_zero, sub_zero]
+  have hgain : 0 < (mpcr * (n : ℝ) - 1) * c :=
+    mul_pos (by linarith) hc
+  nlinarith
 
 end GameTheory.Examples.Economic

@@ -130,7 +130,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| L-NFG | `Languages/NFG.lean`, `Languages/NFG/**` | 10 | transparent language/front-end to `GameForm`; algorithms in `Finite` | validated by EXP-042/T4 | partial; 72/126 reviewed | [exact declaration ledger](coverage/L-NFG-broad.md); countable-action semantics, classic games, and corrected economic examples recovered; continue Braess, public goods, Stackelberg, cheap talk, and mixed presentations |
+| L-NFG | `Languages/NFG.lean`, `Languages/NFG/**` | 10 | transparent language/front-end to `GameForm`; algorithms in `Finite` | validated by EXP-042/T4 | partial; 82/126 reviewed | [exact declaration ledger](coverage/L-NFG-broad.md); countable-action semantics, classic/economic games, Braess welfare loss, and parametric public goods recovered; continue Stackelberg, cheap talk, and mixed presentations |
 | L-EFG | `Languages/EFG.lean`, `Languages/EFG/**` | 15 | transparent Protocol specialization plus named bridges | validated presentation, strategic and Kuhn transfer, nonconstant rationality, and EFG-facing SPE semantics | partial | broad declaration inventory and non-flagship recovery |
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |

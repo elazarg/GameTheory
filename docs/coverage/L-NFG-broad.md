@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.NFG; GameTheory.Examples; canonical Core and Analysis concepts
 Domain contract / decision: D4-D10, D15, EXP-042
 Owner: Wave 2 / mature static and language recovery
-Status: in progress; 54 reviewed, 54 unreviewed
+Status: in progress; 64 reviewed, 44 unreviewed
 Last verified: 2026-07-30
 
 This ledger is an exact generated review queue for the L-NFG family.
@@ -70,14 +70,14 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 | same | `cournotDuopoly` | def | adapt | `GameTheory.Examples.Economic.cournotDuopoly` | focused build | Canonical symmetric `TableGame`. |
 | same | `cournot_q2_q2` | def | adapt | `GameTheory.Examples.Economic.bothQuantityTwo` | focused build | Canonical `Profile` witness. |
 | same | `cournot_q2_q2_is_nash` | theorem | adapt | `GameTheory.Examples.Economic.cournotDuopoly_bothQuantityTwo_isNash` | focused build | The theorem survives; `cournotDuopoly_nashCount` machine-refutes the pinned prose claim of uniqueness and records three equilibria and payoff two at `(2,2)`. |
-| same | `BraessRAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 446 |
-| same | `BraessAAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 450 |
-| same | `braessRestricted` | def | unreviewed | review required | generated index seed only | public, pinned line 455 |
-| same | `braessAugmented` | def | unreviewed | review required | generated index seed only | public, pinned line 466 |
-| same | `braessRestricted_aa_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 486 |
-| same | `braessAugmented_cc_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 494 |
-| same | `braessAugmented_aa_not_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 502 |
-| same | `braess_welfare_decreases` | theorem | unreviewed | review required | generated index seed only | public, pinned line 516 |
+| same | `BraessRAction` | inductive | adapt | `GameTheory.Examples.Economic.RestrictedRoute` | focused build | Canonical descriptive pre-shortcut action type. |
+| same | `BraessAAction` | inductive | adapt | `GameTheory.Examples.Economic.AugmentedRoute` | focused build | Canonical descriptive post-shortcut action type. |
+| same | `braessRestricted` | def | adapt | `GameTheory.Examples.Economic.braessRestricted` | focused build | Exact rational `TableGame`. |
+| same | `braessAugmented` | def | adapt | `GameTheory.Examples.Economic.braessAugmented` | focused build | Exact rational `TableGame`; the dominant-profile checker confirms the shortcut claim. |
+| same | `braessRestricted_aa_is_nash` | theorem | adapt | `GameTheory.Examples.Economic.braessRestrictedAA_isNash` | focused build | Published against canonical semantic `IsNash`. |
+| same | `braessAugmented_cc_is_nash` | theorem | adapt | `GameTheory.Examples.Economic.braessAugmentedCC_isNash` | focused build | Published against canonical semantic `IsNash`. |
+| same | `braessAugmented_aa_not_nash` | theorem | adapt | `GameTheory.Examples.Economic.braessAugmentedAA_not_isNash` | focused build | Canonical semantic refutation. |
+| same | `braess_welfare_decreases` | theorem | adapt | `GameTheory.Examples.Economic.braessWelfareDecreases` | focused build | Exact equilibrium welfare comparison, six versus four. |
 | same | `BertrandPrice` | inductive | adapt | `GameTheory.Examples.Economic.Price` | focused build | Canonical descriptive action type. |
 | same | `BertrandPrice.toReal` | def | adapt | `GameTheory.Examples.Economic.Price.value` | focused build | Exact value is sufficient in `ℚ`; no analytic scalar is needed. |
 | same | `bertrandProfit` | def | adapt | `GameTheory.Examples.Economic.bertrandProfit` | focused build | Every payoff is multiplied by two, preserving preferences while avoiding kernel reduction over `1/2`. |
@@ -104,8 +104,8 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 | same | `matchingPennies_fair_correlated_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 156 |
 | same | `matchingPennies_correlated_eq_unique` | theorem | unreviewed | review required | generated index seed only | public, pinned line 164 |
 | same | `matchingPennies_correlated_eq_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 175 |
-| `GameTheory/Languages/NFG/PublicGoods.lean` | `publicGoods_freeRide_dominant` | theorem | unreviewed | review required | generated index seed only | public, pinned line 29 |
-| same | `publicGoods_cooperation_pareto` | theorem | unreviewed | review required | generated index seed only | public, pinned line 49 |
+| `GameTheory/Languages/NFG/PublicGoods.lean` | `publicGoods_freeRide_dominant` | theorem | adapt | `GameTheory.Examples.Economic.publicGoods_freeRide` | focused build | Uses the named `removeContribution` operation instead of a raw function update; the parametric inequality is unchanged. |
+| same | `publicGoods_cooperation_pareto` | theorem | adapt | `GameTheory.Examples.Economic.publicGoods_cooperationPareto` | focused build | Parametric cooperation-versus-defection payoff theorem recovered. |
 | `GameTheory/Languages/NFG/Stackelberg.lean` | `StackelbergGame` | structure | unreviewed | review required | generated index seed only | public, pinned line 37 |
 | same | `followerBR` | def | unreviewed | review required | generated index seed only | public, pinned line 52 |
 | same | `stackelbergPayoff` | def | unreviewed | review required | generated index seed only | public, pinned line 56 |
