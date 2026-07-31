@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.AdaptiveLocalResponseAtlas
+import GameTheory.Concepts.Stochastic.AnalyticPlayerOwnedCirculationEndpointAlternative
 import GameTheory.Concepts.Stochastic.FiniteBiasEndpointAlternative
 import GameTheory.Concepts.Stochastic.AnalyticPlayerNeutralEndpointAlternative
 import GameTheory.Concepts.Stochastic.PlayerNeutralAnalyticDeflationTerminal
@@ -147,6 +148,14 @@ structure FiniteBiasPublicResponseData
       (G.FinkPublicConstraintResponse
         germ.endpointFinkPoint (seed.H - correction)
         response.source who response.1.2)
+
+/-- A fixed actual forward response extracted from a positive analytic
+circulation on one player's full operational family.  Its missing step is
+credibility at the current public entry and target. -/
+structure PlayerOwnedAnalyticPublicResponseData
+    (germ : G.AnalyticBellmanGerm) where
+  bias : G.State → Payoff ι
+  response : AnalyticForwardFinkPublicResponse germ bias 0
 
 /-- A processed finite-bias obstruction, including its forcing
 decomposition.  Span membership alone does not provide a realized account. -/
@@ -303,6 +312,8 @@ inductive AnalyticEndpointAtlasLeaf
   | publicResponseCredibility
       {seed : germ.FiniteBiasSeed}
       (data : FiniteBiasPublicResponseData germ seed)
+  | playerOwnedAnalyticResponseCredibility
+      (data : PlayerOwnedAnalyticPublicResponseData germ)
   | finiteBiasProcessedAccount
       {seed : germ.FiniteBiasSeed}
       (data : FiniteBiasProcessedObstructionData germ seed span)
@@ -345,6 +356,9 @@ def RequiredReconstructionAt
       CredibilityReconstructionAt germ entry error
         (Σ seed : germ.FiniteBiasSeed,
           FiniteBiasPublicResponseData germ seed)
+  | .playerOwnedAnalyticResponseCredibility _ =>
+      CredibilityReconstructionAt germ entry error
+        (PlayerOwnedAnalyticPublicResponseData germ)
   | .finiteBiasProcessedAccount _ =>
       AccountDischargeReconstructionAt germ entry error
         (Σ seed : germ.FiniteBiasSeed,
@@ -409,6 +423,8 @@ theorem semanticClose_or_certificate_of_resolution
       exact Or.inl uniform
   | publicResponseCredibility data =>
       exact Or.inr (resolution.closeResponse ⟨_, data⟩)
+  | playerOwnedAnalyticResponseCredibility data =>
+      exact Or.inr (resolution.closeResponse data)
   | finiteBiasProcessedAccount data =>
       exact Or.inr (resolution.discharge ⟨_, data⟩)
   | processedJetAccount data =>
@@ -644,6 +660,35 @@ theorem exists_of_playerNeutralDeflation
     germ.exists_playerNeutralAnalyticDeflationTerminalData
       B who initial circulation terminalAnchor
   exact ofPlayerNeutralDeflationTerminal terminal
+
+/-- Classify a positive circulation on one player's full operational family
+without losing the stronger equal-order conclusion.
+
+At equal leading order, finite neutral deflation produces its honest
+terminal leaf.  At lower order, the moving circulation supplies one fixed
+forward public response and lands in the explicitly unresolved credibility
+leaf. -/
+theorem exists_of_playerOwnedAnalyticCirculation
+    (germ : G.AnalyticBellmanGerm)
+    (B : G.State → Payoff ι) (who : ι)
+    (circulation :
+      AnalyticPositiveChargedCirculation
+        (germ.rawOwnerAnalyticOccupationColumn who)
+        (germ.rawPlayerOwnedOccupationCharge B who))
+    (terminalAnchor entry : G.State)
+    (span : germ.EndpointHarmonicJetSpan) :
+    Nonempty (germ.AnalyticEndpointAtlasLeaf span entry) := by
+  obtain ⟨alternative⟩ :=
+    exists_playerOwnedCirculationEndpointAlternative
+      germ B who circulation terminalAnchor
+  cases alternative with
+  | neutralDeflationTerminal _jet _order_eq terminal =>
+      exact ofPlayerNeutralDeflationTerminal terminal
+  | lowerOrder _data response =>
+      exact ⟨.playerOwnedAnalyticResponseCredibility {
+        bias := B
+        response := response
+      }⟩
 
 end AnalyticEndpointAtlasLeaf
 end AnalyticBellmanGerm
