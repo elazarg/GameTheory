@@ -153,6 +153,70 @@ theorem weight_freeze
 
 end FrozenSupportPath
 
+/-- The punctured support of an analytic kernel coordinate family.  An edge
+is retained precisely when its coordinate is not the zero right germ. -/
+def analyticPuncturedSupport
+    (kernel : ℝ → S → PMF S) (source destination : S) : Prop :=
+  ¬∀ᶠ t in nhdsWithin 0 (Set.Ioi 0),
+    (kernel t source destination).toReal = 0
+
+/-- A finite analytic stochastic kernel has one fixed support graph on a
+sufficiently small punctured interval. -/
+theorem eventually_kernel_support_iff_analyticPuncturedSupport
+    [Finite S]
+    (kernel : ℝ → S → PMF S)
+    (hanalytic :
+      ∀ source destination,
+        AnalyticAt ℝ
+          (fun t => (kernel t source destination).toReal) 0) :
+    ∀ᶠ t in nhdsWithin 0 (Set.Ioi 0), ∀ source destination,
+      0 < (kernel t source destination).toReal ↔
+        analyticPuncturedSupport kernel source destination := by
+  classical
+  letI : Fintype S := Fintype.ofFinite S
+  have coordinateAlternative :
+      ∀ source destination,
+        (∀ᶠ t in nhdsWithin 0 (Set.Ioi 0),
+          (kernel t source destination).toReal = 0) ∨
+        (∀ᶠ t in nhdsWithin 0 (Set.Ioi 0),
+          0 < (kernel t source destination).toReal) := by
+    intro source destination
+    apply analyticAt_eventually_eq_zero_or_pos_of_eventually_nonneg
+      (hanalytic source destination)
+    exact Filter.Eventually.of_forall fun _ => ENNReal.toReal_nonneg
+  apply Filter.eventually_all.mpr
+  intro source
+  apply Filter.eventually_all.mpr
+  intro destination
+  rcases coordinateAlternative source destination with hzero | hpos
+  · have hedge :
+        ¬analyticPuncturedSupport kernel source destination := by
+      intro edge
+      exact edge hzero
+    filter_upwards [hzero] with t ht
+    constructor
+    · intro hpositive
+      exact False.elim ((ne_of_gt hpositive) ht)
+    · intro edge
+      exact False.elim (hedge edge)
+  · have hedge :
+        analyticPuncturedSupport kernel source destination := by
+      intro hzero
+      obtain ⟨t, hpositive, htzero⟩ := (hpos.and hzero).exists
+      exact (ne_of_gt hpositive) htzero
+    filter_upwards [hpos] with t hpositive
+    exact ⟨fun _ => hedge, fun _ => hpositive⟩
+
+/-- An edge outside the punctured support is eventually exactly absent. -/
+theorem eventually_kernel_coordinate_eq_zero_of_not_puncturedSupport
+    (kernel : ℝ → S → PMF S)
+    {source destination : S}
+    (missing :
+      ¬analyticPuncturedSupport kernel source destination) :
+    ∀ᶠ t in nhdsWithin 0 (Set.Ioi 0),
+      (kernel t source destination).toReal = 0 := by
+  simpa only [analyticPuncturedSupport, not_not] using missing
+
 /-- Quantitative data extracted from a frozen support graph and analytic raw
 transition coordinates. -/
 structure AnalyticPathMinorization
