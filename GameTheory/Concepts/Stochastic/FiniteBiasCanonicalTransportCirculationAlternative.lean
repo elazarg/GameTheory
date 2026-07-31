@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.AnalyticPrescribedEndpointTransportCirculation
+import GameTheory.Concepts.Stochastic.AnalyticPrescribedEndpointTailAlternative
 import GameTheory.Concepts.Stochastic.FiniteBiasCanonicalSemanticAlternative
 
 /-!
@@ -16,8 +16,11 @@ that negation by concrete finite-dimensional evidence.  It selects one
 player for whom the exact retained calendar fails, then extracts:
 
 * one fixed orientation of that player's endpoint displacement;
-* a positive analytic circulation for the raw baseline occupation columns;
-* a punctured communicating class with positive aggregate oriented charge.
+* a positive analytic circulation restricted to the actual tail-reachable
+  source subtype;
+* a punctured communicating class with positive aggregate oriented charge
+  whose representative is support-reachable from a positive-mass tail
+  state.
 
 The branch retains the same Poisson correction, common potential, shifted
 calendar, charge inequalities, and unilateral deviation-payoff caps.
@@ -91,8 +94,8 @@ structure CanonicalPrescribedTransportCirculationBranch
             germ.endpointValue entry who + δ
   failingPlayer : ι
   transportCirculation :
-    PrescribedEndpointTransportCirculationEvidence
-      germ failingPlayer entry
+    TailReachableEndpointTransportCirculationEvidence
+      germ failingPlayer entry startEpoch valid
 
 /-- The canonical finite-bias endpoint classification with failed
 prescribed transport refined to an oriented analytic circulation and its
@@ -173,7 +176,7 @@ theorem canonicalTransportCirculationAlternative
     obtain ⟨failingPlayer, playerFailure⟩ :=
       not_forall.mp transportFailure
     obtain ⟨transportCirculation⟩ :=
-      germ.exists_prescribedEndpointTransportCirculation_of_not_sublinear
+      germ.exists_tailReachableEndpointTransportCirculation_of_not_sublinear
         failingPlayer entry startEpoch valid playerFailure
     exact Or.inr <| Or.inl <| ⟨{
       correction := correction
