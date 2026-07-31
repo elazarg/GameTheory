@@ -41,31 +41,79 @@ variable {ι : Type} {G : StochasticGame ι}
   [Fintype ι] [DecidableEq ι]
   [∀ i, Fintype (G.Act i)] [∀ i, DecidableEq (G.Act i)]
 
-/-- A player-owned pure action together with eventual positivity of its
-moving stage-plus-`B` continuation charge. -/
+/-- A player-owned pure action whose circulation mass and moving
+stage-plus-`B` continuation charge are both eventually positive. -/
 structure EventuallyPositiveOwnedActionCharge
     (germ : G.AnalyticBellmanGerm)
-    (B : G.State → Payoff ι) (who : ι) where
+    (B : G.State → Payoff ι) (who : ι)
+    (C : AnalyticPositiveChargedCirculation
+      (germ.rawOwnerAnalyticOccupationColumn who)
+      (germ.rawPlayerOwnedOccupationCharge B who)) where
   source : G.State
   action : G.Act who
   eventual :
     ∀ᶠ t in nhdsWithin 0 (Ioi 0),
-      0 <
-        germ.rawPlayerOwnedOccupationCharge B who t
-          (.inr (source, action))
+      0 < C.mass t (.inr (source, action)) ∧
+        0 <
+          germ.rawPlayerOwnedOccupationCharge B who t
+            (.inr (source, action))
 
 namespace EventuallyPositiveOwnedActionCharge
+
+/-- The selected action has eventually positive circulation mass. -/
+theorem eventual_mass_pos
+    {germ : G.AnalyticBellmanGerm}
+    {B : G.State → Payoff ι} {who : ι}
+    {C : AnalyticPositiveChargedCirculation
+      (germ.rawOwnerAnalyticOccupationColumn who)
+      (germ.rawPlayerOwnedOccupationCharge B who)}
+    (selected :
+      EventuallyPositiveOwnedActionCharge germ B who C) :
+    ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+      0 < C.mass t (.inr (selected.source, selected.action)) :=
+  selected.eventual.mono fun _ ht => ht.1
+
+/-- The selected action has eventually positive moving Bellman charge. -/
+theorem eventual_charge_pos
+    {germ : G.AnalyticBellmanGerm}
+    {B : G.State → Payoff ι} {who : ι}
+    {C : AnalyticPositiveChargedCirculation
+      (germ.rawOwnerAnalyticOccupationColumn who)
+      (germ.rawPlayerOwnedOccupationCharge B who)}
+    (selected :
+      EventuallyPositiveOwnedActionCharge germ B who C) :
+    ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+      0 <
+        germ.rawPlayerOwnedOccupationCharge B who t
+          (.inr (selected.source, selected.action)) :=
+  selected.eventual.mono fun _ ht => ht.2
 
 /-- The selected owned action as the response index used by the public
 response API. -/
 def forwardResponse
     {germ : G.AnalyticBellmanGerm}
     {B : G.State → Payoff ι} {who : ι}
-    (C : EventuallyPositiveOwnedActionCharge germ B who) :
+    {C : AnalyticPositiveChargedCirculation
+      (germ.rawOwnerAnalyticOccupationColumn who)
+      (germ.rawPlayerOwnedOccupationCharge B who)}
+    (selected :
+      EventuallyPositiveOwnedActionCharge germ B who C) :
     Σ owner : ι, G.State × G.Act owner :=
-  ⟨who, C.source, C.action⟩
+  ⟨who, selected.source, selected.action⟩
 
 end EventuallyPositiveOwnedActionCharge
+
+/-- A public response tied to the positively occupied circulation action
+from which it was constructed. -/
+structure CirculationTiedAnalyticForwardFinkPublicResponse
+    (germ : G.AnalyticBellmanGerm)
+    (B : G.State → Payoff ι) (who : ι)
+    (C : AnalyticPositiveChargedCirculation
+      (germ.rawOwnerAnalyticOccupationColumn who)
+      (germ.rawPlayerOwnedOccupationCharge B who)) where
+  selected : EventuallyPositiveOwnedActionCharge germ B who C
+  response : AnalyticForwardFinkPublicResponse germ B 0
+  response_eq : response.response = selected.forwardResponse
 
 /-- A positive analytic circulation freezes one actual action of the same
 player whose moving Bellman charge is eventually positive. -/
@@ -76,7 +124,7 @@ theorem
     (C : AnalyticPositiveChargedCirculation
       (germ.rawOwnerAnalyticOccupationColumn who)
       (germ.rawPlayerOwnedOccupationCharge B who)) :
-    Nonempty (EventuallyPositiveOwnedActionCharge germ B who) := by
+    Nonempty (EventuallyPositiveOwnedActionCharge germ B who C) := by
   classical
   cases isEmpty_or_nonempty (OwnerOccupationIndex G who) with
   | inl empty =>
@@ -128,34 +176,42 @@ theorem
         simp only [term, rawPlayerOwnedOccupationCharge, mul_zero] at positive
         exact False.elim ((lt_irrefl 0) positive)
     | inr response =>
-        have charge_pos :
+        have mass_charge_pos :
             ∀ᶠ t in nhdsWithin 0 (Ioi 0),
-              0 <
-                germ.rawPlayerOwnedOccupationCharge B who t
-                  (.inr response) := by
+              0 < C.mass t (.inr response) ∧
+                0 <
+                  germ.rawPlayerOwnedOccupationCharge B who t
+                    (.inr response) := by
           filter_upwards [C.eventual, term_pos] with
               t hcirculation hterm
           have mass_nonneg : 0 ≤ C.mass t (.inr response) :=
             hcirculation.1 (.inr response)
           rcases mul_pos_iff.mp hterm with positive | negative
-          · exact positive.2
+          · exact positive
           · exact False.elim ((not_lt_of_ge mass_nonneg) negative.1)
         exact ⟨{
           source := response.1
           action := response.2
-          eventual := charge_pos }⟩
+          eventual := mass_charge_pos }⟩
 
-omit [DecidableEq G.State] in
 /-- Any fixed owned action with eventually positive moving Bellman charge
-defines one fixed analytic forward public response. -/
+defines one fixed analytic forward public response tied to the same
+positively occupied circulation coordinate. -/
 theorem
-    EventuallyPositiveOwnedActionCharge.toAnalyticForwardFinkPublicResponse
+    EventuallyPositiveOwnedActionCharge.toCirculationTiedPublicResponse
     (germ : G.AnalyticBellmanGerm)
     (B : G.State → Payoff ι) (who : ι)
-    (C : EventuallyPositiveOwnedActionCharge germ B who) :
-    Nonempty (AnalyticForwardFinkPublicResponse germ B 0) := by
+    (circulation : AnalyticPositiveChargedCirculation
+      (germ.rawOwnerAnalyticOccupationColumn who)
+      (germ.rawPlayerOwnedOccupationCharge B who))
+    (selected :
+      EventuallyPositiveOwnedActionCharge
+        germ B who circulation) :
+    Nonempty
+      (CirculationTiedAnalyticForwardFinkPublicResponse
+        germ B who circulation) := by
   classical
-  let forward := C.forwardResponse
+  let forward := selected.forwardResponse
   let supported :
       (Σ owner : ι, G.State × G.Act owner) → Bool :=
     fun _ => true
@@ -165,7 +221,7 @@ theorem
       ∀ t,
         charge t =
           germ.rawPlayerOwnedOccupationCharge B who t
-            (.inr (C.source, C.action)) := by
+            (.inr (selected.source, selected.action)) := by
     intro t
     simp only [charge, AnalyticBellmanGerm.rawFinkObstructionMass,
       supported, if_true, forward,
@@ -176,7 +232,7 @@ theorem
       supported B 0 (Sum.inr forward)
   have charge_pos :
       ∀ᶠ t in nhdsWithin 0 (Ioi 0), 0 < charge t := by
-    filter_upwards [C.eventual] with t ht
+    filter_upwards [selected.eventual_charge_pos] with t ht
     rw [charge_eq]
     exact ht
   obtain ⟨chargeOrder, chargeMargin, chargeMargin_pos, charge_power⟩ :=
@@ -201,24 +257,24 @@ theorem
     simpa only [sub_zero] using hpower
   let stage : ℝ → ℝ := fun t =>
     germ.rawPureDeviationStageGainCurve
-      t C.source who C.action
+      t selected.source who selected.action
   let continuation : ℝ → ℝ := fun t =>
     germ.rawPureDeviationContinuationGainCurve
-      B t C.source who C.action
+      B t selected.source who selected.action
   have stage_analytic : AnalyticAt ℝ stage 0 := by
     exact
       (analyticAt_pi_iff.mp
         (analyticAt_pi_iff.mp
           (analyticAt_pi_iff.mp
             germ.analytic_rawPureDeviationStageGainCurve
-            C.source) who) C.action)
+            selected.source) who) selected.action)
   have continuation_analytic : AnalyticAt ℝ continuation 0 := by
     exact
       (analyticAt_pi_iff.mp
         (analyticAt_pi_iff.mp
           (analyticAt_pi_iff.mp
             (germ.analytic_rawPureDeviationContinuationGainCurve B)
-            C.source) who) C.action)
+            selected.source) who) selected.action)
   have total_power :
       ∀ᶠ t in nhdsWithin 0 (Ioi 0),
         chargeMargin * t ^ chargeOrder ≤
@@ -243,20 +299,23 @@ theorem
           (pow_pos (mem_Ioi.mp htpos) chargeOrder)
       exact ⟨ht, hpower, lower_pos.trans_le hpower⟩
     exact ⟨{
-      supported := supported
-      response := forward
-      chargeOrder := chargeOrder
-      chargeMargin := chargeMargin
-      chargeMargin_pos := chargeMargin_pos
-      eventual_charge := eventual_charge
-      branch := Sum.inl {
-        order := chargeOrder
-        margin := chargeMargin / 2
-        margin_pos := div_pos chargeMargin_pos (by norm_num)
-        eventual := by
-          simpa only [stage, forward,
-            EventuallyPositiveOwnedActionCharge.forwardResponse] using
-            stage_eventual } }⟩
+      selected := selected
+      response := {
+        supported := supported
+        response := forward
+        chargeOrder := chargeOrder
+        chargeMargin := chargeMargin
+        chargeMargin_pos := chargeMargin_pos
+        eventual_charge := eventual_charge
+        branch := Sum.inl {
+          order := chargeOrder
+          margin := chargeMargin / 2
+          margin_pos := div_pos chargeMargin_pos (by norm_num)
+          eventual := by
+            simpa only [stage, forward,
+              EventuallyPositiveOwnedActionCharge.forwardResponse] using
+              stage_eventual } }
+      response_eq := rfl }⟩
   · have continuation_pos :
         ∀ᶠ t in nhdsWithin 0 (Ioi 0),
           0 < continuation t := by
@@ -269,8 +328,8 @@ theorem
       exact lower_pos.trans_le hpower
     let difference : G.State → ℝ → ℝ := fun destination t =>
       germ.rawPureDeviationStateKernelCurve
-          t C.source who C.action destination -
-        germ.rawStateKernelCurve t C.source destination
+          t selected.source who selected.action destination -
+        germ.rawStateKernelCurve t selected.source destination
     have difference_analytic :
         ∀ destination, AnalyticAt ℝ (difference destination) 0 := by
       intro destination
@@ -280,11 +339,11 @@ theorem
             (analyticAt_pi_iff.mp
               (analyticAt_pi_iff.mp
                 germ.analytic_rawPureDeviationStateKernelCurve
-                C.source) who) C.action)
+                selected.source) who) selected.action)
           destination).sub
         (analyticAt_pi_iff.mp
           (analyticAt_pi_iff.mp
-            germ.analytic_rawStateKernelCurve C.source)
+            germ.analytic_rawStateKernelCurve selected.source)
           destination)
     have difference_sum :
         ∀ᶠ t in nhdsWithin 0 (Ioi 0),
@@ -293,26 +352,27 @@ theorem
       have pure_sum :=
         pmf_toReal_sum_one
           (G.finkPureDeviationStateKernel
-            (germ.finkPointAt ht) C.source who C.action)
+            (germ.finkPointAt ht)
+            selected.source who selected.action)
       have baseline_sum :=
         pmf_toReal_sum_one
           (G.finkStateKernel
-            (germ.finkPointAt ht) C.source)
+            (germ.finkPointAt ht) selected.source)
       simp_rw [difference, Finset.sum_sub_distrib]
       rw [show
           (∑ destination,
             germ.rawPureDeviationStateKernelCurve
-              t C.source who C.action destination) = 1 by
+              t selected.source who selected.action destination) = 1 by
             simpa only [
               germ.rawPureDeviationStateKernelCurve_eq_finkPointAt
-                ht C.source who C.action] using pure_sum]
+                ht selected.source who selected.action] using pure_sum]
       rw [show
           (∑ destination,
             germ.rawStateKernelCurve
-              t C.source destination) = 1 by
+              t selected.source destination) = 1 by
             simpa only [
               germ.rawStateKernelCurve_eq_finkStateKernel
-                ht C.source] using baseline_sum]
+                ht selected.source] using baseline_sum]
       exact sub_self 1
     have difference_nonzero :
         ¬∀ᶠ t in nhdsWithin 0 (Ioi 0),
@@ -348,18 +408,57 @@ theorem
         EventuallyPositiveOwnedActionCharge.forwardResponse] using
           And.intro ht hpower
     exact ⟨{
-      supported := supported
-      response := forward
-      chargeOrder := chargeOrder
-      chargeMargin := chargeMargin
-      chargeMargin_pos := chargeMargin_pos
-      eventual_charge := eventual_charge
-      branch := Sum.inr {
-        monitor := monitor
-        order := monitorOrder
-        margin := monitorMargin
-        margin_pos := monitorMargin_pos
-        eventual := monitor_eventual } }⟩
+      selected := selected
+      response := {
+        supported := supported
+        response := forward
+        chargeOrder := chargeOrder
+        chargeMargin := chargeMargin
+        chargeMargin_pos := chargeMargin_pos
+        eventual_charge := eventual_charge
+        branch := Sum.inr {
+          monitor := monitor
+          order := monitorOrder
+          margin := monitorMargin
+          margin_pos := monitorMargin_pos
+          eventual := monitor_eventual } }
+      response_eq := rfl }⟩
+
+/-- Forgetting circulation provenance recovers the response-only API. -/
+theorem
+    EventuallyPositiveOwnedActionCharge.toAnalyticForwardFinkPublicResponse
+    (germ : G.AnalyticBellmanGerm)
+    (B : G.State → Payoff ι) (who : ι)
+    (circulation : AnalyticPositiveChargedCirculation
+      (germ.rawOwnerAnalyticOccupationColumn who)
+      (germ.rawPlayerOwnedOccupationCharge B who))
+    (selected :
+      EventuallyPositiveOwnedActionCharge
+        germ B who circulation) :
+    Nonempty (AnalyticForwardFinkPublicResponse germ B 0) := by
+  obtain ⟨tied⟩ :=
+    EventuallyPositiveOwnedActionCharge.toCirculationTiedPublicResponse
+      germ B who circulation selected
+  exact ⟨tied.response⟩
+
+/-- Every positive analytic circulation yields a fixed forward response
+tied to an action with eventually positive circulation mass and charge. -/
+theorem
+    exists_circulationTiedAnalyticForwardFinkPublicResponse
+    (germ : G.AnalyticBellmanGerm)
+    (B : G.State → Payoff ι) (who : ι)
+    (C : AnalyticPositiveChargedCirculation
+      (germ.rawOwnerAnalyticOccupationColumn who)
+      (germ.rawPlayerOwnedOccupationCharge B who)) :
+    Nonempty
+      (CirculationTiedAnalyticForwardFinkPublicResponse
+        germ B who C) := by
+  obtain ⟨selected⟩ :=
+    exists_eventuallyPositiveOwnedActionCharge_of_analyticCirculation
+      germ B who C
+  exact
+    EventuallyPositiveOwnedActionCharge.toCirculationTiedPublicResponse
+      germ B who C selected
 
 /-- Every positive analytic circulation on a player's full operational family
 produces one fixed actual forward public response owned by that player. -/
@@ -371,10 +470,10 @@ theorem
       (germ.rawOwnerAnalyticOccupationColumn who)
       (germ.rawPlayerOwnedOccupationCharge B who)) :
     Nonempty (AnalyticForwardFinkPublicResponse germ B 0) := by
-  obtain ⟨response⟩ :=
-    exists_eventuallyPositiveOwnedActionCharge_of_analyticCirculation
+  obtain ⟨tied⟩ :=
+    exists_circulationTiedAnalyticForwardFinkPublicResponse
       germ B who C
-  exact response.toAnalyticForwardFinkPublicResponse germ B who
+  exact ⟨tied.response⟩
 
 end AnalyticBellmanGerm
 end StochasticGame

@@ -118,7 +118,9 @@ inductive PlayerOwnedCirculationEndpointAlternative
           terminalAnchor)
   | lowerOrder
       (data : PlayerOwnedLowerOrderCirculationData germ B who C)
-      (response : AnalyticForwardFinkPublicResponse germ B 0)
+      (response :
+        CirculationTiedAnalyticForwardFinkPublicResponse
+          germ B who C)
 
 /-- Every full player-owned analytic charged circulation reaches the
 existing neutral-deflation terminal pipeline at equal order, or returns the
@@ -145,7 +147,7 @@ theorem exists_playerOwnedCirculationEndpointAlternative
   · have order_lt : jet.order < C.poleOrder :=
       lt_of_le_of_ne jet.order_le_poleOrder order_eq
     obtain ⟨response⟩ :=
-      exists_playerOwnedAnalyticForwardFinkPublicResponse_of_analyticCirculation
+      exists_circulationTiedAnalyticForwardFinkPublicResponse
         germ B who C
     exact ⟨.lowerOrder ⟨jet, order_lt⟩ response⟩
 

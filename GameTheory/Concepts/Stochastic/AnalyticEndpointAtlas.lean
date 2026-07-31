@@ -10,6 +10,7 @@ import GameTheory.Concepts.Stochastic.FiniteBiasEndpointAlternative
 import GameTheory.Concepts.Stochastic.AnalyticPlayerNeutralEndpointAlternative
 import GameTheory.Concepts.Stochastic.PlayerNeutralAnalyticDeflationTerminal
 import GameTheory.Concepts.Stochastic.PlayerNeutralReachableClassAlternative
+import GameTheory.Concepts.Stochastic.PlayerOwnedCommonPotentialCalendarAccount
 import GameTheory.Concepts.Stochastic.ProcessedJetAccountBoundary
 import GameTheory.Concepts.Stochastic.ProcessedHarmonicStateAccount
 import GameTheory.Concepts.Stochastic.PublicActionFrequencyResponse
@@ -45,8 +46,9 @@ noncomputable section
 namespace GameTheory
 namespace StochasticGame
 
-open Math Math.Probability
+open Math Math.OnlineLearning Math.Probability Set
 open Math.Probability.AnalyticScaledChargedOccupationPotential
+open GameTheory.StochasticGame.AnalyticBellmanGerm.AnalyticScaledChargedOccupationPotential
 
 variable {ι : Type} {G : StochasticGame ι}
   [Fintype G.State] [DecidableEq G.State]
@@ -155,7 +157,91 @@ credibility at the current public entry and target. -/
 structure PlayerOwnedAnalyticPublicResponseData
     (germ : G.AnalyticBellmanGerm) where
   bias : G.State → Payoff ι
-  response : AnalyticForwardFinkPublicResponse germ bias 0
+  owner : ι
+  circulation :
+    AnalyticPositiveChargedCirculation
+      (germ.rawOwnerAnalyticOccupationColumn owner)
+      (germ.rawPlayerOwnedOccupationCharge bias owner)
+  lowerOrder :
+    PlayerOwnedLowerOrderCirculationData
+      germ bias owner circulation
+  tiedResponse :
+    CirculationTiedAnalyticForwardFinkPublicResponse
+      germ bias owner circulation
+
+/-- The synchronized all-player potential branch of the full-owner
+charged-flow alternative.  The analytic potential already controls every
+pure action of every owner; turning its behavior-calendar bounds into the
+current adaptive certificate remains an account-discharge obligation. -/
+structure PlayerOwnedCommonScaledPotentialData
+    (germ : G.AnalyticBellmanGerm) where
+  bias : G.State → Payoff ι
+  potential :
+    AnalyticOwnerScaledChargedOccupationPotential
+      (fun who => OwnerOccupationIndex G who)
+      (fun who => germ.rawOwnerAnalyticOccupationColumn who)
+      (fun who => germ.rawPlayerOwnedOccupationCharge bias who)
+
+namespace PlayerOwnedCommonScaledPotentialData
+
+/-- Specialize the synchronized potential to one owner without changing its
+common pole-clearing order. -/
+def ownerPotential
+    {germ : G.AnalyticBellmanGerm}
+    (data : PlayerOwnedCommonScaledPotentialData germ)
+    (who : ι) :
+    AnalyticScaledChargedOccupationPotential
+      (germ.rawOwnerAnalyticOccupationColumn who)
+      (germ.rawPlayerOwnedOccupationCharge data.bias who) :=
+  CommonPlayerOwnedPotentialCalendar.ownerPotential
+    germ data.bias data.potential who
+
+/-- Every owner specialization has the existing arbitrary-behavior,
+all-horizon sublinear calendar account. -/
+theorem exists_ownerBehaviorCalendarAccount
+    {germ : G.AnalyticBellmanGerm}
+    (data : PlayerOwnedCommonScaledPotentialData germ)
+    (who : ι) :
+    ∃ (startEpoch : ℕ)
+        (valid :
+          ∀ k : ℕ,
+            shiftedUniversalEpochScale startEpoch k ∈
+              Ioo (0 : ℝ) germ.radius),
+      ∀ (dev : G.BehaviorStrategy who) initial T,
+        expectedPlayerOwnedBehaviorCalendarCharge
+            germ data.bias who startEpoch valid dev initial T ≤
+          playerOwnedPotentialCalendarBudget
+            germ data.bias who (data.ownerPotential who) startEpoch T ∧
+        IsAsymptoticallySublinear
+          (playerOwnedPotentialCalendarBudget
+            germ data.bias who (data.ownerPotential who) startEpoch) :=
+  AnalyticScaledChargedOccupationPotential.exists_playerOwnedBehaviorCalendarAccount
+    germ data.bias who (data.ownerPotential who)
+
+/-- The common potential supplies one calendar burn-in shared by all
+players, while retaining an owner-specific sublinear potential budget. -/
+theorem exists_commonBehaviorCalendarAccount
+    {germ : G.AnalyticBellmanGerm}
+    (data : PlayerOwnedCommonScaledPotentialData germ) :
+    ∃ (startEpoch : ℕ)
+        (valid :
+          ∀ k : ℕ,
+            shiftedUniversalEpochScale startEpoch k ∈
+              Ioo (0 : ℝ) germ.radius),
+      ∀ (who : ι) (dev : G.BehaviorStrategy who) initial T,
+        expectedPlayerOwnedBehaviorCalendarCharge
+            germ data.bias who startEpoch valid dev initial T ≤
+          playerOwnedPotentialCalendarBudget
+            germ data.bias who (data.ownerPotential who)
+            startEpoch T ∧
+        IsAsymptoticallySublinear
+          (playerOwnedPotentialCalendarBudget
+            germ data.bias who (data.ownerPotential who)
+            startEpoch) :=
+  CommonPlayerOwnedPotentialCalendar.exists_commonPlayerOwnedBehaviorCalendarAccount
+    germ data.bias data.potential
+
+end PlayerOwnedCommonScaledPotentialData
 
 /-- A processed finite-bias obstruction, including its forcing
 decomposition.  Span membership alone does not provide a realized account. -/
@@ -314,6 +400,8 @@ inductive AnalyticEndpointAtlasLeaf
       (data : FiniteBiasPublicResponseData germ seed)
   | playerOwnedAnalyticResponseCredibility
       (data : PlayerOwnedAnalyticPublicResponseData germ)
+  | playerOwnedCommonPotentialAccount
+      (data : PlayerOwnedCommonScaledPotentialData germ)
   | finiteBiasProcessedAccount
       {seed : germ.FiniteBiasSeed}
       (data : FiniteBiasProcessedObstructionData germ seed span)
@@ -359,6 +447,9 @@ def RequiredReconstructionAt
   | .playerOwnedAnalyticResponseCredibility _ =>
       CredibilityReconstructionAt germ entry error
         (PlayerOwnedAnalyticPublicResponseData germ)
+  | .playerOwnedCommonPotentialAccount _ =>
+      AccountDischargeReconstructionAt germ entry error
+        (PlayerOwnedCommonScaledPotentialData germ)
   | .finiteBiasProcessedAccount _ =>
       AccountDischargeReconstructionAt germ entry error
         (Σ seed : germ.FiniteBiasSeed,
@@ -425,6 +516,8 @@ theorem semanticClose_or_certificate_of_resolution
       exact Or.inr (resolution.closeResponse ⟨_, data⟩)
   | playerOwnedAnalyticResponseCredibility data =>
       exact Or.inr (resolution.closeResponse data)
+  | playerOwnedCommonPotentialAccount data =>
+      exact Or.inr (resolution.discharge data)
   | finiteBiasProcessedAccount data =>
       exact Or.inr (resolution.discharge ⟨_, data⟩)
   | processedJetAccount data =>
@@ -687,8 +780,37 @@ theorem exists_of_playerOwnedAnalyticCirculation
   | lowerOrder _data response =>
       exact ⟨.playerOwnedAnalyticResponseCredibility {
         bias := B
-        response := response
+        owner := who
+        circulation := circulation
+        lowerOrder := _data
+        tiedResponse := response
       }⟩
+
+/-- Run the synchronized full-owner charged-flow alternative and place both
+outcomes in the honest endpoint atlas.
+
+A circulation is classified by
+`exists_of_playerOwnedAnalyticCirculation`.  Otherwise the common
+all-player potential is retained as an explicit account-discharge leaf. -/
+theorem exists_of_playerOwnedAlternative
+    (germ : G.AnalyticBellmanGerm)
+    (B : G.State → Payoff ι)
+    (terminalAnchor entry : G.State)
+    (span : germ.EndpointHarmonicJetSpan) :
+    Nonempty (germ.AnalyticEndpointAtlasLeaf span entry) := by
+  rcases
+      germ.exists_playerOwnedPositiveChargedCirculation_or_commonScaledPotential
+        B with
+    circulation | commonPotential
+  · obtain ⟨who, circulation⟩ := circulation
+    obtain ⟨circulation⟩ := circulation
+    exact exists_of_playerOwnedAnalyticCirculation
+      germ B who circulation terminalAnchor entry span
+  · obtain ⟨potential⟩ := commonPotential
+    exact ⟨.playerOwnedCommonPotentialAccount {
+      bias := B
+      potential := potential
+    }⟩
 
 end AnalyticEndpointAtlasLeaf
 end AnalyticBellmanGerm
