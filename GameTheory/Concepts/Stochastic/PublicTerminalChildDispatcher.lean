@@ -142,6 +142,21 @@ def terminalSuffixLE {fuel time : ℕ} (htime : fuel ≤ time)
         rw [Fin.append_right]
         exact hstart
 
+/-- If raw appending recovers the displayed base as its fixed-depth prefix,
+then the suffix genuinely starts at the base's current state. -/
+theorem Hist.startsAt_of_terminalPrefix_appendHist_eq
+    {fuel suffixLength : ℕ}
+    (base : G.Hist fuel) (suffix : G.Hist suffixLength)
+    (hprefix :
+      G.terminalPrefix (G.appendHist base suffix) = base) :
+    suffix.StartsAt base.2 := by
+  have hsnd := congrArg Prod.snd hprefix
+  cases suffixLength with
+  | zero =>
+      simpa [Hist.StartsAt, terminalPrefix, appendHist] using hsnd
+  | succ suffixLength =>
+      simpa [Hist.StartsAt, terminalPrefix, appendHist] using hsnd
+
 theorem terminalSuffixLE_appendHist_heq {fuel suffixLength : ℕ}
     (base : G.Hist fuel) (suffix : G.Hist suffixLength) :
     G.terminalSuffixLE (Nat.le_add_right fuel suffixLength)

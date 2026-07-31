@@ -549,7 +549,30 @@ namespace FiniteChildAdaptivePotentialFamily
 variable [Fintype ι] [DecidableEq ι] [Finite G.State]
   [∀ who, Finite (G.Act who)] [Fintype Child]
   {entry : Child → G.State} {target : Child → Payoff ι}
-  {childError : ℝ}
+  {childError suffixError : ℝ}
+
+private theorem expect_mono_on_support
+    {α : Type} [Finite α]
+    (law : PMF α) (f g : α → ℝ)
+    (hfg : ∀ x ∈ law.support, f x ≤ g x) :
+    expect law f ≤ expect law g := by
+  classical
+  let patched : α → ℝ :=
+    fun x => if law x = 0 then g x else f x
+  calc
+    expect law f = expect law patched := by
+      apply Math.ProbabilityMassFunction.expect_congr_on_support
+      intro x hx
+      have hx0 : law x ≠ 0 := by
+        simpa [PMF.mem_support_iff] using hx
+      simp [patched, hx0]
+    _ ≤ expect law g := by
+      apply expect_mono
+      intro x
+      by_cases hx : law x = 0
+      · simp [patched, hx]
+      · simp only [patched, hx, ↓reduceIte]
+        exact hfg x (by simpa [PMF.mem_support_iff])
 
 /-- The post-stopping deviation stage bound uses the restriction of the
 single root deviation, not a separately chosen child deviation. -/
@@ -609,10 +632,21 @@ theorem deviation_stage_of_variableStoppedChildren
     htime joint]
   unfold stoppedChildDeviationScalarCharge
   rw [← expect_add]
-  apply expect_mono
-  intro base
+  apply expect_mono_on_support
+  intro base hbase
+  have hoccurs :=
+    rule.occurs_of_mem_stoppedHistoryLaw
+      updated initial base hbase
   rw [G.afterHistoryProfile_update,
-    G.afterHistoryProfile_causalTerminalChildDispatcher]
+    G.afterHistoryProfile_causalTerminalChildDispatcher_canonical]
+  rw [
+    G.expectedStagePayoff_update_canonicalCausalStoppedChildProfile
+      rule selection (family.observedStoppedProfile observe)
+      base hoccurs who deviation,
+    G.expectedHistoryValue_update_canonicalCausalStoppedChildProfile
+      rule selection (family.observedStoppedProfile observe)
+      base hoccurs who deviation
+  ]
   rw [hentry base]
   exact
     (family.system (observe base)).deviation_stage
@@ -639,7 +673,7 @@ def variableStoppingSuffixCaps
         initial rule.selector
         (family.stoppedLowerCharge observe)
         (family.stoppedUpperCharge observe)
-        (family.stoppedDeviationCharge observe) childError) :
+        (family.stoppedDeviationCharge observe) suffixError) :
     G.VariableStoppingSuffixCaps
       (G.causalTerminalChildDispatcher rule selection
         (family.observedStoppedProfile observe))
@@ -673,7 +707,7 @@ def variableStoppingSuffixCaps
           initial rule.selector
           (family.stoppedDeviationCharge observe)
           who deviation rootTime)
-      childError := by
+      suffixError := by
   let profile :=
     G.causalTerminalChildDispatcher rule selection
       (family.observedStoppedProfile observe)
@@ -716,14 +750,25 @@ def variableStoppingSuffixCaps
       profile initial rule.selector (prefixLower who)
       (family.stoppedLowerPotential observe who)
       hnext (joint (time + 1) hnext)]
-    apply expect_mono
-    intro base
+    apply expect_mono_on_support
+    intro base hbaseSupport
+    have hoccurs :=
+      rule.occurs_of_mem_stoppedHistoryLaw
+        profile initial base hbaseSupport
     have hbase : base.1.val ≤ time :=
       le_trans (Nat.lt_succ_iff.mp base.1.isLt) htime
     have hsub :
         time + 1 - base.1.val = time - base.1.val + 1 := by
       omega
-    rw [G.afterHistoryProfile_causalTerminalChildDispatcher]
+    rw [
+      G.afterHistoryProfile_causalTerminalChildDispatcher_canonical,
+      G.expectedHistoryValue_canonicalCausalStoppedChildProfile
+        rule selection (family.observedStoppedProfile observe)
+        base hoccurs,
+      G.expectedHistoryValue_canonicalCausalStoppedChildProfile
+        rule selection (family.observedStoppedProfile observe)
+        base hoccurs
+    ]
     rw [hentry base]
     simpa only [hsub, observedStoppedProfile,
       stoppedLowerPotential] using
@@ -741,11 +786,22 @@ def variableStoppingSuffixCaps
       profile initial rule.selector htime hdisintegration who]
     unfold stoppedChildScalarCharge
     rw [← expect_add]
-    apply expect_mono
-    intro base
+    apply expect_mono_on_support
+    intro base hbaseSupport
+    have hoccurs :=
+      rule.occurs_of_mem_stoppedHistoryLaw
+        profile initial base hbaseSupport
     have hbase : base.1.val ≤ time :=
       le_trans (Nat.lt_succ_iff.mp base.1.isLt) htime
-    rw [G.afterHistoryProfile_causalTerminalChildDispatcher]
+    rw [
+      G.afterHistoryProfile_causalTerminalChildDispatcher_canonical,
+      G.expectedHistoryValue_canonicalCausalStoppedChildProfile
+        rule selection (family.observedStoppedProfile observe)
+        base hoccurs,
+      G.expectedStagePayoff_canonicalCausalStoppedChildProfile
+        rule selection (family.observedStoppedProfile observe)
+        base hoccurs
+    ]
     rw [hentry base]
     exact
       (family.system (observe base)).lower_stage
@@ -760,14 +816,25 @@ def variableStoppingSuffixCaps
       profile initial rule.selector (prefixUpper who)
       (family.stoppedUpperPotential observe who)
       htime (joint time htime)]
-    apply expect_mono
-    intro base
+    apply expect_mono_on_support
+    intro base hbaseSupport
+    have hoccurs :=
+      rule.occurs_of_mem_stoppedHistoryLaw
+        profile initial base hbaseSupport
     have hbase : base.1.val ≤ time :=
       le_trans (Nat.lt_succ_iff.mp base.1.isLt) htime
     have hsub :
         time + 1 - base.1.val = time - base.1.val + 1 := by
       omega
-    rw [G.afterHistoryProfile_causalTerminalChildDispatcher]
+    rw [
+      G.afterHistoryProfile_causalTerminalChildDispatcher_canonical,
+      G.expectedHistoryValue_canonicalCausalStoppedChildProfile
+        rule selection (family.observedStoppedProfile observe)
+        base hoccurs,
+      G.expectedHistoryValue_canonicalCausalStoppedChildProfile
+        rule selection (family.observedStoppedProfile observe)
+        base hoccurs
+    ]
     rw [hentry base]
     simpa only [hsub, observedStoppedProfile,
       stoppedUpperPotential] using
@@ -785,9 +852,20 @@ def variableStoppingSuffixCaps
       htime (joint time htime)]
     unfold stoppedChildScalarCharge
     rw [← expect_add]
-    apply expect_mono
-    intro base
-    rw [G.afterHistoryProfile_causalTerminalChildDispatcher]
+    apply expect_mono_on_support
+    intro base hbaseSupport
+    have hoccurs :=
+      rule.occurs_of_mem_stoppedHistoryLaw
+        profile initial base hbaseSupport
+    rw [
+      G.afterHistoryProfile_causalTerminalChildDispatcher_canonical,
+      G.expectedStagePayoff_canonicalCausalStoppedChildProfile
+        rule selection (family.observedStoppedProfile observe)
+        base hoccurs,
+      G.expectedHistoryValue_canonicalCausalStoppedChildProfile
+        rule selection (family.observedStoppedProfile observe)
+        base hoccurs
+    ]
     rw [hentry base]
     exact
       (family.system (observe base)).upper_stage
@@ -803,15 +881,27 @@ def variableStoppingSuffixCaps
       updated initial rule.selector (prefixDeviation who)
       (family.stoppedDeviationPotential observe who)
       htime (deviationJoint who deviation time htime)]
-    apply expect_mono
-    intro base
+    apply expect_mono_on_support
+    intro base hbaseSupport
+    have hoccurs :=
+      rule.occurs_of_mem_stoppedHistoryLaw
+        (Function.update profile who deviation)
+        initial base hbaseSupport
     have hbase : base.1.val ≤ time :=
       le_trans (Nat.lt_succ_iff.mp base.1.isLt) htime
     have hsub :
         time + 1 - base.1.val = time - base.1.val + 1 := by
       omega
     rw [G.afterHistoryProfile_update,
-      G.afterHistoryProfile_causalTerminalChildDispatcher]
+      G.afterHistoryProfile_causalTerminalChildDispatcher_canonical]
+    rw [
+      G.expectedHistoryValue_update_canonicalCausalStoppedChildProfile
+        rule selection (family.observedStoppedProfile observe)
+        base hoccurs who deviation,
+      G.expectedHistoryValue_update_canonicalCausalStoppedChildProfile
+        rule selection (family.observedStoppedProfile observe)
+        base hoccurs who deviation
+    ]
     rw [hentry base]
     simpa only [hsub, observedStoppedProfile,
       stoppedDeviationPotential] using
