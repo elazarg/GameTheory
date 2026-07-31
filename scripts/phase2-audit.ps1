@@ -536,6 +536,36 @@ if (-not $SkipReachability) {
   }
   Report 'CHEAP_TALK_BOUNDARY_PROBES_REJECTED' $cheapTalkBoundaryRejected
 
+  # D19 adds a separate static bridge from mixed cheap talk to correlation.
+  # It must be publicly reachable without changing the D18 boundary.
+  $cheapTalkRandomizationInputs = @(
+    'GameTheory.GameForm.CheapTalkExtension.mixedActionLaw',
+    'GameTheory.GameForm.CheapTalkExtension.mixedNash_mixedActionLaw_isCorrelatedEq')
+  $cheapTalkRandomizationBoundary = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.Analysis.nash_exists',
+    'stdSimplex',
+    'Polynomial')
+  $cheapTalkRandomizationOutput =
+    Run-Probe 'GameTheory.Core' `
+      ($cheapTalkRandomizationInputs + $cheapTalkRandomizationBoundary)
+  $cheapTalkRandomizationInputsReached = 0
+  foreach ($constant in $cheapTalkRandomizationInputs) {
+    if (-not (Is-Unreachable $cheapTalkRandomizationOutput $constant)) {
+      $cheapTalkRandomizationInputsReached++
+    }
+  }
+  Report 'CHEAP_TALK_RANDOMIZATION_INPUT_PROBES_REACHED' `
+    $cheapTalkRandomizationInputsReached
+  $cheapTalkRandomizationBoundaryRejected = 0
+  foreach ($constant in $cheapTalkRandomizationBoundary) {
+    if (Is-Unreachable $cheapTalkRandomizationOutput $constant) {
+      $cheapTalkRandomizationBoundaryRejected++
+    }
+  }
+  Report 'CHEAP_TALK_RANDOMIZATION_BOUNDARY_PROBES_REJECTED' `
+    $cheapTalkRandomizationBoundaryRejected
+
   # D8 exposes only concrete equivalences. The probability laws remain
   # game-free, while the Core root deliberately reaches the preservation
   # theorems that consume them.
@@ -643,6 +673,8 @@ if ($VerifyExpected) {
     $Expected['CORE_EVOLUTIONARY_PROBES_REJECTED'] = 2
     $Expected['CHEAP_TALK_INPUT_PROBES_REACHED'] = 2
     $Expected['CHEAP_TALK_BOUNDARY_PROBES_REJECTED'] = 4
+    $Expected['CHEAP_TALK_RANDOMIZATION_INPUT_PROBES_REACHED'] = 2
+    $Expected['CHEAP_TALK_RANDOMIZATION_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['TRANSFORM_INPUT_PROBES_REACHED'] = 6
     $Expected['PROBABILITY_REINDEX_INPUT_PROBES_REACHED'] = 2
     $Expected['PROBABILITY_REINDEX_BOUNDARY_PROBES_REJECTED'] = 2

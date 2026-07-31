@@ -57,6 +57,7 @@ becomes difficult to scan.
 | EXP-044 | 2026-07-30 | D0 / evolutionary ownership | Is ESS static Core semantics or part of an analytic dynamics package? | Supports separate static branch; decides D17 | [`decisions/D17-evolutionary-ownership.md`](decisions/D17-evolutionary-ownership.md); `GameTheory/Evolutionary/`; `GameTheory/Experimental/PostArchitecture/EvolutionaryOwnership.lean` |
 | EXP-045 | 2026-07-30 | D8 / Wave 1 close-out | What is the smallest consumer-backed transformation API that closes reindexing, relabeling, mixed lifting, Nash, and CE transport? | Supports concrete equivalences; decides D8 | [`decisions/D8-minimal-transformations.md`](decisions/D8-minimal-transformations.md); `GameTheory/Experimental/PostArchitecture/D8Transformations.lean` |
 | EXP-046 | 2026-07-30 | D0/D5/D6 / communication ownership | Is observable pre-play cheap talk a static `GameForm` construction, or must even the babbling theorem use Protocol timing? | Supports static ownership; decides D18; promoted | [`decisions/D18-communication-ownership.md`](decisions/D18-communication-ownership.md); `GameTheory/Experimental/PostArchitecture/CheapTalk.lean`; `GameTheory/Core/CheapTalk.lean`; `GameTheory/Examples/CheapTalk.lean` |
+| EXP-047 | 2026-07-30 | D8/D18 / public randomization | Does mixed play of the static cheap-talk extension induce a base correlated equilibrium without Protocol timing or a second equilibrium predicate? | Supports static bridge; decides D19; promoted | [`decisions/D19-cheap-talk-public-randomization.md`](decisions/D19-cheap-talk-public-randomization.md); `GameTheory/Experimental/PostArchitecture/CheapTalkPublicRandomness.lean`; `GameTheory/Core/CheapTalkRandomization.lean` |
 
 ## Entry template
 
@@ -3057,3 +3058,66 @@ memory.
   `propext`, `Classical.choice`, and `Quot.sound` axiom profile.
 - **Next action:** inventory the whole D-COMM family, then test public
   randomness and Electronic Mail against the static/Protocol timing boundary.
+
+### EXP-047: static cheap talk as public randomization
+
+- **Date / revision:** 2026-07-30, working tree based on `866f113`
+- **Status:** supports the static bridge; decides D19
+- **Decision / question:** D8/D18 and D-COMM/S-MIX/S-CORR; whether a mixed
+  profile of the static cheap-talk extension can be pushed through its realized
+  action profile to a base correlated equilibrium, or whether public
+  randomization forces a staged Protocol model.
+- **Prediction:** independent mixed play of message-plus-plan strategies
+  already supplies the needed public random source. Any recommendation-reading
+  base deviation should lift to a cheap-talk deviation that retains the
+  message and applies the deviation to the contingent action. Exact commutation
+  of the induced laws should let the ordinary `IsNash` and `IsCorrelatedEq`
+  predicates prove the result.
+- **Representative slice:** define the induced base action-profile law, lift an
+  arbitrary recommendation-dependent base deviation, prove the profile-law
+  commutation, and derive a base correlated equilibrium from a mixed Nash
+  profile of the cheap-talk form. The theorem is preference-parametric if the
+  exact-law proof really carries the argument.
+- **Competing designs:** keep public randomization as a static bridge over
+  `GameForm.CheapTalkExtension` and `GameForm.mixed`; compile a staged public
+  signal protocol; or add a communication-specific mixed equilibrium
+  predicate.
+- **Measurements to collect:** new probability lemmas required; authored
+  imports and lines; exact use of `Profile.update`; source hazards; axiom
+  profile; focused build cost; and reachability of Protocol/Analysis symbols.
+- **Kill conditions:** the induced action law cannot commute with an arbitrary
+  recommendation-dependent deviation; the proof needs an intermediate
+  communication history; a second Nash/CE predicate or evaluator appears; or
+  direct `Function.update`, dependent transport, stored finiteness, or a
+  Core-to-Protocol/Analysis dependency is required.
+- **Evidence:** the 152-nonblank-line experiment has eight declarations and one
+  authored import, `GameTheory.Core.CheapTalk`. The focused target builds in
+  1,720 jobs. One general finite-law lemma proves that mapping one coordinate
+  of an independent profile law equals mapping that marginal before taking the
+  product.
+- **Observation:** a recommendation-reading base deviation lifts by retaining
+  the cheap-talk message and applying the response to every contingent action.
+  The realized profile and induced finite law commute exactly with this lift.
+  The mixed-Nash inequality therefore becomes the correlated-equilibrium
+  inequality by rewriting both complete outcome laws; expected utility,
+  convexity, and public-message conditioning never enter the proof.
+- **Measurements:** the final theorem is preference-parametric and uses the
+  ordinary `IsNash` of `C.form.mixed` and ordinary `IsCorrelatedEq` of the base
+  form. Source scans find zero placeholders, native decisions, direct
+  `Function.update`, transports, `HEq`, stored finite capabilities,
+  `open Classical`, or custom axioms. The probability lemma and headline
+  theorem use only `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports the prediction and decides D19. Public randomization
+  generated by independent mixed play is a static Core bridge over D18, not a
+  Protocol execution. No communication-specific equilibrium predicate is
+  admitted. Conditional public-signal disintegration remains a separate
+  theorem family and is not silently claimed by this experiment.
+- **Promotion:** `GameTheory/Core/CheapTalkRandomization.lean` contains the
+  exact-law bridge and the preference-parametric CE and CCE results. The
+  focused target builds in 1,720 jobs and the full project in 3,363 jobs.
+  Phase 2 verifies every source/import budget, positive reachability of both
+  D19 public symbols, and rejection of all four Protocol/Analysis boundary
+  probes. The promoted theorems retain the measured standard axiom profile.
+- **Next action:** decide whether a live payoff-mixture consumer earns
+  message-conditioned public-signal disintegration; otherwise proceed to the
+  Electronic Mail ownership slice.

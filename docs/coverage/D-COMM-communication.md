@@ -8,7 +8,7 @@ Successor baseline: `2fc8dfc`
 Canonical destination: GameTheory.Core.CheapTalk; GameTheory.Examples; GameTheory.Epistemic; Protocol where timing is theorem-observable
 Domain contract / decision: D4-D10, D16, D18, EXP-043, EXP-046
 Owner: Wave 2 / communication and information
-Status: in progress; 32/87 reviewed, 2 deferred to the zero-sum communication gate
+Status: in progress; 62/87 reviewed, 19 deferred to public-signal and zero-sum gates
 Last verified: 2026-07-30
 
 This ledger is an exact generated review queue for the D-COMM family.
@@ -34,36 +34,36 @@ disposition.
 | same | `exists_nash_outcomeKernel_iff` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.exists_isNash_play_iff` | focused build (1,719 jobs) | Exact pure-Nash outcome-law preservation is recovered preference-parametrically. |
 | same | `constantSum_eu_eq_base_nash` | theorem | deferred | S-ZERO/D-COMM constant-sum value slice | D18; post-architecture zero-sum lane | Reopen with the constant-sum API and prove the communication value corollary without a wrapper game. |
 | same | `zeroSum_eu_eq_base_nash` | theorem | deferred | S-ZERO/D-COMM zero-sum value slice | D18; post-architecture zero-sum lane | Reopen from saddle-point value uniqueness after the pure/mixed bridge is fixed. |
-| `GameTheory/Concepts/Communication/CheapTalkPublicRandomness.lean` | `MessageProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 47 |
-| same | `instFiniteGameOutcome` | instance | unreviewed | review required | generated index seed only | public, pinned line 50 |
-| same | `mixedMessageMarginal` | def | unreviewed | review required | generated index seed only | public, pinned line 57 |
-| same | `mixedMessageLaw` | def | unreviewed | review required | generated index seed only | public, pinned line 63 |
-| same | `conditionalCheapTalkStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 71 |
-| same | `conditionalCheapTalkProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 78 |
-| same | `publicPlay` | def | unreviewed | review required | generated index seed only | public, pinned line 86 |
-| same | `actionLaw` | def | unreviewed | review required | generated index seed only | public, pinned line 94 |
-| same | `mixedActionLaw` | def | unreviewed | review required | generated index seed only | public, pinned line 100 |
-| same | `liftActionDeviation` | def | unreviewed | review required | generated index seed only | public, pinned line 107 |
-| same | `actionProfile_update_liftActionDeviation` | theorem | unreviewed | review required | generated index seed only | public, pinned line 112 |
-| same | `correlatedEu_actionLaw_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 141 |
-| same | `unilateralDeviationDistribution_actionLaw` | theorem | unreviewed | review required | generated index seed only | public, pinned line 166 |
-| same | `pmf_map_congr_on_support` | theorem | unreviewed | review required | generated index seed only | private, pinned line 182 |
-| same | `mixedStrategyLaw_eq_message_bind_conditional` | theorem | unreviewed | review required | generated index seed only | public, pinned line 193 |
-| same | `messageProfile_eq_of_conditionalCheapTalkProfile_ne_zero` | theorem | unreviewed | review required | generated index seed only | public, pinned line 257 |
-| same | `actionProfile_map_conditional_eq_pmfPi_publicPlay` | theorem | unreviewed | review required | generated index seed only | public, pinned line 293 |
-| same | `mixedActionLaw_eq_publicCorrelatedLaw` | theorem | unreviewed | review required | generated index seed only | public, pinned line 346 |
-| same | `InducesPublicSignalNash` | def | unreviewed | review required | generated index seed only | public, pinned line 368 |
-| same | `mixedNash_mixedActionLaw_isCorrelatedEq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 380 |
-| same | `mixedNash_mixedActionLaw_isCoarseCorrelatedEq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 421 |
-| same | `InducesPublicSignalNash.mixedActionLaw_isCorrelatedEq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 430 |
-| same | `InducesPublicSignalNash.mixedActionLaw_isCoarseCorrelatedEq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 440 |
-| same | `InducesPublicSignalNash.mixedActionLaw_payoff_isMixedNashPayoffMixture` | theorem | unreviewed | review required | generated index seed only | public, pinned line 450 |
-| same | `mixedExtension_eu_eq_correlatedEu_mixedActionLaw_of_bounded` | theorem | unreviewed | review required | generated index seed only | public, pinned line 465 |
-| same | `mixedExtension_eu_eq_correlatedEu_mixedActionLaw` | theorem | unreviewed | review required | generated index seed only | public, pinned line 496 |
-| `GameTheory/Concepts/Communication/CheapTalkPublicRandomnessConstantSum.lean` | `InducesPublicSignalNash.constantSum_mixedExtension_eu_eq_base_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 28 |
-| same | `mixedNash_constantSum_mixedExtension_eu_eq_base_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 42 |
-| same | `InducesPublicSignalNash.zeroSum_mixedExtension_eu_eq_base_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 55 |
-| same | `mixedNash_zeroSum_mixedExtension_eu_eq_base_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 67 |
+| `GameTheory/Concepts/Communication/CheapTalkPublicRandomness.lean` | `MessageProfile` | abbrev | retired | use `Profile C.messageSignature` | D18/D19 | The abbreviation duplicates the canonical dependent profile type. |
+| same | `instFiniteGameOutcome` | instance | retired | no successor instance | D9 and D19 | The extension retains the base outcome type definitionally, and finite laws do not require a global finite outcome capability. |
+| same | `mixedMessageMarginal` | def | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | Reopen when a live theorem needs message-conditioned representation through `FinDist.condOnFibre`. |
+| same | `mixedMessageLaw` | def | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | The correlation theorem does not require a separate public-signal object. |
+| same | `conditionalCheapTalkStrategy` | def | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | Reopen together with a proved finite-law disintegration. |
+| same | `conditionalCheapTalkProfile` | def | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | Reopen together with the message support theorem. |
+| same | `publicPlay` | def | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | A conditional mixed profile is not needed for mixed-Nash-to-CE. |
+| same | `actionLaw` | def | retired | `GameTheory.GameForm.CheapTalkExtension.mixedActionLaw` | EXP-047/D19 | The arbitrary-law helper had no independent consumer; the live bridge maps the canonical independent mixed law directly. |
+| same | `mixedActionLaw` | def | adapt | `GameTheory.GameForm.CheapTalkExtension.mixedActionLaw` | EXP-047/D19; focused build | Recovered over the canonical `FinDist.pi`. |
+| same | `liftActionDeviation` | def | adapt | `GameTheory.GameForm.CheapTalkExtension.liftActionDeviation` | EXP-047/D19; focused build | Retains the message and maps every contingent action. |
+| same | `actionProfile_update_liftActionDeviation` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.actionProfile_update_liftActionDeviation` | focused build (1,720 jobs) | Exact hostile profile commutation recovered. |
+| same | `correlatedEu_actionLaw_eq` | theorem | subsumed | `GameTheory.GameForm.CheapTalkExtension.mixed_play_eq_outcomeLaw_mixedActionLaw` | EXP-047/D19 | Equality of complete finite outcome laws is stronger than the utility-specific equality needed by the live mixed consumer. |
+| same | `unilateralDeviationDistribution_actionLaw` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.mixedActionLaw_update_map_liftActionDeviation` | EXP-047/D19 | Narrowed to the canonical independent mixed law and strengthened to preference-free exact equality. |
+| same | `pmf_map_congr_on_support` | theorem | retired | `FinDist` extensionality and map laws | D9/D19 | Private PMF implementation detail is unnecessary in the finite-law proof. |
+| same | `mixedStrategyLaw_eq_message_bind_conditional` | theorem | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | This is the central deferred disintegration statement. |
+| same | `messageProfile_eq_of_conditionalCheapTalkProfile_ne_zero` | theorem | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | Reopen only with the conditional strategy law. |
+| same | `actionProfile_map_conditional_eq_pmfPi_publicPlay` | theorem | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | Reopen only with the conditional action representation. |
+| same | `mixedActionLaw_eq_publicCorrelatedLaw` | theorem | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | D19 proves correlation directly and does not claim this stronger representation theorem. |
+| same | `InducesPublicSignalNash` | def | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | Admit only if a conditional public-regime consumer earns the named predicate. |
+| same | `mixedNash_mixedActionLaw_isCorrelatedEq` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.mixedNash_mixedActionLaw_isCorrelatedEq` | EXP-047/D19; focused build | Recovered for arbitrary weak preferences and without a finite outcome assumption. |
+| same | `mixedNash_mixedActionLaw_isCoarseCorrelatedEq` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.mixedNash_mixedActionLaw_isCoarseCorrelatedEq` | EXP-047/D19; focused build | Recovered from the canonical CE-to-CCE implication. |
+| same | `InducesPublicSignalNash.mixedActionLaw_isCorrelatedEq` | theorem | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | Depends on the deferred public-signal regime. |
+| same | `InducesPublicSignalNash.mixedActionLaw_isCoarseCorrelatedEq` | theorem | deferred | D-COMM public-signal disintegration slice | D19 scope boundary | Depends on the deferred public-signal regime. |
+| same | `InducesPublicSignalNash.mixedActionLaw_payoff_isMixedNashPayoffMixture` | theorem | deferred | D-COMM/S-MIX public-signal payoff-mixture slice | D19 scope boundary | Reopen after the conditional regime and payoff-mixture API have live consumers. |
+| same | `mixedExtension_eu_eq_correlatedEu_mixedActionLaw_of_bounded` | theorem | subsumed | `GameTheory.GameForm.CheapTalkExtension.mixed_play_eq_outcomeLaw_mixedActionLaw` | EXP-047/D19 | Exact outcome-law equality removes boundedness and utility specialization. |
+| same | `mixedExtension_eu_eq_correlatedEu_mixedActionLaw` | theorem | subsumed | `GameTheory.GameForm.CheapTalkExtension.mixed_play_eq_outcomeLaw_mixedActionLaw` | EXP-047/D19 | The finite-outcome wrapper is unnecessary in the canonical finite-law representation. |
+| `GameTheory/Concepts/Communication/CheapTalkPublicRandomnessConstantSum.lean` | `InducesPublicSignalNash.constantSum_mixedExtension_eu_eq_base_nash` | theorem | deferred | S-ZERO/D-COMM constant-sum public-signal value slice | D19 scope boundary | Requires both the deferred public regime and the constant-sum value API. |
+| same | `mixedNash_constantSum_mixedExtension_eu_eq_base_nash` | theorem | deferred | S-ZERO/D-COMM constant-sum mixed-value slice | D19; zero-sum lane | Reopen from value uniqueness without introducing a communication-specific game wrapper. |
+| same | `InducesPublicSignalNash.zeroSum_mixedExtension_eu_eq_base_nash` | theorem | deferred | S-ZERO/D-COMM zero-sum public-signal value slice | D19 scope boundary | Requires both the deferred public regime and the zero-sum value bridge. |
+| same | `mixedNash_zeroSum_mixedExtension_eu_eq_base_nash` | theorem | deferred | S-ZERO/D-COMM zero-sum mixed-value slice | D19; zero-sum lane | Reopen from saddle-point value uniqueness and the canonical induced action law. |
 | `GameTheory/Core/Babbling.lean` | `BabblingDeviationPreservingFor@33` | def | retired | D18 direct projection theorem | EXP-046/D18 | The predicate duplicated no mathematical object and existed only to abstract one proof. |
 | same | `CheapTalkExtension` | structure | adapt | `GameTheory.GameForm.CheapTalkExtension` | EXP-046/D18; focused build | Recovered with explicit universes and the canonical signature/profile surface. |
 | same | `Strategy'` | def | adapt | `GameTheory.GameForm.CheapTalkExtension.Strategy` | focused build (1,719 jobs) | Message plus a plan over the complete public message profile. |
