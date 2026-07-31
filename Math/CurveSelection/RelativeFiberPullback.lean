@@ -120,7 +120,7 @@ theorem presentationSectionMap_mem_relativeZeroLocus
 A local extremum on a specialized relative zero locus pulls back to the
 regular presentation fiber.  This version treats the distinguished
 parameter as a coefficient, which is the form needed for the fixed-radius
-Gate G optimization.
+curve-selection optimization.
 -/
 theorem isLocalExtrOn_presentationFiber_relative
     {S ι κ ν E : Type*}

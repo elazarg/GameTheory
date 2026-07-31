@@ -215,7 +215,7 @@ def HasBellmanCoordinatewisePuiseuxSelection : Prop :=
       (signCell G.bellmanConstraintPoly τ)
       G.bellmanDiscountCoordinate assign₀
 
-/-- The exact remaining Gate G property: every selected Bellman sign cell
+/-- The exact remaining germ-existence property: every selected Bellman sign cell
 approaching a zero-discount endpoint admits one coupled analytic right arc
 whose discount coordinate becomes positive. -/
 def HasBellmanSignCellCurveSelection : Prop :=
@@ -230,7 +230,8 @@ def HasBellmanSignCellCurveSelection : Prop :=
       G.bellmanDiscountCoordinate assign₀
 
 /-- Coordinatewise convergent Puiseux expansions of one selected Bellman
-curve synchronize to the coupled analytic arc required by Gate G. -/
+curve synchronize to the coupled analytic arc required by analytic
+Bellman-germ existence. -/
 theorem HasBellmanCoordinatewisePuiseuxSelection.toSignCellCurveSelection
     (h : G.HasBellmanCoordinatewisePuiseuxSelection) :
     G.HasBellmanSignCellCurveSelection := by

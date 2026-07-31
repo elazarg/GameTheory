@@ -1,4 +1,5 @@
-/- Gate G: assembly of the algebraic and analytic curve-selection steps. -/
+/- Analytic Bellman-germ existence: assembly of the algebraic and analytic
+curve-selection steps. -/
 import Math.CurveSelection.AlgebraicReduction
 import Math.CurveSelection.AnalyticSign
 import Math.CurveSelection.Convergence

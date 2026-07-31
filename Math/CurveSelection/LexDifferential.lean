@@ -1,4 +1,5 @@
-/- Kähler-differential finiteness and recursive algebraicity for Gate G. -/
+/- Kähler-differential finiteness and recursive algebraicity for analytic
+curve selection. -/
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Algebra
 import Mathlib.Algebra.MvPolynomial.PDeriv
 import Mathlib.RingTheory.Unramified.Field

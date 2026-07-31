@@ -1,4 +1,5 @@
-/- Production Newton--Puiseux implementation used by Gate G. -/
+/- Production Newton--Puiseux implementation used by analytic curve
+selection. -/
 import Math.RamifiedWeierstrass
 import Mathlib.FieldTheory.IsAlgClosed.Basic
 import Mathlib.RingTheory.Henselian

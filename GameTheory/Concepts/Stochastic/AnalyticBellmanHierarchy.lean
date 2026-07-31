@@ -1654,7 +1654,7 @@ theorem finkRelativeBias_finkPointAt_eq_rawRelativeBiasCurve
 
 end AnalyticBellmanGerm
 
-/-- Gate G and the first analytic hierarchy response compose without an
+/-- Analytic Bellman-germ existence and the first analytic hierarchy response compose without an
 intermediate choice or uncoupled coordinate selection. -/
 theorem exists_analyticBellmanGermWithFirstHierarchyResponse
     [∀ i, Nonempty (G.Act i)]

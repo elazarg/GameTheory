@@ -10,7 +10,8 @@ import Math.AnalyticPowerNormalization
 # Analytic curves with an exact power coordinate
 
 Curve selection naturally returns an analytic arc in an ambient
-finite-dimensional space.  Gate G additionally needs one distinguished
+finite-dimensional space.  The analytic Bellman-germ construction
+additionally needs one distinguished
 coordinate, the discount complement, to equal an exact power of the new
 parameter.  This file packages that coordinate-facing form.
 -/

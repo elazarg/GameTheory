@@ -1,5 +1,5 @@
 /-
-Scratch algebraic reduction for Gate G.
+Scratch algebraic reduction for the analytic Bellman-germ construction.
 
 This file contains only proved reductions.  In particular, the generic
 finiteness hypothesis below is displayed explicitly rather than hidden as an

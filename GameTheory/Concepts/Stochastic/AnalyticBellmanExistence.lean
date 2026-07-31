@@ -10,9 +10,9 @@ import Math.CurveSelection.PolynomialSignCellArc
 /-!
 # Analytic Bellman-germ existence
 
-This file closes Gate G: every finite stochastic game with nonempty finite
-action sets admits a coupled analytic germ of discounted stationary Bellman
-equilibria at discount one.
+This file proves analytic Bellman-germ existence: every finite stochastic
+game with nonempty finite action sets admits a coupled analytic germ of
+discounted stationary Bellman equilibria at discount one.
 
 The mathematical input is unconditional analytic curve selection in a
 complete real polynomial sign cell.  `BellmanCurveGate` supplies a
@@ -28,11 +28,11 @@ namespace GameTheory
 namespace StochasticGame
 
 /--
-**Gate G.** Every finite stochastic game with finite nonempty action sets
-admits one coupled analytic germ of discounted stationary Bellman
-equilibria at discount one.
+**Analytic Bellman-germ existence.** Every finite stochastic game with
+finite nonempty action sets admits one coupled analytic germ of discounted
+stationary Bellman equilibria at discount one.
 -/
-def GateG : Prop :=
+def AnalyticBellmanGermExistence : Prop :=
   ∀ (ι : Type) (G : StochasticGame ι)
       [Fintype G.State]
       [Fintype ι]
@@ -43,11 +43,12 @@ def GateG : Prop :=
     Nonempty G.AnalyticBellmanGerm
 
 /--
-The direct consumer form of Gate G.  No further mathematical hypothesis is
-needed once `GateG` has been proved.
+The direct consumer form of analytic Bellman-germ existence.  No further
+mathematical hypothesis is needed once `AnalyticBellmanGermExistence` has
+been proved.
 -/
-theorem GateG.forGame
-    (h : GateG)
+theorem AnalyticBellmanGermExistence.forGame
+    (h : AnalyticBellmanGermExistence)
     {ι : Type} (G : StochasticGame ι)
     [Fintype G.State]
     [Fintype ι]
@@ -59,10 +60,10 @@ theorem GateG.forGame
   h ι G
 
 /--
-Gate G, obtained from unconditional analytic curve selection in the
-polynomial Bellman sign cell.
+Analytic Bellman-germ existence, obtained from unconditional analytic
+curve selection in the polynomial Bellman sign cell.
 -/
-theorem gateG : GateG := by
+theorem analyticBellmanGermExistence : AnalyticBellmanGermExistence := by
   intro ι G _ _ _ _ _ _
   apply G.exists_analyticBellmanGerm
   intro assign₀ τ hdisc hclosure

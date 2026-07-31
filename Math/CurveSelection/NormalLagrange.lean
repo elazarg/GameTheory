@@ -1,4 +1,4 @@
-/- Normalized polynomial Lagrange multipliers for Gate G. -/
+/- Normalized polynomial Lagrange multipliers for analytic curve selection. -/
 import Mathlib.Algebra.MvPolynomial.PDeriv
 import Mathlib.Analysis.Calculus.FDeriv.Mul
 import Mathlib.Analysis.Calculus.LagrangeMultipliers

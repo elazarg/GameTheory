@@ -19,7 +19,7 @@ open CurveSelection.UltrafilterSubsequence
 
 /--
 Ultrafilter-eventual algebraic relations for every nonparameter coordinate
-of the source sequence are enough to finish Gate G's analytic selection
+of the source sequence are enough to finish the germ construction's analytic selection
 step.  Finiteness synchronizes the relations, a strictly increasing
 subsequence turns the ultrafilter identities into pointwise identities, and
 the resulting source-cell power curve projects to the required positive

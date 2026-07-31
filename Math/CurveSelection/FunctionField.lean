@@ -1,4 +1,4 @@
-/- Function-field infrastructure for the algebraic Gate G selection step. -/
+/- Function-field infrastructure for the algebraic curve-selection step. -/
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Algebra
 import Mathlib.Data.Real.Basic
 import Mathlib.RingTheory.Ideal.Quotient.Operations

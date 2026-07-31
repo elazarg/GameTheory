@@ -41,7 +41,8 @@ open CurveSelection.SquareLiftScratch
 /--
 Unconditional mathematical curve selection for a complete real polynomial
 sign cell, through a boundary point approached from one positive
-coordinate.  This is the generic geometric capstone consumed by Gate G.
+coordinate.  This is the generic geometric capstone consumed by the
+analytic Bellman-germ existence theorem.
 -/
 theorem hasPositiveCoordinateAnalyticArcAt_signCell
     {ι σ : Type*} [Fintype ι] [Fintype σ]

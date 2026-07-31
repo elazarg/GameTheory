@@ -1,4 +1,5 @@
-/- Coordinate identities for the localized prime germ used by Gate G. -/
+/- Coordinate identities for the localized prime germ used by analytic
+curve selection. -/
 import Math.CurveSelection.RelativeChartSequence
 
 set_option autoImplicit false

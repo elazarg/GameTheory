@@ -1,4 +1,5 @@
-/- Production algebraic-to-analytic convergence implementation for Gate G. -/
+/- Production algebraic-to-analytic convergence implementation for the
+analytic Bellman-germ construction. -/
 import Math.CurveSelection.Termination
 import Math.CurveSelection.FactorCoverage
 import Math.AnalyticImplicitFunction

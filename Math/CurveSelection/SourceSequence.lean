@@ -17,7 +17,7 @@ open CurveSelection.SquareLiftScratch
 
 /--
 Construct the lexicographically selected parameterized square-lift sequence
-used by Gate G.
+used by analytic curve selection.
 
 The original positive coordinate is first inserted as a strict sign.  The
 new algebraic parameter is the squared radius, thinned to be strictly

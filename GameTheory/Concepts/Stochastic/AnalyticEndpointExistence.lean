@@ -36,7 +36,7 @@ theorem exists_analyticBellmanGermWithFirstHierarchyResponses :
     ∃ germ : G.AnalyticBellmanGerm,
       ∀ span : germ.EndpointHarmonicJetSpan,
         Nonempty (germ.FirstHierarchyResponse span) := by
-  obtain ⟨germ⟩ := gateG.forGame G
+  obtain ⟨germ⟩ := analyticBellmanGermExistence.forGame G
   exact ⟨germ, germ.exists_firstHierarchyResponse⟩
 
 /-- In particular, every finite stochastic game has a first hierarchy

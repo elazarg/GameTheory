@@ -10,7 +10,8 @@ import Math.AnalyticCoordinateCurve
 /-!
 # Analytic Bellman germs
 
-This file defines the exact output of Gate G.  An analytic Bellman germ is
+This file defines the exact output of the analytic Bellman-germ existence
+theorem.  An analytic Bellman germ is
 one coupled analytic assignment of all strategy, value, and discount
 variables.  On a positive punctured interval it solves every polynomial
 Bellman equality and inequality, while its discount-complement coordinate

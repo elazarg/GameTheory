@@ -45,7 +45,7 @@ attribute [local instance 10000] assignmentAddCommGroup
   assignmentModule assignmentTopology realAddCommGroup realModule
 
 /-- Formal polynomial gradient on the ordinary finite assignment space
-`σ → ℝ`, whose norm topology is the one used throughout the Gate G
+`σ → ℝ`, whose norm topology is the one used throughout the curve-selection
 sign-cell construction. -/
 def evalGradient
     {σ : Type*} [Fintype σ]
