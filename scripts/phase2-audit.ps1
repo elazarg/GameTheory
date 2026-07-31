@@ -436,6 +436,46 @@ if (-not $SkipReachability) {
   }
   Report 'EPISTEMIC_BOUNDARY_PROBES_REJECTED' $epistemicBoundaryRejected
 
+  # D20 integrates Bayesian and epistemic semantics only in a concrete
+  # Examples bridge. Each input root must remain blind to the other.
+  $electronicMailInputs = @(
+    'GameTheory.BayesianGame',
+    'GameTheory.Epistemic.InfoPartition',
+    'GameTheory.Examples.ElectronicMail.game',
+    'GameTheory.Examples.ElectronicMail.not_commonPBeliefAt_attackStateEvent_bothConfirmed_of_half_lt')
+  $electronicMailBoundary = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.Analysis.nash_exists',
+    'stdSimplex',
+    'Polynomial')
+  $electronicMailOutput = Run-Probe 'GameTheory.Examples.ElectronicMail' `
+    ($electronicMailInputs + $electronicMailBoundary)
+  $electronicMailInputsReached = 0
+  foreach ($constant in $electronicMailInputs) {
+    if (-not (Is-Unreachable $electronicMailOutput $constant)) {
+      $electronicMailInputsReached++
+    }
+  }
+  Report 'ELECTRONIC_MAIL_INPUT_PROBES_REACHED' $electronicMailInputsReached
+  $electronicMailBoundaryRejected = 0
+  foreach ($constant in $electronicMailBoundary) {
+    if (Is-Unreachable $electronicMailOutput $constant) {
+      $electronicMailBoundaryRejected++
+    }
+  }
+  Report 'ELECTRONIC_MAIL_BOUNDARY_PROBES_REJECTED' `
+    $electronicMailBoundaryRejected
+  $bayesianEpistemicOutput = Run-Probe 'GameTheory.Core.BayesianEquilibrium' `
+    @('GameTheory.Epistemic.InfoPartition')
+  Report 'BAYESIAN_EPISTEMIC_PROBE_REJECTED' `
+    ([int] (Is-Unreachable $bayesianEpistemicOutput `
+      'GameTheory.Epistemic.InfoPartition'))
+  $epistemicBayesianOutput = Run-Probe 'GameTheory.Epistemic' `
+    @('GameTheory.BayesianGame')
+  Report 'EPISTEMIC_BAYESIAN_PROBE_REJECTED' `
+    ([int] (Is-Unreachable $epistemicBayesianOutput `
+      'GameTheory.BayesianGame'))
+
   # D17 keeps the payoff-kernel definitions independent of game semantics,
   # then exposes one deliberate bridge into the canonical static concepts.
   $evolutionaryBasicInputs = @(
@@ -666,6 +706,10 @@ if ($VerifyExpected) {
     $Expected['GAMETHEORYMATH_GAME_REJECTED'] = 1
     $Expected['EPISTEMIC_INPUT_PROBES_REACHED'] = 6
     $Expected['EPISTEMIC_BOUNDARY_PROBES_REJECTED'] = 5
+    $Expected['ELECTRONIC_MAIL_INPUT_PROBES_REACHED'] = 4
+    $Expected['ELECTRONIC_MAIL_BOUNDARY_PROBES_REJECTED'] = 4
+    $Expected['BAYESIAN_EPISTEMIC_PROBE_REJECTED'] = 1
+    $Expected['EPISTEMIC_BAYESIAN_PROBE_REJECTED'] = 1
     $Expected['EVOLUTIONARY_BASIC_INPUT_PROBES_REACHED'] = 2
     $Expected['EVOLUTIONARY_BASIC_BOUNDARY_PROBES_REJECTED'] = 6
     $Expected['EVOLUTIONARY_BRIDGE_INPUT_PROBES_REACHED'] = 3

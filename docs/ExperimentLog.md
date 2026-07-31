@@ -58,6 +58,7 @@ becomes difficult to scan.
 | EXP-045 | 2026-07-30 | D8 / Wave 1 close-out | What is the smallest consumer-backed transformation API that closes reindexing, relabeling, mixed lifting, Nash, and CE transport? | Supports concrete equivalences; decides D8 | [`decisions/D8-minimal-transformations.md`](decisions/D8-minimal-transformations.md); `GameTheory/Experimental/PostArchitecture/D8Transformations.lean` |
 | EXP-046 | 2026-07-30 | D0/D5/D6 / communication ownership | Is observable pre-play cheap talk a static `GameForm` construction, or must even the babbling theorem use Protocol timing? | Supports static ownership; decides D18; promoted | [`decisions/D18-communication-ownership.md`](decisions/D18-communication-ownership.md); `GameTheory/Experimental/PostArchitecture/CheapTalk.lean`; `GameTheory/Core/CheapTalk.lean`; `GameTheory/Examples/CheapTalk.lean` |
 | EXP-047 | 2026-07-30 | D8/D18 / public randomization | Does mixed play of the static cheap-talk extension induce a base correlated equilibrium without Protocol timing or a second equilibrium predicate? | Supports static bridge; decides D19; promoted | [`decisions/D19-cheap-talk-public-randomization.md`](decisions/D19-cheap-talk-public-randomization.md); `GameTheory/Experimental/PostArchitecture/CheapTalkPublicRandomness.lean`; `GameTheory/Core/CheapTalkRandomization.lean` |
+| EXP-048 | 2026-07-30 | D16/D18 / Electronic Mail ownership | Do the finite Electronic Mail theorems integrate as a static Bayesian/Epistemic example, or do their message rounds require Protocol execution? | Supports static Examples bridge; decides D20; promoted | [`decisions/D20-electronic-mail-ownership.md`](decisions/D20-electronic-mail-ownership.md); `GameTheory/Experimental/PostArchitecture/ElectronicMail.lean`; `GameTheory/Examples/ElectronicMail.lean` |
 
 ## Entry template
 
@@ -3121,3 +3122,60 @@ memory.
 - **Next action:** decide whether a live payoff-mixture consumer earns
   message-conditioned public-signal disintegration; otherwise proceed to the
   Electronic Mail ownership slice.
+
+### EXP-048: ownership of the finite Electronic Mail example
+
+- **Date / revision:** 2026-07-30, working tree based on `138c6d1`
+- **Status:** supports the static Examples bridge; decides D20
+- **Decision / question:** D16/D18 and D-COMM; whether the finite Electronic
+  Mail results are a static bridge between the canonical Bayesian and
+  Epistemic branches, or whether their messaging interpretation forces a
+  Protocol execution model.
+- **Prediction:** the pinned theorems observe only endpoint worlds, private
+  views, posteriors, common `p`-belief, and a type-contingent action plan. One
+  canonical finite prior on worlds should push forward to the Bayesian type
+  prior while directly feeding the epistemic partition. No theorem quantifies
+  over an execution history, so an Examples bridge should suffice.
+- **Representative slice:** recover the three endpoint worlds, views, actions,
+  shared finite prior, Bayesian game, candidate and deviating plans, mutual
+  `p`-belief and failure of common `p`-belief at the confirmed endpoint, and
+  the machine-checked failure of Bayes-Nash.
+- **Competing designs:** a static Examples bridge over `BayesianGame` and
+  `Epistemic`; a multistage `ExecutionProtocol` modeling each email attempt; or
+  parallel communication-local probability and equilibrium APIs.
+- **Measurements to collect:** whether one prior serves both branches; import
+  and reachability surface; source hazards; axiom profile; focused build cost;
+  and whether the non-equilibrium theorem uses ordinary `IsNash`.
+- **Kill conditions:** a theorem needs an intermediate message history or
+  transition probability, the endpoint abstraction cannot state the
+  information result, a second prior/equilibrium concept is required, or the
+  example creates a reverse stable dependency or forbidden source construct.
+- **Evidence:** the 212-nonblank-line experiment has 24 declarations and four
+  authored imports: the canonical Bayesian-equilibrium and approximate
+  epistemic roots plus `linarith` and `norm_num`. The focused target builds in
+  1,725 jobs.
+- **Observation:** one uniform `FinDist EmailWorld` pushes forward to the
+  Bayesian type prior and directly supplies every epistemic posterior. The
+  confirmed endpoint is mutually `p`-believed up to threshold one but is not
+  common `p`-belief above one half. The attack-on-message plan has value
+  `-1/3` for player `true`, the canonical `Profile.update` to never attack has
+  value zero, and ordinary `IsNash` therefore refutes the plan.
+- **Measurements:** no Protocol or Analysis import is present; no transition
+  state, second prior, Bayesian-equilibrium wrapper, or communication-local
+  evaluator appears. Source scans find zero placeholders, native decisions,
+  direct `Function.update`, transports, `HEq`, `Fintype.ofFinite`,
+  `open Classical`, or custom axioms. All three headline theorems use only
+  `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports the prediction and decides D20. The pinned finite
+  endpoint theory belongs in Examples as a bridge between the independent
+  Bayesian and Epistemic roots. Protocol is reserved for a model that exposes
+  email delivery transitions, stopping, or strategies during the exchange.
+- **Promotion:** `GameTheory/Examples/ElectronicMail.lean` contains the stable
+  endpoint bridge. The focused target builds in 1,725 jobs and the full project
+  in 3,365 jobs. Phase 2 reaches all four intended inputs, rejects all four
+  Protocol/Analysis boundary probes, and proves both directions of
+  Bayesian/Epistemic root independence. The stable headline theorems retain
+  the measured standard axiom profile.
+- **Next action:** leave Protocol unspent until a dynamic email-process theorem
+  is selected; D-COMM's only remaining rows are the explicitly gated
+  public-signal and zero-sum value families.

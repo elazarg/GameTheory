@@ -301,7 +301,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | Rosenthal exact potential and finite pure-Nash existence | `Core.Potential`, then a thin congestion domain |
 | welfare | individual rationality, smoothness, price of anarchy | a smoothness price-of-anarchy bound stated on the canonical utility game | `Core` or a stable welfare root |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
-| communication | observable babbling, exact pure-Nash outcome laws, and mixed-Nash-to-CE delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static construction validated by EXP-046/D18 and EXP-047/D19; Protocol only when theorem-observable timing matters |
+| communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
 | mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial and all-pay | `n`-bidder truthful Vickrey/VCG plus one false first-price claim | coordinated mechanism/auction root |
 | social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
 
@@ -535,10 +535,9 @@ The next work is ordered:
    measurements;
 3. resume the broader revelation/information-design inventory and open the
    static learning and congestion harvest lanes;
-4. continue broad FOSG recovery, extend D-COMM from its delivered mixed
-   correlation theorem to conditional public-signal representation and
-   Electronic Mail, and open the remaining S-MIX/S-CORR consumers routed by
-   the completed NFG ledger;
+4. continue broad FOSG recovery, decide whether a live consumer earns D-COMM's
+   deferred conditional public-signal representation, and open the remaining
+   S-MIX/S-CORR consumers routed by the completed NFG ledger;
 5. admit at most one mature blind-spot experiment—finite stochastic games or
    finite graph reachability are the leading candidates;
 6. admit no Frontier implementation until the first three items have an active

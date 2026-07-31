@@ -8,7 +8,7 @@ Successor baseline: `2fc8dfc`
 Canonical destination: GameTheory.Core.CheapTalk; GameTheory.Examples; GameTheory.Epistemic; Protocol where timing is theorem-observable
 Domain contract / decision: D4-D10, D16, D18, EXP-043, EXP-046
 Owner: Wave 2 / communication and information
-Status: in progress; 62/87 reviewed, 19 deferred to public-signal and zero-sum gates
+Status: in progress; 87/87 reviewed, 19 deferred to public-signal and zero-sum gates
 Last verified: 2026-07-30
 
 This ledger is an exact generated review queue for the D-COMM family.
@@ -81,31 +81,31 @@ disposition.
 | same | `actionProfile_update_sameMessage_constPlan` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.actionProfile_update_sameMessage_constPlan` | focused build (1,719 jobs) | This law drives the converse Nash theorem. |
 | same | `outcomeKernel_update_embedProfile` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.form_play_update_embedProfile` | focused build (1,719 jobs) | Exact finite outcome-law equality in the successor representation. |
 | same | `babblingDeviationPreservingFor@167` | theorem | retired | `GameTheory.GameForm.CheapTalkExtension.babbling_isNash` | EXP-046/D18 | The direct theorem eliminates its single-use proof predicate. |
-| `GameTheory/Languages/ElectronicMailGame.lean` | `EmailWorld` | inductive | unreviewed | review required | generated index seed only | public, pinned line 41 |
-| same | `<anonymous@47>` | instance | unreviewed | review required | generated index seed only | public, pinned line 47 |
-| same | `EmailView` | inductive | unreviewed | review required | generated index seed only | public, pinned line 50 |
-| same | `EmailAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 56 |
-| same | `viewOf` | def | unreviewed | review required | generated index seed only | public, pinned line 64 |
-| same | `typeProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 71 |
-| same | `emailPrior` | def | unreviewed | review required | generated index seed only | public, pinned line 75 |
-| same | `attackState` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 79 |
-| same | `emailUtility` | def | unreviewed | review required | generated index seed only | public, pinned line 84 |
-| same | `game` | def | unreviewed | review required | generated index seed only | public, pinned line 90 |
-| same | `attackOnMessage` | def | unreviewed | review required | generated index seed only | public, pinned line 97 |
-| same | `trueNeverAttack` | def | unreviewed | review required | generated index seed only | public, pinned line 104 |
-| same | `worldPrior` | def | unreviewed | review required | generated index seed only | public, pinned line 108 |
-| same | `emailPartition` | def | unreviewed | review required | generated index seed only | public, pinned line 111 |
-| same | `attackStateEvent` | def | unreviewed | review required | generated index seed only | public, pinned line 120 |
-| same | `viewOf_noMessage` | theorem | unreviewed | review required | generated index seed only | public, pinned line 122 |
-| same | `viewOf_onlyFirst_true` | theorem | unreviewed | review required | generated index seed only | public, pinned line 126 |
-| same | `viewOf_onlyFirst_false` | theorem | unreviewed | review required | generated index seed only | public, pinned line 129 |
-| same | `viewOf_bothConfirmed` | theorem | unreviewed | review required | generated index seed only | public, pinned line 132 |
-| same | `EmailWorld_univ` | theorem | unreviewed | review required | generated index seed only | private, pinned line 136 |
-| same | `bothConfirmed_mem_mutualPBelief_attackStateEvent` | theorem | unreviewed | review required | generated index seed only | public, pinned line 144 |
-| same | `not_commonPBeliefAt_attackStateEvent_bothConfirmed_of_half_lt` | theorem | unreviewed | review required | generated index seed only | public, pinned line 163 |
-| same | `exAnte_attackOnMessage_true` | theorem | unreviewed | review required | generated index seed only | public, pinned line 204 |
-| same | `exAnte_trueNeverAttack` | theorem | unreviewed | review required | generated index seed only | public, pinned line 221 |
-| same | `attackOnMessage_not_bayesNash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 230 |
+| `GameTheory/Languages/ElectronicMailGame.lean` | `EmailWorld` | inductive | adapt | `GameTheory.Examples.ElectronicMail.EmailWorld` | EXP-048/D20; focused build | Endpoint state carrier recovered under Examples rather than a language root. |
+| same | `<anonymous@47>` | instance | retired | no successor instance | D9 and EXP-048 | The old `Nonempty` instance existed for its probability constructor; the canonical explicit finite law needs no stored capability. |
+| same | `EmailView` | inductive | adapt | `GameTheory.Examples.ElectronicMail.EmailView` | EXP-048/D20; focused build | Private observation carrier recovered. |
+| same | `EmailAction` | inductive | adapt | `GameTheory.Examples.ElectronicMail.EmailAction` | EXP-048/D20; focused build | Coordinated-attack action carrier recovered. |
+| same | `viewOf` | def | adapt | `GameTheory.Examples.ElectronicMail.viewOf` | focused build (1,725 jobs) | Endpoint observation law recovered. |
+| same | `typeProfile` | def | adapt | `GameTheory.Examples.ElectronicMail.typeProfile` | focused build (1,725 jobs) | Canonical dependent type profile. |
+| same | `emailPrior` | def | adapt | `GameTheory.Examples.ElectronicMail.emailPrior` | EXP-048/D20 | Now explicitly the pushforward of the shared canonical world law. |
+| same | `attackState` | abbrev | adapt | `GameTheory.Examples.ElectronicMail.attackState` | focused build (1,725 jobs) | Payoff-relevant type event recovered. |
+| same | `emailUtility` | def | adapt | `GameTheory.Examples.ElectronicMail.emailPayoff` | focused build (1,725 jobs) | Renamed to match the canonical `BayesianGame.payoff` field. |
+| same | `game` | def | adapt | `GameTheory.Examples.ElectronicMail.game` | EXP-048/D20; focused build | Canonical static `BayesianGame`, not a communication-local game type. |
+| same | `attackOnMessage` | def | adapt | `GameTheory.Examples.ElectronicMail.attackOnMessage` | focused build (1,725 jobs) | Canonical type-contingent plan. |
+| same | `trueNeverAttack` | def | adapt | `GameTheory.Examples.ElectronicMail.trueNeverAttack` | focused build (1,725 jobs) | Canonical unilateral replacement plan. |
+| same | `worldPrior` | def | adapt | `GameTheory.Examples.ElectronicMail.worldPrior` | EXP-048/D20 | Strengthened from a real weight function to the canonical uniform `FinDist`, shared by both subfields. |
+| same | `emailPartition` | def | adapt | `GameTheory.Examples.ElectronicMail.emailPartition` | EXP-048/D20; focused build | Canonical `Epistemic.InfoPartition`. |
+| same | `attackStateEvent` | def | adapt | `GameTheory.Examples.ElectronicMail.attackStateEvent` | focused build (1,725 jobs) | World-level finite event recovered. |
+| same | `viewOf_noMessage` | theorem | adapt | `GameTheory.Examples.ElectronicMail.viewOf_noMessage` | focused build (1,725 jobs) | Computation law recovered. |
+| same | `viewOf_onlyFirst_true` | theorem | adapt | `GameTheory.Examples.ElectronicMail.viewOf_onlyFirst_true` | focused build (1,725 jobs) | Computation law recovered. |
+| same | `viewOf_onlyFirst_false` | theorem | adapt | `GameTheory.Examples.ElectronicMail.viewOf_onlyFirst_false` | focused build (1,725 jobs) | Computation law recovered. |
+| same | `viewOf_bothConfirmed` | theorem | adapt | `GameTheory.Examples.ElectronicMail.viewOf_bothConfirmed` | focused build (1,725 jobs) | Computation law recovered. |
+| same | `EmailWorld_univ` | theorem | retired | local enumeration proof | EXP-048/D20 | Private proof helper is rederived locally and is not public API. |
+| same | `bothConfirmed_mem_mutualPBelief_attackStateEvent` | theorem | adapt | `GameTheory.Examples.ElectronicMail.bothConfirmed_mem_mutualPBelief_attackStateEvent` | EXP-048/D20; focused build | Recovered over the canonical `FinDist` posterior. |
+| same | `not_commonPBeliefAt_attackStateEvent_bothConfirmed_of_half_lt` | theorem | adapt | `GameTheory.Examples.ElectronicMail.not_commonPBeliefAt_attackStateEvent_bothConfirmed_of_half_lt` | EXP-048/D20; focused build | Finite mutual/common-belief separation recovered. |
+| same | `exAnte_attackOnMessage_true` | theorem | adapt | `GameTheory.Examples.ElectronicMail.expectedUtility_attackOnMessage_true` | EXP-048/D20; focused build | Uses canonical `expectedUtility` rather than a Bayesian wrapper evaluator. |
+| same | `exAnte_trueNeverAttack` | theorem | adapt | `GameTheory.Examples.ElectronicMail.expectedUtility_trueNeverAttack` | EXP-048/D20; focused build | Uses canonical `Profile.update` and exact value zero. |
+| same | `attackOnMessage_not_bayesNash` | theorem | adapt | `GameTheory.Examples.ElectronicMail.attackOnMessage_not_isNash` | EXP-048/D20; focused build | Ordinary `IsNash` of `BayesianGame.toForm`; no second Bayes-Nash predicate. |
 
 Before this ledger can become complete, each row must be reviewed against the
 canonical successor API and assigned an allowed non-`unreviewed` disposition
