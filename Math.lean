@@ -57,6 +57,7 @@ import Math.Minimax.ShapleySnow
 import Math.LinearAlgebra.FourierMotzkin
 import Math.LinearAlgebra.Farkas
 import Math.LinearAlgebra.ConeSeparation
+import Math.LinearAlgebra.OwnerLabeledFlowHolonomy
 import Math.LinearAlgebra.ApproximateCompatibility
 import Math.LinearAlgebra.FiniteRayMaximum
 import Math.LinearAlgebra.PerronFrobenius
