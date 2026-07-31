@@ -209,6 +209,7 @@ import GameTheory.Concepts.Stochastic.FiniteHorizonProfileLawTransfer
 import GameTheory.Concepts.Stochastic.FiniteRankedTerminalChildNashClosure
 import GameTheory.Concepts.Stochastic.PureExternalityCycle
 import GameTheory.Concepts.Stochastic.GuardedRoutingAudit
+import GameTheory.Concepts.Stochastic.PureExternalityCycleHolonomy
 import GameTheory.Concepts.Stochastic.PublicFirstHitStoppingRule
 import GameTheory.Concepts.Stochastic.PublicHistoryFirstHitStoppingAcceptance
 import GameTheory.Concepts.Stochastic.LocalPublicResponseSelfGeneration
