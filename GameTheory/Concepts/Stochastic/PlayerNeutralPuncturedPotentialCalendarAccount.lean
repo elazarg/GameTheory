@@ -589,9 +589,10 @@ theorem
 
 /-- Expected active moving raw charge in one independently presented
 calendar epoch.  The initial state and predictable selector may vary with
-the epoch.  This local presentation is sufficient for conditional uses
-inside a globally spliced history process because the endpoint bound is
-uniform in the initial state. -/
+the epoch.  The endpoint bound is uniform in both inputs, which is the
+estimate needed after conditioning on a realized global prefix.  Identifying
+these independently presented epoch laws with conditional suffix laws of one
+behavior profile is a separate realization and disintegration theorem. -/
 def
     AnalyticScaledChargedOccupationPotential.expectedActiveEpochCharge
     (germ : G.AnalyticBellmanGerm)
