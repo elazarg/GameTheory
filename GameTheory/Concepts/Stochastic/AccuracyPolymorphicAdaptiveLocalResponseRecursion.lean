@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.AdaptiveLocalResponseRecursion
+import GameTheory.Concepts.Stochastic.LocalResponseRecursion
 import GameTheory.Concepts.Stochastic.PublicFixedDepthAdaptiveCertificate
 
 /-!
@@ -48,39 +49,16 @@ each lower-ranked child certificate at every positive accuracy.
 
 Allowing both strategic interfaces to depend on `error` preserves the actual
 quantifier order: a local implementation chosen for one tolerance need not
-serve at every other tolerance. -/
-structure AccuracyPolymorphicAdaptiveLocalResponseRecursion
+serve at every other tolerance.
+
+This is the `Goal`-generic `AccuracyPolymorphicLocalResponseRecursion` at the
+adaptive potential certificate goal. -/
+abbrev AccuracyPolymorphicAdaptiveLocalResponseRecursion
     (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
     [Finite G.State] [∀ who, Finite (G.Act who)]
-    (s₀ : G.State) (v : Payoff ι) where
-  Rank : Type
-  rankLt : Rank → Rank → Prop
-  rank_wellFounded : WellFounded rankLt
-  Node : Type
-  rank : Node → Rank
-  root : Node
-  entry : Node → G.State
-  target : Node → Payoff ι
-  root_entry : entry root = s₀
-  root_target : target root = v
-  MixedPlayerContinuationCompatibility : Node → ℝ → Prop
-  LegalCoreHistoryEntryInterface : Node → ℝ → Prop
-  mixedPlayerContinuationCompatibility :
-    ∀ node error, 0 < error →
-      MixedPlayerContinuationCompatibility node error
-  legalCoreHistoryEntryInterface :
-    ∀ node error, 0 < error →
-      LegalCoreHistoryEntryInterface node error
-  closeLocalResponse :
-    ∀ (node : Node) (error : ℝ), 0 < error →
-      (∀ child : Node, rankLt (rank child) (rank node) →
-        ∀ childError : ℝ, 0 < childError →
-          G.IsAdaptivePotentialCertificateAt
-            (entry child) (target child) childError) →
-      MixedPlayerContinuationCompatibility node error →
-      LegalCoreHistoryEntryInterface node error →
-      G.IsAdaptivePotentialCertificateAt
-        (entry node) (target node) error
+    (s₀ : G.State) (v : Payoff ι) : Type 1 :=
+  G.AccuracyPolymorphicLocalResponseRecursion
+    G.IsAdaptivePotentialCertificateAt s₀ v
 
 namespace AccuracyPolymorphicAdaptiveLocalResponseRecursion
 
@@ -95,26 +73,8 @@ theorem isAdaptivePotentialCertificateAt
     (construction :
       G.AccuracyPolymorphicAdaptiveLocalResponseRecursion s₀ v)
     (error : ℝ) (error_pos : 0 < error) :
-    G.IsAdaptivePotentialCertificateAt s₀ v error := by
-  let nodeLt : construction.Node → construction.Node → Prop :=
-    construction.rankLt.onFun construction.rank
-  have node_wellFounded : WellFounded nodeLt :=
-    construction.rank_wellFounded.onFun (f := construction.rank)
-  let compile : ∀ node : construction.Node,
-      ∀ childError : ℝ, 0 < childError →
-        G.IsAdaptivePotentialCertificateAt
-          (construction.entry node)
-          (construction.target node) childError :=
-    node_wellFounded.fix fun node recurse childError childError_pos =>
-      construction.closeLocalResponse node childError childError_pos
-        (fun child child_lt requestedError requestedError_pos =>
-          recurse child child_lt requestedError requestedError_pos)
-        (construction.mixedPlayerContinuationCompatibility
-          node childError childError_pos)
-        (construction.legalCoreHistoryEntryInterface
-          node childError childError_pos)
-  simpa only [construction.root_entry, construction.root_target] using
-    compile construction.root error error_pos
+    G.IsAdaptivePotentialCertificateAt s₀ v error :=
+  construction.compile error error_pos
 
 /-- The polymorphic recursion supplies the verifier's all-errors adaptive
 certificate family directly. -/
@@ -206,17 +166,8 @@ certificate without inspecting their witnesses. -/
 structure FixedDepthAccuracyPolymorphicLocalResponseData
     (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
     [Finite G.State] [∀ who, Finite (G.Act who)]
-    (s₀ : G.State) (v : Payoff ι) where
-  Rank : Type
-  rankLt : Rank → Rank → Prop
-  rank_wellFounded : WellFounded rankLt
-  Node : Type
-  rank : Node → Rank
-  root : Node
-  entry : Node → G.State
-  target : Node → Payoff ι
-  root_entry : entry root = s₀
-  root_target : target root = v
+    (s₀ : G.State) (v : Payoff ι)
+    extends G.LocalResponseNodes s₀ v where
   Child : Node → Type
   child_finite : ∀ node, Finite (Child node)
   childNode : ∀ node, Child node → Node
@@ -261,16 +212,7 @@ def toAccuracyPolymorphicAdaptiveLocalResponseRecursion
     (data :
       G.FixedDepthAccuracyPolymorphicLocalResponseData s₀ v) :
     G.AccuracyPolymorphicAdaptiveLocalResponseRecursion s₀ v where
-  Rank := data.Rank
-  rankLt := data.rankLt
-  rank_wellFounded := data.rank_wellFounded
-  Node := data.Node
-  rank := data.rank
-  root := data.root
-  entry := data.entry
-  target := data.target
-  root_entry := data.root_entry
-  root_target := data.root_target
+  toLocalResponseNodes := data.toLocalResponseNodes
   MixedPlayerContinuationCompatibility :=
     data.MixedPlayerContinuationCompatibility
   LegalCoreHistoryEntryInterface := data.LegalCoreHistoryEntryInterface

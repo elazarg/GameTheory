@@ -127,17 +127,8 @@ structure RectangularContinuationBranchingRecursionAt
     [Fintype G.State] [∀ player, Finite (G.Act player)]
     (Constraint : ι → Type*)
     [∀ player, Fintype (Constraint player)]
-    (s₀ : G.State) (v : Payoff ι) (δ : ℝ) where
-  Rank : Type
-  rankLt : Rank → Rank → Prop
-  rank_wellFounded : WellFounded rankLt
-  Node : Type
-  rank : Node → Rank
-  root : Node
-  entry : Node → G.State
-  target : Node → Payoff ι
-  root_entry : entry root = s₀
-  root_target : target root = v
+    (s₀ : G.State) (v : Payoff ι) (δ : ℝ)
+    extends G.LocalResponseNodes s₀ v where
   continuationSystem :
     Node →
       RectangularContinuationSystem
@@ -184,16 +175,7 @@ def toPublicResponseBranchingRecursionAt
     (C : G.RectangularContinuationBranchingRecursionAt
       Constraint s₀ v δ) :
     G.PublicResponseBranchingRecursionAt s₀ v δ where
-  Rank := C.Rank
-  rankLt := C.rankLt
-  rank_wellFounded := C.rank_wellFounded
-  Node := C.Node
-  rank := C.rank
-  root := C.root
-  entry := C.entry
-  target := C.target
-  root_entry := C.root_entry
-  root_target := C.root_target
+  toLocalResponseNodes := C.toLocalResponseNodes
   CompatibleContinuation := fun node =>
     (C.continuationSystem node).SimultaneouslyFeasible
   PublicResponse := C.PublicResponse

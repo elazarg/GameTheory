@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
+import GameTheory.Concepts.Stochastic.LocalResponseRecursion
 import GameTheory.Concepts.Stochastic.PublicPhaseCertificate
 
 /-!
@@ -48,36 +49,16 @@ silently replaced by the root problem.
 The two strategic compatibility propositions are deliberately abstract here
 because their concrete statements depend on the local-response construction;
 their proofs remain mandatory node-indexed fields and are passed explicitly
-to the closer. -/
-structure PublicLocalResponseRecursionAt
+to the closer.
+
+This is the `Goal`-generic `LocalResponseRecursionAt` at the public-phase
+punishment-system goal; all field names and the well-founded compilation are
+inherited from there. -/
+abbrev PublicLocalResponseRecursionAt
     (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
     [Finite G.State] [∀ i, Finite (G.Act i)]
-    (s₀ : G.State) (v : Payoff ι) (δ : ℝ) where
-  Rank : Type
-  rankLt : Rank → Rank → Prop
-  rank_wellFounded : WellFounded rankLt
-  Node : Type
-  rank : Node → Rank
-  root : Node
-  entry : Node → G.State
-  target : Node → Payoff ι
-  root_entry : entry root = s₀
-  root_target : target root = v
-  MixedPlayerContinuationCompatibility : Node → Prop
-  LegalCoreHistoryEntryInterface : Node → Prop
-  mixedPlayerContinuationCompatibility :
-    ∀ node, MixedPlayerContinuationCompatibility node
-  legalCoreHistoryEntryInterface :
-    ∀ node, LegalCoreHistoryEntryInterface node
-  closeLocalResponse :
-    ∀ node : Node,
-      (∀ child : Node, rankLt (rank child) (rank node) →
-        G.IsPublicPhasePunishmentSystemAt
-          (entry child) (target child) δ) →
-      MixedPlayerContinuationCompatibility node →
-      LegalCoreHistoryEntryInterface node →
-      G.IsPublicPhasePunishmentSystemAt
-        (entry node) (target node) δ
+    (s₀ : G.State) (v : Payoff ι) (δ : ℝ) : Type 1 :=
+  G.LocalResponseRecursionAt G.IsPublicPhasePunishmentSystemAt s₀ v δ
 
 namespace PublicLocalResponseRecursionAt
 
@@ -89,20 +70,8 @@ variable {G : StochasticGame ι} [Fintype ι] [DecidableEq ι]
 public-phase punishment-system interface. -/
 theorem toIsPublicPhasePunishmentSystemAt
     (C : G.PublicLocalResponseRecursionAt s₀ v δ) :
-    G.IsPublicPhasePunishmentSystemAt s₀ v δ := by
-  let nodeLt : C.Node → C.Node → Prop :=
-    C.rankLt.onFun C.rank
-  have hnode : WellFounded nodeLt := by
-    exact C.rank_wellFounded.onFun (f := C.rank)
-  let compile : ∀ node : C.Node,
-      G.IsPublicPhasePunishmentSystemAt
-        (C.entry node) (C.target node) δ :=
-    hnode.fix fun node recurse =>
-      C.closeLocalResponse node
-        (fun child hchild => recurse child hchild)
-        (C.mixedPlayerContinuationCompatibility node)
-        (C.legalCoreHistoryEntryInterface node)
-  simpa only [C.root_entry, C.root_target] using compile C.root
+    G.IsPublicPhasePunishmentSystemAt s₀ v δ :=
+  C.compile
 
 end PublicLocalResponseRecursionAt
 

@@ -36,36 +36,16 @@ namespace StochasticGame
 variable {ι : Type}
 
 /-- One completed well-founded local-response recursion whose local result is
-the expectation-level adaptive potential certificate. -/
-structure AdaptiveLocalResponseRecursionAt
+the expectation-level adaptive potential certificate.
+
+This is the `Goal`-generic `LocalResponseRecursionAt` at the adaptive
+potential certificate goal: it differs from
+`PublicLocalResponseRecursionAt` in exactly that predicate. -/
+abbrev AdaptiveLocalResponseRecursionAt
     (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
     [Finite G.State] [∀ i, Finite (G.Act i)]
-    (s₀ : G.State) (v : Payoff ι) (δ : ℝ) where
-  Rank : Type
-  rankLt : Rank → Rank → Prop
-  rank_wellFounded : WellFounded rankLt
-  Node : Type
-  rank : Node → Rank
-  root : Node
-  entry : Node → G.State
-  target : Node → Payoff ι
-  root_entry : entry root = s₀
-  root_target : target root = v
-  MixedPlayerContinuationCompatibility : Node → Prop
-  LegalCoreHistoryEntryInterface : Node → Prop
-  mixedPlayerContinuationCompatibility :
-    ∀ node, MixedPlayerContinuationCompatibility node
-  legalCoreHistoryEntryInterface :
-    ∀ node, LegalCoreHistoryEntryInterface node
-  closeLocalResponse :
-    ∀ node : Node,
-      (∀ child : Node, rankLt (rank child) (rank node) →
-        G.IsAdaptivePotentialCertificateAt
-          (entry child) (target child) δ) →
-      MixedPlayerContinuationCompatibility node →
-      LegalCoreHistoryEntryInterface node →
-      G.IsAdaptivePotentialCertificateAt
-        (entry node) (target node) δ
+    (s₀ : G.State) (v : Payoff ι) (δ : ℝ) : Type 1 :=
+  G.LocalResponseRecursionAt G.IsAdaptivePotentialCertificateAt s₀ v δ
 
 namespace AdaptiveLocalResponseRecursionAt
 
@@ -76,21 +56,8 @@ variable {G : StochasticGame ι} [Fintype ι] [DecidableEq ι]
 /-- Compile the root certificate by well-founded induction on the node rank. -/
 theorem toIsAdaptivePotentialCertificateAt
     (construction : G.AdaptiveLocalResponseRecursionAt s₀ v δ) :
-    G.IsAdaptivePotentialCertificateAt s₀ v δ := by
-  let nodeLt : construction.Node → construction.Node → Prop :=
-    construction.rankLt.onFun construction.rank
-  have hnode : WellFounded nodeLt :=
-    construction.rank_wellFounded.onFun (f := construction.rank)
-  let compile : ∀ node : construction.Node,
-      G.IsAdaptivePotentialCertificateAt
-        (construction.entry node) (construction.target node) δ :=
-    hnode.fix fun node recurse =>
-      construction.closeLocalResponse node
-        (fun child hchild => recurse child hchild)
-        (construction.mixedPlayerContinuationCompatibility node)
-        (construction.legalCoreHistoryEntryInterface node)
-  simpa only [construction.root_entry, construction.root_target] using
-    compile construction.root
+    G.IsAdaptivePotentialCertificateAt s₀ v δ :=
+  construction.compile
 
 /-- A public local-response recursion is, in particular, an adaptive one. -/
 def ofPublic

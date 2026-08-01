@@ -70,17 +70,8 @@ typed obstruction. -/
 structure AdaptiveLocalResponseAtlasAt
     (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
     [Finite G.State] [∀ i, Finite (G.Act i)]
-    (s₀ : G.State) (v : Payoff ι) (error : ℝ) where
-  Rank : Type
-  rankLt : Rank → Rank → Prop
-  rank_wellFounded : WellFounded rankLt
-  Node : Type
-  rank : Node → Rank
-  root : Node
-  entry : Node → G.State
-  target : Node → Payoff ι
-  root_entry : entry root = s₀
-  root_target : target root = v
+    (s₀ : G.State) (v : Payoff ι) (error : ℝ)
+    extends G.LocalResponseNodes s₀ v where
   Obstruction : Node → Type
   classify :
     ∀ node,
@@ -99,10 +90,8 @@ theorem certificate_or_obstruction
     (atlas : G.AdaptiveLocalResponseAtlasAt s₀ v error) :
     G.IsAdaptivePotentialCertificateAt s₀ v error ∨
       ∃ node : atlas.Node, Nonempty (atlas.Obstruction node) := by
-  let nodeLt : atlas.Node → atlas.Node → Prop :=
-    atlas.rankLt.onFun atlas.rank
-  have hnode : WellFounded nodeLt :=
-    atlas.rank_wellFounded.onFun (f := atlas.rank)
+  have hnode : WellFounded (atlas.rankLt.onFun atlas.rank) :=
+    atlas.nodeLt_wellFounded
   let compile : ∀ node : atlas.Node,
       G.IsAdaptivePotentialCertificateAt
           (atlas.entry node) (atlas.target node) error ∨

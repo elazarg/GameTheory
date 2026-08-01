@@ -291,17 +291,8 @@ prove `closeResponse` without a punishment, account, or phase construction. -/
 structure PublicResponseBranchingRecursionAt
     (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
     [Finite G.State] [∀ i, Finite (G.Act i)]
-    (s₀ : G.State) (v : Payoff ι) (δ : ℝ) where
-  Rank : Type
-  rankLt : Rank → Rank → Prop
-  rank_wellFounded : WellFounded rankLt
-  Node : Type
-  rank : Node → Rank
-  root : Node
-  entry : Node → G.State
-  target : Node → Payoff ι
-  root_entry : entry root = s₀
-  root_target : target root = v
+    (s₀ : G.State) (v : Payoff ι) (δ : ℝ)
+    extends G.LocalResponseNodes s₀ v where
   CompatibleContinuation : Node → Prop
   PublicResponse : Node → Prop
   LegalCoreHistoryEntryInterface : Node → Prop
@@ -340,16 +331,7 @@ by the explicit disjunction rather than by an assumed compatibility proof. -/
 def toPublicLocalResponseRecursionAt
     (C : G.PublicResponseBranchingRecursionAt s₀ v δ) :
     G.PublicLocalResponseRecursionAt s₀ v δ where
-  Rank := C.Rank
-  rankLt := C.rankLt
-  rank_wellFounded := C.rank_wellFounded
-  Node := C.Node
-  rank := C.rank
-  root := C.root
-  entry := C.entry
-  target := C.target
-  root_entry := C.root_entry
-  root_target := C.root_target
+  toLocalResponseNodes := C.toLocalResponseNodes
   MixedPlayerContinuationCompatibility := fun node =>
     C.CompatibleContinuation node ∨ C.PublicResponse node
   LegalCoreHistoryEntryInterface := C.LegalCoreHistoryEntryInterface
