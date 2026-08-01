@@ -27,8 +27,8 @@ profile plays action `0` at both states.
 
 ## Provenance
 
-This is the counterexample game of Part E (§11–§13) of
-`ephemeral/Question71-MixedContextStrategicRouting.md`: a finite genuine source
+This is the counterexample game of Part E (§11–§13) of an untracked local
+research note on mixed-context strategic routing: a finite genuine source
 datum for which all four routing strategies of the mixed-context
 strategic-routing theorem fail.  **This file is only the raw layer** — the game
 itself and its direct equilibrium facts.  The four-route no-go theorems need

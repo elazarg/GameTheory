@@ -10,10 +10,10 @@ import Mathlib.Analysis.Real.Sqrt
 /-!
 # A permanent no-go boundary: unscaled tail variation does not control discount bias
 
-This file is deliberately **not** wired into `GameTheory.lean`: it is a standalone, self-contained
-record of a boundary fact for the uniform-equilibrium program, and does not import or edit
-`MertensNeymanCriterion.lean` (its abstract predicates are re-declared here, independently, to
-avoid interfering with concurrent work on that file).
+This file is wired into the root `GameTheory.lean` build; it is nonetheless a standalone,
+self-contained record of a boundary fact for the uniform-equilibrium program, and does not import
+or edit `MertensNeymanCriterion.lean` (its abstract predicates are re-declared here, independently,
+to avoid interfering with concurrent work on that file).
 
 ## The point
 

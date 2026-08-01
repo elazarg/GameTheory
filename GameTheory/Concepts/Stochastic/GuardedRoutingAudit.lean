@@ -10,10 +10,10 @@ import Mathlib.Data.Set.Finite.Lattice
 /-!
 # Guarded routing audit: the abstract skeleton
 
-Provenance: this file is the game-free skeleton of the Question 77 audit
-(`ephemeral/Question77-ProgressCompletenessAudit.md`).  It formalizes only the
-bookkeeping layer of that audit -- the part which is genuinely independent of
-the analytic atlas -- over an arbitrary node type.  It is deliberately *not*
+Provenance: this file is the game-free skeleton of the Question 77 audit, whose
+full statement is recorded in an untracked local research note.  It formalizes
+only the bookkeeping layer of that audit -- the part which is genuinely
+independent of the analytic atlas -- over an arbitrary node type.  It is deliberately *not*
 Theorem 77: the full guarded registry (refined obstruction cells, the coverage
 formulas (8)-(9), the status-refined neutral graph (17) and its phase map (18))
 is future work gated on the rank re-review.

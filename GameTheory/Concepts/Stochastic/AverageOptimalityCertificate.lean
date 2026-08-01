@@ -18,8 +18,8 @@ stationary policy, with **no discount factor and no `1/λ` anywhere**.
 
 The discounted route to a uniform value guarantee converts a discounted
 Bellman certificate to an average-payoff guarantee via a `β / (1 − β)`
-rescaling that diverges as the discount `λ := 1 − β → 0`: a proved wall (see
-`ephemeral/UniformEquilibriumInsights.md` §8). The escape is to certify the
+rescaling that diverges as the discount `λ := 1 − β → 0`: a proved wall (recorded in an
+untracked local research note). The escape is to certify the
 average payoff *directly*, with a **bounded, state-dependent benchmark `ρ`**
 (the "gain") and a **bounded bias `u`** satisfying the classical undiscounted
 average-reward optimality inequalities for a stationary policy — exactly the

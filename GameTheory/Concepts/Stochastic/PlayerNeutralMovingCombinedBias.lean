@@ -19,6 +19,12 @@ term `c * ε`.
 
 This file records only that finite-dimensional implication.  It makes no
 claim that the error tends to zero along a parameter schedule.
+
+**Status.** The exact (error-free) moving combined-bias extension that this
+finite-dimensional implication might suggest has since been refuted by an
+explicit counterexample, recorded in an untracked local research note.  The
+fixed-parameter form proved here is therefore the strongest result available
+on this line, and it is not being pursued further.
 -/
 
 set_option autoImplicit false

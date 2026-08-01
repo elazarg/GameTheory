@@ -42,6 +42,19 @@ theory results.
 - An approximate discounted Nash folk theorem for strictly individually
   rational feasible payoffs in observable mixed-action repeated games.
 
+**Stochastic games and the uniform-equilibrium program**
+
+- Finite stochastic games with behavior strategies, finite-horizon average and
+  discounted payoffs, and the statement of the open uniform-equilibrium
+  existence problem (the repository's only intentional `sorry`).
+- Shapley's discounted zero-sum value, Fink's discounted stationary equilibria,
+  and a conditional Mertens-Neyman criterion.
+- Uniform equilibrium payoffs for absorbing states, action-independent
+  transitions, one-step-absorbing games, single-controller zero-sum games
+  (modulo one named hypothesis), and the Big Match (Blackwell-Ferguson,
+  machine-checked with its history-dependence no-go).
+- See `GameTheory/Concepts/Stochastic/README.md` for a map of the program.
+
 **Mechanism design, auctions, and social choice**
 
 - Bayesian games, finite information-design primitives, and a finite revelation
