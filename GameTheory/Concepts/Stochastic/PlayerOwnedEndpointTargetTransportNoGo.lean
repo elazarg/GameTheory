@@ -133,36 +133,15 @@ def profile (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
 def value (state : State) (player : Player) : ℝ :=
   if player then 0 else if state then 1 else 0
 
+/-- The shared Fubini expansion of a product of two Boolean mixed actions,
+specialized to this file's player index. -/
 private theorem expect_pmfPi_bool
     (m : Player → PMF Bool) (f : (Player → Bool) → ℝ) :
     expect (pmfPi m) f =
       expect (m false) (fun owner =>
         expect (m true) (fun other =>
-          f (fun player => if player then other else owner))) := by
-  classical
-  have hfalse : Function.update m false (m false) = m :=
-    Function.update_eq_self false m
-  rw [← hfalse, pmfPi_update_bind, expect_bind]
-  apply congrArg (expect (m false))
-  funext owner
-  have htrue :
-      Function.update (Function.update m false (PMF.pure owner))
-          true (m true) =
-        Function.update m false (PMF.pure owner) := by
-    funext player
-    cases player <;> simp
-  rw [← htrue, pmfPi_update_bind, expect_bind]
-  apply congrArg (expect (m true))
-  funext other
-  have hpure :
-      Function.update
-          (Function.update m false (PMF.pure owner))
-          true (PMF.pure other) =
-        fun player =>
-          PMF.pure (if player then other else owner) := by
-    funext player
-    cases player <;> simp
-  rw [hpure, pmfPi_pure, expect_pure]
+          f (fun player => if player then other else owner))) :=
+  BigMatch.expect_pmfPi_bool m f
 
 private theorem pureDeviationAuxEU_eq
     (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1)

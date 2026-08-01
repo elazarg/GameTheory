@@ -68,6 +68,8 @@ def inducedKernel
       p hp0 hp1 state)).bind
     (PrescribedEndpointTargetTransportNoGo.game.transition state)
 
+/-- The shared Fubini expansion of a product of two Boolean mixed actions,
+specialized to this file's player index. -/
 private theorem expect_pmfPi_bool
     (m : PrescribedEndpointTargetTransportNoGo.Player → PMF Bool)
     (f :
@@ -75,31 +77,8 @@ private theorem expect_pmfPi_bool
     expect (pmfPi m) f =
       expect (m false) (fun owner =>
         expect (m true) (fun other =>
-          f (fun player => if player then other else owner))) := by
-  classical
-  have hfalse : Function.update m false (m false) = m :=
-    Function.update_eq_self false m
-  rw [← hfalse, pmfPi_update_bind, expect_bind]
-  apply congrArg (expect (m false))
-  funext owner
-  have htrue :
-      Function.update (Function.update m false (PMF.pure owner))
-          true (m true) =
-        Function.update m false (PMF.pure owner) := by
-    funext player
-    cases player <;> simp
-  rw [← htrue, pmfPi_update_bind, expect_bind]
-  apply congrArg (expect (m true))
-  funext other
-  have hpure :
-      Function.update
-          (Function.update m false (PMF.pure owner))
-          true (PMF.pure other) =
-        fun player =>
-          PMF.pure (if player then other else owner) := by
-    funext player
-    cases player <;> simp
-  rw [hpure, pmfPi_pure, expect_pure]
+          f (fun player => if player then other else owner))) :=
+  BigMatch.expect_pmfPi_bool m f
 
 /-- The explicit Bellman profile induces exactly the punctured leak kernel.
 At `p = 0`, this specializes to the endpoint identity kernel. -/
@@ -118,9 +97,7 @@ theorem inducedKernel_eq_puncturedKernel
       PrescribedEndpointTargetTransportNoGo.game,
       PrescribedEndpointTargetTransportNoGo.otherAction,
       puncturedKernel,
-      PrescribedEndpointTargetTransportNoGo.expect_coin,
-      PrescribedEndpointTargetTransportNoGo.coin_true_toReal,
-      PrescribedEndpointTargetTransportNoGo.coin_false_toReal]
+      PrescribedEndpointTargetTransportNoGo.expect_coin]
 
 /-- The analytic endpoint of the induced Bellman kernels is the identity
 kernel used below. -/
@@ -133,9 +110,7 @@ theorem inducedKernel_zero_eq_endpointKernel
   funext destination
   unfold Math.ProbabilityMassFunction.toVector
   cases state <;> cases destination <;>
-    simp [puncturedKernel, endpointKernel,
-      PrescribedEndpointTargetTransportNoGo.coin_true_toReal,
-      PrescribedEndpointTargetTransportNoGo.coin_false_toReal]
+    simp [puncturedKernel, endpointKernel]
 
 /-- The forward displacement from the low entry state is the indicator of
 the high state. -/

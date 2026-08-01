@@ -32,18 +32,18 @@ namespace StochasticGame
 namespace PrescribedEndpointTargetTransportNoGo
 
 open Filter Math Math.OnlineLearning Math.PMFProduct Math.Probability Set
+open PlayerOwnedEndpointTargetTransportNoGo (weight)
 
-abbrev Player := Bool
-abbrev State := Bool
-abbrev Act (_ : Player) : Type := Bool
+/-! ## Shared scaffold
 
-instance (player : Player) : Fintype (Act player) := by
-  unfold Act
-  infer_instance
+The Boolean player/state/action scaffold, the Boolean coin, the analytic
+Bellman-coordinate weights and the universal calendar hazard are shared
+with `PlayerOwnedEndpointTargetTransportNoGo`; only the game, the value
+curve and the germ differ. -/
 
-instance (player : Player) : DecidableEq (Act player) := by
-  unfold Act
-  infer_instance
+abbrev Player := PlayerOwnedEndpointTargetTransportNoGo.Player
+abbrev State := PlayerOwnedEndpointTargetTransportNoGo.State
+abbrev Act := PlayerOwnedEndpointTargetTransportNoGo.Act
 
 def otherAction (action : ∀ player, Act player) : Bool :=
   action true
@@ -78,24 +78,23 @@ instance (player : Player) : DecidableEq (game.Act player) := by
   change DecidableEq Bool
   infer_instance
 
-def coin (p : ℝ) (hp0 : 0 ≤ p) (hp1 : p ≤ 1) : PMF Bool :=
-  BigMatch.coinPMF p hp0 hp1
+abbrev coin := PlayerOwnedEndpointTargetTransportNoGo.coin
 
 @[simp]
 theorem coin_true_toReal (p : ℝ) (hp0 : 0 ≤ p) (hp1 : p ≤ 1) :
-    (coin p hp0 hp1 true).toReal = p := by
-  exact BigMatch.coinPMF_apply_true_toReal p hp0 hp1
+    (coin p hp0 hp1 true).toReal = p :=
+  PlayerOwnedEndpointTargetTransportNoGo.coin_true_toReal p hp0 hp1
 
 @[simp]
 theorem coin_false_toReal (p : ℝ) (hp0 : 0 ≤ p) (hp1 : p ≤ 1) :
-    (coin p hp0 hp1 false).toReal = 1 - p := by
-  exact BigMatch.coinPMF_apply_false_toReal p hp0 hp1
+    (coin p hp0 hp1 false).toReal = 1 - p :=
+  PlayerOwnedEndpointTargetTransportNoGo.coin_false_toReal p hp0 hp1
 
 theorem expect_coin
     (p : ℝ) (hp0 : 0 ≤ p) (hp1 : p ≤ 1) (f : Bool → ℝ) :
     expect (coin p hp0 hp1) f =
-      p * f true + (1 - p) * f false := by
-  exact BigMatch.expect_coinPMF p hp0 hp1 f
+      p * f true + (1 - p) * f false :=
+  PlayerOwnedEndpointTargetTransportNoGo.expect_coin p hp0 hp1 f
 
 /-- The first player uses an irrelevant pure action.  At low, the second
 player leaks with probability `t`; at high, both use the endpoint action. -/
@@ -120,36 +119,15 @@ probability `t`; its endpoint is zero. -/
 def value (t : ℝ) (state : State) (player : Player) : ℝ :=
   if player then 0 else if state then 1 else -t / (2 - t)
 
+/-- The shared Fubini expansion of a product of two Boolean mixed actions,
+specialized to this file's player index. -/
 private theorem expect_pmfPi_bool
     (m : Player → PMF Bool) (f : (Player → Bool) → ℝ) :
     expect (pmfPi m) f =
       expect (m false) (fun owner =>
         expect (m true) (fun other =>
-          f (fun player => if player then other else owner))) := by
-  classical
-  have hfalse : Function.update m false (m false) = m :=
-    Function.update_eq_self false m
-  rw [← hfalse, pmfPi_update_bind, expect_bind]
-  apply congrArg (expect (m false))
-  funext owner
-  have htrue :
-      Function.update (Function.update m false (PMF.pure owner))
-          true (m true) =
-        Function.update m false (PMF.pure owner) := by
-    funext player
-    cases player <;> simp
-  rw [← htrue, pmfPi_update_bind, expect_bind]
-  apply congrArg (expect (m true))
-  funext other
-  have hpure :
-      Function.update
-          (Function.update m false (PMF.pure owner))
-          true (PMF.pure other) =
-        fun player =>
-          PMF.pure (if player then other else owner) := by
-    funext player
-    cases player <;> simp
-  rw [hpure, pmfPi_pure, expect_pure]
+          f (fun player => if player then other else owner))) :=
+  BigMatch.expect_pmfPi_bool m f
 
 private theorem pureDeviationAuxEU_eq
     (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1)
@@ -202,18 +180,8 @@ theorem equilibrium
     field_simp [denominator_ne]
     ring
 
-/-- Analytic Bellman-coordinate weights. -/
-def weight
-    (t : ℝ) (state : State) (player : Player) (action : Bool) : ℝ :=
-  if state then
-    if action then 0 else 1
-  else if player then
-    if action then t else 1 - t
-  else if action then
-    0
-  else
-    1
-
+-- The analytic Bellman-coordinate weights `weight` are the shared ones of
+-- `PlayerOwnedEndpointTargetTransportNoGo`, opened at the top of the file.
 def assignment (t : ℝ) : BellmanVar game → ℝ
   | .mix state player action => weight t state player action
   | .val state player => value t state player
@@ -289,8 +257,7 @@ theorem finkProfile_finkPointAt
   unfold Math.ProbabilityMassFunction.toVector
   rw [game.bellmanDecodeProfile_apply_toReal]
   cases state <;> cases player <;> cases action <;>
-    simp [germ, assignment, weight, profile, coin_true_toReal,
-      coin_false_toReal]
+    simp [germ, assignment, weight, profile]
 
 /-! ## Exact prescribed-calendar realization -/
 
@@ -309,23 +276,15 @@ def survivalProbability (stage : ℕ) : ℝ :=
   BigMatch.MarkovScalar.liveProbability calendarHazard stage
 
 theorem tendsto_survivalProbability_zero :
-    Tendsto survivalProbability atTop (nhds 0) := by
-  have hbranch :=
-    BigMatch.MarkovScalar.summable_or_tendsto_liveProbability_zero
-      calendarHazard
-      (fun stage => (calendarHazard_mem_Ioo stage).1.le)
-      (fun stage => (calendarHazard_mem_Ioo stage).2.le)
-  exact hbranch.resolve_left not_summable_calendarHazard
+    Tendsto survivalProbability atTop (nhds 0) :=
+  PlayerOwnedEndpointTargetTransportNoGo.tendsto_survivalProbability_zero
 
 def scalarEndpointTarget (stage : ℕ) : ℝ :=
   1 - survivalProbability stage
 
 theorem tendsto_scalarEndpointTarget_one :
-    Tendsto scalarEndpointTarget atTop (nhds 1) := by
-  change
-    Tendsto (fun stage => 1 - survivalProbability stage)
-      atTop (nhds 1)
-  simpa using tendsto_const_nhds.sub tendsto_survivalProbability_zero
+    Tendsto scalarEndpointTarget atTop (nhds 1) :=
+  PlayerOwnedEndpointTargetTransportNoGo.tendsto_scalarEndpointTarget_one
 
 /-- The prescribed universal-calendar Fink profile. -/
 def prescribedProfile : game.BehaviorProfile :=
