@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.AnalyticPlayerOwnedOccupationAlternative
+import GameTheory.Concepts.Stochastic.OccupationBellmanAccountIdentity
 
 /-!
 # Player-owned charge as an exact Bellman account
@@ -14,6 +15,10 @@ the actual stage-plus-continuation value of an owned transition and the
 prescribed stage-plus-continuation value at the same source.  This identity
 is the semantic bridge needed to use a full-family charged-flow potential
 against arbitrary unilateral behavior.
+
+Both statements are the player-owned instance of the generic oriented
+account of `OccupationBellmanAccountIdentity`, whose orientation is the
+pair of projections of an owned state/action row.
 -/
 
 set_option autoImplicit false
@@ -38,14 +43,10 @@ def playerOwnedOccupationStageEUAt
     (germ : G.AnalyticBellmanGerm)
     {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) germ.radius)
     (who : ι) :
-    OwnerOccupationIndex G who → ℝ
-  | .inl source =>
-      G.finkStageEU (germ.finkPointAt ht) source who
-  | .inr response =>
-      G.mixedStageEU response.1
-        (Function.update
-          (G.finkProfile (germ.finkPointAt ht) response.1)
-          who (PMF.pure response.2)) who
+    OwnerOccupationIndex G who → ℝ :=
+  germ.occupationRowStageEUAt ht who
+    (fun response : G.State × G.Act who => response.1)
+    (fun response => response.2)
 
 omit [DecidableEq G.State] in
 /-- The full player-owned raw charge is exactly the excess of actual
@@ -64,35 +65,11 @@ theorem playerOwnedOccupation_bellmanAccount_eq
         G.finkContinuationEU B (germ.finkPointAt ht)
           (ownerActualOccupationSource who index) who +
         germ.rawPlayerOwnedOccupationCharge B who t index := by
-  cases index with
-  | inl source =>
-      change
-        G.finkStageEU (germ.finkPointAt ht) source who +
-              expect
-                (G.finkStateKernel
-                  (germ.finkPointAt ht) source)
-                (fun state => B state who) =
-          G.finkStageEU (germ.finkPointAt ht) source who +
-            G.finkContinuationEU B
-              (germ.finkPointAt ht) source who +
-            0
-      unfold finkContinuationEU
-      rw [G.expect_finkStateKernel_eq]
-      ring
-  | inr response =>
-      simp only [playerOwnedOccupationStageEUAt,
-        finkOwnerActualOccupationKernelAt,
-        ownerOccupationIndexEmbedding,
-        finkActualOccupationKernelAt, occupationKernel,
-        ownerActualOccupationSource,
-        finkActualOccupationSource, occupationSource,
-        rawPlayerOwnedOccupationCharge]
-      rw [germ.rawPureDeviationStageGainCurve_eq_finkPointAt ht,
-        germ.rawPureDeviationContinuationGainCurve_eq_finkPointAt B ht,
-        G.finkContinuationGain_eq_expect_stateKernels]
-      unfold finkStageGain finkStageEU finkContinuationEU mixedStageEU
-      rw [← G.expect_finkStateKernel_eq]
-      ring
+  have account :=
+    germ.occupationRow_bellmanAccount_eq B ht who
+      (fun response : G.State × G.Act who => response.1)
+      (fun response => response.2) index
+  cases index <;> exact account
 
 omit [DecidableEq G.State] in
 /-- Rearranged form: the prescribed Bellman residual plus the player-owned
@@ -116,8 +93,11 @@ theorem playerOwnedOccupation_payoffResidual_eq
           B (ownerActualOccupationSource who index) who -
           target) +
         germ.rawPlayerOwnedOccupationCharge B who t index := by
-  rw [germ.playerOwnedOccupation_bellmanAccount_eq B ht who index]
-  ring
+  have residual :=
+    germ.occupationRow_payoffResidual_eq B ht who target
+      (fun response : G.State × G.Act who => response.1)
+      (fun response => response.2) index
+  cases index <;> exact residual
 
 end AnalyticBellmanGerm
 end StochasticGame
