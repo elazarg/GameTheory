@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
+import GameTheory.Concepts.Stochastic.MovingEndpointOccupationEvidence
 import Math.PMFIter
 import Math.Probability.ChargedClassSupportRank
 import Math.Probability.IntegratedResponseLedger
@@ -42,12 +43,13 @@ open Filter Math Math.Probability Set
 variable {State : Type*} [Fintype State] [DecidableEq State]
 
 /-- Endpoint displacement, with `true` denoting the forward orientation
-and `false` its negative. -/
-def signedCharge
+and `false` its negative.  This is exactly the oriented displacement of
+`MovingEndpointOccupationEvidence`, kept under its own frozen-kernel name. -/
+abbrev signedCharge
     (target : State → ℝ) (entry : State)
     (forward : Bool) (state : State) : ℝ :=
-  if forward then target state - target entry
-  else target entry - target state
+  MovingEndpointOccupationEvidence.orientedDisplacement
+    target entry forward state
 
 /-- A fixed kernel as a source-indexed operational transition family. -/
 def indexedKernel (kernel : State → PMF State) (state : State) :
@@ -500,7 +502,7 @@ theorem cumulativeTransport_not_sublinear :
           ((2 * n : ℕ) : ℝ)⁻¹ *
             |cumulativeTransport kernel target false (2 * n)|)
         atTop (nhds 0) := by
-    apply sublinear.comp
+    apply (isAsymptoticallySublinear_iff_tendsto.mp sublinear).comp
     apply tendsto_atTop.2
     intro lower
     filter_upwards [eventually_ge_atTop lower] with n hn

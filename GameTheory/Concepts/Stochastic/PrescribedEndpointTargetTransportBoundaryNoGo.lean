@@ -63,7 +63,7 @@ theorem prescribedPlayerOwnedFinkCalendarProfile_eq :
           PrescribedEndpointTargetTransportNoGo.germ.radius := by
     simpa only [
       AnalyticBellmanGerm.LowerValueJet.residualCalendarScale,
-      playerOwnedCalendarScale,
+      playerOwnedCalendarScale, calendarScale,
       shiftedUniversalEpochScale, Nat.zero_add] using
         unshiftedValid (anytimeEpochIndex stage)
   change
@@ -161,7 +161,7 @@ theorem not_hasSublinearPrescribedCalendarEndpointTargetTransport :
         PrescribedEndpointTargetTransportNoGo.germ
         false 0 unshiftedValid := by
   intro boundary
-  have hzero := boundary false
+  have hzero := isAsymptoticallySublinear_iff_tendsto.mp (boundary false)
   have hone :=
     tendsto_normalized_abs_expectedPrescribedCalendarEndpointTargetTransport_one
   have : (1 : ℝ) = 0 :=

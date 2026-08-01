@@ -501,12 +501,8 @@ theorem
         (choice n history).source = history (Fin.last n)) :
     IsAsymptoticallySublinear
       (correction.expectedSelectedQuotient initial choice) := by
-  change Filter.Tendsto
-    (fun T : ℕ =>
-      (T : ℝ)⁻¹ *
-        correction.expectedSelectedQuotient initial choice T)
-    Filter.atTop (nhds 0)
-  rw [tendsto_zero_iff_norm_tendsto_zero]
+  rw [isAsymptoticallySublinear_iff_tendsto,
+    tendsto_zero_iff_norm_tendsto_zero]
   apply squeeze_zero'
     (g := fun T : ℕ =>
       (T : ℝ)⁻¹ *
@@ -521,8 +517,9 @@ theorem
         initial choice source_compatible T)
       (inv_nonneg.mpr (Nat.cast_nonneg T))
   · exact
-      IsAsymptoticallySublinear.const
-        (2 * finiteStatePotentialBound correction.potential)
+      isAsymptoticallySublinear_iff_tendsto.mp
+        (IsAsymptoticallySublinear.const
+          (2 * finiteStatePotentialBound correction.potential))
 
 /-- Expected cumulative quotient under a predictable behavioral mixture of
 owned invisible responses. -/
@@ -804,12 +801,8 @@ theorem
           response.source = history (Fin.last n)) :
     IsAsymptoticallySublinear
       (correction.expectedMixedQuotient initial selection) := by
-  change Filter.Tendsto
-    (fun T : ℕ =>
-      (T : ℝ)⁻¹ *
-        correction.expectedMixedQuotient initial selection T)
-    Filter.atTop (nhds 0)
-  rw [tendsto_zero_iff_norm_tendsto_zero]
+  rw [isAsymptoticallySublinear_iff_tendsto,
+    tendsto_zero_iff_norm_tendsto_zero]
   apply squeeze_zero'
     (g := fun T : ℕ =>
       (T : ℝ)⁻¹ *
@@ -824,8 +817,9 @@ theorem
         initial selection source_compatible T)
       (inv_nonneg.mpr (Nat.cast_nonneg T))
   · exact
-      IsAsymptoticallySublinear.const
-        (2 * finiteStatePotentialBound correction.potential)
+      isAsymptoticallySublinear_iff_tendsto.mp
+        (IsAsymptoticallySublinear.const
+          (2 * finiteStatePotentialBound correction.potential))
 
 private theorem mixedTransitionCostSum_neg
     {S I : Type*} [Finite I]

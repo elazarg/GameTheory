@@ -165,7 +165,7 @@ theorem prescribedCalendar_poissonBellman_eq
       historyContinuationEU finkContinuationEU
     rw [G.stageActionDist_scheduledMarkovBehaviorProfile]
   rw [hstage, hcontinuation]
-  simpa only [playerOwnedCalendarScale] using
+  simpa only [playerOwnedCalendarScale, calendarScale] using
     (show
       G.finkStageEU
             (germ.finkPointAt

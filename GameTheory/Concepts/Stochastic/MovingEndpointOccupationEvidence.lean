@@ -137,12 +137,7 @@ theorem exists_frequently_average_ge
         ε ≤ (horizon : ℝ)⁻¹ *
           cumulativeOccupation law evidence.state horizon := by
   have hnot := evidence.occupation_not_sublinear
-  change
-    ¬Tendsto
-      (fun horizon : ℕ =>
-        (horizon : ℝ)⁻¹ *
-          cumulativeOccupation law evidence.state horizon)
-      atTop (nhds 0) at hnot
+  rw [isAsymptoticallySublinear_iff_tendsto] at hnot
   rw [Metric.tendsto_atTop] at hnot
   push Not at hnot
   obtain ⟨ε, hε, hfailure⟩ := hnot
@@ -178,14 +173,8 @@ private theorem sublinear_abs
     {budget : ℕ → ℝ}
     (hbudget : IsAsymptoticallySublinear budget) :
     IsAsymptoticallySublinear fun horizon => |budget horizon| := by
-  change
-    Tendsto
-      (fun horizon : ℕ => (horizon : ℝ)⁻¹ * |budget horizon|)
-      atTop (nhds 0)
-  change
-    Tendsto
-      (fun horizon : ℕ => (horizon : ℝ)⁻¹ * budget horizon)
-      atTop (nhds 0) at hbudget
+  rw [isAsymptoticallySublinear_iff_tendsto]
+  rw [isAsymptoticallySublinear_iff_tendsto] at hbudget
   have habs := hbudget.abs
   simpa [abs_mul, abs_inv, abs_of_nonneg] using habs
 

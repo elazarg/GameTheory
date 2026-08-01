@@ -40,10 +40,13 @@ variable {ι : Type} {G : StochasticGame ι}
   [Fintype ι] [DecidableEq ι]
   [∀ i, Fintype (G.Act i)] [∀ i, DecidableEq (G.Act i)]
 
-/-- The shifted analytic parameter used at one calendar stage. -/
-def playerOwnedCalendarScale
+/-- The shifted analytic parameter used at one calendar stage.  This is
+exactly `calendarScale`, the shared wrapper around
+`shiftedUniversalEpochScale` and `anytimeEpochIndex` also used by the
+player-neutral calendar account. -/
+abbrev playerOwnedCalendarScale
     (startEpoch stage : ℕ) : ℝ :=
-  shiftedUniversalEpochScale startEpoch (anytimeEpochIndex stage)
+  calendarScale startEpoch stage
 
 /-- The actual unilateral deviation against the changing Fink calendar. -/
 def scheduledPlayerOwnedFinkDeviationProfile
@@ -237,6 +240,7 @@ theorem playerOwnedCalendar_bellmanAccount_eq
       germ B who startEpoch valid dev history,
     ← expect_add]
   unfold playerOwnedCalendarRawCharge playerOwnedCalendarScale
+    calendarScale
   calc
     expect (dev stage history) (fun action =>
         germ.playerOwnedOccupationStageEUAt

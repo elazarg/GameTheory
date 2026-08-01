@@ -319,8 +319,8 @@ theorem playerOwnedPoissonResidualCalendarBudget_sublinear
       (seed.tendsto_playerOwnedPoissonResidualEnvelope
           correction hPoisson).comp
         (tendsto_finiteBias_playerOwnedCalendarScale startEpoch)
-  simpa [IsAsymptoticallySublinear,
-    playerOwnedPoissonResidualCalendarBudget, stageResidual]
+  rw [isAsymptoticallySublinear_iff_tendsto]
+  simpa [playerOwnedPoissonResidualCalendarBudget, stageResidual]
     using hstage.cesaro
 
 omit [DecidableEq G.State] in
@@ -367,7 +367,7 @@ theorem
               history.2 who -
             seed.playerOwnedPoissonBias correction history.2 who -
           germ.endpointValue history.2 who := by
-    simpa only [playerOwnedCalendarScale] using hsemantic
+    simpa only [playerOwnedCalendarScale, calendarScale] using hsemantic
   unfold playerOwnedCalendarPrescribedBellmanResidual
   change
     G.finkStageEU

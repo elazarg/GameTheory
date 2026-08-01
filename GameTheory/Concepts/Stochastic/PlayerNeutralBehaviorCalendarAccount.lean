@@ -44,10 +44,13 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
   [Fintype G.State] [DecidableEq G.State]
   [∀ i, Fintype (G.Act i)] [∀ i, DecidableEq (G.Act i)]
 
-/-- The shifted universal parameter used at one calendar stage. -/
-def playerNeutralCalendarScale
+/-- The shifted universal parameter used at one calendar stage.  This is
+exactly `calendarScale`, the shared wrapper around
+`shiftedUniversalEpochScale` and `anytimeEpochIndex` also used by the
+player-owned calendar account. -/
+abbrev playerNeutralCalendarScale
     (startEpoch stage : ℕ) : ℝ :=
-  shiftedUniversalEpochScale startEpoch (anytimeEpochIndex stage)
+  calendarScale startEpoch stage
 
 /-- The owner strategy obtained by realizing a full-history predictable
 occupation selector at the parameter of the current calendar epoch. -/

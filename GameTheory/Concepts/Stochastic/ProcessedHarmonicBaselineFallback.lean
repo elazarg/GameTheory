@@ -582,8 +582,9 @@ theorem
         historyLaw selection) := by
   unfold calendarFallbackPositiveGain
   exact
-    (correction.tendsto_calendarFallbackPositiveGainStage
-      stage_nonpos historyLaw selection).cesaro
+    isAsymptoticallySublinear_iff_tendsto.mpr
+      (correction.tendsto_calendarFallbackPositiveGainStage
+        stage_nonpos historyLaw selection).cesaro
 
 omit [DecidableEq G.State] in
 /-- Operational fallback capstone. Either a fixed owned stage response

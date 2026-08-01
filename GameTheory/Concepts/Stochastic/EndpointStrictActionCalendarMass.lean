@@ -511,7 +511,7 @@ theorem scheduledFinkDeviation_endpointValueDrift_eq
   unfold historyContinuationEU
   rw [G.stageActionDist_update_scheduledMarkovBehaviorProfile]
   rw [pmfPi_update_bind, expect_bind]
-  dsimp only [playerNeutralCalendarScale]
+  dsimp only [playerNeutralCalendarScale, calendarScale]
   rw [baseline]
   have gainExpectation :
       expect (dev stage history)
@@ -603,7 +603,7 @@ theorem endpointStrictActionMassBudget_sublinear
   have cumulative :
       IsAsymptoticallySublinear
         (fun T => ∑ stage ∈ Finset.range T, stageError stage) :=
-    stageError_zero.cesaro
+    isAsymptoticallySublinear_iff_tendsto.mpr stageError_zero.cesaro
   unfold endpointStrictActionMassBudget
   apply IsAsymptoticallySublinear.const_mul
   exact

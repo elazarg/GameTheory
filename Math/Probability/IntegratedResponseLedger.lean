@@ -48,8 +48,8 @@ theorem IsAsymptoticallySublinear.of_nonneg_le
     (hfg : ∀ T, f T ≤ g T)
     (hg : IsAsymptoticallySublinear g) :
     IsAsymptoticallySublinear f := by
-  change Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * f T) atTop (nhds 0)
-  change Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * g T) atTop (nhds 0) at hg
+  rw [isAsymptoticallySublinear_iff_tendsto]
+  rw [isAsymptoticallySublinear_iff_tendsto] at hg
   apply squeeze_zero'
   · exact Filter.Eventually.of_forall fun T =>
       mul_nonneg (inv_nonneg.mpr (Nat.cast_nonneg T)) (hf T)

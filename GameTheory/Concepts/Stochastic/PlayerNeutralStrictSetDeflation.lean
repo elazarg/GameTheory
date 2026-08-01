@@ -125,9 +125,10 @@ theorem tendsto_strictSetExpectedUse_div_horizon_zero
     Tendsto
       (fun T : ℕ => C.strictSetExpectedUse initial choice T / T)
       atTop (nhds 0) := by
-  simpa only [IsAsymptoticallySublinear, div_eq_mul_inv, mul_comm] using
-    C.strictSetExpectedUse_isAsymptoticallySublinear
-      initial choice source_compatible
+  simpa only [div_eq_mul_inv, mul_comm] using
+    isAsymptoticallySublinear_iff_tendsto.mp
+      (C.strictSetExpectedUse_isAsymptoticallySublinear
+        initial choice source_compatible)
 
 /-- The expected predictable mass placed on every strictly separated
 player-neutral column is sublinear. -/
@@ -177,9 +178,10 @@ theorem tendsto_strictSetExpectedMass_div_horizon_zero
     Tendsto
       (fun T : ℕ => C.strictSetExpectedMass initial selection T / T)
       atTop (nhds 0) := by
-  simpa only [IsAsymptoticallySublinear, div_eq_mul_inv, mul_comm] using
-    C.strictSetExpectedMass_isAsymptoticallySublinear
-      initial selection source_compatible
+  simpa only [div_eq_mul_inv, mul_comm] using
+    isAsymptoticallySublinear_iff_tendsto.mp
+      (C.strictSetExpectedMass_isAsymptoticallySublinear
+        initial selection source_compatible)
 
 /-- A cumulative contribution supported on pure uses of the strict set is
 sublinear whenever its absolute value is bounded by `L` per such use. -/

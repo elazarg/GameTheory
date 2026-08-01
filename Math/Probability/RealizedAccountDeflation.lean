@@ -72,11 +72,7 @@ theorem IsRealizedByAccount.cumulative_isAsymptoticallySublinear
     (account_bounded : ∀ t, |account t| ≤ bound) :
     IsAsymptoticallySublinear
       (fun T => ∑ t ∈ Finset.range T, charge t) := by
-  change Filter.Tendsto
-    (fun T : ℕ =>
-      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, charge t)
-    Filter.atTop (nhds 0)
-  rw [tendsto_zero_iff_norm_tendsto_zero]
+  rw [isAsymptoticallySublinear_iff_tendsto, tendsto_zero_iff_norm_tendsto_zero]
   apply squeeze_zero'
     (g := fun T : ℕ => (T : ℝ)⁻¹ * (2 * bound))
   · filter_upwards with T
@@ -87,7 +83,8 @@ theorem IsRealizedByAccount.cumulative_isAsymptoticallySublinear
     exact mul_le_mul_of_nonneg_left
       (realized.abs_sum_range_le_two_mul account_bounded T)
       (inv_nonneg.mpr (Nat.cast_nonneg T))
-  · exact IsAsymptoticallySublinear.const (2 * bound)
+  · exact isAsymptoticallySublinear_iff_tendsto.mp
+      (IsAsymptoticallySublinear.const (2 * bound))
 
 namespace ProcessedSpanCounterexample
 

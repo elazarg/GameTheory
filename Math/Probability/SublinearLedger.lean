@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Math.Probability.ShadowSeparatorAccounting
+import Mathlib.Analysis.Asymptotics.Lemmas
 
 /-!
 # Sublinear shadow-or-separator ledgers
@@ -17,45 +18,58 @@ named cumulative budget is sublinear.  Once those estimates are available,
 the theorem below combines them without reopening the pathwise accounting.
 -/
 
-open Filter Set Topology
+open Filter Set Topology Asymptotics
 
 namespace Math.Probability
 
 noncomputable section
 
-/-- A real cumulative budget is sublinear when its ratio to calendar time
-converges to zero. -/
+/-- A real cumulative budget is sublinear when it is little-o of calendar
+time. -/
 def IsAsymptoticallySublinear (budget : ℕ → ℝ) : Prop :=
-  Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * budget T) atTop (nhds 0)
+  budget =o[atTop] fun T : ℕ => (T : ℝ)
+
+/-- The little-o definition of sublinearity unfolds to the classical
+ratio-to-zero limit used throughout the pathwise accounting. -/
+theorem isAsymptoticallySublinear_iff_tendsto {budget : ℕ → ℝ} :
+    IsAsymptoticallySublinear budget ↔
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * budget T) atTop (nhds 0) := by
+  have hgf : ∀ᶠ T : ℕ in atTop, (T : ℝ) = 0 → budget T = 0 := by
+    filter_upwards [eventually_gt_atTop 0] with T hT hT0
+    exact absurd hT0 (Nat.cast_ne_zero.mpr hT.ne')
+  unfold IsAsymptoticallySublinear
+  rw [isLittleO_iff_tendsto' hgf]
+  simp only [div_eq_inv_mul]
 
 namespace IsAsymptoticallySublinear
 
 theorem const (c : ℝ) :
     IsAsymptoticallySublinear (fun _ : ℕ => c) := by
-  simpa [IsAsymptoticallySublinear] using
-    (tendsto_natCast_atTop_atTop.inv_tendsto_atTop.mul_const c)
+  refine isLittleO_const_left.mpr (Or.inr ?_)
+  have heq : (norm ∘ fun T : ℕ => (T : ℝ)) = fun T : ℕ => (T : ℝ) := by
+    funext T
+    change ‖(T : ℝ)‖ = (T : ℝ)
+    rw [Real.norm_eq_abs, abs_of_nonneg (Nat.cast_nonneg T)]
+  rw [heq]
+  exact tendsto_natCast_atTop_atTop
 
 theorem add {f g : ℕ → ℝ}
     (hf : IsAsymptoticallySublinear f)
     (hg : IsAsymptoticallySublinear g) :
-    IsAsymptoticallySublinear (fun T => f T + g T) := by
-  change Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * f T) atTop (nhds 0) at hf
-  change Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * g T) atTop (nhds 0) at hg
-  simpa only [IsAsymptoticallySublinear, mul_add, add_zero] using
-    Filter.Tendsto.add hf hg
+    IsAsymptoticallySublinear (fun T => f T + g T) :=
+  Asymptotics.IsLittleO.add hf hg
 
 theorem const_mul {f : ℕ → ℝ}
     (hf : IsAsymptoticallySublinear f) (c : ℝ) :
-    IsAsymptoticallySublinear (fun T => c * f T) := by
-  change Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * f T) atTop (nhds 0) at hf
-  simpa only [IsAsymptoticallySublinear, ← mul_assoc, mul_comm c,
-    mul_zero, zero_mul] using Filter.Tendsto.const_mul c hf
+    IsAsymptoticallySublinear (fun T => c * f T) :=
+  Asymptotics.IsLittleO.const_mul_left hf c
 
 theorem eventually_average_le {f : ℕ → ℝ}
     (hf : IsAsymptoticallySublinear f)
     {δ : ℝ} (hδ : 0 < δ) :
     ∀ᶠ T : ℕ in atTop, (T : ℝ)⁻¹ * f T ≤ δ := by
-  exact (hf.eventually (eventually_lt_nhds hδ)).mono
+  have htendsto := isAsymptoticallySublinear_iff_tendsto.mp hf
+  exact (htendsto.eventually (eventually_lt_nhds hδ)).mono
     (fun _ h => h.le)
 
 end IsAsymptoticallySublinear

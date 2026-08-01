@@ -143,7 +143,8 @@ the high state. -/
 theorem signedCharge_forward (state : State) :
     FrozenEndpointTransport.signedCharge target false true state =
       target state := by
-  simp [FrozenEndpointTransport.signedCharge, target]
+  simp [FrozenEndpointTransport.signedCharge,
+    MovingEndpointOccupationEvidence.orientedDisplacement, target]
 
 /-- At the endpoint, available support steps are self-loops. -/
 theorem endpoint_availableSupportStep_eq
@@ -208,7 +209,8 @@ theorem no_endpoint_positiveChargedCirculation :
     apply Finset.sum_eq_zero
     intro index _
     rw [endpoint_reachableIndex_eq_false index]
-    simp [FrozenEndpointTransport.signedCharge, target]
+    simp [FrozenEndpointTransport.signedCharge,
+      MovingEndpointOccupationEvidence.orientedDisplacement, target]
   rw [charge_eq_zero] at charge_eq_one
   norm_num at charge_eq_one
 
@@ -333,7 +335,8 @@ theorem punctured_positiveChargedCirculation
   · intro destination
     cases destination <;>
       norm_num [actualOccupationColumn, puncturedKernel, source]
-  · norm_num [FrozenEndpointTransport.signedCharge, target]
+  · norm_num [FrozenEndpointTransport.signedCharge,
+      MovingEndpointOccupationEvidence.orientedDisplacement, target]
   · intro state mass_pos
     cases state
     · exact Relation.ReflTransGen.refl

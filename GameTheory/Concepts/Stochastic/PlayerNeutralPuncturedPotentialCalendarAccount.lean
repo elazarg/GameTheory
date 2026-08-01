@@ -176,11 +176,7 @@ theorem completedAndCurrentEpochBudget_sublinear
       simpa only [add_div, zero_add] using
         hcompleted_ratio.add hcurrent_ratio
     exact hratioK.comp tendsto_localAnytimeEpochIndex
-  change Tendsto
-    (fun T : ℕ =>
-      (T : ℝ)⁻¹ *
-        completedAndCurrentEpochBudget epochBudget T)
-    atTop (𝓝 0)
+  rw [Probability.isAsymptoticallySublinear_iff_tendsto]
   apply squeeze_zero'
     (g := fun T : ℕ =>
       ((∑ k ∈ Finset.range (anytimeEpochIndex T),
@@ -373,6 +369,13 @@ variable {ι : Type} {G : StochasticGame ι}
 namespace AnalyticBellmanGerm
 
 open GameTheory.StochasticGame.AnalyticBellmanGerm.AnalyticScaledChargedOccupationPotential
+
+/-- The shifted analytic parameter used at one calendar stage.  This is the
+common game-side wrapper around `shiftedUniversalEpochScale` and
+`anytimeEpochIndex` shared by the player-neutral and player-owned calendar
+accounts. -/
+def calendarScale (startEpoch stage : ℕ) : ℝ :=
+  shiftedUniversalEpochScale startEpoch (anytimeEpochIndex stage)
 
 /-- Restrict the punctured scaled-potential inequality to any fixed active
 subfamily of raw player-neutral occupation columns.  The active subtype is

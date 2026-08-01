@@ -571,8 +571,9 @@ theorem
         historyLaw selection) := by
   unfold calendarResponseGainCumulativeBudget
   exact
-    (correction.tendsto_calendarResponseGainStageBudget
-      historyLaw selection).cesaro
+    isAsymptoticallySublinear_iff_tendsto.mpr
+      (correction.tendsto_calendarResponseGainStageBudget
+        historyLaw selection).cesaro
 
 end LowerValueJet
 end AnalyticBellmanGerm

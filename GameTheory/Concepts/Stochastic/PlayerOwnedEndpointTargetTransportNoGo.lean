@@ -452,6 +452,7 @@ theorem calendarHazard_lt_one (stage : ℕ) :
     calendarHazard stage < 1 := by
   simpa [calendarHazard,
     AnalyticBellmanGerm.playerOwnedCalendarScale,
+    AnalyticBellmanGerm.calendarScale,
     shiftedUniversalEpochScale] using
       universalEpochScale_lt_one (anytimeEpochIndex stage)
 
@@ -508,6 +509,7 @@ theorem reciprocalCalendarArgument_le_hazard (stage : ℕ) :
     _ = calendarHazard stage := by
       simp [calendarHazard,
         AnalyticBellmanGerm.playerOwnedCalendarScale,
+        AnalyticBellmanGerm.calendarScale,
         shiftedUniversalEpochScale]
 
 private theorem not_summable_reciprocalCalendarArgument :
@@ -617,7 +619,7 @@ theorem scalarEndpointTargetTransport_not_sublinear :
         (fun T : ℕ =>
           (T : ℝ)⁻¹ * scalarEndpointTargetTransport T)
         atTop (nhds 0) := by
-    exact hsublinear
+    exact isAsymptoticallySublinear_iff_tendsto.mp hsublinear
   have hfalse : (1 : ℝ) = 0 :=
     tendsto_nhds_unique
       tendsto_normalized_scalarEndpointTargetTransport_one hzero
@@ -743,6 +745,7 @@ private theorem endpointValue_finkOwnerAlwaysEnable
   cases state <;>
     simp [profile, game, ownerAction, otherAction, value, calendarHazard,
       AnalyticBellmanGerm.playerOwnedCalendarScale,
+      AnalyticBellmanGerm.calendarScale,
       shiftedUniversalEpochScale, Function.update, expect_coin]
 
 private theorem historyContinuationEU_scheduledLeakProfile
@@ -857,7 +860,7 @@ theorem no_playerOwnedCalendarEndpointTargetTransportAccount :
       Tendsto
         (fun T : ℕ => (T : ℝ)⁻¹ * account.budget false T)
         atTop (nhds 0) :=
-    account.sublinear false
+    isAsymptoticallySublinear_iff_tendsto.mp (account.sublinear false)
   have hlimit : (1 : ℝ) ≤ 0 := by
     apply le_of_tendsto_of_tendsto
       tendsto_normalized_scalarEndpointTargetTransport_one

@@ -348,6 +348,7 @@ private theorem prescribedMixedProfile_eq
       calendarHazard,
       PlayerOwnedEndpointTargetTransportNoGo.calendarHazard,
       AnalyticBellmanGerm.playerOwnedCalendarScale,
+      AnalyticBellmanGerm.calendarScale,
       shiftedUniversalEpochScale]
       using calendarHazard_mem_Ioo stage
   rw [
@@ -360,6 +361,7 @@ private theorem prescribedMixedProfile_eq
       calendarHazard,
       PlayerOwnedEndpointTargetTransportNoGo.calendarHazard,
       AnalyticBellmanGerm.playerOwnedCalendarScale,
+      AnalyticBellmanGerm.calendarScale,
       shiftedUniversalEpochScale]
   have hprofile := congrFun (finkProfile_finkPointAt valid) state
   calc

@@ -154,13 +154,8 @@ theorem transitionSetExpectedUse_isAsymptoticallySublinear
   have hupper_sublinear :
       IsAsymptoticallySublinear (fun _ : ℕ => upper) :=
     IsAsymptoticallySublinear.const upper
-  change Tendsto
-    (fun T : ℕ =>
-      (T : ℝ)⁻¹ *
-        transitionSetExpectedUse initial kernel choice active T)
-    atTop (nhds 0)
-  change Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * upper)
-    atTop (nhds 0) at hupper_sublinear
+  rw [isAsymptoticallySublinear_iff_tendsto]
+  rw [isAsymptoticallySublinear_iff_tendsto] at hupper_sublinear
   apply squeeze_zero'
   · exact Filter.Eventually.of_forall fun T =>
       mul_nonneg (inv_nonneg.mpr (Nat.cast_nonneg T)) (hnonneg T)
@@ -208,13 +203,8 @@ theorem transitionSetExpectedMass_isAsymptoticallySublinear
   have hupper_sublinear :
       IsAsymptoticallySublinear (fun _ : ℕ => upper) :=
     IsAsymptoticallySublinear.const upper
-  change Tendsto
-    (fun T : ℕ =>
-      (T : ℝ)⁻¹ *
-        transitionSetExpectedMass initial kernel selection active T)
-    atTop (nhds 0)
-  change Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * upper)
-    atTop (nhds 0) at hupper_sublinear
+  rw [isAsymptoticallySublinear_iff_tendsto]
+  rw [isAsymptoticallySublinear_iff_tendsto] at hupper_sublinear
   apply squeeze_zero'
   · exact Filter.Eventually.of_forall fun T =>
       mul_nonneg (inv_nonneg.mpr (Nat.cast_nonneg T)) (hnonneg T)
@@ -248,7 +238,8 @@ theorem tendsto_transitionSetExpectedUse_div_horizon_zero
   have h := transitionSetExpectedUse_isAsymptoticallySublinear
     initial kernel source choice active potential heta hpotential hsource
     hdrift hmargin
-  simpa only [IsAsymptoticallySublinear, div_eq_mul_inv, mul_comm] using h
+  have htendsto := isAsymptoticallySublinear_iff_tendsto.mp h
+  simpa only [div_eq_mul_inv, mul_comm] using htendsto
 
 /-- Direct ratio form of mixed strict-set deflation. -/
 theorem tendsto_transitionSetExpectedMass_div_horizon_zero
@@ -276,7 +267,8 @@ theorem tendsto_transitionSetExpectedMass_div_horizon_zero
   have h := transitionSetExpectedMass_isAsymptoticallySublinear
     initial kernel source selection active potential heta hpotential hsource
     hdrift hmargin
-  simpa only [IsAsymptoticallySublinear, div_eq_mul_inv, mul_comm] using h
+  have htendsto := isAsymptoticallySublinear_iff_tendsto.mp h
+  simpa only [div_eq_mul_inv, mul_comm] using htendsto
 
 /-- Any expected absolute cumulative contribution dominated pathwise by a
 constant times the pure strict-set use count is sublinear. -/
@@ -339,13 +331,8 @@ theorem transitionSetUseContribution_isAsymptoticallySublinear
         (fun T =>
           L * transitionSetExpectedUse initial kernel choice active T) :=
     huse.const_mul L
-  change Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * absoluteContribution T)
-    atTop (nhds 0)
-  change Tendsto
-    (fun T : ℕ =>
-      (T : ℝ)⁻¹ *
-        (L * transitionSetExpectedUse initial kernel choice active T))
-    atTop (nhds 0) at hscaled
+  rw [isAsymptoticallySublinear_iff_tendsto]
+  rw [isAsymptoticallySublinear_iff_tendsto] at hscaled
   apply squeeze_zero'
   · exact Filter.Eventually.of_forall fun T =>
       mul_nonneg (inv_nonneg.mpr (Nat.cast_nonneg T)) (hnonneg T)
@@ -415,13 +402,8 @@ theorem transitionSetMassContribution_isAsymptoticallySublinear
         (fun T =>
           L * transitionSetExpectedMass initial kernel selection active T) :=
     hmass.const_mul L
-  change Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * absoluteContribution T)
-    atTop (nhds 0)
-  change Tendsto
-    (fun T : ℕ =>
-      (T : ℝ)⁻¹ *
-        (L * transitionSetExpectedMass initial kernel selection active T))
-    atTop (nhds 0) at hscaled
+  rw [isAsymptoticallySublinear_iff_tendsto]
+  rw [isAsymptoticallySublinear_iff_tendsto] at hscaled
   apply squeeze_zero'
   · exact Filter.Eventually.of_forall fun T =>
       mul_nonneg (inv_nonneg.mpr (Nat.cast_nonneg T)) (hnonneg T)

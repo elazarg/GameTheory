@@ -676,8 +676,9 @@ theorem
         initial selection) := by
   unfold realizedPositiveBellmanGain
   exact
-    (correction.tendsto_realizedPositiveBellmanGainStage
-      stage_nonpos initial selection source_compatible).cesaro
+    isAsymptoticallySublinear_iff_tendsto.mpr
+      (correction.tendsto_realizedPositiveBellmanGainStage
+        stage_nonpos initial selection source_compatible).cesaro
 
 omit [DecidableEq G.State] in
 /-- Operational processed-harmonic alternative stated entirely for the

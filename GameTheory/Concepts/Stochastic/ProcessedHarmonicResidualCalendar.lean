@@ -390,8 +390,9 @@ theorem
         historyLaw selection) := by
   unfold calendarResidualCumulativeBudget
   exact
-    (correction.tendsto_calendarResidualStageBudget
-      historyLaw selection).cesaro
+    isAsymptoticallySublinear_iff_tendsto.mpr
+      (correction.tendsto_calendarResidualStageBudget
+        historyLaw selection).cesaro
 
 /-- Calendar budget with an arbitrary supplied law for the moving residual.
 The endpoint harmonic slack and the moving residual may be estimated under
