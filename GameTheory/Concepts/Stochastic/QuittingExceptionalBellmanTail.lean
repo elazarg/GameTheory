@@ -771,6 +771,141 @@ theorem quittingFiniteRootPayoffGap_le_exceptional
       (reward (quittingSingletonTerminal who) who) bound
       hsolo hsoloBound hmass0 hmass1 hquit hcontinue)
 
+/-- One-step residual of a finite prescribed hazard, with `fuel` stages left
+after the current root. -/
+def quittingFiniteRootOneStepResidual
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (hazard : ℕ → PMF Bool) (start fuel : ℕ) : ℝ :=
+  max (quittingFixedOpponentsQuitValue reward roots who start)
+      (quittingFixedOpponentsContinueReward reward roots who start +
+        quittingFixedOpponentsContinueMass roots who start *
+          quittingFiniteRootPayoff reward roots who hazard
+            (start + 1) fuel) -
+    quittingFiniteRootPayoff reward roots who hazard start (fuel + 1)
+
+/-- The finite local residual controls the corrected own-never atom.  This
+is the finite algebraic kernel of the exceptional-player tail argument. -/
+theorem quittingExceptionalAtom_le_finiteRootOneStepResidual
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (hazard : ℕ → PMF Bool) (start fuel : ℕ)
+    (bound : ℝ) (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S, |reward S who| ≤ bound)
+    (hsolo : 0 ≤ reward (quittingSingletonTerminal who) who) :
+    quittingOpponentSurvivalWeight roots who start (fuel + 1) *
+          reward (quittingSingletonTerminal who) who *
+          quittingFiniteHazardWeight hazard start (fuel + 1)
+            (Fin.last (fuel + 1)) ≤
+      quittingFiniteRootOneStepResidual reward roots who hazard start fuel +
+        2 * bound *
+          (1 - quittingOpponentSurvivalWeight roots who start (fuel + 1)) := by
+  let currentMass := quittingFixedOpponentsContinueMass roots who start
+  let survival :=
+    quittingOpponentSurvivalWeight roots who start (fuel + 1)
+  let ownSurvival :=
+    quittingFiniteHazardWeight hazard start (fuel + 1)
+      (Fin.last (fuel + 1))
+  let soloReward := reward (quittingSingletonTerminal who) who
+  let prescribed :=
+    quittingFiniteRootPayoff reward roots who hazard start (fuel + 1)
+  let quitValue := quittingFixedOpponentsQuitValue reward roots who start
+  let residual :=
+    quittingFiniteRootOneStepResidual reward roots who hazard start fuel
+  have hprescribed :=
+    abs_quittingFiniteRootPayoff_sub_exceptionalTarget_le
+      reward roots who hazard start (fuel + 1) bound hbound0 hreward hsolo
+  have hprescribedUpper :
+      prescribed - survival * soloReward * (1 - ownSurvival) ≤
+        bound * (1 - survival) := by
+    rw [abs_le] at hprescribed
+    exact hprescribed.2
+  have hquitBound :=
+    abs_quittingFixedOpponentsQuitValue_sub_continueMass_mul_solo_le
+      reward roots who start bound hbound0 hreward
+  have hquitLower :
+      -(bound * (1 - currentMass)) ≤
+        quitValue - currentMass * soloReward := by
+    rw [abs_le] at hquitBound
+    exact hquitBound.1
+  have hmass0 : 0 ≤ currentMass := by
+    exact quittingStationaryContinueMass_nonneg
+      (Function.update (roots start) who (PMF.pure false))
+  have htail1 :
+      quittingFiniteContinueWeight
+          (quittingFixedOpponentsContinueMass roots who)
+          (start + 1) fuel ≤ 1 := by
+    apply quittingFiniteContinueWeight_le_one
+    · intro time
+      exact quittingStationaryContinueMass_nonneg
+        (Function.update (roots time) who (PMF.pure false))
+    · intro time
+      exact quittingStationaryContinueMass_le_one
+        (Function.update (roots time) who (PMF.pure false))
+  have hsurvivalEq :
+      survival = currentMass *
+        quittingFiniteContinueWeight
+          (quittingFixedOpponentsContinueMass roots who)
+          (start + 1) fuel := by
+    dsimp [survival, currentMass]
+    rw [← quittingFiniteContinueWeight_fixedOpponents_eq_survivalWeight]
+    rfl
+  have hsurvivalLe : survival ≤ currentMass := by
+    rw [hsurvivalEq]
+    calc
+      currentMass *
+            quittingFiniteContinueWeight
+              (quittingFixedOpponentsContinueMass roots who)
+              (start + 1) fuel ≤ currentMass * 1 :=
+        mul_le_mul_of_nonneg_left htail1 hmass0
+      _ = currentMass := mul_one _
+  have hscaledHazard :
+      bound * (1 - currentMass) ≤ bound * (1 - survival) :=
+    mul_le_mul_of_nonneg_left (by linarith) hbound0
+  have hresidualLower : quitValue - prescribed ≤ residual := by
+    dsimp [quitValue, prescribed, residual,
+      quittingFiniteRootOneStepResidual]
+    exact sub_le_sub_right (le_max_left _ _) _
+  have hsoloGap : 0 ≤ (currentMass - survival) * soloReward :=
+    mul_nonneg (sub_nonneg.mpr hsurvivalLe) hsolo
+  dsimp [survival, soloReward, ownSurvival, residual, prescribed,
+    quitValue, currentMass] at hprescribedUpper
+  dsimp [survival, soloReward, ownSurvival, residual, prescribed,
+    quitValue, currentMass] at hquitLower
+  dsimp [survival, soloReward, ownSurvival, residual, prescribed,
+    quitValue, currentMass] at hscaledHazard
+  dsimp [survival, soloReward, ownSurvival, residual, prescribed,
+    quitValue, currentMass] at hresidualLower
+  dsimp [survival, soloReward, ownSurvival, residual, prescribed,
+    quitValue, currentMass] at hsoloGap ⊢
+  nlinarith
+
+/-- Finite exceptional local-to-global estimate: the prescribed local
+residual plus four times the opponent-tail error caps every finite deviation.
+No assertion is made here that these finite values select an infinite
+terminal boundary. -/
+theorem quittingFiniteRootPayoffGap_le_residual_add_exceptionalTail
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribedHazard deviationHazard : ℕ → PMF Bool)
+    (start fuel : ℕ)
+    (bound : ℝ) (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S, |reward S who| ≤ bound)
+    (hsolo : 0 ≤ reward (quittingSingletonTerminal who) who) :
+    quittingFiniteRootPayoff reward roots who deviationHazard start (fuel + 1) -
+        quittingFiniteRootPayoff reward roots who prescribedHazard
+          start (fuel + 1) ≤
+      quittingFiniteRootOneStepResidual reward roots who prescribedHazard
+          start fuel +
+        4 * bound *
+          (1 - quittingOpponentSurvivalWeight roots who start (fuel + 1)) := by
+  have hgap := quittingFiniteRootPayoffGap_le_exceptional
+    reward roots who prescribedHazard deviationHazard start (fuel + 1)
+      bound hbound0 hreward hsolo
+  have hatom := quittingExceptionalAtom_le_finiteRootOneStepResidual
+    reward roots who prescribedHazard start fuel bound hbound0 hreward hsolo
+  linarith
+
 /-- The two finite exceptional-tail estimates imply the corrected cap-gap
 bound, including the own-never atom. -/
 theorem exceptionalBellmanGap_le_of_prescribed_and_cap_bounds
