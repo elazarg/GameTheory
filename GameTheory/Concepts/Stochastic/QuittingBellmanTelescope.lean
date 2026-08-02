@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingPureTimeExtremality
+import GameTheory.Concepts.Stochastic.QuittingExceptionalHazard
 
 /-!
 # Bellman residual telescope along a quitting live path
@@ -390,5 +391,124 @@ theorem quittingBellmanCapGap_le_of_hazardScaled_of_tail_le
   have hscaled := mul_le_mul_of_nonneg_left htail
     (quittingOpponentSurvivalWeight_nonneg roots who start fuel)
   linarith
+
+/-! ## Behavior-profile and exceptional-hazard bridge -/
+
+/-- The product root prescribed by a behavior profile at the unique live
+history of a given stage. -/
+def quittingProfileLiveRoot
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (time : ℕ) : ι → PMF Bool :=
+  fun player => profile player time (quittingLiveHist reward time)
+
+/-- The fixed-root opponent continue coefficient is the existing
+opponent-only conditional live mass. -/
+theorem quittingFixedOpponentsContinueMass_profileLiveRoot
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (who : ι) (time : ℕ) :
+    quittingFixedOpponentsContinueMass
+        (quittingProfileLiveRoot reward profile) who time =
+      quittingJointContinueMass reward
+        (quittingOpponentOnlyProfile reward profile who) time := by
+  unfold quittingFixedOpponentsContinueMass
+    quittingStationaryContinueMass quittingJointContinueMass
+    StochasticGame.stageActionDist quittingOpponentOnlyProfile
+    quittingProfileLiveRoot
+  congr 3
+  funext player
+  by_cases hp : player = who
+  · subst player
+    simp only [Function.update_self, quittingAlwaysContinueStrategy]
+    rfl
+  · simp [Function.update_of_ne hp]
+
+/-- Starting from time zero, the finite survival weights used by the
+Bellman telescope are exactly the existing opponent-only live masses. -/
+theorem quittingOpponentSurvivalWeight_profileLiveRoot_eq_liveMass
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (who : ι) :
+    ∀ fuel,
+      quittingOpponentSurvivalWeight
+          (quittingProfileLiveRoot reward profile) who 0 fuel =
+        quittingLiveMass reward
+          (quittingOpponentOnlyProfile reward profile who) fuel := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      simp [quittingOpponentSurvivalWeight]
+  | succ fuel ih =>
+      calc
+        quittingOpponentSurvivalWeight
+              (quittingProfileLiveRoot reward profile) who 0 (fuel + 1) =
+            quittingOpponentSurvivalWeight
+                (quittingProfileLiveRoot reward profile) who 0 fuel *
+              quittingFixedOpponentsContinueMass
+                (quittingProfileLiveRoot reward profile) who fuel := by
+                  simpa only [Nat.zero_add] using
+                    (quittingOpponentSurvivalWeight_succ
+                      (quittingProfileLiveRoot reward profile) who 0 fuel)
+        _ = quittingLiveMass reward
+              (quittingOpponentOnlyProfile reward profile who) fuel *
+            quittingFixedOpponentsContinueMass
+              (quittingProfileLiveRoot reward profile) who fuel := by rw [ih]
+        _ = quittingLiveMass reward
+              (quittingOpponentOnlyProfile reward profile who) fuel *
+            quittingJointContinueMass reward
+              (quittingOpponentOnlyProfile reward profile who) fuel := by
+                rw [quittingFixedOpponentsContinueMass_profileLiveRoot]
+        _ = quittingLiveMass reward
+              (quittingOpponentOnlyProfile reward profile who) (fuel + 1) :=
+                (quittingLiveMass_succ reward
+                  (quittingOpponentOnlyProfile reward profile who) fuel).symm
+
+/-- Under total almost-sure absorption, for any two distinct players at
+least one Bellman opponent-survival clock contracts to zero.  This is the
+finite-weight form of the already established exceptional-player theorem. -/
+theorem tendsto_zero_quittingOpponentSurvivalWeight_or
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (htotal : Filter.Tendsto (quittingLiveMass reward profile)
+      Filter.atTop (nhds 0))
+    {first second : ι} (hne : first ≠ second) :
+    Filter.Tendsto (fun fuel =>
+        quittingOpponentSurvivalWeight
+          (quittingProfileLiveRoot reward profile) first 0 fuel)
+        Filter.atTop (nhds 0) ∨
+      Filter.Tendsto (fun fuel =>
+        quittingOpponentSurvivalWeight
+          (quittingProfileLiveRoot reward profile) second 0 fuel)
+        Filter.atTop (nhds 0) := by
+  rcases tendsto_zero_quittingOpponentLiveMass_or
+      reward profile htotal hne with hfirst | hsecond
+  · left
+    simpa only [quittingOpponentSurvivalWeight_profileLiveRoot_eq_liveMass]
+      using hfirst
+  · right
+    simpa only [quittingOpponentSurvivalWeight_profileLiveRoot_eq_liveMass]
+      using hsecond
+
+/-- Equivalently, two noncontracting Bellman opponent clocks must belong to
+the same player. -/
+theorem eq_of_quittingOpponentSurvivalWeight_not_tendsto_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (htotal : Filter.Tendsto (quittingLiveMass reward profile)
+      Filter.atTop (nhds 0))
+    {first second : ι}
+    (hfirst : ¬Filter.Tendsto (fun fuel =>
+      quittingOpponentSurvivalWeight
+        (quittingProfileLiveRoot reward profile) first 0 fuel)
+      Filter.atTop (nhds 0))
+    (hsecond : ¬Filter.Tendsto (fun fuel =>
+      quittingOpponentSurvivalWeight
+        (quittingProfileLiveRoot reward profile) second 0 fuel)
+      Filter.atTop (nhds 0)) :
+    first = second := by
+  by_contra hne
+  exact (tendsto_zero_quittingOpponentSurvivalWeight_or
+    reward profile htotal hne).elim hfirst hsecond
 
 end GameTheory
