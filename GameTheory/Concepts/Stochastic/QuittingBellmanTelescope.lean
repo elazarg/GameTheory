@@ -392,6 +392,46 @@ theorem quittingBellmanCapGap_le_of_hazardScaled_of_tail_le
     (quittingOpponentSurvivalWeight_nonneg roots who start fuel)
   linarith
 
+/-- If the opponent-survival clock contracts from the chosen start and the
+cap gap is uniformly bounded, the surviving boundary term vanishes.  This
+is the nonexceptional hazard-scaled conclusion; contraction is assumed at
+the actual start, so an earlier zero factor is irrelevant. -/
+theorem quittingBellmanCapGap_le_hazardScaled_of_survival_tendsto_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribed cap : ℕ → ℝ)
+    (hcap : IsQuittingLiveBellmanCap reward roots who cap)
+    (hgap : ∀ time, 0 ≤ quittingBellmanCapGap prescribed cap time)
+    (η bound : ℝ)
+    (hresidual : ∀ time,
+      quittingPrescribedOneStepResidual reward roots who prescribed time ≤
+        η * (1 - quittingFixedOpponentsContinueMass roots who time))
+    (hbound : ∀ time,
+      quittingBellmanCapGap prescribed cap time ≤ bound)
+    (start : ℕ)
+    (hsurvival : Filter.Tendsto (fun fuel =>
+      quittingOpponentSurvivalWeight roots who start fuel)
+      Filter.atTop (nhds 0)) :
+    quittingBellmanCapGap prescribed cap start ≤ η := by
+  let weight : ℕ → ℝ := fun fuel =>
+    quittingOpponentSurvivalWeight roots who start fuel
+  have hlimit : Filter.Tendsto (fun fuel =>
+      η * (1 - weight fuel) + weight fuel * bound)
+      Filter.atTop (nhds η) := by
+    have hone : Filter.Tendsto (fun _ : ℕ => (1 : ℝ))
+        Filter.atTop (nhds 1) := tendsto_const_nhds
+    have hleft := (hone.sub hsurvival).const_mul η
+    have hright := hsurvival.mul_const bound
+    simpa [weight] using hleft.add hright
+  apply ge_of_tendsto' hlimit
+  intro fuel
+  dsimp [weight]
+  have hfinite := quittingBellmanCapGap_le_hazardScaled_add_tail
+    reward roots who prescribed cap hcap hgap η hresidual start fuel
+  have htail := mul_le_mul_of_nonneg_left (hbound (start + fuel))
+    (quittingOpponentSurvivalWeight_nonneg roots who start fuel)
+  linarith
+
 /-! ## Behavior-profile and exceptional-hazard bridge -/
 
 /-- The product root prescribed by a behavior profile at the unique live
