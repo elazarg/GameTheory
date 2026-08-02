@@ -22,7 +22,173 @@ noncomputable section
 
 namespace GameTheory
 
-open Math.Probability
+open Math.Probability Math.PMFProduct
+
+/-- Removing one distinguished atom from a finite expectation costs at most
+the payoff bound times the complementary probability mass. -/
+theorem abs_expect_sub_singletonContribution_le
+    {Ω : Type} [Fintype Ω] [DecidableEq Ω]
+    (distribution : PMF Ω) (point : Ω) (value : Ω → ℝ)
+    (pointValue bound : ℝ)
+    (hpoint : value point = pointValue)
+    (hbound : ∀ outcome, |value outcome| ≤ bound) :
+    |expect distribution value -
+        (distribution point).toReal * pointValue| ≤
+      bound * (1 - (distribution point).toReal) := by
+  rw [expect_eq_sum]
+  have hmass : ∑ outcome : Ω, (distribution outcome).toReal = 1 :=
+    pmf_toReal_sum_one distribution
+  have hsplitMass := Finset.add_sum_erase
+    (Finset.univ : Finset Ω) (fun outcome =>
+      (distribution outcome).toReal) (Finset.mem_univ point)
+  calc
+    |(∑ outcome : Ω, (distribution outcome).toReal * value outcome) -
+          (distribution point).toReal * pointValue| =
+        |∑ outcome ∈ (Finset.univ : Finset Ω).erase point,
+          (distribution outcome).toReal * value outcome| := by
+            rw [← Finset.add_sum_erase (Finset.univ : Finset Ω)
+              (fun outcome =>
+                (distribution outcome).toReal * value outcome)
+              (Finset.mem_univ point), hpoint]
+            ring_nf
+    _ ≤ ∑ outcome ∈ (Finset.univ : Finset Ω).erase point,
+          |(distribution outcome).toReal * value outcome| :=
+      Finset.abs_sum_le_sum_abs _ _
+    _ = ∑ outcome ∈ (Finset.univ : Finset Ω).erase point,
+          (distribution outcome).toReal * |value outcome| := by
+      apply Finset.sum_congr rfl
+      intro outcome _
+      rw [abs_mul, abs_of_nonneg ENNReal.toReal_nonneg]
+    _ ≤ ∑ outcome ∈ (Finset.univ : Finset Ω).erase point,
+          (distribution outcome).toReal * bound := by
+      apply Finset.sum_le_sum
+      intro outcome _
+      exact mul_le_mul_of_nonneg_left (hbound outcome)
+        ENNReal.toReal_nonneg
+    _ = bound * (1 - (distribution point).toReal) := by
+      rw [← Finset.sum_mul]
+      have herase :
+          ∑ outcome ∈ (Finset.univ : Finset Ω).erase point,
+              (distribution outcome).toReal =
+            1 - (distribution point).toReal := by
+        rw [hmass] at hsplitMass
+        linarith
+      rw [herase]
+      ring_nf
+
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
+/-- The pure joint action at which exactly `who` quits. -/
+def quittingSoloQuitAction (who : ι) : ι → Bool :=
+  Function.update quittingAllContinueAction who true
+
+/-- Exactly `who` quits in the solo-quit action. -/
+@[simp] theorem quittingQuitters_soloQuitAction (who : ι) :
+    quittingQuitters (quittingSoloQuitAction who) = {who} := by
+  ext player
+  by_cases hp : player = who
+  · subst player
+    simp [quittingQuitters, quittingSoloQuitAction]
+  · simp [quittingQuitters, quittingSoloQuitAction,
+      quittingAllContinueAction, hp]
+
+/-- The payoff at the solo-quit action is the singleton terminal reward. -/
+@[simp] theorem quittingRootPayoff_soloQuitAction
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (continuation : Payoff ι) (who : ι) :
+    quittingRootPayoff reward continuation (quittingSoloQuitAction who) who =
+      reward (quittingSingletonTerminal who) who := by
+  have hnonempty :
+      (quittingQuitters (quittingSoloQuitAction who)).Nonempty := by
+    rw [quittingQuitters_soloQuitAction]
+    exact Finset.singleton_nonempty who
+  unfold quittingRootPayoff
+  rw [dif_pos hnonempty]
+  congr
+  exact quittingQuitters_soloQuitAction who
+
+/-- The probability of the solo-quit action when `who` quits surely is the
+probability that every opponent continues. -/
+theorem pmfPi_update_pure_true_soloQuitAction_toReal
+    (root : ι → PMF Bool) (who : ι) :
+    ((pmfPi (Function.update root who (PMF.pure true)))
+        (quittingSoloQuitAction who)).toReal =
+      quittingStationaryContinueMass
+        (Function.update root who (PMF.pure false)) := by
+  unfold quittingStationaryContinueMass
+  apply congrArg ENNReal.toReal
+  rw [pmfPi_apply, pmfPi_apply]
+  apply Finset.prod_congr rfl
+  intro player _
+  by_cases hp : player = who
+  · subst player
+    simp [quittingSoloQuitAction, quittingAllContinueAction]
+  · simp [quittingSoloQuitAction, Function.update_of_ne hp]
+
+/-- Current absorption while `who` continues is paid entirely by the
+opponent hazard. -/
+theorem abs_quittingFixedOpponentsContinueReward_le_hazard
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι) (time : ℕ)
+    (bound : ℝ) (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S, |reward S who| ≤ bound) :
+    |quittingFixedOpponentsContinueReward reward roots who time| ≤
+      bound * (1 - quittingFixedOpponentsContinueMass roots who time) := by
+  let root := Function.update (roots time) who (PMF.pure false)
+  have hpoint : quittingRootPayoff reward (0 : Payoff ι)
+      (quittingAllContinueAction : ι → Bool) who = 0 := by
+    simp [quittingRootPayoff]
+  have hpayoff : ∀ action : ι → Bool,
+      |quittingRootPayoff reward (0 : Payoff ι) action who| ≤ bound := by
+    intro action
+    by_cases hquit : (quittingQuitters action).Nonempty
+    · simpa [quittingRootPayoff, hquit] using
+        hreward ⟨quittingQuitters action, hquit⟩
+    · simpa [quittingRootPayoff, hquit] using hbound0
+  have hestimate := abs_expect_sub_singletonContribution_le
+    (pmfPi root) (quittingAllContinueAction : ι → Bool)
+      (fun action => quittingRootPayoff reward (0 : Payoff ι) action who)
+      0 bound hpoint hpayoff
+  simpa [root, quittingFixedOpponentsContinueReward,
+    quittingFixedOpponentsContinueMass, quittingRootAbsorbingContribution,
+    quittingRootExpectedPayoff, quittingStationaryContinueMass] using hestimate
+
+/-- Quitting now differs from the solo reward times opponent survival only
+on events where at least one opponent also quits. -/
+theorem abs_quittingFixedOpponentsQuitValue_sub_continueMass_mul_solo_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι) (time : ℕ)
+    (bound : ℝ) (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S, |reward S who| ≤ bound) :
+    |quittingFixedOpponentsQuitValue reward roots who time -
+        quittingFixedOpponentsContinueMass roots who time *
+          reward (quittingSingletonTerminal who) who| ≤
+      bound * (1 - quittingFixedOpponentsContinueMass roots who time) := by
+  let root := Function.update (roots time) who (PMF.pure true)
+  let soloAction : ι → Bool := quittingSoloQuitAction who
+  have hpoint : quittingRootPayoff reward (0 : Payoff ι) soloAction who =
+      reward (quittingSingletonTerminal who) who := by
+    simp [soloAction]
+  have hpayoff : ∀ action : ι → Bool,
+      |quittingRootPayoff reward (0 : Payoff ι) action who| ≤ bound := by
+    intro action
+    by_cases hquit : (quittingQuitters action).Nonempty
+    · simpa [quittingRootPayoff, hquit] using
+        hreward ⟨quittingQuitters action, hquit⟩
+    · simpa [quittingRootPayoff, hquit] using hbound0
+  have hestimate := abs_expect_sub_singletonContribution_le
+    (pmfPi root) soloAction
+      (fun action => quittingRootPayoff reward (0 : Payoff ι) action who)
+      (reward (quittingSingletonTerminal who) who) bound hpoint hpayoff
+  have hmass := pmfPi_update_pure_true_soloQuitAction_toReal
+    (roots time) who
+  have hmass' : ((pmfPi root) soloAction).toReal =
+      quittingFixedOpponentsContinueMass roots who time := by
+    simpa [root, soloAction, quittingFixedOpponentsContinueMass] using hmass
+  rw [hmass'] at hestimate
+  simpa [quittingFixedOpponentsQuitValue,
+    quittingFixedOpponentsContinueMass, quittingRootAbsorbingContribution,
+    quittingRootExpectedPayoff, root, soloAction] using hestimate
 
 /-- Finite survival generated by a scalar sequence of continue masses.  The
 recursion is oriented from the current live stage, matching the Bellman
