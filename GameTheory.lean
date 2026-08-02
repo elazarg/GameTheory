@@ -437,6 +437,7 @@ import GameTheory.Concepts.Stochastic.TerminalToUniformDeviationApproximation
 import GameTheory.Concepts.Stochastic.QuittingAlmostSureOpponentUniformization
 import GameTheory.Concepts.Stochastic.QuittingTerminalUniformization
 import GameTheory.Concepts.Stochastic.QuittingTerminalUniformPayoffSelection
+import GameTheory.Concepts.Stochastic.CyclicFourPlayerQuitting
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
 import Math.LinearAlgebra.ExactBlockEliminationConfluence
