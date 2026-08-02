@@ -48,12 +48,14 @@ convention.
 ## The extraction, honestly
 
 The germ API (`AnalyticBellmanGerm`, `EndpointHarmonicJetSpan`,
-`endpointValue`, `endpointFinkPoint`) does **not** expose a tagged
-owner-labeled row system.  There is no definition anywhere in the repository
-producing, from a germ, the finite index type of "genuine unilateral Bellman
-rows of player `i` in a legal public response context".
-`PureExternalityCycleHolonomy` says so in its own module docstring, and this
-file does not pretend otherwise.
+`endpointValue`, `endpointFinkPoint`) does **not by itself** package a tagged
+owner-labeled row system in the leaf-gate format, and it does not produce
+"genuine unilateral Bellman rows of player `i` in a legal public response
+context".  This foundational file therefore keeps `NodeFlowRows` neutral.
+The downstream module `AnalyticEndpointBellmanRowCompiler` canonically
+packages **all actual endpoint owned pure deviations** from the raw analytic
+obstruction data.  It deliberately does not add the missing legal-public-
+response interpretation.
 
 Therefore `NodeFlowRows` takes the row system as a **component** and ties it to
 the node by the coherence that is checkable today:
@@ -77,10 +79,13 @@ the node by the coherence that is checkable today:
    one is genuinely germ-derived; it is a `Prop`, not a field, so it stays
    assumable *and* refutable (`selfLoopRows_not_isEndpointKernelTagged`).
 
-What is **not** checkable today, and is recorded as a gap rather than smuggled
-in: that `grossGain r` is a formally defined Bellman slack of a genuine
-unilateral deviation row.  `PureExternalityCycleHolonomy.rowCharge` reads it
-off the payoff table by hand, and this file inherits that gap verbatim.
+What is **not required by this neutral record** is that `grossGain r` came
+from a genuine unilateral deviation row.  The manual
+`PureExternalityCycleHolonomy.rowCharge` instantiation still reads it off the
+payoff table by hand.  `AnalyticEndpointBellmanRowCompiler` closes precisely
+that actual-data gap for the canonical all-state/all-owner/all-action endpoint
+row family, while leaving public-response legality and recursive-child
+realization as separate obligations.
 
 For the custody core the analogous coherence is sharper: `NodeCustodyGate`
 fixes the boundary-target index type of the `TypedCell` to be `ι` itself, so
@@ -280,11 +285,11 @@ end DeclaredTargetNode
 /-- The owner-labeled flow row system supplied at a declared-target node.
 
 Vertices are the game's states and owners are the game's players, so those two
-coherences are typing.  The remaining data is a *component*: the germ API does
-not expose tagged Bellman rows, so `src`, `transition`, `ownerOf` and
-`grossGain` are supplied.  Two coherence fields are checkable today and are
-carried here; a third, `IsEndpointKernelTagged`, is a separate refutable
-predicate. -/
+coherences are typing.  This generic interface permits `src`, `transition`,
+`ownerOf` and `grossGain` to be supplied; the downstream canonical endpoint
+compiler instead derives all four.  Two coherence fields are carried here;
+a third, `IsEndpointKernelTagged`, is a separate refutable predicate for
+arbitrary supplied systems. -/
 structure NodeFlowRows (node : DeclaredTargetNode G) (Row : Type) where
   /-- The source state of each row. -/
   src : Row → G.State
@@ -292,8 +297,9 @@ structure NodeFlowRows (node : DeclaredTargetNode G) (Row : Type) where
   transition : Row → G.State → ℝ
   /-- The owning player of each row. -/
   ownerOf : Row → ι
-  /-- The gross (target-independent) gain carried by each row.  This is the
-  component the germ API cannot yet produce; see the module docstring. -/
+  /-- The gross (target-independent) gain carried by each row.  The generic
+  interface accepts it as data; `AnalyticEndpointBellmanRowCompiler` derives
+  it for canonical actual endpoint pure-deviation rows. -/
   grossGain : Row → ℝ
   /-- **Coherence.**  The transition weights really are a stochastic matrix. -/
   stochastic : IsStochastic transition
@@ -309,9 +315,10 @@ variable {node : DeclaredTargetNode G} {Row : Type}
 enters the finite core through this single definition: the charge of a row is
 its gross gain minus the declared target coordinate of the row's owner.
 
-This is the strongest coherence available today between the node's declared
-target and the finite flow system, and it is definitional rather than
-assumed. -/
+Within the neutral row record this is the coherence between the node's
+declared target and the finite flow system, and it is definitional rather than
+assumed.  Canonically compiled rows additionally identify `grossGain` with
+the semantic endpoint pure-deviation stage payoff. -/
 def charge (S : NodeFlowRows node Row) : Row → ℝ :=
   fun r => S.grossGain r - node.target (S.ownerOf r)
 
