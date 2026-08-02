@@ -5,7 +5,7 @@ Status: active family-level ledger.
 Pinned source: `reference/GameTheory-v1/` at
 `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 
-Last reconciled: 2026-08-02 against the working tree based on `68321de`.
+Last reconciled: 2026-08-02 against the working tree based on `c3197a2`.
 
 This ledger answers three different questions separately:
 
@@ -20,8 +20,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Twenty-four work-package ledgers claim 1,363 declarations: 682
-have reviewed dispositions and 681 remain seeded `unreviewed`; a further 6,961 are
+declarations. Twenty-five work-package ledgers claim 1,370 declarations: 689
+have reviewed dispositions and 681 remain seeded `unreviewed`; a further 6,954 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -107,7 +107,7 @@ declaration-based.
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
 | S-FOUND | static `Core/**` except `Babbling`/`Coalition`; `Concepts/Foundations/**`; symmetric/team classes | 28 | `Core`, with independent mathematics below it | validated | partial; 7 response/team rows reviewed | [response dynamics and team seed](coverage/S-FOUND-dynamics-team.md); next VNM, convergence, invariance, equivalence, and duplicate hub machinery |
-| S-EQ | `Concepts/Equilibrium/**` | 12 | `Core.Equilibrium`, `Core.Response` | validated | partial; strict-Nash predicate seed reviewed | [strict-Nash seed](coverage/S-EQ-strict-nash.md); next approximate, secure, and strict theorem families against one Nash surface |
+| S-EQ | `Concepts/Equilibrium/**` | 12 | `Core.Equilibrium`, `Core.Response`, `Core.Approximate` | validated | partial; strict-Nash seed plus approximate Nash 8/8 reviewed | [strict-Nash seed](coverage/S-EQ-strict-nash.md), [approximate-Nash ledger](coverage/S-EQ-approximate.md); next secure and remaining strict theorem families against one Nash surface |
 | S-DOM | `Concepts/Dominance/**` | 9 | `Core.Response` and finite correctness | validated | partial | solvability, undominated, and rationalizability inventory |
 | S-CORR | `Concepts/Correlation/**` | 10 | `Core.Equilibrium`; existence in `Analysis` | validated | partial; mixed-Nash bridge module 12/12 reviewed, 2 later-slice rows deferred | [mixed Nash and correlated-equilibrium ledger](coverage/S-CORR-mixed-nash.md); next conditional obedience, dominated support, existence, approximation, timing, regret, and hierarchy separations |
 | S-MIX | `Concepts/Mixed/**` | 9 | `Core.Mixed`; assessment material in Protocol/Analysis | validated | partial; binary proof spine 15 declarations reviewed | [binary mixed-equilibrium ledger](coverage/S-MIX-binary.md); next dominance, improvement, trembling-hand, uniform/balanced wrappers, and remaining language-facing results |
@@ -194,6 +194,9 @@ declaration-based.
   choice or cooperative game theory.
 - Beyond-v1 mature and Frontier work is recorded separately and never raises
   pinned-v1 recovery status.
+- EXP-050/D22 promotes the active sibling branch's basic stochastic/uniform
+  semantic waist as an opt-in root; it accounts for no pinned-v1 declaration
+  and broad stochastic support still awaits the Shapley contraction/value gate.
 
 ## Next ledger actions
 

@@ -1262,6 +1262,15 @@ positive probes require the bridge to reach both and the stable self-play
 theorem. Protocol and the fixed-point dependency remain unreachable from the
 learning bridge.
 
+EXP-050/D22 applies the stratified rule to finite stochastic games. Native
+stochastic data stores only state, actions, a `FinDist` transition, and stage
+utility. A named perfect-public-monitoring bridge supplies the accepted
+Protocol execution, proof-free public history, and behavioral runner; each
+finite horizon then uses canonical expected utility and approximate Nash.
+`GameTheory.Stochastic` is opt-in and positively probes all four promoted
+layers while rejecting Repeated and the fixed-point dependency. It contains no
+infinite-path law or general uniform-equilibrium existence claim.
+
 EXP-033 closes the finite-EFG adapter under that boundary. Stable
 `GameTheory.Languages.EFG` positively reaches its execution, information, and
 finite-history inputs while rejecting solution and analytic declarations.
@@ -1567,6 +1576,11 @@ gated expansion rather than architecture completion.
 EXP-049/D21 is such a post-architecture local gate: broad learning recovery
 exposed a missing reusable MW proof spine, and the measured vector/adapter/
 analytic-bridge split resolved it without reopening Core or the canonical law.
+
+EXP-050/D22 is the corresponding mature-blind-spot gate. It admits a separate
+stochastic root through canonical Protocol and approximate-equilibrium
+surfaces, but leaves broad support contingent on the discounted two-player
+zero-sum Shapley contraction/value slice.
 
 The RFC continues to govern architecture and disproof conditions. Mutable
 delivery order, frozen-obligation status, v1 declaration accounting, mature

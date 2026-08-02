@@ -113,6 +113,8 @@ $EvolutionaryFiles = @(@(Select-Files 'GameTheory/Evolutionary') +
   @('GameTheory/Evolutionary.lean') | Sort-Object -Unique)
 $CongestionFiles = @(Select-Files 'GameTheory/Congestion')
 $MechanismFiles = @(Select-Files 'GameTheory/Mechanism')
+$StochasticFiles = @(@(Select-Files 'GameTheory/Stochastic') +
+  @('GameTheory/Stochastic.lean') | Sort-Object -Unique)
 Report 'TRANSPORT_GAMETHEORYMATH_SOURCE' (Count-Pattern $MathFiles $TransportPattern)
 Report 'TRANSPORT_ANALYSIS_SOURCE' (Count-Pattern $AnalysisFiles $TransportPattern)
 Report 'TRANSPORT_REPEATED_SOURCE' (Count-Pattern $RepeatedFiles $TransportPattern)
@@ -123,6 +125,8 @@ Report 'TRANSPORT_CONGESTION_SOURCE' `
   (Count-Pattern $CongestionFiles $TransportPattern)
 Report 'TRANSPORT_MECHANISM_SOURCE' `
   (Count-Pattern $MechanismFiles $TransportPattern)
+Report 'TRANSPORT_STOCHASTIC_SOURCE' `
+  (Count-Pattern $StochasticFiles $TransportPattern)
 Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
 Report 'TRANSPORT_PHASE3_SOURCE' (Count-Pattern $Phase3Files $TransportPattern)
 Report 'TRANSPORT_PHASE2_PROBE' (Count-Pattern $Phase2ProbeFiles $TransportPattern)
@@ -157,7 +161,7 @@ Report 'TRANSPORT_POST_ARCHITECTURE' `
 # is worse than a mis-bucketed one: nothing measures it, so it drifts unseen.
 $Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $PostArchitectureFiles +
   $Phase2Files + $Phase3Files + $AnalysisFiles + $RepeatedFiles + $EpistemicFiles +
-  $EvolutionaryFiles + $CongestionFiles + $MechanismFiles +
+  $EvolutionaryFiles + $CongestionFiles + $MechanismFiles + $StochasticFiles +
   @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
 Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
@@ -243,6 +247,19 @@ foreach ($f in $EvolutionaryFiles) {
   }
 }
 Report 'EVOLUTIONARY_FORBIDDEN_IMPORTS' $evolutionaryBad
+
+$StochasticForbidden = 'GameTheory\.Languages|GameTheory\.Finite|' +
+  'GameTheory\.Repeated|GameTheory\.Epistemic|GameTheory\.Evolutionary|' +
+  'GameTheory\.Congestion|GameTheory\.Mechanism|GameTheory\.Examples|' +
+  'GameTheory\.Tests|GameTheory\.Experimental|GameTheory\.Frontier|' +
+  'GameTheory\.Challenges|GameTheory\.Analysis|FixedPointTheorems'
+$stochasticBad = 0
+foreach ($f in $StochasticFiles) {
+  foreach ($imp in Get-Imports $f) {
+    if ($imp -match $StochasticForbidden) { $stochasticBad++ }
+  }
+}
+Report 'STOCHASTIC_FORBIDDEN_IMPORTS' $stochasticBad
 
 $mathBad = 0
 foreach ($f in $MathFiles) {
@@ -718,6 +735,35 @@ if (-not $SkipReachability) {
   }
   Report 'PROBABILITY_REINDEX_BOUNDARY_PROBES_REJECTED' `
     $probabilityReindexBoundaryRejected
+
+  # EXP-050/D22 is opt-in but analysis-light. The root must positively reach
+  # all four promoted layers plus canonical approximate Nash, while rejecting
+  # both the Repeated branch and the fixed-point dependency.
+  $stochasticInputs = @(
+    'GameTheory.Stochastic.Game',
+    'GameTheory.Stochastic.Game.perfectMonitoring',
+    'GameTheory.Stochastic.Game.horizonGame_expectedUtility',
+    'GameTheory.Stochastic.Game.IsUniformEquilibriumPayoff',
+    'GameTheory.IsεNash')
+  $stochasticBoundary = @(
+    'GameTheory.UtilityGame.repeatedForm',
+    'kakutani_fixed_point')
+  $stochasticOutput = Run-Probe 'GameTheory.Stochastic' `
+    ($stochasticInputs + $stochasticBoundary)
+  $stochasticInputsReached = 0
+  foreach ($constant in $stochasticInputs) {
+    if (-not (Is-Unreachable $stochasticOutput $constant)) {
+      $stochasticInputsReached++
+    }
+  }
+  Report 'STOCHASTIC_INPUT_PROBES_REACHED' $stochasticInputsReached
+  $stochasticBoundaryRejected = 0
+  foreach ($constant in $stochasticBoundary) {
+    if (Is-Unreachable $stochasticOutput $constant) {
+      $stochasticBoundaryRejected++
+    }
+  }
+  Report 'STOCHASTIC_BOUNDARY_PROBES_REJECTED' $stochasticBoundaryRejected
   Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
@@ -742,6 +788,7 @@ if ($VerifyExpected) {
     TRANSPORT_EVOLUTIONARY_SOURCE = 0
     TRANSPORT_CONGESTION_SOURCE = 0
     TRANSPORT_MECHANISM_SOURCE = 0
+    TRANSPORT_STOCHASTIC_SOURCE = 0
     TRANSPORT_GAMETHEORYMATH_SOURCE = 0
     TRANSPORT_POST_ARCHITECTURE = 0
     ANALYSIS_IMPORTED_OUTSIDE_ROOT = 0
@@ -759,6 +806,7 @@ if ($VerifyExpected) {
     REPEATED_FORBIDDEN_IMPORTS = 0
     EPISTEMIC_FORBIDDEN_IMPORTS = 0
     EVOLUTIONARY_FORBIDDEN_IMPORTS = 0
+    STOCHASTIC_FORBIDDEN_IMPORTS = 0
     GAMETHEORYMATH_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
     REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
@@ -797,6 +845,8 @@ if ($VerifyExpected) {
     $Expected['TRANSFORM_INPUT_PROBES_REACHED'] = 6
     $Expected['PROBABILITY_REINDEX_INPUT_PROBES_REACHED'] = 2
     $Expected['PROBABILITY_REINDEX_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 5
+    $Expected['STOCHASTIC_BOUNDARY_PROBES_REJECTED'] = 2
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

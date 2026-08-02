@@ -15,7 +15,7 @@ its honest pinned-v1 baseline is
 GameTheory/Probability   finite-support probability laws (FinDist)
 GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          deviations, equilibrium and response concepts, static
-                         game theory, Bayesian recommendation/obedience,
+                         game theory, approximate Nash, Bayesian recommendation/obedience,
                          finite no-regret learning, concrete reindexing and
                          relabeling laws, and foundational social/coalitional
                          theory
@@ -31,6 +31,8 @@ GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theo
   /Repeated              analytic repeated-game bridge and discounted folk theorem
 GameTheory/Repeated      stable public histories, finite public monitoring,
                          discounting, cycles, and triggers
+GameTheory/Stochastic    opt-in finite-support stochastic games, perfect-public
+                         Protocol play, finite-horizon payoff, and uniformity
 GameTheory/Congestion    opt-in congestion/load calculus and Rosenthal potential
 GameTheory/Mechanism     opt-in coordinated mechanism domains and finite auctions
 GameTheory/Languages     scoped language encodings and truthful Bayesian
@@ -71,6 +73,11 @@ Kreps-Wilson consistency over stable behavioral assessments; its EFG adapter
 supplies finite history instances and canonical continuation contexts without
 moving solution concepts into stable syntax.
 `GameTheoryMath` is a separate Lake target and cannot import game semantics.
+The provisional stochastic-game domain is also opt-in. Its native object
+stores only state, actions, finite-support transitions, and stage utility; a named
+perfect-monitoring bridge reuses Protocol's sole behavioral runner, and each
+finite horizon reuses canonical approximate Nash. The root contains no
+infinite-path law or general uniform-equilibrium existence claim.
 Congestion and coordinated Mechanism domains are stable but opt-in, so their
 specialized APIs do not enlarge the main root. Languages and Experimental also
 stay outside the root for the separate reasons recorded in their modules.

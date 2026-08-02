@@ -60,6 +60,7 @@ becomes difficult to scan.
 | EXP-047 | 2026-07-30 | D8/D18 / public randomization | Does mixed play of the static cheap-talk extension induce a base correlated equilibrium without Protocol timing or a second equilibrium predicate? | Supports static bridge; decides D19; promoted | [`decisions/D19-cheap-talk-public-randomization.md`](decisions/D19-cheap-talk-public-randomization.md); `GameTheory/Experimental/PostArchitecture/CheapTalkPublicRandomness.lean`; `GameTheory/Core/CheapTalkRandomization.lean` |
 | EXP-048 | 2026-07-30 | D16/D18 / Electronic Mail ownership | Do the finite Electronic Mail theorems integrate as a static Bayesian/Epistemic example, or do their message rounds require Protocol execution? | Supports static Examples bridge; decides D20; promoted | [`decisions/D20-electronic-mail-ownership.md`](decisions/D20-electronic-mail-ownership.md); `GameTheory/Experimental/PostArchitecture/ElectronicMail.lean`; `GameTheory/Examples/ElectronicMail.lean` |
 | EXP-049 | 2026-08-02 | D0/D2/D12 / online learning | Can the pinned multiplicative-weights regret engine be recovered as independent `GameTheoryMath` over `FinDist` and feed stable self-play without importing analysis into Core? | Narrows to law-free vectors plus a canonical-law adapter; decides D21 | [`decisions/D21-finite-online-learning-boundary.md`](decisions/D21-finite-online-learning-boundary.md); `GameTheoryMath/OnlineLearning.lean`; `GameTheory/{Probability,Analysis}/OnlineLearning.lean` |
+| EXP-050 | 2026-08-02 | D0/D4/D6/D9/D11/D12 / finite stochastic games | Can the active uniform-existence branch's basic stochastic-game and uniform-payoff definitions survive the accepted finite-law, Protocol, and equilibrium boundaries? | Supports native data plus named Protocol bridge; decides and promotes D22 | [`decisions/D22-stochastic-protocol-boundary.md`](decisions/D22-stochastic-protocol-boundary.md); `GameTheory/Stochastic/**`; `GameTheory/Examples/StochasticUniform.lean` |
 
 ## Entry template
 
@@ -3236,3 +3237,78 @@ memory.
 - **Next action:** keep finite/MW self-play closed and recover potential-game
   fictitious play as the next D-LEARN package; reserve a new experiment only
   if its convergence statement needs a boundary not already covered by D21.
+
+### EXP-050: finite stochastic games and uniform equilibrium
+
+- **Date / revision:** 2026-08-02, working tree based on `c3197a2`; active
+  source branch `uniform-existence` audited at `e7730a1`
+- **Status:** supports the native-data/Protocol split; decides and promotes D22
+- **Decision / question:** D0/D4/D6/D9/D11/D12 and the mature finite-stochastic
+  blind spot; whether the source branch's basic stochastic-game,
+  finite-horizon average-payoff, and uniform-equilibrium-payoff definitions
+  fit a separate opt-in stochastic root over canonical finite laws and named
+  Protocol/static bridges.
+- **Prediction:** finite transition and stage-utility data need no infinite
+  path law. One behavioral profile can feed every finite Protocol horizon, an
+  epsilon-horizon equilibrium can be a transparent specialization of the
+  canonical approximate-Nash surface, and uniformity is only the quantifier
+  over one profile and all sufficiently large horizons.
+- **Representative slice:** a two-player, two-state simultaneous game with a
+  nondegenerate transition, state-dependent utility, and full public-history
+  behavioral play; prove its horizon evaluation law and the exact equivalence
+  between the source-shaped epsilon-horizon inequality and canonical
+  approximate Nash, then state uniform equilibrium payoff without asserting
+  the open general existence conjecture.
+- **Competing designs:** a native stochastic kernel with a named Protocol
+  bridge; a transparent specialization carrying an `ExecutionProtocol`; or a
+  repeated-game extension. The source branch's independent history runner and
+  `KernelGame` hierarchy are evidence, not candidates for compatibility.
+- **Measurements to collect:** Mathlib overlap; source and import closure;
+  whether arbitrary initial states and nontermination fit Protocol without a
+  terminal workaround; profile identity across horizons; stored capability,
+  transport, law-representation, and axiom counts; focused build cost; and
+  positive/negative reachability probes for the opt-in boundary.
+- **Kill conditions:** the slice needs `PMF` or an infinite path measure,
+  duplicates Protocol history/run semantics or equilibrium predicates, stores
+  discount/finiteness irrelevant to the operation, uses raw
+  `Function.update`, imports any conjecture or placeholder, or weakens the
+  stable Repeated/Protocol/Analysis boundaries.
+- **Evidence:** the read-only source tree is MIT licensed (Copyright (c) 2025
+  Elazar Gershuni); its changing working tree and intervening branch commits
+  were unrelated to the four audited stochastic/uniform files, which remained
+  unchanged from `d35c1d8` through the pinned audit revision. Their reusable
+  statements are finite-horizon, but their implementation uses `PMF`, raw updates, a
+  parallel history distribution, obsolete `KernelGame`, stored discount, and
+  an explicit `sorry` at the open general existence constructor.
+- **Observation:** the native game needs only state, action, `FinDist`
+  transition, and stage utility. Initial state and nonempty actions enter the
+  Protocol bridge; finite players enter behavioral product laws; decidable
+  player equality enters equilibrium. One canonical behavioral profile feeds
+  every horizon, average payoff is canonical expected utility, and
+  epsilon-horizon Nash is canonical `IsεNash`. The first candidate leaked
+  proof-carrying Protocol events into the policy domain; replacing them with a
+  proof-free stage record retained state/action/target data and kept legality
+  and support proofs internal.
+- **Measurements:** the promoted slice is split across `Stochastic.Basic`,
+  `PerfectMonitoring`, `FiniteHorizon`, and `Uniform`, with an opt-in umbrella
+  and a hostile Example. Its focused build completes in 1,733 jobs and the
+  full project in 3,384 jobs; the
+  authored closure has 17 modules and no Analysis, Repeated, Frontier, or
+  Challenges import. Source hazards are zero. The audited declarations use
+  only `propext`, `Classical.choice`, and `Quot.sound`. Five positive
+  reachability probes see every promoted layer plus canonical approximate
+  Nash; two negative probes reject Repeated and the fixed-point dependency.
+- **Outcome:** supports the prediction and decides D22. A stochastic game is
+  native data with a named perfect-monitoring Protocol bridge, not a stored
+  protocol and not a repeated-game extension. Uniform equilibrium adds only
+  finite-horizon quantifiers over the canonical approximate-Nash surface.
+  The source's general existence theorem and everything depending on its
+  `sorry` remain absent.
+- **Promotion:** `GameTheory.Stochastic` is public but opt-in. D22's
+  data/bridge API is adopted; domain support remains provisional until the
+  Shapley gate. Positive probes reach all four promoted layers plus canonical
+  approximate Nash; negative probes reject Repeated and the fixed-point
+  dependency. All four phase audits and the exact coverage audit pass.
+- **Next action:** run the mature Shapley gate—discounted two-player zero-sum
+  contraction and stationary value—before claiming broad stochastic-game
+  support; use the uniform statement layer only for proved special cases.

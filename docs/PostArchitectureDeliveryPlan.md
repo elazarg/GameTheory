@@ -243,9 +243,9 @@ current integration and recovery status. Wave 0 closes when:
    rather than silently changing inside Phase 2/3-named scripts;
 6. README status is derived from the ledger rather than source-size estimates.
 
-The audit now indexes 436 files and 8,324 declarations. Twenty-four work-package
-ledgers claim 1,363 declarations: 682 have reviewed dispositions, the exact
-FOSG queue contains 681 deliberately seeded `unreviewed` rows, and 6,961 remain
+The audit now indexes 436 files and 8,324 declarations. Twenty-five work-package
+ledgers claim 1,370 declarations: 689 have reviewed dispositions, the exact
+FOSG queue contains 681 deliberately seeded `unreviewed` rows, and 6,954 remain
 explicitly unaccounted. Both open sets are review queues, not
 auto-classification targets; generated rows are evidence of scope, not
 recovery.
@@ -430,7 +430,7 @@ the protected recovery waves.
 
 | Candidate | Evidence of the v1 blind spot | First serious slice | Candidate placement, not yet an API commitment |
 |---|---|---|---|
-| finite stochastic/Markov games | one `MultiRound/StochasticGame.lean`, no general value or stationary-equilibrium theory | finite discounted two-player zero-sum game; Shapley operator contraction and stationary value | separate stochastic root using finite transition laws; existence in `Analysis` |
+| finite stochastic/Markov games | one pinned `MultiRound/StochasticGame.lean`, no general value or stationary-equilibrium theory | **semantic admission passed (EXP-050/D22), domain provisional;** next finite discounted two-player zero-sum game, Shapley operator contraction, and stationary value | public opt-in `Stochastic` root using `FinDist` transitions and a named Protocol bridge; existence in `Analysis` only when needed |
 | games on graphs and reactive synthesis | no reachability, safety, Büchi, parity, or mean-payoff family | finite reachability game with executable attractor and memoryless determinacy proof | independent graph-game root; compare its arena with Protocol before sharing |
 | graphical and network games | no local-interaction representation | compile a tree graphical game to `GameForm` and preserve local payoff/Nash facts | language/domain branch over the static core |
 | algorithmic game theory and complexity | executable support is enumeration-oriented and v1 has no complexity layer | one verified reduction or certificate family with explicit size/cost theorem | `Finite`, `GameTheoryMath`, and an experiment-gated complexity vocabulary |
@@ -546,8 +546,9 @@ The next work is ordered:
 5. resume the broader revelation/information-design inventory and decide
    whether a live consumer earns D-COMM's deferred conditional public-signal
    representation;
-6. admit at most one mature blind-spot experiment—finite stochastic games or
-   finite graph reachability are the leading candidates;
+6. finish the admitted stochastic-game domain gate through the discounted
+   two-player zero-sum Shapley contraction/value slice; do not admit finite
+   graph reachability concurrently;
 7. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 

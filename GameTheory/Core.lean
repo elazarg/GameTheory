@@ -28,6 +28,7 @@ import GameTheory.Core.CheapTalkRandomization
 import GameTheory.Core.Utility
 import GameTheory.Core.Learning
 import GameTheory.Core.Response
+import GameTheory.Core.Approximate
 import GameTheory.Core.Potential
 import GameTheory.Core.Mixed
 import GameTheory.Core.BinaryMixed
