@@ -281,4 +281,94 @@ theorem quittingRootDeviation_le_cyclicTerminalValue_of_nearReturn
       reward cycle value (quittingCyclicSeamPolicyError cycle δ) (2 * δ)
         hpolicy hnashClosed hcontracts phase who deviation
 
+/-! ## Abstract finite-block fixed-point closing
+
+The game-facing lemmas above transport local root conditions across a seam.
+The following scalar facts isolate the complementary global calculation. A
+repeated block selects fixed points of its prescribed affine map and of each
+player's one-block Snell operator. Approximate super-solutions are amplified
+by at most the geometric factor one over one minus delta.
+-/
+
+/-- A fixed point of an affine contraction stays close to an approximate fixed
+point, uniformly when the contraction coefficient is at most delta below
+one. -/
+theorem affineFixedPoint_dist_le_of_residual
+    {G σ δ η V w : ℝ}
+    (_hσ0 : 0 ≤ σ) (hσδ : σ ≤ δ) (hδ1 : δ < 1) (_hη0 : 0 ≤ η)
+    (hfixed : V = G + σ * V)
+    (hresidual : |(G + σ * w) - w| ≤ η) :
+    |V - w| ≤ η / (1 - δ) := by
+  have hσ1 : σ < 1 := lt_of_le_of_lt hσδ hδ1
+  have hσden0 : 0 ≤ 1 - σ := (sub_pos.mpr hσ1).le
+  have hδden : 0 < 1 - δ := sub_pos.mpr hδ1
+  have hidentity :
+      (1 - σ) * (V - w) = (G + σ * w) - w := by
+    calc
+      (1 - σ) * (V - w) = V - σ * V - w + σ * w := by ring
+      _ = (G + σ * w) - w := by nlinarith [hfixed]
+  have hscaled :
+      (1 - σ) * |V - w| = |(G + σ * w) - w| := by
+    calc
+      (1 - σ) * |V - w| = |1 - σ| * |V - w| := by
+        rw [abs_of_nonneg hσden0]
+      _ = |(1 - σ) * (V - w)| := (abs_mul _ _).symm
+      _ = |(G + σ * w) - w| := by rw [hidentity]
+  have hactual : (1 - σ) * |V - w| ≤ η := by
+    rw [hscaled]
+    exact hresidual
+  have hdelta : (1 - δ) * |V - w| ≤ η := by
+    have habs0 : 0 ≤ |V - w| := abs_nonneg _
+    nlinarith
+  exact (le_div_iff₀ hδden).2 (by simpa [mul_comm] using hdelta)
+
+/-- A fixed point of a scalar contraction lies below every approximate
+super-solution, with the usual geometric amplification. -/
+theorem contractingFixedPoint_le_of_approximateSuperSolution
+    (T : ℝ → ℝ) {σ δ η B w : ℝ}
+    (_hσ0 : 0 ≤ σ) (hσδ : σ ≤ δ) (hδ1 : δ < 1) (hη0 : 0 ≤ η)
+    (hlipschitz : ∀ x y, |T x - T y| ≤ σ * |x - y|)
+    (hfixed : T B = B) (hsuper : T w ≤ w + η) :
+    B ≤ w + η / (1 - δ) := by
+  have hδden : 0 < 1 - δ := sub_pos.mpr hδ1
+  by_cases hBw : B ≤ w
+  · have hquotient0 : 0 ≤ η / (1 - δ) :=
+      div_nonneg hη0 hδden.le
+    linarith
+  · have hwB : w < B := lt_of_not_ge hBw
+    have habs : |B - w| = B - w := abs_of_pos (sub_pos.mpr hwB)
+    have hlip := hlipschitz B w
+    have hdiff : B - T w ≤ σ * (B - w) := by
+      rw [hfixed, habs] at hlip
+      exact (le_abs_self (B - T w)).trans hlip
+    have hactual : (1 - σ) * (B - w) ≤ η := by
+      nlinarith
+    have hdelta : (1 - δ) * (B - w) ≤ η := by
+      nlinarith
+    have hgap : B - w ≤ η / (1 - δ) :=
+      (le_div_iff₀ hδden).2 (by simpa [mul_comm] using hdelta)
+    linarith
+
+/-- Combining an approximate prescribed fixed point with an approximate Snell
+super-solution bounds the repeated block's deviation gap. -/
+theorem finiteBlockClosingGap_le
+    (T : ℝ → ℝ) {G σ σi δ η V B w : ℝ}
+    (hσ0 : 0 ≤ σ) (hσδ : σ ≤ δ)
+    (hσi0 : 0 ≤ σi) (hσiδ : σi ≤ δ)
+    (hδ1 : δ < 1) (hη0 : 0 ≤ η)
+    (hVfixed : V = G + σ * V)
+    (hVresidual : |(G + σ * w) - w| ≤ η)
+    (hTlipschitz : ∀ x y, |T x - T y| ≤ σi * |x - y|)
+    (hBfixed : T B = B) (hTsuper : T w ≤ w + η) :
+    B - V ≤ 2 * η / (1 - δ) := by
+  have hprescribed := affineFixedPoint_dist_le_of_residual
+    hσ0 hσδ hδ1 hη0 hVfixed hVresidual
+  have hcap := contractingFixedPoint_le_of_approximateSuperSolution
+    T hσi0 hσiδ hδ1 hη0 hTlipschitz hBfixed hTsuper
+  have hbackward : w - V ≤ η / (1 - δ) :=
+    (le_abs_self (w - V)).trans (by simpa [abs_sub_comm] using hprescribed)
+  have hδden : 0 < 1 - δ := sub_pos.mpr hδ1
+  rw [div_eq_mul_inv] at hcap hbackward ⊢
+  nlinarith [inv_pos.mpr hδden]
+
 end GameTheory
