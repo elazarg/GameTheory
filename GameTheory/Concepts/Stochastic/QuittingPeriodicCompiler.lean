@@ -190,4 +190,99 @@ theorem cyclicValue_le_residualCharge_div_one_sub_prod
   apply (le_div_iff₀ hdenom).2
   nlinarith
 
+/-! ## Cyclic root sequences -/
+
+/-- A finite cycle of product roots, read forever from an arbitrary initial
+phase. -/
+def quittingCyclicRootSequence {K : ℕ} {ι : Type}
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K) (time : ℕ) :
+    ι → PMF Bool :=
+  cycle (quittingCyclicOrbit phase time)
+
+@[simp] theorem quittingCyclicRootSequence_zero
+    {K : ℕ} {ι : Type} (cycle : Fin K → ι → PMF Bool)
+    (phase : Fin K) :
+    quittingCyclicRootSequence cycle phase 0 = cycle phase := by
+  simp [quittingCyclicRootSequence]
+
+/-- Advancing by two successive offsets agrees with advancing by their
+sum. -/
+theorem quittingCyclicOrbit_add {K : ℕ} (phase : Fin K)
+    (first second : ℕ) :
+    quittingCyclicOrbit phase (first + second) =
+      quittingCyclicOrbit (quittingCyclicOrbit phase first) second := by
+  induction second with
+  | zero => simp
+  | succ second ih =>
+      rw [Nat.add_succ, quittingCyclicOrbit_succ, ih,
+        quittingCyclicOrbit_succ]
+
+/-- Dropping the first root of a cyclic sequence rotates its initial
+phase. -/
+theorem quittingCyclicRootSequence_succ
+    {K : ℕ} {ι : Type} (cycle : Fin K → ι → PMF Bool)
+    (phase : Fin K) (time : ℕ) :
+    quittingCyclicRootSequence cycle phase (time + 1) =
+      quittingCyclicRootSequence cycle (finRotate K phase) time := by
+  unfold quittingCyclicRootSequence
+  rw [show time + 1 = 1 + time by omega,
+    quittingCyclicOrbit_add, quittingCyclicOrbit_succ]
+  simp
+
+/-- Starting a cyclic root sequence later is the same as rotating its
+initial phase by that many steps. -/
+theorem quittingCyclicRootSequence_add
+    {K : ℕ} {ι : Type} (cycle : Fin K → ι → PMF Bool)
+    (phase : Fin K) (start time : ℕ) :
+    quittingCyclicRootSequence cycle phase (start + time) =
+      quittingCyclicRootSequence cycle
+        (quittingCyclicOrbit phase start) time := by
+  simp only [quittingCyclicRootSequence, quittingCyclicOrbit_add]
+
+variable {K : ℕ} {ι : Type} [Fintype ι] [DecidableEq ι]
+
+/-- Terminal payoff vector selected by the infinite cyclic root profile
+from a supplied initial phase. -/
+def quittingCyclicTerminalValue
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K) : Payoff ι :=
+  fun who => quittingRootSequenceTerminalValue reward
+    (quittingCyclicRootSequence cycle phase) who 0
+
+omit [DecidableEq ι] in
+/-- Terminal evaluation after a finite offset selects the terminal value at
+the correspondingly rotated phase. -/
+theorem quittingRootSequenceTerminalValue_cyclic_eq
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K)
+    (who : ι) (start : ℕ) :
+    quittingRootSequenceTerminalValue reward
+        (quittingCyclicRootSequence cycle phase) who start =
+      quittingCyclicTerminalValue reward cycle
+        (quittingCyclicOrbit phase start) who := by
+  unfold quittingRootSequenceTerminalValue quittingCyclicTerminalValue
+  congr 1
+  funext player time history
+  simp only [quittingRootSequenceProfile,
+    quittingCyclicRootSequence_add, zero_add]
+
+omit [DecidableEq ι] in
+/-- Cyclic terminal values satisfy the exact root policy-evaluation
+recursion at every phase. -/
+theorem quittingCyclicTerminalValue_eq_rootSuccessorPayoff
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K) :
+    quittingCyclicTerminalValue reward cycle phase =
+      quittingRootSuccessorPayoff reward
+        (quittingCyclicTerminalValue reward cycle (finRotate K phase))
+        (cycle phase) := by
+  funext who
+  unfold quittingCyclicTerminalValue
+  rw [quittingRootSequenceTerminalValue_eq_rootSuccessorPayoff]
+  simp only [quittingCyclicRootSequence_zero]
+  apply quittingRootExpectedPayoff_continuation_congr
+  rw [quittingRootSequenceTerminalValue_cyclic_eq]
+  simp [quittingCyclicOrbit_succ]
+  rfl
+
 end GameTheory
