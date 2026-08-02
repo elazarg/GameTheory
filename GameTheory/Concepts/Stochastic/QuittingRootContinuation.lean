@@ -234,4 +234,175 @@ theorem quittingTerminalPayoff_eq_expect_rootContinuation
     (expectedStagePayoff_succ_quittingGame_eq_rootContinuation
       reward profile t who).symm
 
+/-! ## A root action followed by a continuation profile -/
+
+/-- The one-stage quitting payoff with continuation vector `continuation` on
+the all-continue action. -/
+def quittingRootPayoff
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (continuation : Payoff ι) (action : ι → Bool) (who : ι) : ℝ :=
+  if h : (quittingQuitters action).Nonempty then
+    reward ⟨quittingQuitters action, h⟩ who
+  else continuation who
+
+/-- Expected payoff of the finite one-stage continuation game. -/
+def quittingRootExpectedPayoff
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (continuation : Payoff ι) (root : ι → PMF Bool) (who : ι) : ℝ :=
+  expect (pmfPi root) (fun action =>
+    quittingRootPayoff reward continuation action who)
+
+/-- Play `root` at time zero and use `continuation` after every completed
+root history. -/
+def quittingRootThenContinuationProfile
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool)
+    (continuation : (quittingGame reward).BehaviorProfile) :
+    (quittingGame reward).BehaviorProfile :=
+  fun who => fun
+    | 0, _ => root who
+    | t + 1, h => continuation who t (Fin.tail h.1, h.2)
+
+omit [DecidableEq ι] in
+@[simp] theorem quittingRootThenContinuationProfile_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool)
+    (continuation : (quittingGame reward).BehaviorProfile)
+    (who : ι) (h : (quittingGame reward).Hist 0) :
+    quittingRootThenContinuationProfile reward root continuation who 0 h =
+      root who :=
+  rfl
+
+omit [DecidableEq ι] in
+/-- After its root stage, the spliced profile is exactly the declared
+continuation, independently of the realized root action. -/
+theorem shiftProfile_quittingRootThenContinuationProfile
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool)
+    (continuation : (quittingGame reward).BehaviorProfile)
+    (action : ι → Bool) :
+    (quittingGame reward).shiftProfile
+        (quittingRootThenContinuationProfile reward root continuation)
+        (none, action) = continuation := by
+  funext who t h
+  simp [StochasticGame.shiftProfile,
+    quittingRootThenContinuationProfile, StochasticGame.consHist]
+
+/-- Exact prescribed terminal payoff of a root action followed by a
+continuation profile. -/
+theorem quittingTerminalPayoff_rootThenContinuation_eq
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool)
+    (continuation : (quittingGame reward).BehaviorProfile) (who : ι) :
+    quittingTerminalPayoff reward
+        (quittingRootThenContinuationProfile reward root continuation) who =
+      quittingRootExpectedPayoff reward
+        (fun player => quittingTerminalPayoff reward continuation player)
+        root who := by
+  rw [quittingTerminalPayoff_eq_expect_rootContinuation]
+  unfold quittingRootExpectedPayoff
+  have hroot :
+      (quittingGame reward).stageActionDist
+          (quittingRootThenContinuationProfile reward root continuation)
+          ((quittingGame reward).emptyHist none) = pmfPi root := by
+    rfl
+  rw [hroot]
+  apply congrArg (expect (pmfPi root))
+  funext action
+  by_cases hquit : (quittingQuitters action).Nonempty
+  · simp [quittingRootContinuationPayoff, quittingRootPayoff, hquit]
+  · simp [quittingRootContinuationPayoff, quittingRootPayoff, hquit,
+      shiftProfile_quittingRootThenContinuationProfile]
+
+/-- Shift a single behavior strategy past one completed root stage. -/
+def quittingShiftBehaviorStrategy
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    {who : ι} (deviation : (quittingGame reward).BehaviorStrategy who)
+    (action : ι → Bool) : (quittingGame reward).BehaviorStrategy who :=
+  fun t h => deviation (t + 1)
+    ((quittingGame reward).consHist (none, action) h)
+
+/-- Shifting a unilateral deviation from a root/continuation splice leaves
+the opponents on the declared continuation and shifts only the deviator. -/
+theorem shiftProfile_update_quittingRootThenContinuationProfile
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool)
+    (continuation : (quittingGame reward).BehaviorProfile)
+    (who : ι) (deviation : (quittingGame reward).BehaviorStrategy who)
+    (action : ι → Bool) :
+    (quittingGame reward).shiftProfile
+        (Function.update
+          (quittingRootThenContinuationProfile reward root continuation)
+          who deviation) (none, action) =
+      Function.update continuation who
+        (quittingShiftBehaviorStrategy reward deviation action) := by
+  funext player t h
+  by_cases hp : player = who
+  · subst player
+    simp [StochasticGame.shiftProfile, quittingShiftBehaviorStrategy]
+  · simp [StochasticGame.shiftProfile, Function.update_of_ne hp,
+      quittingRootThenContinuationProfile, StochasticGame.consHist]
+
+/-- The deviated root law changes only the deviator's time-zero mixed
+action. -/
+theorem stageActionDist_update_quittingRootThenContinuationProfile
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool)
+    (continuation : (quittingGame reward).BehaviorProfile)
+    (who : ι) (deviation : (quittingGame reward).BehaviorStrategy who) :
+    (quittingGame reward).stageActionDist
+        (Function.update
+          (quittingRootThenContinuationProfile reward root continuation)
+          who deviation)
+        ((quittingGame reward).emptyHist none) =
+      pmfPi (Function.update root who
+        (deviation 0 ((quittingGame reward).emptyHist none))) := by
+  unfold StochasticGame.stageActionDist
+  congr 1
+  funext player
+  by_cases hp : player = who
+  · subst player
+    simp
+  · simp [Function.update_of_ne hp,
+      quittingRootThenContinuationProfile]
+
+/-- **Root deviation lemma.**  Suppose `bound` dominates the terminal payoff
+of every continuation deviation against `continuation` for player `who`.
+Then every full behavior deviation from the root/continuation splice is
+bounded by the one-stage continuation game with all-continue value `bound`.
+
+This is the precise profile-level datum missing when a terminal jump is
+naively assigned continuation value zero. -/
+theorem quittingTerminalPayoff_update_rootThenContinuation_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool)
+    (continuation : (quittingGame reward).BehaviorProfile)
+    (who : ι) (bound : ℝ)
+    (hbound : ∀ deviation : (quittingGame reward).BehaviorStrategy who,
+      quittingTerminalPayoff reward
+          (Function.update continuation who deviation) who ≤ bound)
+    (deviation : (quittingGame reward).BehaviorStrategy who) :
+    quittingTerminalPayoff reward
+        (Function.update
+          (quittingRootThenContinuationProfile reward root continuation)
+          who deviation) who ≤
+      quittingRootExpectedPayoff reward (Function.update
+        (fun player => quittingTerminalPayoff reward continuation player)
+        who bound)
+        (Function.update root who
+          (deviation 0 ((quittingGame reward).emptyHist none))) who := by
+  letI : ∀ player : ι, Finite ((quittingGame reward).Act player) :=
+    fun _ => inferInstanceAs (Finite Bool)
+  rw [quittingTerminalPayoff_eq_expect_rootContinuation,
+    stageActionDist_update_quittingRootThenContinuationProfile]
+  unfold quittingRootExpectedPayoff
+  apply expect_mono
+  intro action
+  by_cases hquit : (quittingQuitters action).Nonempty
+  · simp [quittingRootContinuationPayoff, quittingRootPayoff, hquit]
+  · rw [quittingRootContinuationPayoff_of_allContinue _ _ _ _ hquit,
+      shiftProfile_update_quittingRootThenContinuationProfile]
+    simpa [quittingRootPayoff, hquit] using
+      hbound (quittingShiftBehaviorStrategy reward deviation action)
+
 end GameTheory
