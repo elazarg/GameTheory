@@ -102,6 +102,14 @@ has zero vector Cesaro limit, and therefore synthesizes the prescribed bias
 (A2) on the entire delivery union.  Both configuration-kernel and ordinary
 history-semantic entry points are provided.
 
+`SplitDomainNeutralOccupationConverse.lean` closes the owner-occupation half.
+It disintegrates every balanced owner-local occupation into a stationary mixed
+configuration policy, proves that row closure keeps its supported public
+histories inside the declared owner arena, and averages the all-start semantic
+cap under the invariant source law.  Thus the cap itself implies (N), with no
+recurrent-coverage or separate realizability axiom, and shifted delivery plus
+shifted caps synthesize both Q96 bias families without assuming (N).
+
 `UncoveredPrescribedClassCounterexample.lean` is the two-player/two-node Q96
 regression: all four target/occupation-side checks pass on their stated
 domains, while the escaped prescribed class is outside player one's arena and
