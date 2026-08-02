@@ -115,6 +115,79 @@ theorem quittingPrescribedOneStepResidual_le_of_isεRootNash
   rw [hpolicy] at hmax
   linarith
 
+/-- The weighted repetition of a nonnegative residual around a contracting
+cycle is a geometric series.  This is the infinite-series counterpart of
+`quittingCyclicPolicySelectionError`: the numerator is exactly the charge
+accumulated during one turn, including the phase-dependent prefix weights. -/
+theorem hasSum_quittingCyclicWeightedResidual
+    {K : ℕ} (coefficient residual : Fin K → ℝ) (phase : Fin K)
+    (hcoefficient : ∀ cyclePhase, 0 ≤ coefficient cyclePhase)
+    (hresidual : ∀ cyclePhase, 0 ≤ residual cyclePhase)
+    (hcycle : (∏ cyclePhase : Fin K, coefficient cyclePhase) < 1) :
+    HasSum (fun time =>
+      quittingCyclicPrefixWeight coefficient phase time *
+        residual (quittingCyclicOrbit phase time))
+      (quittingCyclicResidualCharge coefficient residual phase K /
+        (1 - ∏ cyclePhase : Fin K, coefficient cyclePhase)) := by
+  letI : NeZero K := phase.neZero
+  let ρ := ∏ cyclePhase : Fin K, coefficient cyclePhase
+  let charge := quittingCyclicResidualCharge coefficient residual phase K
+  let blocked : ℕ × Fin K → ℝ := fun pair =>
+    ρ ^ pair.1 *
+      (quittingCyclicPrefixWeight coefficient phase pair.2.val *
+        residual (quittingCyclicOrbit phase pair.2.val))
+  have hρ0 : 0 ≤ ρ := Finset.prod_nonneg fun cyclePhase _ =>
+    hcoefficient cyclePhase
+  have hblockNonneg : 0 ≤ blocked := by
+    intro pair
+    exact mul_nonneg (pow_nonneg hρ0 _)
+      (mul_nonneg
+        (quittingCyclicPrefixWeight_nonneg
+          coefficient hcoefficient phase pair.2.val)
+        (hresidual _))
+  have hfiber : ∀ turns, HasSum (fun offset : Fin K =>
+      blocked (turns, offset)) (ρ ^ turns * charge) := by
+    intro turns
+    convert hasSum_fintype (fun offset : Fin K =>
+      blocked (turns, offset)) using 1
+    dsimp only [blocked, charge]
+    unfold quittingCyclicResidualCharge
+    rw [Finset.mul_sum]
+    symm
+    exact Fin.sum_univ_eq_sum_range (fun offset =>
+      ρ ^ turns *
+        (quittingCyclicPrefixWeight coefficient phase offset *
+          residual (quittingCyclicOrbit phase offset))) K
+  have hsummableBlocked : Summable blocked := by
+    rw [summable_prod_of_nonneg hblockNonneg]
+    constructor
+    · intro turns
+      exact (hfiber turns).summable
+    · simpa only [(hfiber _).tsum_eq] using
+        (summable_geometric_of_lt_one hρ0 hcycle).mul_right charge
+  have houter : HasSum (fun turns : ℕ => ρ ^ turns * charge)
+      (charge / (1 - ρ)) := by
+    simpa only [div_eq_mul_inv, mul_comm] using
+      (hasSum_geometric_of_lt_one hρ0 hcycle).mul_right charge
+  have hblocked : HasSum blocked (charge / (1 - ρ)) := by
+    have hcollapsed := hsummableBlocked.hasSum.prod_fiberwise hfiber
+    have hvalue : tsum blocked = charge / (1 - ρ) :=
+      hcollapsed.unique houter
+    rw [← hvalue]
+    exact hsummableBlocked.hasSum
+  apply ((Nat.divModEquiv K).symm.hasSum_iff).mp
+  convert hblocked using 1
+  funext pair
+  rcases pair with ⟨turns, offset⟩
+  simp only [Function.comp_apply, Nat.divModEquiv_symm_apply, blocked]
+  rw [quittingCyclicPrefixWeight_add,
+    quittingCyclicPrefixWeight_mul_card,
+    quittingCyclicOrbit_mul_card,
+    quittingCyclicOrbit_add,
+    quittingCyclicOrbit_mul_card]
+  dsimp only [ρ]
+  ring
+
 /-- The playerwise error with which an approximate cyclic policy vector
 selects the genuine terminal payoff of the repeated root segment. -/
 def quittingCyclicPolicySelectionError {K : ℕ}
