@@ -431,6 +431,9 @@ import GameTheory.Concepts.Correlation.ApproximateCorrelatedEq
 import GameTheory.Concepts.Correlation.CorrelatedNashMixed
 import GameTheory.Concepts.Correlation.CorrelationSaturation
 import GameTheory.Concepts.Correlation.ProductImageConvexification
+import GameTheory.Concepts.Correlation.SelectedFiberBinaryGadget
+import GameTheory.Concepts.Correlation.SelectedFiberAffineCounterexample
+import GameTheory.Concepts.Correlation.SelectedFiberProperSubsetCounterexample
 import GameTheory.Concepts.Correlation.GameMorphism
 import GameTheory.Concepts.Equilibrium.NashCorrelatedEq
 import GameTheory.Concepts.Correlation.CorrelationRegimes
