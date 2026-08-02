@@ -151,7 +151,7 @@ declaration-based.
 | M-FAIR | `Mechanism/FairDivision.lean`, finite indivisible files | 6 | finite mechanism/fair-division branch | assigned | not started | round-robin EF1 and one algorithmic allocation theorem |
 | M-CAKE | divisible fair-division files | 6 | D11/`Analysis` or Frontier | deferred | out of scope | measurable/continuous probability decision |
 | M-SOCIAL | `Mechanism/SocialChoice.lean`, `Mechanism/SocialChoice/**` | 9 | ranking/preference foundations plus coordinated domain | validated by Arrow | partial | May, median strategic compilation, Gibbard-Satterthwaite, Sen |
-| M-AUCT | `Auctions/**` | 10 | finite auction/mechanism branch; continuous work behind D11 | sealed-bid, reserve, VCG, combinatorial, all-pay, exact natural knapsack search, and real pivot-VCG knapsack validated | partial; accounted leaves 194/194 reviewed; knapsack is 26 adapted / 12 retired / 2 subsumed / 31 deferred | [basic auction ledger](coverage/M-AUCT-basic.md); [reserve Vickrey ledger](coverage/M-AUCT-reserve-vickrey.md); [VCG ledger](coverage/M-AUCT-vcg.md); [combinatorial ledger](coverage/M-AUCT-combinatorial.md); [all-pay ledger](coverage/M-AUCT-all-pay.md); [knapsack ledger](coverage/M-AUCT-knapsack.md); next repaired fractional/greedy approximation gate, with exact Myerson payment behind M-BAYES/D11 |
+| M-AUCT | `Auctions/**` | 10 | finite auction/mechanism branch; continuous work behind D11 | sealed-bid, reserve, VCG, combinatorial, all-pay, exact natural knapsack search, real pivot-VCG knapsack, and repaired executable knapsack approximation validated | partial; accounted leaves 194/194 reviewed; knapsack is 33 adapted / 35 retired / 2 subsumed / 1 deferred | [basic auction ledger](coverage/M-AUCT-basic.md); [reserve Vickrey ledger](coverage/M-AUCT-reserve-vickrey.md); [VCG ledger](coverage/M-AUCT-vcg.md); [combinatorial ledger](coverage/M-AUCT-combinatorial.md); [all-pay ledger](coverage/M-AUCT-all-pay.md); [knapsack ledger](coverage/M-AUCT-knapsack.md); EXP-056/D27 closes the returned-allocation approximation gate, with exact Myerson payment behind M-BAYES/D11 |
 | M-VOTE | `Voting/**` | 7 | coordinated voting branch | validated foundations | partial | delegation, liquid democracy, median, majority, power inventory |
 
 ### Potential consumers and parallel domains
@@ -203,9 +203,5 @@ declaration-based.
 
 1. Continue the exact FOSG queue through observation-model batches and named
    comparisons; generated rows remain `unreviewed` until manually classified.
-2. Run the repaired fractional/greedy knapsack approximation gate;
-   EXP-054/D25's natural exact solver and EXP-055/D26's real finite-allocation
-   pivot-VCG bridge are closed, while exact Myerson payment remains behind
-   M-BAYES/D11.
-3. Keep every broader family partial until all pinned declarations are
+2. Keep every broader family partial until all pinned declarations are
    classified, and update this file in the same commit as each status change.

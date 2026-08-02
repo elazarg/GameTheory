@@ -66,6 +66,7 @@ becomes difficult to scan.
 | EXP-053 | 2026-08-02 | D2/D4/D5/D9/D24 / robust smoothness | Can canonical `FinDist` expected welfare lift smoothness from pure Nash to epsilon/exact CCE without another semantic layer or import cycle? | Supports; narrows to theorem-only Core bridge | `GameTheory/Probability/FinDist.lean`; `GameTheory/Core/{Welfare,RobustWelfare}.lean`; `GameTheory/Congestion/AffinePoA.lean` |
 | EXP-054 | 2026-08-02 | D4/D9/D10 / executable knapsack auction | Where is the boundary between knapsack mechanism semantics, executable dynamic programming/greedy algorithms, and correctness? | Narrows to an explicit-list exact natural solver; decides D25; mechanism and approximation remain gated | [`decisions/D25-knapsack-execution-boundary.md`](decisions/D25-knapsack-execution-boundary.md); `GameTheory/{Experimental/PostArchitecture,Mechanism}/Knapsack*` |
 | EXP-055 | 2026-08-02 | D4/D5/D9/D25 / real knapsack mechanism | Can explicit finite-set real knapsack semantics instantiate canonical VCG truthfulness without restoring the predecessor's single-parameter wrapper stack? | Supports; decides D26 | [`decisions/D26-real-knapsack-vcg-boundary.md`](decisions/D26-real-knapsack-vcg-boundary.md); `GameTheory/Mechanism/Knapsack/{Aggregate,Basic,Mechanism}.lean`; hostile witness |
+| EXP-056 | 2026-08-02 | D9/D10/D25/D26 / knapsack approximation | Can a certified executable ratio order support an actual feasible half-approximate allocation after repairing the pinned theorem's overweight-singleton defect? | Supports after narrowing to a direct integral exchange proof; decides D27 | [`decisions/D27-executable-knapsack-half-approximation.md`](decisions/D27-executable-knapsack-half-approximation.md); `GameTheory/Mechanism/Knapsack/Approximation*.lean`; hostile witness |
 
 ## Entry template
 
@@ -3618,3 +3619,71 @@ memory.
   individually infeasible items, compare against the highest feasible
   singleton, prove the fractional relaxation bound, and return the actual
   better feasible `Finset` before stating a half approximation.
+
+### EXP-056: repaired executable knapsack half approximation
+
+- **Date / revision:** 2026-08-02, working tree based on `8330724`
+- **Status:** complete; supports after narrowing; decides D27
+- **Decision / question:** D9/D10/D25/D26 follow-on; whether the nine pinned
+  fractional rows and 21 greedy/approximation rows can become an executable
+  natural-number algorithm with a theorem about the allocation it actually
+  returns, rather than the predecessor's conditional maximum of two values.
+- **Prediction:** after removing individually infeasible items, a duplicate-free
+  explicit list carrying a checked nonincreasing value/weight ratio order can
+  drive the integral greedy prefix and its fractional relaxation.  Comparing
+  the greedy prefix with the highest feasible singleton returns a feasible
+  `Finset`; fractional optimality and the standard split-item bound should
+  prove twice its welfare dominates the exact `solveList` optimum.
+- **Representative slice:** use at least three positive-weight items where the
+  ratio-greedy prefix alone is suboptimal and an additional overweight,
+  high-value item would invalidate the pinned `highestBidValue`.  The repaired
+  frontend must discard the overweight item, evaluate to an actual allocation,
+  and kernel-check feasibility plus the half bound against `solveList`.
+- **Competing designs:** caller-supplied list with a checked ratio-order
+  certificate; executable internal rational comparison sort plus a separate
+  permutation/order proof; or a proof-only real sorter.  The returned result
+  may compare greedy and singleton allocations directly, but may not expose a
+  maximum value with no attaining allocation.
+- **Measurements to collect:** exact pinned proof dependency graph; Mathlib
+  ratio/sort overlap; assumptions needed to avoid division; evaluation and
+  recurrence cost; support/feasibility; fractional relaxation and optimality;
+  exact cast bridge to the natural solver; source hazards; reachability; build
+  cost; axiom profile; and exact rows adapted/retired/subsumed.
+- **Kill conditions:** zero weights or division-by-zero hidden by defaults;
+  noncomputable sorting in an executable API; `open Classical` or hidden
+  `Fintype`; a ratio-order premise not checked by the frontend; an overweight
+  singleton candidate; a theorem about `max` of unattained values; a bound
+  against a different feasible class from `solveList`; raw profile updates,
+  user-visible transport, or real/VCG/Analysis leakage into the algorithm.
+- **Artifacts / commands:**
+  `GameTheory/Mechanism/Knapsack/{ApproximationAlgorithm,
+  ApproximationCorrectness,Approximation}.lean`;
+  `GameTheory/Experimental/PostArchitecture/KnapsackApproximation.lean`;
+  `lake build GameTheory.Mechanism.Knapsack.Approximation` (828 jobs);
+  `lake build GameTheory.Mechanism.Knapsack` (1,731 jobs);
+  `lake build` (3,413 jobs); Phases 0/1/2/3 and coverage audits in expected
+  verification mode.
+- **Observations / measurements:** the pinned source contains nine fractional
+  rows and 21 greedy/approximation rows, but never proves its
+  fractional-greedy optimality premise.  Mathlib supplies executable merge sort
+  and its permutation/pairwise theorems, not fractional-knapsack optimality.
+  The successful design filters individually infeasible items, rejects
+  duplicate or zero-weight raw lists, internally sorts by checked natural
+  cross multiplication, and returns the better of two actual feasible
+  `Finset`s.  A direct division-free exchange proof replaces the predicted
+  fractional layer.  An independent exhaustive pre-check covered 3,119,265
+  small instances without a counterexample.  The hostile telemetry is
+  `some (false, true, 95, 1)`: the overweight item is absent, the best feasible
+  singleton is returned, welfare is 95, and the allocation has one item.  The
+  witness kernel-checks success, singleton selection, overweight exclusion,
+  feasibility, attainment, and the exact-solver factor bound.  The new
+  executable closure rejects 7/7 real/game/probability/analytic probes; the
+  public root reaches 5/5 intended inputs; Phase 2 reports `VERIFIED=1`.
+  The public axiom profile is only `propext`, `Classical.choice`, and
+  `Quot.sound`.  The family now has 33 adapted, 35 retired, two subsumed, and
+  one deferred row.
+- **Outcome / next action:** adopt D27.  Retire the fractional allocation,
+  real-cast, ambient-highest-bid, and conditional-optimality intermediates;
+  retain a separately audited natural executable leaf, structural correctness
+  leaf, and ratio theorem about the returned allocation.  Exact Myerson
+  payment remains behind M-BAYES/D11.  Return to the next DFS delivery gate.

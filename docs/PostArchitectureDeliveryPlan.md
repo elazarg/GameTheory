@@ -308,7 +308,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
-| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, and real pivot-VCG knapsack | **real finite-allocation/VCG slice complete (EXP-055/D26);** next the repaired fractional/greedy approximation gate; exact Myerson payment remains behind M-BAYES/D11 | coordinated mechanism/auction root with separately audited semantic, executable, and correctness leaves |
+| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, and repaired executable approximation | **returned-allocation half approximation complete (EXP-056/D27);** exact Myerson payment remains behind M-BAYES/D11 | coordinated mechanism/auction root with separately audited semantic, executable, and correctness leaves |
 | social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
 
 Each lane first inventories its entire pinned family. Once the hostile result
@@ -537,27 +537,21 @@ The next work is ordered:
 
 1. consolidate moving delivery probes without rewriting historical phase
    measurements;
-2. run the repaired knapsack ratio/fractional-optimality gate now that
-   EXP-054/D25 and EXP-055/D26 have promoted the exact natural solver, real
-   finite allocation, allocation-rule monotonicity, pivot normalization, and
-   topology-free VCG truthfulness; require an actual returned feasible
-   half-approximate allocation, and leave exact Myerson-envelope identity
-   behind M-BAYES/D11;
-3. continue the exact FOSG queue through observation-model batches and named
+2. continue the exact FOSG queue through observation-model batches and named
    comparisons; keep its classified counterfactual-reach/CFR spine and six
    ordinary continuation-coefficient laws behind separate checked-theorem
    gates, and recover general constant-sum value/correlation results beyond
    the completed binary slice;
-4. resume the broader revelation/information-design inventory and decide
+3. resume the broader revelation/information-design inventory and decide
    whether a live consumer earns D-COMM's deferred conditional public-signal
    representation;
-5. extend the passed stochastic-game gate only through a finite-horizon
+4. extend the passed stochastic-game gate only through a finite-horizon
    approximation or checked special case; the active sibling
    `uniform-existence` branch's basic definitions are already represented by
    D22, while its large placeholder-dependent existence hierarchy is research
    evidence only; reserve a new experiment before any infinite-path law,
    vanishing-discount existence theorem, or graph-game root;
-6. admit no Frontier implementation until the first three items have an active
+5. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 
 This queue may change when an experiment refutes an assumption, but a change

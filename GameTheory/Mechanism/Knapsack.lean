@@ -2,13 +2,16 @@
 # Finite knapsack allocation and mechanism design
 
 Public opt-in surface for scalar-generic aggregation, real finite-allocation
-semantics, the exact natural-number skip/take solver, and the canonical
-pivot-normalized VCG mechanism.
+semantics, exact and checked half-approximate natural-number solvers, and the
+canonical pivot-normalized VCG mechanism.
 -/
 
 import GameTheory.Mechanism.Knapsack.Basic
 import GameTheory.Mechanism.Knapsack.Algorithm
 import GameTheory.Mechanism.Knapsack.Correctness
+import GameTheory.Mechanism.Knapsack.ApproximationAlgorithm
+import GameTheory.Mechanism.Knapsack.ApproximationCorrectness
+import GameTheory.Mechanism.Knapsack.Approximation
 import GameTheory.Mechanism.Knapsack.Mechanism
 
 namespace GameTheory.Mechanism.Knapsack

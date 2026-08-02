@@ -179,7 +179,8 @@ Report 'FINTYPE_OF_FINITE' (Count-Pattern $TrustedFiles 'Fintype\.ofFinite')
 $AlgorithmFiles = @(
   'GameTheory/Finite/Algorithm.lean',
   'GameTheory/Mechanism/Knapsack/Aggregate.lean',
-  'GameTheory/Mechanism/Knapsack/Algorithm.lean')
+  'GameTheory/Mechanism/Knapsack/Algorithm.lean',
+  'GameTheory/Mechanism/Knapsack/ApproximationAlgorithm.lean')
 Report 'ALGORITHM_OPEN_CLASSICAL' `
   (Count-Pattern $AlgorithmFiles '(?<![A-Za-z0-9_])(open\s+Classical|classical|noncomputable)(?![A-Za-z0-9_])')
 Report 'SORRY_OR_ADMIT' `
@@ -211,13 +212,17 @@ foreach ($algorithmFile in $AlgorithmFiles) {
     if ($imp -match $AlgorithmForbidden) { $algBad++ }
   }
 }
-# EXP-055/D25 permits precisely one authored GameTheory import into the exact
-# knapsack solver: scalar-generic aggregation.  The aggregation leaf itself
-# remains wholly game-free, so the solver cannot acquire profile, real, or VCG
-# semantics through a convenience import.
-foreach ($imp in Get-Imports 'GameTheory/Mechanism/Knapsack/Algorithm.lean') {
-  if ($imp -match '^GameTheory\.' -and
-      $imp -ne 'GameTheory.Mechanism.Knapsack.Aggregate') { $algBad++ }
+# EXP-055/D25 and EXP-056 permit precisely one authored GameTheory import into
+# each executable knapsack solver: scalar-generic aggregation.  The
+# aggregation leaf itself remains wholly game-free, so neither solver can
+# acquire profile, real, or VCG semantics through a convenience import.
+foreach ($algorithmFile in @(
+    'GameTheory/Mechanism/Knapsack/Algorithm.lean',
+    'GameTheory/Mechanism/Knapsack/ApproximationAlgorithm.lean')) {
+  foreach ($imp in Get-Imports $algorithmFile) {
+    if ($imp -match '^GameTheory\.' -and
+        $imp -ne 'GameTheory.Mechanism.Knapsack.Aggregate') { $algBad++ }
+  }
 }
 Report 'ALGORITHM_FORBIDDEN_IMPORTS' $algBad
 
@@ -443,6 +448,29 @@ if (-not $SkipReachability) {
   Report 'KNAPSACK_ALGORITHM_BOUNDARY_PROBES_REJECTED' `
     $knapsackAlgorithmRejected
 
+  # EXP-056 adds a second executable knapsack leaf.  Its internally checked
+  # density ordering may use list sorting, but cannot bring semantic game,
+  # real, probability, or analytic machinery into the executable closure.
+  $knapsackApproximationAlgorithmBoundary = @(
+    'Real.instAdd',
+    'PMF',
+    'MeasureTheory.Measure',
+    'stdSimplex',
+    'Polynomial',
+    'GameTheory.GameForm',
+    'GameTheory.Mechanism.Auction.auctionGame')
+  $knapsackApproximationAlgorithmOutput =
+    Run-Probe 'GameTheory.Mechanism.Knapsack.ApproximationAlgorithm' `
+      $knapsackApproximationAlgorithmBoundary
+  $knapsackApproximationAlgorithmRejected = 0
+  foreach ($constant in $knapsackApproximationAlgorithmBoundary) {
+    if (Is-Unreachable $knapsackApproximationAlgorithmOutput $constant) {
+      $knapsackApproximationAlgorithmRejected++
+    }
+  }
+  Report 'KNAPSACK_APPROXIMATION_ALGORITHM_BOUNDARY_PROBES_REJECTED' `
+    $knapsackApproximationAlgorithmRejected
+
   # The shared aggregation leaf may be scalar-generic, but it may not turn
   # into a back door from the executable solver to real-valued, game, VCG, or
   # analytic machinery.  The negative probe measures that transitive closure.
@@ -493,7 +521,9 @@ if (-not $SkipReachability) {
   $knapsackInputs = @(
     'GameTheory.Mechanism.Knapsack.solveList',
     'GameTheory.Mechanism.Knapsack.solveList_feasible',
-    'GameTheory.Mechanism.Knapsack.solveList_optimal')
+    'GameTheory.Mechanism.Knapsack.solveList_optimal',
+    'GameTheory.Mechanism.Knapsack.approximate?_supported_feasible',
+    'GameTheory.Mechanism.Knapsack.solveList_welfare_le_two_mul_approximate?')
   $knapsackOutput =
     Run-Probe 'GameTheory.Mechanism.Knapsack' $knapsackInputs
   $knapsackInputsReached = 0
@@ -998,9 +1028,10 @@ if ($VerifyExpected) {
   if (-not $SkipReachability) {
     $Expected['UNREACHABLE_PROBES_PASSED'] = 6
     $Expected['KNAPSACK_ALGORITHM_BOUNDARY_PROBES_REJECTED'] = 7
+    $Expected['KNAPSACK_APPROXIMATION_ALGORITHM_BOUNDARY_PROBES_REJECTED'] = 7
     $Expected['KNAPSACK_AGGREGATE_BOUNDARY_PROBES_REJECTED'] = 8
     $Expected['KNAPSACK_BASIC_BOUNDARY_PROBES_REJECTED'] = 7
-    $Expected['KNAPSACK_ROOT_INPUT_PROBES_REACHED'] = 3
+    $Expected['KNAPSACK_ROOT_INPUT_PROBES_REACHED'] = 5
     $Expected['KNAPSACK_MECHANISM_INPUT_PROBES_REACHED'] = 6
     $Expected['ANALYSIS_PROBES_REACHED'] = 2
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6

@@ -6,9 +6,9 @@ Pinned root: `GameTheory/Auctions/Knapsack/Basic.lean`
 Pinned commit: `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`
 Successor baseline: `d595d17`
 Canonical destination: `GameTheory.Mechanism.Knapsack`
-Domain contract / decision: EXP-054 / D25; EXP-055 / D26
+Domain contract / decision: EXP-054 / D25; EXP-055 / D26; EXP-056 / D27
 Owner: post-architecture breadth wave
-Status: partial; 71 reviewed, 26 adapt, 12 retired, 2 subsumed, 31 deferred
+Status: partial; 71 reviewed, 33 adapt, 35 retired, 2 subsumed, 1 deferred; EXP-056 / D27 complete
 Last verified: 2026-08-02
 
 This ledger records the pinned knapsack module without importing its obsolete
@@ -16,9 +16,12 @@ This ledger records the pinned knapsack module without importing its obsolete
 successor. Stable `Aggregate`, `Basic`, and `Mechanism` APIs recover the real
 finite-allocation, welfare-maximization, monotonicity, and canonical
 pivot-normalized VCG truthfulness slice; stable `Algorithm` and `Correctness`
-APIs recover the explicit natural-number exact skip/take cluster. The
-fractional and repaired approximation clusters, and the exact payment identity,
-remain explicitly gated; no deferred item is credited as recovered.
+APIs recover the explicit natural-number exact skip/take cluster. The repaired
+executable approximation cluster is validated under EXP-056 / D27. The
+historical fractional layer is retired rather
+than reproduced: its pinned "optimality" comparison assumed the very
+fractional-optimality fact it needed. Exact payment identity remains explicitly
+deferred behind D11.
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
 |---|---|---|---|---|---|---|
@@ -38,15 +41,15 @@ remain explicitly gated; no deferred item is credited as recovered.
 | same | `maximalSocialWelfare` | def | adapt | `GameTheory.Mechanism.Knapsack.maximalWelfare` | EXP-055 / D26 | The maximum value is defined through the recovered selector. |
 | same | `welfareMaximizer_respectsCapacity` | theorem | adapt | `GameTheory.Mechanism.Knapsack.welfareMaximizer_feasible` | EXP-055 / D26 | Feasibility is recovered directly from selector membership. |
 | same | `binaryRespectsCapacity_of_mem_feasibleBinaryAllocations` | theorem | adapt | `GameTheory.Mechanism.Knapsack.feasible_of_mem_feasibleAllocations` | EXP-055 / D26 | Feasible-set membership eliminates to the capacity predicate. |
-| same | `fractionalSocialWelfare` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Fractional approximation slice. |
-| same | `fractionalFeasible` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Fractional approximation slice. |
-| same | `ratio` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Ratio ordering is experiment-gated. |
-| same | `ratioTieKey` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Ratio tie-breaking is experiment-gated. |
-| same | `sortedAgentsByRatio` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Ratio sorting is experiment-gated. |
-| same | `fractionalGreedyList` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Fractional greedy computation awaits optimality experiment. |
-| same | `fractionalGreedyAllocation` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Fractional greedy allocation awaits optimality experiment. |
-| same | `binaryToAllocation_fractionalFeasible_of_binaryRespectsCapacity` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Fractional feasibility bridge. |
-| same | `fractionalGreedyWelfare_ge_zeroOneWelfare_of_optimal` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Fractional optimality comparison. |
+| same | `fractionalSocialWelfare` | def | retired | direct natural `welfare` comparison | EXP-056 / D27 | The repaired proof is division-free and never exposes a fractional allocation API. |
+| same | `fractionalFeasible` | def | retired | direct natural feasible-allocation comparison | EXP-056 / D27 | Ambient fractional feasibility is unsound after filtering overweight items, so it is not retained. |
+| same | `ratio` | def | adapt | `GameTheory.Mechanism.Knapsack.densityLE` | EXP-056 / D27 | Checked cross-multiplication replaces division. |
+| same | `ratioTieKey` | def | retired | `densityLE` total preorder | EXP-056 / D27 | No semantic tie key is needed for the returned-allocation guarantee. |
+| same | `sortedAgentsByRatio` | def | adapt | `GameTheory.Mechanism.Knapsack.sortByDensity` | EXP-056 / D27 | Explicit checked density sorting replaces the noncomputable ratio order. |
+| same | `fractionalGreedyList` | def | retired | division-free prefix/exchange proof | EXP-056 / D27 | The old fractional program is not an executable guarantee. |
+| same | `fractionalGreedyAllocation` | def | retired | `approximate` returned feasible allocation | EXP-056 / D27 | The successor returns an actual integral allocation. |
+| same | `binaryToAllocation_fractionalFeasible_of_binaryRespectsCapacity` | theorem | retired | direct natural feasibility theorem | EXP-056 / D27 | The fractional bridge is unnecessary and invalid as an overweight-filtering invariant. |
+| same | `fractionalGreedyWelfare_ge_zeroOneWelfare_of_optimal` | theorem | retired | `welfare_le_two_mul_approximate` | EXP-056 / D27 | The pinned theorem assumed fractional optimality; the successor proves the integral bound directly. |
 | same | `binarySocialWelfare_update_eq_add` | theorem | adapt | `GameTheory.Mechanism.Knapsack.welfare_update` | EXP-055 / D26 | Canonical `Profile.update` gives the finite-set welfare-coordinate identity. |
 | same | `welfareMaximizingAllocationRule` | def | adapt | `GameTheory.Mechanism.Knapsack.allocationRule` | EXP-055 / D26 | Full finite-universe welfare maximization is the canonical allocation rule. |
 | same | `welfareMaximizingPaymentRule` | def | deferred | M-BAYES / D11 envelope gate | M-BAYES / D11 | Payment recovery waits for the envelope gate. |
@@ -72,29 +75,29 @@ remain explicitly gated; no deferred item is credited as recovered.
 | same | `dynamicProgrammingOptimalValue` | def | retired | `GameTheory.Mechanism.Knapsack.solveList` plus `welfare` | Algorithm API review | Misleading noncomputable wrapper; the explicit-list API is canonical. |
 | same | `dynamicProgrammingOptimalAllocation_feasible` | theorem | subsumed | `GameTheory.Mechanism.Knapsack.solveList_feasible` | Correctness direct proof chain | Direct explicit-list feasibility theorem subsumes wrapper correctness. |
 | same | `dynamicProgrammingOptimalAllocation_optimal` | theorem | subsumed | `GameTheory.Mechanism.Knapsack.solveList_optimal` | Correctness direct proof chain | Direct explicit-list optimality theorem subsumes wrapper correctness. |
-| same | `natAuctionData` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `realBidOfNat` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `integralGreedyList` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `integralGreedyAllocation` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `integralGreedyValue` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `highestBidValue` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `le_highestBidValue` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `fractionalSocialWelfare_realBidOfNat_binaryToAllocation` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `natFractionalGreedyList` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `natFractionalGreedyAllocation` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `natFractionalGreedyValue` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `fractionalSupportedOn` | def | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `eq_zero_of_fractionalSupportedOn_of_not_mem` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `integralGreedyList_supportedOn` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `natFractionalGreedyList_supportedOn` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `fractionalSocialWelfare_update_one_of_zero` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `fractionalSocialWelfare_singleton` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation recovery awaits the experiment. |
-| same | `natFractionalGreedyList_le_integralGreedyList_plus_highest` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation comparison. |
-| same | `natFractionalGreedyValue_le_integralGreedyValue_plus_highest` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Greedy/approximation comparison. |
-| same | `dynamicProgrammingOptimalAllocation_fractionalFeasible` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Fractional bridge for the approximation proof. |
-| same | `integralGreedy_halfApprox_dpOptimal` | theorem | deferred | next ratio-order/fractional-optimality approximation experiment | EXP-054 / D25 | Repair must prefilter infeasible items, use the highest feasible singleton, certify ratio order, and return the better feasible allocation; the pinned conditional maximum-of-values statement is not an algorithmic guarantee. |
+| same | `natAuctionData` | def | retired | explicit `(weight value : Agent → Nat)` arguments | EXP-056 / D27 | A wrapper record adds no invariant to the executable API. |
+| same | `realBidOfNat` | def | retired | natural executable welfare | EXP-056 / D27 | No coercion to reals is needed for the discrete guarantee. |
+| same | `integralGreedyList` | def | adapt | `GameTheory.Mechanism.Knapsack.greedySplit` and `greedyPrefix` | EXP-056 / D27 | The stop-at-first-failure scan is recovered with named trace data and an actual finite-set allocation. |
+| same | `integralGreedyAllocation` | def | adapt | `GameTheory.Mechanism.Knapsack.greedyPrefix` | EXP-056 / D27 | The integral density prefix is returned as a feasible finite-set allocation. |
+| same | `integralGreedyValue` | def | adapt | `GameTheory.Mechanism.Knapsack.welfare` of `greedyPrefix` | EXP-056 / D27 | Shared welfare measures the recovered prefix allocation. |
+| same | `highestBidValue` | def | retired | `GameTheory.Mechanism.Knapsack.bestItem?` over `feasibleItems` | EXP-056 / D27 | The ambient maximum is the source of the overweight-singleton defect; the repaired candidate is deliberately feasibility-relative and attained. |
+| same | `le_highestBidValue` | theorem | retired | `GameTheory.Mechanism.Knapsack.le_bestItem?` on the eligible list | EXP-056 / D27 | Ambient domination is not the needed invariant; only supported feasible singleton domination survives. |
+| same | `fractionalSocialWelfare_realBidOfNat_binaryToAllocation` | theorem | retired | natural `welfare` | EXP-056 / D27 | Coercion-only bridge is absent from the natural proof. |
+| same | `natFractionalGreedyList` | def | retired | division-free prefix/exchange proof | EXP-056 / D27 | No fractional greedy list is constructed. |
+| same | `natFractionalGreedyAllocation` | def | retired | `approximate` integral allocation | EXP-056 / D27 | The successor returns only a checked integral allocation. |
+| same | `natFractionalGreedyValue` | def | retired | direct natural welfare bound | EXP-056 / D27 | No fractional value is a public intermediate. |
+| same | `fractionalSupportedOn` | def | retired | Finset allocation representation | EXP-056 / D27 | Function-valued support is obsolete. |
+| same | `eq_zero_of_fractionalSupportedOn_of_not_mem` | theorem | retired | Finset membership | EXP-056 / D27 | Obsolete function-support elimination. |
+| same | `integralGreedyList_supportedOn` | theorem | adapt | `GameTheory.Mechanism.Knapsack.greedyPrefix_subset` | EXP-056 / D27 | Function support is repaired to finite-set inclusion for the actual prefix allocation. |
+| same | `natFractionalGreedyList_supportedOn` | theorem | retired | `approximate_subset` | EXP-056 / D27 | The fractional list is not retained. |
+| same | `fractionalSocialWelfare_update_one_of_zero` | theorem | retired | Finset-sum welfare algebra | EXP-056 / D27 | Update arithmetic is neither a public API nor needed by the proof. |
+| same | `fractionalSocialWelfare_singleton` | theorem | retired | `singletonAllocation` plus `welfare` | EXP-056 / D27 | Singleton welfare is used directly in the integral branch. |
+| same | `natFractionalGreedyList_le_integralGreedyList_plus_highest` | theorem | retired | direct density-exchange bound | EXP-056 / D27 | The repaired proof does not pass through a fractional list. |
+| same | `natFractionalGreedyValue_le_integralGreedyValue_plus_highest` | theorem | retired | direct density-exchange bound | EXP-056 / D27 | The repaired proof eliminates the historical intermediate inequality. |
+| same | `dynamicProgrammingOptimalAllocation_fractionalFeasible` | theorem | retired | `solveList_welfare_le_two_mul_approximate?` | EXP-056 / D27 | Exact optimality compares directly with the returned approximate allocation. |
+| same | `integralGreedy_halfApprox_dpOptimal` | theorem | adapt | `GameTheory.Mechanism.Knapsack.solveList_welfare_le_two_mul_approximate?` | EXP-056 / D27 | Prefilters infeasible items, certifies density order, compares the actual greedy and feasible-singleton allocations, and returns the better allocation. |
 
-Disposition count: 26 adapt, 12 retired, 2 subsumed, 31 deferred; 71 reviewed.
+Disposition count: 33 adapt, 35 retired, 2 subsumed, 1 deferred; 71 reviewed.
 
 Findings: the pinned source contains 45 raw `Function.update` occurrences,
 including proof-facing update helpers; it also exposes 19 noncomputable public
@@ -108,10 +111,11 @@ Attribution: declaration names, kinds, visibility, and the DP/greedy/
 mechanism theorem inventory are from
 `reference/GameTheory-v1/GameTheory/Auctions/Knapsack/Basic.lean` at pinned
 commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`. The recovery classification
-follows EXP-054 / D25 and EXP-055 / D26. It preserves the natural-number
-exact-search payload and recovers the finite real semantics and VCG
-truthfulness slice, while deliberately withholding the fractional,
-approximation, and exact-payment families until their stated gates pass.
+follows EXP-054 / D25, EXP-055 / D26, and EXP-056 / D27.
+It preserves the natural-number exact-search payload and recovers the finite
+real semantics, VCG truthfulness, and repaired executable approximation slice,
+while deliberately retiring the unsound/conditional fractional intermediates
+and withholding exact payment identity until M-BAYES/D11.
 
 Validation:
 
