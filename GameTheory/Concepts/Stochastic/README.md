@@ -196,7 +196,7 @@ arbitrary stochastic game.
 | Single-state games | `exists_uniformEquilibriumPayoff_of_subsingleton_state` | `Absorbing.lean` |
 | Action-independent transitions (full generality, incl. reducible/periodic) | `exists_uniformEquilibriumPayoff_of_isActionIndependent` | `TransitionIndependent.lean` |
 | All children absorbing after one step | `exists_uniformEquilibriumPayoff_of_absorbingChildren` | `OneStepAbsorbingChildUniform.lean` |
-| Zero-sum single-controller (from a Vrieze primal optimum) | `exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptimal` | `SingleControllerFlowReward.lean` |
+| Zero-sum single-controller (full finite generality) | `exists_uniformEquilibriumPayoff_of_isZeroSumBoolGame_of_isSingleController` | `SingleControllerPrimalExistence.lean` |
 | **The Big Match** (Blackwell–Ferguson 1968) | `exists_uniformEquilibriumPayoff_live` | `BigMatchUniform.lean` |
 
 `SingleControllerNoTrap.lean` closes the game-specific no-trap part of that
@@ -216,8 +216,11 @@ same hybrid kernel makes the encoded gain harmonic.
 the occupation core, solves the arbitrary off-core residual by a killed
 Poisson equation, identifies the worst-reward ergodic projection with the
 negative encoded gain, and constructs the controller projection witness.
-Thus the single-controller theorem no longer assumes a separately supplied
-projection witness.
+`SingleControllerPrimalExistence.lean` proves feasibility, bounds every
+feasible gain through its one-sided average guarantee, invokes finite LP
+attainment, and constructs a primal optimum.  Thus the final
+single-controller theorem assumes neither an optimal LP point nor a
+separately supplied projection witness.
 
 Supporting classical theorems, fully proved: Fink's discounted stationary
 equilibria (`exists_isDiscountedStationaryBellmanEq`, `Fink.lean`), Shapley's

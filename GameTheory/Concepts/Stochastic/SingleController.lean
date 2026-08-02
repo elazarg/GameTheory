@@ -47,10 +47,11 @@ shape almost definitionally.
    noncontroller certificate (from Step 1) and a controller projection
    witness via
    `isUniformEquilibriumPayoff_of_isZeroSumBoolGame_of_stationaryAverageGuarantees`
-   into a full `IsUniformEquilibriumPayoff`.  The unconditional assembly from
-   a Vrieze primal optimum is
+   into a full `IsUniformEquilibriumPayoff`.  The assembly from a Vrieze
+   primal optimum is
    `exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptimal`
-   in `SingleControllerFlowReward`.
+   in `SingleControllerFlowReward`; `SingleControllerPrimalExistence`
+   constructs that optimum and exposes the theorem with no LP hypothesis.
 
 ## The zero-occupation trap and its resolution
 
@@ -146,8 +147,11 @@ harmonicity, reward compatibility, and the mean-ergodic projection step.
 * `StochasticGame.exists_uniformEquilibriumPayoff_of_singleController`
   (Step 5, conditional on a supplied `IsControllerProjectionWitness`)
 * `StochasticGame.exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptimal`
-  (in `SingleControllerFlowReward`) — the completed theorem, with the
+  (in `SingleControllerFlowReward`) — the projection-complete theorem, with the
   projection witness constructed internally
+* `StochasticGame.exists_uniformEquilibriumPayoff_of_isZeroSumBoolGame_of_isSingleController`
+  (in `SingleControllerPrimalExistence`) — the full finite theorem, with the
+  optimal Vrieze primal point also constructed internally
 * `StochasticGame.FiniteReachability.trap_closed_of_not_canReachSet` — the
   states that cannot reach a target set `R` are themselves closed under
   every successor: the precise combinatorial form of "a trap disjoint from
