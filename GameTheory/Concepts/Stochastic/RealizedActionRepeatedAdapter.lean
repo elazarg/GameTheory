@@ -62,6 +62,75 @@ def realizedActionStochasticGame (G : KernelGame ι) : StochasticGame ι where
       PMF.pure PUnit.unit :=
   rfl
 
+namespace PublicMonitoring
+
+variable {G : KernelGame ι}
+
+/-- A monitored payoff witness at one accuracy: one profile and one threshold
+work simultaneously for approximate Nash and target delivery at every later
+horizon.  This small wrapper makes the quantifier order explicit. -/
+structure UniformPayoffWitnessAt (M : G.PublicMonitoring) [DecidableEq ι]
+    (target : Payoff ι) (ε : ℝ) where
+  profile : M.MonitoredProfile
+  threshold : ℕ
+  valid : ∀ T, threshold ≤ T →
+    M.IsεFiniteRepeatedNash T ε profile ∧
+      ∀ who, |M.finiteAveragePayoff T profile who - target who| ≤ ε
+
+/-- Payoff-level uniform equilibrium under public monitoring, with exactly the
+accuracy-indexed profile quantifiers used by
+`StochasticGame.IsUniformEquilibriumPayoff`.
+
+This is intentionally distinct from `IsUniformEquilibrium`, which fixes one
+profile for every accuracy and asks separately for payoff convergence. -/
+def IsUniformEquilibriumPayoff (M : G.PublicMonitoring) [DecidableEq ι]
+    (target : Payoff ι) : Prop :=
+  ∀ ε : ℝ, 0 < ε → Nonempty (M.UniformPayoffWitnessAt target ε)
+
+/-- A fixed monitored uniform equilibrium with specified long-run payoff is a
+payoff-level uniform equilibrium.  The converse would require a coherent
+selection/compactness theorem and is not asserted. -/
+theorem IsUniformEquilibrium.isUniformEquilibriumPayoff_of_hasLongRunAveragePayoff
+    {M : G.PublicMonitoring} [Fintype ι] [DecidableEq ι]
+    {profile : M.MonitoredProfile} {target : Payoff ι}
+    (hequilibrium : M.IsUniformEquilibrium profile)
+    (hpayoff : M.HasLongRunAveragePayoff profile target) :
+    M.IsUniformEquilibriumPayoff target := by
+  intro ε hε
+  obtain ⟨nashThreshold, hnash⟩ := hequilibrium.2 ε hε
+  have hclose : ∀ᶠ T in Filter.atTop,
+      ∀ who, |M.finiteAveragePayoff T profile who - target who| < ε := by
+    apply Filter.eventually_all.mpr
+    intro who
+    have hball := (hpayoff who).eventually
+      (Metric.ball_mem_nhds (target who) hε)
+    filter_upwards [hball] with T hT
+    simpa only [Metric.mem_ball, Real.dist_eq] using hT
+  obtain ⟨payoffThreshold, hpayoffThreshold⟩ :=
+    Filter.eventually_atTop.1 hclose
+  refine ⟨{
+    profile := profile
+    threshold := max nashThreshold payoffThreshold
+    valid := fun T hT => ?_ }⟩
+  constructor
+  · exact hnash T (le_trans (Nat.le_max_left _ _) hT)
+  · intro who
+    exact le_of_lt
+      (hpayoffThreshold T (le_trans (Nat.le_max_right _ _) hT) who)
+
+/-- Every fixed-profile monitored uniform equilibrium therefore supplies some
+payoff-level uniform equilibrium payoff. -/
+theorem IsUniformEquilibrium.exists_isUniformEquilibriumPayoff
+    {M : G.PublicMonitoring} [Fintype ι] [DecidableEq ι]
+    {profile : M.MonitoredProfile}
+    (hequilibrium : M.IsUniformEquilibrium profile) :
+    ∃ target : Payoff ι, M.IsUniformEquilibriumPayoff target := by
+  obtain ⟨target, htarget⟩ := hequilibrium.1
+  exact ⟨target,
+    hequilibrium.isUniformEquilibriumPayoff_of_hasLongRunAveragePayoff htarget⟩
+
+end PublicMonitoring
+
 namespace RealizedActionRepeatedAdapter
 
 variable [Fintype ι] (G : KernelGame ι)
@@ -308,6 +377,199 @@ theorem map_actionHistory_histDist
       rfl
 
 end HistoryLaw
+
+section Payoffs
+
+variable [Finite G.Outcome]
+
+/-- At corresponding histories, one-state stochastic expected stage payoff is
+the mixed-extension expected utility used by the monitored presentation. -/
+theorem stageEUAt_toBehaviorProfile
+    (profile : G.realizedActionMonitoring.MonitoredProfile)
+    {t : ℕ} (history : G.realizedActionStochasticGame.Hist t) (who : ι) :
+    G.realizedActionStochasticGame.stageEUAt
+        (toBehaviorProfile G profile) history who =
+      G.mixedExtension.eu
+        (fun player => profile player t (actionHistory G history)) who := by
+  unfold StochasticGame.stageEUAt
+  rw [stageActionDist_toBehaviorProfile]
+  exact (G.mixedExtension_eu
+    (fun player => profile player t (actionHistory G history)) who).symm
+
+/-- Expected payoff in each period is preserved by profile transport. -/
+theorem expectedStagePayoff_toBehaviorProfile
+    (profile : G.realizedActionMonitoring.MonitoredProfile)
+    (t : ℕ) (who : ι) :
+    G.realizedActionStochasticGame.expectedStagePayoff
+        (toBehaviorProfile G profile) PUnit.unit t who =
+      G.realizedActionMonitoring.stageEU profile t who := by
+  letI : Finite G.mixedExtension.Outcome := ‹Finite G.Outcome›
+  obtain ⟨C, hC⟩ :=
+    G.mixedExtension.exists_eu_abs_bound_of_finite_outcome who
+  unfold StochasticGame.expectedStagePayoff
+  simp_rw [stageEUAt_toBehaviorProfile G profile]
+  rw [KernelGame.PublicMonitoring.stageEU,
+    ← map_actionHistory_histDist G profile t]
+  exact
+    (Math.ProbabilityMassFunction.expect_pushforward_of_bounded
+      (G.realizedActionStochasticGame.histDist
+        (toBehaviorProfile G profile) PUnit.unit t)
+      (actionHistory G)
+      (fun history =>
+        G.mixedExtension.eu (fun player => profile player t history) who)
+      (fun history => hC (fun player => profile player t history))).symm
+
+variable [∀ who, Finite (G.Strategy who)]
+
+/-- Every finite-average payoff is preserved by the monitored-to-stochastic
+profile transport. -/
+theorem finiteAveragePayoff_toBehaviorProfile
+    (profile : G.realizedActionMonitoring.MonitoredProfile)
+    (T : ℕ) (who : ι) :
+    G.realizedActionStochasticGame.finiteAveragePayoff PUnit.unit T
+        (toBehaviorProfile G profile) who =
+      G.realizedActionMonitoring.finiteAveragePayoff T profile who := by
+  letI : Finite G.realizedActionStochasticGame.State :=
+    inferInstanceAs (Finite PUnit)
+  letI (player : ι) :
+      Finite (G.realizedActionStochasticGame.Act player) :=
+    ‹∀ who, Finite (G.Strategy who)› player
+  rw [G.realizedActionStochasticGame.finiteAveragePayoff_eq_sum_expectedStagePayoff]
+  unfold KernelGame.PublicMonitoring.finiteAveragePayoff
+  congr 1
+  apply Finset.sum_congr rfl
+  intro t _ht
+  exact expectedStagePayoff_toBehaviorProfile G profile t who
+
+/-- Every finite-average payoff is also preserved in the reverse direction. -/
+theorem finiteAveragePayoff_toMonitoredProfile
+    (profile : G.realizedActionStochasticGame.BehaviorProfile)
+    (T : ℕ) (who : ι) :
+    G.realizedActionMonitoring.finiteAveragePayoff T
+        (toMonitoredProfile G profile) who =
+      G.realizedActionStochasticGame.finiteAveragePayoff PUnit.unit T
+        profile who := by
+  have h := finiteAveragePayoff_toBehaviorProfile G
+    (toMonitoredProfile G profile) T who
+  simpa using h.symm
+
+end Payoffs
+
+section FiniteHorizonEquilibrium
+
+variable [DecidableEq ι] [Finite G.Outcome]
+  [∀ who, Finite (G.Strategy who)]
+
+/-- Finite-horizon approximate Nash is exactly preserved and reflected by the
+profile equivalence, including arbitrary whole-strategy unilateral
+deviations. -/
+theorem isεFiniteRepeatedNash_iff_isεHorizonNash
+    (profile : G.realizedActionMonitoring.MonitoredProfile)
+    (T : ℕ) (ε : ℝ) :
+    G.realizedActionMonitoring.IsεFiniteRepeatedNash T ε profile ↔
+      G.realizedActionStochasticGame.IsεHorizonNash PUnit.unit T ε
+        (toBehaviorProfile G profile) := by
+  constructor
+  · intro hNash who deviation
+    have h := hNash who (toMonitoredStrategy G who deviation)
+    rw [← finiteAveragePayoff_toBehaviorProfile G profile T who,
+      ← finiteAveragePayoff_toBehaviorProfile G
+        (Function.update profile who
+          (toMonitoredStrategy G who deviation)) T who,
+      toBehaviorProfile_update,
+      toBehaviorStrategy_toMonitoredStrategy] at h
+    exact h
+  · intro hNash who deviation
+    have h := hNash who (toBehaviorStrategy G who deviation)
+    rw [finiteAveragePayoff_toBehaviorProfile G profile T who,
+      ← toBehaviorProfile_update,
+      finiteAveragePayoff_toBehaviorProfile G
+        (Function.update profile who deviation) T who] at h
+    exact h
+
+/-- Fixed-profile uniform `ε`-equilibrium is exactly preserved and reflected.
+This statement has the same profile quantifier on both sides. -/
+theorem isUniformεEquilibrium_iff
+    (profile : G.realizedActionMonitoring.MonitoredProfile) (ε : ℝ) :
+    G.realizedActionMonitoring.IsUniformεEquilibrium ε profile ↔
+      G.realizedActionStochasticGame.IsUniformεEquilibrium PUnit.unit ε
+        (toBehaviorProfile G profile) := by
+  constructor
+  · rintro ⟨threshold, hthreshold⟩
+    exact ⟨threshold, fun T hT =>
+      (isεFiniteRepeatedNash_iff_isεHorizonNash G profile T ε).mp
+        (hthreshold T hT)⟩
+  · rintro ⟨threshold, hthreshold⟩
+    exact ⟨threshold, fun T hT =>
+      (isεFiniteRepeatedNash_iff_isεHorizonNash G profile T ε).mpr
+        (hthreshold T hT)⟩
+
+omit [DecidableEq ι] in
+/-- Coordinatewise long-run payoff convergence is preserved and reflected for
+a fixed profile. -/
+theorem hasLongRunAveragePayoff_iff
+    (profile : G.realizedActionMonitoring.MonitoredProfile)
+    (target : Payoff ι) :
+    G.realizedActionMonitoring.HasLongRunAveragePayoff profile target ↔
+      ∀ who, Filter.Tendsto
+        (fun T =>
+          G.realizedActionStochasticGame.finiteAveragePayoff PUnit.unit T
+            (toBehaviorProfile G profile) who)
+        Filter.atTop (nhds (target who)) := by
+  constructor
+  · intro hlimit who
+    simpa only [finiteAveragePayoff_toBehaviorProfile G profile] using
+      hlimit who
+  · intro hlimit who
+    simpa only [finiteAveragePayoff_toBehaviorProfile G profile] using
+      hlimit who
+
+end FiniteHorizonEquilibrium
+
+section PayoffLevelEquilibrium
+
+variable [DecidableEq ι] [Finite G.Outcome]
+  [∀ who, Finite (G.Strategy who)]
+
+/-- The payoff-level monitored predicate is exactly the stochastic uniform
+equilibrium-payoff predicate for the one-state presentation.  Both sides may
+choose an accuracy-dependent profile; no fixed-profile compactness is hidden
+in this equivalence. -/
+theorem isUniformEquilibriumPayoff_iff
+    (target : Payoff ι) :
+    G.realizedActionMonitoring.IsUniformEquilibriumPayoff target ↔
+      G.realizedActionStochasticGame.IsUniformEquilibriumPayoff
+        PUnit.unit target := by
+  constructor
+  · intro hmonitored ε hε
+    obtain ⟨witness⟩ := hmonitored ε hε
+    refine ⟨toBehaviorProfile G witness.profile, witness.threshold,
+      fun T hT => ?_⟩
+    obtain ⟨hnash, hpayoff⟩ := witness.valid T hT
+    constructor
+    · exact
+        (isεFiniteRepeatedNash_iff_isεHorizonNash
+          G witness.profile T ε).mp hnash
+    · intro who
+      rw [finiteAveragePayoff_toBehaviorProfile G witness.profile T who]
+      exact hpayoff who
+  · intro hstochastic ε hε
+    obtain ⟨profile, threshold, hvalid⟩ := hstochastic ε hε
+    refine ⟨{
+      profile := toMonitoredProfile G profile
+      threshold := threshold
+      valid := fun T hT => ?_ }⟩
+    obtain ⟨hnash, hpayoff⟩ := hvalid T hT
+    constructor
+    · apply
+        (isεFiniteRepeatedNash_iff_isεHorizonNash G
+          (toMonitoredProfile G profile) T ε).mpr
+      simpa using hnash
+    · intro who
+      rw [finiteAveragePayoff_toMonitoredProfile G profile T who]
+      exact hpayoff who
+
+end PayoffLevelEquilibrium
 
 end RealizedActionRepeatedAdapter
 
