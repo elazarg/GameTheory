@@ -91,11 +91,12 @@ def IsUniformEquilibriumPayoff (M : G.PublicMonitoring) [DecidableEq ι]
 payoff-level uniform equilibrium.  The converse would require a coherent
 selection/compactness theorem and is not asserted. -/
 theorem IsUniformEquilibrium.isUniformEquilibriumPayoff_of_hasLongRunAveragePayoff
-    {M : G.PublicMonitoring} [Fintype ι] [DecidableEq ι]
+    {M : G.PublicMonitoring} [Finite ι] [DecidableEq ι]
     {profile : M.MonitoredProfile} {target : Payoff ι}
     (hequilibrium : M.IsUniformEquilibrium profile)
     (hpayoff : M.HasLongRunAveragePayoff profile target) :
     M.IsUniformEquilibriumPayoff target := by
+  letI : Fintype ι := Fintype.ofFinite ι
   intro ε hε
   obtain ⟨nashThreshold, hnash⟩ := hequilibrium.2 ε hε
   have hclose : ∀ᶠ T in Filter.atTop,
@@ -121,7 +122,7 @@ theorem IsUniformEquilibrium.isUniformEquilibriumPayoff_of_hasLongRunAveragePayo
 /-- Every fixed-profile monitored uniform equilibrium therefore supplies some
 payoff-level uniform equilibrium payoff. -/
 theorem IsUniformEquilibrium.exists_isUniformEquilibriumPayoff
-    {M : G.PublicMonitoring} [Fintype ι] [DecidableEq ι]
+    {M : G.PublicMonitoring} [Finite ι] [DecidableEq ι]
     {profile : M.MonitoredProfile}
     (hequilibrium : M.IsUniformEquilibrium profile) :
     ∃ target : Payoff ι, M.IsUniformEquilibriumPayoff target := by

@@ -39,6 +39,25 @@ Basic ─→ StageGame ─→ Uniform (the conjecture; both waists)
   one-sided guarantee + zero-sum wrapper) that compile candidate constructions
   into `IsUniformEquilibriumPayoff`.
 
+### Repeated-game compatibility
+
+`RealizedActionRepeatedAdapter.lean` proves that public repeated play under
+realized-action monitoring is exactly the one-state stochastic game whose
+actions are the original pure stage strategies and whose stage payoff is the
+original expected utility.  It gives inverse history, strategy, and profile
+transports; exact projected history laws; commutation with unilateral strategy
+replacement; and equality of finite-average payoffs.  Under the standard
+finite stage-game hypotheses this yields exact equivalences for finite-horizon
+Nash, fixed-profile uniform-ε equilibrium, and the matching payoff-level
+uniform-equilibrium predicate.
+
+The payoff-level monitored predicate is stated separately because its profile
+may depend on ε, exactly as in `StochasticGame.IsUniformEquilibriumPayoff`.
+The older monitored `IsUniformEquilibrium` fixes one profile and requires its
+payoffs to converge.  The adapter proves the sound implication from a fixed
+profile with its specified limit, but does not claim a converse without an
+additional coherent-selection or compactness theorem.
+
 ### Fixed public response architectures
 
 `PublicResponseCredibilityCriterion.lean` and its support-pruned companion
