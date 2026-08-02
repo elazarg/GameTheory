@@ -194,4 +194,110 @@ theorem quittingBellmanCapGap_le_sum_residual_add_tail
               simp only [Nat.add_assoc]
               ring
 
+/-! ## Hazard-scaled telescope -/
+
+/-- Opponent hazard telescopes exactly against its preceding survival
+weight. -/
+theorem sum_quittingOpponentSurvivalWeight_mul_one_sub_continueMass
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (start fuel : ℕ) :
+    (∑ offset ∈ Finset.range fuel,
+        quittingOpponentSurvivalWeight roots who start offset *
+          (1 - quittingFixedOpponentsContinueMass roots who
+            (start + offset))) =
+      1 - quittingOpponentSurvivalWeight roots who start fuel := by
+  induction fuel with
+  | zero =>
+      simp [quittingOpponentSurvivalWeight]
+  | succ fuel ih =>
+      rw [Finset.sum_range_succ, ih,
+        quittingOpponentSurvivalWeight_succ]
+      ring
+
+/-- If each local residual is scaled by the current opponent hazard, finite
+Bellman iteration charges at most `η` times the loss of opponent survival,
+plus the exact surviving boundary gap. -/
+theorem quittingBellmanCapGap_le_hazardScaled_add_tail
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribed cap : ℕ → ℝ)
+    (hcap : IsQuittingLiveBellmanCap reward roots who cap)
+    (hgap : ∀ time, 0 ≤ quittingBellmanCapGap prescribed cap time)
+    (η : ℝ)
+    (hresidual : ∀ time,
+      quittingPrescribedOneStepResidual reward roots who prescribed time ≤
+        η * (1 - quittingFixedOpponentsContinueMass roots who time))
+    (start fuel : ℕ) :
+    quittingBellmanCapGap prescribed cap start ≤
+      η * (1 - quittingOpponentSurvivalWeight roots who start fuel) +
+        quittingOpponentSurvivalWeight roots who start fuel *
+          quittingBellmanCapGap prescribed cap (start + fuel) := by
+  have hiterate := quittingBellmanCapGap_le_sum_residual_add_tail
+    reward roots who prescribed cap hcap hgap start fuel
+  have hsum :
+      (∑ offset ∈ Finset.range fuel,
+          quittingOpponentSurvivalWeight roots who start offset *
+            quittingPrescribedOneStepResidual reward roots who prescribed
+              (start + offset)) ≤
+        ∑ offset ∈ Finset.range fuel,
+          quittingOpponentSurvivalWeight roots who start offset *
+            (η * (1 - quittingFixedOpponentsContinueMass roots who
+              (start + offset))) := by
+    apply Finset.sum_le_sum
+    intro offset _
+    exact mul_le_mul_of_nonneg_left (hresidual (start + offset))
+      (quittingOpponentSurvivalWeight_nonneg roots who start offset)
+  calc
+    quittingBellmanCapGap prescribed cap start ≤
+        (∑ offset ∈ Finset.range fuel,
+            quittingOpponentSurvivalWeight roots who start offset *
+              quittingPrescribedOneStepResidual reward roots who prescribed
+                (start + offset)) +
+          quittingOpponentSurvivalWeight roots who start fuel *
+            quittingBellmanCapGap prescribed cap (start + fuel) := hiterate
+    _ ≤ (∑ offset ∈ Finset.range fuel,
+            quittingOpponentSurvivalWeight roots who start offset *
+              (η * (1 - quittingFixedOpponentsContinueMass roots who
+                (start + offset)))) +
+          quittingOpponentSurvivalWeight roots who start fuel *
+            quittingBellmanCapGap prescribed cap (start + fuel) :=
+      add_le_add hsum le_rfl
+    _ = η * (1 - quittingOpponentSurvivalWeight roots who start fuel) +
+          quittingOpponentSurvivalWeight roots who start fuel *
+            quittingBellmanCapGap prescribed cap (start + fuel) := by
+      rw [show (∑ offset ∈ Finset.range fuel,
+            quittingOpponentSurvivalWeight roots who start offset *
+              (η * (1 - quittingFixedOpponentsContinueMass roots who
+                (start + offset)))) =
+          η * ∑ offset ∈ Finset.range fuel,
+            quittingOpponentSurvivalWeight roots who start offset *
+              (1 - quittingFixedOpponentsContinueMass roots who
+                (start + offset)) by
+            rw [Finset.mul_sum]
+            apply Finset.sum_congr rfl
+            intro offset _
+            ring]
+      rw [sum_quittingOpponentSurvivalWeight_mul_one_sub_continueMass]
+
+/-- In the hazard-scaled regime, any future cap gap already below `η`
+propagates backward with the same sharp constant. -/
+theorem quittingBellmanCapGap_le_of_hazardScaled_of_tail_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribed cap : ℕ → ℝ)
+    (hcap : IsQuittingLiveBellmanCap reward roots who cap)
+    (hgap : ∀ time, 0 ≤ quittingBellmanCapGap prescribed cap time)
+    (η : ℝ)
+    (hresidual : ∀ time,
+      quittingPrescribedOneStepResidual reward roots who prescribed time ≤
+        η * (1 - quittingFixedOpponentsContinueMass roots who time))
+    (start fuel : ℕ)
+    (htail : quittingBellmanCapGap prescribed cap (start + fuel) ≤ η) :
+    quittingBellmanCapGap prescribed cap start ≤ η := by
+  have hfinite := quittingBellmanCapGap_le_hazardScaled_add_tail
+    reward roots who prescribed cap hcap hgap η hresidual start fuel
+  have hscaled := mul_le_mul_of_nonneg_left htail
+    (quittingOpponentSurvivalWeight_nonneg roots who start fuel)
+  linarith
+
 end GameTheory
