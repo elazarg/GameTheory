@@ -66,6 +66,132 @@ def localGlobalCounterexampleProfile :
     false
     (quittingAlwaysQuitStrategy localGlobalCounterexampleReward false)
 
+/-- The supplied behavior profile really is the stationary profile generated
+by its displayed root. -/
+theorem localGlobalCounterexampleProfile_eq_stationary :
+    localGlobalCounterexampleProfile =
+      (quittingGame localGlobalCounterexampleReward).stationaryBehaviorProfile
+        localGlobalCounterexampleRoot := by
+  funext who t history
+  cases who <;>
+    simp [localGlobalCounterexampleProfile,
+      localGlobalCounterexampleRoot, localGlobalCounterexampleAction,
+      quittingAlwaysContinueProfile, quittingAlwaysQuitStrategy,
+      StochasticGame.stationaryBehaviorProfile] <;> rfl
+
+/-- The time-zero root extracted from the supplied stationary profile is the
+pure action `QC`. -/
+@[simp] theorem quittingProfileRoot_localGlobalCounterexampleProfile :
+    quittingProfileRoot localGlobalCounterexampleReward
+        localGlobalCounterexampleProfile =
+      localGlobalCounterexampleRoot := by
+  funext who
+  cases who <;>
+    simp [quittingProfileRoot, localGlobalCounterexampleProfile,
+      localGlobalCounterexampleRoot, localGlobalCounterexampleAction,
+      quittingAlwaysContinueProfile,
+      quittingAlwaysQuitStrategy,
+      StochasticGame.stationaryBehaviorProfile] <;> rfl
+
+/-- The supplied stationary profile absorbs surely at its first stage. -/
+theorem localGlobalCounterexampleProfile_absorbsSurelyAtFirstStage :
+    QuittingProfileAbsorbsSurelyAtFirstStage
+      localGlobalCounterexampleReward localGlobalCounterexampleProfile := by
+  rw [quittingProfileAbsorbsSurelyAtFirstStage_iff_rootHasSureQuitter,
+    quittingProfileRoot_localGlobalCounterexampleProfile]
+  exact ⟨false, by
+    simp [localGlobalCounterexampleRoot,
+      localGlobalCounterexampleAction]⟩
+
+/-- Every player receives the declared continuation value at the prescribed
+pure root. -/
+@[simp] theorem quittingRootExpectedPayoff_localGlobalCounterexampleRoot
+    (who : Bool) :
+    quittingRootExpectedPayoff localGlobalCounterexampleReward
+        localGlobalCounterexampleContinuation
+        localGlobalCounterexampleRoot who =
+      localGlobalCounterexampleContinuation who := by
+  unfold quittingRootExpectedPayoff localGlobalCounterexampleRoot
+  rw [pmfPi_pure, expect_pure]
+  cases who <;>
+    simp [quittingRootPayoff, quittingQuitters,
+      localGlobalCounterexampleReward,
+      localGlobalCounterexampleContinuation,
+      localGlobalCounterexampleAction]
+
+/-- At the continuation vector `(-1, 0)`, either pure root action gives every
+player exactly its prescribed payoff.  Thus both actions—not merely the
+supported one—are exact best replies. -/
+theorem quittingRootExpectedPayoff_localGlobalCounterexample_pureDeviation
+    (who move : Bool) :
+    quittingRootExpectedPayoff localGlobalCounterexampleReward
+        localGlobalCounterexampleContinuation
+        (Function.update localGlobalCounterexampleRoot who (PMF.pure move))
+        who =
+      quittingRootExpectedPayoff localGlobalCounterexampleReward
+        localGlobalCounterexampleContinuation
+        localGlobalCounterexampleRoot who := by
+  rw [quittingRootExpectedPayoff_localGlobalCounterexampleRoot]
+  have hfamily :
+      Function.update localGlobalCounterexampleRoot who (PMF.pure move) =
+        fun player => PMF.pure
+          (Function.update localGlobalCounterexampleAction who move player) := by
+    funext player
+    by_cases hplayer : player = who
+    · subst player
+      simp
+    · simp [Function.update_of_ne hplayer,
+        localGlobalCounterexampleRoot]
+  unfold quittingRootExpectedPayoff
+  rw [hfamily, pmfPi_pure, expect_pure]
+  cases who <;> cases move <;>
+    simp [quittingRootPayoff, quittingQuitters,
+      localGlobalCounterexampleReward,
+      localGlobalCounterexampleContinuation,
+      localGlobalCounterexampleAction]
+
+/-- Arbitrary mixed root deviations are indifferent as well. -/
+theorem quittingRootExpectedPayoff_localGlobalCounterexample_deviation
+    (who : Bool) (deviation : PMF Bool) :
+    quittingRootExpectedPayoff localGlobalCounterexampleReward
+        localGlobalCounterexampleContinuation
+        (Function.update localGlobalCounterexampleRoot who deviation) who =
+      quittingRootExpectedPayoff localGlobalCounterexampleReward
+        localGlobalCounterexampleContinuation
+        localGlobalCounterexampleRoot who := by
+  unfold quittingRootExpectedPayoff
+  rw [pmfPi_update_bind, expect_bind]
+  calc
+    expect deviation (fun move =>
+        expect (pmfPi (Function.update localGlobalCounterexampleRoot who
+          (PMF.pure move)))
+          (fun action => quittingRootPayoff localGlobalCounterexampleReward
+            localGlobalCounterexampleContinuation action who)) =
+      expect deviation (fun _ =>
+        expect (pmfPi localGlobalCounterexampleRoot)
+          (fun action => quittingRootPayoff localGlobalCounterexampleReward
+            localGlobalCounterexampleContinuation action who)) := by
+        apply congrArg (expect deviation)
+        funext move
+        exact
+          quittingRootExpectedPayoff_localGlobalCounterexample_pureDeviation
+            who move
+    _ = expect (pmfPi localGlobalCounterexampleRoot)
+          (fun action => quittingRootPayoff localGlobalCounterexampleReward
+            localGlobalCounterexampleContinuation action who) :=
+      expect_const deviation _
+
+/-- The displayed root is an exact root Nash action.  The stronger preceding
+pure-deviation equality also supplies both inequalities required by strong
+one-stage perfection. -/
+theorem isQuittingRootNash_localGlobalCounterexample :
+    IsεQuittingRootNash localGlobalCounterexampleReward
+      localGlobalCounterexampleContinuation 0
+      localGlobalCounterexampleRoot := by
+  intro who deviation
+  rw [quittingRootExpectedPayoff_localGlobalCounterexample_deviation]
+  simp
+
 @[simp] theorem localGlobalCounterexampleReward_singleton_false :
     localGlobalCounterexampleReward
         (quittingSingletonTerminal false) false = -1 := by
@@ -83,6 +209,32 @@ def localGlobalCounterexampleProfile :
   rw [localGlobalCounterexampleProfile,
     quittingTerminalPayoff_update_quittingAlwaysQuitStrategy]
   exact localGlobalCounterexampleReward_singleton_false
+
+/-- Player two's terminal payoff is identically zero. -/
+@[simp] theorem quittingTerminalPayoff_localGlobalCounterexampleProfile_true :
+    quittingTerminalPayoff localGlobalCounterexampleReward
+        localGlobalCounterexampleProfile true = 0 := by
+  simp [quittingTerminalPayoff, localGlobalCounterexampleReward]
+
+/-- The profile's terminal payoff vector is exactly the continuation vector
+used in the local root calculation. -/
+theorem quittingTerminalPayoff_localGlobalCounterexampleProfile_eq :
+    (fun who => quittingTerminalPayoff localGlobalCounterexampleReward
+      localGlobalCounterexampleProfile who) =
+      localGlobalCounterexampleContinuation := by
+  funext who
+  cases who <;>
+    simp [localGlobalCounterexampleContinuation]
+
+/-- Shifting past any completed stage preserves the stationary supplied
+profile. -/
+@[simp] theorem shiftProfile_localGlobalCounterexampleProfile
+    (action : Bool → Bool) :
+    (quittingGame localGlobalCounterexampleReward).shiftProfile
+        localGlobalCounterexampleProfile (none, action) =
+      localGlobalCounterexampleProfile := by
+  rw [localGlobalCounterexampleProfile_eq_stationary]
+  rfl
 
 /-- Replacing player one's stationary quit strategy by stationary continuation
 returns the all-continue profile exactly. -/
