@@ -49,6 +49,16 @@ inequality, and prescribed delivery produce bounded potentials, uniform
 `O(1/N)` delivery and deviation caps, rebasing, and an enforcement ledger
 consumed by the existing public-response compilers.
 
+`ArbitraryStartPrescribedDeliveryTelescope.lean` and
+`ArbitraryStartUnilateralCap.lean` make the sound part of the corrected Q96
+domain split explicit.  The first gives exact endpoint telescopes and uniform
+`O(1/N)` delivery after rebasing at any node in the declared
+prescribed-closed region.  The second gives the corresponding endpoint and
+uniform unilateral cap after rebasing at any node in the selected player's
+owner-specific arena.  Neither module enlarges those domains to their union or
+asserts the Q96 converse, recurrent coverage, necessity, or obstruction
+extraction.
+
 `FTVCyclicCredibility.lean` is the actual-data acceptance test for this
 route.  It constructs the Flesch--Thuijsman--Vrieze three-player quitting
 game, its ten-configuration public controller (three live clock phases and
