@@ -81,6 +81,14 @@ def ofInt (value : ℤ) : DyadicInterval precision :=
   · rw [← Int.cast_mul, Rat.floor_intCast]
   · rw [← Int.cast_mul, Rat.ceil_intCast]
 
+@[simp] theorem ofRat_zero_eq_ofInt_zero :
+    (ofRat 0 : DyadicInterval precision) = ofInt 0 := by
+  simpa using ofRat_intCast_eq_ofInt (precision := precision) 0
+
+@[simp] theorem ofRat_one_eq_ofInt_one :
+    (ofRat 1 : DyadicInterval precision) = ofInt 1 := by
+  simpa using ofRat_intCast_eq_ofInt (precision := precision) 1
+
 def add (first second : DyadicInterval precision) :
     DyadicInterval precision :=
   ⟨first.lower + second.lower, first.upper + second.upper⟩
@@ -107,6 +115,28 @@ def mul (first second : DyadicInterval precision) :
     DyadicInterval precision :=
   ⟨rectangleLower first second / scale precision,
     -((-rectangleUpper first second) / scale precision)⟩
+
+@[simp] theorem add_ofInt_zero (interval : DyadicInterval precision) :
+    interval.add (ofInt 0) = interval := by
+  cases interval
+  simp [add, ofInt]
+
+@[simp] theorem ofInt_zero_add (interval : DyadicInterval precision) :
+    (ofInt 0).add interval = interval := by
+  cases interval
+  simp [add, ofInt]
+
+@[simp] theorem neg_ofInt_zero :
+    (ofInt 0 : DyadicInterval precision).neg = ofInt 0 := by
+  simp [neg, ofInt]
+
+@[simp] theorem mul_ofInt_zero (interval : DyadicInterval precision) :
+    interval.mul (ofInt 0) = ofInt 0 := by
+  simp [mul, rectangleLower, rectangleUpper, ofInt]
+
+@[simp] theorem ofInt_zero_mul (interval : DyadicInterval precision) :
+    (ofInt 0).mul interval = ofInt 0 := by
+  simp [mul, rectangleLower, rectangleUpper, ofInt]
 
 private theorem floorDiv_scaled_le (value : ℤ) :
     ((((value / scale precision : ℤ) : ℚ) / scale precision)) ≤
