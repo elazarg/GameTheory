@@ -2,22 +2,23 @@
 """Exact evaluation of rational periodic block-pair probes.
 
 This script does not certify optimality.  It records reproducible rational
-points for two public support words and evaluates their *full* periodic
-stopping caps at every start phase.  Against K-periodic opponents, a pure
-best response quits at one of the next K phases or never quits (while the
-opponents may still absorb the game).  Every such choice is evaluated with
-``Fraction`` arithmetic.
+points of periods 2 through 11 and evaluates their *full* periodic stopping
+caps at every start phase.  Against K-periodic opponents, a pure best response
+quits at one of the next K phases or never quits (while the opponents may
+still absorb the game).  Every such choice is evaluated with ``Fraction``
+arithmetic.
 
 The stored terminal table is scaled by two relative to the normalized game.
-The certified upper bounds are
+The probes give a strictly decreasing sequence of certified upper bounds,
+ending with
 
-    period 2, support [14,13]: cap < 71/1000;
-    period 3, support [14,15, 9]: cap < 27/500.
+    period 11, support [7,7,14,14,11,11,9,9,13,13,7]: cap < 10^-12.
 
-These are positive-regret witnesses, not exact equilibria or lower-bound
-certificates.  The script also evaluates prescribed-tail one-stage regret,
-guarding against accidental identification of that weaker quantity with the
-full periodic stopping cap.
+These rounded rational points are approximate witnesses, not proofs that an
+exact root exists and not lower-bound certificates.  The script also evaluates
+prescribed-tail one-stage regret, guarding against accidental identification
+of that weaker quantity with the full periodic stopping cap.  Exact existence
+near the period-11 point requires a separate interval root certificate.
 """
 
 from __future__ import annotations
