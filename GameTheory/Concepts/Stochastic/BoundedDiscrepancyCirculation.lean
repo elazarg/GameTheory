@@ -367,9 +367,98 @@ def HasWalkConnectedSupport (multiplicity : E → ℕ) : Prop :=
     (∀ edge, edge ∈ traversal ↔ 0 < multiplicity edge) ∧
     traversal.IsChain G.SharesEndpoint
 
+private theorem exists_boundary_of_isChain
+    {α : Type*} (relation : α → α → Prop)
+    (hsymmetric : ∀ {first second}, relation first second → relation second first)
+    (marked : α → Prop) (items : List α)
+    (hchain : items.IsChain relation)
+    (hmarked : ∃ item ∈ items, marked item)
+    (hunmarked : ∃ item ∈ items, ¬ marked item) :
+    ∃ first ∈ items, ∃ second ∈ items,
+      marked first ∧ ¬ marked second ∧ relation first second := by
+  induction items with
+  | nil => simp at hmarked
+  | cons first tail ih =>
+      cases tail with
+      | nil => simp_all
+      | cons second rest =>
+          have hrelation : relation first second :=
+            (List.isChain_cons_cons.mp hchain).1
+          have htailChain : (second :: rest).IsChain relation :=
+            (List.isChain_cons_cons.mp hchain).2
+          by_cases hfirst : marked first
+          · by_cases hsecond : marked second
+            · have htailUnmarked : ∃ item ∈ second :: rest, ¬ marked item := by
+                obtain ⟨item, hitem, hunmarkedItem⟩ := hunmarked
+                simp only [List.mem_cons] at hitem
+                rcases hitem with rfl | hitem
+                · exact (hunmarkedItem hfirst).elim
+                · exact ⟨item, by simpa only [List.mem_cons] using hitem,
+                    hunmarkedItem⟩
+              obtain ⟨markedEdge, hmarkedMem, unmarkedEdge, hunmarkedMem,
+                hmarkedEdge, hunmarkedEdge, hboundary⟩ :=
+                  ih htailChain ⟨second, by simp, hsecond⟩ htailUnmarked
+              exact ⟨markedEdge, by simp [hmarkedMem], unmarkedEdge,
+                by simp [hunmarkedMem], hmarkedEdge, hunmarkedEdge, hboundary⟩
+            · exact ⟨first, by simp, second, by simp, hfirst, hsecond, hrelation⟩
+          · by_cases hsecond : marked second
+            · exact ⟨second, by simp, first, by simp, hsecond, hfirst,
+                hsymmetric hrelation⟩
+            · have htailMarked : ∃ item ∈ second :: rest, marked item := by
+                obtain ⟨item, hitem, hmarkedItem⟩ := hmarked
+                simp only [List.mem_cons] at hitem
+                rcases hitem with rfl | hitem
+                · exact (hfirst hmarkedItem).elim
+                · exact ⟨item, by simpa only [List.mem_cons] using hitem,
+                    hmarkedItem⟩
+              obtain ⟨markedEdge, hmarkedMem, unmarkedEdge, hunmarkedMem,
+                hmarkedEdge, hunmarkedEdge, hboundary⟩ :=
+                  ih htailChain htailMarked ⟨second, by simp, hsecond⟩
+              exact ⟨markedEdge, by simp [hmarkedMem], unmarkedEdge,
+                by simp [hunmarkedMem], hmarkedEdge, hunmarkedEdge, hboundary⟩
+
+/-- A walk-connected positive support cannot be split into two nonempty edge
+sets without a pair of positive-support edges sharing an endpoint across the
+split. -/
+theorem HasWalkConnectedSupport.exists_boundary [DecidableEq E]
+    (multiplicity : E → ℕ) (hconnected : G.HasWalkConnectedSupport multiplicity)
+    (marked : Finset E)
+    (hmarked : ∃ edge, 0 < multiplicity edge ∧ edge ∈ marked)
+    (hunmarked : ∃ edge, 0 < multiplicity edge ∧ edge ∉ marked) :
+    ∃ first second,
+      0 < multiplicity first ∧ first ∈ marked ∧
+      0 < multiplicity second ∧ second ∉ marked ∧
+      G.SharesEndpoint first second := by
+  obtain ⟨traversal, _, hsupport, hchain⟩ := hconnected
+  have hmarkedTraversal : ∃ edge ∈ traversal, edge ∈ marked := by
+    obtain ⟨edge, hpositive, hedgeMarked⟩ := hmarked
+    exact ⟨edge, (hsupport edge).2 hpositive, hedgeMarked⟩
+  have hunmarkedTraversal : ∃ edge ∈ traversal, edge ∉ marked := by
+    obtain ⟨edge, hpositive, hedgeUnmarked⟩ := hunmarked
+    exact ⟨edge, (hsupport edge).2 hpositive, hedgeUnmarked⟩
+  obtain ⟨first, hfirstTraversal, second, hsecondTraversal,
+    hfirstMarked, hsecondUnmarked, hshares⟩ :=
+      exists_boundary_of_isChain G.SharesEndpoint
+        (by
+          intro first second h
+          rcases h with h | h | h | h
+          · exact Or.inl h.symm
+          · exact Or.inr (Or.inr (Or.inl h.symm))
+          · exact Or.inr (Or.inl h.symm)
+          · exact Or.inr (Or.inr (Or.inr h.symm)))
+        (fun edge => edge ∈ marked) traversal hchain
+        hmarkedTraversal hunmarkedTraversal
+  exact ⟨first, second, (hsupport first).1 hfirstTraversal, hfirstMarked,
+    (hsupport second).1 hsecondTraversal, hsecondUnmarked, hshares⟩
+
 /-- The `0`-`1` multiplicity of a finite edge set. -/
 def edgeSetMultiplicity [DecidableEq E] (allowed : Finset E) : E → ℕ :=
   fun edge => if edge ∈ allowed then 1 else 0
+
+@[simp] theorem edgeSetMultiplicity_pos_iff [DecidableEq E]
+    (allowed : Finset E) (edge : E) :
+    0 < edgeSetMultiplicity allowed edge ↔ edge ∈ allowed := by
+  by_cases hedge : edge ∈ allowed <;> simp [edgeSetMultiplicity, hedge]
 
 /-- Flow balance for a finite set of distinguishable edge tokens. -/
 def IsBalancedEdgeSet [Fintype E] [DecidableEq E] [DecidableEq V]
@@ -377,6 +466,35 @@ def IsBalancedEdgeSet [Fintype E] [DecidableEq E] [DecidableEq V]
   ∀ vertex,
     G.outgoingMultiplicity (edgeSetMultiplicity allowed) vertex =
       G.incomingMultiplicity (edgeSetMultiplicity allowed) vertex
+
+/-- In a balanced edge set, any edge entering a vertex certifies that some
+allowed edge also leaves that vertex. -/
+theorem IsBalancedEdgeSet.exists_outgoing_of_mem_of_target_eq
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (allowed : Finset E) (hbalanced : G.IsBalancedEdgeSet allowed)
+    (edge : E) (hedge : edge ∈ allowed) (vertex : V)
+    (htarget : G.target edge = vertex) :
+    ∃ outgoing, outgoing ∈ allowed ∧ G.source outgoing = vertex := by
+  have hincomingPositive :
+      0 < G.incomingMultiplicity (edgeSetMultiplicity allowed) vertex := by
+    unfold incomingMultiplicity
+    rw [Finset.sum_pos_iff]
+    refine ⟨edge, ?_, ?_⟩
+    · simp [htarget]
+    · simp [edgeSetMultiplicity, hedge]
+  have houtgoingPositive :
+      0 < G.outgoingMultiplicity (edgeSetMultiplicity allowed) vertex := by
+    rw [hbalanced vertex]
+    exact hincomingPositive
+  unfold outgoingMultiplicity at houtgoingPositive
+  rw [Finset.sum_pos_iff] at houtgoingPositive
+  obtain ⟨outgoing, houtgoingFilter, houtgoingPositive⟩ := houtgoingPositive
+  have hsource : G.source outgoing = vertex :=
+    (Finset.mem_filter.mp houtgoingFilter).2
+  have hallowed : outgoing ∈ allowed := by
+    by_contra hnotAllowed
+    simp [edgeSetMultiplicity, hnotAllowed] at houtgoingPositive
+  exact ⟨outgoing, hallowed, hsource⟩
 
 /-- A nonzero nonnegative integer circulation with zero total charge and a
 finite certificate that its positive support is weakly connected. -/
@@ -712,6 +830,140 @@ theorem isBalancedEdgeSet_sdiff_closedTrail
   have hwalkBalance := walk.edgeMultiplicity_balanced vertex
   have hallowedBalance := hbalanced vertex
   omega
+
+/-- If an unused allowed edge shares an endpoint with a closed trail, residual
+balance supplies a nonempty residual closed trail at a vertex visited by the
+old trail.  This is the local augmentation step in Hierholzer's argument. -/
+theorem exists_residualClosedTrailAt_of_sharesEndpoint
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (allowed : Finset E) (hbalanced : G.IsBalancedEdgeSet allowed)
+    (walk : G.Walk base base) (htrail : walk.IsTrailWithin allowed)
+    (used unused : E) (hused : used ∈ walk.edges)
+    (hunusedAllowed : unused ∈ allowed) (hunused : unused ∉ walk.edges)
+    (hshares : G.SharesEndpoint used unused) :
+    ∃ (vertex : V) (_split : walk.VertexSplit vertex)
+      (inserted : G.Walk vertex vertex),
+      inserted.IsTrailWithin (allowed \ walk.edges.toFinset) ∧
+        0 < inserted.length := by
+  let residual := allowed \ walk.edges.toFinset
+  have hresidualBalanced : G.IsBalancedEdgeSet residual :=
+    walk.isBalancedEdgeSet_sdiff_closedTrail allowed hbalanced htrail
+  have hunusedResidual : unused ∈ residual := by
+    simp [residual, hunusedAllowed, hunused]
+  rcases hshares with hsourceSource | hsourceTarget |
+      htargetSource | htargetTarget
+  · let split := walk.vertexSplitAtSource used hused
+    obtain ⟨inserted, hinserted, hpositive⟩ :=
+      Walk.exists_nonempty_closedTrailWithin_of_exists_outgoing
+        (G := G) residual hresidualBalanced (G.source used)
+        ⟨unused, hunusedResidual, hsourceSource.symm⟩
+    exact ⟨G.source used, split, inserted, hinserted, hpositive⟩
+  · let split := walk.vertexSplitAtSource used hused
+    obtain ⟨outgoing, houtgoingResidual, hsource⟩ :=
+      IsBalancedEdgeSet.exists_outgoing_of_mem_of_target_eq
+        (G := G) residual hresidualBalanced unused hunusedResidual
+          (G.source used) hsourceTarget.symm
+    obtain ⟨inserted, hinserted, hpositive⟩ :=
+      Walk.exists_nonempty_closedTrailWithin_of_exists_outgoing
+        (G := G) residual hresidualBalanced (G.source used)
+        ⟨outgoing, houtgoingResidual, hsource⟩
+    exact ⟨G.source used, split, inserted, hinserted, hpositive⟩
+  · let split := walk.vertexSplitAtTarget used hused
+    obtain ⟨inserted, hinserted, hpositive⟩ :=
+      Walk.exists_nonempty_closedTrailWithin_of_exists_outgoing
+        (G := G) residual hresidualBalanced (G.target used)
+        ⟨unused, hunusedResidual, htargetSource.symm⟩
+    exact ⟨G.target used, split, inserted, hinserted, hpositive⟩
+  · let split := walk.vertexSplitAtTarget used hused
+    obtain ⟨outgoing, houtgoingResidual, hsource⟩ :=
+      IsBalancedEdgeSet.exists_outgoing_of_mem_of_target_eq
+        (G := G) residual hresidualBalanced unused hunusedResidual
+          (G.target used) htargetTarget.symm
+    obtain ⟨inserted, hinserted, hpositive⟩ :=
+      Walk.exists_nonempty_closedTrailWithin_of_exists_outgoing
+        (G := G) residual hresidualBalanced (G.target used)
+        ⟨outgoing, houtgoingResidual, hsource⟩
+    exact ⟨G.target used, split, inserted, hinserted, hpositive⟩
+
+/-- A longest nonempty closed trail in a walk-connected balanced support uses
+every allowed distinguishable edge. -/
+theorem all_edges_mem_of_maximal_closedTrailWithin_of_connected
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (allowed : Finset E) (hbalanced : G.IsBalancedEdgeSet allowed)
+    (hconnected : G.HasWalkConnectedSupport (edgeSetMultiplicity allowed))
+    (walk : G.Walk base base) (htrail : walk.IsTrailWithin allowed)
+    (hnonempty : 0 < walk.length)
+    (hmaximal : ∀ (finish : V) (other : G.Walk base finish),
+      other.IsTrailWithin allowed → other.length ≤ walk.length) :
+    ∀ edge, edge ∈ allowed → edge ∈ walk.edges := by
+  intro unused hunusedAllowed
+  by_contra hunused
+  have hwalkEdges : walk.edges ≠ [] := by
+    intro hempty
+    have : walk.edges.length = 0 := by simp [hempty]
+    rw [walk.edges_length] at this
+    omega
+  let used := walk.edges.head hwalkEdges
+  have husedMem : used ∈ walk.edges := List.head_mem hwalkEdges
+  have husedAllowed : used ∈ allowed := htrail.2 used husedMem
+  have hmarked :
+      ∃ edge, 0 < edgeSetMultiplicity allowed edge ∧
+        edge ∈ walk.edges.toFinset := by
+    exact ⟨used, (edgeSetMultiplicity_pos_iff allowed used).2 husedAllowed,
+      List.mem_toFinset.mpr husedMem⟩
+  have hunmarked :
+      ∃ edge, 0 < edgeSetMultiplicity allowed edge ∧
+        edge ∉ walk.edges.toFinset := by
+    exact ⟨unused, (edgeSetMultiplicity_pos_iff allowed unused).2 hunusedAllowed,
+      by simpa using hunused⟩
+  obtain ⟨usedBoundary, unusedBoundary, _, husedBoundary,
+    hunusedBoundaryPositive, hunusedBoundary, hshares⟩ :=
+      HasWalkConnectedSupport.exists_boundary (G := G)
+        (edgeSetMultiplicity allowed) hconnected walk.edges.toFinset
+          hmarked hunmarked
+  have husedBoundaryMem : usedBoundary ∈ walk.edges :=
+    List.mem_toFinset.mp husedBoundary
+  have hunusedBoundaryAllowed : unusedBoundary ∈ allowed :=
+    (edgeSetMultiplicity_pos_iff allowed unusedBoundary).1
+      hunusedBoundaryPositive
+  have hunusedBoundaryMem : unusedBoundary ∉ walk.edges := by
+    simpa using hunusedBoundary
+  obtain ⟨vertex, split, inserted, hinserted, hinsertedPositive⟩ :=
+    walk.exists_residualClosedTrailAt_of_sharesEndpoint allowed hbalanced htrail
+      usedBoundary unusedBoundary husedBoundaryMem hunusedBoundaryAllowed
+      hunusedBoundaryMem hshares
+  have hsplicedTrail : (split.splice inserted).IsTrailWithin allowed :=
+    split.isTrailWithin_splice inserted allowed htrail hinserted
+  have hle := hmaximal base (split.splice inserted) hsplicedTrail
+  have hlt := split.length_lt_splice inserted hinsertedPositive
+  omega
+
+/-- Directed Euler theorem for a finite set of distinguishable edge tokens:
+a nonempty walk-connected balanced support has a closed trail using every
+allowed token exactly once.  The base may be any vertex with an allowed
+outgoing token. -/
+theorem exists_closedTrail_covering_of_balanced_connected
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (allowed : Finset E) (hbalanced : G.IsBalancedEdgeSet allowed)
+    (hconnected : G.HasWalkConnectedSupport (edgeSetMultiplicity allowed))
+    (base : V) (houtgoing : ∃ edge, edge ∈ allowed ∧ G.source edge = base) :
+    ∃ walk : G.Walk base base,
+      walk.IsTrailWithin allowed ∧
+      ∀ edge, edge ∈ walk.edges ↔ edge ∈ allowed := by
+  obtain ⟨finish, walk, htrail, hmaximal⟩ :=
+    Walk.exists_maximalTrailWithin (G := G) allowed base
+  have hclosed : finish = base :=
+    walk.maximalTrailWithin_isClosed allowed hbalanced htrail hmaximal
+  subst finish
+  obtain ⟨initialEdge, hinitialAllowed, hinitialSource⟩ := houtgoing
+  have hinitialMem := walk.edge_mem_of_maximalTrailWithin_of_source_eq
+    allowed htrail hmaximal initialEdge hinitialAllowed hinitialSource
+  have hnonempty : 0 < walk.length := by
+    rw [← walk.edges_length, List.length_pos_iff]
+    exact List.ne_nil_of_mem hinitialMem
+  have hcover := walk.all_edges_mem_of_maximal_closedTrailWithin_of_connected
+    allowed hbalanced hconnected htrail hnonempty hmaximal
+  exact ⟨walk, htrail, fun edge => ⟨htrail.2 edge, hcover edge⟩⟩
 
 /-- The positive edge support of a nonempty walk is walk-connected in the
 underlying undirected incidence graph. -/
