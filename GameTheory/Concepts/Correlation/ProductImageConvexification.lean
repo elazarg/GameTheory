@@ -110,7 +110,7 @@ theorem productObservationImage_subset_correlatedObservationImage
 /-- The correlated image of a finite joint simplex is the convex hull of its
 pure observation vectors. -/
 theorem correlatedObservationImage_eq_convexHull_pureObservationImage
-    [Fintype ι] [∀ i, Finite (Act i)] {κ : Type uκ}
+    [Finite ι] [∀ i, Finite (Act i)] {κ : Type uκ}
     (observation : ActionProfile Act → κ → ℝ) :
     correlatedObservationImage Act observation =
       convexHull ℝ (pureObservationImage Act observation) := by
