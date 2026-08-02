@@ -433,6 +433,9 @@ import GameTheory.Concepts.Stochastic.QuittingLiveTail
 import GameTheory.Concepts.Stochastic.QuittingExceptionalHazard
 import GameTheory.Concepts.Stochastic.QuittingBellmanTelescope
 import GameTheory.Concepts.Stochastic.QuittingExceptionalBellmanTail
+import GameTheory.Concepts.Stochastic.QuittingRootSequencePayoff
+import GameTheory.Concepts.Stochastic.QuittingExceptionalTailLimits
+import GameTheory.Concepts.Stochastic.QuittingExceptionalInfiniteLTG
 import GameTheory.Concepts.Stochastic.QuittingNearSureRoot
 import GameTheory.Concepts.Stochastic.QuittingNearSureProfile
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
