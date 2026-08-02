@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
 Domain contract / decision: D6, D7, D11, D12, D15, EXP-042
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; 165/776 reviewed, 611 unreviewed
+Status: in progress; 333/776 reviewed, 443 unreviewed
 Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-FOSG family.
@@ -18,7 +18,17 @@ not duplicated here. Rows not yet classified remain deliberately
 visibility only. It does not infer a mathematical disposition. Reviewed batches
 cover the complete `Basic.lean` legality substrate, `History.lean` canonical
 history migration, `Information.lean` canonical information-model migration,
-and `Values.lean` external-value fold.
+`Strategy.lean` canonical policy migration, `Execution.lean` canonical
+law-valued execution migration, and `Values.lean` external-value fold.
+
+The Execution batch maps ordinary one-step, continuation, and complete-history
+reach to `behavioralJoint`, `runBehavioralFrom`, and
+`historyReachProbability`.  Two narrowly separated proof spines remain
+deferred: an ordinary continuation/history-reach coefficient calculus over
+those canonical laws, and the player/counterfactual decomposition calculus
+needed by CFR.  Neither gate authorizes a parallel scalar execution semantics.
+The exact one-step congruence is now
+`InformationModel.behavioralJoint_congr`.
 
 The declaration-free pinned umbrella and test files
 `ReachableHistory.lean`, `Theorems.lean`, `Kuhn.lean`, `Native.lean`, and
@@ -156,79 +166,79 @@ module they require rather than a FOSG-wide umbrella.
 | same | `boundedHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 436 |
 | same | `<anonymous@454>` | instance | unreviewed | review required | generated index seed only | public, pinned line 454 |
 | same | `kernel` | def | unreviewed | review required | generated index seed only | public, pinned line 459 |
-| `GameTheory/Languages/FOSG/Execution.lean` | `extendBySteps` | def | unreviewed | review required | generated index seed only | public, pinned line 33 |
-| same | `extendBySteps_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 40 |
-| same | `extendBySteps_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 44 |
-| same | `steps_extendBySteps` | theorem | unreviewed | review required | generated index seed only | public, pinned line 51 |
-| same | `lastState_extendBySteps` | theorem | unreviewed | review required | generated index seed only | public, pinned line 64 |
-| same | `extendBySteps_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 77 |
-| same | `jointActionDist` | def | unreviewed | review required | generated index seed only | public, pinned line 90 |
-| same | `jointActionDist_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 97 |
-| same | `jointActionDist_congr` | theorem | unreviewed | review required | generated index seed only | public, pinned line 105 |
-| same | `legalBehavioralProfile_jointActionDist_eq_zero_of_not_legal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 116 |
-| same | `legalBehavioralProfile_legalJointMass_eq_one` | theorem | unreviewed | review required | generated index seed only | public, pinned line 139 |
-| same | `legalActionLaw` | def | unreviewed | review required | generated index seed only | public, pinned line 171 |
-| same | `legalActionLaw_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 181 |
-| same | `legalActionLaw_congr` | theorem | unreviewed | review required | generated index seed only | public, pinned line 189 |
-| same | `legalActionLaw_bind_eq_jointActionDist_bind` | theorem | unreviewed | review required | generated index seed only | public, pinned line 207 |
-| same | `legalActionLaw_bind_coord` | theorem | unreviewed | review required | generated index seed only | public, pinned line 255 |
-| same | `legalActionLaw_bind_of_coord` | theorem | unreviewed | review required | generated index seed only | public, pinned line 272 |
-| same | `legalActionLaw_eq_pure_noop_of_active_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 295 |
-| same | `nextStateLaw` | def | unreviewed | review required | generated index seed only | public, pinned line 330 |
-| same | `nextStateLaw_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 338 |
-| same | `legalBehavioralProfile_jointStepMass_eq_one` | theorem | unreviewed | review required | generated index seed only | public, pinned line 349 |
-| same | `nextStateLaw_eq_bind_legalActionLaw` | theorem | unreviewed | review required | generated index seed only | public, pinned line 361 |
-| same | `AgreeOff` | def | unreviewed | review required | generated index seed only | public, pinned line 371 |
-| same | `stepActionProb` | def | unreviewed | review required | generated index seed only | public, pinned line 378 |
-| same | `playerStepActionProb` | def | unreviewed | review required | generated index seed only | public, pinned line 384 |
-| same | `othersStepActionProb` | def | unreviewed | review required | generated index seed only | public, pinned line 391 |
-| same | `stepProb` | def | unreviewed | review required | generated index seed only | public, pinned line 399 |
-| same | `stepActionProb_ne_top` | theorem | unreviewed | review required | generated index seed only | public, pinned line 404 |
-| same | `stepProb_ne_top` | theorem | unreviewed | review required | generated index seed only | public, pinned line 414 |
-| same | `stepProb_eq_stepActionProb_mul_transition` | theorem | unreviewed | review required | generated index seed only | public, pinned line 422 |
-| same | `stepProb_eq_transition_mul_stepActionProb` | theorem | unreviewed | review required | generated index seed only | public, pinned line 428 |
-| same | `legalBehavioralProfile_stepActionProb_eq_one_of_active_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 435 |
-| same | `legalBehavioralProfile_stepProb_eq_transition_of_active_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 458 |
-| same | `stepActionProb_eq_player_mul_others` | theorem | unreviewed | review required | generated index seed only | public, pinned line 468 |
-| same | `stepActionProb_eq_others_mul_player` | theorem | unreviewed | review required | generated index seed only | public, pinned line 480 |
-| same | `othersStepActionProb_eq_of_agreeOff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 487 |
-| same | `counterfactualStepProb` | def | unreviewed | review required | generated index seed only | public, pinned line 501 |
-| same | `stepProb_eq_player_mul_counterfactual` | theorem | unreviewed | review required | generated index seed only | public, pinned line 506 |
-| same | `stepProb_eq_counterfactual_mul_player` | theorem | unreviewed | review required | generated index seed only | public, pinned line 519 |
-| same | `counterfactualStepProb_eq_of_agreeOff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 526 |
-| same | `probFrom` | def | unreviewed | review required | generated index seed only | public, pinned line 539 |
-| same | `playerProbFrom` | def | unreviewed | review required | generated index seed only | public, pinned line 550 |
-| same | `counterfactualProbFrom` | def | unreviewed | review required | generated index seed only | public, pinned line 561 |
-| same | `probFrom_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 570 |
-| same | `probFrom_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 574 |
-| same | `playerProbFrom_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 584 |
-| same | `playerProbFrom_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 589 |
-| same | `counterfactualProbFrom_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 598 |
-| same | `counterfactualProbFrom_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 602 |
-| same | `counterfactualProbFrom_eq_of_agreeOff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 611 |
-| same | `prob` | def | unreviewed | review required | generated index seed only | public, pinned line 630 |
-| same | `prob_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 635 |
-| same | `probFrom_ne_top` | theorem | unreviewed | review required | generated index seed only | public, pinned line 639 |
-| same | `prob_ne_top` | theorem | unreviewed | review required | generated index seed only | public, pinned line 652 |
-| same | `probFrom_eq_playerProbFrom_mul_counterfactualProbFrom` | theorem | unreviewed | review required | generated index seed only | public, pinned line 660 |
-| same | `probFrom_append` | theorem | unreviewed | review required | generated index seed only | public, pinned line 683 |
-| same | `probFrom_append_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 706 |
-| same | `prob_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 720 |
-| same | `playerProb` | def | unreviewed | review required | generated index seed only | public, pinned line 736 |
-| same | `counterfactualProb` | def | unreviewed | review required | generated index seed only | public, pinned line 743 |
-| same | `counterfactualProb_eq_of_agreeOff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 748 |
-| same | `prob_eq_playerProb_mul_counterfactualProb` | theorem | unreviewed | review required | generated index seed only | public, pinned line 757 |
-| same | `prob_extendBySteps` | theorem | unreviewed | review required | generated index seed only | public, pinned line 767 |
-| same | `prob_appendStep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 780 |
-| same | `terminalWeight` | def | unreviewed | review required | generated index seed only | public, pinned line 793 |
-| same | `terminalWeight_ne_top` | theorem | unreviewed | review required | generated index seed only | public, pinned line 798 |
-| same | `terminalWeight_of_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 806 |
-| same | `terminalWeight_of_not_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 813 |
-| same | `terminalMassOn` | def | unreviewed | review required | generated index seed only | public, pinned line 822 |
-| same | `terminalLaw` | def | unreviewed | review required | generated index seed only | public, pinned line 828 |
-| same | `terminalMassOn_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 833 |
-| same | `terminalMassOn_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 840 |
-| same | `terminalLaw_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 847 |
+| `GameTheory/Languages/FOSG/Execution.lean` | `extendBySteps` | def | retired | `ExecutionProtocol.Trace`; `ExecutionProtocol.History.extend` | D6/D15; Protocol History API review (2026-08-02) | Indexed traces already carry chained realized transitions; a bare step-list extension would duplicate history semantics. |
+| same | `extendBySteps_nil` | theorem | retired | `ExecutionProtocol.Trace.start` | D6/D15; API review | Base equation for the retired list extension. |
+| same | `extendBySteps_cons` | theorem | retired | `ExecutionProtocol.Trace.extend` | D6/D15; API review | Step extension is the canonical trace constructor. |
+| same | `steps_extendBySteps` | theorem | retired | indexed trace construction | D6/D15; API review | Canonical histories do not erase endpoint witnesses to a list. |
+| same | `lastState_extendBySteps` | theorem | retired | indexed `Trace` endpoint | D6/D15; API review | The endpoint is carried by the trace index rather than recomputed. |
+| same | `extendBySteps_eq` | theorem | retired | `ExecutionProtocol.History.trace` | D6/D15; API review | A canonical history already is its indexed realized trace. |
+| same | `jointActionDist` | def | adapt | `InformationModel.behavioralJoint` | D6; Protocol Information API review (2026-08-02) | Independent local laws combine directly into a finite law over legal joint actions. |
+| same | `jointActionDist_apply` | theorem | subsumed | `FinDist.prob_pi`; `FinDist.prob_map_of_injective` | D6; finite-law API review | The product point mass is `prob_pi`; the legal-subtype packaging is an injective map. |
+| same | `jointActionDist_congr` | theorem | subsumed | `InformationModel.behavioralJoint_congr` | focused Protocol Information bridge review (2026-08-02) | The exact one-step joint-law congruence now exists independently of runner congruence. |
+| same | `legalBehavioralProfile_jointActionDist_eq_zero_of_not_legal` | theorem | subsumed | `InformationModel.behavioralJoint` | D6; API review | Illegal joint actions cannot inhabit the law's dependent codomain. |
+| same | `legalBehavioralProfile_legalJointMass_eq_one` | theorem | subsumed | `Probability.FinDist.tsum_prob` | D6; finite-law API review | Normalization is intrinsic to `FinDist`. |
+| same | `legalActionLaw` | def | adapt | `InformationModel.behavioralJoint` | D6; Protocol Information API review (2026-08-02) | This is the canonical law over legal joint actions at a history. |
+| same | `legalActionLaw_apply` | theorem | subsumed | `InformationModel.behavioralJoint`; `FinDist.prob_pi`; `FinDist.prob_map_of_injective` | D6; API review | Point probability is the independent product probability transported by the injective legal-action packaging. |
+| same | `legalActionLaw_congr` | theorem | subsumed | `InformationModel.behavioralJoint_congr` | focused Protocol Information bridge review (2026-08-02) | Agreement at the realized information states gives exact equality of legal one-step action laws. |
+| same | `legalActionLaw_bind_eq_jointActionDist_bind` | theorem | subsumed | `InformationModel.behavioralJoint` | D6; API review | No illegal ambient law is constructed, so no restriction bridge is needed. |
+| same | `legalActionLaw_bind_coord` | theorem | subsumed | `FinDist.map_apply_pi`; `InformationModel.behavioralJoint` | D6; finite-law API review | `map_apply_pi` is the exact coordinate-marginal law; bind follows by monad congruence. |
+| same | `legalActionLaw_bind_of_coord` | theorem | subsumed | `FinDist.map_apply_pi`; `InformationModel.behavioralJoint` | D6; finite-law API review | A continuation depending only on one coordinate factors through the exact coordinate marginal. |
+| same | `legalActionLaw_eq_pure_noop_of_active_empty` | theorem | subsumed | `InformationModel.behavioral_eq_of_not_active`; `behavioralJoint` | D6; API review | Every inactive coordinate has one typed choice, so the joint law is a point mass. |
+| same | `nextStateLaw` | def | subsumed | `ExecutionProtocol.runRandomizedFor_succ_of_not_terminal` | D6; Protocol Randomized API review (2026-08-02) | The canonical runner binds the legal joint law through the transition and retains history. |
+| same | `nextStateLaw_apply` | theorem | subsumed | `ExecutionProtocol.runRandomizedFor_succ_of_not_terminal` | D6; API review | The bind equation is stated at the stronger history-law level. |
+| same | `legalBehavioralProfile_jointStepMass_eq_one` | theorem | subsumed | `Probability.FinDist.tsum_prob` | D6; finite-law API review | The composed one-step result is normalized by construction. |
+| same | `nextStateLaw_eq_bind_legalActionLaw` | theorem | subsumed | `ExecutionProtocol.runRandomizedFor_succ_of_not_terminal` | D6; API review | The canonical equation is draw, transition bind, and continuation. |
+| same | `AgreeOff` | def | retired | `Profile.update`; `Profile.update_of_ne` | D4/D6; canonical profile API review | Unilateral changes use shared profile update rather than a second agreement predicate. |
+| same | `stepActionProb` | def | subsumed | `InformationModel.behavioralJoint`; `FinDist.prob_pi` | D6; finite-law API review | Ordinary action probability is the point mass of the canonical independent joint draw. |
+| same | `playerStepActionProb` | def | subsumed | `FinDist.prob` of the player's behavioral choice law | finite-law API review | One player's factor is already the point probability of its local law. |
+| same | `othersStepActionProb` | def | adapt | `FinDist.pi` over `{j // j ≠ i}`; `FinDist.prob_pi` | finite-law API review | The player-excluded one-step product has an exact canonical dependent-product presentation. |
+| same | `stepProb` | def | adapt | `InformationModel.behavioralJoint`; `ExecutionProtocol.step` | D6; Protocol Randomized API review | Ordinary one-step reach is the joint draw probability times the transition probability inside the canonical bind. |
+| same | `stepActionProb_ne_top` | theorem | subsumed | `FinDist.prob_le_one` | finite-law API review | Canonical point probabilities are real and bounded. |
+| same | `stepProb_ne_top` | theorem | subsumed | `FinDist.prob_le_one` | finite-law API review | The canonical real-valued one-step coefficient has no `⊤` case. |
+| same | `stepProb_eq_stepActionProb_mul_transition` | theorem | subsumed | `ExecutionProtocol.runRandomizedFor_succ_of_not_terminal` | D6; Protocol Randomized API review | The runner's bind order is joint draw followed by transition. |
+| same | `stepProb_eq_transition_mul_stepActionProb` | theorem | subsumed | preceding bind factorization plus commutativity | D6; API review | Commuted scalar wrapper adds no API. |
+| same | `legalBehavioralProfile_stepActionProb_eq_one_of_active_empty` | theorem | subsumed | `InformationModel.behavioral_eq_of_not_active`; `FinDist.prob_pure_self` | D6; finite-law API review | Every inactive coordinate is the unique typed choice. |
+| same | `legalBehavioralProfile_stepProb_eq_transition_of_active_empty` | theorem | subsumed | `behavioralJoint`; `FinDist.prob_pure_self` | D6; API review | The joint draw is a point mass, leaving only transition probability. |
+| same | `stepActionProb_eq_player_mul_others` | theorem | subsumed | `FinDist.pi_eq_map_product`; `FinDist.prob_pi` | finite-law API review | The canonical product law factors exactly at one coordinate. |
+| same | `stepActionProb_eq_others_mul_player` | theorem | subsumed | `FinDist.pi_eq_map_product`; `FinDist.prob_pi` | finite-law API review | Commuted wrapper of the exact product factorization. |
+| same | `othersStepActionProb_eq_of_agreeOff` | theorem | subsumed | `FinDist.pi` congruence over `{j // j ≠ i}` | finite-law API review | Equality of all excluded coordinate laws gives equality of their canonical product law. |
+| same | `counterfactualStepProb` | def | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Genuine counterfactual reach object; representation must derive from the accepted runner. |
+| same | `stepProb_eq_player_mul_counterfactual` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Flagship one-step counterfactual factorization. |
+| same | `stepProb_eq_counterfactual_mul_player` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Commuted wrapper follows the flagship factorization. |
+| same | `counterfactualStepProb_eq_of_agreeOff` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Counterfactual invariance should use shared unilateral update. |
+| same | `probFrom` | def | adapt | `InformationModel.runBehavioralFrom`; `FinDist.prob` | D6; BehavioralAssessment API review | Ordinary continuation reach is the target-history point probability under the canonical history law at the suffix length. |
+| same | `playerProbFrom` | def | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Player continuation factor remains part of the deferred spine. |
+| same | `counterfactualProbFrom` | def | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Counterfactual continuation factor remains part of the deferred spine. |
+| same | `probFrom_nil` | theorem | subsumed | `ExecutionProtocol.runRandomizedFor_zero`; `FinDist.prob_pure_self` | D6; finite-law API review | Zero-step continuation is the point mass at its starting history. |
+| same | `probFrom_cons` | theorem | deferred | Protocol ordinary continuation/history-reach coefficient calculus slice | source comparison; D6 boundary | The runner successor equation and `FinDist.prob_bind` supply the ingredients, but the exact recursive point-coefficient bridge remains to be proved. |
+| same | `playerProbFrom_nil` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Base player-factor law. |
+| same | `playerProbFrom_cons` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Recursive player-factor law. |
+| same | `counterfactualProbFrom_nil` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Base counterfactual-factor law. |
+| same | `counterfactualProbFrom_cons` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Recursive counterfactual-factor law. |
+| same | `counterfactualProbFrom_eq_of_agreeOff` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Restate over canonical unilateral profile updates. |
+| same | `prob` | def | adapt | `InformationModel.historyReachProbability` | Protocol BehavioralAssessment API review (2026-08-02) | This is exactly the probability of a complete history under behavioral play at its trace length, now real-valued. |
+| same | `prob_nil` | theorem | subsumed | `InformationModel.historyReachProbability`; `FinDist.prob_pure_self` | D6; API review | The initial history has trace length zero and canonical probability one. |
+| same | `probFrom_ne_top` | theorem | subsumed | `FinDist.prob_le_one` | finite-law API review | Canonical continuation reach is real-valued and at most one. |
+| same | `prob_ne_top` | theorem | subsumed | `FinDist.prob_le_one` | finite-law API review | `historyReachProbability` is real-valued and has no `⊤` case. |
+| same | `probFrom_eq_playerProbFrom_mul_counterfactualProbFrom` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Main continuation-level player/counterfactual factorization. |
+| same | `probFrom_append` | theorem | deferred | Protocol ordinary continuation/history-reach coefficient calculus slice | source comparison; D6 boundary | Runner composition and fuel transitivity exist, but their exact point-coefficient composition law still needs a canonical bridge. |
+| same | `probFrom_append_singleton` | theorem | deferred | Protocol ordinary continuation/history-reach coefficient calculus slice | source comparison; D6 boundary | Specialization of the missing ordinary continuation coefficient-composition bridge. |
+| same | `prob_snoc` | theorem | deferred | Protocol ordinary continuation/history-reach coefficient calculus slice | source comparison; D6 boundary | The canonical history law exists, but its exact one-history extension coefficient equation remains to be exposed. |
+| same | `playerProb` | def | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Full-history player reach factor. |
+| same | `counterfactualProb` | def | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Full-history counterfactual reach factor. |
+| same | `counterfactualProb_eq_of_agreeOff` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Full-history invariance under unilateral update. |
+| same | `prob_eq_playerProb_mul_counterfactualProb` | theorem | deferred | Protocol counterfactual-reach/CFR slice | source comparison; D6 boundary | Main full-history reach factorization. |
+| same | `prob_extendBySteps` | theorem | deferred | Protocol ordinary continuation/history-reach coefficient calculus slice | source comparison; D6 boundary | Recover the mathematical composition law over indexed histories without reviving the retired bare step-list wrapper. |
+| same | `prob_appendStep` | theorem | deferred | Protocol ordinary continuation/history-reach coefficient calculus slice | source comparison; D6 boundary | The runner successor bind supplies the law-valued equation; its exact history point-coefficient bridge remains to be proved. |
+| same | `terminalWeight` | def | adapt | terminal indicator of `InformationModel.historyReachProbability` | D6; BehavioralAssessment API review | Preserve the per-history terminal filter over canonical reach probability; it is not one unspecified-horizon `probOf`. |
+| same | `terminalWeight_ne_top` | theorem | subsumed | `FinDist.prob_le_one` for `historyReachProbability` | finite-law API review | The adapted weight is real-valued and bounded. |
+| same | `terminalWeight_of_terminal` | theorem | subsumed | terminal indicator of `historyReachProbability` | D6; API review | At a terminal history the indicator reduces to canonical reach probability. |
+| same | `terminalWeight_of_not_terminal` | theorem | subsumed | terminal indicator of `historyReachProbability` | D6; API review | At a nonterminal history the indicator is zero. |
+| same | `terminalMassOn` | def | adapt | finite sum of terminal-filtered `historyReachProbability` | D6; BehavioralAssessment API review | Histories in the finite event may have different trace lengths, so no single-horizon `FinDist.probOf` is claimed. |
+| same | `terminalLaw` | def | retired | `terminalMassOn` adaptation directly | D6/D15; API review | This was only a second name for the finite-event terminal mass functional. |
+| same | `terminalMassOn_empty` | theorem | subsumed | `Finset.sum_empty` for the adapted terminal mass | finite-sum API review | Empty finite event has zero terminal-filtered reach sum. |
+| same | `terminalMassOn_singleton` | theorem | subsumed | `Finset.sum_singleton` for the adapted terminal mass | finite-sum API review | Singleton finite event reduces to its terminal-filtered history reach. |
+| same | `terminalLaw_apply` | theorem | retired | no alias to unfold | D6/D15; API review | Reflexive theorem for the retired `terminalLaw` alias. |
 | `GameTheory/Languages/FOSG/History.lean` | `Step` | structure | adapt | `GameTheory.Protocol.ExecutionProtocol.StepEvent` | pinned `History.lean:26`; focused Protocol History build | Canonical event stores the same realized transition with legality and support evidence. |
 | same | `ownAction?` | abbrev | adapt | `ExecutionProtocol.StepEvent.joint` | pinned `History.lean:37`; focused Protocol History build | A player contribution is the canonical joint-action coordinate. |
 | same | `publicObs` | abbrev | adapt | `GameTheory.Protocol.InfoSignals.publicSignal` | pinned `History.lean:41`; focused Protocol History build | Signals consume canonical `StepEvent`; FOSG owns no observation projection. |
@@ -697,101 +707,101 @@ module they require rather than a FOSG-wide umbrella.
 | same | `instDecidablePredSerializeTerminal` | instance | unreviewed | review required | generated index seed only | public, pinned line 1453 |
 | same | `IsSerial` | def | unreviewed | review required | generated index seed only | public, pinned line 1466 |
 | same | `serialize_isSerial` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1471 |
-| `GameTheory/Languages/FOSG/Strategy.lean` | `availableMovesAtState` | def | unreviewed | review required | generated index seed only | public, pinned line 40 |
-| same | `mem_availableMovesAtState_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 45 |
-| same | `availableActionsAtHistory` | def | unreviewed | review required | generated index seed only | public, pinned line 53 |
-| same | `mem_availableActionsAtHistory_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 58 |
-| same | `availableActionsAtHistory_eq_availableActionsAtState_of_mem_active` | theorem | unreviewed | review required | generated index seed only | public, pinned line 65 |
-| same | `availableActionsAtHistory_eq_empty_of_not_mem_active` | theorem | unreviewed | review required | generated index seed only | public, pinned line 71 |
-| same | `availableMoves` | def | unreviewed | review required | generated index seed only | public, pinned line 79 |
-| same | `mem_availableMoves_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 84 |
-| same | `availableMoves_nonempty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 95 |
-| same | `availableMoves_eq_availableMovesAtState` | theorem | unreviewed | review required | generated index seed only | public, pinned line 110 |
-| same | `availableMoves_eq_singleton_none_of_not_mem_active` | theorem | unreviewed | review required | generated index seed only | public, pinned line 116 |
-| same | `LegalObservable` | def | unreviewed | review required | generated index seed only | public, pinned line 129 |
-| same | `availableMoves_eq_of_playerView_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 134 |
-| same | `availableActions_eq_of_playerView_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 142 |
-| same | `availableMovesAtInfoState` | def | unreviewed | review required | generated index seed only | public, pinned line 163 |
-| same | `mem_availableMovesAtInfoState_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 168 |
-| same | `mem_availableMovesAtInfoState_of_history` | theorem | unreviewed | review required | generated index seed only | public, pinned line 175 |
-| same | `availableMovesAtInfoState_eq_of_history` | theorem | unreviewed | review required | generated index seed only | public, pinned line 182 |
-| same | `availableActionsAtInfoState` | def | unreviewed | review required | generated index seed only | public, pinned line 197 |
-| same | `availableActionsAtInfoState_eq_of_history` | theorem | unreviewed | review required | generated index seed only | public, pinned line 202 |
-| same | `PureStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 216 |
-| same | `BehavioralStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 221 |
-| same | `PureProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 225 |
-| same | `BehavioralProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 229 |
-| same | `ofLatestObservation@238` | def | unreviewed | review required | generated index seed only | public, pinned line 238 |
-| same | `ofLatestObservation_nil@247` | theorem | unreviewed | review required | generated index seed only | public, pinned line 247 |
-| same | `ofLatestObservation_eq_policy@252` | theorem | unreviewed | review required | generated index seed only | public, pinned line 252 |
-| same | `ofLatestObservation@269` | def | unreviewed | review required | generated index seed only | public, pinned line 269 |
-| same | `ofLatestObservation_nil@278` | theorem | unreviewed | review required | generated index seed only | public, pinned line 278 |
-| same | `ofLatestObservation_eq_policy@283` | theorem | unreviewed | review required | generated index seed only | public, pinned line 283 |
-| same | `ofLatestObservation@299` | def | unreviewed | review required | generated index seed only | public, pinned line 299 |
-| same | `ofLatestObservation_nil@307` | theorem | unreviewed | review required | generated index seed only | public, pinned line 307 |
-| same | `ofLatestObservation@321` | def | unreviewed | review required | generated index seed only | public, pinned line 321 |
-| same | `ofLatestObservation_nil@329` | theorem | unreviewed | review required | generated index seed only | public, pinned line 329 |
-| same | `IsLegalPureStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 339 |
-| same | `IsLegalBehavioralStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 346 |
-| same | `IsLegalPureProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 354 |
-| same | `IsLegalBehavioralProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 360 |
-| same | `legalBehavioralStrategy_eq_pure_none_of_not_mem_active` | theorem | unreviewed | review required | generated index seed only | public, pinned line 365 |
-| same | `LegalPureStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 398 |
-| same | `LegalBehavioralStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 403 |
-| same | `LegalPureProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 408 |
-| same | `LegalBehavioralProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 413 |
-| same | `LegalPureProfile.toProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 418 |
-| same | `LegalBehavioralProfile.toProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 424 |
-| same | `legalPureProfile_toProfile_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 429 |
-| same | `legalBehavioralProfile_toProfile_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 434 |
-| same | `ReachableInfoState` | def | unreviewed | review required | generated index seed only | public, pinned line 440 |
-| same | `reachableInfoStateOfHistory` | def | unreviewed | review required | generated index seed only | public, pinned line 445 |
-| same | `reachableInfoStateOfHistory_val` | theorem | unreviewed | review required | generated index seed only | public, pinned line 450 |
-| same | `instFintypeReachableInfoState` | instance | unreviewed | review required | generated index seed only | public, pinned line 454 |
-| same | `ReachablePureStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 470 |
-| same | `ReachableBehavioralStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 475 |
-| same | `ReachablePureProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 480 |
-| same | `ReachableBehavioralProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 484 |
-| same | `instFintypeReachablePureStrategy` | instance | unreviewed | review required | generated index seed only | public, pinned line 487 |
-| same | `instFintypeReachablePureProfile` | instance | unreviewed | review required | generated index seed only | public, pinned line 495 |
-| same | `IsLegalReachablePureStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 505 |
-| same | `IsLegalReachableBehavioralStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 512 |
-| same | `ReachableLegalPureStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 520 |
-| same | `ReachableLegalBehavioralStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 525 |
-| same | `ReachableLegalPureProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 530 |
-| same | `ReachableLegalBehavioralProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 534 |
-| same | `ReachableLegalPureProfile.toProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 538 |
-| same | `ReachableLegalBehavioralProfile.toProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 544 |
-| same | `PureStrategy.restrictReachable` | def | unreviewed | review required | generated index seed only | public, pinned line 550 |
-| same | `BehavioralStrategy.restrictReachable` | def | unreviewed | review required | generated index seed only | public, pinned line 556 |
-| same | `LegalPureStrategy.restrictReachable` | def | unreviewed | review required | generated index seed only | public, pinned line 562 |
-| same | `LegalBehavioralStrategy.restrictReachable` | def | unreviewed | review required | generated index seed only | public, pinned line 568 |
-| same | `ReachablePureStrategy.extend` | def | unreviewed | review required | generated index seed only | public, pinned line 575 |
-| same | `ReachableBehavioralStrategy.extend` | def | unreviewed | review required | generated index seed only | public, pinned line 584 |
-| same | `ReachablePureStrategy.extend_apply_history` | theorem | unreviewed | review required | generated index seed only | public, pinned line 591 |
-| same | `ReachableBehavioralStrategy.extend_apply_history` | theorem | unreviewed | review required | generated index seed only | public, pinned line 602 |
-| same | `ReachablePureProfile.extend` | def | unreviewed | review required | generated index seed only | public, pinned line 614 |
-| same | `ReachableBehavioralProfile.extend` | def | unreviewed | review required | generated index seed only | public, pinned line 620 |
-| same | `ReachablePureStrategy.isLegal_extend` | theorem | unreviewed | review required | generated index seed only | public, pinned line 625 |
-| same | `ReachableBehavioralStrategy.isLegal_extend` | theorem | unreviewed | review required | generated index seed only | public, pinned line 633 |
-| same | `ReachableLegalPureProfile.extend` | def | unreviewed | review required | generated index seed only | public, pinned line 642 |
-| same | `ReachableLegalBehavioralProfile.extend` | def | unreviewed | review required | generated index seed only | public, pinned line 650 |
-| same | `pureToBehavioral` | def | unreviewed | review required | generated index seed only | public, pinned line 657 |
-| same | `pureToBehavioral_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 662 |
-| same | `legalBehavioral_of_legalPure` | theorem | unreviewed | review required | generated index seed only | public, pinned line 667 |
-| same | `legalPureToBehavioral` | def | unreviewed | review required | generated index seed only | public, pinned line 679 |
-| same | `MarkovJointPolicy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 691 |
-| same | `PureMarkovJointPolicy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 695 |
-| same | `pureMarkovToBehavioral` | def | unreviewed | review required | generated index seed only | public, pinned line 699 |
-| same | `pureMarkovToBehavioral_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 704 |
-| same | `stepProb` | def | unreviewed | review required | generated index seed only | public, pinned line 710 |
-| same | `pathProb` | def | unreviewed | review required | generated index seed only | public, pinned line 716 |
-| same | `prob` | def | unreviewed | review required | generated index seed only | public, pinned line 723 |
-| same | `pathProb_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 728 |
-| same | `pathProb_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 733 |
-| same | `prob_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 738 |
-| same | `pathProb_append_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 743 |
-| same | `prob_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 753 |
+| `GameTheory/Languages/FOSG/Strategy.lean` | `availableMovesAtState` | def | adapt | `GameTheory.Protocol.LegalOption` | D6/D15; Protocol policy API review (2026-08-02) | Optional action legality is defined once at the execution/information boundary. |
+| same | `mem_availableMovesAtState_iff` | theorem | subsumed | `GameTheory.Protocol.LegalOption` | D6/D15; API review | The predecessor membership theorem only unfolded its wrapper. |
+| same | `availableActionsAtHistory` | def | subsumed | `ExecutionProtocol.available`; `InformationModel.menu_adequate` | D6/D15; API review | Actual actions remain state availability; information-local choice uses the canonical optional menu. |
+| same | `mem_availableActionsAtHistory_iff` | theorem | subsumed | `LegalOption`; `InformationModel.menu_adequate` | D6/D15; API review | Active/some legality is the `LegalOption` constructor case. |
+| same | `availableActionsAtHistory_eq_availableActionsAtState_of_mem_active` | theorem | subsumed | `ExecutionProtocol.available` | D6/D15; API review | No history wrapper separates the endpoint from its canonical availability set. |
+| same | `availableActionsAtHistory_eq_empty_of_not_mem_active` | theorem | subsumed | `LegalOption.eq_none_of_inactive` | D6/D15; API review | Inactivity is expressed by the unique legal optional contribution `none`. |
+| same | `availableMoves` | def | adapt | `InformationModel.menu`; `InformationModel.infoOf` | D6/D15; Protocol policy API review (2026-08-02) | The menu at the information state produced by a trace is the canonical history-facing move set. |
+| same | `mem_availableMoves_iff` | theorem | subsumed | `InformationModel.menu_adequate` | D6/D15; API review | Menu adequacy is the exact equivalence with endpoint `LegalOption`. |
+| same | `availableMoves_nonempty` | theorem | subsumed | `InformationModel.Choice`; `ExecutionProtocol.progress` | D6/D15; API review | Reached nonterminal menus inherit a legal joint coordinate; inactive or terminal coordinates use `none`. |
+| same | `availableMoves_eq_availableMovesAtState` | theorem | subsumed | `InformationModel.menu_adequate` | D6/D15; API review | The canonical interface relates information-local and state-local legality pointwise. |
+| same | `availableMoves_eq_singleton_none_of_not_mem_active` | theorem | subsumed | `InformationModel.subsingleton_choice_of_not_active` | D6; focused Protocol Information build evidence | The stronger typed result says every legal choice at an inactive reached state is equal. |
+| same | `LegalObservable` | def | subsumed | `InformationModel.menu_adequate` | D6/D15; API review | Legal observability is enforced by one menu function on information states plus its adequacy law. |
+| same | `availableMoves_eq_of_playerView_eq` | theorem | subsumed | `InformationModel.menu` | D6/D15; API review | Equal canonical information states select definitionally the same menu. |
+| same | `availableActions_eq_of_playerView_eq` | theorem | subsumed | `InformationModel.menu_adequate` | D6/D15; API review | Actual-action equality follows from the shared optional menu; no raw player-view premise remains. |
+| same | `availableMovesAtInfoState` | def | adapt | `InformationModel.menu` | D6/D15; Protocol policy API review (2026-08-02) | The information-local menu is a field with exact adequacy, not an existential union over histories. |
+| same | `mem_availableMovesAtInfoState_iff` | theorem | subsumed | `InformationModel.menu` | D6/D15; API review | Membership is directly membership in the canonical menu. |
+| same | `mem_availableMovesAtInfoState_of_history` | theorem | subsumed | `InformationModel.menu_adequate` | D6/D15; API review | Any endpoint-legal option belongs to the menu produced by that trace. |
+| same | `availableMovesAtInfoState_eq_of_history` | theorem | subsumed | `InformationModel.menu_adequate` | D6/D15; API review | Adequacy replaces the predecessor's separate observability hypothesis. |
+| same | `availableActionsAtInfoState` | def | subsumed | `InformationModel.Choice` | D6/D15; API review | Actual actions are the `some` case of the proof-carrying optional choice type. |
+| same | `availableActionsAtInfoState_eq_of_history` | theorem | subsumed | `InformationModel.menu_adequate` | D6/D15; API review | The equality is carried pointwise by menu adequacy. |
+| same | `PureStrategy` | abbrev | adapt | `InformationModel.Policy` | D6/D15; Protocol policy API review (2026-08-02) | A deterministic policy chooses from the dependent legal menu by construction. |
+| same | `BehavioralStrategy` | abbrev | adapt | `InformationModel.BehavioralPolicy` | D6/D15; Protocol policy API review (2026-08-02) | Local randomization is a finite law over the dependent legal choice type. |
+| same | `PureProfile` | abbrev | adapt | `Profile M.strategicSignature` | D6/D15; Protocol Strategic API review (2026-08-02) | The shared signature owns information-local pure profiles. |
+| same | `BehavioralProfile` | abbrev | adapt | `Profile M.behavioralSignature` | D6/D15; Protocol Strategic API review (2026-08-02) | The shared behavioral signature owns locally randomized profiles. |
+| same | `ofLatestObservation@238` | def | retired | model-specific policy constructor | D6/D15; Information slice review | Arbitrary information states need not expose a latest private/public observation. |
+| same | `ofLatestObservation_nil@247` | theorem | retired | model-specific policy constructor | D6/D15; Information slice review | Equation for the retired raw-list policy adapter. |
+| same | `ofLatestObservation_eq_policy@252` | theorem | retired | model-specific policy constructor | D6/D15; Information slice review | Equation for the retired raw-list policy adapter. |
+| same | `ofLatestObservation@269` | def | retired | model-specific behavioral constructor | D6/D15; Information slice review | Arbitrary information states need not expose a latest observation. |
+| same | `ofLatestObservation_nil@278` | theorem | retired | model-specific behavioral constructor | D6/D15; Information slice review | Equation for the retired raw-list behavioral adapter. |
+| same | `ofLatestObservation_eq_policy@283` | theorem | retired | model-specific behavioral constructor | D6/D15; Information slice review | Equation for the retired raw-list behavioral adapter. |
+| same | `ofLatestObservation@299` | def | retired | `Profile M.strategicSignature` | D6/D15; Information slice review | Profile construction is pointwise over the model's real information type; no latest-observation wrapper is canonical. |
+| same | `ofLatestObservation_nil@307` | theorem | retired | `Profile M.strategicSignature` | D6/D15; Information slice review | Equation for the retired profile adapter. |
+| same | `ofLatestObservation@321` | def | retired | `Profile M.behavioralSignature` | D6/D15; Information slice review | No FOSG-wide latest-observation behavioral profile exists. |
+| same | `ofLatestObservation_nil@329` | theorem | retired | `Profile M.behavioralSignature` | D6/D15; Information slice review | Equation for the retired profile adapter. |
+| same | `IsLegalPureStrategy` | def | subsumed | `InformationModel.Policy`; `InformationModel.Choice` | D6/D15; API review | Legality is carried in every dependent choice, not checked afterward. |
+| same | `IsLegalBehavioralStrategy` | def | subsumed | `InformationModel.BehavioralPolicy`; `InformationModel.Choice` | D6/D15; API review | Every support point is typed as a legal menu choice. |
+| same | `IsLegalPureProfile` | def | subsumed | `Profile M.strategicSignature` | D6/D15; API review | Every coordinate is already a legal canonical policy. |
+| same | `IsLegalBehavioralProfile` | def | subsumed | `Profile M.behavioralSignature` | D6/D15; API review | Every coordinate randomizes only over legal choices. |
+| same | `legalBehavioralStrategy_eq_pure_none_of_not_mem_active` | theorem | subsumed | `InformationModel.behavioral_eq_of_not_active` | D6; Protocol Information API review (2026-08-02) | The canonical theorem states that all behavioral laws coincide at an inactive reached state. |
+| same | `LegalPureStrategy` | abbrev | retired | `InformationModel.Policy` | D6/D15; API review | A second subtype would duplicate legality already stored in `Choice`. |
+| same | `LegalBehavioralStrategy` | abbrev | retired | `InformationModel.BehavioralPolicy` | D6/D15; API review | A second subtype would duplicate legality already stored in behavioral support. |
+| same | `LegalPureProfile` | abbrev | retired | `Profile M.strategicSignature` | D6/D15; API review | Proof-wrapped profiles collapse to the canonical profile type. |
+| same | `LegalBehavioralProfile` | abbrev | retired | `Profile M.behavioralSignature` | D6/D15; API review | Proof-wrapped profiles collapse to the canonical behavioral profile type. |
+| same | `LegalPureProfile.toProfile` | abbrev | retired | identity on `Profile M.strategicSignature` | D6/D15; API review | There is no legality wrapper to forget. |
+| same | `LegalBehavioralProfile.toProfile` | abbrev | retired | identity on `Profile M.behavioralSignature` | D6/D15; API review | There is no legality wrapper to forget. |
+| same | `legalPureProfile_toProfile_apply` | theorem | retired | no wrapper projection | D6/D15; API review | Reflexive theorem for a retired wrapper. |
+| same | `legalBehavioralProfile_toProfile_apply` | theorem | retired | no wrapper projection | D6/D15; API review | Reflexive theorem for a retired wrapper. |
+| same | `ReachableInfoState` | def | retired | no second reachable information-state carrier | D6/D15; BehavioralAssessment API review | `InformationHistory` is a history fibre, not this subtype; canonical consumers use `infoOf` and indexed histories directly. |
+| same | `reachableInfoStateOfHistory` | def | subsumed | `InformationModel.infoOf`; `InformationModel.mem_infoSet` | D6; API review | A history directly computes its canonical information value and witnesses membership. |
+| same | `reachableInfoStateOfHistory_val` | theorem | subsumed | `InformationModel.infoOf` | D6; API review | The separate subtype projection has disappeared. |
+| same | `instFintypeReachableInfoState` | instance | retired | operation-local `Fintype (M.InfoState i)` | greenfield finiteness rule; API review | The predecessor globally converted `Finite` with `Fintype.ofFinite`; finite capabilities now belong on consumers. |
+| same | `ReachablePureStrategy` | abbrev | retired | `InformationModel.Policy` | D6/D15; API review | A second reachable-only strategy universe would fork canonical policy semantics. |
+| same | `ReachableBehavioralStrategy` | abbrev | retired | `InformationModel.BehavioralPolicy` | D6/D15; API review | A second reachable-only behavioral universe would fork canonical policy semantics. |
+| same | `ReachablePureProfile` | abbrev | retired | `Profile M.strategicSignature` | D6/D15; API review | Canonical profiles use the model-owned information type. |
+| same | `ReachableBehavioralProfile` | abbrev | retired | `Profile M.behavioralSignature` | D6/D15; API review | Canonical behavioral profiles use the model-owned information type. |
+| same | `instFintypeReachablePureStrategy` | instance | retired | operation-local `Fintype (M.InfoState i)` | greenfield finiteness rule; API review | Finite strategy enumeration is requested by the theorem that needs it. |
+| same | `instFintypeReachablePureProfile` | instance | retired | operation-local finite profile assumptions | greenfield finiteness rule; API review | No global reachable-profile instance or `Fintype.ofFinite` escape hatch is retained. |
+| same | `IsLegalReachablePureStrategy` | def | retired | `InformationModel.Policy` | D6/D15; API review | Both the reachable carrier and post-hoc legality predicate are unnecessary. |
+| same | `IsLegalReachableBehavioralStrategy` | def | retired | `InformationModel.BehavioralPolicy` | D6/D15; API review | Both the reachable carrier and post-hoc legality predicate are unnecessary. |
+| same | `ReachableLegalPureStrategy` | abbrev | retired | `InformationModel.Policy` | D6/D15; API review | Duplicate reachable/legal wrapper. |
+| same | `ReachableLegalBehavioralStrategy` | abbrev | retired | `InformationModel.BehavioralPolicy` | D6/D15; API review | Duplicate reachable/legal wrapper. |
+| same | `ReachableLegalPureProfile` | abbrev | retired | `Profile M.strategicSignature` | D6/D15; API review | Duplicate reachable/legal profile wrapper. |
+| same | `ReachableLegalBehavioralProfile` | abbrev | retired | `Profile M.behavioralSignature` | D6/D15; API review | Duplicate reachable/legal behavioral profile wrapper. |
+| same | `ReachableLegalPureProfile.toProfile` | abbrev | retired | no wrapper projection | D6/D15; API review | The duplicate carrier and its projection are both retired. |
+| same | `ReachableLegalBehavioralProfile.toProfile` | abbrev | retired | no wrapper projection | D6/D15; API review | The duplicate carrier and its projection are both retired. |
+| same | `PureStrategy.restrictReachable` | def | retired | canonical `InformationModel.Policy` | D6/D15; API review | Restriction would create a parallel strategy universe. |
+| same | `BehavioralStrategy.restrictReachable` | def | retired | canonical `InformationModel.BehavioralPolicy` | D6/D15; API review | Restriction would create a parallel behavioral universe. |
+| same | `LegalPureStrategy.restrictReachable` | def | retired | canonical `InformationModel.Policy` | D6/D15; API review | Legality is already in the canonical codomain. |
+| same | `LegalBehavioralStrategy.restrictReachable` | def | retired | canonical `InformationModel.BehavioralPolicy` | D6/D15; API review | Legality is already in the canonical behavioral codomain. |
+| same | `ReachablePureStrategy.extend` | def | retired | canonical `InformationModel.Policy` | D6/D15; API review | Defaulting to `none` at unreachable information values is unsound when their unconstrained menu omits `none`. |
+| same | `ReachableBehavioralStrategy.extend` | def | retired | canonical `InformationModel.BehavioralPolicy` | D6/D15; API review | Defaulting to a point mass at `none` need not inhabit an unreachable menu. |
+| same | `ReachablePureStrategy.extend_apply_history` | theorem | retired | no reachable extension | D6/D15; API review | Equation for the retired and generally ill-typed extension. |
+| same | `ReachableBehavioralStrategy.extend_apply_history` | theorem | retired | no reachable extension | D6/D15; API review | Equation for the retired and generally ill-typed extension. |
+| same | `ReachablePureProfile.extend` | def | retired | canonical `Profile M.strategicSignature` | D6/D15; API review | No reachable-only profile is extended. |
+| same | `ReachableBehavioralProfile.extend` | def | retired | canonical `Profile M.behavioralSignature` | D6/D15; API review | No reachable-only behavioral profile is extended. |
+| same | `ReachablePureStrategy.isLegal_extend` | theorem | retired | legality by `InformationModel.Choice` | D6/D15; API review | Post-hoc legality theorem for a retired extension. |
+| same | `ReachableBehavioralStrategy.isLegal_extend` | theorem | retired | legality by `InformationModel.Choice` | D6/D15; API review | Post-hoc legality theorem for a retired extension. |
+| same | `ReachableLegalPureProfile.extend` | def | retired | canonical `Profile M.strategicSignature` | D6/D15; API review | Composite wrapper/extension machinery is unnecessary. |
+| same | `ReachableLegalBehavioralProfile.extend` | def | retired | canonical `Profile M.behavioralSignature` | D6/D15; API review | Composite wrapper/extension machinery is unnecessary. |
+| same | `pureToBehavioral` | def | adapt | `InformationModel.Policy.toBehavioral` | D6; Protocol Information API review (2026-08-02) | A deterministic legal choice is lifted pointwise to a finite point mass. |
+| same | `pureToBehavioral_apply` | theorem | subsumed | `InformationModel.Policy.toBehavioral` | D6; API review | The canonical lifting equation is definitional. |
+| same | `legalBehavioral_of_legalPure` | theorem | subsumed | `InformationModel.Policy.toBehavioral` | D6; API review | The lifted law ranges over `Choice`, so legality requires no separate proof. |
+| same | `legalPureToBehavioral` | def | retired | `InformationModel.Policy.toBehavioral` | D6; API review | A second lifting for proof-wrapped policies is unnecessary. |
+| same | `MarkovJointPolicy` | abbrev | adapt | `ExecutionProtocol.RandomizedChooser` | D6; Protocol Randomized API review (2026-08-02) | The canonical randomized chooser is history-aware and typed by legal joint actions. |
+| same | `PureMarkovJointPolicy` | abbrev | adapt | `ExecutionProtocol.HistoryChooser`; `ExecutionProtocol.Chooser` | D6; Protocol History API review (2026-08-02) | Canonical choosers request nonterminality at the operation that needs a legal joint action. |
+| same | `pureMarkovToBehavioral` | def | subsumed | `ExecutionProtocol.HistoryChooser.toRandomized` | D6; Protocol Randomized API review (2026-08-02) | Deterministic choosers are lifted to point-mass randomized choosers once. |
+| same | `pureMarkovToBehavioral_apply` | theorem | subsumed | `ExecutionProtocol.HistoryChooser.toRandomized` | D6; API review | The point-mass equation is definitional in the canonical lift. |
+| same | `stepProb` | def | retired | `ExecutionProtocol.runRandomizedFor` | D6/D15; Protocol Randomized API review | The auxiliary product semantics is replaced by the canonical law-valued runner. |
+| same | `pathProb` | def | retired | `ExecutionProtocol.runRandomizedFor` | D6/D15; Protocol Randomized API review | A bare list product is not a second execution semantics. |
+| same | `prob` | def | retired | `ExecutionProtocol.runRandomizedFor` | D6/D15; Protocol Randomized API review | Complete history probabilities are read from the canonical finite law when needed. |
+| same | `pathProb_nil` | theorem | retired | `ExecutionProtocol.runRandomizedFor_zero` | D6; API review | Base equation for retired product semantics. |
+| same | `pathProb_cons` | theorem | retired | `ExecutionProtocol.runRandomizedFor_succ_of_not_terminal` | D6; API review | Recursive execution is expressed by finite-law bind, not scalar multiplication over a list. |
+| same | `prob_nil` | theorem | retired | `ExecutionProtocol.runRandomizedFor_zero` | D6; API review | The canonical zero-fuel law is a point mass at the supplied history. |
+| same | `pathProb_append_singleton` | theorem | retired | `ExecutionProtocol.runRandomizedFor_succ_of_not_terminal` | D6; API review | Arbitrary list append lacks the indexed endpoint witnesses of canonical histories. |
+| same | `prob_snoc` | theorem | retired | `ExecutionProtocol.runRandomizedFor_succ_of_not_terminal` | D6; API review | One-step law composition is already the canonical runner equation. |
 | `GameTheory/Languages/FOSG/Values.lean` | `reward` | abbrev | adapt | external `value` parameter of `FOSG.Game.cumulativeValue` | `GameTheory.Protocol.History`; focused Values build (1,722 jobs) | A FOSG has no privileged reward field; transition values remain application data. |
 | same | `rewardSumFrom` | def | retired | `ExecutionProtocol.Trace.valueSum` | focused Values build (1,722 jobs) | The predecessor fold consumed a bare list, which cannot certify that adjacent steps form one realized execution. |
 | same | `rewardSum` | def | adapt | `FOSG.Game.cumulativeValue`; `ExecutionProtocol.History.valueSum` | focused Values build (1,722 jobs) | The canonical indexed history is folded directly. |

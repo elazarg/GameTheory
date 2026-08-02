@@ -14,6 +14,7 @@ its cost.
 -/
 
 import GameTheory.Analysis.Minimax
+import GameTheory.Analysis.Correlated
 import GameTheory.Examples.Classic
 
 namespace GameTheory.Examples
@@ -37,6 +38,17 @@ theorem matchingPennies_exists_isNash_mixed :
     ∃ μ, IsNash matchingPennies.toForm.mixed (euPreference matchingPennies.utility) μ := by
   haveI : ∀ i, Nonempty (matchingPennies.toForm.sig.Strategy i) := fun _ => ⟨Side.heads⟩
   exact exists_isNash_mixed _
+
+/-- **Matching pennies nevertheless has a correlated equilibrium.**  This
+consumer is intentionally existential: it witnesses the general theorem on a
+game whose pure-equilibrium set was just proved empty. -/
+theorem matchingPennies_exists_isCorrelatedEq :
+    ∃ law : Probability.FinDist (Profile matchingPennies.sig),
+      IsCorrelatedEq matchingPennies.toForm
+        (euPreference matchingPennies.utility) law := by
+  haveI : ∀ i, Nonempty (matchingPennies.toForm.sig.Strategy i) := fun _ => ⟨Side.heads⟩
+  exact exists_isCorrelatedEq (ι := Fin 2) (F := matchingPennies.toForm)
+    matchingPennies.utility
 
 /-! ## The value of matching pennies -/
 

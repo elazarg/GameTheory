@@ -612,6 +612,16 @@ def behavioralJoint (policies : (i : ι) → M.BehavioralPolicy i) {state : E.St
         (M.menu_adequate i trace (draws i).1).mp (draws i).2⟩)
     (FinDist.pi fun i => policies i (M.infoOf i trace))
 
+/-- Behavioral profiles that agree at one information history induce the same
+local joint-action law there.  This is the one-step congruence used by the
+global runner theorem below. -/
+theorem behavioralJoint_congr {first second : (i : ι) → M.BehavioralPolicy i}
+    {state : E.State} (trace : Trace E state) (hterm : ¬ E.terminal state)
+    (hagree : ∀ i, first i (M.infoOf i trace) = second i (M.infoOf i trace)) :
+    M.behavioralJoint first trace hterm = M.behavioralJoint second trace hterm := by
+  rw [behavioralJoint, behavioralJoint]
+  exact congrArg _ (congrArg FinDist.pi (funext hagree))
+
 /-- A behavioral profile, as a chooser. -/
 def randomizedChooser (policies : (i : ι) → M.BehavioralPolicy i) : E.RandomizedChooser :=
   fun h hterm => M.behavioralJoint policies h.trace hterm
@@ -643,8 +653,8 @@ theorem runBehavioralFrom_congr {first second : (i : ι) → M.BehavioralPolicy 
         ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm,
         ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm]
     · have hhere : M.randomizedChooser first h hterm = M.randomizedChooser second h hterm := by
-        rw [randomizedChooser, randomizedChooser, behavioralJoint, behavioralJoint]
-        exact congrArg _ (congrArg FinDist.pi (funext fun i => hagree h (.refl _ _) hterm i))
+        rw [randomizedChooser, randomizedChooser]
+        exact M.behavioralJoint_congr h.trace hterm fun i => hagree h (.refl _ _) hterm i
       rw [runBehavioralFrom, runBehavioralFrom,
         ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm,
         ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm, hhere]

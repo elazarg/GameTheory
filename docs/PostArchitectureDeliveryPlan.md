@@ -302,7 +302,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 |---|---|---|---|
 | foundations and VNM | utility invariance, strategic equivalence, expected-utility representation, axiom independence | expected-utility representation without merging probability-free ranks back into lottery preference | `Core.Preference`, finite laws, and independent mathematics only where earned |
 | static response | dominance, rationalizability, approximate and secure equilibrium | dominance solvability and one approximation theorem without duplicate Nash predicates | `GameTheory.Core` |
-| correlation | correlation regimes, regret, signal timing, value of correlation | correlated-equilibrium existence plus one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
+| correlation | correlation regimes, regret, signal timing, value of correlation | **CE/CCE existence complete through mixed Nash;** next one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
 | learning | regret, multiplicative weights, fictitious play, approachability | **F2 and finite MW self-play complete (EXP-049/D21);** next potential-game fictitious-play convergence | stable finite identities in Core, law-free MW algebra in `GameTheoryMath`, canonical-law adapter in Probability, and quantitative composition in `Analysis.Learning` |
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | Rosenthal exact potential and finite pure-Nash existence | `Core.Potential`, then a thin congestion domain |
 | welfare | individual rationality, smoothness, price of anarchy | a smoothness price-of-anarchy bound stated on the canonical utility game | `Core` or a stable welfare root |
@@ -378,7 +378,8 @@ grounds for difficult proofs.
 
 The analysis lane includes:
 
-- correlated-equilibrium existence;
+- **correlated- and coarse-correlated-equilibrium existence complete** through
+  the topology-free Nash-to-correlation bridges and `Analysis.Nash`;
 - demand-driven recovery of reusable Brouwer, KKM, Scarf, or simplex
   approximation mathematics only when a selected theorem needs it;
 - convex bargaining and continuous social-choice results admitted by their
@@ -538,11 +539,14 @@ The next work is ordered:
    measurements;
 2. extend the passed Rosenthal gate through shared Core smoothness, affine
    price of anarchy, and the Pigou/Braess examples;
-3. extend the passed sealed-bid and reserve-price auction gate through VCG,
-   preserving its explicit tie semantics;
-4. continue the exact FOSG queue through observations, strategies, and
-   execution laws, and recover general constant-sum value/correlation results
-   beyond the completed binary slice;
+3. extend the passed auction gate beyond the completed VCG recovery through
+   combinatorial and all-pay auctions, with executable knapsack only after its
+   finite boundary is explicit;
+4. continue the exact FOSG queue through observation-model batches and named
+   comparisons; keep its classified counterfactual-reach/CFR spine and six
+   ordinary continuation-coefficient laws behind separate checked-theorem
+   gates, and recover general constant-sum value/correlation results beyond
+   the completed binary slice;
 5. resume the broader revelation/information-design inventory and decide
    whether a live consumer earns D-COMM's deferred conditional public-signal
    representation;

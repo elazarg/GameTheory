@@ -97,6 +97,15 @@ theorem IsNash.isCorrelatedEq_pi
     FinDist.bind_map] at hdeviation
   exact hdeviation
 
+/-- **A mixed Nash profile also induces a coarse correlated equilibrium.**
+This is the recommendation-independent shadow of `IsNash.isCorrelatedEq_pi`;
+it remains preference-parametric and needs no boundedness hypothesis. -/
+theorem IsNash.isCoarseCorrelatedEq_pi
+    {preference : WeakPreference ι F.sig.Outcome}
+    (hnash : IsNash F.mixed preference mixedProfile) :
+    IsCoarseCorrelatedEq F preference (FinDist.pi mixedProfile) :=
+  hnash.isCorrelatedEq_pi.isCoarseCorrelatedEq
+
 /-! ## What a mixed equilibrium randomizes over
 
 A mixed equilibrium does not merely fail to gain by deviating; it is indifferent
