@@ -430,6 +430,7 @@ import Math.LinearAlgebra.ExactBlockElimination
 import Math.LinearAlgebra.ExactBlockEliminationConfluence
 import Math.LinearAlgebra.LeadingTruncationCounterexamples
 import Math.Probability.FiniteDiscountedFlow
+import Math.Probability.ContractionErrorRecurrence
 import GameTheory.Concepts.Stochastic.FiniteProductFlowKinematics
 import GameTheory.Concepts.Stochastic.FiniteProductFlowTwoStateRegression
 import GameTheory.Concepts.Stochastic.BoundedDiscrepancyCirculation
