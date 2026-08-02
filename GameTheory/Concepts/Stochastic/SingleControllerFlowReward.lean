@@ -527,5 +527,74 @@ theorem ergodicProjection_worstReward_eq_neg_gain_of_flowCompletion
       (eq_ergodicProjection_add_poisson kernel reward)
   simpa only [kernel, reward, rho] using hunique.symm
 
+/-- The hybrid completion of an ordinary zero-gap Vrieze pair is the
+controller projection witness previously isolated as the missing bridge. -/
+theorem isControllerProjectionWitness_of_vriezeFlowCompletion
+    [Nonempty G.State]
+    {controller : Bool}
+    {x : G.State → PMF (G.Act (!controller))}
+    {g v : G.State → ℝ}
+    {w : VriezeRow G controller → ℝ}
+    {tau : G.State → PMF (G.Act controller)}
+    (hzs : G.IsZeroSumBoolGame)
+    (hprimal : Math.LinearProgramming.MinPrimalFeasible
+      (G.vriezeA controller) (G.vriezeB controller)
+        (G.vriezeEncode controller x g v))
+    (hdual : Math.LinearProgramming.MaxDualFeasible
+      (G.vriezeA controller) (G.vriezeC controller) w)
+    (hgap :
+      Math.LinearProgramming.minPrimalValue (G.vriezeC controller)
+          (G.vriezeEncode controller x g v) =
+        Math.LinearProgramming.maxDualValue
+          (G.vriezeB controller) w)
+    (completion : G.IsVriezeFlowCompletion controller
+      (G.vriezeDualZ controller w)
+      (G.vriezeDualYGain controller w) tau) :
+    G.IsControllerProjectionWitness controller tau
+      (fun state => -(g state)) where
+  harmonic :=
+    G.neg_vriezeGain_harmonic_of_flowCompletion
+      hprimal hdual hgap completion
+  le_ergodicProjectionWorstReward := by
+    intro state
+    rw [G.ergodicProjection_worstReward_eq_neg_gain_of_flowCompletion
+      hzs hprimal hdual hgap completion]
+
+/-- A primal-optimal Vrieze point supplies the controller projection witness
+without any separate extraction hypothesis. -/
+theorem exists_controllerProjectionWitness_of_vriezePrimalOptimal
+    [Nonempty G.State]
+    (hzs : G.IsZeroSumBoolGame)
+    {controller : Bool} (hSC : G.IsSingleController controller)
+    {x : G.State → PMF (G.Act (!controller))}
+    {g v : G.State → ℝ}
+    (hopt : G.IsVriezePrimalOptimal controller x g v) :
+    ∃ (tau : G.State → PMF (G.Act controller))
+        (rho : G.State → ℝ),
+      G.IsControllerProjectionWitness controller tau rho ∧
+        rho = fun state => -(g state) := by
+  have hprimal :=
+    G.minPrimalFeasible_vriezeEncode_of_isVriezePrimalFeasible
+      hSC hopt.feasible
+  obtain ⟨w, hdual, hdualValue⟩ :=
+    G.exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal hSC hopt
+  have hgap :
+      Math.LinearProgramming.minPrimalValue (G.vriezeC controller)
+          (G.vriezeEncode controller x g v) =
+        Math.LinearProgramming.maxDualValue
+          (G.vriezeB controller) w := by
+    calc
+      _ = -(∑ state, g state) := by
+        rw [G.minPrimalValue_vriezeC_eq,
+          G.vriezeDecodeG_vriezeEncode]
+      _ = _ := hdualValue.symm
+  let namedDual :=
+    G.isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain hdual
+  obtain ⟨tau, completion⟩ :=
+    G.exists_vriezeFlowCompletion_of_dualFeasible namedDual
+  exact ⟨tau, fun state => -(g state),
+    G.isControllerProjectionWitness_of_vriezeFlowCompletion
+      hzs hprimal hdual hgap completion, rfl⟩
+
 end StochasticGame
 end GameTheory
