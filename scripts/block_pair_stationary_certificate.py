@@ -9,6 +9,12 @@ table below has no stationary complementarity root with
 It does *not* audit faces on which some x_i = 1, and it does not claim to
 exclude nonstationary absorption paths.
 
+The final section separately audits every sure-quitter root.  It proves that
+no such root can be credible: after the other three players satisfy their
+terminal-subgame Nash conditions, the sure quitter gains at least 13/15 by
+continuing and then best-responding.  This is a stronger, strategy-level
+statement than merely testing the prescribed continuation payoff.
+
 The proof reconstructs the stationary gain numerators G_i.  Singleton and
 pair supports have explicit sign witnesses; three of the four triple supports
 have direct sign witnesses; the remaining triple support and the full support
@@ -180,6 +186,42 @@ def stationary_gain_numerators() -> tuple[Poly, Poly, Poly, Poly]:
     return tuple(gains)  # type: ignore[return-value]
 
 
+def root_action_difference(player: int, continuation: int | Fraction = 0) -> Poly:
+    """Quit-minus-continue difference in a recursive root stage."""
+    quit_value: Poly = {}
+    continue_absorb: Poly = {}
+    for opponent_mask in range(1 << N):
+        if opponent_mask & (1 << player):
+            continue
+        probability = product_probability(opponent_mask, omitted=player)
+        quit_value = add(
+            quit_value,
+            scale(terminal(opponent_mask | (1 << player), player), probability),
+        )
+        if opponent_mask != 0:
+            continue_absorb = add(
+                continue_absorb,
+                scale(terminal(opponent_mask, player), probability),
+            )
+    no_opponent = prod_poly(
+        [sub(const(1), X[j]) for j in range(N) if j != player]
+    )
+    return sub(
+        sub(quit_value, continue_absorb),
+        scale(continuation, no_opponent),
+    )
+
+
+def substitute_one(poly: Poly, player: int) -> Poly:
+    """Set x_player=1 exactly."""
+    result: Poly = {}
+    for exponent, coefficient in poly.items():
+        new_exp = list(exponent)
+        new_exp[player] = 0
+        result = add(result, {tuple(new_exp): coefficient})
+    return result
+
+
 def bernstein_coefficients(
     poly: Poly, variables: tuple[int, ...], degrees: tuple[int, ...]
 ) -> dict[tuple[int, ...], Fraction]:
@@ -349,14 +391,122 @@ def assert_full_support_certificate(gain: tuple[Poly, Poly, Poly, Poly]) -> None
     ) == 10368672
 
 
+def assert_credible_first_certificate() -> None:
+    """Audit all four possible designated sure quitters.
+
+    For a designated sure quitter j, every other player's continuation term
+    vanishes at the root.  The asserted identities below characterize the
+    Nash set of that three-player terminal subgame.  The last identity in each
+    block evaluates j's quit-minus-continue difference at that set.
+
+    At the only root where no second player quits surely (j=2), every terminal
+    payoff of player 2 is at least -1, as is the nonabsorption payoff 0.
+    Consequently every continuation best-response value is at least -1.  The
+    action difference computed with continuation -1 is therefore an upper
+    bound on the actual action difference.
+    """
+    x0, x1, x2, x3 = X
+    differences = tuple(root_action_difference(i) for i in range(N))
+
+    # Sure player 0.  D_3 is strictly positive on the whole cube, so x_3=1.
+    # The remaining conditions force x_2=0 and leave x_1 arbitrary.
+    sure0 = tuple(substitute_one(poly, 0) for poly in differences)
+    assert sure0[1] == scale(
+        -3,
+        add(add(scale(3, mul(x2, x3)), scale(-2, x2)),
+            add(scale(-3, x3), const(3))),
+    )
+    assert sure0[2] == scale(5, mul(x3, sub(x1, const(1))))
+    assert sure0[3] == scale(
+        2, add(add(mul(x1, x2), scale(-2, x1)), add(scale(-1, x2), const(3)))
+    )
+    sure0_payoff = substitute_one(
+        substitute_one(restrict_to_support(sure0[0], 11), 3), 0
+    )
+    # The support restriction above also sets x_2=0.
+    assert sure0_payoff == add(scale(-4, x1), const(-2))
+
+    # Sure player 1.  The other-player Nash conditions have the unique point
+    # (x_0,x_2,x_3)=(3/5,1,1/9).
+    sure1 = tuple(substitute_one(poly, 1) for poly in differences)
+    assert sure1[0] == add(
+        add(scale(-12, mul(x2, x3)), scale(10, x2)),
+        add(scale(3, x3), const(-9)),
+    )
+    assert sure1[2] == mul(sub(x0, const(1)), sub(x3, const(6)))
+    assert sure1[3] == add(scale(5, mul(x0, x2)), add(scale(-5, x2), const(2)))
+    sure1_point = {
+        0: Fraction(3, 5),
+        1: Fraction(1),
+        2: Fraction(1),
+        3: Fraction(1, 9),
+    }
+    assert evaluate(sure1[0], sure1_point) == 0
+    assert evaluate(sure1[2], sure1_point) > 0  # player 2 quits surely
+    assert evaluate(sure1[3], sure1_point) == 0
+    assert evaluate(root_action_difference(1), sure1_point) == Fraction(-9, 5)
+
+    # Sure player 2.  The other-player Nash conditions have the unique point
+    # (x_0,x_1,x_3)=(3/5,0,1/3).  Continuation cap >= -1 gives gap 13/15.
+    sure2 = tuple(substitute_one(poly, 2) for poly in differences)
+    assert sure2[0] == add(
+        add(scale(3, mul(x1, x3)), scale(-3, x1)),
+        add(scale(-12, x3), const(4)),
+    )
+    assert sure2[1] == scale(-3, x0)
+    assert sure2[3] == neg(mul(add(scale(5, x0), const(-3)), sub(x1, const(2))))
+    sure2_point = {
+        0: Fraction(3, 5),
+        1: Fraction(0),
+        2: Fraction(1),
+        3: Fraction(1, 3),
+    }
+    assert evaluate(sure2[0], sure2_point) == 0
+    assert evaluate(sure2[1], sure2_point) < 0  # player 1 continues
+    assert evaluate(sure2[3], sure2_point) == 0
+    assert min(terminal(mask, 2) for mask in range(1, 1 << N)) == -1
+    assert evaluate(root_action_difference(2, continuation=-1), sure2_point) == Fraction(-13, 15)
+
+    # Sure player 3.  D_0 is strictly negative, so x_0=0.  The remaining
+    # conditions give x_2=1 and x_1 in [1/2,1].  The sure-player difference is
+    # 3*x_1-6 <= -3 throughout that interval.
+    sure3 = tuple(substitute_one(poly, 3) for poly in differences)
+    assert sure3[0] == scale(
+        2,
+        add(
+            add(scale(2, mul(x1, x2)), scale(-2, x1)),
+            add(scale(-3, x2), const(-1)),
+        ),
+    )
+    assert sure3[1] == scale(
+        3,
+        add(add(mul(x0, x2), scale(-2, x0)), add(scale(-2, x2), const(2))),
+    )
+    assert sure3[2] == scale(-5, add(add(mul(x0, x1), scale(-2, x1)), const(1)))
+    sure3_reduced = restrict_to_support(substitute_one(sure3[3], 2), 14)
+    assert sure3_reduced == add(scale(3, x1), const(-6))
+
+
+def evaluate(poly: Poly, point: dict[int, Fraction]) -> Fraction:
+    value = Fraction(0)
+    for exponent, coefficient in poly.items():
+        term = coefficient
+        for player in range(N):
+            term *= point[player] ** exponent[player]
+        value += term
+    return value
+
+
 def main() -> None:
     gain = stationary_gain_numerators()
     assert_residual_certificate()
     assert_support_certificates(gain)
     assert_full_support_certificate(gain)
+    assert_credible_first_certificate()
     print(
         "exact certificate passed: no stationary complementarity root "
-        "with x != 0 and every x_i < 1"
+        "with x != 0 and every x_i < 1; no credible sure-First root "
+        "(deviation gap >= 13/15)"
     )
 
 
