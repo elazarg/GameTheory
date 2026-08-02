@@ -442,6 +442,7 @@ import GameTheory.Concepts.Stochastic.QuittingStationaryGain
 import GameTheory.Concepts.Stochastic.QuittingExceptionalSynthesis
 import GameTheory.Concepts.Stochastic.QuittingPeriodicCompiler
 import GameTheory.Concepts.Stochastic.QuittingPeriodicClosing
+import GameTheory.Concepts.Stochastic.QuittingPeriodicExceptionalClosing
 import GameTheory.Concepts.Stochastic.QuittingNearSureRoot
 import GameTheory.Concepts.Stochastic.QuittingNearSureProfile
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
