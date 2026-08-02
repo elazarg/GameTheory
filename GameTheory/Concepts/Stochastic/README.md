@@ -144,15 +144,23 @@ a two-step history-dependent strategy whose average payoff converges to `1`.
 Thus neither static minmax nor one-stage-deviation-and-return may replace the
 complete unilateral behavior-strategy cap in the credibility interface.
 
-This is deliberately a supplied-object verifier. It does not construct an
-architecture from an arbitrary game or target, prove the finite-class
-converse, bound the number of public configurations, model hidden randomized
-memory, or establish that finite public architectures cover all
-uniform-equilibrium payoffs. Those stronger claims have separate mathematical
-and formalization status in the research frontier. In particular, the
-support-pruned module proves the criterion-to-ledger direction at its declared
-entry; it does not formalize the corrected Question 96 converse on the union
-of owner-specific reachable arenas.
+This remains a supplied-object route: it does not construct an architecture
+from an arbitrary game or target, bound the number of public configurations,
+model hidden randomized memory, or establish that finite public architectures
+cover all uniform-equilibrium payoffs.  The fixed-class converse is no longer
+an open item, however.  The split-domain converse modules above derive the
+target, occupation and bias packets from the corresponding all-start history
+semantics on the exact delivery union and owner arenas, with no recurrent-
+coverage assumption.
+
+The public stopping stack is also no longer limited to fixed-depth splices.
+`PublicVariableStoppingAdaptiveDispatcher.lean` composes child systems at a
+bounded causal stopping time, while
+`PublicVariableStoppingPrefixLawCompiler.lean` derives the prefix laws and an
+explicit amortization horizon from pointwise online-switch potentials.  This
+is still a verifier/compiler for supplied stopping rules, child families and
+local potential data; it is not a constructor of those objects for an
+arbitrary stochastic game.
 
 ### Proved results (special cases of the conjecture)
 
@@ -204,6 +212,9 @@ ones include:
   supported-harmonic-adjustment route is selection-resistant.
 - `PureExternalityCycle.lean` — analytic provenance cannot supply the routing
   gluing invariant.
+- `UniformNonexistenceCertificate.lean` — quantitative late-horizon and
+  quitting-terminal exploitability gaps rule out every uniform-equilibrium
+  payoff.
 
 ### Family map (file-name prefixes)
 

@@ -402,6 +402,7 @@ import GameTheory.Concepts.Stochastic.BigMatchFinkEndpoint
 import GameTheory.Concepts.Stochastic.FinkBoundaryCalendar
 import GameTheory.Concepts.Stochastic.QuittingGame
 import GameTheory.Concepts.Stochastic.QuittingAsymptotic
+import GameTheory.Concepts.Stochastic.UniformNonexistenceCertificate
 
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
