@@ -60,6 +60,14 @@ that supplied architecture.  The sharp `11/7` finite-horizon modulus and the
 necessity, phase-minimality, and rigidity results studied in Question 97 are
 not formalized in that module.
 
+`ArchitectureCapSeparators.lean` is a regression guard for the cap notion.
+It proves on actual finite games that a supplied architecture's exact
+unilateral cap can be `1` while the corresponding one-shot opponent minmax is
+`0`, and that testing one deviation followed by immediate obedience can miss
+a two-step history-dependent strategy whose average payoff converges to `1`.
+Thus neither static minmax nor one-stage-deviation-and-return may replace the
+complete unilateral behavior-strategy cap in the credibility interface.
+
 This is deliberately a supplied-object verifier. It does not construct an
 architecture from an arbitrary game or target, prove the finite-class
 converse, bound the number of public configurations, model hidden randomized
