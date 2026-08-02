@@ -21,50 +21,6 @@ variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
 
 namespace GameForm
 
-/-- Mapping one coordinate of an independent profile law is the independent
-product with that marginal mapped. -/
-theorem pi_map_recommendation (sig : GameSignature ι)
-    (mixedProfile : Profile sig.mixed) (who : ι)
-    (respond : sig.Strategy who → sig.Strategy who) :
-    (FinDist.pi mixedProfile).map
-        (fun profile =>
-          Profile.update profile who (respond (profile who))) =
-      FinDist.pi
-        (Profile.update mixedProfile who
-          ((mixedProfile who).map respond)) := by
-  rw [FinDist.pi_eq_map_product who mixedProfile, FinDist.map_comp]
-  rw [FinDist.pi_eq_map_product who
-    (Profile.update mixedProfile who ((mixedProfile who).map respond))]
-  rw [Profile.update_same]
-  have hrest :
-      (fun j : {j // j ≠ who} =>
-        (Profile.update mixedProfile who
-          ((mixedProfile who).map respond)) j.1) =
-        fun j : {j // j ≠ who} => mixedProfile j.1 := by
-    funext j
-    rw [Profile.update_of_ne _ _ j.2]
-  rw [hrest]
-  have hproduct :
-      FinDist.product ((mixedProfile who).map respond)
-          (FinDist.pi fun j : {j // j ≠ who} => mixedProfile j.1) =
-        (FinDist.product (mixedProfile who)
-          (FinDist.pi fun j : {j // j ≠ who} => mixedProfile j.1)).map
-            (Prod.map respond id) := by
-    rw [FinDist.map_product]
-    simp
-  rw [hproduct, FinDist.map_comp]
-  congr 1
-  funext pair
-  apply (Equiv.piSplitAt who sig.Strategy).injective
-  apply Prod.ext
-  · simp
-  · funext j
-    simp [Profile.update_of_ne _ _ j.2]
-    split
-    · rename_i h
-      exact False.elim (j.2 h)
-    · rfl
-
 namespace CheapTalkExtension
 
 variable {F : GameForm.{uι, us, uo} ι}

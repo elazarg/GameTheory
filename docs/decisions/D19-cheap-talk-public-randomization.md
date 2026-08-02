@@ -88,7 +88,10 @@ Protocol execution and analytic existence.
 ## Promotion evidence
 
 `GameTheory/Core/CheapTalkRandomization.lean` contains the static bridge and is
-imported by the public Core root after the minimal cheap-talk construction.
+imported by the public Core root after the minimal cheap-talk construction. Its
+independent-coordinate map law now lives at the lower sufficient layer in
+`GameTheory/Core/Form.lean`, where the general mixed-Nash-to-CE theorem can
+reuse it without depending on communication.
 The focused target builds in 1,720 jobs and the full project in 3,363 jobs.
 Phase 2 preserves every source and import budget, reaches both intended public
 symbols, and rejects all four Protocol/Analysis boundary symbols. The

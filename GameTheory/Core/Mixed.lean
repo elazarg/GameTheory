@@ -79,6 +79,24 @@ theorem IsNash.purify (hnash : IsNash F (euPreference utility) σ) :
   rw [purify_update, GameForm.mixed_play_purify]
   exact hnash who s
 
+/-- **A mixed Nash profile induces a correlated equilibrium** on its
+independent law of pure profiles. A recommendation-dependent response merely
+maps the deviator's marginal, which is one admissible mixed replacement. The
+argument preserves complete outcome laws, so no expected-utility assumption is
+needed. -/
+theorem IsNash.isCorrelatedEq_pi
+    {preference : WeakPreference ι F.sig.Outcome}
+    (hnash : IsNash F.mixed preference mixedProfile) :
+    IsCorrelatedEq F preference (FinDist.pi mixedProfile) := by
+  rw [isNash_iff] at hnash
+  rw [isCorrelatedEq_iff]
+  intro who respond
+  have hdeviation := hnash who ((mixedProfile who).map respond)
+  rw [GameForm.mixed_play, GameForm.mixed_play,
+    ← GameForm.pi_map_recommendation F.sig mixedProfile who respond,
+    FinDist.bind_map] at hdeviation
+  exact hdeviation
+
 /-! ## What a mixed equilibrium randomizes over
 
 A mixed equilibrium does not merely fail to gain by deviating; it is indifferent

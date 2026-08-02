@@ -53,6 +53,26 @@ theorem expectedUtility_bind (utility : Outcome → ι → ℝ) (agent : ι) {α
       μ.expect fun a => expectedUtility utility agent (f a) :=
   FinDist.expect_bind ..
 
+/-- Expected utility of a correlated profile law is the profile-law
+expectation of the utility generated at each recommended profile. -/
+theorem expectedUtility_outcomeLaw (F : GameForm ι)
+    (utility : F.sig.Outcome → ι → ℝ) (agent : ι)
+    (μ : FinDist (Profile F.sig)) :
+    expectedUtility utility agent (F.outcomeLaw μ) =
+      μ.expect fun profile => expectedUtility utility agent (F.play profile) := by
+  unfold GameForm.outcomeLaw
+  exact expectedUtility_bind ..
+
+/-- Mapping every recommendation before play maps the integrand in the same
+way. This covers both constant and recommendation-dependent deviations. -/
+theorem expectedUtility_outcomeLaw_map (F : GameForm ι)
+    (utility : F.sig.Outcome → ι → ℝ) (agent : ι)
+    (μ : FinDist (Profile F.sig)) (respond : Profile F.sig → Profile F.sig) :
+    expectedUtility utility agent (F.outcomeLaw (μ.map respond)) =
+      μ.expect fun profile =>
+        expectedUtility utility agent (F.play (respond profile)) := by
+  rw [expectedUtility_outcomeLaw, FinDist.expect_map]
+
 @[simp]
 theorem expectedUtility_map (utility : Outcome' → ι → ℝ) (agent : ι)
     (relabel : Outcome → Outcome') (law : FinDist Outcome) :

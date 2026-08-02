@@ -272,6 +272,14 @@ theorem fairPennies_isNash :
       (euPreference matchingPennies.utility) fairPennies :=
   matchingPennies_uniform_isNash
 
+/-- Independent fair mixing induces a correlated equilibrium of Matching
+Pennies. This is the concrete consumer of the general mixed-Nash-to-CE bridge.
+-/
+theorem matchingPennies_fair_isCorrelatedEq :
+    IsCorrelatedEq matchingPennies.toForm
+      (euPreference matchingPennies.utility) (Probability.FinDist.pi fairPennies) :=
+  fairPennies_isNash.isCorrelatedEq_pi
+
 /-! ## Stag Hunt -/
 
 /-- Hunt stag together or take the safe hare. -/

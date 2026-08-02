@@ -5,7 +5,7 @@ Status: active family-level ledger.
 Pinned source: `reference/GameTheory-v1/` at
 `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 
-Last reconciled: 2026-07-30 against successor commit `4014cbb`.
+Last reconciled: 2026-08-02 against the working tree based on `6c80cea`.
 
 This ledger answers three different questions separately:
 
@@ -20,8 +20,9 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Nine reviewed work-package ledgers account for 162 declarations;
-8,162 remain explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
+declarations. Fifteen work-package ledgers claim 1,216 declarations: 440 have
+reviewed dispositions and 776 remain seeded `unreviewed`; a further 7,108 are
+explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
 numbers do not imply equal mathematical weight and are never converted into a
@@ -108,7 +109,7 @@ declaration-based.
 | S-FOUND | static `Core/**` except `Babbling`/`Coalition`; `Concepts/Foundations/**`; symmetric/team classes | 28 | `Core`, with independent mathematics below it | validated | partial | inventory VNM, convergence, invariance, equivalence, and eliminate duplicate hub machinery |
 | S-EQ | `Concepts/Equilibrium/**` | 12 | `Core.Equilibrium`, `Core.Response` | validated | partial | approximate/secure/strict families against one Nash surface |
 | S-DOM | `Concepts/Dominance/**` | 9 | `Core.Response` and finite correctness | validated | partial | solvability, undominated, and rationalizability inventory |
-| S-CORR | `Concepts/Correlation/**` | 10 | `Core.Equilibrium`; existence in `Analysis` | validated | partial | CE existence, approximation, timing, regret, hierarchy separations |
+| S-CORR | `Concepts/Correlation/**` | 10 | `Core.Equilibrium`; existence in `Analysis` | validated | partial; mixed-Nash bridge module 12/12 reviewed, 2 later-slice rows deferred | [mixed Nash and correlated-equilibrium ledger](coverage/S-CORR-mixed-nash.md); next conditional obedience, dominated support, existence, approximation, timing, regret, and hierarchy separations |
 | S-MIX | `Concepts/Mixed/**` | 9 | `Core.Mixed`; assessment material in Protocol/Analysis | validated | partial | dominance, improvement, trembling-hand, and language-facing wrappers |
 | S-POT | `Concepts/Potential/**` | 9 | `Core.Potential` | validated | partial | improvement, decomposition, harmonic, mixed, and well-founded inventory |
 | S-ZERO | `Concepts/ZeroSum/**` | 15 | `Core.ZeroSum`; existence in `Analysis` | validated | partial | security, constant-sum/correlation, matrix geometry, complementarity |
@@ -130,7 +131,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| L-NFG | `Languages/NFG.lean`, `Languages/NFG/**` | 10 | transparent language/front-end to `GameForm`; algorithms in `Finite` | validated by EXP-042/T4 | complete accounting; 126/126 reviewed, 4 cross-family rows deferred | [exact declaration ledger](coverage/L-NFG-broad.md); broad examples and observable cheap talk recovered; remaining mixed/CE characterizations are owned by S-MIX/S-CORR/S-ZERO |
+| L-NFG | `Languages/NFG.lean`, `Languages/NFG/**` | 10 | transparent language/front-end to `GameForm`; algorithms in `Finite` | validated by EXP-042/T4 | complete accounting; 126/126 reviewed, 3 cross-family rows deferred | [exact declaration ledger](coverage/L-NFG-broad.md); broad examples, observable cheap talk, and fair mixed-to-CE recovered; remaining mixed/constant-sum characterizations are owned by S-MIX/S-CORR/S-ZERO |
 | L-EFG | `Languages/EFG.lean`, `Languages/EFG/**` | 15 | transparent Protocol specialization plus named bridges | validated presentation, strategic and Kuhn transfer, nonconstant rationality, and EFG-facing SPE semantics | partial | broad declaration inventory and non-flagship recovery |
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
