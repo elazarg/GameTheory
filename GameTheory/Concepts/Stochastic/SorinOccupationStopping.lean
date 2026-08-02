@@ -720,6 +720,165 @@ theorem finiteAveragePayoff_playerTwoSecurityAfterLive_sub_eq_tailWeight
     Nat.cast_ne_zero.mpr hsuffix.ne'
   field_simp
 
+/-! ## Sorin's quantitative stopping estimate -/
+
+/-- **Quantitative stopping theorem.**  Every fixed uniform positive-`epsilon`
+equilibrium profile has infinite-survival mass at most `14 * epsilon`.
+
+The constants follow Sorin's slack calculation.  We use
+`eta = zeta = 1/500`, which leaves the sum of the two conditional tail gains
+strictly above `2 r_N / 13`; one player therefore gains more than `r_N / 13`.
+A suffix longer than `13 N` has weight above `13 / 14`, producing a root gain
+above `r_N / 14`. -/
+theorem survivalLimit_le_fourteen_mul_of_isUniformεEquilibrium
+    (profile : game.BehaviorProfile) {epsilon : ℝ}
+    (hepsilon : 0 < epsilon)
+    (huniform : game.IsUniformεEquilibrium .live epsilon profile) :
+    survivalLimit profile ≤ 14 * epsilon := by
+  by_cases hlimitZero : survivalLimit profile = 0
+  · rw [hlimitZero]
+    positivity
+  have hlimitPos : 0 < survivalLimit profile :=
+    lt_of_le_of_ne (survivalLimit_nonneg profile) (Ne.symm hlimitZero)
+  let eta : ℝ := 1 / 500
+  let zeta : ℝ := 1 / 500
+  have heta : 0 < eta := by norm_num [eta]
+  have hzeta : 0 < zeta := by norm_num [zeta]
+  obtain ⟨prefixLength, hrelative⟩ :=
+    exists_one_sub_mul_liveProbability_lt_survivalLimit
+      profile heta hlimitPos
+  obtain ⟨parameter, securityThreshold, hsecurity⟩ :=
+    playerOneSecurity_eventually_ge_half zeta hzeta
+  obtain ⟨nashThreshold, hnash⟩ := huniform
+  let suffixLength : ℕ :=
+    max (max securityThreshold nashThreshold) (13 * prefixLength + 1)
+  have hsuffixSecurity : securityThreshold ≤ suffixLength := by
+    dsimp [suffixLength]
+    exact le_trans (le_max_left _ _) (le_max_left _ _)
+  have hsuffixNash : nashThreshold ≤ suffixLength := by
+    dsimp [suffixLength]
+    exact le_trans (le_max_right _ _) (le_max_left _ _)
+  have hsuffixPos : 0 < suffixLength := by
+    dsimp [suffixLength]
+    omega
+  have hthirteenNat : 13 * prefixLength < suffixLength := by
+    dsimp [suffixLength]
+    omega
+  have htotalNash : nashThreshold ≤ prefixLength + suffixLength :=
+    le_trans hsuffixNash (Nat.le_add_left suffixLength prefixLength)
+  have hnashTotal := hnash (prefixLength + suffixLength) htotalNash
+  have hlivePos : 0 < liveProbability profile prefixLength :=
+    lt_of_lt_of_le hlimitPos
+      (survivalLimit_le_liveProbability profile prefixLength)
+  have htailSum :=
+    liveWeightedTailAverage_sum_le_two_mul_sub_survivalLimit
+      profile prefixLength suffixLength hsuffixPos
+  have hsecurityWeighted :=
+    playerOneSecurityWeightedTailAverage_ge parameter securityThreshold
+      zeta hsecurity profile prefixLength suffixLength hsuffixSecurity
+  let gainOne : ℝ :=
+    playerOneSecurityWeightedTailAverage parameter profile prefixLength
+        suffixLength -
+      liveWeightedTailAverage profile prefixLength suffixLength false
+  let gainTwo : ℝ :=
+    (2 / 3) * liveProbability profile prefixLength -
+      liveWeightedTailAverage profile prefixLength suffixLength true
+  have hgainSum :
+      2 * (liveProbability profile prefixLength / 13) <
+        gainOne + gainTwo := by
+    dsimp [gainOne, gainTwo, eta, zeta] at *
+    nlinarith
+  have hlargeGain :
+      liveProbability profile prefixLength / 13 < gainOne ∨
+        liveProbability profile prefixLength / 13 < gainTwo := by
+    by_contra hnot
+    push Not at hnot
+    nlinarith
+  have htotalPos :
+      (0 : ℝ) < ((prefixLength + suffixLength : ℕ) : ℝ) := by
+    positivity
+  have hthirteenReal :
+      (13 : ℝ) * prefixLength < suffixLength := by
+    exact_mod_cast hthirteenNat
+  have htailWeight :
+      (13 / 14 : ℝ) <
+        ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength := by
+    have hscaled :
+        (13 / 14 : ℝ) * ((prefixLength + suffixLength : ℕ) : ℝ) <
+          suffixLength := by
+      push_cast
+      nlinarith
+    have hdiv := (lt_div_iff₀ htotalPos).2 hscaled
+    simpa [div_eq_mul_inv, mul_comm] using hdiv
+  rcases hlargeGain with hgainOne | hgainTwo
+  · have hrootIdentity :=
+      finiteAveragePayoff_playerOneSecurityAfterLive_sub_eq_tailWeight
+        parameter profile prefixLength suffixLength hsuffixPos
+    have hweightPos :
+        0 < ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength :=
+      lt_trans (by norm_num) htailWeight
+    have hliveDivPos :
+        0 < liveProbability profile prefixLength / 13 := by positivity
+    have hrootGain :
+        liveProbability profile prefixLength / 14 <
+          game.finiteAveragePayoff .live (prefixLength + suffixLength)
+              (Function.update profile false
+                (playerOneSecurityAfterLiveDeviation parameter profile
+                  prefixLength)) false -
+            game.finiteAveragePayoff .live (prefixLength + suffixLength)
+              profile false := by
+      rw [hrootIdentity]
+      change liveProbability profile prefixLength / 14 <
+        ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength * gainOne
+      calc
+        liveProbability profile prefixLength / 14 =
+            (13 / 14 : ℝ) *
+              (liveProbability profile prefixLength / 13) := by ring
+        _ < ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength *
+              (liveProbability profile prefixLength / 13) :=
+          mul_lt_mul_of_pos_right htailWeight hliveDivPos
+        _ < ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength *
+              gainOne := mul_lt_mul_of_pos_left hgainOne hweightPos
+    have hnashGain := hnashTotal false
+      (playerOneSecurityAfterLiveDeviation parameter profile prefixLength)
+    have hliveEpsilon : liveProbability profile prefixLength / 14 < epsilon := by
+      linarith
+    have hlimitLe := survivalLimit_le_liveProbability profile prefixLength
+    linarith
+  · have hrootIdentity :=
+      finiteAveragePayoff_playerTwoSecurityAfterLive_sub_eq_tailWeight
+        profile prefixLength suffixLength hsuffixPos
+    have hweightPos :
+        0 < ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength :=
+      lt_trans (by norm_num) htailWeight
+    have hliveDivPos :
+        0 < liveProbability profile prefixLength / 13 := by positivity
+    have hrootGain :
+        liveProbability profile prefixLength / 14 <
+          game.finiteAveragePayoff .live (prefixLength + suffixLength)
+              (Function.update profile true
+                (playerTwoSecurityAfterLiveDeviation profile prefixLength)) true -
+            game.finiteAveragePayoff .live (prefixLength + suffixLength)
+              profile true := by
+      rw [hrootIdentity]
+      change liveProbability profile prefixLength / 14 <
+        ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength * gainTwo
+      calc
+        liveProbability profile prefixLength / 14 =
+            (13 / 14 : ℝ) *
+              (liveProbability profile prefixLength / 13) := by ring
+        _ < ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength *
+              (liveProbability profile prefixLength / 13) :=
+          mul_lt_mul_of_pos_right htailWeight hliveDivPos
+        _ < ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength *
+              gainTwo := mul_lt_mul_of_pos_left hgainTwo hweightPos
+    have hnashGain := hnashTotal true
+      (playerTwoSecurityAfterLiveDeviation profile prefixLength)
+    have hliveEpsilon : liveProbability profile prefixLength / 14 < epsilon := by
+      linarith
+    have hlimitLe := survivalLimit_le_liveProbability profile prefixLength
+    linarith
+
 end SorinAbsorbingGame
 end StochasticGame
 end GameTheory
