@@ -19,6 +19,8 @@ open scoped BigOperators
 
 namespace GameTheory
 
+open Probability
+
 universe uι
 
 namespace UtilityGame
@@ -29,6 +31,30 @@ variable {ι : Type uι}
 is required by this operation, not stored in `UtilityGame`. -/
 def socialWelfare [Fintype ι] (G : UtilityGame ι) (profile : Profile G.form.sig) : ℝ :=
   ∑ i, expectedUtility G.utility i (G.form.play profile)
+
+/-- Expected social welfare under a finite-support law on pure profiles.  This
+is the expectation of the canonical pure-profile aggregate, not a second
+correlated-payoff semantics. -/
+def expectedSocialWelfare [Fintype ι] (G : UtilityGame ι)
+    (law : FinDist (Profile G.form.sig)) : ℝ :=
+  law.expect G.socialWelfare
+
+@[simp]
+theorem expectedSocialWelfare_pure [Fintype ι] (G : UtilityGame ι)
+    (profile : Profile G.form.sig) :
+    G.expectedSocialWelfare (FinDist.pure profile) = G.socialWelfare profile :=
+  FinDist.expect_pure ..
+
+/-- Expected social welfare is equivalently the sum of each player's expected
+utility under the induced outcome law. -/
+theorem expectedSocialWelfare_eq_sum [Fintype ι] (G : UtilityGame ι)
+    (law : FinDist (Profile G.form.sig)) :
+    G.expectedSocialWelfare law =
+      ∑ i, expectedUtility G.utility i (G.form.outcomeLaw law) := by
+  unfold expectedSocialWelfare socialWelfare
+  simp_rw [expectedUtility_outcomeLaw]
+  exact (FinDist.expect_sum_comm law fun i profile =>
+    expectedUtility G.utility i (G.form.play profile)).symm
 
 /-- A utility game is `(λ, μ)`-smooth when simultaneous comparison with a
 target profile is bounded by the sum of its unilateral target deviations. -/

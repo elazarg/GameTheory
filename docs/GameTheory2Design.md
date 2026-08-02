@@ -1286,13 +1286,15 @@ No arbitrary infinite-history optimality theorem is inferred from the
 statewise result.
 
 EXP-052/D24 adds the first shared welfare consumer without creating a new
-semantic branch.  `Core.Welfare` defines aggregate expected utility and
-smoothness directly on `UtilityGame`, then derives the division-free pure Nash
-bound through canonical unilateral updates.  The opt-in congestion root
-imports that surface one way for affine delay aggregation and the `5/2` cost
-bound.  Pigou and Braess exercise the same game form and Nash predicate.  No
-generic price-of-anarchy ratio is introduced; robust CCE bounds remain behind
-a named canonical finite-law expected-welfare gate.
+semantic branch.  `Core.Welfare` defines aggregate and finite-law expected
+welfare plus smoothness directly on `UtilityGame`, then derives the
+division-free pure Nash bound through canonical unilateral updates.  EXP-053
+closes the robust gate in a theorem-only `Core.RobustWelfare` leaf above both
+Welfare and Learning, preserving their natural dependency direction while
+reusing the existing epsilon/exact CCE predicates.  The opt-in congestion root
+uses the same bridge for pure and correlated affine `5/2` cost bounds.  Pigou
+and Braess exercise the same game form and Nash predicate.  No generic
+price-of-anarchy ratio is introduced.
 
 EXP-033 closes the finite-EFG adapter under that boundary. Stable
 `GameTheory.Languages.EFG` positively reaches its execution, information, and

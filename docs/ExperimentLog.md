@@ -63,6 +63,7 @@ becomes difficult to scan.
 | EXP-050 | 2026-08-02 | D0/D4/D6/D9/D11/D12 / finite stochastic games | Can the active uniform-existence branch's basic stochastic-game and uniform-payoff definitions survive the accepted finite-law, Protocol, and equilibrium boundaries? | Supports native data plus named Protocol bridge; decides and promotes D22 | [`decisions/D22-stochastic-protocol-boundary.md`](decisions/D22-stochastic-protocol-boundary.md); `GameTheory/Stochastic/**`; `GameTheory/Examples/StochasticUniform.lean` |
 | EXP-051 | 2026-08-02 | D2/D4/D9/D12/D22 / discounted stochastic games | Can the canonical finite stochastic data and existing minimax layer support a Shapley contraction and stationary value without importing a parallel matrix-game stack? | Supports one-way normalized Analysis bridge; decides D23 | [`decisions/D23-discounted-stochastic-value-boundary.md`](decisions/D23-discounted-stochastic-value-boundary.md); `GameTheory/Analysis/{MatrixValue,Stochastic}/`; `GameTheory/Stochastic/ZeroSum.lean` |
 | EXP-052 | 2026-08-02 | D0/D4/D5/D9 / welfare and congestion | Does generic smoothness belong in Core, a separate stable welfare root, or the congestion domain? | Supports Core ownership; decides D24 | [`decisions/D24-welfare-smoothness-boundary.md`](decisions/D24-welfare-smoothness-boundary.md); `GameTheory/Core/Welfare.lean`; `GameTheory/Congestion/{AffinePoA,Examples}.lean` |
+| EXP-053 | 2026-08-02 | D2/D4/D5/D9/D24 / robust smoothness | Can canonical `FinDist` expected welfare lift smoothness from pure Nash to epsilon/exact CCE without another semantic layer or import cycle? | Supports; narrows to theorem-only Core bridge | `GameTheory/Probability/FinDist.lean`; `GameTheory/Core/{Welfare,RobustWelfare}.lean`; `GameTheory/Congestion/AffinePoA.lean` |
 
 ## Entry template
 
@@ -3432,3 +3433,52 @@ memory.
 - **Next action:** recover the finite-law epsilon-CCE/CCE smoothness theorem and
   affine correlated-cost corollary through the named gate; do not add the
   predecessor's generic ratio hierarchy without a separate consumer.
+
+### EXP-053: canonical finite-law robust smoothness
+
+- **Date / revision:** 2026-08-02, working tree based on `fce311c`
+- **Status:** supports the finite-law route; narrows the module dependency
+- **Decision / question:** D2/D4/D5/D9/D24 follow-on; whether the three rows
+  deferred by EXP-052 close through one canonical expected-social-welfare
+  operation over `FinDist`, the existing epsilon/exact CCE predicates, and no
+  new probability or equilibrium representation.
+- **Prediction:** `Core.Welfare` can depend one way on `Core.Learning`, expose
+  expected welfare as the expectation of pure social welfare, and derive both
+  robust bounds by finite linearity.  The affine congestion corollary should
+  then be a sign-conversion leaf theorem.
+- **Representative slice:** prove the epsilon-CCE inequality with one epsilon
+  per finite player, specialize it to exact CCE, and recover the pinned affine
+  correlated social-cost theorem.
+- **Measurements to collect:** direct import closure and cycle risk; public
+  declaration count; assumptions; source hazards; exact pinned rows closed;
+  focused/full build cost; phase probes; and headline axiom profile.
+- **Kill conditions:** a second law, expected-utility, or CCE definition;
+  `PMF`, stored finiteness, `Fintype.ofFinite`, raw `Function.update`, transport
+  plumbing, Analysis leakage, an import cycle, or a congestion-specific premise
+  in the generic robust theorem.
+- **Observation:** the mathematical prediction passed directly: finite-support
+  expectation commutes with the finite player sum, external regret supplies one
+  epsilon per player, and expected affine welfare is negated expected social
+  cost.  The first module placement was narrower than predicted, however:
+  importing `Core.Learning` from `Core.Welfare` would invert the natural leaf
+  dependency for pure-welfare consumers.  A theorem-only `Core.RobustWelfare`
+  leaf above both modules preserves the same public namespace and Core root.
+- **Measurements:** `Core.Welfare` is 68 nonblank lines and still imports only
+  `Core.Utility`; `Core.RobustWelfare` is 100 nonblank lines and imports only
+  Learning plus Welfare; `Congestion.AffinePoA` is 169 nonblank lines.  The
+  focused public-root build completes in 1,745 jobs and the full build in 3,396.
+  The three deferred pinned rows are adapted, completing Smoothness 4/4 and
+  the entire congestion family 50/50.  The supporting pinned mathematics row
+  for finite-sum expectation is also adapted, bringing the exact accounting to
+  32 ledgers and 1,443 declarations.  No finite profile, outcome, or strategy
+  carrier assumption survives from the predecessor statements.  Headline
+  axioms are exactly `propext`, `Classical.choice`, and `Quot.sound`.  Phase 1
+  and Phase 2 audits pass; Core forbidden imports, Analysis leakage, and new
+  source hazards are zero, including `TRANSPORT_CONGESTION_SOURCE=0`.
+- **Outcome:** supports canonical finite-law robust smoothness and closes the
+  EXP-052 gate.  Core owns expected welfare and the theorem-only robust bridge;
+  congestion owns only the sign conversion and affine corollary.  No kill
+  condition fired, and no generic ratio hierarchy was introduced.
+- **Next action:** continue breadth recovery at the already-passed auction gate;
+  treat individual rationality as the next S-WEL family rather than extending
+  the completed smoothness surface speculatively.

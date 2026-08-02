@@ -304,8 +304,8 @@ lanes may harvest in parallel after their lead definitions are checked.
 | static response | dominance, rationalizability, approximate and secure equilibrium | dominance solvability and one approximation theorem without duplicate Nash predicates | `GameTheory.Core` |
 | correlation | correlation regimes, regret, signal timing, value of correlation | **CE/CCE existence complete through mixed Nash;** next one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
 | learning | regret, multiplicative weights, fictitious play, approachability | **F2 and finite MW self-play complete (EXP-049/D21);** next potential-game fictitious-play convergence | stable finite identities in Core, law-free MW algebra in `GameTheoryMath`, canonical-law adapter in Probability, and quantitative composition in `Analysis.Learning` |
-| potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | **Rosenthal, affine `5/2` pure PoA, and Pigou/Braess complete (EXP-052/D24);** next robust CCE bound | `Core.Potential` plus the opt-in congestion domain |
-| welfare | individual rationality, smoothness, price of anarchy | **pure smoothness-to-Nash bound complete in Core (EXP-052/D24);** next canonical finite-law CCE extension | `Core.Welfare`; consumer domains import it one way |
+| potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | **pinned congestion family complete, including robust affine CCE PoA (EXP-052/053, D24)** | `Core.Potential` plus the opt-in congestion domain |
+| welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
 | mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial and all-pay | `n`-bidder truthful Vickrey/VCG plus one false first-price claim | coordinated mechanism/auction root |
@@ -537,25 +537,21 @@ The next work is ordered:
 
 1. consolidate moving delivery probes without rewriting historical phase
    measurements;
-2. extend the passed pure smoothness gate through canonical finite-law expected
-   social welfare, epsilon/exact CCE bounds, and the affine correlated-cost
-   corollary; keep the generic ratio hierarchy out until a separate consumer
-   earns it;
-3. extend the passed auction gate beyond the completed VCG recovery through
+2. extend the passed auction gate beyond the completed VCG recovery through
    combinatorial and all-pay auctions, with executable knapsack only after its
    finite boundary is explicit;
-4. continue the exact FOSG queue through observation-model batches and named
+3. continue the exact FOSG queue through observation-model batches and named
    comparisons; keep its classified counterfactual-reach/CFR spine and six
    ordinary continuation-coefficient laws behind separate checked-theorem
    gates, and recover general constant-sum value/correlation results beyond
    the completed binary slice;
-5. resume the broader revelation/information-design inventory and decide
+4. resume the broader revelation/information-design inventory and decide
    whether a live consumer earns D-COMM's deferred conditional public-signal
    representation;
-6. extend the passed stochastic-game gate only through a finite-horizon
+5. extend the passed stochastic-game gate only through a finite-horizon
    approximation or checked special case; reserve a new experiment before any
    infinite-path law, vanishing-discount existence theorem, or graph-game root;
-7. admit no Frontier implementation until the first three items have an active
+6. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 
 This queue may change when an experiment refutes an assumption, but a change

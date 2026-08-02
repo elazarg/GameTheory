@@ -2,7 +2,7 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-08-02
-- **Experiment IDs:** EXP-052
+- **Experiment IDs:** EXP-052, EXP-053
 
 ## Decision / question
 
@@ -47,7 +47,7 @@ of costs seven and eight, plus the destroyed split equilibrium.
 | focused public-root build | 1,744 jobs for `GameTheory.Core` and `GameTheory.Congestion` |
 | full project build | 3,395 jobs |
 | exact pinned accounting | foundational welfare row plus 4/4 smoothness, 8/8 affine PoA, and 17/17 examples reviewed |
-| deferred rows | epsilon-CCE smoothness, exact CCE smoothness, and the affine correlated bound share one named finite-law gate |
+| robust follow-on | EXP-053 closes epsilon-CCE, exact CCE, and affine correlated bounds through canonical `FinDist` expected welfare |
 | source hazards | zero placeholders, custom axioms, raw updates, transports, `Fintype.ofFinite`, or forbidden imports |
 | axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
 
@@ -77,8 +77,12 @@ the reader-facing Pigou and Braess witnesses.  The stable Core umbrella exports
 the generic welfare surface; the opt-in Congestion umbrella exports the affine
 theory without entering the main root.
 
-The robust epsilon-CCE, exact CCE, and affine correlated-cost bounds remain one
-explicit follow-up gate: define expected social welfare of a canonical
-`FinDist` profile law and prove its compatibility with the existing
-`IsεCoarseCorrelatedEq`/`IsCoarseCorrelatedEq` predicates.  This does not reopen
-the pure API or justify the predecessor's generic ratio hierarchy.
+EXP-053 closes the robust follow-up gate.  `Core.Welfare` now defines expected
+social welfare of a canonical `FinDist` profile law and its sum-of-player-
+utilities characterization.  A theorem-only `Core.RobustWelfare` leaf imports
+both Welfare and Learning, rather than making the lower pure-welfare module
+depend on learning.  It proves epsilon and exact CCE bounds through the
+existing predicates, with no finite profile or outcome assumption.  The affine
+consumer converts expected negated welfare to expected social cost and closes
+the pinned correlated `5/2` theorem without per-strategy finiteness.  This does
+not justify the predecessor's generic ratio hierarchy.

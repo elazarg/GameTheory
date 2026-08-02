@@ -20,8 +20,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Thirty-one work-package ledgers claim 1,442 declarations: 999
-have reviewed dispositions and 443 remain seeded `unreviewed`; a further 6,882 are
+declarations. Thirty-two work-package ledgers claim 1,443 declarations: 1,000
+have reviewed dispositions and 443 remain seeded `unreviewed`; a further 6,881 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -113,7 +113,7 @@ declaration-based.
 | S-MIX | `Concepts/Mixed/**` | 9 | `Core.Mixed`; assessment material in Protocol/Analysis | validated | partial; binary proof spine 15 declarations reviewed | [binary mixed-equilibrium ledger](coverage/S-MIX-binary.md); next dominance, improvement, trembling-hand, uniform/balanced wrappers, and remaining language-facing results |
 | S-POT | `Concepts/Potential/**` | 9 | `Core.Potential` | validated | partial; basic potential/FIP/well-founded/team package 22/22 reviewed | [basic potential ledger](coverage/S-POT-basic.md); next decomposition, harmonic, and mixed potential inventory |
 | S-ZERO | `Concepts/ZeroSum/**` | 15 | `Core.ZeroSum`; existence in `Analysis` | validated | partial; binary constant-sum correlation proof spine 11 declarations reviewed | [constant-sum correlation ledger](coverage/S-ZERO-constant-sum-correlation.md); next security, general value/correlation, matrix geometry, and complementarity |
-| S-WEL | `Concepts/Welfare/**` | 13 | `Core.Welfare`, domain consumers, plus `Analysis.Repeated` | pure smoothness validated by EXP-052/D24 | partial; Smoothness 4/4 reviewed, 2 deferred | [smoothness ledger](coverage/S-WEL-smoothness.md); next canonical finite-law CCE bound, then individual rationality and remaining welfare results |
+| S-WEL | `Concepts/Welfare/**` | 13 | `Core.Welfare`, `Core.RobustWelfare`, domain consumers, plus `Analysis.Repeated` | pure and robust smoothness validated by EXP-052/053 and D24 | partial; Smoothness 4/4 reviewed, no deferred rows | [smoothness ledger](coverage/S-WEL-smoothness.md); next individual rationality and remaining welfare results |
 | S-EXIST | `Concepts/Existence/**` | 3 | `Analysis` and `GameTheoryMath` by live consumer | validated for mixed Nash | partial | classify general Nash/Brouwer support and avoid wholesale fixed-point recovery |
 | S-TRANS | `Concepts/Transport/**` | 15 | named maps at owning layers only | generic hierarchy rejected | retired by design, accounting open | classify each declaration as subsumed, theorem-specific, or retired |
 
@@ -158,7 +158,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| P-CONG | `Congestion/**` | 4 | thin domain over `Core.Potential` and `Core.Welfare` | supported through Rosenthal and EXP-052/D24 | v1-accounted; Basic/Rosenthal/AffinePoA/Examples 50/50 reviewed, 1 deferred | [Rosenthal ledger](coverage/P-CONG-rosenthal.md); [affine PoA ledger](coverage/P-CONG-affine-poa.md); [Pigou/Braess ledger](coverage/P-CONG-examples.md); next robust affine CCE bound |
+| P-CONG | `Congestion/**` | 4 | thin domain over `Core.Potential` and `Core.RobustWelfare` | validated through Rosenthal and EXP-052/053/D24 | complete recovery; Basic/Rosenthal/AffinePoA/Examples 50/50 reviewed, no deferred rows | [Rosenthal ledger](coverage/P-CONG-rosenthal.md); [affine PoA ledger](coverage/P-CONG-affine-poa.md); [Pigou/Braess ledger](coverage/P-CONG-examples.md) |
 | P-COAL | `Core/Coalition.lean`, `Cooperative/CoalitionalGame.lean`, `Cooperative/CoalitionalGame/**` | 10 | foundational Core objects, larger `Cooperative` root | validated foundation | partial | convex core, Bondareva, Banzhaf, cost of stability |
 | P-MATCH | matching and `GaleShapley/**` files | 8 | native `Cooperative`/market-design branch | assigned | not started | stable perfect matching, then strategyproofness/rural hospitals |
 | P-BARG | `Cooperative/Bargaining.lean` | 1 | native feasible-utility branch, Analysis as needed | assigned | not started | Nash solution affine invariance |
@@ -171,7 +171,7 @@ declaration-based.
 | T-MIN | `Theorems/Minimax.lean` | 1 | `Core.ZeroSum` plus `Analysis.Minimax` | validated | partial inventory, flagship complete | exact declaration comparison |
 | T-ZER | `Theorems/Zermelo.lean` | 1 | Protocol backward induction | validated substrate | partial | language-independent theorem plus any honest wrapper |
 | T-TEST | predecessor theorem tests | 1 | owning domain tests/examples | assigned by theorem | not started | classify with their theorem families |
-| MATH | pinned `Math/**` support tree | 56 | Mathlib first, then `GameTheoryMath` by live consumer | owner policy validated; EXP-049/D21 for online learning | partial and demand-driven; finite online-learning file 23/23 reviewed | [finite online-learning ledger](coverage/MATH-online-learning.md); continue accounting by consumer, never wholesale port |
+| MATH | pinned `Math/**` support tree | 56 | Mathlib first, then `GameTheoryMath` or canonical probability by live consumer | owner policy validated; EXP-049/D21 and EXP-053 | partial and demand-driven; finite online-learning 23/23 and finite-sum expectation 1/1 reviewed | [finite online-learning ledger](coverage/MATH-online-learning.md); [expectation ledger](coverage/MATH-probability-expectation.md); continue accounting by consumer, never wholesale port |
 
 ## Explicit exclusions and non-equivalences
 
@@ -203,7 +203,7 @@ declaration-based.
 
 1. Continue the exact FOSG queue through observation-model batches and named
    comparisons; generated rows remain `unreviewed` until manually classified.
-2. Extend the passed smoothness gate through its canonical finite-law CCE
-   bound, and the passed auction gate through combinatorial/all-pay recovery.
+2. Extend the passed auction gate through combinatorial/all-pay recovery; the
+   canonical finite-law robust smoothness gate is closed by EXP-053.
 3. Keep every broader family partial until all pinned declarations are
    classified, and update this file in the same commit as each status change.

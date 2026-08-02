@@ -402,6 +402,14 @@ theorem expect_add (μ : FinDist α) (u v : α → ℝ) :
   rw [← Summable.tsum_add (summable_prob_mul μ u) (summable_prob_mul μ v)]
   exact tsum_congr fun a => by ring
 
+/-- A finite sum of integrands commutes with finite-support expectation. -/
+theorem expect_sum_comm {κ : Type*} [Fintype κ] (μ : FinDist α) (f : κ → α → ℝ) :
+    ∑ i, μ.expect (fun a => f i a) = μ.expect (fun a => ∑ i, f i a) := by
+  simp only [expect_eq_sum_support]
+  rw [Finset.sum_comm]
+  exact Finset.sum_congr rfl fun a _ =>
+    (Finset.mul_sum Finset.univ (fun i => f i a) (μ.prob a)).symm
+
 theorem expect_smul (c : ℝ) (μ : FinDist α) (u : α → ℝ) :
     expect μ (fun a => c * u a) = c * expect μ u := by
   unfold expect

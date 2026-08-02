@@ -12,11 +12,13 @@ commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
 import GameTheory.Congestion.Basic
-import GameTheory.Core.Welfare
+import GameTheory.Core.RobustWelfare
 
 noncomputable section
 
 open scoped BigOperators
+
+open GameTheory.Probability
 
 namespace GameTheory.CongestionGame
 
@@ -121,6 +123,24 @@ theorem socialWelfare_toUtilityGame (C : CongestionGame ι) (profile : C.Profile
   simp only [toUtilityGame, toGameForm, expectedUtility_pure, utility]
   rw [← Finset.sum_neg_distrib]
 
+/-- Expected social welfare of the induced utility game is negated expected
+social cost. -/
+theorem expectedSocialWelfare_toUtilityGame (C : CongestionGame ι)
+    (law : FinDist C.Profile) :
+    C.toUtilityGame.expectedSocialWelfare law = -law.expect C.socialCost := by
+  rw [UtilityGame.expectedSocialWelfare]
+  calc
+    law.expect C.toUtilityGame.socialWelfare =
+        law.expect (fun profile => -C.socialCost profile) :=
+      FinDist.expect_congr fun profile _ => C.socialWelfare_toUtilityGame profile
+    _ =
+        law.expect (fun profile => (-1) * C.socialCost profile) := by
+      congr 1
+      funext profile
+      ring
+    _ = (-1) * law.expect C.socialCost := by rw [FinDist.expect_smul]
+    _ = -law.expect C.socialCost := by ring
+
 /-- Affine congestion games are `(5/3, -1/3)`-smooth in the utility
 (negated-cost) convention. -/
 theorem isSmooth_of_isAffine [DecidableEq ι] (C : CongestionGame ι)
@@ -151,6 +171,18 @@ theorem socialCost_nash_le [DecidableEq ι] (C : CongestionGame ι)
     C.socialCost statusQuo ≤ 5 / 2 * C.socialCost target := by
   have hbound := UtilityGame.IsSmooth.nash_bound (C.isSmooth_of_isAffine h) hnash target
   rw [socialWelfare_toUtilityGame, socialWelfare_toUtilityGame] at hbound
+  linarith
+
+/-- **Robust price of anarchy of affine congestion games.**  The `5/2` bound
+extends from pure Nash equilibria to every coarse correlated equilibrium. -/
+theorem correlated_socialCost_le [DecidableEq ι] (C : CongestionGame ι)
+    {a b : C.Resource → ℝ} (h : C.IsAffine a b) {law : FinDist C.Profile}
+    (hlaw : IsCoarseCorrelatedEq C.toGameForm (euPreference C.utility) law)
+    (target : C.Profile) :
+    law.expect C.socialCost ≤ 5 / 2 * C.socialCost target := by
+  have hbound := UtilityGame.IsSmooth.coarseCorrelated_bound
+    (C.isSmooth_of_isAffine h) hlaw target
+  rw [C.expectedSocialWelfare_toUtilityGame, C.socialWelfare_toUtilityGame] at hbound
   linarith
 
 end GameTheory.CongestionGame
