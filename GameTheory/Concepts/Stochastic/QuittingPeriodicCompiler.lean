@@ -53,6 +53,18 @@ theorem quittingCyclicOrbit_card {K : ℕ} (phase : Fin K) :
   apply Fin.ext
   simp [quittingCyclicOrbit, Nat.mod_eq_of_lt phase.isLt]
 
+/-- Advancing by two successive offsets agrees with advancing by their
+sum. -/
+theorem quittingCyclicOrbit_add {K : ℕ} (phase : Fin K)
+    (first second : ℕ) :
+    quittingCyclicOrbit phase (first + second) =
+      quittingCyclicOrbit (quittingCyclicOrbit phase first) second := by
+  induction second with
+  | zero => simp
+  | succ second ih =>
+      rw [Nat.add_succ, quittingCyclicOrbit_succ, ih,
+        quittingCyclicOrbit_succ]
+
 /-- Product of contraction coefficients before a supplied cycle offset. -/
 def quittingCyclicPrefixWeight {K : ℕ}
     (coefficient : Fin K → ℝ) (phase : Fin K) (fuel : ℕ) : ℝ :=
@@ -77,6 +89,35 @@ theorem quittingCyclicPrefixWeight_nonneg {K : ℕ}
     0 ≤ quittingCyclicPrefixWeight coefficient phase fuel := by
   exact Finset.prod_nonneg fun offset _ => hcoefficient _
 
+/-- Prefix weights split at an arbitrary cycle offset. -/
+theorem quittingCyclicPrefixWeight_add {K : ℕ}
+    (coefficient : Fin K → ℝ) (phase : Fin K) (first second : ℕ) :
+    quittingCyclicPrefixWeight coefficient phase (first + second) =
+      quittingCyclicPrefixWeight coefficient phase first *
+        quittingCyclicPrefixWeight coefficient
+          (quittingCyclicOrbit phase first) second := by
+  induction second with
+  | zero => simp
+  | succ second ih =>
+      rw [Nat.add_succ, quittingCyclicPrefixWeight_succ, ih,
+        quittingCyclicPrefixWeight_succ, quittingCyclicOrbit_add]
+      ring
+
+/-- Prefix weights are antitone when every coefficient is at most one. -/
+theorem antitone_quittingCyclicPrefixWeight {K : ℕ}
+    (coefficient : Fin K → ℝ)
+    (hcoefficient0 : ∀ phase, 0 ≤ coefficient phase)
+    (hcoefficient1 : ∀ phase, coefficient phase ≤ 1)
+    (phase : Fin K) :
+    Antitone (quittingCyclicPrefixWeight coefficient phase) := by
+  apply antitone_nat_of_succ_le
+  intro fuel
+  rw [quittingCyclicPrefixWeight_succ]
+  exact mul_le_of_le_one_right
+    (quittingCyclicPrefixWeight_nonneg
+      coefficient hcoefficient0 phase fuel)
+    (hcoefficient1 _)
+
 /-- A full turn multiplies by the product of all phase coefficients,
 independently of the starting phase. -/
 theorem quittingCyclicPrefixWeight_card {K : ℕ}
@@ -92,6 +133,54 @@ theorem quittingCyclicPrefixWeight_card {K : ℕ}
   rw [quittingCyclicPrefixWeight, Finset.prod_range]
   simp_rw [horbit]
   exact Equiv.prod_comp (finCycle phase) coefficient
+
+/-- Any whole number of turns returns to the same initial phase. -/
+theorem quittingCyclicOrbit_mul_card {K : ℕ} (phase : Fin K)
+    (turns : ℕ) :
+    quittingCyclicOrbit phase (turns * K) = phase := by
+  induction turns with
+  | zero => simp
+  | succ turns ih =>
+      rw [Nat.succ_mul, quittingCyclicOrbit_add, ih,
+        quittingCyclicOrbit_card]
+
+/-- Survival through whole turns is a power of the one-cycle product. -/
+theorem quittingCyclicPrefixWeight_mul_card {K : ℕ}
+    (coefficient : Fin K → ℝ) (phase : Fin K) (turns : ℕ) :
+    quittingCyclicPrefixWeight coefficient phase (turns * K) =
+      (∏ cyclePhase : Fin K, coefficient cyclePhase) ^ turns := by
+  induction turns with
+  | zero => simp
+  | succ turns ih =>
+      rw [Nat.succ_mul, quittingCyclicPrefixWeight_add,
+        quittingCyclicOrbit_mul_card, ih,
+        quittingCyclicPrefixWeight_card, pow_succ]
+
+/-- A contracting one-cycle product forces all cyclic prefix weights, not
+only the weights at cycle boundaries, to vanish. -/
+theorem tendsto_zero_quittingCyclicPrefixWeight {K : ℕ}
+    (coefficient : Fin K → ℝ)
+    (hcoefficient0 : ∀ phase, 0 ≤ coefficient phase)
+    (hcoefficient1 : ∀ phase, coefficient phase ≤ 1)
+    (hcycle : (∏ phase : Fin K, coefficient phase) < 1)
+    (phase : Fin K) :
+    Tendsto (quittingCyclicPrefixWeight coefficient phase) atTop (nhds 0) := by
+  let ρ := ∏ cyclePhase : Fin K, coefficient cyclePhase
+  have hρ0 : 0 ≤ ρ := Finset.prod_nonneg fun cyclePhase _ =>
+    hcoefficient0 cyclePhase
+  have hpow : Tendsto (fun turns : ℕ => ρ ^ turns) atTop (nhds 0) :=
+    tendsto_pow_atTop_nhds_zero_of_lt_one hρ0 hcycle
+  have hdiv : Tendsto (fun fuel : ℕ => fuel / K) atTop atTop :=
+    Nat.tendsto_div_const_atTop (Nat.ne_of_gt phase.pos)
+  apply squeeze_zero
+  · exact quittingCyclicPrefixWeight_nonneg
+      coefficient hcoefficient0 phase
+  · intro fuel
+    have hmono := antitone_quittingCyclicPrefixWeight
+      coefficient hcoefficient0 hcoefficient1 phase
+    have hbound := hmono (Nat.div_mul_le_self fuel K)
+    simpa only [quittingCyclicPrefixWeight_mul_card, ρ] using hbound
+  · exact hpow.comp hdiv
 
 /-- Weighted charge of the phase residuals accumulated before a cutoff. -/
 def quittingCyclicResidualCharge {K : ℕ}
@@ -221,18 +310,6 @@ def quittingCyclicRootSequence {K : ℕ} {ι : Type}
     quittingCyclicRootSequence cycle phase 0 = cycle phase := by
   simp [quittingCyclicRootSequence]
 
-/-- Advancing by two successive offsets agrees with advancing by their
-sum. -/
-theorem quittingCyclicOrbit_add {K : ℕ} (phase : Fin K)
-    (first second : ℕ) :
-    quittingCyclicOrbit phase (first + second) =
-      quittingCyclicOrbit (quittingCyclicOrbit phase first) second := by
-  induction second with
-  | zero => simp
-  | succ second ih =>
-      rw [Nat.add_succ, quittingCyclicOrbit_succ, ih,
-        quittingCyclicOrbit_succ]
-
 /-- Dropping the first root of a cyclic sequence rotates its initial
 phase. -/
 theorem quittingCyclicRootSequence_succ
@@ -256,6 +333,62 @@ theorem quittingCyclicRootSequence_add
   simp only [quittingCyclicRootSequence, quittingCyclicOrbit_add]
 
 variable {K : ℕ} {ι : Type} [Fintype ι] [DecidableEq ι]
+
+/-- At a cyclic live stage, fixed-opponent continuation mass is the
+corresponding phase coefficient. -/
+@[simp] theorem quittingFixedOpponentsContinueMass_cyclicRootSequence
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K)
+    (who : ι) (time : ℕ) :
+    quittingFixedOpponentsContinueMass
+        (quittingCyclicRootSequence cycle phase) who time =
+      quittingStationaryFixedOpponentsContinueMass
+        (cycle (quittingCyclicOrbit phase time)) who := by
+  rfl
+
+/-- Opponent survival along a cyclic root sequence is exactly the cyclic
+prefix product, from the phase reached at the starting time. -/
+theorem quittingOpponentSurvivalWeight_cyclicRootSequence
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K)
+    (who : ι) (start fuel : ℕ) :
+    quittingOpponentSurvivalWeight
+        (quittingCyclicRootSequence cycle phase) who start fuel =
+      quittingCyclicPrefixWeight
+        (fun cyclePhase =>
+          quittingStationaryFixedOpponentsContinueMass
+            (cycle cyclePhase) who)
+        (quittingCyclicOrbit phase start) fuel := by
+  unfold quittingOpponentSurvivalWeight quittingCyclicPrefixWeight
+  apply Finset.prod_congr rfl
+  intro offset _
+  rw [quittingFixedOpponentsContinueMass_cyclicRootSequence]
+  congr 2
+  exact quittingCyclicOrbit_add phase start offset
+
+/-- Playerwise contraction over one turn makes opponent survival along the
+entire cyclic live path converge to zero. -/
+theorem tendsto_zero_quittingOpponentSurvivalWeight_cyclicRootSequence
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K) (who : ι)
+    (hcontracts : (∏ cyclePhase : Fin K,
+      quittingStationaryFixedOpponentsContinueMass
+        (cycle cyclePhase) who) < 1) :
+    Tendsto (quittingOpponentSurvivalWeight
+      (quittingCyclicRootSequence cycle phase) who 0) atTop (nhds 0) := by
+  let coefficient : Fin K → ℝ := fun cyclePhase =>
+    quittingStationaryFixedOpponentsContinueMass (cycle cyclePhase) who
+  have hcoefficient0 : ∀ cyclePhase, 0 ≤ coefficient cyclePhase :=
+    fun cyclePhase =>
+      quittingStationaryFixedOpponentsContinueMass_nonneg
+        (cycle cyclePhase) who
+  have hcoefficient1 : ∀ cyclePhase, coefficient cyclePhase ≤ 1 :=
+    fun cyclePhase => quittingStationaryContinueMass_le_one
+      (Function.update (cycle cyclePhase) who (PMF.pure false))
+  have hprefix := tendsto_zero_quittingCyclicPrefixWeight coefficient
+    hcoefficient0 hcoefficient1 hcontracts phase
+  convert hprefix using 1
+  funext fuel
+  rw [quittingOpponentSurvivalWeight_cyclicRootSequence]
+  simp
+  rfl
 
 /-- Terminal payoff vector selected by the infinite cyclic root profile
 from a supplied initial phase. -/
