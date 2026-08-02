@@ -169,6 +169,30 @@ theorem edgeMultiplicity_pos_iff_mem_edges [DecidableEq E]
   | concat walkSoFar finalEdge legal ih =>
       by_cases h : edge = finalEdge <;> simp [edgeMultiplicity, edges, ih, h]
 
+theorem edgeMultiplicity_eq_count [DecidableEq E]
+    (walk : G.Walk start finish) (edge : E) :
+    walk.edgeMultiplicity edge = walk.edges.count edge := by
+  induction walk with
+  | nil => rfl
+  | concat walkSoFar finalEdge legal ih =>
+      by_cases h : edge = finalEdge
+      · subst edge
+        simp [edgeMultiplicity, edges, List.count_append, ih]
+      · simp [edgeMultiplicity, edges, List.count_append, ih, h, eq_comm]
+
+theorem edgeMultiplicity_eq_one_iff_mem_edges [DecidableEq E]
+    (walk : G.Walk start finish) (hnodup : walk.edges.Nodup) (edge : E) :
+    walk.edgeMultiplicity edge = 1 ↔ edge ∈ walk.edges := by
+  rw [walk.edgeMultiplicity_eq_count]
+  exact ⟨fun h => List.count_pos_iff.mp (by omega),
+    fun h => List.count_eq_one_of_mem hnodup h⟩
+
+theorem edgeMultiplicity_le_one [DecidableEq E]
+    (walk : G.Walk start finish) (hnodup : walk.edges.Nodup) (edge : E) :
+    walk.edgeMultiplicity edge ≤ 1 := by
+  rw [walk.edgeMultiplicity_eq_count]
+  exact (List.nodup_iff_count_le_one.mp hnodup) edge
+
 /-- Change only the terminal index of a typed walk along an equality. -/
 def castFinish {start finish finish' : V} (walk : G.Walk start finish)
     (hfinish : finish = finish') : G.Walk start finish' :=
@@ -223,6 +247,17 @@ def HasWalkConnectedSupport (multiplicity : E → ℕ) : Prop :=
     (∀ edge, edge ∈ traversal ↔ 0 < multiplicity edge) ∧
     traversal.IsChain G.SharesEndpoint
 
+/-- The `0`-`1` multiplicity of a finite edge set. -/
+def edgeSetMultiplicity [DecidableEq E] (allowed : Finset E) : E → ℕ :=
+  fun edge => if edge ∈ allowed then 1 else 0
+
+/-- Flow balance for a finite set of distinguishable edge tokens. -/
+def IsBalancedEdgeSet [Fintype E] [DecidableEq E] [DecidableEq V]
+    (allowed : Finset E) : Prop :=
+  ∀ vertex,
+    G.outgoingMultiplicity (edgeSetMultiplicity allowed) vertex =
+      G.incomingMultiplicity (edgeSetMultiplicity allowed) vertex
+
 /-- A nonzero nonnegative integer circulation with zero total charge and a
 finite certificate that its positive support is weakly connected. -/
 structure ConnectedIntegerCirculation {κ : Type uκ}
@@ -248,6 +283,123 @@ structure ReachableConnectedIntegerCirculation {κ : Type uκ}
 namespace Walk
 
 variable {G}
+
+/-- A trail whose distinct edge identities all belong to `allowed`. -/
+def IsTrailWithin [DecidableEq E] (walk : G.Walk start finish)
+    (allowed : Finset E) : Prop :=
+  walk.edges.Nodup ∧ ∀ edge ∈ walk.edges, edge ∈ allowed
+
+theorem length_le_card_of_isTrailWithin [DecidableEq E]
+    (walk : G.Walk start finish) (allowed : Finset E)
+    (htrail : walk.IsTrailWithin allowed) :
+    walk.length ≤ allowed.card := by
+  have hsubset : walk.edges.toFinset ⊆ allowed := by
+    intro edge hedge
+    exact htrail.2 edge (List.mem_toFinset.mp hedge)
+  calc
+    walk.length = walk.edges.length := walk.edges_length.symm
+    _ = walk.edges.toFinset.card := (List.toFinset_card_of_nodup htrail.1).symm
+    _ ≤ allowed.card := Finset.card_le_card hsubset
+
+/-- A longest allowed trail from a prescribed starting vertex exists because
+no trail can use more than `allowed.card` distinct edges. -/
+theorem exists_maximalTrailWithin [DecidableEq E]
+    (allowed : Finset E) (start : V) :
+    ∃ (finish : V) (walk : G.Walk start finish),
+      walk.IsTrailWithin allowed ∧
+      ∀ (finish' : V) (other : G.Walk start finish'),
+        other.IsTrailWithin allowed → other.length ≤ walk.length := by
+  classical
+  let feasible : ℕ → Prop := fun length =>
+    ∃ (finish : V) (walk : G.Walk start finish),
+      walk.IsTrailWithin allowed ∧ walk.length = length
+  have hzero : feasible 0 := by
+    exact ⟨start, Walk.nil, ⟨by simp [Walk.edges], by simp [Walk.edges]⟩, rfl⟩
+  let maximum := Nat.findGreatest feasible allowed.card
+  have hmaximum : feasible maximum :=
+    Nat.findGreatest_spec (Nat.zero_le _) hzero
+  obtain ⟨finish, walk, htrail, hlength⟩ := hmaximum
+  refine ⟨finish, walk, htrail, ?_⟩
+  intro finish' other hother
+  rw [hlength]
+  exact Nat.le_findGreatest (other.length_le_card_of_isTrailWithin allowed hother)
+    ⟨finish', other, hother, rfl⟩
+
+theorem edgeMultiplicity_le_edgeSetMultiplicity [DecidableEq E]
+    (walk : G.Walk start finish) (allowed : Finset E)
+    (htrail : walk.IsTrailWithin allowed) (edge : E) :
+    walk.edgeMultiplicity edge ≤ edgeSetMultiplicity allowed edge := by
+  by_cases hedge : edge ∈ walk.edges
+  · have hallowed : edge ∈ allowed := htrail.2 edge hedge
+    rw [(walk.edgeMultiplicity_eq_one_iff_mem_edges htrail.1 edge).2 hedge]
+    simp [edgeSetMultiplicity, hallowed]
+  · have hzero : walk.edgeMultiplicity edge = 0 := by
+      exact Nat.eq_zero_of_not_pos fun hpos =>
+        hedge ((walk.edgeMultiplicity_pos_iff_mem_edges edge).1 hpos)
+    simp [hzero]
+
+/-- A longest allowed trail cannot leave an unused allowed edge at its
+terminal vertex. -/
+theorem edge_mem_of_maximalTrailWithin_of_source_eq
+    [DecidableEq E] (allowed : Finset E) (walk : G.Walk start finish)
+    (htrail : walk.IsTrailWithin allowed)
+    (hmaximal : ∀ (finish' : V) (other : G.Walk start finish'),
+      other.IsTrailWithin allowed → other.length ≤ walk.length)
+    (edge : E) (hedgeAllowed : edge ∈ allowed)
+    (hsource : G.source edge = finish) :
+    edge ∈ walk.edges := by
+  by_contra hedgeUnused
+  let longer : G.Walk start (G.target edge) := Walk.concat walk edge hsource
+  have hlongerTrail : longer.IsTrailWithin allowed := by
+    constructor
+    · change (walk.edges ++ [edge]).Nodup
+      exact List.nodup_append'.2 ⟨htrail.1, List.nodup_singleton edge,
+        List.disjoint_singleton.mpr hedgeUnused⟩
+    · intro candidate hcandidate
+      simp only [longer, Walk.edges, List.mem_append, List.mem_singleton] at hcandidate
+      rcases hcandidate with hcandidate | rfl
+      · exact htrail.2 candidate hcandidate
+      · exact hedgeAllowed
+  have hle := hmaximal _ longer hlongerTrail
+  simp [longer, Walk.length] at hle
+
+/-- On outgoing edges of the terminal vertex, maximality identifies the
+trail multiplicity with the allowed-edge indicator. -/
+theorem outgoingMultiplicity_eq_edgeSetMultiplicity_of_maximal
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (allowed : Finset E) (walk : G.Walk start finish)
+    (htrail : walk.IsTrailWithin allowed)
+    (hmaximal : ∀ (finish' : V) (other : G.Walk start finish'),
+      other.IsTrailWithin allowed → other.length ≤ walk.length) :
+    G.outgoingMultiplicity walk.edgeMultiplicity finish =
+      G.outgoingMultiplicity (edgeSetMultiplicity allowed) finish := by
+  classical
+  unfold outgoingMultiplicity
+  apply Finset.sum_congr rfl
+  intro edge hedge
+  have hsource : G.source edge = finish := (Finset.mem_filter.mp hedge).2
+  by_cases hallowed : edge ∈ allowed
+  · have hmem := walk.edge_mem_of_maximalTrailWithin_of_source_eq
+      allowed htrail hmaximal edge hallowed hsource
+    rw [(walk.edgeMultiplicity_eq_one_iff_mem_edges htrail.1 edge).2 hmem]
+    simp [edgeSetMultiplicity, hallowed]
+  · have hnotmem : edge ∉ walk.edges := fun hmem =>
+      hallowed (htrail.2 edge hmem)
+    have hzero : walk.edgeMultiplicity edge = 0 := by
+      exact Nat.eq_zero_of_not_pos fun hpos =>
+        hnotmem ((walk.edgeMultiplicity_pos_iff_mem_edges edge).1 hpos)
+    simp [edgeSetMultiplicity, hallowed, hzero]
+
+theorem incomingMultiplicity_le_edgeSetMultiplicity_of_trail
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (allowed : Finset E) (walk : G.Walk start finish)
+    (htrail : walk.IsTrailWithin allowed) (vertex : V) :
+    G.incomingMultiplicity walk.edgeMultiplicity vertex ≤
+      G.incomingMultiplicity (edgeSetMultiplicity allowed) vertex := by
+  classical
+  unfold incomingMultiplicity
+  exact Finset.sum_le_sum fun edge _ =>
+    walk.edgeMultiplicity_le_edgeSetMultiplicity allowed htrail edge
 
 @[simp] theorem outgoingMultiplicity_edgeMultiplicity_nil
     [Fintype E] [DecidableEq E] [DecidableEq V] (vertex : V) :
@@ -322,6 +474,90 @@ theorem edgeMultiplicity_balanced
     G.outgoingMultiplicity walk.edgeMultiplicity vertex =
       G.incomingMultiplicity walk.edgeMultiplicity vertex := by
   have hflow := walk.edgeMultiplicity_flow_with_endpoints vertex
+  omega
+
+/-- A maximal trail in a balanced allowed edge set returns to its start. -/
+theorem maximalTrailWithin_isClosed
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (allowed : Finset E) (hbalanced : G.IsBalancedEdgeSet allowed)
+    (walk : G.Walk start finish) (htrail : walk.IsTrailWithin allowed)
+    (hmaximal : ∀ (finish' : V) (other : G.Walk start finish'),
+      other.IsTrailWithin allowed → other.length ≤ walk.length) :
+    finish = start := by
+  by_contra hfinish
+  have hflow := walk.edgeMultiplicity_flow_with_endpoints finish
+  have hout := walk.outgoingMultiplicity_eq_edgeSetMultiplicity_of_maximal
+    allowed htrail hmaximal
+  have hin := walk.incomingMultiplicity_le_edgeSetMultiplicity_of_trail
+    allowed htrail finish
+  have hallowedBalance := hbalanced finish
+  have hstartFinish : start ≠ finish := Ne.symm hfinish
+  simp [hstartFinish] at hflow
+  omega
+
+/-- From any vertex with an allowed outgoing edge, a balanced finite edge set
+contains a nonempty closed trail based at that vertex. -/
+theorem exists_nonempty_closedTrailWithin_of_exists_outgoing
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (allowed : Finset E) (hbalanced : G.IsBalancedEdgeSet allowed)
+    (start : V)
+    (houtgoing : ∃ edge, edge ∈ allowed ∧ G.source edge = start) :
+    ∃ walk : G.Walk start start,
+      walk.IsTrailWithin allowed ∧ 0 < walk.length := by
+  obtain ⟨finish, walk, htrail, hmaximal⟩ :=
+    Walk.exists_maximalTrailWithin (G := G) allowed start
+  have hclosed : finish = start :=
+    walk.maximalTrailWithin_isClosed allowed hbalanced htrail hmaximal
+  subst finish
+  obtain ⟨edge, hedgeAllowed, hsource⟩ := houtgoing
+  have hedgeMem := walk.edge_mem_of_maximalTrailWithin_of_source_eq
+    allowed htrail hmaximal edge hedgeAllowed hsource
+  have hlength : 0 < walk.length := by
+    rw [← walk.edges_length, List.length_pos_iff]
+    exact List.ne_nil_of_mem hedgeMem
+  exact ⟨walk, htrail, hlength⟩
+
+theorem edgeSetMultiplicity_decompose_trail
+    [DecidableEq E] (allowed : Finset E) (walk : G.Walk start finish)
+    (htrail : walk.IsTrailWithin allowed) (edge : E) :
+    edgeSetMultiplicity allowed edge =
+      walk.edgeMultiplicity edge +
+        edgeSetMultiplicity (allowed \ walk.edges.toFinset) edge := by
+  by_cases hmem : edge ∈ walk.edges
+  · have hallowed := htrail.2 edge hmem
+    have hone := (walk.edgeMultiplicity_eq_one_iff_mem_edges htrail.1 edge).2 hmem
+    simp [edgeSetMultiplicity, hallowed, hmem, hone]
+  · have hzero : walk.edgeMultiplicity edge = 0 := by
+      exact Nat.eq_zero_of_not_pos fun hpos =>
+        hmem ((walk.edgeMultiplicity_pos_iff_mem_edges edge).1 hpos)
+    simp [edgeSetMultiplicity, hmem, hzero]
+
+/-- Removing the edges of a closed allowed trail preserves balance of the
+remaining distinguishable edge set. -/
+theorem isBalancedEdgeSet_sdiff_closedTrail
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (allowed : Finset E) (hbalanced : G.IsBalancedEdgeSet allowed)
+    (walk : G.Walk base base) (htrail : walk.IsTrailWithin allowed) :
+    G.IsBalancedEdgeSet (allowed \ walk.edges.toFinset) := by
+  intro vertex
+  have houtDecompose :
+      G.outgoingMultiplicity (edgeSetMultiplicity allowed) vertex =
+        G.outgoingMultiplicity walk.edgeMultiplicity vertex +
+          G.outgoingMultiplicity
+            (edgeSetMultiplicity (allowed \ walk.edges.toFinset)) vertex := by
+    unfold outgoingMultiplicity
+    simp_rw [edgeSetMultiplicity_decompose_trail allowed walk htrail]
+    exact Finset.sum_add_distrib
+  have hinDecompose :
+      G.incomingMultiplicity (edgeSetMultiplicity allowed) vertex =
+        G.incomingMultiplicity walk.edgeMultiplicity vertex +
+          G.incomingMultiplicity
+            (edgeSetMultiplicity (allowed \ walk.edges.toFinset)) vertex := by
+    unfold incomingMultiplicity
+    simp_rw [edgeSetMultiplicity_decompose_trail allowed walk htrail]
+    exact Finset.sum_add_distrib
+  have hwalkBalance := walk.edgeMultiplicity_balanced vertex
+  have hallowedBalance := hbalanced vertex
   omega
 
 /-- The positive edge support of a nonempty walk is walk-connected in the
