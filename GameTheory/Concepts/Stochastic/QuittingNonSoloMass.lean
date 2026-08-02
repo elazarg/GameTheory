@@ -61,12 +61,14 @@ theorem quittingQuitters_ne_singleton_of_someOpponentQuits
   rw [hsets] at hmem
   simp [hother] at hmem
 
+omit [DecidableEq ι] in
 /-- If no opponent quits but `who` does, the quitter set is `{who}`. -/
 theorem quittingQuitters_eq_singleton_of_noOpponent_of_self
     (who : ι) (action : ι → Bool)
     (hnoOpponent : ¬quittingSomeOpponentQuits who action)
     (hself : action who = true) :
     quittingQuitters action = {who} := by
+  classical
   ext player
   by_cases hp : player = who
   · subst player
@@ -75,12 +77,14 @@ theorem quittingQuitters_eq_singleton_of_noOpponent_of_self
     | false => simp [quittingQuitters, hp, haction]
     | true => exact (hnoOpponent ⟨player, hp, haction⟩).elim
 
+omit [DecidableEq ι] in
 /-- If neither `who` nor any opponent quits, the quitter set is empty. -/
 theorem quittingQuitters_eq_empty_of_noOpponent_of_not_self
     (who : ι) (action : ι → Bool)
     (hnoOpponent : ¬quittingSomeOpponentQuits who action)
     (hself : action who = false) :
     quittingQuitters action = ∅ := by
+  classical
   ext player
   by_cases hp : player = who
   · subst player
