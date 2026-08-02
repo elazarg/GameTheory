@@ -60,15 +60,20 @@ weight `β`.  Sorin's `λ` (weight of the current stage) is therefore `λ = 1 - 
 and the mixing probability `λ / (2 + λ)` becomes `(1 - β) / (3 - β)`; this is
 `topProb`, with `topProb_eq_stageWeightRatio` recording the translation.
 
-## Known gap (deliberate)
+## Uniform-payoff separation
 
-The substantive theorem that **every** uniform-equilibrium payoff `w` of this
-game satisfies `2w₁ + w₂ = 2` is **out of scope** here and is not attempted.
-That is precisely what makes the present endpoint interesting: `(1/2, 2/3)` is
-analytically forced as the limit of the discounted stationary values, yet
-`2·(1/2) + 2/3 = 5/3 ≠ 2`, so it lies *outside* the uniform-equilibrium payoff
-set.  Formalizing that separation needs the uniform-payoff machinery and belongs
-in a later module; nothing below asserts anything about uniform payoffs.
+The later module `SorinUniformSeparation` machine-checks the exact
+accounting identity
+
+`2·averagePayoff₁ + averagePayoff₂ = 2 - bottomRightOccupation`,
+
+the limit passage from vanishing live `(Bottom, Right)` occupation to the line
+`2w₁ + w₂ = 2`, and the arithmetic fact that `(1/2, 2/3)` is not on that line.
+It isolates the genuinely substantive stopping assertion—sufficiently accurate
+uniform approximate equilibria force that occupation to vanish—as a concrete,
+target-independent proposition.  `SorinOccupationVanishing` discharges that
+proposition from the quantitative bound `survivalLimit ≤ 14 * epsilon` and
+thereby proves the separation line and endpoint exclusion unconditionally.
 
 ## File status
 
