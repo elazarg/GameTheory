@@ -53,7 +53,7 @@ inductive Walk (start : V) : V → Type (max uV uE)
 
 namespace Walk
 
-variable {G}
+variable {G} {start finish middle previous base : V}
 
 /-- Number of edges in a finite walk. -/
 def length {start : V} : {finish : V} → G.Walk start finish → ℕ
@@ -790,7 +790,7 @@ theorem tokenGraph_univ_hasWalkConnectedSupport
 
 namespace Walk
 
-variable {G}
+variable {G} {start finish middle previous base : V}
 
 /-- Forget token indices in a typed walk through the multiplicity-expanded
 graph. -/
