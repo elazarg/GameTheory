@@ -217,6 +217,7 @@ import GameTheory.Concepts.Stochastic.PureExternalityCycleGerm
 import GameTheory.Concepts.Stochastic.ProperSupportGatePromotion
 import GameTheory.Concepts.Stochastic.FinitePublicTerminalNashPerturbation
 import GameTheory.Concepts.Stochastic.AnalyticEndpointLeafSelection
+import GameTheory.Concepts.Stochastic.ChildPotentialObstacleCloseness
 import GameTheory.Concepts.Stochastic.PublicFirstHitStoppingRule
 import GameTheory.Concepts.Stochastic.PublicHistoryFirstHitStoppingAcceptance
 import GameTheory.Concepts.Stochastic.LocalPublicResponseSelfGeneration
