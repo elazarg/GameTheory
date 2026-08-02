@@ -6,9 +6,9 @@ Pinned roots: `GameTheory/Languages/FOSG/Basic.lean`; `GameTheory/Languages/FOSG
 Pinned commit: `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`
 Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
-Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28
+Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28, EXP-058/D29
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; 372/776 reviewed, 404 unreviewed
+Status: in progress; 418/776 reviewed, 358 unreviewed
 Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-FOSG family.
@@ -25,6 +25,15 @@ attributes the latter to those exact pinned paths: `Protocol.Information`
 owns the canonical policy and law machinery, while `Languages.FOSG.Kuhn`
 supplies the named FOSG-facing correspondence.  It does not revive the native scalar
 marginal calculus.
+
+EXP-058/D29 disposes `ReachableHistory/ObsModelFacts.lean`.  Only its two
+final-law definitions project directly to canonical Protocol execution, and
+its action-projection append theorem is subsumed by the richer
+`InfoSignals.ownPlay_extend`.  The remaining rows are implementation facts for
+the removed reachable-history observation model: scalar invariants, posterior
+predicates, cast transport, raw-history arithmetic, and lift/erase
+machinery.  This disposition does not credit counterfactual reach or CFR;
+those remain separately gated.
 
 The Execution batch maps ordinary one-step, continuation, and complete-history
 reach to `behavioralJoint`, `runBehavioralFrom`, and
@@ -558,52 +567,52 @@ module they require rather than a FOSG-wide umbrella.
 | same | `reachableHistoryInfoStateFintype` | instance | unreviewed | review required | generated index seed only | public, pinned line 495 |
 | same | `reachableInfoLegalMoveFintype` | instance | unreviewed | review required | generated index seed only | public, pinned line 502 |
 | same | `reachableHistoryLocalStrategyFintype` | instance | unreviewed | review required | generated index seed only | public, pinned line 510 |
-| `GameTheory/Languages/FOSG/ReachableHistory/ObsModelFacts.lean` | `reachableHistoryOutcomeDist` | def | unreviewed | review required | generated index seed only | public, pinned line 33 |
-| same | `reachableHistoryOutcomeDistPure` | def | unreviewed | review required | generated index seed only | public, pinned line 43 |
-| same | `ReachableHistoryStepMassInvariant` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 53 |
-| same | `ReachableHistoryStepSupportFactorization` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 60 |
-| same | `ReachableHistoryActionPosteriorLocal` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 67 |
-| same | `reachableInfoLegalMove_eq_none_of_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 72 |
-| same | `reachableHistory_stepActionDeterminism` | theorem | unreviewed | review required | generated index seed only | public, pinned line 92 |
-| same | `reachableHistory_stepMassInvariant` | theorem | unreviewed | review required | generated index seed only | public, pinned line 198 |
-| same | `reachableHistory_stepSupportFactorization` | theorem | unreviewed | review required | generated index seed only | public, pinned line 204 |
-| same | `playerViewFrom_cons_eq_cons_view` | theorem | unreviewed | review required | generated index seed only | public, pinned line 210 |
-| same | `playerViewFrom_cons_eq_cons_action` | theorem | unreviewed | review required | generated index seed only | public, pinned line 238 |
-| same | `playerViewFrom_cons_ne_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 266 |
-| same | `playerViewFrom_append_singleton_ne_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 275 |
-| same | `playerViewFrom_append_singleton_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 284 |
-| same | `publicViewFrom_length` | theorem | unreviewed | review required | generated index seed only | public, pinned line 343 |
-| same | `publicView_length` | theorem | unreviewed | review required | generated index seed only | public, pinned line 350 |
-| same | `reachableInfoLegalMove_eq_none_of_terminal_view_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 354 |
-| same | `reachableInfoLegalMove_subsingleton_of_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 379 |
-| same | `reachableHistory_projectStates_eq_last` | theorem | unreviewed | review required | generated index seed only | public, pinned line 388 |
-| same | `reachableInfoLegalMove_cast_val` | theorem | unreviewed | review required | generated index seed only | public, pinned line 396 |
-| same | `reachableInfoLegalMove_cast_currentObs_val` | theorem | unreviewed | review required | generated index seed only | public, pinned line 403 |
-| same | `subst_heq_fosg` | theorem | unreviewed | review required | generated index seed only | public, pinned line 415 |
-| same | `reachableHistory_castJointAction_val` | theorem | unreviewed | review required | generated index seed only | public, pinned line 420 |
-| same | `projectActions_snoc_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 435 |
-| same | `sourceView_and_ownAction_eq_of_target_view_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 472 |
-| same | `reachableHistory_pureStep_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 496 |
-| same | `reachableHistory_source_nonterminal_of_target_nonterminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 568 |
-| same | `reachableHistory_pureRun_last_steps_length_le` | theorem | unreviewed | review required | generated index seed only | public, pinned line 598 |
-| same | `reachableHistory_pureStep_component_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 656 |
-| same | `reachableHistory_pureRun_update_obs_local_nonterminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 725 |
-| same | `reachableHistory_pureRun_nonterminal_last_steps_length` | theorem | unreviewed | review required | generated index seed only | public, pinned line 835 |
-| same | `reachableHistory_repeated_projectStates_subsingleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 876 |
-| same | `reachableHistory_current_coord_ignores_of_reachable` | theorem | unreviewed | review required | generated index seed only | public, pinned line 937 |
-| same | `reachableHistory_obsLocalFeasibility` | theorem | unreviewed | review required | generated index seed only | public, pinned line 996 |
-| same | `reachableHistory_actionPosteriorLocal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1067 |
-| same | `ownAction_eq_of_source_target_view_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1080 |
-| same | `liftReachableHistoryPureStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 1121 |
-| same | `reachableInfoLegalMoveOfBehavioralSupport` | def | unreviewed | review required | generated index seed only | public, pinned line 1140 |
-| same | `liftReachableHistoryBehavioralStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 1158 |
-| same | `erase_liftReachableHistoryBehavioralStrategy` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1168 |
-| same | `eraseReachableHistoryPureStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 1211 |
-| same | `liftReachableHistoryPureStrategy_erase` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1224 |
-| same | `reachableHistoryBehavioralToMixedStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 1237 |
-| same | `reachableLegalBehavioralToMixed` | def | unreviewed | review required | generated index seed only | public, pinned line 1254 |
-| same | `reachableLegalBehavioralToMixed_lift` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1262 |
-| same | `liftReachableHistoryBehavioralProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 1281 |
+| `GameTheory/Languages/FOSG/ReachableHistory/ObsModelFacts.lean` | `reachableHistoryOutcomeDist` | def | adapt | `InformationModel.runBehavioral` | EXP-058/D29 hostile witness | Canonical behavioral history law replaces the native reachable-history outcome PMF. |
+| same | `reachableHistoryOutcomeDistPure` | def | adapt | `InformationModel.run` | EXP-058/D29 hostile witness | Canonical initial deterministic-policy history law replaces the native outcome PMF. |
+| same | `ReachableHistoryStepMassInvariant` | abbrev | retired | no successor; removed scalar invariant | EXP-058/D29 | Native step-mass factorization is not a stable law interface. |
+| same | `ReachableHistoryStepSupportFactorization` | abbrev | retired | no successor; removed scalar invariant | EXP-058/D29 | Native support factorization is not retained. |
+| same | `ReachableHistoryActionPosteriorLocal` | abbrev | retired | no successor; removed posterior interface | EXP-058/D29 | D28 proves the canonical law directly and exposes no posterior certificate. |
+| same | `reachableInfoLegalMove_eq_none_of_terminal` | theorem | retired | no successor; removed legal-move carrier | EXP-058/D29 hostile witness | Machine-refuted as a general Protocol claim because terminal activity is deliberately unconstrained. |
+| same | `reachableHistory_stepActionDeterminism` | theorem | retired | no successor; removed native execution model | EXP-058/D29 | Determinism served only the old scalar proof machine. |
+| same | `reachableHistory_stepMassInvariant` | theorem | retired | no successor; removed scalar invariant | EXP-058/D29 | Consequence of retired native determinism. |
+| same | `reachableHistory_stepSupportFactorization` | theorem | retired | no successor; removed scalar invariant | EXP-058/D29 | Consequence of retired native determinism. |
+| same | `playerViewFrom_cons_eq_cons_view` | theorem | retired | no successor; removed compressed view encoding | EXP-058/D29 | Native list decomposition has no canonical consumer. |
+| same | `playerViewFrom_cons_eq_cons_action` | theorem | retired | no successor; removed compressed view encoding | EXP-058/D29 | Native list decomposition has no canonical consumer. |
+| same | `playerViewFrom_cons_ne_nil` | theorem | retired | no successor; removed compressed view encoding | EXP-058/D29 | Native event-list nonemptiness has no canonical consumer. |
+| same | `playerViewFrom_append_singleton_ne_nil` | theorem | retired | no successor; removed compressed view encoding | EXP-058/D29 | Native event-list nonemptiness has no canonical consumer. |
+| same | `playerViewFrom_append_singleton_eq` | theorem | retired | no successor; removed compressed view encoding | EXP-058/D29 | Native event-list cancellation has no canonical consumer. |
+| same | `publicViewFrom_length` | theorem | retired | no successor; removed compressed public view | EXP-058/D29 | The Protocol information recursion has no duplicate list encoding. |
+| same | `publicView_length` | theorem | retired | no successor; removed compressed public view | EXP-058/D29 | The Protocol information recursion has no duplicate list encoding. |
+| same | `reachableInfoLegalMove_eq_none_of_terminal_view_eq` | theorem | retired | no successor; old reachable view bridge | EXP-058/D29 | Requires the removed reachable observation carrier. |
+| same | `reachableInfoLegalMove_subsingleton_of_terminal` | theorem | retired | no successor; removed legal-move carrier | EXP-058/D29 hostile witness | A terminal state may retain two local choices; inactivity has the canonical subsingleton theorem. |
+| same | `reachableHistory_projectStates_eq_last` | theorem | retired | no successor; removed projected-state encoding | EXP-058/D29 | Projection equality is transport machinery for the retired model. |
+| same | `reachableInfoLegalMove_cast_val` | theorem | retired | no successor; forbidden transport helper | EXP-058/D29 | User-visible cast plumbing is deliberately absent. |
+| same | `reachableInfoLegalMove_cast_currentObs_val` | theorem | retired | no successor; forbidden transport helper | EXP-058/D29 | User-visible cast plumbing is deliberately absent. |
+| same | `subst_heq_fosg` | theorem | retired | no successor; forbidden transport helper | EXP-058/D29 | `HEq` transport is outside the public surface. |
+| same | `reachableHistory_castJointAction_val` | theorem | retired | no successor; forbidden transport helper | EXP-058/D29 | Casted joint actions belong only to the removed model. |
+| same | `projectActions_snoc_eq` | theorem | subsumed | `InfoSignals.ownPlay_extend` | EXP-058/D29; `Protocol/Information.lean` | Canonical own-play recursion records the action component and is richer than the old append formula. |
+| same | `sourceView_and_ownAction_eq_of_target_view_eq` | theorem | retired | no successor; old view-equality bridge | EXP-058/D29 hostile witness | Compressed information does not decode prior own actions without an explicit recall hypothesis. |
+| same | `reachableHistory_pureStep_snoc` | theorem | retired | no successor; removed native pure runner | EXP-058/D29 | Native pure-step representation is not retained. |
+| same | `reachableHistory_source_nonterminal_of_target_nonterminal` | theorem | retired | no successor; old source/target proof | EXP-058/D29 | `History.not_isTerminal_of_legal` is not a native-run bridge. |
+| same | `reachableHistory_pureRun_last_steps_length_le` | theorem | retired | no successor; native run-list arithmetic | EXP-058/D29 | Protocol histories use indexed traces rather than this list machine. |
+| same | `reachableHistory_pureStep_component_eq` | theorem | retired | no successor; native pure runner | EXP-058/D29 | Component equality is internal native-run bookkeeping. |
+| same | `reachableHistory_pureRun_update_obs_local_nonterminal` | theorem | retired | no successor; retired observation-locality proof | EXP-058/D29 | Raw updates proved an internal property of the removed pure runner. |
+| same | `reachableHistory_pureRun_nonterminal_last_steps_length` | theorem | retired | no successor; native run-list arithmetic | EXP-058/D29 | Protocol histories use indexed traces rather than this list machine. |
+| same | `reachableHistory_repeated_projectStates_subsingleton` | theorem | retired | no successor; projected-state transport | EXP-058/D29 | Repetition/subsingleton fact serves the removed model. |
+| same | `reachableHistory_current_coord_ignores_of_reachable` | theorem | retired | no successor; native coordinate projection | EXP-058/D29 | No canonical counterpart without rebuilding the carrier. |
+| same | `reachableHistory_obsLocalFeasibility` | theorem | retired | no successor; retired observation-locality proof | EXP-058/D29 | This proof-machine premise is not the `PerfectRecall` theorem used by D28. |
+| same | `reachableHistory_actionPosteriorLocal` | theorem | retired | no successor; removed posterior interface | EXP-058/D29 | D28 replaces its only Kuhn-law consumer; future CFR is a distinct theorem family. |
+| same | `ownAction_eq_of_source_target_view_eq` | theorem | retired | no successor; old view-equality bridge | EXP-058/D29 hostile witness | Compressed information does not decode prior own actions without an explicit recall hypothesis. |
+| same | `liftReachableHistoryPureStrategy` | def | retired | `InformationModel.Policy` without a reachable-history lift | EXP-058/D29 | Do not reproduce the auxiliary strategy carrier. |
+| same | `reachableInfoLegalMoveOfBehavioralSupport` | def | retired | no successor; removed legal-move carrier | EXP-058/D29 | Support witnesses are internal to canonical law semantics. |
+| same | `liftReachableHistoryBehavioralStrategy` | def | retired | `InformationModel.BehavioralPolicy` without a lift | EXP-058/D29 | Do not reproduce the auxiliary strategy carrier. |
+| same | `erase_liftReachableHistoryBehavioralStrategy` | theorem | retired | no successor; removed lift/erase pair | EXP-058/D29 | Inverse proof has no stable surface absent the carrier. |
+| same | `eraseReachableHistoryPureStrategy` | def | retired | no successor; removed lift/erase pair | EXP-058/D29 | Do not reproduce the auxiliary strategy carrier. |
+| same | `liftReachableHistoryPureStrategy_erase` | theorem | retired | no successor; removed lift/erase pair | EXP-058/D29 | Inverse proof has no stable surface absent the carrier. |
+| same | `reachableHistoryBehavioralToMixedStrategy` | def | retired | `BehavioralPolicy.toMixed` without reachable-history conversion | EXP-058/D29 | Old conversion was tied to the removed carrier. |
+| same | `reachableLegalBehavioralToMixed` | def | retired | no successor; removed legal-move carrier | EXP-058/D29 | Canonical `toMixed` operates on `InformationModel` policies. |
+| same | `reachableLegalBehavioralToMixed_lift` | theorem | retired | no successor; removed lift proof | EXP-058/D29 | Compatibility theorem has no independent result. |
+| same | `liftReachableHistoryBehavioralProfile` | def | retired | `Profile G.behavioralSignature` without a lift | EXP-058/D29 | Do not reproduce the auxiliary profile carrier. |
 | `GameTheory/Languages/FOSG/Serial.lean` | `singleMove` | def | unreviewed | review required | generated index seed only | public, pinned line 46 |
 | same | `singleMove_self` | theorem | unreviewed | review required | generated index seed only | public, pinned line 53 |
 | same | `singleMove_other` | theorem | unreviewed | review required | generated index seed only | public, pinned line 57 |

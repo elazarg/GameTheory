@@ -244,8 +244,8 @@ current integration and recovery status. Wave 0 closes when:
 6. README status is derived from the ledger rather than source-size estimates.
 
 The audit now indexes 436 files and 8,324 declarations. Thirty-five work-package
-ledgers claim 1,573 declarations: 1,169 have reviewed dispositions, the exact
-FOSG queue contains 404 deliberately seeded `unreviewed` rows, and 6,751 remain
+ledgers claim 1,573 declarations: 1,215 have reviewed dispositions, the exact
+FOSG queue contains 358 deliberately seeded `unreviewed` rows, and 6,751 remain
 explicitly unaccounted. Both open sets are review queues, not
 auto-classification targets; generated rows are evidence of scope, not
 recovery.
@@ -329,7 +329,7 @@ surface syntax.
 | NFG | **passed and recovered:** EXP-042/T4 validates compilation; all 126 pinned declarations are classified with no deferred rows | broad examples, observable cheap talk, exact half/half mixed Nash, and the complete Matching Pennies correlated-equilibrium characterization are recovered through their canonical shared layers |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
 | MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
-| FOSG | **passed (EXP-042/T4):** real source players act simultaneously through Protocol; phase-only local views cannot observe an opponent's current action; exact outcome and utility laws commute | **Native history/Kuhn batch complete (EXP-057/D28);** next reachable observation-model facts, then a separately gated named EFG serialization comparison |
+| FOSG | **passed (EXP-042/T4):** real source players act simultaneously through Protocol; phase-only local views cannot observe an opponent's current action; exact outcome and utility laws commute | **Native history/Kuhn and reachable observation-model batches complete (EXP-057/D28, EXP-058/D29);** next a separately gated named FOSG-to-EFG serialization comparison; actual counterfactual reach and CFR remain separate gates |
 | multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
 | intrinsic games | the native strategy/information object proves one theorem not recoverable from bare Protocol | compilation, perfect recall, and native theorems |
 | bridges and expressiveness | two real transfers compose more cheaply than direct named proofs | only the earned relation or composition API; otherwise classify v1 transport as retired |

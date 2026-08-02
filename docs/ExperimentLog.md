@@ -68,6 +68,7 @@ becomes difficult to scan.
 | EXP-055 | 2026-08-02 | D4/D5/D9/D25 / real knapsack mechanism | Can explicit finite-set real knapsack semantics instantiate canonical VCG truthfulness without restoring the predecessor's single-parameter wrapper stack? | Supports; decides D26 | [`decisions/D26-real-knapsack-vcg-boundary.md`](decisions/D26-real-knapsack-vcg-boundary.md); `GameTheory/Mechanism/Knapsack/{Aggregate,Basic,Mechanism}.lean`; hostile witness |
 | EXP-056 | 2026-08-02 | D9/D10/D25/D26 / knapsack approximation | Can a certified executable ratio order support an actual feasible half-approximate allocation after repairing the pinned theorem's overweight-singleton defect? | Supports after narrowing to a direct integral exchange proof; decides D27 | [`decisions/D27-executable-knapsack-half-approximation.md`](decisions/D27-executable-knapsack-half-approximation.md); `GameTheory/Mechanism/Knapsack/Approximation*.lean`; hostile witness |
 | EXP-057 | 2026-08-02 | D6/D7/D9/D15 / FOSG observation and Kuhn surface | Does FOSG need any native observation-model/Kuhn execution layer, or only transparent named theorems over the canonical `InformationModel`? | Supports theorem-only projection; decides D28 | [`decisions/D28-fosg-kuhn-protocol-projection.md`](decisions/D28-fosg-kuhn-protocol-projection.md); `Languages/FOSG/Kuhn.lean`; same-execution hostile witness |
+| EXP-058 | 2026-08-02 | D6/D7/D15/D28 / FOSG reachable-observation facts | Which parts of the pinned reachable-observation proof machine survive once Protocol owns histories and information? | Retires the adapter; decides D29 | [`decisions/D29-fosg-reachable-observation-retirement.md`](decisions/D29-fosg-reachable-observation-retirement.md); terminal-activity and compressed-information hostile witnesses |
 
 ## Entry template
 
@@ -3762,3 +3763,55 @@ memory.
   `ReachableHistory/ObsModelFacts.lean` next without crediting its separately
   gated counterfactual/CFR content; reserve a distinct experiment for the
   simultaneous stochastic FOSG-to-EFG serialization comparison.
+
+### EXP-058: FOSG reachable-observation adapter retirement
+
+- **Date / revision:** 2026-08-02, working tree based on `f926bec`
+- **Status:** complete; supports retirement; decides D29
+- **Decision / question:** whether any of the 46 pinned declarations in
+  `Languages/FOSG/ReachableHistory/ObsModelFacts.lean` survives as stable FOSG
+  observation theory after D6/D15/D28 removed the reachable-history
+  `ObsModelCore` machine.
+- **Prediction:** outcome laws and action-record extension already have
+  canonical Protocol owners.  Raw view decoding, terminal-menu facts,
+  alternate-run invariants, posterior-locality adapters, and strategy lifts
+  should retire rather than constrain the accepted execution/information API.
+- **Representative slice:** a terminal-initial Protocol deliberately keeps its
+  sole player active and gives it two Boolean local choices; execution still
+  stops without consulting a chooser, machine-refuting terminal-choice
+  subsingleton.  The existing one-move `Repeat.singleSignals` witness reaches
+  the same compressed information state after distinct own actions and
+  refutes perfect recall, so raw observation-list cancellation cannot become
+  a general information-state theorem.
+- **Competing designs:** port the 1,292-line adapter and its reachable-only
+  carriers; leave all rows open pending future counterfactual work; or classify
+  the file against current Protocol owners while reserving genuinely new CFR
+  work for a theorem stated on the canonical runner.  The third design wins.
+- **Measurements:** 1,233 nonblank lines and 46 declarations.  Raw source-token
+  counts are 128 `ObsModelCore`, 47 `PMF`, 32 `ParameterizedChain`, 19
+  `Function.update`, 24 `change`, 20 `▸`, three `HEq`, one
+  `Fintype.ofFinite`, 15 `classical`, and nine noncomputable definitions.
+  Only `ReachableHistory/Law.lean` and its umbrella import the file directly;
+  the law file consumes its posterior-locality and lift machinery for the
+  native mixed/behavioral and equilibrium-transfer spine.
+- **Artifacts / commands:**
+  `GameTheory/Experimental/PostArchitecture/FOSGObservationFacts.lean`;
+  `lake build GameTheory.Experimental.PostArchitecture.FOSGObservationFacts`
+  (1,724 jobs); `lake build` (3,416 jobs); Phase 2 static and exact ledger /
+  coverage audits in expected verification mode.
+- **Kill conditions:** retain no survivor that mentions `ObsModelCore`, a
+  reachable-only strategy carrier, scalar PMF execution, raw observation
+  lists, terminal inactivity, global finiteness, raw updates, or public
+  transport; credit no CFR theorem merely because downstream retired code used
+  this adapter.
+- **Observation:** the terminal counterexample compiles against the canonical
+  interfaces and the compressed-information counterexample was already part
+  of the D28 hostile suite.  `InformationModel.runBehavioral`, `run`, and
+  `InfoSignals.ownPlay_extend` own the three reusable results.  The remaining
+  declarations are interfaces or proof steps for a second machine, including
+  the posterior-locality result; none is a counterfactual/CFR theorem itself.
+- **Outcome / next action:** adopt D29; classify the file 2 adapt / 1 subsumed /
+  43 retired and add no stable declaration.  Run the separately named
+  simultaneous stochastic FOSG-to-EFG serialization comparison next.  Any
+  later counterfactual/CFR recovery must start from the canonical history law
+  and earn its own checked theorem gate.
