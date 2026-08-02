@@ -273,4 +273,128 @@ theorem expectedStagePayoff_update_le_cutoffTerminal_add_two_opponentLiveTail_of
       reward profile who deviation cutoff bound hbound hreward
   linarith
 
+/-- A coarse bound for the finitely many stages before the cutoff. -/
+theorem expectedStagePayoff_update_le_cutoffTerminal_add_two_bound
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile) (who : ι)
+    (deviation : (quittingGame reward).BehaviorStrategy who)
+    (cutoff time : ℕ) (bound : ℝ) (hbound : 0 ≤ bound)
+    (hreward : ∀ S player, |reward S player| ≤ bound) :
+    (quittingGame reward).expectedStagePayoff
+        (Function.update profile who deviation) none time who ≤
+      quittingTerminalPayoff reward
+          (Function.update profile who
+            (quittingContinueAfterStrategy reward who deviation cutoff)) who +
+        2 * bound := by
+  let cutoffProfile := Function.update profile who
+    (quittingContinueAfterStrategy reward who deviation cutoff)
+  have hstage :
+      |(quittingGame reward).expectedStagePayoff
+        (Function.update profile who deviation) none time who| ≤ bound := by
+    apply (quittingGame reward).abs_expectedStagePayoff_le
+    intro state action
+    cases state with
+    | none => simpa [quittingGame] using hbound
+    | some terminal => simpa [quittingGame] using hreward terminal who
+  have hterminal := abs_quittingTerminalPayoff_le
+    reward cutoffProfile who hbound hreward
+  dsimp [cutoffProfile] at hterminal ⊢
+  linarith [le_of_abs_le hstage, neg_le_of_abs_le hterminal]
+
+/-- A negative-solo deviation's finite average is bounded by the terminal
+payoff of its cutoff version, a vanishing prefix cost, and the opponent live
+tail at the cutoff. -/
+theorem finiteAveragePayoff_update_le_cutoffTerminal_add_prefix_add_tail_of_solo_nonpos
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile) (who : ι)
+    (deviation : (quittingGame reward).BehaviorStrategy who)
+    (cutoff horizon : ℕ) (hcutoff : cutoff ≤ horizon)
+    (hhorizon : 0 < horizon)
+    (bound : ℝ) (hbound : 0 ≤ bound)
+    (hreward : ∀ S player, |reward S player| ≤ bound)
+    (hsolo : reward (quittingSingletonTerminal who) who ≤ 0) :
+    (quittingGame reward).finiteAveragePayoff none horizon
+        (Function.update profile who deviation) who ≤
+      quittingTerminalPayoff reward
+          (Function.update profile who
+            (quittingContinueAfterStrategy reward who deviation cutoff)) who +
+        2 * bound * ((horizon : ℝ)⁻¹ * (cutoff : ℝ) +
+          (quittingLiveMass reward
+              (quittingOpponentOnlyProfile reward profile who) cutoff -
+            quittingLiveMassLimit reward
+              (quittingOpponentOnlyProfile reward profile who))) := by
+  letI : Finite (quittingGame reward).State :=
+    inferInstanceAs (Finite (Option {S : Finset ι // S.Nonempty}))
+  letI : ∀ player : ι, Finite ((quittingGame reward).Act player) :=
+    fun _ => inferInstanceAs (Finite Bool)
+  let cutoffTerminal := quittingTerminalPayoff reward
+    (Function.update profile who
+      (quittingContinueAfterStrategy reward who deviation cutoff)) who
+  let opponentTail := quittingLiveMass reward
+      (quittingOpponentOnlyProfile reward profile who) cutoff -
+    quittingLiveMassLimit reward
+      (quittingOpponentOnlyProfile reward profile who)
+  have htailNonneg : 0 ≤ opponentTail := sub_nonneg.mpr
+    (quittingLiveMassLimit_le reward
+      (quittingOpponentOnlyProfile reward profile who) cutoff)
+  have htailCostNonneg : 0 ≤ 2 * bound * opponentTail := by positivity
+  have hearly :
+      (∑ time ∈ Finset.range cutoff,
+        (quittingGame reward).expectedStagePayoff
+          (Function.update profile who deviation) none time who) ≤
+        ∑ _time ∈ Finset.range cutoff,
+          (cutoffTerminal + 2 * bound * opponentTail + 2 * bound) := by
+    apply Finset.sum_le_sum
+    intro time _
+    have hcoarse :=
+      expectedStagePayoff_update_le_cutoffTerminal_add_two_bound
+        reward profile who deviation cutoff time bound hbound hreward
+    change _ ≤ cutoffTerminal + 2 * bound at hcoarse
+    linarith
+  have hlater :
+      (∑ time ∈ Finset.Ico cutoff horizon,
+        (quittingGame reward).expectedStagePayoff
+          (Function.update profile who deviation) none time who) ≤
+        ∑ _time ∈ Finset.Ico cutoff horizon,
+          (cutoffTerminal + 2 * bound * opponentTail) := by
+    apply Finset.sum_le_sum
+    intro time htime
+    have hcutoffTime : cutoff ≤ time := (Finset.mem_Ico.1 htime).1
+    have hlate :=
+      expectedStagePayoff_update_le_cutoffTerminal_add_two_opponentLiveTail_of_solo_nonpos
+        reward profile who deviation cutoff time hcutoffTime bound hbound
+          (fun S => hreward S who) hsolo
+    simpa [cutoffTerminal, opponentTail] using hlate
+  rw [(quittingGame reward).finiteAveragePayoff_eq_sum_expectedStagePayoff]
+  have hsum :
+      (∑ time ∈ Finset.range horizon,
+        (quittingGame reward).expectedStagePayoff
+          (Function.update profile who deviation) none time who) ≤
+        (∑ _time ∈ Finset.range cutoff,
+          (cutoffTerminal + 2 * bound * opponentTail + 2 * bound)) +
+        ∑ _time ∈ Finset.Ico cutoff horizon,
+          (cutoffTerminal + 2 * bound * opponentTail) := by
+    rw [← Finset.sum_range_add_sum_Ico _ hcutoff]
+    exact add_le_add hearly hlater
+  calc
+    (horizon : ℝ)⁻¹ * ∑ time ∈ Finset.range horizon,
+        (quittingGame reward).expectedStagePayoff
+          (Function.update profile who deviation) none time who ≤
+      (horizon : ℝ)⁻¹ *
+        ((∑ _time ∈ Finset.range cutoff,
+          (cutoffTerminal + 2 * bound * opponentTail + 2 * bound)) +
+        ∑ _time ∈ Finset.Ico cutoff horizon,
+          (cutoffTerminal + 2 * bound * opponentTail)) :=
+      mul_le_mul_of_nonneg_left hsum (by positivity)
+    _ = cutoffTerminal + 2 * bound *
+        ((horizon : ℝ)⁻¹ * (cutoff : ℝ) + opponentTail) := by
+      have hne : (horizon : ℝ) ≠ 0 := by
+        exact_mod_cast (Nat.ne_of_gt hhorizon)
+      simp only [Finset.sum_const, Finset.card_range, Nat.card_Ico,
+        nsmul_eq_mul]
+      rw [Nat.cast_sub hcutoff]
+      field_simp
+      ring
+    _ = _ := rfl
+
 end GameTheory
