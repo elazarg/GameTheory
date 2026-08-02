@@ -144,6 +144,28 @@ theorem tendsto_liveProbability_survivalLimit
   apply tendsto_atTop_ciInf (liveProbability_antitone profile)
   exact liveProbability_bddBelow profile
 
+/-- If the survival limit is positive, then for every relative tolerance
+`eta ∈ (0,1)` some deterministic prefix has conditional survival mass larger
+than `1 - eta`: `(1-eta) * r_N < p`.  This is the division-free form used by
+the stopping proof. -/
+theorem exists_one_sub_mul_liveProbability_lt_survivalLimit
+    (profile : game.BehaviorProfile) {eta : ℝ}
+    (heta0 : 0 < eta)
+    (hlimit : 0 < survivalLimit profile) :
+    ∃ prefixLength : ℕ,
+      (1 - eta) * liveProbability profile prefixLength <
+        survivalLimit profile := by
+  have htendsto := tendsto_liveProbability_survivalLimit profile
+  obtain ⟨prefixLength, hprefixLength⟩ :=
+    (Metric.tendsto_atTop.mp htendsto)
+      (eta * survivalLimit profile) (mul_pos heta0 hlimit)
+  refine ⟨prefixLength, ?_⟩
+  have hdist := hprefixLength prefixLength (le_refl prefixLength)
+  rw [Real.dist_eq] at hdist
+  have hupper := (abs_lt.mp hdist).2
+  have hsurvival0 := liveProbability_nonneg profile prefixLength
+  nlinarith [sq_pos_of_pos heta0]
+
 /-! ## Exact payoff/survival identity -/
 
 /-- Cellwise, the sum of the two current payoffs is at most `2` minus the
@@ -215,6 +237,192 @@ theorem expectedStagePayoff_sum_le_two_sub_liveProbability_succ
                 rw [expect_sub, expect_const]
     _ = 2 - liveProbability profile (time + 1) := by
       rw [liveProbability, game.expectedStateValue_succ]
+
+/-! ## Prefix-conditioned live tails -/
+
+/-- Arbitrary-initial-state version of the expected stage survival bound. -/
+theorem expectedStagePayoff_sum_le_two_sub_expectedStateValue_succ
+    (profile : game.BehaviorProfile) (initial : State) (time : ℕ) :
+    game.expectedStagePayoff profile initial time false +
+        game.expectedStagePayoff profile initial time true ≤
+      2 - game.expectedStateValue profile initial (time + 1)
+        liveIndicator := by
+  unfold StochasticGame.expectedStagePayoff
+  rw [← expect_add]
+  calc
+    expect (game.histDist profile initial time)
+        (fun history =>
+          game.stageEUAt profile history false +
+            game.stageEUAt profile history true) ≤
+      expect (game.histDist profile initial time)
+        (fun history =>
+          2 - expect (game.stageActionDist profile history)
+            (fun action =>
+              expect (game.transition history.2 action) liveIndicator)) := by
+                apply expect_mono
+                intro history
+                exact stageEUAt_sum_le_two_sub_nextLive profile history
+    _ = 2 - expect (game.histDist profile initial time)
+        (fun history =>
+          expect (game.stageActionDist profile history)
+            (fun action =>
+              expect (game.transition history.2 action) liveIndicator)) := by
+                rw [expect_sub, expect_const]
+    _ = 2 - game.expectedStateValue profile initial (time + 1)
+        liveIndicator := by
+      rw [game.expectedStateValue_succ]
+
+/-- Expected state values disintegrate at a deterministic public prefix. -/
+theorem expectedStateValue_add_eq_expect_afterHistory
+    (profile : game.BehaviorProfile) (initial : State)
+    (prefixLength suffixLength : ℕ) (stateValue : State → ℝ) :
+    game.expectedStateValue profile initial (prefixLength + suffixLength)
+        stateValue =
+      expect (game.histDist profile initial prefixLength) fun base =>
+        game.expectedStateValue (game.afterHistoryProfile profile base)
+          base.2 suffixLength stateValue := by
+  unfold StochasticGame.expectedStateValue
+  rw [game.histDist_add_eq_bind_histDistAfter, expect_bind]
+  apply congrArg (expect (game.histDist profile initial prefixLength))
+  funext base
+  unfold StochasticGame.histDistAfter
+  rw [expect_map]
+  rfl
+
+/-- Starting from either absorbing state, the expected live indicator remains
+zero under every behavior profile. -/
+theorem expectedStateValue_liveIndicator_eq_zero_of_not_live
+    (profile : game.BehaviorProfile) (initial : State)
+    (hinitial : initial ≠ State.live) (time : ℕ) :
+    game.expectedStateValue profile initial time liveIndicator = 0 := by
+  cases initial with
+  | live => exact (hinitial rfl).elim
+  | absTL =>
+      unfold StochasticGame.expectedStateValue
+      calc
+        expect (game.histDist profile .absTL time)
+            (fun history => liveIndicator history.2) =
+          expect (game.histDist profile .absTL time) (fun _history => 0) := by
+            apply Math.ProbabilityMassFunction.expect_congr_on_support
+            intro history hhistory
+            have hsnd := game.snd_eq_of_mem_support_histDist_of_isAbsorbingState
+              absTL_isAbsorbingState profile time history hhistory
+            simp [hsnd, liveIndicator]
+        _ = 0 := expect_const _ _
+  | absTR =>
+      unfold StochasticGame.expectedStateValue
+      calc
+        expect (game.histDist profile .absTR time)
+            (fun history => liveIndicator history.2) =
+          expect (game.histDist profile .absTR time) (fun _history => 0) := by
+            apply Math.ProbabilityMassFunction.expect_congr_on_support
+            intro history hhistory
+            have hsnd := game.snd_eq_of_mem_support_histDist_of_isAbsorbingState
+              absTR_isAbsorbingState profile time history hhistory
+            simp [hsnd, liveIndicator]
+        _ = 0 := expect_const _ _
+
+/-- The probability mass of live prefixes is `r_N`. -/
+theorem expect_livePrefixIndicator_eq_liveProbability
+    (profile : game.BehaviorProfile) (prefixLength : ℕ) :
+    expect (game.histDist profile .live prefixLength)
+        (fun base => if base.2 = State.live then (1 : ℝ) else 0) =
+      liveProbability profile prefixLength := by
+  unfold liveProbability StochasticGame.expectedStateValue
+  apply Math.ProbabilityMassFunction.expect_congr_on_support
+  intro base _
+  cases base.2 <;> simp [liveIndicator]
+
+/-- Averaging suffix live-state mass over precisely the live prefixes recovers
+the global later survival probability. -/
+theorem expect_livePrefix_expectedStateValue_eq_liveProbability_add
+    (profile : game.BehaviorProfile) (prefixLength suffixLength : ℕ) :
+    expect (game.histDist profile .live prefixLength)
+        (fun base =>
+          if base.2 = State.live then
+            game.expectedStateValue (game.afterHistoryProfile profile base)
+              base.2 suffixLength liveIndicator
+          else
+            0) =
+      liveProbability profile (prefixLength + suffixLength) := by
+  rw [liveProbability,
+    expectedStateValue_add_eq_expect_afterHistory]
+  apply Math.ProbabilityMassFunction.expect_congr_on_support
+  intro base _
+  by_cases hbase : base.2 = State.live
+  · simp [hbase]
+  · rw [expectedStateValue_liveIndicator_eq_zero_of_not_live
+      (game.afterHistoryProfile profile base) base.2 hbase suffixLength]
+    simp [hbase]
+
+/-- Prefix-mass-weighted expected payoff of one tail stage, restricted to
+prefixes which are live at the splice time. -/
+def liveWeightedStagePayoff (profile : game.BehaviorProfile)
+    (prefixLength suffixTime : ℕ) (who : Player) : ℝ :=
+  expect (game.histDist profile .live prefixLength) fun base =>
+    if base.2 = State.live then
+      game.expectedStagePayoff (game.afterHistoryProfile profile base)
+        base.2 suffixTime who
+    else
+      0
+
+/-- The two live-weighted tail-stage payoffs are bounded by twice the prefix
+survival mass minus the later survival mass. -/
+theorem liveWeightedStagePayoff_sum_le
+    (profile : game.BehaviorProfile) (prefixLength suffixTime : ℕ) :
+    liveWeightedStagePayoff profile prefixLength suffixTime false +
+        liveWeightedStagePayoff profile prefixLength suffixTime true ≤
+      2 * liveProbability profile prefixLength -
+        liveProbability profile (prefixLength + (suffixTime + 1)) := by
+  unfold liveWeightedStagePayoff
+  rw [← expect_add]
+  calc
+    expect (game.histDist profile .live prefixLength)
+        (fun base =>
+          (if base.2 = State.live then
+            game.expectedStagePayoff (game.afterHistoryProfile profile base)
+              base.2 suffixTime false
+          else 0) +
+          if base.2 = State.live then
+            game.expectedStagePayoff (game.afterHistoryProfile profile base)
+              base.2 suffixTime true
+          else 0) ≤
+      expect (game.histDist profile .live prefixLength)
+        (fun base =>
+          if base.2 = State.live then
+            2 - game.expectedStateValue
+              (game.afterHistoryProfile profile base) base.2
+              (suffixTime + 1) liveIndicator
+          else 0) := by
+            apply expect_mono
+            intro base
+            by_cases hbase : base.2 = State.live
+            · simp only [hbase, ↓reduceIte]
+              simpa only [hbase] using
+                expectedStagePayoff_sum_le_two_sub_expectedStateValue_succ
+                  (game.afterHistoryProfile profile base) base.2 suffixTime
+            · simp [hbase]
+    _ = 2 * liveProbability profile prefixLength -
+        liveProbability profile (prefixLength + (suffixTime + 1)) := by
+      have hpoint :
+          (fun base : game.Hist prefixLength =>
+            if base.2 = State.live then
+              2 - game.expectedStateValue
+                (game.afterHistoryProfile profile base) base.2
+                (suffixTime + 1) liveIndicator
+            else 0) =
+          (fun base =>
+            2 * (if base.2 = State.live then (1 : ℝ) else 0) -
+              (if base.2 = State.live then
+                game.expectedStateValue
+                  (game.afterHistoryProfile profile base) base.2
+                  (suffixTime + 1) liveIndicator
+              else 0)) := by
+        funext base
+        by_cases hbase : base.2 = State.live <;> simp [hbase]
+      rw [hpoint, expect_sub, expect_const_mul,
+        expect_livePrefixIndicator_eq_liveProbability,
+        expect_livePrefix_expectedStateValue_eq_liveProbability_add]
 
 end SorinAbsorbingGame
 end StochasticGame
