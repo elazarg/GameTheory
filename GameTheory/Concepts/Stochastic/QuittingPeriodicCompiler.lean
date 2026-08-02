@@ -190,6 +190,22 @@ theorem cyclicValue_le_residualCharge_div_one_sub_prod
   apply (le_div_iff₀ hdenom).2
   nlinarith
 
+/-- Absolute-error form of the one-sided cyclic contraction estimate. -/
+theorem abs_cyclicValue_le_residualCharge_div_one_sub_prod
+    {K : ℕ} (coefficient residual value : Fin K → ℝ)
+    (hcoefficient : ∀ phase, 0 ≤ coefficient phase)
+    (hcycle : (∏ phase : Fin K, coefficient phase) < 1)
+    (hstep : ∀ phase,
+      |value phase| ≤ residual phase +
+        coefficient phase * |value (finRotate K phase)|)
+    (phase : Fin K) :
+    |value phase| ≤
+      quittingCyclicResidualCharge coefficient residual phase K /
+        (1 - ∏ cyclePhase : Fin K, coefficient cyclePhase) := by
+  exact cyclicValue_le_residualCharge_div_one_sub_prod
+    coefficient residual (fun cyclePhase => |value cyclePhase|)
+      hcoefficient hcycle hstep phase
+
 /-! ## Cyclic root sequences -/
 
 /-- A finite cycle of product roots, read forever from an arbitrary initial
@@ -284,5 +300,123 @@ theorem quittingCyclicTerminalValue_eq_rootSuccessorPayoff
   rw [quittingRootSequenceTerminalValue_cyclic_eq]
   simp [quittingCyclicOrbit_succ]
   rfl
+
+/-! ## Quantitative terminal selection -/
+
+omit [DecidableEq ι] in
+/-- A root successor is linear in the selected player's tail coordinate. -/
+theorem quittingRootSuccessorPayoff_sub_eq_continueMass_mul
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (first second : Payoff ι) (root : ι → PMF Bool) (who : ι) :
+    quittingRootSuccessorPayoff reward first root who -
+        quittingRootSuccessorPayoff reward second root who =
+      quittingStationaryContinueMass root * (first who - second who) := by
+  unfold quittingRootSuccessorPayoff
+  rw [quittingRootExpectedPayoff_eq_absorbingContribution_add,
+    quittingRootExpectedPayoff_eq_absorbingContribution_add]
+  ring
+
+/-- The probability that everyone continues is at most the probability
+that all opponents of any fixed player continue. -/
+theorem quittingStationaryContinueMass_le_fixedOpponentsContinueMass
+    (root : ι → PMF Bool) (who : ι) :
+    quittingStationaryContinueMass root ≤
+      quittingStationaryFixedOpponentsContinueMass root who := by
+  have habsorption :=
+    quittingRootAbsorptionMass_eq_one_sub_continueProbability_mul root who
+  have hfactor : quittingStationaryContinueMass root =
+      (root who false).toReal *
+        quittingStationaryFixedOpponentsContinueMass root who := by
+    unfold quittingRootAbsorptionMass at habsorption
+    linarith
+  have hprobability : (root who false).toReal ≤ 1 := by
+    simpa using ENNReal.toReal_mono ENNReal.one_ne_top
+      ((root who).coe_le_one false)
+  have hmass := quittingStationaryFixedOpponentsContinueMass_nonneg root who
+  rw [hfactor]
+  have hprobability0 : 0 ≤ (root who false).toReal :=
+    ENNReal.toReal_nonneg
+  nlinarith
+
+/-- Changing a player's tail coordinate changes its root successor payoff
+by at most opponent survival times the tail-coordinate change. -/
+theorem abs_quittingRootSuccessorPayoff_sub_le_fixedOpponentsContinueMass_mul
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (first second : Payoff ι) (root : ι → PMF Bool) (who : ι) :
+    |quittingRootSuccessorPayoff reward first root who -
+        quittingRootSuccessorPayoff reward second root who| ≤
+      quittingStationaryFixedOpponentsContinueMass root who *
+        |first who - second who| := by
+  rw [quittingRootSuccessorPayoff_sub_eq_continueMass_mul, abs_mul,
+    abs_of_nonneg (quittingStationaryContinueMass_nonneg root)]
+  exact mul_le_mul_of_nonneg_right
+    (quittingStationaryContinueMass_le_fixedOpponentsContinueMass root who)
+    (abs_nonneg _)
+
+/-- A certified approximate cyclic policy-evaluation vector is close to the
+terminal payoff vector selected by the infinite lasso.  The amplification is
+the exact forward weighted cycle charge divided by the playerwise contraction
+gap. -/
+theorem abs_sub_quittingCyclicTerminalValue_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool)
+    (value : Fin K → Payoff ι) (error : Fin K → ι → ℝ)
+    (hpolicy : ∀ phase who,
+      |value phase who -
+        quittingRootSuccessorPayoff reward
+          (value (finRotate K phase)) (cycle phase) who| ≤
+        error phase who)
+    (who : ι)
+    (hcontracts : (∏ phase : Fin K,
+      quittingStationaryFixedOpponentsContinueMass (cycle phase) who) < 1)
+    (phase : Fin K) :
+    |value phase who -
+        quittingCyclicTerminalValue reward cycle phase who| ≤
+      quittingCyclicResidualCharge
+          (fun cyclePhase =>
+            quittingStationaryFixedOpponentsContinueMass
+              (cycle cyclePhase) who)
+          (fun cyclePhase => error cyclePhase who) phase K /
+        (1 - ∏ cyclePhase : Fin K,
+          quittingStationaryFixedOpponentsContinueMass
+            (cycle cyclePhase) who) := by
+  let terminal := quittingCyclicTerminalValue reward cycle
+  let coefficient : Fin K → ℝ := fun cyclePhase =>
+    quittingStationaryFixedOpponentsContinueMass (cycle cyclePhase) who
+  let difference : Fin K → ℝ := fun cyclePhase =>
+    value cyclePhase who - terminal cyclePhase who
+  have hcoefficient : ∀ cyclePhase, 0 ≤ coefficient cyclePhase :=
+    fun cyclePhase =>
+      quittingStationaryFixedOpponentsContinueMass_nonneg
+        (cycle cyclePhase) who
+  have hstep : ∀ cyclePhase,
+      |difference cyclePhase| ≤ error cyclePhase who +
+        coefficient cyclePhase *
+          |difference (finRotate K cyclePhase)| := by
+    intro cyclePhase
+    have hterminal := congrFun
+      (quittingCyclicTerminalValue_eq_rootSuccessorPayoff
+        reward cycle cyclePhase) who
+    have hsplit : difference cyclePhase =
+        (value cyclePhase who -
+          quittingRootSuccessorPayoff reward
+            (value (finRotate K cyclePhase)) (cycle cyclePhase) who) +
+        (quittingRootSuccessorPayoff reward
+            (value (finRotate K cyclePhase)) (cycle cyclePhase) who -
+          quittingRootSuccessorPayoff reward
+            (terminal (finRotate K cyclePhase))
+            (cycle cyclePhase) who) := by
+      dsimp only [difference, terminal]
+      rw [hterminal]
+      ring
+    rw [hsplit]
+    exact (abs_add_le _ _).trans (add_le_add
+      (hpolicy cyclePhase who)
+      (abs_quittingRootSuccessorPayoff_sub_le_fixedOpponentsContinueMass_mul
+        reward (value (finRotate K cyclePhase))
+          (terminal (finRotate K cyclePhase)) (cycle cyclePhase) who))
+  exact abs_cyclicValue_le_residualCharge_div_one_sub_prod
+    coefficient (fun cyclePhase => error cyclePhase who) difference
+      hcoefficient hcontracts hstep phase
 
 end GameTheory
