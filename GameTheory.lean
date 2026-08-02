@@ -430,6 +430,8 @@ import GameTheory.Concepts.Stochastic.QuittingPureTimeExtremality
 import GameTheory.Concepts.Stochastic.QuittingOpponentLiveMass
 import GameTheory.Concepts.Stochastic.QuittingLiveTail
 import GameTheory.Concepts.Stochastic.QuittingExceptionalHazard
+import GameTheory.Concepts.Stochastic.QuittingBellmanTelescope
+import GameTheory.Concepts.Stochastic.QuittingExceptionalBellmanTail
 import GameTheory.Concepts.Stochastic.QuittingNearSureRoot
 import GameTheory.Concepts.Stochastic.QuittingNearSureProfile
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
