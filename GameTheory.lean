@@ -418,6 +418,7 @@ import GameTheory.Concepts.Stochastic.QuittingRootContinuation
 import GameTheory.Concepts.Stochastic.QuittingRootPerturbation
 import GameTheory.Concepts.Stochastic.QuittingSimpleBranches
 import GameTheory.Concepts.Stochastic.QuittingFirstBranch
+import GameTheory.Concepts.Stochastic.QuittingFirstStageAdapter
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
 import Math.NonnegativeLeadingSymbol
 import Math.Probability.FiniteDiscountedFlow
