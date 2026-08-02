@@ -172,6 +172,14 @@ maximizer payoffs `0` then `1`, total vector payoff exactly twice
 root live continuation.  It does not formalize the external universal
 finite-public routing-resistance theorem or any atlas-rank conclusion.
 
+`PrivateRecommendationTargetAbsorbingLift.lean` realizes the sharp
+strategic-form correlation separator as the stated four-state one-decision
+absorbing game. Conditional on any fixed pure decision action, its actual
+finite-horizon average payoff equals that matrix payoff at every positive
+horizon, even with an arbitrary history-dependent continuation after the
+decision. The module is only a payoff-preserving stochastic lift: it defines
+no private device and proves no autonomous-equilibrium or compiler theorem.
+
 ### Negative results (no-go keepers)
 
 No-go and counterexample files are first-class results: each kills a specific
