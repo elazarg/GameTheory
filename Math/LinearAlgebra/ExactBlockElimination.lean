@@ -16,6 +16,11 @@ continuation rebasing commutes with the reduction.
 
 The results are about finite matrices only.  They do not attach stochastic,
 ordered-germ, or asymptotic semantics to the coefficients.
+
+The order-confluence result developed from this layer is the classical
+Crabtree--Haynsworth quotient formula: D. E. Crabtree and E. V. Haynsworth,
+*An identity for the Schur complement of a matrix*, Proc. Amer. Math. Soc. 22
+(1969), DOI 10.1090/S0002-9939-1969-0255573-1.
 -/
 
 set_option autoImplicit false
