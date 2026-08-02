@@ -244,6 +244,209 @@ theorem quittingFinitePureTime_exceptional_bounds
                   add_le_add (hcontinue start) hscaledTail
           _ = bound * (1 - currentMass * tailWeight) := by ring
 
+/-- The prescribed finite hazard payoff is close to the no-opponent-event
+payoff `π * R * (1 - α)`, with every event involving an opponent charged to
+`1 - π`. -/
+theorem abs_quittingFiniteHazardValue_sub_exceptionalTarget_le
+    (quitValue continueReward continueMass : ℕ → ℝ)
+    (hazard : ℕ → PMF Bool)
+    (start fuel : ℕ) (soloReward bound : ℝ)
+    (hsolo0 : 0 ≤ soloReward) (hsoloBound : soloReward ≤ bound)
+    (hmass0 : ∀ time, 0 ≤ continueMass time)
+    (hmass1 : ∀ time, continueMass time ≤ 1)
+    (hquit : ∀ time,
+      |quitValue time - continueMass time * soloReward| ≤
+        bound * (1 - continueMass time))
+    (hcontinue : ∀ time,
+      |continueReward time| ≤ bound * (1 - continueMass time)) :
+    |quittingFiniteHazardValue quitValue continueReward continueMass
+          hazard start fuel -
+        quittingFiniteContinueWeight continueMass start fuel * soloReward *
+          (1 - quittingFiniteOwnContinueWeight hazard start fuel)| ≤
+      bound *
+        (1 - quittingFiniteContinueWeight continueMass start fuel) := by
+  induction fuel generalizing start with
+  | zero =>
+      simp [quittingFiniteHazardValue, quittingFiniteContinueWeight,
+        quittingFiniteOwnContinueWeight]
+  | succ fuel ih =>
+      let currentMass := continueMass start
+      let tailWeight :=
+        quittingFiniteContinueWeight continueMass (start + 1) fuel
+      let tailOwnWeight :=
+        quittingFiniteOwnContinueWeight hazard (start + 1) fuel
+      let quitProbability := (hazard start true).toReal
+      let continueProbability := (hazard start false).toReal
+      let tailValue :=
+        quittingFiniteHazardValue quitValue continueReward continueMass
+          hazard (start + 1) fuel
+      let continueValue := continueReward start + currentMass * tailValue
+      let quitTarget := currentMass * tailWeight * soloReward
+      let continueTarget :=
+        currentMass * tailWeight * soloReward * (1 - tailOwnWeight)
+      let error := bound * (1 - currentMass * tailWeight)
+      have hcurrent0 : 0 ≤ currentMass := hmass0 start
+      have hquitProbability0 : 0 ≤ quitProbability := ENNReal.toReal_nonneg
+      have hcontinueProbability0 : 0 ≤ continueProbability :=
+        ENNReal.toReal_nonneg
+      have hprobabilitySum : quitProbability + continueProbability = 1 := by
+        dsimp [quitProbability, continueProbability]
+        simpa [Fintype.sum_bool] using pmf_toReal_sum_one (hazard start)
+      have hquitBranch :
+          |quitValue start - quitTarget| ≤ error := by
+        have hpure := (quittingFinitePureTime_exceptional_bounds
+          quitValue continueReward continueMass start (fuel + 1)
+          soloReward bound hsolo0 hsoloBound hmass0 hmass1 hquit hcontinue).1
+          (0 : Fin (fuel + 1))
+        simpa only [quittingFinitePureTimeValue,
+          quittingFiniteContinueWeight, Fin.castSucc_zero,
+          Fin.cases_zero] using hpure
+      have htail := ih (start + 1)
+      have hcontinueBranch :
+          |continueValue - continueTarget| ≤ error := by
+        have hscaledTail :
+            currentMass *
+                |tailValue - tailWeight * soloReward *
+                  (1 - tailOwnWeight)| ≤
+              currentMass * (bound * (1 - tailWeight)) :=
+          mul_le_mul_of_nonneg_left htail hcurrent0
+        calc
+          |continueValue - continueTarget| =
+              |continueReward start + currentMass *
+                (tailValue - tailWeight * soloReward *
+                  (1 - tailOwnWeight))| := by
+                    congr 1
+                    dsimp [continueValue, continueTarget]
+                    ring
+          _ ≤ |continueReward start| + currentMass *
+                |tailValue - tailWeight * soloReward *
+                  (1 - tailOwnWeight)| := by
+                  calc
+                    _ ≤ |continueReward start| +
+                        |currentMass *
+                          (tailValue - tailWeight * soloReward *
+                            (1 - tailOwnWeight))| := abs_add_le _ _
+                    _ = _ := by rw [abs_mul, abs_of_nonneg hcurrent0]
+          _ ≤ bound * (1 - currentMass) +
+                currentMass * (bound * (1 - tailWeight)) :=
+                  add_le_add (hcontinue start) hscaledTail
+          _ = error := by dsimp [error]; ring
+      have htarget :
+          currentMass * tailWeight * soloReward *
+              (1 - continueProbability * tailOwnWeight) =
+            quitProbability * quitTarget +
+              continueProbability * continueTarget := by
+        dsimp [quitTarget, continueTarget]
+        rw [show quitProbability = 1 - continueProbability by linarith]
+        ring
+      simp only [quittingFiniteHazardValue,
+        quittingFiniteContinueWeight, quittingFiniteOwnContinueWeight]
+      change
+        |quitProbability * quitValue start +
+              continueProbability * continueValue -
+            currentMass * tailWeight * soloReward *
+              (1 - continueProbability * tailOwnWeight)| ≤ error
+      rw [htarget]
+      calc
+        |quitProbability * quitValue start +
+              continueProbability * continueValue -
+            (quitProbability * quitTarget +
+              continueProbability * continueTarget)| =
+            |quitProbability * (quitValue start - quitTarget) +
+              continueProbability * (continueValue - continueTarget)| := by
+                congr 1
+                ring
+        _ ≤ quitProbability * |quitValue start - quitTarget| +
+              continueProbability * |continueValue - continueTarget| := by
+                calc
+                  _ ≤ |quitProbability * (quitValue start - quitTarget)| +
+                        |continueProbability *
+                          (continueValue - continueTarget)| :=
+                        abs_add_le _ _
+                  _ = _ := by
+                    rw [abs_mul, abs_mul,
+                      abs_of_nonneg hquitProbability0,
+                      abs_of_nonneg hcontinueProbability0]
+        _ ≤ quitProbability * error + continueProbability * error :=
+          add_le_add
+            (mul_le_mul_of_nonneg_left hquitBranch hquitProbability0)
+            (mul_le_mul_of_nonneg_left hcontinueBranch
+              hcontinueProbability0)
+        _ = error := by rw [← add_mul, hprobabilitySum, one_mul]
+
+/-- Every arbitrary finite deviation hazard is bounded by the corrected
+exceptional cap estimate `π * R + M * (1 - π)`. -/
+theorem quittingFiniteHazardValue_le_exceptionalCap
+    (quitValue continueReward continueMass : ℕ → ℝ)
+    (hazard : ℕ → PMF Bool)
+    (start fuel : ℕ) (soloReward bound : ℝ)
+    (hsolo0 : 0 ≤ soloReward) (hsoloBound : soloReward ≤ bound)
+    (hmass0 : ∀ time, 0 ≤ continueMass time)
+    (hmass1 : ∀ time, continueMass time ≤ 1)
+    (hquit : ∀ time,
+      |quitValue time - continueMass time * soloReward| ≤
+        bound * (1 - continueMass time))
+    (hcontinue : ∀ time,
+      |continueReward time| ≤ bound * (1 - continueMass time)) :
+    quittingFiniteHazardValue quitValue continueReward continueMass
+        hazard start fuel ≤
+      quittingFiniteContinueWeight continueMass start fuel * soloReward +
+        bound *
+          (1 - quittingFiniteContinueWeight continueMass start fuel) := by
+  obtain ⟨choice, hchoice⟩ :=
+    exists_pureTime_ge_quittingFiniteHazardValue
+      quitValue continueReward continueMass hazard start fuel
+  have hpure := quittingFinitePureTime_exceptional_bounds
+    quitValue continueReward continueMass start fuel soloReward bound
+      hsolo0 hsoloBound hmass0 hmass1 hquit hcontinue
+  have hweight0 := quittingFiniteContinueWeight_nonneg
+    continueMass hmass0 start fuel
+  refine le_trans hchoice ?_
+  refine Fin.lastCases ?_ (fun earlier => ?_) choice
+  · have hnever := hpure.2
+    have hupper :
+        quittingFinitePureTimeValue quitValue continueReward continueMass
+            start fuel (Fin.last fuel) ≤
+          bound *
+            (1 - quittingFiniteContinueWeight continueMass start fuel) :=
+      le_trans (le_abs_self _) hnever
+    nlinarith [mul_nonneg hweight0 hsolo0]
+  · have hquitChoice := hpure.1 earlier
+    rw [abs_le] at hquitChoice
+    linarith
+
+/-- Corrected finite exceptional gap between an arbitrary deviation hazard
+and the prescribed hazard.  The own-survival atom is retained explicitly. -/
+theorem quittingFiniteHazardGap_le_exceptional
+    (quitValue continueReward continueMass : ℕ → ℝ)
+    (prescribedHazard deviationHazard : ℕ → PMF Bool)
+    (start fuel : ℕ) (soloReward bound : ℝ)
+    (hsolo0 : 0 ≤ soloReward) (hsoloBound : soloReward ≤ bound)
+    (hmass0 : ∀ time, 0 ≤ continueMass time)
+    (hmass1 : ∀ time, continueMass time ≤ 1)
+    (hquit : ∀ time,
+      |quitValue time - continueMass time * soloReward| ≤
+        bound * (1 - continueMass time))
+    (hcontinue : ∀ time,
+      |continueReward time| ≤ bound * (1 - continueMass time)) :
+    quittingFiniteHazardValue quitValue continueReward continueMass
+          deviationHazard start fuel -
+        quittingFiniteHazardValue quitValue continueReward continueMass
+          prescribedHazard start fuel ≤
+      quittingFiniteContinueWeight continueMass start fuel * soloReward *
+          quittingFiniteOwnContinueWeight prescribedHazard start fuel +
+        2 * bound *
+          (1 - quittingFiniteContinueWeight continueMass start fuel) := by
+  have hprescribed :=
+    abs_quittingFiniteHazardValue_sub_exceptionalTarget_le
+      quitValue continueReward continueMass prescribedHazard start fuel
+        soloReward bound hsolo0 hsoloBound hmass0 hmass1 hquit hcontinue
+  have hcap := quittingFiniteHazardValue_le_exceptionalCap
+    quitValue continueReward continueMass deviationHazard start fuel
+      soloReward bound hsolo0 hsoloBound hmass0 hmass1 hquit hcontinue
+  rw [abs_le] at hprescribed
+  nlinarith
+
 /-- The two finite exceptional-tail estimates imply the corrected cap-gap
 bound, including the own-never atom. -/
 theorem exceptionalBellmanGap_le_of_prescribed_and_cap_bounds
