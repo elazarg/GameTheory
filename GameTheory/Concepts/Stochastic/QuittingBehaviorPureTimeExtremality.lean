@@ -190,4 +190,45 @@ theorem quittingTerminalPayoff_eq_rootSequence_profileLiveRoot
     simpa only [hfinite, quittingAllContinueProfileSpine] using hright
   simpa only [quittingProfileSpineRoot_eq_profileLiveRoot] using heq
 
+/-! ## Unilateral deviations on the live path -/
+
+/-- The hazard induced by a behavior strategy on the unique live public
+history. -/
+def quittingBehaviorLiveHazard
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    {who : ι} (deviation : (quittingGame reward).BehaviorStrategy who)
+    (time : ℕ) : PMF Bool :=
+  deviation time (quittingLiveHist reward time)
+
+/-- Updating one behavior strategy updates exactly that coordinate of every
+canonical live root. -/
+theorem quittingProfileLiveRoot_update_eq_rootSequenceUpdate
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (who : ι) (deviation : (quittingGame reward).BehaviorStrategy who) :
+    quittingProfileLiveRoot reward (Function.update profile who deviation) =
+      quittingRootSequenceUpdate (quittingProfileLiveRoot reward profile)
+        who (quittingBehaviorLiveHazard reward deviation) := by
+  funext time player
+  unfold quittingProfileLiveRoot quittingRootSequenceUpdate
+    quittingBehaviorLiveHazard
+  by_cases hp : player = who
+  · subst player
+    simp
+  · simp [Function.update_of_ne hp]
+
+/-- Every unilateral behavioral deviation has exactly the terminal payoff of
+its induced live-path hazard against the original opponents' live roots. -/
+theorem quittingTerminalPayoff_update_eq_rootSequenceHazardTerminalValue
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (who : ι) (deviation : (quittingGame reward).BehaviorStrategy who) :
+    quittingTerminalPayoff reward (Function.update profile who deviation) who =
+      quittingRootSequenceHazardTerminalValue reward
+        (quittingProfileLiveRoot reward profile) who
+        (quittingBehaviorLiveHazard reward deviation) 0 := by
+  rw [quittingTerminalPayoff_eq_rootSequence_profileLiveRoot,
+    quittingProfileLiveRoot_update_eq_rootSequenceUpdate]
+  rfl
+
 end GameTheory
