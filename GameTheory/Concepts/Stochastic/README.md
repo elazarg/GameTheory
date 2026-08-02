@@ -182,10 +182,11 @@ arbitrary stochastic game.
 
 `SingleControllerNoTrap.lean` closes the game-specific no-trap part of that
 residual: strong complementarity forces every state to reach the positive
-dual-occupation support through the pure-controller support graph.  The
-remaining projection witness still requires a policy completion that follows
-such paths without cycling, followed by the fixed-kernel mean-ergodic
-transience/projection argument.
+dual-occupation support through the pure-controller support graph.
+`SingleControllerRankCompletion.lean` then selects least-distance-decreasing
+actions off that support and proves reachability under one fixed completed
+stationary kernel, ruling out cyclic local choices.  The remaining projection
+witness requires the fixed-kernel mean-ergodic transience/projection argument.
 
 Supporting classical theorems, fully proved: Fink's discounted stationary
 equilibria (`exists_isDiscountedStationaryBellmanEq`, `Fink.lean`), Shapley's
