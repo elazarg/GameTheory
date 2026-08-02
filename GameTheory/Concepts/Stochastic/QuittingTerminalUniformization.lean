@@ -35,6 +35,40 @@ open scoped BigOperators
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
+/-- A canonical finite bound for every coordinate of a quitting payoff
+table.  The sum form avoids any nonempty maximum convention. -/
+def quittingRewardBound
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : ℝ :=
+  ∑ S, ∑ who, |reward S who|
+
+omit [DecidableEq ι] in
+/-- The canonical quitting reward bound is nonnegative. -/
+theorem quittingRewardBound_nonneg
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    0 ≤ quittingRewardBound reward := by
+  unfold quittingRewardBound
+  positivity
+
+omit [DecidableEq ι] in
+/-- Every terminal reward coordinate is below the canonical finite bound. -/
+theorem abs_reward_le_quittingRewardBound
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (terminal : {S : Finset ι // S.Nonempty}) (who : ι) :
+    |reward terminal who| ≤ quittingRewardBound reward := by
+  unfold quittingRewardBound
+  have hcoordinate : |reward terminal who| ≤
+      ∑ player, |reward terminal player| := by
+    exact Finset.single_le_sum
+      (fun player _ => abs_nonneg (reward terminal player))
+      (Finset.mem_univ who)
+  have hterminal : (∑ player, |reward terminal player|) ≤
+      ∑ S, ∑ player, |reward S player| := by
+    exact Finset.single_le_sum
+      (fun S _ => Finset.sum_nonneg fun player _ =>
+        abs_nonneg (reward S player))
+      (Finset.mem_univ terminal)
+  exact hcoordinate.trans hterminal
+
 /-- Every finite quitting-game profile has the one-sided deviation
 approximation needed to transfer terminal Nash inequalities to uniform Nash
 inequalities. -/
@@ -47,7 +81,6 @@ theorem quittingGame_hasUniformDeviationUpperApproximation
       none (quittingTerminalPayoff reward) profile := by
   intro error herror
   have hhalf : 0 < error / 2 := by linarith
-
   have heventuallyCesaro : ∀ᶠ horizon : ℕ in atTop, ∀ who,
       bound * ((horizon : ℝ)⁻¹ * ∑ time ∈ Finset.range horizon,
         (quittingLiveMass reward
@@ -68,7 +101,6 @@ theorem quittingGame_hasUniformDeviationUpperApproximation
     exact (tendsto_order.1 hscaled).2 error herror
   obtain ⟨cesaroThreshold, hcesaroThreshold⟩ :=
     Filter.eventually_atTop.1 heventuallyCesaro
-
   have heventuallyTail : ∀ᶠ cutoff : ℕ in atTop, ∀ who,
       2 * bound * (quittingLiveMass reward
             (quittingOpponentOnlyProfile reward profile who) cutoff -
@@ -97,7 +129,6 @@ theorem quittingGame_hasUniformDeviationUpperApproximation
           quittingLiveMassLimit reward
             (quittingOpponentOnlyProfile reward profile who)) < error / 2 :=
     htailAfter cutoff le_rfl
-
   have hinv : Tendsto (fun horizon : ℕ => (horizon : ℝ)⁻¹)
       atTop (nhds 0) :=
     tendsto_inv_atTop_zero.comp tendsto_natCast_atTop_atTop
@@ -112,7 +143,6 @@ theorem quittingGame_hasUniformDeviationUpperApproximation
     (tendsto_order.1 hprefixLimit).2 (error / 2) hhalf
   obtain ⟨prefixThreshold, hprefixThreshold⟩ :=
     Filter.eventually_atTop.1 heventuallyPrefix
-
   let threshold := max cutoff (max 1 (max cesaroThreshold prefixThreshold))
   refine ⟨threshold, fun horizon hhorizon who deviation => ?_⟩
   have hcutoffHorizon : cutoff ≤ horizon :=
@@ -185,5 +215,20 @@ theorem quittingGame_isUniformεEquilibrium_of_terminalNash
         reward profile bound hbound hreward)
       (fun who => tendsto_finiteAveragePayoff_quittingGame
         reward profile who)
+
+/-- Bound-free finite-game form of the terminal-to-uniform theorem.  Finiteness
+of the player set and terminal table supplies the required reward bound
+automatically. -/
+theorem quittingGame_isUniformεEquilibrium_of_terminalNash_finite
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    {ε ε' : ℝ} (herror : ε < ε')
+    (hnash : (quittingGame reward).IsεAsymptoticNash
+      (quittingTerminalPayoff reward) ε profile) :
+    (quittingGame reward).IsUniformεEquilibrium none ε' profile := by
+  exact quittingGame_isUniformεEquilibrium_of_terminalNash
+    reward profile herror hnash (quittingRewardBound reward)
+      (quittingRewardBound_nonneg reward)
+      (abs_reward_le_quittingRewardBound reward)
 
 end GameTheory
