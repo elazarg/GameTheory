@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.NFG; GameTheory.Examples; canonical Core and Analysis concepts
 Domain contract / decision: D4-D10, D15, EXP-042
 Owner: Wave 2 / mature static and language recovery
-Status: complete; 108/108 reviewed, 2 explicitly deferred to owning cross-family gates
+Status: complete; 108/108 reviewed, no deferred rows
 Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-NFG family.
@@ -102,8 +102,8 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 | same | `matchingPennies_fair_mixed_nash` | theorem | adapt | `GameTheory.Examples.fairPennies_isNash` | focused build | Published against `IsNash` of the canonical mixed extension. |
 | same | `matchingPenniesLabels_uniform_eq_fair` | theorem | retired | `GameTheory.Examples.fairPennies` | focused build | Private equality between two predecessor presentations; the successor names one canonical semantic profile. |
 | same | `matchingPennies_fair_correlated_eq` | theorem | adapt | `GameTheory.Examples.matchingPennies_fair_isCorrelatedEq` | S-CORR mixed-Nash ledger; focused build (1,739 jobs) | Concrete consumer of the preference-parametric `GameTheory.IsNash.isCorrelatedEq_pi`; no example-local transport proof. |
-| same | `matchingPennies_correlated_eq_unique` | theorem | deferred | S-CORR/S-ZERO constant-sum correlation recovery | shared static theory gate | Recover the language-independent constant-sum uniqueness theorem, then instantiate the canonical table. |
-| same | `matchingPennies_correlated_eq_iff` | theorem | deferred | S-CORR/S-ZERO constant-sum correlation recovery | shared static theory gate | Follows from the fair-CE and uniqueness rows once their general theorem chain builds. |
+| same | `matchingPennies_correlated_eq_unique` | theorem | adapt | `GameTheory.Examples.matchingPennies_correlatedEq_unique` | S-ZERO constant-sum correlation ledger; focused build (1,741 jobs) | Instantiates the language-independent `GameForm.MatchingPenniesLike.correlatedEq_unique` theorem on the canonical table. |
+| same | `matchingPennies_correlated_eq_iff` | theorem | adapt | `GameTheory.Examples.matchingPennies_isCorrelatedEq_iff` | S-ZERO constant-sum correlation ledger; focused build (1,741 jobs) | Combines the unique-law theorem with the preference-parametric mixed-Nash-to-CE bridge. |
 | `GameTheory/Languages/NFG/PublicGoods.lean` | `publicGoods_freeRide_dominant` | theorem | adapt | `GameTheory.Examples.Economic.publicGoods_freeRide` | focused build | Uses the named `removeContribution` operation instead of a raw function update; the parametric inequality is unchanged. |
 | same | `publicGoods_cooperation_pareto` | theorem | adapt | `GameTheory.Examples.Economic.publicGoods_cooperationPareto` | focused build | Parametric cooperation-versus-defection payoff theorem recovered. |
 | `GameTheory/Languages/NFG/Stackelberg.lean` | `StackelbergGame` | structure | retired | `GameTheory.Protocol.Tree`; `GameTheory.Finite.TableGame` | D0/D5/D6; focused build | The parallel wrapper mixed sequential commitment and simultaneous semantics; the successor example presents each through its canonical root. |

@@ -242,9 +242,9 @@ current integration and recovery status. Wave 0 closes when:
    rather than silently changing inside Phase 2/3-named scripts;
 6. README status is derived from the ledger rather than source-size estimates.
 
-The audit now indexes 436 files and 8,324 declarations. Sixteen work-package
-ledgers claim 1,231 declarations: 455 have reviewed dispositions, the exact
-FOSG queue contains 776 deliberately seeded `unreviewed` rows, and 7,093 remain
+The audit now indexes 436 files and 8,324 declarations. Seventeen work-package
+ledgers claim 1,242 declarations: 466 have reviewed dispositions, the exact
+FOSG queue contains 776 deliberately seeded `unreviewed` rows, and 7,082 remain
 explicitly unaccounted. Both open sets are review queues, not
 auto-classification targets; generated rows are evidence of scope, not
 recovery.
@@ -321,7 +321,7 @@ surface syntax.
 
 | Lane | First gate | Recovery after the gate |
 |---|---|---|
-| NFG | **passed and accounted:** EXP-042/T4 validates compilation; all 126 pinned declarations are classified, with two substantive cross-family rows routed to S-CORR and S-ZERO | broad example, observable cheap-talk, exact half/half mixed Nash, and fair mixed-Nash-to-CE recovery are complete; deliver the remaining constant-sum correlation theorems in their owning lanes |
+| NFG | **passed and recovered:** EXP-042/T4 validates compilation; all 126 pinned declarations are classified with no deferred rows | broad examples, observable cheap talk, exact half/half mixed Nash, and the complete Matching Pennies correlated-equilibrium characterization are recovered through their canonical shared layers |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
 | MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
 | FOSG | **passed (EXP-042/T4):** real source players act simultaneously through Protocol; phase-only local views cannot observe an opponent's current action; exact outcome and utility laws commute | reachable histories, terminal laws, richer observations, strategies, values, and named EFG comparison |
@@ -537,8 +537,8 @@ The next work is ordered:
 3. resume the broader revelation/information-design inventory and open the
    static learning and congestion harvest lanes;
 4. continue broad FOSG recovery, decide whether a live consumer earns D-COMM's
-   deferred conditional public-signal representation, and open the remaining
-   constant-sum S-CORR/S-ZERO consumers routed by the completed NFG ledger;
+   deferred conditional public-signal representation, and recover the general
+   constant-sum value/correlation results beyond the completed binary slice;
 5. admit at most one mature blind-spot experiment—finite stochastic games or
    finite graph reachability are the leading candidates;
 6. admit no Frontier implementation until the first three items have an active

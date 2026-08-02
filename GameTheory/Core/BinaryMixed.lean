@@ -69,9 +69,34 @@ theorem profile_encodeProfile (pureProfile : Profile F.sig) :
   funext i
   simp [profile, encodeProfile]
 
+@[simp]
+theorem encodeProfile_profile (bits : Fin 2 → Bool) :
+    h.encodeProfile (h.profile bits) = bits := by
+  funext i
+  simp [profile, encodeProfile]
+
+/-- The canonical fair mixed profile supplied by the two Boolean labels. -/
+def fairProfile : Profile F.sig.mixed :=
+  fun i => FinDist.mix (1 / 2) (by norm_num) (by norm_num)
+    (FinDist.pure (h.action i true)) (FinDist.pure (h.action i false))
+
+@[simp]
+theorem fairProfile_prob_action (who : Fin 2) (bit : Bool) :
+    (h.fairProfile who).prob (h.action who bit) = (1 / 2 : ℝ) := by
+  classical
+  cases bit
+  · simp [fairProfile, FinDist.prob_pure_of_ne]
+    norm_num
+  · simp [fairProfile, FinDist.prob_pure_of_ne]
+
 /-- Probability assigned to the action labeled `true`. -/
 def probTrue (mixedProfile : Profile F.sig.mixed) (who : Fin 2) : ℝ :=
   (mixedProfile who).prob (h.action who true)
+
+@[simp]
+theorem probTrue_fairProfile (who : Fin 2) :
+    h.probTrue h.fairProfile who = (1 / 2 : ℝ) := by
+  simp [probTrue]
 
 theorem probTrue_nonneg (mixedProfile : Profile F.sig.mixed) (who : Fin 2) :
     0 ≤ h.probTrue mixedProfile who :=

@@ -334,6 +334,44 @@ theorem matchingPennies_fair_isCorrelatedEq :
       (euPreference matchingPennies.utility) (Probability.FinDist.pi fairPennies) :=
   fairPennies_isNash.isCorrelatedEq_pi
 
+private theorem matchingPenniesLike_fairProfile_eq_fairPennies :
+    matchingPenniesLike.fairProfile = fairPennies := by
+  funext who
+  apply FinDist.ext_of_prob
+  intro action
+  rw [TableGame.toMixed_prob]
+  cases action
+  · have hheads : (Side.heads : matchingPennies.Action who) =
+        matchingPenniesLike.action who true := rfl
+    rw [hheads, matchingPenniesLike.fairProfile_prob_action]
+    norm_num [uniformPennies]
+  · have htails : (Side.tails : matchingPennies.Action who) =
+        matchingPenniesLike.action who false := rfl
+    rw [htails, matchingPenniesLike.fairProfile_prob_action]
+    norm_num [uniformPennies]
+
+/-- The independent fair law is the unique correlated equilibrium of Matching
+Pennies. -/
+theorem matchingPennies_correlatedEq_unique
+    {law : FinDist (Profile matchingPennies.sig)}
+    (hCE : IsCorrelatedEq matchingPennies.toForm
+      (euPreference matchingPennies.utility) law) :
+    law = FinDist.pi fairPennies := by
+  rw [← matchingPenniesLike_fairProfile_eq_fairPennies]
+  exact matchingPenniesLike.correlatedEq_unique hCE
+
+/-- A profile law is a correlated equilibrium of Matching Pennies exactly when
+it is the independent fair law. -/
+theorem matchingPennies_isCorrelatedEq_iff
+    (law : FinDist (Profile matchingPennies.sig)) :
+    IsCorrelatedEq matchingPennies.toForm
+        (euPreference matchingPennies.utility) law ↔
+      law = FinDist.pi fairPennies := by
+  constructor
+  · exact matchingPennies_correlatedEq_unique
+  · rintro rfl
+    exact matchingPennies_fair_isCorrelatedEq
+
 /-! ## Stag Hunt -/
 
 /-- Hunt stag together or take the safe hare. -/
