@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exact interval certificates for the block-pair period-eleven lasso.
 
-The lasso has public support word
+The original lasso has public support word
 
     [7, 7, 14, 14, 11, 11, 9, 9, 13, 13, 7].
 
@@ -17,6 +17,10 @@ formula.  After multiplying by the positive joint-cycle denominator, it has
 31 polynomial active-indifference equations in the 31 hazards.  Both systems
 are certified independently; the original 75-variable system remains a
 regression for the elimination and phase orientation.
+
+A second exact reduced certificate changes phase 4 from mask 11 to mask 14.
+It is a regression against accidental rigidity of the original support word;
+the larger 75-variable formulation is retained only for the original word.
 
 Pass ``--export-reduced-preconditioner`` to emit the validated 31-by-31
 rational preconditioner, center, radius, game data, and variable order as
@@ -39,6 +43,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_EVEN, localcontext
 from fractions import Fraction
+from functools import partial
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -66,6 +71,22 @@ ROOT_CENTER_TEXT = (
     ("0.17272500809879718", "0", "0.050942654221662664", "0.076391038430525665"),
     ("0.25317128934533362", "0", "0.024484008004623317", "0.0086400718059171568"),
     ("0.053441876508934921", "0.013002213795957967", "0.061305680651160738", "0"),
+)
+
+
+NEARBY_SUPPORT_WORD = (7, 7, 14, 14, 14, 11, 9, 9, 13, 13, 7)
+NEARBY_ROOT_CENTER_TEXT = (
+    ("0.069263688386350233", "0.042818792380861101", "0.16785488622016514", "0"),
+    ("0.0073968227716418823", "0.071460526463632268", "0.35150324309338782", "0"),
+    ("0", "0.11506801598053953", "0.042813136089758577", "0.0016823518187853101"),
+    ("0", "0.18503939024551086", "0.06959555844283967", "0.040117563823091326"),
+    ("0", "0.27991920884450561", "0.081548119792186888", "0.11265198855786279"),
+    ("0.035491215162116951", "0.010932669515614597", "0", "0.21704875060474529"),
+    ("0.060925914446962146", "0", "0", "0.16807613271724231"),
+    ("0.097318063693156445", "0", "0", "0.10101653488210106"),
+    ("0.17476560341503711", "0", "0.049783745458097432", "0.078157402326823805"),
+    ("0.26178340367149361", "0", "0.02956800509028978", "0.013371405443325707"),
+    ("0.051468536661102619", "0.0029775834003244496", "0.050425054590815838", "0"),
 )
 
 
@@ -104,6 +125,56 @@ def q(text: str) -> Fraction:
     return Fraction(text)
 
 
+@dataclass(frozen=True)
+class ReducedCertificateData:
+    name: str
+    support_word: tuple[int, ...]
+    root_center: tuple[tuple[Fraction, ...], ...]
+    active_slots: tuple[tuple[int, int], ...]
+    hazard_index: dict[tuple[int, int], int]
+    hazard_center: tuple[Fraction, ...]
+
+
+def make_reduced_certificate_data(
+    name: str,
+    support_word: tuple[int, ...],
+    root_center_text: tuple[tuple[str, ...], ...],
+) -> ReducedCertificateData:
+    assert len(support_word) == len(root_center_text) == PERIOD
+    root_center = tuple(
+        tuple(q(value) for value in row) for row in root_center_text
+    )
+    assert all(len(row) == N for row in root_center)
+    active_slots = tuple(
+        (phase, player)
+        for phase, support in enumerate(support_word)
+        for player in range(N)
+        if (support >> player) & 1
+    )
+    hazard_index = {
+        slot: index for index, slot in enumerate(active_slots)
+    }
+    hazard_center = tuple(
+        root_center[phase][player] for phase, player in active_slots
+    )
+    for phase, support in enumerate(support_word):
+        for player in range(N):
+            value = root_center[phase][player]
+            if (support >> player) & 1:
+                assert 0 < value < 1
+            else:
+                assert value == 0
+    assert len(active_slots) == 31
+    return ReducedCertificateData(
+        name,
+        support_word,
+        root_center,
+        active_slots,
+        hazard_index,
+        hazard_center,
+    )
+
+
 ROOT_CENTER = tuple(tuple(q(value) for value in row) for row in ROOT_CENTER_TEXT)
 VALUE_CENTER = tuple(tuple(q(value) for value in row) for row in VALUE_CENTER_TEXT)
 HAZARD_CENTER = tuple(
@@ -115,6 +186,16 @@ CENTER = HAZARD_CENTER + tuple(
     for player in range(N)
 )
 assert len(CENTER) == DIMENSION
+
+BASE_REDUCED_CERTIFICATE = make_reduced_certificate_data(
+    "base", SUPPORT_WORD, ROOT_CENTER_TEXT
+)
+NEARBY_REDUCED_CERTIFICATE = make_reduced_certificate_data(
+    "phase4-mask11-to-mask14", NEARBY_SUPPORT_WORD, NEARBY_ROOT_CENTER_TEXT
+)
+assert BASE_REDUCED_CERTIFICATE.active_slots == ACTIVE_SLOTS
+assert BASE_REDUCED_CERTIFICATE.hazard_index == HAZARD_INDEX
+assert BASE_REDUCED_CERTIFICATE.hazard_center == HAZARD_CENTER
 
 
 @dataclass(frozen=True)
@@ -364,14 +445,15 @@ def value_variable_index(phase: int, player: int) -> int:
 
 def unpack_hazard_box(
     box: tuple[Interval, ...],
+    certificate: ReducedCertificateData = BASE_REDUCED_CERTIFICATE,
 ) -> tuple[tuple[Interval, ...], ...]:
-    assert len(box) == HAZARD_COUNT
+    assert len(box) == len(certificate.active_slots)
     roots = []
-    for phase, support in enumerate(SUPPORT_WORD):
+    for phase, support in enumerate(certificate.support_word):
         row = []
         for player in range(N):
             if bit(support, player):
-                row.append(box[HAZARD_INDEX[(phase, player)]])
+                row.append(box[certificate.hazard_index[(phase, player)]])
             else:
                 row.append(ZERO)
         roots.append(tuple(row))
@@ -382,7 +464,7 @@ def unpack_box(
     box: tuple[Interval, ...],
 ) -> tuple[tuple[tuple[Interval, ...], ...], tuple[tuple[Interval, ...], ...]]:
     assert len(box) == DIMENSION
-    roots = unpack_hazard_box(box[:HAZARD_COUNT])
+    roots = unpack_hazard_box(box[:HAZARD_COUNT], BASE_REDUCED_CERTIFICATE)
     values = tuple(
         tuple(box[value_variable_index(phase, player)] for player in range(N))
         for phase in range(PERIOD)
@@ -474,20 +556,22 @@ def system_and_jacobian(
 
 def unpack_dual_hazard_box(
     box: tuple[Interval, ...],
+    certificate: ReducedCertificateData = BASE_REDUCED_CERTIFICATE,
 ) -> tuple[tuple[IntervalDual, ...], ...]:
-    assert len(box) == HAZARD_COUNT
+    dimension = len(certificate.active_slots)
+    assert len(box) == dimension
     roots = []
-    for phase, support in enumerate(SUPPORT_WORD):
+    for phase, support in enumerate(certificate.support_word):
         row = []
         for player in range(N):
             slot = (phase, player)
             if bit(support, player):
-                index = HAZARD_INDEX[slot]
-                derivative = [ZERO for _ in range(HAZARD_COUNT)]
+                index = certificate.hazard_index[slot]
+                derivative = [ZERO for _ in range(dimension)]
                 derivative[index] = ONE
                 row.append(IntervalDual(box[index], tuple(derivative)))
             else:
-                row.append(IntervalDual.constant(0, HAZARD_COUNT))
+                row.append(IntervalDual.constant(0, dimension))
         roots.append(tuple(row))
     return tuple(roots)
 
@@ -495,13 +579,14 @@ def unpack_dual_hazard_box(
 def dual_probability(
     root: tuple[IntervalDual, ...], mask: int, omitted: int | None = None
 ) -> IntervalDual:
-    one = IntervalDual.constant(1, HAZARD_COUNT)
+    dimension = len(root[0].derivative)
+    one = IntervalDual.constant(1, dimension)
     factors = []
     for player in range(N):
         if player == omitted:
             continue
         factors.append(root[player] if bit(mask, player) else one - root[player])
-    return dual_product(factors, HAZARD_COUNT)
+    return dual_product(factors, dimension)
 
 
 @dataclass(frozen=True)
@@ -513,13 +598,17 @@ class ReducedCycleData:
     numerator: tuple[tuple[IntervalDual, ...], ...]
 
 
-def reduced_cycle_data(box: tuple[Interval, ...]) -> ReducedCycleData:
-    roots = unpack_dual_hazard_box(box)
+def reduced_cycle_data(
+    box: tuple[Interval, ...],
+    certificate: ReducedCertificateData = BASE_REDUCED_CERTIFICATE,
+) -> ReducedCycleData:
+    dimension = len(certificate.active_slots)
+    roots = unpack_dual_hazard_box(box, certificate)
     immediate = []
     survival = []
     for root in roots:
         phase_immediate = [
-            IntervalDual.constant(0, HAZARD_COUNT) for _ in range(N)
+            IntervalDual.constant(0, dimension) for _ in range(N)
         ]
         for mask in range(1, 1 << N):
             mass = dual_probability(root, mask)
@@ -531,11 +620,11 @@ def reduced_cycle_data(box: tuple[Interval, ...]) -> ReducedCycleData:
         immediate.append(tuple(phase_immediate))
         survival.append(dual_probability(root, 0))
 
-    joint_survival = dual_product(survival, HAZARD_COUNT)
+    joint_survival = dual_product(survival, dimension)
     numerator = []
     for phase in range(PERIOD):
-        value = [IntervalDual.constant(0, HAZARD_COUNT) for _ in range(N)]
-        prefix = IntervalDual.constant(1, HAZARD_COUNT)
+        value = [IntervalDual.constant(0, dimension) for _ in range(N)]
+        prefix = IntervalDual.constant(1, dimension)
         for offset in range(PERIOD):
             cycle_phase = (phase + offset) % PERIOD
             for player in range(N):
@@ -557,16 +646,18 @@ def reduced_cycle_data(box: tuple[Interval, ...]) -> ReducedCycleData:
 
 def reduced_system_and_jacobian(
     box: tuple[Interval, ...],
+    certificate: ReducedCertificateData = BASE_REDUCED_CERTIFICATE,
 ) -> tuple[tuple[Interval, ...], tuple[SparseRow, ...]]:
-    data = reduced_cycle_data(box)
-    one = IntervalDual.constant(1, HAZARD_COUNT)
+    dimension = len(certificate.active_slots)
+    data = reduced_cycle_data(box, certificate)
+    one = IntervalDual.constant(1, dimension)
     denominator = one - data.joint_survival
     equations = []
     jacobian = []
 
-    for phase, player in ACTIVE_SLOTS:
-        quit_value = IntervalDual.constant(0, HAZARD_COUNT)
-        absorption = IntervalDual.constant(0, HAZARD_COUNT)
+    for phase, player in certificate.active_slots:
+        quit_value = IntervalDual.constant(0, dimension)
+        absorption = IntervalDual.constant(0, dimension)
         root = data.roots[phase]
         for opponent_mask in range(1 << N):
             if bit(opponent_mask, player):
@@ -594,18 +685,19 @@ def reduced_system_and_jacobian(
             }
         )
 
-    assert len(equations) == len(jacobian) == HAZARD_COUNT
+    assert len(equations) == len(jacobian) == dimension
     return tuple(equations), tuple(jacobian)
 
 
 def reconstructed_cyclic_values(
     box: tuple[Interval, ...],
+    certificate: ReducedCertificateData = BASE_REDUCED_CERTIFICATE,
 ) -> tuple[
     tuple[tuple[Interval, ...], ...],
     tuple[tuple[Interval, ...], ...],
     Interval,
 ]:
-    roots = unpack_hazard_box(box)
+    roots = unpack_hazard_box(box, certificate)
     phases = tuple(phase_data(root) for root in roots)
     joint_survival = interval_product(tuple(data.survival for data in phases))
     denominator = ONE - joint_survival
@@ -796,10 +888,11 @@ def certify_system(
 def assert_strategic_inequalities_for(
     roots: tuple[tuple[Interval, ...], ...],
     values: tuple[tuple[Interval, ...], ...],
+    certificate: ReducedCertificateData = BASE_REDUCED_CERTIFICATE,
 ) -> tuple[Fraction, Fraction, Fraction]:
     assert len(roots) == len(values) == PERIOD
     active_count = 0
-    for phase, support in enumerate(SUPPORT_WORD):
+    for phase, support in enumerate(certificate.support_word):
         for player in range(N):
             hazard = roots[phase][player]
             if bit(support, player):
@@ -807,11 +900,11 @@ def assert_strategic_inequalities_for(
                 assert 0 < hazard.low < hazard.high < 1
             else:
                 assert hazard.is_zero()
-    assert active_count == HAZARD_COUNT
+    assert active_count == len(certificate.active_slots)
 
     inactive_upper = None
     inactive_count = 0
-    for phase, support in enumerate(SUPPORT_WORD):
+    for phase, support in enumerate(certificate.support_word):
         successor = (phase + 1) % PERIOD
         for player in range(N):
             if bit(support, player):
@@ -839,7 +932,7 @@ def assert_strategic_inequalities_for(
         tuple(phase_data(roots[phase]).survival for phase in range(PERIOD))
     )
     assert 0 <= joint_cycle.low <= joint_cycle.high < 1
-    assert inactive_count == N * PERIOD - HAZARD_COUNT == 13
+    assert inactive_count == N * PERIOD - len(certificate.active_slots) == 13
     assert inactive_upper is not None
     return inactive_upper, opponent_cycle_upper, joint_cycle.high
 
@@ -848,16 +941,45 @@ def assert_strategic_inequalities(
     box: tuple[Interval, ...],
 ) -> tuple[Fraction, Fraction, Fraction]:
     roots, values = unpack_box(box)
-    return assert_strategic_inequalities_for(roots, values)
+    return assert_strategic_inequalities_for(
+        roots, values, BASE_REDUCED_CERTIFICATE
+    )
 
 
-def assert_reduced_orientation(center: tuple[Fraction, ...]) -> Fraction:
-    """Check exactly that value reconstruction lifts H to the 75D system."""
+def assert_reduced_orientation(
+    certificate: ReducedCertificateData,
+) -> Fraction | None:
+    """Check value reconstruction and the exact row identity H = (1-rho)D."""
 
-    point = point_box(center)
-    equations, _ = reduced_system_and_jacobian(point)
-    _, values, joint_survival = reconstructed_cyclic_values(point)
+    point = point_box(certificate.hazard_center)
+    equations, _ = reduced_system_and_jacobian(point, certificate)
+    roots, values, joint_survival = reconstructed_cyclic_values(
+        point, certificate
+    )
     denominator = ONE - joint_survival
+    phases = tuple(phase_data(root) for root in roots)
+    for phase in range(PERIOD):
+        successor = (phase + 1) % PERIOD
+        for player in range(N):
+            assert values[phase][player] == (
+                phases[phase].immediate[player]
+                + phases[phase].survival * values[successor][player]
+            )
+    for reduced_equation, (phase, player) in zip(
+        equations, certificate.active_slots
+    ):
+        successor = (phase + 1) % PERIOD
+        opponent = opponent_data(roots[phase], player)
+        difference = (
+            opponent.quit_value
+            - opponent.absorption
+            - opponent.survival * values[successor][player]
+        )
+        assert reduced_equation == denominator * difference
+
+    if certificate is not BASE_REDUCED_CERTIFICATE:
+        return None
+
     lifted_point = point + tuple(
         values[phase][player]
         for phase in range(PERIOD)
@@ -889,13 +1011,16 @@ def fraction_text(value: Fraction) -> str:
 
 
 def reduced_preconditioner_document(
-    preconditioner: list[list[Fraction]], radius: Fraction
+    preconditioner: list[list[Fraction]],
+    radius: Fraction,
+    certificate: ReducedCertificateData = BASE_REDUCED_CERTIFICATE,
 ) -> tuple[str, str, int, int]:
-    assert len(preconditioner) == HAZARD_COUNT
-    assert all(len(row) == HAZARD_COUNT for row in preconditioner)
+    dimension = len(certificate.active_slots)
+    assert len(preconditioner) == dimension
+    assert all(len(row) == dimension for row in preconditioner)
     payload = {
-        "center": [fraction_text(value) for value in HAZARD_CENTER],
-        "dimension": HAZARD_COUNT,
+        "center": [fraction_text(value) for value in certificate.hazard_center],
+        "dimension": dimension,
         "format": "block-pair-k11-reduced-preconditioner-v1",
         "matrix": [
             [fraction_text(value) for value in row]
@@ -903,12 +1028,12 @@ def reduced_preconditioner_document(
         ],
         "preconditioner_decimal_precision": REDUCED_PRECONDITIONER_PRECISION,
         "radius": fraction_text(radius),
-        "support_word": list(SUPPORT_WORD),
+        "support_word": list(certificate.support_word),
         "system": "H=(1-rho)*(q-a)-c*N_next",
         "terminal": [
             [mask, *TERMINAL[mask]] for mask in range(1, 1 << N)
         ],
-        "variable_order": [list(slot) for slot in ACTIVE_SLOTS],
+        "variable_order": [list(slot) for slot in certificate.active_slots],
     }
     canonical_payload = json.dumps(
         payload, sort_keys=True, separators=(",", ":")
@@ -955,6 +1080,10 @@ def main() -> None:
         full_joint_cycle_upper,
     ) = assert_strategic_inequalities(full_box)
 
+    base_reduced_evaluator = partial(
+        reduced_system_and_jacobian,
+        certificate=BASE_REDUCED_CERTIFICATE,
+    )
     (
         reduced_box,
         reduced_preconditioner,
@@ -962,20 +1091,25 @@ def main() -> None:
         reduced_defect_row_sum,
         reduced_inclusion_ratio,
     ) = certify_system(
-        HAZARD_CENTER,
+        BASE_REDUCED_CERTIFICATE.hazard_center,
         radius,
-        reduced_system_and_jacobian,
+        base_reduced_evaluator,
         REDUCED_PRECONDITIONER_PRECISION,
     )
-    reduced_value_center_mismatch = assert_reduced_orientation(HAZARD_CENTER)
+    reduced_value_center_mismatch = assert_reduced_orientation(
+        BASE_REDUCED_CERTIFICATE
+    )
+    assert reduced_value_center_mismatch is not None
     reduced_roots, reduced_values, reduced_joint_cycle = (
-        reconstructed_cyclic_values(reduced_box)
+        reconstructed_cyclic_values(reduced_box, BASE_REDUCED_CERTIFICATE)
     )
     (
         reduced_inactive_upper,
         reduced_opponent_cycle_upper,
         reduced_joint_cycle_upper,
-    ) = assert_strategic_inequalities_for(reduced_roots, reduced_values)
+    ) = assert_strategic_inequalities_for(
+        reduced_roots, reduced_values, BASE_REDUCED_CERTIFICATE
+    )
     assert reduced_joint_cycle.high == reduced_joint_cycle_upper
 
     (
@@ -984,7 +1118,56 @@ def main() -> None:
         preconditioner_payload_bytes,
         maximum_denominator_digits,
     ) = reduced_preconditioner_document(
-        reduced_preconditioner, radius
+        reduced_preconditioner, radius, BASE_REDUCED_CERTIFICATE
+    )
+
+    nearby_reduced_evaluator = partial(
+        reduced_system_and_jacobian,
+        certificate=NEARBY_REDUCED_CERTIFICATE,
+    )
+    (
+        nearby_box,
+        nearby_preconditioner,
+        nearby_center_residual,
+        nearby_defect_row_sum,
+        nearby_inclusion_ratio,
+    ) = certify_system(
+        NEARBY_REDUCED_CERTIFICATE.hazard_center,
+        radius,
+        nearby_reduced_evaluator,
+        REDUCED_PRECONDITIONER_PRECISION,
+    )
+    assert assert_reduced_orientation(NEARBY_REDUCED_CERTIFICATE) is None
+    nearby_roots, nearby_values, nearby_joint_cycle = (
+        reconstructed_cyclic_values(
+            nearby_box, NEARBY_REDUCED_CERTIFICATE
+        )
+    )
+    payoff_coordinate_separations = (
+        nearby_values[0][0].low - reduced_values[0][0].high,
+        nearby_values[0][1].low - reduced_values[0][1].high,
+        reduced_values[0][2].low - nearby_values[0][2].high,
+        nearby_values[0][3].low - reduced_values[0][3].high,
+    )
+    assert all(gap > 0 for gap in payoff_coordinate_separations)
+    minimum_payoff_coordinate_separation = min(
+        payoff_coordinate_separations
+    )
+    (
+        nearby_inactive_upper,
+        nearby_opponent_cycle_upper,
+        nearby_joint_cycle_upper,
+    ) = assert_strategic_inequalities_for(
+        nearby_roots, nearby_values, NEARBY_REDUCED_CERTIFICATE
+    )
+    assert nearby_joint_cycle.high == nearby_joint_cycle_upper
+    (
+        _,
+        nearby_preconditioner_digest,
+        nearby_preconditioner_payload_bytes,
+        nearby_maximum_denominator_digits,
+    ) = reduced_preconditioner_document(
+        nearby_preconditioner, radius, NEARBY_REDUCED_CERTIFICATE
     )
 
     if export_preconditioner:
@@ -1021,6 +1204,58 @@ def main() -> None:
     print(
         "reduced variable order = "
         + ",".join(f"{phase}:{player}" for phase, player in ACTIVE_SLOTS)
+    )
+    print()
+    print(
+        "exact neighboring period-eleven 31-variable eliminated "
+        "Krawczyk certificate passed"
+    )
+    print(f"certificate name = {NEARBY_REDUCED_CERTIFICATE.name}")
+    print(
+        "support word = "
+        + ",".join(
+            str(support)
+            for support in NEARBY_REDUCED_CERTIFICATE.support_word
+        )
+    )
+    print(f"dimension = {len(NEARBY_REDUCED_CERTIFICATE.active_slots)}")
+    print(f"box radius = {radius}")
+    print(f"maximum center residual ~= {float(nearby_center_residual):.3e}")
+    print(
+        "maximum ||I-AJ(X)|| row sum ~= "
+        f"{float(nearby_defect_row_sum):.3e}"
+    )
+    print(
+        "maximum Krawczyk inclusion ratio ~= "
+        f"{float(nearby_inclusion_ratio):.3e}"
+    )
+    print(
+        "largest inactive Quit-minus-Continue upper bound ~= "
+        f"{float(nearby_inactive_upper):.6f}"
+    )
+    print(
+        "largest opponent-cycle survival upper bound ~= "
+        f"{float(nearby_opponent_cycle_upper):.6f}"
+    )
+    print(
+        "joint-cycle survival upper bound ~= "
+        f"{float(nearby_joint_cycle_upper):.6f}"
+    )
+    print(
+        "minimum phase-zero payoff-coordinate separation ~= "
+        f"{float(minimum_payoff_coordinate_separation):.6f}"
+    )
+    print(
+        "neighboring reduced preconditioner SHA-256 = "
+        f"{nearby_preconditioner_digest}"
+    )
+    print(
+        "neighboring reduced preconditioner canonical payload bytes = "
+        f"{nearby_preconditioner_payload_bytes}"
+    )
+    print(
+        "neighboring reduced preconditioner maximum denominator digits = "
+        f"{nearby_maximum_denominator_digits}"
     )
 
 
