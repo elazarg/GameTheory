@@ -26,8 +26,11 @@ original word.
 
 Pass ``--export-reduced-preconditioner`` to emit the validated 31-by-31
 rational preconditioner, center, radius, game data, and variable order as
-canonical JSON with a SHA-256 fingerprint.  Export still runs both exact
-certificates before producing the document.
+canonical JSON with a SHA-256 fingerprint. Pass
+``--export-reduced-dyadic-preconditioner`` to round that matrix to a common
+denominator (2^{80}), validate the rounded matrix by the same exact
+Krawczyk calculation, and emit its integer numerators. Export still runs all
+exact certificates before producing the document.
 
 The decimal inverse used to precondition the system is only witness
 generation.  After it is rounded to rational entries, every Krawczyk bound,
@@ -135,6 +138,7 @@ DIMENSION = HAZARD_COUNT + VALUE_COUNT
 assert HAZARD_COUNT == 31
 assert DIMENSION == 75
 REDUCED_PRECONDITIONER_PRECISION = 16
+DYADIC_PRECONDITIONER_POWER = 80
 
 HAZARD_INDEX = {slot: index for index, slot in enumerate(ACTIVE_SLOTS)}
 
@@ -1031,6 +1035,35 @@ def fraction_text(value: Fraction) -> str:
     return f"{value.numerator}/{value.denominator}"
 
 
+def nearest_dyadic(value: Fraction, denominator_power: int) -> Fraction:
+    """Round exactly to the nearest multiple of ``2^-denominator_power``.
+
+    Halfway cases use ties-to-even.  The particular tie rule is immaterial to
+    soundness because the rounded matrix is subsequently validated from
+    scratch, but spelling it out makes the exported witness deterministic.
+    """
+
+    assert 0 <= denominator_power
+    scale = 1 << denominator_power
+    scaled = value * scale
+    quotient, remainder = divmod(scaled.numerator, scaled.denominator)
+    twice_remainder = 2 * remainder
+    if twice_remainder > scaled.denominator or (
+        twice_remainder == scaled.denominator and quotient % 2
+    ):
+        quotient += 1
+    return Fraction(quotient, scale)
+
+
+def dyadic_preconditioner(
+    preconditioner: list[list[Fraction]], denominator_power: int
+) -> list[list[Fraction]]:
+    return [
+        [nearest_dyadic(value, denominator_power) for value in row]
+        for row in preconditioner
+    ]
+
+
 def reduced_preconditioner_document(
     preconditioner: list[list[Fraction]],
     radius: Fraction,
@@ -1078,13 +1111,77 @@ def reduced_preconditioner_document(
     )
 
 
+def reduced_dyadic_preconditioner_document(
+    preconditioner: list[list[Fraction]],
+    denominator_power: int,
+    radius: Fraction,
+    maximum_defect_row_sum: Fraction,
+    maximum_inclusion_ratio: Fraction,
+    certificate: ReducedCertificateData = BASE_REDUCED_CERTIFICATE,
+) -> tuple[str, str, int, int]:
+    dimension = len(certificate.active_slots)
+    denominator = 1 << denominator_power
+    assert len(preconditioner) == dimension
+    assert all(len(row) == dimension for row in preconditioner)
+    assert all(
+        value.denominator == 1
+        or denominator % value.denominator == 0
+        for row in preconditioner
+        for value in row
+    )
+    numerators = [
+        [value.numerator * (denominator // value.denominator) for value in row]
+        for row in preconditioner
+    ]
+    payload = {
+        "center": [fraction_text(value) for value in certificate.hazard_center],
+        "denominator_power": denominator_power,
+        "dimension": dimension,
+        "format": "block-pair-k11-reduced-dyadic-preconditioner-v1",
+        "matrix_numerators": numerators,
+        "maximum_defect_row_sum": fraction_text(maximum_defect_row_sum),
+        "maximum_inclusion_ratio": fraction_text(maximum_inclusion_ratio),
+        "radius": fraction_text(radius),
+        "support_word": list(certificate.support_word),
+        "system": "H=(1-rho)*(q-a)-c*N_next",
+        "terminal": [
+            [mask, *TERMINAL[mask]] for mask in range(1, 1 << N)
+        ],
+        "variable_order": [list(slot) for slot in certificate.active_slots],
+    }
+    canonical_payload = json.dumps(
+        payload, sort_keys=True, separators=(",", ":")
+    )
+    digest = sha256(canonical_payload.encode("utf-8")).hexdigest()
+    document = json.dumps(
+        {"payload": payload, "sha256": digest},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    maximum_numerator_bits = max(
+        abs(value).bit_length() for row in numerators for value in row
+    )
+    return (
+        document,
+        digest,
+        len(canonical_payload.encode("utf-8")),
+        maximum_numerator_bits,
+    )
+
+
 def main() -> None:
     arguments = sys.argv[1:]
     export_preconditioner = arguments == ["--export-reduced-preconditioner"]
-    if arguments and not export_preconditioner:
+    export_dyadic_preconditioner = arguments == [
+        "--export-reduced-dyadic-preconditioner"
+    ]
+    if arguments and not (
+        export_preconditioner or export_dyadic_preconditioner
+    ):
         raise SystemExit(
             "usage: block_pair_period_eleven_certificate.py "
-            "[--export-reduced-preconditioner]"
+            "[--export-reduced-preconditioner|"
+            "--export-reduced-dyadic-preconditioner]"
         )
 
     radius = Fraction(1, 10**8)
@@ -1225,6 +1322,19 @@ def main() -> None:
     support_ten_minimum_payoff_coordinate_separation = min(
         support_ten_payoff_coordinate_separations
     )
+    support_ten_nearby_payoff_coordinate_separations = (
+        nearby_values[0][0].low - support_ten_values[0][0].high,
+        nearby_values[0][1].low - support_ten_values[0][1].high,
+        support_ten_values[0][2].low - nearby_values[0][2].high,
+        nearby_values[0][3].low - support_ten_values[0][3].high,
+    )
+    assert all(
+        gap > 0
+        for gap in support_ten_nearby_payoff_coordinate_separations
+    )
+    support_ten_nearby_minimum_payoff_coordinate_separation = min(
+        support_ten_nearby_payoff_coordinate_separations
+    )
     (
         support_ten_inactive_upper,
         support_ten_opponent_cycle_upper,
@@ -1248,6 +1358,42 @@ def main() -> None:
 
     if export_preconditioner:
         print(preconditioner_document)
+        return
+
+    if export_dyadic_preconditioner:
+        rounded_preconditioner = dyadic_preconditioner(
+            reduced_preconditioner, DYADIC_PRECONDITIONER_POWER
+        )
+        equations_at_center, _ = base_reduced_evaluator(
+            point_box(BASE_REDUCED_CERTIFICATE.hazard_center)
+        )
+        _, jacobian_on_box = base_reduced_evaluator(reduced_box)
+        (
+            dyadic_defect_row_sum,
+            dyadic_inclusion_ratio,
+            _,
+        ) = krawczyk_bounds(
+            equations_at_center,
+            jacobian_on_box,
+            rounded_preconditioner,
+            radius,
+        )
+        assert dyadic_defect_row_sum < 1
+        assert dyadic_inclusion_ratio < 1
+        (
+            dyadic_document,
+            _,
+            _,
+            _,
+        ) = reduced_dyadic_preconditioner_document(
+            rounded_preconditioner,
+            DYADIC_PRECONDITIONER_POWER,
+            radius,
+            dyadic_defect_row_sum,
+            dyadic_inclusion_ratio,
+            BASE_REDUCED_CERTIFICATE,
+        )
+        print(dyadic_document)
         return
 
     print("exact period-eleven 75-variable Krawczyk certificate passed")
@@ -1375,6 +1521,10 @@ def main() -> None:
     print(
         "minimum phase-zero payoff-coordinate separation from base ~= "
         f"{float(support_ten_minimum_payoff_coordinate_separation):.6f}"
+    )
+    print(
+        "minimum phase-zero payoff-coordinate separation from neighbor ~= "
+        f"{float(support_ten_nearby_minimum_payoff_coordinate_separation):.6f}"
     )
     print(
         "support-ten reduced preconditioner SHA-256 = "
