@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import Mathlib.Logic.Equiv.Fin.Rotate
 import GameTheory.Concepts.Stochastic.QuittingBehaviorPureTimeExtremality
 import GameTheory.Concepts.Stochastic.QuittingStationaryGain
+import GameTheory.Concepts.Stochastic.QuittingTerminalUniformization
 
 /-!
 # Eventually-periodic quitting compiler
@@ -852,5 +853,82 @@ theorem isZeroAsymptoticNash_quittingCyclicBehaviorProfile_of_certificate
   rw [quittingProfileLiveRoot_cyclicBehaviorProfile] at hdeviation
   rw [hdeviation]
   simpa using hhazard
+
+/-- Bound-free finite-game form of the exact periodic compiler. -/
+theorem isZeroAsymptoticNash_quittingCyclicBehaviorProfile_of_certificate_finite
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (value : Fin K → Payoff ι)
+    (phase : Fin K)
+    (hpolicy : ∀ cyclePhase,
+      value cyclePhase = quittingRootSuccessorPayoff reward
+        (value (finRotate K cyclePhase)) (cycle cyclePhase))
+    (hnash : ∀ cyclePhase,
+      IsεQuittingRootNash reward
+        (value (finRotate K cyclePhase)) 0 (cycle cyclePhase))
+    (hcontracts : ∀ player,
+      (∏ cyclePhase : Fin K,
+        quittingStationaryFixedOpponentsContinueMass
+          (cycle cyclePhase) player) < 1) :
+    (quittingGame reward).IsεAsymptoticNash
+      (quittingTerminalPayoff reward) 0
+      (quittingCyclicBehaviorProfile reward cycle phase) := by
+  exact isZeroAsymptoticNash_quittingCyclicBehaviorProfile_of_certificate
+    reward cycle value phase (quittingRewardBound reward)
+      (quittingRewardBound_nonneg reward)
+      (abs_reward_le_quittingRewardBound reward)
+      hpolicy hnash hcontracts
+
+/-- **Uniform-payoff periodic compiler.**  The terminal vector selected by
+an exact contracting cyclic certificate is a uniform equilibrium payoff,
+witnessed at every accuracy by the same cyclic behavior profile. -/
+theorem isUniformEquilibriumPayoff_quittingCyclicTerminalValue_of_certificate
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (value : Fin K → Payoff ι)
+    (phase : Fin K)
+    (hpolicy : ∀ cyclePhase,
+      value cyclePhase = quittingRootSuccessorPayoff reward
+        (value (finRotate K cyclePhase)) (cycle cyclePhase))
+    (hnash : ∀ cyclePhase,
+      IsεQuittingRootNash reward
+        (value (finRotate K cyclePhase)) 0 (cycle cyclePhase))
+    (hcontracts : ∀ player,
+      (∏ cyclePhase : Fin K,
+        quittingStationaryFixedOpponentsContinueMass
+          (cycle cyclePhase) player) < 1) :
+    (quittingGame reward).IsUniformEquilibriumPayoff none
+      (quittingCyclicTerminalValue reward cycle phase) := by
+  let profile := quittingCyclicBehaviorProfile reward cycle phase
+  have hterminalNash : (quittingGame reward).IsεAsymptoticNash
+      (quittingTerminalPayoff reward) 0 profile :=
+    isZeroAsymptoticNash_quittingCyclicBehaviorProfile_of_certificate_finite
+      reward cycle value phase hpolicy hnash hcontracts
+  intro ε hε
+  have huniform : (quittingGame reward).IsUniformεEquilibrium
+      none ε profile :=
+    quittingGame_isUniformεEquilibrium_of_terminalNash_finite
+      reward profile hε hterminalNash
+  obtain ⟨nashThreshold, hnashThreshold⟩ := huniform
+  have heventuallyDelivery : ∀ᶠ horizon : ℕ in atTop, ∀ player,
+      |(quittingGame reward).finiteAveragePayoff none horizon profile player -
+        quittingCyclicTerminalValue reward cycle phase player| < ε := by
+    apply Filter.eventually_all.mpr
+    intro player
+    have hball :=
+      (tendsto_finiteAveragePayoff_quittingGame reward profile player).eventually
+        (Metric.ball_mem_nhds
+          (quittingTerminalPayoff reward profile player) hε)
+    filter_upwards [hball] with horizon hhorizon
+    simpa only [Metric.mem_ball, Real.dist_eq,
+      profile, quittingTerminalPayoff_cyclicBehaviorProfile] using hhorizon
+  obtain ⟨deliveryThreshold, hdeliveryThreshold⟩ :=
+    Filter.eventually_atTop.1 heventuallyDelivery
+  refine ⟨profile, max nashThreshold deliveryThreshold,
+    fun horizon hhorizon => ?_⟩
+  constructor
+  · exact hnashThreshold horizon
+      (le_trans (Nat.le_max_left _ _) hhorizon)
+  · intro player
+    exact (hdeliveryThreshold horizon
+      (le_trans (Nat.le_max_right _ _) hhorizon) player).le
 
 end GameTheory
