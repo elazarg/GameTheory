@@ -8,37 +8,38 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
 Domain contract / decision: D6, D7, D11, D12, D15, EXP-042
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; exact seed, classification pending
-Last verified: 2026-07-30
+Status: in progress; 20/776 reviewed, 756 unreviewed
+Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-FOSG family.
-0 declarations are already accounted for in
-earlier bounded ledgers and are not duplicated here. Every row below is
-deliberately `unreviewed`: the generated index supplies spelling, location,
-kind, and visibility only. It does not infer a mathematical disposition.
+0 declarations are already accounted for in earlier bounded ledgers and are
+not duplicated here. Rows not yet classified remain deliberately
+`unreviewed`: the generated index supplies spelling, location, kind, and
+visibility only. It does not infer a mathematical disposition. The first
+reviewed batch covers the complete `Basic.lean` legality substrate.
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
 |---|---|---|---|---|---|---|
-| `GameTheory/Languages/FOSG/Basic.lean` | `FOSG` | structure | unreviewed | review required | generated index seed only | public, pinned line 25 |
-| same | `legal` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 75 |
-| same | `availableActionsAtState` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 81 |
-| same | `mem_availableActionsAtState_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 86 |
-| same | `locallyLegalAtState` | def | unreviewed | review required | generated index seed only | public, pinned line 93 |
-| same | `legal_iff_forall` | theorem | unreviewed | review required | generated index seed only | public, pinned line 99 |
-| same | `LegalAction` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 106 |
-| same | `legalAction_val` | theorem | unreviewed | review required | generated index seed only | public, pinned line 109 |
-| same | `inactive_eq_none` | theorem | unreviewed | review required | generated index seed only | public, pinned line 114 |
-| same | `legal_inactive_none` | theorem | unreviewed | review required | generated index seed only | public, pinned line 127 |
-| same | `active_has_some` | theorem | unreviewed | review required | generated index seed only | public, pinned line 134 |
-| same | `legal_active_some` | theorem | unreviewed | review required | generated index seed only | public, pinned line 146 |
-| same | `active_eq_empty_of_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 153 |
-| same | `not_legal_of_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 159 |
-| same | `exists_legal_of_not_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 165 |
-| same | `legal_noopAction_of_active_empty_of_not_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 171 |
-| same | `legal_iff_active_eq_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 179 |
-| same | `LegalAction.val_eq_noop_of_active_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 196 |
-| same | `noopLegalAction` | def | unreviewed | review required | generated index seed only | public, pinned line 202 |
-| same | `noopLegalAction_val` | theorem | unreviewed | review required | generated index seed only | public, pinned line 208 |
+| `GameTheory/Languages/FOSG/Basic.lean` | `FOSG` | structure | adapt | `GameTheory.Languages.FOSG.Game`; `GameTheory.Protocol.ExecutionProtocol`; `InformationModel` | EXP-042/D15; focused build (1,723 jobs) | Execution and factored information remain paired, while reward/utility stays external and all semantic runners are canonical Protocol objects. |
+| same | `legal` | abbrev | adapt | `GameTheory.Protocol.ExecutionProtocol.Legal` | EXP-042/D15; focused build (1,723 jobs) | Non-terminality and pointwise joint legality are defined once in Protocol. |
+| same | `availableActionsAtState` | abbrev | retired | `GameTheory.Protocol.ExecutionProtocol.available` | D6/D15; focused build | A second name for the state-indexed available-action projection adds no theorem-facing information. |
+| same | `mem_availableActionsAtState_iff` | theorem | retired | `GameTheory.Protocol.ExecutionProtocol.available` | D6/D15; focused build | Reflexive membership wrapper for the retired abbreviation. |
+| same | `locallyLegalAtState` | def | adapt | `GameTheory.Protocol.LegalOption` | focused build (1,723 jobs) | Canonical per-player legality has the same active/some and inactive/none cases. |
+| same | `legal_iff_forall` | theorem | adapt | `GameTheory.Protocol.isLegalJoint_iff_legalOption`; `ExecutionProtocol.Legal` | focused build (1,723 jobs) | The pointwise decomposition is public at the shared Protocol layer. |
+| same | `LegalAction` | abbrev | retired | subtype accepted by `ExecutionProtocol.step`; `ExecutionProtocol.Chooser` | D6/D7 | A named language-local certificate would duplicate the canonical legal-joint subtype. |
+| same | `legalAction_val` | theorem | retired | subtype projection | D7 | Projection theorem for the retired wrapper carries no mathematical payload. |
+| same | `inactive_eq_none` | theorem | adapt | `GameTheory.Protocol.LegalOption.eq_none_of_inactive`; `ExecutionProtocol.legalOption_of_legal` | focused build (1,723 jobs) | The shared pointwise theorem applies to any canonical legal joint action. |
+| same | `legal_inactive_none` | theorem | subsumed | `LegalOption.eq_none_of_inactive`; `ExecutionProtocol.legalOption_of_legal` | focused build (1,723 jobs) | Duplicate predecessor spelling follows through the same checked theorem chain. |
+| same | `active_has_some` | theorem | adapt | `GameTheory.Protocol.LegalOption.exists_eq_some_of_active`; `ExecutionProtocol.legalOption_of_legal` | focused build (1,723 jobs) | An active coordinate of a legal joint action contains an action. |
+| same | `legal_active_some` | theorem | subsumed | `LegalOption.exists_eq_some_of_active`; `ExecutionProtocol.legalOption_of_legal` | focused build (1,723 jobs) | Duplicate predecessor spelling follows through the same checked theorem chain. |
+| same | `active_eq_empty_of_terminal` | theorem | retired | `GameTheory.Protocol.ExecutionProtocol.terminal_no_legal` | D6/D15 | Protocol intentionally leaves `active` unconstrained after stopping; terminality itself makes every joint action illegal, which is the behavior consumers require. |
+| same | `not_legal_of_terminal` | theorem | adapt | `GameTheory.Protocol.ExecutionProtocol.terminal_no_legal` | focused build (1,723 jobs) | Terminal execution stops without consulting activity or a chooser. |
+| same | `exists_legal_of_not_terminal` | theorem | adapt | `GameTheory.Protocol.ExecutionProtocol.exists_legal` | focused build (1,723 jobs) | The operation-local progress field supplies a canonical legal joint action. |
+| same | `legal_noopAction_of_active_empty_of_not_terminal` | theorem | adapt | `GameTheory.Protocol.ExecutionProtocol.noop_isLegal` | focused build (1,723 jobs) | Finset emptiness becomes the sharper pointwise inactivity premise. |
+| same | `legal_iff_active_eq_empty` | theorem | adapt | `GameTheory.Protocol.ExecutionProtocol.legal_iff_eq_noop_of_inactive` | focused build (1,723 jobs); axiom audit | At an idle state, a joint action is legal exactly when play continues and it is the canonical no-op. |
+| same | `LegalAction.val_eq_noop_of_active_empty` | theorem | adapt | `GameTheory.Protocol.ExecutionProtocol.eq_noop_of_legal_of_inactive` | focused build (1,723 jobs); axiom audit | The mathematical uniqueness fact is public without preserving the retired subtype wrapper. |
+| same | `noopLegalAction` | def | retired | `ExecutionProtocol.noop_isLegal`; `ExecutionProtocol.chanceLaw` | D6/D7; focused build | Canonical code constructs the step subtype locally; a language-specific certificate constructor is unnecessary. |
+| same | `noopLegalAction_val` | theorem | retired | `ExecutionProtocol.noop` | D7 | Reflexive projection theorem for the retired constructor. |
 | `GameTheory/Languages/FOSG/Compile.lean` | `extendByOutcome` | def | unreviewed | review required | generated index seed only | public, pinned line 39 |
 | same | `extendByOutcome_of_support` | theorem | unreviewed | review required | generated index seed only | public, pinned line 43 |
 | same | `extendByOutcome_of_no_support` | theorem | unreviewed | review required | generated index seed only | public, pinned line 49 |

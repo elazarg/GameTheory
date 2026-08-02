@@ -243,8 +243,8 @@ current integration and recovery status. Wave 0 closes when:
 6. README status is derived from the ledger rather than source-size estimates.
 
 The audit now indexes 436 files and 8,324 declarations. Seventeen work-package
-ledgers claim 1,242 declarations: 466 have reviewed dispositions, the exact
-FOSG queue contains 776 deliberately seeded `unreviewed` rows, and 7,082 remain
+ledgers claim 1,242 declarations: 486 have reviewed dispositions, the exact
+FOSG queue contains 756 deliberately seeded `unreviewed` rows, and 7,082 remain
 explicitly unaccounted. Both open sets are review queues, not
 auto-classification targets; generated rows are evidence of scope, not
 recovery.

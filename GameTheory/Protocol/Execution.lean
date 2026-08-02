@@ -104,6 +104,29 @@ theorem noop_isLegal {state : E.State} (hterm : ¬ E.terminal state)
     (hidle : ∀ i, ¬ E.active state i) : E.Legal state E.noop :=
   ⟨hterm, fun i => hidle i⟩
 
+/-- When nobody is active, every legal joint action is the no-op. -/
+theorem eq_noop_of_legal_of_inactive {state : E.State}
+    {joint : ∀ i, Option (E.Action i)} (hlegal : E.Legal state joint)
+    (hidle : ∀ i, ¬ E.active state i) : joint = E.noop := by
+  funext i
+  cases hcase : joint i with
+  | none => rfl
+  | some action =>
+      have hoption := hlegal.2 i
+      rw [hcase] at hoption
+      exact False.elim (hidle i hoption.1)
+
+/-- At an idle state, legality consists exactly of non-terminality and using
+the no-op joint action. -/
+theorem legal_iff_eq_noop_of_inactive {state : E.State}
+    (hidle : ∀ i, ¬ E.active state i) (joint : ∀ i, Option (E.Action i)) :
+    E.Legal state joint ↔ ¬ E.terminal state ∧ joint = E.noop := by
+  constructor
+  · intro hlegal
+    exact ⟨hlegal.1, E.eq_noop_of_legal_of_inactive hlegal hidle⟩
+  · rintro ⟨hterm, rfl⟩
+    exact E.noop_isLegal hterm hidle
+
 /-- A chance state: execution continues, but no player moves. -/
 def IsChance (state : E.State) : Prop :=
   ¬ E.terminal state ∧ ∀ i, ¬ E.active state i
@@ -158,13 +181,8 @@ theorem runFor_succ_of_chance (chooser : E.Chooser) (fuel : ℕ) {state : E.Stat
     E.runFor chooser (fuel + 1) state =
       (E.chanceLaw hchance).bind (E.runFor chooser fuel) := by
   have hidle : chooser state hchance.1 = ⟨E.noop, E.noop_isLegal hchance.1 hchance.2⟩ := by
-    refine Subtype.ext (funext fun i => ?_)
-    have hleg := (chooser state hchance.1).2.2 i
-    cases hcase : (chooser state hchance.1).1 i with
-    | none => rfl
-    | some a =>
-      rw [hcase] at hleg
-      exact absurd hleg.1 (hchance.2 i)
+    exact Subtype.ext (E.eq_noop_of_legal_of_inactive
+      (chooser state hchance.1).2 hchance.2)
   rw [runFor_succ_of_not_terminal chooser fuel hchance.1, chanceLaw]
   exact congrArg (fun d => (E.step state d).bind (E.runFor chooser fuel)) hidle
 
