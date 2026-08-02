@@ -437,7 +437,8 @@ if (-not $SkipReachability) {
   $fosgBoundaryRejected = 0
   $fosgBoundaryConstants = @(
     'GameTheory.IsNash',
-    'GameTheory.euPreference')
+    'GameTheory.euPreference',
+    'GameTheory.Languages.FOSG.Game.kuhn_historyLaws')
   $fosgInputConstants = @(
     'GameTheory.Protocol.ExecutionProtocol',
     'GameTheory.Protocol.InformationModel',
@@ -458,6 +459,28 @@ if (-not $SkipReachability) {
     }
   }
   Report 'FOSG_INPUT_PROBES_REACHED' $fosgInputsReached
+
+  # Kuhn correspondence is an opt-in FOSG leaf: it positively exposes the
+  # two complete-history directions and their outcome projections, but remains
+  # independent of the separate EFG syntax root.
+  $fosgKuhnInputsReached = 0
+  $fosgKuhnConstants = @(
+    'GameTheory.Languages.FOSG.Game.kuhn_behavioral_to_mixed',
+    'GameTheory.Languages.FOSG.Game.kuhn_mixed_to_behavioral',
+    'GameTheory.Languages.FOSG.Game.kuhn_historyLaws',
+    'GameTheory.Languages.FOSG.Game.kuhn_behavioral_to_mixed_outcomeLaw',
+    'GameTheory.Languages.FOSG.Game.kuhn_mixed_to_behavioral_outcomeLaw')
+  $fosgKuhnEfgConstant = 'GameTheory.Languages.EFG.Game'
+  $fosgKuhnOutput = Run-Probe 'GameTheory.Languages.FOSG.Kuhn' `
+    ($fosgKuhnConstants + @($fosgKuhnEfgConstant))
+  foreach ($constant in $fosgKuhnConstants) {
+    if (-not (Is-Unreachable $fosgKuhnOutput $constant)) {
+      $fosgKuhnInputsReached++
+    }
+  }
+  Report 'FOSG_KUHN_INPUT_PROBES_REACHED' $fosgKuhnInputsReached
+  Report 'FOSG_KUHN_EFG_PROBES_REJECTED' `
+    ([int] (Is-Unreachable $fosgKuhnOutput $fosgKuhnEfgConstant))
 
   $nfgFosgBridgeInputsReached = 0
   $nfgFosgBridgeConstants = @(
@@ -533,8 +556,10 @@ if ($VerifyExpected) {
     $Expected['MAID_STRATEGIC_INPUT_PROBES_REACHED'] = 4
     $Expected['NFG_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['NFG_INPUT_PROBES_REACHED'] = 3
-    $Expected['FOSG_SOLUTION_PROBES_REJECTED'] = 2
+    $Expected['FOSG_SOLUTION_PROBES_REJECTED'] = 3
     $Expected['FOSG_INPUT_PROBES_REACHED'] = 3
+    $Expected['FOSG_KUHN_INPUT_PROBES_REACHED'] = 5
+    $Expected['FOSG_KUHN_EFG_PROBES_REJECTED'] = 1
     $Expected['NFG_FOSG_BRIDGE_INPUT_PROBES_REACHED'] = 4
     $Expected['EFG_BRIDGE_INPUT_PROBES_REACHED'] = 3
   }

@@ -6,9 +6,9 @@ Pinned roots: `GameTheory/Languages/FOSG/Basic.lean`; `GameTheory/Languages/FOSG
 Pinned commit: `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`
 Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
-Domain contract / decision: D6, D7, D11, D12, D15, EXP-042
+Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; 333/776 reviewed, 443 unreviewed
+Status: in progress; 372/776 reviewed, 404 unreviewed
 Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-FOSG family.
@@ -19,7 +19,12 @@ visibility only. It does not infer a mathematical disposition. Reviewed batches
 cover the complete `Basic.lean` legality substrate, `History.lean` canonical
 history migration, `Information.lean` canonical information-model migration,
 `Strategy.lean` canonical policy migration, `Execution.lean` canonical
-law-valued execution migration, and `Values.lean` external-value fold.
+law-valued execution migration, `Values.lean` external-value fold, and the
+`Native/History.lean` / `Native/HistoryMarginal.lean` Kuhn batch.  EXP-057/D28
+attributes the latter to those exact pinned paths: `Protocol.Information`
+owns the canonical policy and law machinery, while `Languages.FOSG.Kuhn`
+supplies the named FOSG-facing correspondence.  It does not revive the native scalar
+marginal calculus.
 
 The Execution batch maps ordinary one-step, continuation, and complete-history
 reach to `behavioralJoint`, `runBehavioralFrom`, and
@@ -371,45 +376,45 @@ module they require rather than a FOSG-wide umbrella.
 | same | `perfectRecall` | theorem | refuted | `GameTheory/Tests/Randomized.lean:single_not_perfectRecall` | EXP-018; focused Randomized test | The accepted general FOSG pairing admits a signal model that forgets its own vote, so global perfect recall cannot be claimed. |
 | same | `perfectRecall_obs` | theorem | subsumed | `InfoSignals.actedAt_eq_of_perfectRecall` | D6; Protocol Information API review (2026-08-02) | Under canonical recall, equality of own-play records yields the retained decision-site record. |
 | same | `perfectRecall_action` | theorem | subsumed | `InfoSignals.PerfectRecall` | D6; Protocol Information API review (2026-08-02) | The canonical hypothesis directly retains equality of the complete own-play action record. |
-| `GameTheory/Languages/FOSG/Native/History.lean` | `ExecutionState` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 39 |
-| same | `KuhnLocalStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 43 |
-| same | `KuhnPureProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 47 |
-| same | `KuhnBehavioralProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 51 |
-| same | `runDist` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 55 |
-| same | `runDistPure` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 62 |
-| same | `executionBehavioralToMixedJoint` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 70 |
-| same | `NoNontrivialInfoStateRepeat` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 79 |
-| same | `StepMassInvariant` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 85 |
-| same | `StepSupportFactorization` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 91 |
-| same | `ActionPosteriorLocal` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 97 |
-| same | `ObsLocalFeasibilityFull` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 104 |
-| same | `behavioral_to_mixed_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 116 |
-| same | `mixed_to_behavioral_semantic` | theorem | unreviewed | review required | generated index seed only | public, pinned line 138 |
-| same | `mixed_to_behavioral_of_obsLocal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 165 |
-| same | `PureStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 184 |
-| same | `MixedProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 189 |
-| same | `mixedProfilePureStrategyFintype` | instance | unreviewed | review required | generated index seed only | public, pinned line 192 |
-| same | `BehavioralProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 200 |
-| same | `mixedProfileJoint` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 204 |
-| same | `liftPureStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 210 |
-| same | `liftPureProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 216 |
-| same | `liftMixedProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 221 |
-| same | `liftMixedProfile_joint` | theorem | unreviewed | review required | generated index seed only | public, pinned line 226 |
-| same | `behavioralToMixed` | def | unreviewed | review required | generated index seed only | public, pinned line 243 |
-| same | `behavioralToMixedJoint` | def | unreviewed | review required | generated index seed only | public, pinned line 252 |
-| same | `mixed_to_behavioral_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 267 |
-| same | `mixed_to_behavioral_runDist_of_obsLocal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 293 |
-| same | `toHistoryObsModelCore` | def | unreviewed | review required | generated index seed only | public, pinned line 324 |
-| same | `historyInfoStateFintype` | instance | unreviewed | review required | generated index seed only | public, pinned line 343 |
-| `GameTheory/Languages/FOSG/Native/HistoryMarginal.lean` | `SeenBefore` | def | unreviewed | review required | generated index seed only | public, pinned line 49 |
-| same | `stepChainFrom_prefix` | theorem | unreviewed | review required | generated index seed only | public, pinned line 54 |
-| same | `stepChainFrom_last_src` | theorem | unreviewed | review required | generated index seed only | public, pinned line 66 |
-| same | `seenBefore_mono_appendStep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 78 |
-| same | `seenBefore_current_appendStep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 94 |
-| same | `not_seenBefore_current` | theorem | unreviewed | review required | generated index seed only | public, pinned line 104 |
-| same | `stepProb_pure_congr_at_history` | theorem | unreviewed | review required | generated index seed only | public, pinned line 112 |
-| same | `prob_pure_congr_of_agreeOnSeenBefore` | theorem | unreviewed | review required | generated index seed only | public, pinned line 131 |
-| same | `marginal_prob` | theorem | unreviewed | review required | generated index seed only | public, pinned line 180 |
+| `GameTheory/Languages/FOSG/Native/History.lean` | `ExecutionState` | abbrev | adapt | `GameTheory.Protocol.ExecutionProtocol.State` and `History` | EXP-042/D15; `Languages/FOSG/Kuhn.lean` focused build | Native execution state is the canonical Protocol execution history/state pair, not a second FOSG machine. |
+| same | `KuhnLocalStrategy` | abbrev | adapt | `InformationModel.Policy` | EXP-042/D15; `Languages/FOSG/Kuhn.lean` | Information-local deterministic policy is owned by Protocol. |
+| same | `KuhnPureProfile` | abbrev | adapt | `Profile G.information.strategicSignature.pure` | `Languages/FOSG/Kuhn.lean` | Canonical pure-policy profile. |
+| same | `KuhnBehavioralProfile` | abbrev | adapt | `Profile G.behavioralSignature` | `Game.BehavioralPlan`; `Languages/FOSG/Kuhn.lean` | FOSG wrapper exposes the Protocol behavioral policy family. |
+| same | `runDist` | abbrev | adapt | `InformationModel.runBehavioral` | `Game.toBehavioralGameForm_play`; `Languages/FOSG/Kuhn.lean` | Complete-history law, not a native scalar run distribution. |
+| same | `runDistPure` | abbrev | adapt | `InformationModel.run` | `Protocol/Information.lean` | Initial deterministic-policy law is canonical Protocol execution. |
+| same | `executionBehavioralToMixedJoint` | abbrev | subsumed | `FinDist.pi` over `InformationModel.MixedPolicy` | `InformationModel.runMixed` | Product of local mixed policies is internal to the canonical mixed runner. |
+| same | `NoNontrivialInfoStateRepeat` | abbrev | adapt | `InformationModel.ActsOnceWhereItMatters` | `Game.kuhn_behavioral_to_mixed` | The sharp no-repeat premise has a semantic Protocol name. |
+| same | `StepMassInvariant` | abbrev | retired | no successor; obsolete native scalar factorization | EXP-042/D15 | Law equality replaces a separate step-mass invariant. |
+| same | `StepSupportFactorization` | abbrev | retired | no successor; obsolete native scalar factorization | EXP-042/D15 | Native support-factorization bookkeeping is not a stable API. |
+| same | `ActionPosteriorLocal` | abbrev | retired | no successor; obsolete native posterior predicate | EXP-042/D15 | The recovered theorem uses `PerfectRecall`, not a duplicate posterior formulation. |
+| same | `ObsLocalFeasibilityFull` | abbrev | retired | no successor; obsolete native observation predicate | EXP-042/D15 | The recovered theorem uses `ActsOnceWhereItMatters`, not this wrapper. |
+| same | `behavioral_to_mixed_runDist` | theorem | adapt | `Game.kuhn_behavioral_to_mixed` | `Languages/FOSG/Kuhn.lean`; pinned line 116 | Named FOSG history-law correspondence under the sharp acts-once premise. |
+| same | `mixed_to_behavioral_semantic` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | `Languages/FOSG/Kuhn.lean`; pinned line 138 | Named FOSG history-law correspondence under `PerfectRecall`. |
+| same | `mixed_to_behavioral_of_obsLocal` | theorem | retired | replaced by `Game.kuhn_mixed_to_behavioral` with `PerfectRecall` | `Languages/FOSG/Kuhn.lean`; pinned line 165 | Old observation-local sufficient condition is not retained beside the semantic premise. |
+| same | `PureStrategy` | abbrev | adapt | `InformationModel.Policy` | `Protocol/Information.lean` | Canonical deterministic information policy. |
+| same | `MixedProfile` | abbrev | adapt | `Profile G.information.strategicSignature.mixed` | `Game.MixedPlan`; `Languages/FOSG/Kuhn.lean` | Canonical once-drawn policy profile. |
+| same | `mixedProfilePureStrategyFintype` | instance | subsumed | inherited finite-policy instances | `InformationModel.BehavioralPolicy.toMixed` | No language-local instance surface is needed. |
+| same | `BehavioralProfile` | abbrev | adapt | `Profile G.behavioralSignature` | `Game.BehavioralPlan`; `Languages/FOSG/Kuhn.lean` | Canonical independently randomized local policies. |
+| same | `mixedProfileJoint` | abbrev | subsumed | `FinDist.pi` in `InformationModel.runMixed` | `Protocol/Information.lean` | Internal product law, not a public FOSG alias. |
+| same | `liftPureStrategy` | def | retired | `InformationModel.Policy.toBehavioral` where needed | `Protocol/Information.lean` | Language-local lifting wrapper adds no recovered theorem surface. |
+| same | `liftPureProfile` | def | retired | pointwise `Policy.toBehavioral` | `Protocol/Information.lean` | A profile-wide wrapper is intentionally not duplicated. |
+| same | `liftMixedProfile` | def | retired | `MixedPolicy.toBehavioral` under `PerfectRecall` | `Game.kuhn_mixed_to_behavioral` | The semantic conversion is exposed by the named correspondence theorem. |
+| same | `liftMixedProfile_joint` | theorem | retired | `Game.kuhn_mixed_to_behavioral` | `Languages/FOSG/Kuhn.lean` | Joint-law wrapper is subsumed by complete-history law equality, without preserving the old construction. |
+| same | `behavioralToMixed` | def | subsumed | `BehavioralPolicy.toMixed` | `InformationModel.runMixed_toMixed` | Canonical policy conversion is already the Protocol definition. |
+| same | `behavioralToMixedJoint` | def | subsumed | pointwise `BehavioralPolicy.toMixed`; `FinDist.pi` | `InformationModel.runMixed_toMixed` | Joint conversion is internal to the canonical runner. |
+| same | `mixed_to_behavioral_runDist` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | `Languages/FOSG/Kuhn.lean`; pinned line 267 | Named complete-history law theorem replaces the native runner equality. |
+| same | `mixed_to_behavioral_runDist_of_obsLocal` | theorem | retired | replaced by `Game.kuhn_mixed_to_behavioral` with `PerfectRecall` | `Languages/FOSG/Kuhn.lean`; pinned line 293 | Do not retain the old observation-local alternative premise. |
+| same | `toHistoryObsModelCore` | def | retired | no successor; native observation-model encoding | EXP-042/D15 | Canonical `InformationModel` is primary, without a history-specific adapter. |
+| same | `historyInfoStateFintype` | instance | subsumed | ambient `Fintype (InformationModel.InfoState who)` assumption | `Game.kuhn_behavioral_to_mixed` | The theorem asks only for the needed finite information-state instance. |
+| `GameTheory/Languages/FOSG/Native/HistoryMarginal.lean` | `SeenBefore` | def | retired | no successor; native history-prefix predicate | EXP-042/D15 | `ownPlay`/recall are canonical, but this scalar marginal helper is not recovered. |
+| same | `stepChainFrom_prefix` | theorem | retired | no successor; native chain helper | EXP-042/D15 | Internal history-chain bookkeeping has no stable consumer. |
+| same | `stepChainFrom_last_src` | theorem | retired | no successor; native chain helper | EXP-042/D15 | Internal history-chain bookkeeping has no stable consumer. |
+| same | `seenBefore_mono_appendStep` | theorem | retired | no successor; native marginal helper | EXP-042/D15 | No parallel `SeenBefore` calculus is retained. |
+| same | `seenBefore_current_appendStep` | theorem | retired | no successor; native marginal helper | EXP-042/D15 | No parallel `SeenBefore` calculus is retained. |
+| same | `not_seenBefore_current` | theorem | retired | no successor; native marginal helper | EXP-042/D15 | No parallel `SeenBefore` calculus is retained. |
+| same | `stepProb_pure_congr_at_history` | theorem | retired | `InformationModel.behavioralJoint_congr` only for canonical law steps | EXP-042/D15 | The old scalar pure-step probability API is intentionally not reconstructed. |
+| same | `prob_pure_congr_of_agreeOnSeenBefore` | theorem | retired | `InformationModel.runBehavioralFrom_congr` where a canonical law congruence is needed | `Protocol/Information.lean` | Recovered congruence is law-valued and premise-specific, not `SeenBefore`-based. |
+| same | `marginal_prob` | theorem | subsumed | `InformationModel.runMixed_toMixed` | `Game.kuhn_behavioral_to_mixed`; pinned line 180 | Behavioral-to-predrawn-mixed complete-history equality subsumes each scalar marginal consequence. |
 | `GameTheory/Languages/FOSG/Native/Reachable.lean` | `ReachablePureStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 37 |
 | same | `ReachableBehavioralProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 41 |
 | same | `reachableBehavioralToMixed` | def | unreviewed | review required | generated index seed only | public, pinned line 59 |

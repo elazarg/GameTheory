@@ -67,6 +67,7 @@ becomes difficult to scan.
 | EXP-054 | 2026-08-02 | D4/D9/D10 / executable knapsack auction | Where is the boundary between knapsack mechanism semantics, executable dynamic programming/greedy algorithms, and correctness? | Narrows to an explicit-list exact natural solver; decides D25; mechanism and approximation remain gated | [`decisions/D25-knapsack-execution-boundary.md`](decisions/D25-knapsack-execution-boundary.md); `GameTheory/{Experimental/PostArchitecture,Mechanism}/Knapsack*` |
 | EXP-055 | 2026-08-02 | D4/D5/D9/D25 / real knapsack mechanism | Can explicit finite-set real knapsack semantics instantiate canonical VCG truthfulness without restoring the predecessor's single-parameter wrapper stack? | Supports; decides D26 | [`decisions/D26-real-knapsack-vcg-boundary.md`](decisions/D26-real-knapsack-vcg-boundary.md); `GameTheory/Mechanism/Knapsack/{Aggregate,Basic,Mechanism}.lean`; hostile witness |
 | EXP-056 | 2026-08-02 | D9/D10/D25/D26 / knapsack approximation | Can a certified executable ratio order support an actual feasible half-approximate allocation after repairing the pinned theorem's overweight-singleton defect? | Supports after narrowing to a direct integral exchange proof; decides D27 | [`decisions/D27-executable-knapsack-half-approximation.md`](decisions/D27-executable-knapsack-half-approximation.md); `GameTheory/Mechanism/Knapsack/Approximation*.lean`; hostile witness |
+| EXP-057 | 2026-08-02 | D6/D7/D9/D15 / FOSG observation and Kuhn surface | Does FOSG need any native observation-model/Kuhn execution layer, or only transparent named theorems over the canonical `InformationModel`? | Supports theorem-only projection; decides D28 | [`decisions/D28-fosg-kuhn-protocol-projection.md`](decisions/D28-fosg-kuhn-protocol-projection.md); `Languages/FOSG/Kuhn.lean`; same-execution hostile witness |
 
 ## Entry template
 
@@ -3687,3 +3688,77 @@ memory.
   retain a separately audited natural executable leaf, structural correctness
   leaf, and ratio theorem about the returned allocation.  Exact Myerson
   payment remains behind M-BAYES/D11.  Return to the next DFS delivery gate.
+
+### EXP-057: FOSG observation ownership and native Kuhn retirement
+
+- **Date / revision:** 2026-08-02, working tree based on `c104963`
+- **Status:** complete; supports; decides D28
+- **Decision / question:** whether the 39 pinned declarations in
+  `Languages/FOSG/Native/{History,HistoryMarginal}.lean` expose FOSG-specific
+  mathematics that survives D6/D15, or whether the mature Kuhn payload should
+  be a thin FOSG-facing specialization of the canonical Protocol information
+  model while the native runner and bridge machinery retire.
+- **Prediction:** the existing `InformationModel` laws already subsume both
+  directions at full `FinDist History` equality.  FOSG may earn transparent
+  aliases and named history/outcome-law theorems, but no second history,
+  strategy carrier, product law, execution state, step invariant hierarchy, or
+  runner.  Changing only the observation signals on one execution should
+  switch applicability of the named recall/no-revisit hypotheses and hence which theorem
+  applies.
+- **Representative slice:** reuse the two-vote Protocol in
+  `GameTheory/Tests/Randomized.lean`: its forgetful signals fail perfect recall,
+  while recalling signals on the identical states/actions/transitions prove
+  perfect recall and one-action-per-relevant-information-state.  Package the
+  latter as a real FOSG and reach both named Kuhn directions, complete
+  history-law equality, and an arbitrary outcome pushforward through the
+  canonical runner.
+- **Competing designs:** port the pinned `ObsModelCore` plus native-history PMF
+  runner; expose no FOSG-facing theorem at all and require callers to project
+  every field manually; or provide a theorem-only `FOSG.Kuhn` leaf whose
+  statements reduce to `InformationModel` laws.  A later named FOSG-to-EFG
+  comparison remains a separate batch.
+- **Measurements to collect:** exact pinned dependency clusters and row
+  dispositions; import and source-hazard surface; assumptions on both Kuhn
+  directions; whether the hostile signal change is expressible without
+  changing execution; build and audit cost; axiom profile; and whether any
+  consumer needs the old step-coefficient or posterior-locality predicates.
+- **Kill conditions:** a FOSG-specific runner, history, or strategy definition;
+  stored/global finiteness; `Fintype.ofFinite`; raw `Function.update`; public
+  casts/`HEq`; PMF/`ObsModelCore` compatibility machinery; weaker or conflated
+  hypotheses than the canonical no-revisit and recall conditions; syntax-root
+  reachability of solution concepts; or claiming the separately gated
+  counterfactual-reach/CFR and continuation-coefficient spines.
+- **Artifacts / commands:**
+  `GameTheory/Languages/FOSG/Kuhn.lean`;
+  `GameTheory/Experimental/PostArchitecture/FOSGKuhn.lean`;
+  `GameTheory/Tests/Randomized.lean`;
+  `lake build GameTheory.Experimental.PostArchitecture.FOSGKuhn` (1,724
+  jobs); `lake build` (3,415 jobs); Phase 2 static, Phase 3 full reachability,
+  and coverage audits in expected verification mode.
+- **Observations / measurements:** the 39 pinned native history/marginal rows
+  divide into 13 adaptations, seven subsumptions, and 19 retirements.  The
+  mature content is already stronger at the canonical layer:
+  `InformationModel.runMixed_toMixed` and `runMixed_toBehavioral` prove equality
+  of complete `FinDist History` laws, so the old scalar `marginal_prob` follows
+  by point evaluation.  The FOSG leaf adds only transparent plan/signature
+  abbreviations and five named theorem families: both directions, realizable
+  history-law equality, and both arbitrary outcome pushforwards.  It defines
+  no runner, history, execution state, strategy carrier, or product law.
+  The hostile artifact checks three distinct cases on existing Protocol data:
+  repeating forgetful information violates acts-once and produces unequal
+  behavioral/mixed mapped laws; a one-move model satisfies acts-once but not
+  perfect recall and still reaches the behavioral-to-mixed theorem; recalling
+  signals on the original two-move execution discharge both named hypotheses
+  and all FOSG-facing results.  The syntax root rejects the Kuhn flagship while
+  the opt-in leaf reaches 5/5 named results and rejects EFG 1/1; Phase 3 reports
+  `VERIFIED=1`.  Source scans find no placeholder, custom axiom, transport,
+  raw update, `Fintype.ofFinite`, EFG/utility import, PMF bridge, or
+  `ObsModelCore`.  Public axioms are only `propext`, `Classical.choice`, and
+  `Quot.sound`.
+- **Outcome / next action:** adopt D28.  Keep FOSG Kuhn as a theorem-only
+  projection of `G.information`; retire the native runner, invariant hierarchy,
+  bridge conversions, finite-instance surface, and marginal proof spine.  The
+  exact L-FOSG queue is now 372/776 reviewed with 404 rows remaining.  Review
+  `ReachableHistory/ObsModelFacts.lean` next without crediting its separately
+  gated counterfactual/CFR content; reserve a distinct experiment for the
+  simultaneous stochastic FOSG-to-EFG serialization comparison.

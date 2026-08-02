@@ -45,7 +45,8 @@ GameTheory/Languages     scoped language encodings and truthful Bayesian
   /NFG                   deterministic normal-form syntax compiling directly
                          to the canonical static form, with no second Nash API
   /FOSG                  transparent Protocol execution/information
-                         specialization with simultaneous actions
+                         specialization with simultaneous actions and an
+                         opt-in Kuhn correspondence leaf
   /Bridges/NFGFOSG       exact one-shot source-to-target outcome and utility
                          laws through the actual Protocol history runner
   /EFG                   transparent extensive-form specialization; finite

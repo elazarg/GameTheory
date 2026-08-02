@@ -20,8 +20,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Thirty-five work-package ledgers claim 1,573 declarations: 1,130
-have reviewed dispositions and 443 remain seeded `unreviewed`; a further 6,751 are
+declarations. Thirty-five work-package ledgers claim 1,573 declarations: 1,169
+have reviewed dispositions and 404 remain seeded `unreviewed`; a further 6,751 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -136,7 +136,7 @@ declaration-based.
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
 | L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | validated by EXP-041/T3 | partial | broader refinement, recall, and Kuhn-facing declaration recovery |
-| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4 | partial; 333/776 reviewed, 443 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); Basic, History, Information, Strategy, Execution, and external transition values are classified; next observation-model batches and named EFG comparisons; counterfactual reach and ordinary continuation coefficients retain separate explicit gates |
+| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4 | partial; 372/776 reviewed, 404 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); Basic, History, Information, Strategy, Execution, external transition values, and the Native history/Kuhn batch are classified; next `ReachableHistory/ObsModelFacts.lean`, then named EFG comparisons as a separate batch; counterfactual reach and ordinary continuation coefficients retain separate explicit gates |
 | L-ROUND | `Languages/MultiRound.lean`, `Languages/MultiRound/**` | 15 | native language compiling to Protocol | provisional probe | partial | preserve previous actions and imperfect monitoring |
 | L-INTR | `Languages/Intrinsic.lean`, `Languages/Intrinsic/**` | 8 | native branch only if it retains theorem-relevant data | assigned | not started | one theorem unavailable from bare Protocol |
 | L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1, T3, and T4 complete | partial/retirement open | declaration accounting; add composition only after two live consumers earn it |
