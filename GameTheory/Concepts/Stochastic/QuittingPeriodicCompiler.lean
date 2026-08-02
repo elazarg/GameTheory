@@ -552,4 +552,305 @@ theorem abs_sub_quittingCyclicTerminalValue_le
     coefficient (fun cyclePhase => error cyclePhase who) difference
       hcoefficient hcontracts hstep phase
 
+/-- Exact cyclic policy evaluation is selected uniquely by playerwise
+opponent-cycle contraction. -/
+theorem eq_quittingCyclicTerminalValue_of_rootSuccessorPayoff
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (value : Fin K → Payoff ι)
+    (hpolicy : ∀ phase,
+      value phase = quittingRootSuccessorPayoff reward
+        (value (finRotate K phase)) (cycle phase))
+    (hcontracts : ∀ who,
+      (∏ phase : Fin K,
+        quittingStationaryFixedOpponentsContinueMass
+          (cycle phase) who) < 1) :
+    value = quittingCyclicTerminalValue reward cycle := by
+  funext phase who
+  have hpolicy0 : ∀ cyclePhase player,
+      |value cyclePhase player -
+        quittingRootSuccessorPayoff reward
+          (value (finRotate K cyclePhase))
+          (cycle cyclePhase) player| ≤ 0 := by
+    intro cyclePhase player
+    rw [congrFun (hpolicy cyclePhase) player]
+    simp
+  have hbound := abs_sub_quittingCyclicTerminalValue_le
+    reward cycle value (fun _ _ => 0) hpolicy0 who
+      (hcontracts who) phase
+  have hcharge : quittingCyclicResidualCharge
+      (fun cyclePhase =>
+        quittingStationaryFixedOpponentsContinueMass
+          (cycle cyclePhase) who)
+      (fun _ => 0) phase K = 0 := by
+    simp [quittingCyclicResidualCharge]
+  rw [hcharge, zero_div] at hbound
+  have hzero :
+      |value phase who -
+        quittingCyclicTerminalValue reward cycle phase who| = 0 :=
+    le_antisymm hbound (abs_nonneg _)
+  exact sub_eq_zero.mp (abs_eq_zero.mp hzero)
+
+/-! ## Exact cyclic terminal Nash -/
+
+/-- A prescribed policy has zero pure-action Bellman residual whenever its
+current root is an exact Nash action against the prescribed next value. -/
+theorem quittingPrescribedOneStepResidual_eq_zero_of_isZeroRootNash
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribed : ℕ → ℝ)
+    (hprescribed : IsQuittingLivePrescribedValue
+      reward roots who prescribed)
+    (hnash : ∀ time (deviation : PMF Bool),
+      quittingRootExpectedPayoff reward
+          (fun _ => prescribed (time + 1))
+          (Function.update (roots time) who deviation) who ≤
+        quittingRootExpectedPayoff reward
+            (fun _ => prescribed (time + 1)) (roots time) who + 0)
+    (time : ℕ) :
+    quittingPrescribedOneStepResidual
+      reward roots who prescribed time = 0 := by
+  let tail : Payoff ι := fun _ => prescribed (time + 1)
+  have hquit := hnash time (PMF.pure true)
+  have hcontinue := hnash time (PMF.pure false)
+  have hquit' : quittingFixedOpponentsQuitValue reward roots who time ≤
+      quittingRootSuccessorPayoff reward tail (roots time) who := by
+    rw [← quittingRootQuitPayoff_eq_fixedOpponentsQuitValue
+      reward roots who tail time]
+    simpa only [tail, quittingRootQuitPayoff,
+      quittingRootSuccessorPayoff, add_zero] using hquit
+  have hcontinue' :
+      quittingFixedOpponentsContinueReward reward roots who time +
+          quittingFixedOpponentsContinueMass roots who time *
+            prescribed (time + 1) ≤
+        quittingRootSuccessorPayoff reward tail (roots time) who := by
+    rw [← quittingRootContinuePayoff_eq_fixedOpponents
+      reward roots who tail time]
+    simpa only [tail, quittingRootContinuePayoff,
+      quittingRootSuccessorPayoff, add_zero] using hcontinue
+  have hmax : quittingLiveBellmanValue reward roots who prescribed time ≤
+      quittingRootSuccessorPayoff reward tail (roots time) who := by
+    unfold quittingLiveBellmanValue
+    exact max_le hquit' hcontinue'
+  have hpolicy : quittingRootSuccessorPayoff reward tail (roots time) who =
+      prescribed time := by
+    symm
+    exact hprescribed time
+  have hreverse :
+      quittingRootSuccessorPayoff reward tail (roots time) who ≤
+      quittingLiveBellmanValue reward roots who prescribed time := by
+    exact quittingRootSuccessorPayoff_le_liveBellmanValue
+      reward roots who prescribed time
+  unfold quittingPrescribedOneStepResidual
+  rw [← hpolicy]
+  exact sub_eq_zero.mpr (le_antisymm hmax hreverse)
+
+/-- Exact root Nash at every cyclic terminal phase gives zero prescribed
+Bellman residual at every live time. -/
+theorem quittingPrescribedOneStepResidual_cyclic_eq_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K) (who : ι)
+    (hnash : ∀ cyclePhase,
+      IsεQuittingRootNash reward
+        (quittingCyclicTerminalValue reward cycle
+          (finRotate K cyclePhase)) 0 (cycle cyclePhase))
+    (time : ℕ) :
+    quittingPrescribedOneStepResidual reward
+        (quittingCyclicRootSequence cycle phase) who
+        (quittingRootSequenceTerminalValue reward
+          (quittingCyclicRootSequence cycle phase) who) time = 0 := by
+  let roots := quittingCyclicRootSequence cycle phase
+  let prescribed := quittingRootSequenceTerminalValue reward roots who
+  have htail : ∀ time,
+      prescribed (time + 1) =
+        quittingCyclicTerminalValue reward cycle
+          (finRotate K (quittingCyclicOrbit phase time)) who := by
+    intro liveTime
+    dsimp only [prescribed, roots]
+    rw [quittingRootSequenceTerminalValue_cyclic_eq,
+      quittingCyclicOrbit_succ]
+  have hrootNash : ∀ time (deviation : PMF Bool),
+      quittingRootExpectedPayoff reward
+          (fun _ => prescribed (time + 1))
+          (Function.update (roots time) who deviation) who ≤
+        quittingRootExpectedPayoff reward
+            (fun _ => prescribed (time + 1)) (roots time) who + 0 := by
+    intro liveTime deviation
+    let cyclePhase := quittingCyclicOrbit phase liveTime
+    let terminalTail := quittingCyclicTerminalValue reward cycle
+      (finRotate K cyclePhase)
+    have hdeviationEq := quittingRootExpectedPayoff_continuation_congr
+      reward (fun _ : ι => prescribed (liveTime + 1)) terminalTail
+        (Function.update (roots liveTime) who deviation) who
+        (htail liveTime)
+    have hrootEq := quittingRootExpectedPayoff_continuation_congr
+      reward (fun _ : ι => prescribed (liveTime + 1)) terminalTail
+        (roots liveTime) who (htail liveTime)
+    have hlocal := hnash cyclePhase who deviation
+    change quittingRootExpectedPayoff reward terminalTail
+        (Function.update (roots liveTime) who deviation) who ≤
+      quittingRootExpectedPayoff reward terminalTail
+        (roots liveTime) who + 0 at hlocal
+    rw [hdeviationEq, hrootEq]
+    exact hlocal
+  exact quittingPrescribedOneStepResidual_eq_zero_of_isZeroRootNash
+    reward roots who prescribed
+      (isQuittingLivePrescribedValue_quittingRootSequenceTerminalValue
+        reward roots who)
+      hrootNash time
+
+/-- Against a cyclic profile with exact phasewise root Nash and playerwise
+contraction, no time-dependent unilateral hazard improves the terminal
+payoff. -/
+theorem quittingCyclicHazardTerminalValue_le_of_isZeroRootNash
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K) (who : ι)
+    (deviation : ℕ → PMF Bool) (bound : ℝ)
+    (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S player, |reward S player| ≤ bound)
+    (hnash : ∀ cyclePhase,
+      IsεQuittingRootNash reward
+        (quittingCyclicTerminalValue reward cycle
+          (finRotate K cyclePhase)) 0 (cycle cyclePhase))
+    (hcontracts : (∏ cyclePhase : Fin K,
+      quittingStationaryFixedOpponentsContinueMass
+        (cycle cyclePhase) who) < 1) :
+    quittingRootSequenceHazardTerminalValue reward
+        (quittingCyclicRootSequence cycle phase) who deviation 0 ≤
+      quittingCyclicTerminalValue reward cycle phase who := by
+  let roots := quittingCyclicRootSequence cycle phase
+  let prescribed := quittingRootSequenceTerminalValue reward roots who
+  have hresidual : ∀ time,
+      quittingPrescribedOneStepResidual reward roots who prescribed time =
+        0 := by
+    intro time
+    exact quittingPrescribedOneStepResidual_cyclic_eq_zero
+      reward cycle phase who hnash time
+  have hsummable : Summable (fun time =>
+      quittingOpponentSurvivalWeight roots who 0 time *
+        quittingPrescribedOneStepResidual reward roots who prescribed time) := by
+    simpa only [hresidual, mul_zero] using
+      (summable_zero : Summable (fun _ : ℕ => (0 : ℝ)))
+  have hsurvival : Tendsto
+      (quittingOpponentSurvivalWeight roots who 0) atTop (nhds 0) :=
+    tendsto_zero_quittingOpponentSurvivalWeight_cyclicRootSequence
+      cycle phase who hcontracts
+  have hgap :=
+    quittingRootSequenceHazardTerminalGap_le_tsum_residual_of_survival_zero
+      reward roots who deviation bound hbound0 hreward hsurvival hsummable
+  have hsum : (∑' time,
+      quittingOpponentSurvivalWeight roots who 0 time *
+        quittingPrescribedOneStepResidual reward roots who prescribed time) =
+      0 := by
+    simp only [hresidual, mul_zero, tsum_zero]
+  rw [hsum] at hgap
+  have hbase : prescribed 0 =
+      quittingCyclicTerminalValue reward cycle phase who := by
+    dsimp only [prescribed, roots]
+    rw [quittingRootSequenceTerminalValue_cyclic_eq]
+    simp
+  dsimp only [roots, prescribed] at hgap hbase ⊢
+  linarith
+
+/-- A finite exact phase certificate (policy recursion, local root Nash, and
+playerwise contraction) compiles to the terminal no-profitable-hazard
+inequality at every initial phase. -/
+theorem quittingCyclicHazardTerminalValue_le_of_certificate
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (value : Fin K → Payoff ι)
+    (phase : Fin K) (who : ι) (deviation : ℕ → PMF Bool)
+    (bound : ℝ) (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S player, |reward S player| ≤ bound)
+    (hpolicy : ∀ cyclePhase,
+      value cyclePhase = quittingRootSuccessorPayoff reward
+        (value (finRotate K cyclePhase)) (cycle cyclePhase))
+    (hnash : ∀ cyclePhase,
+      IsεQuittingRootNash reward
+        (value (finRotate K cyclePhase)) 0 (cycle cyclePhase))
+    (hcontracts : ∀ player,
+      (∏ cyclePhase : Fin K,
+        quittingStationaryFixedOpponentsContinueMass
+          (cycle cyclePhase) player) < 1) :
+    quittingRootSequenceHazardTerminalValue reward
+        (quittingCyclicRootSequence cycle phase) who deviation 0 ≤
+      quittingCyclicTerminalValue reward cycle phase who := by
+  have hvalue := eq_quittingCyclicTerminalValue_of_rootSuccessorPayoff
+    reward cycle value hpolicy hcontracts
+  have hnashTerminal : ∀ cyclePhase,
+      IsεQuittingRootNash reward
+        (quittingCyclicTerminalValue reward cycle
+          (finRotate K cyclePhase)) 0 (cycle cyclePhase) := by
+    rw [← hvalue]
+    exact hnash
+  exact quittingCyclicHazardTerminalValue_le_of_isZeroRootNash
+    reward cycle phase who deviation bound hbound0 hreward hnashTerminal
+      (hcontracts who)
+
+/-- History-independent behavior profile generated by an infinite cyclic
+root sequence. -/
+def quittingCyclicBehaviorProfile
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K) :
+    (quittingGame reward).BehaviorProfile :=
+  quittingRootSequenceProfile reward
+    (quittingCyclicRootSequence cycle phase) 0
+
+omit [DecidableEq ι] in
+/-- The canonical live roots of the cyclic behavior profile recover its
+defining cyclic root sequence. -/
+@[simp] theorem quittingProfileLiveRoot_cyclicBehaviorProfile
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K) :
+    quittingProfileLiveRoot reward
+        (quittingCyclicBehaviorProfile reward cycle phase) =
+      quittingCyclicRootSequence cycle phase := by
+  funext time player
+  simp [quittingProfileLiveRoot, quittingCyclicBehaviorProfile,
+    quittingRootSequenceProfile]
+
+omit [DecidableEq ι] in
+/-- The terminal payoff of the cyclic behavior profile is its selected
+cyclic terminal value. -/
+@[simp] theorem quittingTerminalPayoff_cyclicBehaviorProfile
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (phase : Fin K) :
+    quittingTerminalPayoff reward
+        (quittingCyclicBehaviorProfile reward cycle phase) =
+      quittingCyclicTerminalValue reward cycle phase := by
+  rfl
+
+/-- **Exact periodic quitting compiler.**  A finite phase certificate with
+exact policy recursion, exact local root Nash, and playerwise opponent-cycle
+contraction yields an exact terminal Nash behavior profile. -/
+theorem isZeroAsymptoticNash_quittingCyclicBehaviorProfile_of_certificate
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (value : Fin K → Payoff ι)
+    (phase : Fin K) (bound : ℝ) (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S player, |reward S player| ≤ bound)
+    (hpolicy : ∀ cyclePhase,
+      value cyclePhase = quittingRootSuccessorPayoff reward
+        (value (finRotate K cyclePhase)) (cycle cyclePhase))
+    (hnash : ∀ cyclePhase,
+      IsεQuittingRootNash reward
+        (value (finRotate K cyclePhase)) 0 (cycle cyclePhase))
+    (hcontracts : ∀ player,
+      (∏ cyclePhase : Fin K,
+        quittingStationaryFixedOpponentsContinueMass
+          (cycle cyclePhase) player) < 1) :
+    (quittingGame reward).IsεAsymptoticNash
+      (quittingTerminalPayoff reward) 0
+      (quittingCyclicBehaviorProfile reward cycle phase) := by
+  intro who deviation
+  have hhazard := quittingCyclicHazardTerminalValue_le_of_certificate
+    reward cycle value phase who
+      (quittingBehaviorLiveHazard reward deviation) bound hbound0 hreward
+      hpolicy hnash hcontracts
+  rw [← quittingTerminalPayoff_cyclicBehaviorProfile
+    reward cycle phase] at hhazard
+  have hdeviation :=
+    quittingTerminalPayoff_update_eq_rootSequenceHazardTerminalValue
+      reward (quittingCyclicBehaviorProfile reward cycle phase) who deviation
+  rw [quittingProfileLiveRoot_cyclicBehaviorProfile] at hdeviation
+  rw [hdeviation]
+  simpa using hhazard
+
 end GameTheory
