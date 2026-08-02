@@ -90,8 +90,8 @@ def activePhasesBefore : ℕ → ℕ
       activePhasesBefore fuel +
         activePlayerCount (supportMask (Fin.ofNat 11 fuel))
 
-/-- Coordinate lookup computed directly from the public support word and its
-lexicographic active-variable convention. -/
+/-- Reference coordinate lookup computed directly from the public support
+word and its lexicographic active-variable convention. -/
 def activeHazardIndex? (phase : Phase) (player : Player) :
     Option HazardIndex :=
   let mask := supportMask phase
@@ -100,6 +100,29 @@ def activeHazardIndex? (phase : Phase) (player : Player) :
       (activePhasesBefore phase.val +
         activePlayersBefore mask player.val))
   else none
+
+/-- Constant-time coordinate lookup in the public active-variable order. -/
+def fastActiveHazardIndex? : Phase → Player → Option HazardIndex := ![
+  ![some 0, some 1, some 2, none],
+  ![some 3, some 4, some 5, none],
+  ![none, some 6, some 7, some 8],
+  ![none, some 9, some 10, some 11],
+  ![some 12, some 13, none, some 14],
+  ![some 15, some 16, none, some 17],
+  ![some 18, none, none, some 19],
+  ![some 20, none, none, some 21],
+  ![some 22, none, some 23, some 24],
+  ![some 25, none, some 26, some 27],
+  ![some 28, some 29, some 30, none]
+]
+
+/-- The constant-time executable table is exactly the lookup derived from
+`supportMask`. -/
+theorem fastActiveHazardIndex?_eq
+    (phase : Phase) (player : Player) :
+    fastActiveHazardIndex? phase player =
+      activeHazardIndex? phase player := by
+  fin_cases phase <;> fin_cases player <;> decide
 
 private theorem activeHazardIndex?_sound_finite :
     ∀ phase player,
@@ -161,13 +184,13 @@ theorem hazardExpression_eq_zero_of_activeHazardIndex?_eq_none
 
 def localBox (box : HazardIndex → DyadicInterval precision)
     (phase : Phase) (player : Player) : DyadicInterval precision :=
-  match activeHazardIndex? phase player with
+  match fastActiveHazardIndex? phase player with
   | some index => box index
   | none => DyadicInterval.ofRat 0
 
 def localRoot (box : HazardIndex → DyadicInterval precision)
     (phase : Phase) (player : Player) : LocalDual precision :=
-  match activeHazardIndex? phase player with
+  match fastActiveHazardIndex? phase player with
   | some _ =>
       RationalPolynomial.CachedDyadicDual.ofVariable
         (localBox box phase) player
@@ -191,6 +214,7 @@ structure LocalPhaseData (precision : ℕ) where
   maskProbabilities : Vector (LocalDual precision) 16
   immediate : Vector (LocalDual precision) 4
   survival : LocalDual precision
+deriving DecidableEq
 
 def buildLocalPhaseData
     (box : HazardIndex → DyadicInterval precision) (phase : Phase) :
@@ -343,23 +367,29 @@ theorem liftLocalRoot_toDyadicDual
     (liftLocalDual phase (localRoot box phase player)).toDyadicDual =
       RationalPolynomial.evalDualDyadic box
         (hazardExpression phase player) := by
-  cases hindex : activeHazardIndex? phase player with
+  cases hfast : fastActiveHazardIndex? phase player with
   | none =>
+      have hindex : activeHazardIndex? phase player = none := by
+        rw [← fastActiveHazardIndex?_eq phase player]
+        exact hfast
       have hexpression :=
         hazardExpression_eq_zero_of_activeHazardIndex?_eq_none hindex
       apply dyadicDual_ext
-      · simp [liftLocalDual, localRoot, hindex, hexpression,
+      · simp [liftLocalDual, localRoot, hfast, hexpression,
           RationalPolynomial.CachedDyadicDual.toDyadicDual,
           RationalPolynomial.evalDualDyadic,
           RationalPolynomial.CachedDyadicDual.constant,
           RationalPolynomial.DyadicDual.constant]
       · intro coordinate
-        simp [liftLocalDual, localRoot, hindex, hexpression,
+        simp [liftLocalDual, localRoot, hfast, hexpression,
           RationalPolynomial.CachedDyadicDual.toDyadicDual,
           RationalPolynomial.evalDualDyadic,
           RationalPolynomial.CachedDyadicDual.constant,
           RationalPolynomial.DyadicDual.constant]
   | some index =>
+      have hindex : activeHazardIndex? phase player = some index := by
+        rw [← fastActiveHazardIndex?_eq phase player]
+        exact hfast
       have hslot :=
         (activeHazardIndex?_eq_some_iff phase player index).1 hindex
       have hexpression : hazardExpression phase player = .var index := by
@@ -370,7 +400,7 @@ theorem liftLocalRoot_toDyadicDual
         rw [← hphaseSlot, ← hplayerSlot]
         exact hazardExpression_activeSlot index
       apply dyadicDual_ext
-      · simp [liftLocalDual, localRoot, localBox, hindex, hexpression,
+      · simp [liftLocalDual, localRoot, localBox, hfast, hexpression,
           RationalPolynomial.CachedDyadicDual.toDyadicDual,
           RationalPolynomial.evalDualDyadic,
           RationalPolynomial.CachedDyadicDual.ofVariable,
@@ -378,7 +408,7 @@ theorem liftLocalRoot_toDyadicDual
       · intro coordinate
         by_cases hcoordinate : coordinate = index
         · subst coordinate
-          simp [liftLocalDual, localRoot, localBox, hindex, hexpression,
+          simp [liftLocalDual, localRoot, localBox, hfast, hexpression,
             hslot, RationalPolynomial.CachedDyadicDual.toDyadicDual,
             RationalPolynomial.evalDualDyadic,
             RationalPolynomial.CachedDyadicDual.ofVariable,
@@ -390,13 +420,13 @@ theorem liftLocalRoot_toDyadicDual
               apply activeSlot_injective
               rw [hslot]
               exact Prod.ext hphase hplayer
-            simp [liftLocalDual, localRoot, localBox, hindex, hexpression,
+            simp [liftLocalDual, localRoot, localBox, hfast, hexpression,
               hcoordinate, hphase, hplayer,
               RationalPolynomial.CachedDyadicDual.toDyadicDual,
               RationalPolynomial.evalDualDyadic,
               RationalPolynomial.CachedDyadicDual.ofVariable,
               RationalPolynomial.DyadicDual.ofVariable]
-          · simp [liftLocalDual, localRoot, localBox, hindex, hexpression,
+          · simp [liftLocalDual, localRoot, localBox, hfast, hexpression,
               hcoordinate, hphase,
               RationalPolynomial.CachedDyadicDual.toDyadicDual,
               RationalPolynomial.evalDualDyadic,
