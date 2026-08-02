@@ -49,6 +49,17 @@ inequality, and prescribed delivery produce bounded potentials, uniform
 `O(1/N)` delivery and deviation caps, rebasing, and an enforcement ledger
 consumed by the existing public-response compilers.
 
+`FTVCyclicCredibility.lean` is the actual-data acceptance test for this
+route.  It constructs the Flesch--Thuijsman--Vrieze three-player quitting
+game, its ten-configuration public controller (three live clock phases and
+seven absorbing children), and the complete target assignment.  It proves
+all four criterion conditions and compiles them into an enforcement ledger,
+a public-phase punishment system, and an adaptive certificate for payoff
+`(1,2,1)` at every positive error.  This is a formal sufficiency result for
+that supplied architecture.  The sharp `11/7` finite-horizon modulus and the
+necessity, phase-minimality, and rigidity results studied in Question 97 are
+not formalized in that module.
+
 This is deliberately a supplied-object verifier. It does not construct an
 architecture from an arbitrary game or target, prove the finite-class
 converse, bound the number of public configurations, model hidden randomized
