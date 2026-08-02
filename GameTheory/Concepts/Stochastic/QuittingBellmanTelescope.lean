@@ -110,4 +110,88 @@ theorem quittingBellmanCapGap_le_residual_add
   rw [hcontinue]
   linarith
 
+/-! ## Finite weighted iteration -/
+
+/-- Opponent survival for `fuel` stages starting from a supplied live time. -/
+def quittingOpponentSurvivalWeight
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (start fuel : ℕ) : ℝ :=
+  ∏ offset ∈ Finset.range fuel,
+    quittingFixedOpponentsContinueMass roots who (start + offset)
+
+/-- Every finite opponent-survival weight is nonnegative. -/
+theorem quittingOpponentSurvivalWeight_nonneg
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (start fuel : ℕ) :
+    0 ≤ quittingOpponentSurvivalWeight roots who start fuel := by
+  apply Finset.prod_nonneg
+  intro offset _
+  exact quittingStationaryContinueMass_nonneg
+    (Function.update (roots (start + offset)) who (PMF.pure false))
+
+/-- Adding one stage multiplies survival by that stage's opponent continue
+mass. -/
+theorem quittingOpponentSurvivalWeight_succ
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (start fuel : ℕ) :
+    quittingOpponentSurvivalWeight roots who start (fuel + 1) =
+      quittingOpponentSurvivalWeight roots who start fuel *
+        quittingFixedOpponentsContinueMass roots who (start + fuel) := by
+  simp [quittingOpponentSurvivalWeight, Finset.prod_range_succ]
+
+/-- Finite Bellman iteration with the exact opponent-survival weights.  The
+last term is retained, so this theorem requires no asymptotic or
+zero-factor hypothesis. -/
+theorem quittingBellmanCapGap_le_sum_residual_add_tail
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribed cap : ℕ → ℝ)
+    (hcap : IsQuittingLiveBellmanCap reward roots who cap)
+    (hgap : ∀ time, 0 ≤ quittingBellmanCapGap prescribed cap time)
+    (start fuel : ℕ) :
+    quittingBellmanCapGap prescribed cap start ≤
+      (∑ offset ∈ Finset.range fuel,
+          quittingOpponentSurvivalWeight roots who start offset *
+            quittingPrescribedOneStepResidual reward roots who prescribed
+              (start + offset)) +
+        quittingOpponentSurvivalWeight roots who start fuel *
+          quittingBellmanCapGap prescribed cap (start + fuel) := by
+  induction fuel with
+  | zero =>
+      simp [quittingOpponentSurvivalWeight]
+  | succ fuel ih =>
+      have hstep := quittingBellmanCapGap_le_residual_add
+        reward roots who prescribed cap hcap (start + fuel)
+          (hgap (start + fuel + 1))
+      have hscaled := mul_le_mul_of_nonneg_left hstep
+        (quittingOpponentSurvivalWeight_nonneg roots who start fuel)
+      calc
+        quittingBellmanCapGap prescribed cap start ≤
+            (∑ offset ∈ Finset.range fuel,
+                quittingOpponentSurvivalWeight roots who start offset *
+                  quittingPrescribedOneStepResidual reward roots who prescribed
+                    (start + offset)) +
+              quittingOpponentSurvivalWeight roots who start fuel *
+                quittingBellmanCapGap prescribed cap (start + fuel) := ih
+        _ ≤ (∑ offset ∈ Finset.range fuel,
+                quittingOpponentSurvivalWeight roots who start offset *
+                  quittingPrescribedOneStepResidual reward roots who prescribed
+                    (start + offset)) +
+              quittingOpponentSurvivalWeight roots who start fuel *
+                (quittingPrescribedOneStepResidual reward roots who prescribed
+                    (start + fuel) +
+                  quittingFixedOpponentsContinueMass roots who (start + fuel) *
+                    quittingBellmanCapGap prescribed cap (start + fuel + 1)) := by
+              exact add_le_add le_rfl hscaled
+        _ = (∑ offset ∈ Finset.range (fuel + 1),
+                quittingOpponentSurvivalWeight roots who start offset *
+                  quittingPrescribedOneStepResidual reward roots who prescribed
+                    (start + offset)) +
+              quittingOpponentSurvivalWeight roots who start (fuel + 1) *
+                quittingBellmanCapGap prescribed cap (start + (fuel + 1)) := by
+              rw [Finset.sum_range_succ,
+                quittingOpponentSurvivalWeight_succ]
+              simp only [Nat.add_assoc]
+              ring
+
 end GameTheory
