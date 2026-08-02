@@ -420,6 +420,7 @@ import GameTheory.Concepts.Stochastic.QuittingSimpleBranches
 import GameTheory.Concepts.Stochastic.QuittingFirstBranch
 import GameTheory.Concepts.Stochastic.QuittingFirstStageAdapter
 import GameTheory.Concepts.Stochastic.QuittingNearSureRoot
+import GameTheory.Concepts.Stochastic.QuittingNearSureProfile
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
