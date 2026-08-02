@@ -76,6 +76,13 @@ owner's arena.  The hypotheses use the iterated finite configuration kernel;
 identifying those rollouts with the architecture's history semantics remains a
 separate finite-horizon law bridge.
 
+`ResponseArchitectureConfigKernelLaw.lean` supplies the prescribed half of
+that bridge: projecting the full prescribed public-history law to the current
+controller configuration is exactly iteration of the prescribed configuration
+kernel.  Consequently its expected stage payoffs and rebased finite averages
+agree with the corresponding configuration-kernel quantities, and ordinary
+history-level shifted delivery now implies prescribed target harmonicity.
+
 `UncoveredPrescribedClassCounterexample.lean` is the two-player/two-node Q96
 regression: all four target/occupation-side checks pass on their stated
 domains, while the escaped prescribed class is outside player one's arena and
