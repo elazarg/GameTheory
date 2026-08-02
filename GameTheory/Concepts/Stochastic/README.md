@@ -39,6 +39,26 @@ Basic ─→ StageGame ─→ Uniform (the conjecture; both waists)
   one-sided guarantee + zero-sum wrapper) that compile candidate constructions
   into `IsUniformEquilibriumPayoff`.
 
+### Fixed public response architectures
+
+`PublicResponseCredibilityCriterion.lean` and its support-pruned companion
+`ReachablePublicResponseCredibilityCriterion.lean` supply a second
+proof-facing route for a **given finite public Markov response architecture**.
+Target harmonicity, unilateral target superharmonicity, a neutral-occupation
+inequality, and prescribed delivery produce bounded potentials, uniform
+`O(1/N)` delivery and deviation caps, rebasing, and an enforcement ledger
+consumed by the existing public-response compilers.
+
+This is deliberately a supplied-object verifier. It does not construct an
+architecture from an arbitrary game or target, prove the finite-class
+converse, bound the number of public configurations, model hidden randomized
+memory, or establish that finite public architectures cover all
+uniform-equilibrium payoffs. Those stronger claims have separate mathematical
+and formalization status in the research frontier. In particular, the
+support-pruned module proves the criterion-to-ledger direction at its declared
+entry; it does not formalize the corrected Question 96 converse on the union
+of owner-specific reachable arenas.
+
 ### Proved results (special cases of the conjecture)
 
 | Game class | Theorem | File |
@@ -89,7 +109,7 @@ ones include:
 | `PlayerNeutral*` / `PlayerOwned*` / `PlayerInvisible*` | Occupation/charge accounts by action orientation (continuation-neutral vs deviator-owned vs invisible) |
 | `Prescribed*` / `MovingEndpoint*` / `Endpoint*` | Endpoint-target transport probes |
 | `ProcessedHarmonic*` | Harmonic-adjustment response processing |
-| `Public*` | Public-history machinery: stopping rules, phase certificates, punishment systems, public coins |
+| `Public*` | Public-history machinery: stopping rules, phase certificates, response architectures and credibility criteria, punishment systems, public coins |
 | `Quitting*` | Quitting games (translation lemmas to the uniform concept) |
 
 ### File status conventions
