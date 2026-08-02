@@ -8,6 +8,7 @@ import GameTheory.Concepts.Welfare.FolkTheorem.Discounting
 import GameTheory.Concepts.Welfare.FolkTheorem.Geometry
 import GameTheory.Concepts.Welfare.FolkTheorem.Periodic
 import GameTheory.Concepts.Welfare.FolkTheorem.Trigger
+import GameTheory.Concepts.Welfare.FolkTheorem.CesaroTrigger
 import GameTheory.Concepts.Welfare.FolkTheorem.Main
 
 /-!
@@ -23,6 +24,9 @@ Umbrella module. Split across `FolkTheorem/`:
   individually rational payoff sets.
 - `Periodic` — rotation equivalences and periodic discounted continuation bounds.
 - `Trigger` — trigger strategies and their discounted-repeated Nash property.
+- `CesaroTrigger` — bounded-debt trigger accounting, explicit finite-horizon
+  gain bounds, and the fixed-profile uniform-equilibrium theorem for finite
+  observable-profile cycles.
 - `Main` — finite-cycle approximation, the discounted Folk theorem, and
   topological properties of the payoff sets.
 -/

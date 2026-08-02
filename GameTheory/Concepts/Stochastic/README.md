@@ -58,6 +58,14 @@ payoffs to converge.  The adapter proves the sound implication from a fixed
 profile with its specified limit, but does not claim a converse without an
 additional coherent-selection or compactness theorem.
 
+`TransitionMonitoring.lean` identifies the transition coordinate of the
+compiled Bellman/Fink row with the deviation signal law of the canonical
+one-step public monitor that observes only the successor state.  The identity
+is exact for the baseline, pure unilateral deviations, and scalar continuation
+scores.  It is a one-step row adapter only: it does not observe the joint
+action and does not construct a history monitor, response strategy, punishment,
+or credible closer.
+
 ### Fixed public response architectures
 
 `PublicResponseCredibilityCriterion.lean` and its support-pruned companion
