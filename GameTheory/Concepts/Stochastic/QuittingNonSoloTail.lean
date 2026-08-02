@@ -160,6 +160,27 @@ theorem quittingNonSoloMass_monotone
   · simp only [hS, ↓reduceIte]
     exact quittingAbsorbedMass_monotone reward profile S hlater
 
+/-- The limiting non-solo tail is the sum of the future absorption masses
+away from the singleton terminal state `{who}`. -/
+theorem quittingNonSoloMassLimit_sub_eq_sum_tail
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (who : ι) (time : ℕ) :
+    quittingNonSoloMassLimit reward profile who -
+        quittingNonSoloMass reward profile who time =
+      ∑ S, if S = quittingSingletonTerminal who then 0 else
+        (quittingAbsorbedMassLimit reward profile S -
+          quittingAbsorbedMass reward profile time S) := by
+  classical
+  unfold quittingNonSoloMassLimit
+  rw [quittingNonSoloMass_eq_sum_absorbedMass,
+    ← Finset.sum_sub_distrib]
+  apply Finset.sum_congr rfl
+  intro S _
+  by_cases hS : S = quittingSingletonTerminal who
+  · simp [hS]
+  · simp [hS]
+
 /-- In one stage, the new non-solo absorption mass is no larger than the
 opponent-only live mass lost in that stage. -/
 theorem quittingNonSoloMass_update_succ_sub_le_opponentLiveDrop
