@@ -16,6 +16,7 @@ import Math.Probability.StitchedMartingale
 import Math.Probability.ShadowSeparatorAccounting
 import Math.Probability.SublinearLedger
 import Math.Probability.OptionalTargetTransport
+import Math.Probability.SwitchedPotentialCalculus
 import Math.Probability.TriangularLedger
 import Math.Fin
 import Math.Fintype
