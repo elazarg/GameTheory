@@ -193,8 +193,15 @@ theorem exists_isVriezePrimalOptimal
   linarith
 
 /-- Unconditional finite zero-sum single-controller uniform-payoff theorem.
-All Vrieze primal, dual, flow-completion, harmonicity, transience, and reward
-projection objects are constructed internally. -/
+
+Existence follows more generally from Mertens and Neyman, “Stochastic Games,”
+*International Journal of Game Theory* 10 (1981), 53–66,
+doi:10.1007/BF01769259.  The formal proof here instead follows the specialized
+undiscounted LP/single-controller route developed in O. J. Vrieze,
+*Stochastic Games with Finite State and Action Spaces*, CWI Tract 33 (1987),
+as described in `SingleController.lean`.  All Vrieze primal, dual,
+flow-completion, harmonicity, transience, and reward-projection objects are
+constructed internally. -/
 theorem exists_uniformEquilibriumPayoff_of_isZeroSumBoolGame_of_isSingleController
     (G : StochasticGame Bool) [Finite G.State]
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)]
