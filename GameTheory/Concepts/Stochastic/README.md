@@ -84,6 +84,16 @@ that supplied architecture.  The sharp `11/7` finite-horizon modulus and the
 necessity, phase-minimality, and rigidity results studied in Question 97 are
 not formalized in that module.
 
+`FTVCyclicMinimality.lean` supplies Question 97's exact finite-algebra layer.
+For any live cyclic packet satisfying the table-expanded `(Q1)--(Q5)`
+conditions with initial promise `(1,2,1)`, it derives the exposed solo-outcome
+face, a unique active role in every phase, coverage of all three roles, the
+lower bound `K ≥ 3`, and literal uniqueness of the normalized three-phase
+packet.  It also constructs that packet and checks all conditions, including
+the inactive complementarity inequalities.  The module does not formalize
+the equilibrium-theoretic necessity/sufficiency of `(Q1)--(Q5)`, the sharp
+finite-horizon modulus, or Question 97's approximate-regret boundary.
+
 `ArchitectureCapSeparators.lean` is a regression guard for the cap notion.
 It proves on actual finite games that a supplied architecture's exact
 unilateral cap can be `1` while the corresponding one-shot opponent minmax is

@@ -213,6 +213,7 @@ import GameTheory.Concepts.Stochastic.ExplicitDomainGainBiasVerifier
 import GameTheory.Concepts.Stochastic.SplitDomainGainBiasVerifier
 import GameTheory.Concepts.Stochastic.UncoveredPrescribedClassCounterexample
 import GameTheory.Concepts.Stochastic.FTVCyclicCredibility
+import GameTheory.Concepts.Stochastic.FTVCyclicMinimality
 import GameTheory.Concepts.Stochastic.ArchitectureCapSeparators
 import GameTheory.Concepts.Stochastic.AdaptivePotentialFiniteTimeTargetBounds
 import GameTheory.Concepts.Stochastic.FiniteHorizonProfileLawTransfer
