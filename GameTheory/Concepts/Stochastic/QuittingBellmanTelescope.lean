@@ -62,6 +62,97 @@ def IsQuittingLiveBellmanCap
     (cap : ℕ → ℝ) : Prop :=
   ∀ time, cap time = quittingLiveBellmanValue reward roots who cap time
 
+/-- The prescribed values are obtained by using the supplied product root
+at the current stage and the next prescribed value after all continue. -/
+def IsQuittingLivePrescribedValue
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribed : ℕ → ℝ) : Prop :=
+  ∀ time,
+    prescribed time = quittingRootSuccessorPayoff reward
+      (fun _ => prescribed (time + 1)) (roots time) who
+
+/-- The pure-Quit endpoint is exactly the fixed-opponent quit value and does
+not depend on the declared all-continue tail. -/
+theorem quittingRootQuitPayoff_eq_fixedOpponentsQuitValue
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (tail : Payoff ι) (time : ℕ) :
+    quittingRootQuitPayoff reward tail (roots time) who =
+      quittingFixedOpponentsQuitValue reward roots who time := by
+  unfold quittingRootQuitPayoff quittingFixedOpponentsQuitValue
+  rw [quittingRootExpectedPayoff_eq_absorbingContribution_add,
+    quittingStationaryContinueMass_update_pure_true_eq_zero]
+  simp
+
+/-- The pure-Continue endpoint splits into current opponent absorption plus
+opponent survival times the declared tail. -/
+theorem quittingRootContinuePayoff_eq_fixedOpponents
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (tail : Payoff ι) (time : ℕ) :
+    quittingRootContinuePayoff reward tail (roots time) who =
+      quittingFixedOpponentsContinueReward reward roots who time +
+        quittingFixedOpponentsContinueMass roots who time * tail who := by
+  unfold quittingRootContinuePayoff
+    quittingFixedOpponentsContinueReward
+    quittingFixedOpponentsContinueMass
+  rw [quittingRootExpectedPayoff_eq_absorbingContribution_add]
+
+/-- Policy evaluation is below its one-step pure-action maximum. -/
+theorem quittingRootSuccessorPayoff_le_liveBellmanValue
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribed : ℕ → ℝ) (time : ℕ) :
+    quittingRootSuccessorPayoff reward
+        (fun _ => prescribed (time + 1)) (roots time) who ≤
+      quittingLiveBellmanValue reward roots who prescribed time := by
+  let quitValue := quittingFixedOpponentsQuitValue reward roots who time
+  let continueValue :=
+    quittingFixedOpponentsContinueReward reward roots who time +
+      quittingFixedOpponentsContinueMass roots who time * prescribed (time + 1)
+  have hquit := quittingRootQuitPayoff_eq_fixedOpponentsQuitValue
+    reward roots who (fun _ => prescribed (time + 1)) time
+  have hcontinue := quittingRootContinuePayoff_eq_fixedOpponents
+    reward roots who (fun _ => prescribed (time + 1)) time
+  have hsum := quittingRoot_continueProbability_add_quitProbability
+    (roots time) who
+  rw [quittingRootSuccessorPayoff_eq_endpointMix, hquit, hcontinue]
+  change
+    (roots time who true).toReal * quitValue +
+        (roots time who false).toReal * continueValue ≤
+      max quitValue continueValue
+  calc
+    (roots time who true).toReal * quitValue +
+          (roots time who false).toReal * continueValue ≤
+        (roots time who true).toReal * max quitValue continueValue +
+          (roots time who false).toReal * max quitValue continueValue := by
+      exact add_le_add
+        (mul_le_mul_of_nonneg_left (le_max_left _ _) ENNReal.toReal_nonneg)
+        (mul_le_mul_of_nonneg_left (le_max_right _ _) ENNReal.toReal_nonneg)
+    _ = max quitValue continueValue := by
+      rw [← add_mul]
+      have : (roots time who true).toReal +
+          (roots time who false).toReal = 1 := by linarith
+      rw [this, one_mul]
+
+/-- A genuinely prescribed policy value has a nonnegative one-step
+residual. -/
+theorem quittingPrescribedOneStepResidual_nonneg
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribed : ℕ → ℝ)
+    (hprescribed : IsQuittingLivePrescribedValue
+      reward roots who prescribed)
+    (time : ℕ) :
+    0 ≤ quittingPrescribedOneStepResidual
+      reward roots who prescribed time := by
+  unfold quittingPrescribedOneStepResidual
+  rw [hprescribed time]
+  exact sub_nonneg.mpr
+    (quittingRootSuccessorPayoff_le_liveBellmanValue
+      reward roots who prescribed time)
+
 /-- One Bellman step: the cap gap is at most the prescribed local residual
 plus opponent survival times the next cap gap. -/
 theorem quittingBellmanCapGap_le_residual_add
