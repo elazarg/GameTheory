@@ -140,6 +140,27 @@ theorem quittingAbsorbedMass_update_continueAfter_eq_of_le
     reward profile who deviation cutoff time htime
       (quittingAbsorbedIndicator reward terminal)
 
+/-- Expected stage payoff agrees through the cutoff.  In a quitting game the
+current-stage reward depends only on the current state, so agreement of the
+history law through `time` is enough. -/
+theorem expectedStagePayoff_update_continueAfter_eq_of_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile) (who : ι)
+    (deviation : (quittingGame reward).BehaviorStrategy who)
+    (cutoff time : ℕ) (htime : time ≤ cutoff) :
+    (quittingGame reward).expectedStagePayoff
+        (Function.update profile who deviation) none time who =
+      (quittingGame reward).expectedStagePayoff
+        (Function.update profile who
+          (quittingContinueAfterStrategy reward who deviation cutoff))
+        none time who := by
+  rw [expectedStagePayoff_quittingGame_eq_sum_mass,
+    expectedStagePayoff_quittingGame_eq_sum_mass]
+  apply Finset.sum_congr rfl
+  intro terminal _
+  rw [quittingAbsorbedMass_update_continueAfter_eq_of_le
+    reward profile who deviation cutoff time htime terminal]
+
 /-- From the cutoff onward, the cutoff deviation's conditional all-continue
 mass is exactly the opponents' all-continue mass. -/
 theorem quittingJointContinueMass_update_continueAfter_eq_opponentOnly
