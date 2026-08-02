@@ -261,6 +261,10 @@ theorem prob_def (μ : FinDist α) (a : α) : μ.prob a = (μ.toPMF a).toReal :=
 
 theorem prob_nonneg (μ : FinDist α) (a : α) : 0 ≤ μ.prob a := ENNReal.toReal_nonneg
 
+theorem prob_le_one (μ : FinDist α) (a : α) : μ.prob a ≤ 1 := by
+  simpa [prob_def] using
+    ENNReal.toReal_mono (by simp) (PMF.coe_le_one μ.toPMF a)
+
 theorem prob_eq_zero_of_toPMF {μ : FinDist α} {a : α} (h : μ.toPMF a = 0) : μ.prob a = 0 := by
   simp [prob_def, h]
 

@@ -30,6 +30,7 @@ import GameTheory.Core.Learning
 import GameTheory.Core.Response
 import GameTheory.Core.Potential
 import GameTheory.Core.Mixed
+import GameTheory.Core.BinaryMixed
 import GameTheory.Core.Transform
 import GameTheory.Core.ZeroSum
 import GameTheory.Core.SocialChoice

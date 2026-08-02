@@ -176,6 +176,60 @@ theorem matchingPennies_payoff (profile : Fin 2 → Side) (i : Fin 2) :
       if profile 0 = profile 1 then (if i = 0 then 1 else -1)
       else (if i = 0 then -1 else 1) := rfl
 
+/-- Boolean labels for the two descriptive penny sides. -/
+def Side.boolEquiv : Bool ≃ Side where
+  toFun
+    | true => .heads
+    | false => .tails
+  invFun
+    | .heads => true
+    | .tails => false
+  left_inv bit := by cases bit <;> rfl
+  right_inv side := by cases side <;> rfl
+
+/-- The same labels at the dependent action type of either player. -/
+def matchingPenniesAction (who : Fin 2) : Bool ≃ matchingPennies.Action who :=
+  Side.boolEquiv
+
+/-- Matching Pennies satisfies the language-independent binary payoff
+pattern. -/
+def matchingPenniesLike :
+    matchingPennies.toForm.MatchingPenniesLike matchingPennies.utility where
+  action := matchingPenniesAction
+  scale := 1
+  scale_pos := by norm_num
+  payoff_zero bits := by
+    rw [TableGame.toForm_play, expectedUtility_pure]
+    simp only [TableGame.utility_apply, matchingPennies_payoff]
+    cases hzero : bits 0 <;> cases hone : bits 1 <;> split <;> norm_num
+    all_goals
+      rename_i hbad
+      first
+      | exact hbad rfl
+      | exact Bool.noConfusion (Side.boolEquiv.injective hbad)
+  payoff_one bits := by
+    rw [TableGame.toForm_play, expectedUtility_pure]
+    simp only [TableGame.utility_apply, matchingPennies_payoff]
+    cases hzero : bits 0 <;> cases hone : bits 1 <;> split <;> norm_num
+    all_goals
+      rename_i hbad
+      first
+      | exact hbad rfl
+      | exact Bool.noConfusion (Side.boolEquiv.injective hbad)
+
+/-- An arbitrary semantic mixed profile is Nash in Matching Pennies exactly
+when both players put probability one half on heads. -/
+theorem matchingPennies_mixed_isNash_iff_half
+    (mixedProfile : Profile matchingPennies.toForm.sig.mixed) :
+    IsNash matchingPennies.toForm.mixed
+        (euPreference matchingPennies.utility) mixedProfile ↔
+      (mixedProfile 0).prob .heads = (1 / 2 : ℝ) ∧
+        (mixedProfile 1).prob .heads = (1 / 2 : ℝ) := by
+  have hzero : matchingPenniesLike.action 0 true = .heads := rfl
+  have hone : matchingPenniesLike.action 1 true = .heads := rfl
+  simpa only [GameForm.MatchingPenniesLike.probTrue, hzero, hone] using
+    matchingPenniesLike.isNash_iff_half mixedProfile
+
 #guard matchingPennies.enumerateNash.card = 0
 
 /-- Matching Pennies has no pure Nash equilibrium. -/

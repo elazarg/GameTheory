@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.NFG; GameTheory.Examples; canonical Core and Analysis concepts
 Domain contract / decision: D4-D10, D15, EXP-042
 Owner: Wave 2 / mature static and language recovery
-Status: complete; 108/108 reviewed, 3 explicitly deferred to owning cross-family gates
+Status: complete; 108/108 reviewed, 2 explicitly deferred to owning cross-family gates
 Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-NFG family.
@@ -98,7 +98,7 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 | same | `matchingPennies_matchingPenniesLike` | def | retired | `matchingPennies_payoff`; `uniformPennies_verify` | focused build | Private certificate for the predecessor binary wrapper; direct payoff equations and verified exact arithmetic are authoritative. |
 | same | `matchingPenniesFairMixed` | def | adapt | `GameTheory.Examples.fairPennies`; `uniformPennies` | focused build | Named semantic profile compiled from exact rational half/half weights. |
 | same | `matchingPennies_uniform_mixed_balanced` | theorem | adapt | `uniformPennies_expectedPayoff_zero`; `uniformPennies_pureDeviation_expectedPayoff_zero` | focused build | Both the status quo and every pure deviation have exact payoff zero. |
-| same | `matchingPennies_mixed_nash_iff_half` | theorem | deferred | S-MIX binary mixed-equilibrium characterization | `docs/V1CoverageLedger.md` S-MIX gate | Reopen as a language-independent theorem over the canonical mixed extension, then instantiate here; do not recreate `IsNashMixed`. |
+| same | `matchingPennies_mixed_nash_iff_half` | theorem | adapt | `GameTheory.Examples.matchingPennies_mixed_isNash_iff_half` | S-MIX binary ledger; focused build (1,740 jobs) | Instantiates `GameForm.MatchingPenniesLike.isNash_iff_half` over the canonical mixed extension; no `IsNashMixed` wrapper. |
 | same | `matchingPennies_fair_mixed_nash` | theorem | adapt | `GameTheory.Examples.fairPennies_isNash` | focused build | Published against `IsNash` of the canonical mixed extension. |
 | same | `matchingPenniesLabels_uniform_eq_fair` | theorem | retired | `GameTheory.Examples.fairPennies` | focused build | Private equality between two predecessor presentations; the successor names one canonical semantic profile. |
 | same | `matchingPennies_fair_correlated_eq` | theorem | adapt | `GameTheory.Examples.matchingPennies_fair_isCorrelatedEq` | S-CORR mixed-Nash ledger; focused build (1,739 jobs) | Concrete consumer of the preference-parametric `GameTheory.IsNash.isCorrelatedEq_pi`; no example-local transport proof. |
