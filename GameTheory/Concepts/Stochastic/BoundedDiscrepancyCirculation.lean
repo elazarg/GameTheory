@@ -145,6 +145,30 @@ theorem charge_eq_sum_map {κ : Type uκ} (edgeCharge : E → κ → ℤ)
   | nil => rfl
   | concat walkSoFar edge legal ih => simp [charge, edges, ih]
 
+/-- Multiplicity of an edge identity in a finite walk. -/
+def edgeMultiplicity [DecidableEq E] {start : V} : {finish : V} →
+    G.Walk start finish → E → ℕ
+  | _, .nil => 0
+  | _, .concat walkSoFar edge _ => fun candidate =>
+      walkSoFar.edgeMultiplicity candidate + if candidate = edge then 1 else 0
+
+@[simp] theorem edgeMultiplicity_nil [DecidableEq E] (candidate : E) :
+    (Walk.nil : G.Walk start start).edgeMultiplicity candidate = 0 := rfl
+
+@[simp] theorem edgeMultiplicity_concat [DecidableEq E]
+    (walkSoFar : G.Walk start finish) (edge candidate : E)
+    (legal : G.source edge = finish) :
+    (Walk.concat walkSoFar edge legal).edgeMultiplicity candidate =
+      walkSoFar.edgeMultiplicity candidate + if candidate = edge then 1 else 0 := rfl
+
+theorem edgeMultiplicity_pos_iff_mem_edges [DecidableEq E]
+    (walk : G.Walk start finish) (edge : E) :
+    0 < walk.edgeMultiplicity edge ↔ edge ∈ walk.edges := by
+  induction walk with
+  | nil => simp [edgeMultiplicity, edges]
+  | concat walkSoFar finalEdge legal ih =>
+      by_cases h : edge = finalEdge <;> simp [edgeMultiplicity, edges, ih, h]
+
 /-- Change only the terminal index of a typed walk along an equality. -/
 def castFinish {start finish finish' : V} (walk : G.Walk start finish)
     (hfinish : finish = finish') : G.Walk start finish' :=
@@ -168,6 +192,176 @@ def castFinish {start finish finish' : V} (walk : G.Walk start finish)
     (walk.castFinish hfinish).charge edgeCharge = walk.charge edgeCharge := by
   subst finish'
   rfl
+
+end Walk
+
+/-- Total multiplicity leaving a vertex. -/
+def outgoingMultiplicity [Fintype E] [DecidableEq V]
+    (multiplicity : E → ℕ) (vertex : V) : ℕ :=
+  ∑ edge with G.source edge = vertex, multiplicity edge
+
+/-- Total multiplicity entering a vertex. -/
+def incomingMultiplicity [Fintype E] [DecidableEq V]
+    (multiplicity : E → ℕ) (vertex : V) : ℕ :=
+  ∑ edge with G.target edge = vertex, multiplicity edge
+
+/-- Total charge carried by an integer edge multiplicity. -/
+def multiplicityCharge (_G : EdgeGraph V E) [Fintype E] {κ : Type uκ}
+    (edgeCharge : E → κ → ℤ) (multiplicity : E → ℕ) : κ → ℤ :=
+  ∑ edge, multiplicity edge • edgeCharge edge
+
+/-- Two edge identities meet in the underlying undirected support graph. -/
+def SharesEndpoint (first second : E) : Prop :=
+  G.source first = G.source second ∨ G.source first = G.target second ∨
+    G.target first = G.source second ∨ G.target first = G.target second
+
+/-- A finite traversal certificate for weak connectivity of a nonempty edge
+support. Repetitions are allowed; every positive-support edge must occur. -/
+def HasWalkConnectedSupport (multiplicity : E → ℕ) : Prop :=
+  ∃ traversal : List E,
+    traversal ≠ [] ∧
+    (∀ edge, edge ∈ traversal ↔ 0 < multiplicity edge) ∧
+    traversal.IsChain G.SharesEndpoint
+
+/-- A nonzero nonnegative integer circulation with zero total charge and a
+finite certificate that its positive support is weakly connected. -/
+structure ConnectedIntegerCirculation {κ : Type uκ}
+    (edgeCharge : E → κ → ℤ) [Fintype E] [DecidableEq V] where
+  multiplicity : E → ℕ
+  nonzero : ∃ edge, 0 < multiplicity edge
+  balanced : ∀ vertex,
+    G.outgoingMultiplicity multiplicity vertex =
+      G.incomingMultiplicity multiplicity vertex
+  charge_zero : G.multiplicityCharge edgeCharge multiplicity = 0
+  connected : G.HasWalkConnectedSupport multiplicity
+
+/-- A connected circulation together with an explicit finite route from the
+prescribed start into its positive support. -/
+structure ReachableConnectedIntegerCirculation {κ : Type uκ}
+    (edgeCharge : E → κ → ℤ) [Fintype E] [DecidableEq V]
+    (start : V) extends G.ConnectedIntegerCirculation edgeCharge where
+  entry : V
+  initialWalk : G.Walk start entry
+  entry_mem_support : ∃ edge, 0 < multiplicity edge ∧
+    (G.source edge = entry ∨ G.target edge = entry)
+
+namespace Walk
+
+variable {G}
+
+@[simp] theorem outgoingMultiplicity_edgeMultiplicity_nil
+    [Fintype E] [DecidableEq E] [DecidableEq V] (vertex : V) :
+    G.outgoingMultiplicity
+      ((Walk.nil : G.Walk start start).edgeMultiplicity) vertex = 0 := by
+  simp [outgoingMultiplicity]
+
+@[simp] theorem incomingMultiplicity_edgeMultiplicity_nil
+    [Fintype E] [DecidableEq E] [DecidableEq V] (vertex : V) :
+    G.incomingMultiplicity
+      ((Walk.nil : G.Walk start start).edgeMultiplicity) vertex = 0 := by
+  simp [incomingMultiplicity]
+
+theorem outgoingMultiplicity_edgeMultiplicity_concat
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (walkSoFar : G.Walk start finish) (edge : E)
+    (legal : G.source edge = finish) (vertex : V) :
+    G.outgoingMultiplicity (Walk.concat walkSoFar edge legal).edgeMultiplicity vertex =
+      G.outgoingMultiplicity walkSoFar.edgeMultiplicity vertex +
+        if G.source edge = vertex then 1 else 0 := by
+  classical
+  simp [outgoingMultiplicity, edgeMultiplicity, Finset.sum_add_distrib]
+
+theorem incomingMultiplicity_edgeMultiplicity_concat
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (walkSoFar : G.Walk start finish) (edge : E)
+    (legal : G.source edge = finish) (vertex : V) :
+    G.incomingMultiplicity (Walk.concat walkSoFar edge legal).edgeMultiplicity vertex =
+      G.incomingMultiplicity walkSoFar.edgeMultiplicity vertex +
+        if G.target edge = vertex then 1 else 0 := by
+  classical
+  simp [incomingMultiplicity, edgeMultiplicity, Finset.sum_add_distrib]
+
+theorem multiplicityCharge_edgeMultiplicity
+    [Fintype E] [DecidableEq E] {κ : Type uκ}
+    (edgeCharge : E → κ → ℤ) (walk : G.Walk start finish) :
+    G.multiplicityCharge edgeCharge walk.edgeMultiplicity =
+      walk.charge edgeCharge := by
+  induction walk with
+  | nil => simp [multiplicityCharge]
+  | concat walkSoFar edge legal ih =>
+      funext coordinate
+      simp only [multiplicityCharge, edgeMultiplicity, Walk.charge_concat,
+        Pi.add_apply, Finset.sum_apply, nsmul_eq_mul]
+      simp_rw [Nat.cast_add, add_mul, Pi.add_apply, Pi.mul_apply]
+      have ihCoordinate := congrFun ih coordinate
+      simp only [multiplicityCharge, Finset.sum_apply, nsmul_eq_mul,
+        Pi.mul_apply] at ihCoordinate
+      rw [Finset.sum_add_distrib, ihCoordinate]
+      simp
+
+/-- Endpoint-corrected flow conservation for every finite typed walk. -/
+theorem edgeMultiplicity_flow_with_endpoints
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (walk : G.Walk start finish) (vertex : V) :
+    G.outgoingMultiplicity walk.edgeMultiplicity vertex +
+        (if finish = vertex then 1 else 0) =
+      G.incomingMultiplicity walk.edgeMultiplicity vertex +
+        (if start = vertex then 1 else 0) := by
+  induction walk with
+  | nil => simp
+  | @concat middle walkSoFar edge legal ih =>
+      rw [outgoingMultiplicity_edgeMultiplicity_concat,
+        incomingMultiplicity_edgeMultiplicity_concat, legal]
+      omega
+
+/-- Edge multiplicities of a closed typed walk are balanced at every
+vertex. -/
+theorem edgeMultiplicity_balanced
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (walk : G.Walk base base) (vertex : V) :
+    G.outgoingMultiplicity walk.edgeMultiplicity vertex =
+      G.incomingMultiplicity walk.edgeMultiplicity vertex := by
+  have hflow := walk.edgeMultiplicity_flow_with_endpoints vertex
+  omega
+
+/-- The positive edge support of a nonempty walk is walk-connected in the
+underlying undirected incidence graph. -/
+theorem edgeMultiplicity_hasWalkConnectedSupport
+    [DecidableEq E] (walk : G.Walk start finish) (hne : 0 < walk.length) :
+    G.HasWalkConnectedSupport walk.edgeMultiplicity := by
+  have hedges : walk.edges ≠ [] := by
+    intro hempty
+    have : walk.edges.length = 0 := by simp [hempty]
+    rw [walk.edges_length] at this
+    omega
+  refine ⟨walk.edges, hedges, ?_, ?_⟩
+  · intro edge
+    exact (walk.edgeMultiplicity_pos_iff_mem_edges edge).symm
+  · exact walk.edges_isChain.imp fun first second hmatch =>
+      Or.inr (Or.inr (Or.inl hmatch))
+
+/-- A nonempty zero-charge closed walk induces its exact connected integer
+circulation of edge occurrence counts. -/
+def toConnectedIntegerCirculation
+    [Fintype E] [DecidableEq E] [DecidableEq V] {κ : Type uκ}
+    (edgeCharge : E → κ → ℤ) (walk : G.Walk base base)
+    (hne : 0 < walk.length) (hzero : walk.charge edgeCharge = 0) :
+    G.ConnectedIntegerCirculation edgeCharge where
+  multiplicity := walk.edgeMultiplicity
+  nonzero := by
+    have hedges : walk.edges ≠ [] := by
+      intro hempty
+      have : walk.edges.length = 0 := by simp [hempty]
+      rw [walk.edges_length] at this
+      omega
+    let edge := walk.edges.head hedges
+    exact ⟨edge, (walk.edgeMultiplicity_pos_iff_mem_edges edge).2
+      (List.head_mem hedges)⟩
+  balanced := walk.edgeMultiplicity_balanced
+  charge_zero := by
+    rw [walk.multiplicityCharge_edgeMultiplicity]
+    exact hzero
+  connected := walk.edgeMultiplicity_hasWalkConnectedSupport hne
 
 end Walk
 
@@ -642,6 +836,36 @@ theorem exists_eventuallyPeriodic_boundedDiscrepancy
     _ = result.edge (lasso.initialWalk.length + n) := by
       exact (lasso.initialWalk.prependInfinite_edge_length_add periodicTail n).symm
 
+/-- The exact edge counts of a lasso period form a reachable connected
+integer circulation. -/
+def toReachableConnectedIntegerCirculation
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (lasso : G.ZeroChargeLasso edgeCharge start) :
+    G.ReachableConnectedIntegerCirculation edgeCharge start := by
+  let closed := lasso.closedPeriod
+  have hclosedNonempty : 0 < closed.length := by
+    simpa [closed] using lasso.period_nonempty
+  let circulation : G.ConnectedIntegerCirculation edgeCharge :=
+    closed.toConnectedIntegerCirculation edgeCharge hclosedNonempty
+      lasso.closedPeriod_charge
+  refine {
+    toConnectedIntegerCirculation := circulation
+    entry := lasso.base
+    initialWalk := lasso.initialWalk
+    entry_mem_support := ?_
+  }
+  have hedges : closed.edges ≠ [] := by
+    intro hempty
+    have : closed.edges.length = 0 := by simp [hempty]
+    rw [closed.edges_length] at this
+    omega
+  let firstEdge := closed.edges.head hedges
+  refine ⟨firstEdge, ?_, Or.inl ?_⟩
+  · change 0 < closed.edgeMultiplicity firstEdge
+    exact (closed.edgeMultiplicity_pos_iff_mem_edges firstEdge).2
+      (List.head_mem hedges)
+  · exact closed.source_head hedges
+
 end ZeroChargeLasso
 
 /-- The exact repeated-configuration extraction.  Finiteness of the vertex
@@ -709,6 +933,19 @@ theorem exists_boundedDiscrepancy_iff_exists_eventuallyPeriodic
     exact lasso.exists_eventuallyPeriodic_boundedDiscrepancy
   · rintro ⟨walk, hbounded, _⟩
     exact ⟨walk, hbounded⟩
+
+/-- The bounded-discrepancy pigeonhole certificate also yields a reachable
+connected integer circulation. This is the easy direction of the
+circulation equivalence; the converse requires an Euler-tour construction. -/
+theorem exists_reachableConnectedIntegerCirculation_of_boundedDiscrepancy
+    [Finite V] [Fintype E] [DecidableEq E] [DecidableEq V]
+    {κ : Type uκ} (edgeCharge : E → κ → ℤ) (start : V)
+    (walk : G.InfiniteWalk start)
+    (hbounded : walk.HasBoundedDiscrepancy edgeCharge) :
+    Nonempty (G.ReachableConnectedIntegerCirculation edgeCharge start) := by
+  obtain ⟨lasso⟩ := G.exists_zeroChargeLasso_of_boundedDiscrepancy
+    edgeCharge start walk hbounded
+  exact ⟨lasso.toReachableConnectedIntegerCirculation⟩
 
 end EdgeGraph
 
