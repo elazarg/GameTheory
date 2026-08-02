@@ -73,6 +73,33 @@ PROBE3: Profile = (
 )
 
 
+PROBE4: Profile = (
+    (Fraction(0), Fraction("0.21270937143995297"), Fraction("0.3677580056758998"), Fraction("0.010929049872543423")),
+    (Fraction(0), Fraction("0.1447880461768622"), Fraction("0.019148593990112848"), Fraction("0.08520181633212268")),
+    (Fraction("0.12817448143033464"), Fraction(0), Fraction(0), Fraction("0.2358367839526585")),
+    (Fraction("0.22676759057078766"), Fraction(0), Fraction("0.01834429719375438"), Fraction("0.1607316926116511")),
+)
+
+
+PROBE5: Profile = (
+    (Fraction(0), Fraction("0.1789955198842902"), Fraction("0.3650371702456783"), Fraction("0.00848224271611726")),
+    (Fraction(0), Fraction("0.23524102181073978"), Fraction("0.06364736700455524"), Fraction("0.09914347022273425")),
+    (Fraction("0.07919318635331213"), Fraction(0), Fraction(0), Fraction("0.22447689829620973")),
+    (Fraction("0.12900619084205361"), Fraction(0), Fraction(0), Fraction("0.15550741683590857")),
+    (Fraction("0.2289059528916575"), Fraction(0), Fraction("0.019615839278923516"), Fraction("0.054105586425012786")),
+)
+
+
+PROBE6: Profile = (
+    (Fraction(0), Fraction("0.16557279787009302"), Fraction("0.35638705696149003"), Fraction("0.004356326280225217")),
+    (Fraction(0), Fraction("0.2751507583083422"), Fraction("0.09667876252097149"), Fraction("0.09991369714220717")),
+    (Fraction("0.05027724229709349"), Fraction("0.002072270726973805"), Fraction(0), Fraction("0.20421479360647357")),
+    (Fraction("0.0805015461625366"), Fraction(0), Fraction(0), Fraction("0.1449189339382235")),
+    (Fraction("0.1324231268581428"), Fraction(0), Fraction("0.005532837359838398"), Fraction("0.10147483113352697")),
+    (Fraction("0.229034958748282"), Fraction(0), Fraction("0.02205708224644292"), Fraction("0.03198003136085553")),
+)
+
+
 def bit(mask: int, player: int) -> int:
     return (mask >> player) & 1
 
@@ -271,6 +298,19 @@ def main() -> None:
         "[14,15,9]", PROBE3, (14, 15, 9), Fraction(27, 500)
     )
     assert period3_maximum < period2_maximum
+
+    period4_maximum, _ = evaluate_probe(
+        "period 4", PROBE4, (14, 14, 9, 13), Fraction(37, 1000)
+    )
+    period5_maximum, _ = evaluate_probe(
+        "period 5", PROBE5, (14, 14, 9, 9, 13), Fraction(1, 40)
+    )
+    period6_maximum, _ = evaluate_probe(
+        "period 6", PROBE6, (14, 14, 11, 9, 13, 13), Fraction(17, 1000)
+    )
+    assert period4_maximum < period3_maximum
+    assert period5_maximum < period4_maximum
+    assert period6_maximum < period5_maximum
 
 
 if __name__ == "__main__":
