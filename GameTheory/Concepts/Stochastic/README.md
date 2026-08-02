@@ -156,9 +156,16 @@ seven absorbing children), and the complete target assignment.  It proves
 all four criterion conditions and compiles them into an enforcement ledger,
 a public-phase punishment system, and an adaptive certificate for payoff
 `(1,2,1)` at every positive error.  This is a formal sufficiency result for
-that supplied architecture.  The sharp `11/7` finite-horizon modulus and the
-necessity, phase-minimality, and rigidity results studied in Question 97 are
-not formalized in that module.
+that supplied architecture.
+
+`FTVCyclicFiniteHorizon.lean` instantiates the arbitrary-start payoff
+telescope with the exact FTV delivery bias.  In the repository's
+`quittingGame` convention, the live state pays zero on the quitting stage and
+the terminal reward begins one stage later.  The resulting coordinatewise
+bounds are `16/(7T)`, `22/(7T)`, and `18/(7T)`, hence `22/(7T)` uniformly over
+players.  The often quoted `11/(7T)` constant instead corresponds to counting
+the terminal reward already on the quitting stage; it is not the modulus of
+the current Lean model.
 
 `FTVCyclicMinimality.lean` supplies Question 97's exact finite-algebra layer.
 For any live cyclic packet satisfying the table-expanded `(Q1)--(Q5)`
@@ -167,8 +174,8 @@ face, a unique active role in every phase, coverage of all three roles, the
 lower bound `K ≥ 3`, and literal uniqueness of the normalized three-phase
 packet.  It also constructs that packet and checks all conditions, including
 the inactive complementarity inequalities.  The module does not formalize
-the equilibrium-theoretic necessity/sufficiency of `(Q1)--(Q5)`, the sharp
-finite-horizon modulus, or Question 97's approximate-regret boundary.
+the equilibrium-theoretic necessity/sufficiency of `(Q1)--(Q5)` or Question
+97's approximate-regret boundary.
 
 `ArchitectureCapSeparators.lean` is a regression guard for the cap notion.
 It proves on actual finite games that a supplied architecture's exact
