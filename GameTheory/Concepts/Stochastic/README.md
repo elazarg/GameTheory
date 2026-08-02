@@ -59,6 +59,10 @@ owner-specific arena.  Neither module enlarges those domains to their union or
 asserts the Q96 converse, recurrent coverage, necessity, or obstruction
 extraction.
 
+`ExplicitDomainGainBiasVerifier.lean` combines those two domain-correct
+telescopes behind one shared modulus and feeds the existing enforcement ledger
+at prescribed entries, where membership in every owner arena is available.
+
 `FTVCyclicCredibility.lean` is the actual-data acceptance test for this
 route.  It constructs the Flesch--Thuijsman--Vrieze three-player quitting
 game, its ten-configuration public controller (three live clock phases and
