@@ -22,6 +22,10 @@ theory results.
 - Mixed Nash equilibrium existence for finite games, via Brouwer on product
   simplices.
 - Correlated and coarse-correlated equilibrium existence.
+- A sharp strategic-form private-recommendation separator: an exact correlated
+  target at `(5/7, 5/7)` is separated from independent mixed play by the
+  attained delivery/deviation tolerance `(41 - 7√34)/21`. This result does not
+  model an autonomous stochastic-game correlation device or a compiler.
 - Von Neumann minimax for finite two-player zero-sum games.
 - Security levels, saddle-point vocabulary, zero-sum and constant-sum structure.
 
