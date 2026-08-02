@@ -428,10 +428,13 @@ import GameTheory.Concepts.Stochastic.QuittingStationaryPayoff
 import GameTheory.Concepts.Stochastic.QuittingRootSuccessorCertificate
 import GameTheory.Concepts.Stochastic.QuittingOpponentLiveMass
 import GameTheory.Concepts.Stochastic.QuittingLiveTail
+import GameTheory.Concepts.Stochastic.QuittingExceptionalHazard
 import GameTheory.Concepts.Stochastic.QuittingNearSureRoot
 import GameTheory.Concepts.Stochastic.QuittingNearSureProfile
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
 import GameTheory.Concepts.Stochastic.TerminalToUniformDeviationApproximation
+import GameTheory.Concepts.Stochastic.QuittingAlmostSureOpponentUniformization
+import GameTheory.Concepts.Stochastic.QuittingTerminalUniformization
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
 import Math.LinearAlgebra.ExactBlockEliminationConfluence
