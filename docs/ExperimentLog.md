@@ -3317,6 +3317,12 @@ memory.
 - **Next action:** run the mature Shapley gate—discounted two-player zero-sum
   contraction and stationary value—before claiming broad stochastic-game
   support; use the uniform statement layer only for proved special cases.
+- **2026-08-02 source follow-up:** a read-only audit of active branch
+  `uniform-existence` at
+  `81f4a98af8f9eb05c3c13d0657e81505b24e5487` found 52 stochastic files and
+  roughly 34.6k added lines.  The portable definition spine is already the
+  promoted D22 surface; the branch's placeholder-dependent general existence
+  hierarchy remains research evidence, not code to import or port wholesale.
 
 ### EXP-051: discounted stochastic games and the Shapley boundary
 

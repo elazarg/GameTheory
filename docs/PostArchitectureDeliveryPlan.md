@@ -552,8 +552,11 @@ The next work is ordered:
    whether a live consumer earns D-COMM's deferred conditional public-signal
    representation;
 5. extend the passed stochastic-game gate only through a finite-horizon
-   approximation or checked special case; reserve a new experiment before any
-   infinite-path law, vanishing-discount existence theorem, or graph-game root;
+   approximation or checked special case; the active sibling
+   `uniform-existence` branch's basic definitions are already represented by
+   D22, while its large placeholder-dependent existence hierarchy is research
+   evidence only; reserve a new experiment before any infinite-path law,
+   vanishing-discount existence theorem, or graph-game root;
 6. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 

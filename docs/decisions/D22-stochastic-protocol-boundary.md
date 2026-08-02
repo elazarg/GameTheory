@@ -15,6 +15,14 @@ on branch `uniform-existence`, audited at `e7730a1`. Its four relevant files
 were unchanged from the initially observed `d35c1d8` through that revision.
 The sibling is not imported and is not a dependency.
 
+A read-only follow-up on 2026-08-02 inspected the branch at
+`81f4a98af8f9eb05c3c13d0657e81505b24e5487`.  The branch had grown to 52
+stochastic files and roughly 34.6k added lines, but its smallest portable spine
+remained the native stochastic-game data, finite-horizon behavioral semantics,
+and uniform predicates already represented by this decision.  The general
+uniform-existence constructor still contains a placeholder and remains
+excluded with its dependent research hierarchy.
+
 ## Competing designs
 
 1. Store native state/action/transition/utility data and expose a named bridge
@@ -50,6 +58,7 @@ past one threshold. Horizon zero has the explicit empty-average value zero.
 | Measure | EXP-050 result |
 |---|---|
 | source revision | active sibling branch `uniform-existence` at `e7730a1`; four relevant files unchanged from `d35c1d8` |
+| source follow-up | active branch `81f4a98af8f9eb05c3c13d0657e81505b24e5487`; 52 stochastic files / roughly 34.6k added lines; no additional foundational definition required |
 | source license | MIT, Copyright (c) 2025 Elazar Gershuni |
 | source trust hazards | the general uniform-existence constructor contains `sorry`; excluded identically with every theorem depending on it |
 | native object | state, player-indexed action, `FinDist` transition, and stage utility only |
