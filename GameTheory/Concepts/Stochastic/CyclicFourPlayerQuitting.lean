@@ -667,5 +667,37 @@ theorem stationaryProfile_isUniformεEquilibrium
     terminalReward (quittingStationaryProfile terminalReward stationaryRoot)
       hε stationaryProfile_isTerminalNash
 
+/-- The constant vector `omega` is an explicit uniform-equilibrium payoff of
+the four-player quitting game. -/
+theorem stationaryTail_isUniformEquilibriumPayoff :
+    game.IsUniformEquilibriumPayoff none stationaryTail := by
+  intro ε hε
+  obtain ⟨nashThreshold, hnashThreshold⟩ :=
+    stationaryProfile_isUniformεEquilibrium hε
+  have heventuallyDelivery : ∀ᶠ horizon : ℕ in atTop, ∀ who,
+      |game.finiteAveragePayoff none horizon
+          (quittingStationaryProfile terminalReward stationaryRoot) who -
+        stationaryTail who| ≤ ε := by
+    apply Filter.eventually_all.mpr
+    intro who
+    have hball :=
+      (tendsto_finiteAveragePayoff_quittingGame terminalReward
+        (quittingStationaryProfile terminalReward stationaryRoot) who).eventually
+        (Metric.ball_mem_nhds
+          (quittingTerminalPayoff terminalReward
+            (quittingStationaryProfile terminalReward stationaryRoot) who) hε)
+    filter_upwards [hball] with horizon hhorizon
+    rw [quittingTerminalPayoff_stationary] at hhorizon
+    simpa [Metric.mem_ball, Real.dist_eq, stationaryTail] using hhorizon.le
+  obtain ⟨deliveryThreshold, hdeliveryThreshold⟩ :=
+    Filter.eventually_atTop.1 heventuallyDelivery
+  refine ⟨quittingStationaryProfile terminalReward stationaryRoot,
+    max nashThreshold deliveryThreshold, fun horizon hhorizon => ?_⟩
+  constructor
+  · exact hnashThreshold horizon
+      (le_trans (Nat.le_max_left _ _) hhorizon)
+  · exact hdeliveryThreshold horizon
+      (le_trans (Nat.le_max_right _ _) hhorizon)
+
 end CyclicFourPlayerQuitting
 end GameTheory
