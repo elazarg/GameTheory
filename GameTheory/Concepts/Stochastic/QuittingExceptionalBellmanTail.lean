@@ -27,7 +27,7 @@ open Math.Probability Math.PMFProduct
 /-- Removing one distinguished atom from a finite expectation costs at most
 the payoff bound times the complementary probability mass. -/
 theorem abs_expect_sub_singletonContribution_le
-    {Ω : Type} [Fintype Ω] [DecidableEq Ω]
+    {Ω : Type} [Finite Ω]
     (distribution : PMF Ω) (point : Ω) (value : Ω → ℝ)
     (pointValue bound : ℝ)
     (hpoint : value point = pointValue)
@@ -35,6 +35,8 @@ theorem abs_expect_sub_singletonContribution_le
     |expect distribution value -
         (distribution point).toReal * pointValue| ≤
       bound * (1 - (distribution point).toReal) := by
+  classical
+  letI : Fintype Ω := Fintype.ofFinite Ω
   rw [expect_eq_sum]
   have hmass : ∑ outcome : Ω, (distribution outcome).toReal = 1 :=
     pmf_toReal_sum_one distribution
