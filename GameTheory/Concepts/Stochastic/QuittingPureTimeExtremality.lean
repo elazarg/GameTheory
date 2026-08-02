@@ -80,6 +80,40 @@ theorem sum_quittingFiniteHazardWeight
         simpa [Fintype.sum_bool] using pmf_toReal_sum_one (hazard start)
       linarith
 
+/-- Closed form for the weight of quitting at a specified offset. -/
+theorem quittingFiniteHazardWeight_castSucc
+    (hazard : ℕ → PMF Bool) (start fuel : ℕ) (choice : Fin fuel) :
+    quittingFiniteHazardWeight hazard start fuel choice.castSucc =
+      (∏ offset ∈ Finset.range choice.val,
+          (hazard (start + offset) false).toReal) *
+        (hazard (start + choice.val) true).toReal := by
+  induction fuel generalizing start with
+  | zero => exact Fin.elim0 choice
+  | succ fuel ih =>
+      refine Fin.cases ?_ (fun later => ?_) choice
+      · simp [quittingFiniteHazardWeight]
+      · simp only [Fin.castSucc_succ, quittingFiniteHazardWeight,
+          Fin.cases_succ, Fin.val_succ, Finset.prod_range_succ', ih]
+        simp only [Nat.add_left_comm, Nat.add_comm]
+        ring_nf
+
+/-- Closed form for the final weight: the player continues throughout the
+whole truncation. -/
+theorem quittingFiniteHazardWeight_last
+    (hazard : ℕ → PMF Bool) (start fuel : ℕ) :
+    quittingFiniteHazardWeight hazard start fuel (Fin.last fuel) =
+      ∏ offset ∈ Finset.range fuel,
+        (hazard (start + offset) false).toReal := by
+  induction fuel generalizing start with
+  | zero =>
+      simp [quittingFiniteHazardWeight]
+  | succ fuel ih =>
+      rw [show Fin.last (fuel + 1) = (Fin.last fuel).succ by rfl]
+      simp only [quittingFiniteHazardWeight, Fin.cases_succ,
+        Finset.prod_range_succ', ih]
+      simp only [Nat.add_left_comm, Nat.add_comm]
+      ring_nf
+
 /-! ## Abstract finite stopping recursion -/
 
 /-- Finite-horizon payoff of an arbitrary hazard sequence.  At each live
