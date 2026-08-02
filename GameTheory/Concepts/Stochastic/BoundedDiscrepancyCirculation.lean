@@ -217,6 +217,126 @@ def castFinish {start finish finish' : V} (walk : G.Walk start finish)
   subst finish'
   rfl
 
+/-- Concatenate two typed walks at their common endpoint. -/
+def append {start middle : V} (first : G.Walk start middle) :
+    {finish : V} → G.Walk middle finish → G.Walk start finish
+  | _, .nil => first
+  | _, .concat second edge legal =>
+      .concat (first.append second) edge legal
+
+@[simp] theorem append_nil (first : G.Walk start middle) :
+    first.append (.nil : G.Walk middle middle) = first := rfl
+
+@[simp] theorem append_concat (first : G.Walk start middle)
+    (second : G.Walk middle finish) (edge : E)
+    (legal : G.source edge = finish) :
+    first.append (.concat second edge legal) =
+      .concat (first.append second) edge legal := rfl
+
+@[simp] theorem edges_append (first : G.Walk start middle)
+    (second : G.Walk middle finish) :
+    (first.append second).edges = first.edges ++ second.edges := by
+  induction second with
+  | nil => simp
+  | concat second edge legal ih => simp [ih, List.append_assoc]
+
+@[simp] theorem length_append (first : G.Walk start middle)
+    (second : G.Walk middle finish) :
+    (first.append second).length = first.length + second.length := by
+  induction second with
+  | nil => simp
+  | concat second edge legal ih => simp [ih, Nat.add_assoc]
+
+@[simp] theorem charge_append {κ : Type uκ} (edgeCharge : E → κ → ℤ)
+    (first : G.Walk start middle) (second : G.Walk middle finish) :
+    (first.append second).charge edgeCharge =
+      first.charge edgeCharge + second.charge edgeCharge := by
+  induction second with
+  | nil => simp
+  | concat second edge legal ih => simp [ih, add_assoc]
+
+/-- The one-edge walk carrying a prescribed edge identity. -/
+def singleton (edge : E) : G.Walk (G.source edge) (G.target edge) :=
+  .concat .nil edge rfl
+
+@[simp] theorem edges_singleton (edge : E) :
+    (singleton (G := G) edge).edges = [edge] := rfl
+
+@[simp] theorem length_singleton (edge : E) :
+    (singleton (G := G) edge).length = 1 := rfl
+
+/-- A typed decomposition of a walk at an occurrence of an edge. -/
+theorem exists_splitAtEdge (walk : G.Walk start finish) (edge : E)
+    (hmem : edge ∈ walk.edges) :
+    ∃ (before : G.Walk start (G.source edge))
+      (after : G.Walk (G.target edge) finish),
+      walk.edges = before.edges ++ edge :: after.edges := by
+  induction walk with
+  | nil => simp at hmem
+  | @concat middle walkSoFar finalEdge legal ih =>
+      simp only [edges_concat, List.mem_append, List.mem_singleton] at hmem
+      rcases hmem with hmem | heq
+      · obtain ⟨before, after, hsplit⟩ := ih hmem
+        refine ⟨before, after.concat finalEdge legal, ?_⟩
+        simp only [edges_concat, hsplit]
+        simp [List.append_assoc]
+      · subst finalEdge
+        exact ⟨walkSoFar.castFinish legal.symm, .nil, by simp⟩
+
+/-- A witness that a typed walk passes through a specified vertex. -/
+structure VertexSplit (walk : G.Walk start finish) (vertex : V) where
+  before : G.Walk start vertex
+  after : G.Walk vertex finish
+  edges_eq : walk.edges = before.edges ++ after.edges
+
+/-- The source of every used edge is a visited vertex. -/
+noncomputable def vertexSplitAtSource (walk : G.Walk start finish) (edge : E)
+    (hmem : edge ∈ walk.edges) : walk.VertexSplit (G.source edge) := by
+  apply Classical.choice
+  obtain ⟨before, after, hsplit⟩ := walk.exists_splitAtEdge edge hmem
+  refine ⟨⟨before, (singleton (G := G) edge).append after, ?_⟩⟩
+  simpa [List.append_assoc] using hsplit
+
+/-- The target of every used edge is a visited vertex. -/
+noncomputable def vertexSplitAtTarget (walk : G.Walk start finish) (edge : E)
+    (hmem : edge ∈ walk.edges) : walk.VertexSplit (G.target edge) := by
+  apply Classical.choice
+  obtain ⟨before, after, hsplit⟩ := walk.exists_splitAtEdge edge hmem
+  refine ⟨⟨before.append (singleton (G := G) edge), after, ?_⟩⟩
+  simpa [List.append_assoc] using hsplit
+
+namespace VertexSplit
+
+/-- Insert a closed walk at a visited vertex. -/
+def splice {walk : G.Walk start finish} {vertex : V}
+    (split : walk.VertexSplit vertex) (inserted : G.Walk vertex vertex) :
+    G.Walk start finish :=
+  (split.before.append inserted).append split.after
+
+@[simp] theorem edges_splice {walk : G.Walk start finish} {vertex : V}
+    (split : walk.VertexSplit vertex) (inserted : G.Walk vertex vertex) :
+    (split.splice inserted).edges =
+      split.before.edges ++ inserted.edges ++ split.after.edges := by
+  simp [splice, List.append_assoc]
+
+theorem edges_splice_perm {walk : G.Walk start finish} {vertex : V}
+    (split : walk.VertexSplit vertex) (inserted : G.Walk vertex vertex) :
+    (split.splice inserted).edges.Perm (walk.edges ++ inserted.edges) := by
+  rw [split.edges_eq]
+  simpa [List.append_assoc] using
+    (List.Perm.refl split.before.edges).append
+      (List.perm_append_comm :
+        (inserted.edges ++ split.after.edges).Perm
+          (split.after.edges ++ inserted.edges))
+
+@[simp] theorem length_splice {walk : G.Walk start finish} {vertex : V}
+    (split : walk.VertexSplit vertex) (inserted : G.Walk vertex vertex) :
+    (split.splice inserted).length = walk.length + inserted.length := by
+  rw [← Walk.edges_length, ← Walk.edges_length, ← Walk.edges_length]
+  simpa using (split.edges_splice_perm inserted).length_eq
+
+end VertexSplit
+
 end Walk
 
 /-- Total multiplicity leaving a vertex. -/
@@ -288,6 +408,39 @@ variable {G}
 def IsTrailWithin [DecidableEq E] (walk : G.Walk start finish)
     (allowed : Finset E) : Prop :=
   walk.edges.Nodup ∧ ∀ edge ∈ walk.edges, edge ∈ allowed
+
+/-- Splicing a residual closed trail into a trail preserves edge uniqueness
+and the original allowed-edge bound. -/
+theorem VertexSplit.isTrailWithin_splice [DecidableEq E]
+    {walk : G.Walk start finish} {vertex : V}
+    (split : walk.VertexSplit vertex) (inserted : G.Walk vertex vertex)
+    (allowed : Finset E) (hwalk : walk.IsTrailWithin allowed)
+    (hinserted : inserted.IsTrailWithin (allowed \ walk.edges.toFinset)) :
+    (split.splice inserted).IsTrailWithin allowed := by
+  have hdisjoint : walk.edges.Disjoint inserted.edges := by
+    rw [List.disjoint_left]
+    intro edge hedgeWalk hedgeInserted
+    have hresidual := hinserted.2 edge hedgeInserted
+    exact (Finset.mem_sdiff.mp hresidual).2
+      (List.mem_toFinset.mpr hedgeWalk)
+  have hconcatNodup : (walk.edges ++ inserted.edges).Nodup :=
+    List.nodup_append'.2 ⟨hwalk.1, hinserted.1, hdisjoint⟩
+  constructor
+  · exact (split.edges_splice_perm inserted).symm.nodup hconcatNodup
+  · intro edge hedge
+    have : edge ∈ walk.edges ++ inserted.edges :=
+      (split.edges_splice_perm inserted).mem_iff.mp hedge
+    rcases List.mem_append.mp this with hedgeWalk | hedgeInserted
+    · exact hwalk.2 edge hedgeWalk
+    · exact (Finset.mem_sdiff.mp (hinserted.2 edge hedgeInserted)).1
+
+theorem VertexSplit.length_lt_splice
+    {walk : G.Walk start finish} {vertex : V}
+    (split : walk.VertexSplit vertex) (inserted : G.Walk vertex vertex)
+    (hne : 0 < inserted.length) :
+    walk.length < (split.splice inserted).length := by
+  rw [split.length_splice]
+  omega
 
 theorem length_le_card_of_isTrailWithin [DecidableEq E]
     (walk : G.Walk start finish) (allowed : Finset E)
