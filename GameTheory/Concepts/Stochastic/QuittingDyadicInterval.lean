@@ -74,6 +74,13 @@ def ofRat (value : ℚ) : DyadicInterval precision :=
 def ofInt (value : ℤ) : DyadicInterval precision :=
   ⟨value * scale precision, value * scale precision⟩
 
+@[simp] theorem ofRat_intCast_eq_ofInt (value : ℤ) :
+    (ofRat value : DyadicInterval precision) = ofInt value := by
+  unfold ofRat ofInt
+  congr 1
+  · rw [← Int.cast_mul, Rat.floor_intCast]
+  · rw [← Int.cast_mul, Rat.ceil_intCast]
+
 def add (first second : DyadicInterval precision) :
     DyadicInterval precision :=
   ⟨first.lower + second.lower, first.upper + second.upper⟩
