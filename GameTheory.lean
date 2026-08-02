@@ -419,6 +419,7 @@ import GameTheory.Concepts.Stochastic.QuittingRootPerturbation
 import GameTheory.Concepts.Stochastic.QuittingSimpleBranches
 import GameTheory.Concepts.Stochastic.QuittingFirstBranch
 import GameTheory.Concepts.Stochastic.QuittingFirstStageAdapter
+import GameTheory.Concepts.Stochastic.QuittingLocalGlobalCounterexample
 import GameTheory.Concepts.Stochastic.QuittingLiveMass
 import GameTheory.Concepts.Stochastic.QuittingNearSureRoot
 import GameTheory.Concepts.Stochastic.QuittingNearSureProfile
@@ -431,6 +432,8 @@ import Math.LinearAlgebra.LeadingTruncationCounterexamples
 import Math.Probability.FiniteDiscountedFlow
 import GameTheory.Concepts.Stochastic.FiniteProductFlowKinematics
 import GameTheory.Concepts.Stochastic.FiniteProductFlowTwoStateRegression
+import GameTheory.Concepts.Stochastic.BoundedDiscrepancyCirculation
+import GameTheory.Concepts.Stochastic.HiddenFiberSpanCounterexample
 import GameTheory.Concepts.Stochastic.UniformNonexistenceCertificate
 
 -- Correlated equilibrium
