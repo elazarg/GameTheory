@@ -413,6 +413,11 @@ import GameTheory.Concepts.Stochastic.BigMatchFinkEndpoint
 import GameTheory.Concepts.Stochastic.FinkBoundaryCalendar
 import GameTheory.Concepts.Stochastic.QuittingGame
 import GameTheory.Concepts.Stochastic.QuittingAsymptotic
+import GameTheory.Concepts.Stochastic.QuittingRootContinuation
+import GameTheory.Concepts.Stochastic.QuittingRootPerturbation
+import GameTheory.Concepts.Stochastic.QuittingSimpleBranches
+import GameTheory.Concepts.Stochastic.QuittingFirstBranch
+import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
 import GameTheory.Concepts.Stochastic.UniformNonexistenceCertificate
 
 -- Correlated equilibrium

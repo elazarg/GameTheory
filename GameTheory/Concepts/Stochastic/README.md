@@ -214,6 +214,27 @@ is still a verifier/compiler for supplied stopping rules, child families and
 local potential data; it is not a constructor of those objects for an
 arbitrary stochastic game.
 
+### Quitting-game terminal and root bridges
+
+`QuittingAsymptotic.lean` identifies every fixed behavior profile's limiting
+finite-average payoff with its expected terminal reward.  The root modules
+make the missing continuation datum explicit: `QuittingRootContinuation.lean`
+proves the exact first-stage disintegration, and
+`QuittingFirstBranch.lean` proves that a surely absorbing root/continuation
+splice is a terminal `ε`-equilibrium exactly when its product root action is
+an `ε`-Nash action of the finite root game with the playerwise continuation
+best-response suprema.
+
+`QuittingSimpleBranches.lean` gives the sharp all-continue (`Never`) test,
+including the value `max 0 qᵢ` against all-continuing opponents.
+`QuittingRootPerturbation.lean` proves the one-coordinate `2 M d` payoff and
+`4 M d` other-player regret bounds, including the near-sure-quitter
+specialization.  `QuittingFiniteHorizonBridge.lean` proves that common
+eventual delivery error `d` and deviation-cap error `c` are impossible when
+terminal `ε₀`-equilibrium fails and `c + d < ε₀`; only fixed-profile,
+fixed-deviation convergence is used.  These files make no proper
+absorption-path equivalence or stationary discretization claim.
+
 ### Proved results (special cases of the conjecture)
 
 | Game class | Theorem | File |
@@ -310,7 +331,7 @@ ones include:
 | `Prescribed*` / `MovingEndpoint*` / `Endpoint*` | Endpoint-target transport probes |
 | `ProcessedHarmonic*` | Harmonic-adjustment response processing |
 | `Public*` | Public-history machinery: stopping rules, phase certificates, response architectures and credibility criteria, punishment systems, public coins |
-| `Quitting*` | Quitting games (translation lemmas to the uniform concept) |
+| `Quitting*` | Quitting games: terminal limits, exact root continuation, Never/First tests, perturbation and finite-horizon refutation bridges |
 
 ### File status conventions
 
