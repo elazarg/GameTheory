@@ -421,6 +421,7 @@ import GameTheory.Concepts.Stochastic.QuittingFirstBranch
 import GameTheory.Concepts.Stochastic.QuittingFirstStageAdapter
 import GameTheory.Concepts.Stochastic.QuittingLocalGlobalCounterexample
 import GameTheory.Concepts.Stochastic.QuittingLiveMass
+import GameTheory.Concepts.Stochastic.QuittingLiveMassRecurrence
 import GameTheory.Concepts.Stochastic.QuittingNearSureRoot
 import GameTheory.Concepts.Stochastic.QuittingNearSureProfile
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
