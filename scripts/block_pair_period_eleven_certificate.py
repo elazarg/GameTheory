@@ -18,9 +18,11 @@ formula.  After multiplying by the positive joint-cycle denominator, it has
 are certified independently; the original 75-variable system remains a
 regression for the elimination and phase orientation.
 
-A second exact reduced certificate changes phase 4 from mask 11 to mask 14.
-It is a regression against accidental rigidity of the original support word;
-the larger 75-variable formulation is retained only for the original word.
+Two further exact reduced certificates change phase 4 from mask 11 to masks
+14 and 10.  They are regressions against accidental rigidity of the original
+support word; the mask-10 system has 30 active hazards, while the other two
+have 31.  The larger 75-variable formulation is retained only for the
+original word.
 
 Pass ``--export-reduced-preconditioner`` to emit the validated 31-by-31
 rational preconditioner, center, radius, game data, and variable order as
@@ -87,6 +89,22 @@ NEARBY_ROOT_CENTER_TEXT = (
     ("0.17476560341503711", "0", "0.049783745458097432", "0.078157402326823805"),
     ("0.26178340367149361", "0", "0.02956800509028978", "0.013371405443325707"),
     ("0.051468536661102619", "0.0029775834003244496", "0.050425054590815838", "0"),
+)
+
+
+SUPPORT_TEN_WORD = (7, 7, 14, 14, 10, 11, 9, 9, 13, 13, 7)
+SUPPORT_TEN_ROOT_CENTER_TEXT = (
+    ("0.070774602421812105", "0.060096073242045432", "0.17851087174299346", "0"),
+    ("0.0087380630346713013", "0.10138419995693264", "0.36076715722144759", "0"),
+    ("0", "0.16728481695823469", "0.064645461443301494", "0.0093627760410147122"),
+    ("0", "0.27931581113736142", "0.097651190632459722", "0.069820554818503827"),
+    ("0", "0.066351449273244642", "0", "0.11259207325025426"),
+    ("0.035694408636521145", "0.0090204709572843308", "0", "0.217087012569844"),
+    ("0.060243250412863665", "0", "0", "0.16290734154992334"),
+    ("0.096157729815716117", "0", "0", "0.097305441581315058"),
+    ("0.17277646020531875", "0", "0.050913035975158991", "0.076435074601391373"),
+    ("0.253386200220858", "0", "0.024609638736985535", "0.0087586776443477881"),
+    ("0.053409211105701293", "0.012763115215306951", "0.0610466728159033", "0"),
 )
 
 
@@ -164,7 +182,7 @@ def make_reduced_certificate_data(
                 assert 0 < value < 1
             else:
                 assert value == 0
-    assert len(active_slots) == 31
+    assert active_slots
     return ReducedCertificateData(
         name,
         support_word,
@@ -192,6 +210,9 @@ BASE_REDUCED_CERTIFICATE = make_reduced_certificate_data(
 )
 NEARBY_REDUCED_CERTIFICATE = make_reduced_certificate_data(
     "phase4-mask11-to-mask14", NEARBY_SUPPORT_WORD, NEARBY_ROOT_CENTER_TEXT
+)
+SUPPORT_TEN_REDUCED_CERTIFICATE = make_reduced_certificate_data(
+    "phase4-mask11-to-mask10", SUPPORT_TEN_WORD, SUPPORT_TEN_ROOT_CENTER_TEXT
 )
 assert BASE_REDUCED_CERTIFICATE.active_slots == ACTIVE_SLOTS
 assert BASE_REDUCED_CERTIFICATE.hazard_index == HAZARD_INDEX
@@ -932,7 +953,7 @@ def assert_strategic_inequalities_for(
         tuple(phase_data(roots[phase]).survival for phase in range(PERIOD))
     )
     assert 0 <= joint_cycle.low <= joint_cycle.high < 1
-    assert inactive_count == N * PERIOD - len(certificate.active_slots) == 13
+    assert inactive_count == N * PERIOD - len(certificate.active_slots)
     assert inactive_upper is not None
     return inactive_upper, opponent_cycle_upper, joint_cycle.high
 
@@ -1170,6 +1191,61 @@ def main() -> None:
         nearby_preconditioner, radius, NEARBY_REDUCED_CERTIFICATE
     )
 
+    support_ten_reduced_evaluator = partial(
+        reduced_system_and_jacobian,
+        certificate=SUPPORT_TEN_REDUCED_CERTIFICATE,
+    )
+    (
+        support_ten_box,
+        support_ten_preconditioner,
+        support_ten_center_residual,
+        support_ten_defect_row_sum,
+        support_ten_inclusion_ratio,
+    ) = certify_system(
+        SUPPORT_TEN_REDUCED_CERTIFICATE.hazard_center,
+        radius,
+        support_ten_reduced_evaluator,
+        REDUCED_PRECONDITIONER_PRECISION,
+    )
+    assert assert_reduced_orientation(SUPPORT_TEN_REDUCED_CERTIFICATE) is None
+    support_ten_roots, support_ten_values, support_ten_joint_cycle = (
+        reconstructed_cyclic_values(
+            support_ten_box, SUPPORT_TEN_REDUCED_CERTIFICATE
+        )
+    )
+    support_ten_payoff_coordinate_separations = (
+        support_ten_values[0][0].low - reduced_values[0][0].high,
+        support_ten_values[0][1].low - reduced_values[0][1].high,
+        reduced_values[0][2].low - support_ten_values[0][2].high,
+        support_ten_values[0][3].low - reduced_values[0][3].high,
+    )
+    assert all(
+        gap > 0 for gap in support_ten_payoff_coordinate_separations
+    )
+    support_ten_minimum_payoff_coordinate_separation = min(
+        support_ten_payoff_coordinate_separations
+    )
+    (
+        support_ten_inactive_upper,
+        support_ten_opponent_cycle_upper,
+        support_ten_joint_cycle_upper,
+    ) = assert_strategic_inequalities_for(
+        support_ten_roots,
+        support_ten_values,
+        SUPPORT_TEN_REDUCED_CERTIFICATE,
+    )
+    assert support_ten_joint_cycle.high == support_ten_joint_cycle_upper
+    (
+        _,
+        support_ten_preconditioner_digest,
+        support_ten_preconditioner_payload_bytes,
+        support_ten_maximum_denominator_digits,
+    ) = reduced_preconditioner_document(
+        support_ten_preconditioner,
+        radius,
+        SUPPORT_TEN_REDUCED_CERTIFICATE,
+    )
+
     if export_preconditioner:
         print(preconditioner_document)
         return
@@ -1256,6 +1332,61 @@ def main() -> None:
     print(
         "neighboring reduced preconditioner maximum denominator digits = "
         f"{nearby_maximum_denominator_digits}"
+    )
+    print()
+    print(
+        "exact support-ten period-eleven eliminated Krawczyk "
+        "certificate passed"
+    )
+    print(f"certificate name = {SUPPORT_TEN_REDUCED_CERTIFICATE.name}")
+    print(
+        "support word = "
+        + ",".join(
+            str(support)
+            for support in SUPPORT_TEN_REDUCED_CERTIFICATE.support_word
+        )
+    )
+    print(f"dimension = {len(SUPPORT_TEN_REDUCED_CERTIFICATE.active_slots)}")
+    print(f"box radius = {radius}")
+    print(
+        "maximum center residual ~= "
+        f"{float(support_ten_center_residual):.3e}"
+    )
+    print(
+        "maximum ||I-AJ(X)|| row sum ~= "
+        f"{float(support_ten_defect_row_sum):.3e}"
+    )
+    print(
+        "maximum Krawczyk inclusion ratio ~= "
+        f"{float(support_ten_inclusion_ratio):.3e}"
+    )
+    print(
+        "largest inactive Quit-minus-Continue upper bound ~= "
+        f"{float(support_ten_inactive_upper):.6f}"
+    )
+    print(
+        "largest opponent-cycle survival upper bound ~= "
+        f"{float(support_ten_opponent_cycle_upper):.6f}"
+    )
+    print(
+        "joint-cycle survival upper bound ~= "
+        f"{float(support_ten_joint_cycle_upper):.6f}"
+    )
+    print(
+        "minimum phase-zero payoff-coordinate separation from base ~= "
+        f"{float(support_ten_minimum_payoff_coordinate_separation):.6f}"
+    )
+    print(
+        "support-ten reduced preconditioner SHA-256 = "
+        f"{support_ten_preconditioner_digest}"
+    )
+    print(
+        "support-ten reduced preconditioner canonical payload bytes = "
+        f"{support_ten_preconditioner_payload_bytes}"
+    )
+    print(
+        "support-ten reduced preconditioner maximum denominator digits = "
+        f"{support_ten_maximum_denominator_digits}"
     )
 
 
