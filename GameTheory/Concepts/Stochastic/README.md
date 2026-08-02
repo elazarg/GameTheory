@@ -205,11 +205,15 @@ finite-public routing-resistance theorem or any atlas-rank conclusion.
 
 `PrivateRecommendationTargetAbsorbingLift.lean` realizes the sharp
 strategic-form correlation separator as the stated four-state one-decision
-absorbing game. Conditional on any fixed pure decision action, its actual
-finite-horizon average payoff equals that matrix payoff at every positive
-horizon, even with an arbitrary history-dependent continuation after the
-decision. The module is only a payoff-preserving stochastic lift: it defines
-no private device and proves no autonomous-equilibrium or compiler theorem.
+absorbing game. For every arbitrary behavior profile, its actual
+finite-horizon average payoff at every positive horizon equals the static
+mixed payoff of the independently randomized root action, and root extraction
+commutes with unilateral behavioral replacement. Composing this bridge with
+the sharp separator proves that the mediated target `(5/7,5/7)` is not an
+ordinary uniform-equilibrium payoff of the lift. This is target-specific: the
+game has other ordinary uniform targets. The module defines no private device,
+autonomous-equilibrium theorem, universal compiler, or target-free
+nonexistence result.
 
 ### Negative results (no-go keepers)
 

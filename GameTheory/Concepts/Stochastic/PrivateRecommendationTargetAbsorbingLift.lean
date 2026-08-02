@@ -520,6 +520,127 @@ theorem finiteAveragePayoff_eq_mixedRoot
     Finset.sum_const, Finset.card_range, nsmul_eq_mul, ← mul_assoc,
     inv_mul_cancel₀ hne, one_mul]
 
+/-- The behavioral deviation that always chooses the separator's action `D`.
+Only its value at the initial decision history matters in this lift. -/
+def pureDDeviation (who : Player) : game.BehaviorStrategy who :=
+  fun _ _ => PMF.pure false
+
+@[simp] theorem rootMixedProfile_update_pureD
+    (profile : game.BehaviorProfile) (who : Player) :
+    rootMixedProfile
+        (Function.update profile who (pureDDeviation who)) =
+      Function.update (rootMixedProfile profile) who (PMF.pure false) := by
+  rw [rootMixedProfile_update]
+  rfl
+
+/-- The mediated target `(5/7,5/7)` is not a uniform-equilibrium payoff of
+the ordinary one-decision absorbing lift.
+
+This is deliberately target-specific.  The game has other ordinary uniform
+equilibrium payoffs, so no target-free nonexistence interface applies. -/
+theorem privateRecommendationTarget_not_isUniformEquilibriumPayoff :
+    ¬ game.IsUniformEquilibriumPayoff .decision (fun _ => 5 / 7) := by
+  intro huniform
+  let ε : ℝ :=
+    KernelGame.PrivateRecommendationTargetSeparator.deltaStar / 4
+  have hε : 0 < ε := by
+    dsimp [ε]
+    exact div_pos
+      KernelGame.PrivateRecommendationTargetSeparator.deltaStar_pos
+      (by norm_num)
+  obtain ⟨profile, threshold, hprofile⟩ := huniform ε hε
+  let horizon : ℕ := max threshold 1
+  have hthreshold : threshold ≤ horizon := by
+    exact Nat.le_max_left _ _
+  have hpositive : 1 ≤ horizon := by
+    exact Nat.le_max_right _ _
+  obtain ⟨hNash, hdelivery⟩ :=
+    hprofile horizon hthreshold
+  have hdeliveryε : ∀ who,
+      |KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+          (rootMixedProfile profile) who - 5 / 7| ≤ ε := by
+    intro who
+    rw [← finiteAveragePayoff_eq_mixedRoot
+      profile horizon hpositive who]
+    simpa using hdelivery who
+  have hcapOne :
+      KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+          (Function.update (rootMixedProfile profile) false (PMF.pure false))
+          false ≤
+        5 / 7 + 2 * ε := by
+    have hdeviation := hNash false (pureDDeviation false)
+    rw [finiteAveragePayoff_eq_mixedRoot
+          profile horizon hpositive false,
+      finiteAveragePayoff_eq_mixedRoot
+        (Function.update profile false (pureDDeviation false))
+        horizon hpositive false,
+      rootMixedProfile_update_pureD] at hdeviation
+    have hbaseUpper := (abs_le.mp (hdeliveryε false)).2
+    have hbase :
+        KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+            (rootMixedProfile profile) false ≤ 5 / 7 + ε :=
+      by linarith
+    calc
+      KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+          (Function.update (rootMixedProfile profile) false (PMF.pure false))
+          false ≤
+          KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+              (rootMixedProfile profile) false + ε :=
+        hdeviation
+      _ ≤ (5 / 7 + ε) + ε := by
+        simpa [add_comm, add_left_comm, add_assoc] using
+          add_le_add_right hbase ε
+      _ = 5 / 7 + 2 * ε := by ring
+  have hcapTwo :
+      KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+          (Function.update (rootMixedProfile profile) true (PMF.pure false))
+          true ≤
+        5 / 7 + 2 * ε := by
+    have hdeviation := hNash true (pureDDeviation true)
+    rw [finiteAveragePayoff_eq_mixedRoot
+          profile horizon hpositive true,
+      finiteAveragePayoff_eq_mixedRoot
+        (Function.update profile true (pureDDeviation true))
+        horizon hpositive true,
+      rootMixedProfile_update_pureD] at hdeviation
+    have hbaseUpper := (abs_le.mp (hdeliveryε true)).2
+    have hbase :
+        KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+            (rootMixedProfile profile) true ≤ 5 / 7 + ε :=
+      by linarith
+    calc
+      KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+          (Function.update (rootMixedProfile profile) true (PMF.pure false))
+          true ≤
+          KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+              (rootMixedProfile profile) true + ε :=
+        hdeviation
+      _ ≤ (5 / 7 + ε) + ε := by
+        simpa [add_comm, add_left_comm, add_assoc] using
+          add_le_add_right hbase ε
+      _ = 5 / 7 + 2 * ε := by ring
+  have hdeliveryTwo : ∀ who,
+      |KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+          (rootMixedProfile profile) who - 5 / 7| ≤ 2 * ε := by
+    intro who
+    calc
+      |KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+          (rootMixedProfile profile) who - 5 / 7| ≤ ε :=
+        hdeliveryε who
+      _ ≤ 2 * ε := by linarith
+  have hgap :=
+    KernelGame.PrivateRecommendationTargetSeparator.deltaStar_le_of_mixed_delivery_and_pureDCaps
+        (rootMixedProfile profile)
+        (delta := 2 * ε)
+        (by positivity)
+        hdeliveryTwo
+        hcapOne
+        hcapTwo
+  dsimp [ε] at hgap
+  have hpositiveGap :=
+    KernelGame.PrivateRecommendationTargetSeparator.deltaStar_pos
+  linarith
+
 end PrivateRecommendationTargetAbsorbingLift
 end StochasticGame
 end GameTheory
