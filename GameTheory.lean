@@ -419,6 +419,7 @@ import GameTheory.Concepts.Stochastic.QuittingRootPerturbation
 import GameTheory.Concepts.Stochastic.QuittingSimpleBranches
 import GameTheory.Concepts.Stochastic.QuittingFirstBranch
 import GameTheory.Concepts.Stochastic.QuittingFirstStageAdapter
+import GameTheory.Concepts.Stochastic.QuittingStationaryRoot
 import GameTheory.Concepts.Stochastic.QuittingLocalGlobalCounterexample
 import GameTheory.Concepts.Stochastic.QuittingLiveMass
 import GameTheory.Concepts.Stochastic.QuittingLiveMassRecurrence
