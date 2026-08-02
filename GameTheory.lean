@@ -231,6 +231,7 @@ import GameTheory.Concepts.Stochastic.UncoveredPrescribedClassCounterexample
 import GameTheory.Concepts.Stochastic.FTVCyclicCredibility
 import GameTheory.Concepts.Stochastic.FTVCyclicFiniteHorizon
 import GameTheory.Concepts.Stochastic.FTVCyclicMinimality
+import GameTheory.Concepts.Stochastic.FTVCyclicSemanticBridge
 import GameTheory.Concepts.Stochastic.ArchitectureCapSeparators
 import GameTheory.Concepts.Stochastic.AdaptivePotentialFiniteTimeTargetBounds
 import GameTheory.Concepts.Stochastic.FiniteHorizonProfileLawTransfer

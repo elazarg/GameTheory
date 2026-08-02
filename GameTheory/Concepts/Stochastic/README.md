@@ -177,6 +177,17 @@ the inactive complementarity inequalities.  The module does not formalize
 the equilibrium-theoretic necessity/sufficiency of `(Q1)--(Q5)` or Question
 97's approximate-regret boundary.
 
+`FTVCyclicSemanticBridge.lean` closes the concrete duplication between those
+two modules.  It specializes the supplied-architecture semantic
+characterization to the total domain of the ten-node FTV controller, giving
+all-start prescribed delivery and unilateral behavioral caps with one common
+`O(1/T)` remainder.  It also proves that the controller's live quit
+probabilities, promise word, and cyclic successor are exactly the data of the
+normalized `ExactCyclicPacket`.  It deliberately does not infer an
+arbitrary-`K` packet from arbitrary public-controller semantics: that would
+require a separate arbitrary-`K` controller constructor and explicit
+reachability and reduction conventions.
+
 `ArchitectureCapSeparators.lean` is a regression guard for the cap notion.
 It proves on actual finite games that a supplied architecture's exact
 unilateral cap can be `1` while the corresponding one-shot opponent minmax is
