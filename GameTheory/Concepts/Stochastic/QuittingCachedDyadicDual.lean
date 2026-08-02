@@ -38,6 +38,23 @@ def toDyadicDual (dual : CachedDyadicDual precision variableCount) :
     DyadicDual precision variableCount :=
   ⟨dual.value, dual.derivative.get⟩
 
+/-- Materializing the gradient loses no information. -/
+theorem toDyadicDual_injective :
+    Function.Injective
+      (@toDyadicDual precision variableCount) := by
+  intro first second hequal
+  cases first with
+  | mk firstValue firstDerivative =>
+      cases second with
+      | mk secondValue secondDerivative =>
+          simp only [toDyadicDual, DyadicDual.mk.injEq] at hequal
+          have hderivative : firstDerivative = secondDerivative :=
+            Vector.ext fun index hindex =>
+            congrFun hequal.2 ⟨index, hindex⟩
+          cases hequal.1
+          cases hderivative
+          rfl
+
 def constant (value : ℚ) : CachedDyadicDual precision variableCount :=
   ⟨DyadicInterval.ofRat value,
     Vector.replicate variableCount (DyadicInterval.ofInt 0)⟩

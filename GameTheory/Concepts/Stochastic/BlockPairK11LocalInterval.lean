@@ -271,6 +271,59 @@ private theorem cachedDual_ext
     · simp [liftLocalDual, RationalPolynomial.CachedDyadicDual.mul, hphase]
     · simp [liftLocalDual, RationalPolynomial.CachedDyadicDual.mul, hphase]
 
+@[simp] theorem liftLocalDual_sub (phase : Phase)
+    (first second : LocalDual precision) :
+    liftLocalDual phase (CachedDual.sub first second) =
+      CachedDual.sub (liftLocalDual phase first)
+        (liftLocalDual phase second) := by
+  simp only [CachedDual.sub, liftLocalDual_add, liftLocalDual_neg]
+
+theorem liftLocalDual_cachedSum (phase : Phase) {count : ℕ}
+    (term : Fin count → LocalDual precision) :
+    liftLocalDual phase (cachedSum term) =
+      cachedSum fun index ↦ liftLocalDual phase (term index) := by
+  induction count with
+  | zero => simp [cachedSum]
+  | succ count inductionHypothesis =>
+      simp only [cachedSum, liftLocalDual_add]
+      rw [inductionHypothesis]
+
+theorem liftLocalDual_cachedProduct (phase : Phase) {count : ℕ}
+    (factor : Fin count → LocalDual precision) :
+    liftLocalDual phase (cachedProduct factor) =
+      cachedProduct fun index ↦ liftLocalDual phase (factor index) := by
+  induction count with
+  | zero => simp [cachedProduct]
+  | succ count inductionHypothesis =>
+      simp only [cachedProduct, liftLocalDual_mul]
+      rw [inductionHypothesis]
+
+theorem evalCachedDyadic_expressionSum
+    (box : HazardIndex → DyadicInterval precision) {count : ℕ}
+    (term : Fin count → Expression) :
+    RationalPolynomial.evalCachedDyadic box (expressionSum term) =
+      cachedSum fun index ↦
+        RationalPolynomial.evalCachedDyadic box (term index) := by
+  induction count with
+  | zero => rfl
+  | succ count inductionHypothesis =>
+      simp only [expressionSum, cachedSum,
+        RationalPolynomial.evalCachedDyadic]
+      rw [inductionHypothesis]
+
+theorem evalCachedDyadic_expressionProduct
+    (box : HazardIndex → DyadicInterval precision) {count : ℕ}
+    (factor : Fin count → Expression) :
+    RationalPolynomial.evalCachedDyadic box (expressionProduct factor) =
+      cachedProduct fun index ↦
+        RationalPolynomial.evalCachedDyadic box (factor index) := by
+  induction count with
+  | zero => rfl
+  | succ count inductionHypothesis =>
+      simp only [expressionProduct, cachedProduct,
+        RationalPolynomial.evalCachedDyadic]
+      rw [inductionHypothesis]
+
 private theorem dyadicDual_ext
     {first second : RationalPolynomial.DyadicDual precision 31}
     (hvalue : first.value = second.value)
@@ -349,6 +402,106 @@ theorem liftLocalRoot_toDyadicDual
               RationalPolynomial.evalDualDyadic,
               RationalPolynomial.CachedDyadicDual.ofVariable,
               RationalPolynomial.DyadicDual.ofVariable]
+
+/-- Cached local roots are literally the eager reflected evaluator after
+lifting, not merely interval enclosures with matching semantics. -/
+theorem liftLocalRoot_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) (player : Player) :
+    liftLocalDual phase (localRoot box phase player) =
+      RationalPolynomial.evalCachedDyadic box
+        (hazardExpression phase player) := by
+  apply RationalPolynomial.CachedDyadicDual.toDyadicDual_injective
+  rw [liftLocalRoot_toDyadicDual,
+    RationalPolynomial.toDyadicDual_evalCachedDyadic]
+
+theorem liftLocalActionFactor_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision) (phase : Phase)
+    (root : Vector (LocalDual precision) 4)
+    (hroot : ∀ player,
+      liftLocalDual phase (root.get player) =
+        RationalPolynomial.evalCachedDyadic box
+          (hazardExpression phase player))
+    (mask : QuitterMask) (omitted : Option Player) (player : Player) :
+    liftLocalDual phase
+        (localActionFactor root mask omitted player) =
+      RationalPolynomial.evalCachedDyadic box
+        (actionFactor phase mask omitted player) := by
+  by_cases homitted : omitted = some player
+  · simp [localActionFactor, actionFactor, homitted,
+      RationalPolynomial.evalCachedDyadic]
+  · by_cases hmask : maskHasPlayer mask player
+    · simpa [localActionFactor, actionFactor, homitted, hmask] using
+        hroot player
+    · simp [localActionFactor, actionFactor, homitted, hmask,
+        CachedDual.sub, hroot]
+      rfl
+
+theorem liftLocalMaskProbability_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision) (phase : Phase)
+    (root : Vector (LocalDual precision) 4)
+    (hroot : ∀ player,
+      liftLocalDual phase (root.get player) =
+        RationalPolynomial.evalCachedDyadic box
+          (hazardExpression phase player))
+    (mask : QuitterMask) (omitted : Option Player := none) :
+    liftLocalDual phase (localMaskProbability root mask omitted) =
+      RationalPolynomial.evalCachedDyadic box
+        (maskProbability phase mask omitted) := by
+  rw [localMaskProbability, maskProbability,
+    liftLocalDual_cachedProduct,
+    evalCachedDyadic_expressionProduct]
+  apply congrArg cachedProduct
+  funext player
+  exact liftLocalActionFactor_eq_evalCachedDyadic
+    box phase root hroot mask omitted player
+
+theorem lift_buildLocalPhaseData_maskProbability
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) (mask : QuitterMask) :
+    liftLocalDual phase
+        ((buildLocalPhaseData box phase).maskProbabilities.get mask) =
+      RationalPolynomial.evalCachedDyadic box
+        (maskProbability phase mask) := by
+  simp only [buildLocalPhaseData, Vector.get_ofFn]
+  apply liftLocalMaskProbability_eq_evalCachedDyadic
+  intro player
+  simp only [Vector.get_ofFn]
+  exact liftLocalRoot_eq_evalCachedDyadic box phase player
+
+theorem lift_buildLocalPhaseData_immediate
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) (who : Player) :
+    liftLocalDual phase
+        ((buildLocalPhaseData box phase).immediate.get who) =
+      RationalPolynomial.evalCachedDyadic box
+        (immediateReward phase who) := by
+  simp only [buildLocalPhaseData, Vector.get_ofFn]
+  rw [immediateReward, liftLocalDual_cachedSum,
+    evalCachedDyadic_expressionSum]
+  apply congrArg cachedSum
+  funext mask
+  simp only [liftLocalDual_mul, CachedDual.ofRat,
+    liftLocalDual_constant, RationalPolynomial.evalCachedDyadic]
+  rw [liftLocalMaskProbability_eq_evalCachedDyadic]
+  intro player
+  simp only [Vector.get_ofFn]
+  exact liftLocalRoot_eq_evalCachedDyadic box phase player
+
+theorem lift_buildLocalPhaseData_survival
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) :
+    liftLocalDual phase (buildLocalPhaseData box phase).survival =
+      RationalPolynomial.evalCachedDyadic box
+        (phaseSurvival phase) := by
+  simp only [buildLocalPhaseData, Vector.get_ofFn]
+  simpa only [phaseSurvival] using
+    liftLocalMaskProbability_eq_evalCachedDyadic box phase
+      (Vector.ofFn fun player ↦ localRoot box phase player)
+      (fun player ↦ by
+        simp only [Vector.get_ofFn]
+        exact liftLocalRoot_eq_evalCachedDyadic box phase player)
+      0
 
 structure GlobalPhaseData (precision : ℕ) where
   immediate : Vector (GlobalDual precision) 4
