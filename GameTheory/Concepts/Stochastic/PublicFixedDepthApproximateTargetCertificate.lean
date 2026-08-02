@@ -31,14 +31,13 @@ open Math.Probability
 variable {ι Child : Type} {G : StochasticGame ι}
   [Fintype ι] [DecidableEq ι]
   [Finite G.State] [∀ who, Finite (G.Act who)]
-  [Fintype Child]
+  [Finite Child]
   {entry : Child → G.State} {target : Child → Payoff ι}
   {selector : DeviationSafePublicCoinSelector G Child}
   {initial : G.State} {fuel : ℕ}
 
 namespace FixedDepthAdaptivePotentialSplice
 
-set_option linter.unusedFintypeInType false in
 /-- A deviation-safe fixed-depth selector whose expected child target is
 within half the requested tolerance inherits a parent adaptive certificate.
 

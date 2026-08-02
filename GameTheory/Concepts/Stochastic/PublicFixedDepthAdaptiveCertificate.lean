@@ -203,6 +203,8 @@ end FiniteChildAdaptivePotentialFamily
 
 namespace FixedDepthAdaptivePotentialSplice
 
+section FiniteChildFamily
+
 variable [Fintype ι] [DecidableEq ι] [Finite G.State]
   [∀ who, Finite (G.Act who)] [Fintype Child]
   {entry : Child → G.State} {target : Child → Payoff ι}
@@ -261,7 +263,16 @@ theorem deviation_parent_bound_of_exact_target
   exact abs_expect_le_of_abs_le _ _ fun child =>
     (family.system child).deviation_initial who
 
-set_option linter.unusedFintypeInType false in
+end FiniteChildFamily
+
+section FiniteChildren
+
+variable [Fintype ι] [DecidableEq ι] [Finite G.State]
+  [∀ who, Finite (G.Act who)] [Finite Child]
+  {entry : Child → G.State} {target : Child → Payoff ι}
+  {selector : DeviationSafePublicCoinSelector G Child}
+  {selection : G.BehaviorProfile} {initial : G.State} {fuel : ℕ}
+
 /-- Child adaptive certificates at half the requested positive error,
 together with exact public selection data, compile to a parent adaptive
 certificate at the full requested error. -/
@@ -278,6 +289,7 @@ theorem isAdaptivePotentialCertificateAt_of_fixedDepthSelector
       G.IsAdaptivePotentialCertificateAt
         (entry child) (target child) (error / 2)) :
     G.IsAdaptivePotentialCertificateAt initial parentTarget error := by
+  letI : Fintype Child := Fintype.ofFinite Child
   let family :
       G.FiniteChildAdaptivePotentialFamily entry target (error / 2) :=
     FiniteChildAdaptivePotentialFamily.ofCertificates childCertificates
@@ -353,7 +365,6 @@ theorem isAdaptivePotentialCertificateAt_of_fixedDepthSelector
   exact
     (splice.toAdaptivePotentialSystemAt bounds).toIsAdaptivePotentialCertificateAt
 
-set_option linter.unusedFintypeInType false in
 /-- If child certificates are available at every positive accuracy, the
 half-error premise of the fixed-depth constructor is automatic. -/
 theorem isAdaptivePotentialCertificateAt_of_fixedDepthSelector_allErrors
@@ -373,6 +384,8 @@ theorem isAdaptivePotentialCertificateAt_of_fixedDepthSelector_allErrors
     selection parentTarget error herror hfuel hentry hexact
   intro child
   exact childCertificates child (error / 2) (by linarith)
+
+end FiniteChildren
 
 end FixedDepthAdaptivePotentialSplice
 

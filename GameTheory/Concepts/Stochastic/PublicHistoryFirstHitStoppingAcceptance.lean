@@ -72,9 +72,15 @@ theorem stopsBeforeFuel (history : game.Hist 3) :
     constructor
     · simp [stop]
     · intro earlier hearlier
-      fin_cases earlier <;> simp [stop] at hearlier ⊢
-      change (history.1 0).2 () = true at hearlier
-      exact (hfirst hearlier).elim
+      fin_cases earlier
+      · simp [stop] at hearlier
+      · change
+          ((game.boundedHistoryPrefix history
+            ⟨1, by decide⟩).1 0).2 () = true at hearlier
+        rw [firstAction_prefix_one] at hearlier
+        exact (hfirst hearlier).elim
+      · decide
+      · decide
 
 /-- The repaired online rule for this history-dependent stopping region. -/
 def rule : game.OnlineCausalBoundedStoppingRule 3 :=
@@ -106,9 +112,16 @@ theorem late_first_hit :
   constructor
   · simp [stop]
   · intro earlier hearlier
-    fin_cases earlier <;> simp [stop, lateHistory] at hearlier ⊢
-    change false = true at hearlier
-    contradiction
+    fin_cases earlier
+    · simp [stop] at hearlier
+    · change
+        ((game.boundedHistoryPrefix lateHistory
+          ⟨1, by decide⟩).1 0).2 () = true at hearlier
+      rw [firstAction_prefix_one] at hearlier
+      change false = true at hearlier
+      contradiction
+    · decide
+    · decide
 
 /-- Two histories of the same fuel select different stopping times. -/
 theorem selector_is_history_dependent :
