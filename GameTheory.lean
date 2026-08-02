@@ -422,6 +422,7 @@ import GameTheory.Concepts.Stochastic.QuittingFirstStageAdapter
 import GameTheory.Concepts.Stochastic.QuittingNearSureRoot
 import GameTheory.Concepts.Stochastic.QuittingNearSureProfile
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
+import GameTheory.Concepts.Stochastic.TerminalToUniformDeviationApproximation
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
 import Math.LinearAlgebra.ExactBlockEliminationConfluence
