@@ -169,6 +169,7 @@ theorem quittingFiniteRootPayoff_profileSpine_eq_expectedStagePayoff
             rfl]
         exact ih (start + 1)
 
+omit [DecidableEq ι] in
 /-- Every behavior profile has the same terminal payoff as the
 history-independent root sequence read from its canonical live history. -/
 theorem quittingTerminalPayoff_eq_rootSequence_profileLiveRoot
@@ -177,6 +178,7 @@ theorem quittingTerminalPayoff_eq_rootSequence_profileLiveRoot
     quittingTerminalPayoff reward profile who =
       quittingRootSequenceTerminalValue reward
         (quittingProfileLiveRoot reward profile) who 0 := by
+  classical
   have hfinite :=
     quittingFiniteRootPayoff_profileSpine_eq_expectedStagePayoff
       reward profile who
