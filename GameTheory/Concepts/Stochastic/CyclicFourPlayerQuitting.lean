@@ -59,6 +59,21 @@ def terminalReward (S : Terminal) : Payoff Player :=
   | true, true, true, true => ![-6, -6, -6, -6]
   | false, false, false, false => ![0, 0, 0, 0]
 
+/-- The concrete quitting game. -/
+abbrev game : StochasticGame Player := quittingGame terminalReward
+
+instance : Fintype game.State :=
+  inferInstanceAs (Fintype (Option Terminal))
+
+instance : DecidableEq game.State :=
+  inferInstanceAs (DecidableEq (Option Terminal))
+
+instance (who : Player) : Fintype (game.Act who) :=
+  inferInstanceAs (Fintype Bool)
+
+instance (who : Player) : DecidableEq (game.Act who) :=
+  inferInstanceAs (DecidableEq Bool)
+
 /-- The polynomial selecting the exact symmetric stationary root. -/
 def stationaryPolynomial (x : ℝ) : ℝ :=
   x ^ 5 - 6 * x ^ 4 + 7 * x ^ 3 + 6 * x ^ 2 - 15 * x + 1
@@ -386,6 +401,271 @@ theorem stationaryRoot_fixedPoint (who : Player) :
   have hsum := quittingRoot_continueProbability_add_quitProbability
     stationaryRoot who
   rw [← add_mul, add_comm, hsum, one_mul]
+
+/-! ## Global unilateral credibility -/
+
+/-- The one-stage all-continue mass at the symmetric root. -/
+theorem stationaryRoot_continueMass :
+    quittingStationaryContinueMass stationaryRoot =
+      (1 - stationaryParameter) ^ 4 := by
+  unfold quittingStationaryContinueMass
+  rw [pmfPi_apply, ENNReal.toReal_prod]
+  simp [stationaryRoot, quittingAllContinueAction]
+
+theorem stationaryRoot_continueMass_lt_one :
+    quittingStationaryContinueMass stationaryRoot < 1 := by
+  rw [stationaryRoot_continueMass]
+  apply pow_lt_one₀
+  · exact sub_nonneg.mpr stationaryParameter_lt_one.le
+  · linarith [stationaryParameter_pos]
+  · norm_num
+
+/-- The potential used to certify every unilateral behavioral deviation:
+`omega` while live and the terminal table after absorption. -/
+def deviationPotential (who : Player) :
+    game.State → ℝ
+  | none => stationaryPayoff
+  | some terminal => terminalReward terminal who
+
+/-- Evaluating the potential after a live-state transition is exactly the
+finite root payoff with constant tail `omega`. -/
+theorem expect_transition_deviationPotential_eq_rootPayoff
+    (who : Player) (action : Player → Bool) :
+    expect ((quittingGame terminalReward).transition none action)
+        (deviationPotential who) =
+      quittingRootPayoff terminalReward stationaryTail action who := by
+  by_cases hquit : (quittingQuitters action).Nonempty
+  · have hraw : ({who | action who = true} : Finset Player).Nonempty := by
+      simpa [quittingQuitters] using hquit
+    rw [quittingGame_transition_none, dif_pos hraw, expect_pure,
+      quittingRootPayoff, dif_pos hquit]
+    rfl
+  · have hraw : ¬({who | action who = true} : Finset Player).Nonempty := by
+      simpa [quittingQuitters] using hquit
+    rw [quittingGame_transition_none, dif_neg hraw, expect_pure,
+      quittingRootPayoff, dif_neg hquit]
+    rfl
+
+/-- Against the three prescribed stationary opponents, the deviation
+potential is harmonic after every history, for every behavioral strategy of
+the remaining player. -/
+theorem deviationPotential_harmonic
+    (who : Player)
+    (deviation : game.BehaviorStrategy who)
+    {time : ℕ} (history : game.Hist time) :
+    expect (game.stageActionDist
+        (Function.update
+          (quittingStationaryProfile terminalReward stationaryRoot)
+          who deviation) history) (fun action ↦
+      expect (game.transition history.2 action)
+        (deviationPotential who)) =
+      deviationPotential who history.2 := by
+  cases hstate : (show game.State from history.2) with
+  | some terminal =>
+      simp only [hstate]
+      have hinner : ∀ action : game.JointAct,
+          expect (game.transition (show game.State from some terminal) action)
+              (deviationPotential who) = terminalReward terminal who := by
+        intro action
+        change expect (PMF.pure (show game.State from some terminal))
+          (deviationPotential who) = terminalReward terminal who
+        rw [expect_pure]
+        rfl
+      simp_rw [hinner]
+      rw [expect_const]
+      rfl
+  | none =>
+      simp only [hstate]
+      change expect (game.stageActionDist
+          (Function.update (game.stationaryBehaviorProfile stationaryRoot)
+            who deviation) history)
+          (fun action ↦ expect (game.transition none action)
+            (deviationPotential who)) = deviationPotential who none
+      rw [game.stageActionDist_update_stationaryBehaviorProfile]
+      rw [deviationPotential]
+      simp_rw [expect_transition_deviationPotential_eq_rootPayoff]
+      change quittingRootExpectedPayoff terminalReward stationaryTail
+          (Function.update stationaryRoot who (deviation time history)) who =
+        stationaryPayoff
+      rw [quittingRootExpectedPayoff_update_eq_endpointMix,
+        stationaryRoot_quitPayoff, stationaryRoot_continuePayoff]
+      have hsum := quittingRoot_continueProbability_add_quitProbability
+        (Function.update stationaryRoot who (deviation time history)) who
+      simp only [Function.update_self] at hsum
+      rw [← add_mul, add_comm, hsum, one_mul]
+
+/-- The deviation potential has constant expectation `omega` at every
+finite time, even under an arbitrary history-dependent unilateral
+deviation. -/
+theorem expectedStateValue_deviationPotential
+    (who : Player)
+    (deviation : game.BehaviorStrategy who) :
+    ∀ time : ℕ,
+      (quittingGame terminalReward).expectedStateValue
+          (Function.update
+            (quittingStationaryProfile terminalReward stationaryRoot)
+            who deviation) none time (deviationPotential who) =
+        stationaryPayoff := by
+  intro time
+  induction time with
+  | zero => simp [deviationPotential]
+  | succ time ih =>
+      rw [(quittingGame terminalReward).expectedStateValue_succ]
+      calc
+        expect ((quittingGame terminalReward).histDist
+            (Function.update
+              (quittingStationaryProfile terminalReward stationaryRoot)
+              who deviation) none time) (fun history ↦
+          expect ((quittingGame terminalReward).stageActionDist
+              (Function.update
+                (quittingStationaryProfile terminalReward stationaryRoot)
+                who deviation) history) (fun action ↦
+            expect ((quittingGame terminalReward).transition history.2 action)
+              (deviationPotential who))) =
+          expect ((quittingGame terminalReward).histDist
+            (Function.update
+              (quittingStationaryProfile terminalReward stationaryRoot)
+              who deviation) none time) (fun history ↦
+                deviationPotential who history.2) := by
+            apply Math.ProbabilityMassFunction.expect_congr_on_support
+            intro history _
+            exact deviationPotential_harmonic who deviation history
+        _ = stationaryPayoff := ih
+
+/-- The potential expectation splits into the ordinary current-state payoff
+and `omega` times the residual live probability. -/
+theorem expectedStateValue_deviationPotential_eq
+    (profile : (quittingGame terminalReward).BehaviorProfile)
+    (who : Player) (time : ℕ) :
+    (quittingGame terminalReward).expectedStateValue profile none time
+        (deviationPotential who) =
+      (quittingGame terminalReward).expectedStagePayoff profile none time who +
+        stationaryPayoff * quittingLiveMass terminalReward profile time := by
+  rw [quittingLiveMass_eq_expectedStateValue]
+  unfold StochasticGame.expectedStateValue StochasticGame.expectedStagePayoff
+  simp_rw [stageEUAt_quittingGame_eq_stateReward]
+  rw [← expect_const_mul, ← expect_add]
+  apply congrArg (expect ((quittingGame terminalReward).histDist
+    profile none time))
+  funext history
+  cases history.2 <;>
+    simp [deviationPotential, quittingStateReward, quittingLiveIndicator]
+
+/-- Making one player always continue in the stationary profile is itself
+the stationary profile with that one root marginal replaced. -/
+theorem opponentOnlyProfile_stationary (who : Player) :
+    quittingOpponentOnlyProfile terminalReward
+        (quittingStationaryProfile terminalReward stationaryRoot) who =
+      quittingStationaryProfile terminalReward
+        (Function.update stationaryRoot who (PMF.pure false)) := by
+  funext player time history
+  by_cases hplayer : player = who
+  · subst player
+    simp [quittingOpponentOnlyProfile, quittingAlwaysContinueStrategy,
+      quittingStationaryProfile, StochasticGame.stationaryBehaviorProfile]
+    rfl
+  · simp [quittingOpponentOnlyProfile, quittingStationaryProfile,
+      StochasticGame.stationaryBehaviorProfile, Function.update_of_ne hplayer]
+
+/-- The three stationary opponents absorb almost surely. -/
+theorem tendsto_stationaryOpponentLiveMass_zero (who : Player) :
+    Tendsto (quittingLiveMass terminalReward
+      (quittingOpponentOnlyProfile terminalReward
+        (quittingStationaryProfile terminalReward stationaryRoot) who))
+      atTop (nhds 0) := by
+  rw [opponentOnlyProfile_stationary]
+  apply tendsto_quittingLiveMass_stationary_zero
+  rw [stationaryRoot_opponentContinueMass]
+  apply pow_lt_one₀
+  · exact sub_nonneg.mpr stationaryParameter_lt_one.le
+  · linarith [stationaryParameter_pos]
+  · norm_num
+
+/-- Every unilateral deviation's residual live mass vanishes, because it is
+dominated by the three stationary opponents' survival probability. -/
+theorem tendsto_deviationLiveMass_zero
+    (who : Player)
+    (deviation : game.BehaviorStrategy who) :
+    Tendsto (quittingLiveMass terminalReward
+      (Function.update
+        (quittingStationaryProfile terminalReward stationaryRoot)
+        who deviation)) atTop (nhds 0) := by
+  exact squeeze_zero
+    (fun time ↦ quittingLiveMass_nonneg terminalReward _ time)
+    (quittingLiveMass_update_le_opponentOnly terminalReward
+      (quittingStationaryProfile terminalReward stationaryRoot) who deviation)
+    (tendsto_stationaryOpponentLiveMass_zero who)
+
+/-- Every history-dependent unilateral behavioral deviation receives
+exactly `omega` in terminal payoff. -/
+theorem quittingTerminalPayoff_stationary_update_eq
+    (who : Player)
+    (deviation : game.BehaviorStrategy who) :
+    quittingTerminalPayoff terminalReward
+        (Function.update
+          (quittingStationaryProfile terminalReward stationaryRoot)
+          who deviation) who = stationaryPayoff := by
+  let profile := Function.update
+    (quittingStationaryProfile terminalReward stationaryRoot) who deviation
+  have hformula : ∀ time : ℕ,
+      (quittingGame terminalReward).expectedStagePayoff profile none time who =
+        stationaryPayoff - stationaryPayoff *
+          quittingLiveMass terminalReward profile time := by
+    intro time
+    have hpotential := expectedStateValue_deviationPotential who deviation time
+    have hsplit := expectedStateValue_deviationPotential_eq profile who time
+    have hpotential' :
+        (quittingGame terminalReward).expectedStateValue profile none time
+            (deviationPotential who) = stationaryPayoff := by
+      simpa [profile] using hpotential
+    linarith [hpotential', hsplit]
+  have hlive := tendsto_deviationLiveMass_zero who deviation
+  have hright : Tendsto (fun time : ℕ =>
+      stationaryPayoff - stationaryPayoff *
+        quittingLiveMass terminalReward profile time) atTop
+      (nhds stationaryPayoff) := by
+    have hlive' : Tendsto
+        (quittingLiveMass terminalReward profile) atTop (nhds 0) := by
+      simpa [profile] using hlive
+    have hconst : Tendsto (fun _ : ℕ => stationaryPayoff) atTop
+        (nhds stationaryPayoff) := tendsto_const_nhds
+    simpa using hconst.sub
+      (Filter.Tendsto.const_mul stationaryPayoff hlive')
+  have hstage : Tendsto (fun time : ℕ =>
+      (quittingGame terminalReward).expectedStagePayoff profile none time who)
+      atTop (nhds stationaryPayoff) :=
+    hright.congr' (Filter.Eventually.of_forall fun time => (hformula time).symm)
+  exact tendsto_nhds_unique
+    (tendsto_expectedStagePayoff_quittingGame terminalReward profile who) hstage
+
+/-- The prescribed stationary terminal payoff is `omega`. -/
+theorem quittingTerminalPayoff_stationary (who : Player) :
+    quittingTerminalPayoff terminalReward
+        (quittingStationaryProfile terminalReward stationaryRoot) who =
+      stationaryPayoff := by
+  simpa only [Function.update_eq_self] using
+    (quittingTerminalPayoff_stationary_update_eq who
+      (quittingStationaryProfile terminalReward stationaryRoot who))
+
+/-- The exact stationary profile is a terminal Nash equilibrium. -/
+theorem stationaryProfile_isTerminalNash :
+    (quittingGame terminalReward).IsεAsymptoticNash
+      (quittingTerminalPayoff terminalReward) 0
+      (quittingStationaryProfile terminalReward stationaryRoot) := by
+  intro who deviation
+  rw [quittingTerminalPayoff_stationary,
+    quittingTerminalPayoff_stationary_update_eq]
+  norm_num
+
+/-- Hence the same stationary profile is a uniform epsilon-equilibrium for
+every positive error. -/
+theorem stationaryProfile_isUniformεEquilibrium
+    {ε : ℝ} (hε : 0 < ε) :
+    (quittingGame terminalReward).IsUniformεEquilibrium none ε
+      (quittingStationaryProfile terminalReward stationaryRoot) :=
+  quittingGame_isUniformεEquilibrium_of_terminalNash_finite
+    terminalReward (quittingStationaryProfile terminalReward stationaryRoot)
+      hε stationaryProfile_isTerminalNash
 
 end CyclicFourPlayerQuitting
 end GameTheory
