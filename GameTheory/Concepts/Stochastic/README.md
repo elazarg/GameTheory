@@ -190,8 +190,10 @@ stationary kernel, ruling out cyclic local choices.
 needed by Vrieze's original dual: it normalizes `z` on positive occupation
 support and `yGain` elsewhere, proves closed-core reachability under that
 hybrid kernel, and compiles the resulting off-core transience certificate.
-The remaining projection-witness work is the complementary-slackness
-gain/reward compatibility for this hybrid policy.
+`SingleControllerFlowHarmonicity.lean` then combines complementary slackness
+off that support with stationary nonnegative drift on it to prove that the
+same hybrid kernel makes the encoded gain harmonic.  The remaining
+projection-witness work is reward compatibility for this hybrid policy.
 
 Supporting classical theorems, fully proved: Fink's discounted stationary
 equilibria (`exists_isDiscountedStationaryBellmanEq`, `Fink.lean`), Shapley's
