@@ -211,6 +211,7 @@ import GameTheory.Concepts.Stochastic.ArbitraryStartPrescribedDeliveryTelescope
 import GameTheory.Concepts.Stochastic.ArbitraryStartUnilateralCap
 import GameTheory.Concepts.Stochastic.ExplicitDomainGainBiasVerifier
 import GameTheory.Concepts.Stochastic.SplitDomainGainBiasVerifier
+import GameTheory.Concepts.Stochastic.SplitDomainAsymptoticConverse
 import GameTheory.Concepts.Stochastic.UncoveredPrescribedClassCounterexample
 import GameTheory.Concepts.Stochastic.FTVCyclicCredibility
 import GameTheory.Concepts.Stochastic.FTVCyclicMinimality

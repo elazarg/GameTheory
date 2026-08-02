@@ -68,6 +68,14 @@ owner-specific arenas, adapts each half to the existing APIs, reuses the
 mean-ergodic and controlled-Farkas bias theorems, and proves exact endpoint and
 shared-modulus gain--bias sufficiency without a recurrent-coverage assumption.
 
+`SplitDomainAsymptoticConverse.lean` proves the two target-side converse steps
+on those exact domains.  Shifted prescribed Cesaro delivery forces prescribed
+target harmonicity on the delivery union, and an eventual vanishing-error cap
+for every pure one-step rollout forces target superharmonicity on the selected
+owner's arena.  The hypotheses use the iterated finite configuration kernel;
+identifying those rollouts with the architecture's history semantics remains a
+separate finite-horizon law bridge.
+
 `UncoveredPrescribedClassCounterexample.lean` is the two-player/two-node Q96
 regression: all four target/occupation-side checks pass on their stated
 domains, while the escaped prescribed class is outside player one's arena and
