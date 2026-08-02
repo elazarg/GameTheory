@@ -3,8 +3,6 @@ import Mathlib.Algebra.MvPolynomial.PDeriv
 import Mathlib.Analysis.Calculus.FDeriv.Mul
 
 set_option autoImplicit false
-set_option linter.unusedDecidableInType false
-set_option linter.unusedSimpArgs false
 
 noncomputable section
 
@@ -97,7 +95,7 @@ theorem evalGradient_mul_X
   simp only [evalGradient_apply,
     MvPolynomial.pderiv_mul, map_add, map_mul,
     MvPolynomial.eval_X, add_apply, smul_apply,
-    smul_eq_mul, ContinuousLinearMap.coe_proj]
+    smul_eq_mul]
   simp_rw [add_mul]
   rw [Finset.sum_add_distrib]
   simp only [MvPolynomial.pderiv_X, Pi.single_apply]
@@ -157,13 +155,13 @@ theorem evalGradient_single
   rw [Finset.sum_eq_single k]
   · simp
   · intro j hj hne
-    simp [Pi.single_apply, hne]
+    simp [hne]
   · simp
 
 /-- Normalized polynomial Lagrange multipliers directly on the assignment
 type used by the square-lift construction. -/
 theorem exists_permanentMultipliers_of_localExtrOn
-    {σ I : Type*} [Fintype σ] [DecidableEq σ]
+    {σ I : Type*} [Fintype σ]
     [Fintype I] {n : ℕ}
     (x : σ → ℝ)
     (P : I → MvPolynomial σ ℝ)

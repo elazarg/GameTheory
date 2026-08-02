@@ -2,7 +2,6 @@ import Math.CurveSelection.LocalRootIsolation
 import Math.CurveSelection.NormalLagrange
 
 set_option autoImplicit false
-set_option linter.unusedDecidableInType false
 
 noncomputable section
 
@@ -140,7 +139,7 @@ locally automatic; the current lexicographic extremum therefore lives on
 the unchanged regular permanent fiber, where normalized Lagrange
 multipliers apply. -/
 theorem exists_permanentMultipliers_of_separableLexRelations
-    {σ I : Type*} [Fintype σ] [DecidableEq σ]
+    {σ I : Type*} [Fintype σ]
     [Fintype I] {n : ℕ}
     (x : EuclideanSpace ℝ σ)
     (P : I → MvPolynomial σ ℝ)

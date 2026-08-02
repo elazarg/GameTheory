@@ -1,7 +1,6 @@
 import Math.AlgebraicSelection
 
 set_option autoImplicit false
-set_option linter.style.show false
 
 noncomputable section
 
@@ -41,7 +40,7 @@ theorem eventually_eq_of_bivEval_eq_zero
   by_contra hne
   apply hy
   refine ⟨?_, hne⟩
-  show p.eval y = 0
+  change p.eval y = 0
   simpa [p, bivEval_eq_eval_map] using hroot
 
 /--

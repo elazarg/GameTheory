@@ -3,9 +3,6 @@ curve selection. -/
 import Math.CurveSelection.RelativeChartSequence
 
 set_option autoImplicit false
-set_option linter.unnecessarySimpa false
-set_option linter.unusedFintypeInType false
-set_option linter.unusedSimpArgs false
 
 noncomputable section
 
@@ -88,8 +85,7 @@ theorem eval₂_overParameter_localizedCoordinate
       simp only [map_add, MvPolynomial.eval₂_add]
       rw [hP, hQ]
   | mul_X P i hP =>
-      simp only [map_mul, MvPolynomial.eval₂_mul,
-        MvPolynomial.eval₂_X]
+      simp only [map_mul, MvPolynomial.eval₂_mul]
       rw [hP]
       simp [overParameter, localizedCoordinate]
 
@@ -169,13 +165,13 @@ theorem localizedGermParameterAlgHom_localizedCoordinate
   change
     sequenceGermEval x (MvPolynomial.X i) =
       ((fun n => x n i) : GermField)
-  simpa [sequenceGermEval]
+  simp [sequenceGermEval]
 
 /-- A presentation representative of the localized generic point recovers
 the original affine sequence, simultaneously in every coordinate, on an
 ultrafilter-large set. -/
 theorem eventually_presentationSectionMap_eq
-    {σ ι κ : Type*} [Fintype σ]
+    {σ ι κ : Type*} [Finite σ]
     (x : ℕ → (σ → ℝ))
     (J : Ideal (MvPolynomial σ ℝ))
     (parameter : σ)
@@ -215,6 +211,7 @@ theorem eventually_presentationSectionMap_eq
           (localizedCoordinate J g)
           (a n) =
         x n := by
+  letI : Fintype σ := Fintype.ofFinite σ
   have hcoordinate :
       ∀ i : σ,
         ∀ᶠ n in

@@ -7,7 +7,6 @@ import Mathlib.RingTheory.Smooth.Field
 import Mathlib.RingTheory.Smooth.StandardSmoothOfFree
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -27,7 +26,7 @@ localization and the second is a finitely generated extension of a
 characteristic-zero field, hence formally smooth.  Standard smoothness then
 holds after shrinking by one polynomial outside the prime. -/
 theorem exists_parameter_standardSmooth_basicOpen_of_prime
-    {σ : Type*} [Fintype σ]
+    {σ : Type*} [Finite σ]
     (J : Ideal (MvPolynomial σ ℝ)) [J.IsPrime]
     (parameter : σ)
     (hparameter :
@@ -41,6 +40,7 @@ theorem exists_parameter_standardSmooth_basicOpen_of_prime
         parameterPolynomialAlgebra J parameter
       Algebra.IsStandardSmooth (Polynomial ℝ)
         (Localization.Away (Ideal.Quotient.mk J g)) := by
+  letI : Fintype σ := Fintype.ofFinite σ
   let R := Polynomial ℝ
   let A := MvPolynomial σ ℝ ⧸ J
   let K := FractionRing R
@@ -120,7 +120,7 @@ theorem exists_parameter_standardSmooth_basicOpen_of_prime
 prime germ: its denominator is eventually nonzero along the same free
 ultrafilter. -/
 theorem exists_eventually_parameter_standardSmooth_basicOpen
-    {σ : Type*} [Fintype σ]
+    {σ : Type*} [Finite σ]
     (x : ℕ → (σ → ℝ))
     (J : Ideal (MvPolynomial σ ℝ)) [J.IsPrime]
     (parameter : σ)
@@ -142,6 +142,7 @@ theorem exists_eventually_parameter_standardSmooth_basicOpen
         parameterPolynomialAlgebra J parameter
       Algebra.IsStandardSmooth (Polynomial ℝ)
         (Localization.Away (Ideal.Quotient.mk J g)) := by
+  letI : Fintype σ := Fintype.ofFinite σ
   obtain ⟨g, hgJ, hstandard⟩ :=
     exists_parameter_standardSmooth_basicOpen_of_prime
       J parameter hparameter

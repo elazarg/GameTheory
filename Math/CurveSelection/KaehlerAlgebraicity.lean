@@ -6,7 +6,6 @@ import Mathlib.RingTheory.Kaehler.Polynomial
 import Mathlib.RingTheory.Smooth.Field
 
 set_option autoImplicit false
-set_option linter.unnecessarySimpa false
 
 noncomputable section
 
@@ -27,7 +26,7 @@ theorem mvPolynomial_D_X_ne_zero
         (KaehlerDifferential.mvPolynomialBasis K Unit).repr z ())
       h
   have hone : (1 : MvPolynomial Unit K) = 0 := by
-    simpa using hrepr
+    simp at hrepr
   exact one_ne_zero hone
 
 /-- Localizing a one-variable polynomial algebra does not kill the
@@ -121,9 +120,8 @@ theorem adjoin_singleton_D_ne_zero
         (⟨q, hqS⟩ : S) := by
     apply Subtype.ext
     change e (algebraMap A F (MvPolynomial.X ())) = q
-    simpa [e, A, F, S, x] using
-      hx.aevalEquivField_algebraMap_apply_coe
-        (MvPolynomial.X ())
+    simp [e, A, F, S, x,
+      hx.aevalEquivField_algebraMap_apply_coe]
   simpa [halgebraMapX] using hDX
 
 /-- In an essentially finite-type extension of fields over a perfect base,

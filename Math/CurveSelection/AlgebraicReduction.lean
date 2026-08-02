@@ -14,7 +14,6 @@ import Mathlib.Data.Complex.Basic
 import GameTheory.Concepts.Stochastic.BellmanCurveGate
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -322,7 +321,7 @@ still converge to the original endpoint and remain in the target set.
 Strict decrease is useful when turning the sequence into the graph of a
 single-valued partial algebraic branch. -/
 theorem exists_strictAnti_parameter_approach
-    {σ : Type*} [Fintype σ]
+    {σ : Type*} [Finite σ]
     {A : Set (σ → ℝ)} {parameter : σ} {x₀ : σ → ℝ}
     (hparameter : x₀ parameter = 0)
     (hclosure :
@@ -333,6 +332,7 @@ theorem exists_strictAnti_parameter_approach
       (∀ n, 0 < x n parameter) ∧
       Tendsto x atTop (𝓝 x₀) ∧
       Tendsto (fun n => x n parameter) atTop (𝓝 0) := by
+  letI : Fintype σ := Fintype.ofFinite σ
   obtain ⟨z, hzmem, hzlim⟩ :=
     (mem_closure_iff_seq_limit.mp hclosure)
   let a : ℕ → ℝ := fun n => z n parameter
@@ -461,7 +461,7 @@ theorem exists_strictAnti_nearest_compactFiber_approach
 strict-parameter sequence on which every affine coordinate obeys one fixed
 nonzero bivariate equation. -/
 theorem exists_algebraic_strictAnti_signCell_approach
-    {I σ : Type*} [Fintype I] [Fintype σ]
+    {I σ : Type*} [Fintype I] [Finite σ]
     (P : I → MvPolynomial σ ℝ)
     (τ : SignPattern I) (parameter : σ)
     (x₀ : σ → ℝ)
@@ -491,6 +491,7 @@ theorem exists_algebraic_strictAnti_signCell_approach
       ∀ n j,
         bivEval (q j) (x n parameter) (x n j.1) = 0 := by
   classical
+  letI : Fintype σ := Fintype.ofFinite σ
   obtain ⟨x, hxmem, hxanti, hxpos, hxlim, hxparameter⟩ :=
     exists_strictAnti_parameter_approach
       hparameter hclosure
@@ -505,7 +506,7 @@ theorem exists_algebraic_strictAnti_signCell_approach
 /-- A fixed bivariate relation holding along a convergent assignment
 sequence also holds at its endpoint. -/
 theorem bivEval_endpoint_eq_zero_of_tendsto
-    {σ : Type*} [Fintype σ]
+    {σ : Type*} [Finite σ]
     {x : ℕ → (σ → ℝ)} {x₀ : σ → ℝ}
     (hxlim : Tendsto x atTop (𝓝 x₀))
     (parameter target : σ)
@@ -513,6 +514,7 @@ theorem bivEval_endpoint_eq_zero_of_tendsto
     (hroot :
       ∀ n, bivEval q (x n parameter) (x n target) = 0) :
     bivEval q (x₀ parameter) (x₀ target) = 0 := by
+  letI : Fintype σ := Fintype.ofFinite σ
   let F : (σ → ℝ) → ℝ :=
     (fun p : ℝ × ℝ => bivEval q p.1 p.2) ∘
       fun y => (y parameter, y target)
@@ -537,7 +539,7 @@ theorem bivEval_endpoint_eq_zero_of_tendsto
 /-- Endpoint form of the generically finite algebraic approach: all selected
 coordinate relations pass through the limiting assignment. -/
 theorem exists_algebraic_strictAnti_signCell_approach_with_endpoint
-    {I σ : Type*} [Fintype I] [Fintype σ]
+    {I σ : Type*} [Fintype I] [Finite σ]
     (P : I → MvPolynomial σ ℝ)
     (τ : SignPattern I) (parameter : σ)
     (x₀ : σ → ℝ)
@@ -567,6 +569,7 @@ theorem exists_algebraic_strictAnti_signCell_approach_with_endpoint
       (∀ n j,
         bivEval (q j) (x n parameter) (x n j.1) = 0) ∧
       ∀ j, bivEval (q j) 0 (x₀ j.1) = 0 := by
+  letI : Fintype σ := Fintype.ofFinite σ
   obtain ⟨x, q, hxmem, hxanti, hxpos, hxlim,
     hxparameter, hqne, hqroot⟩ :=
     exists_algebraic_strictAnti_signCell_approach
@@ -722,7 +725,7 @@ after which every boundary splits, and every resulting formal root is
 centered.  Taking the product of the individual ramification indices is
 enough. -/
 theorem exists_commonRamification_centeredSplittings
-    {J : Type*} [Fintype J]
+    {J : Type*} [Finite J]
     (Hroot : HasRamifiedRootProperty ℝ)
     (f : J → Polynomial (PowerSeries ℝ))
     (Hdist :
@@ -735,6 +738,7 @@ theorem exists_commonRamification_centeredSplittings
           (ramifyPowerSeriesPolynomial q hq (f j)).IsRoot s →
             s.constantCoeff = 0 := by
   classical
+  letI : Fintype J := Fintype.ofFinite J
   choose p hp hsplit using fun j =>
     hasRamifiedPowerSeriesSplitting_of_hasRamifiedRootProperty
       Hroot (f j) (Hdist j).monic
@@ -769,7 +773,7 @@ Newton--Puiseux there, and later recover the real branch selected by the real
 approaching sequence. -/
 theorem exists_commonRamification_centeredSplittingsOver
     {K L : Type*} [Field K] [Field L]
-    {J : Type*} [Fintype J]
+    {J : Type*} [Finite J]
     (σ : K →+* L)
     (Hroot : HasRamifiedRootProperty L)
     (f : J → Polynomial (PowerSeries K))
@@ -785,6 +789,7 @@ theorem exists_commonRamification_centeredSplittingsOver
             (mapPowerSeriesPolynomial σ (f j))).IsRoot s →
             s.constantCoeff = 0 := by
   classical
+  letI : Fintype J := Fintype.ofFinite J
   choose p hp hsplit using fun j =>
     hasRamifiedPowerSeriesSplittingOver_of_hasRamifiedRootProperty
       σ Hroot (Hdist j).monic
@@ -819,7 +824,7 @@ theorem exists_commonRamification_centeredSplittingsOver
 /-- Every coordinate relation obtained from the saturated finite algebraic
 reduction has a centered primitive Weierstrass boundary polynomial. -/
 theorem exists_coordinate_weierstrassBoundaries_of_saturated_moduleFinite
-    {I σ : Type*} [Fintype I] [Fintype σ]
+    {I σ : Type*} [Fintype I] [Finite σ]
     (P : I → MvPolynomial σ ℝ)
     (τ : SignPattern I) (parameter : σ)
     (x₀ : σ → ℝ)
@@ -864,6 +869,7 @@ theorem exists_coordinate_weierstrassBoundaries_of_saturated_moduleFinite
             (q j) (x₀ j.1)).primPart).IsWeierstrassFactorization
               (f j) (unit j) := by
   classical
+  letI : Fintype σ := Fintype.ofFinite σ
   obtain ⟨x, q, hxmem, hxanti, hxpos, hxlim,
     hxparameter, hqne, hqroot⟩ :=
     exists_algebraic_strictAnti_signCell_approach
@@ -895,7 +901,7 @@ sequence has one algebraic relation per coordinate, and after one common
 ramification all corresponding Weierstrass boundaries split into centered
 formal branches. -/
 theorem exists_coordinate_commonRamifiedSplittings_of_saturated_moduleFinite
-    {I σ : Type*} [Fintype I] [Fintype σ]
+    {I σ : Type*} [Fintype I] [Finite σ]
     (Hroot : HasRamifiedRootProperty ℝ)
     (P : I → MvPolynomial σ ℝ)
     (τ : SignPattern I) (parameter : σ)
@@ -947,6 +953,7 @@ theorem exists_coordinate_commonRamifiedSplittings_of_saturated_moduleFinite
           (ramifyPowerSeriesPolynomial ram hram (f j)).IsRoot s →
             s.constantCoeff = 0 := by
   classical
+  letI : Fintype σ := Fintype.ofFinite σ
   obtain ⟨x, relation, f, unit, hxmem, hxanti, hxpos, hxlim,
     hrelation_ne, hrelation_root, hprimitive, hdegree, hfactor⟩ :=
     exists_coordinate_weierstrassBoundaries_of_saturated_moduleFinite
@@ -965,7 +972,7 @@ after coefficient extension to `ℂ`, one common ramification splits every
 coordinate boundary. -/
 theorem
     exists_coordinate_commonComplexRamifiedSplittings_of_saturated_moduleFinite
-    {I σ : Type*} [Fintype I] [Fintype σ]
+    {I σ : Type*} [Fintype I] [Finite σ]
     (Hroot : HasRamifiedRootProperty ℂ)
     (P : I → MvPolynomial σ ℝ)
     (τ : SignPattern I) (parameter : σ)
@@ -1019,6 +1026,7 @@ theorem
             (mapPowerSeriesPolynomial Complex.ofRealHom (f j))).IsRoot s →
             s.constantCoeff = 0 := by
   classical
+  letI : Fintype σ := Fintype.ofFinite σ
   obtain ⟨x, relation, f, unit, hxmem, hxanti, hxpos, hxlim,
     hrelation_ne, hrelation_root, hprimitive, hdegree, hfactor⟩ :=
     exists_coordinate_weierstrassBoundaries_of_saturated_moduleFinite

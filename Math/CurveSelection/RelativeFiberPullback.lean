@@ -1,7 +1,6 @@
 import Math.CurveSelection.RelativePresentation
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -126,7 +125,7 @@ theorem isLocalExtrOn_presentationFiber_relative
     {S ι κ ν E : Type*}
     [CommRing S]
     [Algebra (Polynomial ℝ) S]
-    [Fintype ι]
+    [Finite ι]
     (P :
       Algebra.Presentation
         (Polynomial ℝ) S ι κ)
@@ -179,6 +178,7 @@ theorem isLocalExtrOn_presentationFiber_relative
               (specializeParameterPolynomial t
                 (P.relation j))}
       x := by
+  letI : Fintype ι := Fintype.ofFinite ι
   let fiber : Set (ι → ℝ) :=
     {z |
       ∀ j : κ,

@@ -5,11 +5,6 @@ import Mathlib.FieldTheory.IsAlgClosed.Basic
 import Mathlib.RingTheory.Henselian
 import Mathlib.RingTheory.AdicCompletion.Completeness
 
-set_option linter.unnecessarySimpa false
-set_option linter.unusedSectionVars false
-set_option linter.unusedSimpArgs false
-set_option linter.unusedTactic false
-set_option linter.unusedVariables false
 
 noncomputable section
 
@@ -97,15 +92,7 @@ theorem exists_pow_eq_expand
   refine ⟨PowerSeries.X ^ d * v, ?_⟩
   rw [mul_pow, hv]
   rw [← pow_mul]
-  change
-    PowerSeries.X ^ (d * m) *
-        PowerSeries.expand m (Nat.ne_of_gt hm) u =
-      PowerSeries.expand m (Nat.ne_of_gt hm) a
   rw [Nat.mul_comm d m, pow_mul]
-  change
-    (PowerSeries.X ^ m) ^ d *
-        PowerSeries.expand m (Nat.ne_of_gt hm) u =
-      PowerSeries.expand m (Nat.ne_of_gt hm) a
   rw [← PowerSeries.expand_X m (Nat.ne_of_gt hm),
     ← map_pow, ← map_mul]
   exact congrArg (PowerSeries.expand m (Nat.ne_of_gt hm))
@@ -129,7 +116,7 @@ end Math
 namespace Math
 namespace CurveSelection.PuiseuxDegreeScratch
 
-variable {K : Type*} [Field K] [IsAlgClosed K] [CharZero K]
+variable {K : Type*} [Field K]
 
 /-- The quadratic formula in a commutative ring in which two is invertible. -/
 theorem quadratic_formula
@@ -164,6 +151,7 @@ Every monic quadratic over formal power series has a formal root after the
 single ramification `X ↦ X²`.
 -/
 theorem exists_ramifiedRoot_quadratic
+    [IsAlgClosed K] [CharZero K]
     (b c : PowerSeries K) :
     ∃ (p : ℕ) (hp : p ≠ 0) (s : PowerSeries K),
       (ramifyPowerSeriesPolynomial p hp
@@ -222,6 +210,7 @@ theorem monic_natDegree_two_eq
 
 /-- Full ramified-root property for every monic quadratic. -/
 theorem exists_ramifiedRoot_of_monic_natDegree_two
+    [IsAlgClosed K] [CharZero K]
     (f : Polynomial (PowerSeries K)) (hf : f.Monic)
     (hdegree : f.natDegree = 2) :
     ∃ (p : ℕ) (hp : p ≠ 0) (s : PowerSeries K),
@@ -245,6 +234,7 @@ theorem exists_ramifiedRoot_of_monic_natDegree_one
 Newton--Puiseux root extraction is complete in outer degrees one and two.
 -/
 theorem exists_ramifiedRoot_of_monic_natDegree_le_two
+    [IsAlgClosed K] [CharZero K]
     (f : Polynomial (PowerSeries K)) (hf : f.Monic)
     (hpositive : 0 < f.natDegree) (hdegree : f.natDegree ≤ 2) :
     ∃ (p : ℕ) (hp : p ≠ 0) (s : PowerSeries K),
@@ -286,6 +276,7 @@ theorem splits_of_monic_natDegree_two_of_isRoot
 /-- Every monic polynomial of outer degree at most two splits after a finite
 ramification of the parameter. -/
 theorem hasRamifiedPowerSeriesSplitting_of_monic_natDegree_le_two
+    [IsAlgClosed K] [CharZero K]
     (f : Polynomial (PowerSeries K)) (hf : f.Monic)
     (hdegree : f.natDegree ≤ 2) :
     HasRamifiedPowerSeriesSplitting f := by
@@ -428,7 +419,7 @@ If ramified roots are already available in all smaller degrees, then the
 original polynomial has a ramified root.
 -/
 theorem exists_ramifiedRoot_of_weierstrass_order_drop
-    (g : Polynomial (PowerSeries K)) (hg : g.Monic) (c : K)
+    (g : Polynomial (PowerSeries K)) (_hg : g.Monic) (c : K)
     (hred :
       ((g.comp
           (Polynomial.X +
@@ -558,6 +549,7 @@ theorem constantCoeff_divByXPow_ne_zero_of_order
 /-- A monic polynomial over an algebraically closed field which has a
 non-leading nonzero coefficient has a nonzero root. -/
 theorem exists_nonzero_isRoot_of_monic_of_coeff_ne_zero
+    [IsAlgClosed K]
     (P : Polynomial K) (hP : P.Monic)
     {k : ℕ} (hk : k < P.natDegree)
     (hcoeff : P.coeff k ≠ 0) :
@@ -781,6 +773,7 @@ theorem C_X_pow_mul_newtonTransform
 /-- Translation by `c` adds `degree • c` to the coefficient immediately
 below the leading term. -/
 theorem nextCoeff_comp_X_add_C_of_monic
+    [IsAlgClosed K]
     (P : Polynomial K) (hP : P.Monic) (c : K) :
     (P.comp (Polynomial.X + Polynomial.C c)).nextCoeff =
       P.nextCoeff + P.natDegree • c := by
@@ -911,6 +904,7 @@ special-fiber order is positive and strictly smaller than the original
 degree.
 -/
 theorem translated_specialFiber_order_drop
+    [IsAlgClosed K] [CharZero K]
     (G : Polynomial (PowerSeries K)) (hG : G.Monic)
     (d : ℕ) (hdegree : G.natDegree = d) (hd : 0 < d)
     (hnext : G.nextCoeff = 0)
@@ -974,7 +968,7 @@ theorem translated_specialFiber_order_drop
       (G.map PowerSeries.constantCoeff).nextCoeff = 0 := by
     rw [Polynomial.nextCoeff_map_of_leadingCoeff_ne_zero]
     · simp [hnext]
-    · simpa [hG.leadingCoeff]
+    · simp [hG.leadingCoeff]
   have hRmonic :
       (G.map PowerSeries.constantCoeff).Monic :=
     hG.map _
@@ -1051,7 +1045,7 @@ theorem newtonTransform_natDegree
   · rw [Polynomial.natDegree_le_iff_coeff_eq_zero]
     intro i hi
     exact coeff_newtonTransform_of_lt f d p q hq hi
-  · simpa [hcoeffd]
+  · simp [hcoeffd]
 
 /-- Depression is preserved by a normalized Newton transform. -/
 theorem newtonTransform_nextCoeff_eq_zero
@@ -1079,6 +1073,7 @@ fiber to positive order, and Weierstrass preparation strictly lowers the
 outer degree.
 -/
 theorem exists_ramifiedRoot_of_depressed_monic
+    [IsAlgClosed K] [CharZero K]
     (f : Polynomial (PowerSeries K)) (hf : f.Monic)
     (d : ℕ) (hdegree : f.natDegree = d) (hd : 0 < d)
     (hnext : f.nextCoeff = 0)
@@ -1203,6 +1198,7 @@ theorem ramify_comp_X_add_C
 /-- Division by a positive natural number, embedded as a constant series,
 gives the translation which kills the next coefficient. -/
 theorem nsmul_depressShift
+    [CharZero K]
     (d : ℕ) (hd : 0 < d) (b : PowerSeries K) :
     d • (-PowerSeries.C ((d : K)⁻¹) * b) = -b := by
   rw [nsmul_eq_mul]
@@ -1223,7 +1219,8 @@ theorem nsmul_depressShift
 Formal Newton--Puiseux root extraction in arbitrary outer degree over an
 algebraically closed characteristic-zero field.
 -/
-theorem hasRamifiedRootProperty_algClosed :
+theorem hasRamifiedRootProperty_algClosed
+    [IsAlgClosed K] [CharZero K] :
     HasRamifiedRootProperty K := by
   intro f hf hpositive
   generalize hdegree : f.natDegree = d

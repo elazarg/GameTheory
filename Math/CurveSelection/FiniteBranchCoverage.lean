@@ -3,7 +3,6 @@ import Math.CurveSelection.RootCoverage
 import Math.CurveSelection.PositiveRoot
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -433,7 +432,7 @@ finite coordinate type.
 -/
 theorem
     exists_coordinatewise_finite_analytic_branches_covering_sequence
-    {J : Type*} [Fintype J]
+    {J : Type*} [Finite J]
     (Q : J → Polynomial (Polynomial ℝ))
     (hQirr : ∀ j, Irreducible (Q j))
     (hQdegree : ∀ j, (Q j).natDegree ≠ 0)
@@ -479,6 +478,7 @@ theorem
       (∀ᶠ i in atTop,
         ∀ j, ∃ γ ∈ branches j, (y i j : ℂ) = γ (t i)) := by
   classical
+  letI : Fintype J := Fintype.ofFinite J
   have hcoordinate :
       ∀ j,
         ∃ (n : ℕ) (branches : List (ℂ → ℂ))
@@ -541,7 +541,7 @@ the sampled roots by finite analytic branch lists.
 -/
 theorem
     exists_factorTuple_finite_analytic_branches_covering_sequence
-    {J : Type*} [Fintype J]
+    {J : Type*} [Finite J]
     (Hroot : HasRamifiedRootProperty ℂ)
     (Q : J → Polynomial (Polynomial ℝ))
     (hQ : ∀ j, Q j ≠ 0)

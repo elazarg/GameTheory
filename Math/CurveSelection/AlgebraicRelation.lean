@@ -3,7 +3,6 @@ import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.RingTheory.Localization.Integer
 
 set_option autoImplicit false
-set_option linter.unnecessarySimpa false
 
 noncomputable section
 
@@ -52,7 +51,7 @@ theorem exists_base_relation_derivative_ne_zero
     intro hD0
     have hd0 : (d : R) = 0 := by
       apply IsFractionRing.injective R K
-      simpa [D] using hD0
+      simp [D] at hD0
     exact nonZeroDivisors.coe_ne_zero d hd0
   have hlifts :
       Polynomial.C D * m ∈

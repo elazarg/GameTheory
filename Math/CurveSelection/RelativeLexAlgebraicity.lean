@@ -9,8 +9,6 @@ objective list, and the resulting algebraicity in the parameter germ field.
 -/
 
 set_option autoImplicit false
-set_option linter.unusedDecidableInType false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -133,7 +131,7 @@ needed along the selected sequence.
 theorem eventually_isLocalExtrOn_presentationFiber_of_lex
     {S ι κ : Type*} {d : ℕ}
     [CommRing S] [Algebra (Polynomial ℝ) S]
-    [Fintype ι]
+    [Finite ι]
     (P : Algebra.Presentation (Polynomial ℝ) S ι κ)
     (t : ℕ → ℝ) (a : ℕ → (ι → ℝ))
     (objective : Fin d → S)
@@ -179,6 +177,7 @@ theorem eventually_isLocalExtrOn_presentationFiber_of_lex
             P (t n) (objective j))
           (presentationFiber P (t n) (a n))
           (a n) := by
+  letI : Fintype ι := Fintype.ofFinite ι
   intro j
   have hderivAll :
       ∀ᶠ n in (sequenceUltrafilter : Filter ℕ),
@@ -253,7 +252,7 @@ simultaneous sequence of normalized multipliers for all objectives.
 theorem exists_eventually_relativeNormalMultipliers_of_lex
     {S ι κ : Type*} {d : ℕ}
     [CommRing S] [Algebra (Polynomial ℝ) S]
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι]
     [Fintype κ] [DecidableEq κ]
     (P :
       Algebra.PreSubmersivePresentation
@@ -307,6 +306,7 @@ theorem exists_eventually_relativeNormalMultipliers_of_lex
           P.toPresentation (t n) (a n)
           objective (Λ n) := by
   classical
+  letI : Fintype ι := Fintype.ofFinite ι
   have hlocal :
       ∀ j : Fin d,
         ∀ᶠ n in (sequenceUltrafilter : Filter ℕ),
@@ -400,8 +400,8 @@ theorem exists_eventually_relativeNormalMultipliers_and_isAlgebraic_of_lex
     {S ι κ σ : Type*} {d : ℕ}
     [CommRing S] [Algebra (Polynomial ℝ) S]
     [Algebra (Polynomial ℝ) GermField]
-    [Fintype ι] [DecidableEq ι]
-    [Fintype κ] [DecidableEq κ]
+    [Finite ι]
+    [Fintype κ]
     (source : ℕ → (σ → ℝ))
     (parameter : σ)
     (hinjective :
@@ -475,6 +475,8 @@ theorem exists_eventually_relativeNormalMultipliers_and_isAlgebraic_of_lex
           objective (Λ n)) ∧
       ∀ j : Fin d,
         IsAlgebraic K (φ (objective j)) := by
+  classical
+  letI : Fintype ι := Fintype.ofFinite ι
   dsimp only
   let K := FractionRing (Polynomial ℝ)
   letI : Algebra K GermField :=

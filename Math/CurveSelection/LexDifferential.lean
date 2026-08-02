@@ -6,8 +6,6 @@ import Mathlib.RingTheory.Unramified.Field
 import Math.CurveSelection.KaehlerAlgebraicity
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
-set_option linter.unusedSimpArgs false
 
 noncomputable section
 
@@ -70,7 +68,7 @@ theorem derivation_eval₂_eq_sum_of_gradientCombination
     [CommRing K] [CommRing L]
     [Algebra K L]
     [AddCommGroup M] [Module L M] [Module K M]
-    [Fintype σ] [Fintype I]
+    [Finite σ] [Fintype I]
     (D : Derivation K L M)
     (x : σ → L)
     (Q : MvPolynomial σ K)
@@ -89,12 +87,12 @@ theorem derivation_eval₂_eq_sum_of_gradientCombination
         Λ i •
           D (MvPolynomial.eval₂
             (algebraMap K L) x (P i)) := by
+  letI : Fintype σ := Fintype.ofFinite σ
   rw [derivation_eval₂ D x Q]
   conv_lhs =>
     enter [2, k]
     rw [hgradient k]
-  simp only [Finset.sum_smul, Finset.smul_sum,
-    mul_smul]
+  simp only [Finset.sum_smul, mul_smul]
   rw [Finset.sum_comm]
   apply Finset.sum_congr rfl
   intro i hi
@@ -108,7 +106,7 @@ theorem derivation_eval₂_eq_sum_add_sum_of_gradientCombination
     [CommRing K] [CommRing L]
     [Algebra K L]
     [AddCommGroup M] [Module L M] [Module K M]
-    [Fintype σ] [Fintype I] [Fintype J]
+    [Finite σ] [Fintype I] [Fintype J]
     (D : Derivation K L M)
     (x : σ → L)
     (Q : MvPolynomial σ K)
@@ -136,6 +134,7 @@ theorem derivation_eval₂_eq_sum_add_sum_of_gradientCombination
         Μ j •
           D (MvPolynomial.eval₂
             (algebraMap K L) x (R j)) := by
+  letI : Fintype σ := Fintype.ofFinite σ
   let S : I ⊕ J → MvPolynomial σ K :=
     Sum.elim P R
   let C : I ⊕ J → L :=
@@ -359,7 +358,7 @@ theorem moduleFinite_of_equations_and_gradientSpanning
     {K L σ I : Type*}
     [Field K] [Field L]
     [Algebra K L]
-    [Fintype σ] [DecidableEq σ] [Fintype I]
+    [Finite σ] [DecidableEq σ] [Fintype I]
     (x : σ → L)
     (hgenerate :
       IntermediateField.adjoin K (Set.range x) = ⊤)
@@ -376,6 +375,7 @@ theorem moduleFinite_of_equations_and_gradientSpanning
               MvPolynomial.eval₂ (algebraMap K L) x
                 (MvPolynomial.pderiv k (P i))) :
     Module.Finite K L := by
+  letI : Fintype σ := Fintype.ofFinite σ
   apply
     moduleFinite_of_vanishingDifferentials_on_finite_fieldGenerators
       x hgenerate
@@ -441,7 +441,7 @@ theorem moduleFinite_of_triangularLexCriticality
     {K L σ I : Type*} {n : ℕ}
     [Field K] [Field L]
     [Algebra K L]
-    [Fintype σ] [Fintype I]
+    [Finite σ] [Fintype I]
     (x : σ → L)
     (hgenerate :
       IntermediateField.adjoin K (Set.range x) = ⊤)
@@ -470,6 +470,7 @@ theorem moduleFinite_of_triangularLexCriticality
     (hcoordinate :
       ∀ k, Q (objective k) = MvPolynomial.X k) :
     Module.Finite K L := by
+  letI : Fintype σ := Fintype.ofFinite σ
   apply
     moduleFinite_of_vanishingDifferentials_on_finite_fieldGenerators
       x hgenerate
@@ -514,7 +515,7 @@ theorem isAlgebraic_of_equations_and_normalCriticality
     {K L σ I : Type*}
     [Field K] [Field L] [CharZero K]
     [Algebra K L] [Algebra.EssFiniteType K L]
-    [Fintype σ] [Fintype I]
+    [Finite σ] [Fintype I]
     (x : σ → L)
     (P : I → MvPolynomial σ K)
     (hzero :
@@ -532,6 +533,7 @@ theorem isAlgebraic_of_equations_and_normalCriticality
                 (MvPolynomial.pderiv k (P i))) :
     IsAlgebraic K
       (MvPolynomial.eval₂ (algebraMap K L) x Q) := by
+  letI : Fintype σ := Fintype.ofFinite σ
   let D : Derivation K L Ω[L⁄K] :=
     KaehlerDifferential.D K L
   have hP :

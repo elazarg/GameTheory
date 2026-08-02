@@ -2,7 +2,6 @@ import Math.CurveSelection.AmbientCriticalAlgebraicity
 import Math.CurveSelection.GermChart
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -85,7 +84,7 @@ Unlike the flattened real-polynomial adapter, the parameter is a coefficient
 here, so no spurious critical equation in the parameter direction is needed.
 -/
 theorem isAlgebraic_objectiveGerm_of_eventually_relativeNormalCriticality
-    {σ ι I : Type*} [Fintype ι] [Fintype I]
+    {σ ι I : Type*} [Finite ι] [Fintype I]
     (x : ℕ → (σ → ℝ))
     (parameter : σ)
     (hinjective :
@@ -122,6 +121,7 @@ theorem isAlgebraic_objectiveGerm_of_eventually_relativeNormalCriticality
             (Polynomial.evalRingHom (x n parameter))
             (y n) Q) : ℕ → ℝ) :
         GermField) := by
+  letI : Fintype ι := Fintype.ofFinite ι
   dsimp only
   let K := FractionRing (Polynomial ℝ)
   letI : Algebra K GermField :=

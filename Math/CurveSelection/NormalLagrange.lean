@@ -5,9 +5,6 @@ import Mathlib.Analysis.Calculus.LagrangeMultipliers
 import Mathlib.Analysis.InnerProductSpace.PiL2
 
 set_option autoImplicit false
-set_option linter.unusedDecidableInType false
-set_option linter.unusedSimpArgs false
-set_option linter.unusedVariables false
 
 noncomputable section
 
@@ -261,7 +258,7 @@ produces the triangular polynomial gradient identities used by the
 algebraic finiteness argument.  Earlier objectives are included among the
 equality constraints at each stage. -/
 theorem exists_triangularMultipliers_of_lexCritical
-    {σ I : Type*} [Fintype σ] [DecidableEq σ]
+    {σ I : Type*} [Fintype σ]
     [Fintype I] {n : ℕ}
     (x : EuclideanSpace ℝ σ)
     (P : I → MvPolynomial σ ℝ)
@@ -359,7 +356,7 @@ chooses normalized real multipliers simultaneously at every selected
 point, so the resulting critical identities hold pointwise (and hence
 eventually in any filter germ). -/
 theorem exists_triangularMultiplierSequences_of_lexCritical
-    {σ I : Type*} [Fintype σ] [DecidableEq σ]
+    {σ I : Type*} [Fintype σ]
     [Fintype I] {n : ℕ}
     (x : ℕ → EuclideanSpace ℝ σ)
     (P : I → MvPolynomial σ ℝ)
@@ -389,7 +386,7 @@ theorem exists_triangularMultiplierSequences_of_lexCritical
                 (fun l : {l : Fin n // l < j} =>
                   Q l.1) a) (x m))) :
     ∃ (Λ : ℕ → Fin n → I → ℝ)
-        (Μ : ∀ m : ℕ, ∀ j : Fin n,
+        (Μ : ∀ _m : ℕ, ∀ j : Fin n,
           {l : Fin n // l < j} → ℝ),
       ∀ m (j : Fin n) (k : σ),
         MvPolynomial.eval (x m).ofLp
@@ -431,7 +428,7 @@ earlier-objective constraints are introduced, and normalized Lagrange
 multipliers express every objective gradient using only the independent
 permanent equations. -/
 theorem exists_permanentMultipliers_of_localExtrOn
-    {σ I : Type*} [Fintype σ] [DecidableEq σ]
+    {σ I : Type*} [Fintype σ]
     [Fintype I] {n : ℕ}
     (x : EuclideanSpace ℝ σ)
     (P : I → MvPolynomial σ ℝ)
@@ -491,7 +488,7 @@ theorem exists_permanentMultipliers_of_localExtrOn
 at every term, stronger than the eventual identities needed for the germ
 ideal. -/
 theorem exists_permanentMultiplierSequences_of_localExtrOn
-    {σ I : Type*} [Fintype σ] [DecidableEq σ]
+    {σ I : Type*} [Fintype σ]
     [Fintype I] {n : ℕ}
     (x : ℕ → EuclideanSpace ℝ σ)
     (P : I → MvPolynomial σ ℝ)

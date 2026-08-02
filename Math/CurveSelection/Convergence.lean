@@ -12,7 +12,6 @@ import Mathlib.RingTheory.PowerSeries.Derivative
 import Mathlib.RingTheory.UniqueFactorizationDomain.NormalizedFactors
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -1589,7 +1588,7 @@ theorem exists_analytic_complexBranch_of_ramified_weierstrass_root
 /-- Synchronize the ramification indices for a finite family after extending
 the coefficient field. -/
 theorem exists_commonRamification_centeredSplittingsOver'
-    {K L J : Type*} [Field K] [Field L] [Fintype J]
+    {K L J : Type*} [Field K] [Field L] [Finite J]
     (σ : K →+* L)
     (Hroot : HasRamifiedRootProperty L)
     (f : J → Polynomial (PowerSeries K))
@@ -1606,6 +1605,7 @@ theorem exists_commonRamification_centeredSplittingsOver'
             (mapPowerSeriesPolynomial σ (f j))).IsRoot s →
             s.constantCoeff = 0 := by
   classical
+  letI : Fintype J := Fintype.ofFinite J
   choose p hp hsplit using fun j =>
     hasRamifiedPowerSeriesSplittingOver_of_hasRamifiedRootProperty
       σ Hroot (Hdist j).monic
@@ -1645,7 +1645,7 @@ comes with a centered complex-analytic representative satisfying the
 corresponding ramified concrete equation.
 -/
 theorem exists_commonRamified_analyticBranches
-    {J : Type*} [Fintype J]
+    {J : Type*} [Finite J]
     (Hroot : HasRamifiedRootProperty ℂ)
     (Q : J → Polynomial (Polynomial ℝ))
     (hQirr : ∀ j, Irreducible (Q j))
@@ -1671,6 +1671,7 @@ theorem exists_commonRamified_analyticBranches
                 (Polynomial.mapRingHom Complex.ofRealHom))
               x (γ x) = 0) := by
   classical
+  letI : Fintype J := Fintype.ofFinite J
   have hprimitive : ∀ j, (Q j).IsPrimitive :=
     fun j => (hQirr j).isPrimitive (hQdegree j)
   choose f u H using fun j =>
@@ -1698,7 +1699,7 @@ ramifications, and finally converge every resulting formal branch.
 -/
 theorem
     exists_factorTuple_commonRamified_analyticBranches
-    {J : Type*} [Fintype J]
+    {J : Type*} [Finite J]
     (Hroot : HasRamifiedRootProperty ℂ)
     (Q : J → Polynomial (Polynomial ℝ))
     (hQ : ∀ j, Q j ≠ 0)

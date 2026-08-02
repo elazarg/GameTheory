@@ -1,9 +1,6 @@
 import Math.CurveSelection.RelativeLexAlgebraicity
 
 set_option autoImplicit false
-set_option linter.unusedDecidableInType false
-set_option linter.unusedFintypeInType false
-set_option linter.unusedVariables false
 
 noncomputable section
 
@@ -31,8 +28,8 @@ theorem all_isAlgebraic_of_lex_and_separable_step
     {S ι κ σ : Type*} {d : ℕ}
     [CommRing S] [Algebra (Polynomial ℝ) S]
     [Algebra (Polynomial ℝ) GermField]
-    [Fintype ι] [DecidableEq ι]
-    [Fintype κ] [DecidableEq κ]
+    [Finite ι]
+    [Finite κ]
     (source : ℕ → (σ → ℝ))
     (parameter : σ)
     (hinjective :
@@ -97,6 +94,9 @@ theorem all_isAlgebraic_of_lex_and_separable_step
         source parameter hinjective
     ∀ j : Fin d,
       IsAlgebraic K (φ (objective j)) := by
+  classical
+  letI : Fintype ι := Fintype.ofFinite ι
+  letI : Fintype κ := Fintype.ofFinite κ
   dsimp only
   let K := FractionRing (Polynomial ℝ)
   letI : Algebra K GermField :=

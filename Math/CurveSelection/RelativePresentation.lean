@@ -7,8 +7,6 @@ import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 import Mathlib.Topology.Algebra.MvPolynomial
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
-set_option linter.unusedSimpArgs false
 
 noncomputable section
 
@@ -185,12 +183,13 @@ def presentationSectionMap
 theorem continuous_presentationSectionMap
     {S ι κ ν : Type*}
     [CommRing S] [Algebra (Polynomial ℝ) S]
-    [Fintype ι]
+    [Finite ι]
     (P :
       Algebra.Presentation
         (Polynomial ℝ) S ι κ)
     (t : ℝ) (coordinate : ν → S) :
     Continuous (presentationSectionMap P t coordinate) := by
+  letI : Fintype ι := Fintype.ofFinite ι
   rw [continuous_pi_iff]
   intro k
   exact
@@ -252,8 +251,7 @@ theorem eval_presentationSectionMap_eq_zero
         (MvPolynomial.eval₂
           (algebraMap ℝ S) coordinate Q) := by
             rw [MvPolynomial.hom_eval₂]
-            simp only [hψbase, RingHom.id_apply,
-              hψcoordinate, MvPolynomial.eval₂_id]
+            simp only [hψbase, hψcoordinate, MvPolynomial.eval₂_id]
     _ = 0 := by rw [hQ, map_zero]
 
 /--
@@ -376,7 +374,7 @@ theorem isLocalMaxOn_presentationFiber
     [Algebra ℝ S]
     [Algebra (Polynomial ℝ) S]
     [IsScalarTower ℝ (Polynomial ℝ) S]
-    [Fintype ι]
+    [Finite ι]
     (P :
       Algebra.Presentation
         (Polynomial ℝ) S ι κ)
@@ -422,6 +420,7 @@ theorem isLocalMaxOn_presentationFiber
               (specializeParameterPolynomial t
                 (P.relation j))}
       x := by
+  letI : Fintype ι := Fintype.ofFinite ι
   let fiber : Set (ι → ℝ) :=
     {z |
       ∀ j : κ,
@@ -568,8 +567,7 @@ theorem pderiv_some_flattenParameterPolynomial
       rw [flattenParameterPolynomial_C]
       induction p using Polynomial.induction_on' with
       | add p q hp hq =>
-          simp only [map_add, Derivation.map_add, hp, hq,
-            add_zero]
+          simp only [map_add, hp, hq]
       | monomial n a =>
           rw [← Polynomial.C_mul_X_pow_eq_monomial]
           simp
@@ -582,8 +580,7 @@ theorem pderiv_some_flattenParameterPolynomial
       by_cases hij : j = i
       · subst j
         simp
-      · have hji : i ≠ j := Ne.symm hij
-        simp [hij, hji]
+      · simp [hij]
 
 @[simp]
 theorem eval_pderiv_some_flattenParameterPolynomial
@@ -715,7 +712,7 @@ theorem exists_multipliers_of_localExtrOn_presentationFiber
     {S ι κ : Type*}
     [CommRing S]
     [Algebra (Polynomial ℝ) S]
-    [Fintype ι] [Fintype κ] [DecidableEq κ]
+    [Finite ι] [Fintype κ] [DecidableEq κ]
     (P :
       Algebra.PreSubmersivePresentation
         (Polynomial ℝ) S ι κ)
@@ -749,6 +746,7 @@ theorem exists_multipliers_of_localExtrOn_presentationFiber
                 (MvPolynomial.pderiv k
                   (P.relation j)) := by
   classical
+  letI : Fintype ι := Fintype.ofFinite ι
   let relation : κ → MvPolynomial ι ℝ :=
     fun j =>
       specializeParameterPolynomial t (P.relation j)
@@ -791,7 +789,7 @@ theorem exists_multipliers_of_localMaxOn_zeroLocus
     [Algebra ℝ S]
     [Algebra (Polynomial ℝ) S]
     [IsScalarTower ℝ (Polynomial ℝ) S]
-    [Fintype ι] [Fintype κ] [DecidableEq κ]
+    [Finite ι] [Fintype κ] [DecidableEq κ]
     (P :
       Algebra.PreSubmersivePresentation
         (Polynomial ℝ) S ι κ)

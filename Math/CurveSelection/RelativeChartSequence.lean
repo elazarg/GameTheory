@@ -3,7 +3,6 @@ parameter sequence. -/
 import Math.CurveSelection.RelativePresentationGerm
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -31,7 +30,7 @@ caller receives ordinary `Fintype` instances without carrying existential
 typeclass witnesses.
 -/
 theorem exists_eventually_regular_parameterChart_of_strictAnti
-    {σ : Type*} [Fintype σ]
+    {σ : Type*} [Finite σ]
     (x : ℕ → (σ → ℝ))
     (parameter : σ)
     (hanti :
@@ -85,6 +84,7 @@ theorem exists_eventually_regular_parameterChart_of_strictAnti
                   (x n parameter))
                 (a n) (P.σ s) =
               germRepresentative (φ s) n) := by
+  letI : Fintype σ := Fintype.ofFinite σ
   let J := sequenceGermIdeal x
   letI : J.IsPrime :=
     sequenceGermIdeal_isPrime x

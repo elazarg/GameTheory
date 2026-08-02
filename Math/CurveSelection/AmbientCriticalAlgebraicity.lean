@@ -1,7 +1,6 @@
 import Math.CurveSelection.LexDifferential
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -20,7 +19,7 @@ theorem isAlgebraic_of_equations_and_normalCriticality_in_ambient
     {K H σ I : Type*}
     [Field K] [Field H] [CharZero K]
     [Algebra K H]
-    [Fintype σ] [Fintype I]
+    [Finite σ] [Fintype I]
     (x : σ → H)
     (P : I → MvPolynomial σ K)
     (hzero :
@@ -39,6 +38,7 @@ theorem isAlgebraic_of_equations_and_normalCriticality_in_ambient
     IsAlgebraic K
       (MvPolynomial.eval₂ (algebraMap K H) x Q) := by
   classical
+  letI : Fintype σ := Fintype.ofFinite σ
   let generator : σ ⊕ I → H :=
     Sum.elim x Λ
   let E : IntermediateField K H :=

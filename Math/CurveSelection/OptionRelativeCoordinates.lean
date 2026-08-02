@@ -3,7 +3,6 @@ an `Option`-indexed affine germ. -/
 import Math.CurveSelection.LocalizedCoordinates
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -137,7 +136,7 @@ eventually recover the source assignments with their `none` coordinate
 removed.
 -/
 theorem eventually_optionPresentationSectionMap_eq
-    {ν ι κ : Type*} [Fintype ν]
+    {ν ι κ : Type*} [Finite ν]
     (x : ℕ → (Option ν → ℝ))
     (J : Ideal (MvPolynomial (Option ν) ℝ))
     (g : MvPolynomial (Option ν) ℝ)
@@ -175,6 +174,7 @@ theorem eventually_optionPresentationSectionMap_eq
           (optionLocalizedCoordinate J g)
           (a n) =
         fun v => x n (some v) := by
+  letI : Fintype ν := Fintype.ofFinite ν
   have hfull :
       ∀ᶠ n in (sequenceUltrafilter : Filter ℕ),
         presentationSectionMap P
@@ -191,7 +191,7 @@ theorem eventually_optionPresentationSectionMap_eq
 /-- Canonical `sequenceGermIdeal` specialization of
 `eventually_optionPresentationSectionMap_eq`. -/
 theorem eventually_optionPresentationSectionMap_eq_sequenceGerm
-    {ν ι κ : Type*} [Fintype ν]
+    {ν ι κ : Type*} [Finite ν]
     (x : ℕ → (Option ν → ℝ))
     (g : MvPolynomial (Option ν) ℝ)
     (hg : g ∉ sequenceGermIdeal x) :

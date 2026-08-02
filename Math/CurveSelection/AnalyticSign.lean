@@ -4,7 +4,6 @@ import Mathlib.Analysis.Analytic.Polynomial
 import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -180,7 +179,7 @@ stabilization upgrades its frequent returns to eventual cell membership.
 -/
 theorem hasAnalyticPowerCurveAt_of_finite_analytic_branches
     {κ : σ → Type*}
-    [Fintype ι] [Fintype σ] [∀ v, Fintype (κ v)]
+    [Finite ι] [Fintype σ] [∀ v, Finite (κ v)]
     (P : ι → MvPolynomial σ ℝ)
     (τ : SignPattern ι)
     (coordinate : Assignment σ →L[ℝ] ℝ)
@@ -205,6 +204,8 @@ theorem hasAnalyticPowerCurveAt_of_finite_analytic_branches
       ∀ n v, ∃ k, branch v k (t n) = x n v) :
     HasAnalyticPowerCurveAt (signCell P τ) coordinate x₀ := by
   classical
+  letI : Fintype ι := Fintype.ofFinite ι
+  letI (v : σ) : Fintype (κ v) := Fintype.ofFinite (κ v)
   choose selected hselected using hcovered
   let choiceTuple : ℕ → (∀ v, κ v) := fun n v => selected n v
   have hsome :
@@ -255,7 +256,7 @@ forces all polynomial equalities and strict signs to stabilize analytically.
 -/
 theorem hasAnalyticPowerCurveAt_of_finite_complexAnalytic_branches
     {κ : σ → Type*}
-    [Fintype ι] [Fintype σ] [∀ v, Fintype (κ v)]
+    [Finite ι] [Fintype σ] [∀ v, Finite (κ v)]
     (P : ι → MvPolynomial σ ℝ)
     (τ : SignPattern ι)
     (coordinate : Assignment σ →L[ℝ] ℝ)
@@ -280,6 +281,8 @@ theorem hasAnalyticPowerCurveAt_of_finite_complexAnalytic_branches
       ∀ n v, ∃ k, (branch v k (t n)).re = x n v) :
     HasAnalyticPowerCurveAt (signCell P τ) coordinate x₀ := by
   classical
+  letI : Fintype ι := Fintype.ofFinite ι
+  letI (v : σ) : Fintype (κ v) := Fintype.ofFinite (κ v)
   choose selected hselected using hcovered
   let choiceTuple : ℕ → (∀ v, κ v) := fun n v => selected n v
   have hsome :

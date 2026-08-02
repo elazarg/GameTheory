@@ -4,7 +4,6 @@ import Mathlib.RingTheory.Polynomial.Content
 import Mathlib.RingTheory.UniqueFactorizationDomain.NormalizedFactors
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -175,7 +174,7 @@ theorem exists_positiveDegree_irreducibleFactor_subsequence_isRoot
 relations.  One tuple of positive-degree irreducible factors vanishes
 frequently across all coordinates. -/
 theorem exists_irreducibleFactorTuple_frequently_isRoot
-    {σ : Type*} [Fintype σ]
+    {σ : Type*} [Finite σ]
     (Q : σ → Polynomial (Polynomial K))
     (hQ : ∀ j, Q j ≠ 0)
     (hprimitive : ∀ j, (Q j).IsPrimitive)
@@ -196,6 +195,7 @@ theorem exists_irreducibleFactorTuple_frequently_isRoot
           CurveSelection.TerminationScratch.bivEvalAt
             (q j) (x n) (y n j) = 0 := by
   classical
+  letI : Fintype σ := Fintype.ofFinite σ
   choose q hqmem hqirr hqdegree hqdvd hqroot using
     fun n j =>
       exists_positiveDegree_irreducibleFactor_isRoot
@@ -239,7 +239,7 @@ theorem exists_irreducibleFactorTuple_frequently_isRoot
 
 /-- Coupled subsequence version of finite-factor synchronization. -/
 theorem exists_irreducibleFactorTuple_subsequence_isRoot
-    {σ : Type*} [Fintype σ]
+    {σ : Type*} [Finite σ]
     (Q : σ → Polynomial (Polynomial K))
     (hQ : ∀ j, Q j ≠ 0)
     (hprimitive : ∀ j, (Q j).IsPrimitive)

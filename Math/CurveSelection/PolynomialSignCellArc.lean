@@ -9,7 +9,6 @@ import Math.CurveSelection.SourceLexExtrema
 import Math.CurveSelection.SourceSequence
 
 set_option autoImplicit false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -45,7 +44,7 @@ coordinate.  This is the generic geometric capstone consumed by the
 analytic Bellman-germ existence theorem.
 -/
 theorem hasPositiveCoordinateAnalyticArcAt_signCell
-    {ι σ : Type*} [Fintype ι] [Fintype σ]
+    {ι σ : Type*} [Finite ι] [Fintype σ]
     (P : ι → MvPolynomial σ ℝ)
     (τ : SignPattern ι)
     (coordinate : σ)
@@ -60,6 +59,7 @@ theorem hasPositiveCoordinateAnalyticArcAt_signCell
       (signCell P τ)
       (ContinuousLinearMap.proj coordinate) x₀ := by
   classical
+  letI : Fintype ι := Fintype.ofFinite ι
   let Ppos :=
     withPositiveCoordinatePolynomial P coordinate
   let τpos :=

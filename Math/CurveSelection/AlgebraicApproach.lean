@@ -8,9 +8,6 @@ import Math.CurveSelection.Puiseux
 import Mathlib.Analysis.Complex.Polynomial.Basic
 
 set_option autoImplicit false
-set_option linter.style.longLine false
-set_option linter.unnecessarySimpa false
-set_option linter.unusedFintypeInType false
 
 noncomputable section
 
@@ -75,7 +72,7 @@ that tail by `n ↦ n + N` preserves convergence to the positive side.
 theorem hasAnalyticPowerCurveAt_of_eventually_finite_complexAnalytic_branches
     {I σ : Type*}
     {κ : σ → Type*}
-    [Fintype I] [Fintype σ] [∀ v, Fintype (κ v)]
+    [Finite I] [Fintype σ] [∀ v, Finite (κ v)]
     (P : I → MvPolynomial σ ℝ)
     (τ : SignPattern I)
     (coordinate : Assignment σ →L[ℝ] ℝ)
@@ -100,6 +97,8 @@ theorem hasAnalyticPowerCurveAt_of_eventually_finite_complexAnalytic_branches
       ∀ᶠ n in atTop,
         ∀ v, ∃ k, (branch v k (t n)).re = x n v) :
     HasAnalyticPowerCurveAt (signCell P τ) coordinate x₀ := by
+  letI : Fintype I := Fintype.ofFinite I
+  letI (v : σ) : Fintype (κ v) := Fintype.ofFinite (κ v)
   rw [Filter.eventually_atTop] at hcovered
   obtain ⟨N, hN⟩ := hcovered
   apply
@@ -121,7 +120,7 @@ converted to an index by `List.exists_mem_iff_get`.
 theorem
     hasAnalyticPowerCurveAt_of_eventually_finite_complexAnalytic_branchLists
     {I σ : Type*}
-    [Fintype I] [Fintype σ]
+    [Finite I] [Fintype σ]
     (P : I → MvPolynomial σ ℝ)
     (τ : SignPattern I)
     (coordinate : Assignment σ →L[ℝ] ℝ)
@@ -149,6 +148,7 @@ theorem
         ∀ v, ∃ γ ∈ branches v,
           (γ (t n : ℂ)).re = x n v) :
     HasAnalyticPowerCurveAt (signCell P τ) coordinate x₀ := by
+  letI : Fintype I := Fintype.ofFinite I
   let branch :
       ∀ v, Fin (branches v).length → ℂ → ℂ :=
     fun v k => (branches v).get k
@@ -182,7 +182,7 @@ uses the sampled real roots to select a compatible finite tuple of analytic
 branches.
 -/
 theorem hasAnalyticPowerCurveAt_signCell_of_algebraic_approach
-    {I σ : Type*} [Fintype I] [Fintype σ]
+    {I σ : Type*} [Finite I] [Fintype σ]
     (P : I → MvPolynomial σ ℝ)
     (τ : SignPattern I)
     (parameter : σ)
@@ -203,6 +203,7 @@ theorem hasAnalyticPowerCurveAt_signCell_of_algebraic_approach
       (signCell P τ)
       (ContinuousLinearMap.proj parameter) x₀ := by
   classical
+  letI : Fintype I := Fintype.ofFinite I
   have hxparameter :
       Tendsto (fun i => x i parameter) atTop (𝓝 0) := by
     simpa [hparameter] using
@@ -321,8 +322,7 @@ theorem hasAnalyticPowerCurveAt_signCell_of_algebraic_approach
     have hmem :
         (allBranches parameter).get (k parameter) ∈
           [parameterBranch] := by
-      simpa [allBranches] using
-        (List.get_mem (allBranches parameter) (k parameter))
+      simp [allBranches]
     have heq :
         (allBranches parameter).get (k parameter) =
           parameterBranch :=
