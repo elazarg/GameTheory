@@ -196,7 +196,7 @@ arbitrary stochastic game.
 | Single-state games | `exists_uniformEquilibriumPayoff_of_subsingleton_state` | `Absorbing.lean` |
 | Action-independent transitions (full generality, incl. reducible/periodic) | `exists_uniformEquilibriumPayoff_of_isActionIndependent` | `TransitionIndependent.lean` |
 | All children absorbing after one step | `exists_uniformEquilibriumPayoff_of_absorbingChildren` | `OneStepAbsorbingChildUniform.lean` |
-| Zero-sum single-controller (modulo one named projection-witness hypothesis) | `exists_uniformEquilibriumPayoff_of_singleController` | `SingleController.lean` |
+| Zero-sum single-controller (from a Vrieze primal optimum) | `exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptimal` | `SingleControllerFlowReward.lean` |
 | **The Big Match** (Blackwell–Ferguson 1968) | `exists_uniformEquilibriumPayoff_live` | `BigMatchUniform.lean` |
 
 `SingleControllerNoTrap.lean` closes the game-specific no-trap part of that
@@ -211,8 +211,13 @@ support and `yGain` elsewhere, proves closed-core reachability under that
 hybrid kernel, and compiles the resulting off-core transience certificate.
 `SingleControllerFlowHarmonicity.lean` then combines complementary slackness
 off that support with stationary nonnegative drift on it to prove that the
-same hybrid kernel makes the encoded gain harmonic.  The remaining
-projection-witness work is reward compatibility for this hybrid policy.
+same hybrid kernel makes the encoded gain harmonic.
+`SingleControllerFlowReward.lean` proves exact reward--bias compatibility on
+the occupation core, solves the arbitrary off-core residual by a killed
+Poisson equation, identifies the worst-reward ergodic projection with the
+negative encoded gain, and constructs the controller projection witness.
+Thus the single-controller theorem no longer assumes a separately supplied
+projection witness.
 
 Supporting classical theorems, fully proved: Fink's discounted stationary
 equilibria (`exists_isDiscountedStationaryBellmanEq`, `Fink.lean`), Shapley's

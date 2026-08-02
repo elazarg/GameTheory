@@ -27,10 +27,12 @@ shape almost definitionally.
    `IsStationaryAverageGuaranteeCertificate` directly: the LP's two families
    of inequalities are *literally* the certificate's two drift inequalities
    with `who := !controller`. No duality is used.
-2.–3. **THE ISOLATED RESIDUAL.** Extracting the *controller's own* stationary
-   strategy and gain from an optimal primal–dual pair. Stated as an explicit,
-   undischarged hypothesis (`exists_controllerProjectionWitness_of_vriezePrimalDualOptimal`)
-   rather than proved — see "The trap" below.
+2.–3. The LP embedding below extracts an ordinary zero-gap dual.  The
+   extension modules `SingleControllerFlowCompletion`,
+   `SingleControllerFlowHarmonicity`, and `SingleControllerFlowReward`
+   normalize its occupation flow `z` on positive-mass states and its gain
+   flow `yGain` elsewhere, prove fixed-kernel reachability of the occupation
+   core, and identify the controller's reward projection with `-g`.
 4. `isUpperAverageCertificate_of_controllerProjectionWitness` — **game
    independent**: given an `IsControllerProjectionWitness` (a controller
    policy `τ` together with a gain `ρ` that is exactly harmonic under the
@@ -43,11 +45,14 @@ shape almost definitionally.
    once the witness is in hand.
 5. `exists_uniformEquilibriumPayoff_of_singleController` — assembles a
    noncontroller certificate (from Step 1) and a controller projection
-   witness (whose existence Steps 2–3 leave open) via
+   witness via
    `isUniformEquilibriumPayoff_of_isZeroSumBoolGame_of_stationaryAverageGuarantees`
-   into a full `IsUniformEquilibriumPayoff`.
+   into a full `IsUniformEquilibriumPayoff`.  The unconditional assembly from
+   a Vrieze primal optimum is
+   `exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptimal`
+   in `SingleControllerFlowReward`.
 
-## The trap (why Steps 2–3 are not proved here)
+## The zero-occupation trap and its resolution
 
 Vrieze's primal LP dualizes to an **occupation measure** `z_s(j)` (dual to
 the bias row) and an auxiliary variable `y_s(j)` (dual to the gain row). The
@@ -57,20 +62,18 @@ the chain induced by the extracted policy, an optimal dual point can have
 `Σ_j z_s(j) = 0`. Vrieze's fix uses the *second* dual variable `y_s(·)` to
 normalize at those states instead, and separately proves that the zero-`z`
 states are *exactly* the transient states of the resulting chain. That
-transient/recurrent support analysis splits into a purely **combinatorial**
-part — no choice of controller action anywhere can build a "trap" region
-disjoint from `R := {s | 0 < Σ_j z_s(j)}` (a bottom strongly-connected
-component of the induced chain missing `R` entirely) — and a genuinely
-**game-specific** part, that `R` in fact has this property because it is
-the *optimal* LP occupation support (a policy-improvement argument). The
-`FiniteReachability` namespace below proves the combinatorial part in full
-generality (for an arbitrary successor relation, independent of the game
-and LP data); the game-specific part, and the probabilistic translation of
-graph-reachability into the mean-ergodic statement `IsControllerProjectionWitness`
-actually needs, are **not attempted here**; see the TODO on
-`exists_controllerProjectionWitness_of_vriezePrimalDualOptimal` for exactly
-what is missing and which pieces of the repository's LP-duality inventory
-(below) it would draw on.
+transient/recurrent support analysis is now compiled in
+`SingleControllerFlowCompletion`: the dual gain-coupling equation rules out
+a `yGain`-support trap outside
+`R := {s | 0 < Σ_j z_s(j)}`, and normalizing `z` on `R` and `yGain` off `R`
+gives one fixed kernel under which `R` is closed and reachable from every
+state.  `Math.Probability.FiniteClosedCoreReach` upgrades this to a
+quantitative transience certificate.  Complementary slackness plus stationary
+nonnegative drift proves harmonicity in `SingleControllerFlowHarmonicity`;
+the killed Poisson correction in `SingleControllerFlowReward` then extends
+core reward compatibility globally.  The strict-complementarity no-trap and
+rank-completion modules remain useful alternative structural routes, but the
+final projection witness only needs the ordinary zero-gap dual.
 
 ## LP-duality inventory (`Math/LinearProgramming`, `Math/LinearAlgebra`)
 
@@ -108,9 +111,9 @@ what is missing and which pieces of the repository's LP-duality inventory
 
 The LP layer below applies `StrongDuality` and `StrongComplementarity`,
 decodes ordinary zero-gap complementary slackness at the `x` columns, and
-identifies occupation support with bias-row tightness. The
-projection-witness hypothesis isolates the no-trap, policy-completion, and
-mean-ergodic arguments required by Steps 2–3.
+identifies occupation support with bias-row tightness.  The later flow
+extension modules use the ordinary dual and discharge policy completion,
+harmonicity, reward compatibility, and the mean-ergodic projection step.
 
 ## Main definitions
 
@@ -128,7 +131,7 @@ mean-ergodic arguments required by Steps 2–3.
   consumes: a controller policy `τ` and gain `ρ`, harmonic under `τ`'s kernel
   and dominated by that kernel's ergodic projection of `worstReward`
 * `StochasticGame.IsVriezePrimalOptimal` — primal feasibility *plus*
-  optimality of `Σ g_s`, the natural hypothesis the residual is stated under
+  optimality of `Σ g_s`, the hypothesis used by the completed Vrieze route
 * `StochasticGame.FiniteReachability.CanReachSet` — reachability of a target
   set along an arbitrary successor relation (generic finite-graph theory,
   independent of the game/LP data)
@@ -142,6 +145,9 @@ mean-ergodic arguments required by Steps 2–3.
   (Step 4)
 * `StochasticGame.exists_uniformEquilibriumPayoff_of_singleController`
   (Step 5, conditional on a supplied `IsControllerProjectionWitness`)
+* `StochasticGame.exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptimal`
+  (in `SingleControllerFlowReward`) — the completed theorem, with the
+  projection witness constructed internally
 * `StochasticGame.FiniteReachability.trap_closed_of_not_canReachSet` — the
   states that cannot reach a target set `R` are themselves closed under
   every successor: the precise combinatorial form of "a trap disjoint from
@@ -152,9 +158,8 @@ mean-ergodic arguments required by Steps 2–3.
   — the "make one step of progress toward `R`" building block a total
   completion policy on the non-recurrent states would iterate
 * `StochasticGame.exists_controllerProjectionWitness_of_vriezePrimalDualOptimal`
-  — **the isolated residual**, Steps 2–3, stated but not proved; see its
-  docstring for the six obligations the graph reformulation above splits it
-  into, and which of them remain open
+  — a legacy pass-through interface for callers that already carry an
+  explicit extraction witness; it is no longer used by the completed theorem
 * `SingleControllerExample.transientProjectionWitness` — a minimal concrete
   instance: a two-state single-controller game (one transient, one absorbing
   state under the extracted policy) with an explicit
@@ -570,70 +575,11 @@ structure IsVriezePrimalOptimal (G : StochasticGame Bool) [Finite G.State]
     letI : Fintype G.State := Fintype.ofFinite G.State
     ∑ s, g' s ≤ ∑ s, g s
 
-/-- **THE ISOLATED RESIDUAL** (Vrieze's Steps 2–3), stated but **not
-proved**. From a primal-optimal Vrieze point `(x, g, v)`, extracting a
-controller stationary strategy `τ` and a gain `ρ = -g` satisfying
-`IsControllerProjectionWitness` requires:
-
-1. **LP-duality layer (provided in this file):** dualizing
-   `IsVriezePrimalOptimal` — encoding its two families of rows
-   (indexed by `(state, controller-action)`, one per gain inequality and one
-   per bias inequality) plus the noncontroller's per-state simplex equality
-   rows into `Math.LinearProgramming.Standard`'s abstract `Row`/`Col` form,
-   then invoking `Math.LinearProgramming.StrongDuality.lp_strong_duality`
-   for *existence* of a dual-optimal point `(z, yGain, lam)` (`z` dual to
-   the bias rows — Vrieze's occupation measure; `yGain` dual to the gain
-   rows; `lam` the free simplex multiplier). Its flow identities,
-   reward-domination inequality, objective equality, and ordinary
-   `x`-column complementary slackness are decoded as well.
-2. **Strict-complementarity layer (provided in this file):** strengthening
-   to a *strictly* complementary optimal pair via
-   `Math.LinearProgramming.StrongComplementarity.exists_strong_complementary_pair`
-   (Goldman–Tucker), so that a state's total dual mass
-   `Σ_j z_s(j)` is positive *iff* some primal bias row at that state is
-   tight.
-3. **The trap**, split into the six obligations the graph
-   reformulation below isolates. Let `R := {s | 0 < Σ_j z_s(j)}` (the
-   LP-optimal occupation support) and `τR` the `z`-normalized policy on `R`
-   (`τR s := z_s(·) / Σ_j z_s(j)`, well defined exactly on `R`):
-   (i) *totality* — extending `τR` to a total `τ : G.State → PMF (G.Act
-   controller)`; (ii) *no trap* — every recurrent class of the completed
-   `controllerKernel controller τ` meets `R` (equivalently, by
-   `FiniteReachability.trap_closed_of_not_canReachSet`'s contrapositive
-   applied to `Succ := controllerSucc G controller`: every state outside
-   `R` can reach `R`, so the "0-occupation states are exactly the transient
-   states" identity is the *consequence*, not the definition, of this
-   step — this is the part needing the LP's *optimality*, via a
-   policy-improvement argument ruling out an LP-beating trap, not proved
-   here); (iii) states outside that support are transient (or zero-mass
-   under the mean-ergodic projection) — given (ii),
-   `FiniteReachability.exists_succ_canReachSet_of_canReachSet` supplies the
-   one-step "make progress toward `R`" building block totality's completion
-   at each non-`R` state would use, but the *probabilistic* consequence
-   (transience in the Cesàro/ergodic sense the projection needs, as opposed
-   to mere graph-reachability) is not derived from it here; (iv) the reward
-   inequality on recurrent classes, from complementary slackness against
-   `z` where the invariant mass lives; (v) the projection extension
-   `ergodicProjection κ (worstReward controller τ) ≥ ρ` globally, because
-   the non-`R` states are transient (needs (iii)); (vi) harmonicity
-   `expect κ ρ = ρ` over the full state space, using the *dual gain-row*
-   feasibility of `y` on `R` and, on the non-`R` states, the specific
-   choice from (i)/(ii) making `ρ` locally constant along the completion.
-4. At the zero-`z` (transient) states, normalizing `τ_s` from `y_s(·)`
-   instead of `z_s(·)` where obligation (ii) leaves genuine freedom, and
-   checking the resulting `τ` and `ρ := -g` satisfy both fields of
-   `IsControllerProjectionWitness` per (iv)–(vi) above.
-
-**Proof boundary.** The LP-embedding section supplies points 1–2. The
-`FiniteReachability` namespace and `controllerSucc` supply the pure
-combinatorics used by obligation (ii): a
-bottom-strongly-connected-component-meets-`R` formulation for an arbitrary
-successor relation, together with the one-step progress lemma used to
-complete a policy. The explicit hypothesis `hextract` packages the other
-ingredients: the LP-optimality/policy-improvement proof that `R` has no
-trap; the Cesàro/mean-ergodic consequences in (iii)/(v)/(vi); and point 4's
-zero-`z` normalization. The theorem below exposes that boundary by returning
-`hextract` unchanged. -/
+/-- Legacy pass-through interface for an explicitly supplied projection
+witness.  The completed constructor is
+`exists_controllerProjectionWitness_of_vriezePrimalOptimal` in
+`SingleControllerFlowReward`; it builds this witness from the ordinary
+zero-gap dual and does not use this assumption. -/
 theorem exists_controllerProjectionWitness_of_vriezePrimalDualOptimal
     {controller : Bool} {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
     (_hopt : G.IsVriezePrimalOptimal controller x g v)
@@ -670,7 +616,8 @@ theorem exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptim
 /-!
 ### The LP embedding
 
-This section carries out the "LP embedding" half of the residual above: it
+This section supplies the LP foundation used by the flow-completion modules:
+it
 embeds `IsVriezePrimalOptimal` into `Math.LinearProgramming.Standard`'s
 min-primal/max-dual pair (`MinPrimalFeasible`/`MaxDualFeasible`), invokes
 `Math.LinearProgramming.StrongDuality.lp_strong_duality`, and decodes the
