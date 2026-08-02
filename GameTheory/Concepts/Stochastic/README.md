@@ -177,8 +177,15 @@ arbitrary stochastic game.
 | Single-state games | `exists_uniformEquilibriumPayoff_of_subsingleton_state` | `Absorbing.lean` |
 | Action-independent transitions (full generality, incl. reducible/periodic) | `exists_uniformEquilibriumPayoff_of_isActionIndependent` | `TransitionIndependent.lean` |
 | All children absorbing after one step | `exists_uniformEquilibriumPayoff_of_absorbingChildren` | `OneStepAbsorbingChildUniform.lean` |
-| Zero-sum single-controller (modulo one named LP-extraction hypothesis) | `exists_uniformEquilibriumPayoff_of_singleController` | `SingleController.lean` |
+| Zero-sum single-controller (modulo one named projection-witness hypothesis) | `exists_uniformEquilibriumPayoff_of_singleController` | `SingleController.lean` |
 | **The Big Match** (Blackwell–Ferguson 1968) | `exists_uniformEquilibriumPayoff_live` | `BigMatchUniform.lean` |
+
+`SingleControllerNoTrap.lean` closes the game-specific no-trap part of that
+residual: strong complementarity forces every state to reach the positive
+dual-occupation support through the pure-controller support graph.  The
+remaining projection witness still requires a policy completion that follows
+such paths without cycling, followed by the fixed-kernel mean-ergodic
+transience/projection argument.
 
 Supporting classical theorems, fully proved: Fink's discounted stationary
 equilibria (`exists_isDiscountedStationaryBellmanEq`, `Fink.lean`), Shapley's
