@@ -163,7 +163,7 @@ theorem quittingFiniteHazardValue_eq_sum_pureTime
                     continueMass (start + 1) fuel choice) := by
             simp_rw [mul_add, Finset.mul_sum]
             rw [Finset.sum_add_distrib]
-            ring
+            ring_nf
 
 /-- Some deterministic quit-time (including `never` at the last index) does
 at least as well as an arbitrary finite hazard. -/
