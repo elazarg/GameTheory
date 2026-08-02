@@ -63,6 +63,11 @@ extraction.
 telescopes behind one shared modulus and feeds the existing enforcement ledger
 at prescribed entries, where membership in every owner arena is available.
 
+`SplitDomainGainBiasVerifier.lean` separates Q96's delivery union from its
+owner-specific arenas, adapts each half to the existing APIs, reuses the
+mean-ergodic and controlled-Farkas bias theorems, and proves exact endpoint and
+shared-modulus gain--bias sufficiency without a recurrent-coverage assumption.
+
 `UncoveredPrescribedClassCounterexample.lean` is the two-player/two-node Q96
 regression: all four target/occupation-side checks pass on their stated
 domains, while the escaped prescribed class is outside player one's arena and
