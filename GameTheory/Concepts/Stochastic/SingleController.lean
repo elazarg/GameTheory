@@ -649,7 +649,7 @@ theorem exists_controllerProjectionWitness_of_vriezePrimalDualOptimal
 hypothesis): once `hextract` is discharged for an actual single-controller
 game, this corollary needs no further work to deliver
 `IsUniformEquilibriumPayoff`. -/
-theorem exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptimal
+theorem exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptimal_of_extraction
     (hzs : G.IsZeroSumBoolGame) {controller : Bool}
     (hSC : G.IsSingleController controller) (s₀ : G.State)
     {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}

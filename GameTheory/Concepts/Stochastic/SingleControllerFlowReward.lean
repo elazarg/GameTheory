@@ -596,5 +596,26 @@ theorem exists_controllerProjectionWitness_of_vriezePrimalOptimal
     G.isControllerProjectionWitness_of_vriezeFlowCompletion
       hzs hprimal hdual hgap completion, rfl⟩
 
+/-- Every finite zero-sum single-controller game with a primal-optimal
+Vrieze point has a uniform equilibrium payoff.  The controller extraction
+is now internal: no projection-witness hypothesis remains. -/
+theorem exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptimal
+    (hzs : G.IsZeroSumBoolGame)
+    {controller : Bool} (hSC : G.IsSingleController controller)
+    (initialState : G.State)
+    {x : G.State → PMF (G.Act (!controller))}
+    {g v : G.State → ℝ}
+    (hopt : G.IsVriezePrimalOptimal controller x g v) :
+    ∃ payoff : Payoff Bool,
+      G.IsUniformEquilibriumPayoff initialState payoff := by
+  letI : Nonempty G.State := ⟨initialState⟩
+  obtain ⟨tau, rho, hwitness, hrho⟩ :=
+    G.exists_controllerProjectionWitness_of_vriezePrimalOptimal
+      hzs hSC hopt
+  refine G.exists_uniformEquilibriumPayoff_of_singleController
+    hzs hSC initialState (g initialState) x g v
+      hopt.feasible rfl tau rho hwitness ?_
+  rw [hrho]
+
 end StochasticGame
 end GameTheory
