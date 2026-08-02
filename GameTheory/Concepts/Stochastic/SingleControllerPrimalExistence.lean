@@ -127,5 +127,87 @@ theorem IsVriezePrimalFeasible.gain_le_payoffBound_add_one
   have hupper := (abs_le.mp habs).2
   linarith
 
+/-- Every finite single-controller game admits a primal-optimal Vrieze
+point.  Feasibility and the semantic payoff bound make the encoded finite LP
+nonempty and bounded; finite LP attainment then supplies an optimizer. -/
+theorem exists_isVriezePrimalOptimal
+    (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (hSC : G.IsSingleController controller) :
+    ∃ (x : G.State → PMF (G.Act (!controller)))
+        (g v : G.State → ℝ),
+      G.IsVriezePrimalOptimal controller x g v := by
+  classical
+  have hstandardFeasible : ∃ q,
+      Math.LinearProgramming.MinPrimalFeasible
+        (G.vriezeA controller) (G.vriezeB controller) q := by
+    obtain ⟨x, g, v, hfeasible⟩ :=
+      G.exists_isVriezePrimalFeasible controller
+    exact ⟨G.vriezeEncode controller x g v,
+      G.minPrimalFeasible_vriezeEncode_of_isVriezePrimalFeasible
+        hSC hfeasible⟩
+  have hstandardBounded : ∃ lower : ℝ, ∀ q,
+      Math.LinearProgramming.MinPrimalFeasible
+          (G.vriezeA controller) (G.vriezeB controller) q →
+        lower ≤ Math.LinearProgramming.minPrimalValue
+          (G.vriezeC controller) q := by
+    let bound : ℝ :=
+      G.vriezeNoncontrollerPayoffBound controller + 1
+    let lower : ℝ :=
+      -((Fintype.card G.State : ℝ) * bound)
+    refine ⟨lower, ?_⟩
+    intro q hq
+    have hsemantic :=
+      G.isVriezePrimalFeasible_of_minPrimalFeasible hSC hq
+    have hsum :
+        (∑ state, G.vriezeDecodeG controller q state) ≤
+          (Fintype.card G.State : ℝ) * bound := by
+      calc
+        (∑ state, G.vriezeDecodeG controller q state) ≤
+            ∑ _state : G.State, bound := by
+          apply Finset.sum_le_sum
+          intro state _
+          exact hsemantic.gain_le_payoffBound_add_one state
+        _ = (Fintype.card G.State : ℝ) * bound := by
+          simp [nsmul_eq_mul]
+    rw [G.minPrimalValue_vriezeC_eq]
+    dsimp only [lower]
+    linarith
+  obtain ⟨q, hq, hqOptimal⟩ :=
+    Math.LinearProgramming.exists_minPrimalOptimal_of_feasible_of_bounded
+      hstandardFeasible hstandardBounded
+  have hsemantic :=
+    G.isVriezePrimalFeasible_of_minPrimalFeasible hSC hq
+  refine ⟨G.vriezeDecodeX controller q,
+    G.vriezeDecodeG controller q,
+    G.vriezeDecodeV controller q, hsemantic, ?_⟩
+  intro x' g' v' hfeasible'
+  have hencoded :=
+    G.minPrimalFeasible_vriezeEncode_of_isVriezePrimalFeasible
+      hSC hfeasible'
+  have hvalue :=
+    hqOptimal (G.vriezeEncode controller x' g' v') hencoded
+  rw [G.minPrimalValue_vriezeC_eq,
+    G.minPrimalValue_vriezeC_eq,
+    G.vriezeDecodeG_vriezeEncode] at hvalue
+  linarith
+
+/-- Unconditional finite zero-sum single-controller uniform-payoff theorem.
+All Vrieze primal, dual, flow-completion, harmonicity, transience, and reward
+projection objects are constructed internally. -/
+theorem exists_uniformEquilibriumPayoff_of_isZeroSumBoolGame_of_isSingleController
+    (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)]
+    (hzs : G.IsZeroSumBoolGame)
+    {controller : Bool} (hSC : G.IsSingleController controller)
+    (initialState : G.State) :
+    ∃ payoff : Payoff Bool,
+      G.IsUniformEquilibriumPayoff initialState payoff := by
+  obtain ⟨x, g, v, hoptimal⟩ :=
+    G.exists_isVriezePrimalOptimal controller hSC
+  exact
+    G.exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptimal
+      hzs hSC initialState hoptimal
+
 end StochasticGame
 end GameTheory
