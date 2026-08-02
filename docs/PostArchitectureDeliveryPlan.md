@@ -243,9 +243,9 @@ current integration and recovery status. Wave 0 closes when:
    rather than silently changing inside Phase 2/3-named scripts;
 6. README status is derived from the ledger rather than source-size estimates.
 
-The audit now indexes 436 files and 8,324 declarations. Thirty-four work-package
-ledgers claim 1,502 declarations: 1,059 have reviewed dispositions, the exact
-FOSG queue contains 443 deliberately seeded `unreviewed` rows, and 6,822 remain
+The audit now indexes 436 files and 8,324 declarations. Thirty-five work-package
+ledgers claim 1,573 declarations: 1,130 have reviewed dispositions, the exact
+FOSG queue contains 443 deliberately seeded `unreviewed` rows, and 6,751 remain
 explicitly unaccounted. Both open sets are review queues, not
 auto-classification targets; generated rows are evidence of scope, not
 recovery.
@@ -308,7 +308,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
-| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial and all-pay | **sealed-bid, reserve, VCG, combinatorial, and all-pay families complete;** next explicit finite boundary for executable knapsack | coordinated mechanism/auction root |
+| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, and exact knapsack search | **exact natural knapsack solver complete (EXP-054/D25);** next real finite-allocation/VCG slice, then the repaired approximation gate | coordinated mechanism/auction root with a separately audited executable leaf |
 | social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
 
 Each lane first inventories its entire pinned family. Once the hostile result
@@ -537,9 +537,11 @@ The next work is ordered:
 
 1. consolidate moving delivery probes without rewriting historical phase
    measurements;
-2. reserve and run the executable-knapsack boundary experiment now that
-   combinatorial and all-pay recovery is complete; keep algorithm data and
-   correctness connected without importing an obsolete auction semantics;
+2. reserve the real finite-allocation/VCG knapsack follow-on now that
+   EXP-054/D25 has promoted the exact natural solver; recover allocation-rule
+   monotonicity and topology-free VCG truthfulness before the separate repaired
+   ratio/approximation gate, and leave only exact Myerson-envelope identity
+   behind M-BAYES/D11;
 3. continue the exact FOSG queue through observation-model batches and named
    comparisons; keep its classified counterfactual-reach/CFR spine and six
    ordinary continuation-coefficient laws behind separate checked-theorem

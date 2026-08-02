@@ -64,6 +64,7 @@ becomes difficult to scan.
 | EXP-051 | 2026-08-02 | D2/D4/D9/D12/D22 / discounted stochastic games | Can the canonical finite stochastic data and existing minimax layer support a Shapley contraction and stationary value without importing a parallel matrix-game stack? | Supports one-way normalized Analysis bridge; decides D23 | [`decisions/D23-discounted-stochastic-value-boundary.md`](decisions/D23-discounted-stochastic-value-boundary.md); `GameTheory/Analysis/{MatrixValue,Stochastic}/`; `GameTheory/Stochastic/ZeroSum.lean` |
 | EXP-052 | 2026-08-02 | D0/D4/D5/D9 / welfare and congestion | Does generic smoothness belong in Core, a separate stable welfare root, or the congestion domain? | Supports Core ownership; decides D24 | [`decisions/D24-welfare-smoothness-boundary.md`](decisions/D24-welfare-smoothness-boundary.md); `GameTheory/Core/Welfare.lean`; `GameTheory/Congestion/{AffinePoA,Examples}.lean` |
 | EXP-053 | 2026-08-02 | D2/D4/D5/D9/D24 / robust smoothness | Can canonical `FinDist` expected welfare lift smoothness from pure Nash to epsilon/exact CCE without another semantic layer or import cycle? | Supports; narrows to theorem-only Core bridge | `GameTheory/Probability/FinDist.lean`; `GameTheory/Core/{Welfare,RobustWelfare}.lean`; `GameTheory/Congestion/AffinePoA.lean` |
+| EXP-054 | 2026-08-02 | D4/D9/D10 / executable knapsack auction | Where is the boundary between knapsack mechanism semantics, executable dynamic programming/greedy algorithms, and correctness? | Narrows to an explicit-list exact natural solver; decides D25; mechanism and approximation remain gated | [`decisions/D25-knapsack-execution-boundary.md`](decisions/D25-knapsack-execution-boundary.md); `GameTheory/{Experimental/PostArchitecture,Mechanism}/Knapsack*` |
 
 ## Entry template
 
@@ -3482,3 +3483,66 @@ memory.
 - **Next action:** continue breadth recovery at the already-passed auction gate;
   treat individual rationality as the next S-WEL family rather than extending
   the completed smoothness surface speculatively.
+
+### EXP-054: executable knapsack auction boundary
+
+- **Date / revision:** 2026-08-02, working tree based on `d595d17`
+- **Status:** narrows the family; decides and promotes D25's natural solver
+- **Decision / question:** D4/D9/D10 follow-on; how to separate the pinned
+  knapsack file's real-valued mechanism semantics, finite allocation search,
+  natural-number dynamic program, fractional/integral greedy algorithms, and
+  correctness theorems without creating a second auction or probability API.
+- **Prediction:** public data and feasibility belong in an opt-in Mechanism
+  semantic leaf; executable algorithms use explicit finite enumerations and
+  natural/rational data in a separate leaf; correctness imports both one way.
+  DSIC should reuse the canonical mechanism incentive surface rather than the
+  pinned wrapper stack.
+- **Representative slice:** trace the welfare-maximizing binary mechanism and
+  one actual dynamic-programming allocation through feasibility, optimality,
+  and the final half-approximation theorem.
+- **Measurements to collect:** pinned declaration/API dependency graph; use of
+  `Finite` versus explicit `Fintype`; raw updates and transports; computable
+  scalar boundary; executable evaluation; direct import closure; build cost;
+  exact rows reusable/retired; and headline axiom profile.
+- **Kill conditions:** duplicate mechanism/equilibrium semantics; hidden
+  `Fintype.ofFinite` or `open Classical` in executable modules; noncomputable
+  data in the claimed algorithm; raw `Function.update`; user-visible transport
+  plumbing; Analysis leakage; or an approximation theorem disconnected from
+  the executable allocation it claims to verify.
+- **Observation:** the 71 declarations split into 16 base real semantics, nine
+  fractional rows, one bid-update identity, five single-parameter mechanism
+  rows, 19 natural solver rows, and 21 greedy/approximation rows.  The source
+  contains 45 raw `Function.update` occurrences and 19 noncomputable public
+  definitions.  Its recursive kernel computes, but its two finite-universe
+  wrappers are noncomputable.  More importantly, the kernel is not memoized:
+  when all items fit it makes `2^(n + 1) - 1` solver calls.  The successor must
+  not retain the source's dynamic-programming name or imply a complexity bound.
+- **Measurements:** the 198-nonblank-line hostile slice returns a `Finset`
+  allocation from an explicit duplicate-free list, evaluates the three-item
+  optimum to cardinality two, and kernel-proves the exact result `{0, 1}`.  It
+  proves support, feasibility, and optimality against every supported feasible
+  finite set.  The focused experiment build completes in 799 jobs; the
+  promoted correctness build in 800, the mechanism umbrella in 1,733, and the
+  full project in 3,405.  `Real.instAdd`, `PMF`,
+  `MeasureTheory.Measure`, `stdSimplex`, and `Polynomial` are unreachable from
+  the algorithm closure.  Source hazards are zero.  The algorithm uses no
+  classical choice; the correctness theorems have the standard `propext`,
+  `Classical.choice`, and `Quot.sound` axiom profile through finite-set
+  foundations.  Phase 2 passes with the new algorithm boundary probes at 7/7
+  rejected and the opt-in root probes at 3/3 reached.
+- **Outcome:** narrows rather than confirms the full prediction.  D25 promotes
+  the 19-row natural cluster as an exact explicit-list skip/take solver plus a
+  one-way correctness leaf.  `Finset` is an honest executable return type;
+  arbitrary `Finset.toList` extraction is noncomputable and is not part of the
+  API.  The originally promised real mechanism and final half approximation
+  were not established, so EXP-054 does not close the 71-row family.
+- **Next action:** reserve separate follow-ons before freezing either remaining
+  surface.  The real semantic slice should recover the allocation rule,
+  monotonicity, and mature truthfulness through canonical `VCGSetup`, leaving
+  only exact Myerson-envelope payment identity behind M-BAYES/D11.  The
+  approximation slice must validate positive weights, prefilter individually
+  infeasible items, use the highest feasible singleton, certify ratio order
+  and fractional optimality, and return the actual better feasible allocation
+  before advertising a half bound.  The predecessor's highest-bid maximum can
+  name an overweight, unattainable item and is not itself an approximation
+  algorithm.

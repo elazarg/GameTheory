@@ -20,8 +20,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Thirty-four work-package ledgers claim 1,502 declarations: 1,059
-have reviewed dispositions and 443 remain seeded `unreviewed`; a further 6,822 are
+declarations. Thirty-five work-package ledgers claim 1,573 declarations: 1,130
+have reviewed dispositions and 443 remain seeded `unreviewed`; a further 6,751 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -151,7 +151,7 @@ declaration-based.
 | M-FAIR | `Mechanism/FairDivision.lean`, finite indivisible files | 6 | finite mechanism/fair-division branch | assigned | not started | round-robin EF1 and one algorithmic allocation theorem |
 | M-CAKE | divisible fair-division files | 6 | D11/`Analysis` or Frontier | deferred | out of scope | measurable/continuous probability decision |
 | M-SOCIAL | `Mechanism/SocialChoice.lean`, `Mechanism/SocialChoice/**` | 9 | ranking/preference foundations plus coordinated domain | validated by Arrow | partial | May, median strategic compilation, Gibbard-Satterthwaite, Sen |
-| M-AUCT | `Auctions/**` | 10 | finite auction/mechanism branch; continuous work behind D11 | sealed-bid, reserve, VCG, combinatorial, and all-pay surfaces validated | partial; accounted leaves 123/123 reviewed | [basic auction ledger](coverage/M-AUCT-basic.md); [reserve Vickrey ledger](coverage/M-AUCT-reserve-vickrey.md); [VCG ledger](coverage/M-AUCT-vcg.md); [combinatorial ledger](coverage/M-AUCT-combinatorial.md); [all-pay ledger](coverage/M-AUCT-all-pay.md); next executable knapsack's 71-declaration boundary |
+| M-AUCT | `Auctions/**` | 10 | finite auction/mechanism branch; continuous work behind D11 | sealed-bid, reserve, VCG, combinatorial, all-pay, and exact natural knapsack search validated | partial; accounted leaves 194/194 reviewed; knapsack has 19 execution rows adapted/retired/subsumed and 52 deferred | [basic auction ledger](coverage/M-AUCT-basic.md); [reserve Vickrey ledger](coverage/M-AUCT-reserve-vickrey.md); [VCG ledger](coverage/M-AUCT-vcg.md); [combinatorial ledger](coverage/M-AUCT-combinatorial.md); [all-pay ledger](coverage/M-AUCT-all-pay.md); [knapsack ledger](coverage/M-AUCT-knapsack.md); next real finite-allocation/VCG slice, then repaired approximation |
 | M-VOTE | `Voting/**` | 7 | coordinated voting branch | validated foundations | partial | delegation, liquid democracy, median, majority, power inventory |
 
 ### Potential consumers and parallel domains
@@ -203,7 +203,8 @@ declaration-based.
 
 1. Continue the exact FOSG queue through observation-model batches and named
    comparisons; generated rows remain `unreviewed` until manually classified.
-2. Reserve the executable-knapsack boundary experiment; combinatorial/all-pay
-   recovery and the canonical finite-law robust smoothness gate are closed.
+2. Reserve the real finite-allocation/VCG knapsack follow-on; EXP-054/D25's
+   natural exact solver, combinatorial/all-pay recovery, and the canonical
+   finite-law robust smoothness gate are closed.
 3. Keep every broader family partial until all pinned declarations are
    classified, and update this file in the same commit as each status change.

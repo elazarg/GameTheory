@@ -176,8 +176,11 @@ Report 'REPRESENTATION_TOKENS_OUTSIDE_FINDIST' `
     '(?<![A-Za-z0-9_])(ENNReal|toReal|toPMF|PMF)(?![A-Za-z0-9_])')
 
 Report 'FINTYPE_OF_FINITE' (Count-Pattern $TrustedFiles 'Fintype\.ofFinite')
+$AlgorithmFiles = @(
+  'GameTheory/Finite/Algorithm.lean',
+  'GameTheory/Mechanism/Knapsack/Algorithm.lean')
 Report 'ALGORITHM_OPEN_CLASSICAL' `
-  (Count-Pattern @('GameTheory/Finite/Algorithm.lean') '(?<![A-Za-z0-9_])(open\s+Classical|classical|noncomputable)(?![A-Za-z0-9_])')
+  (Count-Pattern $AlgorithmFiles '(?<![A-Za-z0-9_])(open\s+Classical|classical|noncomputable)(?![A-Za-z0-9_])')
 Report 'SORRY_OR_ADMIT' `
   (Count-Pattern $TrustedFiles '(?<![A-Za-z0-9_])(sorry|admit|native_decide)(?![A-Za-z0-9_])')
 Report 'CUSTOM_AXIOM' (Count-Pattern $TrustedFiles '(?m)^\s*axiom\s')
@@ -202,8 +205,15 @@ $AlgorithmForbidden = 'GameTheory\.Probability|GameTheory\.Core\.Form|GameTheory
   'Deviation|Mathlib\.Probability|Mathlib\.Analysis|Mathlib\.Topology|Mathlib\.MeasureTheory|' +
   'Mathlib\.Data\.Real'
 $algBad = 0
-foreach ($imp in Get-Imports 'GameTheory/Finite/Algorithm.lean') {
-  if ($imp -match $AlgorithmForbidden) { $algBad++ }
+foreach ($algorithmFile in $AlgorithmFiles) {
+  foreach ($imp in Get-Imports $algorithmFile) {
+    if ($imp -match $AlgorithmForbidden) { $algBad++ }
+  }
+}
+# Unlike the table-game algorithm, knapsack needs no shared profile operation;
+# its executable leaf must remain entirely independent of game semantics.
+foreach ($imp in Get-Imports 'GameTheory/Mechanism/Knapsack/Algorithm.lean') {
+  if ($imp -match '^GameTheory\.') { $algBad++ }
 }
 Report 'ALGORITHM_FORBIDDEN_IMPORTS' $algBad
 
@@ -387,6 +397,47 @@ if (-not $SkipReachability) {
   }
   Report 'UNREACHABLE_PROBES_PASSED' $unreachable
   foreach ($r in $reachable) { Write-Output "REACHABLE_UNEXPECTED=$r" }
+
+  # EXP-054/D25 admits a second exact executable leaf for knapsack.  Its
+  # explicit item order must not buy computability by importing either the
+  # semantic game layer or real/analytic machinery.
+  $knapsackAlgorithmBoundary = @(
+    'Real.instAdd',
+    'PMF',
+    'MeasureTheory.Measure',
+    'stdSimplex',
+    'Polynomial',
+    'GameTheory.GameForm',
+    'GameTheory.Mechanism.Auction.auctionGame')
+  $knapsackAlgorithmOutput =
+    Run-Probe 'GameTheory.Mechanism.Knapsack.Algorithm' `
+      $knapsackAlgorithmBoundary
+  $knapsackAlgorithmRejected = 0
+  foreach ($constant in $knapsackAlgorithmBoundary) {
+    if (Is-Unreachable $knapsackAlgorithmOutput $constant) {
+      $knapsackAlgorithmRejected++
+    }
+  }
+  Report 'KNAPSACK_ALGORITHM_BOUNDARY_PROBES_REJECTED' `
+    $knapsackAlgorithmRejected
+
+  # The opt-in domain root must positively expose the algorithm and both
+  # headline correctness guarantees; otherwise negative containment could be
+  # passing because the new leaf quietly fell out of use.
+  $knapsackInputs = @(
+    'GameTheory.Mechanism.Knapsack.solveList',
+    'GameTheory.Mechanism.Knapsack.solveList_feasible',
+    'GameTheory.Mechanism.Knapsack.solveList_optimal')
+  $knapsackOutput =
+    Run-Probe 'GameTheory.Mechanism.Knapsack' $knapsackInputs
+  $knapsackInputsReached = 0
+  foreach ($constant in $knapsackInputs) {
+    if (-not (Is-Unreachable $knapsackOutput $constant)) {
+      $knapsackInputsReached++
+    }
+  }
+  Report 'KNAPSACK_ROOT_INPUT_PROBES_REACHED' $knapsackInputsReached
+
   # The analytic root is the one place the budget is spent, and a probe that
   # only ever asserts absence would not notice if it stopped being spent there.
   $reached = 0
@@ -856,6 +907,8 @@ if ($VerifyExpected) {
   }
   if (-not $SkipReachability) {
     $Expected['UNREACHABLE_PROBES_PASSED'] = 6
+    $Expected['KNAPSACK_ALGORITHM_BOUNDARY_PROBES_REJECTED'] = 7
+    $Expected['KNAPSACK_ROOT_INPUT_PROBES_REACHED'] = 3
     $Expected['ANALYSIS_PROBES_REACHED'] = 2
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
