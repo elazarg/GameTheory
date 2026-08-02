@@ -231,6 +231,21 @@ theorem transientCharge_mem_coreVanishing (core : Set S) :
   exact transientCharge_of_mem hs
 
 /-- Finite-dimensional Poisson solvability on the killed state space. -/
+theorem exists_coreVanishing_poissonPotential_for
+    [Fintype S] [Nonempty S]
+    {kernel : S → PMF S} {core : Set S}
+    (hclosed : IsClosedCore kernel core)
+    {m : ℕ} {δ : ℝ}
+    (hδpos : 0 < δ) (hδone : δ ≤ 1)
+    (hreach : HasUniformCoreReach kernel core m δ)
+    (charge : coreVanishingSubmodule core) :
+    ∃ h : coreVanishingSubmodule core,
+      killedPoissonOperator kernel core hclosed h = charge := by
+  have hinj := killedPoissonOperator_injective
+    hclosed hδpos hδone hreach
+  exact (LinearMap.injective_iff_surjective.mp hinj) charge
+
+/-- Finite-dimensional Poisson solvability for the off-core indicator. -/
 theorem exists_coreVanishing_poissonPotential
     [Fintype S] [Nonempty S]
     {kernel : S → PMF S} {core : Set S}
@@ -241,10 +256,8 @@ theorem exists_coreVanishing_poissonPotential
     ∃ h : coreVanishingSubmodule core,
       killedPoissonOperator kernel core hclosed h =
         ⟨transientCharge core, transientCharge_mem_coreVanishing core⟩ := by
-  have hinj := killedPoissonOperator_injective
-    hclosed hδpos hδone hreach
-  have hsurj := LinearMap.injective_iff_surjective.mp hinj
-  exact hsurj ⟨transientCharge core,
+  exact exists_coreVanishing_poissonPotential_for
+    hclosed hδpos hδone hreach ⟨transientCharge core,
     transientCharge_mem_coreVanishing core⟩
 
 /-- The core-vanishing Poisson potential is unique under the same uniform
