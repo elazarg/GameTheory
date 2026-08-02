@@ -435,6 +435,7 @@ import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
 import GameTheory.Concepts.Stochastic.TerminalToUniformDeviationApproximation
 import GameTheory.Concepts.Stochastic.QuittingAlmostSureOpponentUniformization
 import GameTheory.Concepts.Stochastic.QuittingTerminalUniformization
+import GameTheory.Concepts.Stochastic.QuittingTerminalUniformPayoffSelection
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
 import Math.LinearAlgebra.ExactBlockEliminationConfluence
