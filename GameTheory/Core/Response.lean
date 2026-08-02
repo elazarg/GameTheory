@@ -14,7 +14,7 @@ Pareto dominance and efficiency close the file: they compare whole profiles
 across all players rather than deviations of one unit.
 -/
 
-import GameTheory.Core.Equilibrium
+import GameTheory.Core.Utility
 
 noncomputable section
 
@@ -86,6 +86,22 @@ strict dominance. -/
 def IsRationalizable (who : ι) (s : F.sig.Strategy who) : Prop :=
   ∀ round, s ∈ survivors F weaklyPrefers round who
 
+/-- A strict expected-utility Nash equilibrium: every genuine unilateral
+replacement strictly lowers the deviator's expected utility. -/
+def IsStrictNash (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
+    (profile : Profile F.sig) : Prop :=
+  ∀ who replacement, replacement ≠ profile who →
+    expectedUtility utility who (F.play (Profile.update profile who replacement)) <
+      expectedUtility utility who (F.play profile)
+
+/-- A strict unilateral expected-utility improvement from `source` to `target`.
+The target equation keeps the relation tied to the canonical profile operation. -/
+def ImprovingStep (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
+    (source target : Profile F.sig) : Prop :=
+  ∃ who replacement,
+    target = Profile.update source who replacement ∧
+      expectedUtility utility who (F.play source) < expectedUtility utility who (F.play target)
+
 end Definitions
 
 section Theorems
@@ -105,6 +121,22 @@ theorem mem_survivors_succ {round : ℕ} {j : ι} {s : F.sig.Strategy j} :
 theorem survivors_antitone (round : ℕ) (j : ι) :
     survivors F weaklyPrefers (round + 1) j ⊆ survivors F weaklyPrefers round j :=
   fun _ hs => hs.1
+
+/-- Failure of expected-utility Nash exhibits an improving step. -/
+theorem not_isNash_iff_exists_improvingStep {F : GameForm ι}
+    {utility : F.sig.Outcome → ι → ℝ} {profile : Profile F.sig} :
+    ¬ IsNash F (euPreference utility) profile ↔
+      ∃ target, ImprovingStep F utility profile target := by
+  constructor
+  · intro hnash
+    rw [isNash_iff] at hnash
+    push Not at hnash
+    obtain ⟨who, replacement, hnot⟩ := hnash
+    refine ⟨Profile.update profile who replacement, who, replacement, rfl, ?_⟩
+    exact lt_of_not_ge hnot
+  · rintro ⟨target, who, replacement, htarget, himprove⟩ hnash
+    subst target
+    exact (not_lt_of_ge ((isNash_iff profile).1 hnash who replacement)) himprove
 
 /-- A Nash equilibrium is exactly a profile of mutual best responses. -/
 theorem isNash_iff_isBestResponse (profile : Profile F.sig) :

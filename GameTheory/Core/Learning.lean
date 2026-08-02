@@ -148,6 +148,186 @@ theorem timeAverage_isεCoarseCorrelatedEq_of_regret_le
     exact_mod_cast Nat.pos_of_ne_zero (NeZero.ne T)
   exact (div_le_div_iff_of_pos_right hT).2 (hregret who replacement)
 
+/-! ## Independent self-play
+
+The learning reduction above accepts an arbitrary finite law over pure
+profiles.  Independent self-play is the special case in which each round is a
+product of players' mixed actions.  This section keeps that bridge at the
+same finite-support layer: it neither installs an algorithm nor assumes that
+the strategy carriers themselves are finite.
+
+The multiplicative-weights recurrence from the pinned library deliberately
+does not live here.  Its quantitative regret theorem belongs to the
+game-independent online-learning layer; see the D-LEARN self-play coverage
+record for the bounded follow-up experiment.
+-/
+
+variable [Fintype ι]
+
+private theorem finDist_map_const {α β : Type*} (μ : FinDist α) (b : β) :
+    μ.map (fun _ => b) = FinDist.pure b := by
+  apply FinDist.ext
+  ext a
+  simp [FinDist.toPMF_map]
+
+/-- The external regret of an independent profile law is exactly the gain from
+replacing that player's mixed action by a point mass in the mixed extension. -/
+theorem externalRegret_pi (G : UtilityGame.{uι, us, uo} ι)
+    (mixedProfile : Profile G.form.sig.mixed) (who : ι)
+    (replacement : G.form.sig.Strategy who) :
+    G.externalRegret (FinDist.pi mixedProfile) who replacement =
+      expectedUtility G.utility who
+          (G.form.mixed.play
+            (Profile.update mixedProfile who (FinDist.pure replacement))) -
+        expectedUtility G.utility who (G.form.mixed.play mixedProfile) := by
+  have hpi := GameForm.pi_map_recommendation G.form.sig mixedProfile who
+    (fun _ => replacement)
+  rw [finDist_map_const] at hpi
+  unfold externalRegret
+  rw [GameForm.outcomeLaw, GameForm.mixed_play, GameForm.mixed_play, ← hpi, FinDist.bind_map]
+
+/-- A pure-action payoff in independent play, normalized to the unit interval
+using a player-specific payoff band.  This is the input interface a future
+finite online-learning algorithm consumes. -/
+def normGain (G : UtilityGame.{uι, us, uo} ι) (lo : ι → ℝ) (width : ℝ)
+    (mixedProfile : Profile G.form.sig.mixed) (who : ι)
+    (action : G.form.sig.Strategy who) : ℝ :=
+  (expectedUtility G.utility who
+      (G.form.mixed.play
+        (Profile.update mixedProfile who (FinDist.pure action))) - lo who) / width
+
+/-- Mixing a player's pure-action values against their own mixed action gives
+their status-quo utility. -/
+theorem expect_expectedUtility_update (G : UtilityGame.{uι, us, uo} ι)
+    (mixedProfile : Profile G.form.sig.mixed) (who : ι) :
+    (mixedProfile who).expect (fun action =>
+      expectedUtility G.utility who
+        (G.form.mixed.play
+          (Profile.update mixedProfile who (FinDist.pure action)))) =
+      expectedUtility G.utility who (G.form.mixed.play mixedProfile) := by
+  conv_rhs => rw [show mixedProfile =
+      Profile.update mixedProfile who (mixedProfile who) from
+        (Profile.update_eq_self mixedProfile who).symm]
+  rw [GameForm.mixed_play_update, expectedUtility_bind]
+
+/-- Normalized pure-action gains lie in `[0, 1]` whenever every outcome
+utility lies in the advertised player-specific band. -/
+theorem normGain_mem_Icc (G : UtilityGame.{uι, us, uo} ι)
+    {lo : ι → ℝ} {width : ℝ} (hwidth : 0 < width)
+    (hband : ∀ who outcome, G.utility outcome who ∈ Set.Icc (lo who) (lo who + width))
+    (mixedProfile : Profile G.form.sig.mixed) (who : ι)
+    (action : G.form.sig.Strategy who) :
+    G.normGain lo width mixedProfile who action ∈ Set.Icc (0 : ℝ) 1 := by
+  have hlower : lo who ≤ expectedUtility G.utility who
+      (G.form.mixed.play (Profile.update mixedProfile who (FinDist.pure action))) := by
+    rw [expectedUtility]
+    have h := FinDist.expect_mono (μ :=
+      G.form.mixed.play (Profile.update mixedProfile who (FinDist.pure action)))
+      (u := fun _ => lo who) (v := fun outcome => G.utility outcome who)
+      (fun outcome _ => (hband who outcome).1)
+    simpa using h
+  have hupper : expectedUtility G.utility who
+      (G.form.mixed.play (Profile.update mixedProfile who (FinDist.pure action))) ≤
+        lo who + width := by
+    rw [expectedUtility]
+    have h := FinDist.expect_mono (μ :=
+      G.form.mixed.play (Profile.update mixedProfile who (FinDist.pure action)))
+      (u := fun outcome => G.utility outcome who) (v := fun _ => lo who + width)
+      (fun outcome _ => (hband who outcome).2)
+    simpa using h
+  refine Set.mem_Icc.mpr ⟨?_, ?_⟩
+  · rw [normGain]
+    exact div_nonneg (sub_nonneg.mpr hlower) hwidth.le
+  · rw [normGain, div_le_one hwidth]
+    linarith
+
+/-- The expected normalized gain is the normalized status-quo utility. -/
+theorem expect_normGain (G : UtilityGame.{uι, us, uo} ι)
+    (lo : ι → ℝ) (width : ℝ) (mixedProfile : Profile G.form.sig.mixed) (who : ι) :
+    (mixedProfile who).expect (G.normGain lo width mixedProfile who) =
+      (expectedUtility G.utility who (G.form.mixed.play mixedProfile) - lo who) / width := by
+  rw [show G.normGain lo width mixedProfile who = fun action =>
+      (1 / width) *
+        (expectedUtility G.utility who
+          (G.form.mixed.play
+            (Profile.update mixedProfile who (FinDist.pure action))) - lo who) by
+      funext action
+      rw [normGain]
+      ring,
+    FinDist.expect_smul]
+  have hsub :
+      (mixedProfile who).expect (fun action =>
+        expectedUtility G.utility who
+          (G.form.mixed.play
+            (Profile.update mixedProfile who (FinDist.pure action))) - lo who) =
+        expectedUtility G.utility who (G.form.mixed.play mixedProfile) - lo who := by
+    calc
+      (mixedProfile who).expect (fun action =>
+          expectedUtility G.utility who
+            (G.form.mixed.play
+              (Profile.update mixedProfile who (FinDist.pure action))) - lo who) =
+          (mixedProfile who).expect (fun action =>
+            expectedUtility G.utility who
+              (G.form.mixed.play
+                (Profile.update mixedProfile who (FinDist.pure action))) + (-1) * lo who) := by
+            congr 1
+            funext action
+            ring
+      _ = (mixedProfile who).expect (fun action =>
+            expectedUtility G.utility who
+              (G.form.mixed.play
+                (Profile.update mixedProfile who (FinDist.pure action)))) +
+          (-1) * (mixedProfile who).expect (fun _ => lo who) := by
+            rw [FinDist.expect_add, FinDist.expect_smul]
+      _ = expectedUtility G.utility who (G.form.mixed.play mixedProfile) - lo who := by
+            rw [G.expect_expectedUtility_update, FinDist.expect_const]
+            ring
+  rw [hsub]
+  ring
+
+/-- Scaling normalized gains back by the width recovers a pure-deviation gain. -/
+theorem expectedUtility_deviation_eq_width_mul_normGain
+    (G : UtilityGame.{uι, us, uo} ι) {lo : ι → ℝ} {width : ℝ}
+    (hwidth : 0 < width) (mixedProfile : Profile G.form.sig.mixed) (who : ι)
+    (action : G.form.sig.Strategy who) :
+    expectedUtility G.utility who
+        (G.form.mixed.play
+          (Profile.update mixedProfile who (FinDist.pure action))) -
+      expectedUtility G.utility who (G.form.mixed.play mixedProfile) =
+      width * (G.normGain lo width mixedProfile who action -
+        (mixedProfile who).expect (G.normGain lo width mixedProfile who)) := by
+  rw [G.expect_normGain]
+  simp only [normGain]
+  have hne : width ≠ 0 := hwidth.ne'
+  field_simp
+  ring
+
+/-- **Independent no-regret self-play yields an approximate CCE.** A bound on
+every pure deviation's cumulative mixed-extension gain is transferred through
+the finite product law at every round. -/
+theorem selfPlay_timeAverage_isεCoarseCorrelatedEq
+    (G : UtilityGame.{uι, us, uo} ι) {T : ℕ} [NeZero T]
+    (mixedProfile : Fin T → Profile G.form.sig.mixed) {bound : ℝ}
+    (hregret : ∀ who action,
+      (∑ round : Fin T, (expectedUtility G.utility who
+          (G.form.mixed.play
+            (Profile.update (mixedProfile round) who (FinDist.pure action))) -
+        expectedUtility G.utility who (G.form.mixed.play (mixedProfile round)))) ≤ bound) :
+    G.IsεCoarseCorrelatedEq (bound / T)
+      (G.timeAverage fun round => FinDist.pi (mixedProfile round)) := by
+  apply G.timeAverage_isεCoarseCorrelatedEq_of_regret_le
+  intro who action
+  rw [show (∑ round : Fin T, G.externalRegret
+      (FinDist.pi (mixedProfile round)) who action) =
+      ∑ round : Fin T, (expectedUtility G.utility who
+          (G.form.mixed.play
+            (Profile.update (mixedProfile round) who (FinDist.pure action))) -
+        expectedUtility G.utility who (G.form.mixed.play (mixedProfile round))) by
+      apply Finset.sum_congr rfl
+      intro round _
+      exact G.externalRegret_pi (mixedProfile round) who action]
+  exact hregret who action
+
 end UtilityGame
 
 end GameTheory

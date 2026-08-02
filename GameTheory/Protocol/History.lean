@@ -93,6 +93,30 @@ theorem History.extend_state (h : E.History) {joint : ∀ i, Option (E.Action i)
     (realized : target ∈ (E.step h.state ⟨joint, isLegal⟩).support) :
     (h.extend isLegal realized).state = target := rfl
 
+/-- Whether a complete history ends at a terminal execution state.  This is a
+history-facing view of the protocol's one terminality predicate, not a second
+notion of stopping. -/
+def History.isTerminal (h : E.History) : Prop := E.terminal h.state
+
+/-- The complete histories at which execution has stopped. -/
+def terminalHistories (E : ExecutionProtocol ι) : Set E.History :=
+  { h | h.isTerminal }
+
+theorem mem_terminalHistories_iff {h : E.History} :
+    h ∈ E.terminalHistories ↔ h.isTerminal := Iff.rfl
+
+/-- A legal joint action from a history proves that its endpoint is not
+terminal. -/
+theorem History.not_isTerminal_of_legal (h : E.History)
+    {joint : ∀ i, Option (E.Action i)} (hlegal : E.Legal h.state joint) :
+    ¬ h.isTerminal := hlegal.1
+
+/-- At a non-terminal history endpoint, protocol progress supplies a legal
+joint action. -/
+theorem History.exists_legal_of_not_terminal (h : E.History)
+    (hterm : ¬ h.isTerminal) : ∃ joint, E.Legal h.state joint :=
+  E.exists_legal hterm
+
 variable (E) in
 /-- A chooser that may read the history, not only the state it reached. -/
 def HistoryChooser : Type _ :=
@@ -174,6 +198,42 @@ theorem reachesWithin_zero_iff {h target : E.History} :
   refine ⟨fun hreach => ?_, fun hequal => by subst hequal; exact .refl 0 target⟩
   cases hreach
   rfl
+
+/-- A bounded reachability witness remains valid when more fuel is available. -/
+theorem ReachesWithin.mono {fuel extra : ℕ} {start target : E.History}
+    (hreach : E.ReachesWithin fuel start target) :
+    E.ReachesWithin (fuel + extra) start target := by
+  induction hreach with
+  | refl fuel history => exact .refl _ history
+  | step joint isLegal realized rest ih =>
+      have hstep := ReachesWithin.step joint isLegal realized ih
+      simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hstep
+
+/-- Bounded semantic reachability composes, with the fuel budgets adding. -/
+theorem ReachesWithin.trans {firstFuel secondFuel : ℕ}
+    {first middle last : E.History}
+    (hfirst : E.ReachesWithin firstFuel first middle)
+    (hsecond : E.ReachesWithin secondFuel middle last) :
+    E.ReachesWithin (firstFuel + secondFuel) first last := by
+  induction hfirst with
+  | refl fuel history =>
+      simpa [Nat.add_comm] using hsecond.mono (extra := fuel)
+  | step joint isLegal realized rest ih =>
+      have hstep := ReachesWithin.step joint isLegal realized (ih hsecond)
+      simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hstep
+
+/-- Every complete history is semantically reachable from the initial history;
+its indexed trace supplies the exact transition budget. -/
+theorem reachesWithin_from_init (h : E.History) :
+    E.ReachesWithin h.trace.length E.initHistory h := by
+  rcases h with ⟨state, trace⟩
+  induction trace with
+  | start => exact .refl 0 E.initHistory
+  | @extend source target prior joint isLegal realized ih =>
+      have hone : E.ReachesWithin 1 ⟨source, prior⟩
+          ⟨target, Trace.extend prior joint isLegal realized⟩ :=
+        .step joint isLegal realized (.refl 0 _)
+      simpa [Trace.length] using ih.trans hone
 
 /-- Choosers agreeing on every history induce the same history law. -/
 theorem runHistoryFor_congr {first second : E.HistoryChooser}

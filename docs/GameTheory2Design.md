@@ -1210,7 +1210,8 @@ GameTheory.Finite        executable rational frontend
 GameTheory.Languages     stable language syntax and compilers
 GameTheory.Analysis      fixed points, LP, minimax, existence
   ├─ Protocol            one-way analytic bridge over stable assessments
-  └─ Repeated            one-way analytic bridge over stable repeated play
+  ├─ Repeated            one-way analytic bridge over stable repeated play
+  └─ Learning            one-way quantitative bridge over finite self-play
 GameTheory.Repeated      stable stagewise and finite-prefix repeated-game theory
 GameTheory.Cooperative   larger cooperative theories, matching, bargaining
 GameTheory.Frontier      unstable open-game and repeated-monitoring research
@@ -1249,6 +1250,17 @@ the analytic convergence definition; the bridge rejects `stdSimplex` and
 `Polynomial`. Basic topology names are already transitively reachable through
 Mathlib, so project-declaration probes, not vocabulary probes, enforce this
 boundary.
+
+EXP-049/D21 applies the same enforced split to finite online learning. Core
+owns only product-law, normalization, and finite regret-to-CCE identities.
+`GameTheoryMath.OnlineLearning` proves multiplicative-weights regret over a
+normalized real vector without importing either game semantics or `FinDist`;
+`GameTheory.Probability.OnlineLearning` alone packages that vector as the
+canonical finite law; `GameTheory.Analysis.Learning` composes the two sides.
+Negative probes keep the algorithm and adapter unreachable from Core, while
+positive probes require the bridge to reach both and the stable self-play
+theorem. Protocol and the fixed-point dependency remain unreachable from the
+learning bridge.
 
 EXP-033 closes the finite-EFG adapter under that boundary. Stable
 `GameTheory.Languages.EFG` positively reaches its execution, information, and
@@ -1551,6 +1563,10 @@ with dynamics reserved for Analysis, and EXP-045/D8 promoted the minimal
 concrete transformation surface. Every original Phase 4 architecture
 obligation is now closed; later work is declaration recovery and explicitly
 gated expansion rather than architecture completion.
+
+EXP-049/D21 is such a post-architecture local gate: broad learning recovery
+exposed a missing reusable MW proof spine, and the measured vector/adapter/
+analytic-bridge split resolved it without reopening Core or the canonical law.
 
 The RFC continues to govern architecture and disproof conditions. Mutable
 delivery order, frozen-obligation status, v1 declaration accounting, mature

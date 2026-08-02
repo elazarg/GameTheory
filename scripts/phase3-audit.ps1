@@ -176,7 +176,9 @@ Report 'LANGUAGE_MODULES' $LanguageFiles.Count
 # --------------------------------------------------------------------------
 
 if (-not $SkipReachability) {
-  $probeFile = Join-Path ([IO.Path]::GetTempPath()) 'gametheory-phase3-probe.lean'
+  # Keep concurrent delivery audits from racing on one probe source file.
+  $probeFile = Join-Path ([IO.Path]::GetTempPath()) `
+    ("gametheory-phase3-probe-$PID.lean")
   function Run-Probe([string] $Root, [string[]] $Constants) {
     $checks = $Constants | ForEach-Object { "#check @$_" }
     Set-Content -Path $probeFile -Value (@("import $Root") + $checks) -Encoding utf8

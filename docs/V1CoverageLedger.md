@@ -5,7 +5,7 @@ Status: active family-level ledger.
 Pinned source: `reference/GameTheory-v1/` at
 `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 
-Last reconciled: 2026-08-02 against the working tree based on `66125a5`.
+Last reconciled: 2026-08-02 against the working tree based on `d9ff55e`.
 
 This ledger answers three different questions separately:
 
@@ -20,8 +20,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Seventeen work-package ledgers claim 1,242 declarations: 486 have
-reviewed dispositions and 756 remain seeded `unreviewed`; a further 7,082 are
+declarations. Twenty-two work-package ledgers claim 1,310 declarations: 616
+have reviewed dispositions and 694 remain seeded `unreviewed`; a further 7,014 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -106,12 +106,12 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| S-FOUND | static `Core/**` except `Babbling`/`Coalition`; `Concepts/Foundations/**`; symmetric/team classes | 28 | `Core`, with independent mathematics below it | validated | partial | inventory VNM, convergence, invariance, equivalence, and eliminate duplicate hub machinery |
-| S-EQ | `Concepts/Equilibrium/**` | 12 | `Core.Equilibrium`, `Core.Response` | validated | partial | approximate/secure/strict families against one Nash surface |
+| S-FOUND | static `Core/**` except `Babbling`/`Coalition`; `Concepts/Foundations/**`; symmetric/team classes | 28 | `Core`, with independent mathematics below it | validated | partial; 7 response/team rows reviewed | [response dynamics and team seed](coverage/S-FOUND-dynamics-team.md); next VNM, convergence, invariance, equivalence, and duplicate hub machinery |
+| S-EQ | `Concepts/Equilibrium/**` | 12 | `Core.Equilibrium`, `Core.Response` | validated | partial; strict-Nash predicate seed reviewed | [strict-Nash seed](coverage/S-EQ-strict-nash.md); next approximate, secure, and strict theorem families against one Nash surface |
 | S-DOM | `Concepts/Dominance/**` | 9 | `Core.Response` and finite correctness | validated | partial | solvability, undominated, and rationalizability inventory |
 | S-CORR | `Concepts/Correlation/**` | 10 | `Core.Equilibrium`; existence in `Analysis` | validated | partial; mixed-Nash bridge module 12/12 reviewed, 2 later-slice rows deferred | [mixed Nash and correlated-equilibrium ledger](coverage/S-CORR-mixed-nash.md); next conditional obedience, dominated support, existence, approximation, timing, regret, and hierarchy separations |
 | S-MIX | `Concepts/Mixed/**` | 9 | `Core.Mixed`; assessment material in Protocol/Analysis | validated | partial; binary proof spine 15 declarations reviewed | [binary mixed-equilibrium ledger](coverage/S-MIX-binary.md); next dominance, improvement, trembling-hand, uniform/balanced wrappers, and remaining language-facing results |
-| S-POT | `Concepts/Potential/**` | 9 | `Core.Potential` | validated | partial | improvement, decomposition, harmonic, mixed, and well-founded inventory |
+| S-POT | `Concepts/Potential/**` | 9 | `Core.Potential` | validated | partial; basic potential/FIP/well-founded/team package 22/22 reviewed | [basic potential ledger](coverage/S-POT-basic.md); next decomposition, harmonic, and mixed potential inventory |
 | S-ZERO | `Concepts/ZeroSum/**` | 15 | `Core.ZeroSum`; existence in `Analysis` | validated | partial; binary constant-sum correlation proof spine 11 declarations reviewed | [constant-sum correlation ledger](coverage/S-ZERO-constant-sum-correlation.md); next security, general value/correlation, matrix geometry, and complementarity |
 | S-WEL | `Concepts/Welfare/**` | 13 | stable welfare consumers plus `Analysis.Repeated` | validated for folk theorem | partial | individual rationality, smoothness, price of anarchy, remaining welfare results |
 | S-EXIST | `Concepts/Existence/**` | 3 | `Analysis` and `GameTheoryMath` by live consumer | validated for mixed Nash | partial | classify general Nash/Brouwer support and avoid wholesale fixed-point recovery |
@@ -121,7 +121,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| D-LEARN | `Concepts/Learning/**` | 8 | stable static consumer; limits in `Analysis` | validated by F2 | partial | inventory regret algorithms, then fictitious play on a potential game |
+| D-LEARN | `Concepts/Learning/**` | 8 | stable finite identities in Core; quantitative composition in `Analysis.Learning` | validated by F2 and EXP-049/D21 | partial; finite and MW self-play package 15/15 reviewed | [self-play ledger](coverage/D-LEARN-self-play.md); next fictitious play on a potential game, then approachability |
 | D-COMM | `Concepts/Communication/**`, `Core/Babbling.lean`, `Languages/ElectronicMailGame.lean` | 5 | static core or Protocol according to timing | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20 | partial; 87/87 declarations reviewed, 19 cross-family rows deferred | [exact declaration ledger](coverage/D-COMM-communication.md); pure babbling, exact Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail recovered; conditional public-signal and zero-sum value results remain gated |
 | D-KNOW | `Concepts/Knowledge/**` | 2 | stable `Epistemic` branch; a Protocol bridge only with an explicit state-view premise | validated by EXP-043/D16 | complete; 62/62 declarations accounted | [finite and approximate common-knowledge ledger](coverage/D-KNOW-aumann.md); private mass machinery and the public quantitative bound build |
 | D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | validated for deterministic and finite public-signal theory | partial | monitoring equilibrium/rank hierarchy and uniform results; no infinite realized-path law |
@@ -136,7 +136,7 @@ declaration-based.
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
 | L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | validated by EXP-041/T3 | partial | broader refinement, recall, and Kuhn-facing declaration recovery |
-| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4 | partial; 20/776 reviewed | [exact declaration ledger](coverage/L-FOSG-broad.md); Basic legality substrate classified; next reachable histories, richer observations, values, and named EFG comparisons |
+| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4 | partial; 82/776 reviewed, 694 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); Basic legality and History are classified, with bounded reachability algebra recovered in Protocol; next richer observations, strategies, values, and named EFG comparisons |
 | L-ROUND | `Languages/MultiRound.lean`, `Languages/MultiRound/**` | 15 | native language compiling to Protocol | provisional probe | partial | preserve previous actions and imperfect monitoring |
 | L-INTR | `Languages/Intrinsic.lean`, `Languages/Intrinsic/**` | 8 | native branch only if it retains theorem-relevant data | assigned | not started | one theorem unavailable from bare Protocol |
 | L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1, T3, and T4 complete | partial/retirement open | declaration accounting; add composition only after two live consumers earn it |
@@ -171,7 +171,7 @@ declaration-based.
 | T-MIN | `Theorems/Minimax.lean` | 1 | `Core.ZeroSum` plus `Analysis.Minimax` | validated | partial inventory, flagship complete | exact declaration comparison |
 | T-ZER | `Theorems/Zermelo.lean` | 1 | Protocol backward induction | validated substrate | partial | language-independent theorem plus any honest wrapper |
 | T-TEST | predecessor theorem tests | 1 | owning domain tests/examples | assigned by theorem | not started | classify with their theorem families |
-| MATH | pinned `Math/**` support tree | 56 | Mathlib first, then `GameTheoryMath` by live consumer | owner policy validated | partial and demand-driven | declaration accounting by consumer; never wholesale port |
+| MATH | pinned `Math/**` support tree | 56 | Mathlib first, then `GameTheoryMath` by live consumer | owner policy validated; EXP-049/D21 for online learning | partial and demand-driven; finite online-learning file 23/23 reviewed | [finite online-learning ledger](coverage/MATH-online-learning.md); continue accounting by consumer, never wholesale port |
 
 ## Explicit exclusions and non-equivalences
 

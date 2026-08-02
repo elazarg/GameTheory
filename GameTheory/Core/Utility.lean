@@ -108,6 +108,41 @@ theorem euPreference_total (utility : Outcome → ι → ℝ) :
     Preference.Total (euPreference utility) :=
   fun _ _ _ => (le_total _ _).symm.imp id id
 
+/-! ## Team utilities -/
+
+/-- A team (identical-interest) utility assigns every player the same value at
+each outcome. This property belongs to utility evaluation itself; potential
+games and zero-sum games consume it without owning a duplicate definition. -/
+def IsTeamGame (utility : Outcome → ι → ℝ) : Prop :=
+  ∀ outcome first second, utility outcome first = utility outcome second
+
+/-- Team players have equal expected utility under every finite outcome law. -/
+theorem IsTeamGame.expectedUtility_eq {utility : Outcome → ι → ℝ}
+    (hteam : IsTeamGame utility) (law : FinDist Outcome) (first second : ι) :
+    expectedUtility utility first law = expectedUtility utility second law := by
+  unfold expectedUtility
+  apply FinDist.expect_congr
+  intro outcome _
+  exact hteam outcome first second
+
+/-- At a Nash profile of a team game, a unilateral deviation cannot improve
+any player's expected utility, not only the deviator's. -/
+theorem IsTeamGame.isNash_deviation_nonimproving [DecidableEq ι]
+    {F : GameForm ι} {utility : F.sig.Outcome → ι → ℝ}
+    (hteam : IsTeamGame utility) {profile : Profile F.sig}
+    (hnash : IsNash F (euPreference utility) profile)
+    (who : ι) (replacement : F.sig.Strategy who) (observer : ι) :
+    expectedUtility utility observer (F.play (Profile.update profile who replacement)) ≤
+      expectedUtility utility observer (F.play profile) := by
+  calc
+    expectedUtility utility observer (F.play (Profile.update profile who replacement)) =
+        expectedUtility utility who (F.play (Profile.update profile who replacement)) :=
+      hteam.expectedUtility_eq _ observer who
+    _ ≤ expectedUtility utility who (F.play profile) :=
+      (isNash_iff profile).1 hnash who replacement
+    _ = expectedUtility utility observer (F.play profile) :=
+      hteam.expectedUtility_eq _ who observer
+
 theorem euPreference_strict_iff (utility : Outcome → ι → ℝ) (agent : ι)
     (preferred alternative : FinDist Outcome) :
     Preference.strict (euPreference utility) agent preferred alternative ↔

@@ -335,7 +335,11 @@ Report 'PRISONERS_DILEMMA_DEF_LINES' `
 # --------------------------------------------------------------------------
 
 if (-not $SkipReachability) {
-  $probeFile = Join-Path ([IO.Path]::GetTempPath()) 'gametheory-phase2-probe.lean'
+  # Delivery audits run in parallel during breadth recovery. A fixed filename
+  # lets one process overwrite another process's import root between writing
+  # and elaboration, producing spurious reachability failures.
+  $probeFile = Join-Path ([IO.Path]::GetTempPath()) `
+    ("gametheory-phase2-probe-$PID.lean")
   function Run-Probe([string] $Root, [string[]] $Constants) {
     $checks = $Constants | ForEach-Object { "#check @$_" }
     Set-Content -Path $probeFile -Value (@("import $Root") + $checks) -Encoding utf8
@@ -403,6 +407,65 @@ if (-not $SkipReachability) {
     @('GameTheory.UtilityGame')
   $mathGameRejected = Is-Unreachable $mathOutput 'GameTheory.UtilityGame'
   Report 'GAMETHEORYMATH_GAME_REJECTED' ([int] $mathGameRejected)
+
+  # EXP-049/D21 keeps the exponential-potential proof independent of both
+  # game semantics and the canonical law representation. Core owns only the
+  # finite averaging bridge; the opt-in analytic bridge is the first root
+  # allowed to reach all three inputs at once.
+  $mathLearningBoundary = @(
+    'GameTheory.UtilityGame',
+    'GameTheory.Probability.FinDist')
+  $mathLearningOutput =
+    Run-Probe 'GameTheoryMath.OnlineLearning' $mathLearningBoundary
+  $mathLearningBoundaryRejected = 0
+  foreach ($constant in $mathLearningBoundary) {
+    if (Is-Unreachable $mathLearningOutput $constant) {
+      $mathLearningBoundaryRejected++
+    }
+  }
+  Report 'MATH_LEARNING_BOUNDARY_PROBES_REJECTED' `
+    $mathLearningBoundaryRejected
+
+  $coreLearningBoundary = @(
+    'GameTheoryMath.OnlineLearning.externalRegret_le',
+    'GameTheory.Probability.OnlineLearning.multiplicativeWeights')
+  $coreLearningOutput =
+    Run-Probe 'GameTheory.Core.Learning' $coreLearningBoundary
+  $coreLearningBoundaryRejected = 0
+  foreach ($constant in $coreLearningBoundary) {
+    if (Is-Unreachable $coreLearningOutput $constant) {
+      $coreLearningBoundaryRejected++
+    }
+  }
+  Report 'CORE_LEARNING_MW_PROBES_REJECTED' `
+    $coreLearningBoundaryRejected
+
+  $learningBridgeInputs = @(
+    'GameTheory.UtilityGame.selfPlay_timeAverage_isεCoarseCorrelatedEq',
+    'GameTheoryMath.OnlineLearning.externalRegret_le',
+    'GameTheory.Probability.OnlineLearning.multiplicativeWeights',
+    'GameTheory.UtilityGame.mwSelfPlay_timeAverage_isεCoarseCorrelatedEq')
+  $learningBridgeBoundary = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'kakutani_fixed_point')
+  $learningBridgeOutput = Run-Probe 'GameTheory.Analysis.Learning' `
+    ($learningBridgeInputs + $learningBridgeBoundary)
+  $learningBridgeInputsReached = 0
+  foreach ($constant in $learningBridgeInputs) {
+    if (-not (Is-Unreachable $learningBridgeOutput $constant)) {
+      $learningBridgeInputsReached++
+    }
+  }
+  Report 'LEARNING_BRIDGE_INPUT_PROBES_REACHED' `
+    $learningBridgeInputsReached
+  $learningBridgeBoundaryRejected = 0
+  foreach ($constant in $learningBridgeBoundary) {
+    if (Is-Unreachable $learningBridgeOutput $constant) {
+      $learningBridgeBoundaryRejected++
+    }
+  }
+  Report 'LEARNING_BRIDGE_BOUNDARY_PROBES_REJECTED' `
+    $learningBridgeBoundaryRejected
 
   # D16's epistemic branch consumes the canonical finite law but remains
   # independent of static, sequential, and analytic game semantics.
@@ -704,6 +767,10 @@ if ($VerifyExpected) {
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
     $Expected['REPEATED_BRIDGE_PROTOCOL_REJECTED'] = 1
     $Expected['GAMETHEORYMATH_GAME_REJECTED'] = 1
+    $Expected['MATH_LEARNING_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['CORE_LEARNING_MW_PROBES_REJECTED'] = 2
+    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 4
+    $Expected['LEARNING_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['EPISTEMIC_INPUT_PROBES_REACHED'] = 6
     $Expected['EPISTEMIC_BOUNDARY_PROBES_REJECTED'] = 5
     $Expected['ELECTRONIC_MAIL_INPUT_PROBES_REACHED'] = 4

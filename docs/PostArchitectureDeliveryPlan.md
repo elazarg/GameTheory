@@ -103,8 +103,9 @@ The accepted design is a stratified hybrid, not a universal game object.
 - `GameTheory.Repeated` owns stagewise, recursive, and finite-prefix repeated
   play without committing the stable root to an infinite path law.
 - `GameTheory.Analysis` imports stable semantic roots in one direction for
-  topology, convexity, fixed points, minimax, and existence. Stable roots never
-  import it back.
+  topology, convexity, fixed points, minimax, existence, and quantitative
+  online-learning consumers. Stable roots never import it back. Protocol,
+  Repeated, and Learning bridges have separate positive and negative probes.
 - `GameTheory.Cooperative` is reserved for larger coalitional, matching,
   bargaining, and market-design developments that do not honestly reduce to
   strategic profiles.
@@ -242,12 +243,16 @@ current integration and recovery status. Wave 0 closes when:
    rather than silently changing inside Phase 2/3-named scripts;
 6. README status is derived from the ledger rather than source-size estimates.
 
-The audit now indexes 436 files and 8,324 declarations. Seventeen work-package
-ledgers claim 1,242 declarations: 486 have reviewed dispositions, the exact
-FOSG queue contains 756 deliberately seeded `unreviewed` rows, and 7,082 remain
+The audit now indexes 436 files and 8,324 declarations. Twenty-two work-package
+ledgers claim 1,310 declarations: 616 have reviewed dispositions, the exact
+FOSG queue contains 694 deliberately seeded `unreviewed` rows, and 7,014 remain
 explicitly unaccounted. Both open sets are review queues, not
 auto-classification targets; generated rows are evidence of scope, not
 recovery.
+
+The Phase 2 and Phase 3 reachability harnesses use process-unique temporary
+probe files. Parallel recovery audits therefore cannot overwrite one another's
+import roots and manufacture a false boundary result.
 
 ## 6. Wave 1: close the frozen promises
 
@@ -298,7 +303,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | foundations and VNM | utility invariance, strategic equivalence, expected-utility representation, axiom independence | expected-utility representation without merging probability-free ranks back into lottery preference | `Core.Preference`, finite laws, and independent mathematics only where earned |
 | static response | dominance, rationalizability, approximate and secure equilibrium | dominance solvability and one approximation theorem without duplicate Nash predicates | `GameTheory.Core` |
 | correlation | correlation regimes, regret, signal timing, value of correlation | correlated-equilibrium existence plus one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
-| learning | regret, multiplicative weights, fictitious play, approachability | F2, followed by potential-game fictitious-play convergence | stable static consumer plus `Analysis` only where a limit is essential |
+| learning | regret, multiplicative weights, fictitious play, approachability | **F2 and finite MW self-play complete (EXP-049/D21);** next potential-game fictitious-play convergence | stable finite identities in Core, law-free MW algebra in `GameTheoryMath`, canonical-law adapter in Probability, and quantitative composition in `Analysis.Learning` |
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | Rosenthal exact potential and finite pure-Nash existence | `Core.Potential`, then a thin congestion domain |
 | welfare | individual rationality, smoothness, price of anarchy | a smoothness price-of-anarchy bound stated on the canonical utility game | `Core` or a stable welfare root |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |

@@ -52,6 +52,19 @@ theorem IsZeroSum.expectedUtility_one {utility : Outcome → Fin 2 → ℝ}
   rw [FinDist.expect_smul]
   ring
 
+/-- A zero-sum team game has zero utility at every outcome. -/
+theorem IsZeroSum.teamGame_utility_zero [Nonempty ι] {utility : Outcome → ι → ℝ}
+    (hzero : IsZeroSum utility) (hteam : IsTeamGame utility)
+    (outcome : Outcome) (who : ι) : utility outcome who = 0 := by
+  have hsum : (∑ player, utility outcome player) = 0 := hzero outcome
+  have hconstant : ∀ player, utility outcome player = utility outcome who :=
+    fun player => hteam outcome player who
+  simp_rw [hconstant] at hsum
+  rw [Finset.sum_const, nsmul_eq_mul] at hsum
+  have hcard_ne : (Fintype.card ι : ℝ) ≠ 0 := by
+    exact_mod_cast Fintype.card_pos.ne'
+  exact (mul_eq_zero.mp hsum).resolve_left hcard_ne
+
 end ZeroSum
 
 section Saddle

@@ -99,4 +99,26 @@ theorem timeAverage_not_coarseCorrelatedEq :
   norm_num [roundLaw, game, form, utility, expectedUtility, coordinated,
     mismatched, Fin.sum_univ_two, FinDist.expect_pure] at hnonpos
 
+/-! ### Independent self-play API -/
+
+/-- The finite self-play bridge is exposed over canonical `FinDist` mixed
+profiles and the canonical CCE predicate. -/
+theorem independent_selfPlay_api : True := by
+  let mixedProfile : Profile signature.mixed := fun _ => FinDist.pure false
+  have hband : ∀ who outcome, game.utility outcome who ∈ Set.Icc (0 : ℝ) 1 := by
+    intro who outcome
+    simp only [utility]
+    split <;> norm_num
+  have _ := game.externalRegret_pi mixedProfile 0 false
+  have _ := game.normGain (fun _ => 0) 1 mixedProfile 0 false
+  have _ := game.expect_expectedUtility_update mixedProfile 0
+  have _ := game.normGain_mem_Icc (lo := fun _ => 0) (width := 1)
+    (by norm_num) (by simpa using hband) mixedProfile 0 false
+  have _ := game.expect_normGain (fun _ => 0) 1 mixedProfile 0
+  have _ := game.expectedUtility_deviation_eq_width_mul_normGain
+    (lo := fun _ => 0) (width := 1) (by norm_num) mixedProfile 0 false
+  have _ := game.selfPlay_timeAverage_isεCoarseCorrelatedEq (T := 1) (bound := 0)
+    (fun _ => mixedProfile)
+  trivial
+
 end GameTheory.Tests.Learning

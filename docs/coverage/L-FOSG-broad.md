@@ -8,15 +8,16 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
 Domain contract / decision: D6, D7, D11, D12, D15, EXP-042
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; 20/776 reviewed, 756 unreviewed
+Status: in progress; 82/776 reviewed, 694 unreviewed
 Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-FOSG family.
 0 declarations are already accounted for in earlier bounded ledgers and are
 not duplicated here. Rows not yet classified remain deliberately
 `unreviewed`: the generated index supplies spelling, location, kind, and
-visibility only. It does not infer a mathematical disposition. The first
-reviewed batch covers the complete `Basic.lean` legality substrate.
+visibility only. It does not infer a mathematical disposition. Reviewed batches
+cover the complete `Basic.lean` legality substrate and `History.lean` canonical
+history migration.
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
 |---|---|---|---|---|---|---|
@@ -220,68 +221,68 @@ reviewed batch covers the complete `Basic.lean` legality substrate.
 | same | `terminalMassOn_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 833 |
 | same | `terminalMassOn_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 840 |
 | same | `terminalLaw_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 847 |
-| `GameTheory/Languages/FOSG/History.lean` | `Step` | structure | unreviewed | review required | generated index seed only | public, pinned line 26 |
-| same | `ownAction?` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 37 |
-| same | `publicObs` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 41 |
-| same | `privateObs` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 45 |
-| same | `ownAction?_eq_none_of_not_mem_active` | theorem | unreviewed | review required | generated index seed only | public, pinned line 48 |
-| same | `exists_ownAction_of_mem_active` | theorem | unreviewed | review required | generated index seed only | public, pinned line 53 |
-| same | `instFintypeLegalAction` | instance | unreviewed | review required | generated index seed only | public, pinned line 66 |
-| same | `StepData` | abbrev | unreviewed | review required | generated index seed only | private, pinned line 72 |
-| same | `instFintypeStep` | instance | unreviewed | review required | generated index seed only | public, pinned line 76 |
-| same | `StepChainFrom` | def | unreviewed | review required | generated index seed only | public, pinned line 99 |
-| same | `lastStateFrom` | def | unreviewed | review required | generated index seed only | public, pinned line 105 |
-| same | `stateTraceFrom` | def | unreviewed | review required | generated index seed only | public, pinned line 111 |
-| same | `lastStateFrom_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 116 |
-| same | `lastStateFrom_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 120 |
-| same | `stateTraceFrom_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 124 |
-| same | `stateTraceFrom_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 128 |
-| same | `stateTraceFrom_length` | theorem | unreviewed | review required | generated index seed only | public, pinned line 132 |
-| same | `lastStateFrom_append_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 141 |
-| same | `lastStateFrom_append` | theorem | unreviewed | review required | generated index seed only | public, pinned line 150 |
-| same | `stateTraceFrom_append_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 160 |
-| same | `StepChainFrom.snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 172 |
-| same | `StepChainFrom.append` | theorem | unreviewed | review required | generated index seed only | public, pinned line 187 |
-| same | `StepChainFrom.left` | theorem | unreviewed | review required | generated index seed only | public, pinned line 201 |
-| same | `StepChainFrom.right` | theorem | unreviewed | review required | generated index seed only | public, pinned line 214 |
-| same | `History` | structure | unreviewed | review required | generated index seed only | public, pinned line 228 |
-| same | `ext` | theorem | unreviewed | review required | generated index seed only | public, pinned line 236 |
-| same | `nil` | def | unreviewed | review required | generated index seed only | public, pinned line 245 |
-| same | `lastState` | def | unreviewed | review required | generated index seed only | public, pinned line 249 |
-| same | `stateTrace` | def | unreviewed | review required | generated index seed only | public, pinned line 253 |
-| same | `actionTrace` | def | unreviewed | review required | generated index seed only | public, pinned line 257 |
-| same | `snoc` | def | unreviewed | review required | generated index seed only | public, pinned line 261 |
-| same | `appendStep` | def | unreviewed | review required | generated index seed only | public, pinned line 268 |
-| same | `steps_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 274 |
-| same | `lastState_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 277 |
-| same | `stateTrace_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 280 |
-| same | `actionTrace_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 283 |
-| same | `steps_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 286 |
-| same | `steps_appendStep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 291 |
-| same | `lastState_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 295 |
-| same | `stateTrace_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 302 |
-| same | `actionTrace_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 309 |
-| same | `stateTrace_length` | theorem | unreviewed | review required | generated index seed only | public, pinned line 315 |
-| same | `lastState_appendStep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 320 |
-| same | `stateTrace_appendStep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 326 |
-| same | `appendStep_eq_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 332 |
-| same | `length_states_eq_actions_succ` | theorem | unreviewed | review required | generated index seed only | public, pinned line 337 |
-| same | `IsPrefix` | def | unreviewed | review required | generated index seed only | public, pinned line 343 |
-| same | `IsDescendant` | def | unreviewed | review required | generated index seed only | public, pinned line 347 |
-| same | `IsTerminal` | def | unreviewed | review required | generated index seed only | public, pinned line 351 |
-| same | `terminalHistories` | def | unreviewed | review required | generated index seed only | public, pinned line 355 |
-| same | `isPrefix_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 358 |
-| same | `isDescendant_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 363 |
-| same | `prefix_refl` | theorem | unreviewed | review required | generated index seed only | public, pinned line 368 |
-| same | `nil_prefix` | theorem | unreviewed | review required | generated index seed only | public, pinned line 373 |
-| same | `prefix_of_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 378 |
-| same | `prefix_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 384 |
-| same | `prefix_trans` | theorem | unreviewed | review required | generated index seed only | public, pinned line 391 |
-| same | `descendant_refl` | theorem | unreviewed | review required | generated index seed only | public, pinned line 400 |
-| same | `descendant_trans` | theorem | unreviewed | review required | generated index seed only | public, pinned line 405 |
-| same | `mem_terminalHistories_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 411 |
-| same | `not_isTerminal_of_legalAction` | theorem | unreviewed | review required | generated index seed only | public, pinned line 416 |
-| same | `exists_legalAction_of_not_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 422 |
+| `GameTheory/Languages/FOSG/History.lean` | `Step` | structure | adapt | `GameTheory.Protocol.ExecutionProtocol.StepEvent` | pinned `History.lean:26`; focused Protocol History build | Canonical event stores the same realized transition with legality and support evidence. |
+| same | `ownAction?` | abbrev | adapt | `ExecutionProtocol.StepEvent.joint` | pinned `History.lean:37`; focused Protocol History build | A player contribution is the canonical joint-action coordinate. |
+| same | `publicObs` | abbrev | adapt | `GameTheory.Protocol.InfoSignals.publicSignal` | pinned `History.lean:41`; focused Protocol History build | Signals consume canonical `StepEvent`; FOSG owns no observation projection. |
+| same | `privateObs` | abbrev | adapt | `GameTheory.Protocol.InfoSignals.privateSignal` | pinned `History.lean:45`; focused Protocol History build | Signals consume canonical `StepEvent`; FOSG owns no observation projection. |
+| same | `ownAction?_eq_none_of_not_mem_active` | theorem | adapt | `GameTheory.Protocol.LegalOption.eq_none_of_inactive` | pinned `History.lean:48`; focused Protocol History build | Canonical pointwise legality proves an inactive coordinate is `none`. |
+| same | `exists_ownAction_of_mem_active` | theorem | adapt | `GameTheory.Protocol.LegalOption.exists_eq_some_of_active` | pinned `History.lean:53`; focused Protocol History build | Canonical pointwise legality proves an active coordinate is `some`. |
+| same | `instFintypeLegalAction` | instance | retired | explicit finite enumerations at algorithm boundary | D6/D7; pinned `History.lean:66` | No global noncomputable `Fintype` synthesized from language-local optional actions. |
+| same | `StepData` | abbrev | retired | `ExecutionProtocol.StepEvent` | pinned `History.lean:72` | Private sigma encoding only supported the retired automatic instance. |
+| same | `instFintypeStep` | instance | retired | explicit finite enumerations at algorithm boundary | D6/D7; pinned `History.lean:76` | No global finite enumeration of proof-carrying realized transitions. |
+| same | `StepChainFrom` | def | retired | `ExecutionProtocol.Trace` | pinned `History.lean:99`; focused Protocol History build | Indexed traces enforce chaining in their type instead of a list predicate. |
+| same | `lastStateFrom` | def | retired | `ExecutionProtocol.Trace`; `ExecutionProtocol.History.state` | pinned `History.lean:105` | Endpoint is carried by the trace index and history field. |
+| same | `stateTraceFrom` | def | retired | `ExecutionProtocol.Trace` | pinned `History.lean:111` | The list-shaped diagnostic view is not protocol semantics. |
+| same | `lastStateFrom_nil` | theorem | retired | `ExecutionProtocol.initHistory_state` | pinned `History.lean:116` | List-recursion base theorem retired with the list encoding. |
+| same | `lastStateFrom_cons` | theorem | retired | `ExecutionProtocol.History.extend_state` | pinned `History.lean:120` | List-recursion step theorem retired with the list encoding. |
+| same | `stateTraceFrom_nil` | theorem | retired | `ExecutionProtocol.Trace.start` | pinned `History.lean:124` | List trace display retired. |
+| same | `stateTraceFrom_cons` | theorem | retired | `ExecutionProtocol.Trace.extend` | pinned `History.lean:128` | List trace display retired. |
+| same | `stateTraceFrom_length` | theorem | retired | `ExecutionProtocol.Trace.length` | pinned `History.lean:132`; source comparison | The state-list length equation disappears with the redundant unindexed state-list view; canonical traces store transition length directly. |
+| same | `lastStateFrom_append_singleton` | theorem | retired | `ExecutionProtocol.History.extend_state` | pinned `History.lean:141` | Endpoint-after-extension is direct rather than a list append proof. |
+| same | `lastStateFrom_append` | theorem | retired | `ExecutionProtocol.Trace` | pinned `History.lean:150` | Concatenating unindexed traces would duplicate the indexed transition representation. |
+| same | `stateTraceFrom_append_singleton` | theorem | retired | `ExecutionProtocol.Trace.extend` | pinned `History.lean:160` | List display append retired. |
+| same | `StepChainFrom.snoc` | theorem | retired | `ExecutionProtocol.Trace.extend` | pinned `History.lean:172` | Extension constructs a well-formed indexed trace directly. |
+| same | `StepChainFrom.append` | theorem | retired | `ExecutionProtocol.Trace` | pinned `History.lean:187` | No unindexed trace concatenation API is needed. |
+| same | `StepChainFrom.left` | theorem | retired | `ExecutionProtocol.Trace` | pinned `History.lean:201` | List-prefix decomposition retired. |
+| same | `StepChainFrom.right` | theorem | retired | `ExecutionProtocol.Trace` | pinned `History.lean:214` | List-suffix decomposition retired. |
+| same | `History` | structure | adapt | `GameTheory.Protocol.ExecutionProtocol.History` | pinned `History.lean:228`; focused Protocol History build | A complete history packages its endpoint with a type-indexed canonical trace. |
+| same | `ext` | theorem | retired | indexed `ExecutionProtocol.History` | pinned `History.lean:236`; source and symbol audit | The old one-field extensionality discarded a propositional chaining proof; the canonical endpoint-indexed trace has no honest one-field analogue without exposing equality transport. |
+| same | `nil` | def | adapt | `ExecutionProtocol.initHistory` | pinned `History.lean:245`; focused Protocol History build | Canonical empty history starts at the protocol initial state. |
+| same | `lastState` | def | adapt | `ExecutionProtocol.History.state` | pinned `History.lean:249`; focused Protocol History build | The endpoint is a canonical history field. |
+| same | `stateTrace` | def | retired | `ExecutionProtocol.Trace` | pinned `History.lean:253` | A redundant unindexed state-list view is intentionally absent. |
+| same | `actionTrace` | def | retired | `ExecutionProtocol.Trace` | pinned `History.lean:257` | A redundant unindexed action-list view is intentionally absent. |
+| same | `snoc` | def | adapt | `ExecutionProtocol.History.extend` | pinned `History.lean:261`; focused Protocol History build | Extension takes exactly a legal realized transition. |
+| same | `appendStep` | def | adapt | `ExecutionProtocol.History.extend` | pinned `History.lean:268`; focused Protocol History build | The source-match proof is absorbed by the history endpoint index. |
+| same | `steps_nil` | theorem | retired | `ExecutionProtocol.initHistory` | pinned `History.lean:274` | Projection of retired list representation. |
+| same | `lastState_nil` | theorem | adapt | `ExecutionProtocol.initHistory_state` | pinned `History.lean:277`; focused Protocol History build | Canonical initial-history endpoint theorem. |
+| same | `stateTrace_nil` | theorem | retired | `ExecutionProtocol.Trace.start` | pinned `History.lean:280` | List display theorem retired. |
+| same | `actionTrace_nil` | theorem | retired | `ExecutionProtocol.Trace.start` | pinned `History.lean:283` | List display theorem retired. |
+| same | `steps_snoc` | theorem | retired | `ExecutionProtocol.History.extend` | pinned `History.lean:286` | Projection of retired list representation. |
+| same | `steps_appendStep` | theorem | retired | `ExecutionProtocol.History.extend` | pinned `History.lean:291` | Projection of retired list representation. |
+| same | `lastState_snoc` | theorem | adapt | `ExecutionProtocol.History.extend_state` | pinned `History.lean:295`; focused Protocol History build | Endpoint after canonical extension is definitionally its realized target. |
+| same | `stateTrace_snoc` | theorem | retired | `ExecutionProtocol.Trace.extend` | pinned `History.lean:302` | List display theorem retired. |
+| same | `actionTrace_snoc` | theorem | retired | `ExecutionProtocol.Trace.extend` | pinned `History.lean:309` | List display theorem retired. |
+| same | `stateTrace_length` | theorem | retired | `ExecutionProtocol.Trace.length` | pinned `History.lean:315`; source comparison | The state-list length equation disappears with the redundant unindexed state-list view; canonical traces store transition length directly. |
+| same | `lastState_appendStep` | theorem | adapt | `ExecutionProtocol.History.extend_state` | pinned `History.lean:320`; focused Protocol History build | Endpoint after canonical extension is definitionally its realized target. |
+| same | `stateTrace_appendStep` | theorem | retired | `ExecutionProtocol.Trace.extend` | pinned `History.lean:326` | List display theorem retired. |
+| same | `appendStep_eq_snoc` | theorem | retired | `ExecutionProtocol.History.extend` | pinned `History.lean:332` | One canonical extension constructor makes duplicate append APIs unnecessary. |
+| same | `length_states_eq_actions_succ` | theorem | retired | `ExecutionProtocol.Trace.length` | pinned `History.lean:337` | The statement depends on retired list display projections. |
+| same | `IsPrefix` | def | retired | `ExecutionProtocol.ReachesWithin` | pinned `History.lean:343` | Bounded semantic reachability replaces raw list-prefix bookkeeping. |
+| same | `IsDescendant` | def | retired | `ExecutionProtocol.ReachesWithin` | pinned `History.lean:347` | Bounded semantic reachability replaces raw list-suffix bookkeeping. |
+| same | `IsTerminal` | def | adapt | `ExecutionProtocol.History.isTerminal` | pinned `History.lean:351`; focused Protocol History build | New Protocol-level history view uses the one terminality predicate. |
+| same | `terminalHistories` | def | adapt | `ExecutionProtocol.terminalHistories` | pinned `History.lean:355`; focused Protocol History build | New Protocol-level terminal-history set is reusable by EFG and FOSG. |
+| same | `isPrefix_iff` | theorem | retired | `ExecutionProtocol.ReachesWithin` | pinned `History.lean:358` | Reflexive list-prefix wrapper retired. |
+| same | `isDescendant_iff` | theorem | retired | `ExecutionProtocol.ReachesWithin` | pinned `History.lean:363` | Reflexive list-descendant wrapper retired. |
+| same | `prefix_refl` | theorem | adapt | `ExecutionProtocol.ReachesWithin.refl` | pinned `History.lean:368`; focused Protocol History build | Semantic bounded reachability is reflexive at every available fuel budget. |
+| same | `nil_prefix` | theorem | adapt | `ExecutionProtocol.reachesWithin_from_init` | pinned `History.lean:373`; focused Protocol History build | Every canonical history is reached from `initHistory`, with its indexed trace length as the exact budget. |
+| same | `prefix_of_eq` | theorem | adapt | `ExecutionProtocol.ReachesWithin.refl` | pinned `History.lean:378`; focused Protocol History build | Equality becomes bounded semantic reachability reflexivity without a list witness. |
+| same | `prefix_snoc` | theorem | adapt | `ExecutionProtocol.ReachesWithin.step` | pinned `History.lean:384`; focused Protocol History build | One realized extension is represented by the semantic reachability constructor. |
+| same | `prefix_trans` | theorem | adapt | `ExecutionProtocol.ReachesWithin.trans` | pinned `History.lean:391`; focused Protocol History build | Canonical transitivity records the honest sum of the two finite reachability budgets. |
+| same | `descendant_refl` | theorem | retired | `ExecutionProtocol.ReachesWithin.refl` | pinned `History.lean:400` | Semantic bounded reachability is reflexive. |
+| same | `descendant_trans` | theorem | retired | `ExecutionProtocol.ReachesWithin.trans` | pinned `History.lean:405`; focused Protocol History build | The reverse-argument descendant vocabulary carries no independent payload; canonical reachability composes with explicit additive fuel. |
+| same | `mem_terminalHistories_iff` | theorem | adapt | `ExecutionProtocol.mem_terminalHistories_iff` | pinned `History.lean:411`; focused Protocol History build | New canonical terminal-history membership theorem. |
+| same | `not_isTerminal_of_legalAction` | theorem | adapt | `ExecutionProtocol.History.not_isTerminal_of_legal` | pinned `History.lean:416`; focused Protocol History build | A legal joint action proves the endpoint is non-terminal. |
+| same | `exists_legalAction_of_not_terminal` | theorem | adapt | `ExecutionProtocol.History.exists_legal_of_not_terminal` | pinned `History.lean:422`; focused Protocol History build | Protocol progress supplies a legal joint action at a non-terminal endpoint. |
 | `GameTheory/Languages/FOSG/Information.lean` | `PlayerEvent` | inductive | unreviewed | review required | generated index seed only | public, pinned line 23 |
 | same | `publicPart` | def | unreviewed | review required | generated index seed only | public, pinned line 33 |
 | same | `actionPart` | def | unreviewed | review required | generated index seed only | public, pinned line 38 |

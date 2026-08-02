@@ -59,6 +59,7 @@ becomes difficult to scan.
 | EXP-046 | 2026-07-30 | D0/D5/D6 / communication ownership | Is observable pre-play cheap talk a static `GameForm` construction, or must even the babbling theorem use Protocol timing? | Supports static ownership; decides D18; promoted | [`decisions/D18-communication-ownership.md`](decisions/D18-communication-ownership.md); `GameTheory/Experimental/PostArchitecture/CheapTalk.lean`; `GameTheory/Core/CheapTalk.lean`; `GameTheory/Examples/CheapTalk.lean` |
 | EXP-047 | 2026-07-30 | D8/D18 / public randomization | Does mixed play of the static cheap-talk extension induce a base correlated equilibrium without Protocol timing or a second equilibrium predicate? | Supports static bridge; decides D19; promoted | [`decisions/D19-cheap-talk-public-randomization.md`](decisions/D19-cheap-talk-public-randomization.md); `GameTheory/Experimental/PostArchitecture/CheapTalkPublicRandomness.lean`; `GameTheory/Core/CheapTalkRandomization.lean` |
 | EXP-048 | 2026-07-30 | D16/D18 / Electronic Mail ownership | Do the finite Electronic Mail theorems integrate as a static Bayesian/Epistemic example, or do their message rounds require Protocol execution? | Supports static Examples bridge; decides D20; promoted | [`decisions/D20-electronic-mail-ownership.md`](decisions/D20-electronic-mail-ownership.md); `GameTheory/Experimental/PostArchitecture/ElectronicMail.lean`; `GameTheory/Examples/ElectronicMail.lean` |
+| EXP-049 | 2026-08-02 | D0/D2/D12 / online learning | Can the pinned multiplicative-weights regret engine be recovered as independent `GameTheoryMath` over `FinDist` and feed stable self-play without importing analysis into Core? | Narrows to law-free vectors plus a canonical-law adapter; decides D21 | [`decisions/D21-finite-online-learning-boundary.md`](decisions/D21-finite-online-learning-boundary.md); `GameTheoryMath/OnlineLearning.lean`; `GameTheory/{Probability,Analysis}/OnlineLearning.lean` |
 
 ## Entry template
 
@@ -3179,3 +3180,59 @@ memory.
 - **Next action:** leave Protocol unspent until a dynamic email-process theorem
   is selected; D-COMM's only remaining rows are the explicitly gated
   public-signal and zero-sum value families.
+
+### EXP-049: finite multiplicative weights over the canonical law
+
+- **Date / revision:** 2026-08-02, working tree based on `d9ff55e`
+- **Status:** supports the quantitative recovery with a narrowed boundary;
+  decides and promotes D21
+- **Decision / question:** D0/D2/D12 and D-LEARN; whether the missing pinned
+  `Math.OnlineLearning` dependency should be recovered as reusable
+  `GameTheoryMath` over exact finite laws, or whether multiplicative-weights
+  self-play remains deferred.
+- **Prediction:** the finite action algorithm, exponential-potential argument,
+  and explicit external-regret bound are game-independent. They should use
+  `FinDist`, live below game semantics, and feed `Core.Learning` through a thin
+  theorem without creating another regret or equilibrium API.
+- **Representative slice:** recover exponential weights on one arbitrary
+  finite action carrier, prove the fixed-learning-rate regret bound, then use
+  the existing finite self-play bridge to obtain the pinned explicit
+  approximate-CCE capstone.
+- **Competing designs:** port the proof spine to `GameTheoryMath`; find an
+  equivalent Mathlib theorem and adapt it; or leave the quantitative MW rows
+  deferred while retaining only the finite self-play identities.
+- **Measurements to collect:** Mathlib overlap; imports and closure cost;
+  authored lines; PMF-to-`FinDist` friction; axiom and source-hazard profile;
+  focused build cost; and whether stable Core gains an Analysis dependency.
+- **Kill conditions:** the game-independent statement essentially needs an
+  infinite/countable law, forces topology or `Real.exp` imports into Core,
+  needs a second regret/CCE definition, depends on untrusted evaluation, or
+  requires stored finiteness or forbidden transport.
+- **Evidence so far:** the first Terra recovery pass found that the finite
+  self-play identities adapt to current Core, while every quantitative MW
+  capstone depends on pinned `mwDist`, `expWeights`, and
+  `mw_externalRegret_le`; no equivalent current repository declaration exists.
+- **Observation:** Mathlib supplies the exponential convexity and logarithm
+  facts but no multiplicative-weights/regret engine. Direct `FinDist` use in
+  `GameTheoryMath` is rejected by the existing forbidden-import check. The
+  successful split proves normalized finite-vector mathematics independently,
+  packages it with `FinDist.ofWeights` in Probability, and composes it only in
+  `Analysis.Learning`; the original direct-`FinDist` prediction is therefore
+  narrowed rather than rewritten.
+- **Measurements:** the new law-free module, adapter, and bridge are 227, 49,
+  and 197 nonblank lines. Core learning grows from 133 to 301 nonblank lines,
+  but its added product-law/normalization layer contains no `Real.exp` or
+  `Real.log`. The integrated build completes in 2,079 jobs, including the
+  Analysis-owned concrete witness, and the full project builds in 3,371 jobs;
+  23/23 pinned math
+  and 15/15 self-play declarations are reviewed. Source hazards are zero and
+  the headline theorems use only `propext`, `Classical.choice`, and
+  `Quot.sound`.
+- **Outcome:** supports the game-independent proof spine and finite MW
+  self-play, while deciding D21's vector/adapter/analytic-bridge split. Core
+  rejects the MW modules; the bridge positively reaches Core averaging,
+  independent regret, the canonical-law adapter, and the quantitative game
+  theorem, while rejecting Protocol and the fixed-point dependency.
+- **Next action:** keep finite/MW self-play closed and recover potential-game
+  fictitious play as the next D-LEARN package; reserve a new experiment only
+  if its convergence statement needs a boundary not already covered by D21.
