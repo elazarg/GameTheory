@@ -155,6 +155,21 @@ PROBE10: Profile = (
 )
 
 
+PROBE11: Profile = (
+    row("0.07077316250825261", "0.06049895706248606", "0.17873702678622672", 0),
+    row("0.00870554163481225", "0.10205549180212525", "0.360823707435671", 0),
+    row(0, "0.1684647388296799", "0.06509810769329116", "0.00970305238135889"),
+    row(0, "0.28149267717706933", "0.09754546812153103", "0.07033032463990774"),
+    row("0.002056179806325357", "0.06082548529141743", 0, "0.11501844773867301"),
+    row("0.03569988191346543", "0.00897017315075594", 0, "0.21708955986796796"),
+    row("0.06022555064968521", 0, 0, "0.16277294054550848"),
+    row("0.09612766769407326", 0, 0, "0.09720955546489693"),
+    row("0.17272500809879754", 0, "0.0509426542216618", "0.07639103843052555"),
+    row("0.2531712893453341", 0, "0.024484008004624004", "0.008640071805916994"),
+    row("0.05344187650893504", "0.013002213795958862", "0.06130568065116255", 0),
+)
+
+
 def bit(mask: int, player: int) -> int:
     return (mask >> player) & 1
 
@@ -295,6 +310,34 @@ def prescribed_tail_one_stage_gains(profile: Profile) -> list[Fraction]:
     return result
 
 
+def local_action_differences(profile: Profile) -> tuple[Vector, ...]:
+    """Quit-minus-Continue values using the prescribed successor payoff."""
+    values = profile_values(profile)
+    result = []
+    for phase in range(len(profile)):
+        successor = (phase + 1) % len(profile)
+        differences = []
+        for player in range(N):
+            quit_value, absorption, survival = opponent_stage_values(
+                profile[phase], player
+            )
+            continue_value = absorption + survival * values[successor][player]
+            differences.append(quit_value - continue_value)
+        result.append(tuple(differences))
+    return tuple(result)  # type: ignore[return-value]
+
+
+def assert_profile_payoff_equations(profile: Profile) -> None:
+    values = profile_values(profile)
+    for phase, probabilities in enumerate(profile):
+        immediate, survival = phase_data(probabilities)
+        successor = (phase + 1) % len(profile)
+        for player in range(N):
+            assert values[phase][player] == (
+                immediate[player] + survival * values[successor][player]
+            )
+
+
 def support_word(profile: Profile) -> tuple[int, ...]:
     return tuple(
         sum(
@@ -313,6 +356,7 @@ def evaluate_probe(
     upper_bound: Fraction,
 ) -> tuple[Fraction, dict[tuple[int, int, str], Fraction]]:
     assert support_word(profile) == expected_support
+    assert_profile_payoff_equations(profile)
     gains = full_stopping_gains(profile)
     maximum_key, maximum_gain = max(gains.items(), key=lambda item: item[1])
     one_stage_maximum = max(prescribed_tail_one_stage_gains(profile))
@@ -386,6 +430,34 @@ def main() -> None:
     assert period8_maximum < period7_maximum
     assert period9_maximum < period8_maximum
     assert period10_maximum < period9_maximum
+
+    period11_maximum, period11_gains = evaluate_probe(
+        "period 11",
+        PROBE11,
+        (7, 7, 14, 14, 11, 11, 9, 9, 13, 13, 7),
+        Fraction(1, 10**10),
+    )
+    assert period11_maximum < Fraction(1, 10**12)
+    assert period11_maximum < period10_maximum
+
+    differences = local_action_differences(PROBE11)
+    active_residuals = []
+    inactive_differences = []
+    for phase in range(len(PROBE11)):
+        for player in range(N):
+            if PROBE11[phase][player] == 0:
+                inactive_differences.append(differences[phase][player])
+            else:
+                active_residuals.append(abs(differences[phase][player]))
+    assert max(active_residuals) < Fraction(1, 10**12)
+    assert max(inactive_differences) < 0
+    assert max(period11_gains.values()) == period11_maximum
+    print(f"period 11 exact signed maximum = {period11_maximum}")
+    print(
+        "period 11 inactive D range ~= "
+        f"[{float(min(inactive_differences)):.15f}, "
+        f"{float(max(inactive_differences)):.15f}]"
+    )
 
 
 if __name__ == "__main__":
