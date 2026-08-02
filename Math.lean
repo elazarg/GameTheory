@@ -6,6 +6,7 @@ import Math.Probability.PredictableCoreShadow
 import Math.Probability.MaximalCoupling
 import Math.Probability.MarkovOccupation
 import Math.Probability.HittingTimePotential
+import Math.Probability.FiniteClosedCoreReach
 import Math.Probability.OccupationFlowAlternative
 import Math.Probability.ChargedOccupationAlternative
 import Math.Probability.AnalyticOccupationFlow
