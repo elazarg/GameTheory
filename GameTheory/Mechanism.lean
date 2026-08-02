@@ -8,6 +8,8 @@ umbrella.
 
 import GameTheory.Languages.Mechanism
 import GameTheory.Mechanism.Auction
+import GameTheory.Mechanism.AllPay
+import GameTheory.Mechanism.Combinatorial
 import GameTheory.Mechanism.ReserveVickrey
 import GameTheory.Mechanism.VCG
 

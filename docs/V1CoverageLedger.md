@@ -5,7 +5,7 @@ Status: active family-level ledger.
 Pinned source: `reference/GameTheory-v1/` at
 `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 
-Last reconciled: 2026-08-02 against the working tree based on `21c49fd`.
+Last reconciled: 2026-08-02 against the working tree based on `8239c18`.
 
 This ledger answers three different questions separately:
 
@@ -20,8 +20,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Thirty-two work-package ledgers claim 1,443 declarations: 1,000
-have reviewed dispositions and 443 remain seeded `unreviewed`; a further 6,881 are
+declarations. Thirty-four work-package ledgers claim 1,502 declarations: 1,059
+have reviewed dispositions and 443 remain seeded `unreviewed`; a further 6,822 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -151,7 +151,7 @@ declaration-based.
 | M-FAIR | `Mechanism/FairDivision.lean`, finite indivisible files | 6 | finite mechanism/fair-division branch | assigned | not started | round-robin EF1 and one algorithmic allocation theorem |
 | M-CAKE | divisible fair-division files | 6 | D11/`Analysis` or Frontier | deferred | out of scope | measurable/continuous probability decision |
 | M-SOCIAL | `Mechanism/SocialChoice.lean`, `Mechanism/SocialChoice/**` | 9 | ranking/preference foundations plus coordinated domain | validated by Arrow | partial | May, median strategic compilation, Gibbard-Satterthwaite, Sen |
-| M-AUCT | `Auctions/**` | 10 | finite auction/mechanism branch; continuous work behind D11 | sealed-bid, reserve-price, and VCG surfaces validated | partial; Basic/Vickrey/FirstPrice/ReserveVickrey/VCG 64/64 reviewed | [basic auction ledger](coverage/M-AUCT-basic.md); [reserve Vickrey ledger](coverage/M-AUCT-reserve-vickrey.md); [VCG ledger](coverage/M-AUCT-vcg.md); next combinatorial/all-pay and executable knapsack |
+| M-AUCT | `Auctions/**` | 10 | finite auction/mechanism branch; continuous work behind D11 | sealed-bid, reserve, VCG, combinatorial, and all-pay surfaces validated | partial; accounted leaves 123/123 reviewed | [basic auction ledger](coverage/M-AUCT-basic.md); [reserve Vickrey ledger](coverage/M-AUCT-reserve-vickrey.md); [VCG ledger](coverage/M-AUCT-vcg.md); [combinatorial ledger](coverage/M-AUCT-combinatorial.md); [all-pay ledger](coverage/M-AUCT-all-pay.md); next executable knapsack's 71-declaration boundary |
 | M-VOTE | `Voting/**` | 7 | coordinated voting branch | validated foundations | partial | delegation, liquid democracy, median, majority, power inventory |
 
 ### Potential consumers and parallel domains
@@ -203,7 +203,7 @@ declaration-based.
 
 1. Continue the exact FOSG queue through observation-model batches and named
    comparisons; generated rows remain `unreviewed` until manually classified.
-2. Extend the passed auction gate through combinatorial/all-pay recovery; the
-   canonical finite-law robust smoothness gate is closed by EXP-053.
+2. Reserve the executable-knapsack boundary experiment; combinatorial/all-pay
+   recovery and the canonical finite-law robust smoothness gate are closed.
 3. Keep every broader family partial until all pinned declarations are
    classified, and update this file in the same commit as each status change.

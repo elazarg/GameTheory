@@ -37,7 +37,8 @@ GameTheory/Stochastic    opt-in finite-support stochastic games, perfect-public
 GameTheory/Congestion    opt-in load calculus, Rosenthal potential, pure and
                          coarse-correlated affine PoA, and canonical
                          Pigou/Braess examples
-GameTheory/Mechanism     opt-in coordinated mechanism domains and finite auctions
+GameTheory/Mechanism     opt-in coordinated mechanisms, finite auctions,
+                         combinatorial allocations, and all-pay arithmetic
 GameTheory/Languages     scoped language encodings and truthful Bayesian
                          mechanism compilation with recorded limitations
   /NFG                   deterministic normal-form syntax compiling directly
