@@ -300,6 +300,380 @@ theorem isOneSidedGuaranteeCertificate_playerOne :
   exact hsecurity opponent horizon
     (le_trans (le_max_left threshold 2) hhorizon)
 
+/-! ## Deterministic live-history reset of player 1's security strategy -/
+
+/-- Follow the prescribed player-1 strategy before `prefixLength`.  On a
+length-`prefixLength` cone which is still live, reset the
+Blackwell--Ferguson strategy and feed it only the rebased suffix history.  On
+cones already absorbed by the splice time, keep the prescribed strategy. -/
+def playerOneSecurityAfterLiveDeviation
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (prefixLength : ℕ) : game.BehaviorStrategy false :=
+  fun time history =>
+    if htime : prefixLength ≤ time then
+      let base := game.terminalPrefixLE htime history
+      if base.2 = State.live then
+        playerOneSecurityStrategy parameter (time - prefixLength)
+          (game.terminalSuffixLE htime history)
+      else
+        prescribed false time history
+    else
+      prescribed false time history
+
+/-- A packaged-history evaluator used to move the reset strategy across the
+dependent equality between a recovered suffix and its displayed suffix. -/
+def playerOneSecurityAtPackagedHistory (parameter : ℕ) :
+    (Σ length, game.Hist length) → PMF Bool :=
+  fun packaged =>
+    playerOneSecurityStrategy parameter packaged.1 packaged.2
+
+theorem playerOneSecurityAfterLiveDeviation_before
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (prefixLength : ℕ) {time : ℕ} (htime : time < prefixLength)
+    (history : game.Hist time) :
+    playerOneSecurityAfterLiveDeviation parameter prescribed prefixLength
+        time history =
+      prescribed false time history := by
+  simp [playerOneSecurityAfterLiveDeviation, Nat.not_le_of_lt htime]
+
+theorem playerOneSecurityAfterLiveDeviation_appendHist_of_live
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (prefixLength : ℕ) (base : game.Hist prefixLength)
+    (hbase : base.2 = State.live) {suffixLength : ℕ}
+    (suffix : game.Hist suffixLength) (hstart : suffix.StartsAt base.2) :
+    playerOneSecurityAfterLiveDeviation parameter prescribed prefixLength
+        (prefixLength + suffixLength) (game.appendHist base suffix) =
+      playerOneSecurityStrategy parameter suffixLength suffix := by
+  unfold playerOneSecurityAfterLiveDeviation
+  simp only [dif_pos (Nat.le_add_right prefixLength suffixLength)]
+  rw [game.terminalPrefixLE_appendHist base suffix hstart]
+  simp only [hbase, ↓reduceIte]
+  let packagedSuffix : Σ length, game.Hist length :=
+    ⟨prefixLength + suffixLength - prefixLength,
+      game.terminalSuffixLE
+        (Nat.le_add_right prefixLength suffixLength)
+        (game.appendHist base suffix)⟩
+  have packagedSuffix_eq :
+      packagedSuffix = ⟨suffixLength, suffix⟩ := by
+    apply Sigma.ext (Nat.add_sub_cancel_left prefixLength suffixLength)
+    exact game.terminalSuffixLE_appendHist_heq base suffix
+  change
+    playerOneSecurityAtPackagedHistory parameter packagedSuffix =
+      playerOneSecurityAtPackagedHistory parameter ⟨suffixLength, suffix⟩
+  exact congrArg (playerOneSecurityAtPackagedHistory parameter)
+    packagedSuffix_eq
+
+theorem playerOneSecurityAfterLiveDeviation_appendHist_of_not_live
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (prefixLength : ℕ) (base : game.Hist prefixLength)
+    (hbase : base.2 ≠ State.live) {suffixLength : ℕ}
+    (suffix : game.Hist suffixLength) (hstart : suffix.StartsAt base.2) :
+    playerOneSecurityAfterLiveDeviation parameter prescribed prefixLength
+        (prefixLength + suffixLength) (game.appendHist base suffix) =
+      prescribed false (prefixLength + suffixLength)
+        (game.appendHist base suffix) := by
+  unfold playerOneSecurityAfterLiveDeviation
+  simp only [dif_pos (Nat.le_add_right prefixLength suffixLength)]
+  rw [game.terminalPrefixLE_appendHist base suffix hstart]
+  simp [hbase]
+
+/-- The reset deviation leaves the complete prefix law unchanged. -/
+theorem profilesAgreeBefore_playerOneSecurityAfterLive
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (prefixLength : ℕ) :
+    game.ProfilesAgreeBefore
+      (Function.update prescribed false
+        (playerOneSecurityAfterLiveDeviation parameter prescribed
+          prefixLength))
+      prescribed prefixLength := by
+  intro who time history htime
+  cases who
+  · simp [playerOneSecurityAfterLiveDeviation_before parameter prescribed
+      prefixLength htime history]
+  · simp
+
+theorem histDist_playerOneSecurityAfterLive_at_prefix
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (initial : State) (prefixLength : ℕ) :
+    game.histDist
+        (Function.update prescribed false
+          (playerOneSecurityAfterLiveDeviation parameter prescribed
+            prefixLength))
+        initial prefixLength =
+      game.histDist prescribed initial prefixLength :=
+  game.histDist_eq_of_profilesAgreeBefore
+    (profilesAgreeBefore_playerOneSecurityAfterLive parameter prescribed
+      prefixLength)
+    prefixLength (le_refl prefixLength)
+
+/-- On every genuine suffix of a live prefix, the global reset is exactly the
+local security completion against the prescribed rebased player-2 strategy. -/
+theorem profilesAgreeOnStartsAt_playerOneSecurityAfterLive_of_live
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (prefixLength : ℕ) (base : game.Hist prefixLength)
+    (hbase : base.2 = State.live) :
+    game.ProfilesAgreeOnStartsAt
+      (game.afterHistoryProfile
+        (Function.update prescribed false
+          (playerOneSecurityAfterLiveDeviation parameter prescribed
+            prefixLength))
+        base)
+      (Function.update (game.afterHistoryProfile prescribed base) false
+        (playerOneSecurityStrategy parameter))
+      base.2 := by
+  intro who suffixLength suffix hstart
+  cases who
+  · change
+      playerOneSecurityAfterLiveDeviation parameter prescribed prefixLength
+          (prefixLength + suffixLength) (game.appendHist base suffix) =
+        playerOneSecurityStrategy parameter suffixLength suffix
+    exact playerOneSecurityAfterLiveDeviation_appendHist_of_live
+      parameter prescribed prefixLength base hbase suffix hstart
+  · simp
+
+/-- On every genuine suffix of an absorbed prefix, the global reset is
+identical to the prescribed rebased profile. -/
+theorem profilesAgreeOnStartsAt_playerOneSecurityAfterLive_of_not_live
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (prefixLength : ℕ) (base : game.Hist prefixLength)
+    (hbase : base.2 ≠ State.live) :
+    game.ProfilesAgreeOnStartsAt
+      (game.afterHistoryProfile
+        (Function.update prescribed false
+          (playerOneSecurityAfterLiveDeviation parameter prescribed
+            prefixLength))
+        base)
+      (game.afterHistoryProfile prescribed base)
+      base.2 := by
+  intro who suffixLength suffix hstart
+  cases who
+  · change
+      playerOneSecurityAfterLiveDeviation parameter prescribed prefixLength
+          (prefixLength + suffixLength) (game.appendHist base suffix) =
+        prescribed false (prefixLength + suffixLength)
+          (game.appendHist base suffix)
+    exact playerOneSecurityAfterLiveDeviation_appendHist_of_not_live
+      parameter prescribed prefixLength base hbase suffix hstart
+  · simp
+
+/-- Finite-average payoffs depend only on play at histories genuinely rooted
+at the supplied initial state. -/
+theorem finiteAveragePayoff_eq_of_profilesAgreeOnStartsAt_for_sorinSecurity
+    {left right : game.BehaviorProfile} {initial : State}
+    (hagree : game.ProfilesAgreeOnStartsAt left right initial)
+    (horizon : ℕ) (who : Player) :
+    game.finiteAveragePayoff initial horizon left who =
+      game.finiteAveragePayoff initial horizon right who := by
+  unfold StochasticGame.finiteAveragePayoff
+  rw [game.histDist_eq_of_profilesAgreeOnStartsAt hagree horizon]
+
+/-- On a live prefix, the conditional finite-average payoff of the global
+reset is exactly that of the locally reset security completion. -/
+theorem finiteAveragePayoff_after_playerOneSecurityAfterLive_of_live
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (prefixLength : ℕ) (base : game.Hist prefixLength)
+    (hbase : base.2 = State.live) (horizon : ℕ) :
+    game.finiteAveragePayoff base.2 horizon
+        (game.afterHistoryProfile
+          (Function.update prescribed false
+            (playerOneSecurityAfterLiveDeviation parameter prescribed
+              prefixLength))
+          base)
+        false =
+      game.finiteAveragePayoff base.2 horizon
+        (Function.update (game.afterHistoryProfile prescribed base) false
+          (playerOneSecurityStrategy parameter))
+        false :=
+  finiteAveragePayoff_eq_of_profilesAgreeOnStartsAt_for_sorinSecurity
+    (profilesAgreeOnStartsAt_playerOneSecurityAfterLive_of_live
+      parameter prescribed prefixLength base hbase)
+    horizon false
+
+/-- On an absorbed prefix, the conditional finite-average payoff is unchanged
+by the global reset. -/
+theorem finiteAveragePayoff_after_playerOneSecurityAfterLive_of_not_live
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (prefixLength : ℕ) (base : game.Hist prefixLength)
+    (hbase : base.2 ≠ State.live) (horizon : ℕ) :
+    game.finiteAveragePayoff base.2 horizon
+        (game.afterHistoryProfile
+          (Function.update prescribed false
+            (playerOneSecurityAfterLiveDeviation parameter prescribed
+              prefixLength))
+          base)
+        false =
+      game.finiteAveragePayoff base.2 horizon
+        (game.afterHistoryProfile prescribed base) false :=
+  finiteAveragePayoff_eq_of_profilesAgreeOnStartsAt_for_sorinSecurity
+    (profilesAgreeOnStartsAt_playerOneSecurityAfterLive_of_not_live
+      parameter prescribed prefixLength base hbase)
+    horizon false
+
+/-- A quantitative Blackwell--Ferguson guarantee applies uniformly after
+every live prefix because its opponent quantifier ranges over arbitrary
+rebased behavior profiles. -/
+theorem finiteAveragePayoff_after_playerOneSecurityAfterLive_ge_half
+    (parameter threshold : ℕ) (epsilon : ℝ)
+    (hsecurity : ∀ (opponent : game.BehaviorProfile) (horizon : ℕ),
+      threshold ≤ horizon →
+        1 / 2 - epsilon ≤
+          game.finiteAveragePayoff .live horizon
+            (Function.update opponent false
+              (playerOneSecurityStrategy parameter)) false)
+    (prescribed : game.BehaviorProfile) (prefixLength : ℕ)
+    (base : game.Hist prefixLength) (hbase : base.2 = State.live)
+    (horizon : ℕ) (hhorizon : threshold ≤ horizon) :
+    1 / 2 - epsilon ≤
+      game.finiteAveragePayoff base.2 horizon
+        (game.afterHistoryProfile
+          (Function.update prescribed false
+            (playerOneSecurityAfterLiveDeviation parameter prescribed
+              prefixLength))
+          base)
+        false := by
+  rw [finiteAveragePayoff_after_playerOneSecurityAfterLive_of_live
+    parameter prescribed prefixLength base hbase]
+  simpa [hbase] using
+    hsecurity (game.afterHistoryProfile prescribed base) horizon hhorizon
+
+/-- Exact one-stage gain formula for the player-1 reset. -/
+theorem expectedStagePayoff_playerOneSecurityAfterLive_sub
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (initial : State) (prefixLength suffixLength : ℕ) :
+    game.expectedStagePayoff
+        (Function.update prescribed false
+          (playerOneSecurityAfterLiveDeviation parameter prescribed
+            prefixLength))
+        initial (prefixLength + suffixLength) false -
+      game.expectedStagePayoff prescribed initial
+        (prefixLength + suffixLength) false =
+      expect (game.histDist prescribed initial prefixLength) fun base =>
+        if base.2 = State.live then
+          game.expectedStagePayoff
+              (Function.update (game.afterHistoryProfile prescribed base)
+                false (playerOneSecurityStrategy parameter))
+              base.2 suffixLength false -
+            game.expectedStagePayoff
+              (game.afterHistoryProfile prescribed base)
+              base.2 suffixLength false
+        else
+          0 := by
+  rw [expectedStagePayoff_add_eq_expect_afterHistory_for_sorinSplice,
+    expectedStagePayoff_add_eq_expect_afterHistory_for_sorinSplice,
+    histDist_playerOneSecurityAfterLive_at_prefix]
+  rw [← expect_sub]
+  apply Math.ProbabilityMassFunction.expect_congr_on_support
+  intro base _
+  by_cases hbase : base.2 = State.live
+  · rw [game.expectedStagePayoff_eq_of_profilesAgreeOnStartsAt
+      (profilesAgreeOnStartsAt_playerOneSecurityAfterLive_of_live
+        parameter prescribed prefixLength base hbase)]
+    simp [hbase]
+  · rw [game.expectedStagePayoff_eq_of_profilesAgreeOnStartsAt
+      (profilesAgreeOnStartsAt_playerOneSecurityAfterLive_of_not_live
+        parameter prescribed prefixLength base hbase)]
+    simp [hbase]
+
+/-- Exact whole-horizon gain formula for the player-1 reset.  As for player 2,
+all prefix terms cancel and only the live-prefix conditional suffix gains
+remain. -/
+theorem finiteAveragePayoff_playerOneSecurityAfterLive_sub
+    (parameter : ℕ) (prescribed : game.BehaviorProfile)
+    (initial : State) (prefixLength suffixLength : ℕ) :
+    game.finiteAveragePayoff initial (prefixLength + suffixLength)
+        (Function.update prescribed false
+          (playerOneSecurityAfterLiveDeviation parameter prescribed
+            prefixLength))
+        false -
+      game.finiteAveragePayoff initial (prefixLength + suffixLength)
+        prescribed false =
+      ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ *
+        ∑ time ∈ Finset.range suffixLength,
+          expect (game.histDist prescribed initial prefixLength) fun base =>
+            if base.2 = State.live then
+              game.expectedStagePayoff
+                  (Function.update (game.afterHistoryProfile prescribed base)
+                    false (playerOneSecurityStrategy parameter))
+                  base.2 time false -
+                game.expectedStagePayoff
+                  (game.afterHistoryProfile prescribed base)
+                  base.2 time false
+            else
+              0 := by
+  rw [game.finiteAveragePayoff_eq_sum_expectedStagePayoff,
+    game.finiteAveragePayoff_eq_sum_expectedStagePayoff,
+    Finset.sum_range_add, Finset.sum_range_add]
+  have hprefix :
+      (∑ time ∈ Finset.range prefixLength,
+          game.expectedStagePayoff
+            (Function.update prescribed false
+              (playerOneSecurityAfterLiveDeviation parameter prescribed
+                prefixLength))
+            initial time false) =
+        ∑ time ∈ Finset.range prefixLength,
+          game.expectedStagePayoff prescribed initial time false := by
+    apply Finset.sum_congr rfl
+    intro time htime
+    exact expectedStagePayoff_eq_of_profilesAgreeBefore_for_sorinSplice
+      (profilesAgreeBefore_playerOneSecurityAfterLive parameter prescribed
+        prefixLength)
+      (Finset.mem_range.mp htime) false
+  rw [hprefix]
+  calc
+    ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ *
+          ((∑ time ∈ Finset.range prefixLength,
+              game.expectedStagePayoff prescribed initial time false) +
+            ∑ time ∈ Finset.range suffixLength,
+              game.expectedStagePayoff
+                (Function.update prescribed false
+                  (playerOneSecurityAfterLiveDeviation parameter prescribed
+                    prefixLength))
+                initial (prefixLength + time) false) -
+        ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ *
+          ((∑ time ∈ Finset.range prefixLength,
+              game.expectedStagePayoff prescribed initial time false) +
+            ∑ time ∈ Finset.range suffixLength,
+              game.expectedStagePayoff prescribed initial
+                (prefixLength + time) false) =
+      ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ *
+        ((∑ time ∈ Finset.range suffixLength,
+            game.expectedStagePayoff
+              (Function.update prescribed false
+                (playerOneSecurityAfterLiveDeviation parameter prescribed
+                  prefixLength))
+              initial (prefixLength + time) false) -
+          ∑ time ∈ Finset.range suffixLength,
+            game.expectedStagePayoff prescribed initial
+              (prefixLength + time) false) := by ring
+    _ = ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ *
+        ∑ time ∈ Finset.range suffixLength,
+          (game.expectedStagePayoff
+              (Function.update prescribed false
+                (playerOneSecurityAfterLiveDeviation parameter prescribed
+                  prefixLength))
+              initial (prefixLength + time) false -
+            game.expectedStagePayoff prescribed initial
+              (prefixLength + time) false) := by
+          rw [Finset.sum_sub_distrib]
+    _ = ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ *
+        ∑ time ∈ Finset.range suffixLength,
+          expect (game.histDist prescribed initial prefixLength) fun base =>
+            if base.2 = State.live then
+              game.expectedStagePayoff
+                  (Function.update (game.afterHistoryProfile prescribed base)
+                    false (playerOneSecurityStrategy parameter))
+                  base.2 time false -
+                game.expectedStagePayoff
+                  (game.afterHistoryProfile prescribed base)
+                  base.2 time false
+            else
+              0 := by
+          congr 1
+          apply Finset.sum_congr rfl
+          intro time _
+          exact expectedStagePayoff_playerOneSecurityAfterLive_sub
+            parameter prescribed initial prefixLength time
+
 end SorinAbsorbingGame
 end StochasticGame
 end GameTheory
