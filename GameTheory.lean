@@ -231,6 +231,7 @@ import GameTheory.Concepts.Stochastic.SorinAbsorbingGame
 import GameTheory.Concepts.Stochastic.SorinOccupationSecurity
 import GameTheory.Concepts.Stochastic.SorinOccupationPlayerOneSecurity
 import GameTheory.Concepts.Stochastic.SorinOccupationStopping
+import GameTheory.Concepts.Stochastic.SorinOccupationVanishing
 import GameTheory.Concepts.Stochastic.PureExternalityCycleGerm
 import GameTheory.Concepts.Stochastic.ProperSupportGatePromotion
 import GameTheory.Concepts.Stochastic.FinitePublicTerminalNashPerturbation
