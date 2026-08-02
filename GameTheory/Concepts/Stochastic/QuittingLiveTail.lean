@@ -31,12 +31,14 @@ def quittingLiveMassLimit
     (profile : (quittingGame reward).BehaviorProfile) : ℝ :=
   ⨅ time, quittingLiveMass reward profile time
 
+omit [DecidableEq ι] in
 /-- Live mass converges monotonically to its infimum. -/
 theorem tendsto_quittingLiveMass
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (profile : (quittingGame reward).BehaviorProfile) :
     Tendsto (quittingLiveMass reward profile) atTop
       (nhds (quittingLiveMassLimit reward profile)) := by
+  classical
   unfold quittingLiveMassLimit
   apply tendsto_atTop_ciInf (quittingLiveMass_antitone reward profile)
   refine ⟨0, ?_⟩
@@ -66,12 +68,14 @@ theorem quittingLiveMassLimit_le
   rintro _ ⟨stage, rfl⟩
   exact quittingLiveMass_nonneg reward profile stage
 
+omit [DecidableEq ι] in
 /-- At every time, live mass plus all absorbed-state masses is one. -/
 theorem quittingLiveMass_add_sum_absorbedMass
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (profile : (quittingGame reward).BehaviorProfile) (time : ℕ) :
     quittingLiveMass reward profile time +
       ∑ S, quittingAbsorbedMass reward profile time S = 1 := by
+  classical
   letI : Finite (quittingGame reward).State :=
     inferInstanceAs (Finite (Option {S : Finset ι // S.Nonempty}))
   letI : ∀ who : ι, Finite ((quittingGame reward).Act who) :=
@@ -97,12 +101,14 @@ theorem quittingLiveMass_add_sum_absorbedMass
                 quittingGame]
     _ = 1 := expect_const _ _
 
+omit [DecidableEq ι] in
 /-- Conservation of probability persists at the limit. -/
 theorem quittingLiveMassLimit_add_sum_absorbedMassLimit
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (profile : (quittingGame reward).BehaviorProfile) :
     quittingLiveMassLimit reward profile +
       ∑ S, quittingAbsorbedMassLimit reward profile S = 1 := by
+  classical
   have hlimit : Tendsto (fun time =>
       quittingLiveMass reward profile time +
         ∑ S, quittingAbsorbedMass reward profile time S) atTop
@@ -117,6 +123,7 @@ theorem quittingLiveMassLimit_add_sum_absorbedMassLimit
     simpa only [quittingLiveMass_add_sum_absorbedMass] using hlimit
   exact tendsto_nhds_unique hconstant tendsto_const_nhds
 
+omit [DecidableEq ι] in
 /-- Total probability of absorption strictly after the cutoff is current
 live mass minus the probability of never absorbing. -/
 theorem sum_absorbedMassLimit_sub_eq_liveTail
@@ -126,6 +133,7 @@ theorem sum_absorbedMassLimit_sub_eq_liveTail
       quittingAbsorbedMass reward profile time S)) =
       quittingLiveMass reward profile time -
         quittingLiveMassLimit reward profile := by
+  classical
   have hfinite :=
     quittingLiveMass_add_sum_absorbedMass reward profile time
   have hlimit :=
@@ -163,6 +171,7 @@ theorem quittingTerminalPayoff_sub_expectedStagePayoff_eq_sum_liveTail
   intro S _
   ring
 
+omit [DecidableEq ι] in
 /-- Quantitative terminal-tail estimate. -/
 theorem abs_quittingTerminalPayoff_sub_expectedStagePayoff_le_liveTail
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -173,6 +182,7 @@ theorem abs_quittingTerminalPayoff_sub_expectedStagePayoff_le_liveTail
         (quittingGame reward).expectedStagePayoff profile none time who| ≤
       bound * (quittingLiveMass reward profile time -
         quittingLiveMassLimit reward profile) := by
+  classical
   rw [quittingTerminalPayoff_sub_expectedStagePayoff_eq_sum_liveTail]
   calc
     |∑ S, (quittingAbsorbedMassLimit reward profile S -
