@@ -185,8 +185,13 @@ residual: strong complementarity forces every state to reach the positive
 dual-occupation support through the pure-controller support graph.
 `SingleControllerRankCompletion.lean` then selects least-distance-decreasing
 actions off that support and proves reachability under one fixed completed
-stationary kernel, ruling out cyclic local choices.  The remaining projection
-witness requires the fixed-kernel mean-ergodic transience/projection argument.
+stationary kernel, ruling out cyclic local choices.
+`SingleControllerFlowCompletion.lean` supplies the stronger same-policy route
+needed by Vrieze's original dual: it normalizes `z` on positive occupation
+support and `yGain` elsewhere, proves closed-core reachability under that
+hybrid kernel, and compiles the resulting off-core transience certificate.
+The remaining projection-witness work is the complementary-slackness
+gain/reward compatibility for this hybrid policy.
 
 Supporting classical theorems, fully proved: Fink's discounted stationary
 equilibria (`exists_isDiscountedStationaryBellmanEq`, `Fink.lean`), Shapley's

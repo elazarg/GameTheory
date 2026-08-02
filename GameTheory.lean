@@ -165,6 +165,7 @@ import GameTheory.Concepts.Stochastic.AverageOptimalityCertificate
 import GameTheory.Concepts.Stochastic.SingleController
 import GameTheory.Concepts.Stochastic.SingleControllerNoTrap
 import GameTheory.Concepts.Stochastic.SingleControllerRankCompletion
+import GameTheory.Concepts.Stochastic.SingleControllerFlowCompletion
 import GameTheory.Concepts.Stochastic.DiscountBiasNoGo
 import GameTheory.Concepts.Stochastic.BellmanVariety
 import GameTheory.Concepts.Stochastic.BellmanSignCell
