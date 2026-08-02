@@ -424,6 +424,302 @@ theorem liveWeightedStagePayoff_sum_le
         expect_livePrefixIndicator_eq_liveProbability,
         expect_livePrefix_expectedStateValue_eq_liveProbability_add]
 
+/-- Prefix-mass-weighted finite tail average of one player's prescribed
+continuation, restricted to prefixes live at the splice time. -/
+def liveWeightedTailAverage (profile : game.BehaviorProfile)
+    (prefixLength suffixLength : ℕ) (who : Player) : ℝ :=
+  (suffixLength : ℝ)⁻¹ *
+    ∑ suffixTime ∈ Finset.range suffixLength,
+      liveWeightedStagePayoff profile prefixLength suffixTime who
+
+/-- Equivalent conditional-history form of `liveWeightedTailAverage`. -/
+theorem liveWeightedTailAverage_eq_expect
+    (profile : game.BehaviorProfile) (prefixLength suffixLength : ℕ)
+    (who : Player) :
+    liveWeightedTailAverage profile prefixLength suffixLength who =
+      expect (game.histDist profile .live prefixLength) fun base =>
+        if base.2 = State.live then
+          game.finiteAveragePayoff base.2 suffixLength
+            (game.afterHistoryProfile profile base) who
+        else
+          0 := by
+  unfold liveWeightedTailAverage liveWeightedStagePayoff
+  rw [← Fin.sum_univ_eq_sum_range,
+    Math.Probability.expect_sum_comm, ← expect_const_mul]
+  apply Math.ProbabilityMassFunction.expect_congr_on_support
+  intro base _
+  by_cases hbase : base.2 = State.live
+  · simp only [hbase, ↓reduceIte]
+    rw [game.finiteAveragePayoff_eq_sum_expectedStagePayoff]
+    congr 1
+    exact Fin.sum_univ_eq_sum_range
+      (fun time : ℕ =>
+        game.expectedStagePayoff (game.afterHistoryProfile profile base)
+          State.live time who)
+      suffixLength
+  · simp [hbase]
+
+/-- The sum of the two live-weighted prescribed tail averages is at most
+`2 r_N - p`.  This is the unnormalized form of Sorin's conditional-tail
+bound `u₁ + u₂ ≤ 2 - p/r_N`. -/
+theorem liveWeightedTailAverage_sum_le_two_mul_sub_survivalLimit
+    (profile : game.BehaviorProfile) (prefixLength suffixLength : ℕ)
+    (hsuffix : 0 < suffixLength) :
+    liveWeightedTailAverage profile prefixLength suffixLength false +
+        liveWeightedTailAverage profile prefixLength suffixLength true ≤
+      2 * liveProbability profile prefixLength - survivalLimit profile := by
+  have hterm : ∀ suffixTime ∈ Finset.range suffixLength,
+      liveWeightedStagePayoff profile prefixLength suffixTime false +
+          liveWeightedStagePayoff profile prefixLength suffixTime true ≤
+        2 * liveProbability profile prefixLength - survivalLimit profile := by
+    intro suffixTime _
+    exact (liveWeightedStagePayoff_sum_le profile prefixLength suffixTime).trans
+      (sub_le_sub_left
+        (survivalLimit_le_liveProbability profile
+          (prefixLength + (suffixTime + 1)))
+        (2 * liveProbability profile prefixLength))
+  have hsum := Finset.sum_le_sum hterm
+  have hsuffixReal : (0 : ℝ) < suffixLength := by exact_mod_cast hsuffix
+  unfold liveWeightedTailAverage
+  rw [← mul_add, ← Finset.sum_add_distrib] at *
+  have hnormalize := mul_le_mul_of_nonneg_left hsum
+    (inv_nonneg.mpr hsuffixReal.le)
+  calc
+    (suffixLength : ℝ)⁻¹ *
+        ∑ suffixTime ∈ Finset.range suffixLength,
+          (liveWeightedStagePayoff profile prefixLength suffixTime false +
+            liveWeightedStagePayoff profile prefixLength suffixTime true) ≤
+      (suffixLength : ℝ)⁻¹ *
+        ∑ _suffixTime ∈ Finset.range suffixLength,
+          (2 * liveProbability profile prefixLength - survivalLimit profile) :=
+        hnormalize
+    _ = 2 * liveProbability profile prefixLength - survivalLimit profile := by
+      rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+      field_simp
+
+/-! ## Security-tail averages and exact root gain -/
+
+/-- Player 1's live-prefix-weighted tail stage payoff after locally resetting
+the Blackwell--Ferguson strategy. -/
+def playerOneSecurityWeightedStagePayoff (parameter : ℕ)
+    (profile : game.BehaviorProfile) (prefixLength suffixTime : ℕ) : ℝ :=
+  expect (game.histDist profile .live prefixLength) fun base =>
+    if base.2 = State.live then
+      game.expectedStagePayoff
+        (Function.update (game.afterHistoryProfile profile base) false
+          (playerOneSecurityStrategy parameter))
+        base.2 suffixTime false
+    else
+      0
+
+/-- Corresponding live-prefix-weighted finite tail average. -/
+def playerOneSecurityWeightedTailAverage (parameter : ℕ)
+    (profile : game.BehaviorProfile) (prefixLength suffixLength : ℕ) : ℝ :=
+  (suffixLength : ℝ)⁻¹ *
+    ∑ suffixTime ∈ Finset.range suffixLength,
+      playerOneSecurityWeightedStagePayoff parameter profile prefixLength
+        suffixTime
+
+theorem playerOneSecurityWeightedTailAverage_eq_expect
+    (parameter : ℕ) (profile : game.BehaviorProfile)
+    (prefixLength suffixLength : ℕ) :
+    playerOneSecurityWeightedTailAverage parameter profile prefixLength
+        suffixLength =
+      expect (game.histDist profile .live prefixLength) fun base =>
+        if base.2 = State.live then
+          game.finiteAveragePayoff base.2 suffixLength
+            (Function.update (game.afterHistoryProfile profile base) false
+              (playerOneSecurityStrategy parameter))
+            false
+        else
+          0 := by
+  unfold playerOneSecurityWeightedTailAverage
+    playerOneSecurityWeightedStagePayoff
+  rw [← Fin.sum_univ_eq_sum_range,
+    Math.Probability.expect_sum_comm, ← expect_const_mul]
+  apply Math.ProbabilityMassFunction.expect_congr_on_support
+  intro base _
+  by_cases hbase : base.2 = State.live
+  · simp only [hbase, ↓reduceIte]
+    rw [game.finiteAveragePayoff_eq_sum_expectedStagePayoff]
+    congr 1
+    exact Fin.sum_univ_eq_sum_range
+      (fun time : ℕ =>
+        game.expectedStagePayoff
+          (Function.update (game.afterHistoryProfile profile base) false
+            (playerOneSecurityStrategy parameter))
+          State.live time false)
+      suffixLength
+  · simp [hbase]
+
+/-- The uniform Blackwell--Ferguson floor survives averaging over all live
+prefixes. -/
+theorem playerOneSecurityWeightedTailAverage_ge
+    (parameter threshold : ℕ) (zeta : ℝ)
+    (hsecurity : ∀ (opponent : game.BehaviorProfile) (horizon : ℕ),
+      threshold ≤ horizon →
+        1 / 2 - zeta ≤
+          game.finiteAveragePayoff .live horizon
+            (Function.update opponent false
+              (playerOneSecurityStrategy parameter)) false)
+    (profile : game.BehaviorProfile) (prefixLength suffixLength : ℕ)
+    (hsuffix : threshold ≤ suffixLength) :
+    (1 / 2 - zeta) * liveProbability profile prefixLength ≤
+      playerOneSecurityWeightedTailAverage parameter profile prefixLength
+        suffixLength := by
+  rw [playerOneSecurityWeightedTailAverage_eq_expect]
+  calc
+    (1 / 2 - zeta) * liveProbability profile prefixLength =
+      expect (game.histDist profile .live prefixLength)
+        (fun base =>
+          if base.2 = State.live then 1 / 2 - zeta else 0) := by
+            rw [show
+              (fun base : game.Hist prefixLength =>
+                if base.2 = State.live then 1 / 2 - zeta else 0) =
+              (fun base =>
+                (1 / 2 - zeta) *
+                  (if base.2 = State.live then (1 : ℝ) else 0)) by
+                    funext base
+                    by_cases hbase : base.2 = State.live <;> simp [hbase]]
+            rw [expect_const_mul,
+              expect_livePrefixIndicator_eq_liveProbability]
+    _ ≤ expect (game.histDist profile .live prefixLength)
+        (fun base =>
+          if base.2 = State.live then
+            game.finiteAveragePayoff base.2 suffixLength
+              (Function.update (game.afterHistoryProfile profile base) false
+                (playerOneSecurityStrategy parameter)) false
+          else 0) := by
+            apply expect_mono
+            intro base
+            by_cases hbase : base.2 = State.live
+            · simp only [hbase, ↓reduceIte]
+              simpa only [hbase] using
+                hsecurity (game.afterHistoryProfile profile base)
+                  suffixLength hsuffix
+            · simp [hbase]
+
+theorem playerOneSecurityWeightedStagePayoff_sub_liveWeightedStagePayoff
+    (parameter : ℕ) (profile : game.BehaviorProfile)
+    (prefixLength suffixTime : ℕ) :
+    expect (game.histDist profile .live prefixLength)
+        (fun base =>
+          if base.2 = State.live then
+            game.expectedStagePayoff
+                (Function.update (game.afterHistoryProfile profile base) false
+                  (playerOneSecurityStrategy parameter))
+                base.2 suffixTime false -
+              game.expectedStagePayoff
+                (game.afterHistoryProfile profile base)
+                base.2 suffixTime false
+          else 0) =
+      playerOneSecurityWeightedStagePayoff parameter profile prefixLength
+          suffixTime -
+        liveWeightedStagePayoff profile prefixLength suffixTime false := by
+  unfold playerOneSecurityWeightedStagePayoff liveWeightedStagePayoff
+  rw [← expect_sub]
+  apply Math.ProbabilityMassFunction.expect_congr_on_support
+  intro base _
+  by_cases hbase : base.2 = State.live <;> simp [hbase]
+
+/-- Exact root payoff gain from the deterministic player-1 live reset,
+expressed as tail weight times the live-weighted conditional tail gain. -/
+theorem finiteAveragePayoff_playerOneSecurityAfterLive_sub_eq_tailWeight
+    (parameter : ℕ) (profile : game.BehaviorProfile)
+    (prefixLength suffixLength : ℕ) (hsuffix : 0 < suffixLength) :
+    game.finiteAveragePayoff .live (prefixLength + suffixLength)
+        (Function.update profile false
+          (playerOneSecurityAfterLiveDeviation parameter profile prefixLength))
+        false -
+      game.finiteAveragePayoff .live (prefixLength + suffixLength)
+        profile false =
+      ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength *
+        (playerOneSecurityWeightedTailAverage parameter profile prefixLength
+            suffixLength -
+          liveWeightedTailAverage profile prefixLength suffixLength false) := by
+  rw [finiteAveragePayoff_playerOneSecurityAfterLive_sub]
+  simp_rw [playerOneSecurityWeightedStagePayoff_sub_liveWeightedStagePayoff]
+  rw [Finset.sum_sub_distrib]
+  unfold playerOneSecurityWeightedTailAverage liveWeightedTailAverage
+  have hsuffixNe : (suffixLength : ℝ) ≠ 0 :=
+    Nat.cast_ne_zero.mpr hsuffix.ne'
+  field_simp
+
+theorem playerTwoSecurityStageGain_eq
+    (profile : game.BehaviorProfile) (prefixLength suffixTime : ℕ) :
+    expect (game.histDist profile .live prefixLength)
+        (fun base =>
+          if base.2 = State.live then
+            2 / 3 -
+              game.expectedStagePayoff
+                (game.afterHistoryProfile profile base)
+                base.2 suffixTime true
+          else 0) =
+      (2 / 3) * liveProbability profile prefixLength -
+        liveWeightedStagePayoff profile prefixLength suffixTime true := by
+  unfold liveWeightedStagePayoff
+  calc
+    expect (game.histDist profile .live prefixLength)
+        (fun base =>
+          if base.2 = State.live then
+            2 / 3 -
+              game.expectedStagePayoff
+                (game.afterHistoryProfile profile base)
+                base.2 suffixTime true
+          else 0) =
+      expect (game.histDist profile .live prefixLength)
+        (fun base =>
+          (if base.2 = State.live then 2 / 3 else 0) -
+            (if base.2 = State.live then
+              game.expectedStagePayoff
+                (game.afterHistoryProfile profile base)
+                base.2 suffixTime true
+            else 0)) := by
+            apply Math.ProbabilityMassFunction.expect_congr_on_support
+            intro base _
+            by_cases hbase : base.2 = State.live <;> simp [hbase]
+    _ = expect (game.histDist profile .live prefixLength)
+          (fun base => if base.2 = State.live then 2 / 3 else 0) -
+        expect (game.histDist profile .live prefixLength)
+          (fun base => if base.2 = State.live then
+            game.expectedStagePayoff
+              (game.afterHistoryProfile profile base)
+              base.2 suffixTime true
+          else 0) := by
+            rw [expect_sub]
+    _ = _ := by
+      rw [show
+        (fun base : game.Hist prefixLength =>
+          if base.2 = State.live then (2 / 3 : ℝ) else 0) =
+        (fun base =>
+          (2 / 3 : ℝ) *
+            (if base.2 = State.live then (1 : ℝ) else 0)) by
+              funext base
+              by_cases hbase : base.2 = State.live <;> simp [hbase],
+        expect_const_mul,
+        expect_livePrefixIndicator_eq_liveProbability]
+
+/-- Exact root payoff gain from player 2's deterministic live reset. -/
+theorem finiteAveragePayoff_playerTwoSecurityAfterLive_sub_eq_tailWeight
+    (profile : game.BehaviorProfile)
+    (prefixLength suffixLength : ℕ) (hsuffix : 0 < suffixLength) :
+    game.finiteAveragePayoff .live (prefixLength + suffixLength)
+        (Function.update profile true
+          (playerTwoSecurityAfterLiveDeviation profile prefixLength)) true -
+      game.finiteAveragePayoff .live (prefixLength + suffixLength)
+        profile true =
+      ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ * suffixLength *
+        ((2 / 3) * liveProbability profile prefixLength -
+          liveWeightedTailAverage profile prefixLength suffixLength true) := by
+  rw [finiteAveragePayoff_playerTwoSecurityAfterLive_sub]
+  simp_rw [playerTwoSecurityStageGain_eq]
+  rw [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_range,
+    nsmul_eq_mul]
+  unfold liveWeightedTailAverage
+  have hsuffixNe : (suffixLength : ℝ) ≠ 0 :=
+    Nat.cast_ne_zero.mpr hsuffix.ne'
+  field_simp
+
 end SorinAbsorbingGame
 end StochasticGame
 end GameTheory
