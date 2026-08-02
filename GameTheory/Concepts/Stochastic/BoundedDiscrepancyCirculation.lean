@@ -4,7 +4,9 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import Mathlib.Data.Fintype.Pigeonhole
+import Mathlib.Data.Fintype.BigOperators
 import Mathlib.Data.List.Chain
+import Mathlib.Data.List.ChainOfFn
 import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Tactic
@@ -400,6 +402,7 @@ private theorem exists_boundary_of_isChain
                   ih htailChain ⟨second, by simp, hsecond⟩ htailUnmarked
               exact ⟨markedEdge, by simp [hmarkedMem], unmarkedEdge,
                 by simp [hunmarkedMem], hmarkedEdge, hunmarkedEdge, hboundary⟩
+
             · exact ⟨first, by simp, second, by simp, hfirst, hsecond, hrelation⟩
           · by_cases hsecond : marked second
             · exact ⟨second, by simp, first, by simp, hsecond, hfirst,
@@ -416,6 +419,71 @@ private theorem exists_boundary_of_isChain
                   ih htailChain htailMarked ⟨second, by simp, hsecond⟩
               exact ⟨markedEdge, by simp [hmarkedMem], unmarkedEdge,
                 by simp [hunmarkedMem], hmarkedEdge, hunmarkedEdge, hboundary⟩
+
+private theorem isChain_flatMap_of_nonempty
+    {α β : Type*} (relation : α → α → Prop)
+    (liftedRelation : β → β → Prop) (block : α → List β)
+    (items : List α) (hitems : items.IsChain relation)
+    (hnonempty : ∀ item ∈ items, block item ≠ [])
+    (hblock : ∀ item ∈ items, (block item).IsChain liftedRelation)
+    (hcross : ∀ {first second}, relation first second →
+      ∀ x ∈ block first, ∀ y ∈ block second, liftedRelation x y) :
+    (items.flatMap block).IsChain liftedRelation := by
+  induction items with
+  | nil => exact List.isChain_nil
+  | cons first tail ih =>
+      cases tail with
+      | nil => simpa using hblock first (by simp)
+      | cons second rest =>
+          have hrelation : relation first second :=
+            (List.isChain_cons_cons.mp hitems).1
+          have htailChain : (second :: rest).IsChain relation :=
+            (List.isChain_cons_cons.mp hitems).2
+          have hsecondNonempty : block second ≠ [] :=
+            hnonempty second (by simp)
+          have htailNonempty :
+              ∀ item ∈ second :: rest, block item ≠ [] := by
+            intro item hitem
+            exact hnonempty item (by simp [hitem])
+          have htailBlock :
+              ∀ item ∈ second :: rest,
+                (block item).IsChain liftedRelation := by
+            intro item hitem
+            exact hblock item (by simp [hitem])
+          have htailResult :
+              ((second :: rest).flatMap block).IsChain liftedRelation :=
+            ih htailChain htailNonempty htailBlock
+          change
+            (block first ++ (second :: rest).flatMap block).IsChain
+              liftedRelation
+          apply (hblock first (by simp)).append htailResult
+          intro x hx y hy
+          have hxMem : x ∈ block first := List.mem_of_mem_getLast? hx
+          have hyInHead : y ∈ (block second).head? := by
+            rw [show (second :: rest).flatMap block =
+              block second ++ rest.flatMap block by rfl] at hy
+            rw [List.head?_append_of_ne_nil _ hsecondNonempty] at hy
+            exact hy
+          exact hcross hrelation x hxMem y
+            (List.mem_of_mem_head? hyInHead)
+
+private theorem count_map_eq_sum_toFinset_ite
+    {α β : Type*} [DecidableEq α] [DecidableEq β]
+    (mapValue : α → β) (items : List α) (hnodup : items.Nodup)
+    (value : β) :
+    (items.map mapValue).count value =
+      ∑ item ∈ items.toFinset,
+        if mapValue item = value then 1 else 0 := by
+  induction items with
+  | nil => simp
+  | cons first rest ih =>
+      rw [List.nodup_cons] at hnodup
+      simp only [List.map_cons, List.count_cons, List.toFinset_cons]
+      rw [Finset.sum_insert (by simpa using hnodup.1), ih hnodup.2]
+      by_cases hvalue : mapValue first = value
+      · simp [hvalue]
+        omega
+      · simp [hvalue]
 
 /-- A walk-connected positive support cannot be split into two nonempty edge
 sets without a pair of positive-support edges sharing an endpoint across the
@@ -518,9 +586,272 @@ structure ReachableConnectedIntegerCirculation {κ : Type uκ}
   entry_mem_support : ∃ edge, 0 < multiplicity edge ∧
     (G.source edge = entry ∨ G.target edge = entry)
 
+/-- Distinguishable copies of an edge under a finite integer multiplicity. -/
+abbrev MultiplicityToken (multiplicity : E → ℕ) :=
+  Σ edge : E, Fin (multiplicity edge)
+
+namespace MultiplicityToken
+
+def edge {multiplicity : E → ℕ} (token : MultiplicityToken multiplicity) : E :=
+  token.1
+
+theorem card_filter_edge_eq_sum_filter [Fintype E] [DecidableEq E]
+    (multiplicity : E → ℕ) (predicate : E → Prop)
+    [DecidablePred predicate] :
+    (Finset.univ.filter
+      (fun token : MultiplicityToken multiplicity => predicate token.edge)).card =
+      ∑ edge with predicate edge, multiplicity edge := by
+  rw [Finset.card_eq_sum_ones, Finset.sum_filter]
+  change (∑ token : MultiplicityToken multiplicity,
+    if predicate token.edge then 1 else 0) = _
+  rw [Fintype.sum_sigma]
+  conv_rhs => rw [Finset.sum_filter]
+  apply Finset.sum_congr rfl
+  intro edge _
+  by_cases hedge : predicate edge <;>
+    simp [MultiplicityToken.edge, hedge]
+
+/-- All distinguishable copies of one original edge. -/
+def listForEdge (multiplicity : E → ℕ) (edge : E) :
+    List (MultiplicityToken multiplicity) :=
+  List.ofFn fun index : Fin (multiplicity edge) => ⟨edge, index⟩
+
+theorem listForEdge_ne_nil_of_pos (multiplicity : E → ℕ) (edge : E)
+    (hpositive : 0 < multiplicity edge) :
+    listForEdge multiplicity edge ≠ [] := by
+  intro hempty
+  have hlength := congrArg List.length hempty
+  simp [listForEdge] at hlength
+  omega
+
+theorem edge_eq_of_mem_listForEdge {multiplicity : E → ℕ} {edge : E}
+    {token : MultiplicityToken multiplicity}
+    (hmem : token ∈ listForEdge multiplicity edge) :
+    token.edge = edge := by
+  rw [listForEdge, List.mem_ofFn'] at hmem
+  obtain ⟨index, rfl⟩ := hmem
+  rfl
+
+theorem self_mem_listForEdge {multiplicity : E → ℕ}
+    (token : MultiplicityToken multiplicity) :
+    token ∈ listForEdge multiplicity token.edge := by
+  rcases token with ⟨edge, index⟩
+  rw [listForEdge, List.mem_ofFn']
+  exact ⟨index, rfl⟩
+
+theorem sum_ite_edge_eq (multiplicity : E → ℕ) [Fintype E]
+    [DecidableEq E] (edge : E) :
+    (∑ token : MultiplicityToken multiplicity,
+      if token.edge = edge then 1 else 0) = multiplicity edge := by
+  rw [Fintype.sum_sigma]
+  rw [Finset.sum_eq_single edge]
+  · simp [MultiplicityToken.edge]
+  · intro other _ hne
+    simp [MultiplicityToken.edge, hne]
+  · simp
+
+end MultiplicityToken
+
+/-- Expand an integer edge multiplicity into a directed graph of
+distinguishable edge tokens. -/
+def tokenGraph (multiplicity : E → ℕ) :
+    EdgeGraph V (MultiplicityToken multiplicity) where
+  source token := G.source token.edge
+  target token := G.target token.edge
+
+@[simp] theorem tokenGraph_source (multiplicity : E → ℕ)
+    (token : MultiplicityToken multiplicity) :
+    (G.tokenGraph multiplicity).source token = G.source token.edge := rfl
+
+@[simp] theorem tokenGraph_target (multiplicity : E → ℕ)
+    (token : MultiplicityToken multiplicity) :
+    (G.tokenGraph multiplicity).target token = G.target token.edge := rfl
+
+theorem tokenGraph_outgoingMultiplicity_univ
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (multiplicity : E → ℕ) (vertex : V) :
+    (G.tokenGraph multiplicity).outgoingMultiplicity
+        (edgeSetMultiplicity (Finset.univ : Finset (MultiplicityToken multiplicity))) vertex =
+      G.outgoingMultiplicity multiplicity vertex := by
+  classical
+  calc
+    (G.tokenGraph multiplicity).outgoingMultiplicity
+        (edgeSetMultiplicity
+          (Finset.univ : Finset (MultiplicityToken multiplicity))) vertex =
+        (Finset.univ.filter (fun token : MultiplicityToken multiplicity =>
+          G.source token.edge = vertex)).card := by
+            simp [outgoingMultiplicity, edgeSetMultiplicity]
+    _ = ∑ edge with G.source edge = vertex, multiplicity edge :=
+      MultiplicityToken.card_filter_edge_eq_sum_filter multiplicity
+        (fun edge => G.source edge = vertex)
+    _ = G.outgoingMultiplicity multiplicity vertex := rfl
+
+theorem tokenGraph_incomingMultiplicity_univ
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (multiplicity : E → ℕ) (vertex : V) :
+    (G.tokenGraph multiplicity).incomingMultiplicity
+        (edgeSetMultiplicity (Finset.univ : Finset (MultiplicityToken multiplicity))) vertex =
+      G.incomingMultiplicity multiplicity vertex := by
+  classical
+  calc
+    (G.tokenGraph multiplicity).incomingMultiplicity
+        (edgeSetMultiplicity
+          (Finset.univ : Finset (MultiplicityToken multiplicity))) vertex =
+        (Finset.univ.filter (fun token : MultiplicityToken multiplicity =>
+          G.target token.edge = vertex)).card := by
+            simp [incomingMultiplicity, edgeSetMultiplicity]
+    _ = ∑ edge with G.target edge = vertex, multiplicity edge :=
+      MultiplicityToken.card_filter_edge_eq_sum_filter multiplicity
+        (fun edge => G.target edge = vertex)
+    _ = G.incomingMultiplicity multiplicity vertex := rfl
+
+theorem tokenGraph_univ_balanced_of_balanced
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (multiplicity : E → ℕ)
+    (hbalanced : ∀ vertex,
+      G.outgoingMultiplicity multiplicity vertex =
+        G.incomingMultiplicity multiplicity vertex) :
+    (G.tokenGraph multiplicity).IsBalancedEdgeSet Finset.univ := by
+  intro vertex
+  rw [G.tokenGraph_outgoingMultiplicity_univ multiplicity vertex,
+    G.tokenGraph_incomingMultiplicity_univ multiplicity vertex]
+  exact hbalanced vertex
+
+theorem tokenGraph_listForEdge_isChain
+    (multiplicity : E → ℕ) (edge : E) :
+    (MultiplicityToken.listForEdge multiplicity edge).IsChain
+      (G.tokenGraph multiplicity).SharesEndpoint := by
+  rw [MultiplicityToken.listForEdge, List.isChain_ofFn]
+  intro index hindex
+  exact Or.inl rfl
+
+theorem tokenGraph_sharesEndpoint_of_mem_listForEdge
+    (multiplicity : E → ℕ) {first second : E}
+    (hshares : G.SharesEndpoint first second)
+    {firstToken secondToken : MultiplicityToken multiplicity}
+    (hfirst : firstToken ∈ MultiplicityToken.listForEdge multiplicity first)
+    (hsecond : secondToken ∈ MultiplicityToken.listForEdge multiplicity second) :
+    (G.tokenGraph multiplicity).SharesEndpoint firstToken secondToken := by
+  have hfirstEdge := MultiplicityToken.edge_eq_of_mem_listForEdge hfirst
+  have hsecondEdge := MultiplicityToken.edge_eq_of_mem_listForEdge hsecond
+  simpa [SharesEndpoint, hfirstEdge, hsecondEdge] using hshares
+
+/-- Weak connectivity of the original positive support lifts to weak
+connectivity of all distinguishable multiplicity tokens. -/
+theorem tokenGraph_univ_hasWalkConnectedSupport
+    [Fintype E] [DecidableEq E] (multiplicity : E → ℕ)
+    (hnonzero : ∃ edge, 0 < multiplicity edge)
+    (hconnected : G.HasWalkConnectedSupport multiplicity) :
+    (G.tokenGraph multiplicity).HasWalkConnectedSupport
+      (edgeSetMultiplicity
+        (Finset.univ : Finset (MultiplicityToken multiplicity))) := by
+  obtain ⟨traversal, _, hsupport, hchain⟩ := hconnected
+  let block : E → List (MultiplicityToken multiplicity) :=
+    MultiplicityToken.listForEdge multiplicity
+  let tokenTraversal := traversal.flatMap block
+  have hblockNonempty : ∀ edge ∈ traversal, block edge ≠ [] := by
+    intro edge hedge
+    exact MultiplicityToken.listForEdge_ne_nil_of_pos multiplicity edge
+      ((hsupport edge).1 hedge)
+  have hblockChain : ∀ edge ∈ traversal,
+      (block edge).IsChain (G.tokenGraph multiplicity).SharesEndpoint := by
+    intro edge _
+    exact G.tokenGraph_listForEdge_isChain multiplicity edge
+  have htokenChain :
+      tokenTraversal.IsChain (G.tokenGraph multiplicity).SharesEndpoint := by
+    exact isChain_flatMap_of_nonempty G.SharesEndpoint
+      (G.tokenGraph multiplicity).SharesEndpoint block traversal hchain
+      hblockNonempty hblockChain fun hshares firstToken hfirst secondToken hsecond =>
+        G.tokenGraph_sharesEndpoint_of_mem_listForEdge multiplicity hshares
+          hfirst hsecond
+  have hall : ∀ token : MultiplicityToken multiplicity,
+      token ∈ tokenTraversal := by
+    intro token
+    have hpositive : 0 < multiplicity token.edge := by
+      exact Nat.zero_lt_of_lt token.2.isLt
+    have hedgeTraversal : token.edge ∈ traversal :=
+      (hsupport token.edge).2 hpositive
+    apply List.mem_flatMap.mpr
+    exact ⟨token.edge, hedgeTraversal,
+      MultiplicityToken.self_mem_listForEdge token⟩
+  have htokenNonempty : tokenTraversal ≠ [] := by
+    obtain ⟨edge, hpositive⟩ := hnonzero
+    let token : MultiplicityToken multiplicity :=
+      ⟨edge, ⟨0, hpositive⟩⟩
+    exact List.ne_nil_of_mem (hall token)
+  refine ⟨tokenTraversal, htokenNonempty, ?_, htokenChain⟩
+  intro token
+  constructor
+  · intro _
+    exact (edgeSetMultiplicity_pos_iff Finset.univ token).2
+      (Finset.mem_univ token)
+  · intro _
+    exact hall token
+
 namespace Walk
 
 variable {G}
+
+/-- Forget token indices in a typed walk through the multiplicity-expanded
+graph. -/
+def detokenize (multiplicity : E → ℕ) {start : V} : {finish : V} →
+    (G.tokenGraph multiplicity).Walk start finish → G.Walk start finish
+  | _, .nil => .nil
+  | _, .concat walkSoFar token legal =>
+      .concat (detokenize multiplicity walkSoFar) token.edge legal
+
+@[simp] theorem edges_detokenize (multiplicity : E → ℕ)
+    (walk : (G.tokenGraph multiplicity).Walk start finish) :
+    (walk.detokenize multiplicity).edges =
+      walk.edges.map MultiplicityToken.edge := by
+  induction walk with
+  | nil => rfl
+  | concat walkSoFar token legal ih =>
+      change
+        (detokenize multiplicity walkSoFar).edges ++ [token.edge] =
+          (walkSoFar.edges ++ [token]).map MultiplicityToken.edge
+      rw [ih, List.map_append]
+      rfl
+
+@[simp] theorem length_detokenize (multiplicity : E → ℕ)
+    (walk : (G.tokenGraph multiplicity).Walk start finish) :
+    (walk.detokenize multiplicity).length = walk.length := by
+  rw [← Walk.edges_length, ← Walk.edges_length, edges_detokenize,
+    List.length_map]
+
+@[simp] theorem charge_detokenize {κ : Type uκ}
+    (multiplicity : E → ℕ) (edgeCharge : E → κ → ℤ)
+    (walk : (G.tokenGraph multiplicity).Walk start finish) :
+    (walk.detokenize multiplicity).charge edgeCharge =
+      walk.charge (fun token => edgeCharge token.edge) := by
+  induction walk with
+  | nil => rfl
+  | concat walkSoFar token legal ih =>
+      change
+        (detokenize multiplicity walkSoFar).charge edgeCharge +
+            edgeCharge token.edge =
+          walkSoFar.charge (fun token => edgeCharge token.edge) +
+            edgeCharge token.edge
+      rw [ih]
+
+/-- A token trail containing every distinguishable token detokenizes to the
+prescribed original integer edge multiplicity. -/
+theorem edgeMultiplicity_detokenize_of_nodup_all
+    [Fintype E] [DecidableEq E] (multiplicity : E → ℕ)
+    (walk : (G.tokenGraph multiplicity).Walk start finish)
+    (hnodup : walk.edges.Nodup)
+    (hall : ∀ token : MultiplicityToken multiplicity, token ∈ walk.edges)
+    (edge : E) :
+    (walk.detokenize multiplicity).edgeMultiplicity edge =
+      multiplicity edge := by
+  rw [(walk.detokenize multiplicity).edgeMultiplicity_eq_count,
+    edges_detokenize,
+    count_map_eq_sum_toFinset_ite MultiplicityToken.edge walk.edges hnodup edge]
+  have hfinset : walk.edges.toFinset = Finset.univ := by
+    ext token
+    simp [hall token]
+  rw [hfinset]
+  exact MultiplicityToken.sum_ite_edge_eq multiplicity edge
 
 /-- A trail whose distinct edge identities all belong to `allowed`. -/
 def IsTrailWithin [DecidableEq E] (walk : G.Walk start finish)
@@ -1006,6 +1337,84 @@ def toConnectedIntegerCirculation
 
 end Walk
 
+namespace ConnectedIntegerCirculation
+
+variable {G} {κ : Type uκ} {edgeCharge : E → κ → ℤ}
+
+/-- A connected integer circulation has an exact closed-walk realization at
+any incident support vertex.  Integer multiplicities are expanded to
+distinguishable tokens, traversed by the finite directed Euler theorem, and
+then detokenized. -/
+theorem exists_closedWalk_exactMultiplicity_at
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (circulation : G.ConnectedIntegerCirculation edgeCharge)
+    (base : V)
+    (hbase : ∃ edge, 0 < circulation.multiplicity edge ∧
+      (G.source edge = base ∨ G.target edge = base)) :
+    ∃ walk : G.Walk base base,
+      0 < walk.length ∧
+      (∀ edge, walk.edgeMultiplicity edge = circulation.multiplicity edge) ∧
+      walk.charge edgeCharge = 0 := by
+  let multiplicity := circulation.multiplicity
+  let tokenG := G.tokenGraph multiplicity
+  let allowed : Finset (MultiplicityToken multiplicity) := Finset.univ
+  have htokenBalanced : tokenG.IsBalancedEdgeSet allowed := by
+    exact G.tokenGraph_univ_balanced_of_balanced multiplicity circulation.balanced
+  have htokenConnected :
+      tokenG.HasWalkConnectedSupport (edgeSetMultiplicity allowed) := by
+    exact G.tokenGraph_univ_hasWalkConnectedSupport multiplicity
+      circulation.nonzero circulation.connected
+  have htokenOutgoing :
+      ∃ token, token ∈ allowed ∧ tokenG.source token = base := by
+    obtain ⟨edge, hpositive, hsource | htarget⟩ := hbase
+    · let token : MultiplicityToken multiplicity := ⟨edge, ⟨0, hpositive⟩⟩
+      have htokenSource : tokenG.source token = base := by
+        change G.source edge = base
+        exact hsource
+      exact ⟨token, Finset.mem_univ token, htokenSource⟩
+    · let token : MultiplicityToken multiplicity := ⟨edge, ⟨0, hpositive⟩⟩
+      have htokenTarget : tokenG.target token = base := by
+        change G.target edge = base
+        exact htarget
+      exact IsBalancedEdgeSet.exists_outgoing_of_mem_of_target_eq
+        (G := tokenG) allowed htokenBalanced token (Finset.mem_univ token)
+          base htokenTarget
+  obtain ⟨tokenWalk, htokenTrail, htokenCover⟩ :=
+    Walk.exists_closedTrail_covering_of_balanced_connected
+      (G := tokenG) allowed htokenBalanced htokenConnected base htokenOutgoing
+  let walk : G.Walk base base := tokenWalk.detokenize multiplicity
+  have hall : ∀ token : MultiplicityToken multiplicity,
+      token ∈ tokenWalk.edges := by
+    intro token
+    exact (htokenCover token).2 (Finset.mem_univ token)
+  have hexact : ∀ edge,
+      walk.edgeMultiplicity edge = circulation.multiplicity edge := by
+    intro edge
+    exact tokenWalk.edgeMultiplicity_detokenize_of_nodup_all multiplicity
+      htokenTrail.1 hall edge
+  have hnonempty : 0 < walk.length := by
+    obtain ⟨edge, hpositive⟩ := circulation.nonzero
+    have hwalkPositive : 0 < walk.edgeMultiplicity edge := by
+      rw [hexact edge]
+      exact hpositive
+    have hedgeMem := (walk.edgeMultiplicity_pos_iff_mem_edges edge).1
+      hwalkPositive
+    rw [← walk.edges_length, List.length_pos_iff]
+    exact List.ne_nil_of_mem hedgeMem
+  have hcharge : walk.charge edgeCharge = 0 := by
+    calc
+      walk.charge edgeCharge =
+          G.multiplicityCharge edgeCharge walk.edgeMultiplicity :=
+        (walk.multiplicityCharge_edgeMultiplicity edgeCharge).symm
+      _ = G.multiplicityCharge edgeCharge circulation.multiplicity := by
+        congr 1
+        funext edge
+        exact hexact edge
+      _ = 0 := circulation.charge_zero
+  exact ⟨walk, hnonempty, hexact, hcharge⟩
+
+end ConnectedIntegerCirculation
+
 /-- A nonempty cyclic word of edge identities based at `base`.  The endpoint
 conditions include the wraparound edge compatibility. -/
 structure CyclicWord (base : V) where
@@ -1426,6 +1835,31 @@ structure ZeroChargeLasso {κ : Type uκ} (edgeCharge : E → κ → ℤ)
   period_nonempty : 0 < period.length
   period_zero : period.charge edgeCharge = 0
 
+namespace ReachableConnectedIntegerCirculation
+
+variable {G} {start : V} {κ : Type uκ} {edgeCharge : E → κ → ℤ}
+
+/-- The Euler realization of a reachable connected circulation is a
+zero-charge lasso whose transient is the supplied route to the support. -/
+theorem exists_zeroChargeLasso
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (circulation : G.ReachableConnectedIntegerCirculation edgeCharge start) :
+    Nonempty (G.ZeroChargeLasso edgeCharge start) := by
+  obtain ⟨period, hnonempty, _, hzero⟩ :=
+    circulation.toConnectedIntegerCirculation.exists_closedWalk_exactMultiplicity_at
+      circulation.entry circulation.entry_mem_support
+  exact ⟨{
+    base := circulation.entry
+    initialWalk := circulation.initialWalk
+    periodFinish := circulation.entry
+    period := period
+    period_closed := rfl
+    period_nonempty := hnonempty
+    period_zero := hzero
+  }⟩
+
+end ReachableConnectedIntegerCirculation
+
 namespace ZeroChargeLasso
 
 variable {G} {start : V} {κ : Type uκ} {edgeCharge : E → κ → ℤ}
@@ -1509,6 +1943,22 @@ def toReachableConnectedIntegerCirculation
 
 end ZeroChargeLasso
 
+namespace ReachableConnectedIntegerCirculation
+
+variable {G} {start : V} {κ : Type uκ} {edgeCharge : E → κ → ℤ}
+
+/-- A reachable connected zero-charge integer circulation constructs a
+genuine eventually periodic infinite walk of bounded discrepancy. -/
+theorem exists_eventuallyPeriodic_boundedDiscrepancy
+    [Fintype E] [DecidableEq E] [DecidableEq V]
+    (circulation : G.ReachableConnectedIntegerCirculation edgeCharge start) :
+    ∃ walk : G.InfiniteWalk start,
+      walk.HasBoundedDiscrepancy edgeCharge ∧ walk.IsEventuallyPeriodic := by
+  obtain ⟨lasso⟩ := circulation.exists_zeroChargeLasso
+  exact lasso.exists_eventuallyPeriodic_boundedDiscrepancy
+
+end ReachableConnectedIntegerCirculation
+
 /-- The exact repeated-configuration extraction.  Finiteness of the vertex
 type and of the prefix-charge range forces two distinct times to have the same
 vertex and cumulative lattice charge; the intervening segment is the desired
@@ -1576,8 +2026,8 @@ theorem exists_boundedDiscrepancy_iff_exists_eventuallyPeriodic
     exact ⟨walk, hbounded⟩
 
 /-- The bounded-discrepancy pigeonhole certificate also yields a reachable
-connected integer circulation. This is the easy direction of the
-circulation equivalence; the converse requires an Euler-tour construction. -/
+connected integer circulation. This is the extraction direction of the
+circulation equivalence below. -/
 theorem exists_reachableConnectedIntegerCirculation_of_boundedDiscrepancy
     [Finite V] [Fintype E] [DecidableEq E] [DecidableEq V]
     {κ : Type uκ} (edgeCharge : E → κ → ℤ) (start : V)
@@ -1587,6 +2037,25 @@ theorem exists_reachableConnectedIntegerCirculation_of_boundedDiscrepancy
   obtain ⟨lasso⟩ := G.exists_zeroChargeLasso_of_boundedDiscrepancy
     edgeCharge start walk hbounded
   exact ⟨lasso.toReachableConnectedIntegerCirculation⟩
+
+/-- Exact finite certificate theorem for offline bounded discrepancy.  Over a
+finite vertex set and an integer charge lattice, a bounded-discrepancy walk
+exists exactly when a reachable connected zero-charge integer circulation
+exists.  The reverse construction is eventually periodic. -/
+theorem exists_boundedDiscrepancy_iff_reachableConnectedIntegerCirculation
+    [Finite V] [Fintype E] [DecidableEq E] [DecidableEq V]
+    {κ : Type uκ} (edgeCharge : E → κ → ℤ) (start : V) :
+    (∃ walk : G.InfiniteWalk start,
+      walk.HasBoundedDiscrepancy edgeCharge) ↔
+      Nonempty (G.ReachableConnectedIntegerCirculation edgeCharge start) := by
+  constructor
+  · rintro ⟨walk, hbounded⟩
+    exact G.exists_reachableConnectedIntegerCirculation_of_boundedDiscrepancy
+      edgeCharge start walk hbounded
+  · rintro ⟨circulation⟩
+    obtain ⟨walk, hbounded, _⟩ :=
+      circulation.exists_eventuallyPeriodic_boundedDiscrepancy
+    exact ⟨walk, hbounded⟩
 
 end EdgeGraph
 
