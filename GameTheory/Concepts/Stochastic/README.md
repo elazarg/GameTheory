@@ -63,6 +63,11 @@ extraction.
 telescopes behind one shared modulus and feeds the existing enforcement ledger
 at prescribed entries, where membership in every owner arena is available.
 
+`UncoveredPrescribedClassCounterexample.lean` is the two-player/two-node Q96
+regression: all four target/occupation-side checks pass on their stated
+domains, while the escaped prescribed class is outside player one's arena and
+has linear positive delivery error, so its Poisson equation is impossible.
+
 `FTVCyclicCredibility.lean` is the actual-data acceptance test for this
 route.  It constructs the Flesch--Thuijsman--Vrieze three-player quitting
 game, its ten-configuration public controller (three live clock phases and
