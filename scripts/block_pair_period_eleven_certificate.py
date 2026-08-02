@@ -1,16 +1,27 @@
 #!/usr/bin/env python3
-"""Exact interval certificate for the block-pair period-eleven lasso.
+"""Exact interval certificates for the block-pair period-eleven lasso.
 
-The candidate has public support word
+The lasso has public support word
 
     [7, 7, 14, 14, 11, 11, 9, 9, 13, 13, 7].
 
-There are 31 positive quitting probabilities.  For a sparse polynomial
-system we retain the 44 phase/player continuation values as independent
-variables.  The 75 equations are:
+There are 31 positive quitting probabilities.  The first, sparse polynomial
+system retains the 44 phase/player continuation values as independent
+variables.  Its 75 equations are:
 
 * 44 cyclic prescribed-payoff recurrences; and
 * 31 Quit = Continue equations, one at every active phase/player slot.
+
+The second system eliminates the 44 values through the exact cyclic payoff
+formula.  After multiplying by the positive joint-cycle denominator, it has
+31 polynomial active-indifference equations in the 31 hazards.  Both systems
+are certified independently; the original 75-variable system remains a
+regression for the elimination and phase orientation.
+
+Pass ``--export-reduced-preconditioner`` to emit the validated 31-by-31
+rational preconditioner, center, radius, game data, and variable order as
+canonical JSON with a SHA-256 fingerprint.  Export still runs both exact
+certificates before producing the document.
 
 The decimal inverse used to precondition the system is only witness
 generation.  After it is rounded to rational entries, every Krawczyk bound,
@@ -18,15 +29,18 @@ inactive-action inequality, support bound, and contraction check is performed
 with ``Fraction`` interval arithmetic.  Thus successful assertions are an
 exact certificate; no floating-point result is trusted.
 
-This script proves existence and local uniqueness of an exact zero in the
-displayed rational box.  It does not identify the zero as rational.
+This script proves existence and local uniqueness of an exact zero in the two
+respective rational boxes.  It does not identify the zero as rational.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from decimal import Decimal, localcontext
+from decimal import Decimal, ROUND_HALF_EVEN, localcontext
 from fractions import Fraction
+from hashlib import sha256
+import json
 from pathlib import Path
 import sys
 
@@ -81,6 +95,7 @@ VALUE_COUNT = PERIOD * N
 DIMENSION = HAZARD_COUNT + VALUE_COUNT
 assert HAZARD_COUNT == 31
 assert DIMENSION == 75
+REDUCED_PRECONDITIONER_PRECISION = 16
 
 HAZARD_INDEX = {slot: index for index, slot in enumerate(ACTIVE_SLOTS)}
 
@@ -91,7 +106,10 @@ def q(text: str) -> Fraction:
 
 ROOT_CENTER = tuple(tuple(q(value) for value in row) for row in ROOT_CENTER_TEXT)
 VALUE_CENTER = tuple(tuple(q(value) for value in row) for row in VALUE_CENTER_TEXT)
-CENTER = tuple(ROOT_CENTER[phase][player] for phase, player in ACTIVE_SLOTS) + tuple(
+HAZARD_CENTER = tuple(
+    ROOT_CENTER[phase][player] for phase, player in ACTIVE_SLOTS
+)
+CENTER = HAZARD_CENTER + tuple(
     VALUE_CENTER[phase][player]
     for phase in range(PERIOD)
     for player in range(N)
@@ -156,6 +174,68 @@ def interval_sum(values: list[Interval] | tuple[Interval, ...]) -> Interval:
 
 def interval_product(values: list[Interval] | tuple[Interval, ...]) -> Interval:
     result = ONE
+    for value in values:
+        result = result * value
+    return result
+
+
+def positive_reciprocal(value: Interval) -> Interval:
+    assert 0 < value.low <= value.high
+    return Interval(Fraction(1) / value.high, Fraction(1) / value.low)
+
+
+@dataclass(frozen=True)
+class IntervalDual:
+    """An interval value with an exact interval enclosure of its gradient."""
+
+    value: Interval
+    derivative: tuple[Interval, ...]
+
+    @staticmethod
+    def constant(value: Fraction | int, dimension: int) -> "IntervalDual":
+        return IntervalDual(
+            Interval.point(value), tuple(ZERO for _ in range(dimension))
+        )
+
+    def __add__(self, other: "IntervalDual") -> "IntervalDual":
+        assert len(self.derivative) == len(other.derivative)
+        return IntervalDual(
+            self.value + other.value,
+            tuple(
+                left + right
+                for left, right in zip(self.derivative, other.derivative)
+            ),
+        )
+
+    def __neg__(self) -> "IntervalDual":
+        return IntervalDual(
+            -self.value, tuple(-entry for entry in self.derivative)
+        )
+
+    def __sub__(self, other: "IntervalDual") -> "IntervalDual":
+        return self + (-other)
+
+    def __mul__(self, other: "IntervalDual") -> "IntervalDual":
+        assert len(self.derivative) == len(other.derivative)
+        return IntervalDual(
+            self.value * other.value,
+            tuple(
+                left * other.value + self.value * right
+                for left, right in zip(self.derivative, other.derivative)
+            ),
+        )
+
+    def scale(self, scalar: Fraction | int) -> "IntervalDual":
+        return IntervalDual(
+            self.value.scale(scalar),
+            tuple(entry.scale(scalar) for entry in self.derivative),
+        )
+
+
+def dual_product(
+    values: list[IntervalDual] | tuple[IntervalDual, ...], dimension: int
+) -> IntervalDual:
+    result = IntervalDual.constant(1, dimension)
     for value in values:
         result = result * value
     return result
@@ -282,9 +362,10 @@ def value_variable_index(phase: int, player: int) -> int:
     return HAZARD_COUNT + N * phase + player
 
 
-def unpack_box(
+def unpack_hazard_box(
     box: tuple[Interval, ...],
-) -> tuple[tuple[tuple[Interval, ...], ...], tuple[tuple[Interval, ...], ...]]:
+) -> tuple[tuple[Interval, ...], ...]:
+    assert len(box) == HAZARD_COUNT
     roots = []
     for phase, support in enumerate(SUPPORT_WORD):
         row = []
@@ -294,14 +375,26 @@ def unpack_box(
             else:
                 row.append(ZERO)
         roots.append(tuple(row))
+    return tuple(roots)
+
+
+def unpack_box(
+    box: tuple[Interval, ...],
+) -> tuple[tuple[tuple[Interval, ...], ...], tuple[tuple[Interval, ...], ...]]:
+    assert len(box) == DIMENSION
+    roots = unpack_hazard_box(box[:HAZARD_COUNT])
     values = tuple(
         tuple(box[value_variable_index(phase, player)] for player in range(N))
         for phase in range(PERIOD)
     )
-    return tuple(roots), values
+    return roots, values
 
 
 SparseRow = dict[int, Interval]
+SystemEvaluator = Callable[
+    [tuple[Interval, ...]],
+    tuple[tuple[Interval, ...], tuple[SparseRow, ...]],
+]
 
 
 def add_entry(row: SparseRow, column: int, value: Interval) -> None:
@@ -379,48 +472,211 @@ def system_and_jacobian(
     return tuple(equations), tuple(jacobian)
 
 
+def unpack_dual_hazard_box(
+    box: tuple[Interval, ...],
+) -> tuple[tuple[IntervalDual, ...], ...]:
+    assert len(box) == HAZARD_COUNT
+    roots = []
+    for phase, support in enumerate(SUPPORT_WORD):
+        row = []
+        for player in range(N):
+            slot = (phase, player)
+            if bit(support, player):
+                index = HAZARD_INDEX[slot]
+                derivative = [ZERO for _ in range(HAZARD_COUNT)]
+                derivative[index] = ONE
+                row.append(IntervalDual(box[index], tuple(derivative)))
+            else:
+                row.append(IntervalDual.constant(0, HAZARD_COUNT))
+        roots.append(tuple(row))
+    return tuple(roots)
+
+
+def dual_probability(
+    root: tuple[IntervalDual, ...], mask: int, omitted: int | None = None
+) -> IntervalDual:
+    one = IntervalDual.constant(1, HAZARD_COUNT)
+    factors = []
+    for player in range(N):
+        if player == omitted:
+            continue
+        factors.append(root[player] if bit(mask, player) else one - root[player])
+    return dual_product(factors, HAZARD_COUNT)
+
+
+@dataclass(frozen=True)
+class ReducedCycleData:
+    roots: tuple[tuple[IntervalDual, ...], ...]
+    immediate: tuple[tuple[IntervalDual, ...], ...]
+    survival: tuple[IntervalDual, ...]
+    joint_survival: IntervalDual
+    numerator: tuple[tuple[IntervalDual, ...], ...]
+
+
+def reduced_cycle_data(box: tuple[Interval, ...]) -> ReducedCycleData:
+    roots = unpack_dual_hazard_box(box)
+    immediate = []
+    survival = []
+    for root in roots:
+        phase_immediate = [
+            IntervalDual.constant(0, HAZARD_COUNT) for _ in range(N)
+        ]
+        for mask in range(1, 1 << N):
+            mass = dual_probability(root, mask)
+            for player in range(N):
+                phase_immediate[player] = (
+                    phase_immediate[player]
+                    + mass.scale(TERMINAL[mask][player])
+                )
+        immediate.append(tuple(phase_immediate))
+        survival.append(dual_probability(root, 0))
+
+    joint_survival = dual_product(survival, HAZARD_COUNT)
+    numerator = []
+    for phase in range(PERIOD):
+        value = [IntervalDual.constant(0, HAZARD_COUNT) for _ in range(N)]
+        prefix = IntervalDual.constant(1, HAZARD_COUNT)
+        for offset in range(PERIOD):
+            cycle_phase = (phase + offset) % PERIOD
+            for player in range(N):
+                value[player] = (
+                    value[player]
+                    + prefix * immediate[cycle_phase][player]
+                )
+            prefix = prefix * survival[cycle_phase]
+        numerator.append(tuple(value))
+
+    return ReducedCycleData(
+        roots,
+        tuple(immediate),
+        tuple(survival),
+        joint_survival,
+        tuple(numerator),
+    )
+
+
+def reduced_system_and_jacobian(
+    box: tuple[Interval, ...],
+) -> tuple[tuple[Interval, ...], tuple[SparseRow, ...]]:
+    data = reduced_cycle_data(box)
+    one = IntervalDual.constant(1, HAZARD_COUNT)
+    denominator = one - data.joint_survival
+    equations = []
+    jacobian = []
+
+    for phase, player in ACTIVE_SLOTS:
+        quit_value = IntervalDual.constant(0, HAZARD_COUNT)
+        absorption = IntervalDual.constant(0, HAZARD_COUNT)
+        root = data.roots[phase]
+        for opponent_mask in range(1 << N):
+            if bit(opponent_mask, player):
+                continue
+            mass = dual_probability(root, opponent_mask, omitted=player)
+            quit_value = quit_value + mass.scale(
+                TERMINAL[opponent_mask | (1 << player)][player]
+            )
+            if opponent_mask:
+                absorption = absorption + mass.scale(
+                    TERMINAL[opponent_mask][player]
+                )
+        opponent_survival = dual_probability(root, 0, omitted=player)
+        equation = (
+            denominator * (quit_value - absorption)
+            - opponent_survival
+            * data.numerator[(phase + 1) % PERIOD][player]
+        )
+        equations.append(equation.value)
+        jacobian.append(
+            {
+                column: entry
+                for column, entry in enumerate(equation.derivative)
+                if not entry.is_zero()
+            }
+        )
+
+    assert len(equations) == len(jacobian) == HAZARD_COUNT
+    return tuple(equations), tuple(jacobian)
+
+
+def reconstructed_cyclic_values(
+    box: tuple[Interval, ...],
+) -> tuple[
+    tuple[tuple[Interval, ...], ...],
+    tuple[tuple[Interval, ...], ...],
+    Interval,
+]:
+    roots = unpack_hazard_box(box)
+    phases = tuple(phase_data(root) for root in roots)
+    joint_survival = interval_product(tuple(data.survival for data in phases))
+    denominator = ONE - joint_survival
+    inverse_denominator = positive_reciprocal(denominator)
+    values = []
+    for phase in range(PERIOD):
+        numerator = [ZERO for _ in range(N)]
+        prefix = ONE
+        for offset in range(PERIOD):
+            cycle_phase = (phase + offset) % PERIOD
+            for player in range(N):
+                numerator[player] = (
+                    numerator[player]
+                    + prefix * phases[cycle_phase].immediate[player]
+                )
+            prefix = prefix * phases[cycle_phase].survival
+        values.append(
+            tuple(value * inverse_denominator for value in numerator)
+        )
+    return roots, tuple(values), joint_survival
+
+
 def point_box(values: tuple[Fraction, ...]) -> tuple[Interval, ...]:
     return tuple(Interval.point(value) for value in values)
 
 
-def rational_preconditioner(point_jacobian: tuple[SparseRow, ...]) -> list[list[Fraction]]:
+def rational_preconditioner(
+    point_jacobian: tuple[SparseRow, ...], decimal_precision: int = 50
+) -> list[list[Fraction]]:
     """Generate a rational approximate inverse using only Decimal arithmetic.
 
     Decimal elimination is not trusted as a proof step: its output is rounded
     to exact ``Fraction`` entries and the Krawczyk assertions below validate
     that rational matrix from scratch.
     """
+    dimension = len(point_jacobian)
+    assert dimension
     rational_matrix = [
-        [Fraction(0) for _ in range(DIMENSION)] for _ in range(DIMENSION)
+        [Fraction(0) for _ in range(dimension)] for _ in range(dimension)
     ]
     for row_index, row in enumerate(point_jacobian):
         for column, value in row.items():
+            assert 0 <= column < dimension
             assert value.low == value.high
             rational_matrix[row_index][column] = value.low
 
+    assert decimal_precision >= 2
     with localcontext() as context:
-        context.prec = 50
+        context.prec = decimal_precision
+        context.rounding = ROUND_HALF_EVEN
 
         def decimal(value: Fraction) -> Decimal:
             return Decimal(value.numerator) / Decimal(value.denominator)
 
         augmented = []
-        for row in range(DIMENSION):
+        for row in range(dimension):
             augmented.append(
                 [decimal(value) for value in rational_matrix[row]]
-                + [Decimal(1 if row == column else 0) for column in range(DIMENSION)]
+                + [Decimal(1 if row == column else 0) for column in range(dimension)]
             )
 
-        for column in range(DIMENSION):
+        for column in range(dimension):
             pivot = max(
-                range(column, DIMENSION),
+                range(column, dimension),
                 key=lambda row: abs(augmented[row][column]),
             )
             assert augmented[pivot][column] != 0
             augmented[column], augmented[pivot] = augmented[pivot], augmented[column]
             pivot_value = augmented[column][column]
             augmented[column] = [value / pivot_value for value in augmented[column]]
-            for row in range(DIMENSION):
+            for row in range(dimension):
                 if row == column:
                     continue
                 multiplier = augmented[row][column]
@@ -431,7 +687,7 @@ def rational_preconditioner(point_jacobian: tuple[SparseRow, ...]) -> list[list[
                     for value, pivot_entry in zip(augmented[row], augmented[column])
                 ]
 
-        inverse_decimal = [row[DIMENSION:] for row in augmented]
+        inverse_decimal = [row[dimension:] for row in augmented]
 
     # Decimal values are converted to exact decimal rationals.  The subsequent
     # interval validation, not the approximate elimination, proves the claim.
@@ -447,30 +703,34 @@ def krawczyk_bounds(
     preconditioner: list[list[Fraction]],
     radius: Fraction,
 ) -> tuple[Fraction, Fraction, tuple[Fraction, ...]]:
+    dimension = len(equations_at_center)
+    assert dimension == len(jacobian_on_box) == len(preconditioner)
+    assert all(len(row) == dimension for row in preconditioner)
     residual = []
     for equation in equations_at_center:
         assert equation.low == equation.high
         residual.append(equation.low)
 
     correction = []
-    for output in range(DIMENSION):
+    for output in range(dimension):
         correction.append(
             sum(
                 (preconditioner[output][row] * residual[row]
-                 for row in range(DIMENSION)),
+                 for row in range(dimension)),
                 Fraction(0),
             )
         )
 
     # B = I - A J(X), represented by interval entries.  Exploit the sparse
-    # rows of J rather than multiplying two dense 75-by-75 matrices.
+    # rows of J rather than multiplying two dense square matrices.
     defect = [
-        [Interval.point(1 if row == column else 0) for column in range(DIMENSION)]
-        for row in range(DIMENSION)
+        [Interval.point(1 if row == column else 0) for column in range(dimension)]
+        for row in range(dimension)
     ]
     for equation_row, sparse_row in enumerate(jacobian_on_box):
         for column, jacobian_entry in sparse_row.items():
-            for output in range(DIMENSION):
+            assert 0 <= column < dimension
+            for output in range(dimension):
                 coefficient = preconditioner[output][equation_row]
                 if coefficient:
                     defect[output][column] = (
@@ -484,23 +744,79 @@ def krawczyk_bounds(
     )
     inclusion_ratios = tuple(
         (abs(correction[index]) + row_sums[index] * radius) / radius
-        for index in range(DIMENSION)
+        for index in range(dimension)
     )
     return max(row_sums), max(inclusion_ratios), inclusion_ratios
 
 
-def assert_strategic_inequalities(box: tuple[Interval, ...]) -> tuple[Fraction, Fraction]:
-    roots, values = unpack_box(box)
-    for phase, player in ACTIVE_SLOTS:
-        hazard = roots[phase][player]
-        assert 0 < hazard.low < hazard.high < 1
+def certify_system(
+    center: tuple[Fraction, ...],
+    radius: Fraction,
+    evaluator: SystemEvaluator,
+    preconditioner_precision: int = 50,
+) -> tuple[
+    tuple[Interval, ...],
+    list[list[Fraction]],
+    Fraction,
+    Fraction,
+    Fraction,
+]:
+    center_box = point_box(center)
+    equations_at_center, point_jacobian = evaluator(center_box)
+    assert len(equations_at_center) == len(center)
+    preconditioner = rational_preconditioner(
+        point_jacobian, preconditioner_precision
+    )
+
+    box = tuple(Interval(value - radius, value + radius) for value in center)
+    _, jacobian_on_box = evaluator(box)
+    maximum_defect_row_sum, maximum_inclusion_ratio, _ = krawczyk_bounds(
+        equations_at_center,
+        jacobian_on_box,
+        preconditioner,
+        radius,
+    )
+
+    # ||I-AJ(X)||_infinity < 1 proves regularity throughout the box.  Strict
+    # Krawczyk inclusion proves existence and uniqueness of the exact root.
+    assert maximum_defect_row_sum < 1
+    assert maximum_inclusion_ratio < 1
+    maximum_center_residual = max(
+        equation.abs_upper() for equation in equations_at_center
+    )
+    return (
+        box,
+        preconditioner,
+        maximum_center_residual,
+        maximum_defect_row_sum,
+        maximum_inclusion_ratio,
+    )
+
+
+def assert_strategic_inequalities_for(
+    roots: tuple[tuple[Interval, ...], ...],
+    values: tuple[tuple[Interval, ...], ...],
+) -> tuple[Fraction, Fraction, Fraction]:
+    assert len(roots) == len(values) == PERIOD
+    active_count = 0
+    for phase, support in enumerate(SUPPORT_WORD):
+        for player in range(N):
+            hazard = roots[phase][player]
+            if bit(support, player):
+                active_count += 1
+                assert 0 < hazard.low < hazard.high < 1
+            else:
+                assert hazard.is_zero()
+    assert active_count == HAZARD_COUNT
 
     inactive_upper = None
+    inactive_count = 0
     for phase, support in enumerate(SUPPORT_WORD):
         successor = (phase + 1) % PERIOD
         for player in range(N):
             if bit(support, player):
                 continue
+            inactive_count += 1
             data = opponent_data(roots[phase], player)
             difference = (
                 data.quit_value
@@ -523,43 +839,189 @@ def assert_strategic_inequalities(box: tuple[Interval, ...]) -> tuple[Fraction, 
         tuple(phase_data(roots[phase]).survival for phase in range(PERIOD))
     )
     assert 0 <= joint_cycle.low <= joint_cycle.high < 1
+    assert inactive_count == N * PERIOD - HAZARD_COUNT == 13
     assert inactive_upper is not None
-    return inactive_upper, opponent_cycle_upper
+    return inactive_upper, opponent_cycle_upper, joint_cycle.high
+
+
+def assert_strategic_inequalities(
+    box: tuple[Interval, ...],
+) -> tuple[Fraction, Fraction, Fraction]:
+    roots, values = unpack_box(box)
+    return assert_strategic_inequalities_for(roots, values)
+
+
+def assert_reduced_orientation(center: tuple[Fraction, ...]) -> Fraction:
+    """Check exactly that value reconstruction lifts H to the 75D system."""
+
+    point = point_box(center)
+    equations, _ = reduced_system_and_jacobian(point)
+    _, values, joint_survival = reconstructed_cyclic_values(point)
+    denominator = ONE - joint_survival
+    lifted_point = point + tuple(
+        values[phase][player]
+        for phase in range(PERIOD)
+        for player in range(N)
+    )
+    full_equations, _ = system_and_jacobian(lifted_point)
+    assert all(equation.is_zero() for equation in full_equations[:VALUE_COUNT])
+    for reduced_equation, full_equation in zip(
+        equations, full_equations[VALUE_COUNT:]
+    ):
+        assert reduced_equation == denominator * full_equation
+
+    mismatch = Fraction(0)
+    for phase in range(PERIOD):
+        for player in range(N):
+            value = values[phase][player]
+            assert value.low == value.high
+            mismatch = max(
+                mismatch,
+                abs(value.low - VALUE_CENTER[phase][player]),
+            )
+    return mismatch
+
+
+def fraction_text(value: Fraction) -> str:
+    if value.denominator == 1:
+        return str(value.numerator)
+    return f"{value.numerator}/{value.denominator}"
+
+
+def reduced_preconditioner_document(
+    preconditioner: list[list[Fraction]], radius: Fraction
+) -> tuple[str, str, int, int]:
+    assert len(preconditioner) == HAZARD_COUNT
+    assert all(len(row) == HAZARD_COUNT for row in preconditioner)
+    payload = {
+        "center": [fraction_text(value) for value in HAZARD_CENTER],
+        "dimension": HAZARD_COUNT,
+        "format": "block-pair-k11-reduced-preconditioner-v1",
+        "matrix": [
+            [fraction_text(value) for value in row]
+            for row in preconditioner
+        ],
+        "preconditioner_decimal_precision": REDUCED_PRECONDITIONER_PRECISION,
+        "radius": fraction_text(radius),
+        "support_word": list(SUPPORT_WORD),
+        "system": "H=(1-rho)*(q-a)-c*N_next",
+        "terminal": [
+            [mask, *TERMINAL[mask]] for mask in range(1, 1 << N)
+        ],
+        "variable_order": [list(slot) for slot in ACTIVE_SLOTS],
+    }
+    canonical_payload = json.dumps(
+        payload, sort_keys=True, separators=(",", ":")
+    )
+    digest = sha256(canonical_payload.encode("utf-8")).hexdigest()
+    document = json.dumps(
+        {"payload": payload, "sha256": digest},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    maximum_denominator_digits = max(
+        len(str(value.denominator))
+        for row in preconditioner
+        for value in row
+    )
+    return (
+        document,
+        digest,
+        len(canonical_payload.encode("utf-8")),
+        maximum_denominator_digits,
+    )
 
 
 def main() -> None:
+    arguments = sys.argv[1:]
+    export_preconditioner = arguments == ["--export-reduced-preconditioner"]
+    if arguments and not export_preconditioner:
+        raise SystemExit(
+            "usage: block_pair_period_eleven_certificate.py "
+            "[--export-reduced-preconditioner]"
+        )
+
     radius = Fraction(1, 10**8)
-    center_box = point_box(CENTER)
-    equations_at_center, point_jacobian = system_and_jacobian(center_box)
-    preconditioner = rational_preconditioner(point_jacobian)
+    (
+        full_box,
+        _,
+        full_center_residual,
+        full_defect_row_sum,
+        full_inclusion_ratio,
+    ) = certify_system(CENTER, radius, system_and_jacobian)
+    (
+        full_inactive_upper,
+        full_opponent_cycle_upper,
+        full_joint_cycle_upper,
+    ) = assert_strategic_inequalities(full_box)
 
-    box = tuple(Interval(value - radius, value + radius) for value in CENTER)
-    _, jacobian_on_box = system_and_jacobian(box)
-    maximum_defect_row_sum, maximum_inclusion_ratio, _ = krawczyk_bounds(
-        equations_at_center,
-        jacobian_on_box,
-        preconditioner,
+    (
+        reduced_box,
+        reduced_preconditioner,
+        reduced_center_residual,
+        reduced_defect_row_sum,
+        reduced_inclusion_ratio,
+    ) = certify_system(
+        HAZARD_CENTER,
         radius,
+        reduced_system_and_jacobian,
+        REDUCED_PRECONDITIONER_PRECISION,
+    )
+    reduced_value_center_mismatch = assert_reduced_orientation(HAZARD_CENTER)
+    reduced_roots, reduced_values, reduced_joint_cycle = (
+        reconstructed_cyclic_values(reduced_box)
+    )
+    (
+        reduced_inactive_upper,
+        reduced_opponent_cycle_upper,
+        reduced_joint_cycle_upper,
+    ) = assert_strategic_inequalities_for(reduced_roots, reduced_values)
+    assert reduced_joint_cycle.high == reduced_joint_cycle_upper
+
+    (
+        preconditioner_document,
+        preconditioner_digest,
+        preconditioner_payload_bytes,
+        maximum_denominator_digits,
+    ) = reduced_preconditioner_document(
+        reduced_preconditioner, radius
     )
 
-    # ||I-AJ(X)||_infinity < 1 proves regularity throughout the box.  Strict
-    # Krawczyk inclusion proves existence and uniqueness of the exact root.
-    assert maximum_defect_row_sum < 1
-    assert maximum_inclusion_ratio < 1
+    if export_preconditioner:
+        print(preconditioner_document)
+        return
 
-    inactive_upper, opponent_cycle_upper = assert_strategic_inequalities(box)
-
-    maximum_center_residual = max(
-        equation.abs_upper() for equation in equations_at_center
-    )
-    print("exact period-eleven Krawczyk certificate passed")
+    print("exact period-eleven 75-variable Krawczyk certificate passed")
     print(f"dimension = {DIMENSION}")
     print(f"box radius = {radius}")
-    print(f"maximum center residual ~= {float(maximum_center_residual):.3e}")
-    print(f"maximum ||I-AJ(X)|| row sum ~= {float(maximum_defect_row_sum):.3e}")
-    print(f"maximum Krawczyk inclusion ratio ~= {float(maximum_inclusion_ratio):.3e}")
-    print(f"largest inactive Quit-minus-Continue upper bound ~= {float(inactive_upper):.6f}")
-    print(f"largest opponent-cycle survival upper bound ~= {float(opponent_cycle_upper):.6f}")
+    print(f"maximum center residual ~= {float(full_center_residual):.3e}")
+    print(f"maximum ||I-AJ(X)|| row sum ~= {float(full_defect_row_sum):.3e}")
+    print(f"maximum Krawczyk inclusion ratio ~= {float(full_inclusion_ratio):.3e}")
+    print(f"largest inactive Quit-minus-Continue upper bound ~= {float(full_inactive_upper):.6f}")
+    print(f"largest opponent-cycle survival upper bound ~= {float(full_opponent_cycle_upper):.6f}")
+    print(f"joint-cycle survival upper bound ~= {float(full_joint_cycle_upper):.6f}")
+    print()
+    print("exact period-eleven 31-variable eliminated Krawczyk certificate passed")
+    print(f"dimension = {HAZARD_COUNT}")
+    print(f"box radius = {radius}")
+    print(f"maximum center residual ~= {float(reduced_center_residual):.3e}")
+    print(f"maximum ||I-AJ(X)|| row sum ~= {float(reduced_defect_row_sum):.3e}")
+    print(f"maximum Krawczyk inclusion ratio ~= {float(reduced_inclusion_ratio):.3e}")
+    print(f"largest inactive Quit-minus-Continue upper bound ~= {float(reduced_inactive_upper):.6f}")
+    print(f"largest opponent-cycle survival upper bound ~= {float(reduced_opponent_cycle_upper):.6f}")
+    print(f"joint-cycle survival upper bound ~= {float(reduced_joint_cycle_upper):.6f}")
+    print(f"maximum reconstructed-value center mismatch ~= {float(reduced_value_center_mismatch):.3e}")
+    print(f"reduced preconditioner SHA-256 = {preconditioner_digest}")
+    print(f"reduced preconditioner canonical payload bytes = {preconditioner_payload_bytes}")
+    print(f"reduced preconditioner maximum denominator digits = {maximum_denominator_digits}")
+    print(
+        "reduced preconditioner Decimal generation precision = "
+        f"{REDUCED_PRECONDITIONER_PRECISION}"
+    )
+    print(
+        "reduced variable order = "
+        + ",".join(f"{phase}:{player}" for phase, player in ACTIVE_SLOTS)
+    )
 
 
 if __name__ == "__main__":
