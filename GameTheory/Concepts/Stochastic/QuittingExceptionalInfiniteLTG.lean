@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingExceptionalTailLimits
+import GameTheory.Concepts.Stochastic.QuittingFirstBranch
 
 /-!
 # Infinite local-to-global bound for the exceptional quitting clock
@@ -491,5 +492,161 @@ theorem quittingRootSequenceHazardTerminalGap_le_tsum_residual
     apply ge_of_tendsto' hright
     exact hfinite
   simpa only [deviationValue, prescribed, residual, add_zero] using hlimitBound
+
+/-- Abstract terminal-boundary consumer for the positive sub-Bellman
+telescope. -/
+theorem quittingSubBellmanGap_le_tsum_residual_of_boundary_tendsto_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribed deviation : ℕ → ℝ)
+    (hdeviation : ∀ time, deviation time ≤
+      quittingLiveBellmanValue reward roots who deviation time)
+    (hresidual : ∀ time, 0 ≤ quittingPrescribedOneStepResidual
+      reward roots who prescribed time)
+    (hsummable : Summable (fun time =>
+      quittingOpponentSurvivalWeight roots who 0 time *
+        quittingPrescribedOneStepResidual reward roots who prescribed time))
+    (hboundary : Tendsto (fun fuel =>
+      quittingOpponentSurvivalWeight roots who 0 fuel *
+        max (deviation fuel - prescribed fuel) 0) atTop (nhds 0)) :
+    deviation 0 - prescribed 0 ≤
+      ∑' time, quittingOpponentSurvivalWeight roots who 0 time *
+        quittingPrescribedOneStepResidual reward roots who prescribed time := by
+  have hfinite : ∀ fuel,
+      deviation 0 - prescribed 0 ≤
+        (∑ offset ∈ Finset.range fuel,
+          quittingOpponentSurvivalWeight roots who 0 offset *
+            quittingPrescribedOneStepResidual reward roots who prescribed
+              offset) +
+        quittingOpponentSurvivalWeight roots who 0 fuel *
+          max (deviation fuel - prescribed fuel) 0 := by
+    intro fuel
+    exact (le_max_left (deviation 0 - prescribed 0) 0).trans
+      (by
+        simpa using
+          (quittingPositiveSubBellmanGap_le_sum_residual_add_tail
+            reward roots who prescribed deviation hdeviation hresidual 0 fuel))
+  have hpartial : Tendsto (fun fuel =>
+      ∑ offset ∈ Finset.range fuel,
+        quittingOpponentSurvivalWeight roots who 0 offset *
+          quittingPrescribedOneStepResidual reward roots who prescribed offset)
+      atTop (nhds (∑' time,
+        quittingOpponentSurvivalWeight roots who 0 time *
+          quittingPrescribedOneStepResidual reward roots who prescribed time)) :=
+    hsummable.hasSum.tendsto_sum_nat
+  have hright := hpartial.add hboundary
+  have hlimitBound : deviation 0 - prescribed 0 ≤
+      (∑' time, quittingOpponentSurvivalWeight roots who 0 time *
+        quittingPrescribedOneStepResidual reward roots who prescribed time) +
+          0 := by
+    apply ge_of_tendsto' hright
+    exact hfinite
+  simpa only [add_zero] using hlimitBound
+
+/-- If the opponent-survival clock contracts to zero, bounded terminal
+payoffs make the positive sub-Bellman boundary vanish, with no sign
+condition on the player's singleton reward. -/
+theorem quittingRootSequenceHazardTerminalGap_le_tsum_residual_of_survival_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (deviation : ℕ → PMF Bool) (bound : ℝ)
+    (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S player, |reward S player| ≤ bound)
+    (hsurvival : Tendsto
+      (quittingOpponentSurvivalWeight roots who 0) atTop (nhds 0))
+    (hsummable : Summable (fun time =>
+      quittingOpponentSurvivalWeight roots who 0 time *
+        quittingPrescribedOneStepResidual reward roots who
+          (quittingRootSequenceTerminalValue reward roots who) time)) :
+    quittingRootSequenceHazardTerminalValue reward roots who deviation 0 -
+        quittingRootSequenceTerminalValue reward roots who 0 ≤
+      ∑' time, quittingOpponentSurvivalWeight roots who 0 time *
+        quittingPrescribedOneStepResidual reward roots who
+          (quittingRootSequenceTerminalValue reward roots who) time := by
+  let prescribed := quittingRootSequenceTerminalValue reward roots who
+  let deviationValue :=
+    quittingRootSequenceHazardTerminalValue reward roots who deviation
+  have hresidual : ∀ time, 0 ≤ quittingPrescribedOneStepResidual
+      reward roots who prescribed time := fun time =>
+    quittingPrescribedOneStepResidual_nonneg reward roots who prescribed
+      (isQuittingLivePrescribedValue_quittingRootSequenceTerminalValue
+        reward roots who) time
+  have hdeviation : ∀ time, deviationValue time ≤
+      quittingLiveBellmanValue reward roots who deviationValue time :=
+    quittingRootSequenceHazardTerminalValue_le_liveBellmanValue
+      reward roots who deviation
+  have hgapBound : ∀ time,
+      max (deviationValue time - prescribed time) 0 ≤ 2 * bound := by
+    intro time
+    have hdev := abs_quittingTerminalPayoff_le reward
+      (quittingRootSequenceProfile reward
+        (quittingRootSequenceUpdate roots who deviation) time)
+      who hbound0 hreward
+    have hpres := abs_quittingTerminalPayoff_le reward
+      (quittingRootSequenceProfile reward roots time)
+      who hbound0 hreward
+    have hraw : deviationValue time - prescribed time ≤ 2 * bound := by
+      dsimp [deviationValue, prescribed,
+        quittingRootSequenceHazardTerminalValue,
+        quittingRootSequenceTerminalValue]
+      rw [abs_le] at hdev hpres
+      linarith
+    exact max_le hraw (by linarith)
+  have hboundary : Tendsto (fun fuel =>
+      quittingOpponentSurvivalWeight roots who 0 fuel *
+        max (deviationValue fuel - prescribed fuel) 0) atTop (nhds 0) := by
+    apply squeeze_zero
+    · intro fuel
+      exact mul_nonneg
+        (quittingOpponentSurvivalWeight_nonneg roots who 0 fuel)
+        (le_max_right _ _)
+    · intro fuel
+      exact mul_le_mul_of_nonneg_left (hgapBound fuel)
+        (quittingOpponentSurvivalWeight_nonneg roots who 0 fuel)
+    · simpa using hsurvival.mul_const (2 * bound)
+  exact quittingSubBellmanGap_le_tsum_residual_of_boundary_tendsto_zero
+    reward roots who prescribed deviationValue hdeviation hresidual
+      hsummable hboundary
+
+/-- Umbrella form of the Q115 local-to-global conclusion.  The same weighted
+residual bound holds either when opponent survival contracts to zero, or—on
+the only possible positive-survival branch—when the singleton reward is
+nonnegative. -/
+theorem quittingRootSequenceHazardTerminalGap_le_tsum_residual_of_zero_or_nonnegativeSolo
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (deviation : ℕ → PMF Bool) (bound limit : ℝ)
+    (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S player, |reward S player| ≤ bound)
+    (hlimit : Tendsto
+      (quittingOpponentSurvivalWeight roots who 0) atTop (nhds limit))
+    (hbranch : limit = 0 ∨
+      0 ≤ reward (quittingSingletonTerminal who) who)
+    (hsummable : Summable (fun time =>
+      quittingOpponentSurvivalWeight roots who 0 time *
+        quittingPrescribedOneStepResidual reward roots who
+          (quittingRootSequenceTerminalValue reward roots who) time)) :
+    quittingRootSequenceHazardTerminalValue reward roots who deviation 0 -
+        quittingRootSequenceTerminalValue reward roots who 0 ≤
+      ∑' time, quittingOpponentSurvivalWeight roots who 0 time *
+        quittingPrescribedOneStepResidual reward roots who
+          (quittingRootSequenceTerminalValue reward roots who) time := by
+  rcases hbranch with hzero | hsolo
+  · apply quittingRootSequenceHazardTerminalGap_le_tsum_residual_of_survival_zero
+      reward roots who deviation bound hbound0 hreward
+    · simpa only [hzero] using hlimit
+    · exact hsummable
+  · by_cases hzero : limit = 0
+    · apply quittingRootSequenceHazardTerminalGap_le_tsum_residual_of_survival_zero
+        reward roots who deviation bound hbound0 hreward
+      · simpa only [hzero] using hlimit
+      · exact hsummable
+    · have hlimit0 : 0 ≤ limit := by
+        apply ge_of_tendsto' hlimit
+        exact quittingOpponentSurvivalWeight_nonneg roots who 0
+      have hlimitPos : 0 < limit := lt_of_le_of_ne hlimit0 (Ne.symm hzero)
+      exact quittingRootSequenceHazardTerminalGap_le_tsum_residual
+        reward roots who deviation bound limit hbound0 (fun S => hreward S who)
+          hsolo hlimit hlimitPos hsummable
 
 end GameTheory
