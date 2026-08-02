@@ -243,9 +243,9 @@ current integration and recovery status. Wave 0 closes when:
    rather than silently changing inside Phase 2/3-named scripts;
 6. README status is derived from the ledger rather than source-size estimates.
 
-The audit now indexes 436 files and 8,324 declarations. Twenty-two work-package
-ledgers claim 1,310 declarations: 616 have reviewed dispositions, the exact
-FOSG queue contains 694 deliberately seeded `unreviewed` rows, and 7,014 remain
+The audit now indexes 436 files and 8,324 declarations. Twenty-four work-package
+ledgers claim 1,363 declarations: 682 have reviewed dispositions, the exact
+FOSG queue contains 681 deliberately seeded `unreviewed` rows, and 6,961 remain
 explicitly unaccounted. Both open sets are review queues, not
 auto-classification targets; generated rows are evidence of scope, not
 recovery.
@@ -534,19 +534,21 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. review the exact L-FOSG queue and add exact broad-package ledgers for the
-   first static recovery batches; L-NFG is fully classified, and generated
-   rows remain review queues only;
-2. consolidate moving delivery probes without rewriting historical phase
+1. consolidate moving delivery probes without rewriting historical phase
    measurements;
-3. resume the broader revelation/information-design inventory and open the
-   static learning and congestion harvest lanes;
-4. continue broad FOSG recovery, decide whether a live consumer earns D-COMM's
-   deferred conditional public-signal representation, and recover the general
-   constant-sum value/correlation results beyond the completed binary slice;
-5. admit at most one mature blind-spot experiment—finite stochastic games or
+2. extend the passed Rosenthal gate through shared Core smoothness, affine
+   price of anarchy, and the Pigou/Braess examples;
+3. extend the passed sealed-bid auction gate through reserve Vickrey and VCG,
+   preserving its explicit tie semantics;
+4. continue the exact FOSG queue through observations, strategies, and
+   execution laws, and recover general constant-sum value/correlation results
+   beyond the completed binary slice;
+5. resume the broader revelation/information-design inventory and decide
+   whether a live consumer earns D-COMM's deferred conditional public-signal
+   representation;
+6. admit at most one mature blind-spot experiment—finite stochastic games or
    finite graph reachability are the leading candidates;
-6. admit no Frontier implementation until the first three items have an active
+7. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 
 This queue may change when an experiment refutes an assumption, but a change

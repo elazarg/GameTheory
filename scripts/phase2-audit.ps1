@@ -111,12 +111,18 @@ $EpistemicFiles = @(@(Select-Files 'GameTheory/Epistemic') +
   @('GameTheory/Epistemic.lean') | Sort-Object -Unique)
 $EvolutionaryFiles = @(@(Select-Files 'GameTheory/Evolutionary') +
   @('GameTheory/Evolutionary.lean') | Sort-Object -Unique)
+$CongestionFiles = @(Select-Files 'GameTheory/Congestion')
+$MechanismFiles = @(Select-Files 'GameTheory/Mechanism')
 Report 'TRANSPORT_GAMETHEORYMATH_SOURCE' (Count-Pattern $MathFiles $TransportPattern)
 Report 'TRANSPORT_ANALYSIS_SOURCE' (Count-Pattern $AnalysisFiles $TransportPattern)
 Report 'TRANSPORT_REPEATED_SOURCE' (Count-Pattern $RepeatedFiles $TransportPattern)
 Report 'TRANSPORT_EPISTEMIC_SOURCE' (Count-Pattern $EpistemicFiles $TransportPattern)
 Report 'TRANSPORT_EVOLUTIONARY_SOURCE' `
   (Count-Pattern $EvolutionaryFiles $TransportPattern)
+Report 'TRANSPORT_CONGESTION_SOURCE' `
+  (Count-Pattern $CongestionFiles $TransportPattern)
+Report 'TRANSPORT_MECHANISM_SOURCE' `
+  (Count-Pattern $MechanismFiles $TransportPattern)
 Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
 Report 'TRANSPORT_PHASE3_SOURCE' (Count-Pattern $Phase3Files $TransportPattern)
 Report 'TRANSPORT_PHASE2_PROBE' (Count-Pattern $Phase2ProbeFiles $TransportPattern)
@@ -151,7 +157,7 @@ Report 'TRANSPORT_POST_ARCHITECTURE' `
 # is worse than a mis-bucketed one: nothing measures it, so it drifts unseen.
 $Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $PostArchitectureFiles +
   $Phase2Files + $Phase3Files + $AnalysisFiles + $RepeatedFiles + $EpistemicFiles +
-  $EvolutionaryFiles +
+  $EvolutionaryFiles + $CongestionFiles + $MechanismFiles +
   @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
 Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
@@ -734,6 +740,8 @@ if ($VerifyExpected) {
     TRANSPORT_REPEATED_SOURCE = 0
     TRANSPORT_EPISTEMIC_SOURCE = 0
     TRANSPORT_EVOLUTIONARY_SOURCE = 0
+    TRANSPORT_CONGESTION_SOURCE = 0
+    TRANSPORT_MECHANISM_SOURCE = 0
     TRANSPORT_GAMETHEORYMATH_SOURCE = 0
     TRANSPORT_POST_ARCHITECTURE = 0
     ANALYSIS_IMPORTED_OUTSIDE_ROOT = 0

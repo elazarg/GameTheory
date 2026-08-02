@@ -31,6 +31,8 @@ GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theo
   /Repeated              analytic repeated-game bridge and discounted folk theorem
 GameTheory/Repeated      stable public histories, finite public monitoring,
                          discounting, cycles, and triggers
+GameTheory/Congestion    opt-in congestion/load calculus and Rosenthal potential
+GameTheory/Mechanism     opt-in coordinated mechanism domains and finite auctions
 GameTheory/Languages     scoped language encodings and truthful Bayesian
                          mechanism compilation with recorded limitations
   /NFG                   deterministic normal-form syntax compiling directly
@@ -69,9 +71,11 @@ Kreps-Wilson consistency over stable behavioral assessments; its EFG adapter
 supplies finite history instances and canonical continuation contexts without
 moving solution concepts into stable syntax.
 `GameTheoryMath` is a separate Lake target and cannot import game semantics.
-Languages and Experimental also stay outside the root for the separate reasons
-recorded in their modules. Examples and Tests compile in the default library
-target but are not public-root imports.
+Congestion and coordinated Mechanism domains are stable but opt-in, so their
+specialized APIs do not enlarge the main root. Languages and Experimental also
+stay outside the root for the separate reasons recorded in their modules.
+Examples and Tests compile in the default library target but are not
+public-root imports.
 
 The ignored `reference/GameTheory-v1/` directory is an exact source snapshot of
 the previous library at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.

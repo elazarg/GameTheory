@@ -5,7 +5,7 @@ Status: active family-level ledger.
 Pinned source: `reference/GameTheory-v1/` at
 `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 
-Last reconciled: 2026-08-02 against the working tree based on `d9ff55e`.
+Last reconciled: 2026-08-02 against the working tree based on `68321de`.
 
 This ledger answers three different questions separately:
 
@@ -20,8 +20,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Twenty-two work-package ledgers claim 1,310 declarations: 616
-have reviewed dispositions and 694 remain seeded `unreviewed`; a further 7,014 are
+declarations. Twenty-four work-package ledgers claim 1,363 declarations: 682
+have reviewed dispositions and 681 remain seeded `unreviewed`; a further 6,961 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -136,7 +136,7 @@ declaration-based.
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
 | L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | validated by EXP-041/T3 | partial | broader refinement, recall, and Kuhn-facing declaration recovery |
-| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4 | partial; 82/776 reviewed, 694 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); Basic legality and History are classified, with bounded reachability algebra recovered in Protocol; next richer observations, strategies, values, and named EFG comparisons |
+| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4 | partial; 95/776 reviewed, 681 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); Basic legality, History, and external transition values are classified; next richer observations, strategies, execution laws, and named EFG comparisons |
 | L-ROUND | `Languages/MultiRound.lean`, `Languages/MultiRound/**` | 15 | native language compiling to Protocol | provisional probe | partial | preserve previous actions and imperfect monitoring |
 | L-INTR | `Languages/Intrinsic.lean`, `Languages/Intrinsic/**` | 8 | native branch only if it retains theorem-relevant data | assigned | not started | one theorem unavailable from bare Protocol |
 | L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1, T3, and T4 complete | partial/retirement open | declaration accounting; add composition only after two live consumers earn it |
@@ -151,14 +151,14 @@ declaration-based.
 | M-FAIR | `Mechanism/FairDivision.lean`, finite indivisible files | 6 | finite mechanism/fair-division branch | assigned | not started | round-robin EF1 and one algorithmic allocation theorem |
 | M-CAKE | divisible fair-division files | 6 | D11/`Analysis` or Frontier | deferred | out of scope | measurable/continuous probability decision |
 | M-SOCIAL | `Mechanism/SocialChoice.lean`, `Mechanism/SocialChoice/**` | 9 | ranking/preference foundations plus coordinated domain | validated by Arrow | partial | May, median strategic compilation, Gibbard-Satterthwaite, Sen |
-| M-AUCT | `Auctions/**` | 10 | finite auction/mechanism branch; continuous work behind D11 | validated encoding only | partial | general finite Vickrey/VCG plus false first-price witness |
+| M-AUCT | `Auctions/**` | 10 | finite auction/mechanism branch; continuous work behind D11 | basic sealed-bid surface validated | partial; Basic/Vickrey/FirstPrice 28/28 reviewed | [basic auction ledger](coverage/M-AUCT-basic.md); next reserve Vickrey and VCG, then combinatorial/all-pay and executable knapsack |
 | M-VOTE | `Voting/**` | 7 | coordinated voting branch | validated foundations | partial | delegation, liquid democracy, median, majority, power inventory |
 
 ### Potential consumers and parallel domains
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| P-CONG | `Congestion/**` | 4 | thin wrapper over `Core.Potential`, welfare for PoA | assigned | not started | Rosenthal exact potential and Nash existence |
+| P-CONG | `Congestion/**` | 4 | thin wrapper over `Core.Potential`, welfare for PoA | Rosenthal gate passed | partial; Basic/Rosenthal 25/25 reviewed | [Rosenthal ledger](coverage/P-CONG-rosenthal.md); next Core smoothness consumer, affine price of anarchy, and Pigou/Braess examples |
 | P-COAL | `Core/Coalition.lean`, `Cooperative/CoalitionalGame.lean`, `Cooperative/CoalitionalGame/**` | 10 | foundational Core objects, larger `Cooperative` root | validated foundation | partial | convex core, Bondareva, Banzhaf, cost of stability |
 | P-MATCH | matching and `GaleShapley/**` files | 8 | native `Cooperative`/market-design branch | assigned | not started | stable perfect matching, then strategyproofness/rural hospitals |
 | P-BARG | `Cooperative/Bargaining.lean` | 1 | native feasible-utility branch, Analysis as needed | assigned | not started | Nash solution affine invariance |
@@ -197,9 +197,11 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Review the exact NFG/FOSG seeds and add exact ledgers for the first static
-   recovery batches; generated rows remain `unreviewed` until manually
+1. Continue the exact FOSG queue through observations, strategies, and
+   execution laws; generated rows remain `unreviewed` until manually
    classified.
-2. Continue broad NFG/FOSG recovery from their passed gates while keeping broader
-   family status partial until every pinned declaration is classified.
-3. Update this file in the same commit that changes a family status.
+2. Extend the passed congestion gate through shared Core smoothness and affine
+   price-of-anarchy examples, and the passed auction gate through reserve
+   Vickrey and VCG.
+3. Keep every broader family partial until all pinned declarations are
+   classified, and update this file in the same commit as each status change.

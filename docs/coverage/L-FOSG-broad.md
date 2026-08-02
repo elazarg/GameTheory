@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
 Domain contract / decision: D6, D7, D11, D12, D15, EXP-042
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; 82/776 reviewed, 694 unreviewed
+Status: in progress; 95/776 reviewed, 681 unreviewed
 Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-FOSG family.
@@ -16,8 +16,15 @@ This ledger is an exact generated review queue for the L-FOSG family.
 not duplicated here. Rows not yet classified remain deliberately
 `unreviewed`: the generated index supplies spelling, location, kind, and
 visibility only. It does not infer a mathematical disposition. Reviewed batches
-cover the complete `Basic.lean` legality substrate and `History.lean` canonical
-history migration.
+cover the complete `Basic.lean` legality substrate, `History.lean` canonical
+history migration, and `Values.lean` external-value fold.
+
+The declaration-free pinned umbrella and test files
+`ReachableHistory.lean`, `Theorems.lean`, `Kuhn.lean`, `Native.lean`, and
+`Tests.lean` are retired as re-export/compilation entrypoints.  They introduce
+no theorem inventory of their own; their substantive children remain in this
+review queue, and successor consumers import the specific Protocol or language
+module they require rather than a FOSG-wide umbrella.
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
 |---|---|---|---|---|---|---|
@@ -784,19 +791,24 @@ history migration.
 | same | `prob_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 738 |
 | same | `pathProb_append_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 743 |
 | same | `prob_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 753 |
-| `GameTheory/Languages/FOSG/Values.lean` | `reward` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 27 |
-| same | `rewardSumFrom` | def | unreviewed | review required | generated index seed only | public, pinned line 37 |
-| same | `rewardSum` | def | unreviewed | review required | generated index seed only | public, pinned line 43 |
-| same | `utility` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 47 |
-| same | `rewardSumFrom_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 50 |
-| same | `rewardSumFrom_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 54 |
-| same | `rewardSumFrom_append_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 59 |
-| same | `rewardSumFrom_append` | theorem | unreviewed | review required | generated index seed only | public, pinned line 69 |
-| same | `rewardSum_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 80 |
-| same | `utility_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 84 |
-| same | `rewardSum_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 88 |
-| same | `utility_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 96 |
-| same | `utility_def` | theorem | unreviewed | review required | generated index seed only | public, pinned line 105 |
+| `GameTheory/Languages/FOSG/Values.lean` | `reward` | abbrev | adapt | external `value` parameter of `FOSG.Game.cumulativeValue` | `GameTheory.Protocol.History`; focused Values build (1,722 jobs) | A FOSG has no privileged reward field; transition values remain application data. |
+| same | `rewardSumFrom` | def | retired | `ExecutionProtocol.Trace.valueSum` | focused Values build (1,722 jobs) | The predecessor fold consumed a bare list, which cannot certify that adjacent steps form one realized execution. |
+| same | `rewardSum` | def | adapt | `FOSG.Game.cumulativeValue`; `ExecutionProtocol.History.valueSum` | focused Values build (1,722 jobs) | The canonical indexed history is folded directly. |
+| same | `utility` | abbrev | retired | caller vocabulary | D15; focused Values build (1,722 jobs) | Protocol and FOSG deliberately do not choose whether an external value is a utility, reward, cost, or vector payoff. |
+| same | `rewardSumFrom_nil` | theorem | retired | `ExecutionProtocol.Trace.valueSum_start` | focused Values build (1,722 jobs) | The checked zero law is stated on an indexed trace rather than an arbitrary list. |
+| same | `rewardSumFrom_cons` | theorem | retired | `ExecutionProtocol.Trace.valueSum_extend` | focused Values build (1,722 jobs) | An indexed realized extension replaces unconstrained list cons. |
+| same | `rewardSumFrom_append_singleton` | theorem | retired | `ExecutionProtocol.History.valueSum_extend` | focused Values build (1,722 jobs) | Complete traces have dependent endpoints and no sound unrestricted append operation. |
+| same | `rewardSumFrom_append` | theorem | retired | no canonical successor | focused Values build (1,722 jobs) | Arbitrary list append would lose the endpoint witness supplied by the indexed trace. |
+| same | `rewardSum_nil` | theorem | adapt | `ExecutionProtocol.History.valueSum_init`; `FOSG.Game.cumulativeValue_init` | focused Values build (1,722 jobs) | Initial canonical history has zero cumulative externally supplied value. |
+| same | `utility_nil` | theorem | retired | `ExecutionProtocol.History.valueSum_init` | focused Values build (1,722 jobs) | The value law survives; the language-local utility alias does not. |
+| same | `rewardSum_snoc` | theorem | adapt | `ExecutionProtocol.History.valueSum_extend`; `FOSG.Game.cumulativeValue_extend` | focused Values build (1,722 jobs) | One realized legal extension adds exactly its caller-supplied transition value. |
+| same | `utility_snoc` | theorem | retired | `FOSG.Game.cumulativeValue_extend` | focused Values build (1,722 jobs) | The mathematical extension law survives without fixing a utility vocabulary. |
+| same | `utility_def` | theorem | retired | `FOSG.Game.cumulativeValue` | D15; focused Values build (1,722 jobs) | No second name is needed for a transparent external value fold. |
+
+The Values batch has 4 adapted and 9 retired declarations.  Its focused build,
+the integrated Phase 2/3 gates, and the coverage audit pass; `#print axioms`
+for both canonical extension laws reports only `propext`, `Classical.choice`,
+and `Quot.sound`.
 
 Before this ledger can become complete, each row must be reviewed against
 the canonical successor API and assigned an allowed non-`unreviewed`

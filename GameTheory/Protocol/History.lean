@@ -93,6 +93,52 @@ theorem History.extend_state (h : E.History) {joint : ∀ i, Option (E.Action i)
     (realized : target ∈ (E.step h.state ⟨joint, isLegal⟩).support) :
     (h.extend isLegal realized).state = target := rfl
 
+/-! ## External values on realized histories
+
+A protocol describes legal execution and chance, not what a transition is
+worth to a particular consumer.  Cumulative values therefore take the
+transition valuation as an argument.  This keeps rewards, costs, and
+application-specific utilities out of the shared execution object while still
+giving every sequential language the same checked fold over realized traces.
+-/
+
+/-- Fold an additive transition value along an indexed realized trace. -/
+def Trace.valueSum {α : Type _} [Zero α] [Add α] (value : E.StepEvent → α) :
+    ∀ {state : E.State}, E.Trace state → α
+  | _, .start => 0
+  | _, .extend prior joint isLegal realized =>
+      prior.valueSum value + value ⟨_, joint, isLegal, _, realized⟩
+
+@[simp]
+theorem Trace.valueSum_start {α : Type _} [Zero α] [Add α]
+    (value : E.StepEvent → α) :
+    (Trace.start : E.Trace E.init).valueSum value = 0 := rfl
+
+@[simp]
+theorem Trace.valueSum_extend {α : Type _} [Zero α] [Add α]
+    (value : E.StepEvent → α) {source target : E.State} (prior : E.Trace source)
+    (joint : ∀ i, Option (E.Action i)) (isLegal : E.Legal source joint)
+    (realized : target ∈ (E.step source ⟨joint, isLegal⟩).support) :
+    (Trace.extend prior joint isLegal realized).valueSum value =
+      prior.valueSum value + value ⟨source, joint, isLegal, target, realized⟩ := rfl
+
+/-- The cumulative externally supplied value of a complete history. -/
+def History.valueSum {α : Type _} [Zero α] [Add α] (h : E.History)
+    (value : E.StepEvent → α) : α :=
+  h.trace.valueSum value
+
+@[simp]
+theorem History.valueSum_init {α : Type _} [Zero α] [Add α]
+    (value : E.StepEvent → α) : (E.initHistory).valueSum value = 0 := rfl
+
+@[simp]
+theorem History.valueSum_extend {α : Type _} [Zero α] [Add α]
+    (h : E.History) (value : E.StepEvent → α) {joint : ∀ i, Option (E.Action i)}
+    (isLegal : E.Legal h.state joint) {target : E.State}
+    (realized : target ∈ (E.step h.state ⟨joint, isLegal⟩).support) :
+    (h.extend isLegal realized).valueSum value =
+      h.valueSum value + value ⟨h.state, joint, isLegal, target, realized⟩ := rfl
+
 /-- Whether a complete history ends at a terminal execution state.  This is a
 history-facing view of the protocol's one terminality predicate, not a second
 notion of stopping. -/

@@ -41,7 +41,7 @@ M-CAKE	out-of-scope	^GameTheory/Mechanism/FairDivision/Divisible(?:/.*)?\.lean$
 M-SOCIAL	partial	^GameTheory/Mechanism/SocialChoice(?:/.*)?\.lean$
 M-AUCT	partial	^GameTheory/Auctions(?:/.*)?\.lean$
 M-VOTE	partial	^GameTheory/Voting/.*\.lean$
-P-CONG	not-started	^GameTheory/Congestion/.*\.lean$
+P-CONG	partial	^GameTheory/Congestion/.*\.lean$
 P-COAL	partial	^GameTheory/Core/Coalition\.lean$
 P-COAL	partial	^GameTheory/Cooperative\.lean$
 P-COAL	partial	^GameTheory/Cooperative/CoalitionalGame(?:/.*)?\.lean$
