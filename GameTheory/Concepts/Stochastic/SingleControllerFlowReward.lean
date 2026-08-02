@@ -430,5 +430,102 @@ theorem worstReward_eq_neg_gain_add_kernelBias_on_occupationSupport
     G.vriezeDualLam_div_eq_neg_gain_add_kernelBias_on_occupationSupport
       hprimal hdual hgap completion state hstate]
 
+/-- Closed-core reachability extends occupied-core reward compatibility
+through every transient state.  Consequently the mean-ergodic projection
+of the hybrid policy's worst reward is exactly the controller gain `-g`. -/
+theorem ergodicProjection_worstReward_eq_neg_gain_of_flowCompletion
+    [Nonempty G.State]
+    {controller : Bool}
+    {x : G.State → PMF (G.Act (!controller))}
+    {g v : G.State → ℝ}
+    {w : VriezeRow G controller → ℝ}
+    {tau : G.State → PMF (G.Act controller)}
+    (hzs : G.IsZeroSumBoolGame)
+    (hprimal : Math.LinearProgramming.MinPrimalFeasible
+      (G.vriezeA controller) (G.vriezeB controller)
+        (G.vriezeEncode controller x g v))
+    (hdual : Math.LinearProgramming.MaxDualFeasible
+      (G.vriezeA controller) (G.vriezeC controller) w)
+    (hgap :
+      Math.LinearProgramming.minPrimalValue (G.vriezeC controller)
+          (G.vriezeEncode controller x g v) =
+        Math.LinearProgramming.maxDualValue
+          (G.vriezeB controller) w)
+    (completion : G.IsVriezeFlowCompletion controller
+      (G.vriezeDualZ controller w)
+      (G.vriezeDualYGain controller w) tau) :
+    ergodicProjection (G.controllerKernel controller tau)
+        (G.worstReward controller tau) =
+      fun state => -(g state) := by
+  classical
+  let kernel : G.State → PMF G.State :=
+    G.controllerKernel controller tau
+  let core : Set G.State :=
+    {state | G.vriezeOccupationSupport controller
+      (G.vriezeDualZ controller w) state}
+  let rho : G.State → ℝ := fun state => -(g state)
+  let reward : G.State → ℝ := G.worstReward controller tau
+  let residual : G.State → ℝ := fun state =>
+    reward state -
+      (rho state + (expect (kernel state) v - v state))
+  have hresidualCore : residual ∈ coreVanishingSubmodule core := by
+    intro state hstate
+    dsimp only [residual, reward, rho, kernel, core]
+    rw [G.worstReward_eq_neg_gain_add_kernelBias_on_occupationSupport
+      hzs hprimal hdual hgap completion state hstate]
+    ring
+  let charge : coreVanishingSubmodule core :=
+    ⟨residual, hresidualCore⟩
+  let certificate : ClosedCoreTransienceCertificate kernel core :=
+    Classical.choice completion.exists_closedCoreTransienceCertificate
+  obtain ⟨correction, hcorrection⟩ :=
+    exists_coreVanishing_poissonPotential_for
+      completion.occupationSupport_closed
+      certificate.minorization_pos
+      certificate.minorization_le_one
+      certificate.uniform_reach charge
+  have hcorrectionPoisson : ∀ state,
+      (correction : G.State → ℝ) state -
+          expect (kernel state) correction = residual state := by
+    intro state
+    have hpoint := congrFun (congrArg Subtype.val hcorrection) state
+    change
+      (correction : G.State → ℝ) state -
+          (killedMarkovOperator kernel core
+            completion.occupationSupport_closed correction :
+              G.State → ℝ) state =
+        residual state at hpoint
+    simpa only [killedMarkovOperator_apply, charge] using hpoint
+  let adjustedBias : G.State → ℝ := fun state =>
+    v state - (correction : G.State → ℝ) state
+  have hrhoHarmonic : ∀ state,
+      expect (kernel state) rho = rho state := by
+    intro state
+    simpa only [kernel, rho] using
+      G.neg_vriezeGain_harmonic_of_flowCompletion
+        hprimal hdual hgap completion state
+  have hrewardDecomposition : ∀ state,
+      reward state = rho state +
+        (expect (kernel state) adjustedBias - adjustedBias state) := by
+    intro state
+    have hexpectSub :
+        expect (kernel state) adjustedBias =
+          expect (kernel state) v - expect (kernel state) correction := by
+      simpa only [adjustedBias] using
+        expect_sub (kernel state) v (correction : G.State → ℝ)
+    rw [hexpectSub]
+    dsimp only [residual] at hcorrectionPoisson
+    dsimp only [adjustedBias]
+    linarith [hcorrectionPoisson state]
+  have hunique :=
+    Math.MeanErgodic.harmonic_eq_of_add_poisson_eq
+      kernel reward rho adjustedBias
+      (ergodicProjection kernel reward)
+      (ergodicPoissonPotential kernel reward)
+      hrhoHarmonic hrewardDecomposition
+      (ergodicProjection_harmonic kernel reward)
+      (eq_ergodicProjection_add_poisson kernel reward)
+  simpa only [kernel, reward, rho] using hunique.symm
+
 end StochasticGame
 end GameTheory
