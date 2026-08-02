@@ -90,6 +90,12 @@ and finite average, and proves that history-level shifted delivery plus an
 eventual vanishing-error unilateral cap implies both target conditions (T0)
 and (Ti) on the split delivery and owner domains.
 
+`SplitDomainPrescribedBiasConverse.lean` continues the necessity direction.
+From shifted prescribed delivery it proves that the restricted Poisson charge
+has zero vector Cesaro limit, and therefore synthesizes the prescribed bias
+(A2) on the entire delivery union.  Both configuration-kernel and ordinary
+history-semantic entry points are provided.
+
 `UncoveredPrescribedClassCounterexample.lean` is the two-player/two-node Q96
 regression: all four target/occupation-side checks pass on their stated
 domains, while the escaped prescribed class is outside player one's arena and
