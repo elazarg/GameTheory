@@ -61,18 +61,21 @@ of the time and the live history. -/
       quittingStationaryContinueMass root :=
   rfl
 
+omit [DecidableEq ι] in
 /-- Exact geometric survival under a stationary quitting profile. -/
 @[simp] theorem quittingLiveMass_stationary_eq_pow
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (root : ι → PMF Bool) (time : ℕ) :
     quittingLiveMass reward (quittingStationaryProfile reward root) time =
       quittingStationaryContinueMass root ^ time := by
+  classical
   induction time with
   | zero => simp
   | succ time ih =>
       rw [quittingLiveMass_succ, ih,
         quittingJointContinueMass_stationary, pow_succ]
 
+omit [DecidableEq ι] in
 /-- If the stationary profile sometimes absorbs, its live mass converges
 geometrically to zero. -/
 theorem tendsto_quittingLiveMass_stationary_zero
@@ -91,6 +94,7 @@ theorem tendsto_quittingLiveMass_stationary_zero
   exact tendsto_pow_atTop_nhds_zero_of_lt_one
     (quittingStationaryContinueMass_nonneg root) hquit
 
+omit [DecidableEq ι] in
 /-- If the stationary all-continue probability is one, the profile remains
 live with probability one at every finite time. -/
 theorem quittingLiveMass_stationary_eq_one_of_continueMass_eq_one
@@ -101,7 +105,8 @@ theorem quittingLiveMass_stationary_eq_one_of_continueMass_eq_one
     quittingLiveMass reward (quittingStationaryProfile reward root) time = 1 := by
   rw [quittingLiveMass_stationary_eq_pow, hcontinue, one_pow]
 
-/-- Every stationary quitting profile lies in exactly the persistent-live
+omit [DecidableEq ι] in
+/-- Every stationary quitting profile lies in the persistent-live
 endpoint or the geometrically absorbing regime. -/
 theorem quittingStationary_liveMass_regime
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
