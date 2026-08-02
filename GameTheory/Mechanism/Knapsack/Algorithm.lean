@@ -7,20 +7,11 @@ at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 memoization or asymptotic-complexity claim.
 -/
 
-import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Data.Finset.Basic
+import GameTheory.Mechanism.Knapsack.Aggregate
 
 namespace GameTheory.Mechanism.Knapsack
 
 variable {Agent : Type} [DecidableEq Agent]
-
-/-- Total weight of a finite selected allocation. -/
-def load (weight : Agent → ℕ) (selected : Finset Agent) : ℕ :=
-  ∑ agent ∈ selected, weight agent
-
-/-- Total value of a finite selected allocation. -/
-def welfare (value : Agent → ℕ) (selected : Finset Agent) : ℕ :=
-  ∑ agent ∈ selected, value agent
 
 /-- Exact explicit-list skip/take solver. Ties choose the take branch. -/
 def solveList (weight value : Agent → ℕ) : List Agent → ℕ → Finset Agent

@@ -65,6 +65,7 @@ becomes difficult to scan.
 | EXP-052 | 2026-08-02 | D0/D4/D5/D9 / welfare and congestion | Does generic smoothness belong in Core, a separate stable welfare root, or the congestion domain? | Supports Core ownership; decides D24 | [`decisions/D24-welfare-smoothness-boundary.md`](decisions/D24-welfare-smoothness-boundary.md); `GameTheory/Core/Welfare.lean`; `GameTheory/Congestion/{AffinePoA,Examples}.lean` |
 | EXP-053 | 2026-08-02 | D2/D4/D5/D9/D24 / robust smoothness | Can canonical `FinDist` expected welfare lift smoothness from pure Nash to epsilon/exact CCE without another semantic layer or import cycle? | Supports; narrows to theorem-only Core bridge | `GameTheory/Probability/FinDist.lean`; `GameTheory/Core/{Welfare,RobustWelfare}.lean`; `GameTheory/Congestion/AffinePoA.lean` |
 | EXP-054 | 2026-08-02 | D4/D9/D10 / executable knapsack auction | Where is the boundary between knapsack mechanism semantics, executable dynamic programming/greedy algorithms, and correctness? | Narrows to an explicit-list exact natural solver; decides D25; mechanism and approximation remain gated | [`decisions/D25-knapsack-execution-boundary.md`](decisions/D25-knapsack-execution-boundary.md); `GameTheory/{Experimental/PostArchitecture,Mechanism}/Knapsack*` |
+| EXP-055 | 2026-08-02 | D4/D5/D9/D25 / real knapsack mechanism | Can explicit finite-set real knapsack semantics instantiate canonical VCG truthfulness without restoring the predecessor's single-parameter wrapper stack? | Supports; decides D26 | [`decisions/D26-real-knapsack-vcg-boundary.md`](decisions/D26-real-knapsack-vcg-boundary.md); `GameTheory/Mechanism/Knapsack/{Aggregate,Basic,Mechanism}.lean`; hostile witness |
 
 ## Entry template
 
@@ -3546,3 +3547,68 @@ memory.
   before advertising a half bound.  The predecessor's highest-bid maximum can
   name an overweight, unattainable item and is not itself an approximation
   algorithm.
+
+### EXP-055: explicit real knapsack allocation and canonical VCG
+
+- **Date / revision:** 2026-08-02, working tree based on `9687148`
+- **Status:** supports the finite-set/pivot-VCG split; decides and promotes D26
+- **Decision / question:** D4/D5/D9/D25 follow-on; whether the 16 base real
+  semantic rows, welfare-maximizing allocation rule, monotonicity, and mature
+  truthfulness integrate through `Finset Agent`, explicit finite universes,
+  `Profile.update`, and the existing `Mechanism.Auction.VCGSetup`.
+- **Prediction:** a capability-free real data record and finite-set allocation
+  semantics can share the exact solver's aggregate operations.  Noncomputable
+  maximization requires only an explicit finite universe.  The full-agent
+  mechanism adds theorem-local `[Fintype Agent]`, proves efficiency and a
+  nonconstant own-report-independent Groves offset, and obtains truthful
+  ex-post Nash from canonical VCG rather than a new DSIC predicate.
+- **Representative slice:** recover a chosen welfare-maximizing allocation and
+  its feasibility/optimality, prove own-bid monotonicity despite arbitrary
+  maximizing tie choice, instantiate `VCGSetup` with `Finset Agent` outcomes
+  and an offset computed after zeroing the bidder's own report, then apply the
+  existing truthfulness theorem to a nontrivial capacity-constrained instance.
+- **Competing designs:** explicit `Finset` universe and allocation; ambient
+  Boolean function allocation plus `[Fintype]`; a knapsack-specific mechanism
+  and DSIC predicate; or canonical `VCGSetup` with a named allocation bridge.
+- **Measurements to collect:** import closure; exact assumptions by operation;
+  public surface; update/transport counts; maximizer tie behavior; efficiency
+  and offset-independence proof cost; exact rows adapted/retired; focused/full
+  build cost; reachability probes; and headline axiom profile.
+- **Kill conditions:** stored or algorithm-leaking `Fintype`; a second
+  mechanism, utility, dominance, or DSIC predicate; raw `Function.update`;
+  duplicate Nat/Real aggregate semantics; arbitrary tie choice breaking
+  monotonicity; Analysis/Protocol leakage; a constant-offset toy that does not
+  test own-report independence; or truthfulness stated only outside canonical
+  equilibrium semantics.
+- **Observation:** efficiency quantifies over every VCG outcome, so the outcome
+  carrier must be the subtype of feasible finite sets rather than every
+  `Finset Agent`.  Arbitrary maximizer tie choice does not break monotonicity:
+  if a strictly raised selected bidder were dropped, the low- and high-report
+  optimality inequalities contradict each other.  The first hostile draft
+  also exposed and then removed two kill-condition defects: a local duplicate
+  bid signature and separate real aggregation operations.
+- **Measurements:** scalar-generic `Aggregate` is shared independently by the
+  natural `Algorithm` and real `Basic`; `Basic` stores no finiteness and does
+  not import execution or VCG.  `Mechanism` uses the canonical auction report
+  and `Profile.update`, adds `[Fintype Agent]` only at the full-universe
+  boundary, and packages feasibility in the outcome type.  The two-agent
+  capacity-one witness rejects the joint allocation, moves the pivot offset
+  from zero to three under an opponent-report change, preserves it under every
+  own replacement, and proves zero payment after a zero own report.  Focused
+  builds complete in 1,724/1,725/1,726 jobs for Basic, Mechanism, and the
+  witness; the umbrella completes in 1,728 and the full project in 3,409.
+  Aggregate rejects 8/8 boundary probes, Basic rejects 7/7, and the mechanism
+  root reaches 6/6 canonical update/VCG/monotonicity/Nash targets.  All four
+  phase audits and coverage audit report `VERIFIED=1`.  Source hazards are
+  zero; headline theorems use only `propext`, `Classical.choice`, and
+  `Quot.sound`.
+- **Outcome:** supports the prediction and decides D26.  The family ledger is
+  now 26 adapted, 12 retired, two subsumed, and 31 deferred.  The 31 are the
+  nine fractional rows, 21 repaired greedy/approximation rows, and exact
+  Myerson payment equality; mature truthfulness itself is recovered through
+  canonical VCG and ex-post Nash.
+- **Next action:** reserve the repaired approximation experiment.  Require
+  positive weights, an executable certified ratio order, prefilter
+  individually infeasible items, compare against the highest feasible
+  singleton, prove the fractional relaxation bound, and return the actual
+  better feasible `Finset` before stating a half approximation.

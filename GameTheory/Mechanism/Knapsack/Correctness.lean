@@ -38,7 +38,7 @@ theorem solveList_feasible (weight value : Agent → ℕ)
     {agents : List Agent} (hnodup : agents.Nodup) (capacity : ℕ) :
     load weight (solveList weight value agents capacity) ≤ capacity := by
   induction hnodup generalizing capacity with
-  | nil => simp [solveList, load]
+  | nil => simp [solveList, load, aggregate]
   | @cons agent agents hnotmem _ ih =>
       have hagentNotMem : agent ∉ agents := by
         intro hmem
@@ -57,7 +57,7 @@ theorem solveList_feasible (weight value : Agent → ℕ)
             simpa [tail] using ih (capacity - weight agent)
           calc
             load weight take = weight agent + load weight tail := by
-              simp [take, load, hagentTail]
+              simp [take, load, aggregate, hagentTail]
             _ ≤ capacity := by omega
         by_cases htake : welfare value skip ≤ welfare value take
         · simpa [solveList, hfit, skip, tail, take, htake] using htakeFeasible
@@ -130,7 +130,7 @@ theorem solveList_optimal (weight value : Agent → ℕ)
               exact (Finset.sum_erase_add _ _ hmem).symm
             have htakeValue :
                 welfare value take = welfare value tail + value agent := by
-              simp [take, welfare, hagentTail, Nat.add_comm]
+              simp [take, welfare, aggregate, hagentTail, Nat.add_comm]
             rw [hwelfareSplit, htakeValue]
             exact le_trans (Nat.add_le_add_right htailBound _)
               (le_max_right _ _)

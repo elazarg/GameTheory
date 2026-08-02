@@ -178,6 +178,7 @@ Report 'REPRESENTATION_TOKENS_OUTSIDE_FINDIST' `
 Report 'FINTYPE_OF_FINITE' (Count-Pattern $TrustedFiles 'Fintype\.ofFinite')
 $AlgorithmFiles = @(
   'GameTheory/Finite/Algorithm.lean',
+  'GameTheory/Mechanism/Knapsack/Aggregate.lean',
   'GameTheory/Mechanism/Knapsack/Algorithm.lean')
 Report 'ALGORITHM_OPEN_CLASSICAL' `
   (Count-Pattern $AlgorithmFiles '(?<![A-Za-z0-9_])(open\s+Classical|classical|noncomputable)(?![A-Za-z0-9_])')
@@ -210,12 +211,33 @@ foreach ($algorithmFile in $AlgorithmFiles) {
     if ($imp -match $AlgorithmForbidden) { $algBad++ }
   }
 }
-# Unlike the table-game algorithm, knapsack needs no shared profile operation;
-# its executable leaf must remain entirely independent of game semantics.
+# EXP-055/D25 permits precisely one authored GameTheory import into the exact
+# knapsack solver: scalar-generic aggregation.  The aggregation leaf itself
+# remains wholly game-free, so the solver cannot acquire profile, real, or VCG
+# semantics through a convenience import.
 foreach ($imp in Get-Imports 'GameTheory/Mechanism/Knapsack/Algorithm.lean') {
-  if ($imp -match '^GameTheory\.') { $algBad++ }
+  if ($imp -match '^GameTheory\.' -and
+      $imp -ne 'GameTheory.Mechanism.Knapsack.Aggregate') { $algBad++ }
 }
 Report 'ALGORITHM_FORBIDDEN_IMPORTS' $algBad
+
+$knapsackAggregateBad = 0
+foreach ($imp in Get-Imports 'GameTheory/Mechanism/Knapsack/Aggregate.lean') {
+  if ($imp -match '^GameTheory\.') { $knapsackAggregateBad++ }
+}
+Report 'KNAPSACK_AGGREGATE_GAMETHEORY_IMPORTS' $knapsackAggregateBad
+
+# The real semantic layer consumes only scalar aggregation.  Execution,
+# canonical mechanism/equilibrium, protocol, and analytic roots must remain
+# outside its authored and transitive closure.
+$knapsackBasicForbidden = 'GameTheory\.Mechanism\.Knapsack\.Algorithm|' +
+  'GameTheory\.Mechanism\.VCG|GameTheory\.Core|GameTheory\.Protocol|' +
+  'GameTheory\.Analysis|FixedPointTheorems'
+$knapsackBasicBad = 0
+foreach ($imp in Get-Imports 'GameTheory/Mechanism/Knapsack/Basic.lean') {
+  if ($imp -match $knapsackBasicForbidden) { $knapsackBasicBad++ }
+}
+Report 'KNAPSACK_BASIC_FORBIDDEN_IMPORTS' $knapsackBasicBad
 
 $sigBad = 0
 foreach ($imp in Get-Imports 'GameTheory/Core/Signature.lean') {
@@ -421,9 +443,53 @@ if (-not $SkipReachability) {
   Report 'KNAPSACK_ALGORITHM_BOUNDARY_PROBES_REJECTED' `
     $knapsackAlgorithmRejected
 
-  # The opt-in domain root must positively expose the algorithm and both
-  # headline correctness guarantees; otherwise negative containment could be
-  # passing because the new leaf quietly fell out of use.
+  # The shared aggregation leaf may be scalar-generic, but it may not turn
+  # into a back door from the executable solver to real-valued, game, VCG, or
+  # analytic machinery.  The negative probe measures that transitive closure.
+  $knapsackAggregateBoundary = @(
+    'Real.instAdd',
+    'PMF',
+    'MeasureTheory.Measure',
+    'stdSimplex',
+    'Polynomial',
+    'GameTheory.GameForm',
+    'GameTheory.IsNash',
+    'GameTheory.Mechanism.Auction.VCGSetup')
+  $knapsackAggregateOutput =
+    Run-Probe 'GameTheory.Mechanism.Knapsack.Aggregate' `
+      $knapsackAggregateBoundary
+  $knapsackAggregateRejected = 0
+  foreach ($constant in $knapsackAggregateBoundary) {
+    if (Is-Unreachable $knapsackAggregateOutput $constant) {
+      $knapsackAggregateRejected++
+    }
+  }
+  Report 'KNAPSACK_AGGREGATE_BOUNDARY_PROBES_REJECTED' `
+    $knapsackAggregateRejected
+
+  # Real finite-allocation semantics deliberately share scalar aggregation but
+  # stop before execution, canonical VCG/Nash, Protocol, and Analysis.
+  $knapsackBasicBoundary = @(
+    'GameTheory.Mechanism.Knapsack.solveList',
+    'GameTheory.Mechanism.Auction.VCGSetup',
+    'GameTheory.IsNash',
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.Analysis.nash_exists',
+    'stdSimplex',
+    'Polynomial')
+  $knapsackBasicOutput =
+    Run-Probe 'GameTheory.Mechanism.Knapsack.Basic' $knapsackBasicBoundary
+  $knapsackBasicRejected = 0
+  foreach ($constant in $knapsackBasicBoundary) {
+    if (Is-Unreachable $knapsackBasicOutput $constant) {
+      $knapsackBasicRejected++
+    }
+  }
+  Report 'KNAPSACK_BASIC_BOUNDARY_PROBES_REJECTED' $knapsackBasicRejected
+
+  # The opt-in domain root must positively expose the executable and semantic
+  # paths; otherwise negative containment could be passing because a leaf
+  # quietly fell out of use.
   $knapsackInputs = @(
     'GameTheory.Mechanism.Knapsack.solveList',
     'GameTheory.Mechanism.Knapsack.solveList_feasible',
@@ -437,6 +503,28 @@ if (-not $SkipReachability) {
     }
   }
   Report 'KNAPSACK_ROOT_INPUT_PROBES_REACHED' $knapsackInputsReached
+
+  # The public mechanism root must make the canonical update, VCG
+  # certificates, payment normalization, monotonicity, and ex-post Nash
+  # theorem jointly reachable.  This is a positive integration probe, not an
+  # import-surrogate: it fails if any layer stops being public.
+  $knapsackMechanismInputs = @(
+    'GameTheory.Mechanism.Knapsack.vcgSetup_efficient',
+    'GameTheory.Mechanism.Knapsack.vcgSetup_offset_independent',
+    'GameTheory.Mechanism.Knapsack.vcgPayment_update_zero',
+    'GameTheory.Mechanism.Knapsack.allocationRule_monotone',
+    'GameTheory.Mechanism.Knapsack.vcgSetup_truthful_isExPostNash',
+    'GameTheory.Profile.update')
+  $knapsackMechanismOutput =
+    Run-Probe 'GameTheory.Mechanism.Knapsack' $knapsackMechanismInputs
+  $knapsackMechanismInputsReached = 0
+  foreach ($constant in $knapsackMechanismInputs) {
+    if (-not (Is-Unreachable $knapsackMechanismOutput $constant)) {
+      $knapsackMechanismInputsReached++
+    }
+  }
+  Report 'KNAPSACK_MECHANISM_INPUT_PROBES_REACHED' `
+    $knapsackMechanismInputsReached
 
   # The analytic root is the one place the budget is spent, and a probe that
   # only ever asserts absence would not notice if it stopped being spent there.
@@ -891,6 +979,8 @@ if ($VerifyExpected) {
     CUSTOM_AXIOM = 0
     CORE_FORBIDDEN_IMPORTS = 0
     ALGORITHM_FORBIDDEN_IMPORTS = 0
+    KNAPSACK_AGGREGATE_GAMETHEORY_IMPORTS = 0
+    KNAPSACK_BASIC_FORBIDDEN_IMPORTS = 0
     SIGNATURE_PROBABILITY_IMPORTS = 0
     REPEATED_FORBIDDEN_IMPORTS = 0
     EPISTEMIC_FORBIDDEN_IMPORTS = 0
@@ -908,7 +998,10 @@ if ($VerifyExpected) {
   if (-not $SkipReachability) {
     $Expected['UNREACHABLE_PROBES_PASSED'] = 6
     $Expected['KNAPSACK_ALGORITHM_BOUNDARY_PROBES_REJECTED'] = 7
+    $Expected['KNAPSACK_AGGREGATE_BOUNDARY_PROBES_REJECTED'] = 8
+    $Expected['KNAPSACK_BASIC_BOUNDARY_PROBES_REJECTED'] = 7
     $Expected['KNAPSACK_ROOT_INPUT_PROBES_REACHED'] = 3
+    $Expected['KNAPSACK_MECHANISM_INPUT_PROBES_REACHED'] = 6
     $Expected['ANALYSIS_PROBES_REACHED'] = 2
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
