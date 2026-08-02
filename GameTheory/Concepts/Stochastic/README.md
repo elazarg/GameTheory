@@ -110,6 +110,13 @@ cap under the invariant source law.  Thus the cap itself implies (N), with no
 recurrent-coverage or separate realizability axiom, and shifted delivery plus
 shifted caps synthesize both Q96 bias families without assuming (N).
 
+`SplitDomainSemanticCredibilityCharacterization.lean` packages the exact
+fixed-class result.  One shared `O(1/T)` prescribed-delivery and unilateral-cap
+predicate, quantified over the delivery union and each selected owner's arena,
+is equivalent to a nonempty target/gain--bias packet on those same domains.
+The equivalence has no recurrent-coverage premise and makes no claim that a
+suitable finite architecture exists for an arbitrary game or target.
+
 `UncoveredPrescribedClassCounterexample.lean` is the two-player/two-node Q96
 regression: all four target/occupation-side checks pass on their stated
 domains, while the escaped prescribed class is outside player one's arena and
