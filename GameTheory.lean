@@ -426,6 +426,7 @@ import GameTheory.Concepts.Stochastic.QuittingLiveMassRecurrence
 import GameTheory.Concepts.Stochastic.QuittingStationaryLiveMass
 import GameTheory.Concepts.Stochastic.QuittingStationaryPayoff
 import GameTheory.Concepts.Stochastic.QuittingRootSuccessorCertificate
+import GameTheory.Concepts.Stochastic.QuittingPureTimeExtremality
 import GameTheory.Concepts.Stochastic.QuittingOpponentLiveMass
 import GameTheory.Concepts.Stochastic.QuittingLiveTail
 import GameTheory.Concepts.Stochastic.QuittingExceptionalHazard
