@@ -62,6 +62,7 @@ becomes difficult to scan.
 | EXP-049 | 2026-08-02 | D0/D2/D12 / online learning | Can the pinned multiplicative-weights regret engine be recovered as independent `GameTheoryMath` over `FinDist` and feed stable self-play without importing analysis into Core? | Narrows to law-free vectors plus a canonical-law adapter; decides D21 | [`decisions/D21-finite-online-learning-boundary.md`](decisions/D21-finite-online-learning-boundary.md); `GameTheoryMath/OnlineLearning.lean`; `GameTheory/{Probability,Analysis}/OnlineLearning.lean` |
 | EXP-050 | 2026-08-02 | D0/D4/D6/D9/D11/D12 / finite stochastic games | Can the active uniform-existence branch's basic stochastic-game and uniform-payoff definitions survive the accepted finite-law, Protocol, and equilibrium boundaries? | Supports native data plus named Protocol bridge; decides and promotes D22 | [`decisions/D22-stochastic-protocol-boundary.md`](decisions/D22-stochastic-protocol-boundary.md); `GameTheory/Stochastic/**`; `GameTheory/Examples/StochasticUniform.lean` |
 | EXP-051 | 2026-08-02 | D2/D4/D9/D12/D22 / discounted stochastic games | Can the canonical finite stochastic data and existing minimax layer support a Shapley contraction and stationary value without importing a parallel matrix-game stack? | Supports one-way normalized Analysis bridge; decides D23 | [`decisions/D23-discounted-stochastic-value-boundary.md`](decisions/D23-discounted-stochastic-value-boundary.md); `GameTheory/Analysis/{MatrixValue,Stochastic}/`; `GameTheory/Stochastic/ZeroSum.lean` |
+| EXP-052 | 2026-08-02 | D0/D4/D5/D9 / welfare and congestion | Does generic smoothness belong in Core, a separate stable welfare root, or the congestion domain? | Supports Core ownership; decides D24 | [`decisions/D24-welfare-smoothness-boundary.md`](decisions/D24-welfare-smoothness-boundary.md); `GameTheory/Core/Welfare.lean`; `GameTheory/Congestion/{AffinePoA,Examples}.lean` |
 
 ## Entry template
 
@@ -3382,3 +3383,52 @@ memory.
 - **Next action:** use the admitted stochastic waist for finite-horizon or
   checked special-case results; reserve a new experiment before adding an
   infinite-path payoff law or a vanishing-discount existence theorem.
+
+### EXP-052: welfare smoothness and the congestion boundary
+
+- **Date / revision:** 2026-08-02, working tree based on `9e35ab1`
+- **Status:** supports Core ownership; decides and promotes D24
+- **Decision / question:** D0/D4/D5/D9 and the first shared welfare consumer;
+  whether social welfare and smoothness are canonical `UtilityGame` facts in
+  Core, a separate stable welfare root, or congestion-local infrastructure.
+- **Prediction:** social welfare is a finite sum of canonical expected
+  utilities, and a smoothness-to-Nash bound needs no new game, equilibrium,
+  ratio, or probability semantics.  The generic theorem belongs at the lowest
+  stable layer; affine congestion should import it one way.
+- **Representative slice:** recover the pure affine-congestion smoothness
+  certificate and its `5/2` social-cost bound, then anchor it to a nontrivial
+  Pigou or Braess congestion instance.
+- **Competing designs:** `Core.Welfare`; an opt-in `GameTheory.Welfare` root;
+  or a congestion-local definition.  The pinned generic price-of-anarchy ratio
+  hierarchy is not a candidate for this first slice.
+- **Measurements to collect:** Mathlib overlap, import closure, public surface
+  size, theorem-local finiteness/equality assumptions, v1 declaration reuse,
+  source hazards, build cost, axiom profile, and whether later CCE/no-regret
+  consumers can reuse the definition without entering this first theorem.
+- **Kill conditions:** a duplicate Nash or utility predicate, stored finite
+  capability, raw `Function.update`, total-division ratio API, cost/welfare sign
+  ambiguity, an import cycle, Analysis leakage, or failure of the affine
+  congestion theorem to use the generic statement transparently.
+- **Observation:** the generic surface is 46 nonblank lines and imports only
+  `Core.Utility`.  The 140-line affine consumer proves the CK inequality,
+  deviation-cost aggregation, sign conversion, and `5/2` bound without a ratio
+  API or analytic dependency.  Pigou and Braess recover all 17 pinned example
+  declarations through the same canonical profile and Nash surface.
+- **Measurements:** the focused public-root build completes in 1,744 jobs.
+  The full project build completes in 3,395 jobs.
+  Exact ledgers review 4/4 smoothness, 8/8 affine, and 17/17 example
+  declarations plus the foundational social-welfare row.  Three robust CCE
+  rows remain behind one named canonical
+  `FinDist` expected-social-welfare gate.  Source hazards are zero and headline
+  axioms are exactly `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports design 1 and decides D24.  Core owns only social
+  welfare, smoothness, and the division-free Nash inequality; congestion owns
+  affine aggregation and the pure cost theorem.  No separate welfare root is
+  earned.
+- **Promotion:** `GameTheory.Core` exports `Core.Welfare`; the opt-in
+  `GameTheory.Congestion` root exports `AffinePoA`.  The integration audit
+  removed an avoidable tactic import and verified both public reachability
+  paths before freeze.
+- **Next action:** recover the finite-law epsilon-CCE/CCE smoothness theorem and
+  affine correlated-cost corollary through the named gate; do not add the
+  predecessor's generic ratio hierarchy without a separate consumer.

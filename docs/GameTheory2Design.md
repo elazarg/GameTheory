@@ -1285,6 +1285,15 @@ root and keep Protocol and Repeated out of the discounted bridge.
 No arbitrary infinite-history optimality theorem is inferred from the
 statewise result.
 
+EXP-052/D24 adds the first shared welfare consumer without creating a new
+semantic branch.  `Core.Welfare` defines aggregate expected utility and
+smoothness directly on `UtilityGame`, then derives the division-free pure Nash
+bound through canonical unilateral updates.  The opt-in congestion root
+imports that surface one way for affine delay aggregation and the `5/2` cost
+bound.  Pigou and Braess exercise the same game form and Nash predicate.  No
+generic price-of-anarchy ratio is introduced; robust CCE bounds remain behind
+a named canonical finite-law expected-welfare gate.
+
 EXP-033 closes the finite-EFG adapter under that boundary. Stable
 `GameTheory.Languages.EFG` positively reaches its execution, information, and
 finite-history inputs while rejecting solution and analytic declarations.

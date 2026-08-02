@@ -304,8 +304,8 @@ lanes may harvest in parallel after their lead definitions are checked.
 | static response | dominance, rationalizability, approximate and secure equilibrium | dominance solvability and one approximation theorem without duplicate Nash predicates | `GameTheory.Core` |
 | correlation | correlation regimes, regret, signal timing, value of correlation | **CE/CCE existence complete through mixed Nash;** next one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
 | learning | regret, multiplicative weights, fictitious play, approachability | **F2 and finite MW self-play complete (EXP-049/D21);** next potential-game fictitious-play convergence | stable finite identities in Core, law-free MW algebra in `GameTheoryMath`, canonical-law adapter in Probability, and quantitative composition in `Analysis.Learning` |
-| potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | Rosenthal exact potential and finite pure-Nash existence | `Core.Potential`, then a thin congestion domain |
-| welfare | individual rationality, smoothness, price of anarchy | a smoothness price-of-anarchy bound stated on the canonical utility game | `Core` or a stable welfare root |
+| potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | **Rosenthal, affine `5/2` pure PoA, and Pigou/Braess complete (EXP-052/D24);** next robust CCE bound | `Core.Potential` plus the opt-in congestion domain |
+| welfare | individual rationality, smoothness, price of anarchy | **pure smoothness-to-Nash bound complete in Core (EXP-052/D24);** next canonical finite-law CCE extension | `Core.Welfare`; consumer domains import it one way |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
 | mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial and all-pay | `n`-bidder truthful Vickrey/VCG plus one false first-price claim | coordinated mechanism/auction root |
@@ -537,8 +537,10 @@ The next work is ordered:
 
 1. consolidate moving delivery probes without rewriting historical phase
    measurements;
-2. extend the passed Rosenthal gate through shared Core smoothness, affine
-   price of anarchy, and the Pigou/Braess examples;
+2. extend the passed pure smoothness gate through canonical finite-law expected
+   social welfare, epsilon/exact CCE bounds, and the affine correlated-cost
+   corollary; keep the generic ratio hierarchy out until a separate consumer
+   earns it;
 3. extend the passed auction gate beyond the completed VCG recovery through
    combinatorial and all-pay auctions, with executable knapsack only after its
    finite boundary is explicit;

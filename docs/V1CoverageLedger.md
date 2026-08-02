@@ -20,8 +20,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Twenty-eight work-package ledgers claim 1,412 declarations: 969
-have reviewed dispositions and 443 remain seeded `unreviewed`; a further 6,912 are
+declarations. Thirty-one work-package ledgers claim 1,442 declarations: 999
+have reviewed dispositions and 443 remain seeded `unreviewed`; a further 6,882 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -106,14 +106,14 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| S-FOUND | static `Core/**` except `Babbling`/`Coalition`; `Concepts/Foundations/**`; symmetric/team classes | 28 | `Core`, with independent mathematics below it | validated | partial; 7 response/team rows reviewed | [response dynamics and team seed](coverage/S-FOUND-dynamics-team.md); next VNM, convergence, invariance, equivalence, and duplicate hub machinery |
+| S-FOUND | static `Core/**` except `Babbling`/`Coalition`; `Concepts/Foundations/**`; symmetric/team classes | 28 | `Core`, with independent mathematics below it | validated | partial; 8 response/team/welfare rows reviewed | [response dynamics, team, and welfare seed](coverage/S-FOUND-dynamics-team.md); next VNM, convergence, invariance, equivalence, and duplicate hub machinery |
 | S-EQ | `Concepts/Equilibrium/**` | 12 | `Core.Equilibrium`, `Core.Response`, `Core.Approximate` | validated | partial; strict-Nash seed plus approximate Nash 8/8 reviewed | [strict-Nash seed](coverage/S-EQ-strict-nash.md), [approximate-Nash ledger](coverage/S-EQ-approximate.md); next secure and remaining strict theorem families against one Nash surface |
 | S-DOM | `Concepts/Dominance/**` | 9 | `Core.Response` and finite correctness | validated | partial | solvability, undominated, and rationalizability inventory |
 | S-CORR | `Concepts/Correlation/**` | 10 | `Core.Equilibrium`; existence in `Analysis` | validated | partial; mixed-Nash bridge module 12/12 reviewed, 2 later-slice rows deferred | [mixed Nash and correlated-equilibrium ledger](coverage/S-CORR-mixed-nash.md); next conditional obedience, dominated support, existence, approximation, timing, regret, and hierarchy separations |
 | S-MIX | `Concepts/Mixed/**` | 9 | `Core.Mixed`; assessment material in Protocol/Analysis | validated | partial; binary proof spine 15 declarations reviewed | [binary mixed-equilibrium ledger](coverage/S-MIX-binary.md); next dominance, improvement, trembling-hand, uniform/balanced wrappers, and remaining language-facing results |
 | S-POT | `Concepts/Potential/**` | 9 | `Core.Potential` | validated | partial; basic potential/FIP/well-founded/team package 22/22 reviewed | [basic potential ledger](coverage/S-POT-basic.md); next decomposition, harmonic, and mixed potential inventory |
 | S-ZERO | `Concepts/ZeroSum/**` | 15 | `Core.ZeroSum`; existence in `Analysis` | validated | partial; binary constant-sum correlation proof spine 11 declarations reviewed | [constant-sum correlation ledger](coverage/S-ZERO-constant-sum-correlation.md); next security, general value/correlation, matrix geometry, and complementarity |
-| S-WEL | `Concepts/Welfare/**` | 13 | stable welfare consumers plus `Analysis.Repeated` | validated for folk theorem | partial | individual rationality, smoothness, price of anarchy, remaining welfare results |
+| S-WEL | `Concepts/Welfare/**` | 13 | `Core.Welfare`, domain consumers, plus `Analysis.Repeated` | pure smoothness validated by EXP-052/D24 | partial; Smoothness 4/4 reviewed, 2 deferred | [smoothness ledger](coverage/S-WEL-smoothness.md); next canonical finite-law CCE bound, then individual rationality and remaining welfare results |
 | S-EXIST | `Concepts/Existence/**` | 3 | `Analysis` and `GameTheoryMath` by live consumer | validated for mixed Nash | partial | classify general Nash/Brouwer support and avoid wholesale fixed-point recovery |
 | S-TRANS | `Concepts/Transport/**` | 15 | named maps at owning layers only | generic hierarchy rejected | retired by design, accounting open | classify each declaration as subsumed, theorem-specific, or retired |
 
@@ -158,7 +158,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| P-CONG | `Congestion/**` | 4 | thin wrapper over `Core.Potential`, welfare for PoA | Rosenthal gate passed | partial; Basic/Rosenthal 25/25 reviewed | [Rosenthal ledger](coverage/P-CONG-rosenthal.md); next Core smoothness consumer, affine price of anarchy, and Pigou/Braess examples |
+| P-CONG | `Congestion/**` | 4 | thin domain over `Core.Potential` and `Core.Welfare` | supported through Rosenthal and EXP-052/D24 | v1-accounted; Basic/Rosenthal/AffinePoA/Examples 50/50 reviewed, 1 deferred | [Rosenthal ledger](coverage/P-CONG-rosenthal.md); [affine PoA ledger](coverage/P-CONG-affine-poa.md); [Pigou/Braess ledger](coverage/P-CONG-examples.md); next robust affine CCE bound |
 | P-COAL | `Core/Coalition.lean`, `Cooperative/CoalitionalGame.lean`, `Cooperative/CoalitionalGame/**` | 10 | foundational Core objects, larger `Cooperative` root | validated foundation | partial | convex core, Bondareva, Banzhaf, cost of stability |
 | P-MATCH | matching and `GaleShapley/**` files | 8 | native `Cooperative`/market-design branch | assigned | not started | stable perfect matching, then strategyproofness/rural hospitals |
 | P-BARG | `Cooperative/Bargaining.lean` | 1 | native feasible-utility branch, Analysis as needed | assigned | not started | Nash solution affine invariance |
@@ -203,8 +203,7 @@ declaration-based.
 
 1. Continue the exact FOSG queue through observation-model batches and named
    comparisons; generated rows remain `unreviewed` until manually classified.
-2. Extend the passed congestion gate through shared Core smoothness and affine
-   price-of-anarchy examples, and the passed auction gate through
-   combinatorial/all-pay recovery.
+2. Extend the passed smoothness gate through its canonical finite-law CCE
+   bound, and the passed auction gate through combinatorial/all-pay recovery.
 3. Keep every broader family partial until all pinned declarations are
    classified, and update this file in the same commit as each status change.

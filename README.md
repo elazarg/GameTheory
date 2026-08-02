@@ -17,8 +17,8 @@ GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          deviations, equilibrium and response concepts, static
                          game theory, approximate Nash, Bayesian recommendation/obedience,
                          finite no-regret learning, concrete reindexing and
-                         relabeling laws, and foundational social/coalitional
-                         theory
+                         relabeling laws, social welfare and smoothness, and
+                         foundational social/coalitional theory
 GameTheory/Protocol      execution, histories, information, assessment,
                          randomization, well-founded subgame perfection, and
                          static-form compilation
@@ -34,7 +34,8 @@ GameTheory/Repeated      stable public histories, finite public monitoring,
                          discounting, cycles, and triggers
 GameTheory/Stochastic    opt-in finite-support stochastic games, perfect-public
                          Protocol play, finite-horizon payoff, and uniformity
-GameTheory/Congestion    opt-in congestion/load calculus and Rosenthal potential
+GameTheory/Congestion    opt-in load calculus, Rosenthal potential, affine PoA,
+                         and canonical Pigou/Braess examples
 GameTheory/Mechanism     opt-in coordinated mechanism domains and finite auctions
 GameTheory/Languages     scoped language encodings and truthful Bayesian
                          mechanism compilation with recorded limitations
