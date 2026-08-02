@@ -301,4 +301,85 @@ theorem tendsto_quittingStationaryFiniteSnellValue
       hgeom
   simpa [Real.dist_eq] using habs
 
+/-! ## Quitting-game specialization -/
+
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
+/-- Stationary pure-Quit value against fixed opponent marginals. -/
+def quittingStationaryFixedOpponentsQuitValue
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι) : ℝ :=
+  quittingFixedOpponentsQuitValue reward (fun _ => root) who 0
+
+/-- Stationary unconditional absorbing contribution when the selected
+player continues. -/
+def quittingStationaryFixedOpponentsContinueReward
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι) : ℝ :=
+  quittingFixedOpponentsContinueReward reward (fun _ => root) who 0
+
+/-- Stationary probability that all opponents continue. -/
+def quittingStationaryFixedOpponentsContinueMass
+    (root : ι → PMF Bool) (who : ι) : ℝ :=
+  quittingFixedOpponentsContinueMass (fun _ => root) who 0
+
+/-- The selected infinite-horizon unilateral cap against a stationary
+product profile. -/
+def quittingStationaryUnilateralCap
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι) : ℝ :=
+  quittingStationarySelectedCap
+    (quittingStationaryFixedOpponentsQuitValue reward root who)
+    (quittingStationaryFixedOpponentsContinueReward reward root who)
+    (quittingStationaryFixedOpponentsContinueMass root who)
+
+/-- Opponent continuation mass is nonnegative. -/
+theorem quittingStationaryFixedOpponentsContinueMass_nonneg
+    (root : ι → PMF Bool) (who : ι) :
+    0 ≤ quittingStationaryFixedOpponentsContinueMass root who :=
+  quittingStationaryContinueMass_nonneg
+    (Function.update root who (PMF.pure false))
+
+/-- Game-facing stationary Snell equation. -/
+theorem quittingStationaryUnilateralCap_bellman
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι)
+    (hcontracts : quittingStationaryFixedOpponentsContinueMass root who < 1) :
+    quittingStationaryUnilateralCap reward root who =
+      max (quittingStationaryFixedOpponentsQuitValue reward root who)
+        (quittingStationaryFixedOpponentsContinueReward reward root who +
+          quittingStationaryFixedOpponentsContinueMass root who *
+            quittingStationaryUnilateralCap reward root who) := by
+  exact quittingStationarySelectedCap_bellman _ _ _ hcontracts
+
+/-- Under stationary opponent contraction, the game-facing Bellman equation
+has the selected unilateral cap as its unique real solution. -/
+theorem eq_quittingStationaryUnilateralCap_of_bellman
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι) (value : ℝ)
+    (hcontracts : quittingStationaryFixedOpponentsContinueMass root who < 1)
+    (hvalue : value =
+      max (quittingStationaryFixedOpponentsQuitValue reward root who)
+        (quittingStationaryFixedOpponentsContinueReward reward root who +
+          quittingStationaryFixedOpponentsContinueMass root who * value)) :
+    value = quittingStationaryUnilateralCap reward root who := by
+  exact eq_quittingStationarySelectedCap_of_bellman _ _ _ value
+    (quittingStationaryFixedOpponentsContinueMass_nonneg root who)
+    hcontracts hvalue
+
+/-- Finite zero-terminal stationary Snell recursions converge to the
+game-facing selected unilateral cap. -/
+theorem tendsto_quittingStationaryUnilateralFiniteSnellValue
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι)
+    (hcontracts : quittingStationaryFixedOpponentsContinueMass root who < 1) :
+    Tendsto (quittingStationaryFiniteSnellValue
+      (quittingStationaryFixedOpponentsQuitValue reward root who)
+      (quittingStationaryFixedOpponentsContinueReward reward root who)
+      (quittingStationaryFixedOpponentsContinueMass root who)) atTop
+      (nhds (quittingStationaryUnilateralCap reward root who)) := by
+  exact tendsto_quittingStationaryFiniteSnellValue _ _ _
+    (quittingStationaryFixedOpponentsContinueMass_nonneg root who)
+    hcontracts
+
 end GameTheory
