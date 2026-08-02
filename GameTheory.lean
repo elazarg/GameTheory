@@ -421,6 +421,8 @@ import GameTheory.Concepts.Stochastic.QuittingFirstBranch
 import GameTheory.Concepts.Stochastic.QuittingFirstStageAdapter
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
 import Math.NonnegativeLeadingSymbol
+import Math.LinearAlgebra.ExactBlockElimination
+import Math.LinearAlgebra.ExactBlockEliminationConfluence
 import Math.Probability.FiniteDiscountedFlow
 import GameTheory.Concepts.Stochastic.FiniteProductFlowKinematics
 import GameTheory.Concepts.Stochastic.FiniteProductFlowTwoStateRegression
