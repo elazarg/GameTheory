@@ -90,6 +90,12 @@ and finite average, and proves that history-level shifted delivery plus an
 eventual vanishing-error unilateral cap implies both target conditions (T0)
 and (Ti) on the split delivery and owner domains.
 
+`ResponseArchitectureMarkovDeviationLaw.lean` generalizes that history law
+from a pure prefix to every stationary mixed policy on controller
+configurations.  The projected history law, calendar rewards, and rebased
+finite averages are exactly the induced finite Markov-kernel quantities; this
+is the operational bridge used to test invariant unilateral occupations.
+
 `SplitDomainPrescribedBiasConverse.lean` continues the necessity direction.
 From shifted prescribed delivery it proves that the restricted Poisson charge
 has zero vector Cesaro limit, and therefore synthesizes the prescribed bias

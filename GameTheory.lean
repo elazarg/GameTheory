@@ -214,6 +214,7 @@ import GameTheory.Concepts.Stochastic.SplitDomainGainBiasVerifier
 import GameTheory.Concepts.Stochastic.SplitDomainAsymptoticConverse
 import GameTheory.Concepts.Stochastic.ResponseArchitectureConfigKernelLaw
 import GameTheory.Concepts.Stochastic.ResponseArchitecturePurePrefixLaw
+import GameTheory.Concepts.Stochastic.ResponseArchitectureMarkovDeviationLaw
 import GameTheory.Concepts.Stochastic.SplitDomainPrescribedBiasConverse
 import GameTheory.Concepts.Stochastic.UncoveredPrescribedClassCounterexample
 import GameTheory.Concepts.Stochastic.FTVCyclicCredibility
@@ -407,6 +408,7 @@ import GameTheory.Concepts.Correlation.CorrelationSaturation
 import GameTheory.Concepts.Correlation.GameMorphism
 import GameTheory.Concepts.Equilibrium.NashCorrelatedEq
 import GameTheory.Concepts.Correlation.CorrelationRegimes
+import GameTheory.Concepts.Correlation.PrivateRecommendationTargetSeparator
 import GameTheory.Concepts.Correlation.ValueOfCorrelation
 import GameTheory.Concepts.Correlation.SignalTiming
 import GameTheory.Concepts.Communication.CheapTalkPublicRandomness
