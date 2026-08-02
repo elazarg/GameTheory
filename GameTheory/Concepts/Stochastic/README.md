@@ -83,6 +83,13 @@ kernel.  Consequently its expected stage payoffs and rebased finite averages
 agree with the corresponding configuration-kernel quantities, and ordinary
 history-level shifted delivery now implies prescribed target harmonicity.
 
+`ResponseArchitecturePurePrefixLaw.lean` supplies the unilateral half.  It
+formalizes the behavior deviation that plays one selected pure row at a
+rebased entry and obeys thereafter, identifies its exact configuration law
+and finite average, and proves that history-level shifted delivery plus an
+eventual vanishing-error unilateral cap implies both target conditions (T0)
+and (Ti) on the split delivery and owner domains.
+
 `UncoveredPrescribedClassCounterexample.lean` is the two-player/two-node Q96
 regression: all four target/occupation-side checks pass on their stated
 domains, while the escaped prescribed class is outside player one's arena and
@@ -145,6 +152,13 @@ discounted zero-sum value with exact discounted Nash profiles
 Mertens–Neyman theorem** reducing the zero-sum uniform value to two named
 hypotheses (`uniformValue_of_rowColumnTrackingCertificates`,
 `MertensNeymanCriterion.lean`).
+
+`BigMatchSelfSimilarity.lean` checks the finite structural core of Question 80
+Part D.  The legal live cycle `(Continue, Left)` then `(Continue, Right)` has
+maximizer payoffs `0` then `1`, total vector payoff exactly twice
+`(1/2,-1/2)`, zero target debt, and an endpoint continuation identical to the
+root live continuation.  It does not formalize the external universal
+finite-public routing-resistance theorem or any atlas-rank conclusion.
 
 ### Negative results (no-go keepers)
 

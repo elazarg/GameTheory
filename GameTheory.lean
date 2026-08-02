@@ -213,6 +213,7 @@ import GameTheory.Concepts.Stochastic.ExplicitDomainGainBiasVerifier
 import GameTheory.Concepts.Stochastic.SplitDomainGainBiasVerifier
 import GameTheory.Concepts.Stochastic.SplitDomainAsymptoticConverse
 import GameTheory.Concepts.Stochastic.ResponseArchitectureConfigKernelLaw
+import GameTheory.Concepts.Stochastic.ResponseArchitecturePurePrefixLaw
 import GameTheory.Concepts.Stochastic.UncoveredPrescribedClassCounterexample
 import GameTheory.Concepts.Stochastic.FTVCyclicCredibility
 import GameTheory.Concepts.Stochastic.FTVCyclicMinimality
@@ -386,6 +387,7 @@ import GameTheory.Concepts.Stochastic.BigMatchMarkov
 import GameTheory.Concepts.Stochastic.BigMatchNoMarkov
 import GameTheory.Concepts.Stochastic.BigMatchUniform
 import GameTheory.Concepts.Stochastic.BigMatchPublicPhase
+import GameTheory.Concepts.Stochastic.BigMatchSelfSimilarity
 import GameTheory.Concepts.Stochastic.BigMatchFink
 import GameTheory.Concepts.Stochastic.BigMatchDeficitIndexNoGo
 import GameTheory.Concepts.Stochastic.MertensNeymanAccount
