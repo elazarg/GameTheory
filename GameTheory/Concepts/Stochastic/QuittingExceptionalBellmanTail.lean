@@ -231,6 +231,31 @@ theorem quittingFiniteContinueWeight_le_one
         _ = continueMass start := mul_one _
         _ ≤ 1 := hmass1 start
 
+/-- Closed product form of the recursively oriented finite continue
+weight. -/
+theorem quittingFiniteContinueWeight_eq_product
+    (continueMass : ℕ → ℝ) :
+    ∀ start fuel,
+      quittingFiniteContinueWeight continueMass start fuel =
+        ∏ offset ∈ Finset.range fuel, continueMass (start + offset) := by
+  intro start fuel
+  induction fuel generalizing start with
+  | zero => simp [quittingFiniteContinueWeight]
+  | succ fuel ih =>
+      simp only [quittingFiniteContinueWeight, Finset.prod_range_succ', ih]
+      simp only [Nat.add_left_comm, Nat.add_comm]
+      exact mul_comm _ _
+
+/-- The generic finite continue weight specializes to the opponent-survival
+weight used by the Bellman telescope. -/
+theorem quittingFiniteContinueWeight_fixedOpponents_eq_survivalWeight
+    (roots : ℕ → ι → PMF Bool) (who : ι) (start fuel : ℕ) :
+    quittingFiniteContinueWeight
+        (quittingFixedOpponentsContinueMass roots who) start fuel =
+      quittingOpponentSurvivalWeight roots who start fuel := by
+  rw [quittingFiniteContinueWeight_eq_product]
+  rfl
+
 /-- Finite survival of the prescribed player's own continue hazards. -/
 def quittingFiniteOwnContinueWeight
     (hazard : ℕ → PMF Bool) : ℕ → ℕ → ℝ
@@ -612,6 +637,137 @@ theorem quittingFiniteHazardGap_le_exceptional
       soloReward bound hsolo0 hsoloBound hmass0 hmass1 hquit hcontinue
   rw [abs_le] at hprescribed
   nlinarith
+
+/-! ## Quitting-game specialization -/
+
+/-- Bounded quitting rewards supply all scalar one-stage hypotheses of the
+finite exceptional-tail calculation. -/
+theorem quittingFixedOpponents_exceptionalStageBounds
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (bound : ℝ) (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S, |reward S who| ≤ bound) :
+    (∀ time, 0 ≤ quittingFixedOpponentsContinueMass roots who time) ∧
+    (∀ time, quittingFixedOpponentsContinueMass roots who time ≤ 1) ∧
+    (∀ time,
+      |quittingFixedOpponentsQuitValue reward roots who time -
+          quittingFixedOpponentsContinueMass roots who time *
+            reward (quittingSingletonTerminal who) who| ≤
+        bound *
+          (1 - quittingFixedOpponentsContinueMass roots who time)) ∧
+    ∀ time,
+      |quittingFixedOpponentsContinueReward reward roots who time| ≤
+        bound *
+          (1 - quittingFixedOpponentsContinueMass roots who time) := by
+  refine ⟨fun time => ?_, fun time => ?_, fun time => ?_, fun time => ?_⟩
+  · exact quittingStationaryContinueMass_nonneg
+      (Function.update (roots time) who (PMF.pure false))
+  · exact quittingStationaryContinueMass_le_one
+      (Function.update (roots time) who (PMF.pure false))
+  · exact
+      abs_quittingFixedOpponentsQuitValue_sub_continueMass_mul_solo_le
+        reward roots who time bound hbound0 hreward
+  · exact abs_quittingFixedOpponentsContinueReward_le_hazard
+      reward roots who time bound hbound0 hreward
+
+/-- Prescribed finite quitting play obeys the corrected `π`/`α` estimate. -/
+theorem abs_quittingFiniteRootPayoff_sub_exceptionalTarget_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (hazard : ℕ → PMF Bool) (start fuel : ℕ)
+    (bound : ℝ) (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S, |reward S who| ≤ bound)
+    (hsolo : 0 ≤ reward (quittingSingletonTerminal who) who) :
+    |quittingFiniteRootPayoff reward roots who hazard start fuel -
+        quittingOpponentSurvivalWeight roots who start fuel *
+          reward (quittingSingletonTerminal who) who *
+          (1 - quittingFiniteHazardWeight hazard start fuel
+            (Fin.last fuel))| ≤
+      bound *
+        (1 - quittingOpponentSurvivalWeight roots who start fuel) := by
+  have hsoloBound :
+      reward (quittingSingletonTerminal who) who ≤ bound := by
+    simpa [abs_of_nonneg hsolo] using
+      hreward (quittingSingletonTerminal who)
+  obtain ⟨hmass0, hmass1, hquit, hcontinue⟩ :=
+    quittingFixedOpponents_exceptionalStageBounds
+      reward roots who bound hbound0 hreward
+  simpa only [quittingFiniteRootPayoff_eq_hazardValue,
+    quittingFiniteContinueWeight_fixedOpponents_eq_survivalWeight,
+    quittingFiniteOwnContinueWeight_eq_hazardWeight_last] using
+    (abs_quittingFiniteHazardValue_sub_exceptionalTarget_le
+      (quittingFixedOpponentsQuitValue reward roots who)
+      (quittingFixedOpponentsContinueReward reward roots who)
+      (quittingFixedOpponentsContinueMass roots who)
+      hazard start fuel (reward (quittingSingletonTerminal who) who) bound
+      hsolo hsoloBound hmass0 hmass1 hquit hcontinue)
+
+/-- Every arbitrary finite quitting hazard is bounded above by the corrected
+exceptional cap. -/
+theorem quittingFiniteRootPayoff_le_exceptionalCap
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (hazard : ℕ → PMF Bool) (start fuel : ℕ)
+    (bound : ℝ) (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S, |reward S who| ≤ bound)
+    (hsolo : 0 ≤ reward (quittingSingletonTerminal who) who) :
+    quittingFiniteRootPayoff reward roots who hazard start fuel ≤
+      quittingOpponentSurvivalWeight roots who start fuel *
+          reward (quittingSingletonTerminal who) who +
+        bound *
+          (1 - quittingOpponentSurvivalWeight roots who start fuel) := by
+  have hsoloBound :
+      reward (quittingSingletonTerminal who) who ≤ bound := by
+    simpa [abs_of_nonneg hsolo] using
+      hreward (quittingSingletonTerminal who)
+  obtain ⟨hmass0, hmass1, hquit, hcontinue⟩ :=
+    quittingFixedOpponents_exceptionalStageBounds
+      reward roots who bound hbound0 hreward
+  simpa only [quittingFiniteRootPayoff_eq_hazardValue,
+    quittingFiniteContinueWeight_fixedOpponents_eq_survivalWeight] using
+    (quittingFiniteHazardValue_le_exceptionalCap
+      (quittingFixedOpponentsQuitValue reward roots who)
+      (quittingFixedOpponentsContinueReward reward roots who)
+      (quittingFixedOpponentsContinueMass roots who)
+      hazard start fuel (reward (quittingSingletonTerminal who) who) bound
+      hsolo hsoloBound hmass0 hmass1 hquit hcontinue)
+
+/-- Exact finite exceptional-player deviation gap in the quitting API.  The
+term containing the prescribed player's own survival is intentionally not
+discarded. -/
+theorem quittingFiniteRootPayoffGap_le_exceptional
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (prescribedHazard deviationHazard : ℕ → PMF Bool)
+    (start fuel : ℕ)
+    (bound : ℝ) (hbound0 : 0 ≤ bound)
+    (hreward : ∀ S, |reward S who| ≤ bound)
+    (hsolo : 0 ≤ reward (quittingSingletonTerminal who) who) :
+    quittingFiniteRootPayoff reward roots who deviationHazard start fuel -
+        quittingFiniteRootPayoff reward roots who prescribedHazard start fuel ≤
+      quittingOpponentSurvivalWeight roots who start fuel *
+          reward (quittingSingletonTerminal who) who *
+          quittingFiniteHazardWeight prescribedHazard start fuel
+            (Fin.last fuel) +
+        2 * bound *
+          (1 - quittingOpponentSurvivalWeight roots who start fuel) := by
+  have hsoloBound :
+      reward (quittingSingletonTerminal who) who ≤ bound := by
+    simpa [abs_of_nonneg hsolo] using
+      hreward (quittingSingletonTerminal who)
+  obtain ⟨hmass0, hmass1, hquit, hcontinue⟩ :=
+    quittingFixedOpponents_exceptionalStageBounds
+      reward roots who bound hbound0 hreward
+  simpa only [quittingFiniteRootPayoff_eq_hazardValue,
+    quittingFiniteContinueWeight_fixedOpponents_eq_survivalWeight,
+    quittingFiniteOwnContinueWeight_eq_hazardWeight_last] using
+    (quittingFiniteHazardGap_le_exceptional
+      (quittingFixedOpponentsQuitValue reward roots who)
+      (quittingFixedOpponentsContinueReward reward roots who)
+      (quittingFixedOpponentsContinueMass roots who)
+      prescribedHazard deviationHazard start fuel
+      (reward (quittingSingletonTerminal who) who) bound
+      hsolo hsoloBound hmass0 hmass1 hquit hcontinue)
 
 /-- The two finite exceptional-tail estimates imply the corrected cap-gap
 bound, including the own-never atom. -/
