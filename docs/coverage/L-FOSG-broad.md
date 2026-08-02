@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
 Domain contract / decision: D6, D7, D11, D12, D15, EXP-042
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; 95/776 reviewed, 681 unreviewed
+Status: in progress; 165/776 reviewed, 611 unreviewed
 Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-FOSG family.
@@ -17,7 +17,8 @@ not duplicated here. Rows not yet classified remain deliberately
 `unreviewed`: the generated index supplies spelling, location, kind, and
 visibility only. It does not infer a mathematical disposition. Reviewed batches
 cover the complete `Basic.lean` legality substrate, `History.lean` canonical
-history migration, and `Values.lean` external-value fold.
+history migration, `Information.lean` canonical information-model migration,
+and `Values.lean` external-value fold.
 
 The declaration-free pinned umbrella and test files
 `ReachableHistory.lean`, `Theorems.lean`, `Kuhn.lean`, `Native.lean`, and
@@ -290,76 +291,76 @@ module they require rather than a FOSG-wide umbrella.
 | same | `mem_terminalHistories_iff` | theorem | adapt | `ExecutionProtocol.mem_terminalHistories_iff` | pinned `History.lean:411`; focused Protocol History build | New canonical terminal-history membership theorem. |
 | same | `not_isTerminal_of_legalAction` | theorem | adapt | `ExecutionProtocol.History.not_isTerminal_of_legal` | pinned `History.lean:416`; focused Protocol History build | A legal joint action proves the endpoint is non-terminal. |
 | same | `exists_legalAction_of_not_terminal` | theorem | adapt | `ExecutionProtocol.History.exists_legal_of_not_terminal` | pinned `History.lean:422`; focused Protocol History build | Protocol progress supplies a legal joint action at a non-terminal endpoint. |
-| `GameTheory/Languages/FOSG/Information.lean` | `PlayerEvent` | inductive | unreviewed | review required | generated index seed only | public, pinned line 23 |
-| same | `publicPart` | def | unreviewed | review required | generated index seed only | public, pinned line 33 |
-| same | `actionPart` | def | unreviewed | review required | generated index seed only | public, pinned line 38 |
-| same | `observationPart` | def | unreviewed | review required | generated index seed only | public, pinned line 44 |
-| same | `publicPart_act` | theorem | unreviewed | review required | generated index seed only | public, pinned line 48 |
-| same | `publicPart_obs` | theorem | unreviewed | review required | generated index seed only | public, pinned line 51 |
-| same | `actionPart_act` | theorem | unreviewed | review required | generated index seed only | public, pinned line 54 |
-| same | `actionPart_obs` | theorem | unreviewed | review required | generated index seed only | public, pinned line 57 |
-| same | `observationPart_act` | theorem | unreviewed | review required | generated index seed only | public, pinned line 60 |
-| same | `observationPart_obs` | theorem | unreviewed | review required | generated index seed only | public, pinned line 63 |
-| same | `InfoState` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 69 |
-| same | `PublicState` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 73 |
-| same | `last?` | def | unreviewed | review required | generated index seed only | public, pinned line 81 |
-| same | `last?_append_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 86 |
-| same | `observationEvents` | def | unreviewed | review required | generated index seed only | public, pinned line 97 |
-| same | `latestObservation?` | def | unreviewed | review required | generated index seed only | public, pinned line 101 |
-| same | `observationEvents_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 104 |
-| same | `latestObservation?_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 107 |
-| same | `latestObservation?_append_obs` | theorem | unreviewed | review required | generated index seed only | public, pinned line 110 |
-| same | `latestObservation?_append_act_obs` | theorem | unreviewed | review required | generated index seed only | public, pinned line 116 |
-| same | `playerView@130` | def | unreviewed | review required | generated index seed only | public, pinned line 130 |
-| same | `playerView_of_some` | theorem | unreviewed | review required | generated index seed only | public, pinned line 135 |
-| same | `playerView_of_none` | theorem | unreviewed | review required | generated index seed only | public, pinned line 141 |
-| same | `filterMap_publicPart_playerView` | theorem | unreviewed | review required | generated index seed only | public, pinned line 147 |
-| same | `playerView_length_pos` | theorem | unreviewed | review required | generated index seed only | public, pinned line 153 |
-| same | `latestObservation?_append_playerView` | theorem | unreviewed | review required | generated index seed only | public, pinned line 159 |
-| same | `publicViewFrom` | def | unreviewed | review required | generated index seed only | public, pinned line 180 |
-| same | `playerViewFrom` | def | unreviewed | review required | generated index seed only | public, pinned line 185 |
-| same | `publicView` | def | unreviewed | review required | generated index seed only | public, pinned line 190 |
-| same | `playerView@194` | def | unreviewed | review required | generated index seed only | public, pinned line 194 |
-| same | `projectActions` | def | unreviewed | review required | generated index seed only | public, pinned line 199 |
-| same | `projectObservations` | def | unreviewed | review required | generated index seed only | public, pinned line 204 |
-| same | `publicViewFrom_append_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 207 |
-| same | `publicViewFrom_append` | theorem | unreviewed | review required | generated index seed only | public, pinned line 217 |
-| same | `playerViewFrom_append_singleton` | theorem | unreviewed | review required | generated index seed only | public, pinned line 227 |
-| same | `playerViewFrom_append` | theorem | unreviewed | review required | generated index seed only | public, pinned line 237 |
-| same | `publicView_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 247 |
-| same | `playerView_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 250 |
-| same | `publicView_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 253 |
-| same | `playerView_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 261 |
-| same | `latestObservation?_playerView_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 269 |
-| same | `latestObservation?_playerView_appendStep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 280 |
-| same | `publicViewFrom_eq_filterMap_playerViewFrom` | theorem | unreviewed | review required | generated index seed only | public, pinned line 294 |
-| same | `publicView_eq_filterMap_playerView` | theorem | unreviewed | review required | generated index seed only | public, pinned line 305 |
-| same | `publicView_eq_of_playerView_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 312 |
-| same | `projectActions_eq_of_playerView_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 319 |
-| same | `projectObservations_eq_of_playerView_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 326 |
-| same | `playerView_length_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 333 |
-| same | `playerView_length_lt_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 340 |
-| same | `playerView_ne_snoc` | theorem | unreviewed | review required | generated index seed only | public, pinned line 347 |
-| same | `playerView_eq_append_of_prefix` | theorem | unreviewed | review required | generated index seed only | public, pinned line 357 |
-| same | `playerView_length_lt_of_properPrefix` | theorem | unreviewed | review required | generated index seed only | public, pinned line 367 |
-| same | `playerView_ne_of_properPrefix` | theorem | unreviewed | review required | generated index seed only | public, pinned line 385 |
-| same | `infoSet` | def | unreviewed | review required | generated index seed only | public, pinned line 394 |
-| same | `IsDecisionHistory` | def | unreviewed | review required | generated index seed only | public, pinned line 398 |
-| same | `decisionInfoSet` | def | unreviewed | review required | generated index seed only | public, pinned line 403 |
-| same | `publicSet` | def | unreviewed | review required | generated index seed only | public, pinned line 407 |
-| same | `mem_publicSet_of_mem_infoSet` | theorem | unreviewed | review required | generated index seed only | public, pinned line 410 |
-| same | `infoSet_subset_publicSet` | theorem | unreviewed | review required | generated index seed only | public, pinned line 418 |
-| same | `decisionInfoSet_subset_infoSet` | theorem | unreviewed | review required | generated index seed only | public, pinned line 425 |
-| same | `mem_decisionInfoSet_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 431 |
-| same | `infoSet_mem_publicSet` | theorem | unreviewed | review required | generated index seed only | public, pinned line 437 |
-| same | `ObsRecall@447` | def | unreviewed | review required | generated index seed only | public, pinned line 447 |
-| same | `ActionRecall@454` | def | unreviewed | review required | generated index seed only | public, pinned line 454 |
-| same | `PerfectRecall@464` | def | unreviewed | review required | generated index seed only | public, pinned line 464 |
-| same | `obsRecall` | theorem | unreviewed | review required | generated index seed only | public, pinned line 467 |
-| same | `actionRecall` | theorem | unreviewed | review required | generated index seed only | public, pinned line 472 |
-| same | `perfectRecall` | theorem | unreviewed | review required | generated index seed only | public, pinned line 477 |
-| same | `perfectRecall_obs` | theorem | unreviewed | review required | generated index seed only | public, pinned line 481 |
-| same | `perfectRecall_action` | theorem | unreviewed | review required | generated index seed only | public, pinned line 486 |
+| `GameTheory/Languages/FOSG/Information.lean` | `PlayerEvent` | inductive | retired | `ExecutionProtocol.StepEvent`; `InfoSignals.publicSignal`/`privateSignal` | D6/D15; Protocol Information API review (2026-08-02) | The old action-or-observation sum fixes one FOSG observation representation; Protocol consumes one realized step and leaves signal alphabets to the model. |
+| same | `publicPart` | def | retired | `InfoSignals.publicSignal` | D6/D15; API review | There is no canonical projection from a player-local information state to a public signal. |
+| same | `actionPart` | def | retired | `StepEvent.joint` | D6/D15; API review | A realized joint action is already available before any language-specific view encoding. |
+| same | `observationPart` | def | retired | `InfoSignals.privateSignal`; `InfoSignals.publicSignal` | D6/D15; API review | Private and public signals need not be paired or retained verbatim. |
+| same | `publicPart_act` | theorem | retired | `InfoSignals.publicSignal` | D6/D15; API review | Constructor equation for retired event syntax. |
+| same | `publicPart_obs` | theorem | retired | `InfoSignals.publicSignal` | D6/D15; API review | Constructor equation for retired event syntax. |
+| same | `actionPart_act` | theorem | retired | `StepEvent.joint` | D6/D15; API review | Constructor equation for retired event syntax. |
+| same | `actionPart_obs` | theorem | retired | `InfoSignals.privateSignal` | D6/D15; API review | Constructor equation for retired event syntax. |
+| same | `observationPart_act` | theorem | retired | `InfoSignals.privateSignal`; `InfoSignals.publicSignal` | D6/D15; API review | Constructor equation for retired event syntax. |
+| same | `observationPart_obs` | theorem | retired | `InfoSignals.privateSignal`; `InfoSignals.publicSignal` | D6/D15; API review | Constructor equation for retired event syntax. |
+| same | `InfoState` | abbrev | adapt | `InformationModel.InfoState` | D6/D15; Protocol Information API review (2026-08-02) | Information states are model-owned and may be compressed; they are not fixed action-observation lists. |
+| same | `PublicState` | abbrev | retired | `InfoSignals.PublicSignal` | D6/D15; API review | A public signal is canonical; a list of signals is only one model's chosen information state. |
+| same | `last?` | def | retired | no canonical successor | D6/D15; API review | The shared model does not privilege list-encoded observations. |
+| same | `last?_append_singleton` | theorem | retired | no canonical successor | D6/D15; API review | List lemma for the retired observation encoding. |
+| same | `observationEvents` | def | retired | `InfoSignals.infoOf` | D6/D15; API review | Information is updated by the model's `pushInfo`, not extracted from a fixed event list. |
+| same | `latestObservation?` | def | retired | no canonical successor | D6/D15; API review | A latest observation is application-specific, not Protocol semantics. |
+| same | `observationEvents_nil` | theorem | retired | `InfoSignals.infoOf_start` | D6/D15; API review | The valid canonical initial-state equation is for `infoOf`, not a raw event list. |
+| same | `latestObservation?_nil` | theorem | retired | `InfoSignals.infoOf_start` | D6/D15; API review | The valid canonical initial-state equation is for `infoOf`, not a raw event list. |
+| same | `latestObservation?_append_obs` | theorem | retired | `InfoSignals.infoOf_extend` | D6/D15; API review | The model determines how a signal affects information. |
+| same | `latestObservation?_append_act_obs` | theorem | retired | `InfoSignals.infoOf_extend` | D6/D15; API review | The model determines how a signal affects information. |
+| same | `playerView@130` | def | retired | `InfoSignals.infoOf` | D6/D15; API review | The old per-step list is replaced by the model-selected information update. |
+| same | `playerView_of_some` | theorem | retired | `InfoSignals.infoOf_extend` | D6/D15; API review | Case equation for the retired per-step list. |
+| same | `playerView_of_none` | theorem | retired | `InfoSignals.infoOf_extend` | D6/D15; API review | Case equation for the retired per-step list. |
+| same | `filterMap_publicPart_playerView` | theorem | retired | no canonical successor | D6/D15; API review | Public observability need not be recoverable from local information. |
+| same | `playerView_length_pos` | theorem | retired | no canonical successor | D6/D15; API review | A compressed information state has no event-list length invariant. |
+| same | `latestObservation?_append_playerView` | theorem | retired | `InfoSignals.infoOf_extend` | D6/D15; API review | The canonical update theorem leaves retention to `pushInfo`. |
+| same | `publicViewFrom` | def | retired | `InfoSignals.publicSignal` | D6/D15; API review | Protocol does not impose a public-history list representation. |
+| same | `playerViewFrom` | def | retired | `InfoSignals.infoOf` | D6/D15; API review | Protocol computes model-selected information directly from an indexed trace. |
+| same | `publicView` | def | retired | `InfoSignals.publicSignal` | D6/D15; API review | A complete history does not carry a mandated public-view projection. |
+| same | `playerView@194` | def | retired | `InfoSignals.infoOf` | D6/D15; API review | The canonical history-to-information map is `infoOf`. |
+| same | `projectActions` | def | retired | `InfoSignals.ownPlay` | D6; Protocol Information API review (2026-08-02) | The canonical own-action record retains the information state at each own move, which the old projection discarded. |
+| same | `projectObservations` | def | retired | no canonical successor | D6/D15; API review | Observation recall is not forced by arbitrary information compression. |
+| same | `publicViewFrom_append_singleton` | theorem | retired | no canonical successor | D6/D15; API review | List append law for retired public-history syntax. |
+| same | `publicViewFrom_append` | theorem | retired | no canonical successor | D6/D15; API review | List append law for retired public-history syntax. |
+| same | `playerViewFrom_append_singleton` | theorem | retired | `InfoSignals.infoOf_extend` | D6/D15; API review | Indexed trace extension replaces raw-list append. |
+| same | `playerViewFrom_append` | theorem | retired | no canonical successor | D6/D15; API review | Raw list append cannot preserve indexed trace endpoints. |
+| same | `publicView_nil` | theorem | retired | `InfoSignals.infoOf_start` | D6/D15; API review | The canonical initial observation fact is model-specific. |
+| same | `playerView_nil` | theorem | retired | `InfoSignals.infoOf_start` | D6/D15; API review | The canonical initial information fact is `infoOf_start`. |
+| same | `publicView_snoc` | theorem | retired | `InfoSignals.infoOf_extend` | D6/D15; API review | A signal update is not necessarily list append. |
+| same | `playerView_snoc` | theorem | retired | `InfoSignals.infoOf_extend` | D6/D15; API review | A player's information update is not necessarily list append. |
+| same | `latestObservation?_playerView_snoc` | theorem | retired | `InfoSignals.infoOf_extend` | D6/D15; API review | Latest-observation retention is model-specific. |
+| same | `latestObservation?_playerView_appendStep` | theorem | retired | `InfoSignals.infoOf_extend` | D6/D15; API review | Latest-observation retention is model-specific. |
+| same | `publicViewFrom_eq_filterMap_playerViewFrom` | theorem | retired | no canonical successor | D6/D15; API review | The shared interface permits private information that omits public signals. |
+| same | `publicView_eq_filterMap_playerView` | theorem | retired | no canonical successor | D6/D15; API review | The shared interface permits private information that omits public signals. |
+| same | `publicView_eq_of_playerView_eq` | theorem | retired | no canonical successor | D6/D15; API review | Equal local information need not determine a retained public-signal history. |
+| same | `projectActions_eq_of_playerView_eq` | theorem | retired | `InfoSignals.PerfectRecall` | D6; API review | This conclusion is a recall hypothesis in the general model, not a free FOSG theorem. |
+| same | `projectObservations_eq_of_playerView_eq` | theorem | retired | no canonical successor | D6/D15; API review | Observation recall is not an architectural invariant. |
+| same | `playerView_length_snoc` | theorem | retired | no canonical successor | D6/D15; API review | Compressed information has no event-list length. |
+| same | `playerView_length_lt_snoc` | theorem | retired | no canonical successor | D6/D15; API review | Compressed information need not grow at every step. |
+| same | `playerView_ne_snoc` | theorem | retired | no canonical successor | D6/D15; API review | Information may intentionally remain unchanged after a step. |
+| same | `playerView_eq_append_of_prefix` | theorem | retired | no canonical successor | D6/D15; API review | The general model supplies no append decomposition of information values. |
+| same | `playerView_length_lt_of_properPrefix` | theorem | retired | no canonical successor | D6/D15; API review | Proper execution extension need not enlarge compressed information. |
+| same | `playerView_ne_of_properPrefix` | theorem | retired | no canonical successor | D6/D15; API review | Proper execution extension may leave an information state unchanged. |
+| same | `infoSet` | def | subsumed | `InformationModel.InformationHistory`; `InformationModel.InfoSet` | Protocol BehavioralAssessment/Information API review (2026-08-02) | The former history fiber is `InformationHistory`; the state-facing information set is also available for state beliefs. |
+| same | `IsDecisionHistory` | def | subsumed | `InformationModel.InformationSite` | Protocol BehavioralAssessment API review (2026-08-02) | A canonical decision site additionally requires a reached history, nonterminality, and a genuine menu action. |
+| same | `decisionInfoSet` | def | subsumed | `InformationModel.InformationSite`; `InformationModel.InformationHistory` | Protocol BehavioralAssessment API review (2026-08-02) | The assessment interface packages exactly the reachable decision information needed by downstream reasoning. |
+| same | `publicSet` | def | retired | no canonical successor | D6/D15; API review | Public histories are a language/model choice, not a generic FOSG object. |
+| same | `mem_publicSet_of_mem_infoSet` | theorem | retired | no canonical successor | D6/D15; API review | It relies on the retired filtering representation of public signals. |
+| same | `infoSet_subset_publicSet` | theorem | retired | no canonical successor | D6/D15; API review | It relies on the retired filtering representation of public signals. |
+| same | `decisionInfoSet_subset_infoSet` | theorem | subsumed | `InformationModel.InformationSite` | Protocol BehavioralAssessment API review (2026-08-02) | An information site contains its witnessing `InformationHistory` by construction. |
+| same | `mem_decisionInfoSet_iff` | theorem | retired | `InformationModel.InformationSite` | Protocol BehavioralAssessment API review (2026-08-02) | The old set-membership wrapper is replaced by the dependent site witness. |
+| same | `infoSet_mem_publicSet` | theorem | retired | no canonical successor | D6/D15; API review | Equal local information does not generally determine retained public history. |
+| same | `ObsRecall@447` | def | retired | no canonical successor | D6/D15; API review | The old property presupposes a raw observation-list encoding. |
+| same | `ActionRecall@454` | def | retired | `InfoSignals.PerfectRecall` | D6; API review | The general recall predicate retains the stronger `(information state, action)` own-play record. |
+| same | `PerfectRecall@464` | def | adapt | `InfoSignals.PerfectRecall` | D6; Protocol Information API review (2026-08-02) | Recall is a property of `infoOf`, not a language-owned conjunction of projections. |
+| same | `obsRecall` | theorem | retired | no canonical successor | D6/D15; API review | Automatic observation recall was an artefact of the retired list representation. |
+| same | `actionRecall` | theorem | retired | `InfoSignals.PerfectRecall` | D6; API review | Automatic action recall is not a theorem for arbitrary information models. |
+| same | `perfectRecall` | theorem | refuted | `GameTheory/Tests/Randomized.lean:single_not_perfectRecall` | EXP-018; focused Randomized test | The accepted general FOSG pairing admits a signal model that forgets its own vote, so global perfect recall cannot be claimed. |
+| same | `perfectRecall_obs` | theorem | subsumed | `InfoSignals.actedAt_eq_of_perfectRecall` | D6; Protocol Information API review (2026-08-02) | Under canonical recall, equality of own-play records yields the retained decision-site record. |
+| same | `perfectRecall_action` | theorem | subsumed | `InfoSignals.PerfectRecall` | D6; Protocol Information API review (2026-08-02) | The canonical hypothesis directly retains equality of the complete own-play action record. |
 | `GameTheory/Languages/FOSG/Native/History.lean` | `ExecutionState` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 39 |
 | same | `KuhnLocalStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 43 |
 | same | `KuhnPureProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 47 |

@@ -90,8 +90,9 @@ average-payoff evaluation of the canonical history law. `Stochastic.Uniform`
 owns transparent horizon and uniform solution concepts through
 `Core.Approximate`.
 
-The umbrella `GameTheory.Stochastic` is public and opt-in, with the domain
-still provisional until the Shapley gate. The main `GameTheory` root does not
+The umbrella `GameTheory.Stochastic` is public and opt-in. At this decision it
+remained provisional until the Shapley gate; EXP-051/D23 subsequently closed
+that gate through a one-way normalized Analysis bridge. The main `GameTheory` root does not
 import it. Positive probes ensure the umbrella
 reaches all four layers and canonical approximate Nash; negative probes reject
 Repeated theory and the fixed-point dependency.
@@ -104,11 +105,10 @@ existence and no placeholder standing in for it. Future known-case existence
 theorems belong above this root, with Analysis used only when their proof
 actually needs it.
 
-The adopted data/bridge API is stable; broad subfield support remains
-provisional. The mature subfield gate is Shapley's finite discounted two-player
-zero-sum slice: define the discounted operator with local discount assumptions,
-prove contraction and the stationary value theorem, and only then call finite
-stochastic games broadly supported. Uniform equilibrium now has a trustworthy
+The adopted data/bridge API is stable. D23 subsequently proved the mature
+finite discounted two-player zero-sum slice: its normalized operator is a
+contraction with a unique value and stationary statewise saddle selectors, so
+the finite stochastic domain is now broadly supported. Uniform equilibrium now has a trustworthy
 statement layer on which known special cases or research-facing certificates
 can land without weakening mature foundations.
 

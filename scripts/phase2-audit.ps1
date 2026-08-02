@@ -371,7 +371,7 @@ if (-not $SkipReachability) {
   function Is-Unreachable([string] $Output, [string] $Constant) {
     $escaped = [regex]::Escape($Constant)
     return ($Output -match
-      "(?im)unknown (identifier|constant)[^\r\n]*$escaped")
+      "(?im)unknown (identifier|constant)[^\r\n]*$escaped(?![A-Za-z0-9_.])")
   }
   $unreachable = 0
   $reachable = @()
@@ -736,17 +736,21 @@ if (-not $SkipReachability) {
   Report 'PROBABILITY_REINDEX_BOUNDARY_PROBES_REJECTED' `
     $probabilityReindexBoundaryRejected
 
-  # EXP-050/D22 is opt-in but analysis-light. The root must positively reach
-  # all four promoted layers plus canonical approximate Nash, while rejecting
-  # both the Repeated branch and the fixed-point dependency.
+  # EXP-050/D22 and EXP-051/D23 keep the stable stochastic root
+  # analysis-light. It must positively reach the four semantic layers,
+  # canonical approximate Nash, and the structural zero-sum surface, while
+  # rejecting Repeated and both analytic fixed-point routes.
   $stochasticInputs = @(
     'GameTheory.Stochastic.Game',
+    'GameTheory.Stochastic.Game.IsZeroSum',
+    'GameTheory.Stochastic.Game.pairAction',
     'GameTheory.Stochastic.Game.perfectMonitoring',
     'GameTheory.Stochastic.Game.horizonGame_expectedUtility',
     'GameTheory.Stochastic.Game.IsUniformEquilibriumPayoff',
     'GameTheory.IsεNash')
   $stochasticBoundary = @(
     'GameTheory.UtilityGame.repeatedForm',
+    'GameTheory.Stochastic.Game.shapleyOperator',
     'kakutani_fixed_point')
   $stochasticOutput = Run-Probe 'GameTheory.Stochastic' `
     ($stochasticInputs + $stochasticBoundary)
@@ -764,6 +768,40 @@ if (-not $SkipReachability) {
     }
   }
   Report 'STOCHASTIC_BOUNDARY_PROBES_REJECTED' $stochasticBoundaryRejected
+
+  # D23's one-way bridge must consume canonical matrix values, FinDist, the
+  # stable zero-sum surface, and the already-admitted D12 Kakutani path behind
+  # finite minimax. Protocol and Repeated remain unrelated and unreachable.
+  $stochasticAnalysisInputs = @(
+    'GameTheory.Stochastic.Game.shapleyOperator',
+    'GameTheory.Stochastic.Game.contractingWith_shapleyOperator',
+    'GameTheory.Stochastic.Game.stationarySaddleProfile_isSaddlePoint',
+    'GameTheory.Stochastic.Game.auxiliaryUtility_one_eq',
+    'GameTheory.MatrixGame.abs_value_sub_le_of_entrywise_abs_le',
+    'GameTheory.Stochastic.Game.IsZeroSum',
+    'GameTheory.Probability.FinDist',
+    'kakutani_fixed_point')
+  $stochasticAnalysisBoundary = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.UtilityGame.repeatedForm')
+  $stochasticAnalysisOutput = Run-Probe 'GameTheory.Analysis.Stochastic' `
+    ($stochasticAnalysisInputs + $stochasticAnalysisBoundary)
+  $stochasticAnalysisInputsReached = 0
+  foreach ($constant in $stochasticAnalysisInputs) {
+    if (-not (Is-Unreachable $stochasticAnalysisOutput $constant)) {
+      $stochasticAnalysisInputsReached++
+    }
+  }
+  Report 'STOCHASTIC_ANALYSIS_INPUT_PROBES_REACHED' `
+    $stochasticAnalysisInputsReached
+  $stochasticAnalysisBoundaryRejected = 0
+  foreach ($constant in $stochasticAnalysisBoundary) {
+    if (Is-Unreachable $stochasticAnalysisOutput $constant) {
+      $stochasticAnalysisBoundaryRejected++
+    }
+  }
+  Report 'STOCHASTIC_ANALYSIS_BOUNDARY_PROBES_REJECTED' `
+    $stochasticAnalysisBoundaryRejected
   Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
@@ -845,8 +883,10 @@ if ($VerifyExpected) {
     $Expected['TRANSFORM_INPUT_PROBES_REACHED'] = 6
     $Expected['PROBABILITY_REINDEX_INPUT_PROBES_REACHED'] = 2
     $Expected['PROBABILITY_REINDEX_BOUNDARY_PROBES_REJECTED'] = 2
-    $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 5
-    $Expected['STOCHASTIC_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 7
+    $Expected['STOCHASTIC_BOUNDARY_PROBES_REJECTED'] = 3
+    $Expected['STOCHASTIC_ANALYSIS_INPUT_PROBES_REACHED'] = 8
+    $Expected['STOCHASTIC_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

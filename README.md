@@ -29,6 +29,7 @@ GameTheory/Finite        executable rational frontend and its correctness layer
 GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theory
   /Protocol              analytic behavioral-assessment consistency bridge
   /Repeated              analytic repeated-game bridge and discounted folk theorem
+  /Stochastic            normalized Shapley values and stationary statewise saddles
 GameTheory/Repeated      stable public histories, finite public monitoring,
                          discounting, cycles, and triggers
 GameTheory/Stochastic    opt-in finite-support stochastic games, perfect-public
@@ -73,11 +74,14 @@ Kreps-Wilson consistency over stable behavioral assessments; its EFG adapter
 supplies finite history instances and canonical continuation contexts without
 moving solution concepts into stable syntax.
 `GameTheoryMath` is a separate Lake target and cannot import game semantics.
-The provisional stochastic-game domain is also opt-in. Its native object
-stores only state, actions, finite-support transitions, and stage utility; a named
-perfect-monitoring bridge reuses Protocol's sole behavioral runner, and each
-finite horizon reuses canonical approximate Nash. The root contains no
-infinite-path law or general uniform-equilibrium existence claim.
+The supported finite stochastic-game domain is also opt-in. Its native object
+stores only state, actions, finite-support transitions, and stage utility; a
+named perfect-monitoring bridge reuses Protocol's sole behavioral runner, and
+each finite horizon reuses canonical approximate Nash. The one-way
+`GameTheory.Analysis.Stochastic` bridge proves the normalized two-player
+zero-sum Shapley contraction, unique discounted value, and stationary
+statewise saddle selectors. Neither root contains an infinite-path law or a
+general uniform-equilibrium existence claim.
 Congestion and coordinated Mechanism domains are stable but opt-in, so their
 specialized APIs do not enlarge the main root. Languages and Experimental also
 stay outside the root for the separate reasons recorded in their modules.

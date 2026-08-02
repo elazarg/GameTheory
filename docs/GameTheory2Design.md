@@ -1271,6 +1271,20 @@ finite horizon then uses canonical expected utility and approximate Nash.
 layers while rejecting Repeated and the fixed-point dependency. It contains no
 infinite-path law or general uniform-equilibrium existence claim.
 
+EXP-051/D23 closes the mature discounted-value gate without reversing that
+dependency. `GameTheory.Stochastic.ZeroSum` adds only pointwise zero-sum data
+and a proof-free row/column action presentation. `Analysis.MatrixValue`
+derives a nonexpansive finite matrix value from the existing mixed
+`GameForm`/saddle theorem, and the one-way `Analysis.Stochastic` bridge proves
+the normalized Shapley contraction, unique discounted Bellman value, and
+stationary statewise saddle selectors. A positive probe reaches the theorem
+identifying the constructed column utility with the native player-one return;
+positive probes also require the existing D12 Kakutani/minimax path to remain
+live. Negative probes keep Analysis and Kakutani out of the stable stochastic
+root and keep Protocol and Repeated out of the discounted bridge.
+No arbitrary infinite-history optimality theorem is inferred from the
+statewise result.
+
 EXP-033 closes the finite-EFG adapter under that boundary. Stable
 `GameTheory.Languages.EFG` positively reaches its execution, information, and
 finite-history inputs while rejecting solution and analytic declarations.
@@ -1579,8 +1593,10 @@ analytic-bridge split resolved it without reopening Core or the canonical law.
 
 EXP-050/D22 is the corresponding mature-blind-spot gate. It admits a separate
 stochastic root through canonical Protocol and approximate-equilibrium
-surfaces, but leaves broad support contingent on the discounted two-player
-zero-sum Shapley contraction/value slice.
+surfaces. EXP-051/D23 completes that gate through the normalized discounted
+two-player zero-sum Shapley contraction/value slice and a one-way Analysis
+bridge, without admitting an infinite-path law or the open uniform-existence
+claim.
 
 The RFC continues to govern architecture and disproof conditions. Mutable
 delivery order, frozen-obligation status, v1 declaration accounting, mature

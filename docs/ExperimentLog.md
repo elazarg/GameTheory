@@ -61,6 +61,7 @@ becomes difficult to scan.
 | EXP-048 | 2026-07-30 | D16/D18 / Electronic Mail ownership | Do the finite Electronic Mail theorems integrate as a static Bayesian/Epistemic example, or do their message rounds require Protocol execution? | Supports static Examples bridge; decides D20; promoted | [`decisions/D20-electronic-mail-ownership.md`](decisions/D20-electronic-mail-ownership.md); `GameTheory/Experimental/PostArchitecture/ElectronicMail.lean`; `GameTheory/Examples/ElectronicMail.lean` |
 | EXP-049 | 2026-08-02 | D0/D2/D12 / online learning | Can the pinned multiplicative-weights regret engine be recovered as independent `GameTheoryMath` over `FinDist` and feed stable self-play without importing analysis into Core? | Narrows to law-free vectors plus a canonical-law adapter; decides D21 | [`decisions/D21-finite-online-learning-boundary.md`](decisions/D21-finite-online-learning-boundary.md); `GameTheoryMath/OnlineLearning.lean`; `GameTheory/{Probability,Analysis}/OnlineLearning.lean` |
 | EXP-050 | 2026-08-02 | D0/D4/D6/D9/D11/D12 / finite stochastic games | Can the active uniform-existence branch's basic stochastic-game and uniform-payoff definitions survive the accepted finite-law, Protocol, and equilibrium boundaries? | Supports native data plus named Protocol bridge; decides and promotes D22 | [`decisions/D22-stochastic-protocol-boundary.md`](decisions/D22-stochastic-protocol-boundary.md); `GameTheory/Stochastic/**`; `GameTheory/Examples/StochasticUniform.lean` |
+| EXP-051 | 2026-08-02 | D2/D4/D9/D12/D22 / discounted stochastic games | Can the canonical finite stochastic data and existing minimax layer support a Shapley contraction and stationary value without importing a parallel matrix-game stack? | Supports one-way normalized Analysis bridge; decides D23 | [`decisions/D23-discounted-stochastic-value-boundary.md`](decisions/D23-discounted-stochastic-value-boundary.md); `GameTheory/Analysis/{MatrixValue,Stochastic}/`; `GameTheory/Stochastic/ZeroSum.lean` |
 
 ## Entry template
 
@@ -3312,3 +3313,72 @@ memory.
 - **Next action:** run the mature Shapley gate—discounted two-player zero-sum
   contraction and stationary value—before claiming broad stochastic-game
   support; use the uniform statement layer only for proved special cases.
+
+### EXP-051: discounted stochastic games and the Shapley boundary
+
+- **Date / revision:** 2026-08-02, working tree based on `1a1831d`
+- **Status:** supports the one-way normalized Analysis bridge; decides D23
+- **Decision / question:** D2/D4/D9/D12/D22 and the mature stochastic-game
+  gate; whether an Analysis-owned statewise finite matrix value over canonical
+  `FinDist` transitions yields the discounted Shapley contraction and unique
+  stationary value without widening the stable stochastic root.
+- **Prediction:** the stochastic data remain unchanged and topology remains a
+  one-way Analysis dependency. Existing finite minimax and saddle-point
+  uniqueness should supply a canonical one-shot value whose entrywise
+  one-Lipschitz law combines with finite-law expectation to make the Shapley
+  operator a contraction with constant `beta`.
+- **Representative slice:** two players, two states, two actions at each state,
+  state-dependent zero-sum stage utility, and a genuinely nondegenerate
+  transition; prove the operator contraction and a unique fixed point/Bellman
+  equation for `0 ≤ beta < 1`.
+- **Competing designs:** define the statewise value from the existing
+  `Analysis.Minimax` saddle point; extract reusable matrix-value mathematics
+  into `GameTheoryMath`; or port the active sibling branch's separate
+  `Math.Minimax`/Shapley stack.
+- **Measurements to collect:** Mathlib overlap and import closure; the size of
+  any reusable value layer; whether saddle points prove value independence and
+  entrywise Lipschitz directly; required finiteness/nonemptiness assumptions;
+  build cost; axiom profile; and positive/negative reachability probes.
+- **Kill conditions:** a second probability or equilibrium representation;
+  `PMF`, `Fintype.ofFinite`, or stored discount/finiteness; topology leaking
+  into `GameTheory.Stochastic`; dependency on the active sibling tree; failure
+  to prove value independence or the Lipschitz bound from trusted theorems; or
+  user-visible transport plumbing.
+- **Observation:** the existing saddle-point inequalities prove matrix-value
+  nonexpansiveness directly by crossing the selected row half of one saddle
+  with the column half of another. No simplex optimizer or new minimax stack is
+  needed. Mathlib's `ContractingWith` then supplies the unique fixed point on
+  the finite-state sup metric.
+- **Convention result:** the sibling prototype's unnormalized
+  `u + beta * E[v]` operator was not copied. The promoted operator uses
+  `(1 - beta) * u + beta * E[v]`, matching stable Repeated payoffs and keeping
+  bounded values on their original scale for later vanishing-discount work.
+- **Audit finding:** the first promoted split defined `Game.IsZeroSum` but the
+  operator consumed only player zero's payoff, leaving the predicate dead.
+  The strong integration audit added `auxiliaryUtility_one_eq`, which uses the
+  predicate to identify the artificial matrix column utility with the actual
+  normalized player-one return and negated continuation value. Positive probes
+  name that theorem, not merely the imported predicate. The same audit also
+  disproved the direct-import inference that the bridge was Mathlib-only:
+  `MatrixValue` reuses `Analysis.Minimax`, whose proof closure intentionally
+  reaches D12's Kakutani/Nash dependency. The first combined stable probe also
+  exposed an audit-parser defect: the unknown negative
+  `Game.shapleyOperator` was treated as evidence that its `Game` namespace
+  prefix was unknown. Adding an identifier boundary repaired the matcher
+  without weakening the positive probe.
+- **Measurements:** the 329-nonblank-line experiment promoted into
+  `Stochastic.ZeroSum`, `Analysis.MatrixValue`, and the one-way
+  `Analysis.Stochastic` bridge plus its hostile Example. The seven-target
+  focused build completed in 3,122 jobs (17.3 seconds). Stable Stochastic
+  rejects the Shapley operator; the analytic bridge reaches the canonical
+  matrix value, `FinDist`, zero-sum interpretation, contraction, and stationary
+  saddle selector plus the existing Kakutani/minimax path while rejecting
+  Protocol and Repeated. Source hazards are zero, and headline axioms are
+  exactly `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports design 1 and decides D23. Statewise stationary saddle
+  actions and the normalized Bellman value are public behind Analysis;
+  arbitrary infinite-history optimality and the general uniform-existence
+  conjecture remain explicitly unclaimed.
+- **Next action:** use the admitted stochastic waist for finite-horizon or
+  checked special-case results; reserve a new experiment before adding an
+  infinite-path payoff law or a vanishing-discount existence theorem.

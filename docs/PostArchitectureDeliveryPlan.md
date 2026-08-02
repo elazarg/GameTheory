@@ -244,8 +244,8 @@ current integration and recovery status. Wave 0 closes when:
 6. README status is derived from the ledger rather than source-size estimates.
 
 The audit now indexes 436 files and 8,324 declarations. Twenty-five work-package
-ledgers claim 1,370 declarations: 689 have reviewed dispositions, the exact
-FOSG queue contains 681 deliberately seeded `unreviewed` rows, and 6,954 remain
+ledgers claim 1,397 declarations: 786 have reviewed dispositions, the exact
+FOSG queue contains 611 deliberately seeded `unreviewed` rows, and 6,927 remain
 explicitly unaccounted. Both open sets are review queues, not
 auto-classification targets; generated rows are evidence of scope, not
 recovery.
@@ -430,7 +430,7 @@ the protected recovery waves.
 
 | Candidate | Evidence of the v1 blind spot | First serious slice | Candidate placement, not yet an API commitment |
 |---|---|---|---|
-| finite stochastic/Markov games | one pinned `MultiRound/StochasticGame.lean`, no general value or stationary-equilibrium theory | **semantic admission passed (EXP-050/D22), domain provisional;** next finite discounted two-player zero-sum game, Shapley operator contraction, and stationary value | public opt-in `Stochastic` root using `FinDist` transitions and a named Protocol bridge; existence in `Analysis` only when needed |
+| finite stochastic/Markov games | one pinned `MultiRound/StochasticGame.lean`, no general value or stationary-equilibrium theory | **domain gate passed (EXP-050/D22 and EXP-051/D23):** native finite-horizon/uniform semantics plus normalized two-player zero-sum Shapley contraction, unique value, and stationary statewise saddles | public opt-in `Stochastic` root using `FinDist` transitions and a named Protocol bridge; discounted value in the one-way `Analysis.Stochastic` bridge |
 | games on graphs and reactive synthesis | no reachability, safety, Büchi, parity, or mean-payoff family | finite reachability game with executable attractor and memoryless determinacy proof | independent graph-game root; compare its arena with Protocol before sharing |
 | graphical and network games | no local-interaction representation | compile a tree graphical game to `GameForm` and preserve local payoff/Nash facts | language/domain branch over the static core |
 | algorithmic game theory and complexity | executable support is enumeration-oriented and v1 has no complexity layer | one verified reduction or certificate family with explicit size/cost theorem | `Finite`, `GameTheoryMath`, and an experiment-gated complexity vocabulary |
@@ -538,7 +538,7 @@ The next work is ordered:
    measurements;
 2. extend the passed Rosenthal gate through shared Core smoothness, affine
    price of anarchy, and the Pigou/Braess examples;
-3. extend the passed sealed-bid auction gate through reserve Vickrey and VCG,
+3. extend the passed sealed-bid and reserve-price auction gate through VCG,
    preserving its explicit tie semantics;
 4. continue the exact FOSG queue through observations, strategies, and
    execution laws, and recover general constant-sum value/correlation results
@@ -546,9 +546,9 @@ The next work is ordered:
 5. resume the broader revelation/information-design inventory and decide
    whether a live consumer earns D-COMM's deferred conditional public-signal
    representation;
-6. finish the admitted stochastic-game domain gate through the discounted
-   two-player zero-sum Shapley contraction/value slice; do not admit finite
-   graph reachability concurrently;
+6. extend the passed stochastic-game gate only through a finite-horizon
+   approximation or checked special case; reserve a new experiment before any
+   infinite-path law, vanishing-discount existence theorem, or graph-game root;
 7. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 

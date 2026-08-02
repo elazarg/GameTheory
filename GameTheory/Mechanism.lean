@@ -8,6 +8,7 @@ umbrella.
 
 import GameTheory.Languages.Mechanism
 import GameTheory.Mechanism.Auction
+import GameTheory.Mechanism.ReserveVickrey
 
 namespace GameTheory
 
