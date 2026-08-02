@@ -8,6 +8,7 @@ CLAUDE.md
 .cache/
 .mcp.json
 ephemeral/
+questions/
 *.log
 .codex
 *.pdf
