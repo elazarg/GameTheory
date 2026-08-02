@@ -354,6 +354,172 @@ theorem finiteAveragePayoff_rootForcedProfile_zero
         (rootForcedProfile action continuation) who = 0 := by
   simp
 
+/-! ## Arbitrary mixed root laws -/
+
+/-- The independent mixed action selected by an arbitrary behavior profile at
+the unique initial decision history. -/
+def rootMixedProfile (profile : game.BehaviorProfile) :
+    KernelGame.PrivateRecommendationTargetSeparator.MixedProfile :=
+  fun who => profile who 0 (game.emptyHist .decision)
+
+@[simp] theorem stageActionDist_emptyHist_decision
+    (profile : game.BehaviorProfile) :
+    game.stageActionDist profile (game.emptyHist .decision) =
+      pmfPi (rootMixedProfile profile) :=
+  rfl
+
+/-- Extracting the initial mixed action commutes with unilateral behavioral
+replacement.  Only the deviator's action at the empty decision history
+survives in the extracted strategic-form profile. -/
+theorem rootMixedProfile_update
+    (profile : game.BehaviorProfile) (who : Player)
+    (deviation : game.BehaviorStrategy who) :
+    rootMixedProfile (Function.update profile who deviation) =
+      Function.update (rootMixedProfile profile) who
+        (deviation 0 (game.emptyHist .decision)) := by
+  funext other
+  by_cases hother : other = who
+  · subst other
+    simp [rootMixedProfile]
+  · simp [rootMixedProfile, Function.update_of_ne hother]
+
+/-- Every nondecision state in the lift is absorbing. -/
+theorem terminal_isAbsorbing {state : State} (hterminal : state ≠ .decision) :
+    game.IsAbsorbingState state := by
+  cases state with
+  | decision => exact (hterminal rfl).elim
+  | z0 => exact z0_isAbsorbing
+  | z1 => exact z1_isAbsorbing
+  | z2 => exact z2_isAbsorbing
+
+/-- From a terminal state, arbitrary history-dependent behavior has the
+constant absorbing payoff at every stage. -/
+theorem expectedStagePayoff_terminal
+    (profile : game.BehaviorProfile) {state : State}
+    (hterminal : state ≠ .decision) (time : ℕ) (who : Player) :
+    game.expectedStagePayoff profile state time who =
+      absorbingPayoff state who := by
+  unfold StochasticGame.expectedStagePayoff
+  have heq : ∀ history ∈ (game.histDist profile state time).support,
+      game.stageEUAt profile history who = absorbingPayoff state who := by
+    intro history hhistory
+    have hstate :
+        history.2 = state :=
+      game.snd_eq_of_mem_support_histDist_of_isAbsorbingState
+        (terminal_isAbsorbing hterminal) profile time history hhistory
+    unfold StochasticGame.stageEUAt
+    rw [hstate]
+    have hpointwise : ∀ action : game.JointAct,
+        game.stagePayoff state action who = absorbingPayoff state who := by
+      intro action
+      cases state <;> simp_all [stagePayoff]
+    have hfun :
+        (fun action => game.stagePayoff state action who) =
+          (fun _ => absorbingPayoff state who) :=
+      funext hpointwise
+    rw [hfun]
+    exact expect_const _ _
+  rw [Math.ProbabilityMassFunction.expect_congr_on_support
+      (game.histDist profile state time)
+      (fun history => game.stageEUAt profile history who)
+      (fun _ => absorbingPayoff state who) heq,
+    expect_const]
+
+/-- At stage zero, an arbitrary behavior profile earns the static mixed payoff
+of its extracted independent root law. -/
+theorem expectedStagePayoff_zero_eq_mixedRoot
+    (profile : game.BehaviorProfile) (who : Player) :
+    game.expectedStagePayoff profile .decision 0 who =
+      KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+        (rootMixedProfile profile) who := by
+  unfold StochasticGame.expectedStagePayoff StochasticGame.stageEUAt
+  rw [game.histDist_zero, expect_pure,
+    stageActionDist_emptyHist_decision,
+    KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension_eu]
+  simp [StochasticGame.emptyHist, stagePayoff, matrixPayoff,
+    KernelGame.eu_ofPureEU]
+
+/-- After the first decision, every possible successor is terminal, so the
+expected payoff at every later stage is still the static mixed payoff of the
+initial independent root law. -/
+theorem expectedStagePayoff_succ_eq_mixedRoot
+    (profile : game.BehaviorProfile) (time : ℕ) (who : Player) :
+    game.expectedStagePayoff profile .decision (time + 1) who =
+      KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+        (rootMixedProfile profile) who := by
+  unfold StochasticGame.expectedStagePayoff
+  rw [game.histDist_succ_shift profile .decision time, expect_bind,
+    stageActionDist_emptyHist_decision,
+    KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension_eu]
+  simp only [KernelGame.eu_ofPureEU]
+  apply congrArg (expect (pmfPi (rootMixedProfile profile)))
+  funext action
+  rw [expect_bind]
+  change
+    expect (decisionTransition action)
+        (fun state =>
+          expect
+            ((game.histDist
+                (game.shiftProfile profile (.decision, action)) state time).map
+              (game.consHist (.decision, action)))
+            (fun history => game.stageEUAt profile history who)) =
+      matrixPayoff action who
+  simp_rw [expect_map]
+  rw [Math.ProbabilityMassFunction.expect_congr_on_support
+      (decisionTransition action)
+      (fun state =>
+        expect
+          (game.histDist
+            (game.shiftProfile profile (.decision, action)) state time)
+          (fun history =>
+            game.stageEUAt profile
+              (game.consHist (.decision, action) history) who))
+      (fun state => absorbingPayoff state who)]
+  · exact expect_absorbingPayoff_decisionTransition action who
+  · intro state hstate
+    have hterminal : state ≠ .decision := by
+      intro hdecision
+      subst state
+      exact hstate (by simp [decisionWeight, decisionRealWeight])
+    have hshift :
+        expect
+            (game.histDist
+              (game.shiftProfile profile (.decision, action)) state time)
+            (fun history =>
+              game.stageEUAt profile
+                (game.consHist (.decision, action) history) who) =
+          game.expectedStagePayoff
+            (game.shiftProfile profile (.decision, action)) state time who := by
+      rfl
+    rw [hshift, expectedStagePayoff_terminal _ hterminal]
+
+/-- Every stage payoff of an arbitrary profile is determined solely by its
+independent mixed action at the initial decision history. -/
+theorem expectedStagePayoff_eq_mixedRoot
+    (profile : game.BehaviorProfile) (time : ℕ) (who : Player) :
+    game.expectedStagePayoff profile .decision time who =
+      KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+        (rootMixedProfile profile) who := by
+  cases time with
+  | zero => exact expectedStagePayoff_zero_eq_mixedRoot profile who
+  | succ time => exact expectedStagePayoff_succ_eq_mixedRoot profile time who
+
+/-- **Arbitrary-root horizonwise lift.** At every positive horizon, the
+stochastic payoff of any behavior profile is exactly the strategic-form mixed
+payoff of its independently randomized initial action. -/
+theorem finiteAveragePayoff_eq_mixedRoot
+    (profile : game.BehaviorProfile) (horizon : ℕ)
+    (hpositive : 1 ≤ horizon) (who : Player) :
+    game.finiteAveragePayoff .decision horizon profile who =
+      KernelGame.PrivateRecommendationTargetSeparator.game.mixedExtension.eu
+        (rootMixedProfile profile) who := by
+  have hne : (horizon : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+  rw [game.finiteAveragePayoff_eq_sum_expectedStagePayoff,
+    Finset.sum_congr rfl fun time _ =>
+      expectedStagePayoff_eq_mixedRoot profile time who,
+    Finset.sum_const, Finset.card_range, nsmul_eq_mul, ← mul_assoc,
+    inv_mul_cancel₀ hne, one_mul]
+
 end PrivateRecommendationTargetAbsorbingLift
 end StochasticGame
 end GameTheory
