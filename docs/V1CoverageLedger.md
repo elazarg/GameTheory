@@ -5,7 +5,7 @@ Status: active family-level ledger.
 Pinned source: `reference/GameTheory-v1/` at
 `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 
-Last reconciled: 2026-08-02 against the working tree based on `8239c18`.
+Last reconciled: 2026-08-02 against the working tree based on `1dec799`.
 
 This ledger answers three different questions separately:
 
@@ -136,10 +136,10 @@ declaration-based.
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
 | L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | validated by EXP-041/T3 | partial | broader refinement, recall, and Kuhn-facing declaration recovery |
-| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4; one-round hidden-phase serialization feasibility validated by EXP-059/D30 | partial; 483/776 reviewed, 293 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); the pinned Compile batch is classified; next run the two-round signal-replay serialization gate before promoting the explicit-order bridge; actual counterfactual reach, CFR, and ordinary continuation coefficients retain separate explicit gates |
+| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4; two-round hidden-phase serialization and source-signal replay validated by EXP-059/060, D30 | partial; 483/776 reviewed, 293 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); the pinned Compile batch is classified; next implement and validate the generic explicit-order adapter, then account its pinned live chain; actual counterfactual reach, CFR, and ordinary continuation coefficients retain separate explicit gates |
 | L-ROUND | `Languages/MultiRound.lean`, `Languages/MultiRound/**` | 15 | native language compiling to Protocol | provisional probe | partial | preserve previous actions and imperfect monitoring |
 | L-INTR | `Languages/Intrinsic.lean`, `Languages/Intrinsic/**` | 8 | native branch only if it retains theorem-relevant data | assigned | not started | one theorem unavailable from bare Protocol |
-| L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1, T3, T4 complete; one-round FOSG-to-EFG feasibility passes EXP-059/D30 | partial/retirement open | validate two-round signal replay and scaled history laws before promoting the explicit-order FOSG-to-EFG bridge; then account its pinned live chain |
+| L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1, T3, T4 complete; two-round FOSG-to-EFG signal replay and scaled history laws pass EXP-059/060, D30 | partial/retirement open | implement and validate the generic explicit-order FOSG-to-EFG adapter, then recover or retire its pinned live bridge chain |
 | L-OPEN | `Languages/OpenGame.lean`, `Languages/OpenGame/**` | 15 | `Frontier` | Frontier | not started | one compositional theorem and external semantic comparison |
 
 ### Mechanisms, auctions, and collective choice

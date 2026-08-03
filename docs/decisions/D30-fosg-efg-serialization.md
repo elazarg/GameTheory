@@ -1,9 +1,9 @@
 # D30: Serialize simultaneous FOSGs through hidden explicit EFG phases
 
-- **Status:** adopted for one-round feasibility and explicit ordering; generic
-  promotion remains experiment-gated
+- **Status:** adopted through two-round source-signal replay and explicit
+  ordering; the stable generic adapter is not yet promoted
 - **Date:** 2026-08-02
-- **Experiment IDs:** EXP-059
+- **Experiment IDs:** EXP-059, EXP-060
 
 ## Decision / question
 
@@ -73,18 +73,40 @@ merely a payoff or default-valued terminal projection.  The forward and
 order-independence theorems retain the separate action/action/chance
 coordinates as corollaries.
 
+## Two-round validation
+
+EXP-060 tests composition rather than another one-round outcome encoding.  Its
+source is non-tree-shaped: distinct first-round joints merge to the same state,
+yet canonical source histories induce different later information.  The first
+resolution emits a public bit and player-specific private reports; a hidden bit
+controls whether one second-round player is inactive.  The target carries the
+exact source history, runs two fixed-width selection slots plus one resolver,
+and replays source public/private/own-action signals only at that resolver.
+
+The full target `infoOf` is exactly the current phase paired with the source
+`infoOf` of the carried history.  Direct reached witnesses show that the later
+mover sees neither an inactive-versus-active hidden slot nor the earlier action
+inside the round.  A concrete source policy nevertheless changes its
+second-round action with each of the public bit, opponent-private report, and
+remembered own action after resolution.
+
+The law result is literal and strategy-space exact.  Every target behavioral
+profile projects to a source profile whose two-round canonical history law is
+the erasure of the six-microstep target law.  Translation projects back to the
+original source profile, both fixed orders agree, and an arbitrary target
+profile transports through its source projection to either target order.  No
+default outcome or reconstructed state history occurs in this proof.
+
 ## Result and consequences
 
-The candidate public bridge is an opt-in `Languages.Bridges.FOSGToEFG` family,
-but EXP-059 does not promote it.  EXP-060 must first compile a two-round
-stochastic FOSG with a second-round policy that depends on nontrivial source
-public/private resolution signals while still hiding the earlier choice in
-each simultaneous round.  It must cover inactive slots and own-action memory,
-and prove the `(order.length + 1) * k` canonical-history law, arbitrary target
-profile projection, and mapped order independence for the representative
-horizon.  Only then may the generic explicit-order API freeze.  Strategic or
-equilibrium transfer remains a later leaf over those law theorems and D8's
-coordinate/update laws.
+The candidate public bridge is an opt-in `Languages.Bridges.FOSGToEFG` family.
+EXP-060 now satisfies the required two-round signal, inactivity, policy, scaled
+history-law, and order tests, so implementation of a generic explicit-order
+adapter is unblocked.  The concrete Boolean experiment does not itself freeze
+or promote that API.  The generic implementation must compile against the
+same canonical definitions and reproduce these law-level obligations before
+stable bridge coverage is credited.  Strategic or equilibrium transfer remains
+a later leaf over those laws and D8's coordinate/update results.
 
 Do not port pinned `FOSG.Serial`: its own documentation says it is not
 semantics-preserving, and it is not on the mature pinned bridge dependency

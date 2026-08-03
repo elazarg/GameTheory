@@ -6,7 +6,7 @@ Pinned roots: `GameTheory/Languages/FOSG/Basic.lean`; `GameTheory/Languages/FOSG
 Pinned commit: `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`
 Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
-Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28, EXP-058/D29, EXP-059/D30
+Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28, EXP-058/D29, EXP-059/060/D30
 Owner: Wave 3 / sequential and language recovery
 Status: in progress; 483/776 reviewed, 293 unreviewed
 Last verified: 2026-08-02
@@ -32,8 +32,12 @@ EXP-059/D30 disposes the 65-declaration `Compile.lean` batch (the earlier
 terminal-law, finite enumeration, transport, and KernelGame compiler are
 retired. Terminal-support and coefficient laws remain deferred to the
 ordinary-continuation / named FOSG-to-EFG serialization gate.
-EXP-059 closes only the one-round feasibility risk; a two-round signal-replay
-slice remains mandatory before a generic explicit-order bridge is promoted.
+EXP-060 closes the required two-round signal-replay risk with exact source
+history carriage, resolver-only public/private/own-action replay, inactive
+slots, arbitrary target-profile projection, and a literal six-step/two-round
+history law in either order.  Generic explicit-order adapter delivery is now
+unblocked but is not credited until a stable implementation reproduces those
+obligations; the declaration dispositions and counts below are unchanged.
 
 EXP-058/D29 disposes `ReachableHistory/ObsModelFacts.lean`.  Only its two
 final-law definitions project directly to canonical Protocol execution, and

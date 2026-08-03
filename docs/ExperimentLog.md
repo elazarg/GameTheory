@@ -70,7 +70,7 @@ becomes difficult to scan.
 | EXP-057 | 2026-08-02 | D6/D7/D9/D15 / FOSG observation and Kuhn surface | Does FOSG need any native observation-model/Kuhn execution layer, or only transparent named theorems over the canonical `InformationModel`? | Supports theorem-only projection; decides D28 | [`decisions/D28-fosg-kuhn-protocol-projection.md`](decisions/D28-fosg-kuhn-protocol-projection.md); `Languages/FOSG/Kuhn.lean`; same-execution hostile witness |
 | EXP-058 | 2026-08-02 | D6/D7/D15/D28 / FOSG reachable-observation facts | Which parts of the pinned reachable-observation proof machine survive once Protocol owns histories and information? | Retires the adapter; decides D29 | [`decisions/D29-fosg-reachable-observation-retirement.md`](decisions/D29-fosg-reachable-observation-retirement.md); terminal-activity and compressed-information hostile witnesses |
 | EXP-059 | 2026-08-02 | D6/D8/D14/D15/D28 / FOSG-to-EFG serialization | Can a simultaneous stochastic FOSG be serialized as a single-mover EFG while hiding within-round choices and preserving its mapped history law? | Supports explicit hidden-phase serialization; decides D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFG.lean` |
-| EXP-060 | 2026-08-02 | D6/D8/D14/D15/D30 / two-round FOSG-to-EFG signal replay | Can the hidden-phase serializer replay nontrivial source public/private signals over two stochastic rounds, including own-action memory and inactive slots, while preserving the scaled canonical-history law? | Active; generic bridge promotion remains blocked | planned `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound.lean` |
+| EXP-060 | 2026-08-02 | D6/D8/D14/D15/D30 / two-round FOSG-to-EFG signal replay | Can the hidden-phase serializer replay nontrivial source public/private signals over two stochastic rounds, including own-action memory and inactive slots, while preserving the scaled canonical-history law? | Supports two-round signal replay; generic explicit-order implementation unblocked; extends D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound{,Witnesses}.lean` |
 
 ## Entry template
 
@@ -3847,8 +3847,9 @@ memory.
 
 ### EXP-060: two-round FOSG-to-EFG source-signal replay
 
-- **Date / revision:** 2026-08-02, active on `1d0d0d8`
-- **Status:** active; blocks promotion of a generic explicit-order bridge
+- **Date / revision:** 2026-08-02, working tree based on `1dec799`
+- **Status:** complete; supports D30 through two-round replay and unblocks a
+  generic explicit-order implementation without promoting one yet
 - **Decision / question:** whether D30's hidden microstep design composes over
   source rounds when the next source decision depends on nontrivial
   public/private resolution signals, rather than only on a phase tag.
@@ -3866,19 +3867,49 @@ memory.
   add a concrete two-round replay layer over canonical Protocol histories; or
   port the pinned separate serial-FOSG execution machine.  The experiment tests
   the middle design and keeps the other two blocked.
-- **Required measurements:** focused/full build jobs and import surface;
-  reached-information equality inside a round; public/private and own-action
-  replay after resolution; inactive-slot behavior; arbitrary target-profile
-  projection; exact mapped `InformationModel.runBehavioral` history law at a
-  representative horizon; mapped order independence; source scans and public
-  axiom audit.
+- **Measurements:** 2,308 nonblank lines and 172 declarations across the main
+  slice and direct witnesses; imports only stable `Languages.EFG` and
+  `Languages.FOSG`.  The source is deliberately non-tree-shaped: distinct
+  first-round joints merge at one state while source information retains their
+  different traces.  The target is tree-shaped and carries the exact
+  `Source.execution.History` through two fixed-width player slots and a
+  resolver per source round.
+- **Information and policy tests:** selection signals are administrative and
+  leave the full policy-visible source component unchanged.  Only the resolver
+  replays the exact source public signal, private signal, and own source
+  choice.  Named reached `infoOf` witnesses cover inactive-versus-active and
+  alternate-action hiding, while a concrete second-round policy changes with
+  the public bit, opponent-private report, and remembered own action.
+- **Law tests:** the three-target-step/one-source-step boundary theorem and the
+  composed six-target-step/two-source-step theorem quantify over every target
+  behavioral profile and preserve literal canonical source histories.
+  Projection followed by translation is the identity on every source view;
+  forward translation, both fixed orders, and arbitrary-profile transport
+  between either pair of orders preserve the same history law.
+- **Integration:** the focused main-and-witness build completes warning-free at
+  1,724 jobs and the full build completes at 3,419 jobs.  Phase 2, Phase 3,
+  and exact-coverage audits each report `VERIFIED=1`; exact coverage matches all
+  1,573 ledger rows with zero missing or duplicate declarations.
+- **Audit:** no placeholders, custom axioms, raw updates,
+  `Fintype.ofFinite`, `open Classical`, or source-level transport tokens.
+  Public axiom prints for the source counterexample, target tree theorem,
+  arbitrary-profile history laws, full-info witness, and signal-sensitive
+  policy use only `propext`, `Classical.choice`, and `Quot.sound`.
 - **Kill conditions:** any second execution/history/strategy carrier; exposing
   a prior within-round action through target information; replaying a source
   signal before its source transition; relying on a default terminal outcome;
   raw `Function.update`, public transport plumbing, global finite instances,
   placeholders, custom axioms, or weakening the canonical runner contract.
-- **Artifacts / commands:** planned
-  `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound.lean`; narrow
-  Lake target, Phase 2/3 static audits, exact coverage audit, full build, and
-  `#print axioms` on the history-law and information witnesses.
-- **Outcome / next action:** pending.
+- **Artifacts / commands:**
+  `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound.lean`;
+  `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRoundWitnesses.lean`;
+  their narrow Lake targets; `scripts/phase2-audit.ps1`;
+  `scripts/phase3-audit.ps1`; `scripts/coverage-audit.ps1`; full `lake build`;
+  embedded `#print axioms` commands.
+- **Outcome / next action:** no kill condition fired.  D30's hidden-phase
+  design composes across stochastic source rounds, exact source-signal replay,
+  own-action memory, and inactive slots.  Implement and validate the generic
+  explicit-order adapter next, then account the pinned live bridge chain.  Do
+  not claim stable bridge coverage from this concrete Bool experiment, and
+  keep counterfactual reach, CFR, and ordinary continuation coefficients behind
+  their separate gates.
