@@ -27,7 +27,7 @@ noncomputable section
 namespace GameTheory
 namespace StochasticGame
 
-open Math.Probability
+open Math.Probability Math.MeanErgodic
 
 variable {G : StochasticGame Bool} [Finite G.State]
   [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)]

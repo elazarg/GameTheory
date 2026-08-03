@@ -8,6 +8,7 @@ import Math.PMFProduct.Bind
 import Math.PMFProduct.Conditioning
 import Math.PMFProduct.Update
 import Math.PMFProduct.Independence
+import Math.PMFProduct.TotalVariation
 
 /-!
 # Independent Product Distributions

@@ -179,7 +179,7 @@ noncomputable section
 namespace GameTheory
 namespace StochasticGame
 
-open Math.Probability
+open Math.Probability Math.MeanErgodic
 
 -- ============================================================================
 -- Single-controller games
@@ -333,31 +333,6 @@ theorem isLowerAverageCertificate_of_vriezePrimalFeasible
 -- ============================================================================
 -- The mean-ergodic projection, repackaged from `Math.MeanErgodic`
 -- ============================================================================
-
-/-- **The mean-ergodic (ergodic-projection) component** of an observable `f`
-under a finite-state Markov kernel `κ`: the harmonic part `o` of the
-Poisson decomposition `f = o + (κ-step u − u)`
-(`Math.MeanErgodic.exists_harmonic_add_poisson`), picked once via choice.
-Unique by `Math.MeanErgodic.harmonic_eq_of_add_poisson_eq`, so *any* valid
-harmonic-plus-Poisson decomposition of `f` identifies this function. -/
-def ergodicProjection {S : Type*} [Fintype S] (κ : S → PMF S) (f : S → ℝ) : S → ℝ :=
-  (Math.MeanErgodic.exists_harmonic_add_poisson κ f).choose
-
-/-- The Poisson potential paired with `ergodicProjection` by the same choice,
-so that `eq_ergodicProjection_add_poisson` below holds. -/
-def ergodicPoissonPotential {S : Type*} [Fintype S] (κ : S → PMF S) (f : S → ℝ) :
-    S → ℝ :=
-  (Math.MeanErgodic.exists_harmonic_add_poisson κ f).choose_spec.choose
-
-theorem ergodicProjection_harmonic {S : Type*} [Fintype S] (κ : S → PMF S)
-    (f : S → ℝ) (s : S) : expect (κ s) (ergodicProjection κ f) = ergodicProjection κ f s :=
-  (Math.MeanErgodic.exists_harmonic_add_poisson κ f).choose_spec.choose_spec.1 s
-
-theorem eq_ergodicProjection_add_poisson {S : Type*} [Fintype S] (κ : S → PMF S)
-    (f : S → ℝ) (s : S) :
-    f s = ergodicProjection κ f s +
-      (expect (κ s) (ergodicPoissonPotential κ f) - ergodicPoissonPotential κ f s) :=
-  (Math.MeanErgodic.exists_harmonic_add_poisson κ f).choose_spec.choose_spec.2.1 s
 
 -- ============================================================================
 -- Step 4: the controller projection witness ⟹ the controller's own certificate
@@ -2271,7 +2246,7 @@ below applies it to `game`'s (definitionally `Bool`) state type at a single
 top-level function application, where full elaboration-time defeq suffices. -/
 private theorem ergodicProjection_pure_true_kernel (κ : Bool → PMF Bool) (f : Bool → ℝ)
     (hκ : ∀ s, κ s = PMF.pure true) (hfA : f false = 0) (hfB : f true = 5) :
-    StochasticGame.ergodicProjection κ f = fun _ => (5 : ℝ) := by
+    Math.MeanErgodic.ergodicProjection κ f = fun _ => (5 : ℝ) := by
   classical
   set o2 : Bool → ℝ := fun _ => (5 : ℝ) with ho2
   set u2 : Bool → ℝ := fun s => cond s 0 5 with hu2
@@ -2284,16 +2259,17 @@ private theorem ergodicProjection_pure_true_kernel (κ : Bool → PMF Bool) (f :
     · rw [hfA, ho2, hu2]; norm_num
     · rw [hfB, ho2, hu2]; norm_num
   have huniq := Math.MeanErgodic.harmonic_eq_of_add_poisson_eq κ f
-    (StochasticGame.ergodicProjection κ f) (StochasticGame.ergodicPoissonPotential κ f)
+    (Math.MeanErgodic.ergodicProjection κ f)
+      (Math.MeanErgodic.ergodicPoissonPotential κ f)
     o2 u2
-    (StochasticGame.ergodicProjection_harmonic κ f)
-    (StochasticGame.eq_ergodicProjection_add_poisson κ f) ho2harm hdecomp2
+    (Math.MeanErgodic.ergodicProjection_harmonic κ f)
+    (Math.MeanErgodic.eq_ergodicProjection_add_poisson κ f) ho2harm hdecomp2
   rw [huniq, ho2]
 
 /-- The constant `5` is a valid harmonic-plus-Poisson decomposition of the
 worst-case reward under `τ`'s (transient-at-`A`, absorbing-at-`B`) kernel. -/
 theorem ergodicProjection_worstReward_τ :
-    StochasticGame.ergodicProjection (game.controllerKernel false τ)
+    Math.MeanErgodic.ergodicProjection (game.controllerKernel false τ)
         (game.worstReward false τ) = fun _ => (5 : ℝ) :=
   ergodicProjection_pure_true_kernel (game.controllerKernel false τ) (game.worstReward false τ)
     (fun s => congrFun controllerKernel_τ_eq s) worstReward_τ_false worstReward_τ_true

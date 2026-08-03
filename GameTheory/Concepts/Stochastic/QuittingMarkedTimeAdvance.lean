@@ -66,7 +66,7 @@ theorem expect_quittingNonemptyIndicator_eq_absorptionMass
       subst action
       simp [allContinue]
   rw [hindicator, expect_sub, expect_const,
-    ← pmf_apply_toReal_eq_expect_indicator]
+    ← Math.Probability.apply_toReal_eq_expect_indicator]
   rfl
 
 omit [DecidableEq ι] in

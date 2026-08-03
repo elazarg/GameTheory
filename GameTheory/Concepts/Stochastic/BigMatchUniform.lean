@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Stochastic.BigMatchMarkov
 import GameTheory.Concepts.Stochastic.AdaptiveCertificate
+import Math.SequenceVariation
 
 /-!
 # The Big Match: the positive (Blackwell–Ferguson) side of the uniform value
@@ -741,12 +742,6 @@ theorem sum_range_bfDelta_eq (d : ℕ → Bool) (n : ℕ) :
     push_cast
     split_ifs <;> ring
 
-theorem sum_range_sub_succ (S : ℕ → ℝ) (n : ℕ) :
-    ∑ i ∈ Finset.range n, (S i - S (i + 1)) = S 0 - S n := by
-  induction n with
-  | zero => simp
-  | succ n ih => rw [Finset.sum_range_succ, ih]; ring
-
 /-- **Lemma 4, the Abel-summation bound.** The negative drift of `S t * δ t`
 is bounded uniformly in the horizon, by summation by parts against the
 excess bound `bfExcess_ge_of_stateLiveProbability_pos`. -/
@@ -811,7 +806,8 @@ theorem bfAbel_bound (N : ℕ) (d : ℕ → Bool) (T : ℕ) :
           Finset.sum_le_sum hterm
       _ = ((N : ℝ) + 1) * ∑ i ∈ Finset.range (T - 1), (S i - S (i + 1)) := by
           rw [Finset.mul_sum]; congr 1; funext i; ring
-      _ = ((N : ℝ) + 1) * (S 0 - S (T - 1)) := by rw [sum_range_sub_succ]
+      _ = ((N : ℝ) + 1) * (S 0 - S (T - 1)) := by
+        rw [Math.sum_range_sub_succ]
       _ ≤ (N : ℝ) + 1 := by
           have h1 : S 0 = 1 := stateLiveProbability_zero _
           have h2 : 0 ≤ S (T - 1) := stateLiveProbability_nonneg _ _
@@ -1477,23 +1473,8 @@ support-level induction on the raw stage record (`bfDeltaSum`), reusing
 `netRightExcess_ge_of_live_of_mem_support`, and then lifted to the
 expectation level by the *same* one-step `histDist_succ` unfolding used for
 `bfLiveDeltaExpect_eq`; (ii) is proved by recognizing `bfLivePExpect` as the
-one-step drop in live probability, telescoping via `sum_range_sub_succ`. -/
-
-/-- A helper dual to `Math.ProbabilityMassFunction.expect_le_of_le_on_support`:
-a *lower* bound holding on the support of a PMF lower-bounds its expectation. -/
-theorem expect_ge_of_ge_on_support {Ω : Type*} [Finite Ω] (μ : PMF Ω) (f : Ω → ℝ) {B : ℝ}
-    (hfB : ∀ a, a ∈ μ.support → B ≤ f a) : B ≤ expect μ f := by
-  classical
-  have hcongr : expect μ f = expect μ (fun a => if a ∈ μ.support then f a else B) :=
-    Math.ProbabilityMassFunction.expect_congr_on_support μ _ _ (fun a ha => by simp [ha])
-  rw [hcongr]
-  have hge : ∀ a, B ≤ (if a ∈ μ.support then f a else B) := by
-    intro a
-    by_cases ha : a ∈ μ.support
-    · simpa [ha] using hfB a ha
-    · simp [ha]
-  calc B = expect μ (fun _ => B) := (expect_const _ _).symm
-    _ ≤ _ := expect_mono μ _ _ hge
+one-step drop in live probability, telescoping via
+`Math.sum_range_sub_succ`. -/
 
 /-! ### Part (i): the signed-excess sum -/
 
@@ -1583,7 +1564,7 @@ theorem bfPartialDeltaSum_ge (N : ℕ) (dev : game.BehaviorStrategy true) (T : �
     intro h hh
     have := (bfDeltaSum_facts N dev T h hh).2
     exact_mod_cast this
-  exact expect_ge_of_ge_on_support _ _ hb
+  exact Math.ProbabilityMassFunction.le_expect_of_le_on_support _ _ hb
 
 /-- One-step recursion for `bfPartialDeltaSum`: exactly the same `histDist_succ`
 unfolding as `bfLiveDeltaExpect_eq`'s proof, so it reuses that lemma directly
@@ -1696,7 +1677,7 @@ theorem sum_bfLivePExpect_le_one (N : ℕ) (dev : game.BehaviorStrategy true) (T
     ∑ t ∈ Finset.range T, bfLivePExpect N dev t ≤ 1 := by
   have hsum : ∑ t ∈ Finset.range T, bfLivePExpect N dev t = bfPLive N dev 0 - bfPLive N dev T := by
     simp_rw [bfLivePExpect_eq_sub]
-    exact sum_range_sub_succ (bfPLive N dev) T
+    exact Math.sum_range_sub_succ (bfPLive N dev) T
   rw [hsum, bfPLive_zero]
   have := bfPLive_nonneg N dev T
   linarith

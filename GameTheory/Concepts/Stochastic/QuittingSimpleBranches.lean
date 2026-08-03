@@ -213,6 +213,7 @@ theorem quittingTerminalPayoff_update_quittingAlwaysContinue_le_max
   exact le_of_tendsto'
     (tendsto_expectedStagePayoff_quittingGame reward profile who) hstage
 
+omit [DecidableEq ι] in
 /-- Under all-continue, every supported history remains active. -/
 theorem state_eq_none_of_mem_support_quittingAlwaysContinue
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
@@ -246,6 +247,7 @@ theorem state_eq_none_of_mem_support_quittingAlwaysContinue
       simp at hnext
       simpa using hnext
 
+omit [DecidableEq ι] in
 /-- The all-continue profile has terminal payoff zero. -/
 @[simp] theorem quittingTerminalPayoff_quittingAlwaysContinue
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (who : ι) :
@@ -295,8 +297,10 @@ theorem quittingTerminalPayoff_update_quittingAlwaysQuitStrategy
     funext player
     by_cases hp : player = who
     · subst player
-      simp [quitAction, quittingAlwaysQuitStrategy]
-      with_unfolding_all rfl
+      rw [Function.update_self]
+      change PMF.pure true = PMF.pure (quitAction who)
+      congr
+      simp [quitAction]
     · simp [Function.update_of_ne hp, quittingAlwaysQuitStrategy, quitAction]
   rw [hfamily, pmfPi_pure]
   with_unfolding_all

@@ -10,6 +10,7 @@ import Mathlib.Data.List.ChainOfFn
 import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Tactic
+import Math.Periodicity
 
 /-!
 # Bounded-discrepancy walks and zero-charge lassos
@@ -401,8 +402,7 @@ private theorem exists_boundary_of_isChain
                 hmarkedEdge, hunmarkedEdge, hboundary⟩ :=
                   ih htailChain ⟨second, by simp, hsecond⟩ htailUnmarked
               exact ⟨markedEdge, by simp [hmarkedMem], unmarkedEdge,
-                by simp [hunmarkedMem], hmarkedEdge, hunmarkedEdge, hboundary⟩
-
+              by simp [hunmarkedMem], hmarkedEdge, hunmarkedEdge, hboundary⟩
             · exact ⟨first, by simp, second, by simp, hfirst, hsecond, hrelation⟩
           · by_cases hsecond : marked second
             · exact ⟨second, by simp, first, by simp, hsecond, hfirst,
@@ -488,15 +488,16 @@ private theorem count_map_eq_sum_toFinset_ite
 /-- A walk-connected positive support cannot be split into two nonempty edge
 sets without a pair of positive-support edges sharing an endpoint across the
 split. -/
-theorem HasWalkConnectedSupport.exists_boundary [DecidableEq E]
+theorem HasWalkConnectedSupport.exists_boundary
     (multiplicity : E → ℕ) (hconnected : G.HasWalkConnectedSupport multiplicity)
     (marked : Finset E)
     (hmarked : ∃ edge, 0 < multiplicity edge ∧ edge ∈ marked)
     (hunmarked : ∃ edge, 0 < multiplicity edge ∧ edge ∉ marked) :
     ∃ first second,
       0 < multiplicity first ∧ first ∈ marked ∧
-      0 < multiplicity second ∧ second ∉ marked ∧
-      G.SharesEndpoint first second := by
+       0 < multiplicity second ∧ second ∉ marked ∧
+       G.SharesEndpoint first second := by
+  classical
   obtain ⟨traversal, _, hsupport, hchain⟩ := hconnected
   have hmarkedTraversal : ∃ edge ∈ traversal, edge ∈ marked := by
     obtain ⟨edge, hpositive, hedgeMarked⟩ := hmarked
@@ -595,12 +596,13 @@ namespace MultiplicityToken
 def edge {multiplicity : E → ℕ} (token : MultiplicityToken multiplicity) : E :=
   token.1
 
-theorem card_filter_edge_eq_sum_filter [Fintype E] [DecidableEq E]
+theorem card_filter_edge_eq_sum_filter [Fintype E]
     (multiplicity : E → ℕ) (predicate : E → Prop)
     [DecidablePred predicate] :
-    (Finset.univ.filter
+       (Finset.univ.filter
       (fun token : MultiplicityToken multiplicity => predicate token.edge)).card =
       ∑ edge with predicate edge, multiplicity edge := by
+  classical
   rw [Finset.card_eq_sum_ones, Finset.sum_filter]
   change (∑ token : MultiplicityToken multiplicity,
     if predicate token.edge then 1 else 0) = _
@@ -837,13 +839,14 @@ def detokenize (multiplicity : E → ℕ) {start : V} : {finish : V} →
 /-- A token trail containing every distinguishable token detokenizes to the
 prescribed original integer edge multiplicity. -/
 theorem edgeMultiplicity_detokenize_of_nodup_all
-    [Fintype E] [DecidableEq E] (multiplicity : E → ℕ)
+    [Finite E] [DecidableEq E] (multiplicity : E → ℕ)
     (walk : (G.tokenGraph multiplicity).Walk start finish)
     (hnodup : walk.edges.Nodup)
     (hall : ∀ token : MultiplicityToken multiplicity, token ∈ walk.edges)
     (edge : E) :
     (walk.detokenize multiplicity).edgeMultiplicity edge =
       multiplicity edge := by
+  letI : Fintype E := Fintype.ofFinite E
   rw [(walk.detokenize multiplicity).edgeMultiplicity_eq_count,
     edges_detokenize,
     count_map_eq_sum_toFinset_ite MultiplicityToken.edge walk.edges hnodup edge]
@@ -1583,36 +1586,6 @@ def HasBoundedDiscrepancy (walk : G.InfiniteWalk start) {κ : Type uκ}
     (edgeCharge : E → κ → ℤ) : Prop :=
   Set.Finite (Set.range (walk.prefixCharge edgeCharge))
 
-/-- A positive additive period forces a sequence on `ℕ` to have finite
-range. -/
-theorem finite_range_of_add_period {α : Type*} (sequence : ℕ → α)
-    (period : ℕ) (hperiodPos : 0 < period)
-    (hperiod : ∀ n, sequence (n + period) = sequence n) :
-    Set.Finite (Set.range sequence) := by
-  have hremainder : ∀ n, ∃ r < period, sequence n = sequence r := by
-    intro n
-    induction n using Nat.strong_induction_on with
-    | h n ih =>
-        by_cases hn : n < period
-        · exact ⟨n, hn, rfl⟩
-        · let earlier := n - period
-          have hearlier : earlier < n := by
-            dsimp [earlier]
-            omega
-          obtain ⟨r, hr, her⟩ := ih earlier hearlier
-          refine ⟨r, hr, ?_⟩
-          have hnEq : earlier + period = n := by
-            dsimp [earlier]
-            omega
-          rw [← hnEq, hperiod earlier]
-          exact her
-  have hfiniteDomain : Set.Finite (↑(Finset.range period) : Set ℕ) :=
-    Finset.finite_toSet _
-  refine (hfiniteDomain.image sequence).subset ?_
-  rintro value ⟨n, rfl⟩
-  obtain ⟨r, hr, heq⟩ := hremainder n
-  refine ⟨r, ?_, heq.symm⟩
-  simpa using hr
 
 /-- The first `n` edges as a finite walk. -/
 def take (walk : G.InfiniteWalk start) : (n : ℕ) → G.Walk start (walk.vertex n)
@@ -1815,7 +1788,7 @@ theorem hasBoundedDiscrepancy_of_wordCharge_zero {κ : Type uκ}
     (cycle : G.CyclicWord base) (edgeCharge : E → κ → ℤ)
     (hzero : (cycle.word.map edgeCharge).sum = 0) :
     cycle.toInfiniteWalk.HasBoundedDiscrepancy edgeCharge := by
-  exact InfiniteWalk.finite_range_of_add_period
+  exact Math.finite_range_of_add_period
     (cycle.toInfiniteWalk.prefixCharge edgeCharge)
     cycle.periodLength cycle.periodLength_pos
     (cycle.prefixCharge_add_period_of_wordCharge_zero edgeCharge hzero)
@@ -1842,9 +1815,10 @@ variable {G} {start : V} {κ : Type uκ} {edgeCharge : E → κ → ℤ}
 /-- The Euler realization of a reachable connected circulation is a
 zero-charge lasso whose transient is the supplied route to the support. -/
 theorem exists_zeroChargeLasso
-    [Fintype E] [DecidableEq E] [DecidableEq V]
+    [Fintype E] [DecidableEq V]
     (circulation : G.ReachableConnectedIntegerCirculation edgeCharge start) :
     Nonempty (G.ZeroChargeLasso edgeCharge start) := by
+  classical
   obtain ⟨period, hnonempty, _, hzero⟩ :=
     circulation.toConnectedIntegerCirculation.exists_closedWalk_exactMultiplicity_at
       circulation.entry circulation.entry_mem_support
@@ -1950,10 +1924,11 @@ variable {G} {start : V} {κ : Type uκ} {edgeCharge : E → κ → ℤ}
 /-- A reachable connected zero-charge integer circulation constructs a
 genuine eventually periodic infinite walk of bounded discrepancy. -/
 theorem exists_eventuallyPeriodic_boundedDiscrepancy
-    [Fintype E] [DecidableEq E] [DecidableEq V]
+    [Fintype E] [DecidableEq V]
     (circulation : G.ReachableConnectedIntegerCirculation edgeCharge start) :
     ∃ walk : G.InfiniteWalk start,
       walk.HasBoundedDiscrepancy edgeCharge ∧ walk.IsEventuallyPeriodic := by
+  classical
   obtain ⟨lasso⟩ := circulation.exists_zeroChargeLasso
   exact lasso.exists_eventuallyPeriodic_boundedDiscrepancy
 
@@ -2029,11 +2004,12 @@ theorem exists_boundedDiscrepancy_iff_exists_eventuallyPeriodic
 connected integer circulation. This is the extraction direction of the
 circulation equivalence below. -/
 theorem exists_reachableConnectedIntegerCirculation_of_boundedDiscrepancy
-    [Finite V] [Fintype E] [DecidableEq E] [DecidableEq V]
+    [Finite V] [Fintype E] [DecidableEq V]
     {κ : Type uκ} (edgeCharge : E → κ → ℤ) (start : V)
     (walk : G.InfiniteWalk start)
     (hbounded : walk.HasBoundedDiscrepancy edgeCharge) :
     Nonempty (G.ReachableConnectedIntegerCirculation edgeCharge start) := by
+  classical
   obtain ⟨lasso⟩ := G.exists_zeroChargeLasso_of_boundedDiscrepancy
     edgeCharge start walk hbounded
   exact ⟨lasso.toReachableConnectedIntegerCirculation⟩
@@ -2043,11 +2019,12 @@ finite vertex set and an integer charge lattice, a bounded-discrepancy walk
 exists exactly when a reachable connected zero-charge integer circulation
 exists.  The reverse construction is eventually periodic. -/
 theorem exists_boundedDiscrepancy_iff_reachableConnectedIntegerCirculation
-    [Finite V] [Fintype E] [DecidableEq E] [DecidableEq V]
+    [Finite V] [Fintype E] [DecidableEq V]
     {κ : Type uκ} (edgeCharge : E → κ → ℤ) (start : V) :
     (∃ walk : G.InfiniteWalk start,
       walk.HasBoundedDiscrepancy edgeCharge) ↔
       Nonempty (G.ReachableConnectedIntegerCirculation edgeCharge start) := by
+  classical
   constructor
   · rintro ⟨walk, hbounded⟩
     exact G.exists_reachableConnectedIntegerCirculation_of_boundedDiscrepancy

@@ -189,6 +189,6 @@ theorem expect_pmfPi_someOpponentQuits_eq_one_sub_continueMass
       rw [expect_sub, expect_const]
     _ = 1 - ((pmfPi (Function.update root who (PMF.pure false)))
         (quittingAllContinueAction : ι → Bool)).toReal := by
-      rw [← pmf_apply_toReal_eq_expect_indicator]
+      rw [← Math.Probability.apply_toReal_eq_expect_indicator]
 
 end GameTheory

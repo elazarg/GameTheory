@@ -72,6 +72,7 @@ theorem quittingJointContinueMass_le_one
     ENNReal.toReal_le_toReal (PMF.apply_ne_top _ _) (by simp)]
   exact PMF.coe_le_one _ _
 
+omit [DecidableEq ι] in
 /-- The live-history coordinate is exactly the expected indicator of the
 current state being live. -/
 theorem quittingLiveMass_eq_expectedStateValue
@@ -113,13 +114,14 @@ theorem quittingLiveMass_eq_expectedStateValue
             exact (hhistory heq).elim
         · cases hstate : history.2 with
           | none => exact (hlive hstate).elim
-          | some S => simp [hstate, quittingLiveIndicator]
+          | some S => simp [quittingLiveIndicator]
       · intro hnot
         exact (hnot (Finset.mem_univ _)).elim
     _ = (((quittingGame reward).histDist profile none time)
           (quittingLiveHist reward time)).toReal := by
       simp
 
+omit [DecidableEq ι] in
 /-- Live mass is at most one. -/
 theorem quittingLiveMass_le_one
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -130,17 +132,7 @@ theorem quittingLiveMass_le_one
     ENNReal.toReal_le_toReal (PMF.apply_ne_top _ _) (by simp)]
   exact PMF.coe_le_one _ _
 
-/-- A PMF coordinate is the expectation of its singleton indicator. -/
-theorem pmf_apply_toReal_eq_expect_indicator
-    {Ω : Type} [Finite Ω] [DecidableEq Ω]
-    (distribution : PMF Ω) (point : Ω) :
-    (distribution point).toReal =
-      expect distribution (fun other => if other = point then 1 else 0) := by
-  classical
-  letI : Fintype Ω := Fintype.ofFinite Ω
-  rw [expect_eq_sum]
-  simp
-
+omit [DecidableEq ι] in
 /-- From the live state, the next state remains live exactly under the
 all-continue joint action. -/
 theorem expect_quittingGame_transition_liveIndicator
@@ -156,7 +148,7 @@ theorem expect_quittingGame_transition_liveIndicator
     have hne : action ≠ (quittingAllContinueAction : ι → Bool) := by
       intro heq
       subst action
-      simpa using hquit
+      simp at hquit
     rw [quittingGame_transition_none, dif_pos hraw]
     simp [hne, quittingLiveIndicator]
   · have heq :=
@@ -170,6 +162,7 @@ theorem expect_quittingGame_transition_liveIndicator
     rw [quittingGame_transition_none, dif_neg hraw]
     simp [quittingLiveIndicator]
 
+omit [DecidableEq ι] in
 /-- Conditional on a live current history, the expected next live indicator
 is the all-continue action coordinate.  At an absorbed history it is zero. -/
 theorem expect_stageAction_transition_quittingLiveIndicator
@@ -192,34 +185,16 @@ theorem expect_stageAction_transition_quittingLiveIndicator
       with_unfolding_all
         change expect distribution (fun action : ι → Bool =>
             expect ((quittingGame reward).transition none action)
-              (fun state =>
-                match state with | none => (1 : ℝ) | some _ => 0)) =
+              (quittingLiveIndicator reward)) =
           (distribution quittingAllContinueAction).toReal
-      rw [pmf_apply_toReal_eq_expect_indicator]
+      rw [Math.Probability.apply_toReal_eq_expect_indicator]
       apply congrArg (expect distribution)
       funext action
-      by_cases hquit :
-          ({who | action who = true} : Finset ι).Nonempty
-      · rw [quittingGame_transition_none, dif_pos hquit]
-        have hne :
-            action ≠ (quittingAllContinueAction : ι → Bool) := by
-          intro heq
-          subst action
-          simpa [quittingAllContinueAction] using hquit
-        simp only [expect_pure]
-        rw [if_neg hne]
-      · rw [quittingGame_transition_none, dif_neg hquit]
-        have heq :
-            action = (quittingAllContinueAction : ι → Bool) := by
-          funext who
-          change action who = false
-          cases ha : action who with
-          | false => rfl
-          | true => exact (hquit ⟨who, by simp [ha]⟩).elim
-        simp [heq]
+      exact expect_quittingGame_transition_liveIndicator reward action
   | some S =>
       simp [quittingGame, quittingLiveIndicator]
 
+omit [DecidableEq ι] in
 /-- The stopping recurrence: current live mass times the conditional
 all-continue probability is the live mass one stage later. -/
 theorem quittingLiveMass_succ
@@ -254,7 +229,7 @@ theorem quittingLiveMass_succ
               reward profile history hsupported hstate
           subst history
           simp [quittingJointContinueMass]
-        | some S => simp [hstate, quittingLiveIndicator]
+        | some S => simp [quittingLiveIndicator]
     _ = quittingJointContinueMass reward profile time *
         quittingLiveMass reward profile time := by
       rw [expect_const_mul, quittingLiveMass_eq_expectedStateValue]
@@ -262,6 +237,7 @@ theorem quittingLiveMass_succ
     _ = quittingLiveMass reward profile time *
         quittingJointContinueMass reward profile time := by ring
 
+omit [DecidableEq ι] in
 /-- Live mass is nonincreasing. -/
 theorem quittingLiveMass_succ_le
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -273,6 +249,7 @@ theorem quittingLiveMass_succ_le
     (quittingLiveMass_nonneg reward profile time)
     (quittingJointContinueMass_le_one reward profile time)
 
+omit [DecidableEq ι] in
 /-- Live mass is antitone in time. -/
 theorem quittingLiveMass_antitone
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)

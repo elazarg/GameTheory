@@ -36,11 +36,7 @@ open PMFProduct
 
 universe uS uI uA
 
-variable {S : Type uS} {I : Type uI}
-  [Fintype S] [DecidableEq S]
-  [Fintype I] [DecidableEq I]
-  {Action : S → I → Type uA}
-  [∀ state player, Fintype (Action state player)]
+variable {S : Type uS} {I : Type uI} {Action : S → I → Type uA}
 
 /-- Joint action available at one state. -/
 abbrev FiniteJointAction (Action : S → I → Type uA) (state : S) :=
@@ -59,6 +55,10 @@ namespace FiniteProductFlowData
 
 variable (data : FiniteProductFlowData (S := S) (I := I) Action)
 
+section ProductMass
+
+variable [Fintype I]
+
 /-- Independent joint-action law at one state. -/
 def jointActionLaw (state : S) : PMF (FiniteJointAction Action state) :=
   pmfPi (data.profile state)
@@ -72,16 +72,6 @@ def edgeFlux (state : S) (action : FiniteJointAction Action state)
     (target : S) : ℝ :=
   (1 - data.reset) * data.actionMass state action *
     (data.kernel state action target).toReal
-
-/-- Exact discounted state balance for product-flow data. -/
-def IsBalanced : Prop :=
-  ∀ target,
-    (data.occupation target).toReal =
-      data.reset * (data.initial target).toReal +
-        (1 - data.reset) *
-          ∑ state, ∑ action,
-            data.actionMass state action *
-              (data.kernel state action target).toReal
 
 @[simp] theorem jointActionLaw_apply (state : S)
     (action : FiniteJointAction Action state) :
@@ -101,6 +91,10 @@ theorem actionMass_nonneg (state : S)
     (action : FiniteJointAction Action state) :
     0 ≤ data.actionMass state action :=
   mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg
+
+section Swap
+
+variable [DecidableEq I]
 
 /-- Swapping one coordinate between two joint actions preserves the product
 of their independent joint-action probabilities. -/
@@ -161,8 +155,14 @@ theorem actionMass_swap_mul (state : S)
           (data.jointActionLaw state
             (Function.update second player (first player))).toReal) := by ring
 
+end Swap
+end ProductMass
+
+section Normalization
+
 /-- Product action masses disintegrate exactly to the state occupation mass. -/
-theorem sum_actionMass (state : S) :
+theorem sum_actionMass [Fintype I] [DecidableEq I] (state : S)
+    [∀ player, Fintype (Action state player)] :
     ∑ action, data.actionMass state action =
       (data.occupation state).toReal := by
   classical
@@ -178,14 +178,21 @@ theorem sum_actionMass (state : S) :
           rw [pmf_toReal_sum_one, mul_one]
 
 /-- The state occupation vector is a simplex point. -/
-theorem sum_occupation :
+theorem sum_occupation [Fintype S] :
     ∑ state, (data.occupation state).toReal = 1 :=
   pmf_toReal_sum_one data.occupation
 
 /-- Every state/player action vector is a simplex point. -/
-theorem sum_profile (state : S) (player : I) :
+theorem sum_profile (state : S) (player : I)
+    [Fintype (Action state player)] :
     ∑ action, (data.profile state player action).toReal = 1 :=
   pmf_toReal_sum_one (data.profile state player)
+
+end Normalization
+
+section SuccessorFlux
+
+variable [Fintype I]
 
 /-- Fixed-kernel successor proportionality, stated directly for product
 flows. -/
@@ -199,7 +206,7 @@ theorem kernel_mul_edgeFlux (state : S)
   ring
 
 /-- All successors of a fixed state/action label form one stochastic bundle. -/
-theorem sum_edgeFlux (state : S)
+theorem sum_edgeFlux [Fintype S] (state : S)
     (action : FiniteJointAction Action state) :
     ∑ target, data.edgeFlux state action target =
       (1 - data.reset) * data.actionMass state action := by
@@ -215,6 +222,23 @@ theorem sum_edgeFlux (state : S)
     _ = (1 - data.reset) * data.actionMass state action := by
           rw [pmf_toReal_sum_one, mul_one]
 
+end SuccessorFlux
+
+section FiniteFlow
+
+variable [Fintype S] [Fintype I] [DecidableEq I]
+  [∀ state player, Fintype (Action state player)]
+
+/-- Exact discounted state balance for product-flow data. -/
+def IsBalanced : Prop :=
+  ∀ target,
+    (data.occupation target).toReal =
+      data.reset * (data.initial target).toReal +
+        (1 - data.reset) *
+          ∑ state, ∑ action,
+            data.actionMass state action *
+              (data.kernel state action target).toReal
+
 /-- Compile balanced product-flow data to the generic labelled-flow API. -/
 def toFiniteDiscountedLabelledFlow (hbalance : data.IsBalanced) :
     FiniteDiscountedLabelledFlow
@@ -224,7 +248,7 @@ def toFiniteDiscountedLabelledFlow (hbalance : data.IsBalanced) :
   stock := fun state => (data.occupation state).toReal
   labelMass := data.actionMass
   kernel := data.kernel
-  label_mass_sum := data.sum_actionMass
+  label_mass_sum := fun state => data.sum_actionMass state
   state_balance := by
     intro target
     exact hbalance target
@@ -260,6 +284,10 @@ theorem sum_aggregateFlux (source : S) :
     _ = (1 - data.reset) * (data.occupation source).toReal := by
           rw [data.sum_actionMass source]
 
+section CutBalance
+
+variable [DecidableEq S]
+
 /-- Balanced product data satisfy the exact discounted cut equation. -/
 theorem cut_balance (hbalance : data.IsBalanced) (states : Finset S) :
     data.reset *
@@ -270,16 +298,22 @@ theorem cut_balance (hbalance : data.IsBalanced) (states : Finset S) :
         finiteFlowBetween data.aggregateFlux statesᶜ states := by
   exact (data.toFiniteDiscountedLabelledFlow hbalance).cut_balance states
 
+end CutBalance
+end FiniteFlow
+
 end FiniteProductFlowData
 
 /-- Product-flow data together with their exact discounted state equation. -/
 structure FiniteDiscountedProductFlow (Action : S → I → Type uA)
+    [Fintype S] [Fintype I] [DecidableEq I]
     [∀ state player, Fintype (Action state player)] where
   data : FiniteProductFlowData (S := S) (I := I) Action
   balanced : data.IsBalanced
 
 namespace FiniteDiscountedProductFlow
 
+variable [Fintype S] [DecidableEq S] [Fintype I] [DecidableEq I]
+  [∀ state player, Fintype (Action state player)]
 variable (flow : FiniteDiscountedProductFlow (S := S) (I := I) Action)
 
 theorem cut_balance (states : Finset S) :

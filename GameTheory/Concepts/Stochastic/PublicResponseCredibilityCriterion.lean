@@ -1728,11 +1728,6 @@ theorem sum_bool_prod (f : Bool × Bool → ℝ) :
     Fintype.sum_bool]
 
 /-- A point mass gives zero real weight away from its atom. -/
-theorem pmf_pure_toReal_of_ne {α : Type} (a b : α) (hne : b ≠ a) :
-    ((PMF.pure a) b).toReal = 0 := by
-  rw [PMF.pure_apply, if_neg hne]
-  simp
-
 theorem targetCharge_constTarget (row : Bool) (c : ℝ) (z act : Bool) :
     (stationaryArchitecture row).targetCharge (constTarget c) () z act = 0 := by
   simp [StochasticGame.FiniteResponseArchitecture.targetCharge, constTarget]
@@ -1803,7 +1798,8 @@ theorem not_isNeutralOccupationNonpositive_obey :
           rcases eq_or_ne y (true : Bool) with hy | hy
           · rw [hy]
             norm_num
-          · rw [if_neg hy, pmf_pure_toReal_of_ne _ _ hy, sub_zero]
+          · rw [if_neg hy, Math.Probability.pure_apply_toReal_of_ne _ _ hy,
+              sub_zero]
         · rw [show responseMass p = 0 from if_neg hp, zero_mul]
       total := by
         change ∑ p : Bool × Bool, responseMass p = 1
@@ -1857,7 +1853,8 @@ theorem not_isPrescribedDelivery_obey_one :
           rcases eq_or_ne y (false : Bool) with hy | hy
           · rw [hy]
             norm_num
-          · rw [if_neg hy, pmf_pure_toReal_of_ne _ _ hy, sub_zero]
+          · rw [if_neg hy, Math.Probability.pure_apply_toReal_of_ne _ _ hy,
+              sub_zero]
       total := by
         change ∑ z : Bool, obeyStationaryMass z = 1
         norm_num [obeyStationaryMass, Fintype.sum_bool] }

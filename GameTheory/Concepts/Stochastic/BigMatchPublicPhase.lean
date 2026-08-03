@@ -27,11 +27,6 @@ namespace BigMatch
 
 open Math.Probability Math.PMFProduct
 
-/-- Negation commutes with expectation. -/
-theorem expect_neg_finite {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ) :
-    expect d (fun ω => -f ω) = -expect d f := by
-  simpa using expect_const_mul d (-1) f
-
 /-- The fair continuation value of the maximizer at a Big Match state. -/
 def fairMaxValue (s : State) : ℝ :=
   oneIndicator s + (1 / 2) * liveIndicator s
@@ -101,7 +96,7 @@ theorem historyContinuationEU_neg (σ : game.BehaviorProfile)
     game.historyContinuationEU σ (fun t h => -V t h) h =
       -game.historyContinuationEU σ V h := by
   unfold historyContinuationEU
-  simp_rw [expect_neg_finite]
+  simp_rw [expect_neg]
 
 /-- The Blackwell--Ferguson pointwise submartingale step in
 `historyContinuationEU` form. -/

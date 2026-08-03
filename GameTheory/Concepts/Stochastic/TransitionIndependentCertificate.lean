@@ -54,7 +54,7 @@ clause with zero error too.
 
 ## Main results
 
-* `GameTheory.StochasticGame.expect_iter_of_harmonic` — a harmonic
+* `Math.PMFIter.expect_iter_of_harmonic` — a harmonic
   observable's expectation along the chain is constant in time
 * `GameTheory.StochasticGame.isAdaptiveDecoupledEquilibriumCertificate_of_isActionIndependent`
   — the Poisson-equation certificate construction
@@ -75,38 +75,6 @@ namespace StochasticGame
 open Filter Math.Probability Math.PMFProduct
 
 variable {ι : Type}
-
--- ============================================================================
--- A harmonic observable's expectation along the chain is time-invariant
--- ============================================================================
-
-/-- **The expectation of a harmonic observable along a Markov chain is
-constant in time**, equal to its value at the starting state — even when the
-observable itself is *not* constant across states (e.g. several recurrent
-classes: different states can have different harmonic values, but the
-expectation started from a *fixed* `s₀` never moves off `o s₀`). This is
-what lets a single scalar `g := o s₀` serve as the certificate's target,
-with no "single recurrent class" / unichain hypothesis needed. -/
-theorem expect_iter_of_harmonic {S : Type*} [Finite S] (κ : S → PMF S)
-    (o : S → ℝ) (ho : ∀ s, expect (κ s) o = o s) (t : ℕ) (s₀ : S) :
-    expect (Math.PMFIter.iter κ t s₀) o = o s₀ := by
-  letI : Fintype S := Fintype.ofFinite S
-  have hfix : Math.MeanErgodic.markovOperator κ o = o := by
-    funext s
-    rw [Math.MeanErgodic.markovOperator_apply]
-    exact ho s
-  have h1 := Math.MeanErgodic.markovOperator_pow_apply κ t o s₀
-  have h2 := congrFun (Math.MeanErgodic.pow_apply_eq_of_fixed hfix t) s₀
-  rw [h2] at h1
-  exact h1.symm
-
-/-- One-step unfolding of the chain's expectation, in `expect`-of-`expect`
-form: the calendar-time analogue of `Math.PMFIter.iter_succ'`. -/
-theorem expect_iter_succ {S : Type*} [Finite S] (κ : S → PMF S) (w : S → ℝ)
-    (t : ℕ) (s₀ : S) :
-    expect (Math.PMFIter.iter κ t s₀) (fun s => expect (κ s) w) =
-      expect (Math.PMFIter.iter κ (t + 1) s₀) w := by
-  rw [Math.PMFIter.iter_succ', expect_bind]
 
 -- ============================================================================
 -- Stage-Nash domination against a deviation, at the expectation level
@@ -188,8 +156,9 @@ theorem isAdaptiveDecoupledEquilibriumCertificate_of_isActionIndependent
           (fun s => o who s + (expect (κ s) (u who) - u who s)) :=
       Math.ProbabilityMassFunction.expect_congr_on_support _ _ _
         fun s _ => hdecomp who s
-    rw [hcongr, expect_add, expect_sub, expect_iter_succ κ (u who) t s₀,
-      expect_iter_of_harmonic κ (o who) (ho who) t s₀]
+    rw [hcongr, expect_add, expect_sub,
+      Math.PMFIter.expect_iter_succ κ (u who) t s₀,
+      Math.PMFIter.expect_iter_of_harmonic κ (o who) (ho who) t s₀]
     ring
   have hφeq : ∀ (σ' : G.BehaviorProfile) (who : ι) (t : ℕ),
       G.expectedHistoryValue σ' s₀ (φ who) t =

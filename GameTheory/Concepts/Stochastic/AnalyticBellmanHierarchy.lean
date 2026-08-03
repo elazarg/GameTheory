@@ -37,7 +37,7 @@ set_option autoImplicit false
 
 noncomputable section
 
-open Filter Set Topology
+open Filter Math.Probability Set Topology
 
 namespace GameTheory
 namespace StochasticGame

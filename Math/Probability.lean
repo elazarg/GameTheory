@@ -525,6 +525,29 @@ theorem expect_const_mul {Ω : Type*} (d : PMF Ω) (c : ℝ) (f : Ω → ℝ) :
   rw [← tsum_mul_left]
   exact tsum_congr fun ω => by ring
 
+/-- Negation commutes with expectation. -/
+theorem expect_neg {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ) :
+    expect d (fun ω => -f ω) = -expect d f := by
+  simpa using expect_const_mul d (-1) f
+
+/-- A PMF coordinate is the expectation of its singleton indicator. -/
+theorem apply_toReal_eq_expect_indicator
+    {Ω : Type*} [Finite Ω] [DecidableEq Ω]
+    (distribution : PMF Ω) (point : Ω) :
+    (distribution point).toReal =
+      expect distribution (fun other => if other = point then 1 else 0) := by
+  classical
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [expect_eq_sum]
+  simp
+
+/-- A point mass has zero real weight away from its atom. -/
+theorem pure_apply_toReal_of_ne {α : Type*} (atom point : α)
+    (hne : point ≠ atom) :
+    ((PMF.pure atom) point).toReal = 0 := by
+  rw [PMF.pure_apply, if_neg hne]
+  simp
+
 /-- A nonnegative integrand has nonnegative expectation. -/
 theorem expect_nonneg {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ)
     (hf : ∀ ω, 0 ≤ f ω) : 0 ≤ expect d f := by

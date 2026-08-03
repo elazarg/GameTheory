@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingNashBellmanClockReduction
+import Math.SequenceVariation
 import Mathlib.Topology.Algebra.InfiniteSum.Real
 
 /-!
@@ -69,61 +70,6 @@ theorem IsCanonicalExactQuittingNashBellmanSpine.successor_sub_current_le
       (abs_reward_le_quittingRewardBound reward)
       (hspine.1 (time + 1) who) (hspine.2.1 time) (hspine.2.2 time)
 
-/-! ## Finite total variation -/
-
-/-- Generic finite-variation accounting: a bounded real sequence whose
-positive increments are clock-charged has total variation bounded by twice
-the endpoint bound plus twice the positive-increment budget. -/
-theorem sum_abs_succ_sub_le_of_bounded_of_increase_le_clock
-    (value charge : ℕ → ℝ) (M : ℝ)
-    (hbound : ∀ time, |value time| ≤ M)
-    (hcharge : ∀ time, 0 ≤ charge time)
-    (hincrease : ∀ time,
-      value (time + 1) - value time ≤ 2 * M * charge time)
-    (horizon : ℕ) :
-    (∑ time ∈ Finset.range horizon,
-        |value (time + 1) - value time|) ≤
-      2 * M + 4 * M *
-        (∑ time ∈ Finset.range horizon, charge time) := by
-  have hM : 0 ≤ M := (abs_nonneg (value 0)).trans (hbound 0)
-  have hpositive : ∀ time,
-      max (value (time + 1) - value time) 0 ≤
-        2 * M * charge time := by
-    intro time
-    exact max_le (hincrease time)
-      (mul_nonneg (mul_nonneg (by norm_num) hM) (hcharge time))
-  have hsumPositive :
-      (∑ time ∈ Finset.range horizon,
-          max (value (time + 1) - value time) 0) ≤
-        2 * M * (∑ time ∈ Finset.range horizon, charge time) := by
-    calc
-      (∑ time ∈ Finset.range horizon,
-          max (value (time + 1) - value time) 0) ≤
-          ∑ time ∈ Finset.range horizon, 2 * M * charge time :=
-        Finset.sum_le_sum fun time _ => hpositive time
-      _ = 2 * M * (∑ time ∈ Finset.range horizon, charge time) := by
-        rw [Finset.mul_sum]
-  have habsIdentity : ∀ x : ℝ, |x| = 2 * max x 0 - x := by
-    intro x
-    by_cases hx : 0 ≤ x
-    · rw [abs_of_nonneg hx, max_eq_left hx]
-      ring
-    · have hx' : x ≤ 0 := le_of_not_ge hx
-      rw [abs_of_nonpos hx', max_eq_right hx']
-      ring
-  have htelescope :
-      (∑ time ∈ Finset.range horizon,
-          (value (time + 1) - value time)) =
-        value horizon - value 0 :=
-    Finset.sum_range_sub value horizon
-  have hspan : value 0 - value horizon ≤ 2 * M := by
-    have h0 := (abs_le.mp (hbound 0)).2
-    have hN := (abs_le.mp (hbound horizon)).1
-    linarith
-  rw [Finset.sum_congr rfl (fun time _ => habsIdentity _),
-    Finset.sum_sub_distrib, ← Finset.mul_sum, htelescope]
-  linarith
-
 /-- Finite total variation of one value coordinate is controlled by its
 finite opponent-clock mass. -/
 theorem IsCanonicalExactQuittingNashBellmanSpine.sum_abs_value_succ_sub_le
@@ -137,7 +83,7 @@ theorem IsCanonicalExactQuittingNashBellmanSpine.sum_abs_value_succ_sub_le
         4 * quittingRewardBound reward *
           (∑ time ∈ Finset.range horizon,
             quittingOpponentClockCharge roots who time) := by
-  exact sum_abs_succ_sub_le_of_bounded_of_increase_le_clock
+  exact Math.sum_abs_succ_sub_le_of_bounded_of_increase_le_clock
     (fun time => value time who)
     (quittingOpponentClockCharge roots who)
     (quittingRewardBound reward)

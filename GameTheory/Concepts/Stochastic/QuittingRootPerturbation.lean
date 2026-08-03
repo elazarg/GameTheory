@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingRootContinuation
+import Math.PMFProduct.TotalVariation
 import Math.ProbabilityMassFunction.TotalVariation
 
 /-!
@@ -30,76 +31,6 @@ namespace GameTheory
 open StochasticGame Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
-
-/-- Updating one factor of an independent finite product preserves exactly
-the total-variation distance between the old and new factors. -/
-theorem pmfTV_pmfPi_update_eq
-    {A : ι → Type} [∀ player, Fintype (A player)]
-    (root : ∀ player, PMF (A player)) (changed : ι)
-    (oldMarginal newMarginal : PMF (A changed)) :
-    pmfTV
-        (pmfPi (Function.update root changed oldMarginal))
-        (pmfPi (Function.update root changed newMarginal)) =
-      pmfTV oldMarginal newMarginal := by
-  apply le_antisymm
-  · rw [pmfPi_update_bind, pmfPi_update_bind]
-    exact pmfTV_bind_le
-      (fun action =>
-        pmfPi (Function.update root changed (PMF.pure action)))
-      oldMarginal newMarginal
-  · have hmap := pmfTV_map_le
-      (fun action : ∀ player, A player => action changed)
-      (pmfPi (Function.update root changed oldMarginal))
-      (pmfPi (Function.update root changed newMarginal))
-    have hold :
-        PMF.map (fun action : ∀ player, A player => action changed)
-            (pmfPi (Function.update root changed oldMarginal)) =
-          oldMarginal := by
-      change Math.ProbabilityMassFunction.pushforward
-          (pmfPi (Function.update root changed oldMarginal))
-          (fun action : ∀ player, A player => action changed) = oldMarginal
-      rw [pmfPi_push_coord]
-      simp
-    have hnew :
-        PMF.map (fun action : ∀ player, A player => action changed)
-            (pmfPi (Function.update root changed newMarginal)) =
-          newMarginal := by
-      change Math.ProbabilityMassFunction.pushforward
-          (pmfPi (Function.update root changed newMarginal))
-          (fun action : ∀ player, A player => action changed) = newMarginal
-      rw [pmfPi_push_coord]
-      simp
-    rwa [hold, hnew] at hmap
-
-/-- On `Bool`, the TV distance from a marginal to sure `true` is exactly its
-probability of `false`.  Thus a near-sure quitter's coordinate displacement
-has the expected Bernoulli interpretation. -/
-@[simp] theorem pmfTV_pure_true (marginal : PMF Bool) :
-    pmfTV marginal (PMF.pure true) = (marginal false).toReal := by
-  have htrue : (marginal true).toReal ≤ 1 := by
-    simpa using
-      ENNReal.toReal_mono ENNReal.one_ne_top (PMF.coe_le_one marginal true)
-  change (∑ action : Bool,
-      max ((marginal action).toReal -
-        ((PMF.pure true : PMF Bool) action).toReal) 0) = _
-  rw [Fintype.sum_bool]
-  simp only [PMF.pure_apply, Bool.false_eq_true, ↓reduceIte]
-  norm_num
-  exact htrue
-
-/-- A bounded root payoff changes by at most twice its bound times the TV
-movement of one marginal. -/
-theorem abs_expect_pmfPi_update_sub_le_two_mul_pmfTV
-    {A : ι → Type} [∀ player, Fintype (A player)]
-    (root : ∀ player, PMF (A player)) (changed : ι)
-    (oldMarginal newMarginal : PMF (A changed))
-    (payoff : (∀ player, A player) → ℝ) {M : ℝ}
-    (hpayoff : ∀ action, |payoff action| ≤ M) :
-    |expect (pmfPi (Function.update root changed oldMarginal)) payoff -
-        expect (pmfPi (Function.update root changed newMarginal)) payoff| ≤
-      (2 * M) * pmfTV oldMarginal newMarginal := by
-  rw [← pmfTV_pmfPi_update_eq root changed oldMarginal newMarginal]
-  exact abs_expect_sub_le_two_mul_pmfTV _ _ payoff hpayoff
 
 /-- The one-stage regret in a quitting root continuation game. -/
 def quittingRootDeviationRegret
@@ -195,7 +126,7 @@ theorem abs_quittingRootDeviationRegret_update_sub_le_four_mul_pmfTV
           (quittingRootExpectedPayoff reward continuation
               (Function.update root changed oldMarginal) who -
             quittingRootExpectedPayoff reward continuation
-              (Function.update root changed newMarginal) who)| := by ring
+              (Function.update root changed newMarginal) who)| := by ring_nf
     _ ≤
         |quittingRootExpectedPayoff reward continuation
               (Function.update (Function.update root who deviation)

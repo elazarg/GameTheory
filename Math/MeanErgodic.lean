@@ -532,6 +532,32 @@ section MarkovFinite
 
 variable {S : Type*} [Finite S]
 
+/-- The harmonic component selected from the finite-state Poisson
+decomposition of an observable. -/
+noncomputable def ergodicProjection [Fintype S]
+    (κ : S → PMF S) (observable : S → ℝ) : S → ℝ :=
+  (exists_harmonic_add_poisson κ observable).choose
+
+/-- The Poisson potential paired with `ergodicProjection`. -/
+noncomputable def ergodicPoissonPotential [Fintype S]
+    (κ : S → PMF S) (observable : S → ℝ) : S → ℝ :=
+  (exists_harmonic_add_poisson κ observable).choose_spec.choose
+
+omit [Finite S] in
+theorem ergodicProjection_harmonic [Fintype S]
+    (κ : S → PMF S) (observable : S → ℝ) (state : S) :
+    expect (κ state) (ergodicProjection κ observable) =
+      ergodicProjection κ observable state :=
+  (exists_harmonic_add_poisson κ observable).choose_spec.choose_spec.1 state
+
+omit [Finite S] in
+theorem eq_ergodicProjection_add_poisson [Fintype S]
+    (κ : S → PMF S) (observable : S → ℝ) (state : S) :
+    observable state = ergodicProjection κ observable state +
+      (expect (κ state) (ergodicPoissonPotential κ observable) -
+        ergodicPoissonPotential κ observable state) :=
+  (exists_harmonic_add_poisson κ observable).choose_spec.choose_spec.2.1 state
+
 /-- **Mean ergodic theorem for finite Markov chains**: Cesàro averages of
 expected values along the iterated kernel converge. -/
 theorem tendsto_cesaro_expect_iter (κ : S → PMF S) (w : S → ℝ) (s₀ : S) :

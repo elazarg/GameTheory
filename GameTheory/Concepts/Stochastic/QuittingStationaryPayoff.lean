@@ -78,7 +78,7 @@ theorem quittingRootExpectedPayoff_eq_absorbingContribution_add
       rfl
     _ = quittingRootAbsorbingContribution reward root who +
         continuation who * quittingStationaryContinueMass root := by
-      rw [← pmf_apply_toReal_eq_expect_indicator]
+      rw [← Math.Probability.apply_toReal_eq_expect_indicator]
       rfl
     _ = quittingRootAbsorbingContribution reward root who +
         quittingStationaryContinueMass root * continuation who := by

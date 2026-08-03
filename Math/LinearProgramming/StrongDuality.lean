@@ -63,7 +63,6 @@ private theorem primalSystem_feasible_iff (A : Row → Col → ℝ) (b : Row →
     (x : Col → ℝ) :
     (∀ r, primalSystemB b r ≤ ∑ j, primalSystemA A r j * x j) ↔
     MinPrimalFeasible A b x := by
-  classical
   constructor
   · intro h
     constructor
@@ -108,7 +107,6 @@ private theorem primalSystem_bound_iff {A : Row → Col → ℝ} {b : Row → �
 private theorem sum_primalSystemB
     (b : Row → ℝ) (u : Row ⊕ Col → ℝ) :
     (∑ r, u r * primalSystemB b r) = ∑ i, u (Sum.inl i) * b i := by
-  classical
   rw [Fintype.sum_sum_type]
   simp [primalSystemB]
 
@@ -116,7 +114,6 @@ private theorem sum_primalSystemA
     (A : Row → Col → ℝ) (u : Row ⊕ Col → ℝ) (j : Col) :
     (∑ r, u r * primalSystemA A r j) =
       (∑ i, u (Sum.inl i) * A i j) + u (Sum.inr j) := by
-  classical
   rw [Fintype.sum_sum_type]
   simp only [primalSystemA]
   rw [sum_mul_unitCoeff]
@@ -130,7 +127,6 @@ theorem exists_maxDualFeasible_of_minPrimal_lower_bound
     (hfeas : ∃ x, MinPrimalFeasible A b x)
     (hbound : ∀ x, MinPrimalFeasible A b x → d ≤ minPrimalValue c x) :
     ∃ y, MaxDualFeasible A c y ∧ d ≤ maxDualValue b y := by
-  classical
   obtain ⟨u, hu_nonneg, hu_col, hu_bound⟩ :=
     (Math.LinearAlgebra.farkas_lemma_fintype
       (StrongDuality.primalSystemA A) (StrongDuality.primalSystemB b) c d
@@ -163,7 +159,6 @@ theorem exists_minPrimalFeasible_of_maxDual_upper_bound
     (hfeas : ∃ y, MaxDualFeasible A c y)
     (hbound : ∀ y, MaxDualFeasible A c y → maxDualValue b y ≤ d) :
     ∃ x, MinPrimalFeasible A b x ∧ minPrimalValue c x ≤ d := by
-  classical
   let dualA : Col → Row → ℝ := fun j i => -A i j
   let dualB : Col → ℝ := fun j => -c j
   let dualC : Row → ℝ := fun i => -b i
@@ -234,11 +229,12 @@ theorem exists_minPrimalFeasible_of_maxDual_upper_bound
   rw [hvalue] at hxValue
   linarith
 
+omit [Fintype Row] in
 /-- A nonempty finite standard-form primal whose objective is bounded below
 attains its minimum.  The proof uses the infimum only to obtain an optimal
 dual certificate, then the transposed Farkas theorem above produces an
 actual primal optimizer. -/
-theorem exists_minPrimalOptimal_of_feasible_of_bounded
+theorem exists_minPrimalOptimal_of_feasible_of_bounded [Finite Row]
     {A : Row → Col → ℝ} {b : Row → ℝ} {c : Col → ℝ}
     (hfeas : ∃ x, MinPrimalFeasible A b x)
     (hbounded : ∃ lower : ℝ,
@@ -246,7 +242,7 @@ theorem exists_minPrimalOptimal_of_feasible_of_bounded
     ∃ x, MinPrimalFeasible A b x ∧
       ∀ z, MinPrimalFeasible A b z →
         minPrimalValue c x ≤ minPrimalValue c z := by
-  classical
+  letI := Fintype.ofFinite Row
   let values : Set ℝ :=
     {value | ∃ x, MinPrimalFeasible A b x ∧
       minPrimalValue c x = value}

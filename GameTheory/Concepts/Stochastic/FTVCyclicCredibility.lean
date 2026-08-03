@@ -346,14 +346,6 @@ theorem isNeutralOccupationNonpositive :
     mul_nonpos_of_nonneg_of_nonpos (μ.mass_nonneg p)
       (stagePayoffAt_sub_target_nonpos who p.1 p.2)
 
-/-- A PMF coordinate is the expectation of its singleton indicator. -/
-theorem apply_toReal_eq_expect_indicator {Omega : Type} [Finite Omega]
-    [DecidableEq Omega] (d : PMF Omega) (x : Omega) :
-    (d x).toReal = expect d (fun y ↦ if y = x then 1 else 0) := by
-  letI : Fintype Omega := Fintype.ofFinite Omega
-  rw [expect_eq_sum]
-  simp
-
 /-- The prescribed live-to-live kernel is one half on the cyclic successor
 and zero on the other two live phases. -/
 theorem prescribedConfigDist_live_apply_live (source dest : Player) :

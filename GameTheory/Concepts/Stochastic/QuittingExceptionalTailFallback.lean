@@ -79,7 +79,7 @@ theorem pmfTV_self_map_le_expect_moved
 /-- A bounded expectation changes by at most twice its bound times the
 probability that a deterministic retraction changes the sampled point. -/
 theorem abs_expect_sub_expect_map_le_moved
-    {Ω : Type} [Fintype Ω] [DecidableEq Ω]
+    {Ω : Type} [Finite Ω] [DecidableEq Ω]
     (distribution : PMF Ω) (retraction : Ω → Ω)
     (value : Ω → ℝ) {M : ℝ} (hM : 0 ≤ M)
     (hvalue : ∀ outcome, |value outcome| ≤ M) :
@@ -87,6 +87,7 @@ theorem abs_expect_sub_expect_map_le_moved
         expect (distribution.map retraction) value| ≤
       2 * M * expect distribution (fun outcome =>
         if retraction outcome ≠ outcome then 1 else 0) := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
   calc
     _ ≤ (2 * M) * pmfTV distribution (distribution.map retraction) :=
       abs_expect_sub_le_two_mul_pmfTV distribution
@@ -308,13 +309,18 @@ theorem map_pmfPi_update_pure_true_keepPair
   funext player
   by_cases hfirst : player = first
   · subst player
-    simp [quittingSoloStationaryRoot, Ne.symm hne]
+    simp only [↓reduceIte, quittingSoloStationaryRoot, Function.update,
+      Ne.symm hne, ↓reduceDIte]
+    change PMF.map id (root first) = root first
     exact PMF.map_id _
   · by_cases hsecond : player = second
     · subst player
-      simp [hfirst, quittingSoloStationaryRoot]
+      simp only [↓reduceIte, Function.update, hfirst, ↓reduceDIte]
+      change PMF.map id (PMF.pure true) = PMF.pure true
       exact PMF.map_id _
-    · simp [hfirst, hsecond, quittingSoloStationaryRoot]
+    · simp only [Bool.if_false_right, quittingSoloStationaryRoot,
+        Function.update, hfirst, hsecond, ↓reduceDIte]
+      change PMF.map (fun _ => false) (root player) = PMF.pure false
       exact PMF.map_const _ _
 
 /-- Deleting every current hazard except `owner`'s changes another player's
