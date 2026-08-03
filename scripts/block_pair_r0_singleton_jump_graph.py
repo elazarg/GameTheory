@@ -63,6 +63,20 @@ EXPECTED_STRATEGIC_TRIPLES = frozenset(
         (3, 2, 1),
     }
 )
+EXPECTED_RUN_ENVELOPE_TRIPLES = frozenset(
+    {
+        (0, 2, 3),
+        (0, 3, 2),
+        (1, 0, 2),
+        (1, 2, 3),
+        (1, 3, 2),
+        (2, 0, 1),
+        (2, 1, 0),
+        (3, 0, 1),
+        (3, 1, 0),
+        (3, 2, 1),
+    }
+)
 
 
 def terminal(mask: int, player: int) -> Fraction:
@@ -157,6 +171,168 @@ def affine_dot(normal: Vector, line: tuple[Affine, ...]) -> Affine:
         sum((normal[i] * line[i][0] for i in range(N)), ZERO),
         sum((normal[i] * line[i][1] for i in range(N)), ZERO),
     )
+
+
+def eliminate_second_variable(
+    inequalities: tuple[tuple[Fraction, Fraction, Fraction], ...],
+) -> tuple[Affine, ...]:
+    """Project ``a*u + b*y + c >= 0`` exactly onto the u-axis."""
+
+    lowers = []
+    uppers = []
+    projected: list[Affine] = []
+    for parameter, variable, constant in inequalities:
+        if variable > 0:
+            # y >= -(parameter*u+constant)/variable
+            lowers.append((parameter, variable, constant))
+        elif variable < 0:
+            # y <= -(parameter*u+constant)/variable
+            uppers.append((parameter, variable, constant))
+        else:
+            projected.append((constant, parameter))
+    assert lowers and uppers
+    for lower_parameter, lower_variable, lower_constant in lowers:
+        for upper_parameter, upper_variable, upper_constant in uppers:
+            # upper - lower >= 0
+            projected.append(
+                (
+                    -upper_constant / upper_variable
+                    + lower_constant / lower_variable,
+                    -upper_parameter / upper_variable
+                    + lower_parameter / lower_variable,
+                )
+            )
+    # Affine uses (constant, slope), while the input convention above uses
+    # (u coefficient, eliminated-variable coefficient, constant).
+    return tuple(projected)
+
+
+def affine_feasible_interval(
+    inequalities: tuple[Affine, ...],
+) -> tuple[Fraction, Fraction] | None:
+    """Intersect exact inequalities ``constant+slope*u >= 0``."""
+
+    lower: Fraction | None = None
+    upper: Fraction | None = None
+    for constant, slope in inequalities:
+        if slope > 0:
+            bound = -constant / slope
+            lower = bound if lower is None else max(lower, bound)
+        elif slope < 0:
+            bound = -constant / slope
+            upper = bound if upper is None else min(upper, bound)
+        elif constant < 0:
+            return None
+    assert lower is not None and upper is not None
+    return None if upper < lower else (lower, upper)
+
+
+def repeated_run_endpoint_interval(
+    previous: int, current: int, following: int
+) -> tuple[Fraction, Fraction] | None:
+    """Necessary u-domain for an arbitrary finite repeated-current run.
+
+    A run follows the segment
+
+        mu(b) = (1-b)e_current + b*mu_plus.
+
+    Put y=1/b.  A stage from future coefficient b to current coefficient a
+    satisfies, for inactive player i,
+
+        A_i/a + B_i/b + delta_i >= 0,
+
+    where ``A_i=c_i-pair_i``, ``B_i=pair_i-q_i``, and
+    ``delta_i=V_i(mu_plus)-c_i``.  Thus the first and last stages of every
+    finite subdivision satisfy two separate rational linear feasibility
+    systems.  Projecting their internal y-coordinates gives an exact
+    over-approximation in the line parameter u.  It is necessary, not claimed
+    sufficient; acyclicity of this larger graph is therefore decisive.
+    """
+
+    assert previous != current and current != following
+    line = line_intersection(current, following)
+    probability_lower, probability_upper = probability_interval(line)
+    previous_on_line = affine_dot(NORMALS[previous], line)
+    at_vertex = NORMALS[previous][current]
+    assert at_vertex != 0
+
+    # Aggregate run survival is lambda=-e/(n_a(mu)-e), hence its inverse
+    # Y=1/lambda=1-n_a(mu)/e is affine in u.
+    y_total: Affine = (
+        ONE - previous_on_line[0] / at_vertex,
+        -previous_on_line[1] / at_vertex,
+    )
+
+    first_stage: list[tuple[Fraction, Fraction, Fraction]] = [
+        (ZERO, ONE, -ONE),  # y >= 1
+        (y_total[1], -ONE, y_total[0]),  # y <= Y(u)
+    ]
+    last_stage: list[tuple[Fraction, Fraction, Fraction]] = [
+        (ZERO, ONE, -ONE),
+        (y_total[1], -ONE, y_total[0]),
+    ]
+
+    for player in range(N):
+        if player == current:
+            continue
+        payoff_on_line = (
+            sum(
+                COLUMNS[quitter][player] * line[quitter][0]
+                for quitter in range(N)
+            ),
+            sum(
+                COLUMNS[quitter][player] * line[quitter][1]
+                for quitter in range(N)
+            ),
+        )
+        current_column_payoff = COLUMNS[current][player]
+        pair_payoff = terminal((1 << player) | (1 << current), player)
+        a_coefficient = current_column_payoff - pair_payoff
+        b_coefficient = pair_payoff - SOLO[player]
+        delta = (
+            payoff_on_line[0] - current_column_payoff,
+            payoff_on_line[1],
+        )
+
+        # First substage: future reciprocal coefficient is exactly 1;
+        # A*y + B + delta(u) >= 0.
+        first_stage.append(
+            (
+                delta[1],
+                a_coefficient,
+                b_coefficient + delta[0],
+            )
+        )
+        # Last substage: current reciprocal coefficient is Y(u);
+        # A*Y(u) + B*x + delta(u) >= 0.
+        last_stage.append(
+            (
+                a_coefficient * y_total[1] + delta[1],
+                b_coefficient,
+                a_coefficient * y_total[0] + delta[0],
+            )
+        )
+
+    projected = (
+        *eliminate_second_variable(tuple(first_stage)),
+        *eliminate_second_variable(tuple(last_stage)),
+        (-probability_lower, ONE),
+        (probability_upper, -ONE),
+        # Y(u) >= 1. Strict inequality is checked below.
+        (y_total[0] - ONE, y_total[1]),
+    )
+    feasible = affine_feasible_interval(projected)
+    if feasible is None:
+        return None
+    lower, upper = feasible
+    # A genuine run has positive aggregate hazard, equivalently Y>1.  The
+    # projected systems use closed endpoint inequalities as a safe
+    # over-approximation, so discard a domain supported only at Y=1.
+    maximum_excess = max(
+        affine_value((y_total[0] - ONE, y_total[1]), lower),
+        affine_value((y_total[0] - ONE, y_total[1]), upper),
+    )
+    return None if maximum_excess <= 0 else feasible
 
 
 @dataclass(frozen=True)
@@ -411,6 +587,33 @@ def main() -> None:
     )
     assert len(geometric_edges) == 24
     assert geometric_cyclic == (tuple(sorted(vertices)),)
+
+    # Exact necessary endpoint envelope for arbitrary finite subdivisions of
+    # a maximal repeated-player run.  Because it forgets compatibility of the
+    # intermediate substages, this graph contains every genuine run edge and
+    # may contain false positives.  Its acyclicity is therefore enough.
+    run_intervals: dict[
+        tuple[int, int, int], tuple[Fraction, Fraction]
+    ] = {}
+    run_edges: set[tuple[Pair, Pair]] = set()
+    for previous in range(N):
+        for current in range(N):
+            for following in range(N):
+                if previous == current or current == following:
+                    continue
+                interval = repeated_run_endpoint_interval(
+                    previous, current, following
+                )
+                if interval is not None:
+                    run_intervals[(previous, current, following)] = interval
+                    run_edges.add(((current, following), (previous, current)))
+    run_components = strongly_connected_components(vertices, run_edges)
+    run_cyclic = tuple(
+        component for component in run_components if len(component) > 1
+    )
+    assert frozenset(run_intervals) == EXPECTED_RUN_ENVELOPE_TRIPLES
+    assert len(run_edges) == len(EXPECTED_RUN_ENVELOPE_TRIPLES) == 10
+    assert not run_cyclic
     print("exact singleton-jump transition graph generated")
     print(f"vertices = {len(vertices)}")
     print(f"feasible triples = {len(witnesses)}")
@@ -433,7 +636,34 @@ def main() -> None:
         print("the arbitrary-run geometric envelope is also acyclic")
     else:
         print("repeated-run geometry leaves cycles; stagewise analysis is needed")
-    print("scope: singleton-support finite periodic profiles only")
+    print("finite repeated-run necessary endpoint intervals:")
+    for triple, interval in sorted(run_intervals.items()):
+        print(f"  {triple}: [{interval[0]},{interval[1]}]")
+    print(f"finite repeated-run envelope edges = {len(run_edges)}")
+    print(f"finite repeated-run envelope SCCs = {run_components}")
+    print("the finite repeated-run necessary envelope is acyclic")
+
+    # A periodic singleton profile using just one identity absorbs at that
+    # player's solo outcome.  Player 0 rejects its negative solo reward in
+    # favor of Never.  For players 1--3 the displayed inactive player has a
+    # strictly profitable immediate quit at every own hazard h in [0,1].
+    assert SOLO[0] == Q(-189, 100) < 0
+    same_mode_witnesses = {
+        1: (2, Q(2), Q(4)),
+        2: (0, Q(211, 100), Q(189, 100)),
+        3: (1, Q(2), Q(4)),
+    }
+    for quitter, (deviator, intercept, slope) in same_mode_witnesses.items():
+        column = COLUMNS[quitter][deviator]
+        pair = terminal((1 << quitter) | (1 << deviator), deviator)
+        assert SOLO[deviator] - column == intercept
+        assert pair - SOLO[deviator] == slope
+        assert intercept > 0 and intercept + slope > 0
+    print("same-identity singleton cycles are excluded exactly")
+    print(
+        "conclusion: no finite periodic singleton-support terminal Nash path"
+    )
+    print("scope left open: multi-active phases and nonperiodic product jumps")
 
 
 if __name__ == "__main__":
