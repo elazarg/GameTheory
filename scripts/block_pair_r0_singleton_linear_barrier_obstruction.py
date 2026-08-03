@@ -178,6 +178,9 @@ WEIGHTS = (
     Q(2503154923, 13463106480),
 )
 
+FILTERED_SEPARATOR = (Q(1), Q(-1), Q(0), Q(1))
+FILTERED_DRIFTS = (Q(39211, 9900), Q(5501, 900), Q(789, 100), Q(789, 100))
+
 
 def certify_edge(edge: Edge) -> None:
     root = edge.root
@@ -220,11 +223,50 @@ def main() -> None:
     )
     assert barycenter == (ZERO, ZERO, ZERO, ZERO)
 
+    # The five displayed edges do not themselves form a finite-state
+    # circulation: no future endpoint equals any current endpoint.  Rational
+    # clearing of the drift identity alone therefore cannot make a lasso.
+    currents = tuple(predecessor(edge.root, edge.successor) for edge in EDGES)
+    assert all(
+        future != current
+        for edge in EDGES
+        for future in (edge.successor,)
+        for current in currents
+    )
+
+    # The high-weight first edge is exactly the negative-solo exceptional
+    # mode: player 0 is the only quitter, all opponents continue surely, and
+    # both its current and future value equal its negative singleton reward.
+    exceptional = EDGES[0]
+    exceptional_current = currents[0]
+    assert exceptional.quitter == 0
+    assert probability(exceptional.root, 0, omitted=0) == 1
+    assert terminal(1, 0) == Q(-189, 100) < 0
+    assert exceptional.successor[0] == exceptional_current[0] == terminal(1, 0)
+
+    # Once that exceptional edge is removed, the other four packet directions
+    # are strictly separated by a tiny integer functional.  This does not
+    # prove that a cap-augmented *full* relation is separated; it identifies
+    # exactly which edge defeats this finite affine packet.
+    filtered_drifts = tuple(
+        sum(
+            FILTERED_SEPARATOR[player] * edge.normalized_drift[player]
+            for player in range(N)
+        )
+        for edge in EDGES[1:]
+    )
+    assert filtered_drifts == FILTERED_DRIFTS
+    assert all(value > 0 for value in filtered_drifts)
+
     print("exact affine absorption-clock barrier obstruction passed")
     print(f"theta = {THETA}")
     print(f"edges = {len(EDGES)}")
     print("all five edges are nonterminal local Nash-predecessor edges")
     print("positive convex combination of normalized drifts = (0,0,0,0)")
+    print("the five endpoint edges do not chain into a finite-state lasso")
+    print("edge 0 is the negative-solo/opponent-survival-one exception")
+    print(f"remaining-packet separator = {FILTERED_SEPARATOR}")
+    print(f"remaining-packet drifts = {FILTERED_DRIFTS}")
     print("scope: full local relation/global affine potential only")
 
 
