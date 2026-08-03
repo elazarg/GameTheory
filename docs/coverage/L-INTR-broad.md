@@ -8,14 +8,15 @@ Successor baseline: `544528b`
 Canonical destination: GameTheory.Languages.Intrinsic; separately gated temporal, mixed, utility, and Kuhn bridges
 Domain contract / decision: D31 / EXP-062; Wave 3 sequential and language recovery
 Owner: Wave 3 / intrinsic-language recovery
-Status: in progress; 54/158 reviewed (24 adapt, 14 deferred, 16 retired), 104 unreviewed
+Status: in progress; 58/158 reviewed (29 adapt, 13 deferred, 16 retired), 100 unreviewed
 Last verified: 2026-08-03
 
 This ledger is an exact generated review queue for the L-INTR family.
 0 declarations are already accounted for in earlier bounded ledgers and are
-not duplicated here. The 27 declarations in pinned `Syntax.lean` and 27
-native-example/test declarations in pinned `Examples.lean` and `Tests.lean`
-are reviewed below against D31; the other 104 rows remain deliberately
+not duplicated here. The 27 declarations in pinned `Syntax.lean`, 27
+native-example/test declarations in pinned `Examples.lean` and `Tests.lean`,
+and four selected-solution theorems in pinned `Theorems.lean` are reviewed
+below against D31; the other 100 rows remain deliberately
 `unreviewed`. `GameTheory.Examples.Intrinsic` is a stable native leaf: its
 signaling model is pre-Protocol configuration/information data, while utility,
 probability, ownership, execution, and randomization remain separately gated.
@@ -152,9 +153,9 @@ does not infer a mathematical disposition.
 | same | `PureProfile` | abbrev | adapt | `GameTheory.Languages.Intrinsic.Model.PureProfile` | D31 / EXP-062; focused build | Canonical family of intrinsic pure strategies. |
 | same | `isFixedPoint` | def | adapt | `GameTheory.Languages.Intrinsic.Model.IsFixedPoint` | D31 / EXP-062; focused build | Closed-loop equations are retained with explicit model ownership. |
 | same | `Solvable` | def | adapt | `GameTheory.Languages.Intrinsic.Model.IsSolvable` | D31 / EXP-062; focused build | Unique fixed-point solvability is retained without a solution-extraction operation. |
-| same | `solutionMap` | def | deferred | D31 solution-selection theorem gate | D31 | Derivable from `IsSolvable` by choice with no added model capability; deferred only to keep the first promoted surface minimal until a consumer needs selection. |
-| same | `solutionMap_spec` | theorem | deferred | D31 solution-selection theorem gate | D31 | Reopen with the derived `solutionMap`; no additional nonemptiness premise is required beyond `IsSolvable` and the supplied profile/nature. |
-| same | `solutionMap_unique` | theorem | deferred | D31 solution-selection theorem gate | D31 | Reopen with the derived `solutionMap` and its uniqueness consequence. |
+| same | `solutionMap` | def | adapt | `GameTheory.Languages.Intrinsic.Model.solution` | D31; `lake env lean GameTheory/Languages/Intrinsic/Solution.lean` | Selected solely from `IsSolvable`'s unique-existence certificate; adds no model capability. |
+| same | `solutionMap_spec` | theorem | adapt | `GameTheory.Languages.Intrinsic.Model.solution_apply` | D31; `lake env lean GameTheory/Languages/Intrinsic/Solution.lean` | Exact agentwise fixed-point equation for the selected profile. |
+| same | `solutionMap_unique` | theorem | adapt | `GameTheory.Languages.Intrinsic.Model.solution_unique` | D31; `lake env lean GameTheory/Languages/Intrinsic/Solution.lean` | The unique-existence certificate proves every fixed point is the selection. |
 | same | `TotalOrdering` | def | adapt | `GameTheory.Languages.Intrinsic.Model.Schedule` | D31 / EXP-062; focused build | Explicit slots and equivalences replace the source list ordering. |
 | same | `ConfigOrdering` | def | adapt | `GameTheory.Languages.Intrinsic.Model.Schedule` | D31 / EXP-062; focused build | The schedule is configuration-dependent at the required semantic layer. |
 | same | `OrderingPrefix` | def | retired | no successor | D31 / EXP-062 | Source list-prefix intermediary is replaced by direct `SamePrefixThrough`. |
@@ -178,10 +179,10 @@ does not infer a mathematical disposition.
 | same | `oneAgentOrdering` | def | retired | no successor | D31 | Retired along with the singleton smoke model and list ordering encoding. |
 | same | `futureLookingModel` | def | adapt | `GameTheory.Examples.Intrinsic.futureLooking` | D31 / EXP-062; `lake build GameTheory.Examples.Intrinsic` | Native future-information countermodel, stated before Protocol. |
 | same | `futureLookingOrdering` | def | adapt | `GameTheory.Examples.Intrinsic.futureLookingSchedule` | D31 / EXP-062; `lake build GameTheory.Examples.Intrinsic` | Explicit schedule used by the stable causality rejection. |
-| `GameTheory/Languages/Intrinsic/Theorems.lean` | `solutionMap_isFixedPoint` | theorem | unreviewed | review required | generated index seed only | public, pinned line 24 |
-| same | `solutionMap_ext` | theorem | unreviewed | review required | generated index seed only | public, pinned line 30 |
-| same | `liftProfile_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 46 |
-| same | `productMixedToBehavioral_meas` | theorem | unreviewed | review required | generated index seed only | public, pinned line 52 |
+| `GameTheory/Languages/Intrinsic/Theorems.lean` | `solutionMap_isFixedPoint` | theorem | adapt | `GameTheory.Languages.Intrinsic.Model.solution_apply` | D31; `lake env lean GameTheory/Languages/Intrinsic/Solution.lean` | The successor is the exact agentwise selected fixed-point law. |
+| same | `solutionMap_ext` | theorem | adapt | `GameTheory.Languages.Intrinsic.Model.solution_congr` | D31; `lake env lean GameTheory/Languages/Intrinsic/Solution.lean` | Pointwise equality of strategy actions yields equal selected closed-loop decisions. |
+| same | `liftProfile_apply` | theorem | deferred | D31 player-ownership / player-strategy gate | D31 | Lifting is meaningful only after player ownership and player strategy spaces are separately introduced. |
+| same | `productMixedToBehavioral_meas` | theorem | deferred | D31 mixed / behavioral strategy gate | D31 | Mixed and behavioral strategy semantics remain separately gated. |
 
 Before this ledger can become complete, each row must be reviewed against
 the canonical successor API and assigned an allowed non-`unreviewed`
