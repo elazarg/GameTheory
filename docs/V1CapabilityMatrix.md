@@ -41,13 +41,13 @@ Verdicts are intentionally qualitative:
 
 ## Dashboard
 
-The 44 workflow rows below contain 19 better, 5 comparable, and 8 partial
-verdicts; 10 are critical gaps and 2 are deliberately retired or out of
+The 44 workflow rows below contain 20 better, 5 comparable, and 8 partial
+verdicts; 9 are critical gaps and 2 are deliberately retired or out of
 scope.  The strongest evidence is the canonical static/protocol spine, NFG,
 the frozen EFG/Kuhn/SPE transfers, finite learning, finite auctions, congestion,
 and the executable rational frontend.  The release blockers are broader
-multi-round/repeated theory, pure-SPE existence by backward induction,
-learning dynamics, equilibrium refinements, revelation/information design,
+multi-round/repeated theory, learning dynamics, equilibrium refinements,
+revelation/information design,
 contracts, finite fair division, matching, and bargaining.  The many partial
 rows are not treated as
 release-ready merely because their declaration review is advanced; in
@@ -82,7 +82,7 @@ particular, the live FOSG queue still has 81 rows to classify
 | Express history-local information, behavioral policies, and their induced execution law once | `Languages/InfoModel.lean`, `Languages/InfoModel/**` (L-INFO) | [`GameTheory/Protocol/Information.lean`](../GameTheory/Protocol/Information.lean) with EFG, FOSG, and Kuhn consumers | better | Finish classifying predecessor simulation/semantic-form wrappers; retain no second information runner. |
 | Represent finite extensive forms with canonical histories and extract contingent-plan strategic forms | `Languages/EFG.lean`, `Languages/EFG/**` (L-EFG); frozen T1 | [`GameTheory/Languages/EFG.lean`](../GameTheory/Languages/EFG.lean), [`GameTheory/Protocol/Strategic.lean`](../GameTheory/Protocol/Strategic.lean); complete T1 ledger | better | Broader EFG syntax/refinement inventory remains to be classified. |
 | Prove sequential rationality / one-shot deviation iff subgame perfection, including off-path histories | EFG refinement material; frozen F4 | [`GameTheory/Protocol/SubgamePerfect.lean`](../GameTheory/Protocol/SubgamePerfect.lean), EFG specialization, complete F4 ledger | better | Recover remaining EFG refinement declarations without weakening well-founded hypotheses. |
-| Construct a pure SPE in a finite perfect-information game by backward induction | `Theorems/Zermelo.lean` (T-ZER) | [`GameTheory/Protocol/Backward.lean`](../GameTheory/Protocol/Backward.lean) evaluates a fixed chooser and relates one-shot to global optimality, but does not yet construct a strategic pure SPE | critical gap | Prove the language-independent Zermelo existence theorem, then add only honest syntax wrappers. |
+| Construct a pure SPE in a finite perfect-information game by backward induction | `Theorems/Zermelo.lean` (T-ZER) | [`GameTheory/Protocol/Zermelo.lean`](../GameTheory/Protocol/Zermelo.lean) constructs one information-local Bellman profile and proves SPE after every history; [`GameTheory/Languages/EFG/Zermelo.lean`](../GameTheory/Languages/EFG/Zermelo.lean) is the transparent EFG specialization; the chance/off-path witness is build evidence | better | Keep well-foundedness and finite local choices explicit; do not reintroduce subtree evaluators, bounded-utility wrappers, or global `Fintype.ofFinite`. |
 | Move between behavioral and mixed strategies under sharp recall/no-revisit conditions | `Languages/Kuhn/**`, `Theorems/Kuhn/**` (L-KUHN); frozen F3/T2 | [`GameTheory/Protocol/Information.lean`](../GameTheory/Protocol/Information.lean), [`GameTheory/Languages/EFG/Kuhn.lean`](../GameTheory/Languages/EFG/Kuhn.lean); complete T2 ledger | better | Classify non-flagship generic/language-specific Kuhn material. |
 | Use trembling-hand and assessment refinements beyond ordinary mixed Nash | refinement and sequential-assessment files in `Concepts/Mixed/**` (S-MIX) | Pointwise assessment consistency exists in the opt-in Analysis/Protocol bridge, but the mature refinement workflow is not recovered | critical gap | Recover one nondegenerate trembling-hand or perfect-equilibrium theorem with the topology boundary explicit. |
 | Model simultaneous stochastic play with observation-local policies and serialize FOSG to EFG | `Languages/FOSG/**` (L-FOSG); `Languages/Bridges/**` (L-BRIDGE) | [`GameTheory/Languages/FOSG.lean`](../GameTheory/Languages/FOSG.lean), [`GameTheory/Languages/Bridges/FOSGToEFG.lean`](../GameTheory/Languages/Bridges/FOSGToEFG.lean) | partial | Finish the remaining L-FOSG and bridge queues; counterfactual reach, CFR, continuation coefficients, and strategic/utility transfer keep separate gates. |

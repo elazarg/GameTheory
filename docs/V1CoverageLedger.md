@@ -22,8 +22,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Thirty-seven work-package ledgers claim 1,835 declarations: 1,654
-have reviewed dispositions and 181 remain seeded `unreviewed`; a further 6,489 are
+declarations. Thirty-eight work-package ledgers claim 1,840 declarations: 1,659
+have reviewed dispositions and 181 remain seeded `unreviewed`; a further 6,484 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -172,7 +172,7 @@ declaration-based.
 |---|---|---:|---|---|---|---|
 | T-CE | `Theorems/CorrelatedEqExistence.lean` | 1 | `Analysis` plus topology-free bridges in `Core.Mixed` | validated by existing Nash boundary | complete; 6/6 reviewed | [exact ledger](coverage/T-CE-existence.md); existence factors through mixed Nash with no LP or duplicate boundedness layer |
 | T-MIN | `Theorems/Minimax.lean` | 1 | `Core.ZeroSum` plus `Analysis.Minimax` | validated | partial inventory, flagship complete | exact declaration comparison |
-| T-ZER | `Theorems/Zermelo.lean` | 1 | Protocol backward induction | validated substrate | partial | language-independent theorem plus any honest wrapper |
+| T-ZER | `Theorems/Zermelo.lean` | 1 | Protocol backward induction | validated by constructive Protocol theorem and transparent EFG wrapper | complete; 5/5 reviewed, no deferred rows | [exact ledger](coverage/T-ZER-zermelo.md); maintain explicit well-foundedness and finite local-choice assumptions |
 | T-TEST | predecessor theorem tests | 1 | owning domain tests/examples | assigned by theorem | not started | classify with their theorem families |
 | MATH | pinned `Math/**` support tree | 56 | Mathlib first, then `GameTheoryMath` or canonical probability by live consumer | owner policy validated; EXP-049/D21 and EXP-053 | partial and demand-driven; finite online-learning 23/23 and finite-sum expectation 1/1 reviewed | [finite online-learning ledger](coverage/MATH-online-learning.md); [expectation ledger](coverage/MATH-probability-expectation.md); continue accounting by consumer, never wholesale port |
 

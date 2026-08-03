@@ -97,6 +97,29 @@ theorem exists_legal {state : E.State} (hterm : ¬ E.terminal state) :
 /-- The no-op joint action. -/
 def noop : ∀ i, Option (E.Action i) := fun _ => none
 
+/-- Embed one player's optional action in a joint action, with every other
+coordinate set to `none`. This is the canonical dependent singleton embedding;
+legality remains a separate, state-specific proof obligation. -/
+def singletonJoint [DecidableEq ι] (owner : ι)
+    (choice : Option (E.Action owner)) : ∀ i, Option (E.Action i) :=
+  fun i =>
+    if h : i = owner then by
+      subst i
+      exact choice
+    else none
+
+@[simp]
+theorem singletonJoint_self [DecidableEq ι] (owner : ι)
+    (choice : Option (E.Action owner)) :
+    E.singletonJoint owner choice owner = choice := by
+  simp [singletonJoint]
+
+@[simp]
+theorem singletonJoint_of_ne [DecidableEq ι] (owner : ι)
+    (choice : Option (E.Action owner)) {other : ι} (hne : other ≠ owner) :
+    E.singletonJoint owner choice other = none := by
+  simp [singletonJoint, hne]
+
 /-- The no-op is legal exactly where execution continues and nobody is active.
 This is the canonical chance or administrative step; the randomness lives in
 `step`. -/
@@ -269,6 +292,45 @@ variable (E) in
 /-- The arena is tree-shaped: every reachable state has exactly one history.
 This is the premise tree extraction needs, and a merging arena refutes it. -/
 def IsTreeShaped : Prop := ∀ state : E.State, Subsingleton (Trace E state)
+
+/-- Unique realized predecessor events make the protocol tree-shaped, provided
+the initial state cannot be reached by a step. This packages the trace
+induction shared by language bridges; callers retain responsibility for the
+representation-specific predecessor proof. -/
+theorem isTreeShaped_of_predecessor_unique
+    (init_not_mem_step :
+      ∀ (source : E.State) (joint : ∀ i, Option (E.Action i))
+        (isLegal : E.Legal source joint),
+        E.init ∉ (E.step source ⟨joint, isLegal⟩).support)
+    (predecessor_unique :
+      ∀ {target firstSource secondSource : E.State}
+        {firstJoint secondJoint : ∀ i, Option (E.Action i)}
+        (firstLegal : E.Legal firstSource firstJoint)
+        (secondLegal : E.Legal secondSource secondJoint),
+        target ∈ (E.step firstSource ⟨firstJoint, firstLegal⟩).support →
+        target ∈ (E.step secondSource ⟨secondJoint, secondLegal⟩).support →
+        firstSource = secondSource ∧ firstJoint = secondJoint) :
+    E.IsTreeShaped := by
+  intro state
+  constructor
+  intro first second
+  induction first with
+  | start =>
+      cases second with
+      | start => rfl
+      | extend prior joint isLegal realized =>
+          exact False.elim (init_not_mem_step _ joint isLegal realized)
+  | @extend source target prior joint isLegal realized ih =>
+      cases second with
+      | start =>
+          exact False.elim (init_not_mem_step _ joint isLegal realized)
+      | @extend secondSource _ secondPrior secondJoint secondLegal secondRealized =>
+          obtain ⟨rfl, hjoint⟩ :=
+            predecessor_unique isLegal secondLegal realized secondRealized
+          subst secondJoint
+          have hprior := ih secondPrior
+          subst secondPrior
+          rfl
 
 end ExecutionProtocol
 

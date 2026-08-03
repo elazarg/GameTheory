@@ -281,9 +281,9 @@ current integration and recovery status. Wave 0 closes when:
    rather than silently changing inside Phase 2/3-named scripts;
 6. README status is derived from the ledger rather than source-size estimates.
 
-The audit now indexes 436 files and 8,324 declarations. Thirty-seven work-package
-ledgers claim 1,835 declarations: 1,654 have reviewed dispositions, 181 remain
-deliberately seeded `unreviewed`, and 6,489 remain explicitly unaccounted. Both
+The audit now indexes 436 files and 8,324 declarations. Thirty-eight work-package
+ledgers claim 1,840 declarations: 1,659 have reviewed dispositions, 181 remain
+deliberately seeded `unreviewed`, and 6,484 remain explicitly unaccounted. Both
 open sets are review queues, not
 auto-classification targets; generated rows are evidence of scope, not
 recovery or a release percentage.
@@ -577,26 +577,34 @@ capability status is not renegotiated during that review.
 
 ## 15. Immediate queue
 
-The next work is ordered:
+The next work is ordered. T-ZER is closed: the language-independent
+well-founded Bellman construction, transparent EFG wrapper, and hostile
+chance/off-path witness now cover its mature workflow without bounded utility
+or a second tree evaluator.
 
-1. consolidate moving delivery probes without rewriting historical phase
-   measurements;
-2. close T-ZER's critical gap with a language-independent constructive pure-SPE
-   theorem by backward induction and one honest EFG wrapper; reuse the existing
-   well-founded execution, one-shot-deviation, and SPE surfaces, and reserve an
-   experiment only if competing perfect-information representations actually
-   emerge;
-3. build D-REPEAT's public-monitoring equilibrium waist: discounted
+1. make the existing enforcement continuous: add hosted CI for the full build
+   and every audit that can run from a clean checkout, while preserving the
+   pinned-reference-dependent phase 0 and coverage checks as an explicit local
+   checkpoint until their exact snapshot is provisioned in CI;
+2. close the safe engineering debt confirmed by integration review: identify
+   ε-CCE with the canonical approximate-equilibrium preference, reuse the new
+   Protocol singleton-joint and unique-predecessor tree toolkit in existing
+   bridges, and document intentional opt-in leaves rather than importing them
+   into capability-light syntax roots;
+3. audit, but do not mechanically apply, the proposed MAID-root and EFG/FOSG
+   ownership changes against D14, D6, and D30; reserve experiments before any
+   dependency-direction or public-semantics change;
+4. build D-REPEAT's public-monitoring equilibrium waist: discounted
    continuation values, canonical perfect-public equilibrium specialization,
    and one-shot-deviation equivalence on a noisy branch-dependent example,
    without introducing infinite realized-path probability;
-4. close M-CONTRACT with a finite principal-agent model, welfare identity,
+5. close M-CONTRACT with a finite principal-agent model, welfare identity,
    incentivized-action existence, and participation against an explicit
    outside option;
-5. run the remaining 81-row L-FOSG classification and already-validated static,
+6. run the remaining 81-row L-FOSG classification and already-validated static,
    Bayesian, and language leaf recovery as parallel BFS work, not as a reason to
    postpone critical capability gaps;
-6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
+7. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    discharges L-ROUND or repeated-game parity.
 

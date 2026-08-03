@@ -974,6 +974,33 @@ theorem mem_support_mix_right (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
     (mul_nonneg h0 (prob_nonneg μ a))
     (mul_pos (sub_pos.mpr ht) (prob_pos_iff.mpr ha))
 
+/-- With both weights positive, the support of a mixture is exactly the union
+of the two supports. -/
+theorem mem_support_mix_iff (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
+    (ht0 : 0 < t) (ht1 : t < 1) {μ ν : FinDist α} {a : α} :
+    a ∈ (mix t h0 h1 μ ν).support ↔ a ∈ μ.support ∨ a ∈ ν.support := by
+  constructor
+  · intro ha
+    by_contra hmem
+    have hμ : a ∉ μ.support := fun h => hmem (Or.inl h)
+    have hν : a ∉ ν.support := fun h => hmem (Or.inr h)
+    rw [← prob_pos_iff, prob_mix, prob_eq_zero_iff.mpr hμ,
+      prob_eq_zero_iff.mpr hν] at ha
+    linarith
+  · rintro (ha | ha)
+    · exact mem_support_mix_left t h0 h1 ht0 ha
+    · exact mem_support_mix_right t h0 h1 ht1 ha
+
+/-- A nondegenerate mixture of two point masses supports exactly its named
+points. -/
+theorem mem_support_mix_pure_iff [DecidableEq α]
+    (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (ht0 : 0 < t) (ht1 : t < 1)
+    (first second a : α) :
+    a ∈ (mix t h0 h1 (pure first) (pure second)).support ↔
+      a = first ∨ a = second := by
+  rw [mem_support_mix_iff t h0 h1 ht0 ht1,
+    mem_support_pure, mem_support_pure]
+
 /-- Expectation is affine in the law. -/
 theorem expect_mix (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ ν : FinDist α) (u : α → ℝ) :
     expect (mix t h0 h1 μ ν) u = t * expect μ u + (1 - t) * expect ν u := by

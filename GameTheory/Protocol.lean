@@ -18,6 +18,9 @@ choice and continuation as a context; its finite-horizon history context
 identifies sequential rationality with information-local one-shot optimality.
 `Backward` supplies the well-founded recursion and proves it computes the same
 value as the fuelled runner.
+`Zermelo` adds the finite-choice perfect-information optimization construction
+on that same history semantics, yielding a pure subgame-perfect profile without
+introducing a second evaluator.
 `Strategic` compiles both state-indexed protocol policies and information-local
 pure and behavioral policies into static `GameForm`s. The ordinary mixed
 extension of the information-local pure form is exactly the existing mixed
@@ -44,5 +47,6 @@ import GameTheory.Protocol.Backward
 import GameTheory.Protocol.Information
 import GameTheory.Protocol.Assessment
 import GameTheory.Protocol.SubgamePerfect
+import GameTheory.Protocol.Zermelo
 import GameTheory.Protocol.Strategic
 import GameTheory.Protocol.BehavioralAssessment
