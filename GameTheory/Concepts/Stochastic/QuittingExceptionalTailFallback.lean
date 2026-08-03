@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Concepts.Stochastic.QuittingStationaryBestResponse
 import GameTheory.Concepts.Stochastic.QuittingOpponentActionMass
 import GameTheory.Concepts.Stochastic.QuittingRootPerturbation
+import GameTheory.Concepts.Stochastic.QuittingNonSoloTail
 
 /-!
 # Exceptional-tail stationary fallback
@@ -424,6 +425,176 @@ def quittingSoloReward
     (owner : ι) : Payoff ι :=
   reward ⟨{owner}, Finset.singleton_nonempty owner⟩
 
+omit [DecidableEq ι] in
+/-- Every finite-time absorbed-state mass is nonnegative. -/
+theorem quittingAbsorbedMass_nonneg
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile) (time : ℕ)
+    (terminal : {S : Finset ι // S.Nonempty}) :
+    0 ≤ quittingAbsorbedMass reward profile time terminal := by
+  unfold quittingAbsorbedMass StochasticGame.expectedStateValue
+  apply expect_nonneg
+  intro history
+  unfold quittingAbsorbedIndicator
+  split_ifs <;> norm_num
+
+omit [DecidableEq ι] in
+/-- Every limiting absorbed-state mass is nonnegative. -/
+theorem quittingAbsorbedMassLimit_nonneg
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (terminal : {S : Finset ι // S.Nonempty}) :
+    0 ≤ quittingAbsorbedMassLimit reward profile terminal :=
+  (quittingAbsorbedMass_nonneg reward profile 0 terminal).trans
+    (quittingAbsorbedMass_le_limit reward profile 0 terminal)
+
+/-- Under almost-sure absorption, terminal payoff is within `2M` times the
+non-solo absorption probability of the singleton reward owned by `owner`. -/
+theorem abs_quittingTerminalPayoff_sub_soloReward_le_nonSoloMassLimit
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (owner who : ι) {M : ℝ}
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (habsorbs : quittingLiveMassLimit reward profile = 0) :
+    |quittingTerminalPayoff reward profile who -
+        quittingSoloReward reward owner who| ≤
+      2 * M * quittingNonSoloMassLimit reward profile owner := by
+  classical
+  let singleton := quittingSingletonTerminal owner
+  let mass := fun terminal =>
+    quittingAbsorbedMassLimit reward profile terminal
+  let solo := quittingSoloReward reward owner who
+  have htotal : (∑ terminal, mass terminal) = 1 := by
+    have hconservation :=
+      quittingLiveMassLimit_add_sum_absorbedMassLimit reward profile
+    rw [habsorbs, zero_add] at hconservation
+    exact hconservation
+  have hsolo : reward singleton who = solo := by
+    rfl
+  have hidentity :
+      quittingTerminalPayoff reward profile who - solo =
+        ∑ terminal,
+          if terminal = singleton then 0
+          else mass terminal * (reward terminal who - solo) := by
+    calc
+      quittingTerminalPayoff reward profile who - solo =
+          (∑ terminal, mass terminal * reward terminal who) - solo := by
+        rfl
+      _ = (∑ terminal, mass terminal * reward terminal who) -
+          (∑ terminal, mass terminal) * solo := by rw [htotal, one_mul]
+      _ = ∑ terminal, mass terminal * (reward terminal who - solo) := by
+        rw [Finset.sum_mul, ← Finset.sum_sub_distrib]
+        apply Finset.sum_congr rfl
+        intro terminal _
+        ring
+      _ = ∑ terminal,
+          if terminal = singleton then 0
+          else mass terminal * (reward terminal who - solo) := by
+        apply Finset.sum_congr rfl
+        intro terminal _
+        by_cases hterminal : terminal = singleton
+        · subst terminal
+          simp [hsolo]
+        · simp [hterminal]
+  rw [hidentity]
+  calc
+    |∑ terminal,
+        if terminal = singleton then 0
+        else mass terminal * (reward terminal who - solo)| ≤
+      ∑ terminal,
+        |if terminal = singleton then 0
+        else mass terminal * (reward terminal who - solo)| := by
+      simpa using Finset.abs_sum_le_sum_abs
+        (fun terminal =>
+          if terminal = singleton then 0
+          else mass terminal * (reward terminal who - solo))
+        Finset.univ
+    _ = ∑ terminal,
+        if terminal = singleton then 0
+        else mass terminal * |reward terminal who - solo| := by
+      apply Finset.sum_congr rfl
+      intro terminal _
+      by_cases hterminal : terminal = singleton
+      · simp [hterminal]
+      · simp only [hterminal, ↓reduceIte, abs_mul]
+        rw [abs_of_nonneg]
+        exact quittingAbsorbedMassLimit_nonneg reward profile terminal
+    _ ≤ ∑ terminal,
+        if terminal = singleton then 0
+        else mass terminal * (2 * M) := by
+      apply Finset.sum_le_sum
+      intro terminal _
+      by_cases hterminal : terminal = singleton
+      · simp [hterminal]
+      · simp only [hterminal, ↓reduceIte]
+        apply mul_le_mul_of_nonneg_left
+        · calc
+            |reward terminal who - solo| ≤
+                |reward terminal who| + |solo| := abs_sub _ _
+            _ ≤ M + M := add_le_add (hreward terminal who) (by
+              rw [← hsolo]
+              exact hreward singleton who)
+            _ = 2 * M := by ring
+        · exact quittingAbsorbedMassLimit_nonneg reward profile terminal
+    _ = 2 * M * quittingNonSoloMassLimit reward profile owner := by
+      unfold quittingNonSoloMassLimit
+      dsimp only [mass, singleton]
+      rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro terminal _
+      by_cases hterminal : terminal = quittingSingletonTerminal owner
+      · simp [hterminal]
+      · simp [hterminal, mul_comm]
+
+/-- Non-solo terminal absorption is bounded by the probability that some
+opponent of `owner` eventually quits. -/
+theorem quittingNonSoloMassLimit_le_one_sub_opponentLiveMassLimit
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile) (owner : ι) :
+    quittingNonSoloMassLimit reward profile owner ≤
+      1 - quittingLiveMassLimit reward
+        (quittingOpponentOnlyProfile reward profile owner) := by
+  have htail := quittingNonSoloMassLimit_update_sub_le_opponentLiveTail
+    reward profile owner (profile owner) 0
+  have hupdate : Function.update profile owner (profile owner) = profile := by
+    funext player
+    by_cases hp : player = owner
+    · subst player
+      simp
+    · simp [Function.update_of_ne hp]
+  have hzero : quittingNonSoloMass reward profile owner 0 = 0 := by
+    unfold quittingNonSoloMass
+    rw [(quittingGame reward).expectedStateValue_zero]
+    simp [quittingNonSoloIndicator]
+  rw [hupdate, hzero, quittingLiveMass_zero, sub_zero] at htail
+  exact htail
+
+/-- Semantic form of tail concentration: almost-sure absorption and an
+opponent-live-tail bound imply the `2Mη` estimate used by the exceptional
+fallback. -/
+theorem abs_quittingTerminalPayoff_sub_soloReward_le_of_opponentLiveTail
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (owner who : ι) {M η : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (habsorbs : quittingLiveMassLimit reward profile = 0)
+    (htail : 1 - quittingLiveMassLimit reward
+      (quittingOpponentOnlyProfile reward profile owner) ≤ η) :
+    |quittingTerminalPayoff reward profile who -
+        quittingSoloReward reward owner who| ≤
+      2 * M * η := by
+  calc
+    _ ≤ 2 * M * quittingNonSoloMassLimit reward profile owner :=
+      abs_quittingTerminalPayoff_sub_soloReward_le_nonSoloMassLimit
+        reward profile owner who hreward habsorbs
+    _ ≤ 2 * M *
+          (1 - quittingLiveMassLimit reward
+            (quittingOpponentOnlyProfile reward profile owner)) :=
+      mul_le_mul_of_nonneg_left
+        (quittingNonSoloMassLimit_le_one_sub_opponentLiveMassLimit
+          reward profile owner) (by positivity)
+    _ ≤ 2 * M * η := mul_le_mul_of_nonneg_left htail (by positivity)
+
 omit [Fintype ι] in
 @[simp] theorem update_quittingSoloStationaryRoot_owner
     (owner : ι) (first second : PMF Bool) :
@@ -757,6 +928,41 @@ theorem isεAsymptoticNash_soloStationary_of_tail_bounds_of_hazard
     abs_quittingStationaryFixedOpponentsQuitValue_sub_solo_le_of_hazard
       reward originalRoot hne hM hreward hhazard
 
+/-- The one-tail exceptional fallback with both probabilistic estimates
+discharged semantically: absorption gives concentration, and the current
+opponent hazard gives root-deletion stability. -/
+theorem isεAsymptoticNash_soloStationary_of_absorbing_tail
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (originalRoot : ι → PMF Bool)
+    (tailProfile : (quittingGame reward).BehaviorProfile)
+    (owner : ι) {β M η : ℝ}
+    (hβ : 0 ≤ β) (hM : 0 ≤ M) (hη : 0 ≤ η)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (habsorbs : quittingLiveMassLimit reward tailProfile = 0)
+    (htail : 1 - quittingLiveMassLimit reward
+      (quittingOpponentOnlyProfile reward tailProfile owner) ≤ η)
+    (hhazard :
+      1 - quittingStationaryFixedOpponentsContinueMass originalRoot owner ≤ η)
+    (hpositive : 0 < (originalRoot owner true).toReal)
+    (hneverNash : -M * η ≤
+      quittingTerminalPayoff reward tailProfile owner + β)
+    (hquitNash : ∀ who, who ≠ owner →
+      quittingStationaryFixedOpponentsQuitValue reward originalRoot who ≤
+        quittingTerminalPayoff reward tailProfile who + β) :
+    (quittingGame reward).IsεAsymptoticNash
+      (quittingTerminalPayoff reward) (β + 4 * M * η)
+      (quittingStationaryProfile reward
+        (quittingSoloStationaryRoot owner (originalRoot owner))) := by
+  apply isεAsymptoticNash_soloStationary_of_tail_bounds_of_hazard
+    reward originalRoot (quittingTerminalPayoff reward tailProfile) owner
+      hβ hM hη hreward hhazard hpositive
+  · intro who
+    exact
+      abs_quittingTerminalPayoff_sub_soloReward_le_of_opponentLiveTail
+        reward tailProfile owner who hM hreward habsorbs htail
+  · exact hneverNash
+  · exact hquitNash
+
 /-- If the opponent-tail error tends to zero and positive owner hazards occur
 arbitrarily late, the stationary solo fallbacks can be selected with error
 arbitrarily close to `β`. -/
@@ -842,5 +1048,49 @@ theorem exists_isεAsymptoticNash_soloStationary_of_tendsto_hazard_bounds
   exact
     abs_quittingStationaryFixedOpponentsQuitValue_sub_solo_le_of_hazard
       reward (roots time) hne hM hreward (hhazard time)
+
+/-- Limit selection from a sequence of absorbing tails.  Both `2Mη`
+estimates are derived from live-mass bounds rather than supplied as abstract
+payoff inequalities. -/
+theorem exists_isεAsymptoticNash_soloStationary_of_absorbing_tails
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool)
+    (tails : ℕ → (quittingGame reward).BehaviorProfile)
+    (owner : ι) (η : ℕ → ℝ) {β M : ℝ}
+    (hβ : 0 ≤ β) (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hη : ∀ time, 0 ≤ η time)
+    (hηzero : Tendsto η atTop (nhds 0))
+    (habsorbs : ∀ time,
+      quittingLiveMassLimit reward (tails time) = 0)
+    (htail : ∀ time,
+      1 - quittingLiveMassLimit reward
+        (quittingOpponentOnlyProfile reward (tails time) owner) ≤ η time)
+    (hhazard : ∀ time,
+      1 - quittingStationaryFixedOpponentsContinueMass
+        (roots time) owner ≤ η time)
+    (hpositiveLate : ∀ threshold,
+      ∃ time ≥ threshold, 0 < (roots time owner true).toReal)
+    (hneverNash : ∀ time,
+      -M * η time ≤
+        quittingTerminalPayoff reward (tails time) owner + β)
+    (hquitNash : ∀ time who, who ≠ owner →
+      quittingStationaryFixedOpponentsQuitValue reward (roots time) who ≤
+        quittingTerminalPayoff reward (tails time) who + β) :
+    ∀ ζ > 0, ∃ time,
+      (quittingGame reward).IsεAsymptoticNash
+        (quittingTerminalPayoff reward) (β + ζ)
+        (quittingStationaryProfile reward
+          (quittingSoloStationaryRoot owner (roots time owner))) := by
+  apply exists_isεAsymptoticNash_soloStationary_of_tendsto_hazard_bounds
+    reward roots (fun time => quittingTerminalPayoff reward (tails time))
+      owner η hβ hM hreward hη hηzero hhazard hpositiveLate
+  · intro time who
+    exact
+      abs_quittingTerminalPayoff_sub_soloReward_le_of_opponentLiveTail
+        reward (tails time) owner who hM hreward
+          (habsorbs time) (htail time)
+  · exact hneverNash
+  · exact hquitNash
 
 end GameTheory
