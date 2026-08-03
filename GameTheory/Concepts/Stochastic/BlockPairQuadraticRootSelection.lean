@@ -127,6 +127,38 @@ theorem existsUnique_supportThirteen_root_Ioo
     (supportThirteenC successor) lower upper hlowerUpper hlower hupper
     hderivative
 
+/-- A rational isolating interval selects a unique support-13 chart point,
+including its active indifference and predecessor-value semantics. -/
+theorem existsUnique_supportThirteen_chart_Ioo
+    (successor : BlockPairK11.Player → ℝ) (lower upper : ℝ)
+    (hlowerUpper : lower < upper)
+    (hlower : supportThirteenPolynomial successor lower < 0)
+    (hupper : 0 < supportThirteenPolynomial successor upper)
+    (hderivative : ∀ z ∈ Set.Icc lower upper,
+      0 < supportThirteenDerivative successor z)
+    (hzeroDenominator : ∀ z ∈ Set.Ioo lower upper,
+      supportThirteenZeroDenominator successor z ≠ 0)
+    (htwoDenominator : ∀ z ∈ Set.Ioo lower upper,
+      supportThirteenTwoDenominator successor z ≠ 0) :
+    ∃! z : ℝ,
+      z ∈ Set.Ioo lower upper ∧
+      supportThirteenPolynomial successor z = 0 ∧
+      (difference (supportThirteenHazard successor z) successor 0 = 0 ∧
+        difference (supportThirteenHazard successor z) successor 2 = 0 ∧
+        difference (supportThirteenHazard successor z) successor 3 = 0) ∧
+      predecessorValue (supportThirteenHazard successor z) successor =
+        supportThirteenValue successor z := by
+  obtain ⟨z, hz, hzUnique⟩ :=
+    existsUnique_supportThirteen_root_Ioo successor lower upper
+      hlowerUpper hlower hupper hderivative
+  have hzero := hzeroDenominator z hz.1
+  have htwo := htwoDenominator z hz.1
+  refine ⟨z, ⟨hz.1, hz.2,
+    supportThirteen_active successor z hzero htwo hz.2,
+    supportThirteen_predecessorValue successor z hzero htwo hz.2⟩, ?_⟩
+  intro y hy
+  exact hzUnique y ⟨hy.1, hy.2.1⟩
+
 def supportElevenDerivative
     (successor : BlockPairK11.Player → ℝ) (z : ℝ) : ℝ :=
   quadraticDerivative (supportElevenA successor)
@@ -151,5 +183,37 @@ theorem existsUnique_supportEleven_root_Ioo
     (supportElevenA successor) (supportElevenB successor)
     (supportElevenC successor) lower upper hlowerUpper hlower hupper
     hderivative
+
+/-- A rational isolating interval selects a unique support-11 chart point,
+including its active indifference and predecessor-value semantics. -/
+theorem existsUnique_supportEleven_chart_Ioo
+    (successor : BlockPairK11.Player → ℝ) (lower upper : ℝ)
+    (hlowerUpper : lower < upper)
+    (hlower : supportElevenPolynomial successor lower < 0)
+    (hupper : 0 < supportElevenPolynomial successor upper)
+    (hderivative : ∀ z ∈ Set.Icc lower upper,
+      0 < supportElevenDerivative successor z)
+    (hzeroDenominator : ∀ z ∈ Set.Ioo lower upper,
+      supportElevenZeroDenominator successor z ≠ 0)
+    (honeDenominator : ∀ z ∈ Set.Ioo lower upper,
+      supportElevenOneDenominator successor z ≠ 0) :
+    ∃! z : ℝ,
+      z ∈ Set.Ioo lower upper ∧
+      supportElevenPolynomial successor z = 0 ∧
+      (difference (supportElevenHazard successor z) successor 0 = 0 ∧
+        difference (supportElevenHazard successor z) successor 1 = 0 ∧
+        difference (supportElevenHazard successor z) successor 3 = 0) ∧
+      predecessorValue (supportElevenHazard successor z) successor =
+        supportElevenValue successor z := by
+  obtain ⟨z, hz, hzUnique⟩ :=
+    existsUnique_supportEleven_root_Ioo successor lower upper
+      hlowerUpper hlower hupper hderivative
+  have hzero := hzeroDenominator z hz.1
+  have hone := honeDenominator z hz.1
+  refine ⟨z, ⟨hz.1, hz.2,
+    supportEleven_active successor z hzero hone hz.2,
+    supportEleven_predecessorValue successor z hzero hone hz.2⟩, ?_⟩
+  intro y hy
+  exact hzUnique y ⟨hy.1, hy.2.1⟩
 
 end GameTheory.BlockPairCharts
