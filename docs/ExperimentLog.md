@@ -72,6 +72,7 @@ becomes difficult to scan.
 | EXP-059 | 2026-08-02 | D6/D8/D14/D15/D28 / FOSG-to-EFG serialization | Can a simultaneous stochastic FOSG be serialized as a single-mover EFG while hiding within-round choices and preserving its mapped history law? | Supports explicit hidden-phase serialization; decides D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFG.lean` |
 | EXP-060 | 2026-08-02 | D6/D8/D14/D15/D30 / two-round FOSG-to-EFG signal replay | Can the hidden-phase serializer replay nontrivial source public/private signals over two stochastic rounds, including own-action memory and inactive slots, while preserving the scaled canonical-history law? | Supports two-round signal replay; generic explicit-order implementation unblocked; extends D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound{,Witnesses}.lean` |
 | EXP-061 | 2026-08-02 | D6/D8/D14/D15/D30 / generic explicit-order FOSG-to-EFG bridge | Can D30's validated hidden-phase construction be expressed once over the canonical FOSG/EFG APIs, with explicit finite player order and the same exact history, signal, policy, inactivity, and order laws? | Supports; promotes the stable generic bridge and completes D30's API gate | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Languages/Bridges/FOSGToEFG.lean`; generic hostile witnesses |
+| EXP-062 | 2026-08-03 | D4/D6/D7/D9 / intrinsic games ownership | Does configuration-dependent causality and closed-loop solvability earn a native intrinsic-game branch by proving a theorem or counterexample unavailable from bare Protocol without first choosing a temporal compiler? | Active; hostile solvability/causality slice reserved | Reserved on `6c37ac8`; pinned `Languages/Intrinsic/{Syntax,Examples,Tests}.lean`; experimental artifacts pending |
 
 ## Entry template
 
@@ -3993,3 +3994,41 @@ memory.
   Counterfactual reach, CFR, ordinary continuation coefficients, augmentation,
   strategic/utility transfer, and language expressiveness retain their own
   gates.
+
+### EXP-062: intrinsic games ownership and closed-loop causality
+
+- **Date / revision:** 2026-08-03, reserved on `6c37ac8`
+- **Status:** active; no intrinsic public API or pinned coverage credited
+- **Decision / question:** whether the pinned finite Witsenhausen-style
+  intrinsic model retains theorem-relevant product/configuration information
+  that cannot be represented honestly by the canonical Protocol history and
+  information layers before a temporal ordering/compiler is selected.
+- **Prediction:** a minimal native configuration carrier, agent-indexed
+  decision functions constant on information setoid classes, closed-loop
+  fixed-point solvability, and configuration-dependent causality can express
+  both a solvability theorem and a future-information counterexample that bare
+  Protocol cannot state without prematurely fixing an execution order.  No
+  utility, equilibrium, PMF runner, or Kuhn theorem is needed for that test.
+- **Representative slice:** reconstruct the pinned trivial-information
+  two-agent solvability witness and the `futureLookingModel` causality
+  rejection on capability-light data.  The negative witness must genuinely
+  distinguish dependence on a not-yet-predecessor decision; the positive
+  witness must prove unique closed-loop solutions for every pure profile, not
+  merely exhibit one hand-picked profile.
+- **Competing designs:** a native intrinsic configuration/information root with
+  later named compilation; direct encoding as Protocol after an explicit
+  ordering, retiring the intrinsic branch; or a theorem-only fixed-point
+  construction over existing generic data with no game-language surface.
+- **Kill conditions:** every hostile statement reduces transparently to an
+  existing Protocol theorem; the slice needs stored global finiteness, PMF,
+  KernelGame, duplicate equilibrium/behavioral strategy semantics, raw profile
+  updates, public transports, or a chosen temporal execution merely to state
+  causality; the future-looking fixture fails to distinguish the designs; or
+  trusted code needs placeholders/custom axioms/forbidden imports.
+- **Artifacts / commands:** pending experimental syntax and hostile witnesses;
+  focused build; source-hazard and axiom audit; Phase 2/3 reachability probes if
+  a stable root is earned; exact L-INTR ledger update only after the result.
+- **Outcome / next action:** implement the smallest falsifying slice under
+  `Experimental/PostArchitecture`.  Do not port the pinned mixed/behavioral,
+  perfect-recall, Kuhn, PMF, or KernelGame hierarchy until the native ownership
+  question is decided.
