@@ -34,7 +34,7 @@ L-BRIDGE	partial	^GameTheory/Languages\.lean$
 L-OPEN	frontier	^GameTheory/Languages/OpenGame(?:/.*)?\.lean$
 M-BAYES	partial	^GameTheory/Mechanism/Bayesian(?:/.*)?\.lean$
 M-BAYES	partial	^GameTheory/Mechanism/Tests\.lean$
-M-CONTRACT	not-started	^GameTheory/Mechanism/Contracts/.*\.lean$
+M-CONTRACT	complete	^GameTheory/Mechanism/Contracts/.*\.lean$
 M-FAIR	not-started	^GameTheory/Mechanism/FairDivision\.lean$
 M-FAIR	not-started	^GameTheory/Mechanism/FairDivision/Indivisible(?:/.*)?\.lean$
 M-CAKE	out-of-scope	^GameTheory/Mechanism/FairDivision/Divisible(?:/.*)?\.lean$

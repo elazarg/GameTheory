@@ -4218,3 +4218,13 @@ memory.
   `Classical.choice`, and `Quot.sound`.  No kill condition fired; D32 adopts a
   native opt-in `Mechanism` leaf and keeps any strategic/Bayesian or executable
   contract search behind separate consumer gates.
+- **Promotion:** `GameTheory.Mechanism.PrincipalAgent` is now public through
+  the opt-in Mechanism root, with independent action/outcome universes and no
+  outcome-carrier finiteness.  Its 171 nonblank lines recover or strengthen
+  all 23 pinned declarations; the 107-nonblank-line public fixture preserves
+  stochasticity, strict contract sensitivity, nonzero reservation utilities,
+  and the negative control.  The focused root/test build is warning-free, the
+  full build completes 3,440 jobs, Phase 2 structural verification and exact
+  coverage both return `VERIFIED=1`, and the M-CONTRACT ledger is complete
+  23/23.  The integration audit caught and repaired missing reducibility
+  annotations and their resulting unused-simp warnings before promotion.

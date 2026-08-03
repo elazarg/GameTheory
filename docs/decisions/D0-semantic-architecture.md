@@ -239,6 +239,19 @@ discounting; positive probes show the bridge still consumes both the native
 path and the information model. No new equilibrium definition, generic
 certificate, or infinite-path law appears.
 
+### Post-architecture contract stress
+
+[EXP-065](../ExperimentLog.md) applies the same ownership rule to hidden-action
+contracts.  A committed outcome-contingent payment leaves one agent choosing
+an action whose `FinDist` law determines reward and effort cost.  A dummy
+principal player and a Nash wrapper would add strategic structure absent from
+the theorem.  D32 therefore keeps the model native under `Mechanism`, while
+making each outside option explicit and attaching action finiteness only to
+classical maximizer existence.  A stochastic two-action witness distinguishes
+contracts and reservation utilities; a one-action negative control refutes
+participation from limited liability and optimality without an acceptable
+fallback.
+
 ### Consequences for public API
 
 `GameTheory.Core` and `GameTheory.Protocol` are both public. Both a bare

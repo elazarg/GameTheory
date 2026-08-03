@@ -1,6 +1,6 @@
 # D32: finite hidden-action contracts use a native principal-agent branch
 
-- **Status:** adopted; public promotion pending
+- **Status:** adopted and promoted
 - **Date:** 2026-08-03
 - **Experiment ID:** EXP-065
 
@@ -45,14 +45,16 @@ claim and forces the public theorem to expose an acceptable fallback.
 |---|---|
 | direct import | only `GameTheory.Probability.FinDist` |
 | candidate artifact | 167 nonblank lines; 37 declarations including witnesses |
+| promoted leaf / fixture | 171 / 107 nonblank lines; 23/23 pinned declarations classified |
 | probability capability | finite support belongs to each action law; no finite outcome carrier |
 | action capability | `[Finite Action] [Nonempty Action]` only on maximizer existence |
 | stochasticity | productive outcome law is a non-point-mass fair mixture |
 | source hazards | zero raw updates, transports, `Fintype.ofFinite`, placeholders, or custom axioms |
 | axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
+| gate validation | focused root/test build, 3,440-job full build, Phase 2 structural and exact coverage `VERIFIED=1` |
 
-The public promotion must still pass focused and root builds, architecture
-audits, exact pinned-v1 accounting, and an independent integration review.
+The focused and root builds, architecture audit, exact pinned-v1 accounting,
+and independent integration review all pass.
 
 ## Kill condition
 
@@ -69,8 +71,8 @@ added to this foundation.
 
 ## Consequences for the public API
 
-The public leaf will live under `GameTheory.Mechanism`, remain absent from the
-main `GameTheory` umbrella, and expose one native `PrincipalAgent` concept.
+The public leaf lives under `GameTheory.Mechanism`, remains absent from the
+main `GameTheory` umbrella, and exposes one native `PrincipalAgent` concept.
 Agent and outcome universes remain independent.  Expected payment, agent and
 principal utilities, social surplus, incentive maximization, explicit
 participation, and limited liability are defined directly over `FinDist`.

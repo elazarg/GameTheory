@@ -41,14 +41,14 @@ Verdicts are intentionally qualitative:
 
 ## Dashboard
 
-The 44 workflow rows below contain 20 better, 5 comparable, and 9 partial
-verdicts; 8 are critical gaps and 2 are deliberately retired or out of
+The 44 workflow rows below contain 21 better, 5 comparable, and 9 partial
+verdicts; 7 are critical gaps and 2 are deliberately retired or out of
 scope.  The strongest evidence is the canonical static/protocol spine, NFG,
 the frozen EFG/Kuhn/SPE transfers, finite learning, finite auctions, congestion,
 and the executable rational frontend.  The release blockers are broader
 multi-round theory, learning dynamics, equilibrium refinements,
 revelation/information design,
-contracts, finite fair division, matching, and bargaining.  The many partial
+finite fair division, matching, and bargaining.  The many partial
 rows are not treated as
 release-ready merely because their declaration review is advanced; in
 particular, the live FOSG queue still has 81 rows to classify
@@ -107,7 +107,7 @@ particular, the live FOSG queue still has 81 rows to classify
 | Relate Bayesian recommendation/obedience, incentive compatibility, and truthful Bayesian Nash | `Mechanism/Bayesian/**` (M-BAYES); frozen F5/F6 | [`GameTheory/Core/Bayesian.lean`](../GameTheory/Core/Bayesian.lean), [`GameTheory/Languages/BayesianMechanism.lean`](../GameTheory/Languages/BayesianMechanism.lean); complete F5/F6 ledgers | comparable | Recover revelation, welfare, participation, and information-design inventory. |
 | Apply revelation principles and reason about information design | revelation, Bayes-correlated, and mechanism-design files in `Mechanism/Bayesian/**` (M-BAYES) | Truthfulness and Bayes-correlated outcome-law transfers are present, but no general revelation or information-design theorem is exposed | critical gap | Prove a canonical finite revelation theorem, then select one persuasion/information-design workflow. |
 | Specify and verify finite sealed-bid, reserve, VCG, combinatorial, all-pay, and knapsack mechanisms | `Auctions/**` (M-AUCT) | [`GameTheory/Mechanism.lean`](../GameTheory/Mechanism.lean), `Auction`, `ReserveVickrey`, `VCG`, `Combinatorial`, `AllPay`, and `Knapsack` modules | better | Exact Myerson payment remains behind M-BAYES/D11; broad auction family stays partial. |
-| Formalize contracts with an explicit participation/outside-option theorem | `Mechanism/Contracts/**` (M-CONTRACT) | No successor module or flagship recorded | critical gap | Establish the native mechanism contract branch and its named theorem. |
+| Formalize contracts with an explicit participation/outside-option theorem | `Mechanism/Contracts/**` (M-CONTRACT) | [`GameTheory/Mechanism/PrincipalAgent.lean`](../GameTheory/Mechanism/PrincipalAgent.lean), stochastic hostile fixture, and complete 23/23 ledger | better | Maintain explicit outside options and theorem-local action finiteness; richer adverse-selection or executable contract search is a separate consumer. |
 | Formalize finite fair division, including indivisible EF1 | `Mechanism/FairDivision.lean`, finite files (M-FAIR) | No finite fair-division successor | critical gap | Build finite round-robin EF1 plus one allocation theorem without importing measurable cake assumptions. |
 | Formalize divisible cake cutting | divisible fair-division files (M-CAKE) | No continuous/measurable successor by D11 | deliberately retired or out of scope | Cake theory remains outside the finite release; reconsider only through the D11 measurable program. |
 | Prove voting, majority, delegation, and power-index results | `Voting/**` (M-VOTE) | [`GameTheory/Examples/Voting.lean`](../GameTheory/Examples/Voting.lean) supplies examples but not the mature theorem families | partial | Recover median/majority, delegation, liquid-democracy, and power-index results against the ranking foundations. |

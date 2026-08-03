@@ -112,6 +112,11 @@ The foundational characteristic-function game and its core live in
 merely to fit this diagram. Larger cooperative developments may still warrant
 their own dependency root.
 
+Finite hidden-action contracts are likewise native to the opt-in mechanism
+branch.  D32 represents each action by its own finite-support outcome law and
+states agent optimality and explicit participation directly; it does not add
+dummy strategic players merely to reuse `GameForm`.
+
 ## 4. Decision summary
 
 | ID | Current/default decision | Status | Fastest serious test |

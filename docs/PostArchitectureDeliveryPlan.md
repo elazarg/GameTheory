@@ -346,7 +346,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
-| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, and repaired executable approximation | **returned-allocation half approximation complete (EXP-056/D27);** exact Myerson payment remains behind M-BAYES/D11 | coordinated mechanism/auction root with separately audited semantic, executable, and correctness leaves |
+| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, repaired executable approximation, and finite hidden-action contracts | **M-CONTRACT complete (EXP-065/D32) with explicit participation; returned-allocation half approximation complete (EXP-056/D27);** exact Myerson payment remains behind M-BAYES/D11 | coordinated mechanism root with native principal-agent semantics and separately audited auction semantic, executable, and correctness leaves |
 | social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
 
 Each lane first inventories its entire pinned family. Once the hostile result
@@ -397,7 +397,7 @@ theory.
 | finite fair division | round-robin EF1 and one envy-cycle or maximin-share result | coordinated mechanism branch; no measurable cake assumptions |
 | knowledge and epistemic games | **complete for pinned v1:** exact/approximate common knowledge and both agreement theorems | any future Protocol bridge must state the extra state-view premise; broader epistemic work is a new consumer, not recovery debt |
 | evolutionary stability | **passed (EXP-044/D17):** ESS implies canonical symmetric Nash | recover static ESS/NSS in `Evolutionary`; dynamics do not enter until a named theorem measures scalar/topology needs |
-| contracts | one incentive or participation theorem with explicit outside option | mechanism branch sharing only actual report/deviation vocabulary |
+| contracts | **passed and recovered (EXP-065/D32):** stochastic welfare accounting, finite-action maximizer existence, and participation against an explicit outside option, with all 23 pinned declarations classified | native `Mechanism.PrincipalAgent` branch over `FinDist`; no artificial strategic players, and richer contract-selection/adverse-selection models remain separate consumers |
 
 Coalitional foundations and the Shapley characterization are already validated;
 their remaining theorem inventory may be harvested immediately. The other
@@ -608,9 +608,10 @@ provisioned in CI.
    the bounded one-shot-deviation equivalence.  Its noisy branch-dependent
    witness includes a strict unilateral loss and a zero-probability history,
    without introducing infinite realized-path probability;
-4. close M-CONTRACT with a finite principal-agent model, welfare identity,
-   incentivized-action existence, and participation against an explicit
-   outside option;
+4. **complete:** EXP-065/D32 closes M-CONTRACT with a finite-support
+   principal-agent model, stochastic welfare identity, incentivized-action
+   existence, explicit participation, a premise-erasing negative control, and
+   a complete 23/23 pinned declaration ledger;
 5. run the remaining 81-row L-FOSG classification, D-REPEAT
    rank/self-generation/uniform harvesting, and already-validated static,
    Bayesian, and language leaf recovery as parallel BFS work, not as a reason
