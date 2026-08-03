@@ -12,7 +12,7 @@ set_option autoImplicit false
 
 namespace GameTheory.BlockPairK11.DyadicCertificate
 
-open LocalInterval
+open LocalInterval Math.Interval
 
 abbrev Precision : ℕ := 80
 

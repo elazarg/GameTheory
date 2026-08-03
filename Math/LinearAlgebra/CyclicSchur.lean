@@ -23,7 +23,7 @@ set_option autoImplicit false
 
 noncomputable section
 
-namespace GameTheory.BlockPairCharts.CyclicSchur
+namespace Math.LinearAlgebra.CyclicSchur
 
 variable {E : Type*} [AddCommGroup E] [Module ℝ E]
 
@@ -371,4 +371,4 @@ theorem fullJacobian_isUnit_iff (data : LocalLinearization K H E)
   ext x
   rfl
 
-end GameTheory.BlockPairCharts.CyclicSchur
+end Math.LinearAlgebra.CyclicSchur

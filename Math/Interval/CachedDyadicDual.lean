@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.QuittingDyadicPolynomial
+import Math.Interval.DyadicPolynomial
 import Batteries.Data.Vector.Lemmas
 
 /-!
@@ -19,7 +19,8 @@ does not change either the interval value or any gradient coordinate.
 
 set_option autoImplicit false
 
-namespace GameTheory
+namespace Math
+namespace Interval
 
 namespace RationalPolynomial
 
@@ -179,4 +180,5 @@ theorem toDyadicDual_evalCachedDyadic
 
 end RationalPolynomial
 
-end GameTheory
+end Interval
+end Math

@@ -4,7 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.MovingKernelEpochPotentialAccount
+import Math.Probability.MovingKernelEpochPotentialAccount
+import Math.ProbabilityMassFunction
 
 /-!
 # Support-sensitive potential accounts for moving kernels

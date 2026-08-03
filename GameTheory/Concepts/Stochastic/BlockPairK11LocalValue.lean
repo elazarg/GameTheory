@@ -19,7 +19,7 @@ set_option autoImplicit false
 
 namespace GameTheory.BlockPairK11.LocalValue
 
-open LocalInterval
+open LocalInterval Math.Interval
 
 variable {precision : ℕ}
 

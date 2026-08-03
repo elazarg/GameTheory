@@ -19,7 +19,8 @@ the expression blow-up caused by materializing every symbolic derivative.
 
 set_option autoImplicit false
 
-namespace GameTheory
+namespace Math
+namespace Interval
 
 /-- A pair of exact rational endpoints.  Certificate checkers separately
 verify that `lower ≤ upper`; semantic containment itself does not need that
@@ -243,4 +244,5 @@ theorem Contains.mul {first second : RationalInterval} {x y : ℝ}
 
 end RationalInterval
 
-end GameTheory
+end Interval
+end Math

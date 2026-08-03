@@ -6,7 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.AnalyticPrescribedEndpointTailChargedClass
 import GameTheory.Concepts.Stochastic.AnalyticPrescribedEndpointTransportCirculation
-import GameTheory.Concepts.Stochastic.AnalyticRestrictedSourceCalendarAccount
+import Math.Probability.AnalyticRestrictedSourceCalendarAccount
 
 /-!
 # Tail-reachable alternative for prescribed endpoint transport

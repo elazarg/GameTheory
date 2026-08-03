@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Existence.NashExistenceMixed
-import GameTheory.Concepts.Stochastic.CompactSerialRelation
+import Math.Topology.CompactSerialRelation
 import GameTheory.Concepts.Stochastic.QuittingRootSuccessorCertificate
 import GameTheory.Concepts.Stochastic.QuittingTerminalUniformization
 import Math.ProbabilityMassFunction.Simplex
@@ -27,7 +27,7 @@ noncomputable section
 namespace GameTheory
 
 open Math.Probability Math.PMFProduct
-open Math.ProbabilityMassFunction
+open Math.ProbabilityMassFunction Math.Topology
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 

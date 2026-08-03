@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.QuittingRationalInterval
+import Math.Interval.RationalInterval
 import Mathlib.Data.Int.DivMod
 
 /-!
@@ -20,7 +20,8 @@ certificate.
 
 set_option autoImplicit false
 
-namespace GameTheory
+namespace Math
+namespace Interval
 
 /-- Integer endpoints representing the closed interval
 `[lower / 2^precision, upper / 2^precision]`. -/
@@ -334,4 +335,5 @@ theorem Contains.mul {first second : DyadicInterval precision} {x y : ℝ}
 
 end DyadicInterval
 
-end GameTheory
+end Interval
+end Math

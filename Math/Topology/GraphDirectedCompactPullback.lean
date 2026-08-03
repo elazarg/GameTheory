@@ -29,7 +29,8 @@ set_option autoImplicit false
 
 noncomputable section
 
-namespace GameTheory
+namespace Math
+namespace Topology
 
 open Filter
 
@@ -484,4 +485,5 @@ theorem GraphDirectedCompactSystem.existsUnique_compatiblePullbackPath
 
 end Metric
 
-end GameTheory
+end Topology
+end Math

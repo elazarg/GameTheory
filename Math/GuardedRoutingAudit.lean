@@ -61,7 +61,7 @@ set_option autoImplicit false
 
 universe u v w
 
-namespace GameTheory
+namespace Math
 namespace GuardedRouting
 
 /-- The three outputs a local rule may return at a node: a terminal closed
@@ -380,4 +380,4 @@ theorem auditCertificate_closedSystem (Node : Type u) (root : Node) :
     (strictProgress_closedSystem Node) (obstructionFree_closedSystem Node root)
 
 end GuardedRouting
-end GameTheory
+end Math

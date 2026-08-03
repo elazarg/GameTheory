@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.AnalyticFinkBaselineChargedClass
-import GameTheory.Concepts.Stochastic.AnalyticRawOccupationColumnCalendarAlternative
+import Math.Probability.AnalyticRawOccupationColumnCalendarAlternative
 import GameTheory.Concepts.Stochastic.MovingEndpointOccupationEvidence
 import GameTheory.Concepts.Stochastic.ScheduledFinkMarginalRecurrence
 

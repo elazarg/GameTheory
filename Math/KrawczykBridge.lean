@@ -24,7 +24,7 @@ and `A` is injective, Banach's fixed-point theorem supplies an exact zero of
 
 set_option autoImplicit false
 
-namespace GameTheory
+namespace Math
 
 open Function Metric Set
 
@@ -87,4 +87,4 @@ theorem exists_zero_in_closedBall_of_preconditioned_contraction
     exact sub_eq_self.mp hrootFixed
   exact hpreconditioner (hzero.trans preconditioner.map_zero.symm)
 
-end GameTheory
+end Math

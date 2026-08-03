@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.QuittingRationalPolynomial
+import Math.Interval.RationalPolynomial
 import Mathlib.Data.Fin.VecNotation
 
 /-!
@@ -22,6 +22,8 @@ set_option autoImplicit false
 namespace GameTheory
 
 namespace BlockPairK11
+
+open Math.Interval
 
 abbrev Player := Fin 4
 abbrev Phase := Fin 11

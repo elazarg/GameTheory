@@ -21,7 +21,8 @@ set_option autoImplicit false
 
 noncomputable section
 
-namespace GameTheory
+namespace Math
+namespace Topology
 
 /-- A closed predecessor-serial relation on one compact box. -/
 structure CompactSerialRelation (Point : Type*) [TopologicalSpace Point] where
@@ -227,4 +228,5 @@ theorem CompactSerialRelation.exists_infiniteChain
   exact ⟨value, (hprefix 0).1, fun time ↦
     (hprefix (time + 1)).2 ⟨time, Nat.lt_succ_self time⟩⟩
 
-end GameTheory
+end Topology
+end Math

@@ -240,7 +240,7 @@ import GameTheory.Concepts.Stochastic.AdaptivePotentialFiniteTimeTargetBounds
 import GameTheory.Concepts.Stochastic.FiniteHorizonProfileLawTransfer
 import GameTheory.Concepts.Stochastic.FiniteRankedTerminalChildNashClosure
 import GameTheory.Concepts.Stochastic.PureExternalityCycle
-import GameTheory.Concepts.Stochastic.GuardedRoutingAudit
+import Math.GuardedRoutingAudit
 import GameTheory.Concepts.Stochastic.PureExternalityCycleHolonomy
 import GameTheory.Concepts.Stochastic.AttainableEndpointCorrespondence
 import GameTheory.Concepts.Stochastic.SorinAbsorbingGame
@@ -333,10 +333,10 @@ import Math.Probability.AnalyticStationaryPoisson
 import Math.Probability.AnalyticPuncturedTailSupport
 import Math.Probability.AnalyticRestrictedSourceChargeAlternative
 import Math.Probability.SupportedMovingKernelEpochAccount
-import GameTheory.Concepts.Stochastic.MovingKernelEpochPotentialAccount
-import GameTheory.Concepts.Stochastic.AnalyticMarkovChargeCalendarAlternative
-import GameTheory.Concepts.Stochastic.AnalyticRawOccupationColumnCalendarAlternative
-import GameTheory.Concepts.Stochastic.AnalyticRestrictedSourceCalendarAccount
+import Math.Probability.MovingKernelEpochPotentialAccount
+import Math.Probability.AnalyticMarkovChargeCalendarAlternative
+import Math.Probability.AnalyticRawOccupationColumnCalendarAlternative
+import Math.Probability.AnalyticRestrictedSourceCalendarAccount
 import GameTheory.Concepts.Stochastic.ScheduledFinkMarginalRecurrence
 import GameTheory.Concepts.Stochastic.AnalyticFinkBaselineChargedClass
 import GameTheory.Concepts.Stochastic.AnalyticFinkTailReachableSupport
@@ -436,9 +436,9 @@ import GameTheory.Concepts.Stochastic.QuittingLiveTail
 import GameTheory.Concepts.Stochastic.QuittingExceptionalHazard
 import GameTheory.Concepts.Stochastic.QuittingBellmanTelescope
 import GameTheory.Concepts.Stochastic.QuittingNegativeSingletonChargeRegression
-import GameTheory.Concepts.Stochastic.GraphDirectedCompactPullback
-import GameTheory.Concepts.Stochastic.GraphDirectedPeriodicLift
-import GameTheory.Concepts.Stochastic.CompactSerialRelation
+import Math.Topology.GraphDirectedCompactPullback
+import Math.Topology.GraphDirectedPeriodicLift
+import Math.Topology.CompactSerialRelation
 import GameTheory.Concepts.Stochastic.QuittingNashBellmanSpine
 import GameTheory.Concepts.Stochastic.QuittingBlockSurvival
 import GameTheory.Concepts.Stochastic.QuittingInfinitePathCompiler
@@ -491,7 +491,7 @@ import GameTheory.Concepts.Stochastic.QuittingOpponentClockDichotomy
 import GameTheory.Concepts.Stochastic.QuittingNashBellmanClockReduction
 import GameTheory.Concepts.Stochastic.QuittingNashBellmanValueConvergence
 import GameTheory.Concepts.Stochastic.QuittingNashBellmanQuitEndpointLimit
-import GameTheory.Concepts.Stochastic.QuittingPeriodicMeshRate
+import Math.SqrtRate
 import GameTheory.Concepts.Stochastic.QuittingPeriodicFiniteHorizonRate
 import GameTheory.Concepts.Stochastic.QuittingCyclicSupersolution
 import GameTheory.Concepts.Stochastic.QuittingSingletonFlowMesh
@@ -509,9 +509,9 @@ import Math.LinearAlgebra.ExactBlockEliminationConfluence
 import Math.LinearAlgebra.LeadingTruncationCounterexamples
 import Math.Probability.FiniteDiscountedFlow
 import Math.Probability.ContractionErrorRecurrence
-import GameTheory.Concepts.Stochastic.FiniteProductFlowKinematics
-import GameTheory.Concepts.Stochastic.FiniteProductFlowTwoStateRegression
-import GameTheory.Concepts.Stochastic.BoundedDiscrepancyCirculation
+import Math.Probability.FiniteProductFlowKinematics
+import Math.Probability.FiniteProductFlowTwoStateRegression
+import Math.BoundedDiscrepancyCirculation
 import GameTheory.Concepts.Stochastic.HiddenFiberSpanCounterexample
 import GameTheory.Concepts.Stochastic.UniformNonexistenceCertificate
 

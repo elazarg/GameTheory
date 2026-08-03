@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.GraphDirectedCompactPullback
+import Math.Topology.GraphDirectedCompactPullback
 
 /-!
 # Periodic lifts and common-prefix continuity
@@ -23,7 +23,8 @@ set_option autoImplicit false
 
 noncomputable section
 
-namespace GameTheory
+namespace Math
+namespace Topology
 
 variable {Vertex Edge Point : Type*} [MetricSpace Point]
 
@@ -146,4 +147,5 @@ theorem GraphDirectedCompactSystem.compatiblePullbackPath_periodic
       hcontraction0 hcontraction1 hcontract hshifted hvalue
   exact fun time ↦ congrFun hunique time
 
-end GameTheory
+end Topology
+end Math

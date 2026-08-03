@@ -21,7 +21,7 @@ one fixed profile works at every horizon.
 
 set_option autoImplicit false
 
-namespace GameTheory
+namespace Math
 
 /-- The scalar square-root optimization behind accuracy-indexed periodic
 meshes.  The hypotheses on `m` are satisfied by `ceil (sqrt N)` when
@@ -72,4 +72,4 @@ theorem periodicMeshGap_le_sqrt_rate
     _ ≤ (A + 2 * B) / Real.sqrt N :=
       inv_add_linear_le_sqrt_rate hA hB hN hm_lower hm_upper
 
-end GameTheory
+end Math

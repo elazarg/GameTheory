@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingPeriodicClosing
-import GameTheory.Concepts.Stochastic.QuittingPeriodicMeshRate
+import Math.SqrtRate
 import GameTheory.Concepts.Stochastic.QuittingAlmostSureOpponentUniformization
 
 /-!
@@ -27,7 +27,7 @@ noncomputable section
 
 namespace GameTheory
 
-open StochasticGame Math.Probability Math.PMFProduct
+open StochasticGame Math Math.Probability Math.PMFProduct
 
 variable {K : ℕ} {ι : Type} [Fintype ι] [DecidableEq ι]
 

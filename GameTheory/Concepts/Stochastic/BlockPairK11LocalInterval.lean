@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.BlockPairK11System
-import GameTheory.Concepts.Stochastic.QuittingCachedDyadicDual
+import Math.Interval.CachedDyadicDual
 import Mathlib.Data.Fintype.Fin
 import Mathlib.Tactic.FinCases
 
@@ -25,6 +25,8 @@ namespace GameTheory
 namespace BlockPairK11
 
 namespace LocalInterval
+
+open Math.Interval
 
 variable {precision variableCount : ℕ}
 

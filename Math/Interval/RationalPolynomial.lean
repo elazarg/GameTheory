@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.QuittingRationalInterval
+import Math.Interval.RationalInterval
 
 /-!
 # Reflected rational polynomials with interval automatic differentiation
@@ -17,7 +17,8 @@ formal partial derivative.
 
 set_option autoImplicit false
 
-namespace GameTheory
+namespace Math
+namespace Interval
 
 /-- Factored rational polynomial expressions in `variableCount` variables. -/
 inductive RationalPolynomial (variableCount : ℕ) where
@@ -173,4 +174,5 @@ theorem evalDualInterval_sound
 
 end RationalPolynomial
 
-end GameTheory
+end Interval
+end Math

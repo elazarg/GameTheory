@@ -31,7 +31,7 @@ against an adaptive edge chooser.
 
 noncomputable section
 
-namespace GameTheory
+namespace Math
 
 namespace BoundedDiscrepancy
 
@@ -2038,4 +2038,4 @@ end EdgeGraph
 
 end BoundedDiscrepancy
 
-end GameTheory
+end Math

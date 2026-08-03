@@ -4,8 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.QuittingDyadicInterval
-import GameTheory.Concepts.Stochastic.QuittingRationalPolynomial
+import Math.Interval.DyadicInterval
+import Math.Interval.RationalPolynomial
 
 /-!
 # Reflected polynomial automatic differentiation with dyadic intervals
@@ -19,7 +19,8 @@ formal partial derivatives of the reflected polynomial.
 
 set_option autoImplicit false
 
-namespace GameTheory
+namespace Math
+namespace Interval
 
 namespace RationalPolynomial
 
@@ -127,4 +128,5 @@ theorem evalDualDyadic_sound
 
 end RationalPolynomial
 
-end GameTheory
+end Interval
+end Math

@@ -30,7 +30,7 @@ noncomputable section
 
 namespace GameTheory
 
-open Math.ProbabilityMassFunction
+open Math.ProbabilityMassFunction Math.Topology
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 

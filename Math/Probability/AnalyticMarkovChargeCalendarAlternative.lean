@@ -4,8 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.MovingKernelEpochPotentialAccount
-import GameTheory.Concepts.Stochastic.MovingEndpointOccupationEvidence
+import Math.Probability.MovingKernelEpochPotentialAccount
+import Math.Probability.MovingEndpointOccupationEvidence
 import Math.Probability.AnalyticMarkovChargeAlternative
 
 /-!
@@ -32,7 +32,7 @@ noncomputable section
 namespace Math
 namespace Probability
 
-open Filter GameTheory.StochasticGame Math.OnlineLearning
+open Filter Math.OnlineLearning
 
 variable {S : Type*}
 

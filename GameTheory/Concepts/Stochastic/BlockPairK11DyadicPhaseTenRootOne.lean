@@ -12,6 +12,8 @@ set_option autoImplicit false
 
 namespace GameTheory.BlockPairK11.DyadicCertificate
 
+open Math.Interval
+
 def phaseTenRootOne : DyadicInterval Precision :=
   ⟨15718699880824927933521, 15718724059341320226105⟩
 
