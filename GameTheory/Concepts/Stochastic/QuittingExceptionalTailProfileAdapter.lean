@@ -372,6 +372,30 @@ theorem neg_opponentTail_le_terminal_add_of_isεNash
       hneverLower
     _ ≤ quittingTerminalPayoff reward profile who + β := hneverNash
 
+/-- A genuinely negative terminal target forces a quantitatively visible
+opponent fence under the owner's deletion.  More precisely, if terminal
+beta-Nash leaves the player at least delta below zero, then the probability
+that some opponent eventually absorbs is at least delta divided by the reward
+bound, stated here in division-free form.
+
+This is the first marked-boundary estimate: an ordinary time occupation may
+lose a zero-density fence, but the owner-deletion law must retain enough of
+that fence to finance the negative terminal payoff. -/
+theorem delta_le_mul_opponentTail_of_terminal_add_le_neg
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (who : ι) {β M δ : ℝ}
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hnash : (quittingGame reward).IsεAsymptoticNash
+      (quittingTerminalPayoff reward) β profile)
+    (hnegative :
+      quittingTerminalPayoff reward profile who + β ≤ -δ) :
+    δ ≤ M * (1 - quittingLiveMassLimit reward
+      (quittingOpponentOnlyProfile reward profile who)) := by
+  have hfence := neg_opponentTail_le_terminal_add_of_isεNash
+    reward profile who hreward hnash
+  linarith
+
 /-! ## End-to-end exceptional profile adapter -/
 
 /-- If every live tail absorbs almost surely while `owner`'s opponents have
