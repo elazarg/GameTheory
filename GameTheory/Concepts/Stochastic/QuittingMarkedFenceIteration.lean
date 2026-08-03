@@ -321,8 +321,9 @@ theorem exists_finiteLabelWalk_good_or_repeat
       (∀ n, n < Fintype.card ι → ¬Good (walk n) →
         Next (walk n) (walk (n + 1))) ∧
       ((∃ n, n ≤ Fintype.card ι ∧ Good (walk n)) ∨
-        ∃ m n, m ≤ Fintype.card ι ∧ n ≤ Fintype.card ι ∧
-          m ≠ n ∧ label (walk m) = label (walk n)) := by
+        (∀ n, n ≤ Fintype.card ι → ¬Good (walk n)) ∧
+          ∃ m n, m ≤ Fintype.card ι ∧ n ≤ Fintype.card ι ∧
+            m ≠ n ∧ label (walk m) = label (walk n)) := by
   classical
   have hnext (state : State) (hnotGood : ¬Good state) :
       ∃ next, Next state next := by
@@ -347,6 +348,9 @@ theorem exists_finiteLabelWalk_good_or_repeat
   · by_cases hgood : ∃ n, n ≤ Fintype.card ι ∧ Good (walk n)
     · exact Or.inl hgood
     · right
+      constructor
+      · intro n hn hgoodAt
+        exact hgood ⟨n, hn, hgoodAt⟩
       let labelAt : Fin (Fintype.card ι + 1) → ι :=
         fun n ↦ label (walk n)
       have hcard : Fintype.card ι <
@@ -413,6 +417,29 @@ theorem QuittingNegativeFlagState.IsActualTransfer.target_time_lt_cutoff
   obtain ⟨mark, htime, _hraw, _hmarked, _hactive⟩ := htransfer
   have hoffset := mark.1.isLt
   omega
+
+/-- Actual transfers never move backward in the fixed chain's calendar. -/
+theorem QuittingNegativeFlagState.IsActualTransfer.source_time_le_target_time
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (cutoff : ℕ) (θ : ℝ)
+    {source target : QuittingNegativeFlagState value cutoff θ}
+    (htransfer : source.IsActualTransfer reward roots value cutoff θ target) :
+    source.time ≤ target.time := by
+  obtain ⟨mark, htime, _hraw, _hmarked, _hactive⟩ := htransfer
+  rw [htime]
+  omega
+
+/-- Owner deletion makes every actual transfer change the player flag. -/
+theorem QuittingNegativeFlagState.IsActualTransfer.target_owner_ne_source_owner
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (cutoff : ℕ) (θ : ℝ)
+    {source target : QuittingNegativeFlagState value cutoff θ}
+    (htransfer : source.IsActualTransfer reward roots value cutoff θ target) :
+    target.owner ≠ source.owner := by
+  obtain ⟨_mark, _htime, _hraw, hmarked, _hactive⟩ := htransfer
+  exact (Finset.mem_erase.mp hmarked.2.1).1
 
 /-- At the target of an actual transfer, positive Quit support and exact
 root Nash identify the new owner's pure-Quit endpoint with the declared
@@ -528,8 +555,10 @@ theorem exists_finiteActualNegativeFlagWalk_good_or_repeatedOwner
           (walk (n + 1))) ∧
       ((∃ n, n ≤ Fintype.card ι ∧
           (walk n).HasGoodBoundary reward roots value cutoff θ) ∨
-        ∃ m n, m ≤ Fintype.card ι ∧ n ≤ Fintype.card ι ∧
-          m ≠ n ∧ (walk m).owner = (walk n).owner) := by
+        (∀ n, n ≤ Fintype.card ι →
+          ¬(walk n).HasGoodBoundary reward roots value cutoff θ) ∧
+          ∃ m n, m ≤ Fintype.card ι ∧ n ≤ Fintype.card ι ∧
+            m ≠ n ∧ (walk m).owner = (walk n).owner) := by
   apply exists_finiteLabelWalk_good_or_repeat
     (fun state : QuittingNegativeFlagState value cutoff θ ↦ state.owner)
     (fun state ↦ state.HasGoodBoundary reward roots value cutoff θ)
@@ -538,5 +567,80 @@ theorem exists_finiteActualNegativeFlagWalk_good_or_repeatedOwner
   · intro state
     exact state.hasGoodBoundary_or_exists_actualTransfer reward roots value
       cutoff θ M hterminal hpolicy hnash hθ hM hreward
+
+/-- The repeated-owner branch refines into the exact calendar alternatives
+needed by the marked construction.  Because actual transfer times are
+nondecreasing, an owner repeat is either at the same actual suffix date
+(hence at the same supplied value/root node) or occurs at a strictly later
+date. -/
+theorem exists_finiteActualNegativeFlagWalk_good_or_sameTime_or_strictTimeRepeat
+    [Nontrivial ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (cutoff : ℕ) (θ M : ℝ)
+    (hterminal : value cutoff = 0)
+    (hpolicy : ∀ time, time < cutoff →
+      value time = quittingRootSuccessorPayoff reward
+        (value (time + 1)) (roots time))
+    (hnash : ∀ time, time < cutoff →
+      IsεQuittingRootNash reward (value (time + 1)) 0 (roots time))
+    (hθ : 0 < θ) (hM : 0 ≤ M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (initial : QuittingNegativeFlagState value cutoff θ) :
+    ∃ walk : ℕ → QuittingNegativeFlagState value cutoff θ,
+      walk 0 = initial ∧
+      (∀ n, n < Fintype.card ι →
+        ¬(walk n).HasGoodBoundary reward roots value cutoff θ →
+        (walk n).IsActualTransfer reward roots value cutoff θ
+          (walk (n + 1))) ∧
+      ((∃ n, n ≤ Fintype.card ι ∧
+          (walk n).HasGoodBoundary reward roots value cutoff θ) ∨
+        (∀ n, n ≤ Fintype.card ι →
+          ¬(walk n).HasGoodBoundary reward roots value cutoff θ) ∧
+          ((∃ m n, m < n ∧ n ≤ Fintype.card ι ∧
+              (walk m).owner = (walk n).owner ∧
+              (walk m).time = (walk n).time) ∨
+            ∃ m n, m < n ∧ n ≤ Fintype.card ι ∧
+              (walk m).owner = (walk n).owner ∧
+              (walk m).time < (walk n).time)) := by
+  obtain ⟨walk, hinitial, hsteps, hend⟩ :=
+    exists_finiteActualNegativeFlagWalk_good_or_repeatedOwner
+      reward roots value cutoff θ M hterminal hpolicy hnash hθ hM
+        hreward initial
+  refine ⟨walk, hinitial, hsteps, ?_⟩
+  rcases hend with hgood | ⟨hnogood, hrepeat⟩
+  · exact Or.inl hgood
+  · right
+    refine ⟨hnogood, ?_⟩
+    have hadjacent (n : ℕ) (hn : n < Fintype.card ι) :
+        (walk n).time ≤ (walk (n + 1)).time := by
+      have htransfer := hsteps n hn (hnogood n hn.le)
+      exact htransfer.source_time_le_target_time
+        reward roots value cutoff θ
+    have htimeMonotone : ∀ {m n : ℕ}, m ≤ n →
+        n ≤ Fintype.card ι → (walk m).time ≤ (walk n).time := by
+      intro m n hmn hn
+      induction n generalizing m with
+      | zero =>
+          have hm : m = 0 := by omega
+          subst m
+          exact le_rfl
+      | succ n ih =>
+          by_cases hm : m = n + 1
+          · subst m
+            exact le_rfl
+          · have hmle : m ≤ n := by omega
+            exact (ih hmle (by omega)).trans (hadjacent n (by omega))
+    obtain ⟨m, n, hm, hn, hmn, howner⟩ := hrepeat
+    by_cases horder : m < n
+    · have htime := htimeMonotone horder.le hn
+      rcases htime.eq_or_lt with heq | hlt
+      · exact Or.inl ⟨m, n, horder, hn, howner, heq⟩
+      · exact Or.inr ⟨m, n, horder, hn, howner, hlt⟩
+    · have hreverse : n < m := by omega
+      have htime := htimeMonotone hreverse.le hm
+      rcases htime.eq_or_lt with heq | hlt
+      · exact Or.inl ⟨n, m, hreverse, hm, howner.symm, heq⟩
+      · exact Or.inr ⟨n, m, hreverse, hm, howner.symm, hlt⟩
 
 end GameTheory
