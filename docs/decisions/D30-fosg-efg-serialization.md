@@ -1,9 +1,9 @@
 # D30: Serialize simultaneous FOSGs through hidden explicit EFG phases
 
-- **Status:** adopted through two-round source-signal replay and explicit
-  ordering; the stable generic adapter is not yet promoted
+- **Status:** adopted and promoted through the stable generic explicit-order
+  bridge
 - **Date:** 2026-08-02
-- **Experiment IDs:** EXP-059, EXP-060
+- **Experiment IDs:** EXP-059, EXP-060, EXP-061
 
 ## Decision / question
 
@@ -111,5 +111,32 @@ a later leaf over those laws and D8's coordinate/update results.
 Do not port pinned `FOSG.Serial`: its own documentation says it is not
 semantics-preserving, and it is not on the mature pinned bridge dependency
 path.  Mine `FOSG.Compile`, `Bridges/FOSG/SerialExec`, `AugmentedEFG`, and
-`Expressiveness/EFG_FOSG` only after the generic bounded bridge compiles, and
+`Expressiveness/EFG_FOSG` now that the generic bounded bridge compiles, and
 reuse statements rather than their PMF, global-finiteness, or transport API.
+
+## Generic promotion
+
+EXP-061 promotes `Languages.Bridges.FOSGToEFG`.  `ExplicitOrder` stores an
+equivalence `Fin slots ≃ ι`, so exhaustive duplicate-free scheduling is an
+invariant without a global finite instance and the empty-player case remains
+valid.  The target has one source-player slot per round plus one resolver,
+stores the exact canonical source history and partial legal joint, and exposes
+only the phase paired with canonical source information.
+
+The generic exact-law theorem quantifies over every target behavioral profile
+and every finite round count.  Erasing the fixed-width target history yields
+the canonical source `InformationModel.runBehavioral` law under the profile
+projected from scheduled target views.  Translation and arbitrary-order
+transport are corollaries.  The migrated EXP-060 source directly rechecks both
+orders, within-round hiding, hidden inactive slots, resolver-only replay of
+public/private/own-action information, and a translated policy sensitive to
+each replayed coordinate.
+
+The bridge has only stable EFG/FOSG imports.  The recursive exact-law proof
+machinery is private, so the public API exposes no second runner or default
+assignment.  The focused 1,727-job build is warning-free and the printed axiom
+profile is exactly `propext`, `Classical.choice`, and `Quot.sound`.  The full
+3,422-job integration build and Phase 2, Phase 3, and exact coverage audits all
+pass.  No D30 kill condition fired.  The pinned live bridge chain may now be
+recovered or retired against this canonical adapter; equilibrium transfer
+still requires a separate strategic gate.

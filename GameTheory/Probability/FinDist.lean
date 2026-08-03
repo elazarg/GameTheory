@@ -1294,6 +1294,185 @@ theorem pi_pure [DecidableEq ι] (s : ∀ i, A i) :
       PMF.pure_apply]
     simp [h]
 
+/-! ## Ordered dependent draws -/
+
+namespace DependentAssignment
+
+/-- Replace a finite set of coordinates in a dependent assignment. -/
+def resolve [DecidableEq ι] (assignment : (i : ι) → A i) (indices : Finset ι)
+    (draw : (index : {index // index ∈ indices}) → A index.1) :
+    (i : ι) → A i :=
+  fun i => if hi : i ∈ indices then draw ⟨i, hi⟩ else assignment i
+
+/-- Replace one coordinate in a dependent assignment. -/
+def setOne [DecidableEq ι] (assignment : (i : ι) → A i) (entry : Sigma A) :
+    (i : ι) → A i :=
+  resolve assignment {entry.1} fun index => by
+    have hindex : index.1 = entry.1 := Finset.mem_singleton.mp index.2
+    cases index with
+    | mk value _ =>
+      dsimp only at hindex
+      subst value
+      exact entry.2
+
+omit [Fintype ι] in
+theorem resolve_of_mem [DecidableEq ι] (assignment : (i : ι) → A i) (indices : Finset ι)
+    (draw : (index : {index // index ∈ indices}) → A index.1)
+    {index : ι} (hindex : index ∈ indices) :
+    resolve assignment indices draw index = draw ⟨index, hindex⟩ := by
+  simp [resolve, hindex]
+
+omit [Fintype ι] in
+theorem resolve_of_notMem [DecidableEq ι] (assignment : (i : ι) → A i) (indices : Finset ι)
+    (draw : (index : {index // index ∈ indices}) → A index.1)
+    {index : ι} (hindex : index ∉ indices) :
+    resolve assignment indices draw index = assignment index := by
+  simp [resolve, hindex]
+
+end DependentAssignment
+
+/-- Sequentially draw laws in list order and write each draw into an assignment. -/
+def runDependent [DecidableEq ι] (laws : (index : ι) → FinDist (A index)) :
+    List ι → ((index : ι) → A index) → FinDist ((index : ι) → A index)
+  | [], assignment => pure assignment
+  | index :: rest, assignment =>
+    (laws index).bind fun value =>
+      runDependent laws rest (DependentAssignment.setOne assignment ⟨index, value⟩)
+
+omit [Fintype ι] in
+/-- A duplicate-free sequential draw is the independent product on the listed
+coordinates, mapped into the initial assignment. -/
+theorem runDependent_eq_pi_subtype [DecidableEq ι] (laws : (index : ι) → FinDist (A index)) :
+    ∀ (indices : List ι), indices.Nodup → ∀ assignment : (index : ι) → A index,
+      runDependent laws indices assignment =
+        map (DependentAssignment.resolve assignment indices.toFinset)
+          (pi fun index : {index // index ∈ indices.toFinset} => laws index.1) := by
+  intro indices
+  induction indices with
+  | nil =>
+      intro _ assignment
+      let emptyDraw :
+          (index : {index : ι // index ∈ ([] : List ι).toFinset}) → A index.1 :=
+        fun index => by
+          exfalso
+          exact List.not_mem_nil (List.mem_toFinset.mp index.2)
+      have hlaws :
+          (fun index : {index : ι // index ∈ ([] : List ι).toFinset} => laws index.1) =
+            fun index => pure (emptyDraw index) := by
+        funext index
+        exfalso
+        exact List.not_mem_nil (List.mem_toFinset.mp index.2)
+      rw [runDependent, hlaws, pi_pure, map_pure]
+      apply congrArg pure
+      funext index
+      simp [DependentAssignment.resolve]
+  | cons head tail ih =>
+      intro hnodup assignment
+      have hheadNotMem : head ∉ tail := (List.nodup_cons.mp hnodup).1
+      have htailNodup : tail.Nodup := (List.nodup_cons.mp hnodup).2
+      have hheadNotFinset : head ∉ tail.toFinset := by simpa using hheadNotMem
+      let full := {index : ι // index ∈ (head :: tail).toFinset}
+      let headIndex : full := ⟨head, by simp⟩
+      let remaining := {index : full // index ≠ headIndex}
+      let tailIndex := {index : ι // index ∈ tail.toFinset}
+      let remainingEquiv : tailIndex ≃ remaining :=
+        { toFun := fun index => ⟨⟨index.1, by simp [index.2]⟩, by
+            intro heq
+            have hindexValue : index.1 = head := by
+              simpa [headIndex] using congrArg (fun value : full => value.1) heq
+            have hheadFinset : head ∈ tail.toFinset := by
+              rw [← hindexValue]
+              exact index.2
+            exact hheadNotMem (by simpa using hheadFinset)⟩
+          invFun := fun index => ⟨index.1.1, by
+            have hmem : index.1.1 = head ∨ index.1.1 ∈ tail.toFinset := by
+              simpa using index.1.2
+            rcases hmem with hhead | htail
+            · exfalso
+              apply index.2
+              apply Subtype.ext
+              exact hhead
+            · exact htail⟩
+          left_inv := fun index => by
+            apply Subtype.ext
+            rfl
+          right_inv := fun index => by
+            apply Subtype.ext
+            rfl }
+      let remainingValue (index : remaining) := A index.1.1
+      let remainingLaws (index : remaining) : FinDist (remainingValue index) := laws index.1.1
+      have hreindex :
+          map (Equiv.piCongrLeft remainingValue remainingEquiv).symm (pi remainingLaws) =
+            pi (fun index : tailIndex => laws index.1) := by
+        simpa [remainingEquiv, remainingValue, remainingLaws, tailIndex] using
+          pi_reindex remainingValue remainingEquiv remainingLaws
+      have hresolve (value : A head) :
+          map
+              (fun draw : (index : remaining) → remainingValue index =>
+                DependentAssignment.resolve assignment (head :: tail).toFinset
+                  ((Equiv.piSplitAt headIndex
+                    (fun index : full => A index.1)).symm (value, draw)))
+              (pi remainingLaws) =
+            map
+              (DependentAssignment.resolve
+                (DependentAssignment.setOne assignment ⟨head, value⟩) tail.toFinset)
+              (pi (fun index : tailIndex => laws index.1)) := by
+        rw [← hreindex, map_comp]
+        apply congrArg (fun f => map f (pi remainingLaws))
+        funext draw index
+        by_cases hindexHead : index = head
+        · subst index
+          simp [DependentAssignment.resolve, DependentAssignment.setOne,
+            headIndex, full, remainingEquiv, hheadNotFinset]
+        · by_cases hindexTail : index ∈ tail.toFinset
+          · simp [DependentAssignment.resolve, DependentAssignment.setOne,
+              hindexHead, hindexTail, headIndex, full, remainingEquiv,
+              remainingValue, tailIndex]
+          · simp [DependentAssignment.resolve, DependentAssignment.setOne,
+              hindexHead, hindexTail]
+      rw [runDependent]
+      simp_rw [ih htailNodup]
+      let fullLaws : (index : full) → FinDist (A index.1) := fun index => laws index.1
+      rw [show (fun index : {index : ι // index ∈ (head :: tail).toFinset} => laws index.1) =
+          fullLaws by rfl,
+        pi_eq_map_product headIndex fullLaws, map_comp]
+      unfold product
+      rw [map_bind]
+      apply bind_congr
+      intro value _
+      refine (hresolve value).symm.trans ?_
+      rw [map_comp]
+      apply congrArg (fun f => map f (pi remainingLaws))
+      funext draw
+      rfl
+
+/-- A duplicate-free exhaustive sequential draw is the independent product of
+the whole law family. -/
+theorem runDependent_eq_pi [DecidableEq ι] (laws : (index : ι) → FinDist (A index))
+    (indices : List ι) (hnodup : indices.Nodup) (hcomplete : ∀ index, index ∈ indices)
+    (assignment : (index : ι) → A index) :
+    runDependent laws indices assignment = pi laws := by
+  rw [runDependent_eq_pi_subtype laws indices hnodup assignment]
+  have hmem (index : ι) : index ∈ indices.toFinset := by simpa using hcomplete index
+  let equiv : {index : ι // index ∈ indices.toFinset} ≃ ι :=
+    { toFun := fun index => index.1
+      invFun := fun index => ⟨index, hmem index⟩
+      left_inv := fun index => by
+        apply Subtype.ext
+        rfl
+      right_inv := fun index => rfl }
+  have hpi :
+      pi (fun index : {index : ι // index ∈ indices.toFinset} => laws index.1) =
+        map (Equiv.piCongrLeft A equiv).symm (pi laws) := by
+    simpa [equiv] using (pi_reindex A equiv laws).symm
+  rw [hpi, map_comp]
+  have hresolve :
+      DependentAssignment.resolve assignment indices.toFinset ∘
+          (Equiv.piCongrLeft A equiv).symm = id := by
+    funext draw index
+    simp [DependentAssignment.resolve, equiv, hmem]
+  rw [hresolve, map_id]
+
 end Pi
 
 end FinDist
