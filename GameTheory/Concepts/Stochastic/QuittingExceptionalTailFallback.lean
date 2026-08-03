@@ -5,6 +5,8 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingStationaryBestResponse
+import GameTheory.Concepts.Stochastic.QuittingOpponentActionMass
+import GameTheory.Concepts.Stochastic.QuittingRootPerturbation
 
 /-!
 # Exceptional-tail stationary fallback
@@ -33,6 +35,68 @@ open StochasticGame Filter Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
+/-- Mapping a finite law through a deterministic retraction can only move
+total-variation mass carried by points that the retraction changes. -/
+theorem pmfTV_self_map_le_expect_moved
+    {Ω : Type} [Fintype Ω] [DecidableEq Ω]
+    (distribution : PMF Ω) (retraction : Ω → Ω) :
+    pmfTV distribution (distribution.map retraction) ≤
+      expect distribution (fun outcome =>
+        if retraction outcome ≠ outcome then 1 else 0) := by
+  change
+    (∑ outcome : Ω,
+        max ((distribution outcome).toReal -
+          ((distribution.map retraction) outcome).toReal) 0) ≤ _
+  rw [expect_eq_sum]
+  apply Finset.sum_le_sum
+  intro outcome _
+  change
+    max ((distribution outcome).toReal -
+      ((distribution.map retraction) outcome).toReal) 0 ≤
+        (distribution outcome).toReal *
+          (if retraction outcome ≠ outcome then 1 else 0)
+  by_cases hmoved : retraction outcome = outcome
+  · have hmass : distribution outcome ≤
+        distribution.map retraction outcome := by
+      have hmass' := Math.ProbabilityMassFunction.le_pushforward_apply
+        distribution retraction outcome
+      change distribution outcome ≤
+        distribution.map retraction (retraction outcome) at hmass'
+      rwa [hmoved] at hmass'
+    have hmassReal : (distribution outcome).toReal ≤
+        ((distribution.map retraction) outcome).toReal :=
+      ENNReal.toReal_mono (PMF.apply_ne_top _ _) hmass
+    rw [max_eq_right (sub_nonpos.mpr hmassReal)]
+    simp [hmoved]
+  · have hdistribution : 0 ≤ (distribution outcome).toReal :=
+      ENNReal.toReal_nonneg
+    have hmapped : 0 ≤ ((distribution.map retraction) outcome).toReal :=
+      ENNReal.toReal_nonneg
+    rw [if_pos hmoved, mul_one]
+    exact max_le (by linarith) hdistribution
+
+/-- A bounded expectation changes by at most twice its bound times the
+probability that a deterministic retraction changes the sampled point. -/
+theorem abs_expect_sub_expect_map_le_moved
+    {Ω : Type} [Fintype Ω] [DecidableEq Ω]
+    (distribution : PMF Ω) (retraction : Ω → Ω)
+    (value : Ω → ℝ) {M : ℝ} (hM : 0 ≤ M)
+    (hvalue : ∀ outcome, |value outcome| ≤ M) :
+    |expect distribution value -
+        expect (distribution.map retraction) value| ≤
+      2 * M * expect distribution (fun outcome =>
+        if retraction outcome ≠ outcome then 1 else 0) := by
+  calc
+    _ ≤ (2 * M) * pmfTV distribution (distribution.map retraction) :=
+      abs_expect_sub_le_two_mul_pmfTV distribution
+        (distribution.map retraction) value hvalue
+    _ ≤ (2 * M) * expect distribution (fun outcome =>
+          if retraction outcome ≠ outcome then 1 else 0) :=
+      mul_le_mul_of_nonneg_left
+        (pmfTV_self_map_le_expect_moved distribution retraction) (by positivity)
+    _ = 2 * M * expect distribution (fun outcome =>
+          if retraction outcome ≠ outcome then 1 else 0) := by ring
+
 /-- A stationary root at which only `owner` may quit. -/
 def quittingSoloStationaryRoot (owner : ι) (hazard : PMF Bool) :
     ι → PMF Bool :=
@@ -41,6 +105,318 @@ def quittingSoloStationaryRoot (owner : ι) (hazard : PMF Bool) :
 /-- Joint action at which only `owner` may take the supplied action. -/
 def quittingSoloAction (owner : ι) (action : Bool) : ι → Bool :=
   Function.update (fun _ => false) owner action
+
+/-- Delete every coordinate except `first` and `second` from a joint action. -/
+def quittingKeepPairAction (first second : ι) (action : ι → Bool) :
+    ι → Bool :=
+  fun player =>
+    if player = first then action player
+    else if player = second then action player
+    else false
+
+/-- Some coordinate outside the distinguished pair quits. -/
+def quittingSomeOutsidePairQuits
+    (first second : ι) (action : ι → Bool) : Prop :=
+  ∃ player, player ≠ first ∧ player ≠ second ∧ action player = true
+
+/-- Boolean flag for a quitter outside the distinguished pair. -/
+noncomputable def quittingOutsidePairQuitFlag
+    (first second : ι) (action : ι → Bool) : Bool := by
+  classical
+  exact decide (quittingSomeOutsidePairQuits first second action)
+
+/-- Real indicator for a quitter outside the distinguished pair. -/
+def quittingOutsidePairQuitIndicator
+    (first second : ι) (action : ι → Bool) : ℝ :=
+  if quittingOutsidePairQuitFlag first second action = true then 1 else 0
+
+omit [Fintype ι] in
+/-- The keep-pair retraction moves exactly the actions with a quitter outside
+the pair. -/
+theorem quittingKeepPairAction_ne_iff
+    (first second : ι) (action : ι → Bool) :
+    quittingKeepPairAction first second action ≠ action ↔
+      quittingSomeOutsidePairQuits first second action := by
+  classical
+  constructor
+  · intro hmoved
+    by_contra houtside
+    apply hmoved
+    funext player
+    by_cases hfirst : player = first
+    · simp [quittingKeepPairAction, hfirst]
+    · by_cases hsecond : player = second
+      · simp [quittingKeepPairAction, hsecond]
+      · cases haction : action player with
+        | false => simp [quittingKeepPairAction, hfirst, hsecond]
+        | true =>
+            exact (houtside ⟨player, hfirst, hsecond, haction⟩).elim
+  · rintro ⟨player, hfirst, hsecond, hquit⟩ heq
+    have hcoordinate := congrFun heq player
+    simp [quittingKeepPairAction, hfirst, hsecond, hquit] at hcoordinate
+
+omit [Fintype ι] [DecidableEq ι] in
+theorem quittingOutsidePairQuitFlag_eq_true_iff
+    (first second : ι) (action : ι → Bool) :
+    quittingOutsidePairQuitFlag first second action = true ↔
+      quittingSomeOutsidePairQuits first second action := by
+  classical
+  simp [quittingOutsidePairQuitFlag]
+
+omit [Fintype ι] in
+theorem quittingSomeOutsidePairQuits_update_second_iff
+    (first second : ι) (action : ι → Bool) (secondAction : Bool) :
+    quittingSomeOutsidePairQuits first second
+        (Function.update action second secondAction) ↔
+      quittingSomeOutsidePairQuits first second action := by
+  constructor
+  · rintro ⟨player, hfirst, hsecond, hquit⟩
+    refine ⟨player, hfirst, hsecond, ?_⟩
+    simpa [Function.update_of_ne hsecond] using hquit
+  · rintro ⟨player, hfirst, hsecond, hquit⟩
+    refine ⟨player, hfirst, hsecond, ?_⟩
+    simpa [Function.update_of_ne hsecond] using hquit
+
+omit [Fintype ι] in
+/-- The outside-pair flag ignores either coordinate that the retraction
+keeps; this orientation is the one used when forcing `second` to quit. -/
+theorem quittingOutsidePairQuitFlag_ignores_second
+    (first second : ι) :
+    Ignores (A := fun _ : ι => Bool) second
+      (fun action => PMF.pure
+        (quittingOutsidePairQuitFlag first second action)) := by
+  intro action secondAction
+  apply congrArg PMF.pure
+  rw [Bool.eq_iff_iff,
+    quittingOutsidePairQuitFlag_eq_true_iff,
+    quittingOutsidePairQuitFlag_eq_true_iff]
+  exact quittingSomeOutsidePairQuits_update_second_iff
+    first second action secondAction
+
+/-- Changing `second`'s marginal does not change the probability of a quitter
+outside the distinguished pair. -/
+theorem expect_pmfPi_outsidePairQuits_update_invariant
+    (root : ι → PMF Bool) (first second : ι) (marginal : PMF Bool) :
+    expect (pmfPi (Function.update root second marginal))
+        (quittingOutsidePairQuitIndicator first second) =
+      expect (pmfPi root)
+        (quittingOutsidePairQuitIndicator first second) := by
+  have hbind := pmfPi_bind_ignores_coord
+    (A := fun _ : ι => Bool) root second marginal
+    (fun action => PMF.pure
+      (quittingOutsidePairQuitFlag first second action))
+    (quittingOutsidePairQuitFlag_ignores_second first second)
+  have hexpect := congrArg (fun distribution : PMF Bool =>
+    expect distribution (fun flag => if flag = true then (1 : ℝ) else 0))
+    hbind
+  change expect (pmfPi (Function.update root second marginal))
+      (fun action =>
+        if quittingOutsidePairQuitFlag first second action = true
+        then 1 else 0) =
+    expect (pmfPi root) (fun action =>
+      if quittingOutsidePairQuitFlag first second action = true
+      then 1 else 0)
+  simpa [expect_bind, expect_pure] using hexpect
+
+omit [Fintype ι] [DecidableEq ι] in
+/-- A quitter outside `{first, second}` is in particular an opponent of
+`first`. -/
+theorem quittingOutsidePairQuitIndicator_le_opponentQuitIndicator
+    (first second : ι) (action : ι → Bool) :
+    quittingOutsidePairQuitIndicator first second action ≤
+      quittingSomeOpponentQuitsIndicator first action := by
+  by_cases houtside :
+      quittingSomeOutsidePairQuits first second action
+  · have houtsideFlag :=
+      (quittingOutsidePairQuitFlag_eq_true_iff first second action).2 houtside
+    obtain ⟨player, hfirst, _hsecond, hquit⟩ := houtside
+    have hopponent : quittingSomeOpponentQuits first action :=
+      ⟨player, hfirst, hquit⟩
+    have hopponentFlag :=
+      (quittingOpponentQuitFlag_eq_true_iff first action).2 hopponent
+    simp [quittingOutsidePairQuitIndicator,
+      quittingSomeOpponentQuitsIndicator, houtsideFlag, hopponentFlag]
+  · have houtsideFlag :
+        quittingOutsidePairQuitFlag first second action ≠ true :=
+      fun h => houtside
+        ((quittingOutsidePairQuitFlag_eq_true_iff first second action).1 h)
+    cases hflag : quittingOutsidePairQuitFlag first second action
+    · unfold quittingOutsidePairQuitIndicator
+      rw [hflag]
+      simp only [Bool.false_eq_true, ↓reduceIte]
+      unfold quittingSomeOpponentQuitsIndicator
+      split_ifs <;> norm_num
+    · exact (houtsideFlag hflag).elim
+
+/-- The outside-pair probability after forcing `second` is bounded by the
+original one-stage probability that some opponent of `first` quits. -/
+theorem expect_pmfPi_outsidePairQuits_le_one_sub_continueMass
+    (root : ι → PMF Bool) (first second : ι) (marginal : PMF Bool) :
+    expect (pmfPi (Function.update root second marginal))
+        (quittingOutsidePairQuitIndicator first second) ≤
+      1 - quittingStationaryFixedOpponentsContinueMass root first := by
+  rw [expect_pmfPi_outsidePairQuits_update_invariant]
+  calc
+    expect (pmfPi root)
+          (quittingOutsidePairQuitIndicator first second) ≤
+        expect (pmfPi root)
+          (quittingSomeOpponentQuitsIndicator first) :=
+      expect_mono (pmfPi root) _ _
+        (quittingOutsidePairQuitIndicator_le_opponentQuitIndicator
+          first second)
+    _ = 1 - quittingStationaryFixedOpponentsContinueMass root first := by
+      have hmass := expect_pmfPi_someOpponentQuits_eq_one_sub_continueMass
+        root first (root first)
+      have hroot : Function.update root first (root first) = root := by
+        funext player
+        by_cases hp : player = first
+        · subst player
+          simp
+        · simp [Function.update_of_ne hp]
+      simpa [hroot, quittingStationaryFixedOpponentsContinueMass,
+        quittingFixedOpponentsContinueMass,
+        quittingStationaryContinueMass] using hmass
+
+/-- Keeping only `first` and a surely-quitting `second` pushes the original
+product law to the corresponding solo-root law. -/
+theorem map_pmfPi_update_pure_true_keepPair
+    (root : ι → PMF Bool) {first second : ι} (hne : second ≠ first) :
+    (pmfPi (Function.update root second (PMF.pure true))).map
+        (quittingKeepPairAction first second) =
+      pmfPi (Function.update
+        (quittingSoloStationaryRoot first (root first)) second
+        (PMF.pure true)) := by
+  have hpush := pmfPi_push_coordwise
+    (A := fun _ : ι => Bool) (B := fun _ : ι => Bool)
+    (Function.update root second (PMF.pure true))
+    (fun player action =>
+      if player = first then action
+      else if player = second then action
+      else false)
+  change
+    (pmfPi (Function.update root second (PMF.pure true))).map
+        (quittingKeepPairAction first second) =
+      pmfPi (fun player =>
+        ((Function.update root second (PMF.pure true)) player).map
+          (fun action =>
+            if player = first then action
+            else if player = second then action
+            else false)) at hpush
+  rw [hpush]
+  apply congrArg pmfPi
+  funext player
+  by_cases hfirst : player = first
+  · subst player
+    simp [quittingSoloStationaryRoot, Ne.symm hne]
+    exact PMF.map_id _
+  · by_cases hsecond : player = second
+    · subst player
+      simp [hfirst, quittingSoloStationaryRoot]
+      exact PMF.map_id _
+    · simp [hfirst, hsecond, quittingSoloStationaryRoot]
+      exact PMF.map_const _ _
+
+/-- Deleting every current hazard except `owner`'s changes another player's
+immediate-Quit payoff by at most `2M` times the current probability that some
+opponent of `owner` quits. -/
+theorem abs_quittingStationaryFixedOpponentsQuitValue_sub_solo_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) {owner who : ι} (hne : who ≠ owner)
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M) :
+    |quittingStationaryFixedOpponentsQuitValue reward root who -
+        quittingStationaryFixedOpponentsQuitValue reward
+          (quittingSoloStationaryRoot owner (root owner)) who| ≤
+      2 * M *
+        (1 - quittingStationaryFixedOpponentsContinueMass root owner) := by
+  let distribution :=
+    pmfPi (Function.update root who (PMF.pure true))
+  let retraction := quittingKeepPairAction owner who
+  let value : (ι → Bool) → ℝ := fun action =>
+    quittingRootPayoff reward (0 : Payoff ι) action who
+  have hvalue : ∀ action, |value action| ≤ M := by
+    intro action
+    dsimp only [value]
+    exact abs_quittingRootPayoff_le reward (0 : Payoff ι)
+      hreward (fun player => by simpa using hM) action who
+  have hmap : distribution.map retraction =
+      pmfPi (Function.update
+        (quittingSoloStationaryRoot owner (root owner)) who
+        (PMF.pure true)) := by
+    simpa [distribution, retraction] using
+      map_pmfPi_update_pure_true_keepPair root hne
+  have hmoved :
+      expect distribution (fun action =>
+          if retraction action ≠ action then 1 else 0) =
+        expect distribution
+          (quittingOutsidePairQuitIndicator owner who) := by
+    apply congrArg (expect distribution)
+    funext action
+    change
+      (if quittingKeepPairAction owner who action ≠ action then 1 else 0) =
+        (if quittingOutsidePairQuitFlag owner who action = true then 1 else 0)
+    by_cases houtside :
+        quittingSomeOutsidePairQuits owner who action
+    · have hmoved :=
+        (quittingKeepPairAction_ne_iff owner who action).2 houtside
+      have hflag :=
+        (quittingOutsidePairQuitFlag_eq_true_iff owner who action).2 houtside
+      simp [hmoved, hflag]
+    · have hmoved :
+          ¬quittingKeepPairAction owner who action ≠ action :=
+        fun h => houtside
+          ((quittingKeepPairAction_ne_iff owner who action).1 h)
+      have hflag :
+          quittingOutsidePairQuitFlag owner who action ≠ true :=
+        fun h => houtside
+          ((quittingOutsidePairQuitFlag_eq_true_iff owner who action).1 h)
+      simp [hmoved, hflag]
+  have hprob :
+      expect distribution
+          (quittingOutsidePairQuitIndicator owner who) ≤
+        1 - quittingStationaryFixedOpponentsContinueMass root owner := by
+    simpa [distribution] using
+      expect_pmfPi_outsidePairQuits_le_one_sub_continueMass
+        root owner who (PMF.pure true)
+  have hestimate := abs_expect_sub_expect_map_le_moved
+    distribution retraction value hM hvalue
+  calc
+    |quittingStationaryFixedOpponentsQuitValue reward root who -
+          quittingStationaryFixedOpponentsQuitValue reward
+            (quittingSoloStationaryRoot owner (root owner)) who| =
+        |expect distribution value -
+          expect (distribution.map retraction) value| := by
+      simp only [quittingStationaryFixedOpponentsQuitValue,
+        quittingFixedOpponentsQuitValue,
+        quittingRootAbsorbingContribution,
+        quittingRootExpectedPayoff, distribution, value]
+      rw [hmap]
+    _ ≤ 2 * M * expect distribution (fun action =>
+          if retraction action ≠ action then 1 else 0) := hestimate
+    _ = 2 * M * expect distribution
+          (quittingOutsidePairQuitIndicator owner who) := by rw [hmoved]
+    _ ≤ 2 * M *
+          (1 - quittingStationaryFixedOpponentsContinueMass root owner) :=
+      mul_le_mul_of_nonneg_left hprob (by positivity)
+
+/-- Tail-error form of the root-deletion estimate. -/
+theorem abs_quittingStationaryFixedOpponentsQuitValue_sub_solo_le_of_hazard
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) {owner who : ι} (hne : who ≠ owner)
+    {M η : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hhazard :
+      1 - quittingStationaryFixedOpponentsContinueMass root owner ≤ η) :
+    |quittingStationaryFixedOpponentsQuitValue reward root who -
+        quittingStationaryFixedOpponentsQuitValue reward
+          (quittingSoloStationaryRoot owner (root owner)) who| ≤
+      2 * M * η := by
+  calc
+    _ ≤ 2 * M *
+          (1 - quittingStationaryFixedOpponentsContinueMass root owner) :=
+      abs_quittingStationaryFixedOpponentsQuitValue_sub_solo_le
+        reward root hne hM hreward
+    _ ≤ 2 * M * η := mul_le_mul_of_nonneg_left hhazard (by positivity)
 
 /-- Terminal reward when `owner` is the unique quitter. -/
 def quittingSoloReward
@@ -352,6 +728,35 @@ theorem isεAsymptoticNash_soloStationary_of_tail_bounds
     · exact hsoloQuitUpper who hwho
     · exact le_add_of_nonneg_right herror
 
+/-- The exceptional fallback with root deletion discharged from the current
+opponent-hazard bound. -/
+theorem isεAsymptoticNash_soloStationary_of_tail_bounds_of_hazard
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (originalRoot : ι → PMF Bool) (tailValue : Payoff ι)
+    (owner : ι) {β M η : ℝ}
+    (hβ : 0 ≤ β) (hM : 0 ≤ M) (hη : 0 ≤ η)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hhazard :
+      1 - quittingStationaryFixedOpponentsContinueMass originalRoot owner ≤ η)
+    (hpositive : 0 < (originalRoot owner true).toReal)
+    (hconcentration : ∀ who,
+      |tailValue who - quittingSoloReward reward owner who| ≤ 2 * M * η)
+    (hneverNash : -M * η ≤ tailValue owner + β)
+    (hquitNash : ∀ who, who ≠ owner →
+      quittingStationaryFixedOpponentsQuitValue reward originalRoot who ≤
+        tailValue who + β) :
+    (quittingGame reward).IsεAsymptoticNash
+      (quittingTerminalPayoff reward) (β + 4 * M * η)
+      (quittingStationaryProfile reward
+        (quittingSoloStationaryRoot owner (originalRoot owner))) := by
+  apply isεAsymptoticNash_soloStationary_of_tail_bounds
+    reward originalRoot tailValue owner hβ hM hη hpositive
+      hconcentration hneverNash hquitNash
+  intro who hne
+  exact
+    abs_quittingStationaryFixedOpponentsQuitValue_sub_solo_le_of_hazard
+      reward originalRoot hne hM hreward hhazard
+
 /-- If the opponent-tail error tends to zero and positive owner hazards occur
 arbitrarily late, the stationary solo fallbacks can be selected with error
 arbitrarily close to `β`. -/
@@ -401,5 +806,41 @@ theorem exists_isεAsymptoticNash_soloStationary_of_tendsto_tail_bounds
   intro who deviation
   have herror' : β + 4 * M * η time ≤ β + ζ := by linarith
   exact (hnash who deviation).trans (add_le_add_right herror' _)
+
+/-- Limit selection with the root-deletion premise replaced by the semantic
+one-stage opponent-hazard bound. -/
+theorem exists_isεAsymptoticNash_soloStationary_of_tendsto_hazard_bounds
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (tailValue : ℕ → Payoff ι)
+    (owner : ι) (η : ℕ → ℝ) {β M : ℝ}
+    (hβ : 0 ≤ β) (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hη : ∀ time, 0 ≤ η time)
+    (hηzero : Tendsto η atTop (nhds 0))
+    (hhazard : ∀ time,
+      1 - quittingStationaryFixedOpponentsContinueMass
+        (roots time) owner ≤ η time)
+    (hpositiveLate : ∀ threshold,
+      ∃ time ≥ threshold, 0 < (roots time owner true).toReal)
+    (hconcentration : ∀ time who,
+      |tailValue time who - quittingSoloReward reward owner who| ≤
+        2 * M * η time)
+    (hneverNash : ∀ time,
+      -M * η time ≤ tailValue time owner + β)
+    (hquitNash : ∀ time who, who ≠ owner →
+      quittingStationaryFixedOpponentsQuitValue reward (roots time) who ≤
+        tailValue time who + β) :
+    ∀ ζ > 0, ∃ time,
+      (quittingGame reward).IsεAsymptoticNash
+        (quittingTerminalPayoff reward) (β + ζ)
+        (quittingStationaryProfile reward
+          (quittingSoloStationaryRoot owner (roots time owner))) := by
+  apply exists_isεAsymptoticNash_soloStationary_of_tendsto_tail_bounds
+    reward roots tailValue owner η hβ hM hη hηzero hpositiveLate
+      hconcentration hneverNash hquitNash
+  intro time who hne
+  exact
+    abs_quittingStationaryFixedOpponentsQuitValue_sub_solo_le_of_hazard
+      reward (roots time) hne hM hreward (hhazard time)
 
 end GameTheory
