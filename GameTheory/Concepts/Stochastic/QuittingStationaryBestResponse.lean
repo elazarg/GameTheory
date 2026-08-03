@@ -166,4 +166,75 @@ theorem isεAsymptoticNash_stationary_of_unilateralCap_le
   exact (quittingTerminalPayoff_update_stationary_le_unilateralCap
     reward root who deviation (hcontracts who)).trans (hcap who)
 
+/-- Under strict opponent contraction, the stationary unilateral cap is
+attained by an actual deterministic-time behavior deviation: either Quit
+immediately or Never quit. -/
+theorem exists_pureTimeBehaviorStrategy_terminalPayoff_eq_unilateralCap
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι)
+    (hcontracts :
+      quittingStationaryFixedOpponentsContinueMass root who < 1) :
+    ∃ choice : Option ℕ,
+      quittingTerminalPayoff reward
+          (Function.update (quittingStationaryProfile reward root) who
+            (quittingPureTimeBehaviorStrategy reward who choice)) who =
+        quittingStationaryUnilateralCap reward root who := by
+  let quitValue :=
+    quittingStationaryFixedOpponentsQuitValue reward root who
+  let continueReward :=
+    quittingStationaryFixedOpponentsContinueReward reward root who
+  let continueMass :=
+    quittingStationaryFixedOpponentsContinueMass root who
+  by_cases hnever : quitValue ≤
+      quittingStationaryNeverValue continueReward continueMass
+  · refine ⟨none, ?_⟩
+    rw [quittingTerminalPayoff_update_pureTimeBehaviorStrategy,
+      quittingProfileLiveRoot_stationary,
+      quittingRootSequencePureTimeTerminalValue_const
+        reward root who hcontracts]
+    change quittingStationaryNeverValue continueReward continueMass =
+      quittingStationarySelectedCap quitValue continueReward continueMass
+    exact (max_eq_right hnever).symm
+  · refine ⟨some 0, ?_⟩
+    rw [quittingTerminalPayoff_update_pureTimeBehaviorStrategy,
+      quittingProfileLiveRoot_stationary,
+      quittingRootSequencePureTimeTerminalValue_const
+        reward root who hcontracts]
+    change quittingStationaryPureTimeValue
+        quitValue continueReward continueMass 0 =
+      quittingStationarySelectedCap quitValue continueReward continueMass
+    rw [quittingStationaryPureTimeValue]
+    exact (max_eq_left (le_of_not_ge hnever)).symm
+
+/-- For a playerwise-contracting stationary root, the pointwise cap
+criterion is also necessary for terminal approximate Nash. -/
+theorem isεAsymptoticNash_stationary_iff_unilateralCap_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (ε : ℝ)
+    (hcontracts : ∀ who,
+      quittingStationaryFixedOpponentsContinueMass root who < 1) :
+    (quittingGame reward).IsεAsymptoticNash
+        (quittingTerminalPayoff reward) ε
+        (quittingStationaryProfile reward root) ↔
+      ∀ who,
+        quittingStationaryUnilateralCap reward root who ≤
+          quittingTerminalPayoff reward
+            (quittingStationaryProfile reward root) who + ε := by
+  constructor
+  · intro hnash who
+    obtain ⟨choice, hchoice⟩ :=
+      exists_pureTimeBehaviorStrategy_terminalPayoff_eq_unilateralCap
+        reward root who (hcontracts who)
+    calc
+      quittingStationaryUnilateralCap reward root who =
+          quittingTerminalPayoff reward
+            (Function.update (quittingStationaryProfile reward root) who
+              (quittingPureTimeBehaviorStrategy reward who choice)) who :=
+        hchoice.symm
+      _ ≤ quittingTerminalPayoff reward
+            (quittingStationaryProfile reward root) who + ε :=
+        hnash who (quittingPureTimeBehaviorStrategy reward who choice)
+  · exact isεAsymptoticNash_stationary_of_unilateralCap_le
+      reward root ε hcontracts
+
 end GameTheory
