@@ -1,6 +1,9 @@
 # Design record: the history carrier and `Hist.StartsAt`
 
-Status: **evaluated by prototype, not adopted.** Dated 2026-08-04.
+Status: **two candidates evaluated by prototype; neither adopted.** The
+first candidate was rejected for a stronger reason than originally recorded;
+a second, better candidate is identified but unpriced. Dated 2026-08-04,
+revised the same day after review.
 
 ## The question
 
@@ -11,117 +14,125 @@ StageRecord t = Fin t → State × JointAct
 Hist t        = StageRecord t × State
 ```
 
-— the record of `t` completed stages, plus the current state stored
-*separately*. Nothing at the type level links entry `i` to entry `i+1`, or
-the last entry to the current state. It is a deliberately loose carrier: the
-dynamics enter only through `histDist`, whose support is the genuine plays.
-
-Consequently `appendHist` (`PublicSuffixHistory.lean`)
+Appending (`PublicSuffixHistory.lean`) is
 
 ```lean
 appendHist base suffix = (Fin.append base.1 suffix.1, suffix.2)
 ```
 
-**discards `base.2`**, the base's current state: it appears neither in the
-result's record nor as the result's current state. `Hist.StartsAt`
-(`PublicTerminalChildDispatcher.lean`) supplies exactly that missing boundary
-state:
+which **discards `base.2`**, the base's current state. `Hist.StartsAt`
+(`PublicTerminalChildDispatcher.lean`) supplies exactly that missing state,
+and `suffix.StartsAt base.2` is threaded through the dispatcher lemmas.
 
-```lean
-StartsAt state h = match length with
-  | 0     => h.2 = state
-  | _ + 1 => (h.1 0).1 = state
-```
+## What is really being chosen
 
-`suffix.StartsAt base.2` is threaded through the dispatcher lemmas, where it
-does **two** jobs:
+At a seam, the base's terminal state and the suffix's initial state are **two
+copies of one semantic datum**. Any concatenation must drop one. The choice
+is *which*, and each choice makes one side of the API unconditional and the
+other side conditional:
 
-1. *recoverability* — without it `appendHist` is not injective in the base,
-   since two bases differing only in current state give the same append
-   (`terminalBase_eq_of_appendHist_eq` takes it on both sides); and
-2. *fixed-depth branch-cone disjointness*, which follows from (1) and is what
-   makes the terminal-child dispatcher well defined.
+| | production `appendHist` | candidate A `Path` |
+| --- | --- | --- |
+| drops | `base.2` | `suffix.1` |
+| prefix side | needs `StartsAt` (`terminalPrefix_appendHist`, `terminalBase_eq_of_appendHist_eq`) | **free** |
+| suffix side | **free** (`terminalSuffix_appendHist`, `appendHist_injective`) | needs the boundary predicate; injectivity in the suffix *fails* |
 
-The question evaluated here: would a different carrier remove this?
+So candidate A does not eliminate the boundary predicate. It **relocates**
+it from the prefix side to the suffix side.
 
-## The candidate
+The suffix side is not idle: `appendHist_injective`
+(`PublicCausalStoppingEventRatio.lean:395`) is unconditional and drives the
+`PMF.map` argument in `histDistAfter_apply_appendHist`. Losing it is a real
+cost, and the first version of this record did not price it.
 
-```lean
-Path S A t = S × (Fin t → A × S)
-```
+## Candidate A: `Path t = S × (Fin t → A × S)`
 
-an initial state followed by `t` `(action, resulting state)` pairs, with the
-current state *computed* rather than stored.
+Prototype: `experiments/PathCarrierPrototype.lean` (untracked, compiles
+clean).
 
-## Prototype
-
-`experiments/PathCarrierPrototype.lean` (untracked; run with
-`lake env lean`). It compiles clean. Results:
-
-**(1) Prefix recovery becomes unconditional — confirmed.**
+Genuine result:
 
 ```lean
 theorem take_append_left (base : Path S A m) (suffix : Path S A n) :
     take (append base suffix) ⟨m, by omega⟩ = base
 ```
 
-No boundary hypothesis, four lines of proof. `append_left_injective` follows
-immediately, also unconditionally — so branch-cone disjointness no longer
-needs `StartsAt`.
+unconditional, hence `append_left_injective` and cone disjointness likewise.
 
-**(2) Consecutive-stage continuity becomes structural — confirmed, and this
-is a stronger property than mere removal of redundancy.** `stateAt` assigns
-exactly one state per position, so the source state of stage `i+1` *is* the
-result state of stage `i` by construction. A chaining hypothesis is not
-merely unnecessary, it is inexpressible.
-
-**(3) A boundary predicate survives — confirmed.** With a nonempty suffix,
-`current (append base suffix) = current suffix` needs no hypothesis. With an
-*empty* suffix the append's current state is the base's, so the equation
-genuinely requires `suffix.1 = current base`. Semantic composition still
-needs a predicate; only the recoverability role is eliminated.
-
-**(4) `StartsAt` becomes a theorem, not an obligation.**
+Measured cost, which the first version of this record omitted:
 
 ```lean
-theorem startsAt_toHist (h : Path S A t) : Hist.StartsAt h.1 (toHist h)
+theorem append_not_injective_in_suffix :
+    ∃ (base s₁ s₂ : Path Bool Unit 0), s₁ ≠ s₂ ∧ append base s₁ = append base s₂
 ```
 
-by `rfl` in both cases, where `toHist` denotes a `Path` as a `Hist`. The
-image of `toHist` is exactly the chained histories, so the candidate carrier
-is the well-formed part of the production one.
+Two suffixes differing only in their dropped initial state have the same
+append. The dual of production's `appendHist_injective` is therefore false
+here.
 
-**(5) Transport cost — measured, and it is the *length* dimension only.** The
-single proof that did not go through first time was `current_append_zero`,
-needing a case split on `m` plus an explicit `Fin.castAdd` / `Fin.append_left`
-rewrite, because `m + 0` and `Fin.append` do not reduce definitionally. **No
-`HEq` arose anywhere.** The prototype deliberately does *not* index `Path` by
-start/end state; that variant would add a second, more pervasive transport
-dimension and was not measured.
+**Verdict: rejected**, and more decisively than first recorded. At nearly
+every call site the relocation is a wash — the splice proofs
+(`FixedDepthAdaptivePotentialSplice.lean:73-75`) use the prefix lemma with
+`hstart` and the suffix lemma without; under candidate A they would use the
+same hypothesis at the other lemma. The one clean win, unconditional cone
+disjointness, arrives at sites that already have `hstart` in scope, because
+the dispatcher only ever decomposes genuine plays.
 
-## Verdict
+## Candidate B: split the two roles
 
-The design works and its benefit is real but bounded: recovery and cone
-disjointness become unconditional, semantic composition still needs a
-boundary predicate, and continuity becomes structural. The cost is
-translating every API that consumes a directly indexed `(state, action)`
-record — `Basic.lean` and the whole `Public*` layer.
+Histories stay rooted; continuations become **unrooted** — `Cont n = Fin n →
+A × S`, with the start state supplied by context. Then `appendCont` uses the
+base's terminal state as the source state of the continuation's first stage,
+so **nothing is dropped**:
 
-**Not adopted.** The benefit does not justify changing the spine on its own.
-It should be revisited if the public-history layer is extracted to `Math`
-(see the `Stochastic → Math` review), since that migration would touch the
-same APIs anyway and the two changes share their cost.
+```lean
+theorem baseState_appendCont (base : Hist S A m) (c : Cont S A (n+1)) :
+    ((appendCont base c).1 (Fin.natAdd m ⟨0, _⟩)).1 = base.2
+theorem histTake_appendCont (base : Hist S A m) (c : Cont S A n) (i : Fin m) :
+    (appendCont base c).1 (Fin.castAdd n i) = base.1 i
+theorem appendCont_injective (base : Hist S A m) :
+    Function.Injective (appendCont base : Cont S A n → Hist S A (m + n))
+```
 
-## Corrections folded in
+All unconditional, all verified in the prototype. Both sides are recoverable
+and the boundary predicate **genuinely disappears** rather than migrating,
+because a continuation cannot carry a competing copy of the seam state.
 
-Three claims made during the analysis were wrong and are corrected here:
+Cost, unpriced: suffixes stop being the same type as histories, so every
+`histDistAfter`-shaped signature changes. This is the only design on the
+table that delivers what candidate A was hoped to deliver, and it is the one
+to price if this is reopened.
 
-* "Concatenation cannot be type-correct" — false. `appendHist` is perfectly
-  type-correct; it cannot enforce semantic boundary compatibility *through
-  its type*.
-* The candidate representation was described as merely removing redundancy.
-  It does more: it makes continuity structural, per (2).
-* `terminalSuffixLE_appendHist_heq` was cited as evidence that a stricter
-  carrier would cost `HEq` transport. It is evidence of *arithmetic-index*
-  transport caused by lengths, and says nothing about state indexing. The
-  prototype confirms the length dimension exists and produced no `HEq` at all.
+## Corrections to the first version of this record
+
+Five claims were wrong; all are corrected above.
+
+1. **"The candidate is the well-formed part of the production carrier."**
+   False. The two carriers are **isomorphic** — `Hist t` stores `t+1` states
+   and `t` actions, exactly as `Path t` does, and no state appears twice, so
+   there is no chaining condition a `Hist` could violate. Verified by
+   constructing the inverse:
+   `theorem toHist_ofHist (h : Hist S A t) : toHist (ofHist h) = h`.
+2. **"Continuity becomes structural" is a benefit of the candidate.** It is
+   equally true of the production carrier, for the same reason, so it is not
+   a differentiator at all.
+3. **"`Hist` stores the current state redundantly."** It does not: the record
+   covers positions `0 … t-1` and `h.2` is position `t`.
+4. **"The benefit is that the boundary predicate is removed."** For candidate
+   A it is relocated, not removed. Only candidate B removes it.
+5. **"Concatenation cannot be type-correct."** `appendHist` is perfectly
+   type-correct; it cannot enforce boundary compatibility *through its type*.
+
+A sixth correction from the previous revision stands: the production
+`terminalSuffixLE_appendHist_heq` is evidence of *arithmetic-index* transport
+from length subtraction, not of state-indexing friction. The prototype
+reproduced exactly that length-dimension transport (`current_append_zero`
+needed a case split plus explicit `Fin.castAdd` / `Fin.append_left`) and
+produced **no `HEq` at all**.
+
+## Provenance
+
+The dual-side accounting, the isomorphism correction, and candidate B are due
+to a review of the first version of this record. The prototype was extended
+to verify each of them rather than accept them on argument; every claim above
+that is stated as a Lean theorem compiles.
