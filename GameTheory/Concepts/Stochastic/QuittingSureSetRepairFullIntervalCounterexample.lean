@@ -21,7 +21,9 @@ exploitability at least `1/3`.
 
 Every direct pure First set also fails.  These are architecture
 counterexamples only: no claim is made about optimized positive debt or
-about arbitrary stationary, time-inhomogeneous, or behavioral profiles.
+about arbitrary time-inhomogeneous or behavioral profiles.  Indeed the final
+section gives an exact mixed stationary repair with one sure quitter and two
+nontrivial hazard coordinates, sharply delimiting the negative result.
 -/
 
 set_option autoImplicit false
@@ -504,6 +506,7 @@ theorem not_isεAsymptoticNash_directPureSet
       {0} (by simp) 1 ε
     norm_num [quittingSetReward, reward]
     linarith
+
   · subst S
     apply not_isεAsymptoticNash_pureSetRoot_of_quitNow_gain
       {1} (by simp) 0 ε
@@ -534,6 +537,158 @@ theorem not_isεAsymptoticNash_directPureSet
       {0, 1, 2} (by simp) 0 (by simp) ε
     norm_num [quittingSetReward, reward]
     linarith
+
+/-! ## Scope calibration: an exact mixed stationary repair -/
+
+@[simp] theorem expect_hazardCoin
+    (p : ℝ) (hp0 : 0 ≤ p) (hp1 : p ≤ 1) (f : Bool → ℝ) :
+    expect (quittingHazardCoin p hp0 hp1) f =
+      (1 - p) * f false + p * f true := by
+  rw [expect_eq_sum, Fintype.sum_bool]
+  simp
+  ring
+
+def halfCoin : PMF Bool :=
+  quittingHazardCoin (1 / 2) (by norm_num) (by norm_num)
+
+def quarterCoin : PMF Bool :=
+  quittingHazardCoin (1 / 4) (by norm_num) (by norm_num)
+
+/-- Player-zero quits with probability `1/2`, player one quits surely, and
+player two quits with probability `1/4`. -/
+def stationaryRepairRoot : Player → PMF Bool :=
+  ![halfCoin, PMF.pure true, quarterCoin]
+
+def stationaryRepairValue : Payoff Player := ![1, 3 / 4, 1 / 2]
+def stationaryRepairContinueReward : Payoff Player := ![1, 1 / 4, 1 / 2]
+def stationaryRepairOpponentContinueMass : Payoff Player := ![0, 3 / 8, 0]
+
+theorem stationaryRepairRoot_hasSureQuitter :
+    QuittingRootHasSureQuitter stationaryRepairRoot := by
+  exact ⟨1, by simp [stationaryRepairRoot]⟩
+
+@[simp] theorem stationaryRepairRoot_continueMass :
+    quittingStationaryContinueMass stationaryRepairRoot = 0 := by
+  change ((pmfPi stationaryRepairRoot)
+    (fun _ : Player ↦ false)).toReal = 0
+  rw [(quittingRootHasSureQuitter_iff_allContinue_mass_zero
+    stationaryRepairRoot).mp stationaryRepairRoot_hasSureQuitter]
+  simp
+
+theorem stationaryRepairRoot_absorbingContribution (who : Player) :
+    quittingRootAbsorbingContribution reward stationaryRepairRoot who =
+      stationaryRepairValue who := by
+  unfold quittingRootAbsorbingContribution quittingRootExpectedPayoff
+  rw [expect_pmfPi_fin3_bool]
+  fin_cases who <;>
+    simp [stationaryRepairRoot, halfCoin, quarterCoin,
+      expect_hazardCoin,
+      quittingRootPayoff, stationaryRepairValue, reward] <;>
+    norm_num
+
+theorem stationaryRepairRoot_terminalPayoff (who : Player) :
+    quittingTerminalPayoff reward
+        (quittingStationaryProfile reward stationaryRepairRoot) who =
+      stationaryRepairValue who := by
+  rw [quittingTerminalPayoff_stationary_eq_absorbingContribution_div]
+  · rw [stationaryRepairRoot_absorbingContribution,
+      stationaryRepairRoot_continueMass]
+    norm_num
+  · rw [stationaryRepairRoot_continueMass]
+    norm_num
+
+theorem stationaryRepairRoot_fixedOpponentsQuitValue (who : Player) :
+    quittingStationaryFixedOpponentsQuitValue reward
+        stationaryRepairRoot who =
+      stationaryRepairValue who := by
+  unfold quittingStationaryFixedOpponentsQuitValue
+    quittingFixedOpponentsQuitValue quittingRootAbsorbingContribution
+    quittingRootExpectedPayoff
+  rw [expect_pmfPi_fin3_bool]
+  fin_cases who <;>
+    simp [stationaryRepairRoot, halfCoin, quarterCoin,
+      expect_hazardCoin, quittingRootPayoff,
+      stationaryRepairValue, reward] <;>
+    norm_num
+
+theorem stationaryRepairRoot_fixedOpponentsContinueReward
+    (who : Player) :
+    quittingStationaryFixedOpponentsContinueReward reward
+        stationaryRepairRoot who =
+      stationaryRepairContinueReward who := by
+  unfold quittingStationaryFixedOpponentsContinueReward
+    quittingFixedOpponentsContinueReward quittingRootAbsorbingContribution
+    quittingRootExpectedPayoff
+  rw [expect_pmfPi_fin3_bool]
+  fin_cases who <;>
+    simp [stationaryRepairRoot, halfCoin, quarterCoin,
+      expect_hazardCoin, quittingRootPayoff,
+      stationaryRepairContinueReward, reward] <;>
+    norm_num
+
+theorem stationaryRepairRoot_fixedOpponentsContinueMass
+    (who : Player) :
+    quittingStationaryFixedOpponentsContinueMass
+        stationaryRepairRoot who =
+      stationaryRepairOpponentContinueMass who := by
+  unfold quittingStationaryFixedOpponentsContinueMass
+    quittingFixedOpponentsContinueMass quittingStationaryContinueMass
+  rw [pmfPi_apply, Fin.prod_univ_three]
+  fin_cases who <;>
+    simp [stationaryRepairRoot, halfCoin, quarterCoin,
+      stationaryRepairOpponentContinueMass,
+      quittingAllContinueAction] <;>
+    norm_num
+
+theorem stationaryRepairRoot_unilateralCap (who : Player) :
+    quittingStationaryUnilateralCap reward stationaryRepairRoot who =
+      stationaryRepairValue who := by
+  unfold quittingStationaryUnilateralCap quittingStationarySelectedCap
+    quittingStationaryNeverValue
+  rw [stationaryRepairRoot_fixedOpponentsQuitValue,
+    stationaryRepairRoot_fixedOpponentsContinueReward,
+    stationaryRepairRoot_fixedOpponentsContinueMass]
+  fin_cases who <;>
+    norm_num [stationaryRepairValue, stationaryRepairContinueReward,
+      stationaryRepairOpponentContinueMass]
+
+theorem stationaryRepairRoot_fixedOpponents_contracts (who : Player) :
+    quittingStationaryFixedOpponentsContinueMass
+        stationaryRepairRoot who < 1 := by
+  rw [stationaryRepairRoot_fixedOpponentsContinueMass]
+  fin_cases who <;>
+    norm_num [stationaryRepairOpponentContinueMass]
+
+/-- The mixed root is an exact terminal Nash equilibrium against arbitrary
+behavioral unilateral deviations. -/
+theorem stationaryRepairRoot_isNash :
+    (quittingGame reward).IsεAsymptoticNash
+      (quittingTerminalPayoff reward) 0
+      (quittingStationaryProfile reward stationaryRepairRoot) := by
+  apply isεAsymptoticNash_stationary_of_unilateralCap_le
+  · exact stationaryRepairRoot_fixedOpponents_contracts
+  · intro who
+    rw [stationaryRepairRoot_unilateralCap,
+      stationaryRepairRoot_terminalPayoff]
+    norm_num
+
+/-- Hence `(1,3/4,1/2)` is an exact stationary uniform-equilibrium payoff.
+The counterexample separates the narrower static repair grammar; it does not
+force a dynamic or memory-bearing architecture. -/
+theorem stationaryRepairValue_isUniformEquilibriumPayoff :
+    (quittingGame reward).IsUniformEquilibriumPayoff none
+      stationaryRepairValue := by
+  have huniform :=
+    quittingGame_isUniformEquilibriumPayoff_of_terminalNash_exact
+      reward (quittingStationaryProfile reward stationaryRepairRoot)
+      stationaryRepairRoot_isNash
+  have hpayoff : quittingTerminalPayoff reward
+      (quittingStationaryProfile reward stationaryRepairRoot) =
+        stationaryRepairValue := by
+    funext who
+    exact stationaryRepairRoot_terminalPayoff who
+  rw [hpayoff] at huniform
+  exact huniform
 
 end QuittingSureSetRepairFullIntervalCounterexample
 
