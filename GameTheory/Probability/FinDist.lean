@@ -1054,12 +1054,42 @@ def pi (μ : ∀ i, FinDist (A i)) : FinDist (∀ i, A i) :=
       exact hs (Finset.prod_eq_zero (Finset.mem_univ i) hz)
     exact ⟨fun i => ⟨s i, hcoord i⟩, rfl⟩⟩
 
+/-- Independent product of a `Fin`-indexed family, assembled in increasing
+coordinate order. -/
+def piFin : {n : ℕ} → {A : Fin n → Type*} →
+    ((i : Fin n) → FinDist (A i)) → FinDist ((i : Fin n) → A i)
+  | 0, _, _ => pure fun i => Fin.elim0 i
+  | _ + 1, A, μ =>
+    map (Fin.consEquiv A)
+      (product (μ 0) (piFin fun i => μ i.succ))
+
 @[simp]
 theorem prob_pi (μ : ∀ i, FinDist (A i)) (s : ∀ i, A i) :
     (pi μ).prob s = ∏ i, (μ i).prob (s i) := by
   show (∏ i, (μ i).toPMF (s i)).toReal = _
   rw [ENNReal.toReal_prod]
   rfl
+
+/-- The explicit ordered product agrees with the finite independent product. -/
+theorem piFin_eq_pi : ∀ {n : ℕ} {A : Fin n → Type*}
+    (μ : (i : Fin n) → FinDist (A i)), piFin μ = pi μ
+  | 0, A, μ => by
+    classical
+    apply ext_of_prob
+    intro s
+    have hs : s = fun i => Fin.elim0 i := funext fun i => Fin.elim0 i
+    subst s
+    rw [piFin, prob_pure_eq_ite, prob_pi]
+    simp
+  | n + 1, A, μ => by
+    classical
+    let e : A 0 × ((i : Fin n) → A i.succ) ≃ ((i : Fin (n + 1)) → A i) := Fin.consEquiv A
+    apply ext_of_prob
+    intro s
+    conv_lhs => rw [show s = e (e.symm s) from (e.apply_symm_apply s).symm]
+    rw [piFin, prob_map_of_injective e e.injective, prob_product,
+      piFin_eq_pi, prob_pi, prob_pi]
+    simpa [e, Fin.tail] using (Fin.prod_univ_succ fun i => (μ i).prob (s i)).symm
 
 /-- An independent draw lands on a tuple exactly when every coordinate is
 possible for its own factor. -/
