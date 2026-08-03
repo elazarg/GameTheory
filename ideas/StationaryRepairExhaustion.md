@@ -19,7 +19,7 @@
 | --- | --- | --- | --- | --- |
 | SR1 | For every stationary product profile, the full-rate unilateral cap is the exact supremum over arbitrary behavioral deviations. Its pointwise cap inequalities are equivalent, for every error, to terminal approximate Nash. | `PROVED` | `M+L+C` | `QuittingFullRateStationaryVerifier`. Verification of supplied stationary data; no root construction or search. |
 | SR2a | Positive exact dynamic debt for a fixed owner yields either that owner's solo payoff as a uniform-equilibrium payoff or a universal joining obstruction at every positive owner hazard. | `PROVED` | `M+L+C` | E39 and `QuittingOwnerSoloCertification`. |
-| SR2b | Ownerwise assembly gives either some solo uniform payoff or the universal joining obstruction for every positive-debt owner in every admissible finite chain. | `PROVED` | `M+X` | E39's experiment extension; not E49, which is the two-ended compactification. |
+| SR2b | Ownerwise assembly gives either some solo uniform payoff or the universal joining obstruction for every positive-debt owner in every admissible finite chain. | `PROVED` | `M+X` | E39's experiment extension; not E50, which is the two-ended compactification. |
 | SR3a | A universal constant-rate joining obstruction yields a strict stagewise joiner at every positive date of every owner-hazard sequence. | `PROVED` | `M+X` | E39's scalar transfer kernel. It does not itself prove a profitable global deviation. |
 | SR3b | Every exact time-varying owner-solo terminal equilibrium induces a certifying constant owner hazard. | `OPEN` | `I` | Would make the universal joining obstruction exhaustive over the full owner-solo behavior class; the global payoff comparison is missing. |
 | SR4 | First scale/direction coordinates and the singleton-reward direction-barycenter estimate describe stationary payoffs to first order at zero total hazard. | `PROVED` | `M+X` | E44--E45. No cap continuity, Nash transfer, or hierarchical-scale completeness follows. |
@@ -117,7 +117,7 @@ positive-debt owner --> solo payoff or universal joining obstruction [L, E39]
 - `QuittingTerminalUniformization` and
   `QuittingTerminalUniformPayoffSelection`: semantic consumer of the
   zero-infimum branch.
-- E49 is deliberately absent from this lane: it is
+- E50 is deliberately absent from this lane: it is
   `TwoEndedDynamicDebtCompactification.lean` and belongs to the
   positive-plateau bridge/holonomy producer.
 
@@ -219,6 +219,6 @@ strategy class by a positive gap.
 
 The lanes meet only through a producer: E39 can suggest which stationary
 faces to search first, while SR6 certifies whether all stationary faces have
-actually been exhausted. E49 does not belong to this stationary assembly; it
+actually been exhausted. E50 does not belong to this stationary assembly; it
 retains the separate forward and reverse ends of optimized exact-D chains for
 the P0 boundary/holonomy problem.
