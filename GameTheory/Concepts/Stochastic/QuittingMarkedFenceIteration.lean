@@ -267,4 +267,176 @@ theorem exists_goodBoundary_or_activeNegativeTransfer_of_finiteExactChain
     exact quittingFirstOpponent_quitProbability_pos_of_rawWeight_pos
       roots owner start (cutoff - start) mark j hraw hmarkBad.2.1
 
+/-! ## Finite player-flag iteration -/
+
+/-- Abstract finite-label walk lemma.  If every nongood state has a next
+state, then within `card ι` transitions the walk either sees a good state or
+repeats a label.  The constructed walk is proof-local; this theorem does not
+install a global successor selector. -/
+theorem exists_finiteLabelWalk_good_or_repeat
+    {State : Type*} (label : State → ι)
+    (Good : State → Prop) (Next : State → State → Prop)
+    (hstep : ∀ state, Good state ∨ ∃ next, Next state next)
+    (initial : State) :
+    ∃ walk : ℕ → State,
+      walk 0 = initial ∧
+      (∀ n, n < Fintype.card ι → ¬Good (walk n) →
+        Next (walk n) (walk (n + 1))) ∧
+      ((∃ n, n ≤ Fintype.card ι ∧ Good (walk n)) ∨
+        ∃ m n, m ≤ Fintype.card ι ∧ n ≤ Fintype.card ι ∧
+          m ≠ n ∧ label (walk m) = label (walk n)) := by
+  classical
+  have hnext (state : State) (hnotGood : ¬Good state) :
+      ∃ next, Next state next := by
+    rcases hstep state with hgood | hnext
+    · exact (hnotGood hgood).elim
+    · exact hnext
+  let advance : State → State := fun state ↦
+    if hgood : Good state then state else Classical.choose (hnext state hgood)
+  have hadvance (state : State) (hnotGood : ¬Good state) :
+      Next state (advance state) := by
+    simp only [advance, dif_neg hnotGood]
+    exact Classical.choose_spec (hnext state hnotGood)
+  let walk : ℕ → State := fun n ↦ advance^[n] initial
+  refine ⟨walk, ?_, ?_, ?_⟩
+  · simp [walk]
+  · intro n hn hnotGood
+    have hnotGood' : ¬Good (advance^[n] initial) := by
+      simpa only [walk] using hnotGood
+    change Next (advance^[n] initial) (advance^[n + 1] initial)
+    rw [Function.iterate_succ_apply']
+    exact hadvance (advance^[n] initial) hnotGood'
+  · by_cases hgood : ∃ n, n ≤ Fintype.card ι ∧ Good (walk n)
+    · exact Or.inl hgood
+    · right
+      let labelAt : Fin (Fintype.card ι + 1) → ι :=
+        fun n ↦ label (walk n)
+      have hcard : Fintype.card ι <
+          Fintype.card (Fin (Fintype.card ι + 1)) := by simp
+      obtain ⟨m, n, hmn, hlabel⟩ :=
+        Fintype.exists_ne_map_eq_of_card_lt labelAt hcard
+      refine ⟨(m : ℕ), (n : ℕ), Nat.le_of_lt_succ m.isLt,
+        Nat.le_of_lt_succ n.isLt, ?_, ?_⟩
+      · intro heq
+        exact hmn (Fin.ext heq)
+      · simpa [labelAt] using hlabel
+
+/-- A player-marked negative suffix of one fixed finite chain. -/
+structure QuittingNegativeFlagState
+    (value : ℕ → Payoff ι) (cutoff : ℕ) (θ : ℝ) where
+  owner : ι
+  time : ℕ
+  time_le_cutoff : time ≤ cutoff
+  negative : value time owner ≤ -θ
+
+/-- The current negative flag has a concrete positive-weight good-boundary
+mark in its actual owner-deleted suffix packet. -/
+def QuittingNegativeFlagState.HasGoodBoundary
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (cutoff : ℕ) (θ : ℝ)
+    (state : QuittingNegativeFlagState value cutoff θ) : Prop :=
+  ∃ mark : QuittingFirstOpponentMark ι (cutoff - state.time),
+    0 < quittingFirstOpponentRawWeight roots state.owner state.time
+        (cutoff - state.time) mark ∧
+      QuittingMarkedFencePacket.IsGoodBoundary θ
+        (quittingFirstOpponentOwnerReward reward state.owner)
+        (quittingFirstOpponentQuitters state.owner)
+        (quittingFirstOpponentValue value state.time) mark
+
+/-- One actual new-negative flag transfer.  It retains the full marked joint
+action, advances to exactly its displayed suffix date, and records strict
+activity of the new owner at that root. -/
+def QuittingNegativeFlagState.IsActualTransfer
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (cutoff : ℕ) (θ : ℝ)
+    (source target : QuittingNegativeFlagState value cutoff θ) : Prop :=
+  ∃ mark : QuittingFirstOpponentMark ι (cutoff - source.time),
+    target.time = source.time + mark.1 ∧
+    0 < quittingFirstOpponentRawWeight roots source.owner source.time
+        (cutoff - source.time) mark ∧
+    QuittingMarkedFencePacket.IsNewNegativeOwner θ
+      (quittingFirstOpponentOwnerReward reward source.owner)
+      (quittingFirstOpponentQuitters source.owner)
+      (quittingFirstOpponentValue value source.time) target.owner mark ∧
+    0 < (roots target.time target.owner true).toReal
+
+/-- Every negative flag on an arbitrary fixed-cutoff exact chain either has
+a concrete good boundary or admits one actual active negative transfer on
+the same chain. -/
+theorem QuittingNegativeFlagState.hasGoodBoundary_or_exists_actualTransfer
+    [Nontrivial ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (cutoff : ℕ) (θ M : ℝ)
+    (hterminal : value cutoff = 0)
+    (hpolicy : ∀ time, time < cutoff →
+      value time = quittingRootSuccessorPayoff reward
+        (value (time + 1)) (roots time))
+    (hnash : ∀ time, time < cutoff →
+      IsεQuittingRootNash reward (value (time + 1)) 0 (roots time))
+    (hθ : 0 < θ) (hM : 0 ≤ M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (state : QuittingNegativeFlagState value cutoff θ) :
+    state.HasGoodBoundary reward roots value cutoff θ ∨
+      ∃ next, state.IsActualTransfer reward roots value cutoff θ next := by
+  rcases exists_goodBoundary_or_activeNegativeTransfer_of_finiteExactChain
+    reward roots value state.owner cutoff state.time θ M
+      state.time_le_cutoff hterminal hpolicy hnash hθ hM hreward
+        state.negative with hgood | htransfer
+  · exact Or.inl hgood
+  · right
+    obtain ⟨j, mark, hjne, hraw, hmarked, hactive⟩ := htransfer
+    have htimeLe : state.time + (mark.1 : ℕ) ≤ cutoff := by
+      have hoffset := mark.1.isLt
+      omega
+    let next : QuittingNegativeFlagState value cutoff θ :=
+      { owner := j
+        time := state.time + mark.1
+        time_le_cutoff := htimeLe
+        negative := hmarked.2.2 }
+    refine ⟨next, mark, rfl, hraw, hmarked, ?_⟩
+    exact hactive
+
+/-- **Finite actual flag iteration.**  Starting from any negative flag on an
+arbitrary exact fixed-cutoff chain, there is a walk of actual supported
+suffix transfers such that within at most `card ι` transfers either a
+concrete good-boundary packet is reached or a player label repeats.
+
+The repeat is only a player-name repeat.  No equality or recurrence of
+payoff states, product roots, or charts is asserted. -/
+theorem exists_finiteActualNegativeFlagWalk_good_or_repeatedOwner
+    [Nontrivial ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (cutoff : ℕ) (θ M : ℝ)
+    (hterminal : value cutoff = 0)
+    (hpolicy : ∀ time, time < cutoff →
+      value time = quittingRootSuccessorPayoff reward
+        (value (time + 1)) (roots time))
+    (hnash : ∀ time, time < cutoff →
+      IsεQuittingRootNash reward (value (time + 1)) 0 (roots time))
+    (hθ : 0 < θ) (hM : 0 ≤ M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (initial : QuittingNegativeFlagState value cutoff θ) :
+    ∃ walk : ℕ → QuittingNegativeFlagState value cutoff θ,
+      walk 0 = initial ∧
+      (∀ n, n < Fintype.card ι →
+        ¬(walk n).HasGoodBoundary reward roots value cutoff θ →
+        (walk n).IsActualTransfer reward roots value cutoff θ
+          (walk (n + 1))) ∧
+      ((∃ n, n ≤ Fintype.card ι ∧
+          (walk n).HasGoodBoundary reward roots value cutoff θ) ∨
+        ∃ m n, m ≤ Fintype.card ι ∧ n ≤ Fintype.card ι ∧
+          m ≠ n ∧ (walk m).owner = (walk n).owner) := by
+  apply exists_finiteLabelWalk_good_or_repeat
+    (fun state : QuittingNegativeFlagState value cutoff θ ↦ state.owner)
+    (fun state ↦ state.HasGoodBoundary reward roots value cutoff θ)
+    (fun source target ↦
+      source.IsActualTransfer reward roots value cutoff θ target)
+  · intro state
+    exact state.hasGoodBoundary_or_exists_actualTransfer reward roots value
+      cutoff θ M hterminal hpolicy hnash hθ hM hreward
+
 end GameTheory
