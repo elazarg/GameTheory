@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.QuittingFiniteNashBellmanMinimizer
 import GameTheory.Concepts.Stochastic.QuittingExceptionalTailLimits
+import GameTheory.Concepts.Stochastic.QuittingMarkedTimeAdvance
 
 /-!
 # Monotonicity of minimum finite-chain debt
@@ -30,6 +31,19 @@ namespace GameTheory
 open Math.Probability Math.ProbabilityMassFunction
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
+/-- If every opponent of `owner` continues with probability one, each fixed
+opponent's Quit probability is zero. -/
+theorem quittingProbability_eq_zero_of_fixedOpponentsContinueMass_eq_one
+    (root : ι → PMF Bool) (owner other : ι) (hne : other ≠ owner)
+    (hmass : quittingStationaryContinueMass
+      (Function.update root owner (PMF.pure false)) = 1) :
+    (root other true).toReal = 0 := by
+  have hle := quittingProbability_le_opponentAbsorptionMass
+    root (marked := other) (who := owner) hne
+  unfold quittingRootOpponentAbsorptionMass quittingRootAbsorptionMass at hle
+  rw [hmass] at hle
+  exact le_antisymm (by linarith) ENNReal.toReal_nonneg
 
 /-- The first point of a finite chain, packaged in the canonical compact
 box. -/
@@ -348,6 +362,36 @@ theorem quittingFixedOpponentsContinueMass_prepend_eq_one_of_minDebt_plateau
         reward cutoff who hdebt hlt
     rw [hplateau] at hstrict
     exact (lt_irrefl _ hstrict).elim
+
+/-- On a minimum-debt plateau, every opponent of a positive-debt player has
+zero Quit probability at the prepended predecessor root.  Thus any residual
+activity there is confined to the debt owner itself. -/
+theorem quittingProbability_prepend_eq_zero_of_minDebt_plateau
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ)
+    (hplateau :
+      quittingFiniteZeroBoundaryNashBellmanMinDebt reward (cutoff + 1) =
+        quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff)
+    (owner : ι)
+    (hdebt : 0 < quittingFiniteNashBellmanPathPlayerDebt reward cutoff
+      (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff) owner)
+    (other : ι) (hne : other ≠ owner) :
+    ((quittingFiniteNashBellmanPathRoots (cutoff + 1)
+      (quittingFiniteNashBellmanPathPrepend reward cutoff
+        (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff)
+        (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer_mem reward cutoff)))
+      0 other true).toReal = 0 := by
+  let root := (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+    (quittingFiniteNashBellmanPathPrepend reward cutoff
+      (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff)
+      (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer_mem reward cutoff))) 0
+  have hmass :=
+    quittingFixedOpponentsContinueMass_prepend_eq_one_of_minDebt_plateau
+      reward cutoff hplateau owner hdebt
+  change quittingStationaryContinueMass
+      (Function.update root owner (PMF.pure false)) = 1 at hmass
+  exact quittingProbability_eq_zero_of_fixedOpponentsContinueMass_eq_one
+    root owner other hne hmass
 
 /-- Minimum aggregate debt is antitone over all cutoffs. -/
 theorem antitone_quittingFiniteZeroBoundaryNashBellmanMinDebt
