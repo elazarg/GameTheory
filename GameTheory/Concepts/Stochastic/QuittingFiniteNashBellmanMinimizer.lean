@@ -164,6 +164,75 @@ def quittingFiniteNashBellmanPathRoots
   else
     quittingAllContinueRoot
 
+/-- Extend a finite path's displayed values by zero after the terminal
+state. -/
+def quittingFiniteNashBellmanPathValue
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (time : ℕ) : Payoff ι :=
+  if htime : time < cutoff + 1 then
+    (path ⟨time, htime⟩).1
+  else
+    0
+
+omit [DecidableEq ι] in
+/-- The operational root extension is all-Continue from the cutoff onward. -/
+theorem quittingFiniteNashBellmanPathRoots_eq_allContinue_of_cutoff_le
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (time : ℕ) (htime : cutoff ≤ time) :
+    quittingFiniteNashBellmanPathRoots cutoff path time =
+      (quittingAllContinueRoot : ι → PMF Bool) := by
+  simp [quittingFiniteNashBellmanPathRoots, not_lt.mpr htime]
+
+/-- An admissible finite path has zero terminal value. -/
+theorem quittingFiniteNashBellmanPathValue_eq_zero_at_cutoff
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff) :
+    quittingFiniteNashBellmanPathValue cutoff path cutoff = 0 := by
+  rw [quittingFiniteNashBellmanPathValue,
+    dif_pos (Nat.lt_succ_self cutoff)]
+  exact hpath.2.1
+
+/-- The value projection of an admissible path obeys its exact Bellman
+equation before the cutoff. -/
+theorem quittingFiniteNashBellmanPathValue_eq_successor
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (time : ℕ) (htime : time < cutoff) :
+    quittingFiniteNashBellmanPathValue cutoff path time =
+      quittingRootSuccessorPayoff reward
+        (quittingFiniteNashBellmanPathValue cutoff path (time + 1))
+        (quittingFiniteNashBellmanPathRoots cutoff path time) := by
+  have htime0 : time < cutoff + 1 :=
+    lt_trans htime (Nat.lt_succ_self cutoff)
+  have htime1 : time + 1 < cutoff + 1 := Nat.succ_lt_succ htime
+  simpa [quittingFiniteNashBellmanPathValue,
+    quittingFiniteNashBellmanPathRoots, htime, htime0, htime1] using
+    (hpath.2.2 (⟨time, htime⟩ : Fin cutoff)).1
+
+/-- Every pre-terminal root of an admissible path is exact Nash against its
+displayed successor value. -/
+theorem quittingFiniteNashBellmanPathRoots_isZeroNash
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (time : ℕ) (htime : time < cutoff) :
+    IsεQuittingRootNash reward
+      (quittingFiniteNashBellmanPathValue cutoff path (time + 1)) 0
+      (quittingFiniteNashBellmanPathRoots cutoff path time) := by
+  have htime1 : time + 1 < cutoff + 1 := Nat.succ_lt_succ htime
+  apply (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+    reward
+      (quittingFiniteNashBellmanPathValue cutoff path (time + 1))
+      (quittingFiniteNashBellmanPathRoots cutoff path time)).1
+  simpa [quittingFiniteNashBellmanPathValue,
+    quittingFiniteNashBellmanPathRoots, htime, htime1] using
+    (hpath.2.2 (⟨time, htime⟩ : Fin cutoff)).2
+
 /-- One pre-terminal stage's probability that every opponent of `who`
 continues, written directly in simplex coordinates.  It is set to one away
 from the displayed pre-terminal range. -/
@@ -196,6 +265,80 @@ def quittingFiniteNashBellmanPathAggregateDebt
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff) : ℝ :=
   ∑ who, quittingFiniteNashBellmanPathPlayerDebt reward cutoff path who
+
+/-- Forcing `who` to Continue leaves the product of the other simplex
+Continue coordinates. -/
+theorem quittingFixedOpponentsContinueMass_quittingRootOfSimplex
+    (root : QuittingRootSimplex ι) (who : ι) :
+    quittingStationaryContinueMass
+        (Function.update (quittingRootOfSimplex root) who (PMF.pure false)) =
+      ∏ player ∈ Finset.univ.erase who, root player false := by
+  classical
+  unfold quittingStationaryContinueMass
+  rw [pmfPi_apply, ENNReal.toReal_prod]
+  have hupdate :
+      (fun player =>
+        ((Function.update (quittingRootOfSimplex root) who
+          (PMF.pure false) player) false).toReal) =
+        Function.update
+          (fun player => ((quittingRootOfSimplex root player) false).toReal)
+          who 1 := by
+    funext player
+    by_cases hplayer : player = who
+    · subst player
+      simp
+    · simp [Function.update_of_ne hplayer]
+  change (∏ player,
+    ((Function.update (quittingRootOfSimplex root) who
+      (PMF.pure false) player) false).toReal) = _
+  rw [hupdate, Finset.prod_update_of_mem (Finset.mem_univ who)]
+  rw [one_mul, Finset.sdiff_singleton_eq_erase]
+  apply Finset.prod_congr rfl
+  intro player _
+  exact quittingRootOfSimplex_apply_toReal root player false
+
+/-- The simplex-coordinate opponent factor agrees with the operational
+fixed-opponent Continue mass at every pre-terminal time. -/
+theorem quittingFixedOpponentsContinueMass_pathRoots_eq
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (who : ι) (time : ℕ) (htime : time < cutoff) :
+    quittingFixedOpponentsContinueMass
+        (quittingFiniteNashBellmanPathRoots cutoff path) who time =
+      quittingFiniteNashBellmanPathOpponentContinueMass
+        cutoff path who time := by
+  rw [quittingFixedOpponentsContinueMass]
+  simp only [quittingFiniteNashBellmanPathRoots,
+    quittingFiniteNashBellmanPathOpponentContinueMass, dif_pos htime]
+  exact quittingFixedOpponentsContinueMass_quittingRootOfSimplex _ who
+
+/-- The polynomial survival objective is exactly the survival weight used by
+the terminal-chain compiler. -/
+theorem quittingOpponentSurvivalWeight_pathRoots_eq
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (who : ι) :
+    quittingOpponentSurvivalWeight
+        (quittingFiniteNashBellmanPathRoots cutoff path) who 0 cutoff =
+      quittingFiniteNashBellmanPathOpponentSurvival cutoff path who := by
+  unfold quittingOpponentSurvivalWeight
+    quittingFiniteNashBellmanPathOpponentSurvival
+  apply Finset.prod_congr rfl
+  intro time htime
+  simpa only [Nat.zero_add] using
+    quittingFixedOpponentsContinueMass_pathRoots_eq
+      cutoff path who time (Finset.mem_range.mp htime)
+
+/-- Each playerwise polynomial component is exactly the compiler's surviving
+positive-singleton debt. -/
+theorem quittingFiniteNashBellmanPathPlayerDebt_eq
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (who : ι) :
+    quittingFiniteNashBellmanPathPlayerDebt reward cutoff path who =
+      quittingOpponentSurvivalWeight
+          (quittingFiniteNashBellmanPathRoots cutoff path) who 0 cutoff *
+        max 0 (reward (quittingSingletonTerminal who) who) := by
+  rw [quittingFiniteNashBellmanPathPlayerDebt,
+    quittingOpponentSurvivalWeight_pathRoots_eq]
 
 /-- A pre-terminal opponent-continuation factor is continuous in the full
 finite path. -/
@@ -286,6 +429,20 @@ theorem quittingFiniteNashBellmanPathAggregateDebt_nonneg
   exact Finset.sum_nonneg fun who _ =>
     quittingFiniteNashBellmanPathPlayerDebt_nonneg reward cutoff path who
 
+/-- Each playerwise component is bounded by the aggregate debt. -/
+theorem quittingFiniteNashBellmanPathPlayerDebt_le_aggregate
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (who : ι) :
+    quittingFiniteNashBellmanPathPlayerDebt reward cutoff path who ≤
+      quittingFiniteNashBellmanPathAggregateDebt reward cutoff path := by
+  unfold quittingFiniteNashBellmanPathAggregateDebt
+  exact Finset.single_le_sum
+    (fun player _ =>
+      quittingFiniteNashBellmanPathPlayerDebt_nonneg
+        reward cutoff path player)
+    (Finset.mem_univ who)
+
 /-! ## Fixed-cutoff minimizer -/
 
 /-- At each cutoff, aggregate surviving debt attains a minimum over all
@@ -346,5 +503,84 @@ theorem quittingFiniteZeroBoundaryNashBellmanMinDebt_nonneg
     (cutoff : ℕ) :
     0 ≤ quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff :=
   quittingFiniteNashBellmanPathAggregateDebt_nonneg reward cutoff _
+
+/-! ## Compiler interface and the all-cutoff criterion -/
+
+/-- Every operational playerwise debt of the minimizing chain is at most its
+minimum aggregate debt. -/
+theorem quittingFiniteZeroBoundaryNashBellmanMinimizer_survivingDebt_le_minDebt
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (who : ι) :
+    quittingOpponentSurvivalWeight
+        (quittingFiniteNashBellmanPathRoots cutoff
+          (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff))
+        who 0 cutoff *
+        max 0 (reward (quittingSingletonTerminal who) who) ≤
+      quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff := by
+  rw [← quittingFiniteNashBellmanPathPlayerDebt_eq]
+  exact quittingFiniteNashBellmanPathPlayerDebt_le_aggregate
+    reward cutoff
+      (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff) who
+
+/-- A cutoff whose minimum debt is below `ε` supplies an exact finite chain
+in the terminal compiler's operational root/value interface, with every
+playerwise surviving debt below `ε`. -/
+theorem exists_finiteZeroBoundaryExactQuittingNashBellmanChain_of_minDebt_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (ε : ℝ)
+    (hdebt : quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff ≤ ε) :
+    ∃ (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι),
+      (∀ time, cutoff ≤ time →
+        roots time = (quittingAllContinueRoot : ι → PMF Bool)) ∧
+      value cutoff = 0 ∧
+      (∀ time, time < cutoff →
+        value time = quittingRootSuccessorPayoff reward
+          (value (time + 1)) (roots time)) ∧
+      (∀ time, time < cutoff →
+        IsεQuittingRootNash reward (value (time + 1)) 0 (roots time)) ∧
+      ∀ who,
+        quittingOpponentSurvivalWeight roots who 0 cutoff *
+          max 0 (reward (quittingSingletonTerminal who) who) ≤ ε := by
+  let path :=
+    quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff
+  have hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff :=
+    quittingFiniteZeroBoundaryNashBellmanDebtMinimizer_mem reward cutoff
+  refine ⟨quittingFiniteNashBellmanPathRoots cutoff path,
+    quittingFiniteNashBellmanPathValue cutoff path,
+    quittingFiniteNashBellmanPathRoots_eq_allContinue_of_cutoff_le
+      cutoff path,
+    quittingFiniteNashBellmanPathValue_eq_zero_at_cutoff
+      reward cutoff path hpath,
+    quittingFiniteNashBellmanPathValue_eq_successor
+      reward cutoff path hpath,
+    quittingFiniteNashBellmanPathRoots_isZeroNash
+      reward cutoff path hpath, ?_⟩
+  intro who
+  exact (quittingFiniteZeroBoundaryNashBellmanMinimizer_survivingDebt_le_minDebt
+    reward cutoff who).trans hdebt
+
+/-- **Minimum-debt finite-chain criterion.**  If the infimum over cutoffs of
+the attained minimum aggregate debts is zero, the quitting game has a
+uniform-equilibrium payoff. -/
+theorem quittingGame_exists_uniformEquilibriumPayoff_of_iInf_finiteMinDebt_eq_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (hmin : (⨅ cutoff : ℕ,
+      quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff) = 0) :
+    ∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff := by
+  apply quittingGame_exists_uniformEquilibriumPayoff_of_finiteExactChains
+    reward
+  intro ε hε
+  have hinf : (⨅ cutoff : ℕ,
+      quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff) < ε := by
+    rw [hmin]
+    exact hε
+  obtain ⟨cutoff, hcutoff⟩ := exists_lt_of_ciInf_lt hinf
+  rcases
+      exists_finiteZeroBoundaryExactQuittingNashBellmanChain_of_minDebt_le
+        reward cutoff ε hcutoff.le with
+    ⟨roots, value, htail, hterminal, hpolicy, hnash, hdebt⟩
+  exact ⟨roots, value, cutoff, htail, hterminal, hpolicy, hnash, hdebt⟩
 
 end GameTheory
