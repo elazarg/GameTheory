@@ -5,13 +5,15 @@ Status: active family-level ledger.
 Pinned source: `reference/GameTheory-v1/` at
 `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 
-Last reconciled: 2026-08-02 against the working tree based on `1dec799`.
+Last reconciled: 2026-08-03.
 
-This ledger answers three different questions separately:
+This ledger answers four different questions separately:
 
 1. Has a family been assigned an honest semantic owner?
 2. Has its hostile flagship obligation been completed?
-3. Has its full pinned declaration inventory been recovered or disposed?
+3. Does its user-facing workflow meet the qualitative comparator in
+   [`V1CapabilityMatrix.md`](V1CapabilityMatrix.md)?
+4. Has its full pinned declaration inventory been recovered or disposed?
 
 A strong answer to the first question does not imply either of the other two.
 The disposition vocabulary and completion rules are defined in
@@ -20,13 +22,14 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Thirty-five work-package ledgers claim 1,573 declarations: 1,215
-have reviewed dispositions and 358 remain seeded `unreviewed`; a further 6,751 are
+declarations. Thirty-seven work-package ledgers claim 1,835 declarations: 1,654
+have reviewed dispositions and 181 remain seeded `unreviewed`; a further 6,489 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
 numbers do not imply equal mathematical weight and are never converted into a
-completion percentage.
+completion percentage. They are regression and curation evidence beneath the
+capability matrix, not a port quota or the release headline.
 
 ## Status vocabulary
 
@@ -92,7 +95,7 @@ credit.
 | well-founded strategic SPE/one-shot equivalence | **complete (EXP-036)** | every whole-policy deviation and typed one-shot deviation are equivalent at all histories under `ActsOnceWhereItMatters` |
 | knowledge/`InfoState` hostile probe promised by Phase 0 | **complete (EXP-043/D16)** | separate stable `Epistemic` branch; Protocol counterexample retained as evidence |
 | ESS/static-vs-dynamic hostile probe promised by Phase 0 | **complete (EXP-044/D17)** | stable `Evolutionary` definitions plus one-way canonical Nash bridge |
-| correlated-equilibrium existence | **open, expected cheap** | Wave 2/Analysis; first try mixed-Nash existence plus Nash-to-CE |
+| correlated-equilibrium existence | **complete** | `Analysis.Correlated`; topology-free Nash-to-CE/CCE bridges; exact T-CE ledger |
 | general fixed-point support stack | **deferred by consumer** | Wave 5; recover only for a selected theorem |
 | exact mixed-equilibrium solver | **not a release goal** | D10/D13 reopening only |
 | measurable infinite-path and continuous probability | **out of finite scope** | D11 post-release program |
@@ -136,7 +139,7 @@ declaration-based.
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
 | L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | validated by EXP-041/T3 | partial | broader refinement, recall, and Kuhn-facing declaration recovery |
-| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4; generic explicit-order FOSG-to-EFG serialization, full policy inversion, source-signal replay, all-round exact history laws, and order transport validated by EXP-059/060/061, D30 | partial; 633/776 reviewed, 143 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); the live bridge, Examples, and Serial batches are fully accounted, with the canonical simultaneous witness recovered and the non-semantics-preserving serial machine retired; continue the remaining native law/algorithm queue while counterfactual reach, CFR, ordinary continuation coefficients, and strategic transfer retain separate explicit gates |
+| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4; generic explicit-order FOSG-to-EFG serialization, full policy inversion, source-signal replay, all-round exact history laws, and order transport validated by EXP-059/060/061, D30 | partial; 695/776 reviewed, 81 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); native reachable, step-independence, terminal-law, and outcome-closure rows are classified; complete-history equality is adapted with its explicit no-revisit premise, four pure-mixture marginal laws retain a checked-theorem gate, and ordinary continuation/terminal-support, outcome-value-process, and strategic transfer remain separate |
 | L-ROUND | `Languages/MultiRound.lean`, `Languages/MultiRound/**` | 15 | native language compiling to Protocol | provisional probe | partial | preserve previous actions and imperfect monitoring |
 | L-INTR | `Languages/Intrinsic.lean`, `Languages/Intrinsic/**` | 8 | capability-light native product/closed-loop root before any named Protocol compiler | D31-native root, native Examples/Tests, and solution-selection theorem leaf validated and promoted | partial; 58/158 reviewed, 100 queued | [exact declaration ledger](coverage/L-INTR-broad.md); the ungated native waist is recovered; player ownership/outcome preferences, temporal compilation, perfect recall, mixed/behavioral, PMF/utility, equilibrium, and Kuhn retain separate gates |
 | L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1, T3, T4 complete; stable generic FOSG-to-EFG full policy equivalence, exact all-round history laws, and order transport pass EXP-059/060/061, D30 | partial; bounded FOSG chain 104/104 reviewed, 19 deferred | [exact FOSG bridge ledger](coverage/L-BRIDGE-fosg.md); next L-BRIDGE family after its own gate; FOSG strategic/utility, terminal-support, augmentation, and expressiveness rows remain explicitly deferred |
@@ -203,7 +206,8 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Continue the exact FOSG queue through observation-model batches and named
+1. Continue the remaining 81-row exact FOSG queue through observation-model batches and named
    comparisons; generated rows remain `unreviewed` until manually classified.
-2. Keep every broader family partial until all pinned declarations are
-   classified, and update this file in the same commit as each status change.
+2. Keep exact family recovery separate from the qualitative verdict in
+   `V1CapabilityMatrix.md`; neither may silently stand in for the other.
+3. Update this file in the same commit as each exact status change.

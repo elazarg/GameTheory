@@ -727,6 +727,15 @@ def runBehavioralFrom (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ
     FinDist E.History :=
   E.runRandomizedFor (M.randomizedChooser policies) fuel h
 
+/-- Behavioral play started from a terminal history is absorbed there for
+every fuel amount. -/
+@[simp]
+theorem runBehavioralFrom_of_terminal
+    (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) {h : E.History}
+    (hterm : E.terminal h.state) :
+    M.runBehavioralFrom policies fuel h = FinDist.pure h :=
+  E.runRandomizedFor_of_terminal (M.randomizedChooser policies) fuel hterm
+
 /-- The law over histories a behavioral profile induces from the start. -/
 def runBehavioral (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) : FinDist E.History :=
   M.runBehavioralFrom policies fuel E.initHistory

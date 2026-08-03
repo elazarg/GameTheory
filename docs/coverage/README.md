@@ -97,8 +97,16 @@ The audit rejects:
 - duplicate disposition claims for one pinned declaration;
 - an exactly `complete` ledger with an unreviewed/deferred row; and
 - a broad family marked `complete` while any declaration is unaccounted,
-  unreviewed, or deferred.
+  unreviewed, or deferred;
+- a pinned family ID absent from `../V1CapabilityMatrix.md`;
+- an unknown capability verdict or a capability dashboard whose reported
+  totals disagree with its workflow rows.
 
 `UNACCOUNTED_PINNED_DECLARATIONS` is deliberately reported rather than forced
 to zero today. It reaches zero only by adding reviewed ledger rows; the
 generator never fills it with guessed name matches.
+
+The capability checks do not decide whether a qualitative verdict is
+mathematically justified. They prevent the user-facing comparator from losing a
+pinned family or drifting numerically from its own rows; theorem evidence and
+integration audit remain review obligations.

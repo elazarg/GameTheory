@@ -9,7 +9,11 @@ complete while its method remains a standing design-stress protocol. The active
 coverage and expansion schedule is
 [`docs/PostArchitectureDeliveryPlan.md`](docs/PostArchitectureDeliveryPlan.md);
 its honest pinned-v1 baseline is
-[`docs/V1CoverageLedger.md`](docs/V1CoverageLedger.md).
+[`docs/V1CoverageLedger.md`](docs/V1CoverageLedger.md). User-facing parity is
+tracked separately in
+[`docs/V1CapabilityMatrix.md`](docs/V1CapabilityMatrix.md): exact declaration
+accounting is regression evidence, while release usefulness is judged by
+mature workflows and cannot be bought with unrelated beyond-v1 breadth.
 
 ```text
 GameTheory/Probability   finite-support probability laws (FinDist)

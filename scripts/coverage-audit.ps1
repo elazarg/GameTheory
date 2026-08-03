@@ -321,6 +321,70 @@ foreach ($family in $familyIds) {
   }
 }
 
+$capabilityPath = Join-Path $RepoRoot 'docs/V1CapabilityMatrix.md'
+$capabilityText = [IO.File]::ReadAllText($capabilityPath)
+$allowedCapabilityVerdicts = @(
+  'better',
+  'comparable',
+  'partial',
+  'critical gap',
+  'deliberately retired or out of scope')
+$capabilityRows = @()
+$unknownCapabilityVerdicts = 0
+$malformedCapabilityRows = 0
+$capabilityFamilyEvidence = @()
+foreach ($line in [IO.File]::ReadAllLines($capabilityPath)) {
+  $tableLine = $line.TrimStart()
+  if (-not $tableLine.StartsWith('|')) { continue }
+  $cells = $tableLine.Split('|')
+  if ($cells.Count -ne 7) {
+    $malformedCapabilityRows++
+    Write-Output "MALFORMED_CAPABILITY_ROW=$tableLine"
+    continue
+  }
+  $verdict = $cells[4].Trim()
+  if ($verdict -eq 'Verdict' -or $verdict -match '^[-:]+$') { continue }
+  if ($verdict -notin $allowedCapabilityVerdicts) {
+    $unknownCapabilityVerdicts++
+    Write-Output "UNKNOWN_CAPABILITY_VERDICT=$verdict`:$tableLine"
+    continue
+  }
+  $capabilityRows += [pscustomobject]@{
+    Verdict = $verdict
+    FamilyEvidence = $cells[2].Trim()
+  }
+  $capabilityFamilyEvidence += $cells[2].Trim()
+}
+
+$capabilityFamilyText = $capabilityFamilyEvidence -join "`n"
+$familiesMissingFromCapabilities = @($familyIds | Where-Object {
+  $capabilityFamilyText -notmatch
+    "(?<![A-Z0-9-])$([regex]::Escape($_))(?![A-Z0-9-])"
+})
+foreach ($family in $familiesMissingFromCapabilities) {
+  Write-Output "FAMILY_ID_MISSING_FROM_CAPABILITIES=$family"
+}
+
+$capabilityCounts = [ordered]@{}
+foreach ($verdict in $allowedCapabilityVerdicts) {
+  $capabilityCounts[$verdict] = @($capabilityRows | Where-Object {
+    $_.Verdict -eq $verdict
+  }).Count
+}
+$dashboardPattern =
+  'The (?<rows>\d+) workflow rows below contain (?<better>\d+) better, ' +
+  '(?<comparable>\d+) comparable, and (?<partial>\d+) partial\s+' +
+  'verdicts; (?<critical>\d+) are critical gaps and (?<retired>\d+) are deliberately'
+$dashboard = [regex]::Match($capabilityText, $dashboardPattern)
+$capabilityDashboardMismatch = if (-not $dashboard.Success) { 1 } elseif (
+  [int] $dashboard.Groups['rows'].Value -ne $capabilityRows.Count -or
+  [int] $dashboard.Groups['better'].Value -ne $capabilityCounts['better'] -or
+  [int] $dashboard.Groups['comparable'].Value -ne $capabilityCounts['comparable'] -or
+  [int] $dashboard.Groups['partial'].Value -ne $capabilityCounts['partial'] -or
+  [int] $dashboard.Groups['critical'].Value -ne $capabilityCounts['critical gap'] -or
+  [int] $dashboard.Groups['retired'].Value -ne
+    $capabilityCounts['deliberately retired or out of scope']) { 1 } else { 0 }
+
 Report 'PINNED_FILES' $pinnedFiles.Count
 Report 'PINNED_DECLARATIONS' $declarations.Count
 Report 'FAMILY_SCOPE_RULES' $scopes.Count
@@ -328,6 +392,8 @@ Report 'FAMILY_IDS' $familyIds.Count
 Report 'UNKNOWN_FAMILY_RECOVERY' $unknownRecovery
 Report 'FAMILY_RECOVERY_CONFLICTS' $recoveryConflicts
 Report 'FAMILY_IDS_MISSING_FROM_LEDGER' ($familyIds.Count - $ledgerFamilies.Count)
+Report 'FAMILY_IDS_MISSING_FROM_CAPABILITIES' `
+  $familiesMissingFromCapabilities.Count
 Report 'PINNED_FILES_WITHOUT_OWNER' $missingOwners
 Report 'PINNED_FILES_WITH_DUPLICATE_OWNER' $duplicateOwners
 Report 'GENERATED_INDEX_CURRENT' $indexCurrent
@@ -342,6 +408,10 @@ Report 'COMPLETE_FAMILIES_WITH_OPEN_DECLARATIONS' `
   $completeFamiliesWithOpenDeclarations
 Report 'ACCOUNTED_PINNED_DECLARATIONS' $accountedKeys.Count
 Report 'UNACCOUNTED_PINNED_DECLARATIONS' $unaccounted
+Report 'CAPABILITY_ROWS' $capabilityRows.Count
+Report 'UNKNOWN_CAPABILITY_VERDICTS' $unknownCapabilityVerdicts
+Report 'MALFORMED_CAPABILITY_ROWS' $malformedCapabilityRows
+Report 'CAPABILITY_DASHBOARD_MISMATCH' $capabilityDashboardMismatch
 foreach ($issue in $ledgerIndex.Issues.UnknownDispositionRows) {
   Write-Output "UNKNOWN_DISPOSITION_ROW=$issue"
 }
@@ -352,6 +422,7 @@ foreach ($issue in $ledgerIndex.Issues.MissingPathRows) {
 if ($VerifyExpected) {
   $expectedZero = @(
     'FAMILY_IDS_MISSING_FROM_LEDGER',
+    'FAMILY_IDS_MISSING_FROM_CAPABILITIES',
     'UNKNOWN_FAMILY_RECOVERY',
     'FAMILY_RECOVERY_CONFLICTS',
     'PINNED_FILES_WITHOUT_OWNER',
@@ -361,7 +432,10 @@ if ($VerifyExpected) {
     'MISSING_LEDGER_DECLARATIONS',
     'DUPLICATE_LEDGER_DECLARATIONS',
     'COMPLETE_LEDGER_OPEN_ROWS',
-    'COMPLETE_FAMILIES_WITH_OPEN_DECLARATIONS')
+    'COMPLETE_FAMILIES_WITH_OPEN_DECLARATIONS',
+    'UNKNOWN_CAPABILITY_VERDICTS',
+    'MALFORMED_CAPABILITY_ROWS',
+    'CAPABILITY_DASHBOARD_MISMATCH')
   foreach ($key in $expectedZero) {
     if ($Results[$key] -ne 0) {
       throw "$key expected 0, got $($Results[$key])"

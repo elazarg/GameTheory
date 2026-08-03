@@ -21,16 +21,46 @@ The first obligation is the protected critical path. The second broadens the
 subject deliberately. The third is opt-in and may never weaken either of the
 first two.
 
+The headline comparator is the user-facing workflow matrix in
+`docs/V1CapabilityMatrix.md`: v2 must be at least as useful as v1 across mature,
+in-scope work while improving ownership, trust, assumptions, and integration.
+The pinned declaration index remains a regression oracle and attribution
+source. It is not a quota requiring every predecessor wrapper or niche theorem
+to be reproduced.
+
 ## 1. What completion means
 
-File count, line count, and source compatibility are not completion metrics.
+File count, line count, declaration count, and source compatibility are not
+completion metrics.
 The rewrite deliberately changes representation and removes duplicate public
-surfaces. Completion is measured by mathematical and architectural accounting.
+surfaces. Completion is measured by qualitative capability parity supported by
+mathematical and architectural evidence.
 
-### 1.1 Declaration accounting
+### 1.1 Capability parity
 
-Every public or mathematically substantive declaration in the pinned snapshot
-must eventually receive exactly one disposition:
+`docs/V1CapabilityMatrix.md` records recognizable user workflows rather than
+assigning equal weight to every predecessor declaration. A release-level parity
+claim requires:
+
+1. every mature in-scope v1 workflow is represented in the matrix;
+2. no row remains a `critical gap`;
+3. a `better` or `comparable` verdict names a checked public theorem, example,
+   and integration advantage or equivalence;
+4. a `partial` verdict is release-compatible only when its missing remainder is
+   explicitly shown not to remove a mature user workflow;
+5. beyond-v1 work does not compensate for a regression in a mature field; and
+6. architecture, assumptions, trust, executability, and import ergonomics are
+   part of usefulness, not secondary polish.
+
+A stronger canonical theorem may replace many predecessor declarations. A
+directory, syntax bundle, internal wrapper, or experiment does not establish
+capability parity.
+
+### 1.2 Declaration accounting
+
+Exact declaration review protects the qualitative matrix from overlooking a
+useful predecessor fact. Declarations reviewed by an active work package
+receive exactly one disposition:
 
 - **port:** retain essentially the same statement against the canonical v2 API;
 - **adapt:** retain the mathematical result with an honestly changed statement
@@ -48,25 +78,29 @@ must eventually receive exactly one disposition:
 starts in a family, its work package must add a declaration-level ledger with
 the pinned path, old declaration, disposition, canonical destination, and
 validation evidence under `docs/coverage/`. The required schema is documented
-there. A family is not complete while it contains an unclassified declaration.
+there. A family is not called exactly recovered while it contains an
+unclassified declaration. Full-snapshot accounting remains a valuable curation
+milestone, but it is not the release definition and unreviewed declarations
+earn no capability credit.
 
-### 1.2 Four completion levels
+### 1.3 Four completion levels
 
 The project reports four different milestones and never collapses them into
 one percentage:
 
 1. **architecture-ready:** the semantic owner and dependency direction have
    survived a hostile theorem;
-2. **v1-accounted:** every pinned declaration has a disposition;
-3. **mature coverage:** every in-scope `port`, `adapt`, and `subsumed`
-   obligation is implemented and checked;
-4. **release-ready:** mature coverage, public import review, examples,
+2. **capability-covered:** every mature workflow is `better`, `comparable`, or
+   an accepted `partial` with no lost mature use case;
+3. **v1-accounted:** independently, every pinned declaration has a disposition;
+4. **release-ready:** capability coverage, public import review, examples,
    documentation, full build, audits, and cold-build measurements all pass.
 
 The project is architecture-ready for the shared static core and the principal
-Protocol and Analysis boundaries. It is not yet v1-accounted.
+Protocol and Analysis boundaries. It is neither capability-covered nor fully
+v1-accounted yet.
 
-### 1.3 Definition of support for a subfield
+### 1.4 Definition of support for a subfield
 
 A subfield is called **supported** only when all of the following exist:
 
@@ -78,7 +112,8 @@ A subfield is called **supported** only when all of the following exist:
    preservation facts;
 5. at least one reader-facing example and one architecture or locality test;
 6. exact assumptions on the theorem or operation that needs them;
-7. a declaration-level v1 ledger when the subfield has a v1 predecessor;
+7. a bounded declaration-level v1 ledger supporting its capability verdict
+   when the subfield has a v1 predecessor;
 8. a clean relevant build, trust audit, and dependency-boundary audit.
 
 A syntax bundle, one encoding example, or a directory name is a probe, not
@@ -128,11 +163,14 @@ static universal hub.
 
 Research breadth is welcome only under rules that preserve mature support.
 
-1. The v1 recovery waves below remain the critical path until mature coverage.
+1. The v1 recovery waves below remain the critical path until capability
+   coverage has no critical gap.
    Beyond-v1 work cannot satisfy or postpone a recovery gate.
-2. Until v1 is accounted, at least three of every four planned integration work
-   packages target mature v1 recovery. A package is a predeclared theorem
-   family or domain gate, not a commit or a line-count target.
+2. Until capability coverage has no critical gap, at least three of every four
+   planned integration work packages target mature v1 workflows. A package is
+   a predeclared theorem family or domain gate, not a commit, declaration count,
+   or line-count target. Exact accounting may run mechanically in parallel but
+   does not choose the lead integration package.
 3. At most one Frontier experiment may be active at a time. If fewer than four
    independent work packages are active, Frontier occupies at most one.
 4. Mature blind-spot work may begin after Wave 1 when its prerequisites are
@@ -243,12 +281,12 @@ current integration and recovery status. Wave 0 closes when:
    rather than silently changing inside Phase 2/3-named scripts;
 6. README status is derived from the ledger rather than source-size estimates.
 
-The audit now indexes 436 files and 8,324 declarations. Thirty-five work-package
-ledgers claim 1,573 declarations: 1,215 have reviewed dispositions, the exact
-FOSG queue contains 358 deliberately seeded `unreviewed` rows, and 6,751 remain
-explicitly unaccounted. Both open sets are review queues, not
+The audit now indexes 436 files and 8,324 declarations. Thirty-seven work-package
+ledgers claim 1,835 declarations: 1,654 have reviewed dispositions, 181 remain
+deliberately seeded `unreviewed`, and 6,489 remain explicitly unaccounted. Both
+open sets are review queues, not
 auto-classification targets; generated rows are evidence of scope, not
-recovery.
+recovery or a release percentage.
 
 The Phase 2 and Phase 3 reachability harnesses use process-unique temporary
 probe files. Parallel recovery audits therefore cannot overwrite one another's
@@ -329,7 +367,7 @@ surface syntax.
 | NFG | **passed and recovered:** EXP-042/T4 validates compilation; all 126 pinned declarations are classified with no deferred rows | broad examples, observable cheap talk, exact half/half mixed Nash, and the complete Matching Pennies correlated-equilibrium characterization are recovered through their canonical shared layers |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
 | MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
-| FOSG | **generic bridge gate passed (EXP-042/T4; EXP-059/060/061, D30):** the stable explicit-order FOSG-to-EFG bridge retains exact source histories while hiding within-round choices; policy projection/translation are full inverses, resolver-only public/private/own-action replay, inactive slots, literal all-round history laws, and order transport pass | **Native history/Kuhn, reachable observation-model, Compile, Examples, Serial, and the 104-declaration live bridge chain are classified;** the utility-free simultaneous example now exercises the canonical NFG-to-FOSG-to-EFG path, and the non-semantics-preserving serial machine is retired; continue the remaining 143-row exact L-FOSG queue while counterfactual reach, CFR, ordinary continuation coefficients, augmentation, strategic/utility transfer, and expressiveness retain separate gates |
+| FOSG | **generic bridge gate passed (EXP-042/T4; EXP-059/060/061, D30):** the stable explicit-order FOSG-to-EFG bridge retains exact source histories while hiding within-round choices; policy projection/translation are full inverses, resolver-only public/private/own-action replay, inactive slots, literal all-round history laws, and order transport pass | **Native history/Kuhn, reachable observation-model, reachable/step-independence/terminal-law/outcome-closure, Compile, Examples, Serial, and the 104-declaration live bridge chain are classified;** the utility-free simultaneous example now exercises the canonical NFG-to-FOSG-to-EFG path, and the non-semantics-preserving serial machine is retired; continue the remaining 81-row exact L-FOSG queue while counterfactual reach, CFR, ordinary continuation coefficients, augmentation, strategic/utility transfer, and expressiveness retain separate gates |
 | multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
 | intrinsic games | **D31-native layer recovered (EXP-062, D31):** `Languages.Intrinsic` owns capability-light configurations, information-local pure rules, closed-loop solvability, explicit-slot configuration-dependent causality, stable native examples, and an opt-in solution-selection theorem leaf derived only from `IsSolvable` | choose the next gate explicitly: player ownership/outcome preferences, temporal compilation, perfect recall, mixed/behavioral strategy, PMF/utility, and Kuhn remain separate |
 | bridges and expressiveness | two real transfers compose more cheaply than direct named proofs | only the earned relation or composition API; otherwise classify v1 transport as retired |
@@ -402,22 +440,28 @@ reusable. The old `Math/` tree is not ported wholesale.
 
 ## 11. Wave 6: accounting and release
 
-Status: blocked by Waves 1-5.
+Status: blocked by the capability matrix's critical gaps and the release audits
+below; open-ended curation elsewhere in Waves 0-5 is not itself a blocker.
 
 The v1-scope release gate requires:
 
-1. every pinned declaration classified;
-2. no open `port`, `adapt`, or `subsumed` obligation in a mature in-scope
-   family;
-3. every `deferred` row names its missing gate and remains visibly excluded
-   from the coverage claim;
-4. public umbrellas reviewed for intentional inclusion and opt-in boundaries;
-5. one reader-facing example per supported subfield;
-6. full build with warnings treated as failures;
-7. all architecture, trust, reachability, transport, and coverage audits;
-8. axiom audit on every flagship theorem;
-9. cold-build and representative incremental-build measurements;
-10. a generated release report listing support, provisional surfaces,
+1. every pinned family mapped to a capability row or an explicit mature-scope
+   exclusion;
+2. no `critical gap` in the capability matrix and no unaccepted loss hidden by
+   a `partial` verdict;
+3. every parity claim backed by a bounded declaration ledger with no open
+   `port`, `adapt`, or `subsumed` obligation in that claim's scope;
+4. every `deferred` row names its missing gate and remains visibly excluded
+   from the capability claim;
+5. the exact unaccounted declaration remainder is reported as curation risk,
+   without being converted into a release percentage;
+6. public umbrellas reviewed for intentional inclusion and opt-in boundaries;
+7. one reader-facing example per supported subfield;
+8. full build with warnings treated as failures;
+9. all architecture, trust, reachability, transport, and coverage audits;
+10. axiom audit on every flagship theorem;
+11. cold-build and representative incremental-build measurements;
+12. a generated release report listing support, provisional surfaces,
     Frontier work, and explicit non-goals.
 
 Source compatibility with v1 is not a release gate.
@@ -516,8 +560,8 @@ At the end of each integrated work package:
 3. record exact validation commands;
 4. record any API change or newly exposed gap;
 5. attribute adapted v1 results to their pinned paths;
-6. report whether the package increased accounted coverage, mature coverage,
-   or Frontier only.
+6. report whether the package improved a capability verdict, exact accounting,
+   both, or Frontier only.
 
 At each domain gate:
 
@@ -529,7 +573,7 @@ At each domain gate:
 
 Quarterly or after five domain gates, whichever comes first, review the
 beyond-v1 horizon. A direction may be promoted, narrowed, or removed. Mature v1
-recovery status is not renegotiated during that review.
+capability status is not renegotiated during that review.
 
 ## 15. Immediate queue
 
@@ -537,23 +581,24 @@ The next work is ordered:
 
 1. consolidate moving delivery probes without rewriting historical phase
    measurements;
-2. continue the remaining exact L-FOSG queue after completing the bounded
-   104-declaration serialization/expressiveness comparison; keep its classified
-   counterfactual-reach/CFR spine and ordinary continuation-coefficient laws
-   behind separate checked-theorem gates, and recover general constant-sum
-   value/correlation results beyond the completed binary slice;
-3. resume the broader revelation/information-design inventory and decide
-   whether a live consumer earns D-COMM's deferred conditional public-signal
-   representation;
-4. use the recovered uniform deviation-cap equivalence to prove a checked
-   finite-horizon or known special case; the active sibling
-   `uniform-existence` branch's basic definitions and placeholder-independent
-   proof waist are represented by D22, while its large placeholder-dependent
-   existence hierarchy is research evidence only; reserve a new experiment
-   before any infinite-path law, vanishing-discount existence theorem, or
-   graph-game root;
-5. admit no Frontier implementation until the first three items have an active
-   owner and ledger.
+2. close T-ZER's critical gap with a language-independent constructive pure-SPE
+   theorem by backward induction and one honest EFG wrapper; reuse the existing
+   well-founded execution, one-shot-deviation, and SPE surfaces, and reserve an
+   experiment only if competing perfect-information representations actually
+   emerge;
+3. build D-REPEAT's public-monitoring equilibrium waist: discounted
+   continuation values, canonical perfect-public equilibrium specialization,
+   and one-shot-deviation equivalence on a noisy branch-dependent example,
+   without introducing infinite realized-path probability;
+4. close M-CONTRACT with a finite principal-agent model, welfare identity,
+   incentivized-action existence, and participation against an explicit
+   outside option;
+5. run the remaining 81-row L-FOSG classification and already-validated static,
+   Bayesian, and language leaf recovery as parallel BFS work, not as a reason to
+   postpone critical capability gaps;
+6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
+   sibling branch remains research evidence, and no stochastic advance
+   discharges L-ROUND or repeated-game parity.
 
 This queue may change when an experiment refutes an assumption, but a change
 must update this document rather than silently starting whichever domain is

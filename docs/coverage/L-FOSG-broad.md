@@ -8,8 +8,8 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
 Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28, EXP-058/D29, EXP-059/060/061/D30
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; 633/776 reviewed, 143 unreviewed
-Last verified: 2026-08-02
+Status: in progress; 695/776 reviewed, 81 unreviewed
+Last verified: 2026-08-03
 
 This ledger is an exact generated review queue for the L-FOSG family.
 0 declarations are already accounted for in earlier bounded ledgers and are
@@ -25,6 +25,22 @@ attributes the latter to those exact pinned paths: `Protocol.Information`
 owns the canonical policy and law machinery, while `Languages.FOSG.Kuhn`
 supplies the named FOSG-facing correspondence.  It does not revive the native scalar
 marginal calculus.
+
+The `Native/Reachable.lean`, `Native/StepIndependence.lean`,
+`Native/TerminalLaw.lean`, and `OutcomeClosure.lean` batch is now classified.
+Canonical behavioral-to-mixed equality adapts three complete-history rows with
+the explicit `ActsOnceWhereItMatters` premise it actually needs.  Four
+mixture-over-pure-policy marginal identities remain behind a named canonical
+behavioral-mixture marginal gate; definitions of the joint law and runner are
+not credited as proofs.  The parallel scalar, profile-swapping, and seen-before
+machinery is retired.  Terminal-support and ordinary continuation
+coefficients remain deferred to the ordinary-continuation/terminal-support
+gate; utility and expectation transfer remain deferred to the
+external-evaluation/strategic gate.  `OutcomeClosure` retains neither a
+language-local outcome-value process nor a parallel runner: its stopped-step
+equations are subsumed by the audited Protocol runner laws, and its remaining
+outcome-value/process closure surface awaits the
+ordinary-continuation/outcome-value-process gate.
 
 EXP-059/061/D30 disposes the 65-declaration `Compile.lean` batch (the earlier
 54-row estimate missed attributed declarations). Canonical Protocol runners and
@@ -455,68 +471,68 @@ module they require rather than a FOSG-wide umbrella.
 | same | `stepProb_pure_congr_at_history` | theorem | retired | `InformationModel.behavioralJoint_congr` only for canonical law steps | EXP-042/D15 | The old scalar pure-step probability API is intentionally not reconstructed. |
 | same | `prob_pure_congr_of_agreeOnSeenBefore` | theorem | retired | `InformationModel.runBehavioralFrom_congr` where a canonical law congruence is needed | `Protocol/Information.lean` | Recovered congruence is law-valued and premise-specific, not `SeenBefore`-based. |
 | same | `marginal_prob` | theorem | subsumed | `InformationModel.runMixed_toMixed` | `Game.kuhn_behavioral_to_mixed`; pinned line 180 | Behavioral-to-predrawn-mixed complete-history equality subsumes each scalar marginal consequence. |
-| `GameTheory/Languages/FOSG/Native/Reachable.lean` | `ReachablePureStrategy` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 37 |
-| same | `ReachableBehavioralProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 41 |
-| same | `reachableBehavioralToMixed` | def | unreviewed | review required | generated index seed only | public, pinned line 59 |
-| same | `reachableBehavioralToMixedJoint` | def | unreviewed | review required | generated index seed only | public, pinned line 67 |
-| same | `reachable_stepActionProb_pureToBehavioral` | theorem | unreviewed | review required | generated index seed only | public, pinned line 75 |
-| same | `reachable_marginal_stepActionProb` | theorem | unreviewed | review required | generated index seed only | public, pinned line 87 |
-| same | `reachable_marginal_stepProb` | theorem | unreviewed | review required | generated index seed only | public, pinned line 152 |
-| same | `swapReachableProfileBy` | def | unreviewed | review required | generated index seed only | public, pinned line 176 |
-| same | `swapReachableProfileBy_involutive` | theorem | unreviewed | review required | generated index seed only | public, pinned line 184 |
-| same | `swapReachableBy_weight_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 200 |
-| same | `reachable_scalar_indep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 219 |
-| same | `ReachableSeenBefore` | def | unreviewed | review required | generated index seed only | public, pinned line 309 |
-| same | `reachable_seenBefore_mono_appendStep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 314 |
-| same | `reachable_seenBefore_current_appendStep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 330 |
-| same | `reachable_not_seenBefore_current` | theorem | unreviewed | review required | generated index seed only | public, pinned line 341 |
-| same | `reachable_stepProb_pure_congr_at_history` | theorem | unreviewed | review required | generated index seed only | public, pinned line 351 |
-| same | `reachable_prob_pure_congr_of_agreeOnSeenBefore` | theorem | unreviewed | review required | generated index seed only | public, pinned line 371 |
-| same | `reachable_scalar_indep_stepProb` | theorem | unreviewed | review required | generated index seed only | public, pinned line 420 |
-| same | `reachable_marginal_prob` | theorem | unreviewed | review required | generated index seed only | public, pinned line 454 |
-| same | `reachable_marginal_terminalWeight` | theorem | unreviewed | review required | generated index seed only | public, pinned line 512 |
-| same | `reachable_marginal_terminalMassOn` | theorem | unreviewed | review required | generated index seed only | public, pinned line 541 |
-| same | `reachable_marginal_terminalLaw` | theorem | unreviewed | review required | generated index seed only | public, pinned line 565 |
-| same | `reachable_marginal_terminalWeight_toReal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 574 |
-| same | `reachable_marginal_terminalUtilitySum` | theorem | unreviewed | review required | generated index seed only | public, pinned line 600 |
-| same | `reachable_marginal_terminalExpectation` | theorem | unreviewed | review required | generated index seed only | public, pinned line 644 |
-| same | `behavioral_to_mixed_prob_reachable` | theorem | unreviewed | review required | generated index seed only | public, pinned line 690 |
-| same | `behavioral_to_mixed_terminalWeight_reachable` | theorem | unreviewed | review required | generated index seed only | public, pinned line 698 |
-| same | `behavioral_to_mixed_terminalMassOn_reachable` | theorem | unreviewed | review required | generated index seed only | public, pinned line 706 |
-| same | `behavioral_to_mixed_terminalLaw_reachable` | theorem | unreviewed | review required | generated index seed only | public, pinned line 714 |
-| same | `behavioral_to_mixed_eu_reachable` | theorem | unreviewed | review required | generated index seed only | public, pinned line 723 |
-| `GameTheory/Languages/FOSG/Native/StepIndependence.lean` | `stepActionProb_pureToBehavioral` | theorem | unreviewed | review required | generated index seed only | public, pinned line 51 |
-| same | `marginal_stepActionProb_raw` | theorem | unreviewed | review required | generated index seed only | public, pinned line 67 |
-| same | `marginal_stepActionProb` | theorem | unreviewed | review required | generated index seed only | public, pinned line 124 |
-| same | `marginal_stepProb` | theorem | unreviewed | review required | generated index seed only | public, pinned line 144 |
-| same | `swapProfileBy` | def | unreviewed | review required | generated index seed only | public, pinned line 188 |
-| same | `swapProfileBy_involutive` | theorem | unreviewed | review required | generated index seed only | public, pinned line 196 |
-| same | `swapBy_weight_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 212 |
-| same | `scalar_indep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 234 |
-| same | `scalar_indep_stepProb` | theorem | unreviewed | review required | generated index seed only | public, pinned line 329 |
-| `GameTheory/Languages/FOSG/Native/TerminalLaw.lean` | `marginal_terminalWeight` | theorem | unreviewed | review required | generated index seed only | public, pinned line 49 |
-| same | `marginal_terminalMassOn` | theorem | unreviewed | review required | generated index seed only | public, pinned line 81 |
-| same | `marginal_terminalLaw` | theorem | unreviewed | review required | generated index seed only | public, pinned line 108 |
-| same | `marginal_terminalWeight_toReal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 120 |
-| same | `terminalWeightClassical` | def | unreviewed | review required | generated index seed only | public, pinned line 149 |
-| same | `marginal_terminalUtilitySum` | theorem | unreviewed | review required | generated index seed only | public, pinned line 157 |
-| same | `behavioral_to_mixed_prob` | theorem | unreviewed | review required | generated index seed only | public, pinned line 209 |
-| same | `behavioral_to_mixed_terminalWeight` | theorem | unreviewed | review required | generated index seed only | public, pinned line 220 |
-| same | `behavioral_to_mixed_terminalMassOn` | theorem | unreviewed | review required | generated index seed only | public, pinned line 231 |
-| same | `behavioral_to_mixed_terminalLaw` | theorem | unreviewed | review required | generated index seed only | public, pinned line 242 |
-| same | `behavioral_to_mixed_eu` | theorem | unreviewed | review required | generated index seed only | public, pinned line 254 |
-| `GameTheory/Languages/FOSG/OutcomeClosure.lean` | `valueStep` | def | unreviewed | review required | generated index seed only | public, pinned line 38 |
-| same | `valueStep_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 49 |
-| same | `valueStep_nonterminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 57 |
-| same | `OutcomeValue` | structure | unreviewed | review required | generated index seed only | public, pinned line 70 |
-| same | `ofProjectedStep` | def | unreviewed | review required | generated index seed only | public, pinned line 99 |
-| same | `ofLastStateValue` | def | unreviewed | review required | generated index seed only | public, pinned line 165 |
-| same | `stateStepValue_of_projectedStep` | theorem | unreviewed | review required | generated index seed only | public, pinned line 207 |
-| same | `ofProjectedLastStateStep` | def | unreviewed | review required | generated index seed only | public, pinned line 276 |
-| same | `toValueProcess` | def | unreviewed | review required | generated index seed only | public, pinned line 326 |
-| same | `runDistFrom_eq_run` | theorem | unreviewed | review required | generated index seed only | public, pinned line 370 |
-| same | `map_observe_runDistFrom_eq_value` | theorem | unreviewed | review required | generated index seed only | public, pinned line 405 |
-| same | `map_observe_runDist_eq_value` | theorem | unreviewed | review required | generated index seed only | public, pinned line 415 |
+| `GameTheory/Languages/FOSG/Native/Reachable.lean` | `ReachablePureStrategy` | abbrev | retired | no successor; retired reachable scalar profile API | EXP-057/D28 | The reachable specialization duplicates the retired native scalar profile surface. |
+| same | `ReachableBehavioralProfile` | abbrev | retired | no successor; retired reachable scalar profile API | EXP-057/D28 | The reachable specialization duplicates the retired native scalar profile surface. |
+| same | `reachableBehavioralToMixed` | def | retired | no successor; retired reachable scalar profile API | EXP-057/D28 | Canonical mixed conversion is law-valued and does not retain the reachable wrapper. |
+| same | `reachableBehavioralToMixedJoint` | def | retired | no successor; retired reachable scalar profile API | EXP-057/D28 | Canonical mixed conversion is law-valued and does not retain the reachable wrapper. |
+| same | `reachable_stepActionProb_pureToBehavioral` | theorem | retired | no successor; retired reachable scalar probability API | EXP-057/D28 | The scalar pure-to-behavioral step equation is not reconstructed. |
+| same | `reachable_marginal_stepActionProb` | theorem | deferred | canonical behavioral-mixture marginal gate | D28/D29 | `behavioralJoint` is a definition, not yet a checked mixture-over-pure-policy marginal theorem. |
+| same | `reachable_marginal_stepProb` | theorem | deferred | canonical behavioral-mixture marginal gate | D28/D29 | `runBehavioralFrom` is a runner, not yet a checked mixture-over-pure-policy marginal theorem. |
+| same | `swapReachableProfileBy` | def | retired | no successor; retired profile-swapping API | EXP-057/D28 | No parallel profile-swapping calculus is retained. |
+| same | `swapReachableProfileBy_involutive` | theorem | retired | no successor; retired profile-swapping API | EXP-057/D28 | No parallel profile-swapping calculus is retained. |
+| same | `swapReachableBy_weight_eq` | theorem | retired | no successor; retired profile-swapping API | EXP-057/D28 | No scalar weight transport is retained. |
+| same | `reachable_scalar_indep` | theorem | retired | no successor; retired scalar independence API | EXP-057/D28 | Canonical execution is law-valued rather than a scalar calculus. |
+| same | `ReachableSeenBefore` | def | retired | no successor; retired seen-before API | EXP-057/D28 | No reachable seen-before predicate is retained. |
+| same | `reachable_seenBefore_mono_appendStep` | theorem | retired | no successor; retired seen-before API | EXP-057/D28 | No reachable seen-before calculus is retained. |
+| same | `reachable_seenBefore_current_appendStep` | theorem | retired | no successor; retired seen-before API | EXP-057/D28 | No reachable seen-before calculus is retained. |
+| same | `reachable_not_seenBefore_current` | theorem | retired | no successor; retired seen-before API | EXP-057/D28 | No reachable seen-before calculus is retained. |
+| same | `reachable_stepProb_pure_congr_at_history` | theorem | retired | no successor; retired scalar congruence API | EXP-057/D28 | Canonical congruence is law-valued and premise-specific. |
+| same | `reachable_prob_pure_congr_of_agreeOnSeenBefore` | theorem | retired | no successor; retired scalar congruence API | EXP-057/D28 | Canonical congruence is law-valued and premise-specific. |
+| same | `reachable_scalar_indep_stepProb` | theorem | retired | no successor; retired scalar independence API | EXP-057/D28 | No scalar step-probability calculus is retained. |
+| same | `reachable_marginal_prob` | theorem | adapt | `InformationModel.runMixed_toMixed` under `ActsOnceWhereItMatters` | audited `Protocol.Information` theorem | The canonical complete-history equality retains the operational no-revisit premise instead of claiming an unconditional scalar identity. |
+| same | `reachable_marginal_terminalWeight` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `reachable_marginal_terminalMassOn` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `reachable_marginal_terminalLaw` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `reachable_marginal_terminalWeight_toReal` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `reachable_marginal_terminalUtilitySum` | theorem | deferred | external-evaluation/strategic gate | EXP-057/D28 | Utility transfer requires the external evaluation surface. |
+| same | `reachable_marginal_terminalExpectation` | theorem | deferred | external-evaluation/strategic gate | EXP-057/D28 | Expectation transfer requires the external evaluation surface. |
+| same | `behavioral_to_mixed_prob_reachable` | theorem | adapt | `InformationModel.runMixed_toMixed` under `ActsOnceWhereItMatters` | audited `Protocol.Information` theorem | The canonical law equality is retained with its explicit operational premise. |
+| same | `behavioral_to_mixed_terminalWeight_reachable` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `behavioral_to_mixed_terminalMassOn_reachable` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `behavioral_to_mixed_terminalLaw_reachable` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `behavioral_to_mixed_eu_reachable` | theorem | deferred | external-evaluation/strategic gate | EXP-057/D28 | Expected-utility transfer requires the external evaluation surface. |
+| `GameTheory/Languages/FOSG/Native/StepIndependence.lean` | `stepActionProb_pureToBehavioral` | theorem | retired | no successor; retired scalar probability API | EXP-057/D28 | The scalar pure-to-behavioral step equation is not reconstructed. |
+| same | `marginal_stepActionProb_raw` | theorem | retired | no successor; retired raw scalar marginal API | EXP-057/D28 | The raw scalar marginal is not a canonical execution surface. |
+| same | `marginal_stepActionProb` | theorem | deferred | canonical behavioral-mixture marginal gate | D28/D29 | `behavioralJoint` does not by itself prove the mixture-over-pure-policy marginal identity. |
+| same | `marginal_stepProb` | theorem | deferred | canonical behavioral-mixture marginal gate | D28/D29 | `runBehavioralFrom` does not by itself prove the mixture-over-pure-policy marginal identity. |
+| same | `swapProfileBy` | def | retired | no successor; retired profile-swapping API | EXP-057/D28 | No parallel profile-swapping calculus is retained. |
+| same | `swapProfileBy_involutive` | theorem | retired | no successor; retired profile-swapping API | EXP-057/D28 | No parallel profile-swapping calculus is retained. |
+| same | `swapBy_weight_eq` | theorem | retired | no successor; retired profile-swapping API | EXP-057/D28 | No scalar weight transport is retained. |
+| same | `scalar_indep` | theorem | retired | no successor; retired scalar independence API | EXP-057/D28 | Canonical execution is law-valued rather than a scalar calculus. |
+| same | `scalar_indep_stepProb` | theorem | retired | no successor; retired scalar independence API | EXP-057/D28 | No scalar step-probability calculus is retained. |
+| `GameTheory/Languages/FOSG/Native/TerminalLaw.lean` | `marginal_terminalWeight` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `marginal_terminalMassOn` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `marginal_terminalLaw` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `marginal_terminalWeight_toReal` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `terminalWeightClassical` | def | retired | no successor; retired scalar terminal-weight API | EXP-057/D28 | Classical scalar terminal weights are not a canonical surface. |
+| same | `marginal_terminalUtilitySum` | theorem | deferred | external-evaluation/strategic gate | EXP-057/D28 | Utility transfer requires the external evaluation surface. |
+| same | `behavioral_to_mixed_prob` | theorem | adapt | `InformationModel.runMixed_toMixed` under `ActsOnceWhereItMatters` | audited `Protocol.Information` theorem | The canonical equality states the no-revisit premise needed by predrawn mixed play. |
+| same | `behavioral_to_mixed_terminalWeight` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `behavioral_to_mixed_terminalMassOn` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `behavioral_to_mixed_terminalLaw` | theorem | deferred | ordinary-continuation/terminal-support gate | EXP-057/D28 | Reopen with canonical terminal-support coefficients. |
+| same | `behavioral_to_mixed_eu` | theorem | deferred | external-evaluation/strategic gate | EXP-057/D28 | Expected-utility transfer requires the external evaluation surface. |
+| `GameTheory/Languages/FOSG/OutcomeClosure.lean` | `valueStep` | def | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | A language-local stopped process awaits the ordinary continuation outcome-value surface. |
+| same | `valueStep_terminal` | theorem | subsumed | `InformationModel.runBehavioralFrom_of_terminal` | audited `Protocol.Information` theorem | The canonical behavioral runner self-loops from a terminal history. |
+| same | `valueStep_nonterminal` | theorem | subsumed | `ExecutionProtocol.runRandomizedFor_succ_of_not_terminal` | audited `Protocol.Execution` theorem | The canonical runner supplies the nonterminal one-step bind equation. |
+| same | `OutcomeValue` | structure | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | No language-local outcome-value certificate is retained before that gate. |
+| same | `ofProjectedStep` | def | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | Projection construction awaits the canonical outcome-value process. |
+| same | `ofLastStateValue` | def | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | State-value construction awaits the canonical outcome-value process. |
+| same | `stateStepValue_of_projectedStep` | theorem | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | Projected step preservation awaits the canonical outcome-value process. |
+| same | `ofProjectedLastStateStep` | def | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | Projection construction awaits the canonical outcome-value process. |
+| same | `toValueProcess` | def | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | Generic process conversion awaits the canonical outcome-value process. |
+| same | `runDistFrom_eq_run` | theorem | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | Runner/process comparison awaits the canonical outcome-value process. |
+| same | `map_observe_runDistFrom_eq_value` | theorem | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | Prefix outcome closure awaits the canonical outcome-value process. |
+| same | `map_observe_runDist_eq_value` | theorem | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | Initial outcome closure awaits the canonical outcome-value process. |
 | `GameTheory/Languages/FOSG/ReachableHistory/Law.lean` | `reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores` | theorem | unreviewed | review required | generated index seed only | public, pinned line 36 |
 | same | `reachableHistoryBehavioralToMixedStrategy_factorAt` | theorem | unreviewed | review required | generated index seed only | public, pinned line 100 |
 | same | `liftReachableHistoryPureProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 127 |
