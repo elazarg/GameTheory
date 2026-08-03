@@ -45,6 +45,21 @@ theorem quittingProbability_eq_zero_of_fixedOpponentsContinueMass_eq_one
   rw [hmass] at hle
   exact le_antisymm (by linarith) ENNReal.toReal_nonneg
 
+/-- A Boolean marginal with zero real Quit mass is pure Continue. -/
+theorem pmf_eq_pure_false_of_apply_true_toReal_eq_zero
+    (marginal : PMF Bool) (htrueReal : (marginal true).toReal = 0) :
+    marginal = PMF.pure false := by
+  have htrue : marginal true = 0 := by
+    have hfinite : marginal true ≠ ⊤ := PMF.apply_ne_top marginal true
+    rcases (ENNReal.toReal_eq_zero_iff (marginal true)).mp htrueReal with
+      hzero | htop
+    · exact hzero
+    · exact (hfinite htop).elim
+  have hsum := Math.ProbabilityMassFunction.sum_coe_fintype marginal
+  rw [Fintype.sum_bool, htrue, zero_add] at hsum
+  ext action
+  cases action <;> simp [PMF.pure_apply, htrue, hsum]
+
 /-- The first point of a finite chain, packaged in the canonical compact
 box. -/
 def quittingFiniteNashBellmanPathInitialBoxPoint
@@ -392,6 +407,40 @@ theorem quittingProbability_prepend_eq_zero_of_minDebt_plateau
       (Function.update root owner (PMF.pure false)) = 1 at hmass
   exact quittingProbability_eq_zero_of_fixedOpponentsContinueMass_eq_one
     root owner other hne hmass
+
+/-- If two distinct players carry positive debt on a plateau, their two
+owner-deletion constraints intersect to make the whole prepended predecessor
+root all-Continue.  Hence a nontrivial plateau root can be exceptional for at
+most one positive-debt player. -/
+theorem quittingFiniteNashBellmanPathRoots_prepend_eq_allContinue_of_plateau_two_debts
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ)
+    (hplateau :
+      quittingFiniteZeroBoundaryNashBellmanMinDebt reward (cutoff + 1) =
+        quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff)
+    (first second : ι) (hne : first ≠ second)
+    (hfirst : 0 < quittingFiniteNashBellmanPathPlayerDebt reward cutoff
+      (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff) first)
+    (hsecond : 0 < quittingFiniteNashBellmanPathPlayerDebt reward cutoff
+      (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff) second) :
+    (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+      (quittingFiniteNashBellmanPathPrepend reward cutoff
+        (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff)
+        (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer_mem reward cutoff)))
+      0 = (quittingAllContinueRoot : ι → PMF Bool) := by
+  let root := (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+    (quittingFiniteNashBellmanPathPrepend reward cutoff
+      (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff)
+      (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer_mem reward cutoff))) 0
+  funext player
+  have hquit : (root player true).toReal = 0 := by
+    by_cases hp : player = first
+    · subst player
+      exact quittingProbability_prepend_eq_zero_of_minDebt_plateau
+        reward cutoff hplateau second hsecond first hne
+    · exact quittingProbability_prepend_eq_zero_of_minDebt_plateau
+        reward cutoff hplateau first hfirst player hp
+  exact pmf_eq_pure_false_of_apply_true_toReal_eq_zero (root player) hquit
 
 /-- Minimum aggregate debt is antitone over all cutoffs. -/
 theorem antitone_quittingFiniteZeroBoundaryNashBellmanMinDebt
