@@ -41,7 +41,7 @@ import sys
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import block_pair_r0_9_3_9_obstruction as pair_backtrack  # noqa: E402
+import block_pair_r0_9_run_3_run_obstruction as pair_backtrack  # noqa: E402
 import block_pair_r0_core_excursion_grammar as grammar  # noqa: E402
 import block_pair_r0_singleton_bridge_ranks as singleton_bridge  # noqa: E402
 import block_pair_r0_support9_to_singleton_obstruction as nine_exit  # noqa: E402
@@ -160,11 +160,7 @@ def replay_local_ingredients() -> None:
     singleton_bridge.assert_arbitrary_singleton_word_return_rank()
     nine_exit.assert_one_step_positivity_packet()
 
-    pair_backtrack.assert_first_inactive_clock()
-    e_value, f_value = pair_backtrack.derived_middle_hazards()
-    c_value, d_value = pair_backtrack.second_support_hazards(e_value, f_value)
-    pair_backtrack.assert_second_inactive_difference(e_value, c_value, d_value)
-    pair_backtrack.assert_clock_sign_certificate()
+    pair_backtrack.assert_block_obstruction()
 
 
 def main() -> None:

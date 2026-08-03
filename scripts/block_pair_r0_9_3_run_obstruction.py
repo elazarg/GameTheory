@@ -266,11 +266,17 @@ def assert_endpoint_monotonicity() -> None:
     )
 
 
-def main() -> None:
+def assert_support_three_run_obstruction() -> None:
+    """Replay the base case and the support-3 insertion certificate."""
+
     base.assert_single_phase_obstruction()
     assert_boundary_elimination()
     assert_strict_sign_certificate()
     assert_endpoint_monotonicity()
+
+
+def main() -> None:
+    assert_support_three_run_obstruction()
 
     print("exact support motif {2,6}->9->3+->9 obstruction passed")
     print("a profitable final support-9 deviation survives each 3 insertion")

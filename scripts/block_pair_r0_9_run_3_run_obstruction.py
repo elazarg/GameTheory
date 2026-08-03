@@ -286,13 +286,19 @@ def assert_zero_offset_matches_base() -> None:
     rat_equal(deviation, expected_numerator, expected_denominator)
 
 
-def main() -> None:
-    support_three_run.main()
+def assert_block_obstruction() -> None:
+    """Replay both arbitrary-run lifts without diagnostic output."""
+
+    support_three_run.assert_support_three_run_obstruction()
     support_nine_packet()
     assert_negative_offset_propagation()
     assert_deviation_monotonicity_identity()
     assert_monotonicity_core_positive()
     assert_zero_offset_matches_base()
+
+
+def main() -> None:
+    assert_block_obstruction()
 
     print("exact support motif {2,6}->9+->3+->9 obstruction passed")
     print("support-9 waiting makes player 1's incoming offset negative")
