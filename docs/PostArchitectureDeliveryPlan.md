@@ -582,29 +582,32 @@ well-founded Bellman construction, transparent EFG wrapper, and hostile
 chance/off-path witness now cover its mature workflow without bounded utility
 or a second tree evaluator.
 
-1. make the existing enforcement continuous: add hosted CI for the full build
-   and every audit that can run from a clean checkout, while preserving the
-   pinned-reference-dependent phase 0 and coverage checks as an explicit local
-   checkpoint until their exact snapshot is provisioned in CI;
-2. close the safe engineering debt confirmed by integration review: identify
+Continuous enforcement is now present in `.github/workflows/ci.yml`: a clean
+hosted checkout runs the full `.andSubmodules` build, the self-contained Phase
+1-3 audits, and the tracked-index structural coverage gate. The
+pinned-reference-dependent Phase 0 and full coverage source/freshness checks
+remain explicit local release gates until their exact evidence snapshot is
+provisioned in CI.
+
+1. close the safe engineering debt confirmed by integration review: identify
    ε-CCE with the canonical approximate-equilibrium preference, reuse the new
    Protocol singleton-joint and unique-predecessor tree toolkit in existing
    bridges, and document intentional opt-in leaves rather than importing them
    into capability-light syntax roots;
-3. audit, but do not mechanically apply, the proposed MAID-root and EFG/FOSG
+2. audit, but do not mechanically apply, the proposed MAID-root and EFG/FOSG
    ownership changes against D14, D6, and D30; reserve experiments before any
    dependency-direction or public-semantics change;
-4. build D-REPEAT's public-monitoring equilibrium waist: discounted
+3. build D-REPEAT's public-monitoring equilibrium waist: discounted
    continuation values, canonical perfect-public equilibrium specialization,
    and one-shot-deviation equivalence on a noisy branch-dependent example,
    without introducing infinite realized-path probability;
-5. close M-CONTRACT with a finite principal-agent model, welfare identity,
+4. close M-CONTRACT with a finite principal-agent model, welfare identity,
    incentivized-action existence, and participation against an explicit
    outside option;
-6. run the remaining 81-row L-FOSG classification and already-validated static,
+5. run the remaining 81-row L-FOSG classification and already-validated static,
    Bayesian, and language leaf recovery as parallel BFS work, not as a reason to
    postpone critical capability gaps;
-7. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
+6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    discharges L-ROUND or repeated-game parity.
 

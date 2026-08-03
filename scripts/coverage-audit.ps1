@@ -1,6 +1,9 @@
 param(
   [switch] $UpdateIndex,
-  [switch] $VerifyExpected
+  [switch] $VerifyExpected,
+  # Validate tracked declaration/ledger/capability relationships without the
+  # ignored pinned source snapshot.  This is deliberately not the full gate.
+  [switch] $TrackedIndexOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -121,6 +124,48 @@ function Render-Index($Declarations) {
   return ($lines -join "`n") + "`n"
 }
 
+function Read-TrackedIndex {
+  if (-not (Test-Path $IndexPath)) {
+    throw "Tracked declaration index not found: $IndexPath"
+  }
+  $lines = [IO.File]::ReadAllLines($IndexPath)
+  $expectedHeader = "path`tline`tfamily_id`tkind`tdeclaration`tvisibility"
+  $commitLine = "# pinned_commit`t$PinnedCommit"
+  $malformed = 0
+  $declarations = @()
+  if ($lines.Count -lt 3 -or $lines[0] -ne $commitLine -or
+      $lines[2] -ne $expectedHeader) {
+    $malformed++
+  }
+  for ($i = 3; $i -lt $lines.Count; $i++) {
+    if ($lines[$i].Trim().Length -eq 0) { continue }
+    $cells = $lines[$i].Split("`t")
+    $line = 0
+    if ($cells.Count -ne 6 -or -not [int]::TryParse($cells[1], [ref] $line) -or
+        $line -le 0 -or [string]::IsNullOrWhiteSpace($cells[0]) -or
+        [string]::IsNullOrWhiteSpace($cells[2]) -or
+        [string]::IsNullOrWhiteSpace($cells[3]) -or
+        [string]::IsNullOrWhiteSpace($cells[4]) -or
+        [string]::IsNullOrWhiteSpace($cells[5])) {
+      $malformed++
+      Write-Output "MALFORMED_TRACKED_INDEX_ROW=$($lines[$i])"
+      continue
+    }
+    $declarations += [pscustomobject]@{
+      Path = $cells[0]
+      Line = $line
+      Family = $cells[2]
+      Kind = $cells[3]
+      Declaration = $cells[4]
+      Visibility = $cells[5]
+    }
+  }
+  return [pscustomobject]@{
+    Declarations = @($declarations | Sort-Object Path, Line)
+    Malformed = $malformed
+  }
+}
+
 function Strip-Code([string] $Cell) {
   $value = $Cell.Trim()
   if ($value.StartsWith('`') -and $value.EndsWith('`') -and $value.Length -ge 2) {
@@ -201,7 +246,9 @@ function Report([string] $Key, $Value) {
 }
 
 $scopes = Read-Scopes
-$pinnedFiles = Get-PinnedFiles
+if ($TrackedIndexOnly -and $UpdateIndex) {
+  throw '-TrackedIndexOnly cannot regenerate the index; use the full audit with -UpdateIndex'
+}
 $allowedRecovery = @('partial', 'not-started', 'retired-open',
   'out-of-scope', 'frontier', 'complete')
 $unknownRecovery = @($scopes |
@@ -211,36 +258,65 @@ $recoveryConflicts = @($scopes | Group-Object Family | Where-Object {
 }).Count
 $missingOwners = 0
 $duplicateOwners = 0
-$declarations = @()
-foreach ($path in $pinnedFiles) {
-  $owners = Get-Owners $path $scopes
-  if ($owners.Count -eq 0) {
-    $missingOwners++
-    Write-Output "PINNED_FILE_WITHOUT_OWNER=$path"
-    continue
+$trackedIndexMalformed = 0
+if ($TrackedIndexOnly) {
+  $trackedIndex = Read-TrackedIndex
+  $declarations = $trackedIndex.Declarations
+  $trackedIndexMalformed = $trackedIndex.Malformed
+  $pinnedFiles = @($declarations | Select-Object -ExpandProperty Path -Unique)
+  $indexCurrent = $null
+} else {
+  $pinnedFiles = Get-PinnedFiles
+  $declarations = @()
+  foreach ($path in $pinnedFiles) {
+    $owners = Get-Owners $path $scopes
+    if ($owners.Count -eq 0) {
+      $missingOwners++
+      Write-Output "PINNED_FILE_WITHOUT_OWNER=$path"
+      continue
+    }
+    if ($owners.Count -gt 1) {
+      $duplicateOwners++
+      Write-Output "PINNED_FILE_WITH_DUPLICATE_OWNER=$path"
+      continue
+    }
+    $declarations += Get-Declarations $path $owners[0].Family
   }
-  if ($owners.Count -gt 1) {
-    $duplicateOwners++
-    Write-Output "PINNED_FILE_WITH_DUPLICATE_OWNER=$path"
-    continue
+  $declarations = @($declarations | Sort-Object Path, Line)
+  $renderedIndex = Render-Index $declarations
+
+  if ($UpdateIndex) {
+    [IO.File]::WriteAllText($IndexPath, $renderedIndex,
+      [Text.UTF8Encoding]::new($false))
   }
-  $declarations += Get-Declarations $path $owners[0].Family
-}
-$declarations = @($declarations | Sort-Object Path, Line)
-$renderedIndex = Render-Index $declarations
 
-if ($UpdateIndex) {
-  [IO.File]::WriteAllText($IndexPath, $renderedIndex,
-    [Text.UTF8Encoding]::new($false))
-}
-
-$indexCurrent = 0
-if (Test-Path $IndexPath) {
-  $existing = [IO.File]::ReadAllText($IndexPath).Replace("`r", '')
-  if ($existing -eq $renderedIndex) { $indexCurrent = 1 }
+  $indexCurrent = 0
+  if (Test-Path $IndexPath) {
+    $existing = [IO.File]::ReadAllText($IndexPath).Replace("`r", '')
+    if ($existing -eq $renderedIndex) { $indexCurrent = 1 }
+  }
 }
 
 $familyIds = @($scopes | Select-Object -ExpandProperty Family -Unique)
+$unknownTrackedIndexFamilies = @($declarations | Where-Object {
+  $_.Family -notin $familyIds
+}).Count
+$trackedIndexScopeMismatches = 0
+if ($TrackedIndexOnly) {
+  foreach ($indexedPath in @($declarations | Group-Object Path)) {
+    $owners = @(Get-Owners $indexedPath.Name $scopes)
+    $storedFamilies = @($indexedPath.Group | Select-Object -ExpandProperty Family -Unique)
+    if ($owners.Count -ne 1 -or $storedFamilies.Count -ne 1 -or
+        ($owners.Count -eq 1 -and $storedFamilies.Count -eq 1 -and
+         $owners[0].Family -ne $storedFamilies[0])) {
+      $trackedIndexScopeMismatches++
+      $ownerText = @($owners | Select-Object -ExpandProperty Family) -join ','
+      $storedText = $storedFamilies -join ','
+      Write-Output "TRACKED_INDEX_SCOPE_MISMATCH=$($indexedPath.Name):" +
+        "owners=$ownerText:stored=$storedText"
+    }
+  }
+}
 $ledgerIndex = Read-LedgerRows $pinnedFiles
 $matchedRows = @()
 $missingDeclarations = 0
@@ -385,8 +461,22 @@ $capabilityDashboardMismatch = if (-not $dashboard.Success) { 1 } elseif (
   [int] $dashboard.Groups['retired'].Value -ne
     $capabilityCounts['deliberately retired or out of scope']) { 1 } else { 0 }
 
-Report 'PINNED_FILES' $pinnedFiles.Count
-Report 'PINNED_DECLARATIONS' $declarations.Count
+if ($TrackedIndexOnly) {
+  # These are properties of the committed index, not a measurement of the
+  # ignored source snapshot.  Do not present this mode as a full coverage run.
+  Report 'TRACKED_INDEX_ONLY' 1
+  Report 'TRACKED_INDEX_FILES' $pinnedFiles.Count
+  Report 'TRACKED_INDEX_DECLARATIONS' $declarations.Count
+  Report 'MALFORMED_TRACKED_INDEX' $trackedIndexMalformed
+  Report 'UNKNOWN_TRACKED_INDEX_FAMILIES' $unknownTrackedIndexFamilies
+  Report 'TRACKED_INDEX_SCOPE_MISMATCHES' $trackedIndexScopeMismatches
+  Report 'PINNED_SOURCE_FILE_OWNERSHIP_SKIPPED' 1
+  Report 'SOURCE_FILES_WITHOUT_INDEXED_DECLARATIONS_NOT_CHECKED' 1
+  Report 'GENERATED_INDEX_FRESHNESS_SKIPPED' 1
+} else {
+  Report 'PINNED_FILES' $pinnedFiles.Count
+  Report 'PINNED_DECLARATIONS' $declarations.Count
+}
 Report 'FAMILY_SCOPE_RULES' $scopes.Count
 Report 'FAMILY_IDS' $familyIds.Count
 Report 'UNKNOWN_FAMILY_RECOVERY' $unknownRecovery
@@ -394,9 +484,11 @@ Report 'FAMILY_RECOVERY_CONFLICTS' $recoveryConflicts
 Report 'FAMILY_IDS_MISSING_FROM_LEDGER' ($familyIds.Count - $ledgerFamilies.Count)
 Report 'FAMILY_IDS_MISSING_FROM_CAPABILITIES' `
   $familiesMissingFromCapabilities.Count
-Report 'PINNED_FILES_WITHOUT_OWNER' $missingOwners
-Report 'PINNED_FILES_WITH_DUPLICATE_OWNER' $duplicateOwners
-Report 'GENERATED_INDEX_CURRENT' $indexCurrent
+if (-not $TrackedIndexOnly) {
+  Report 'PINNED_FILES_WITHOUT_OWNER' $missingOwners
+  Report 'PINNED_FILES_WITH_DUPLICATE_OWNER' $duplicateOwners
+  Report 'GENERATED_INDEX_CURRENT' $indexCurrent
+}
 Report 'DECLARATION_LEDGERS' $ledgerIndex.Ledgers.Count
 Report 'DECLARATION_LEDGER_ROWS' $ledgerIndex.Rows.Count
 Report 'UNKNOWN_DISPOSITIONS' $ledgerIndex.Issues.UnknownDisposition
@@ -425,8 +517,6 @@ if ($VerifyExpected) {
     'FAMILY_IDS_MISSING_FROM_CAPABILITIES',
     'UNKNOWN_FAMILY_RECOVERY',
     'FAMILY_RECOVERY_CONFLICTS',
-    'PINNED_FILES_WITHOUT_OWNER',
-    'PINNED_FILES_WITH_DUPLICATE_OWNER',
     'UNKNOWN_DISPOSITIONS',
     'MISSING_LEDGER_PATHS',
     'MISSING_LEDGER_DECLARATIONS',
@@ -436,13 +526,29 @@ if ($VerifyExpected) {
     'UNKNOWN_CAPABILITY_VERDICTS',
     'MALFORMED_CAPABILITY_ROWS',
     'CAPABILITY_DASHBOARD_MISMATCH')
+  if ($TrackedIndexOnly) {
+    $expectedZero += @(
+      'MALFORMED_TRACKED_INDEX',
+      'UNKNOWN_TRACKED_INDEX_FAMILIES',
+      'TRACKED_INDEX_SCOPE_MISMATCHES')
+  } else {
+    $expectedZero += @(
+      'PINNED_FILES_WITHOUT_OWNER',
+      'PINNED_FILES_WITH_DUPLICATE_OWNER')
+  }
   foreach ($key in $expectedZero) {
     if ($Results[$key] -ne 0) {
       throw "$key expected 0, got $($Results[$key])"
     }
   }
-  if ($Results['GENERATED_INDEX_CURRENT'] -ne 1) {
+  if (-not $TrackedIndexOnly -and $Results['GENERATED_INDEX_CURRENT'] -ne 1) {
     throw 'Generated declaration index is stale; run with -UpdateIndex'
+  }
+  if ($TrackedIndexOnly -and
+      ($Results['PINNED_SOURCE_FILE_OWNERSHIP_SKIPPED'] -ne 1 -or
+       $Results['SOURCE_FILES_WITHOUT_INDEXED_DECLARATIONS_NOT_CHECKED'] -ne 1 -or
+       $Results['GENERATED_INDEX_FRESHNESS_SKIPPED'] -ne 1)) {
+    throw 'Tracked-index mode must explicitly report its source-snapshot limits'
   }
   Write-Output 'VERIFIED=1'
 }

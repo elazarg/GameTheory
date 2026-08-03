@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Build and architecture audits
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # lean-action reads the repository's pinned lean-toolchain.  The build is
+      # selected explicitly rather than inferred, and runs before the action
+      # saves its `.lake` cache.
+      - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9 # v1.5.0
+        with:
+          auto-config: false
+          build: true
+          test: false
+          lint: false
+          use-mathlib-cache: true
+
+      # Phase 0 and the full coverage source/freshness audit intentionally
+      # require the ignored, pinned v1 evidence snapshot.  A clean checkout
+      # can still verify every relationship recorded in the tracked index, but
+      # the source-backed checks remain explicit local release-gate work.
+      - name: Verify Phase 1 architecture measurements
+        run: ./scripts/phase1-audit.ps1 -VerifyExpected
+
+      - name: Verify Phase 2 architecture measurements and reachability probes
+        run: ./scripts/phase2-audit.ps1 -VerifyExpected
+
+      - name: Verify Phase 3 architecture measurements and reachability probes
+        run: ./scripts/phase3-audit.ps1 -VerifyExpected
+
+      - name: Verify tracked coverage relationships (not the full snapshot gate)
+        run: ./scripts/coverage-audit.ps1 -TrackedIndexOnly -VerifyExpected
+
+      - name: Verify build and audits do not mutate tracked files
+        run: git diff --exit-code

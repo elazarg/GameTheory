@@ -133,3 +133,9 @@ were folded into the historically named Phase 2/3 scripts. The coverage audit
 owns the separate pinned-v1 accounting gate: it checks exclusive file
 ownership, a current generated declaration index, and exact reviewed ledger
 rows before any `v1-accounted` claim.
+
+Hosted CI runs the full build, the self-contained Phase 1-3 audits, and the
+tracked-index structural coverage checks on a clean checkout. Phase 0 and the
+coverage audit's source-ownership and index-freshness checks additionally
+require the exact ignored `reference/GameTheory-v1/` snapshot; they remain
+explicit local release gates until that pinned evidence is provisioned in CI.
