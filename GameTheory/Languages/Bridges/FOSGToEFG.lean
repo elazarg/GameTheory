@@ -544,32 +544,21 @@ theorem step_predecessor_unique [DecidableEq ι]
   exact ⟨rfl, joint_eq_of_same_target G order firstJoint secondJoint
     firstLegal secondLegal firstRealized secondRealized⟩
 
-/-- Serialized traces are unique because the stored source trace and prefix
-determine every predecessor event. -/
-theorem trace_unique [DecidableEq ι] :
-    ∀ {state : (execution G order).State}
-      (first second : (execution G order).Trace state), first = second
-  | _, .start, .start => rfl
-  | _, .start, .extend prior joint isLegal realized =>
-      False.elim (init_not_mem_step G order _ joint isLegal realized)
-  | _, .extend prior joint isLegal realized, .start =>
-      False.elim (init_not_mem_step G order _ joint isLegal realized)
-  | _, .extend prior joint isLegal realized,
-      .extend secondPrior secondJoint secondLegal secondRealized => by
-      obtain ⟨rfl, hjoint⟩ := step_predecessor_unique G order
-        isLegal secondLegal realized secondRealized
-      subst secondJoint
-      have hprior := trace_unique prior secondPrior
-      subst secondPrior
-      rfl
-termination_by _ first _ => first.length
-decreasing_by simp [ExecutionProtocol.Trace.length]
-
 /-- The generic serializer is tree-shaped even when the source FOSG merges
 states reached by different histories. -/
 theorem treeShaped [DecidableEq ι] :
     (execution G order).IsTreeShaped :=
-  fun _ => ⟨trace_unique G order⟩
+  ExecutionProtocol.isTreeShaped_of_predecessor_unique
+    (init_not_mem_step G order)
+    (fun firstLegal secondLegal firstRealized secondRealized =>
+      step_predecessor_unique G order firstLegal secondLegal
+        firstRealized secondRealized)
+
+/-- Serialized traces are unique because the stored source trace and prefix
+determine every predecessor event. -/
+theorem trace_unique [DecidableEq ι] {state : (execution G order).State}
+    (first second : (execution G order).Trace state) : first = second :=
+  ((treeShaped G order) state).elim first second
 
 theorem step_select [DecidableEq ι]
     {history : History G} {count : ℕ}

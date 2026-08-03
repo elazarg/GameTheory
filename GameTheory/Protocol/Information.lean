@@ -314,6 +314,13 @@ name an action outside the menu. -/
 abbrev Choice (i : ι) (info : M.InfoState i) : Type _ :=
   { choice : Option (E.Action i) // choice ∈ M.menu i info }
 
+/-- A menu with at most one option leaves no meaningful policy choice at that
+information state.  This is stated directly over the information-local menu so
+bridges need not recover inactivity merely to use a singleton-menu fact. -/
+theorem subsingleton_choice_of_menu_subsingleton {i : ι} (info : M.InfoState i)
+    (hmenu : (M.menu i info).Subsingleton) : Subsingleton (M.Choice i info) :=
+  ⟨fun first second => Subtype.ext (hmenu first.2 second.2)⟩
+
 /-- A player's policy: a choice from its own menu, given only its own
 information state. -/
 def Policy (i : ι) : Type _ := (info : M.InfoState i) → M.Choice i info
@@ -733,6 +740,18 @@ theorem runBehavioralFrom_of_terminal
     M.runBehavioralFrom policies fuel h = FinDist.pure h :=
   E.runRandomizedFor_of_terminal (M.randomizedChooser policies) fuel hterm
 
+/-- One nonterminal behavioral step first draws the information-local joint
+action, then follows the execution transition.  Keeping this unfolding at the
+behavioral layer avoids repeating the chooser expansion at every bridge. -/
+theorem runBehavioralFrom_succ_of_not_terminal
+    (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) {h : E.History}
+    (hterm : ¬ E.terminal h.state) :
+    M.runBehavioralFrom policies (fuel + 1) h =
+      (M.behavioralJoint policies h.trace hterm).bind fun draw =>
+        (E.step h.state draw).bindOnSupport fun _ realized =>
+          M.runBehavioralFrom policies fuel (h.extend draw.2 realized) :=
+  E.runRandomizedFor_succ_of_not_terminal (M.randomizedChooser policies) fuel hterm
+
 /-- The law over histories a behavioral profile induces from the start. -/
 def runBehavioral (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) : FinDist E.History :=
   M.runBehavioralFrom policies fuel E.initHistory
@@ -764,12 +783,11 @@ theorem runBehavioralFrom_congr {first second : (i : ι) → M.BehavioralPolicy 
     · rw [runBehavioralFrom, runBehavioralFrom,
         ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm,
         ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm]
-    · have hhere : M.randomizedChooser first h hterm = M.randomizedChooser second h hterm := by
-        rw [randomizedChooser, randomizedChooser]
-        exact M.behavioralJoint_congr h.trace hterm fun i => hagree h (.refl _ _) hterm i
-      rw [runBehavioralFrom, runBehavioralFrom,
-        ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm,
-        ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm, hhere]
+    · have hhere : M.behavioralJoint first h.trace hterm =
+          M.behavioralJoint second h.trace hterm :=
+        M.behavioralJoint_congr h.trace hterm fun i => hagree h (.refl _ _) hterm i
+      rw [M.runBehavioralFrom_succ_of_not_terminal first fuel hterm,
+        M.runBehavioralFrom_succ_of_not_terminal second fuel hterm, hhere]
       refine FinDist.bind_congr fun draw _ => FinDist.bindOnSupport_congr fun target realized => ?_
       exact ih _ fun h' hreach hterm' i => hagree h' (.step _ _ realized hreach) hterm' i
 
@@ -1136,9 +1154,8 @@ theorem runMixedFrom_toMixed (hactsOnce : M.ActsOnceWhereItMatters) :
           FinDist.pi_map, FinDist.pi_product, FinDist.map_comp]
         rfl
       rw [runMixedFrom, hfactor, FinDist.bind_map, FinDist.product, FinDist.bind_bind,
-        runBehavioralFrom,
-        ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm,
-        randomizedChooser, behavioralJoint, FinDist.bind_map]
+        M.runBehavioralFrom_succ_of_not_terminal _ fuel hterm,
+        behavioralJoint, FinDist.bind_map]
       refine FinDist.bind_congr fun draw _ => ?_
       rw [FinDist.bind_map]
       -- Both sides now take the same joint action.
@@ -1340,8 +1357,7 @@ theorem runMixedFrom_toBehavioralWith (hconstrain : M.ConstrainsAlike)
       conv_lhs => rw [runMixedFrom,
         FinDist.eq_bind_condOnFibre (FinDist.pi mixed) (M.answerAt h), FinDist.bind_bind,
         FinDist.bind_map]
-      rw [runBehavioralFrom, ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm,
-        randomizedChooser, behavioralJoint, hdraw]
+      rw [M.runBehavioralFrom_succ_of_not_terminal _ fuel hterm, behavioralJoint, hdraw]
       conv_rhs => rw [FinDist.map_comp, FinDist.bind_map]
       refine FinDist.bind_congr fun p hp => ?_
       have hfib : ∃ q ∈ M.answerAt h ⁻¹' {M.answerAt h p}, q ∈ (FinDist.pi mixed).support :=

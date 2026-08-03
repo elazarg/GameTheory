@@ -706,11 +706,10 @@ theorem map_state_runBehavioralFrom_eq_serialRun
       · have hpath :
             history.state.path.length ≠
               topological.order.length := hterminal
-        rw [InformationModel.runBehavioralFrom,
-          ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
-            _ fuel hterminal,
+        rw [InformationModel.runBehavioralFrom_succ_of_not_terminal
+            (information topological semantics)
+            (behavioralProfile topological semantics policy) fuel hterminal,
           FinDist.map_bind, serialRun, dif_neg hpath]
-        unfold InformationModel.randomizedChooser
         calc
           _ =
               ((information topological semantics).behavioralJoint

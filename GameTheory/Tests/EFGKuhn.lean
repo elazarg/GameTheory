@@ -100,28 +100,16 @@ theorem step_predecessor_unique
   | done firstFirst firstSecond =>
       simp [Round.stopped] at hfirstStopped
 
+theorem twice_treeShaped : twice.IsTreeShaped :=
+  ExecutionProtocol.isTreeShaped_of_predecessor_unique start_not_mem_step
+    (fun firstLegal secondLegal firstRealized secondRealized =>
+      step_predecessor_unique firstLegal secondLegal firstRealized secondRealized)
+
 /-- The two-vote state records the entire action prefix, so its realized
 histories form a tree. -/
-theorem trace_unique :
-    ∀ {state : Round} (first second : twice.Trace state), first = second
-  | _, .start, .start => rfl
-  | _, .start, .extend prior joint isLegal realized =>
-      False.elim (start_not_mem_step _ joint isLegal realized)
-  | _, .extend prior joint isLegal realized, .start =>
-      False.elim (start_not_mem_step _ joint isLegal realized)
-  | _, .extend prior joint isLegal realized,
-      .extend secondPrior secondJoint secondLegal secondRealized => by
-      obtain ⟨rfl, hjoint⟩ :=
-        step_predecessor_unique isLegal secondLegal realized secondRealized
-      subst secondJoint
-      have hprior := trace_unique prior secondPrior
-      subst secondPrior
-      rfl
-termination_by _ first _ => first.length
-decreasing_by simp [ExecutionProtocol.Trace.length]
-
-theorem twice_treeShaped : twice.IsTreeShaped :=
-  fun _ => ⟨trace_unique⟩
+theorem trace_unique {state : Round} (first second : twice.Trace state) :
+    first = second :=
+  (twice_treeShaped state).elim first second
 
 /-- The hostile perfect-recall protocol viewed through the transparent EFG
 specialization. -/

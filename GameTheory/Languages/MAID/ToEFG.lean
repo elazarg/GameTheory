@@ -782,38 +782,23 @@ theorem step_predecessor_unique
       ⟨firstJoint, firstLegal⟩ ⟨secondJoint, secondLegal⟩
       firstRealized secondRealized⟩
 
-theorem trace_unique [DecidableEq Player] [DecidableEq Node]
-    (semantics : GameTheory.Languages.MAID.Semantics diagram) :
-    ∀ {state : (execution topological semantics).State}
-      (first second : (execution topological semantics).Trace state),
-      first = second
-  | _, .start, .start => rfl
-  | _, .start, .extend prior joint isLegal realized =>
-      False.elim
-        (initial_not_mem_transition topological semantics _
-          ⟨joint, isLegal⟩ realized)
-  | _, .extend prior joint isLegal realized, .start =>
-      False.elim
-        (initial_not_mem_transition topological semantics _
-          ⟨joint, isLegal⟩ realized)
-  | _, .extend prior joint isLegal realized,
-      .extend secondPrior secondJoint secondLegal secondRealized => by
-      obtain ⟨rfl, hjoint⟩ :=
-        step_predecessor_unique topological semantics isLegal secondLegal
-          realized secondRealized
-      subst secondJoint
-      have hprior :=
-        trace_unique semantics prior secondPrior
-      subst secondPrior
-      rfl
-termination_by _ first _ => first.length
-decreasing_by simp [ExecutionProtocol.Trace.length]
-
 theorem execution_treeShaped
     [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram) :
     (execution topological semantics).IsTreeShaped :=
-  fun _ => ⟨trace_unique (topological := topological) semantics⟩
+  ExecutionProtocol.isTreeShaped_of_predecessor_unique
+    (fun source joint isLegal =>
+      initial_not_mem_transition topological semantics source ⟨joint, isLegal⟩)
+    (fun firstLegal secondLegal firstRealized secondRealized =>
+      step_predecessor_unique topological semantics firstLegal secondLegal
+        firstRealized secondRealized)
+
+theorem trace_unique [DecidableEq Player] [DecidableEq Node]
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    {state : (execution topological semantics).State}
+    (first second : (execution topological semantics).Trace state) :
+    first = second :=
+  ((execution_treeShaped topological semantics) state).elim first second
 
 theorem execution_singleMover
     [DecidableEq Player] [DecidableEq Node]
