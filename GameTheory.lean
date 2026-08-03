@@ -438,6 +438,7 @@ import GameTheory.Concepts.Stochastic.QuittingExceptionalTailLimits
 import GameTheory.Concepts.Stochastic.QuittingExceptionalInfiniteLTG
 import GameTheory.Concepts.Stochastic.QuittingInfinitePureTimeExtremality
 import GameTheory.Concepts.Stochastic.QuittingBehaviorPureTimeExtremality
+import GameTheory.Concepts.Stochastic.QuittingExceptionalTailProfileAdapter
 import GameTheory.Concepts.Stochastic.QuittingStationaryGain
 import GameTheory.Concepts.Stochastic.QuittingExceptionalSynthesis
 import GameTheory.Concepts.Stochastic.QuittingPeriodicCompiler
