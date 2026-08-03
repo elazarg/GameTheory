@@ -70,6 +70,32 @@ theorem runRandomizedFor_succ_of_not_terminal (chooser : E.RandomizedChooser) (f
           E.runRandomizedFor chooser fuel (h.extend draw.2 realized) := by
   rw [runRandomizedFor, dif_neg hterm]
 
+/-- Running for `m + n` randomized history steps is running for `m` steps
+and then independently continuing for `n` more. -/
+theorem runRandomizedFor_add (chooser : E.RandomizedChooser)
+    (firstFuel secondFuel : ℕ) (history : E.History) :
+    E.runRandomizedFor chooser (firstFuel + secondFuel) history =
+      (E.runRandomizedFor chooser firstFuel history).bind
+        (E.runRandomizedFor chooser secondFuel) := by
+  induction firstFuel generalizing history with
+  | zero => simp [FinDist.pure_bind]
+  | succ firstFuel ih =>
+      by_cases hterm : E.terminal history.state
+      · rw [runRandomizedFor_of_terminal _ _ hterm,
+          runRandomizedFor_of_terminal _ _ hterm,
+          FinDist.pure_bind,
+          runRandomizedFor_of_terminal _ _ hterm]
+      · rw [show firstFuel + 1 + secondFuel =
+            (firstFuel + secondFuel) + 1 by omega,
+          runRandomizedFor_succ_of_not_terminal chooser _ hterm,
+          runRandomizedFor_succ_of_not_terminal chooser _ hterm,
+          FinDist.bind_bind]
+        apply FinDist.bind_congr
+        intro draw _
+        rw [FinDist.bind_bindOnSupport]
+        exact FinDist.bindOnSupport_congr fun reached realized =>
+          ih (history.extend draw.2 realized)
+
 /-- **Deterministic play is the degenerate case.** A chooser that answers with
 point masses induces exactly the law the deterministic runner induces, so
 randomizing is an extension of committing rather than a rival account of it. -/

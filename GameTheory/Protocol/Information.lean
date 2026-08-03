@@ -731,6 +731,16 @@ def runBehavioralFrom (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ
 def runBehavioral (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) : FinDist E.History :=
   M.runBehavioralFrom policies fuel E.initHistory
 
+/-- Behavioral play composes across adjacent fuel blocks. -/
+theorem runBehavioralFrom_add
+    (policies : (i : ι) → M.BehavioralPolicy i)
+    (firstFuel secondFuel : ℕ) (history : E.History) :
+    M.runBehavioralFrom policies (firstFuel + secondFuel) history =
+      (M.runBehavioralFrom policies firstFuel history).bind
+        (M.runBehavioralFrom policies secondFuel) :=
+  E.runRandomizedFor_add (M.randomizedChooser policies)
+    firstFuel secondFuel history
+
 /-- Behavioral profiles that answer alike at every history a run of this length
 can pass through induce the same law. This is what makes a change to a
 coordinate the continuation never consults invisible. -/
