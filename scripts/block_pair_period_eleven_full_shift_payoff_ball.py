@@ -360,7 +360,7 @@ def interval_text(value: Interval) -> str:
 
 
 EXPECTED_TRANSCRIPT_SHA256 = (
-    "cb97d3cf8f02539d0606ab6433e03d44b8bdfa0779865e7a998df6ca8e152491"
+    "59175578dfde3544dcdbb8d15a370d27f976e6b94b512aec130e4136a62996ea"
 )
 
 

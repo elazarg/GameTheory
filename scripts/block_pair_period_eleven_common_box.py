@@ -91,7 +91,7 @@ CERTIFICATE_BY_LABEL = {
 
 ALPHABET = ("10", "11", "14")
 CONTEXT_RADIUS = Fraction(2, 10**6)
-SAFE_OPPONENT_BLOCK_BOUND = Fraction(18481, 200000)  # 0.092405
+SAFE_OPPONENT_BLOCK_BOUND = Fraction(1849, 20000)  # 0.09245
 PAYOFF_ABS_BOUND = max(
     abs(payoff)
     for row in TERMINAL.values()
@@ -261,14 +261,11 @@ def interval_newton_quadratic(
     )
     newton = Interval.point(candidate) - divide(value_at_candidate, derivative)
     assert domain.low < newton.low <= newton.high < domain.high
-    # A second exact refinement makes subsequent centered forms much tighter.
-    refined_derivative = quadratic_derivative(coefficients, newton)
-    assert refined_derivative.high < 0 or 0 < refined_derivative.low
-    refined = Interval.point(candidate) - divide(
-        value_at_candidate, refined_derivative
-    )
-    assert domain.low < refined.low <= refined.high < domain.high
-    return outward_round(refined)
+    # Return this first interval-Newton enclosure.  The Newton center belongs
+    # to `domain`, so the usual mean-value proof validates the inclusion.
+    # Reusing the same center with a derivative evaluated only on `newton`
+    # would be unsound when the center lies outside `newton`.
+    return outward_round(newton)
 
 
 def rational_hazard(support: int, successor: VectorBox) -> VectorBox:
@@ -669,7 +666,7 @@ def hash_edge(
 # Filled after the first deterministic exact replay; kept as a regression
 # against changes to centers, chart orientation, rounding, or edge order.
 EXPECTED_TRANSCRIPT_SHA256 = (
-    "cb0450723132c3458a25e729ed5dc5dd64da4af5417e8fbdea38d57866766238"
+    "071da65a39f684d3a11f73b770733aecda0a9bd5b5a2c7b4af0f5d1897d00689"
 )
 
 

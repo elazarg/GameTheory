@@ -67,8 +67,8 @@ WORDS = (
             "2.0790386488323763351606785119660598970",
             "3.9553597473310079439784695733067785030",
         ),
-        Fraction(1426, 10**6),
-        Fraction(561, 10**13),
+        Fraction(143, 10**5),
+        Fraction(562, 10**13),
     ),
     MixedWord(
         "10",
@@ -85,8 +85,8 @@ WORDS = (
             "2.0183097330229485108898744579078591291",
             "4.0243604807450666920400575793869011182",
         ),
-        Fraction(1586, 10**6),
-        Fraction(553, 10**13),
+        Fraction(159, 10**5),
+        Fraction(554, 10**13),
     ),
     MixedWord(
         "11",
@@ -103,8 +103,8 @@ WORDS = (
             "2.0183183241680450264358488447038481767",
             "4.0243061375457684378865972005300593172",
         ),
-        Fraction(1369, 10**6),
-        Fraction(417, 10**13),
+        Fraction(1371, 10**6),
+        Fraction(418, 10**13),
     ),
 )
 
@@ -127,6 +127,11 @@ PURE_CENTERS = {
         "-1.8143086353", "1.5030041565", "2.0179188553", "4.0269245859"
     ),
 }
+
+
+EXPECTED_TRANSCRIPT_SHA256 = (
+    "cb0838beeb53f72e24f8d46980a42db1e6f7c4440c7036ea1a92e76e73e1f3c2"
+)
 
 
 def centered_box(
@@ -227,6 +232,7 @@ def replay(word: MixedWord) -> tuple[str, ...]:
 def main() -> None:
     transcript = "\n".join("|".join(replay(word)) for word in WORDS)
     digest = sha256(transcript.encode("ascii")).hexdigest()
+    assert digest == EXPECTED_TRANSCRIPT_SHA256
     print("exact Q119 mixed-cycle replay passed")
     print(f"transcript SHA-256 = {digest}")
 
