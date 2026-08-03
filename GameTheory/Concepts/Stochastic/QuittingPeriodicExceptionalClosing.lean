@@ -216,4 +216,89 @@ theorem isUniformEquilibriumPayoff_quittingCyclicTerminalValue_of_branches
     exact (hdeliveryThreshold horizon
       (le_trans (Nat.le_max_right _ _) hhorizon) player).le
 
+/-! ## Tail-relative finite-block closing
+
+The prescribed block and the deviator's Snell block generally have different
+residual budgets.  Keeping them separate gives the sharp sum of the two
+geometric charges.  When the opponent clock approaches the noncontracting
+endpoint, the relevant numerator is the positive part of the Snell residual;
+at the endpoint itself the terminal Never payoff has to be retained
+explicitly.
+-/
+
+/-- A finite-block prescribed residual and Snell residual contribute
+separately to the closing gap.  This is the sharp two-budget version of
+`finiteBlockClosingGap_le`. -/
+theorem finiteBlockClosingGap_le_separateResiduals
+    (T : ℝ → ℝ) {G σ σi δ ηV ηB V B w : ℝ}
+    (hσ0 : 0 ≤ σ) (hσδ : σ ≤ δ)
+    (hσi0 : 0 ≤ σi) (hσiδ : σi ≤ δ)
+    (hδ1 : δ < 1) (hηV0 : 0 ≤ ηV) (hηB0 : 0 ≤ ηB)
+    (hVfixed : V = G + σ * V)
+    (hVresidual : |(G + σ * w) - w| ≤ ηV)
+    (hTlipschitz : ∀ x y, |T x - T y| ≤ σi * |x - y|)
+    (hBfixed : T B = B) (hTsuper : T w ≤ w + ηB) :
+    B - V ≤ (ηV + ηB) / (1 - δ) := by
+  have hprescribed := affineFixedPoint_dist_le_of_residual
+    hσ0 hσδ hδ1 hηV0 hVfixed hVresidual
+  have hcap := contractingFixedPoint_le_of_approximateSuperSolution
+    T hσi0 hσiδ hδ1 hηB0 hTlipschitz hBfixed hTsuper
+  have hcapGap : B - w ≤ ηB / (1 - δ) := by
+    linarith
+  have hprescribedGap : w - V ≤ ηV / (1 - δ) :=
+    (le_abs_self (w - V)).trans
+      (by simpa [abs_sub_comm] using hprescribed)
+  calc
+    B - V = (B - w) + (w - V) := by ring
+    _ ≤ ηB / (1 - δ) + ηV / (1 - δ) :=
+      add_le_add hcapGap hprescribedGap
+    _ = (ηV + ηB) / (1 - δ) := by ring
+
+/-- Tail-relative Snell closing.  For a contracting scalar block, the cap gap
+is controlled by the positive part of the residual at the supplied tail
+value.  In particular, a residual merely tending to zero is insufficient
+when `σ` tends to one unless it is little-o of `1 - σ`. -/
+theorem contractingFixedPoint_sub_le_positivePartResidual
+    (T : ℝ → ℝ) {σ B w : ℝ}
+    (hσ0 : 0 ≤ σ) (hσ1 : σ < 1)
+    (hTlipschitz : ∀ x y, |T x - T y| ≤ σ * |x - y|)
+    (hBfixed : T B = B) :
+    B - w ≤ max (T w - w) 0 / (1 - σ) := by
+  let η := max (T w - w) 0
+  have hη0 : 0 ≤ η := le_max_right _ _
+  have hsuper : T w ≤ w + η := by
+    dsimp only [η]
+    have hresidual : T w - w ≤ max (T w - w) 0 :=
+      le_max_left _ _
+    linarith
+  have hcap := contractingFixedPoint_le_of_approximateSuperSolution
+    T hσ0 (le_refl σ) hσ1 hη0 hTlipschitz hBfixed hsuper
+  dsimp only [η] at hcap
+  linarith
+
+/-- Division-free exceptional endpoint.  If the opponent clock is exactly
+noncontracting, its one-block Snell operator is `z ↦ max quitValue z`, while
+the terminal cap is `max 0 quitValue`: the extra zero is the Never boundary.
+A nonnegative exact super-solution therefore bounds the cap without dividing
+by `1 - σ`. -/
+theorem exceptionalSnellCap_le_of_nonnegative_superSolution
+    {quitValue w : ℝ} (hw0 : 0 ≤ w)
+    (hsuper : max quitValue w ≤ w) :
+    max 0 quitValue ≤ w := by
+  apply max_le hw0
+  exact (le_max_left quitValue w).trans hsuper
+
+/-- The exact exceptional-clock exploitability is the negative part of the
+singleton quitting payoff.  This is the scalar regression that prevents a
+local fixed-point equation from silently discarding Never. -/
+theorem exceptionalSnellCap_sub_prescribed_eq_negativePart
+    (soloReward : ℝ) :
+    max 0 soloReward - soloReward = max (-soloReward) 0 := by
+  by_cases hsolo : 0 ≤ soloReward
+  · rw [max_eq_right hsolo, max_eq_right (neg_nonpos.mpr hsolo)]
+    ring
+  · have hsoloLe : soloReward ≤ 0 := le_of_not_ge hsolo
+    rw [max_eq_left hsoloLe, max_eq_left (neg_nonneg.mpr hsoloLe)]
+    ring
+
 end GameTheory
