@@ -50,6 +50,7 @@ def quittingDebtBox
   quittingNashBellmanBox (quittingRewardBound reward) ×ˢ
     Set.Icc (0 : Payoff ι) (quittingPositiveSingletonDebtCap reward)
 
+omit [DecidableEq ι] in
 /-- The augmented state box is compact. -/
 theorem quittingDebtBox_isCompact
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
@@ -94,7 +95,7 @@ theorem quittingDebtOpponentContinueMass_le_one
     exact (state.1.2 other).property.1 false
   · intro other _
     rw [← quittingRootOfSimplex_apply_toReal]
-    simpa using ENNReal.toReal_mono ENNReal.one_ne_top
+    exact ENNReal.toReal_mono ENNReal.one_ne_top
       (PMF.coe_le_one (quittingRootOfSimplex state.1.2 other) false)
 
 /-- Exact debt-augmented Nash--Bellman edge. -/

@@ -54,6 +54,7 @@ theorem residualDepth_tendsto_atTop_or_frequently_bounded
 
 /-! ## Projective chronological extraction -/
 
+omit [DecidableEq ι] in
 /-- Coordinatewise continuity of total debt-edge loss. -/
 theorem continuous_quittingDebtEdgeLoss :
     Continuous (fun edge : QuittingDebtPoint ι × QuittingDebtPoint ι ↦
@@ -61,27 +62,17 @@ theorem continuous_quittingDebtEdgeLoss :
   unfold quittingDebtEdgeLoss quittingDebtCoordinateLoss
   fun_prop
 
-set_option maxHeartbeats 800000 in
-/-- Genuine residual-horizon escape extracts one projectively compatible
-infinite tail from actual finite exact debt tails.
-
-`tail family time` is understood as a rooted finite suffix, padded after
-`depth family`; only edges strictly before that residual depth are assumed to
-be actual.  Convergence is in the product topology, hence coordinatewise. -/
-theorem exists_projective_quittingDebtTail_of_residualDepth_tendsto
+omit [DecidableEq ι] in
+/-- A family of debt paths contained coordinatewise in the compact debt box
+has a coordinatewise convergent subsequence whose limit remains in that box. -/
+theorem exists_projective_quittingDebtTail_limit
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (depth : ℕ → ℕ)
     (tail : ℕ → ℕ → QuittingDebtPoint ι)
-    (hbox : ∀ family time, tail family time ∈ quittingDebtBox reward)
-    (hedge : ∀ family time, time < depth family →
-      IsQuittingDebtEdge reward (tail family time) (tail family (time + 1)))
-    (hdepth : Tendsto depth atTop atTop) :
+    (hbox : ∀ family time, tail family time ∈ quittingDebtBox reward) :
     ∃ (limit : ℕ → QuittingDebtPoint ι) (subseq : ℕ → ℕ),
       StrictMono subseq ∧
       Tendsto ((fun family ↦ tail family) ∘ subseq) atTop (nhds limit) ∧
-      (∀ time, limit time ∈ quittingDebtBox reward) ∧
-      ∀ time,
-        IsQuittingDebtEdge reward (limit time) (limit (time + 1)) := by
+      ∀ time, limit time ∈ quittingDebtBox reward := by
   let pathBox : Set (ℕ → QuittingDebtPoint ι) :=
     {path | ∀ time, path time ∈ quittingDebtBox reward}
   have hpathBoxCompact : IsCompact pathBox := by
@@ -91,32 +82,70 @@ theorem exists_projective_quittingDebtTail_of_residualDepth_tendsto
     fun family time ↦ hbox family time
   obtain ⟨limit, hlimitBox, subseq, hsubseq, hlimit⟩ :=
     hpathBoxCompact.tendsto_subseq htailMem
-  refine ⟨limit, subseq, hsubseq, hlimit, hlimitBox, ?_⟩
-  intro time
-  have hdepthSubseq : Tendsto (depth ∘ subseq) atTop atTop :=
-    hdepth.comp hsubseq.tendsto_atTop
+  exact ⟨limit, subseq, hsubseq, hlimit, hlimitBox⟩
+
+omit [DecidableEq ι] in
+/-- Coordinatewise projective convergence implies convergence of every
+fixed adjacent pair. -/
+theorem tendsto_projective_adjacentPair
+    (tail : ℕ → ℕ → QuittingDebtPoint ι)
+    (limit : ℕ → QuittingDebtPoint ι) (subseq : ℕ → ℕ)
+    (hlimit : Tendsto ((fun family ↦ tail family) ∘ subseq)
+      atTop (nhds limit))
+    (time : ℕ) : Tendsto
+      (fun family ↦
+        (tail (subseq family) time, tail (subseq family) (time + 1)))
+      atTop (nhds (limit time, limit (time + 1))) := by
   have hcurrent : Tendsto (fun family ↦ tail (subseq family) time)
       atTop (nhds (limit time)) := by
     exact ((continuous_apply time).tendsto limit).comp hlimit
   have hsuccessor : Tendsto (fun family ↦ tail (subseq family) (time + 1))
       atTop (nhds (limit (time + 1))) := by
     exact ((continuous_apply (time + 1)).tendsto limit).comp hlimit
-  have hpairs : Tendsto
-      (fun family ↦
-        (tail (subseq family) time, tail (subseq family) (time + 1)))
-      atTop (nhds (limit time, limit (time + 1))) :=
-    hcurrent.prodMk_nhds hsuccessor
-  have heventually : ∀ᶠ family in atTop,
+  exact hcurrent.prodMk_nhds hsuccessor
+
+/-- Every fixed adjacent pair eventually lies in the exact debt-edge graph
+when residual depth tends to infinity. -/
+theorem eventually_projective_adjacentPair_mem_debtEdgeGraph
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (depth : ℕ → ℕ)
+    (tail : ℕ → ℕ → QuittingDebtPoint ι)
+    (hbox : ∀ family time, tail family time ∈ quittingDebtBox reward)
+    (hedge : ∀ family time, time < depth family →
+      IsQuittingDebtEdge reward (tail family time) (tail family (time + 1)))
+    (hdepth : Tendsto depth atTop atTop)
+    (subseq : ℕ → ℕ) (hsubseq : StrictMono subseq) (time : ℕ) :
+    ∀ᶠ family in atTop,
       (tail (subseq family) time, tail (subseq family) (time + 1)) ∈
         quittingDebtEdgeGraph reward := by
-    filter_upwards [tendsto_atTop.1 hdepthSubseq (time + 1)] with family hfamily
-    change time + 1 ≤ depth (subseq family) at hfamily
-    exact ⟨hbox (subseq family) time, hbox (subseq family) (time + 1),
-      hedge (subseq family) time (by omega)⟩
-  exact ((isClosed_quittingDebtEdgeGraph reward).mem_of_tendsto
-    hpairs heventually).2.2
+  have hdepthSubseq : Tendsto (depth ∘ subseq) atTop atTop :=
+    hdepth.comp hsubseq.tendsto_atTop
+  filter_upwards [tendsto_atTop.1 hdepthSubseq (time + 1)] with family hfamily
+  change time + 1 ≤ depth (subseq family) at hfamily
+  exact ⟨hbox (subseq family) time, hbox (subseq family) (time + 1),
+    hedge (subseq family) time (by omega)⟩
 
-set_option maxHeartbeats 800000 in
+omit [DecidableEq ι] in
+/-- Vanishing loss along a convergent projective subsequence passes to each
+fixed adjacent pair. -/
+theorem quittingDebtEdgeLoss_eq_zero_of_projective_limit
+    (tail : ℕ → ℕ → QuittingDebtPoint ι)
+    (limit : ℕ → QuittingDebtPoint ι) (subseq : ℕ → ℕ)
+    (hsubseq : StrictMono subseq)
+    (hlimit : Tendsto ((fun family ↦ tail family) ∘ subseq)
+      atTop (nhds limit))
+    (hloss : ∀ time, Tendsto
+      (fun family ↦
+        quittingDebtEdgeLoss (tail family time) (tail family (time + 1)))
+      atTop (nhds 0))
+    (time : ℕ) :
+    quittingDebtEdgeLoss (limit time) (limit (time + 1)) = 0 := by
+  have hpairs := tendsto_projective_adjacentPair tail limit subseq hlimit time
+  have hlimitLoss := (continuous_quittingDebtEdgeLoss.tendsto
+    (limit time, limit (time + 1))).comp hpairs
+  have hzeroLoss := (hloss time).comp hsubseq.tendsto_atTop
+  exact tendsto_nhds_unique hlimitLoss hzeroLoss
+
 /-- If every fixed chronological edge has vanishing debt loss along the
 extracted family, the projective limit consists entirely of zero-loss exact
 edges. -/
@@ -140,32 +169,25 @@ theorem exists_projective_zeroLoss_quittingDebtTail
         IsQuittingDebtEdge reward (limit time) (limit (time + 1))) ∧
       ∀ time,
         quittingDebtEdgeLoss (limit time) (limit (time + 1)) = 0 := by
-  obtain ⟨limit, subseq, hsubseq, hlimit, hlimitBox, hedgeLimit⟩ :=
-    exists_projective_quittingDebtTail_of_residualDepth_tendsto
-      reward depth tail hbox hedge hdepth
-  refine ⟨limit, subseq, hsubseq, hlimit, hlimitBox, hedgeLimit, ?_⟩
-  intro time
-  have hcurrent : Tendsto (fun family ↦ tail (subseq family) time)
-      atTop (nhds (limit time)) :=
-    ((continuous_apply time).tendsto limit).comp hlimit
-  have hsuccessor : Tendsto (fun family ↦ tail (subseq family) (time + 1))
-      atTop (nhds (limit (time + 1))) :=
-    ((continuous_apply (time + 1)).tendsto limit).comp hlimit
-  have hpairs : Tendsto
-      (fun family ↦
+  obtain ⟨limit, subseq, hsubseq, hlimit, hlimitBox⟩ :=
+    exists_projective_quittingDebtTail_limit
+      (reward := reward) (tail := tail) hbox
+  have hedgeLimit : ∀ time,
+      IsQuittingDebtEdge reward (limit time) (limit (time + 1)) := by
+    intro time
+    exact isQuittingDebtEdge_of_tendsto_edgeGraph
+      (edge := (limit time, limit (time + 1)))
+      (candidate := fun family ↦
         (tail (subseq family) time, tail (subseq family) (time + 1)))
-      atTop (nhds (limit time, limit (time + 1))) :=
-    hcurrent.prodMk_nhds hsuccessor
-  have hlimitLoss : Tendsto
-      (fun family ↦
-        quittingDebtEdgeLoss (tail (subseq family) time)
-          (tail (subseq family) (time + 1)))
-      atTop
-      (nhds (quittingDebtEdgeLoss (limit time) (limit (time + 1)))) :=
-    (continuous_quittingDebtEdgeLoss.tendsto
-      (limit time, limit (time + 1))).comp hpairs
-  have hzeroLoss := (hloss time).comp hsubseq.tendsto_atTop
-  exact tendsto_nhds_unique hlimitLoss hzeroLoss
+      reward (tendsto_projective_adjacentPair tail limit subseq hlimit time)
+      (eventually_projective_adjacentPair_mem_debtEdgeGraph
+        reward depth tail hbox hedge hdepth subseq hsubseq time)
+  have hzeroLimit : ∀ time,
+      quittingDebtEdgeLoss (limit time) (limit (time + 1)) = 0 := by
+    intro time
+    exact quittingDebtEdgeLoss_eq_zero_of_projective_limit
+      tail limit subseq hsubseq hlimit hloss time
+  exact ⟨limit, subseq, hsubseq, hlimit, hlimitBox, hedgeLimit, hzeroLimit⟩
 
 /-- Pointwise zero-loss support classification on a projective debt tail:
 a positive successor debt coordinate forces every opponent of that owner to

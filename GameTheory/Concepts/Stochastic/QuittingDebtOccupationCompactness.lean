@@ -42,6 +42,14 @@ def quittingDebtEdgeGraph
     edge.2 ∈ quittingDebtBox reward ∧
     IsQuittingDebtEdge reward edge.1 edge.2}
 
+/-- Membership in the bounded debt-edge graph contains an exact debt edge. -/
+theorem isQuittingDebtEdge_of_mem_edgeGraph
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    {edge : QuittingDebtPoint ι × QuittingDebtPoint ι}
+    (hedge : edge ∈ quittingDebtEdgeGraph reward) :
+    IsQuittingDebtEdge reward edge.1 edge.2 :=
+  hedge.2.2
+
 /-- Opponent Continue mass is continuous in the augmented state. -/
 theorem continuous_quittingDebtOpponentContinueMass (owner : ι) :
     Continuous (fun state : QuittingDebtPoint ι ↦
@@ -130,6 +138,19 @@ theorem isClosed_quittingDebtEdgeGraph
     aesop
   rw [heq]
   exact ((hnash.inter hcurrentDebt).inter hsuccessorDebt).inter hrecurrence
+
+/-- A limit of eventually exact bounded debt edges is an exact debt edge. -/
+theorem isQuittingDebtEdge_of_tendsto_edgeGraph
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    {edge : QuittingDebtPoint ι × QuittingDebtPoint ι}
+    {candidate : ℕ → QuittingDebtPoint ι × QuittingDebtPoint ι}
+    (hcandidate : Tendsto candidate atTop (nhds edge))
+    (heventually : ∀ᶠ index in atTop,
+      candidate index ∈ quittingDebtEdgeGraph reward) :
+    IsQuittingDebtEdge reward edge.1 edge.2 :=
+  isQuittingDebtEdge_of_mem_edgeGraph reward
+    ((isClosed_quittingDebtEdgeGraph reward).mem_of_tendsto
+      hcandidate heventually)
 
 /-- The bounded exact augmented edge graph is compact. -/
 theorem quittingDebtEdgeGraph_isCompact

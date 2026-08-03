@@ -43,6 +43,11 @@ inductive Edge
   | negative
   deriving DecidableEq, Fintype
 
+private theorem Edge.univ_eq :
+    (Finset.univ : Finset Edge) = {Edge.low, Edge.high, Edge.negative} := by
+  ext edge
+  cases edge <;> simp
+
 /-- Both positive edges have public observation `false`; the negative edge
 has public observation `true`. -/
 def observation : Edge → Bool
@@ -72,7 +77,7 @@ def target (_ : Edge) : Unit := ()
 /-- The target masses form a probability row. -/
 theorem sum_targetMass_eq_one :
     ∑ edge, targetMass edge = 1 := by
-  native_decide
+  simp [Edge.univ_eq, targetMass]; norm_num
 
 /-- Every target edge has strictly positive rational mass. -/
 theorem targetMass_pos (edge : Edge) : 0 < targetMass edge := by
@@ -81,17 +86,17 @@ theorem targetMass_pos (edge : Edge) : 0 < targetMass edge := by
 /-- The target row has exactly zero mean charge. -/
 theorem targetMeanCharge_eq_zero :
     ∑ edge, targetMass edge * (charge edge : ℚ) = 0 := by
-  native_decide
+  simp [Edge.univ_eq, targetMass, charge]; norm_num
 
 /-- Public mass of one observation after forgetting the hidden edge. -/
 def publicMass (output : Bool) : ℚ :=
   ∑ edge, if observation edge = output then targetMass edge else 0
 
 @[simp] theorem publicMass_false : publicMass false = 5 / 12 := by
-  native_decide
+  simp [publicMass, Edge.univ_eq, observation, targetMass]; norm_num
 
 @[simp] theorem publicMass_true : publicMass true = 7 / 12 := by
-  native_decide
+  simp [publicMass, Edge.univ_eq, observation, targetMass]
 
 /-- The within-`false` fiber charge difference is the unit direction. -/
 @[simp] theorem high_sub_low_charge : charge .high - charge .low = 1 := by
