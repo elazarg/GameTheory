@@ -216,16 +216,47 @@ structure LocalPhaseData (precision : ℕ) where
   survival : LocalDual precision
 deriving DecidableEq
 
+def buildLocalRoot
+    (box : HazardIndex → DyadicInterval precision) (phase : Phase) :
+    Vector (LocalDual precision) 4 :=
+  Vector.ofFn fun player ↦ localRoot box phase player
+
+def buildLocalMaskProbabilities
+    (root : Vector (LocalDual precision) 4) :
+    Vector (LocalDual precision) 16 :=
+  Vector.ofFn fun mask ↦ localMaskProbability root mask
+
+def localImmediateFromMaskProbabilities
+    (maskProbabilities : Vector (LocalDual precision) 16)
+    (who : Player) : LocalDual precision :=
+  cachedSum fun mask : QuitterMask ↦
+    (CachedDual.ofRat (terminalTable mask who)).mul
+      (maskProbabilities.get mask)
+
+/-- Compute only one immediate-reward component.  This is useful as an
+independent native-certificate unit for an otherwise expensive phase. -/
+def buildLocalImmediate
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) (who : Player) : LocalDual precision :=
+  localImmediateFromMaskProbabilities
+    (buildLocalMaskProbabilities (buildLocalRoot box phase)) who
+
+/-- Compute only the all-continue component of one phase. -/
+def buildLocalSurvival
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) : LocalDual precision :=
+  localMaskProbability (buildLocalRoot box phase) 0
+
 def buildLocalPhaseData
     (box : HazardIndex → DyadicInterval precision) (phase : Phase) :
     LocalPhaseData precision :=
   let root : Vector (LocalDual precision) 4 :=
-    Vector.ofFn fun player => localRoot box phase player
+    Vector.ofFn fun player ↦ localRoot box phase player
   let maskProbabilities : Vector (LocalDual precision) 16 :=
-    Vector.ofFn fun mask => localMaskProbability root mask
+    Vector.ofFn fun mask ↦ localMaskProbability root mask
   let immediate : Vector (LocalDual precision) 4 :=
-    Vector.ofFn fun who =>
-      cachedSum fun mask : QuitterMask =>
+    Vector.ofFn fun who ↦
+      cachedSum fun mask : QuitterMask ↦
         (CachedDual.ofRat (terminalTable mask who)).mul
           (maskProbabilities.get mask)
   ⟨root, maskProbabilities, immediate, maskProbabilities.get 0⟩
@@ -485,6 +516,40 @@ theorem liftLocalMaskProbability_eq_evalCachedDyadic
   funext player
   exact liftLocalActionFactor_eq_evalCachedDyadic
     box phase root hroot mask omitted player
+
+theorem lift_buildLocalImmediate_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) (who : Player) :
+    liftLocalDual phase (buildLocalImmediate box phase who) =
+      RationalPolynomial.evalCachedDyadic box
+        (immediateReward phase who) := by
+  simp only [buildLocalImmediate, localImmediateFromMaskProbabilities,
+    buildLocalMaskProbabilities, buildLocalRoot, Vector.get_ofFn]
+  rw [immediateReward, liftLocalDual_cachedSum,
+    evalCachedDyadic_expressionSum]
+  apply congrArg cachedSum
+  funext mask
+  simp only [liftLocalDual_mul, CachedDual.ofRat,
+    liftLocalDual_constant, RationalPolynomial.evalCachedDyadic]
+  rw [liftLocalMaskProbability_eq_evalCachedDyadic]
+  intro player
+  simp only [Vector.get_ofFn]
+  exact liftLocalRoot_eq_evalCachedDyadic box phase player
+
+theorem lift_buildLocalSurvival_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) :
+    liftLocalDual phase (buildLocalSurvival box phase) =
+      RationalPolynomial.evalCachedDyadic box
+        (phaseSurvival phase) := by
+  simp only [buildLocalSurvival, buildLocalRoot]
+  simpa only [phaseSurvival] using
+    liftLocalMaskProbability_eq_evalCachedDyadic box phase
+      (Vector.ofFn fun player ↦ localRoot box phase player)
+      (fun player ↦ by
+        simp only [Vector.get_ofFn]
+        exact liftLocalRoot_eq_evalCachedDyadic box phase player)
+      0
 
 theorem lift_buildLocalPhaseData_maskProbability
     (box : HazardIndex → DyadicInterval precision)
