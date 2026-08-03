@@ -40,6 +40,16 @@ theorem isεHorizonNash_iff [DecidableEq ι] (initial : G.State)
   exact isεNash_iff (F := G.horizonForm initial horizon)
     (utility := G.horizonUtility initial horizon)
 
+/-- Finite-horizon approximate Nash is monotone in its error allowance. -/
+theorem IsεHorizonNash.mono [DecidableEq ι] {initial : G.State}
+    [∀ i, Nonempty (G.Action i)] {horizon : ℕ} {epsilon epsilon' : ℝ}
+    {profile : G.BehaviorProfile initial}
+    (h : G.IsεHorizonNash initial horizon epsilon profile)
+    (hepsilon : epsilon ≤ epsilon') :
+    G.IsεHorizonNash initial horizon epsilon' profile := by
+  exact IsεNash.mono (F := G.horizonForm initial horizon)
+    (utility := G.horizonUtility initial horizon) h hepsilon
+
 /-- One profile is epsilon-Nash at every sufficiently long finite horizon. -/
 def IsUniformεEquilibrium [DecidableEq ι] (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (epsilon : ℝ)
@@ -69,6 +79,66 @@ theorem IsUniformεEquilibrium.mono [DecidableEq ι] {initial : G.State}
     IsεNash.mono (F := G.horizonForm initial horizon)
       (utility := G.horizonUtility initial horizon)
       (hthreshold horizon hhorizon) hepsilon⟩
+
+/-- A proof-facing certificate for a uniform equilibrium payoff.  At every
+positive accuracy it supplies one profile whose on-path payoff is close to the
+claimed value and whose unilateral deviations are capped by that value.
+
+This is the elementary certificate calculus from the active sibling's
+`Concepts/Stochastic/Uniform.lean`, adapted to the canonical Protocol horizon
+form; it does not use that branch's unproved existence claim. -/
+def HasUniformDeviationCapConstructor [DecidableEq ι] (initial : G.State)
+    [∀ i, Nonempty (G.Action i)] (value : ι → ℝ) : Prop :=
+  ∀ delta : ℝ, 0 < delta →
+    ∃ (profile : G.BehaviorProfile initial) (threshold : ℕ),
+      ∀ horizon, threshold ≤ horizon →
+        (∀ who,
+          |G.finiteAveragePayoff initial horizon profile who - value who| ≤ delta) ∧
+        ∀ who (deviation : (G.perfectMonitoring initial).BehavioralPolicy who),
+          G.finiteAveragePayoff initial horizon
+              (Profile.update profile who deviation) who ≤ value who + delta
+
+/-- A uniform deviation-cap constructor yields the semantic uniform-payoff
+property. -/
+theorem isUniformEquilibriumPayoff_of_deviation_caps [DecidableEq ι]
+    (initial : G.State) [∀ i, Nonempty (G.Action i)] (value : ι → ℝ)
+    (hcertificate : G.HasUniformDeviationCapConstructor initial value) :
+    G.IsUniformEquilibriumPayoff initial value := by
+  intro epsilon hepsilon
+  have hdelta : 0 < epsilon / 2 := by linarith
+  obtain ⟨profile, threshold, hprofile⟩ := hcertificate (epsilon / 2) hdelta
+  refine ⟨profile, threshold, fun horizon hhorizon => ?_⟩
+  obtain ⟨honPath, hdeviation⟩ := hprofile horizon hhorizon
+  constructor
+  · rw [G.isεHorizonNash_iff]
+    intro who deviation
+    have hlower := (abs_le.mp (honPath who)).1
+    have hupper := hdeviation who deviation
+    linarith
+  · intro who
+    exact (honPath who).trans (by linarith)
+
+/-- The deviation-cap constructor is equivalent to the semantic uniform
+equilibrium-payoff property. -/
+theorem hasUniformDeviationCapConstructor_iff [DecidableEq ι]
+    (initial : G.State) [∀ i, Nonempty (G.Action i)] (value : ι → ℝ) :
+    G.HasUniformDeviationCapConstructor initial value ↔
+      G.IsUniformEquilibriumPayoff initial value := by
+  constructor
+  · exact G.isUniformEquilibriumPayoff_of_deviation_caps initial value
+  · intro hpayoff delta hdelta
+    have hhalf : 0 < delta / 2 := by linarith
+    obtain ⟨profile, threshold, hprofile⟩ := hpayoff (delta / 2) hhalf
+    refine ⟨profile, threshold, fun horizon hhorizon => ?_⟩
+    obtain ⟨hnash, honPath⟩ := hprofile horizon hhorizon
+    constructor
+    · intro who
+      exact (honPath who).trans (by linarith)
+    · intro who deviation
+      have hdeviation := (G.isεHorizonNash_iff initial horizon (delta / 2) profile).mp
+        hnash who deviation
+      have honUpper := (abs_le.mp (honPath who)).2
+      linarith
 
 end Game
 

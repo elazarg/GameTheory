@@ -23,6 +23,15 @@ and uniform predicates already represented by this decision.  The general
 uniform-existence constructor still contains a placeholder and remains
 excluded with its dependent research hierarchy.
 
+A second read-only follow-up on 2026-08-03 inspected the moving branch at
+`dba3b7a1356581d676d0f432bd1cb39ade41afb5`.  The named deviation-cap
+constructor and its exact equivalence with uniform-equilibrium payoff entered
+at `81c60ec813348b9805b3ae26b96a3b767b9e05f9`; that source file is unchanged
+between that revision and the audited head.  Only its placeholder-independent
+certificate calculus is adapted here.  Its general existence constructor still
+contains `sorry`, so the existence theorem and every dependent claim remain
+absent.
+
 ## Competing designs
 
 1. Store native state/action/transition/utility data and expose a named bridge
@@ -59,6 +68,8 @@ past one threshold. Horizon zero has the explicit empty-average value zero.
 |---|---|
 | source revision | active sibling branch `uniform-existence` at `e7730a1`; four relevant files unchanged from `d35c1d8` |
 | source follow-up | active branch `81f4a98af8f9eb05c3c13d0657e81505b24e5487`; 52 stochastic files / roughly 34.6k added lines; no additional foundational definition required |
+| certificate follow-up | moving branch audited at `dba3b7a1356581d676d0f432bd1cb39ade41afb5`; deviation-cap calculus last changed at `81c60ec813348b9805b3ae26b96a3b767b9e05f9`; existence placeholder excluded |
+| certificate validation | focused 1,732-job build and full 3,422-job build; Phase 2/3 and exact coverage audits verified; standard axiom profile only |
 | source license | MIT, Copyright (c) 2025 Elazar Gershuni |
 | source trust hazards | the general uniform-existence constructor contains `sorry`; excluded identically with every theorem depending on it |
 | native object | state, player-indexed action, `FinDist` transition, and stage utility only |
@@ -97,7 +108,12 @@ records. `Stochastic.PerfectMonitoring` supplies the selected-initial-state
 Protocol execution and information model. `Stochastic.FiniteHorizon` owns the
 average-payoff evaluation of the canonical history law. `Stochastic.Uniform`
 owns transparent horizon and uniform solution concepts through
-`Core.Approximate`.
+`Core.Approximate`. Its post-gate proof surface also exposes finite-horizon
+epsilon monotonicity and `HasUniformDeviationCapConstructor`: for every positive
+accuracy, one eventual profile is close to a proposed value and caps every
+unilateral deviation. Applying the certificate at half accuracy is exactly
+equivalent to `IsUniformEquilibriumPayoff`; this is a checked construction
+waist, not an existence assertion.
 
 The umbrella `GameTheory.Stochastic` is public and opt-in. At this decision it
 remained provisional until the Shapley gate; EXP-051/D23 subsequently closed
