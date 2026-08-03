@@ -52,6 +52,44 @@ theorem exists_pos_weight_of_packetMass_pos
 
 end QuittingMarkedFencePacket
 
+/-- Under exact root Nash, every player who quits with positive probability
+receives exactly the prescribed root payoff from the pure-Quit endpoint.
+This includes the sure-Quit endpoint; no positive Continue probability is
+required. -/
+theorem quittingRootQuitPayoff_eq_successor_of_quitProbability_pos
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (tail : Payoff ι) (root : ι → PMF Bool) (who : ι)
+    (hnash : IsεQuittingRootNash reward tail 0 root)
+    (hquit : 0 < (root who true).toReal) :
+    quittingRootQuitPayoff reward tail root who =
+      quittingRootSuccessorPayoff reward tail root who := by
+  have hendpoint :=
+    (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+      reward tail root).2 hnash
+  have hdifference0 : 0 ≤
+      quittingRootEndpointDifference reward tail root who := by
+    exact nonneg_of_mul_nonneg_left
+      (by simpa [mul_comm] using (hendpoint who).2) hquit
+  have hcontinue0 : 0 ≤ (root who false).toReal := ENNReal.toReal_nonneg
+  have hproduct0 : (root who false).toReal *
+      quittingRootEndpointDifference reward tail root who = 0 := by
+    apply le_antisymm
+    · simpa using (hendpoint who).1
+    · exact mul_nonneg hcontinue0 hdifference0
+  have hsum := quittingRoot_continueProbability_add_quitProbability root who
+  have hquitProbability : (root who true).toReal =
+      1 - (root who false).toReal := by linarith
+  have hgap :
+      quittingRootQuitPayoff reward tail root who -
+          quittingRootSuccessorPayoff reward tail root who =
+        (root who false).toReal *
+          quittingRootEndpointDifference reward tail root who := by
+    rw [quittingRootSuccessorPayoff_eq_endpointMix, hquitProbability]
+    unfold quittingRootEndpointDifference
+    ring
+  rw [hproduct0] at hgap
+  exact sub_eq_zero.mp hgap
+
 /-- A positive raw first-opponent atom gives every displayed opponent
 quitter strictly positive Quit probability in the actual root marginal. -/
 theorem quittingFirstOpponent_quitProbability_pos_of_rawWeight_pos
@@ -361,6 +399,68 @@ def QuittingNegativeFlagState.IsActualTransfer
       (quittingFirstOpponentQuitters source.owner)
       (quittingFirstOpponentValue value source.time) target.owner mark ∧
     0 < (roots target.time target.owner true).toReal
+
+/-- An actual transfer always lands strictly before the fixed terminal
+cutoff, even though negative flag states only store the weaker closed bound
+needed to form the initial state. -/
+theorem QuittingNegativeFlagState.IsActualTransfer.target_time_lt_cutoff
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (cutoff : ℕ) (θ : ℝ)
+    {source target : QuittingNegativeFlagState value cutoff θ}
+    (htransfer : source.IsActualTransfer reward roots value cutoff θ target) :
+    target.time < cutoff := by
+  obtain ⟨mark, htime, _hraw, _hmarked, _hactive⟩ := htransfer
+  have hoffset := mark.1.isLt
+  omega
+
+/-- At the target of an actual transfer, positive Quit support and exact
+root Nash identify the new owner's pure-Quit endpoint with the declared
+current value. -/
+theorem QuittingNegativeFlagState.IsActualTransfer.quitPayoff_eq_value
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (cutoff : ℕ) (θ : ℝ)
+    (hpolicy : ∀ time, time < cutoff →
+      value time = quittingRootSuccessorPayoff reward
+        (value (time + 1)) (roots time))
+    (hnash : ∀ time, time < cutoff →
+      IsεQuittingRootNash reward (value (time + 1)) 0 (roots time))
+    {source target : QuittingNegativeFlagState value cutoff θ}
+    (htransfer : source.IsActualTransfer reward roots value cutoff θ target) :
+    quittingRootQuitPayoff reward (value (target.time + 1))
+        (roots target.time) target.owner =
+      value target.time target.owner := by
+  have htime := htransfer.target_time_lt_cutoff reward roots value cutoff θ
+  obtain ⟨_mark, _htime, _hraw, _hmarked, hactive⟩ := htransfer
+  calc
+    quittingRootQuitPayoff reward (value (target.time + 1))
+        (roots target.time) target.owner =
+      quittingRootSuccessorPayoff reward (value (target.time + 1))
+        (roots target.time) target.owner :=
+          quittingRootQuitPayoff_eq_successor_of_quitProbability_pos
+            reward (value (target.time + 1)) (roots target.time) target.owner
+              (hnash target.time htime) hactive
+    _ = value target.time target.owner := by
+      rw [← congrFun (hpolicy target.time htime) target.owner]
+
+/-- Equivalent fixed-opponents form of the active-transfer equality. -/
+theorem QuittingNegativeFlagState.IsActualTransfer.fixedQuitValue_eq_value
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (cutoff : ℕ) (θ : ℝ)
+    (hpolicy : ∀ time, time < cutoff →
+      value time = quittingRootSuccessorPayoff reward
+        (value (time + 1)) (roots time))
+    (hnash : ∀ time, time < cutoff →
+      IsεQuittingRootNash reward (value (time + 1)) 0 (roots time))
+    {source target : QuittingNegativeFlagState value cutoff θ}
+    (htransfer : source.IsActualTransfer reward roots value cutoff θ target) :
+    quittingFixedOpponentsQuitValue reward roots target.owner target.time =
+      value target.time target.owner := by
+  rw [← quittingRootQuitPayoff_eq_fixedOpponentsQuitValue reward roots
+    target.owner (value (target.time + 1)) target.time]
+  exact htransfer.quitPayoff_eq_value reward roots value cutoff θ hpolicy hnash
 
 /-- Every negative flag on an arbitrary fixed-cutoff exact chain either has
 a concrete good boundary or admits one actual active negative transfer on
