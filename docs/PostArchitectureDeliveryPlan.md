@@ -331,7 +331,7 @@ surface syntax.
 | MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
 | FOSG | **generic bridge gate passed (EXP-042/T4; EXP-059/060/061, D30):** the stable explicit-order FOSG-to-EFG bridge retains exact source histories while hiding within-round choices; policy projection/translation are full inverses, resolver-only public/private/own-action replay, inactive slots, literal all-round history laws, and order transport pass | **Native history/Kuhn, reachable observation-model, Compile, Examples, Serial, and the 104-declaration live bridge chain are classified;** the utility-free simultaneous example now exercises the canonical NFG-to-FOSG-to-EFG path, and the non-semantics-preserving serial machine is retired; continue the remaining 143-row exact L-FOSG queue while counterfactual reach, CFR, ordinary continuation coefficients, augmentation, strategic/utility transfer, and expressiveness retain separate gates |
 | multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
-| intrinsic games | **native ownership gate passed and root promoted (EXP-062, D31):** `Languages.Intrinsic` owns capability-light configurations, information-local pure rules, closed-loop solvability, and explicit-slot configuration-dependent causality; the hostile schedule needs prefix-cell and predecessor agreement independently | recover the native Examples/Tests leaves; separately gate temporal compilation, perfect recall, mixed/behavioral strategy, PMF/utility, and Kuhn layers |
+| intrinsic games | **native ownership gate passed, root promoted, and native Examples/Tests recovered (EXP-062, D31):** `Languages.Intrinsic` owns capability-light configurations, information-local pure rules, closed-loop solvability, and explicit-slot configuration-dependent causality; the stable example leaf adds no-information solvability, signaling information, positive causality, and future-information rejection | recover the derived solution-selection theorem micro-family; separately gate temporal compilation, perfect recall, mixed/behavioral strategy, PMF/utility, and Kuhn layers |
 | bridges and expressiveness | two real transfers compose more cheaply than direct named proofs | only the earned relation or composition API; otherwise classify v1 transport as retired |
 | open games | one compositional theorem with no duplicate stable equilibrium predicate | `GameTheory.Frontier`, not the stable language umbrella |
 
@@ -537,8 +537,8 @@ The next work is ordered:
 
 1. consolidate moving delivery probes without rewriting historical phase
    measurements;
-2. recover the newly unblocked intrinsic Examples/Tests leaves against the
-   promoted D31 root; do not cross the separate compiler, perfect-recall,
+2. recover the intrinsic solution-selection theorem micro-family derivable
+   from `IsSolvable`; do not cross the separate compiler, perfect-recall,
    mixed/behavioral, PMF/utility, or Kuhn gates;
 3. continue the remaining exact L-FOSG queue after completing the bounded
    104-declaration serialization/expressiveness comparison; keep its classified

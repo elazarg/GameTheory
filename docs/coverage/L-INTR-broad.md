@@ -8,15 +8,19 @@ Successor baseline: `544528b`
 Canonical destination: GameTheory.Languages.Intrinsic; separately gated temporal, mixed, utility, and Kuhn bridges
 Domain contract / decision: D31 / EXP-062; Wave 3 sequential and language recovery
 Owner: Wave 3 / intrinsic-language recovery
-Status: in progress; 27/158 reviewed (12 adapt, 10 deferred, 5 retired), 131 unreviewed
+Status: in progress; 54/158 reviewed (24 adapt, 14 deferred, 16 retired), 104 unreviewed
 Last verified: 2026-08-03
 
 This ledger is an exact generated review queue for the L-INTR family.
 0 declarations are already accounted for in earlier bounded ledgers and are
-not duplicated here. The 27 declarations in the pinned `Syntax.lean` are
-reviewed below against D31; the other 131 rows remain deliberately
-`unreviewed`. The generated index supplies spelling, location, kind, and
-visibility only. It does not infer a mathematical disposition.
+not duplicated here. The 27 declarations in pinned `Syntax.lean` and 27
+native-example/test declarations in pinned `Examples.lean` and `Tests.lean`
+are reviewed below against D31; the other 104 rows remain deliberately
+`unreviewed`. `GameTheory.Examples.Intrinsic` is a stable native leaf: its
+signaling model is pre-Protocol configuration/information data, while utility,
+probability, ownership, execution, and randomization remain separately gated.
+The generated index supplies spelling, location, kind, and visibility only. It
+does not infer a mathematical disposition.
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
 |---|---|---|---|---|---|---|
@@ -34,25 +38,25 @@ visibility only. It does not infer a mathematical disposition.
 | same | `KuhnOutcomeEquivalent` | def | unreviewed | review required | generated index seed only | public, pinned line 172 |
 | same | `kuhn_equivalence_of_player_event_mass` | theorem | unreviewed | review required | generated index seed only | public, pinned line 182 |
 | same | `EUWGame.toKernelGame` | def | unreviewed | review required | generated index seed only | public, pinned line 214 |
-| `GameTheory/Languages/Intrinsic/Examples.lean` | `Coin` | inductive | unreviewed | review required | generated index seed only | public, pinned line 28 |
-| same | `<anonymous@31>` | instance | unreviewed | review required | generated index seed only | public, pinned line 31 |
-| same | `matchingPenniesModel` | def | unreviewed | review required | generated index seed only | public, pinned line 37 |
-| same | `mpUtility` | def | unreviewed | review required | generated index seed only | public, pinned line 45 |
-| same | `matchingPennies` | def | unreviewed | review required | generated index seed only | public, pinned line 51 |
-| same | `SigType` | inductive | unreviewed | review required | generated index seed only | public, pinned line 64 |
-| same | `<anonymous@67>` | instance | unreviewed | review required | generated index seed only | public, pinned line 67 |
-| same | `Message` | inductive | unreviewed | review required | generated index seed only | public, pinned line 70 |
-| same | `<anonymous@73>` | instance | unreviewed | review required | generated index seed only | public, pinned line 73 |
-| same | `RcvAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 76 |
-| same | `<anonymous@79>` | instance | unreviewed | review required | generated index seed only | public, pinned line 79 |
-| same | `sigDecision` | def | unreviewed | review required | generated index seed only | public, pinned line 83 |
-| same | `sigDecisionFintype` | instance | unreviewed | review required | generated index seed only | public, pinned line 87 |
-| same | `sigDecisionNonempty` | instance | unreviewed | review required | generated index seed only | public, pinned line 92 |
-| same | `signalingModel` | def | unreviewed | review required | generated index seed only | public, pinned line 101 |
-| same | `sigReceiverAction` | def | unreviewed | review required | generated index seed only | public, pinned line 114 |
-| same | `signalingUtility` | def | unreviewed | review required | generated index seed only | public, pinned line 117 |
-| same | `signalingGame` | def | unreviewed | review required | generated index seed only | public, pinned line 124 |
-| same | `matchingPennies_solvable` | theorem | unreviewed | review required | generated index seed only | public, pinned line 138 |
+| `GameTheory/Languages/Intrinsic/Examples.lean` | `Coin` | inductive | adapt | `Bool` in `GameTheory.Examples.Intrinsic.noInformation` | D31 / EXP-062; `lake build GameTheory.Examples.Intrinsic` | The two decision values are normalized to the canonical Boolean witness; no compatibility action type is retained. |
+| same | `<anonymous@31>` | instance | retired | no successor | D31 | Source `Nonempty Coin` is not stored or needed by the native root. |
+| same | `matchingPenniesModel` | def | adapt | `GameTheory.Examples.Intrinsic.noInformation` | D31 / EXP-062; `lake build GameTheory.Examples.Intrinsic` | Retained as the utility-free two-Boolean universal-information model. |
+| same | `mpUtility` | def | deferred | D31 utility / equilibrium gate | D31 | Utility is outside the approved configuration/information leaf. |
+| same | `matchingPennies` | def | deferred | D31 player-ownership / outcome-law / PMF / utility gate | D31 | Expected-utility game wrapper remains separately gated. |
+| same | `SigType` | inductive | adapt | `Bool` in `GameTheory.Examples.Intrinsic.signaling` | D31; `lake build GameTheory.Examples.Intrinsic` | The two nature types are represented by Boolean nature without a compatibility type. |
+| same | `<anonymous@67>` | instance | retired | no successor | D31 | Source `Nonempty SigType` is not a native-model capability. |
+| same | `Message` | inductive | adapt | `Bool` in `GameTheory.Examples.Intrinsic.signaling` | D31; `lake build GameTheory.Examples.Intrinsic` | Sender messages are the Boolean sender decision. |
+| same | `<anonymous@73>` | instance | retired | no successor | D31 | Source `Nonempty Message` is not a native-model capability. |
+| same | `RcvAction` | inductive | adapt | `Bool` in `GameTheory.Examples.Intrinsic.signaling` | D31; `lake build GameTheory.Examples.Intrinsic` | Receiver actions are the Boolean receiver decision. |
+| same | `<anonymous@79>` | instance | retired | no successor | D31 | Source `Nonempty RcvAction` is not a native-model capability. |
+| same | `sigDecision` | def | adapt | `GameTheory.Examples.Intrinsic.signaling` | D31; `lake build GameTheory.Examples.Intrinsic` | The stable signaling model directly owns its Boolean decision family. |
+| same | `sigDecisionFintype` | instance | retired | no successor | D31 | No global finite decision-family capability is stored. |
+| same | `sigDecisionNonempty` | instance | retired | no successor | D31 | No global nonempty decision-family capability is stored. |
+| same | `signalingModel` | def | adapt | `GameTheory.Examples.Intrinsic.signaling` | D31; `lake build GameTheory.Examples.Intrinsic` | Native information model: sender observes nature and receiver observes the sender decision, before Protocol. |
+| same | `sigReceiverAction` | def | adapt | `GameTheory.Languages.Intrinsic.Config.decision` | D31; `GameTheory.Examples.Intrinsic.signaling_receiver_info_iff` | Direct receiver coordinate projection; the stable information theorem records the retained receiver observation. |
+| same | `signalingUtility` | def | deferred | D31 utility / equilibrium gate | D31 | Utility evaluation remains outside the native example leaf. |
+| same | `signalingGame` | def | deferred | D31 player-ownership / outcome-law / PMF / utility gate | D31 | Expected-utility wrapper remains separately gated. |
+| same | `matchingPennies_solvable` | theorem | adapt | `GameTheory.Examples.Intrinsic.noInformation_isSolvable` | D31 / EXP-062; `lake build GameTheory.Examples.Intrinsic` | Universal information yields the retained unique closed-loop solution theorem. |
 | `GameTheory/Languages/Intrinsic/PerfectRecall.lean` | `choiceEquiv` | def | unreviewed | review required | generated index seed only | public, pinned line 50 |
 | same | `playerChoiceEquiv` | def | unreviewed | review required | generated index seed only | public, pinned line 62 |
 | same | `PerfectRecall` | def | unreviewed | review required | generated index seed only | public, pinned line 82 |
@@ -166,14 +170,14 @@ visibility only. It does not infer a mathematical disposition.
 | same | `EUWGame.configLaw` | def | deferred | D31 outcome-law / PMF gate | D31 | Probability law is not present in the approved root. |
 | same | `EUWGame.expectedUtilityLaw` | def | deferred | D31 utility / equilibrium gate | D31 | Expected utility is not present in the approved root. |
 | same | `EUWGame.toWGame` | def | deferred | D31 ownership / outcome-preference / utility gate | D31 | Reopen after ownership, outcome-law preference, prior, and utility contracts; temporal compilation remains independent. |
-| `GameTheory/Languages/Intrinsic/Tests.lean` | `alwaysHeads` | def | unreviewed | review required | generated index seed only | public, pinned line 31 |
-| same | `mkSigConfig` | def | unreviewed | review required | generated index seed only | public, pinned line 51 |
-| same | `matchingPenniesOrdering` | def | unreviewed | review required | generated index seed only | public, pinned line 80 |
-| same | `oneAgentModel` | def | unreviewed | review required | generated index seed only | public, pinned line 99 |
-| same | `oneAgentGame` | def | unreviewed | review required | generated index seed only | public, pinned line 107 |
-| same | `oneAgentOrdering` | def | unreviewed | review required | generated index seed only | public, pinned line 115 |
-| same | `futureLookingModel` | def | unreviewed | review required | generated index seed only | public, pinned line 148 |
-| same | `futureLookingOrdering` | def | unreviewed | review required | generated index seed only | public, pinned line 159 |
+| `GameTheory/Languages/Intrinsic/Tests.lean` | `alwaysHeads` | def | retired | no successor | D31; `noInformation_isSolvable` | A constant-strategy smoke witness adds no payload beyond the retained solvability theorem. |
+| same | `mkSigConfig` | def | retired | no successor | D31; `GameTheory.Languages.Intrinsic.Config` | One-line constructor helper is compatibility/smoke scaffolding; direct configurations are canonical. |
+| same | `matchingPenniesOrdering` | def | adapt | `GameTheory.Examples.Intrinsic.noInformationSchedule` | D31 / EXP-062; `lake build GameTheory.Examples.Intrinsic` | Explicit two-slot schedule replaces the source list ordering. |
+| same | `oneAgentModel` | def | retired | no successor | D31 | Singleton smoke model does not test the approved hostile surface. |
+| same | `oneAgentGame` | def | retired | no successor | D31 | Singleton preference-game smoke scaffolding also requires the unapproved ownership/preference layer. |
+| same | `oneAgentOrdering` | def | retired | no successor | D31 | Retired along with the singleton smoke model and list ordering encoding. |
+| same | `futureLookingModel` | def | adapt | `GameTheory.Examples.Intrinsic.futureLooking` | D31 / EXP-062; `lake build GameTheory.Examples.Intrinsic` | Native future-information countermodel, stated before Protocol. |
+| same | `futureLookingOrdering` | def | adapt | `GameTheory.Examples.Intrinsic.futureLookingSchedule` | D31 / EXP-062; `lake build GameTheory.Examples.Intrinsic` | Explicit schedule used by the stable causality rejection. |
 | `GameTheory/Languages/Intrinsic/Theorems.lean` | `solutionMap_isFixedPoint` | theorem | unreviewed | review required | generated index seed only | public, pinned line 24 |
 | same | `solutionMap_ext` | theorem | unreviewed | review required | generated index seed only | public, pinned line 30 |
 | same | `liftProfile_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 46 |
