@@ -120,6 +120,7 @@ import GameTheory.Concepts.Stochastic.TransitionIndependent
 import GameTheory.Concepts.Stochastic.Discounted
 import GameTheory.Concepts.Stochastic.Adaptive
 import GameTheory.Concepts.Stochastic.AdaptiveCertificate
+import GameTheory.Concepts.Stochastic.WeightedSecurityWelfareAssembly
 import GameTheory.Concepts.Stochastic.PublicPhaseCertificate
 import GameTheory.Concepts.Stochastic.AdaptivePotentialSystem
 import GameTheory.Concepts.Stochastic.AdaptiveCertificateTargetPerturbation
