@@ -6,7 +6,7 @@ Pinned roots: `GameTheory/Languages/FOSG/Basic.lean`; `GameTheory/Languages/FOSG
 Pinned commit: `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`
 Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
-Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28, EXP-058/D29, EXP-059/060/D30
+Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28, EXP-058/D29, EXP-059/060/061/D30
 Owner: Wave 3 / sequential and language recovery
 Status: in progress; 483/776 reviewed, 293 unreviewed
 Last verified: 2026-08-02
@@ -26,18 +26,23 @@ owns the canonical policy and law machinery, while `Languages.FOSG.Kuhn`
 supplies the named FOSG-facing correspondence.  It does not revive the native scalar
 marginal calculus.
 
-EXP-059/D30 disposes the 65-declaration `Compile.lean` batch (the earlier
+EXP-059/061/D30 disposes the 65-declaration `Compile.lean` batch (the earlier
 54-row estimate missed attributed declarations). Canonical Protocol runners and
 `BoundedHorizon` retain the genuine execution fragments; the duplicate PMF
 terminal-law, finite enumeration, transport, and KernelGame compiler are
 retired. Terminal-support and coefficient laws remain deferred to the
-ordinary-continuation / named FOSG-to-EFG serialization gate.
+ordinary-continuation coefficient gate; generic serialization no longer blocks
+them but does not by itself prove their scalar coefficient statements.
 EXP-060 closes the required two-round signal-replay risk with exact source
 history carriage, resolver-only public/private/own-action replay, inactive
 slots, arbitrary target-profile projection, and a literal six-step/two-round
-history law in either order.  Generic explicit-order adapter delivery is now
-unblocked but is not credited until a stable implementation reproduces those
-obligations; the declaration dispositions and counts below are unchanged.
+history law in either order.  EXP-061 promotes the stable generic
+explicit-order adapter after reproducing those obligations for every target
+behavioral profile and finite round count.  The existing `Compile.lean`
+dispositions and counts remain unchanged: canonical Protocol runners still
+subsume its live execution fragments, while the promoted serializer supplies a
+different named FOSG-to-EFG comparison rather than reviving the pinned
+scalar/PMF compiler.
 
 EXP-058/D29 disposes `ReachableHistory/ObsModelFacts.lean`.  Only its two
 final-law definitions project directly to canonical Protocol execution, and
