@@ -1,0 +1,440 @@
+#!/usr/bin/env python3
+"""Exact transition graph for singleton-support product jumps.
+
+The payoff table is the block-pair table with ``r_0({0})=-2+11/100``.
+Suppose a periodic quitting profile uses exactly one positive hazard at every
+phase.  Conditional on eventual absorption, let ``mu`` be the distribution of
+the identity of the solo quitter.  The continuation value is then the payoff
+matrix times ``mu``.  If player ``j`` is active, both endpoints of its jump
+lie on the rational hyperplane where player j's continuation payoff equals
+its solo payoff.
+
+A phase whose adjacent active identities are different is described by a
+triple ``(a,j,k)``: the previous, current, and next active players.  Its future
+distribution lies on ``H_j intersect H_k`` and its current distribution lies
+on ``H_a intersect H_j``.  Both intersections are rational lines.  The jump
+hazard and every inactive Nash inequality reduce to rational functions whose
+sign changes only at explicitly enumerated rational points.  This checker
+enumerates all such transition domains exactly and prints the resulting graph
+on ordered player pairs.
+
+This script is an exact finite reduction for the singleton-support periodic
+subclass with no equal adjacent active identities.  It also applies when each
+maximal same-player run satisfies the inactive inequalities after aggregation
+to one jump.  Stagewise Nash inequalities do not in general survive that
+aggregation, so arbitrary repeated runs are separately left open.  A graph
+cycle is merely a necessary combinatorial condition: the associated
+fractional transition maps must still share a periodic point.  An acyclic
+graph excludes the stated reduced subclass.  The checker says nothing about
+phases with several active quitters or nonperiodic paths.
+"""
+
+from __future__ import annotations
+
+if not __debug__:
+    raise RuntimeError("this exact checker must not run under python -O")
+
+from dataclasses import dataclass
+from fractions import Fraction
+from pathlib import Path
+import sys
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from block_pair_stationary_certificate import N, TERMINAL  # noqa: E402
+
+
+Q = Fraction
+ZERO = Q(0)
+ONE = Q(1)
+THETA = Q(11, 100)
+Vector = tuple[Fraction, Fraction, Fraction, Fraction]
+Affine = tuple[Fraction, Fraction]
+Pair = tuple[int, int]
+
+
+EXPECTED_STRATEGIC_TRIPLES = frozenset(
+    {
+        (0, 3, 2),
+        (1, 0, 2),
+        (1, 2, 3),
+        (2, 0, 1),
+        (3, 1, 0),
+        (3, 2, 1),
+    }
+)
+
+
+def terminal(mask: int, player: int) -> Fraction:
+    value = Q(TERMINAL[mask][player])
+    if mask == 1 and player == 0:
+        value += THETA
+    return value
+
+
+SOLO: Vector = tuple(terminal(1 << player, player) for player in range(N))  # type: ignore[assignment]
+COLUMNS: tuple[Vector, ...] = tuple(
+    tuple(terminal(1 << quitter, player) for player in range(N))
+    for quitter in range(N)
+)  # type: ignore[assignment]
+NORMALS: tuple[Vector, ...] = tuple(
+    tuple(COLUMNS[quitter][player] - SOLO[player] for quitter in range(N))
+    for player in range(N)
+)  # type: ignore[assignment]
+
+
+def dot(left: Vector, right: Vector) -> Fraction:
+    return sum((left[index] * right[index] for index in range(N)), ZERO)
+
+
+def affine_value(value: Affine, parameter: Fraction) -> Fraction:
+    return value[0] + value[1] * parameter
+
+
+def line_intersection(left: int, right: int) -> tuple[Affine, ...]:
+    """Parametrize simplex intersect H_left intersect H_right."""
+
+    assert left != right
+    matrix = [
+        [ONE, ONE, ONE, ONE, ONE],
+        [*NORMALS[left], ZERO],
+        [*NORMALS[right], ZERO],
+    ]
+    pivot_columns: list[int] = []
+    pivot_row = 0
+    for column in range(N):
+        selected = next(
+            (row for row in range(pivot_row, 3) if matrix[row][column] != 0),
+            None,
+        )
+        if selected is None:
+            continue
+        matrix[pivot_row], matrix[selected] = matrix[selected], matrix[pivot_row]
+        pivot = matrix[pivot_row][column]
+        matrix[pivot_row] = [entry / pivot for entry in matrix[pivot_row]]
+        for row in range(3):
+            if row == pivot_row:
+                continue
+            coefficient = matrix[row][column]
+            if coefficient:
+                matrix[row] = [
+                    matrix[row][index] - coefficient * matrix[pivot_row][index]
+                    for index in range(N + 1)
+                ]
+        pivot_columns.append(column)
+        pivot_row += 1
+        if pivot_row == 3:
+            break
+    assert pivot_row == 3
+    free_columns = [column for column in range(N) if column not in pivot_columns]
+    assert len(free_columns) == 1
+    free = free_columns[0]
+    result: list[Affine] = [(ZERO, ZERO) for _ in range(N)]
+    result[free] = (ZERO, ONE)
+    for row, column in enumerate(pivot_columns):
+        result[column] = (matrix[row][N], -matrix[row][free])
+    return tuple(result)
+
+
+def probability_interval(line: tuple[Affine, ...]) -> tuple[Fraction, Fraction]:
+    lower: Fraction | None = None
+    upper: Fraction | None = None
+    for constant, slope in line:
+        if slope > 0:
+            bound = -constant / slope
+            lower = bound if lower is None else max(lower, bound)
+        elif slope < 0:
+            bound = -constant / slope
+            upper = bound if upper is None else min(upper, bound)
+        else:
+            assert constant >= 0
+    assert lower is not None and upper is not None and lower <= upper
+    return lower, upper
+
+
+def affine_dot(normal: Vector, line: tuple[Affine, ...]) -> Affine:
+    return (
+        sum((normal[i] * line[i][0] for i in range(N)), ZERO),
+        sum((normal[i] * line[i][1] for i in range(N)), ZERO),
+    )
+
+
+@dataclass(frozen=True)
+class Witness:
+    previous: int
+    current: int
+    following: int
+    parameter: Fraction
+    hazard: Fraction
+    future: Vector
+    present: Vector
+
+    @property
+    def source(self) -> Pair:
+        return self.current, self.following
+
+    @property
+    def target(self) -> Pair:
+        return self.previous, self.current
+
+
+def valid_at(
+    previous: int,
+    current: int,
+    following: int,
+    line: tuple[Affine, ...],
+    parameter: Fraction,
+    check_inactive: bool = True,
+) -> Witness | None:
+    future: Vector = tuple(affine_value(entry, parameter) for entry in line)  # type: ignore[assignment]
+    if any(coordinate < 0 for coordinate in future) or sum(future, ZERO) != ONE:
+        return None
+    assert dot(NORMALS[current], future) == 0
+    assert dot(NORMALS[following], future) == 0
+
+    previous_normal = NORMALS[previous]
+    at_future = dot(previous_normal, future)
+    at_vertex = previous_normal[current]
+    denominator = at_future - at_vertex
+    if denominator == 0:
+        return None
+    survival = -at_vertex / denominator
+    hazard = ONE - survival
+    if not ZERO < hazard < ONE:
+        return None
+    present: Vector = tuple(  # type: ignore[assignment]
+        survival * future[player]
+        + hazard * (ONE if player == current else ZERO)
+        for player in range(N)
+    )
+    if any(coordinate < 0 for coordinate in present) or sum(present, ZERO) != ONE:
+        return None
+    assert dot(NORMALS[previous], present) == 0
+    assert dot(NORMALS[current], present) == 0
+
+    if check_inactive:
+        for player in range(N):
+            if player == current:
+                continue
+            continuation_value = sum(
+                COLUMNS[quitter][player] * future[quitter]
+                for quitter in range(N)
+            )
+            pair_payoff = terminal((1 << player) | (1 << current), player)
+            difference = (
+                survival * SOLO[player]
+                + hazard * pair_payoff
+                - hazard * COLUMNS[current][player]
+                - survival * continuation_value
+            )
+            if difference > 0:
+                return None
+    return Witness(
+        previous,
+        current,
+        following,
+        parameter,
+        hazard,
+        future,
+        present,
+    )
+
+
+def triple_witnesses(
+    previous: int,
+    current: int,
+    following: int,
+    check_inactive: bool = True,
+) -> tuple[Witness, ...]:
+    assert previous != current and current != following
+    line = line_intersection(current, following)
+    lower, upper = probability_interval(line)
+    critical = {lower, upper}
+
+    # Every condition has constant sign between these rational roots.  Add
+    # roots of simplex coordinates, the jump denominator/boundaries, and each
+    # inactive action difference numerator.
+    for constant, slope in line:
+        if slope:
+            root = -constant / slope
+            if lower <= root <= upper:
+                critical.add(root)
+    previous_on_line = affine_dot(NORMALS[previous], line)
+    at_vertex = NORMALS[previous][current]
+    for constant, slope in (
+        previous_on_line,
+        (previous_on_line[0] - at_vertex, previous_on_line[1]),
+    ):
+        if slope:
+            root = -constant / slope
+            if lower <= root <= upper:
+                critical.add(root)
+
+    # Derive inactive difference numerator after substituting
+    # survival=-n_a(e_j)/(n_a(mu)-n_a(e_j)).  Direct interpolation at two
+    # rational parameter values reconstructs its affine numerator safely.
+    def inactive_numerator(player: int, parameter: Fraction) -> Fraction:
+        future: Vector = tuple(  # type: ignore[assignment]
+            affine_value(entry, parameter) for entry in line
+        )
+        na_mu = dot(NORMALS[previous], future)
+        e = NORMALS[previous][current]
+        pair_gap = (
+            terminal((1 << player) | (1 << current), player)
+            - COLUMNS[current][player]
+        )
+        # Difference times the common denominator L=na_mu-e.
+        return e * dot(NORMALS[player], future) + na_mu * pair_gap
+
+    for player in range(N):
+        if player == current:
+            continue
+        value_zero = inactive_numerator(player, ZERO)
+        value_one = inactive_numerator(player, ONE)
+        slope = value_one - value_zero
+        if slope:
+            root = -value_zero / slope
+            if lower <= root <= upper:
+                critical.add(root)
+
+    ordered = sorted(critical)
+    samples = set(ordered)
+    samples.update(
+        (left + right) / 2 for left, right in zip(ordered, ordered[1:])
+    )
+    witnesses = tuple(
+        witness
+        for parameter in sorted(samples)
+        if (witness := valid_at(
+            previous,
+            current,
+            following,
+            line,
+            parameter,
+            check_inactive=check_inactive,
+        )) is not None
+    )
+    return witnesses
+
+
+def strongly_connected_components(
+    vertices: tuple[Pair, ...], edges: set[tuple[Pair, Pair]]
+) -> tuple[tuple[Pair, ...], ...]:
+    adjacency = {
+        vertex: tuple(target for source, target in edges if source == vertex)
+        for vertex in vertices
+    }
+    reverse = {
+        vertex: tuple(source for source, target in edges if target == vertex)
+        for vertex in vertices
+    }
+    seen: set[Pair] = set()
+    order: list[Pair] = []
+
+    def visit(vertex: Pair) -> None:
+        if vertex in seen:
+            return
+        seen.add(vertex)
+        for target in adjacency[vertex]:
+            visit(target)
+        order.append(vertex)
+
+    for vertex in vertices:
+        visit(vertex)
+    seen.clear()
+    components: list[tuple[Pair, ...]] = []
+
+    def collect(vertex: Pair, component: list[Pair]) -> None:
+        if vertex in seen:
+            return
+        seen.add(vertex)
+        component.append(vertex)
+        for source in reverse[vertex]:
+            collect(source, component)
+
+    for vertex in reversed(order):
+        if vertex not in seen:
+            component: list[Pair] = []
+            collect(vertex, component)
+            components.append(tuple(sorted(component)))
+    return tuple(components)
+
+
+def main() -> None:
+    assert N == 4
+    vertices = tuple(
+        (left, right)
+        for left in range(N)
+        for right in range(N)
+        if left != right
+    )
+    witnesses: dict[tuple[int, int, int], tuple[Witness, ...]] = {}
+    edges: set[tuple[Pair, Pair]] = set()
+    for previous in range(N):
+        for current in range(N):
+            for following in range(N):
+                if previous == current or current == following:
+                    continue
+                found = triple_witnesses(previous, current, following)
+                if found:
+                    witnesses[(previous, current, following)] = found
+                    edges.add((found[0].source, found[0].target))
+
+    components = strongly_connected_components(vertices, edges)
+    cyclic = tuple(component for component in components if len(component) > 1)
+    assert frozenset(witnesses) == EXPECTED_STRATEGIC_TRIPLES
+    assert len(edges) == len(EXPECTED_STRATEGIC_TRIPLES) == 6
+    assert not cyclic
+
+    # A maximal run of one singleton mode has the same geometric endpoint
+    # relation as a single jump, but its stagewise inactive inequalities do
+    # not automatically collapse to the aggregate inequality above.  The
+    # inactive-free graph is therefore the honest necessary envelope for
+    # arbitrary repeated runs.
+    geometric_edges: set[tuple[Pair, Pair]] = set()
+    for previous in range(N):
+        for current in range(N):
+            for following in range(N):
+                if previous == current or current == following:
+                    continue
+                found = triple_witnesses(
+                    previous,
+                    current,
+                    following,
+                    check_inactive=False,
+                )
+                if found:
+                    geometric_edges.add((found[0].source, found[0].target))
+    geometric_components = strongly_connected_components(vertices, geometric_edges)
+    geometric_cyclic = tuple(
+        component for component in geometric_components if len(component) > 1
+    )
+    assert len(geometric_edges) == 24
+    assert geometric_cyclic == (tuple(sorted(vertices)),)
+    print("exact singleton-jump transition graph generated")
+    print(f"vertices = {len(vertices)}")
+    print(f"feasible triples = {len(witnesses)}")
+    print(f"directed edges = {len(edges)}")
+    for triple, found in sorted(witnesses.items()):
+        witness = found[0]
+        print(
+            f"  {triple}: parameter={witness.parameter}; "
+            f"hazard={witness.hazard}; {witness.source}->{witness.target}"
+        )
+    print(f"strongly connected components = {components}")
+    print(f"nontrivial strongly connected components = {cyclic}")
+    if not cyclic:
+        print("the reduced singleton-support transition graph is acyclic")
+    else:
+        print("graph cycles remain; fractional-map compatibility is unresolved")
+    print(f"geometric run-envelope edges = {len(geometric_edges)}")
+    print(f"geometric run-envelope nontrivial SCCs = {geometric_cyclic}")
+    if not geometric_cyclic:
+        print("the arbitrary-run geometric envelope is also acyclic")
+    else:
+        print("repeated-run geometry leaves cycles; stagewise analysis is needed")
+    print("scope: singleton-support finite periodic profiles only")
+
+
+if __name__ == "__main__":
+    main()
