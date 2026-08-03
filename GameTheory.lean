@@ -459,6 +459,7 @@ import GameTheory.Concepts.Stochastic.QuittingNearSureProfile
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
 import GameTheory.Concepts.Stochastic.QuittingMarkedFencePacket
 import GameTheory.Concepts.Stochastic.QuittingMarkedFenceIteration
+import GameTheory.Concepts.Stochastic.QuittingMinDebtMarkedFence
 import GameTheory.Concepts.Stochastic.QuittingMarkedSameNodeCycleRegression
 import GameTheory.Concepts.Stochastic.QuittingMarkedTimeAdvance
 import GameTheory.Concepts.Stochastic.QuittingOpponentClockDichotomy
