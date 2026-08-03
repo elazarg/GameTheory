@@ -579,11 +579,7 @@ theorem behavioralJoint_eq_serialJointLaw
       let jointOfOption :
           Option (Action diagram owner) →
             (other : Player) → Option (Action diagram other) :=
-        fun choice other =>
-          if howner : other = owner then by
-            subst other
-            exact choice
-          else none
+        (execution topological semantics).singletonJoint owner
       have hfactor :
           ((fun joint :
               { joint : (other : Player) →
@@ -593,11 +589,7 @@ theorem behavioralJoint_eq_serialJointLaw
             (fun choice :
                 (information topological semantics).Choice owner
                   ((information topological semantics).infoOf owner trace) =>
-              (⟨(fun other =>
-                  if howner : other = owner then by
-                    subst other
-                    exact choice.1
-                  else none),
+              (⟨(execution topological semantics).singletonJoint owner choice.1,
                 ExecutionProtocol.legal_of_legalOption hterminal
                   fun other => by
                     by_cases howner : other = owner
@@ -609,7 +601,8 @@ theorem behavioralJoint_eq_serialJointLaw
                           ¬ Active topological state other := by
                         intro hother
                         exact howner (hunique other hother)
-                      simpa only [howner, dite_false, LegalOption]
+                      simpa only [ExecutionProtocol.singletonJoint, howner,
+                        dite_false, LegalOption]
                         using hinactive⟩ :
                 { joint : (other : Player) →
                     Option (Action diagram other) //

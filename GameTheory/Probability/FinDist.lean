@@ -94,6 +94,12 @@ theorem toPMF_map (f : α → β) (μ : FinDist α) :
     (map f μ).toPMF = μ.toPMF.bind fun a => PMF.pure (f a) := rfl
 
 @[simp]
+theorem map_const (μ : FinDist α) (b : β) : map (fun _ => b) μ = pure b := by
+  apply ext
+  ext a
+  simp [toPMF_map]
+
+@[simp]
 theorem toPMF_bind (μ : FinDist α) (f : α → FinDist β) :
     (bind μ f).toPMF = μ.toPMF.bind fun a => (f a).toPMF := rfl
 

@@ -179,12 +179,6 @@ record for the bounded follow-up experiment.
 
 variable [Fintype ι]
 
-private theorem finDist_map_const {α β : Type*} (μ : FinDist α) (b : β) :
-    μ.map (fun _ => b) = FinDist.pure b := by
-  apply FinDist.ext
-  ext a
-  simp [FinDist.toPMF_map]
-
 /-- The external regret of an independent profile law is exactly the gain from
 replacing that player's mixed action by a point mass in the mixed extension. -/
 theorem externalRegret_pi (G : UtilityGame.{uι, us, uo} ι)
@@ -197,7 +191,7 @@ theorem externalRegret_pi (G : UtilityGame.{uι, us, uo} ι)
         expectedUtility G.utility who (G.form.mixed.play mixedProfile) := by
   have hpi := GameForm.pi_map_recommendation G.form.sig mixedProfile who
     (fun _ => replacement)
-  rw [finDist_map_const] at hpi
+  rw [FinDist.map_const] at hpi
   unfold externalRegret
   rw [GameForm.outcomeLaw, GameForm.mixed_play, GameForm.mixed_play, ← hpi, FinDist.bind_map]
 

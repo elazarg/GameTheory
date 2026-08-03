@@ -230,11 +230,7 @@ contribution. -/
 def selectedJoint [DecidableEq ι] (owner : ι)
     (choice : Option (G.execution.Action owner)) :
     (player : ι) → Option (G.execution.Action player) :=
-  fun player =>
-    if howner : player = owner then by
-      subst player
-      exact choice
-    else none
+  G.execution.singletonJoint owner choice
 
 /-- Target legality at a selection slot is exactly source-local legality for
 the scheduled contribution. -/
@@ -253,14 +249,14 @@ theorem selectedJoint_legal [DecidableEq ι]
   · subst player
     cases hchoice : choice.1 with
     | none =>
-        simp only [selectedJoint, dite_true]
+        simp only [selectedJoint, ExecutionProtocol.singletonJoint, dite_true]
         intro hactive
         obtain ⟨_, _, hsource⟩ := hactive
         exact (show ¬ G.execution.active history.state
           (scheduledPlayer G order collected hcount) by
             simpa [LegalOption, hchoice] using choice.2) hsource
     | some action =>
-        simp only [selectedJoint, dite_true]
+        simp only [selectedJoint, ExecutionProtocol.singletonJoint, dite_true]
         have hsource :
             G.execution.active history.state
                 (scheduledPlayer G order collected hcount) ∧
@@ -268,7 +264,7 @@ theorem selectedJoint_legal [DecidableEq ι]
                 (scheduledPlayer G order collected hcount) := by
           simpa [LegalOption, hchoice] using choice.2
         exact ⟨⟨hcount, rfl, hsource.1⟩, hsource.2⟩
-  · simp only [selectedJoint, howner, dite_false]
+  · simp only [selectedJoint, ExecutionProtocol.singletonJoint, howner, dite_false]
     intro hactive
     obtain ⟨_, heq, _⟩ := hactive
     exact howner heq

@@ -174,6 +174,10 @@ $NonRepresentation = @($AllFiles | Where-Object {
 Report 'REPRESENTATION_TOKENS_OUTSIDE_FINDIST' `
   (Count-Pattern $NonRepresentation `
     '(?<![A-Za-z0-9_])(ENNReal|toReal|toPMF|PMF)(?![A-Za-z0-9_])')
+# Keep the representation escape hatch independently visible: a future
+# broadening of the aggregate token check must not silently permit it.
+Report 'TOPMF_OUTSIDE_FINDIST' `
+  (Count-Pattern $NonRepresentation '(?<![A-Za-z0-9_])toPMF(?![A-Za-z0-9_])')
 
 Report 'FINTYPE_OF_FINITE' (Count-Pattern $TrustedFiles 'Fintype\.ofFinite')
 $AlgorithmFiles = @(
@@ -1019,6 +1023,7 @@ if ($VerifyExpected) {
     GAMETHEORYMATH_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
     REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
+    TOPMF_OUTSIDE_FINDIST = 0
   }
   # RFC 7.3 states a budget, not a target, so this one is a bound.
   if ($Results['PRISONERS_DILEMMA_DEF_LINES'] -ge 25) {

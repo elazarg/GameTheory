@@ -663,11 +663,7 @@ theorem behavioralJoint_eq_map_of_at_most_one_active
     M.behavioralJoint policies trace hterminal =
       FinDist.map
         (fun choice : M.Choice active (M.infoOf active trace) =>
-          ⟨(fun other =>
-              if howner : other = active then by
-                subst other
-                exact choice.1
-              else none),
+          ⟨E.singletonJoint active choice.1,
             ExecutionProtocol.legal_of_legalOption hterminal
               fun other => by
                 by_cases howner : other = active
@@ -678,7 +674,8 @@ theorem behavioralJoint_eq_map_of_at_most_one_active
                 · have hinactive : ¬ E.active state other := by
                     intro hother
                     exact howner (hunique other hother)
-                  simpa only [howner, dite_false, LegalOption]
+                  simpa only [ExecutionProtocol.singletonJoint, howner,
+                    dite_false, LegalOption]
                     using hinactive⟩)
         (policies active (M.infoOf active trace)) := by
   let idle :

@@ -1156,7 +1156,7 @@ theorem map_runBehavioralFrom_afterFirst (first : Bool)
       (fun history => terminalOutcomeOfState first history.state)
       ((information first).runBehavioralFrom target 1
         ⟨.ready firstJoint
-          (fun other => if other = !first then choice.1 else none), _⟩) = _
+          ((execution first).singletonJoint (!first) choice.1), _⟩) = _
   rw [map_runBehavioralFrom_ready]
   apply congrArg (fun function : Bool → Outcome =>
     FinDist.map function Source.coin)
@@ -1201,7 +1201,7 @@ theorem runOutcomeLaw_eq_ordered (first : Bool)
       (fun history => terminalOutcomeOfState first history.state)
       ((information first).runBehavioralFrom target 2
         ⟨.afterFirst
-          (fun other => if other = first then choice.1 else none), _⟩) = _
+          ((execution first).singletonJoint first choice.1), _⟩) = _
   rw [map_runBehavioralFrom_afterFirst]
   rw [infoOf_eq_viewOfState]
   simp [viewOfState]
@@ -1305,7 +1305,7 @@ theorem map_erase_runBehavioralFrom_afterFirst (first : Bool)
           FinDist.map
             (fun coinValue => eraseState first
               (.terminal firstJoint
-                (fun other => if other = !first then choice.1 else none)
+                ((execution first).singletonJoint (!first) choice.1)
                 (fun _ => none) coinValue))
             Source.coin := by
   have hterminal : ¬ (execution first).terminal
@@ -1329,7 +1329,7 @@ theorem map_erase_runBehavioralFrom_afterFirst (first : Bool)
   show FinDist.map (eraseHistory first)
       ((information first).runBehavioralFrom target 1
         ⟨.ready firstJoint
-          (fun other => if other = !first then choice.1 else none), _⟩) = _
+          ((execution first).singletonJoint (!first) choice.1), _⟩) = _
   rw [map_erase_runBehavioralFrom_ready]
 
 theorem map_erase_runBehavioral_eq_policy_binds (first : Bool)
@@ -1341,9 +1341,8 @@ theorem map_erase_runBehavioral_eq_policy_binds (first : Bool)
           FinDist.map
             (fun coinValue => eraseState first
               (.terminal
-                (fun other => if other = first then firstChoice.1 else none)
-                (fun other =>
-                  if other = !first then secondChoice.1 else none)
+                ((execution first).singletonJoint first firstChoice.1)
+                ((execution first).singletonJoint (!first) secondChoice.1)
                 (fun _ => none) coinValue))
             Source.coin := by
   unfold InformationModel.runBehavioral
@@ -1369,7 +1368,7 @@ theorem map_erase_runBehavioral_eq_policy_binds (first : Bool)
   show FinDist.map (eraseHistory first)
       ((information first).runBehavioralFrom target 2
         ⟨.afterFirst
-          (fun other => if other = first then choice.1 else none), _⟩) = _
+          ((execution first).singletonJoint first choice.1), _⟩) = _
   rw [map_erase_runBehavioralFrom_afterFirst]
   rw [infoOf_eq_viewOfState]
   simp [viewOfState]
