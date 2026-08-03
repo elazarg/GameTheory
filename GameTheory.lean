@@ -432,6 +432,7 @@ import GameTheory.Concepts.Stochastic.QuittingOpponentLiveMass
 import GameTheory.Concepts.Stochastic.QuittingLiveTail
 import GameTheory.Concepts.Stochastic.QuittingExceptionalHazard
 import GameTheory.Concepts.Stochastic.QuittingBellmanTelescope
+import GameTheory.Concepts.Stochastic.QuittingNegativeSingletonChargeRegression
 import GameTheory.Concepts.Stochastic.GraphDirectedCompactPullback
 import GameTheory.Concepts.Stochastic.CompactSerialRelation
 import GameTheory.Concepts.Stochastic.QuittingNashBellmanSpine
