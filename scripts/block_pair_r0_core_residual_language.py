@@ -24,13 +24,14 @@ after support 9 are already ranked for arbitrary finite blocks.  A companion
 value argument excludes every finite strict cycle using only supports 3 and
 9.  An exact inactive-value obstruction forces the support-9 block after
 support 2 or 6 to have length one.  The two remaining 6-return skeletons pass
-through support 3 and are ranked when that block also has length one.  To
-obtain an all-finite-core-cycle theorem it remains to lift that endpoint rank
-to arbitrary nonempty support-3 blocks.
+through support 3; the companion clock-charge theorem ranks arbitrary
+nonempty support-3 blocks (and the optional support-2 prefix).  Consequently
+no finite strict cycle exists inside this five-mask core.
 
-This is a grammar theorem only.  It does not claim those block lifts, does not
-cover supports outside the five-mask core, and says nothing about infinite
-walks converging to the zero-hazard boundary.
+This remains conditional on the constructed five-mask atlas.  It does not
+prove that atlas exhaustive for the full game, does not cover supports outside
+the core, and says nothing about infinite walks converging to the zero-hazard
+boundary.
 """
 
 from __future__ import annotations
@@ -47,6 +48,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import block_pair_r0_9_run_3_run_obstruction as pair_backtrack  # noqa: E402
 import block_pair_r0_core_excursion_grammar as grammar  # noqa: E402
 import block_pair_r0_singleton_bridge_ranks as singleton_bridge  # noqa: E402
+import block_pair_r0_support3_block_clock_charge as block_charge  # noqa: E402
 import block_pair_r0_support3_9_cycle_exclusion as pair_cycles  # noqa: E402
 import block_pair_r0_support9_double_obstruction as double_nine  # noqa: E402
 import block_pair_r0_support9_run_rank as support_nine_run  # noqa: E402
@@ -175,6 +177,7 @@ def replay_local_ingredients() -> None:
     pair_cycles.assert_support_nine_player_three_transport()
     pair_cycles.assert_support_three_player_three_bound()
     pair_cycles.assert_cycle_gap()
+    block_charge.assert_arbitrary_support_three_block_charge()
 
 
 def main() -> None:
@@ -196,7 +199,8 @@ def main() -> None:
     print("all finite strict 3/9-only cycles are excluded separately")
     print("arbitrary support-9 blocks in the two direct 6-returns are ranked")
     print("entered support-9 blocks have length one")
-    print("remaining lift: arbitrary support-3 blocks in two 6-returns")
+    print("arbitrary support-3 blocks in the final two 6-returns are charged")
+    print("conclusion: no finite strict cycle inside the five-mask core")
     print("scope: strict five-mask finite grammar; infinite/boundary paths remain")
 
 
