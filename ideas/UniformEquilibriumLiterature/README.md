@@ -17,6 +17,7 @@ attribution.
 - [Two-player quitting games have stationary approximate equilibria](TwoPlayerQuittingGamesHaveStationaryApproximateEquilibria.md).
 - [Two-player absorbing games have uniform equilibria](TwoPlayerAbsorbingGamesHaveUniformEquilibria.md).
 - [Three-player absorbing games have uniform equilibria](ThreePlayerAbsorbingGamesHaveUniformEquilibria.md).
+- [Non-Q quitting games have ordinary uniform approximate equilibria](NonQQuittingGamesHaveUniformApproximateEquilibria.md).
 - [Four-player quitting fallback conclusions fail](FourPlayerQuittingFallbacksFail.md).
 - [FTV's cyclic game excludes stationary approximate equilibria](FTVCyclicGameHasNoStationaryApproximateEquilibria.md).
 - [Positive-recursive nonrectangular games have uniform payoffs](PositiveRecursiveNonrectangularGamesHaveUniformPayoffs.md).

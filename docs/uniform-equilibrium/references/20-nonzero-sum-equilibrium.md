@@ -360,7 +360,9 @@ verified primary sources, not independently fetched:
   Programming 2022, DOI `10.1007/s10107-022-01807-6`
 - arXiv:1707.02598 — Solan & Solan, *Quitting Games and Linear Complementarity
   Problems*, Math. OR 45(2), DOI `10.1287/moor.2019.0996` (sunspot
-  ε-equilibrium in the Q-matrix case)
+  ε-equilibria for all multiplayer quitting games; ordinary uniform
+  ε-equilibria when the source's derived matrix is **not** a Q-matrix; the
+  exact matrix adapter still requires a full-text audit)
 - arXiv:2001.03094 — Munk & Solan
 - arXiv:1803.00802 — *Jointly Controlled Lotteries with Biased Coins* —
   directly relevant to the frontier's endogenous-lottery item

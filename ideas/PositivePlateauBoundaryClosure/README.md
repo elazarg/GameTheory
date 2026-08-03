@@ -9,6 +9,7 @@
 | [Positive debt produces an anchored terminal packet](PositiveDebtProducesAnchoredTerminalPacket.md) | `PROVED` |
 | [Finite calibrated blocks have compositional boundary holonomy](FiniteCalibratedBlocksHaveCompositionalBoundaryHolonomy.md) | `PROVED`, production Lean |
 | [Realized anchored holonomy should be closed—or fail informatively](RealizedAnchoredHolonomyClosedness.md) | `PARTIAL`, fixed-cutoff closure and unbounded-cost fence proved in Lean |
+| [Enriched absorption paths may compactify the escaping middle](EnrichedAbsorptionPathsMayCompactifyTheEscapingMiddle.md) | `OPEN`, leading published infinity-chart candidate |
 | [Anchored repair or uniform optimized-debt descent](AnchoredRepairOrUniformDebtDescent.md) | `OPEN`, decisive capstone |
 | [Narrow repair and closure shortcuts are false](RepairAndClosureShortcutsAreFalse.md) | `PROVED` fences |
 
