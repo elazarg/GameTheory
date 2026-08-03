@@ -101,15 +101,17 @@ theorem abs_pathDifference_le_survival_mul
           ring_nf
 
 /-- Uniformly bounded exact Bellman values are uniquely selected by the
-terminal root-sequence payoff once every opponent-survival tail vanishes. -/
-theorem eq_quittingRootSequenceTerminalValue_of_exact_bounded_path
+terminal root-sequence payoff once every playerwise opponent-survival tail
+vanishes from every start. -/
+theorem
+    eq_quittingRootSequenceTerminalValue_of_exact_bounded_path_of_survival_tendsto_zero
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (roots : ℕ → ι → PMF Bool)
     (value : ℕ → Payoff ι)
-    {rho bound : ℝ}
-    (hK : 0 < K)
-    (hblock : IsQuittingOpponentBlockContraction roots K rho)
-    (hrho0 : 0 ≤ rho) (hrho1 : rho < 1)
+    {bound : ℝ}
+    (hsurvival : ∀ who start,
+      Tendsto (quittingOpponentSurvivalWeight roots who start)
+        atTop (nhds 0))
     (hbound0 : 0 ≤ bound)
     (hreward : ∀ terminal who, |reward terminal who| ≤ bound)
     (hvalueBound : ∀ time who, |value time who| ≤ bound)
@@ -163,19 +165,44 @@ theorem eq_quittingRootSequenceTerminalValue_of_exact_bounded_path
     exact (hiterate fuel).trans
       (mul_le_mul_of_nonneg_left (htailBound fuel)
         (quittingOpponentSurvivalWeight_nonneg roots who time fuel))
-  have hsurvival :=
-    tendsto_zero_quittingOpponentSurvivalWeight_of_blockContraction
-      roots hK hblock hrho0 hrho1 who time
+  have hsurvivalWho := hsurvival who time
   have htendsto : Tendsto (fun fuel ↦
       quittingOpponentSurvivalWeight roots who time fuel * (2 * bound))
       atTop (nhds 0) := by
-    simpa using hsurvival.mul_const (2 * bound)
+    simpa using hsurvivalWho.mul_const (2 * bound)
   have hzero : |difference time| ≤ 0 :=
     ge_of_tendsto' htendsto hbound
   have hdifference : difference time = 0 :=
     abs_eq_zero.mp (le_antisymm hzero (abs_nonneg _))
   dsimp only [difference, terminal] at hdifference
   exact sub_eq_zero.mp hdifference
+
+/-- Uniform block contraction is a quantitative sufficient condition for the
+qualitative Bellman-path selection theorem. -/
+theorem eq_quittingRootSequenceTerminalValue_of_exact_bounded_path
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool)
+    (value : ℕ → Payoff ι)
+    {rho bound : ℝ}
+    (hK : 0 < K)
+    (hblock : IsQuittingOpponentBlockContraction roots K rho)
+    (hrho0 : 0 ≤ rho) (hrho1 : rho < 1)
+    (hbound0 : 0 ≤ bound)
+    (hreward : ∀ terminal who, |reward terminal who| ≤ bound)
+    (hvalueBound : ∀ time who, |value time who| ≤ bound)
+    (hpolicy : ∀ time,
+      value time = quittingRootSuccessorPayoff reward
+        (value (time + 1)) (roots time)) :
+    ∀ time,
+      value time =
+        fun who ↦ quittingRootSequenceTerminalValue reward roots who time := by
+  exact
+    eq_quittingRootSequenceTerminalValue_of_exact_bounded_path_of_survival_tendsto_zero
+      reward roots value
+        (fun who start ↦
+          tendsto_zero_quittingOpponentSurvivalWeight_of_blockContraction
+            roots hK hblock hrho0 hrho1 who start)
+        hbound0 hreward hvalueBound hpolicy
 
 /-! ## Exact terminal Nash compilation -/
 
@@ -222,8 +249,75 @@ theorem quittingPrescribedOneStepResidual_infinitePath_eq_zero
         reward roots who)
       hrootNash time
 
-/-- A bounded exact Bellman/Nash path with uniform block contraction compiles
-to an exact terminal Nash profile and delivers its supplied initial value. -/
+/-- A bounded exact Bellman/Nash path whose playerwise opponent-survival
+clocks vanish from every start compiles to an exact terminal Nash profile and
+delivers its supplied initial value. -/
+theorem
+    infinitePath_isZeroAsymptoticNash_and_delivers_of_survival_tendsto_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool)
+    (value : ℕ → Payoff ι)
+    {bound : ℝ}
+    (hsurvival : ∀ who start,
+      Tendsto (quittingOpponentSurvivalWeight roots who start)
+        atTop (nhds 0))
+    (hbound0 : 0 ≤ bound)
+    (hreward : ∀ terminal who, |reward terminal who| ≤ bound)
+    (hvalueBound : ∀ time who, |value time who| ≤ bound)
+    (hpolicy : ∀ time,
+      value time = quittingRootSuccessorPayoff reward
+        (value (time + 1)) (roots time))
+    (hnash : ∀ time,
+      IsεQuittingRootNash reward (value (time + 1)) 0 (roots time)) :
+    (quittingGame reward).IsεAsymptoticNash
+        (quittingTerminalPayoff reward) 0
+        (quittingInfinitePathProfile reward roots) ∧
+      quittingTerminalPayoff reward
+          (quittingInfinitePathProfile reward roots) = value 0 := by
+  have hselected :=
+    eq_quittingRootSequenceTerminalValue_of_exact_bounded_path_of_survival_tendsto_zero
+      reward roots value hsurvival hbound0 hreward hvalueBound hpolicy
+  have hdelivery : quittingTerminalPayoff reward
+      (quittingInfinitePathProfile reward roots) = value 0 := by
+    funext who
+    rw [quittingTerminalPayoff_infinitePathProfile]
+    exact (congrFun (hselected 0) who).symm
+  constructor
+  · intro who deviation
+    let prescribed := quittingRootSequenceTerminalValue reward roots who
+    have hresidual : ∀ time,
+        quittingPrescribedOneStepResidual reward roots who prescribed time =
+          0 := by
+      intro time
+      exact quittingPrescribedOneStepResidual_infinitePath_eq_zero
+        reward roots value hselected hnash who time
+    have hsummable : Summable (fun time ↦
+        quittingOpponentSurvivalWeight roots who 0 time *
+          quittingPrescribedOneStepResidual reward roots who prescribed
+            time) := by
+      simpa only [hresidual, mul_zero] using
+        (summable_zero : Summable (fun _ : ℕ ↦ (0 : ℝ)))
+    have hsurvivalWho := hsurvival who 0
+    have hgap :=
+      quittingRootSequenceHazardTerminalGap_le_tsum_residual_of_survival_zero
+        reward roots who (quittingBehaviorLiveHazard reward deviation)
+          bound hbound0 hreward hsurvivalWho hsummable
+    have hsum : (∑' time,
+        quittingOpponentSurvivalWeight roots who 0 time *
+          quittingPrescribedOneStepResidual reward roots who prescribed
+            time) = 0 := by
+      simp only [hresidual, mul_zero, tsum_zero]
+    rw [hsum] at hgap
+    have hdeviation :=
+      quittingTerminalPayoff_update_eq_rootSequenceHazardTerminalValue
+        reward (quittingInfinitePathProfile reward roots) who deviation
+    rw [quittingProfileLiveRoot_infinitePathProfile] at hdeviation
+    rw [hdeviation, quittingTerminalPayoff_infinitePathProfile]
+    linarith
+  · exact hdelivery
+
+/-- Uniform block contraction supplies the qualitative tail hypothesis, hence
+compiles a bounded exact Bellman/Nash path to exact terminal Nash play. -/
 theorem infinitePath_isZeroAsymptoticNash_and_delivers
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (roots : ℕ → ι → PMF Bool)
@@ -245,50 +339,74 @@ theorem infinitePath_isZeroAsymptoticNash_and_delivers
         (quittingInfinitePathProfile reward roots) ∧
       quittingTerminalPayoff reward
           (quittingInfinitePathProfile reward roots) = value 0 := by
-  have hselected :=
-    eq_quittingRootSequenceTerminalValue_of_exact_bounded_path
-      reward roots value hK hblock hrho0 hrho1 hbound0 hreward
-        hvalueBound hpolicy
-  have hdelivery : quittingTerminalPayoff reward
-      (quittingInfinitePathProfile reward roots) = value 0 := by
-    funext who
-    rw [quittingTerminalPayoff_infinitePathProfile]
-    exact (congrFun (hselected 0) who).symm
+  exact
+    infinitePath_isZeroAsymptoticNash_and_delivers_of_survival_tendsto_zero
+      reward roots value
+        (fun who start ↦
+          tendsto_zero_quittingOpponentSurvivalWeight_of_blockContraction
+            roots hK hblock hrho0 hrho1 who start)
+        hbound0 hreward hvalueBound hpolicy hnash
+
+/-- Qualitative fixed-payoff corollary.  No common block rate is required:
+bounded exact Bellman/Nash play selects `value 0`, and if every playerwise
+opponent clock dies (possibly at a different, non-uniform rate), terminal
+uniformization plus Cesàro payoff convergence makes `value 0` a uniform
+equilibrium payoff. -/
+theorem
+    infinitePath_isUniformEquilibriumPayoff_of_survival_tendsto_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool)
+    (value : ℕ → Payoff ι)
+    {bound : ℝ}
+    (hsurvival : ∀ who start,
+      Tendsto (quittingOpponentSurvivalWeight roots who start)
+        atTop (nhds 0))
+    (hbound0 : 0 ≤ bound)
+    (hreward : ∀ terminal who, |reward terminal who| ≤ bound)
+    (hvalueBound : ∀ time who, |value time who| ≤ bound)
+    (hpolicy : ∀ time,
+      value time = quittingRootSuccessorPayoff reward
+        (value (time + 1)) (roots time))
+    (hnash : ∀ time,
+      IsεQuittingRootNash reward (value (time + 1)) 0 (roots time)) :
+    (quittingGame reward).IsUniformEquilibriumPayoff none (value 0) := by
+  let profile := quittingInfinitePathProfile reward roots
+  have hcompiled :=
+    infinitePath_isZeroAsymptoticNash_and_delivers_of_survival_tendsto_zero
+      reward roots value hsurvival hbound0 hreward hvalueBound hpolicy hnash
+  have hterminalNash : (quittingGame reward).IsεAsymptoticNash
+      (quittingTerminalPayoff reward) 0 profile := by
+    simpa only [profile] using hcompiled.1
+  have hterminalValue : quittingTerminalPayoff reward profile = value 0 := by
+    simpa only [profile] using hcompiled.2
+  intro ε hε
+  have huniform : (quittingGame reward).IsUniformεEquilibrium
+      none ε profile :=
+    quittingGame_isUniformεEquilibrium_of_terminalNash
+      reward profile hε hterminalNash bound hbound0 hreward
+  obtain ⟨nashThreshold, hnashThreshold⟩ := huniform
+  have heventuallyDelivery : ∀ᶠ horizon : ℕ in atTop, ∀ who,
+      |(quittingGame reward).finiteAveragePayoff none horizon profile who -
+          value 0 who| ≤ ε := by
+    apply Filter.eventually_all.mpr
+    intro who
+    have hball :=
+      (tendsto_finiteAveragePayoff_quittingGame reward profile who).eventually
+        (Metric.ball_mem_nhds
+          (quittingTerminalPayoff reward profile who) hε)
+    filter_upwards [hball] with horizon hhorizon
+    have hvalue := congrFun hterminalValue who
+    rw [hvalue] at hhorizon
+    simpa [Metric.mem_ball, Real.dist_eq] using hhorizon.le
+  obtain ⟨deliveryThreshold, hdeliveryThreshold⟩ :=
+    Filter.eventually_atTop.1 heventuallyDelivery
+  refine ⟨profile, max nashThreshold deliveryThreshold,
+    fun horizon hhorizon ↦ ?_⟩
   constructor
-  · intro who deviation
-    let prescribed := quittingRootSequenceTerminalValue reward roots who
-    have hresidual : ∀ time,
-        quittingPrescribedOneStepResidual reward roots who prescribed time =
-          0 := by
-      intro time
-      exact quittingPrescribedOneStepResidual_infinitePath_eq_zero
-        reward roots value hselected hnash who time
-    have hsummable : Summable (fun time ↦
-        quittingOpponentSurvivalWeight roots who 0 time *
-          quittingPrescribedOneStepResidual reward roots who prescribed
-            time) := by
-      simpa only [hresidual, mul_zero] using
-        (summable_zero : Summable (fun _ : ℕ ↦ (0 : ℝ)))
-    have hsurvival :=
-      tendsto_zero_quittingOpponentSurvivalWeight_of_blockContraction
-        roots hK hblock hrho0 hrho1 who 0
-    have hgap :=
-      quittingRootSequenceHazardTerminalGap_le_tsum_residual_of_survival_zero
-        reward roots who (quittingBehaviorLiveHazard reward deviation)
-          bound hbound0 hreward hsurvival hsummable
-    have hsum : (∑' time,
-        quittingOpponentSurvivalWeight roots who 0 time *
-          quittingPrescribedOneStepResidual reward roots who prescribed
-            time) = 0 := by
-      simp only [hresidual, mul_zero, tsum_zero]
-    rw [hsum] at hgap
-    have hdeviation :=
-      quittingTerminalPayoff_update_eq_rootSequenceHazardTerminalValue
-        reward (quittingInfinitePathProfile reward roots) who deviation
-    rw [quittingProfileLiveRoot_infinitePathProfile] at hdeviation
-    rw [hdeviation, quittingTerminalPayoff_infinitePathProfile]
-    linarith
-  · exact hdelivery
+  · exact hnashThreshold horizon
+      (le_trans (Nat.le_max_left _ _) hhorizon)
+  · exact hdeliveryThreshold horizon
+      (le_trans (Nat.le_max_right _ _) hhorizon)
 
 /-! ## Explicit finite-horizon transfer -/
 
