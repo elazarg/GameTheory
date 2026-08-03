@@ -180,6 +180,25 @@ theorem quittingOpponentSurvivalWeight_prepend
       rw [quittingOpponentSurvivalWeight_prepend_tail]
       simp [quittingOpponentSurvivalWeight]
 
+/-- Exact playerwise debt factorization under predecessor prepending. -/
+theorem quittingFiniteNashBellmanPathPlayerDebt_prepend_eq
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (who : ι) :
+    quittingFiniteNashBellmanPathPlayerDebt reward (cutoff + 1)
+        (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath) who =
+      quittingFixedOpponentsContinueMass
+          (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+            (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath))
+          who 0 *
+        quittingFiniteNashBellmanPathPlayerDebt reward cutoff path who := by
+  rw [quittingFiniteNashBellmanPathPlayerDebt_eq,
+    quittingFiniteNashBellmanPathPlayerDebt_eq,
+    quittingOpponentSurvivalWeight_prepend]
+  ring
+
 /-- Every player's surviving singleton debt weakly decreases when a
 predecessor is prepended. -/
 theorem quittingFiniteNashBellmanPathPlayerDebt_prepend_le
@@ -191,25 +210,17 @@ theorem quittingFiniteNashBellmanPathPlayerDebt_prepend_le
     quittingFiniteNashBellmanPathPlayerDebt reward (cutoff + 1)
         (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath) who ≤
       quittingFiniteNashBellmanPathPlayerDebt reward cutoff path who := by
-  rw [quittingFiniteNashBellmanPathPlayerDebt_eq,
-    quittingFiniteNashBellmanPathPlayerDebt_eq,
-    quittingOpponentSurvivalWeight_prepend]
+  rw [quittingFiniteNashBellmanPathPlayerDebt_prepend_eq]
   let firstMass := quittingFixedOpponentsContinueMass
     (quittingFiniteNashBellmanPathRoots (cutoff + 1)
       (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath)) who 0
-  let oldDebt := quittingOpponentSurvivalWeight
-    (quittingFiniteNashBellmanPathRoots cutoff path) who 0 cutoff *
-      max 0 (reward (quittingSingletonTerminal who) who)
-  change firstMass *
-      quittingOpponentSurvivalWeight
-        (quittingFiniteNashBellmanPathRoots cutoff path) who 0 cutoff *
-        max 0 (reward (quittingSingletonTerminal who) who) ≤ oldDebt
+  let oldDebt :=
+    quittingFiniteNashBellmanPathPlayerDebt reward cutoff path who
   have hfirst1 : firstMass ≤ 1 :=
     quittingStationaryContinueMass_le_one _
-  have hold0 : 0 ≤ oldDebt := mul_nonneg
-    (quittingOpponentSurvivalWeight_nonneg _ who 0 cutoff)
-    (le_max_left 0 (reward (quittingSingletonTerminal who) who))
-  rw [mul_assoc]
+  have hold0 : 0 ≤ oldDebt :=
+    quittingFiniteNashBellmanPathPlayerDebt_nonneg
+      reward cutoff path who
   change firstMass * oldDebt ≤ oldDebt
   exact mul_le_of_le_one_left hold0 hfirst1
 
@@ -227,6 +238,33 @@ theorem quittingFiniteNashBellmanPathAggregateDebt_prepend_le
   exact Finset.sum_le_sum fun who _ ↦
     quittingFiniteNashBellmanPathPlayerDebt_prepend_le
       reward cutoff path hpath who
+
+/-- A positive old player debt and a genuine first-stage contraction make
+the prepended aggregate debt strictly smaller. -/
+theorem quittingFiniteNashBellmanPathAggregateDebt_prepend_lt_of_player
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (who : ι)
+    (hdebt : 0 <
+      quittingFiniteNashBellmanPathPlayerDebt reward cutoff path who)
+    (hcontract : quittingFixedOpponentsContinueMass
+      (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+        (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath))
+      who 0 < 1) :
+    quittingFiniteNashBellmanPathAggregateDebt reward (cutoff + 1)
+        (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath) <
+      quittingFiniteNashBellmanPathAggregateDebt reward cutoff path := by
+  unfold quittingFiniteNashBellmanPathAggregateDebt
+  apply Finset.sum_lt_sum
+  · intro player _
+    exact quittingFiniteNashBellmanPathPlayerDebt_prepend_le
+      reward cutoff path hpath player
+  · refine ⟨who, Finset.mem_univ who, ?_⟩
+    rw [quittingFiniteNashBellmanPathPlayerDebt_prepend_eq]
+    have hpositive := mul_pos (sub_pos.mpr hcontract) hdebt
+    nlinarith
 
 /-- **Minimum-debt monotonicity.**  Increasing the cutoff by one cannot
 increase the minimum aggregate surviving debt. -/
@@ -246,6 +284,70 @@ theorem quittingFiniteZeroBoundaryNashBellmanMinDebt_succ_le
         reward cutoff path hpath)).trans
     (quittingFiniteNashBellmanPathAggregateDebt_prepend_le
       reward cutoff path hpath)
+
+/-- If the predecessor of a minimizing chain contracts one positive-debt
+player's opponent clock, minimum debt drops strictly at the next cutoff. -/
+theorem quittingFiniteZeroBoundaryNashBellmanMinDebt_succ_lt_of_player
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (who : ι)
+    (hdebt : 0 < quittingFiniteNashBellmanPathPlayerDebt reward cutoff
+      (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff) who)
+    (hcontract : quittingFixedOpponentsContinueMass
+      (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+        (quittingFiniteNashBellmanPathPrepend reward cutoff
+          (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff)
+          (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer_mem
+            reward cutoff))) who 0 < 1) :
+    quittingFiniteZeroBoundaryNashBellmanMinDebt reward (cutoff + 1) <
+      quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff := by
+  let path :=
+    quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff
+  let hpath :=
+    quittingFiniteZeroBoundaryNashBellmanDebtMinimizer_mem reward cutoff
+  calc
+    quittingFiniteZeroBoundaryNashBellmanMinDebt reward (cutoff + 1) ≤
+        quittingFiniteNashBellmanPathAggregateDebt reward (cutoff + 1)
+          (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath) :=
+      quittingFiniteZeroBoundaryNashBellmanMinDebt_le reward (cutoff + 1) _
+        (quittingFiniteNashBellmanPathPrepend_mem
+          reward cutoff path hpath)
+    _ < quittingFiniteNashBellmanPathAggregateDebt reward cutoff path :=
+      quittingFiniteNashBellmanPathAggregateDebt_prepend_lt_of_player
+        reward cutoff path hpath who hdebt hcontract
+    _ = quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff := rfl
+
+/-- Plateau rigidity: if two successive attained minimum debts agree, the
+prepended predecessor has opponent Continue mass one for every player whose
+old minimizing-chain debt is positive. -/
+theorem quittingFixedOpponentsContinueMass_prepend_eq_one_of_minDebt_plateau
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ)
+    (hplateau :
+      quittingFiniteZeroBoundaryNashBellmanMinDebt reward (cutoff + 1) =
+        quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff)
+    (who : ι)
+    (hdebt : 0 < quittingFiniteNashBellmanPathPlayerDebt reward cutoff
+      (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff) who) :
+    quittingFixedOpponentsContinueMass
+      (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+        (quittingFiniteNashBellmanPathPrepend reward cutoff
+          (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff)
+          (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer_mem
+            reward cutoff))) who 0 = 1 := by
+  have hmassLe : quittingFixedOpponentsContinueMass
+      (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+        (quittingFiniteNashBellmanPathPrepend reward cutoff
+          (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff)
+          (quittingFiniteZeroBoundaryNashBellmanDebtMinimizer_mem
+            reward cutoff))) who 0 ≤ 1 :=
+    quittingStationaryContinueMass_le_one _
+  rcases hmassLe.eq_or_lt with heq | hlt
+  · exact heq
+  · have hstrict :=
+      quittingFiniteZeroBoundaryNashBellmanMinDebt_succ_lt_of_player
+        reward cutoff who hdebt hlt
+    rw [hplateau] at hstrict
+    exact (lt_irrefl _ hstrict).elim
 
 /-- Minimum aggregate debt is antitone over all cutoffs. -/
 theorem antitone_quittingFiniteZeroBoundaryNashBellmanMinDebt
