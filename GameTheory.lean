@@ -465,6 +465,7 @@ import GameTheory.Concepts.Stochastic.QuittingMarkedSameNodeCycleRegression
 import GameTheory.Concepts.Stochastic.QuittingMarkedTimeAdvance
 import GameTheory.Concepts.Stochastic.QuittingOpponentClockDichotomy
 import GameTheory.Concepts.Stochastic.QuittingNashBellmanClockReduction
+import GameTheory.Concepts.Stochastic.QuittingNashBellmanValueConvergence
 import GameTheory.Concepts.Stochastic.QuittingPeriodicMeshRate
 import GameTheory.Concepts.Stochastic.QuittingPeriodicFiniteHorizonRate
 import GameTheory.Concepts.Stochastic.QuittingCyclicSupersolution
