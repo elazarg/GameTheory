@@ -70,6 +70,7 @@ becomes difficult to scan.
 | EXP-057 | 2026-08-02 | D6/D7/D9/D15 / FOSG observation and Kuhn surface | Does FOSG need any native observation-model/Kuhn execution layer, or only transparent named theorems over the canonical `InformationModel`? | Supports theorem-only projection; decides D28 | [`decisions/D28-fosg-kuhn-protocol-projection.md`](decisions/D28-fosg-kuhn-protocol-projection.md); `Languages/FOSG/Kuhn.lean`; same-execution hostile witness |
 | EXP-058 | 2026-08-02 | D6/D7/D15/D28 / FOSG reachable-observation facts | Which parts of the pinned reachable-observation proof machine survive once Protocol owns histories and information? | Retires the adapter; decides D29 | [`decisions/D29-fosg-reachable-observation-retirement.md`](decisions/D29-fosg-reachable-observation-retirement.md); terminal-activity and compressed-information hostile witnesses |
 | EXP-059 | 2026-08-02 | D6/D8/D14/D15/D28 / FOSG-to-EFG serialization | Can a simultaneous stochastic FOSG be serialized as a single-mover EFG while hiding within-round choices and preserving its mapped history law? | Supports explicit hidden-phase serialization; decides D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFG.lean` |
+| EXP-060 | 2026-08-02 | D6/D8/D14/D15/D30 / two-round FOSG-to-EFG signal replay | Can the hidden-phase serializer replay nontrivial source public/private signals over two stochastic rounds, including own-action memory and inactive slots, while preserving the scaled canonical-history law? | Active; generic bridge promotion remains blocked | planned `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound.lean` |
 
 ## Entry template
 
@@ -3843,3 +3844,41 @@ memory.
   covering source signal replay, own-action memory, inactive slots, arbitrary
   target projection, and exact scaled canonical-history laws.  Do not port the
   unrelated pinned `FOSG.Serial` machine.
+
+### EXP-060: two-round FOSG-to-EFG source-signal replay
+
+- **Date / revision:** 2026-08-02, active on `1d0d0d8`
+- **Status:** active; blocks promotion of a generic explicit-order bridge
+- **Decision / question:** whether D30's hidden microstep design composes over
+  source rounds when the next source decision depends on nontrivial
+  public/private resolution signals, rather than only on a phase tag.
+- **Prediction:** target execution may retain the partial within-round joint,
+  but target information must replay source signals only after resolution.
+  Erasing every block of `order.length + 1` target histories should recover the
+  canonical source history law without default-valued outcome projection.
+- **Representative hostile slice:** two Boolean players and two stochastic
+  rounds.  The first resolution produces a public signal and distinct private
+  signals including own-action memory; the second round contains an inactive
+  player slot.  A second-round policy changes with the replayed source signal,
+  while distinct hidden first-mover choices remain information-equivalent
+  inside each serialized round.
+- **Competing designs:** promote a generic compiler from the one-round result;
+  add a concrete two-round replay layer over canonical Protocol histories; or
+  port the pinned separate serial-FOSG execution machine.  The experiment tests
+  the middle design and keeps the other two blocked.
+- **Required measurements:** focused/full build jobs and import surface;
+  reached-information equality inside a round; public/private and own-action
+  replay after resolution; inactive-slot behavior; arbitrary target-profile
+  projection; exact mapped `InformationModel.runBehavioral` history law at a
+  representative horizon; mapped order independence; source scans and public
+  axiom audit.
+- **Kill conditions:** any second execution/history/strategy carrier; exposing
+  a prior within-round action through target information; replaying a source
+  signal before its source transition; relying on a default terminal outcome;
+  raw `Function.update`, public transport plumbing, global finite instances,
+  placeholders, custom axioms, or weakening the canonical runner contract.
+- **Artifacts / commands:** planned
+  `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound.lean`; narrow
+  Lake target, Phase 2/3 static audits, exact coverage audit, full build, and
+  `#print axioms` on the history-law and information witnesses.
+- **Outcome / next action:** pending.
