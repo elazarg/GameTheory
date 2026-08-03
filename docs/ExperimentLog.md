@@ -74,6 +74,7 @@ becomes difficult to scan.
 | EXP-061 | 2026-08-02 | D6/D8/D14/D15/D30 / generic explicit-order FOSG-to-EFG bridge | Can D30's validated hidden-phase construction be expressed once over the canonical FOSG/EFG APIs, with explicit finite player order and the same exact history, signal, policy, inactivity, and order laws? | Supports; promotes the stable generic bridge and completes D30's API gate | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Languages/Bridges/FOSGToEFG.lean`; generic hostile witnesses |
 | EXP-062 | 2026-08-03 | D4/D6/D7/D9 / intrinsic games ownership | Does configuration-dependent causality and closed-loop solvability earn a native intrinsic-game branch by proving a theorem or counterexample unavailable from bare Protocol without first choosing a temporal compiler? | Supports; native closed-loop and causality root approved, later compiler/mixed/utility/Kuhn layers remain gated | `GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean`; D31; focused compile, hazard, axiom, and premise-independence audits |
 | EXP-063 | 2026-08-03 | D12 / dependency maintenance | Do Lean and Mathlib 4.32.2 preserve the fixed-point dependency, trust profile, and enforced architecture boundaries? | Supports; toolchain-aligned maintained fork repinned without theorem-source change | `lean-toolchain`; `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
+| EXP-064 | 2026-08-03 | D5/D11 / repeated public monitoring | Can finite-prefix signal laws support canonical PPE and the bounded one-shot-deviation principle without an infinite-path law? | Supports; closes the public-monitoring equilibrium waist | `GameTheory/Repeated/Monitoring*.lean`; `GameTheory/Tests/MonitoringEquilibrium.lean`; [`coverage/D-REPEAT-monitoring-equilibrium.md`](coverage/D-REPEAT-monitoring-equilibrium.md) |
 
 ## Entry template
 
@@ -4104,3 +4105,72 @@ memory.
   immutable provenance and zero toolchain skew; retain the maintained fork's
   metadata in lockstep with future root toolchain bumps, and keep the original
   EXP-023 measurements as historical evidence.
+
+### EXP-064: discounted public-monitoring equilibrium waist
+
+- **Date / revision:** 2026-08-03, reserved on `2041354`
+- **Status:** complete
+- **Decision / question:** whether finite public-signal prefixes support
+  discounted continuation values, canonical perfect-public equilibrium, and a
+  one-shot-deviation equivalence without an infinite realized-path law or a
+  second equilibrium predicate.
+- **Prediction:** stagewise expectation over `signalHistoryLaw`, followed by an
+  ordinary normalized real series, defines the payoff.  A deterministic
+  monitored-strategy form lets discounted public Nash reuse `IsNash` and
+  `euPreferenceWithin`; PPE is that same condition after every finite public
+  history.  For `0 ≤ δ < 1` and bounded stage payoffs, PPE is equivalent to no
+  profitable one-shot deviation after every public history.
+- **Representative slice:** a noisy finite public-monitoring game whose second
+  signal law and prescribed continuation both depend on the first realized
+  signal, with nonconstant stage utility and a genuine unilateral action
+  comparison.  The generic theorem must specialize to this fixture without
+  perfect observation or a deterministic signal process.
+- **Competing designs:** stagewise finite expectations plus a real series over
+  the existing monitored profile; a new infinite-path probability semantics;
+  or a standalone repeated-equilibrium inequality disconnected from canonical
+  `IsNash`.
+- **Kill conditions:** any need for a `FinDist`/measure on infinite signal
+  paths; a duplicate Nash/deviation/profile-update semantics; stored global
+  finiteness or topology in `PublicMonitoring`; direct `Function.update`;
+  signal-history transports visible in the public API; or an equivalence that
+  only works for deterministic/perfect monitoring or vacuous payoffs.
+- **Artifacts / commands:** the four `GameTheory/Repeated/Monitoring*.lean`
+  leaves, `GameTheory/Tests/MonitoringEquilibrium.lean`, and the focused
+  D-REPEAT ledger.  The focused
+  targets were `GameTheory.Repeated` and
+  `GameTheory.Tests.MonitoringEquilibrium`; the release gate used the full
+  build, Phase 2/3 audits, and exact coverage audit recorded below.
+- **Observations / measurements:** arbitrary continuations and finite
+  deviations stayed cast-free and use only `Profile.update`.  Finite-support
+  expectation made the stage-payoff tower law strictly cleaner than v1: it
+  needs no boundedness premise.  Discounted public Nash is literally `IsNash`
+  on the deterministic monitored form; PPE and one-shot optimality quantify
+  over every typed finite history, including zero-probability histories.  The
+  exact sufficiency proof did not need v1's approximate accumulated-allowance
+  detour: induction controls finite truncations and dominated convergence
+  reaches an arbitrary public deviation.  No player, strategy, signal, or
+  outcome finiteness is stored or assumed; only `0 ≤ discount < 1` and a
+  per-player uniform absolute stage-payoff bound enter sufficiency.
+- **Hostile result:** the two-player Boolean coordination fixture has a fair
+  root signal, a deterministic successor kernel after `true`, nonconstant
+  utility, and a strict unilateral current-action loss.  It proves that the
+  typed history `[true,false]` has generated mass zero, computes its stationary
+  all-true continuation, proves one-shot optimality after every typed history,
+  and derives an actual PPE at discount `1/2` through the generic equivalence.
+- **Trust / outcome:** no kill condition fired.  Both the Bellman theorem and
+  the final one-shot equivalence print exactly `propext`,
+  `Classical.choice`, and `Quot.sound`.  The public root and hostile fixture
+  build warning-free, and the full repository build completes 3,437 jobs.
+  The full Phase 3 audit returns `VERIFIED=1`, including three rejected and two
+  reached repeated-boundary probes.  Phase 2's full reachability run passed
+  every probe but caught four source-level `change` tokens; after replacing
+  them with definitional unfolding/`show`, its structural rerun reports
+  `TRANSPORT_REPEATED_SOURCE=0`, `TRANSPORT_PHASE3_SOURCE=0`,
+  `FUNCTION_UPDATE_OUTSIDE_PROFILE=0`, `SORRY_OR_ADMIT=0`,
+  `CUSTOM_AXIOM=0`, and `VERIFIED=1`.  Exact coverage reports 8,324 pinned
+  declarations, 44 qualitative capability rows, a current generated index,
+  no ledger/capability mismatch, and `VERIFIED=1`.  EXP-064 supports D11's
+  finite-prefix boundary and closes the critical monitoring-equilibrium gap.
+  Approximate allowances, garbling breadth, rank/self-generation, and uniform
+  results return to dependency-gated D-REPEAT harvesting; private-history
+  deviations or a stochastic Protocol compiler require a separate experiment.

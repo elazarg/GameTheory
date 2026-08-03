@@ -1199,6 +1199,14 @@ pointwise convergence of finite local strategy and belief coordinates, even
 though those coordinates are indexed by Protocol histories. That topology is
 isolated under `GameTheory.Analysis.Protocol`.
 
+EXP-064 validates the public-monitoring equilibrium waist on the same side of
+the boundary.  Every horizon has a finite `FinDist` of public signals and the
+discounted payoff is an ordinary real series of those stage expectations.
+Perfect-public equilibrium is canonical `IsNash` after every typed finite
+public history, including zero-probability histories, and uniformly bounded
+stage expected payoffs imply the exact one-shot-deviation principle without
+constructing a law on an infinite realized path.
+
 ### D12. Package and stability boundaries
 
 Use separate dependency roots, not only directories:

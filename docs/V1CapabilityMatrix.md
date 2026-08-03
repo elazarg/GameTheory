@@ -41,12 +41,12 @@ Verdicts are intentionally qualitative:
 
 ## Dashboard
 
-The 44 workflow rows below contain 20 better, 5 comparable, and 8 partial
-verdicts; 9 are critical gaps and 2 are deliberately retired or out of
+The 44 workflow rows below contain 20 better, 5 comparable, and 9 partial
+verdicts; 8 are critical gaps and 2 are deliberately retired or out of
 scope.  The strongest evidence is the canonical static/protocol spine, NFG,
 the frozen EFG/Kuhn/SPE transfers, finite learning, finite auctions, congestion,
 and the executable rational frontend.  The release blockers are broader
-multi-round/repeated theory, learning dynamics, equilibrium refinements,
+multi-round theory, learning dynamics, equilibrium refinements,
 revelation/information design,
 contracts, finite fair division, matching, and bargaining.  The many partial
 rows are not treated as
@@ -95,9 +95,9 @@ particular, the live FOSG queue still has 81 rows to classify
 
 | Capability / user workflow | Pinned v1 evidence (paths / families) | v2 successor evidence | Verdict | Parity condition / next proof |
 |---|---|---|---|---|
-| Define public-history repeated play, discounted values, triggers, and use the discounted folk theorem | `Concepts/Repeated/**` (D-REPEAT); frozen F7 | [`GameTheory/Repeated.lean`](../GameTheory/Repeated.lean), [`GameTheory/Analysis/Repeated/Folk.lean`](../GameTheory/Analysis/Repeated/Folk.lean), F7 witness | comparable | Recover monitoring-equilibrium/rank/uniform parts separately; stable root has no infinite-path law. |
-| Propagate a finite public-monitoring signal prefix through successor/bind laws | D-REPEAT; frozen F8 | [`GameTheory/Repeated/Monitoring.lean`](../GameTheory/Repeated/Monitoring.lean), complete F8 ledger | comparable | Do not infer monitoring equilibrium or self-generation from the prefix law. |
-| Use the broader repeated-game monitoring, rank, and uniform-equilibrium hierarchy | `Concepts/Repeated/**` (D-REPEAT) | `GameTheory.Repeated` provides only the stated finite-prefix/discounted slice | critical gap | Complete the named hierarchy; infinite realized-path probability remains excluded. |
+| Define public-history repeated play, discounted values, triggers, and use the discounted folk theorem | `Concepts/Repeated/**` (D-REPEAT); frozen F7 | [`GameTheory/Repeated.lean`](../GameTheory/Repeated.lean), [`GameTheory/Analysis/Repeated/Folk.lean`](../GameTheory/Analysis/Repeated/Folk.lean), F7 witness | comparable | Recover the remaining rank/uniform parts separately; stable root has no infinite-path law. |
+| Propagate a finite public-monitoring signal prefix through successor/bind laws | D-REPEAT; frozen F8 | [`GameTheory/Repeated/Monitoring.lean`](../GameTheory/Repeated/Monitoring.lean), complete F8 ledger | comparable | The prefix law remains the lower layer; PPE and one-shot results come from the separately checked EXP-064 leaves. |
+| Use the broader repeated-game monitoring, rank, and uniform-equilibrium hierarchy | `Concepts/Repeated/**` (D-REPEAT) | [`GameTheory/Repeated.lean`](../GameTheory/Repeated.lean) now exposes finite-prefix monitoring, continuation values, canonical PPE, and the bounded one-shot-deviation principle; EXP-064 hostile witness | partial | Harvest rank/self-generation, approximate allowances, and uniform results; infinite realized-path probability remains excluded. |
 | Analyze finite stochastic games, uniform deviation caps, and discounted zero-sum stationary values | only `Languages/MultiRound/StochasticGame.lean` in L-ROUND; v1 lacks general value theory | [`GameTheory/Stochastic.lean`](../GameTheory/Stochastic.lean), [`GameTheory/Analysis/Stochastic.lean`](../GameTheory/Analysis/Stochastic.lean) | better | This beyond-v1 mature capability must remain opt-in and cannot discharge L-ROUND recovery; general uniform existence is excluded. |
 
 ## Mechanisms, social domains, and cooperation

@@ -603,16 +603,18 @@ provisioned in CI.
    qualified-projection ownership without helping D30.  Any future common
    carrier, `extends`, compiler relocation, or Kuhn import-direction change
    still requires a reserved experiment;
-3. build D-REPEAT's public-monitoring equilibrium waist: discounted
-   continuation values, canonical perfect-public equilibrium specialization,
-   and one-shot-deviation equivalence on a noisy branch-dependent example,
+3. **complete:** EXP-064 builds D-REPEAT's public-monitoring equilibrium waist:
+   discounted continuation values, canonical perfect-public equilibrium, and
+   the bounded one-shot-deviation equivalence.  Its noisy branch-dependent
+   witness includes a strict unilateral loss and a zero-probability history,
    without introducing infinite realized-path probability;
 4. close M-CONTRACT with a finite principal-agent model, welfare identity,
    incentivized-action existence, and participation against an explicit
    outside option;
-5. run the remaining 81-row L-FOSG classification and already-validated static,
-   Bayesian, and language leaf recovery as parallel BFS work, not as a reason to
-   postpone critical capability gaps;
+5. run the remaining 81-row L-FOSG classification, D-REPEAT
+   rank/self-generation/uniform harvesting, and already-validated static,
+   Bayesian, and language leaf recovery as parallel BFS work, not as a reason
+   to postpone critical capability gaps;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    discharges L-ROUND or repeated-game parity.
