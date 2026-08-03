@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.MovingEndpointOccupationEvidence
+import Math.Probability.MovingEndpointOccupationEvidence
 import Math.PMFIter
 import Math.Probability.ChargedClassSupportRank
 import Math.Probability.IntegratedResponseLedger
@@ -34,8 +34,8 @@ set_option autoImplicit false
 
 noncomputable section
 
-namespace GameTheory
-namespace StochasticGame
+namespace Math
+namespace Probability
 namespace FrozenEndpointTransport
 
 open Filter Math Math.Probability Set
@@ -556,5 +556,5 @@ theorem no_nonempty_proper_closed_class :
 end TwoCycleBoundary
 
 end FrozenEndpointTransport
-end StochasticGame
-end GameTheory
+end Probability
+end Math

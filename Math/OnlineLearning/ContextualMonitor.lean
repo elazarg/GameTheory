@@ -4,8 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.FinkMonitor
 import Math.OnlineLearning.ContextualMultiplicativeWeights
+import Math.ProbabilityMassFunction.Monitoring
 
 /-!
 # Context-local predictable public monitors
@@ -23,8 +23,8 @@ tests used by Fink obstruction monitors.
 
 noncomputable section
 
-namespace GameTheory
-namespace StochasticGame
+namespace Math
+namespace OnlineLearning
 
 open Math.Probability
 
@@ -343,5 +343,5 @@ theorem contextualPMFCoordinateMonitor_fixedPolicyRegret_le_card
 
 end FinkCoordinate
 
-end StochasticGame
-end GameTheory
+end OnlineLearning
+end Math

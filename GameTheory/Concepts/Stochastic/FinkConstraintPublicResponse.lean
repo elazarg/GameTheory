@@ -4,7 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.ContextualFinkMonitor
+import Math.OnlineLearning.ContextualMonitor
+import GameTheory.Concepts.Stochastic.FinkMonitor
 import GameTheory.Concepts.Stochastic.PublicLocalResponseRecursion
 import Math.LinearAlgebra.MixedCompatibilityCharge
 
@@ -36,7 +37,7 @@ noncomputable section
 namespace GameTheory
 namespace StochasticGame
 
-open Math.LinearAlgebra Math.Probability
+open Math.LinearAlgebra Math.OnlineLearning Math.Probability
 open NormalizedFinkSupportTangentObstructionFlow
 
 variable {ι : Type} {G : StochasticGame ι}

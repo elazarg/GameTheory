@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.PrescribedEndpointTargetTransportBoundaryNoGo
-import GameTheory.Concepts.Stochastic.PrescribedEndpointTransportChildAlternative
+import Math.Probability.FrozenEndpointTransport
 
 /-!
 # Moving endpoint transport is not controlled by the endpoint kernel
