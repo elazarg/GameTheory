@@ -434,6 +434,7 @@ import GameTheory.Concepts.Stochastic.QuittingExceptionalHazard
 import GameTheory.Concepts.Stochastic.QuittingBellmanTelescope
 import GameTheory.Concepts.Stochastic.QuittingNegativeSingletonChargeRegression
 import GameTheory.Concepts.Stochastic.GraphDirectedCompactPullback
+import GameTheory.Concepts.Stochastic.GraphDirectedPeriodicLift
 import GameTheory.Concepts.Stochastic.CompactSerialRelation
 import GameTheory.Concepts.Stochastic.QuittingNashBellmanSpine
 import GameTheory.Concepts.Stochastic.QuittingBlockSurvival
