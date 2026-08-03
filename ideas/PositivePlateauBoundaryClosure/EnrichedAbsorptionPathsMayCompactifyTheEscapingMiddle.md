@@ -68,6 +68,14 @@ compactness.  A falsification test for any proposed topology is two families
 with the same ordinary absorption-path limit but incompatible limiting
 obstacles or conditional marks.
 
+The coordinate-level specification of that finite object is the dated design
+note [`MarkedAbsorptionCylinder.md`](../../docs/uniform-equilibrium/design/MarkedAbsorptionCylinder.md).
+It is a design record, not a result: it fixes types, separates the finite exit
+port from the completed-path `Never` atom, argues that each player's stopping
+obstacle runs on its own opponent-only clock rather than the total-absorption
+clock, and lists the exact identities `LEAN-P1-4` must discharge.  Its
+derivations are on paper only.
+
 The 2026 essential-APS operator is a useful positive model for this program,
 but currently covers the continuous one-randomizer-at-a-time subclass and may
 have an empty payoff set.  A payoff--cap/marked-packet extension is therefore a
