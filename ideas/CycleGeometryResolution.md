@@ -7,9 +7,9 @@
 | Lifecycle | `ACTIVE` |
 | Verdict | `MIXED` |
 | Objective priority | `P1` |
-| Last audited | 2026-08-03, through `bf65314` and experiments E42--E45 |
-| Central live claim | A compact, strategically exhaustive resolved repair relation turns the abstract buffered one-seam return-or-exit theorem into either a compilable repair or a uniform root-debt-decreasing splice. |
-| Next discriminant | Construct the full anchored relation and prove the two decoder interfaces: close seam to repair, buffered exit to root-debt descent. |
+| Last audited | 2026-08-03, through `fa4621d` and experiments E42--E49 |
+| Central live claim | Couple the landed forward exact-D seam chart to E49's reverse anchored terminal-packet chart through the common finite minimizers, then decode a seam or certified buffered exit as repair or uniform root-debt descent. |
+| Next discriminant | Prove a finite-chain bridge/holonomy interface that transports E49's reverse depth-one packet across a forward close seam, or prove that failure of such transport gives a uniform optimized-debt exit. |
 | Production destination | Quitting relative-boundary producer and one-seam reinsertion consumer |
 | Supersedes / superseded by | Supersedes the invariant-circle/Sturmian reading locally; no successor yet. |
 
@@ -21,10 +21,12 @@
 | CG2 | Periodic lifts are exponentially dense in a supplied contracting full-shift component. | `PROVED` | `M+X` | Symbolic cover only; injective payoff coding is not claimed. |
 | CG3 | Finite-prefix best-response summaries compose max-affinely and their acceptance sets are explicit polyhedra. | `PROVED` | `M+L` | Supplied quitting prefixes; producer of attainable tails remains open. |
 | CG4 | First scale/direction blow-up gives exact coordinates away from zero and stationary payoffs approach the singleton-reward direction barycenter. | `PROVED` | `M+X` | Stationary zero-hazard chart; no Nash-limit or nonstationary claim. |
-| CG5 | Finite iterated blow-up plus terminal data yields a compact, closed, predecessor-serial, strategically exhaustive repair relation. | `OPEN` | `I` | Required global producer. |
+| CG5 | Finite iterated blow-up plus terminal data yields a compact, closed, predecessor-serial, strategically exhaustive repair relation. | `OPEN` | `I` | `quittingDebtBox` and the exact-D edge graph already supply a compact closed unanchored core; packet/scale augmentation, plateau seriality, and strategic exhaustiveness remain open. |
 | CG6 | Ordinary chain recurrence supplies an exact internal path with all approximation concentrated in one closing seam. | `WRONG` | `M` | Refuted by standard pseudo-orbit versus exact-orbit separation; §8 is corrected below. |
-| CG7 | A globally serial relation with a compact buffered set has, within its covering number, either a downstream exact path with one small closing seam or an exit from the buffer. | `PROVED` | `M` | Pure compactness theorem; no strategic decoder or initial-debt conclusion. |
+| CG7 | A globally serial relation with a compact buffered set has, within its covering number, either a downstream exact path with one small closing seam or an exit from the buffer. | `PROVED` | `M+X` | Pure compactness theorem; no strategic decoder or initial-debt conclusion. Lean probes: `BufferedOneSeamReturnOrExit.lean` (arbitrary serial orbit) and `GreedyBufferedExitDecoder.lean` (E46; greedy `K`-relative path, first-exit prefix anchoring, drop `> a − b`, and certified failure of buffered seriality at the pre-exit state — the seriality-failure half of CG8 interface 4). |
 | CG8 | Plateau-generated, anchor-preserving exact paths decode the CG7 seam as a repair and every CG7 exit as a bounded-length uniform reduction of root optimized debt. | `OPEN` | `I` | Current central geometry question and replacement for CG6. |
+| CG9 | The production positive-debt split can retain its supplied exact-D tail and select a downstream finite-cover one-seam pair without changing any internal edge. | `PROVED` | `M+X` | E47 actual-data adapter; the selected states omit terminal packet, terminal distance/scale, and calibrated-prefix provenance, so no repair is claimed. |
+| CG10 | Selected finite min-max chains admit a common-subsequence two-ended exact-D limit: a forward positive/summable-clock ray and a reverse ray ending on the zero-payoff/singleton-cap face, with positive debt and a quantitative full-action packet at reverse depth one. | `PROVED` | `M+X` | E49. The middle escapes, so there is no bi-infinite orbit or proved transport from the reverse packet to the forward seam. |
 
 ### Falsifiers and wrong turns
 
@@ -39,8 +41,8 @@
   bounded horizon gives a uniform decrement over late reachable states. This
   kills any inference from pointwise Lyapunov decrease to CG8.
 - K11 overlap, FTV neutral behavior, the period-ten atlas escape, Q125's
-  off-chain payoff, Q129 owner nontransfer, and the terminal atom at infinity
-  remain mandatory regressions for CG5--CG7.
+  off-chain payoff, Q129 owner nontransfer, and the separation between E49's
+  forward and reverse ends remain mandatory regressions for CG5--CG8.
 
 ### Production map
 
@@ -49,11 +51,15 @@ contracting graph data -> pullback/periodicity/prefix estimates       [L]
 finite quitting prefix -> max-affine acceptance geometry             [L]
 hazard vector -> first direction chart and stationary barycenter     [X]
 iterated scales + terminal anchor -> compact exhaustive relation      [?]
+serial buffer -> greedy one-seam return or certified-exit dichotomy   [X]
+positive projective exact-D tail -> downstream exact-D seam           [X]
+finite min-max chains -> forward ray + reverse anchored packet ray    [X]
 anchored exact return or buffered exit -> one-seam reinsertion        [? -> L consumer exists]
 ```
 
-The two missing arrows, rather than the already landed symbolic algebra, own
-the claim that this geometry could solve the quitting producer.
+The missing bridge/decoder arrows, rather than the already landed symbolic
+algebra, finite-cover pigeonhole step, or terminal-end compactness, own the
+claim that this geometry could solve the quitting producer.
 
 ### Exit conditions
 
@@ -537,13 +543,96 @@ The required construction theorem is:
 > the strategically admissible repair relation \(R\) is closed on a compact
 > resolved atlas and is predecessor-serial on the positive-plateau region.
 
-This is not yet proved. Its mandatory falsifiers are:
+### 7.1 A landed partial resolved relation
+
+The construction does not start from zero. Production already contains the
+following fixed-dimensional core:
+
+\[
+\texttt{QuittingDebtPoint}
+=
+(\text{payoff},\text{product root},\text{exact dynamic debt}).
+\]
+
+The set `quittingDebtBox` is compact. The graph
+`quittingDynamicDebtEdgeGraph` of exact Nash--Bellman/dynamic-debt
+transitions is closed and compact. Moreover, the production positive-infimum
+split supplies either a uniform-equilibrium payoff or an infinite path in
+this graph with a positive initial debt coordinate and summable opponent
+clock.
+
+E47 applies the supplied-path form of the finite-cover theorem directly to
+that production tail. For every finite cell assignment whose cells have
+diameter below \(\eta\) on `quittingDebtBox`, the exceptional tail contains
+ordered indices
+
+\[
+0\le p<q\le \#\mathrm{Cell}
+\quad\text{with}\quad
+d(z_p,z_q)<\eta,
+\tag{7.2}
+\]
+
+and every displayed transition remains the original exact-D edge. Thus the
+compact exact relation and an actual positive-plateau path through it are
+already landed; the downstream seam is now Lean-checked without selecting a
+different orbit.
+
+E49 shows that the terminal end should not be forced into the same one-point
+state by an unbounded residual-distance coordinate.  For the selected finite
+minimizers (z^K_0,ldots,z^K_K), retain simultaneously
+
+\[
+  z_t=\lim_j z^{K_j}_t,
+  \qquad
+  y_r=\lim_j z^{K_j}_{K_j-r}
+  \tag{7.3}
+\]
+
+along one common subsequence.  The (z)-ray follows exact-D edges forward;
+the (y)-ray follows exact-D edges toward (y_0).  The latter lies on the
+closed terminal face
+
+\[
+  y_0.\mathrm{payoff}=0,
+  \qquad
+  y_0.\mathrm{debt}_i=\max(0,r_i(\{i\})).
+  \tag{7.4}
+\]
+
+Moreover, finite-chain monotonicity gives
+
+\[
+  D_i(z^K_0)\le D_i(z^K_{K-1}).
+  \tag{7.5}
+\]
+
+Thus the positive owner on the forward limit has (D_i(y_1)>0).  The exact
+edge (y_1\to y_0) then forces a complete simultaneous opponent action with
+positive product mass and positive owner advantage; quantitatively its
+weighted advantage carries a `1 / card (ι → Bool)` share of the incoming
+debt.  This is the residual-depth-one packet, now retained theorem-grade at
+the reverse end rather than discarded as an atom at infinity.
+
+This is still not the resolved repair relation.  Equation (7.3) produces two
+one-sided charts, not a bi-infinite orbit: the middle of the same finite
+chains escapes, and no bounded bridge between (z) and (y) is asserted.
+Consequently the reverse packet is not yet transported through E47's close
+forward seam.  Closeness in the forward `QuittingDebtPoint` quotient can
+still identify states whose finite suffixes cannot be spliced with a uniform
+modulus. Nor is the exact-D graph proved predecessor-serial on an exhaustive
+plateau set. CG5 is therefore narrowed from “add an unbounded terminal field”
+to “construct a two-chart bridge/holonomy relation preserving finite-chain
+provenance, and prove its strategic decoder.”
+
+The full conjecture is not yet proved. Its mandatory falsifiers are:
 
 1. the K11 full shift and its overlapping boxes;
 2. FTV neutral rotation;
 3. Q125's stationary payoff outside the zero-boundary chain set;
 4. Q129 owner nontransfer;
-5. the nonvanishing terminal packet at infinity;
+5. E49's nonvanishing reverse terminal packet with no automatic bridge to
+   the forward ray;
 6. the pure-externality positive-holonomy equilibrium; and
 7. the period-ten branch outside the reduced atlas.
 
@@ -615,6 +704,19 @@ finite dichotomy supplied by compactness alone. In particular, once downstream
 starts are allowed, absence of an \(\eta\)-return means failure of seriality
 inside the buffer, not a Conley theorem.
 
+**LEAN STATUS.** E46 proves the greedy relative form: the exit is the first
+exit, its entire prefix is exact and buffered, and the pre-exit state has no
+admissible successor remaining in the buffer. E47 proves the complementary
+supplied-path form and instantiates it on the production projective exact-D
+tail. E49 retains, along the same finite-minimizer subsequence, a reverse
+exact-D ray whose depth-one state has positive debt and a quantitative full-
+action packet over the anchored terminal face. Consequently the topology,
+actual forward-tail adapter, and terminal-end compactness are no longer open.
+What remains is exactly CG8: bridge the separately compactified forward seam
+and reverse packet through their common finite-chain provenance, and convert
+the greedy exit's failure of buffered seriality into the root optimized-debt
+splice.
+
 The uniform exit is a state-level statement, not yet optimized-debt descent.
 That distinction is forced even by a one-dimensional continuous map. Take
 
@@ -649,10 +751,12 @@ restricted graph then supplies the positive minimum gap.
 
 The downstream one-seam lemma still says nothing by itself about the
 designated initial state or the terminal packet that generated the positive
-debt. Shifting to the downstream segment may lose the owner, simultaneous
-quitter set, transported scale, terminal distance, or the requirement that the
-block be attached to the calibrated minimizing chain. Without those fields the
-return is a pigeonhole artifact, not a repair certificate.
+debt. E49 proves that the owner and a simultaneous terminal action survive on
+the reverse chart, but shifting to a downstream forward segment does not
+transport that reverse chart with it. The missing datum is now the bridge
+through the common calibrated finite chain (including the relevant
+transported scale), not existence of the terminal packet itself. Without that
+bridge the return is a pigeonhole artifact, not a repair certificate.
 
 The corrected target is therefore anchored:
 
@@ -729,6 +833,13 @@ terms may require one extra homogeneous coordinate.
 8. First scale/direction blow-up — **E44, LEAN-CHECKED**.
 9. Depth-free one-seam mismatch penalty — **E40, LEAN-CHECKED atop the
    landed reinsertion core**.
+10. Greedy buffered return or first certified exit — **E46,
+    LEAN-CHECKED**.
+11. Supplied exact-path fork and production positive exact-D tail adapter —
+    **E47, LEAN-CHECKED**.
+12. Common-subsequence forward/reverse exact-D compactification, anchored
+    reverse terminal face, and quantitative depth-one packet — **E49,
+    LEAN-CHECKED**.
 
 ### Tier B: short formal extensions
 
@@ -747,7 +858,7 @@ terms may require one extra homogeneous coordinate.
 1. Certified branch-image separation/overlap nerve for K11.
 2. Exhaustive refined support/active-branch atlas.
 3. Finite iterated blow-up theorem for selected analytic/Puiseux hazard arcs.
-4. Closed two-ended repair correspondence.
+4. Closed bridge/holonomy correspondence coupling E49's two landed ends.
 5. Full-state anchored one-seam return compiler on that correspondence.
 6. Decoder from a buffered exit to a bounded-length root-debt splice. The
    abstract covering-number return-or-exit theorem itself is already proved.
