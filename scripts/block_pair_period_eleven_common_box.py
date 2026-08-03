@@ -63,6 +63,7 @@ from block_pair_period_eleven_certificate import (  # noqa: E402
     N,
     ONE,
     PERIOD,
+    TERMINAL,
     ZERO,
     Interval,
     ReducedCertificateData,
@@ -90,6 +91,19 @@ CERTIFICATE_BY_LABEL = {
 
 ALPHABET = ("10", "11", "14")
 CONTEXT_RADIUS = Fraction(2, 10**6)
+SAFE_OPPONENT_BLOCK_BOUND = Fraction(18481, 200000)  # 0.092405
+PAYOFF_ABS_BOUND = max(
+    abs(payoff)
+    for row in TERMINAL.values()
+    for payoff in row
+)
+EXPECTED_LIVE_STAGE_BOUND = Fraction(PERIOD) / (
+    1 - SAFE_OPPONENT_BLOCK_BOUND
+)
+FINITE_HORIZON_GAIN_CONSTANT = (
+    2 * PAYOFF_ABS_BOUND * EXPECTED_LIVE_STAGE_BOUND
+)
+assert PAYOFF_ABS_BOUND == 10
 
 # These are deliberately terminating rational guide centers, not asserted
 # roots.  The all-box edge checks below are the certificate.
@@ -697,6 +711,7 @@ def certify_context_graph() -> tuple[GraphSummary, str]:
     assert summary.minimum_inactive_gap is not None
     assert summary.minimum_determinant_gap is not None
     assert summary.minimum_image_slack is not None
+    assert summary.maximum_opponent_product < SAFE_OPPONENT_BLOCK_BOUND
     digest = transcript.hexdigest()
     if EXPECTED_TRANSCRIPT_SHA256 != "TO_BE_FILLED":
         assert digest == EXPECTED_TRANSCRIPT_SHA256
@@ -730,6 +745,18 @@ def main() -> None:
     print(
         "maximum opponent-cycle survival ~= "
         f"{float(summary.maximum_opponent_product):.9f}"
+    )
+    print(
+        "safe opponent-block bound = "
+        f"{SAFE_OPPONENT_BLOCK_BOUND}"
+    )
+    print(
+        "uniform expected-live-stage bound = "
+        f"{EXPECTED_LIVE_STAGE_BOUND}"
+    )
+    print(
+        "uniform N-stage deviation-gain bound = "
+        f"{FINITE_HORIZON_GAIN_CONSTANT}/N"
     )
     print(
         "minimum different-first-symbol box separation ~= "
