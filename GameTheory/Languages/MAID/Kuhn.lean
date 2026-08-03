@@ -104,7 +104,6 @@ variable (S : Struct Player n) (sem : Sem S)
 
 open Math.PMFProduct Math.ProbabilityMassFunction
 
-set_option maxHeartbeats 400000 in
 -- congrFun/congrArg for PMF.bind rewriting needs extra unification work
 /-- **Kuhn M→B (fully native MAID)**: under perfect recall, every product
 mixed strategy can be realized by a behavioral policy with the same outcome

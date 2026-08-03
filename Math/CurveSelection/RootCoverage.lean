@@ -574,7 +574,6 @@ theorem exists_common_separating_truncation
     (hpositive.and (hseparate.and hlarge)).exists
   exact ⟨n, hn, hnsep, hnlarge⟩
 
-set_option maxHeartbeats 800000 in
 -- Explicit specialization creates a large but entirely routine elaboration.
 /-- The residual obtained after peeling a finite family of centered moving
 roots from a concrete bivariate polynomial converges at every convergent

@@ -83,6 +83,7 @@ theorem between_target_compl (states : Finset S) :
   unfold between finiteFlowBetween
   rw [Finset.sum_add_sum_compl]
 
+omit [DecidableEq S] in
 theorem between_source_univ (states : Finset S) :
     flow.between states Finset.univ =
       (1 - flow.reset) * flow.stockOn states := by
@@ -97,6 +98,7 @@ theorem between_source_univ (states : Finset S) :
     _ = (1 - flow.reset) * ∑ source ∈ states, flow.stock source := by
           rw [Finset.mul_sum]
 
+omit [DecidableEq S] in
 theorem stockOn_state_balance (states : Finset S) :
     flow.stockOn states =
       flow.reset * flow.initialOn states + flow.between Finset.univ states := by
@@ -161,6 +163,7 @@ def edgeFlux (source : S) (label : Label source) (target : S) : ℝ :=
 def aggregateFlux (source target : S) : ℝ :=
   ∑ label, flow.edgeFlux source label target
 
+omit [DecidableEq S] in
 /-- Successors of one fixed labelled transition retain the proportions of its
 stochastic kernel. -/
 theorem kernel_mul_edgeFlux (source : S) (label : Label source)
@@ -172,6 +175,7 @@ theorem kernel_mul_edgeFlux (source : S) (label : Label source)
   simp only [edgeFlux]
   ring
 
+omit [DecidableEq S] in
 /-- The successor bundle of one label has total mass
 `(1 - reset) * labelMass`. -/
 theorem sum_edgeFlux (source : S) (label : Label source) :
@@ -189,6 +193,7 @@ theorem sum_edgeFlux (source : S) (label : Label source) :
     _ = (1 - flow.reset) * flow.labelMass source label := by
           rw [pmf_toReal_sum_one, mul_one]
 
+omit [DecidableEq S] in
 /-- Labelled state balance rewritten directly in terms of edge flux. -/
 theorem state_balance_edgeFlux (target : S) :
     flow.stock target = flow.reset * (flow.initial target).toReal +
