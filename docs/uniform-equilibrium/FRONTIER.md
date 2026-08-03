@@ -62,6 +62,13 @@ The finite-quitting front is now sharply reduced.
    exact-D endpoints, survival, atom, and common holonomy. Conversely, every
    compact subset of `ℕ × X` has bounded length, so no compact lift retaining
    literal unbounded game-stage cost can cover the escaping middles.
+9. **Leading infinity-chart candidate (`P+I`).** Published absorption paths
+   compactify quitting behavior by accumulated absorption mass rather than
+   calendar time.  The P0 candidate is stricter: a marked subprobability path
+   with a finite-block exit port or infinite Never atom, the conditional
+   terminal packet, entry/exit anchors, payoff/debt paths, and the full
+   unilateral stopping-obstacle graph.  Neither its closedness nor its exact
+   adapter is proved.
 
 The chain is exhaustive up to the positive fully summable plateau. It is not a
 claim that every equilibrium belongs to one finite grammar.
@@ -70,14 +77,21 @@ claim that every equilibrium belongs to one finite grammar.
 
 Fixed-cutoff closedness is settled; arbitrary-length executability is not.
 Projection to scalar coefficients forgets splice admissibility, while a state
-retaining the literal middle length cannot be compact along an unbounded
-family. The first question is therefore the sharper
-[escaping-middle problem](../../ideas/PositivePlateauBoundaryClosure/RealizedAnchoredHolonomyClosedness.md): prove uniform middle-length tightness,
-or compactify the infinity/stopping-law behavior and separately prove a
-uniform bounded finite decoder, or construct a calibrated incompatible-splice
-family showing which additional scale/state is indispensable.
+retaining literal finite length cannot remain a complete finite-realizability
+certificate after compact closure.  Boundary objects representing an escaped
+infinite or continuous middle are unavoidable unless plateau middles are
+uniformly tight.  The leading candidate is therefore the
+[marked absorption-path route](../../ideas/PositivePlateauBoundaryClosure/EnrichedAbsorptionPathsMayCompactifyTheEscapingMiddle.md), with the
+[escaping-middle problem](../../ideas/PositivePlateauBoundaryClosure/RealizedAnchoredHolonomyClosedness.md)
+retained as its acceptance/falsification test.  The first theorem must encode
+actual finite blocks exactly; the next must prove the enriched strategic graph
+closed or exhibit two identical ordinary path limits with incompatible caps,
+marks, or splice semantics.
 
-The second question is strategic. E40 gives depth-free error once a certified
+The second question is strategic and splits into two decoders.  One compiles a
+globally valid corrected path into terminal approximate profiles.  The other
+extracts a bounded finite surgery from a strict local failure and decreases
+optimized debt at the original root.  E40 gives depth-free error once a certified
 seam is supplied; E46 gives a greedy buffered return/exit/dead-end trichotomy;
 E47 applies a downstream seam to the actual exact-D tail. None transports the
 root anchor and reverse packet through the middle or turns an exit into new
