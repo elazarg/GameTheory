@@ -636,4 +636,148 @@ theorem supportThirteen_predecessorValue
       terminalRewardNat]
     ring
 
+/-- The denominator controlled by player 0's successor coordinate in the
+support-11 chart. -/
+def supportElevenZeroDenominator
+    (successor : Player → ℝ) (z : ℝ) : ℝ :=
+  successor 0 * z - successor 0 - 3 * z + 7
+
+/-- The denominator controlled by player 1's successor coordinate in the
+support-11 chart. -/
+def supportElevenOneDenominator
+    (successor : Player → ℝ) (z : ℝ) : ℝ :=
+  successor 1 * z - successor 1 - 5 * z + 11
+
+def supportElevenA (successor : Player → ℝ) : ℝ :=
+  2 * successor 0 * successor 1 - 10 * successor 0 -
+    18 * successor 1 - 27 * successor 3 - 18
+
+def supportElevenB (successor : Player → ℝ) : ℝ :=
+  -4 * successor 0 * successor 1 + 32 * successor 0 +
+    68 * successor 1 + 108 * successor 3 - 16
+
+def supportElevenC (successor : Player → ℝ) : ℝ :=
+  2 * successor 0 * successor 1 - 22 * successor 0 -
+    50 * successor 1 - 81 * successor 3 + 226
+
+/-- The quadratic compatibility polynomial for support mask 11. -/
+def supportElevenPolynomial
+    (successor : Player → ℝ) (z : ℝ) : ℝ :=
+  supportElevenA successor * z ^ 2 +
+    supportElevenB successor * z + supportElevenC successor
+
+/-- The support-11 hazards on the sheet parameterized by `z = x₃`. -/
+def supportElevenHazard
+    (successor : Player → ℝ) (z : ℝ) : Player → ℝ := ![
+  (successor 1 * z - successor 1 + 4 * z + 2) /
+    supportElevenOneDenominator successor z,
+  (successor 0 * z - successor 0 - 2) /
+    supportElevenZeroDenominator successor z,
+  0,
+  z
+]
+
+theorem supportEleven_zero_one_active
+    (successor : Player → ℝ) (z : ℝ)
+    (hzero : supportElevenZeroDenominator successor z ≠ 0)
+    (hone : supportElevenOneDenominator successor z ≠ 0) :
+    difference (supportElevenHazard successor z) successor 0 = 0 ∧
+      difference (supportElevenHazard successor z) successor 1 = 0 := by
+  constructor
+  · rw [difference_eq_expanded]
+    simp [expandedDifference, supportElevenHazard]
+    field_simp
+    simp only [supportElevenZeroDenominator]
+    ring
+  · rw [difference_eq_expanded]
+    simp [expandedDifference, supportElevenHazard]
+    field_simp
+    simp only [supportElevenOneDenominator]
+    ring
+
+/-- After solving the first two active equations, the third is exactly the
+quadratic compatibility equation (43). -/
+theorem supportEleven_difference_three
+    (successor : Player → ℝ) (z : ℝ)
+    (hzero : supportElevenZeroDenominator successor z ≠ 0)
+    (hone : supportElevenOneDenominator successor z ≠ 0) :
+    difference (supportElevenHazard successor z) successor 3 =
+      supportElevenPolynomial successor z /
+        (supportElevenZeroDenominator successor z *
+          supportElevenOneDenominator successor z) := by
+  rw [difference_eq_expanded]
+  simp [expandedDifference, supportElevenHazard]
+  field_simp
+  simp only [supportElevenZeroDenominator, supportElevenOneDenominator,
+    supportElevenPolynomial, supportElevenA, supportElevenB, supportElevenC]
+  ring
+
+theorem supportEleven_active
+    (successor : Player → ℝ) (z : ℝ)
+    (hzero : supportElevenZeroDenominator successor z ≠ 0)
+    (hone : supportElevenOneDenominator successor z ≠ 0)
+    (hpolynomial : supportElevenPolynomial successor z = 0) :
+    difference (supportElevenHazard successor z) successor 0 = 0 ∧
+      difference (supportElevenHazard successor z) successor 1 = 0 ∧
+      difference (supportElevenHazard successor z) successor 3 = 0 := by
+  obtain ⟨hactiveZero, hactiveOne⟩ :=
+    supportEleven_zero_one_active successor z hzero hone
+  refine ⟨hactiveZero, hactiveOne, ?_⟩
+  rw [supportEleven_difference_three successor z hzero hone, hpolynomial]
+  simp
+
+/-- The exact predecessor-value chart for support mask 11. -/
+def supportElevenValue
+    (successor : Player → ℝ) (z : ℝ) : Player → ℝ :=
+  let x₀ := supportElevenHazard successor z 0
+  let x₁ := supportElevenHazard successor z 1
+  let survival := (1 - x₀) * (1 - x₁) * (1 - z)
+  ![
+    x₁ * z - 3 * x₁ - 4 * z - 2,
+    -3 * x₀ + 4 * z + 2,
+    4 * x₀ * x₁ * z - x₀ * x₁ - 3 * x₀ * z -
+      7 * x₁ * z + 8 * z + survival * successor 2,
+    2 * (1 + 2 * x₀ - x₀ * x₁)
+  ]
+
+/-- On a root of `P₁₁`, the terminal-table expectation agrees with the
+algebraic predecessor chart (45). -/
+theorem supportEleven_predecessorValue
+    (successor : Player → ℝ) (z : ℝ)
+    (hzero : supportElevenZeroDenominator successor z ≠ 0)
+    (hone : supportElevenOneDenominator successor z ≠ 0)
+    (hpolynomial : supportElevenPolynomial successor z = 0) :
+    predecessorValue (supportElevenHazard successor z) successor =
+      supportElevenValue successor z := by
+  have hactive := supportEleven_active successor z hzero hone hpolynomial
+  funext who
+  fin_cases who
+  · change predecessorValue (supportElevenHazard successor z) successor 0 =
+      supportElevenValue successor z 0
+    rw [predecessorValue_eq_quit_of_difference_eq_zero hactive.1]
+    simp +decide [opponentQuitValue, maskProbability, actionFactor, realSum,
+      realProduct, maskWithPlayer, supportElevenHazard, supportElevenValue,
+      terminalRewardNat]
+    ring
+  · change predecessorValue (supportElevenHazard successor z) successor 1 =
+      supportElevenValue successor z 1
+    rw [predecessorValue_eq_quit_of_difference_eq_zero hactive.2.1]
+    simp +decide [opponentQuitValue, maskProbability, actionFactor, realSum,
+      realProduct, maskWithPlayer, supportElevenHazard, supportElevenValue,
+      terminalRewardNat]
+    ring
+  · change predecessorValue (supportElevenHazard successor z) successor 2 =
+      supportElevenValue successor z 2
+    simp +decide [predecessorValue, opponentAbsorbingContribution,
+      opponentSurvival, maskProbability, actionFactor, realSum, realProduct,
+      supportElevenHazard, supportElevenValue, terminalRewardNat]
+    ring
+  · change predecessorValue (supportElevenHazard successor z) successor 3 =
+      supportElevenValue successor z 3
+    rw [predecessorValue_eq_quit_of_difference_eq_zero hactive.2.2]
+    simp +decide [opponentQuitValue, maskProbability, actionFactor, realSum,
+      realProduct, maskWithPlayer, supportElevenHazard, supportElevenValue,
+      terminalRewardNat]
+    ring
+
 end GameTheory.BlockPairCharts
