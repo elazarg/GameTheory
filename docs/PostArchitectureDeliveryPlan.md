@@ -329,7 +329,7 @@ surface syntax.
 | NFG | **passed and recovered:** EXP-042/T4 validates compilation; all 126 pinned declarations are classified with no deferred rows | broad examples, observable cheap talk, exact half/half mixed Nash, and the complete Matching Pennies correlated-equilibrium characterization are recovered through their canonical shared layers |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
 | MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
-| FOSG | **generic bridge gate passed (EXP-042/T4; EXP-059/060/061, D30):** the stable explicit-order FOSG-to-EFG bridge retains exact source histories while hiding within-round choices; resolver-only public/private/own-action replay, inactive slots, arbitrary target projection, literal all-round history laws, and order transport pass | **Native history/Kuhn, reachable observation-model, and Compile batches classified (EXP-057/D28, EXP-058/D29, EXP-059/D30);** breadth-first recover or retire the pinned live `Compile` → `SerialExec` → `AugmentedEFG` → `EFG_FOSG` chain against the canonical bridge; counterfactual reach, CFR, ordinary continuation coefficients, and strategic transfer remain separate gates |
+| FOSG | **generic bridge gate passed (EXP-042/T4; EXP-059/060/061, D30):** the stable explicit-order FOSG-to-EFG bridge retains exact source histories while hiding within-round choices; policy projection/translation are full inverses, resolver-only public/private/own-action replay, inactive slots, literal all-round history laws, and order transport pass | **Native history/Kuhn, reachable observation-model, Compile, and the 104-declaration live bridge chain are classified;** continue the remaining 293-row exact L-FOSG queue, while counterfactual reach, CFR, ordinary continuation coefficients, augmentation, strategic/utility transfer, and expressiveness remain separate gates |
 | multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
 | intrinsic games | the native strategy/information object proves one theorem not recoverable from bare Protocol | compilation, perfect recall, and native theorems |
 | bridges and expressiveness | two real transfers compose more cheaply than direct named proofs | only the earned relation or composition API; otherwise classify v1 transport as retired |
@@ -431,7 +431,7 @@ the protected recovery waves.
 
 | Candidate | Evidence of the v1 blind spot | First serious slice | Candidate placement, not yet an API commitment |
 |---|---|---|---|
-| finite stochastic/Markov games | one pinned `MultiRound/StochasticGame.lean`, no general value or stationary-equilibrium theory | **domain gate passed (EXP-050/D22 and EXP-051/D23):** native finite-horizon/uniform semantics plus normalized two-player zero-sum Shapley contraction, unique value, and stationary statewise saddles | public opt-in `Stochastic` root using `FinDist` transitions and a named Protocol bridge; discounted value in the one-way `Analysis.Stochastic` bridge |
+| finite stochastic/Markov games | one pinned `MultiRound/StochasticGame.lean`, no general value or stationary-equilibrium theory | **domain gate passed (EXP-050/D22 and EXP-051/D23):** native finite-horizon/uniform semantics, an exact uniform deviation-cap certificate equivalence, plus normalized two-player zero-sum Shapley contraction, unique value, and stationary statewise saddles | public opt-in `Stochastic` root using `FinDist` transitions and a named Protocol bridge; discounted value in the one-way `Analysis.Stochastic` bridge; general uniform existence remains an excluded open conjecture |
 | games on graphs and reactive synthesis | no reachability, safety, Büchi, parity, or mean-payoff family | finite reachability game with executable attractor and memoryless determinacy proof | independent graph-game root; compare its arena with Protocol before sharing |
 | graphical and network games | no local-interaction representation | compile a tree graphical game to `GameForm` and preserve local payoff/Nash facts | language/domain branch over the static core |
 | algorithmic game theory and complexity | executable support is enumeration-oriented and v1 has no complexity layer | one verified reduction or certificate family with explicit size/cost theorem | `Finite`, `GameTheoryMath`, and an experiment-gated complexity vocabulary |
@@ -537,20 +537,21 @@ The next work is ordered:
 
 1. consolidate moving delivery probes without rewriting historical phase
    measurements;
-2. continue the exact FOSG queue through observation-model batches and named
-   comparisons; keep its classified counterfactual-reach/CFR spine and six
-   ordinary continuation-coefficient laws behind separate checked-theorem
-   gates, and recover general constant-sum value/correlation results beyond
-   the completed binary slice;
+2. continue the remaining exact L-FOSG queue after completing the bounded
+   104-declaration serialization/expressiveness comparison; keep its classified
+   counterfactual-reach/CFR spine and ordinary continuation-coefficient laws
+   behind separate checked-theorem gates, and recover general constant-sum
+   value/correlation results beyond the completed binary slice;
 3. resume the broader revelation/information-design inventory and decide
    whether a live consumer earns D-COMM's deferred conditional public-signal
    representation;
-4. extend the passed stochastic-game gate only through a finite-horizon
-   approximation or checked special case; the active sibling
-   `uniform-existence` branch's basic definitions are already represented by
-   D22, while its large placeholder-dependent existence hierarchy is research
-   evidence only; reserve a new experiment before any infinite-path law,
-   vanishing-discount existence theorem, or graph-game root;
+4. use the recovered uniform deviation-cap equivalence to prove a checked
+   finite-horizon or known special case; the active sibling
+   `uniform-existence` branch's basic definitions and placeholder-independent
+   proof waist are represented by D22, while its large placeholder-dependent
+   existence hierarchy is research evidence only; reserve a new experiment
+   before any infinite-path law, vanishing-discount existence theorem, or
+   graph-game root;
 5. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 

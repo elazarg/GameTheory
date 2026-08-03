@@ -136,10 +136,10 @@ declaration-based.
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
 | L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | validated by EXP-041/T3 | partial | broader refinement, recall, and Kuhn-facing declaration recovery |
-| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4; generic explicit-order FOSG-to-EFG serialization, source-signal replay, all-round exact history laws, and order transport validated by EXP-059/060/061, D30 | partial; 483/776 reviewed, 293 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); breadth-first account the pinned live `Compile` → `SerialExec` → `AugmentedEFG` → `EFG_FOSG` chain against the canonical bridge; actual counterfactual reach, CFR, ordinary continuation coefficients, and strategic transfer retain separate explicit gates |
+| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4; generic explicit-order FOSG-to-EFG serialization, full policy inversion, source-signal replay, all-round exact history laws, and order transport validated by EXP-059/060/061, D30 | partial; 483/776 reviewed, 293 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); the cross-family live bridge chain is fully accounted; continue the remaining native/examples queue while actual counterfactual reach, CFR, ordinary continuation coefficients, and strategic transfer retain separate explicit gates |
 | L-ROUND | `Languages/MultiRound.lean`, `Languages/MultiRound/**` | 15 | native language compiling to Protocol | provisional probe | partial | preserve previous actions and imperfect monitoring |
 | L-INTR | `Languages/Intrinsic.lean`, `Languages/Intrinsic/**` | 8 | native branch only if it retains theorem-relevant data | assigned | not started | one theorem unavailable from bare Protocol |
-| L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1, T3, T4 complete; stable generic FOSG-to-EFG signal replay, exact all-round history laws, and order transport pass EXP-059/060/061, D30 | partial/retirement open | breadth-first recover or retire the pinned live FOSG bridge chain against the canonical adapter; keep strategic/equilibrium transfer behind its own gate |
+| L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1, T3, T4 complete; stable generic FOSG-to-EFG full policy equivalence, exact all-round history laws, and order transport pass EXP-059/060/061, D30 | partial; bounded FOSG chain 104/104 reviewed, 19 deferred | [exact FOSG bridge ledger](coverage/L-BRIDGE-fosg.md); next L-BRIDGE family after its own gate; FOSG strategic/utility, terminal-support, augmentation, and expressiveness rows remain explicitly deferred |
 | L-OPEN | `Languages/OpenGame.lean`, `Languages/OpenGame/**` | 15 | `Frontier` | Frontier | not started | one compositional theorem and external semantic comparison |
 
 ### Mechanisms, auctions, and collective choice
@@ -196,8 +196,10 @@ declaration-based.
   pinned-v1 recovery status.
 - EXP-050/D22 and EXP-051/D23 promote the active sibling branch's basic
   stochastic/uniform semantic waist and the mature discounted Shapley value
-  slice as opt-in stable/Analysis roots. They account for no pinned-v1
-  declaration; pinned stochastic rows remain in the L-ROUND review queue.
+  slice as opt-in stable/Analysis roots. D22's post-gate deviation-cap
+  equivalence is likewise beyond-v1 mature coverage. These results account for
+  no pinned-v1 declaration; pinned stochastic rows remain in the L-ROUND review
+  queue.
 
 ## Next ledger actions
 

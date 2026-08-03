@@ -3329,6 +3329,20 @@ memory.
   roughly 34.6k added lines.  The portable definition spine is already the
   promoted D22 surface; the branch's placeholder-dependent general existence
   hierarchy remains research evidence, not code to import or port wholesale.
+- **2026-08-03 certificate follow-up:** a read-only audit of the moving sibling
+  at `dba3b7a1356581d676d0f432bd1cb39ade41afb5` found one additional
+  placeholder-independent proof waist in
+  `Concepts/Stochastic/Uniform.lean`, last changed at
+  `81c60ec813348b9805b3ae26b96a3b767b9e05f9`.  The stable successor adapts
+  finite-horizon epsilon monotonicity, the named uniform deviation-cap
+  constructor, its half-accuracy soundness theorem, and its exact equivalence
+  with semantic uniform-equilibrium payoff.  It does not adapt the sibling's
+  `sorry`-tainted `exists_uniformDeviationCapConstructor` or any dependent
+  existence statement, adds no Analysis/asymptotic dependency, and credits no
+  pinned-v1 declaration.  The focused 1,732-job and full 3,422-job builds pass;
+  Phase 2, Phase 3, and exact coverage audits return `VERIFIED=1`, and the four
+  adapted declarations use only `propext`, `Classical.choice`, and
+  `Quot.sound`.
 
 ### EXP-051: discounted stochastic games and the Shapley boundary
 
@@ -3968,10 +3982,14 @@ memory.
   `GameTheory/Languages/Bridges/FOSGToEFG.lean`; EXP-060 migrated witnesses;
   focused build; Phase 2 and Phase 3 audits; exact coverage audit; full build;
   embedded axiom prints for the public laws.
-- **Outcome / next action:** no kill condition fired.  Promote the generic
-  bridge and begin breadth-first accounting of the pinned live bridge chain:
-  `FOSG.Compile`, `Bridges/FOSG/SerialExec`, `AugmentedEFG`, and
-  `Expressiveness/EFG_FOSG`.  Recover statements against the canonical bridge;
-  retire the pinned PMF runner, global-finiteness, manual reindexing, and
-  separate serial semantics.  Counterfactual reach, CFR, ordinary continuation
-  coefficients, and equilibrium transfer retain their own gates.
+- **Outcome / next action:** no kill condition fired.  The immediate
+  breadth-first follow-up accounts all 104 declarations in the pinned
+  `SerialExec` → `AugmentedEFG` → `EFG_FOSG` chain: 11 adapt, 27 subsumed, 47
+  retired, and 19 explicitly deferred.  Only one additional stable theorem was
+  justified: `translate_project_profile` upgrades the scheduled inverse to a
+  full target-profile inverse because every non-owner and resolver menu is a
+  certified singleton.  The pinned PMF runner, global-finiteness, manual
+  reindexing, legalization, and separate serial semantics remain retired.
+  Counterfactual reach, CFR, ordinary continuation coefficients, augmentation,
+  strategic/utility transfer, and language expressiveness retain their own
+  gates.
