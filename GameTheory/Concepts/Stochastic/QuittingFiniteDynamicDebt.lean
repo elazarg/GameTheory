@@ -191,7 +191,7 @@ theorem quittingFiniteDynamicDebt_succ_le_residual_add
   rw [quittingFiniteDynamicDebt_succ]
   unfold quittingPrescribedOneStepResidual quittingLiveBellmanValue
   dsimp only [quitValue, continueValue, continueMass, nextDebt] at hmax ⊢
-  convert sub_le_sub_right hmax (prescribed start) using 1 <;> ring
+  convert sub_le_sub_right hmax (prescribed start) using 1 <;> ring_nf
 
 /-- If every displayed local residual vanishes, exact dynamic debt is at
 most the coarse survival-weighted terminal envelope. -/

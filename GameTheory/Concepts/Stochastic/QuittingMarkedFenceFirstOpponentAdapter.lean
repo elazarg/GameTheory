@@ -203,7 +203,7 @@ theorem opponentEventMass_mul_ownerReward
         eq_allContinue_of_not_someOpponentQuits_of_mem_support
           root owner action hsupport hnoOpponent
       subst action
-      simp [quittingRootPayoff, distribution]
+      simp [quittingRootPayoff]
 
 /-- At a fixed date, the owner-reward moment of actual marked opponent
 actions is the standard fixed-opponents Continue reward. -/
@@ -328,7 +328,7 @@ theorem quittingFirstOpponentRawMean_succ
           quittingFixedOpponentsContinueReward reward roots owner
             ((start + 1) + offset) := by
       rw [show offset + 1 = 1 + offset by omega, hweight]
-      congr 2 <;> omega
+      congr 2; omega
     _ = quittingFixedOpponentsContinueMass roots owner start *
         (quittingOpponentSurvivalWeight roots owner (start + 1) offset *
           quittingFixedOpponentsContinueReward reward roots owner
@@ -415,6 +415,7 @@ theorem quittingFirstOpponentRawMean_le_value_of_finiteExactChain
 
 /-! ## Bounds and normalization -/
 
+omit [DecidableEq ι] in
 /-- The displayed owner reward inherits the common lower reward bound. -/
 theorem quittingFirstOpponentOwnerReward_lower
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)

@@ -35,7 +35,7 @@ noncomputable section
 
 namespace GameTheory
 
-open Math.Probability Math.ProbabilityMassFunction
+open Filter Math.Probability Math.ProbabilityMassFunction
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
@@ -460,6 +460,18 @@ theorem isClosed_quittingDynamicDebtEdgeGraph
     aesop
   rw [heq]
   exact ((hnash.inter hcurrentDebt).inter hsuccessorDebt).inter hrecurrence
+
+/-- A limit of eventually exact bounded dynamic-debt edges is exact. -/
+theorem isQuittingDynamicDebtEdge_of_tendsto_edgeGraph
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    {edge : QuittingDebtPoint ι × QuittingDebtPoint ι}
+    {candidate : ℕ → QuittingDebtPoint ι × QuittingDebtPoint ι}
+    (hcandidate : Tendsto candidate atTop (nhds edge))
+    (heventually : ∀ᶠ index in atTop,
+      candidate index ∈ quittingDynamicDebtEdgeGraph reward) :
+    IsQuittingDynamicDebtEdge reward edge.1 edge.2 :=
+  ((isClosed_quittingDynamicDebtEdgeGraph reward).mem_of_tendsto
+    hcandidate heventually).2.2
 
 /-- The bounded exact dynamic-debt edge graph is compact. -/
 theorem quittingDynamicDebtEdgeGraph_isCompact

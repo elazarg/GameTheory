@@ -276,7 +276,7 @@ theorem quittingFiniteNashBellmanPathDynamicDebt_le_survival_mul_later
               reward cutoff path owner (start + (offset + 1)) := by
           rw [quittingOpponentSurvivalWeight_succ]
           simp only [time]
-          ring
+          ring_nf
 
 /-- Positive debt at any live date implies a strictly positive singleton
 quitting reward for the same owner. -/
