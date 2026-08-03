@@ -448,6 +448,7 @@ import GameTheory.Concepts.Stochastic.QuittingNearSureRoot
 import GameTheory.Concepts.Stochastic.QuittingNearSureProfile
 import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
 import GameTheory.Concepts.Stochastic.QuittingPeriodicMeshRate
+import GameTheory.Concepts.Stochastic.QuittingPeriodicFiniteHorizonRate
 import GameTheory.Concepts.Stochastic.TerminalToUniformDeviationApproximation
 import GameTheory.Concepts.Stochastic.QuittingAlmostSureOpponentUniformization
 import GameTheory.Concepts.Stochastic.QuittingTerminalUniformization
