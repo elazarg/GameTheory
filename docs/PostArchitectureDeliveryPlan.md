@@ -589,14 +589,20 @@ pinned-reference-dependent Phase 0 and full coverage source/freshness checks
 remain explicit local release gates until their exact evidence snapshot is
 provisioned in CI.
 
-1. close the safe engineering debt confirmed by integration review: identify
-   ε-CCE with the canonical approximate-equilibrium preference, reuse the new
-   Protocol singleton-joint and unique-predecessor tree toolkit in existing
-   bridges, and document intentional opt-in leaves rather than importing them
-   into capability-light syntax roots;
-2. audit, but do not mechanically apply, the proposed MAID-root and EFG/FOSG
-   ownership changes against D14, D6, and D30; reserve experiments before any
-   dependency-direction or public-semantics change;
+1. **complete:** the safe integration debt now identifies ε-CCE with the
+   canonical approximate-equilibrium preference, reuses the Protocol
+   singleton-joint and unique-predecessor tree toolkit, and documents
+   intentional opt-in leaves rather than importing them into capability-light
+   syntax roots;
+2. **closed without a semantic redesign:** the MAID root now re-exports D14's
+   validated typed `General` surface and the old three-node witness is explicit
+   post-architecture evidence.  The EFG/FOSG ownership audit retains separate
+   transparent records and domain-facing Kuhn names: their mathematical proof
+   spine is already factored at `InformationModel`, while `EFG extends FOSG`
+   would thicken the EFG syntax import closure and change public constructor and
+   qualified-projection ownership without helping D30.  Any future common
+   carrier, `extends`, compiler relocation, or Kuhn import-direction change
+   still requires a reserved experiment;
 3. build D-REPEAT's public-monitoring equilibrium waist: discounted
    continuation values, canonical perfect-public equilibrium specialization,
    and one-shot-deviation equivalence on a noisy branch-dependent example,

@@ -9,6 +9,7 @@ the stable static core.
 
 import GameTheory.Congestion.Rosenthal
 import GameTheory.Congestion.AffinePoA
+import GameTheory.Congestion.Examples
 
 namespace GameTheory
 

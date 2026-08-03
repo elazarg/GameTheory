@@ -18,39 +18,39 @@ namespace GameTheory.Experimental.FOSGKuhn
 open GameTheory.Languages GameTheory.Protocol GameTheory.Tests
 
 private def forgetfulGame : FOSG.Game Unit where
-  execution := Repeat.twice
-  information := Repeat.model
+  execution := Randomized.twice
+  information := Randomized.model
 
 private def recallingGame : FOSG.Game Unit where
-  execution := Repeat.twice
-  information := Repeat.recallModel
+  execution := Randomized.twice
+  information := Randomized.recallModel
 
 private def singleGame : FOSG.Game Unit where
-  execution := Repeat.once
-  information := Repeat.singleModel
+  execution := Randomized.once
+  information := Randomized.singleModel
 
 private noncomputable instance recallingInfoStateFintype (who : Unit) :
     Fintype (recallingGame.information.InfoState who) := by
   cases who
-  simpa [recallingGame, Repeat.recallModel, Repeat.recallSignals] using
-    (inferInstance : Fintype Repeat.Memory)
+  simpa [recallingGame, Randomized.recallModel, Randomized.recallSignals] using
+    (inferInstance : Fintype Randomized.Memory)
 
 private instance recallingInfoStateDecidableEq (who : Unit) :
     DecidableEq (recallingGame.information.InfoState who) := by
   cases who
-  simpa [recallingGame, Repeat.recallModel, Repeat.recallSignals] using
-    (inferInstance : DecidableEq Repeat.Memory)
+  simpa [recallingGame, Randomized.recallModel, Randomized.recallSignals] using
+    (inferInstance : DecidableEq Randomized.Memory)
 
 private noncomputable instance singleInfoStateFintype (who : Unit) :
     Fintype (singleGame.information.InfoState who) := by
   cases who
-  simpa [singleGame, Repeat.singleModel, Repeat.singleSignals] using
+  simpa [singleGame, Randomized.singleModel, Randomized.singleSignals] using
     (inferInstance : Fintype Bool)
 
 private instance singleInfoStateDecidableEq (who : Unit) :
     DecidableEq (singleGame.information.InfoState who) := by
   cases who
-  simpa [singleGame, Repeat.singleModel, Repeat.singleSignals] using
+  simpa [singleGame, Randomized.singleModel, Randomized.singleSignals] using
     (inferInstance : DecidableEq Bool)
 
 /-- Observation design changes while execution remains definitionally equal. -/
@@ -58,30 +58,30 @@ example : forgetfulGame.execution = recallingGame.execution := rfl
 
 /-- The forgetful observation design cannot use the recall-facing direction. -/
 example : ¬forgetfulGame.information.PerfectRecall :=
-  Repeat.not_perfectRecall
+  Randomized.not_perfectRecall
 
 /-- Repeating one nontrivial information state also violates the acts-once
 hypothesis, and the two randomization modes then induce different laws. -/
 example : ¬forgetfulGame.information.ActsOnceWhereItMatters :=
-  Repeat.not_actsOnceWhereItMatters
+  Randomized.not_actsOnceWhereItMatters
 
 example :
     Probability.FinDist.map (fun history => history.state)
         (forgetfulGame.information.runBehavioral
-          (fun _ => Repeat.coinPolicy) 2) ≠
+          (fun _ => Randomized.coinPolicy) 2) ≠
       Probability.FinDist.map (fun history => history.state)
         (forgetfulGame.information.runMixed
-          (fun _ => Repeat.coinPolicy.toMixed) 2) := by
-  simpa [forgetfulGame] using Repeat.runBehavioral_ne_runMixed
+          (fun _ => Randomized.coinPolicy.toMixed) 2) := by
+  simpa [forgetfulGame] using Randomized.runBehavioral_ne_runMixed
 
 /-- One move satisfies acts-once while still forgetting its own action, so
 acts-once does not imply perfect recall. -/
 private theorem singleActsOnce : singleGame.information.ActsOnceWhereItMatters :=
   singleGame.information.actsOnceWhereItMatters_of_actsOnce
-    Repeat.single_actsOnceAtEachInfoState
+    Randomized.single_actsOnceAtEachInfoState
 
 example : ¬singleGame.information.PerfectRecall :=
-  Repeat.single_not_perfectRecall
+  Randomized.single_not_perfectRecall
 
 example (behavioral : Profile singleGame.behavioralSignature) (horizon : ℕ) :
     ∃ mixed : Profile singleGame.information.strategicSignature.mixed,
@@ -92,11 +92,11 @@ example (behavioral : Profile singleGame.behavioralSignature) (horizon : ℕ) :
 private theorem recallingActsOnce :
     recallingGame.information.ActsOnceWhereItMatters :=
   recallingGame.information.actsOnceWhereItMatters_of_actsOnce
-    Repeat.recall_actsOnceAtEachInfoState
+    Randomized.recall_actsOnceAtEachInfoState
 
 private theorem recallingPerfectRecall :
     recallingGame.information.PerfectRecall :=
-  Repeat.recall_perfectRecall
+  Randomized.recall_perfectRecall
 
 /-- The FOSG-facing behavioral-to-mixed theorem is the canonical Protocol law. -/
 theorem recalling_behavioral_to_mixed

@@ -11,11 +11,12 @@ import GameTheory.Tests.EFGKuhn
 
 noncomputable section
 
-namespace GameTheory.Tests.Repeat
+namespace GameTheory.Tests.EFGSubgamePerfect
 
 open GameTheory GameTheory.Languages GameTheory.Protocol
 open GameTheory.Probability
 open GameTheory.Protocol.ExecutionProtocol
+open GameTheory.Tests.Randomized
 
 def twiceRank : Round → ℕ
   | .start => 2
@@ -56,7 +57,7 @@ theorem twiceRank_decreases
 theorem twice_wellFoundedPlay : twice.WellFoundedPlay :=
   wellFoundedPlay_of_rank twiceRank twiceRank_decreases
 
-end GameTheory.Tests.Repeat
+end GameTheory.Tests.EFGSubgamePerfect
 
 namespace GameTheory.Tests.EFGSubgamePerfect
 
@@ -65,13 +66,13 @@ open GameTheory GameTheory.Languages GameTheory.Protocol
 /-- The EFG surface reduces directly to the canonical well-founded Protocol
 equivalence on a two-decision perfect-recall game. -/
 theorem oneShotDeviation_iff_subgamePerfect
-    (profile : Profile Repeat.recallGame.strategicSignature)
-    (utility : Repeat.recallGame.History → Unit → ℝ) :
-    Repeat.recallGame.IsSubgamePerfect
-        Repeat.twice_wellFoundedPlay profile utility ↔
-      Repeat.recallGame.HasNoProfitableOneShotDeviation
-        Repeat.twice_wellFoundedPlay profile utility :=
-  Repeat.recallGame.isSubgamePerfect_iff_hasNoProfitableOneShotDeviation
-    Repeat.recallGame_actsOnce Repeat.twice_wellFoundedPlay profile utility
+    (profile : Profile EFGKuhn.recallGame.strategicSignature)
+    (utility : EFGKuhn.recallGame.History → Unit → ℝ) :
+    EFGKuhn.recallGame.IsSubgamePerfect
+        twice_wellFoundedPlay profile utility ↔
+      EFGKuhn.recallGame.HasNoProfitableOneShotDeviation
+        twice_wellFoundedPlay profile utility :=
+  EFGKuhn.recallGame.isSubgamePerfect_iff_hasNoProfitableOneShotDeviation
+    EFGKuhn.recallGame_actsOnce twice_wellFoundedPlay profile utility
 
 end GameTheory.Tests.EFGSubgamePerfect

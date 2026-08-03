@@ -12,11 +12,12 @@ import GameTheory.Tests.Randomized
 
 noncomputable section
 
-namespace GameTheory.Tests.Repeat
+namespace GameTheory.Tests.EFGKuhn
 
 open GameTheory GameTheory.Languages GameTheory.Protocol
 open GameTheory.Probability
 open GameTheory.Protocol.ExecutionProtocol
+open GameTheory.Tests.Randomized
 
 /-- No transition in the two-vote protocol returns to the initial state. -/
 theorem start_not_mem_step (source : Round)
@@ -133,7 +134,7 @@ theorem recallGame_perfectRecall :
     recallGame.information.PerfectRecall :=
   recall_perfectRecall
 
-end GameTheory.Tests.Repeat
+end GameTheory.Tests.EFGKuhn
 
 namespace GameTheory.Tests.EFGKuhn
 
@@ -143,46 +144,46 @@ open GameTheory.Probability
 /-- The EFG wrapper exposes the constructive behavioral-to-mixed direction on
 the two-decision perfect-recall game. -/
 theorem behavioral_to_mixed
-    (behavioral : Profile Repeat.recallGame.behavioralSignature)
+    (behavioral : Profile recallGame.behavioralSignature)
     (horizon : ℕ) :
-    ∃ mixed : Profile Repeat.recallGame.strategicSignature.mixed,
-      Repeat.recallGame.information.runMixed mixed horizon =
-        Repeat.recallGame.information.runBehavioral behavioral horizon :=
-  Repeat.recallGame.kuhn_behavioral_to_mixed
-    Repeat.recallGame_actsOnce behavioral horizon
+    ∃ mixed : Profile recallGame.strategicSignature.mixed,
+      recallGame.information.runMixed mixed horizon =
+        recallGame.information.runBehavioral behavioral horizon :=
+  recallGame.kuhn_behavioral_to_mixed
+    recallGame_actsOnce behavioral horizon
 
 /-- The converse EFG wrapper uses the discharged perfect-recall proof. -/
 theorem mixed_to_behavioral
-    (mixed : Profile Repeat.recallGame.strategicSignature.mixed)
+    (mixed : Profile recallGame.strategicSignature.mixed)
     (horizon : ℕ) :
-    ∃ behavioral : Profile Repeat.recallGame.behavioralSignature,
-      Repeat.recallGame.information.runBehavioral behavioral horizon =
-        Repeat.recallGame.information.runMixed mixed horizon :=
-  Repeat.recallGame.kuhn_mixed_to_behavioral
-    Repeat.recallGame_perfectRecall mixed horizon
+    ∃ behavioral : Profile recallGame.behavioralSignature,
+      recallGame.information.runBehavioral behavioral horizon =
+        recallGame.information.runMixed mixed horizon :=
+  recallGame.kuhn_mixed_to_behavioral
+    recallGame_perfectRecall mixed horizon
 
 /-- Both strategy presentations realize exactly the same history laws through
 the EFG surface. -/
 theorem historyLaws (horizon : ℕ) :
-    { law | ∃ behavioral : Profile Repeat.recallGame.behavioralSignature,
-        Repeat.recallGame.information.runBehavioral behavioral horizon = law } =
-      { law | ∃ mixed : Profile Repeat.recallGame.strategicSignature.mixed,
-        Repeat.recallGame.information.runMixed mixed horizon = law } :=
-  Repeat.recallGame.kuhn_historyLaws
-    Repeat.recallGame_actsOnce Repeat.recallGame_perfectRecall horizon
+    { law | ∃ behavioral : Profile recallGame.behavioralSignature,
+        recallGame.information.runBehavioral behavioral horizon = law } =
+      { law | ∃ mixed : Profile recallGame.strategicSignature.mixed,
+        recallGame.information.runMixed mixed horizon = law } :=
+  recallGame.kuhn_historyLaws
+    recallGame_actsOnce recallGame_perfectRecall horizon
 
 /-- The language-facing utility corollary retains arbitrary, nonconstant
 history-dependent utility. -/
 theorem behavioral_to_mixed_expectedUtility
-    (behavioral : Profile Repeat.recallGame.behavioralSignature)
-    (horizon : ℕ) (utility : Repeat.recallGame.History → Unit → ℝ) :
-    ∃ mixed : Profile Repeat.recallGame.strategicSignature.mixed,
+    (behavioral : Profile recallGame.behavioralSignature)
+    (horizon : ℕ) (utility : recallGame.History → Unit → ℝ) :
+    ∃ mixed : Profile recallGame.strategicSignature.mixed,
       ∀ who,
         expectedUtility utility who
-            (Repeat.recallGame.information.runMixed mixed horizon) =
+            (recallGame.information.runMixed mixed horizon) =
           expectedUtility utility who
-            (Repeat.recallGame.information.runBehavioral behavioral horizon) :=
-  Repeat.recallGame.kuhn_behavioral_to_mixed_expectedUtility
-    Repeat.recallGame_actsOnce behavioral horizon utility
+            (recallGame.information.runBehavioral behavioral horizon) :=
+  recallGame.kuhn_behavioral_to_mixed_expectedUtility
+    recallGame_actsOnce behavioral horizon utility
 
 end GameTheory.Tests.EFGKuhn

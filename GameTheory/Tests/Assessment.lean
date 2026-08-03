@@ -178,7 +178,7 @@ Nash in the compiled `GameForm`.
 
 namespace AssessmentBridge
 
-open Repeat
+open Randomized
 open GameTheory.Protocol.ExecutionProtocol (History)
 
 /-- Vote up at the continuing information state and do nothing after play

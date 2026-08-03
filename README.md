@@ -49,8 +49,9 @@ GameTheory/Languages     scoped language encodings and truthful Bayesian
   /NFG                   deterministic normal-form syntax compiling directly
                          to the canonical static form, with no second Nash API
   /FOSG                  transparent Protocol execution/information
-                         specialization with simultaneous actions and an
-                         opt-in Kuhn correspondence leaf
+                         specialization with simultaneous actions; Values and
+                         Kuhn are intentional explicit opt-in leaves, not
+                         syntax-root imports
   /Bridges/NFGFOSG       exact one-shot source-to-target outcome and utility
                          laws through the actual Protocol history runner
   /EFG                   transparent extensive-form specialization; finite
@@ -64,7 +65,9 @@ GameTheory/Languages     scoped language encodings and truthful Bayesian
                          source-owner behavioral Nash transfer
   /Intrinsic             capability-light closed-loop configurations,
                          information-local pure rules, solvability, and
-                         configuration-dependent causality before compilation
+                         configuration-dependent causality before compilation;
+                         Solution is an intentional explicit opt-in leaf, not
+                         a syntax-root import
 GameTheory/Examples      reader-facing examples with #eval and #guard tests
 GameTheory/Tests         architecture and locality tests
 GameTheory/Experimental  architecture spikes, never re-exported
@@ -100,6 +103,10 @@ stay outside the root for the separate reasons recorded in their modules.
 The intrinsic language is likewise opt-in: its native product and closed-loop
 semantics precede any temporal compiler, while mixed strategies, utility,
 perfect recall, and Kuhn equivalence remain separately gated.
+Per D28 and D31, `GameTheory.Languages.FOSG.Values`,
+`GameTheory.Languages.FOSG.Kuhn`, and
+`GameTheory.Languages.Intrinsic.Solution` are intentional explicit opt-in
+leaves. They are therefore not imported by their language syntax roots.
 Examples and Tests compile in the default library target but are not
 public-root imports.
 

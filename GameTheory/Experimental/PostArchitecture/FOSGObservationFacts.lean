@@ -88,8 +88,8 @@ example {E : ExecutionProtocol Unit} (M : InformationModel E)
 /-- Current information states may intentionally forget a player's action.
 Thus equality of compressed information cannot support the old raw-view
 cancellation lemmas without a separately stated recall hypothesis. -/
-example : ¬Repeat.singleSignals.PerfectRecall :=
-  Repeat.single_not_perfectRecall
+example : ¬Randomized.singleSignals.PerfectRecall :=
+  Randomized.single_not_perfectRecall
 
 #print axioms terminal_choice_not_subsingleton
 

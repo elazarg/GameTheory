@@ -184,36 +184,36 @@ model separates them; the recall model on the same protocol identifies them.
 the static mixed extension of the pure-policy compilation. -/
 theorem compiled_behavioral_ne_static_mixed_without_actsOnce :
     FinDist.map ExecutionProtocol.History.state
-        ((Repeat.model.toBehavioralGameForm 2).play (fun _ => Repeat.coinPolicy)) ≠
+        ((Randomized.model.toBehavioralGameForm 2).play (fun _ => Randomized.coinPolicy)) ≠
       FinDist.map ExecutionProtocol.History.state
-        (((Repeat.model.toGameForm 2).mixed).play
-          (fun _ => Repeat.coinPolicy.toMixed)) := by
+        (((Randomized.model.toGameForm 2).mixed).play
+          (fun _ => Randomized.coinPolicy.toMixed)) := by
   rw [InformationModel.toBehavioralGameForm_play, InformationModel.toGameForm_mixed_play]
-  exact Repeat.runBehavioral_ne_runMixed
+  exact Randomized.runBehavioral_ne_runMixed
 
 /-- With the sharp no-revisit condition discharged, drawing every behavioral
 choice in advance commutes with the compiled form. -/
 theorem compiled_behavioral_eq_static_mixed_of_actsOnce
-    (behavioral : Profile Repeat.recallModel.behavioralSignature) (horizon : ℕ) :
-    ((Repeat.recallModel.toGameForm horizon).mixed).play
+    (behavioral : Profile Randomized.recallModel.behavioralSignature) (horizon : ℕ) :
+    ((Randomized.recallModel.toGameForm horizon).mixed).play
         (fun i => (behavioral i).toMixed) =
-      (Repeat.recallModel.toBehavioralGameForm horizon).play behavioral :=
+      (Randomized.recallModel.toBehavioralGameForm horizon).play behavioral :=
   InformationModel.toGameForm_mixed_play_toMixed
-    (M := Repeat.recallModel)
-    (Repeat.recallModel.actsOnceWhereItMatters_of_actsOnce
-      Repeat.recall_actsOnceAtEachInfoState)
+    (M := Randomized.recallModel)
+    (Randomized.recallModel.actsOnceWhereItMatters_of_actsOnce
+      Randomized.recall_actsOnceAtEachInfoState)
     behavioral horizon
 
 /-- With the constraint-equivalence condition supplied by perfect recall, a
 static mixed profile can conversely be read behaviorally after compilation. -/
 theorem compiled_mixed_eq_behavioral_of_recall
-    (mixed : (i : Unit) → Repeat.recallModel.MixedPolicy i) (horizon : ℕ) :
-    ((Repeat.recallModel.toGameForm horizon).mixed).play mixed =
-      (Repeat.recallModel.toBehavioralGameForm horizon).play
+    (mixed : (i : Unit) → Randomized.recallModel.MixedPolicy i) (horizon : ℕ) :
+    ((Randomized.recallModel.toGameForm horizon).mixed).play mixed =
+      (Randomized.recallModel.toBehavioralGameForm horizon).play
         (fun i => (mixed i).toBehavioral) :=
   InformationModel.toGameForm_mixed_play_toBehavioral
-    (M := Repeat.recallModel)
-    (InformationModel.constrainsAlike_of_perfectRecall Repeat.recall_perfectRecall)
+    (M := Randomized.recallModel)
+    (InformationModel.constrainsAlike_of_perfectRecall Randomized.recall_perfectRecall)
     mixed horizon
 
 end GameTheory.Tests

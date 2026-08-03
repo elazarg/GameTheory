@@ -21,7 +21,7 @@ import GameTheory.Protocol.Information
 
 noncomputable section
 
-namespace GameTheory.Tests.Repeat
+namespace GameTheory.Tests.Randomized
 
 open GameTheory GameTheory.Protocol GameTheory.Probability
 open GameTheory.Protocol.ExecutionProtocol (Trace History)
@@ -703,4 +703,4 @@ theorem recall_kuhn (fuel : ℕ) :
     (recallModel.actsOnceWhereItMatters_of_actsOnce recall_actsOnceAtEachInfoState)
     (InformationModel.constrainsAlike_of_perfectRecall recall_perfectRecall) fuel
 
-end GameTheory.Tests.Repeat
+end GameTheory.Tests.Randomized
