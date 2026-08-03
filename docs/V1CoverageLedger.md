@@ -150,7 +150,7 @@ declaration-based.
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
 | M-BAYES | `Mechanism/Bayesian.lean`, `Mechanism/Bayesian/**` | 12 | Bayesian data/equilibrium plus coordinated mechanism modules | validated split; F5/F6 complete | partial | revelation, welfare/participation, and information-design inventory |
-| M-CONTRACT | `Mechanism/Contracts/**` | 1 | mechanism branch | assigned | not started | participation/incentive theorem with explicit outside option |
+| M-CONTRACT | `Mechanism/Contracts/**` | 1 | mechanism branch | native ownership validated by EXP-065/D32 | experiment candidate only; public recovery pending | promote the welfare, maximizer-existence, and explicit-participation slice, then classify all 23 pinned declarations |
 | M-FAIR | `Mechanism/FairDivision.lean`, finite indivisible files | 6 | finite mechanism/fair-division branch | assigned | not started | round-robin EF1 and one algorithmic allocation theorem |
 | M-CAKE | divisible fair-division files | 6 | D11/`Analysis` or Frontier | deferred | out of scope | measurable/continuous probability decision |
 | M-SOCIAL | `Mechanism/SocialChoice.lean`, `Mechanism/SocialChoice/**` | 9 | ranking/preference foundations plus coordinated domain | validated by Arrow | partial | May, median strategic compilation, Gibbard-Satterthwaite, Sen |

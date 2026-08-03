@@ -75,7 +75,7 @@ becomes difficult to scan.
 | EXP-062 | 2026-08-03 | D4/D6/D7/D9 / intrinsic games ownership | Does configuration-dependent causality and closed-loop solvability earn a native intrinsic-game branch by proving a theorem or counterexample unavailable from bare Protocol without first choosing a temporal compiler? | Supports; native closed-loop and causality root approved, later compiler/mixed/utility/Kuhn layers remain gated | `GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean`; D31; focused compile, hazard, axiom, and premise-independence audits |
 | EXP-063 | 2026-08-03 | D12 / dependency maintenance | Do Lean and Mathlib 4.32.2 preserve the fixed-point dependency, trust profile, and enforced architecture boundaries? | Supports; toolchain-aligned maintained fork repinned without theorem-source change | `lean-toolchain`; `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
 | EXP-064 | 2026-08-03 | D5/D11 / repeated public monitoring | Can finite-prefix signal laws support canonical PPE and the bounded one-shot-deviation principle without an infinite-path law? | Supports; closes the public-monitoring equilibrium waist | `GameTheory/Repeated/Monitoring*.lean`; `GameTheory/Tests/MonitoringEquilibrium.lean`; [`coverage/D-REPEAT-monitoring-equilibrium.md`](coverage/D-REPEAT-monitoring-equilibrium.md) |
-| EXP-065 | 2026-08-03 | D0/D2/D4/D9 / finite contracts | Does hidden-action contract theory earn a native finite-support principal-agent branch, with an explicit outside option, rather than a one-player `GameForm` or an auction specialization? | Active | reserved on `abf5901`; hostile two-action fixture planned |
+| EXP-065 | 2026-08-03 | D0/D2/D4/D9 / finite contracts | Does hidden-action contract theory earn a native finite-support principal-agent branch, with an explicit outside option, rather than a one-player `GameForm` or an auction specialization? | Supports native ownership; decides D32 | [`decisions/D32-principal-agent-contract-ownership.md`](decisions/D32-principal-agent-contract-ownership.md); `GameTheory/Experimental/PostArchitecture/ContractOwnership.lean` |
 
 ## Entry template
 
@@ -4179,7 +4179,7 @@ memory.
 ### EXP-065: finite hidden-action contract ownership
 
 - **Date / revision:** 2026-08-03, reserved on `abf5901`
-- **Status:** active
+- **Status:** complete; supports native finite-support ownership
 - **Decision / question:** whether the pinned hidden-action model earns a
   native `Mechanism` branch over action-indexed `FinDist` outcome laws, or
   should be encoded as a one-player `GameForm` or an auction specialization.
@@ -4201,3 +4201,20 @@ memory.
   supplied; explicit outside options force duplicate normalized predicates;
   the negative control fails; or the slice needs stored `Finite`/`Fintype`,
   raw `Function.update`, public transports, placeholders, or custom axioms.
+- **Observations / measurements:** the candidate imports only `FinDist`, stores
+  no capabilities, and has 167 nonblank lines and 37 declarations including
+  the hostile witnesses.  A fair productive action and deterministic safe
+  action make the preferred action change between zero transfer and a success
+  bonus.  The bonus gives productive utility `1/2`, so it accepts outside
+  utility `1/4` and rejects `3/4`.  The generic maximizer theorem specializes
+  to the fixture.  A singleton positive-cost negative control is
+  limited-liability and trivially incentivized but rejects outside utility
+  zero, machine-refuting automatic participation without an acceptable
+  fallback.
+- **Trust / outcome:** the focused artifact builds warning-free.  Source scans
+  find no raw update, transport, stored-finiteness workaround, placeholder, or
+  custom axiom.  The welfare identity, maximizer existence, participation
+  theorem, and negative control each print exactly `propext`,
+  `Classical.choice`, and `Quot.sound`.  No kill condition fired; D32 adopts a
+  native opt-in `Mechanism` leaf and keeps any strategic/Bayesian or executable
+  contract search behind separate consumer gates.
