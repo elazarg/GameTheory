@@ -439,6 +439,7 @@ import GameTheory.Concepts.Stochastic.QuittingNashBellmanSpine
 import GameTheory.Concepts.Stochastic.QuittingBlockSurvival
 import GameTheory.Concepts.Stochastic.QuittingInfinitePathCompiler
 import GameTheory.Concepts.Stochastic.QuittingFiniteChainTerminalCompiler
+import GameTheory.Concepts.Stochastic.QuittingFiniteNashBellmanFactory
 import GameTheory.Concepts.Stochastic.QuittingExceptionalBellmanTail
 import GameTheory.Concepts.Stochastic.QuittingRootSequencePayoff
 import GameTheory.Concepts.Stochastic.QuittingExceptionalTailLimits
