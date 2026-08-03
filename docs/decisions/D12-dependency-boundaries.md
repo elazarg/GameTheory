@@ -5,6 +5,7 @@ everything that follows from it lives in a root the audited layers do not
 import.
 
 Experiment IDs: [EXP-022](../ExperimentLog.md), [EXP-023](../ExperimentLog.md);
+dependency maintenance [EXP-063](../ExperimentLog.md);
 post-decision boundary stresses [EXP-030](../ExperimentLog.md) and
 [EXP-031](../ExperimentLog.md); Protocol amendments
 [EXP-032](../ExperimentLog.md), [EXP-033](../ExperimentLog.md), and
@@ -34,13 +35,22 @@ below is what makes it defensible rather than convenient.
 
 | Measure | Value |
 |---|---|
-| toolchain skew against `harfe/fixed-point-theorems-lean4` | none; both pin `v4.32.0` |
-| license | MIT, Copyright (c) 2026 harfe |
-| pre-existing manifest revisions changed by `lake update` | 0 |
-| axioms behind `brouwer_fixed_point`, `kakutani_fixed_point` | the three standard ones |
+| dependency provenance | `elazarg/fixed-point-theorems-lean4@9571dd7e0ff0af9c9e9becb2738a309cf48387c1`; all theorem sources byte-identical to `harfe/fixed-point-theorems-lean4@770940ddf9878cf61952ed53d910b92bca841838` |
+| toolchain skew | none; root and dependency both pin `v4.32.2` |
+| license | MIT, Copyright (c) 2026 harfe; retained byte-for-byte in the fork |
+| revisions changed by the `v4.32.2` update | root Mathlib and the direct fixed-point pin only; 0 transitive revisions |
+| axioms behind `brouwer_fixed_point`, `kakutani_fixed_point`, `GameTheory.exists_isNash_mixed` | `propext`, `Classical.choice`, `Quot.sound` only |
 | `sorry`, `admit`, custom axioms in the dependency | 0 |
 | additional build jobs | 490 (6 its own, 484 Mathlib) |
 | existing reachability probes that fire on it | both (`stdSimplex`, `Polynomial`) |
+
+The original EXP-023 import measurement used the upstream `harfe` commit and
+aligned `v4.32.0` pins.  EXP-063 is a maintenance amendment, not a new theorem
+dependency: it reproduced the package in a clean clone, restored the upstream
+MIT license to the maintained fork, verified byte-identical theorem sources,
+and then rebuilt the dependency and this complete repository under `v4.32.2`.
+The immutable fork pin removes the competing-fixed-toolchain warning that a
+root-only override would have left behind.
 
 ## Unexpected costs
 

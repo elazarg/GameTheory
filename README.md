@@ -109,8 +109,8 @@ It is evidence for design experiments, not a dependency or migration source.
 
 ## Environment
 
-- Lean: `v4.32.0`
-- Mathlib: `v4.32.0`
+- Lean: `v4.32.2`
+- Mathlib: `v4.32.2`
 - Lake package, public library, and public Lean namespace: `GameTheory`
 
 Use `lake update` to resolve dependencies and `lake exe cache get` to fetch

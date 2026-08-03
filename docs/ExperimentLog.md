@@ -73,6 +73,7 @@ becomes difficult to scan.
 | EXP-060 | 2026-08-02 | D6/D8/D14/D15/D30 / two-round FOSG-to-EFG signal replay | Can the hidden-phase serializer replay nontrivial source public/private signals over two stochastic rounds, including own-action memory and inactive slots, while preserving the scaled canonical-history law? | Supports two-round signal replay; generic explicit-order implementation unblocked; extends D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound{,Witnesses}.lean` |
 | EXP-061 | 2026-08-02 | D6/D8/D14/D15/D30 / generic explicit-order FOSG-to-EFG bridge | Can D30's validated hidden-phase construction be expressed once over the canonical FOSG/EFG APIs, with explicit finite player order and the same exact history, signal, policy, inactivity, and order laws? | Supports; promotes the stable generic bridge and completes D30's API gate | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Languages/Bridges/FOSGToEFG.lean`; generic hostile witnesses |
 | EXP-062 | 2026-08-03 | D4/D6/D7/D9 / intrinsic games ownership | Does configuration-dependent causality and closed-loop solvability earn a native intrinsic-game branch by proving a theorem or counterexample unavailable from bare Protocol without first choosing a temporal compiler? | Supports; native closed-loop and causality root approved, later compiler/mixed/utility/Kuhn layers remain gated | `GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean`; D31; focused compile, hazard, axiom, and premise-independence audits |
+| EXP-063 | 2026-08-03 | D12 / dependency maintenance | Do Lean and Mathlib 4.32.2 preserve the fixed-point dependency, trust profile, and enforced architecture boundaries? | Supports; toolchain-aligned maintained fork repinned without theorem-source change | `lean-toolchain`; `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
 
 ## Entry template
 
@@ -4049,3 +4050,57 @@ memory.
   the pinned `Syntax.lean` batch exactly.  Temporal compilation, perfect
   recall, mixed/behavioral strategies, PMF outcome laws, ownership/utility,
   equilibrium, and Kuhn remain separate gates.
+
+### EXP-063: Lean and Mathlib 4.32.2 compatibility gate
+
+- **Date / revision:** 2026-08-03, reserved on `d58fc8d`
+- **Status:** complete; supports the patch upgrade and metadata-only maintained
+  fork repin
+- **Decision / question:** whether the project and its pinned external
+  fixed-point dependency remain warning-free, kernel-auditable, and within the
+  enforced import boundaries after moving the root Lean and Mathlib pins from
+  `v4.32.0` to the stable `v4.32.2` patch release.
+- **Prediction:** Lake resolves one root Mathlib revision at `v4.32.2`; the
+  fixed-point package's older advertised `v4.32.0` pins do not create a second
+  Mathlib or prevent its Brouwer/Kakutani modules from compiling; all current
+  build, trust, reachability, and coverage gates remain unchanged.
+- **Representative slice:** resolve the full manifest, fetch the matching
+  Mathlib cache, build the two fixed-point modules first, then compile every
+  GameTheory/GameTheoryMath submodule and run the complete phase and pinned-v1
+  coverage audits.
+- **Kill conditions:** dependency resolution retains or introduces a second
+  Mathlib revision; the fixed-point dependency fails on `v4.32.2`; any trusted
+  theorem gains `sorryAx` or a custom axiom; warnings, source hazards, expected
+  positive/negative reachability probes, or exact coverage accounting regress.
+- **Artifacts / commands:** `lean-toolchain`, `lakefile.lean`, generated
+  `lake-manifest.json`; `lake update`; `lake env lean --version`; `lake exe cache
+  get`; focused fixed-point builds; full build; Phase 0--3 and coverage audits;
+  kernel axiom prints.
+- **Intervention / repin:** the accepted upstream pin still advertised a fixed
+  `v4.32.0` toolchain, so Lake reported competing fixed-toolchain candidates.
+  The dependency was repinned to the user-maintained
+  `elazarg/fixed-point-theorems-lean4@9571dd7e0ff0af9c9e9becb2738a309cf48387c1`.
+  Relative to `harfe/fixed-point-theorems-lean4@770940ddf9878cf61952ed53d910b92bca841838`,
+  all six theorem-source files and the root Lean source are byte-identical.  The
+  upstream MIT license was retained byte-for-byte; only toolchain and generated
+  dependency metadata otherwise differ.
+- **Observations / measurements:** the first attempt in the active v1 checkout
+  exposed untracked generated files inside its ignored Mathlib clone, so it was
+  preserved and the validation was restarted in a clean clone.  Intermittent
+  GitHub HTTPS failures required retries but did not change resolution.  The
+  clean dependency clone resolved one Mathlib at `v4.32.2` / `905b958`, fetched
+  its cache, built 3,050 jobs, and passed its axiom audit; it has no configured
+  `lake test` driver.  The root resolver subsequently completed through the
+  ordinary GitHub URL with no toolchain-skew warning, `lake exe cache get`
+  reported 8,639 artifacts present, the focused Brouwer/Kakutani/Nash build
+  completed 3,101 jobs, and the full repository build completed 3,430 jobs.
+  `brouwer_fixed_point`, `kakutani_fixed_point`, and
+  `GameTheory.exists_isNash_mixed` each report exactly `propext`,
+  `Classical.choice`, and `Quot.sound`.  Phase 0 reproduced its frozen source
+  measurements, and Phase 1, Phase 2, Phase 3, and exact pinned-v1 coverage all
+  returned `VERIFIED=1`; in particular `FIXED_POINT_IMPORTERS=1`,
+  `ANALYSIS_PROBES_REACHED=2`, `SORRY_OR_ADMIT=0`, and `CUSTOM_AXIOM=0`.
+- **Outcome / next action:** no kill condition fired.  D12 records the new
+  immutable provenance and zero toolchain skew; retain the maintained fork's
+  metadata in lockstep with future root toolchain bumps, and keep the original
+  EXP-023 measurements as historical evidence.
