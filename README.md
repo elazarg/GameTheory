@@ -152,7 +152,7 @@ The library is finite/discrete by design.
 
 ## Build
 
-Requires Lean 4 (`v4.32.0`) and Mathlib (`v4.32.0`). The project also depends on
+Requires Lean 4 (`v4.32.2`) and Mathlib (`v4.32.2`). The project also depends on
 the pinned [`fixed-point-theorems-lean4`](https://github.com/elazarg/fixed-point-theorems-lean4)
 fork for Brouwer/Kakutani-style fixed-point support.
 
