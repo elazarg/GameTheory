@@ -454,6 +454,7 @@ import GameTheory.Concepts.Stochastic.QuittingFiniteHorizonBridge
 import GameTheory.Concepts.Stochastic.QuittingMarkedFencePacket
 import GameTheory.Concepts.Stochastic.QuittingMarkedSameNodeCycleRegression
 import GameTheory.Concepts.Stochastic.QuittingMarkedTimeAdvance
+import GameTheory.Concepts.Stochastic.QuittingOpponentClockDichotomy
 import GameTheory.Concepts.Stochastic.QuittingPeriodicMeshRate
 import GameTheory.Concepts.Stochastic.QuittingPeriodicFiniteHorizonRate
 import GameTheory.Concepts.Stochastic.QuittingCyclicSupersolution
