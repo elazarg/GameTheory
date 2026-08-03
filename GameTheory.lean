@@ -436,6 +436,7 @@ import GameTheory.Concepts.Stochastic.GraphDirectedCompactPullback
 import GameTheory.Concepts.Stochastic.CompactSerialRelation
 import GameTheory.Concepts.Stochastic.QuittingBlockSurvival
 import GameTheory.Concepts.Stochastic.QuittingInfinitePathCompiler
+import GameTheory.Concepts.Stochastic.QuittingFiniteChainTerminalCompiler
 import GameTheory.Concepts.Stochastic.QuittingExceptionalBellmanTail
 import GameTheory.Concepts.Stochastic.QuittingRootSequencePayoff
 import GameTheory.Concepts.Stochastic.QuittingExceptionalTailLimits
