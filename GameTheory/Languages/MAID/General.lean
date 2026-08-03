@@ -11,8 +11,9 @@ order to the shared EFG and information layers. `Order` and
 independent of that order and exactly equals native frontier evaluation.
 `Strategic` proves the source-owner profile and Nash-equilibrium transfer.
 
-The earlier `GameTheory.Languages.MAID` module remains the concrete three-node
-architecture witness. This module is the validated general surface.
+The concrete three-node architecture witness remains available explicitly at
+`GameTheory.Experimental.PostArchitecture.MAIDThreeNodeWitness`. This module
+is the validated general surface.
 -/
 
 import GameTheory.Languages.MAID.Strategic

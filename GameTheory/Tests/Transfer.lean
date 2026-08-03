@@ -18,7 +18,7 @@ in order to be usable by the static concepts. The answer is nothing, twice.
 import GameTheory.Protocol.Strategic
 import GameTheory.Core.Utility
 import GameTheory.Core.Response
-import GameTheory.Languages.MAID
+import GameTheory.Experimental.PostArchitecture.MAIDThreeNodeWitness
 import GameTheory.Languages.Rounds
 
 noncomputable section
