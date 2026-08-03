@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.BigMatch
+import GameTheory.Concepts.Stochastic.QuittingMarkedFenceIteration
 import GameTheory.Concepts.Stochastic.QuittingRootSuccessorCertificate
 
 /-!
@@ -206,6 +207,217 @@ theorem selectedEdge_diracMarginals_ne :
     PMF.pure_apply_of_ne secondValue firstValue
       selectedEdge_source_ne_successor] at hmass
   exact one_ne_zero hmass
+
+/-! ## Arbitrarily long chains with a bounded-depth marked packet -/
+
+/-- Pure Quit at an all-Continue prefix receives the singleton reward. -/
+@[simp] theorem allContinue_quitPayoff (who : Bool) :
+    quittingRootQuitPayoff reward firstValue quittingAllContinueRoot who =
+      -3 := by
+  unfold quittingRootQuitPayoff quittingRootExpectedPayoff
+  rw [expect_pmfPi_bool]
+  cases who <;>
+    simp [quittingAllContinueRoot, firstValue, quittingRootPayoff, reward]
+
+/-- Pure Continue at an all-Continue prefix preserves the fixed value. -/
+@[simp] theorem allContinue_continuePayoff (who : Bool) :
+    quittingRootContinuePayoff reward firstValue quittingAllContinueRoot who =
+      -2 := by
+  unfold quittingRootContinuePayoff quittingRootExpectedPayoff
+  rw [expect_pmfPi_bool]
+  cases who <;>
+    simp [quittingAllContinueRoot, firstValue, quittingRootPayoff, reward]
+
+/-- An all-Continue root fixes `firstValue`.  These roots provide arbitrary
+exact prefixes without changing the terminal marked packet. -/
+@[simp] theorem allContinue_successorPayoff (who : Bool) :
+    quittingRootSuccessorPayoff reward firstValue quittingAllContinueRoot who =
+      firstValue who := by
+  rw [quittingRootSuccessorPayoff_eq_endpointMix]
+  simp [quittingAllContinueRoot, firstValue]
+
+/-- At the prefix root, Quit gives `-3` while Continue preserves `-2`, so
+all-Continue is an exact Nash root. -/
+theorem allContinue_isExactNash :
+    IsεQuittingRootNash reward firstValue 0 quittingAllContinueRoot := by
+  rw [← isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash]
+  intro who
+  have hdiff : quittingRootEndpointDifference reward firstValue
+      quittingAllContinueRoot who = -1 := by
+    cases who <;>
+      norm_num [quittingRootEndpointDifference, quittingSingletonTerminal,
+        reward, firstValue]
+  simp [quittingAllContinueRoot, hdiff]
+
+/-- Cutoff of the chain with `bulk` fixed all-Continue prefixes, followed by
+the half root and the surely quitting root. -/
+def liftedCutoff (bulk : ℕ) : ℕ := bulk + 2
+
+/-- Root sequence of the arbitrarily long exact lift. -/
+def liftedRoots (bulk time : ℕ) : Bool → PMF Bool :=
+  if time < bulk then quittingAllContinueRoot
+  else if time = bulk then halfRoot else sureRoot
+
+/-- Value sequence of the arbitrarily long exact lift. -/
+def liftedValue (bulk time : ℕ) : Payoff Bool :=
+  if time ≤ bulk then firstValue
+  else if time = bulk + 1 then secondValue else terminalValue
+
+@[simp] theorem liftedValue_at_cutoff (bulk : ℕ) :
+    liftedValue bulk (liftedCutoff bulk) = 0 := by
+  funext who
+  simp [liftedValue, liftedCutoff, terminalValue]
+
+/-- Every edge in the lifted chain satisfies its exact Bellman equation. -/
+theorem liftedValue_eq_successor (bulk time : ℕ)
+    (htime : time < liftedCutoff bulk) :
+    liftedValue bulk time =
+      quittingRootSuccessorPayoff reward (liftedValue bulk (time + 1))
+        (liftedRoots bulk time) := by
+  by_cases hbulk : time < bulk
+  · have hnext : time + 1 ≤ bulk := by omega
+    funext who
+    simp [liftedValue, liftedRoots, hbulk, hbulk.le, hnext]
+  · have hge : bulk ≤ time := Nat.le_of_not_gt hbulk
+    have hcases : time = bulk ∨ time = bulk + 1 := by
+      unfold liftedCutoff at htime
+      omega
+    rcases hcases with rfl | rfl
+    · funext who
+      simp [liftedValue, liftedRoots]
+    · funext who
+      simp [liftedValue, liftedRoots]
+
+/-- Every root in the lifted chain is an exact Nash root. -/
+theorem liftedRoots_isExactNash (bulk time : ℕ)
+    (htime : time < liftedCutoff bulk) :
+    IsεQuittingRootNash reward (liftedValue bulk (time + 1)) 0
+      (liftedRoots bulk time) := by
+  by_cases hbulk : time < bulk
+  · have hnext : time + 1 ≤ bulk := by omega
+    simpa [liftedValue, liftedRoots, hbulk, hnext] using
+      allContinue_isExactNash
+  · have hge : bulk ≤ time := Nat.le_of_not_gt hbulk
+    have hcases : time = bulk ∨ time = bulk + 1 := by
+      unfold liftedCutoff at htime
+      omega
+    rcases hcases with rfl | rfl
+    · simpa [liftedValue, liftedRoots] using halfRoot_isExactNash
+    · simpa [liftedValue, liftedRoots, terminalValue] using
+        sureRoot_isExactNash
+
+/-- The lifted chain packages the exact zero-boundary interface consumed by
+the marked-fence iteration. -/
+theorem liftedChain_exact (bulk : ℕ) :
+    liftedValue bulk (liftedCutoff bulk) = 0 ∧
+      (∀ time, time < liftedCutoff bulk →
+        liftedValue bulk time =
+          quittingRootSuccessorPayoff reward (liftedValue bulk (time + 1))
+            (liftedRoots bulk time)) ∧
+      ∀ time, time < liftedCutoff bulk →
+        IsεQuittingRootNash reward (liftedValue bulk (time + 1)) 0
+          (liftedRoots bulk time) := by
+  exact ⟨liftedValue_at_cutoff bulk, liftedValue_eq_successor bulk,
+    liftedRoots_isExactNash bulk⟩
+
+/-- A negative player flag at the half root of the lifted chain. -/
+def liftedFlag (bulk : ℕ) (owner : Bool) :
+    QuittingNegativeFlagState (liftedValue bulk) (liftedCutoff bulk) 1 where
+  owner := owner
+  time := bulk
+  time_le_cutoff := by simp [liftedCutoff]
+  negative := by simp [liftedValue, firstValue]
+
+/-- The owner-deleted singleton action used by a same-date transfer. -/
+def singletonAction (who : Bool) : Bool → Bool :=
+  fun player ↦ if player = who then true else false
+
+@[simp] theorem singletonAction_self (who : Bool) :
+    singletonAction who who = true := by simp [singletonAction]
+
+@[simp] theorem singletonAction_other {owner who : Bool} (hne : owner ≠ who) :
+    singletonAction who owner = false := by simp [singletonAction, hne]
+
+/-- `singletonAction` has exactly its named quitter. -/
+@[simp] theorem quittingQuitters_singletonAction (who : Bool) :
+    quittingQuitters (singletonAction who) = {who} := by
+  ext player
+  cases who <;> cases player <;> simp [quittingQuitters, singletonAction]
+
+/-- Every singleton terminal reward in this symmetric regression is `-3`. -/
+@[simp] theorem reward_singleton (quitter who : Bool) :
+    reward (quittingSingletonTerminal quitter) who = -3 := by
+  simp [reward, quittingSingletonTerminal]
+
+/-- The root payoff displayed by a singleton action is independent of the
+unused all-Continue tail. -/
+@[simp] theorem rootPayoff_singletonAction
+    (tail : Payoff Bool) (quitter who : Bool) :
+    quittingRootPayoff reward tail (singletonAction quitter) who = -3 := by
+  simp only [quittingRootPayoff, quittingQuitters_singletonAction,
+    Finset.singleton_nonempty, dite_true]
+  change reward (quittingSingletonTerminal quitter) who = -3
+  exact reward_singleton quitter who
+
+/-- Changing to the other player at the half root is a genuine supported
+marked-fence transfer at the same actual suffix date. -/
+theorem liftedFlag_isActualTransfer (bulk : ℕ) (owner target : Bool)
+    (hne : owner ≠ target) :
+    (liftedFlag bulk owner).IsActualTransfer reward (liftedRoots bulk)
+      (liftedValue bulk) (liftedCutoff bulk) 1 (liftedFlag bulk target) := by
+  let offset : Fin (liftedCutoff bulk - bulk) := ⟨0, by
+    simp [liftedCutoff]⟩
+  let mark : QuittingFirstOpponentMark Bool
+      (liftedCutoff bulk - (liftedFlag bulk owner).time) :=
+    ⟨offset, singletonAction target⟩
+  refine ⟨mark, ?_, ?_, ?_, ?_⟩
+  · simp [mark, offset, liftedFlag]
+  · cases owner <;> cases target <;> simp_all [mark, offset,
+      quittingFirstOpponentRawWeight, quittingOpponentSurvivalWeight,
+      quittingOpponentQuitFlag, quittingSomeOpponentQuits, singletonAction,
+      liftedFlag, liftedRoots, halfRoot, pmfPi_apply]
+  · refine ⟨?_, ?_, ?_⟩
+    · change 2 * quittingRootPayoff reward (0 : Payoff Bool)
+          (singletonAction target) owner ≤ -1
+      simp
+      norm_num
+    · change target ∈ (quittingQuitters (singletonAction target)).erase owner
+      simp [hne.symm]
+    · change liftedValue bulk (bulk + (offset : ℕ)) target ≤ -1
+      simp [offset, liftedValue, firstValue]
+  · simp [liftedFlag, liftedRoots]
+
+/-- The two actual marked transfers alternate forever without advancing the
+fixed chain's calendar. -/
+theorem liftedFlag_sameTime_twoCycle (bulk : ℕ) :
+    (liftedFlag bulk false).IsActualTransfer reward (liftedRoots bulk)
+        (liftedValue bulk) (liftedCutoff bulk) 1 (liftedFlag bulk true) ∧
+      (liftedFlag bulk true).IsActualTransfer reward (liftedRoots bulk)
+        (liftedValue bulk) (liftedCutoff bulk) 1 (liftedFlag bulk false) := by
+  exact ⟨liftedFlag_isActualTransfer bulk false true (by decide),
+    liftedFlag_isActualTransfer bulk true false (by decide)⟩
+
+/-- Although the cutoffs diverge with the prefix length, every selected
+marked packet in this family has the same finite residual depth `2`. -/
+theorem liftedFlag_residualDepth_eq_two (bulk : ℕ) :
+    liftedCutoff bulk - (liftedFlag bulk false).time = 2 ∧
+      liftedCutoff bulk - (liftedFlag bulk true).time = 2 := by
+  simp [liftedCutoff, liftedFlag]
+
+/-- The family has unbounded entry cutoffs. -/
+theorem liftedCutoff_tendsto_atTop :
+    Filter.Tendsto liftedCutoff Filter.atTop Filter.atTop := by
+  rw [Filter.tendsto_atTop_atTop]
+  intro lower
+  exact ⟨lower, fun bulk hbulk ↦ by simp [liftedCutoff]; omega⟩
+
+/-- Entry depth does not imply residual-horizon escape: the selected packet
+depth is constantly `2`. -/
+theorem liftedFlag_residualDepth_not_tendsto_atTop :
+    ¬ Filter.Tendsto
+        (fun bulk ↦ liftedCutoff bulk - (liftedFlag bulk false).time)
+        Filter.atTop Filter.atTop := by
+  simp [liftedCutoff, liftedFlag, Filter.not_tendsto_const_atTop]
 
 end QuittingMarkedSameNodeCycleRegression
 
