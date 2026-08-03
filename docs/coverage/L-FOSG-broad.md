@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
 Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28, EXP-058/D29, EXP-059/060/061/D30
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; 483/776 reviewed, 293 unreviewed
+Status: in progress; 633/776 reviewed, 143 unreviewed
 Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-FOSG family.
@@ -43,6 +43,19 @@ dispositions and counts remain unchanged: canonical Protocol runners still
 subsume its live execution fragments, while the promoted serializer supplies a
 different named FOSG-to-EFG comparison rather than reviving the pinned
 scalar/PMF compiler.
+
+The complete `Examples.lean` batch contributes one stable code recovery:
+`GameTheory.Examples.FOSG`, a utility-free simultaneous two-bit FOSG compiled
+through the canonical NFG-to-FOSG path and used for exact FOSG-to-EFG
+history-law regressions.  Eleven declarations adapt to that witness, five are
+subsumed by canonical one-shot execution, and the remaining fixture,
+enumeration, handwritten kernel, and bounded-evaluator surface is retired.
+`Serial.lean` is fully accounted: 46 structural declarations are subsumed by
+`Languages.Bridges.FOSGToEFG`; its other 62 declarations are retired.  In
+particular, its reward and support facts are not deferred ports: they describe
+a serializer the pinned module itself says is not semantics-preserving.  Any
+future utility or terminal-support bridge theorem begins over the canonical
+generic bridge under its own gate.
 
 EXP-058/D29 disposes `ReachableHistory/ObsModelFacts.lean`.  Only its two
 final-law definitions project directly to canonical Protocol execution, and
@@ -156,48 +169,48 @@ module they require rather than a FOSG-wide umbrella.
 | same | `toKernelGameOfExactHorizon_outcomeKernel` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | The stable serializer does not revive this scalar/PMF or transport machinery. | public, pinned line 1351 |
 | same | `toKernelGameOfExactHorizon_support_isTerminal` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | The stable serializer does not revive this scalar/PMF or transport machinery. | public, pinned line 1361 |
 | same | `toKernelGameOfExactHorizon_eu_eq` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | The stable serializer does not revive this scalar/PMF or transport machinery. | public, pinned line 1376 |
-| `GameTheory/Languages/FOSG/Examples.lean` | `historyFintypeOfLengthLeOne` | def | unreviewed | review required | generated index seed only | public, pinned line 32 |
-| same | `Solo` | inductive | unreviewed | review required | generated index seed only | public, pinned line 90 |
-| same | `soloIndex` | def | unreviewed | review required | generated index seed only | private, pinned line 94 |
-| same | `<anonymous@97>` | instance | unreviewed | review required | generated index seed only | public, pinned line 97 |
-| same | `SoloAct` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 104 |
-| same | `SoloObs` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 105 |
-| same | `SoloPub` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 106 |
-| same | `SoloState` | inductive | unreviewed | review required | generated index seed only | public, pinned line 108 |
-| same | `binaryChoiceActive` | def | unreviewed | review required | generated index seed only | public, pinned line 113 |
-| same | `binaryChoiceAvailable` | def | unreviewed | review required | generated index seed only | public, pinned line 117 |
-| same | `binaryChoiceTerminal` | def | unreviewed | review required | generated index seed only | public, pinned line 121 |
-| same | `binaryChoicePick` | def | unreviewed | review required | generated index seed only | public, pinned line 125 |
-| same | `binaryChoiceTransition` | def | unreviewed | review required | generated index seed only | public, pinned line 142 |
-| same | `binaryChoice` | def | unreviewed | review required | generated index seed only | public, pinned line 161 |
-| same | `<anonymous@195>` | instance | unreviewed | review required | generated index seed only | public, pinned line 195 |
-| same | `startAction` | def | unreviewed | review required | generated index seed only | public, pinned line 201 |
-| same | `startAction_legal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 204 |
-| same | `startLegalAction` | def | unreviewed | review required | generated index seed only | public, pinned line 218 |
-| same | `binaryChoice_step_from_start_isTerminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 221 |
-| same | `binaryChoiceBoundedHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 243 |
-| same | `<anonymous@262>` | instance | unreviewed | review required | generated index seed only | public, pinned line 262 |
-| same | `binaryChoiceKernel` | def | unreviewed | review required | generated index seed only | public, pinned line 267 |
-| same | `Player` | inductive | unreviewed | review required | generated index seed only | public, pinned line 272 |
-| same | `playerIndex` | def | unreviewed | review required | generated index seed only | private, pinned line 277 |
-| same | `<anonymous@281>` | instance | unreviewed | review required | generated index seed only | public, pinned line 281 |
-| same | `Act` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 286 |
-| same | `PrivObs` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 287 |
-| same | `PubObs` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 288 |
-| same | `State` | inductive | unreviewed | review required | generated index seed only | public, pinned line 290 |
-| same | `active` | def | unreviewed | review required | generated index seed only | public, pinned line 295 |
-| same | `availableActions` | def | unreviewed | review required | generated index seed only | public, pinned line 299 |
-| same | `terminal` | def | unreviewed | review required | generated index seed only | public, pinned line 303 |
-| same | `payoff` | def | unreviewed | review required | generated index seed only | public, pinned line 307 |
-| same | `leftMove` | def | unreviewed | review required | generated index seed only | public, pinned line 314 |
-| same | `rightMove` | def | unreviewed | review required | generated index seed only | public, pinned line 330 |
-| same | `transition` | def | unreviewed | review required | generated index seed only | public, pinned line 343 |
-| same | `game` | def | unreviewed | review required | generated index seed only | public, pinned line 357 |
-| same | `<anonymous@396>` | instance | unreviewed | review required | generated index seed only | public, pinned line 396 |
-| same | `step_from_start_isTerminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 402 |
-| same | `boundedHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 436 |
-| same | `<anonymous@454>` | instance | unreviewed | review required | generated index seed only | public, pinned line 454 |
-| same | `kernel` | def | unreviewed | review required | generated index seed only | public, pinned line 459 |
+| `GameTheory/Languages/FOSG/Examples.lean` | `historyFintypeOfLengthLeOne` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `Solo` | inductive | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `soloIndex` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `<anonymous@97>` | instance | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `SoloAct` | abbrev | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `SoloObs` | abbrev | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `SoloPub` | abbrev | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `SoloState` | inductive | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `binaryChoiceActive` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `binaryChoiceAvailable` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `binaryChoiceTerminal` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `binaryChoicePick` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `binaryChoiceTransition` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `binaryChoice` | def | subsumed | `NFG.OneShotFOSG.game` | EXP-061/D30 | Generic one-shot compiler replaces the manual fixture. |
+| same | `<anonymous@195>` | instance | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `startAction` | def | subsumed | canonical `policyProfile` | EXP-061/D30 | The canonical policy supplies its only use. |
+| same | `startAction_legal` | theorem | subsumed | `ExecutionProtocol.Legal` | EXP-061/D30 | Joint legality is canonical. |
+| same | `startLegalAction` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `binaryChoice_step_from_start_isTerminal` | theorem | subsumed | canonical one-step runner law | EXP-061/D30 | The result follows from canonical execution. |
+| same | `binaryChoiceBoundedHorizon` | theorem | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `<anonymous@262>` | instance | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `binaryChoiceKernel` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `Player` | inductive | adapt | `Bool` in `GameTheory.Examples.FOSG` | EXP-061/D30 | The stable two-bit witness needs no bespoke player type. |
+| same | `playerIndex` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `<anonymous@281>` | instance | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `Act` | abbrev | adapt | `twoBitSource.Action` | EXP-061/D30 | The canonical one-shot action family is used directly. |
+| same | `PrivObs` | abbrev | adapt | canonical one-shot signals | EXP-061/D30 | Signals are supplied by the NFG-to-FOSG compiler. |
+| same | `PubObs` | abbrev | adapt | canonical one-shot signals | EXP-061/D30 | Signals are supplied by the NFG-to-FOSG compiler. |
+| same | `State` | inductive | adapt | `NFG.OneShotFOSG.State` | EXP-061/D30 | The compiled state is canonical. |
+| same | `active` | def | adapt | canonical one-shot execution | EXP-061/D30 | No handwritten execution field remains. |
+| same | `availableActions` | def | adapt | canonical one-shot execution | EXP-061/D30 | No handwritten execution field remains. |
+| same | `terminal` | def | adapt | canonical one-shot execution | EXP-061/D30 | No handwritten execution field remains. |
+| same | `payoff` | def | adapt | `GameTheory.Examples.matchingPennies.payoff` | EXP-061/D30 | Payoff remains external, not FOSG syntax. |
+| same | `leftMove` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `rightMove` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `transition` | def | adapt | `NFG.OneShotFOSG.execution` | EXP-061/D30 | The compiler owns the transition. |
+| same | `game` | def | adapt | `GameTheory.Examples.FOSG.twoBit` | EXP-061/D30 | Stable utility-free FOSG witness and bridge regression. |
+| same | `<anonymous@396>` | instance | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `step_from_start_isTerminal` | theorem | subsumed | canonical one-step runner law | EXP-061/D30 | The result follows from canonical execution. |
+| same | `boundedHorizon` | theorem | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `<anonymous@454>` | instance | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
+| same | `kernel` | def | retired | no successor | EXP-061/D30 | Legacy fixture, enumeration, kernel, or manual extraction is intentionally absent. |
 | `GameTheory/Languages/FOSG/Execution.lean` | `extendBySteps` | def | retired | `ExecutionProtocol.Trace`; `ExecutionProtocol.History.extend` | D6/D15; Protocol History API review (2026-08-02) | Indexed traces already carry chained realized transitions; a bare step-list extension would duplicate history semantics. |
 | same | `extendBySteps_nil` | theorem | retired | `ExecutionProtocol.Trace.start` | D6/D15; API review | Base equation for the retired list extension. |
 | same | `extendBySteps_cons` | theorem | retired | `ExecutionProtocol.Trace.extend` | D6/D15; API review | Step extension is the canonical trace constructor. |
@@ -631,114 +644,114 @@ module they require rather than a FOSG-wide umbrella.
 | same | `reachableLegalBehavioralToMixed` | def | retired | no successor; removed legal-move carrier | EXP-058/D29 | Canonical `toMixed` operates on `InformationModel` policies. |
 | same | `reachableLegalBehavioralToMixed_lift` | theorem | retired | no successor; removed lift proof | EXP-058/D29 | Compatibility theorem has no independent result. |
 | same | `liftReachableHistoryBehavioralProfile` | def | retired | `Profile G.behavioralSignature` without a lift | EXP-058/D29 | Do not reproduce the auxiliary profile carrier. |
-| `GameTheory/Languages/FOSG/Serial.lean` | `singleMove` | def | unreviewed | review required | generated index seed only | public, pinned line 46 |
-| same | `singleMove_self` | theorem | unreviewed | review required | generated index seed only | public, pinned line 53 |
-| same | `singleMove_other` | theorem | unreviewed | review required | generated index seed only | public, pinned line 57 |
-| same | `ExtendsPartial` | def | unreviewed | review required | generated index seed only | public, pinned line 63 |
-| same | `recordChoice` | def | unreviewed | review required | generated index seed only | public, pinned line 69 |
-| same | `recordChoice_self` | theorem | unreviewed | review required | generated index seed only | public, pinned line 73 |
-| same | `recordChoice_other` | theorem | unreviewed | review required | generated index seed only | public, pinned line 78 |
-| same | `extendsPartial_noop` | theorem | unreviewed | review required | generated index seed only | public, pinned line 83 |
-| same | `extendsPartial_recordChoice` | theorem | unreviewed | review required | generated index seed only | public, pinned line 91 |
-| same | `MatchesActedPrefix` | def | unreviewed | review required | generated index seed only | public, pinned line 108 |
-| same | `prefixChoice` | def | unreviewed | review required | generated index seed only | public, pinned line 115 |
-| same | `playerLegal` | def | unreviewed | review required | generated index seed only | public, pinned line 125 |
-| same | `eq_singleMove_of_current_some_other_none` | theorem | unreviewed | review required | generated index seed only | public, pinned line 131 |
-| same | `playerLegal_iff_exists_singleMove` | theorem | unreviewed | review required | generated index seed only | public, pinned line 142 |
-| same | `playerLegal_current_some` | theorem | unreviewed | review required | generated index seed only | public, pinned line 157 |
-| same | `playerLegal_other_none` | theorem | unreviewed | review required | generated index seed only | public, pinned line 162 |
-| same | `baseChanceLegalAction` | def | unreviewed | review required | generated index seed only | public, pinned line 168 |
-| same | `baseChanceLegalAction_val` | theorem | unreviewed | review required | generated index seed only | public, pinned line 172 |
-| same | `actionAtActive` | def | unreviewed | review required | generated index seed only | public, pinned line 178 |
-| same | `actionAtActive_spec` | theorem | unreviewed | review required | generated index seed only | public, pinned line 182 |
-| same | `moveOfLegalAction` | def | unreviewed | review required | generated index seed only | public, pinned line 189 |
-| same | `moveOfLegalAction_current` | theorem | unreviewed | review required | generated index seed only | public, pinned line 194 |
-| same | `moveOfLegalAction_other` | theorem | unreviewed | review required | generated index seed only | public, pinned line 200 |
-| same | `matchesActedPrefix_noop` | theorem | unreviewed | review required | generated index seed only | public, pinned line 206 |
-| same | `matchesActedPrefix_prefixChoice` | theorem | unreviewed | review required | generated index seed only | public, pinned line 212 |
-| same | `prefixChoice_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 218 |
-| same | `prefixChoice_apply_of_mem` | theorem | unreviewed | review required | generated index seed only | public, pinned line 224 |
-| same | `prefixChoice_apply_of_not_mem` | theorem | unreviewed | review required | generated index seed only | public, pinned line 230 |
-| same | `matchesActedPrefix_recordChoice_move` | theorem | unreviewed | review required | generated index seed only | public, pinned line 236 |
-| same | `prefixChoice_recordChoice_move` | theorem | unreviewed | review required | generated index seed only | public, pinned line 250 |
-| same | `orderedActive` | def | unreviewed | review required | generated index seed only | public, pinned line 270 |
-| same | `mem_orderedActive_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 274 |
-| same | `orderedActive_eq_nil_of_active_eq_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 279 |
-| same | `active_eq_empty_of_orderedActive_eq_nil` | theorem | unreviewed | review required | generated index seed only | public, pinned line 292 |
-| same | `current_mem_active_of_split` | theorem | unreviewed | review required | generated index seed only | public, pinned line 301 |
-| same | `current_not_mem_rest_of_split` | theorem | unreviewed | review required | generated index seed only | public, pinned line 312 |
-| same | `ValidDecision` | def | unreviewed | review required | generated index seed only | public, pinned line 329 |
-| same | `SerialState` | inductive | unreviewed | review required | generated index seed only | public, pinned line 340 |
-| same | `active` | def | unreviewed | review required | generated index seed only | public, pinned line 357 |
-| same | `terminal` | def | unreviewed | review required | generated index seed only | public, pinned line 367 |
-| same | `instDecidablePredTerminal` | instance | unreviewed | review required | generated index seed only | public, pinned line 372 |
-| same | `world` | def | unreviewed | review required | generated index seed only | public, pinned line 384 |
-| same | `world_base` | theorem | unreviewed | review required | generated index seed only | public, pinned line 389 |
-| same | `world_decide` | theorem | unreviewed | review required | generated index seed only | public, pinned line 392 |
-| same | `world_chance` | theorem | unreviewed | review required | generated index seed only | public, pinned line 397 |
-| same | `legal` | def | unreviewed | review required | generated index seed only | public, pinned line 402 |
-| same | `availableActions` | def | unreviewed | review required | generated index seed only | public, pinned line 414 |
-| same | `legal_iff_jointActionLegal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 430 |
-| same | `LegalAction` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 587 |
-| same | `FOSGLegalAction` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 590 |
-| same | `toFOSGLegalAction` | def | unreviewed | review required | generated index seed only | public, pinned line 595 |
-| same | `ofFOSGLegalAction` | def | unreviewed | review required | generated index seed only | public, pinned line 599 |
-| same | `toFOSGLegalAction_val` | theorem | unreviewed | review required | generated index seed only | public, pinned line 603 |
-| same | `ofFOSGLegalAction_val` | theorem | unreviewed | review required | generated index seed only | public, pinned line 606 |
-| same | `active_eq_empty_of_base_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 609 |
-| same | `legalAction_eq_of_extends_matchesOrderedActive` | theorem | unreviewed | review required | generated index seed only | public, pinned line 616 |
-| same | `not_mem_acted_of_mem_remaining` | theorem | unreviewed | review required | generated index seed only | public, pinned line 640 |
-| same | `validDecision_of_prefix` | theorem | unreviewed | review required | generated index seed only | public, pinned line 654 |
-| same | `base_playerLegal_of_legalAction` | theorem | unreviewed | review required | generated index seed only | public, pinned line 670 |
-| same | `decide_playerLegal_of_legalAction` | theorem | unreviewed | review required | generated index seed only | public, pinned line 684 |
-| same | `validDecision_from_base` | theorem | unreviewed | review required | generated index seed only | public, pinned line 701 |
-| same | `validDecision_step` | theorem | unreviewed | review required | generated index seed only | public, pinned line 718 |
-| same | `basePlayerSuccessorWithOrder` | def | unreviewed | review required | generated index seed only | public, pinned line 740 |
-| same | `basePlayerSuccessor` | def | unreviewed | review required | generated index seed only | public, pinned line 758 |
-| same | `world_basePlayerSuccessorWithOrder` | theorem | unreviewed | review required | generated index seed only | public, pinned line 763 |
-| same | `world_basePlayerSuccessor` | theorem | unreviewed | review required | generated index seed only | public, pinned line 778 |
-| same | `decidePlayerSuccessor` | def | unreviewed | review required | generated index seed only | public, pinned line 786 |
-| same | `world_decidePlayerSuccessor` | theorem | unreviewed | review required | generated index seed only | public, pinned line 803 |
-| same | `baseReplayAction` | def | unreviewed | review required | generated index seed only | public, pinned line 815 |
-| same | `basePlayerSuccessorWithOrder_replay_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 825 |
-| same | `basePlayerSuccessorWithOrder_replay_last` | theorem | unreviewed | review required | generated index seed only | public, pinned line 843 |
-| same | `basePlayerSuccessor_replay_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 877 |
-| same | `basePlayerSuccessor_replay_last` | theorem | unreviewed | review required | generated index seed only | public, pinned line 892 |
-| same | `decideReplayAction` | def | unreviewed | review required | generated index seed only | public, pinned line 907 |
-| same | `decidePlayerSuccessor_replay_cons` | theorem | unreviewed | review required | generated index seed only | public, pinned line 927 |
-| same | `decidePlayerSuccessor_replay_last` | theorem | unreviewed | review required | generated index seed only | public, pinned line 946 |
-| same | `chanceResolutionAction` | def | unreviewed | review required | generated index seed only | public, pinned line 991 |
-| same | `transition` | def | unreviewed | review required | generated index seed only | public, pinned line 997 |
-| same | `transition_base_empty_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1013 |
-| same | `transition_base_nonempty_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1025 |
-| same | `transition_decide_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1032 |
-| same | `reward` | def | unreviewed | review required | generated index seed only | public, pinned line 1043 |
-| same | `reward_decide_eq_zero` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1063 |
-| same | `reward_chance_base_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1072 |
-| same | `reward_decide_successor_eq_zero` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1079 |
-| same | `reward_basePlayerSuccessor_eq_zero` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1089 |
-| same | `reward_base_empty_base_eq_of_active_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1097 |
-| same | `privObs` | def | unreviewed | review required | generated index seed only | public, pinned line 1148 |
-| same | `privObs_decide_eq_none` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1169 |
-| same | `privObs_chance_base_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1178 |
-| same | `privObs_decide_successor_eq_none` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1185 |
-| same | `pubObs` | def | unreviewed | review required | generated index seed only | public, pinned line 1197 |
-| same | `pubObs_decide_eq_none` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1217 |
-| same | `pubObs_chance_base_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1226 |
-| same | `pubObs_decide_successor_eq_none` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1233 |
-| same | `pubObs_basePlayerSuccessor_eq_none` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1242 |
-| same | `pubObs_base_empty_base_eq_of_active_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1250 |
-| same | `bookkeeping_decide_step` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1302 |
-| same | `resolution_chance_step` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1323 |
-| same | `map_base_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1337 |
-| same | `map_base_apply_decide` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1349 |
-| same | `map_base_apply_chance` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1358 |
-| same | `base_empty_support` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1366 |
-| same | `chance_support` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1387 |
-| same | `serialize` | def | unreviewed | review required | generated index seed only | public, pinned line 1396 |
-| same | `instDecidablePredSerializeTerminal` | instance | unreviewed | review required | generated index seed only | public, pinned line 1453 |
-| same | `IsSerial` | def | unreviewed | review required | generated index seed only | public, pinned line 1466 |
-| same | `serialize_isSerial` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1471 |
+| `GameTheory/Languages/FOSG/Serial.lean` | `singleMove` | def | subsumed | `FOSGToEFG.ChoiceAt`; `selectedJoint` | EXP-061/D30 | Single-owner selection is canonical without fabricated dependent joint moves. |
+| same | `singleMove_self` | theorem | subsumed | `FOSGToEFG.ChoiceAt`; `selectedJoint` | EXP-061/D30 | Single-owner selection is canonical without fabricated dependent joint moves. |
+| same | `singleMove_other` | theorem | subsumed | `FOSGToEFG.ChoiceAt`; `selectedJoint` | EXP-061/D30 | Single-owner selection is canonical without fabricated dependent joint moves. |
+| same | `ExtendsPartial` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `recordChoice` | def | subsumed | `FOSGToEFG.Prefix.advance` | EXP-061/D30 | Certified prefix extension replaces equality-update plumbing. |
+| same | `recordChoice_self` | theorem | subsumed | `FOSGToEFG.Prefix.advance` | EXP-061/D30 | Certified prefix extension replaces equality-update plumbing. |
+| same | `recordChoice_other` | theorem | subsumed | `FOSGToEFG.Prefix.advance` | EXP-061/D30 | Certified prefix extension replaces equality-update plumbing. |
+| same | `extendsPartial_noop` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `extendsPartial_recordChoice` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `MatchesActedPrefix` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `prefixChoice` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `playerLegal` | def | subsumed | `FOSGToEFG.menu`; `legalOption_scheduled` | EXP-061/D30 | Canonical local choices replace the joint-action wrapper. |
+| same | `eq_singleMove_of_current_some_other_none` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `playerLegal_iff_exists_singleMove` | theorem | subsumed | `FOSGToEFG.menu`; `legalOption_scheduled` | EXP-061/D30 | Canonical local choices replace the joint-action wrapper. |
+| same | `playerLegal_current_some` | theorem | subsumed | `FOSGToEFG.menu`; `legalOption_scheduled` | EXP-061/D30 | Canonical local choices replace the joint-action wrapper. |
+| same | `playerLegal_other_none` | theorem | subsumed | `FOSGToEFG.menu`; `legalOption_scheduled` | EXP-061/D30 | Canonical local choices replace the joint-action wrapper. |
+| same | `baseChanceLegalAction` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `baseChanceLegalAction_val` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `actionAtActive` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `actionAtActive_spec` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `moveOfLegalAction` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `moveOfLegalAction_current` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `moveOfLegalAction_other` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `matchesActedPrefix_noop` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `matchesActedPrefix_prefixChoice` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `prefixChoice_nil` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `prefixChoice_apply_of_mem` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `prefixChoice_apply_of_not_mem` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `matchesActedPrefix_recordChoice_move` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `prefixChoice_recordChoice_move` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `orderedActive` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `mem_orderedActive_iff` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `orderedActive_eq_nil_of_active_eq_empty` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `active_eq_empty_of_orderedActive_eq_nil` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `current_mem_active_of_split` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `current_not_mem_rest_of_split` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `ValidDecision` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `SerialState` | inductive | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `active` | def | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `terminal` | def | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `instDecidablePredTerminal` | instance | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `world` | def | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `world_base` | theorem | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `world_decide` | theorem | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `world_chance` | theorem | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `legal` | def | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `availableActions` | def | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `legal_iff_jointActionLegal` | theorem | subsumed | `FOSGToEFG.State`; `execution`; `singleMover` | EXP-061/D30 | The generic EFG state carries canonical source history and a certified prefix. |
+| same | `LegalAction` | abbrev | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `FOSGLegalAction` | abbrev | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `toFOSGLegalAction` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `ofFOSGLegalAction` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `toFOSGLegalAction_val` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `ofFOSGLegalAction_val` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `active_eq_empty_of_base_terminal` | theorem | subsumed | `FOSGToEFG.execution` terminal invariant | EXP-061/D30 | Terminal activity is owned by canonical execution. |
+| same | `legalAction_eq_of_extends_matchesOrderedActive` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `not_mem_acted_of_mem_remaining` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `validDecision_of_prefix` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `base_playerLegal_of_legalAction` | theorem | subsumed | `legalOption_scheduled` | EXP-061/D30 | Scheduled owner menus are exactly the source legal options. |
+| same | `decide_playerLegal_of_legalAction` | theorem | subsumed | `legalOption_scheduled` | EXP-061/D30 | Scheduled owner menus are exactly the source legal options. |
+| same | `validDecision_from_base` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `validDecision_step` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `basePlayerSuccessorWithOrder` | def | subsumed | `FOSGToEFG.execution`; `step_select`; `State.history` | EXP-061/D30 | Fixed explicit order and target steps replace active-set sorting and replay. |
+| same | `basePlayerSuccessor` | def | subsumed | `FOSGToEFG.execution`; `step_select`; `State.history` | EXP-061/D30 | Fixed explicit order and target steps replace active-set sorting and replay. |
+| same | `world_basePlayerSuccessorWithOrder` | theorem | subsumed | `FOSGToEFG.execution`; `step_select`; `State.history` | EXP-061/D30 | Fixed explicit order and target steps replace active-set sorting and replay. |
+| same | `world_basePlayerSuccessor` | theorem | subsumed | `FOSGToEFG.execution`; `step_select`; `State.history` | EXP-061/D30 | Fixed explicit order and target steps replace active-set sorting and replay. |
+| same | `decidePlayerSuccessor` | def | subsumed | `FOSGToEFG.execution`; `step_select`; `State.history` | EXP-061/D30 | Fixed explicit order and target steps replace active-set sorting and replay. |
+| same | `world_decidePlayerSuccessor` | theorem | subsumed | `FOSGToEFG.execution`; `step_select`; `State.history` | EXP-061/D30 | Fixed explicit order and target steps replace active-set sorting and replay. |
+| same | `baseReplayAction` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `basePlayerSuccessorWithOrder_replay_cons` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `basePlayerSuccessorWithOrder_replay_last` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `basePlayerSuccessor_replay_cons` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `basePlayerSuccessor_replay_last` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `decideReplayAction` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `decidePlayerSuccessor_replay_cons` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `decidePlayerSuccessor_replay_last` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `chanceResolutionAction` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `transition` | def | subsumed | `FOSGToEFG.execution`; `step_select`; `step_resolve` | EXP-061/D30 | Canonical FinDist execution owns selection and resolution. |
+| same | `transition_base_empty_eq` | theorem | subsumed | `FOSGToEFG.execution`; `step_select`; `step_resolve` | EXP-061/D30 | Canonical FinDist execution owns selection and resolution. |
+| same | `transition_base_nonempty_eq` | theorem | subsumed | `FOSGToEFG.execution`; `step_select`; `step_resolve` | EXP-061/D30 | Canonical FinDist execution owns selection and resolution. |
+| same | `transition_decide_eq` | theorem | subsumed | `FOSGToEFG.execution`; `step_select`; `step_resolve` | EXP-061/D30 | Canonical FinDist execution owns selection and resolution. |
+| same | `reward` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `reward_decide_eq_zero` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `reward_chance_base_eq` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `reward_decide_successor_eq_zero` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `reward_basePlayerSuccessor_eq_zero` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `reward_base_empty_base_eq_of_active_empty` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `privObs` | def | subsumed | `FOSGToEFG.signals`; resolver replay | EXP-061/D30 | Resolver-only source signal replay is stronger than option-wrapped bookkeeping. |
+| same | `privObs_decide_eq_none` | theorem | subsumed | `FOSGToEFG.signals`; resolver replay | EXP-061/D30 | Resolver-only source signal replay is stronger than option-wrapped bookkeeping. |
+| same | `privObs_chance_base_eq` | theorem | subsumed | `FOSGToEFG.signals`; resolver replay | EXP-061/D30 | Resolver-only source signal replay is stronger than option-wrapped bookkeeping. |
+| same | `privObs_decide_successor_eq_none` | theorem | subsumed | `FOSGToEFG.signals`; resolver replay | EXP-061/D30 | Resolver-only source signal replay is stronger than option-wrapped bookkeeping. |
+| same | `pubObs` | def | subsumed | `FOSGToEFG.signals`; resolver replay | EXP-061/D30 | Resolver-only source signal replay is stronger than option-wrapped bookkeeping. |
+| same | `pubObs_decide_eq_none` | theorem | subsumed | `FOSGToEFG.signals`; resolver replay | EXP-061/D30 | Resolver-only source signal replay is stronger than option-wrapped bookkeeping. |
+| same | `pubObs_chance_base_eq` | theorem | subsumed | `FOSGToEFG.signals`; resolver replay | EXP-061/D30 | Resolver-only source signal replay is stronger than option-wrapped bookkeeping. |
+| same | `pubObs_decide_successor_eq_none` | theorem | subsumed | `FOSGToEFG.signals`; resolver replay | EXP-061/D30 | Resolver-only source signal replay is stronger than option-wrapped bookkeeping. |
+| same | `pubObs_basePlayerSuccessor_eq_none` | theorem | subsumed | `FOSGToEFG.signals`; resolver replay | EXP-061/D30 | Resolver-only source signal replay is stronger than option-wrapped bookkeeping. |
+| same | `pubObs_base_empty_base_eq_of_active_empty` | theorem | subsumed | `FOSGToEFG.signals`; resolver replay | EXP-061/D30 | Resolver-only source signal replay is stronger than option-wrapped bookkeeping. |
+| same | `bookkeeping_decide_step` | theorem | subsumed | `step_select`; `step_resolve`; exact erased-history law | EXP-061/D30 | The generic bridge supplies the structural result at canonical law level. |
+| same | `resolution_chance_step` | theorem | subsumed | `step_select`; `step_resolve`; exact erased-history law | EXP-061/D30 | The generic bridge supplies the structural result at canonical law level. |
+| same | `map_base_apply` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `map_base_apply_decide` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `map_base_apply_chance` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `base_empty_support` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `chance_support` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `serialize` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `instDecidablePredSerializeTerminal` | instance | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `IsSerial` | def | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
+| same | `serialize_isSerial` | theorem | retired | no successor | EXP-061/D30 | D30 rejects the non-semantics-preserving serial-FOSG representation; any future canonical bridge result starts over. |
 | `GameTheory/Languages/FOSG/Strategy.lean` | `availableMovesAtState` | def | adapt | `GameTheory.Protocol.LegalOption` | D6/D15; Protocol policy API review (2026-08-02) | Optional action legality is defined once at the execution/information boundary. |
 | same | `mem_availableMovesAtState_iff` | theorem | subsumed | `GameTheory.Protocol.LegalOption` | D6/D15; API review | The predecessor membership theorem only unfolded its wrapper. |
 | same | `availableActionsAtHistory` | def | subsumed | `ExecutionProtocol.available`; `InformationModel.menu_adequate` | D6/D15; API review | Actual actions remain state availability; information-local choice uses the canonical optional menu. |
