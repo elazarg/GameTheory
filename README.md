@@ -58,6 +58,9 @@ GameTheory/Languages     scoped language encodings and truthful Bayesian
                          policies, order-free frontier evaluation, explicit
                          EFG compilation, order independence, and exact
                          source-owner behavioral Nash transfer
+  /Intrinsic             capability-light closed-loop configurations,
+                         information-local pure rules, solvability, and
+                         configuration-dependent causality before compilation
 GameTheory/Examples      reader-facing examples with #eval and #guard tests
 GameTheory/Tests         architecture and locality tests
 GameTheory/Experimental  architecture spikes, never re-exported
@@ -90,6 +93,9 @@ general uniform-equilibrium existence claim.
 Congestion and coordinated Mechanism domains are stable but opt-in, so their
 specialized APIs do not enlarge the main root. Languages and Experimental also
 stay outside the root for the separate reasons recorded in their modules.
+The intrinsic language is likewise opt-in: its native product and closed-loop
+semantics precede any temporal compiler, while mixed strategies, utility,
+perfect recall, and Kuhn equivalence remain separately gated.
 Examples and Tests compile in the default library target but are not
 public-root imports.
 

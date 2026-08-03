@@ -331,7 +331,7 @@ surface syntax.
 | MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
 | FOSG | **generic bridge gate passed (EXP-042/T4; EXP-059/060/061, D30):** the stable explicit-order FOSG-to-EFG bridge retains exact source histories while hiding within-round choices; policy projection/translation are full inverses, resolver-only public/private/own-action replay, inactive slots, literal all-round history laws, and order transport pass | **Native history/Kuhn, reachable observation-model, Compile, Examples, Serial, and the 104-declaration live bridge chain are classified;** the utility-free simultaneous example now exercises the canonical NFG-to-FOSG-to-EFG path, and the non-semantics-preserving serial machine is retired; continue the remaining 143-row exact L-FOSG queue while counterfactual reach, CFR, ordinary continuation coefficients, augmentation, strategic/utility transfer, and expressiveness retain separate gates |
 | multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
-| intrinsic games | **native ownership gate passed (EXP-062, D31):** unique closed-loop solvability, future-information rejection, and a nonconstant schedule with independently necessary prefix-cell/predecessor premises validate the pre-Protocol product layer | promote the capability-light native root and causality surface; then separately gate temporal compilation, perfect recall, mixed/behavioral strategy, PMF/utility, and Kuhn layers |
+| intrinsic games | **native ownership gate passed and root promoted (EXP-062, D31):** `Languages.Intrinsic` owns capability-light configurations, information-local pure rules, closed-loop solvability, and explicit-slot configuration-dependent causality; the hostile schedule needs prefix-cell and predecessor agreement independently | recover the native Examples/Tests leaves; separately gate temporal compilation, perfect recall, mixed/behavioral strategy, PMF/utility, and Kuhn layers |
 | bridges and expressiveness | two real transfers compose more cheaply than direct named proofs | only the earned relation or composition API; otherwise classify v1 transport as retired |
 | open games | one compositional theorem with no duplicate stable equilibrium predicate | `GameTheory.Frontier`, not the stable language umbrella |
 
@@ -537,22 +537,25 @@ The next work is ordered:
 
 1. consolidate moving delivery probes without rewriting historical phase
    measurements;
-2. continue the remaining exact L-FOSG queue after completing the bounded
+2. recover the newly unblocked intrinsic Examples/Tests leaves against the
+   promoted D31 root; do not cross the separate compiler, perfect-recall,
+   mixed/behavioral, PMF/utility, or Kuhn gates;
+3. continue the remaining exact L-FOSG queue after completing the bounded
    104-declaration serialization/expressiveness comparison; keep its classified
    counterfactual-reach/CFR spine and ordinary continuation-coefficient laws
    behind separate checked-theorem gates, and recover general constant-sum
    value/correlation results beyond the completed binary slice;
-3. resume the broader revelation/information-design inventory and decide
+4. resume the broader revelation/information-design inventory and decide
    whether a live consumer earns D-COMM's deferred conditional public-signal
    representation;
-4. use the recovered uniform deviation-cap equivalence to prove a checked
+5. use the recovered uniform deviation-cap equivalence to prove a checked
    finite-horizon or known special case; the active sibling
    `uniform-existence` branch's basic definitions and placeholder-independent
    proof waist are represented by D22, while its large placeholder-dependent
    existence hierarchy is research evidence only; reserve a new experiment
    before any infinite-path law, vanishing-discount existence theorem, or
    graph-game root;
-5. admit no Frontier implementation until the first three items have an active
+6. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 
 This queue may change when an experiment refutes an assumption, but a change

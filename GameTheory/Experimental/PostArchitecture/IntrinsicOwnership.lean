@@ -179,10 +179,10 @@ theorem futureLookingModel_not_causal :
       · rfl
       · intro earlier hearlier
         omega)
-  change allFalse.decision true = futureTrue.decision true at hinfo
+  have hinfo' : allFalse.decision true = futureTrue.decision true := hinfo
   have hne : (false : futureLookingModel.Decision true) ≠ true := by
     decide
-  exact hne hinfo
+  exact hne hinfo'
 
 /-! ## Nonconstant schedule validation -/
 
@@ -208,21 +208,21 @@ def branchingInfo (agent : Fin 3) : Setoid branchingConfiguration :=
 
 @[simp] theorem branchingInfo_zero (left right : branchingConfiguration) :
     (branchingInfo (0 : Fin 3)).r left right := by
-  change True
+  show True
   trivial
 
 @[simp] theorem branchingInfo_one (left right : branchingConfiguration) :
     (branchingInfo (1 : Fin 3)).r left right ↔
       (left.decision (0 : Fin 3) = right.decision (0 : Fin 3) ∧
         (branchingCondition left ↔ branchingCondition right)) := by
-  change (_ ∧ _) ↔ _
+  show (_ ∧ _) ↔ _
   rfl
 
 @[simp] theorem branchingInfo_two (left right : branchingConfiguration) :
     (branchingInfo (2 : Fin 3)).r left right ↔
       (left.decision (0 : Fin 3) = right.decision (0 : Fin 3) ∧
         (branchingCondition left ↔ branchingCondition right)) := by
-  change (_ ∧ _) ↔ _
+  show (_ ∧ _) ↔ _
   rfl
 
 abbrev branchingModel : Model where
@@ -243,7 +243,7 @@ def branchingOrder : branchingModel.Schedule 3 where
 theorem branchingOrder_one_of (configuration : branchingModel.Configuration)
     (hbranch : branchingCondition configuration) :
     branchingOrder.orderAt configuration 1 = (2 : Fin 3) := by
-  change (if branchingCondition configuration then Equiv.swap 1 2
+  show (if branchingCondition configuration then Equiv.swap 1 2
     else Equiv.refl (Fin 3)) 1 = 2
   rw [if_pos hbranch]
   exact Equiv.swap_apply_left 1 2
@@ -252,7 +252,7 @@ theorem branchingOrder_one_of_not
     (configuration : branchingModel.Configuration)
     (hbranch : ¬ branchingCondition configuration) :
     branchingOrder.orderAt configuration 1 = (1 : Fin 3) := by
-  change (if branchingCondition configuration then Equiv.swap 1 2
+  show (if branchingCondition configuration then Equiv.swap 1 2
     else Equiv.refl (Fin 3)) 1 = 1
   rw [if_neg hbranch]
   rfl
@@ -260,7 +260,7 @@ theorem branchingOrder_one_of_not
 theorem branchingOrder_two_of (configuration : branchingModel.Configuration)
     (hbranch : branchingCondition configuration) :
     branchingOrder.orderAt configuration 2 = (1 : Fin 3) := by
-  change (if branchingCondition configuration then Equiv.swap 1 2
+  show (if branchingCondition configuration then Equiv.swap 1 2
     else Equiv.refl (Fin 3)) 2 = 1
   rw [if_pos hbranch]
   exact Equiv.swap_apply_right 1 2
@@ -269,7 +269,7 @@ theorem branchingOrder_two_of_not
     (configuration : branchingModel.Configuration)
     (hbranch : ¬ branchingCondition configuration) :
     branchingOrder.orderAt configuration 2 = (2 : Fin 3) := by
-  change (if branchingCondition configuration then Equiv.swap 1 2
+  show (if branchingCondition configuration then Equiv.swap 1 2
     else Equiv.refl (Fin 3)) 2 = 2
   rw [if_neg hbranch]
   rfl
@@ -277,12 +277,12 @@ theorem branchingOrder_two_of_not
 theorem branchingOrder_zero (configuration : branchingModel.Configuration) :
     branchingOrder.orderAt configuration 0 = (0 : Fin 3) := by
   by_cases hbranch : branchingCondition configuration
-  · change (if branchingCondition configuration then Equiv.swap 1 2
+  · show (if branchingCondition configuration then Equiv.swap 1 2
       else Equiv.refl (Fin 3)) 0 = 0
     rw [if_pos hbranch]
     exact Equiv.swap_apply_of_ne_of_ne (a := (1 : Fin 3)) (b := 2) (x := 0)
       (by decide) (by decide)
-  · change (if branchingCondition configuration then Equiv.swap 1 2
+  · show (if branchingCondition configuration then Equiv.swap 1 2
       else Equiv.refl (Fin 3)) 0 = 0
     rw [if_neg hbranch]
     rfl
@@ -331,7 +331,7 @@ theorem branchingPremises_independent :
     · intro earlier _
       have hall : branchingCondition branchingAllFalse := by rfl
       have hboth : branchingCondition branchingZeroOneTrue := by decide
-      change (if branchingCondition branchingAllFalse then Equiv.swap 1 2
+      show (if branchingCondition branchingAllFalse then Equiv.swap 1 2
         else Equiv.refl (Fin 3)) earlier =
         (if branchingCondition branchingZeroOneTrue then Equiv.swap 1 2
         else Equiv.refl (Fin 3)) earlier
@@ -349,7 +349,7 @@ theorem branchingModel_isCausal :
   intro left right slot hprefix hagree
   have hslot : slot = 0 ∨ slot = 1 ∨ slot = 2 := by omega
   rcases hslot with rfl | rfl | rfl
-  · change branchingInfo (branchingOrder.orderAt left 0) left right
+  · show branchingInfo (branchingOrder.orderAt left 0) left right
     rw [branchingOrder_zero]
     exact branchingInfo_zero left right
   · have horder := hprefix (1 : Fin 3) (by omega)
@@ -369,7 +369,7 @@ theorem branchingModel_isCausal :
           branchingOrder_one_of _ hright] at horder
         have hne : (1 : Fin 3) ≠ 2 := by decide
         exact hne horder
-    change branchingInfo (branchingOrder.orderAt left 1) left right
+    show branchingInfo (branchingOrder.orderAt left 1) left right
     by_cases hleft : branchingCondition left
     · rw [branchingOrder_one_of _ hleft]
       exact (branchingInfo_two left right).2 ⟨hzero, hbranch⟩
@@ -392,7 +392,7 @@ theorem branchingModel_isCausal :
           branchingOrder_two_of _ hright] at horder
         have hne : (2 : Fin 3) ≠ 1 := by decide
         exact hne horder
-    change branchingInfo (branchingOrder.orderAt left 2) left right
+    show branchingInfo (branchingOrder.orderAt left 2) left right
     by_cases hleft : branchingCondition left
     · rw [branchingOrder_two_of _ hleft]
       exact (branchingInfo_one left right).2 ⟨hzero, hbranch⟩
