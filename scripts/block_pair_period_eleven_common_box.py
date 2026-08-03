@@ -49,7 +49,7 @@ if not __debug__:
 from hashlib import sha256
 from dataclasses import dataclass
 from fractions import Fraction
-from itertools import product
+from itertools import combinations, product
 from math import sqrt
 from pathlib import Path
 import sys
@@ -525,6 +525,47 @@ def context_box(context: tuple[str, str, str]) -> VectorBox:
     )
 
 
+def context_box_sup_separation(
+    left: tuple[str, str, str], right: tuple[str, str, str]
+) -> Fraction:
+    """Exact l-infinity distance between two equal-radius axis boxes."""
+
+    return max(
+        max(abs(x - y) - 2 * CONTEXT_RADIUS, Fraction(0))
+        for x, y in zip(CONTEXT_CENTERS[left], CONTEXT_CENTERS[right])
+    )
+
+
+def certify_context_separation() -> tuple[Fraction, Fraction, int]:
+    pairs = tuple(combinations(sorted(CONTEXT_CENTERS), 2))
+    first_symbol = tuple(
+        context_box_sup_separation(left, right)
+        for left, right in pairs
+        if left[0] != right[0]
+    )
+    second_symbol = tuple(
+        context_box_sup_separation(left, right)
+        for left, right in pairs
+        if left[0] == right[0] and left[1] != right[1]
+    )
+    overlap_pairs = tuple(
+        (left, right)
+        for left, right in pairs
+        if context_box_sup_separation(left, right) == 0
+    )
+    minimum_first = min(first_symbol)
+    minimum_second = min(second_symbol)
+    assert 0 < minimum_first
+    assert 0 < minimum_second
+    assert len(overlap_pairs) == 9
+    assert all(
+        left[:2] == right[:2]
+        and {left[2], right[2]} == {"10", "11"}
+        for left, right in overlap_pairs
+    )
+    return minimum_first, minimum_second, len(overlap_pairs)
+
+
 def strict_image_slack(image: VectorBox, target: VectorBox) -> Fraction:
     return min(
         min(inner.low - outer.low, outer.high - inner.high)
@@ -664,6 +705,9 @@ def certify_context_graph() -> tuple[GraphSummary, str]:
 
 def main() -> None:
     summary, digest = certify_context_graph()
+    first_separation, second_separation, overlap_count = (
+        certify_context_separation()
+    )
     print("exact memory-three graph-directed full-shift certificate passed")
     print(f"context boxes = {len(CONTEXT_CENTERS)}, directed edges = {summary.edges}")
     print(f"uniform box radius = {CONTEXT_RADIUS}")
@@ -687,6 +731,15 @@ def main() -> None:
         "maximum opponent-cycle survival ~= "
         f"{float(summary.maximum_opponent_product):.9f}"
     )
+    print(
+        "minimum different-first-symbol box separation ~= "
+        f"{float(first_separation):.9f}"
+    )
+    print(
+        "minimum same-first/different-second box separation ~= "
+        f"{float(second_separation):.9e}"
+    )
+    print(f"overlapping context-box pairs = {overlap_count}")
     print(f"transcript SHA-256 = {digest}")
 
 
