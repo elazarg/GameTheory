@@ -6,15 +6,16 @@ block-pair quitting game.
 
 First, consider
 
-    support 6 -> (a nonempty finite support-1 block) -> support 2.
+    support {2 or 6} -> (a nonempty finite support-1 block) -> support 2.
 
-Player 1's active equality at support 6 requires successor value 2.  Player
-1 is active at the final support 2, so its value there is also 2.  During the
-support-1 block, absorption gives player 1 payoff 8.  If H is the block's
-aggregate absorption probability, its value at entry is therefore
-``8H+2(1-H)=2+6H>2``.  The support transition is impossible, independently
-of inactive inequalities.  This removes both simple skeletons beginning
-``6,1,2`` and every version with repeated support-1 phases.
+Player 1's active equality at either entering support requires successor
+value 2.  Player 1 is active at the final support 2, so its value there is
+also 2.  During the support-1 block, absorption gives player 1 payoff 8.  If
+H is the block's aggregate absorption probability, its value at entry is
+therefore ``8H+2(1-H)=2+6H>2``.  The support transition is impossible,
+independently of inactive inequalities.  This removes both simple skeletons
+beginning ``6,1,2``, every bare ``2,1+,2`` backtrack, and every version with
+repeated support-1 phases.
 
 Second, consider
 
@@ -200,7 +201,7 @@ def main() -> None:
     assert_credible_first_unchanged()
 
     print("exact singleton-bridge support-6 reductions passed")
-    print("excluded prefix: 6 -> nonempty support-1 block -> 2")
+    print("excluded prefix: support 2 or 6 -> nonempty support-1 block -> 2")
     print("ranked family: 6 -> finite support-2 block -> 9 -> 6 has A>a")
     print("ranked family: every finite singleton-word 6-return has A>a")
     print("the endpoint rank leaves the outgoing support after the final 6 free")
