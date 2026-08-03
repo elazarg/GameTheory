@@ -71,6 +71,7 @@ becomes difficult to scan.
 | EXP-058 | 2026-08-02 | D6/D7/D15/D28 / FOSG reachable-observation facts | Which parts of the pinned reachable-observation proof machine survive once Protocol owns histories and information? | Retires the adapter; decides D29 | [`decisions/D29-fosg-reachable-observation-retirement.md`](decisions/D29-fosg-reachable-observation-retirement.md); terminal-activity and compressed-information hostile witnesses |
 | EXP-059 | 2026-08-02 | D6/D8/D14/D15/D28 / FOSG-to-EFG serialization | Can a simultaneous stochastic FOSG be serialized as a single-mover EFG while hiding within-round choices and preserving its mapped history law? | Supports explicit hidden-phase serialization; decides D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFG.lean` |
 | EXP-060 | 2026-08-02 | D6/D8/D14/D15/D30 / two-round FOSG-to-EFG signal replay | Can the hidden-phase serializer replay nontrivial source public/private signals over two stochastic rounds, including own-action memory and inactive slots, while preserving the scaled canonical-history law? | Supports two-round signal replay; generic explicit-order implementation unblocked; extends D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound{,Witnesses}.lean` |
+| EXP-061 | 2026-08-02 | D6/D8/D14/D15/D30 / generic explicit-order FOSG-to-EFG bridge | Can D30's validated hidden-phase construction be expressed once over the canonical FOSG/EFG APIs, with explicit finite player order and the same exact history, signal, policy, inactivity, and order laws? | Active; public API and hostile migrated slice under measurement | Reserved on `4af78de`; candidate `GameTheory/Languages/Bridges/FOSGToEFG.lean` |
 
 ## Entry template
 
@@ -3913,3 +3914,38 @@ memory.
   not claim stable bridge coverage from this concrete Bool experiment, and
   keep counterfactual reach, CFR, and ordinary continuation coefficients behind
   their separate gates.
+
+### EXP-061: generic explicit-order FOSG-to-EFG bridge
+
+- **Date / revision:** 2026-08-02, reserved on `4af78de`
+- **Status:** active; no stable bridge coverage credited yet
+- **Question:** whether the hidden microstep construction validated by
+  EXP-059/060 generalizes over the canonical FOSG and EFG carriers without a
+  second execution semantics, global finiteness, default outcomes, or public
+  transport plumbing.
+- **Prediction:** an explicit duplicate-free player order, source history, and
+  partial legal joint should suffice to serialize each source round into one
+  selection slot per ordered player plus one resolver.  Target information
+  should expose only the current phase and canonical source information; exact
+  source histories and signals should be replayed only at resolution.
+- **Representative slice:** migrate the hostile non-tree-shaped two-round
+  EXP-060 source through the generic construction, including inactive slots,
+  source-signal-sensitive policies, arbitrary target-profile projection, and
+  two distinct explicit orders.
+- **Competing designs:** a generic bounded compiler over explicit orders; a
+  theorem-only construction specialized per game; or promotion of the pinned
+  separate `FOSG.Serial` semantics.  The last design remains excluded by D30;
+  the experiment distinguishes the first two by API and proof cost.
+- **Kill conditions:** inability to state exact canonical history laws without
+  reconstruction or defaults; information leakage from partial joints;
+  strategy projection that depends on unreachable guesses; stored global
+  `Fintype`/`Finite` assumptions; synthetic players; user-visible transports;
+  a second runner/history carrier; placeholders, custom axioms, or forbidden
+  dependencies.
+- **Artifacts / commands:** reserved candidate
+  `GameTheory/Languages/Bridges/FOSGToEFG.lean`; EXP-060 migrated witnesses;
+  focused build; Phase 2 and Phase 3 audits; exact coverage audit; full build;
+  embedded axiom prints for the public laws.
+- **Outcome / next action:** pending implementation and measurement.  Do not
+  freeze the public bridge or begin broad pinned recovery until the hostile
+  migrated slice passes and D30 records the measured result.
