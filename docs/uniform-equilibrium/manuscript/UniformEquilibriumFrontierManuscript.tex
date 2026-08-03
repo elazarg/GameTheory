@@ -1,0 +1,2171 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,longtable,array}
+\usepackage[margin=1.05in]{geometry}
+\usepackage[expansion=false]{microtype}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,citecolor=blue!55!black,urlcolor=blue!55!black}
+\allowdisplaybreaks
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\EE}{\mathbb E}
+\newcommand{\PP}{\mathbb P}
+\newcommand{\RR}{\mathbb R}
+\newcommand{\NN}{\mathbb N}
+\newcommand{\one}{\mathbf 1}
+\newcommand{\co}{\operatorname{co}}
+\newcommand{\osc}{\operatorname{osc}}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\ord}{\operatorname{ord}}
+\newcommand{\val}{\operatorname{val}}
+\newcommand{\leanchecked}{\textsc{Lean-checked}}
+\newcommand{\proved}{\textsc{proved}}
+\newcommand{\conditional}{\textsc{conditional}}
+\newcommand{\openstatus}{\textsc{open}}
+\newcommand{\counterexample}{\textsc{counterexample}}
+
+\title{Analytic Endpoints, Causal Obstructions, and Adaptive Certificates\\
+\large A structural program for uniform equilibrium in finite stochastic games}
+\author{Working manuscript}
+\date{August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The existence of a uniform equilibrium payoff in every finite stochastic game
+remains open for three or more players.  This paper records a body of new
+structural results developed around that problem and places them against the
+frontier known through 2025.  The program factors the conjecture into three
+layers.  First, every finite game admits a coupled real-analytic germ of
+stationary discounted equilibria.  Second, the germ has a finite endpoint
+classification expressed in terms of harmonic directions, support faces,
+owned occupation measures, and zero-pairing obstructions.  Third, an adaptive
+certificate, once constructed, implies a uniform equilibrium by a short
+quantitative verification theorem.
+
+The first and third layers, and the endpoint classification itself, have been
+formalized in Lean.  A classical example of Sorin gives an essential correction
+to the intended bridge: even a rational analytic discounted Nash germ may have
+an endpoint outside the entire uniform-equilibrium payoff set.  Thus the germ
+is source data, not a target which can always be preserved.  Since the germ
+itself is existential, the missing theorem may choose a favorable analytic
+branch; it must then select an implementable payoff target and construct an
+actual public response which is credible against unilateral deviations,
+transports that entire selected target, enters legally after public histories,
+and either decreases a well-founded rank or discharges a realized account.  We prove exact auxiliary
+theorems for direct closure by unilateral occupation harmlessness, analytic
+Markov occupation at multiple scales, finite-tree and stopped-child
+composition, causal versus ordinary transport, public separator compression,
+colored circulation, entry, monitoring, and finite-memory obstructions.  We
+also give small counterexamples to several tempting closure principles.
+
+The paper is deliberately status-aware.  Results are labelled as
+machine-checked, proved mathematically but not yet formalized, conditional, or
+open.  No claim of priority is made for a statement merely because its exact
+form appears to be new in this program.  The final section isolates the
+remaining conjecture-level arrow and a finite collection of scoped mathematical
+problems whose joint solution would close it.
+\end{abstract}
+
+\tableofcontents
+
+\section{The problem and the frontier}
+
+Let $I$ be a finite set of players, $S$ a finite state space, and
+$A_i(s)$ a nonempty finite action set.  A finite stochastic game consists of
+bounded stage payoffs $g_i(s,a)$ and a transition kernel $q(\cdot\mid s,a)$.
+A behavior profile $\sigma$ is a \emph{uniform $\varepsilon$-equilibrium from
+$s$ with payoff $v$} if, for all sufficiently large horizons $N$, its expected
+Ces\`aro payoff is within $\varepsilon$ of $v$ and every unilateral behavior
+deviation gains at most $\varepsilon$.  The same profile must work for all
+large $N$; a family chosen separately for each horizon is not enough.
+
+Throughout, the current state and past action profiles are publicly observed,
+players have perfect recall, and behavior strategies use independent private
+randomization.  No exogenous public correlation device is part of the base
+model.  Whenever a construction calls for a public lottery, it must synthesize
+that lottery from publicly observed play and prove unilateral robustness,
+entry safety, and sublinear cost.  Granting a free public seed would change the
+problem being solved.
+
+Shapley's discounted fixed-point theorem gives stationary equilibria for every
+discount factor in the two-player zero-sum model \cite{Shapley1953}; Fink's
+theorem gives stationary discounted equilibria in finite $n$-player games
+\cite{Fink1964}.  In the zero-sum case, Bewley and Kohlberg obtained a
+Puiseux expansion and the asymptotic value \cite{BewleyKohlberg1976}, while
+Mertens and Neyman constructed strategies realizing the uniform value
+\cite{MertensNeyman1981}.  The multiperson existence problem is qualitatively
+different: discounted equilibria may select strategically incompatible
+limits, and the punishment needed after a deviation may itself require a
+long-run construction.
+
+The principal general positive results before the present program include
+Vieille's two-player theorem \cite{Vieille2000I,Vieille2000II}, Solan's
+three-player absorbing theorem \cite{Solan1999}, the theory of quitting games
+\cite{SolanVieille2001}, and autonomous correlated equilibrium for arbitrary
+finite games \cite{SolanVieille2002}.  The Big Match already shows why
+calendar-time stationary or bounded-memory reasoning is insufficient:
+Blackwell and Ferguson's uniform strategy is genuinely history adaptive
+\cite{BlackwellFerguson1968}.  Recent work proves that only logarithmically
+many public memory states need be used by carefully scheduled strategies in
+certain formulations, while bounded public memory still fails for the Big
+Match \cite{HansenIbsenJensenNeyman2025}.  A late-2025 result establishes an
+undiscounted equilibrium payoff for positive recursive absorbing games whose
+nonabsorbing components are nonrectangular \cite{SolanVieille2025}.  These
+advances do not settle arbitrary finite games with three or more players.
+
+The program here starts from a simple diagnosis.  The limiting discounted
+payoff is not itself the missing object and, in general, is not even an
+admissible uniform target.  Sorin's absorbing example
+(\S\ref{sec:sorin-target}) has a rational analytic discounted-equilibrium
+payoff whose endpoint is disjoint from the uniform-equilibrium payoff set.
+What is missing is therefore a mechanism that uses analytic endpoint data to
+select an implementable target and then produces one strategy profile
+satisfying, at once,
+\begin{enumerate}[label=(\roman*)]
+\item delivery of the selected full vector target;
+\item a cap against every unilateral history-dependent deviation;
+\item credibility of every public response after the history at which it is
+      invoked;
+\item compatibility with public suffix rebasing and random stopping;
+\item strict progress in a well-founded recursion, or a complete quantitative
+      account showing why no progress is needed.
+\end{enumerate}
+
+\subsection{Status convention}
+
+Four labels are used throughout.
+\begin{itemize}
+\item \leanchecked: a theorem has a proof in the accompanying Lean
+      development, with no additional axiom.
+\item \proved: a complete finite-dimensional or probabilistic proof is given
+      here or in the associated question file, but the theorem is not claimed
+      to be fully formalized.
+\item \conditional: the implication is rigorous, but one or more strategic
+      inputs are explicit hypotheses rather than consequences of an arbitrary
+      game.
+\item \openstatus: the statement is a genuine remaining problem.
+\end{itemize}
+At the stable audited snapshot the development has one intentional admitted
+declaration, exactly at the global uniform-equilibrium constructor.  The
+semantic verifier, analytic-germ existence, root endpoint classification, and
+several special cases are checked.  None of the thirteen generic nonsemantic
+endpoint leaves has yet been closed unconditionally.
+
+\section{The certificate that would settle the game}
+
+The most useful contribution of formalization has been to force the final
+verification statement into a form that does not conceal a strategy in a
+limit or a quantifier swap.
+
+Fix an initial state $s_0$ and target $v\in\RR^I$.  The semantic waist is a
+uniform deviation-cap constructor: for each error it returns one behavior
+profile and one horizon threshold such that all longer finite averages deliver
+$v$ and every unilateral behavior deviation is capped by $v$ plus the error.
+This is equivalent to $v$ being a uniform-equilibrium payoff.
+
+One sound sufficient language is the checked adaptive-potential certificate.
+At error $\delta$ it consists, schematically, of a public behavior profile
+$\sigma$, three public-history potentials for each player (on-path lower,
+on-path upper, and deviation upper), and Cesaro-small error budgets.  The
+initial expected potentials are close to $v$.  Their expected values from
+$s_0$ are respectively submartingale or supermartingale sequences, and bound
+the corresponding expected stage payoff in the required direction.  The
+deviation potential inequality is quantified over every unilateral behavior
+strategy.  The potentials need not be bounded or close to $v$ after the
+initial history.
+
+This expectation-level formulation is load-bearing: it permits cancellation
+between publicly observed stochastic branches.  More local bounded-potential,
+account, and stopped-child systems are useful construction languages only
+when a theorem compiles them into this certificate or directly into the
+semantic deviation caps.  The proof does not require stationary play or a
+single scalar Lyapunov function.
+
+\begin{theorem}[Adaptive-certificate verifier; \leanchecked]
+\label{thm:verifier}
+Suppose that for every $\delta>0$ a finite stochastic game admits an adaptive
+potential certificate at $(s_0,v,\delta)$.  Then $v$ is a uniform equilibrium
+payoff from $s_0$.  Quantitatively, the strategy contained in the
+$\delta$-certificate has, for all sufficiently large $N$,
+\[
+ \left\|\EE_\sigma\frac1N\sum_{t<N}g(t)-v\right\|_\infty
+ \le C\delta+o_N(1)
+\]
+and, for every $i$ and every unilateral behavior deviation $\alpha_i$,
+\[
+ \EE_{\alpha_i,\sigma_{-i}}\frac1N\sum_{t<N}g_i(t)
+ \le v_i+C\delta+o_N(1),
+\]
+where the remainder is uniform over the deviation.
+\end{theorem}
+
+\begin{proof}[Proof mechanism]
+Apply the lower and upper expectation-level telescope to the prescribed
+profile, and the upper telescope to every deviating profile.  Monotonicity of
+the expected potentials removes the terminal term in the favorable direction;
+their initial values anchor the estimate at $v$.  The Cesaro-small budgets
+contribute $C\delta$.  Construction-specific bounded potentials, accounts,
+and stopped systems have their own compilation theorems before this verifier
+is invoked.  The prescribed lower and upper directions give delivery.
+The quantifiers are
+\[
+ \forall\varepsilon>0\ \exists\sigma\ \exists N_0\
+ \forall N\ge N_0\ \forall i\ \forall\alpha_i,
+\]
+so the deviation may depend on $N$ and on the entire observed history.
+This is the argument formalized by the certificate verifier.
+\end{proof}
+
+The theorem is substantive, but it is not the conjecture in disguise only if
+the certificate fields are concrete: action kernels, transition laws,
+targets, bounded potentials, and proved ledgers.  A record whose decisive
+field simply returns a uniform equilibrium or an adaptive certificate is only
+an interface.  This distinction will recur below.
+
+\section{Analytic Bellman germs and the endpoint atlas}
+
+For normalized discount $\lambda\in(0,1)$, let
+\[
+ V_i^\lambda(s)=
+ \EE_{s,\sigma^\lambda}
+ \sum_{t\ge0}\lambda(1-\lambda)^t g_i(s_t,a_t),
+\]
+where $\sigma^\lambda$ is a stationary equilibrium.  The Bellman equilibrium
+conditions are a finite system of polynomial equalities and inequalities in
+$\lambda$, the mixed actions, and $V$.  Compactness supplies accumulation,
+but an arbitrary sequence loses sign and order information.  Semialgebraic
+curve selection retains it.
+
+\begin{theorem}[Coupled analytic Bellman germ; \leanchecked]
+\label{thm:germ}
+Every finite stochastic game admits, after restricting to a sufficiently
+small interval and using a finite analytic reparameterization when necessary,
+a real-analytic arc
+\[
+ t\longmapsto
+ \bigl(\lambda(t),\sigma(t),V(t)\bigr),\qquad t\downarrow0,
+\]
+of stationary discounted equilibria, with $\lambda(t)>0$ and
+$\lambda(t)\to0$.  Every equilibrium support, every equality pattern in the
+Bellman inequalities, and the sign of every nonzero analytic comparison is
+constant on the punctured arc.
+\end{theorem}
+
+\begin{proof}[Construction]
+Encode normalization, simplex constraints, Bellman equalities on used
+actions, and Bellman inequalities on unused actions as a compact
+semialgebraic set whose projection accumulates at $\lambda=0$.  Real
+semialgebraic curve selection gives a semialgebraic arc.  One-dimensional
+semialgebraic preparation yields a convergent Puiseux parameterization; a
+power substitution converts it to a real-analytic germ.  Finiteness of the
+comparison family and the identity theorem allow a common punctured interval
+on which every support and sign cell is fixed.
+\end{proof}
+
+Write $v=V(0)$.  Expanding the Bellman identities produces successive bias
+vectors and occupation constraints.  A direction already accounted for is
+placed in a processed harmonic span.  The first response outside that span
+falls into a finite alternative governed by:
+\begin{itemize}
+\item semantic closure;
+\item a proper support face;
+\item a player-owned positive occupation or circulation;
+\item a full-support zero-pairing configuration;
+\item failure of target transport, entry, ownership, or credibility;
+\item a new harmonic direction.
+\end{itemize}
+
+\begin{theorem}[Finite endpoint classification; \leanchecked]
+\label{thm:atlas}
+For every analytic Bellman germ, processed harmonic span, and legal entry
+datum, a first nonprocessed hierarchy response exists and belongs to one of a
+finite list of typed endpoint leaves.  The classification is exhaustive and
+retains the player, target, support, analytic order, and occupation data needed
+by the corresponding leaf.
+\end{theorem}
+
+The theorem is an obstruction atlas, not a closure theorem.  One leaf is
+semantic.  The other thirteen accept reconstruction data; at present no
+generic theorem manufactures that data from an arbitrary game.  Thus the
+strongest unconditional chain is
+\[
+ \text{finite game}
+ \longrightarrow \text{analytic Bellman germ}
+ \longrightarrow \text{honest endpoint leaf}
+ \not\!\longrightarrow \text{adaptive certificate}.
+\]
+This explicit broken arrow is the current frontier.
+
+The quantifier over arcs matters.  The atlas classifies every chosen analytic
+germ, but the conjecture requires only the existence of one successful
+construction.  A global proof may therefore select or replace an equilibrium
+arc so as to avoid an unclosable leaf; it need not close every germ
+individually.  This ``arc improvement'' route is logically distinct from leaf
+closure.  Sorin's example in \S\ref{sec:sorin-target} also shows its limit:
+even choosing a better discounted arc cannot suffice when every discounted
+equilibrium payoff has the wrong target.  Arc selection and endogenous target
+selection are separate gates.
+
+\section{Local analytic consequences}
+
+Several useful conclusions do follow from the germ without solving the
+strategic routing problem.
+
+\subsection{Invisible neutral actions}
+
+Let $p(t),r(t)\in\Delta(S)$, $W(t)=W_0+t^qH(t)$, and suppose
+\[
+ t^qg(t)+(1-t^q)(r(t)-p(t))\cdot W(t)\le0,
+ \qquad
+ (r(0)-p(0))\cdot W_0=0.
+\]
+Put $D(t)=(r(t)-p(t))\cdot W_0$.
+
+\begin{proposition}[Sharp neutral-drift dichotomy; \proved]
+\label{prop:neutral-drift}
+If $D\not\equiv0$ and $m=\ord_0D<q$, then the leading coefficient of
+$D$ is negative and $-D(t)\ge ct^m$ for all small positive $t$.  Otherwise
+$D=t^qL$ for an analytic germ $L$, and
+\[
+ g(0)+(r(0)-p(0))\cdot H(0)+L(0)\le0.
+\]
+If $W_0$ is nonconstant, the first branch yields a bounded centered public
+state score with expected deviation drift at least $c't^m$.  If $W_0$ is
+constant, then $D\equiv0$.
+\end{proposition}
+
+\begin{proof}
+Writing $A=r-p$ reduces the inequality to
+\[
+ (1-t^q)D(t)+t^qB(t)\le0,
+ \qquad
+ B(t)=g(t)+(1-t^q)A(t)\cdot H(t).
+\]
+If $D=d_mt^m+O(t^{m+1})$ with $m<q$, division by $t^m$ and passage to the
+limit gives $d_m\le0$, hence $d_m<0$.  The quantitative bound follows by
+tail control.  In the other branch analytic divisibility gives $D=t^qL$;
+divide by $t^q$ and pass to the limit.  Centering
+$W_0$ does not change $A\cdot W_0$ because $A\cdot\one=0$, and normalization
+gives the bounded monitor.
+\end{proof}
+
+For finitely many neutral unused actions, simultaneous representation of all
+$L_a(0)$ by one state potential is a finite linear feasibility problem.  Its
+failure has an exact Farkas certificate: a signed combination of action
+transition rows which annihilates every state potential but pairs nontrivially
+with the vector of coefficients.  Importantly, the certificate need not be
+owned by one player; mixed-player obstructions are real.
+
+\subsection{One-dimensional moving-bias minimax}
+
+For a finite analytic family of one-step zero-sum linear programs, the active
+basis and sign pattern stabilize after shrinking the parameter interval.
+Consequently an optimal selector can be chosen analytic and with support at
+most two in the one-dimensional moving-bias problem.  The exact remainder is
+the first nonvanishing determinant (equivalently, reduced-cost) jet of the
+stabilized basis.  This gives a useful local minimax selector and makes all
+cancellation orders finite and computable.  It does not by itself supply
+target delivery or a credible multiplayer punishment.
+
+\subsection{Saturated Puiseux rank}
+
+For a finite family of convergent Laurent--Puiseux series, saturation by the
+common value group produces a finite lexicographic obstruction rank: leading
+valuation, active support dimension, and the first nonzero oriented
+coefficient.  Rank comparison stabilizes effectively from coefficient-tail
+bounds.  Saturation alone forgets positivity, however; strategic descent
+requires a nonnegative occupation cone, not merely the linear span of leading
+jets.
+
+\section{Multiscale occupation of analytic Markov kernels}
+
+The following theorem isolates the probabilistic content of a moving analytic
+kernel.  It is useful both for block constructions and for diagnosing what
+the germ does \emph{not} imply.
+
+Let $K(t)$ be an $N\times N$ stochastic matrix analytic at $0$.  After
+shrinking the interval, its punctured support graph is fixed.  Let
+$C_1,\dots,C_m$ be its closed strongly connected components, let $\pi_j(t)$
+be the stationary law on $C_j$, and let $\alpha_j(\mu,t)$ be the probability
+of eventual absorption in $C_j$ from initial law $\mu$.
+
+\begin{theorem}[Analytic Markov occupation decomposition; \proved]
+\label{thm:analytic-markov}
+The functions $\pi_j(t)$ and $\alpha_j(\mu,t)$ extend analytically to
+$t=0$.  If $\Pi(t)$ is the Ces\`aro projection and
+\[
+ G(t)=(I-K(t)+\Pi(t))^{-1}(I-\Pi(t)),
+\]
+then $G$ is meromorphic with a pole of finite order $p$.  For every bounded
+$f:S\to\RR$, every initial law $\mu$, and every integer $L\ge1$,
+\[
+ \sum_{n<L}\mu K(t)^nf
+ =L\sum_{j=1}^m\alpha_j(\mu,t)\,\pi_j(t)f+R_L(t),
+ \qquad |R_L(t)|\le 2\|f\|_\infty C t^{-p}.
+\]
+If every positive transition has vanishing order at most $q$, one may take
+the safe bound $p\le Nq$; a sharper bound is obtained from the maximal order
+of a directed forest used in the relevant matrix-tree formulas.
+\end{theorem}
+
+\begin{proof}
+The Markov-chain tree theorem writes every recurrent stationary coordinate as
+a quotient of finite sums of positive analytic monomials.  Extracting the
+minimal common order removes the apparent pole; boundedness makes it
+removable.  The same argument, or Cramer's rule for the transient absorption
+system, treats $\alpha_j$.  The inverse defining $G$ is meromorphic by the
+adjugate formula.  Finally,
+\[
+ \sum_{n<L}K^nf=L\Pi f+(I-K^L)Gf,
+\]
+because $(I-K)G=I-\Pi$ and $K\Pi=\Pi$.  Uniformity in $\mu$ and $L$ follows
+from stochastic contraction and the pole bound.
+\end{proof}
+
+\begin{remark}
+The estimate separates the mixing debt $O(t^{-p})$ from the stationary
+mean.  A block of length $L\gg t^{-p}$ samples the latter.  It does not say
+that a single calendar realizes the discounted endpoint: when transitions
+between recurrent classes have probability of order $\lambda$, those fluxes
+are visible on the discounted time scale $1/\lambda$ even though they vanish
+in the endpoint kernel.
+\end{remark}
+
+\subsection{The Abel endpoint and the limits of one global calendar}
+
+The global-calendar question has a negative answer.  Its resolution also
+gives a useful exact formula for the singular Abel endpoint.
+
+This subsection assumes that the transition family is analytic in the
+normalized discount $\lambda$ itself.  The general germ of
+Theorem~\ref{thm:germ} is only analytic in a parameter $t$ and may satisfy
+$\lambda(t)\asymp t^d$.  A transition of order $t^a$ is then faster than,
+critical with, or slower than the discount scale according as
+$a<d$, $a=d$, or $a>d$.  Formula (5.1) is therefore the one-scale
+specialization of the coupled-scale reduction stated below.  Faster classes
+must first be quotiented, a generator is retained when its scale matches
+killing, and slower irreversible leakage is discarded by the Abel resolvent
+but retained as a separate feedback hazard.
+
+Put $P_0=P(0)$.  Let $C_1,\dots,C_m$ be its recurrent classes.  Write
+$H_{xi}$ for the probability, under $P_0$, of eventual absorption in $C_i$,
+and let row $i$ of $J$ be the stationary law of $P_0$ on $C_i$.  Then
+\[
+ P_0H=H,\qquad JP_0=J,\qquad JH=I_m,\qquad \Pi_0=HJ.
+\]
+Set
+\[
+ P_1=P'(0),\qquad A=JP_1H,\qquad g=Jr(0).
+\]
+The matrix $A$ is a continuous-time Markov generator: its off-diagonal
+entries are nonnegative and $A\one=0$.
+
+\begin{theorem}[Reduced Abel endpoint and schedule reduction; \proved]
+\label{thm:abel-schedule}
+For every finite analytic family $P(\lambda),r(\lambda)$,
+\[
+ \lim_{\lambda\downarrow0}
+ \lambda\bigl(I-(1-\lambda)P(\lambda)\bigr)^{-1}r(\lambda)
+ =H(I_m-A)^{-1}g.                                \tag{5.1}
+\]
+Thus existence of the Abel endpoint is automatic.
+
+Let $\alpha_t>0$ be any nonincreasing parameter sequence tending to zero,
+including the flattening of an arbitrary positive-parameter block schedule,
+and put
+\[
+ Q_0=I,\qquad Q_{t+1}=Q_tP(\alpha_t),\qquad
+ K_N=\frac1N\sum_{t<N}Q_tH.
+\]
+Then
+\[
+ \frac1N\sum_{t<N}Q_tr(\alpha_t)-K_Ng\longrightarrow0.      \tag{5.2}
+\]
+Consequently the schedule realizes the Abel endpoint at every horizon and
+from every initial state if and only if
+\[
+ \bigl(K_N-H(I_m-A)^{-1}\bigr)g\longrightarrow0.             \tag{5.3}
+\]
+Restarting the block clock adds no condition: row-uniform convergence in
+(5.3) supplies the same modulus from every restarted state.
+\end{theorem}
+
+\begin{proof}
+The discounted resolvent identity is
+\[
+ [I-(1-\lambda)P(\lambda)]V(\lambda)=\lambda r(\lambda).
+\]
+Every subsequential limit $w$ is $P_0$-harmonic, so $w=Hu$.  Multiplication
+by $J/\lambda$ and passage to the limit gives
+$(I_m-A)u=g$.  Since $A$ is a Markov generator, $I_m-A$ is invertible, proving
+(5.1).
+
+For (5.2), take the unique $\psi$ satisfying
+\[
+ (I-P_0)\psi=r(0)-Hg,\qquad J\psi=0.
+\]
+Then
+\begin{align*}
+ Q_t(r(0)-Hg)
+ &=(Q_t-Q_{t+1})\psi
+   +Q_t(P(\alpha_t)-P_0)\psi .
+\end{align*}
+The first term telescopes.  The Ces\`aro means of the second term and of
+$Q_t(r(\alpha_t)-r(0))$ vanish because $\alpha_t\to0$.  This proves (5.2),
+and (5.3) follows from (5.1).
+\end{proof}
+
+Condition (5.3) is an exact finite-dimensional \emph{trajectory reduction},
+not a static decidability criterion: it still asks whether one ordered
+nonhomogeneous Markov trajectory reaches a prescribed Ces\`aro class kernel.
+
+\subsection{Canonical coupled-scale reduction and feedback boundary}
+
+Put
+\[
+ Q(t)=P(t)-I,
+ \qquad
+ \gamma(t)=\frac{\lambda(t)}{1-\lambda(t)}
+            =ct^d+o(t^d),\qquad c>0.
+\]
+Then the normalized discounted kernel is
+\[
+ \gamma(t)\bigl(\gamma(t)I-Q(t)\bigr)^{-1}.
+\]
+For a finite generator $G$, let $H_G$ be its absorption map into closed
+recurrent classes, $J_G$ the matrix of their stationary laws, and
+$\Pi_G=H_GJ_G$.  If an analytic generator germ $A(t)$ satisfies $A(0)=G$,
+there is a uniquely normalized analytic invariant graph
+\[
+ U(t)=H_G+W(t),\qquad J_GW(t)=0,\qquad
+ A(t)U(t)=U(t)B(t),\qquad B(t)=J_GA(t)U(t).
+\]
+This removes transient directions and records mediated excursions.  For
+example, if $A(t)=G+tA_1+t^2A_2+\cdots$, then
+\[
+ B_1=J_GA_1H_G,\qquad
+ B_2=J_GA_2H_G-J_GA_1G^\#A_1H_G.
+\]
+
+Iterate this reduction.  At a level whose physical generator is
+$t^\alpha A(t)$, quotient the recurrent classes of $A(0)$.  If the first
+nonzero reduced term has order $\beta<d-\alpha$, it is faster than killing
+and becomes the next generator at physical order $\alpha+\beta$.  If
+$\beta=d-\alpha$, retain its leading generator $\Gamma$ without a further
+quotient.  If no term occurs through that order, set $\Gamma=0$.  Let
+$\mathcal H$ and $\mathcal J$ be the products of the absorption and stationary
+maps over the faster levels.
+
+\begin{theorem}[Coupled-scale Abel reduction; \proved]
+\label{thm:multiscale-abel}
+The iteration terminates after at most $|S|-1$ nontrivial faster-than-killing
+quotients, followed by at most one critical solve, and
+\[
+ \lim_{t\downarrow0}
+ \lambda(t)\bigl(I-(1-\lambda(t))P(t)\bigr)^{-1}r(t)
+ =\mathcal H\,c(cI-\Gamma)^{-1}\mathcal J r(0).       \tag{5.5}
+\]
+The hierarchy and the physical limit are invariant, up to relabeling, under
+analytic reparameterization $t=au^q+O(u^{q+1})$.  For effectively represented
+rational or real-algebraic germs, all coefficients needed through the killing
+order are obtained by finite exact linear algebra.
+\end{theorem}
+
+The same analysis separates Abel computation from feedback attainability.
+Let $A=[0,t_0)$ be the available parameter rows.  For an initial state $x$ and
+target $z$, consider finite nonnegative measures $\mu_s,\eta_s$ on $A$
+satisfying
+\begin{align*}
+ \mu_y(A)&=\sum_s\int_A P(t)(s,y)\,d\mu_s(t),\\
+ \mathbf 1_{\{y=x\}}+\sum_s\int_A P(t)(s,y)\,d\eta_s(t)
+   &=\eta_y(A)+\mu_y(A),\\
+ \sum_s\int_A r(t)(s)\,d\mu_s(t)&=z.                 \tag{5.6}
+\end{align*}
+The first line is recurrent balance; the second is transient entrance flow.
+
+\begin{theorem}[Finite-mode feedback realization; \proved]
+\label{thm:feedback-flux}
+A fresh-public-randomized finite-mode feedback policy realizes $z$ from $x$
+in expected Ces\`aro average if and only if (5.6) is feasible.  Two modes---a
+transient entrance mode and a recurrent mode---suffice.  A certificate may be
+chosen atomic with support bounded linearly in $|S|$ and the reward dimension.
+
+For any specified deterministic or randomized finite-mode architecture, exact
+realization is equivalently tested by the absorption/stationary projection of
+its finite augmented Markov chain.  Unrestricted deterministic feedback is
+not captured by the closure of (5.6): its entrance problem is nonconvex and
+can be expressed by an inverse-limit viability recursion over actual rows.
+\end{theorem}
+
+The fresh public randomization in this theorem is a resource of the controlled
+Markov formulation, not a free device in the base stochastic game.  A game
+theoretic application must synthesize and protect it or use the deterministic
+viability route.
+
+\begin{example}[Zero-defect irreversible leak]
+\label{ex:abel-leak}
+Let
+\[
+ P(\lambda)=
+ \begin{pmatrix}1-\lambda^2&\lambda^2\\0&1\end{pmatrix},
+ \qquad r=(0,1)^\mathsf T.
+\]
+The Abel endpoint is $v=(0,1)^\mathsf T=\Pi_0r$, so its defect is zero.
+Nevertheless every schedule with $\alpha_0>0$ creates a permanent positive
+probability of absorption in the rewarding state.  Starting from the first
+state, if
+\[
+ q_t=\prod_{s<t}(1-\alpha_s^2),
+\]
+then the expected Ces\`aro reward converges to $1-q_\infty>0$, rather than
+$v_1=0$.  No positive-parameter schedule realizes the endpoint.  If the
+architecture permits permanent entry into the exact endpoint mode
+$\lambda=0$, this particular obstruction disappears.
+\end{example}
+
+\begin{example}[Slower leakage and nonclosed exact attainment]
+\label{ex:multiscale-nonclosed}
+Let $S=\{0,1,2\}$, $\lambda(t)=t$, $r(s)=e_s\in\RR^3$, and
+\[
+ P(t)=
+ \begin{pmatrix}
+ 1-t-t^2&t&t^2\\
+ 0&1&0\\
+ 0&0&1
+ \end{pmatrix}.
+\]
+The order-$t$ critical generator sends $0$ to $1$ and discards the slower
+order-$t^2$ transition to $2$.  Hence the Abel target from $0$ is
+\[
+ z=(1/2,1/2,0).
+\]
+No deterministic or publicly randomized feedback policy realizes $z$
+exactly.  Since $2$ is absorbing, the zero third coordinate forces zero
+probability of ever entering $2$; therefore every reachable action at state
+$0$ must use $t=0$, which makes entry into state $1$ impossible.
+
+Nevertheless $z$ is approximable.  Use $t=\varepsilon$ for $L$ attempts at
+state $0$ and then use $t=0$.  With
+$q_\varepsilon=1-\varepsilon-\varepsilon^2$, the limiting occupation is
+\[
+ \left(q_\varepsilon^L,
+ \frac{1-q_\varepsilon^L}{1+\varepsilon},
+ \frac{\varepsilon(1-q_\varepsilon^L)}{1+\varepsilon}\right).
+\]
+Choosing $L=L(\varepsilon)$ so that
+$q_\varepsilon^{L(\varepsilon)}\to1/2$ makes these vectors converge to $z$.
+Thus exact feedback attainment is nonclosed.  This distinction is crucial for
+uniform equilibrium: its profile may depend on the requested accuracy, so an
+all-accuracy constructive target correspondence may contain limits which no
+single policy realizes exactly.  Closure alone is still insufficient unless
+the horizon and unilateral-deviation estimates are carried with the
+approximation.
+\end{example}
+
+\begin{example}[Coordinatewise realization without a common calendar]
+\label{ex:abel-vector}
+Take two disjoint one-way chains with hazards $\lambda$ and $2\lambda$, and
+two reward coordinates recording absorption in the corresponding chains.
+The Abel target survival probabilities are $1/2$ and $1/3$.  A common
+schedule would require
+\[
+ \prod_t(1-\alpha_t)=\frac12,\qquad
+ \prod_t(1-2\alpha_t)=\frac13.
+\]
+But for every $0<x<1/2$,
+\[
+ -\log(1-2x)>2[-\log(1-x)],
+\]
+which would force $\log3>2\log2=\log4$.  Each coordinate separately is
+realizable by assigning the appropriate total log hazard, but no global
+scalar calendar realizes both.  State- or context-local clocks evade this
+particular incompatibility because the two components are publicly
+distinguishable.
+\end{example}
+
+For a scalar one-way hazard
+$h(\lambda)=c\lambda^k+o(\lambda^k)$, the resulting trichotomy is sharp.
+If $k=1$, the Abel target is realized by total log hazard $\log(1+c)$.
+If $k>1$, the Abel target remains in the nonabsorbing class, but every positive
+first parameter creates an irreversible delivery error.  A nonvanishing
+endpoint hazard instead gives absorption with probability one.
+
+The defect itself always has the finite flux representation
+\[
+ v-\Pi_0r(0)
+ =H\bigl[(I-A)^{-1}-I\bigr]g
+ =HA(I-A)^{-1}g.                                  \tag{5.4}
+\]
+Only order-$\lambda$ interclass transitions enter (5.4).  Example
+\ref{ex:abel-leak} shows that higher-order leakage can still obstruct a
+positive-parameter schedule, while Example~\ref{ex:abel-vector} shows that
+the first-order fluxes need not be jointly implementable by one calendar.
+
+The remaining pure Markov problem is therefore narrower: allow a public
+finite-state controller to choose the parameter from the current state and
+mode, including permanent use of $\lambda=0$, and characterize restartable
+realization.  The strategically relevant extension must additionally preserve
+one-controller Bellman caps against arbitrary history-dependent deviations.
+
+\section{Occupation harmlessness and direct strategic closure}
+
+One of the most useful new results is a closure route that does not try to
+purify a mixed analytic obstruction.  It asks instead whether every unilateral
+occupation is harmless.  This is the correct acceptance test for examples in
+which a mixed-player circulation represents a joint improvement that no
+single player can implement.
+
+Let $X$ be a finite augmented public state space carrying every finite mode of
+a fixed public profile $\sigma$.  Against $\sigma_{-i}$, player $i$ controls a
+finite Markov system with actions $A_i(x)$, kernel $P_i(\cdot\mid x,a)$, and a
+bounded bookkeeping reward $\rho_i(x,a)$.  Let $\mathcal O_i$ be the polytope
+of invariant state--action occupations supported on the part of the arena
+reachable by some unilateral strategy from the declared entry.
+
+\begin{theorem}[Direct closure by global unilateral harmlessness; \proved]
+\label{thm:direct-closure}
+Assume, for every $i$,
+\[
+ \gamma_i:=\max_{\eta\in\mathcal O_i}
+       \sum_{x,a}\eta(x,a)\rho_i(x,a)\le0.                 \tag{6.1}
+\]
+Assume further that a bounded $L_i:X\to\RR$ and a deterministic
+$r_i(n)=o(n)$ compile actual target-relative payoffs into bookkeeping rewards:
+for every reachable history ending at $x$, every continuation deviation, and
+every $n$,
+\begin{align*}
+ \EE_h\sum_{t<n}(g_i(t)-v_i)
+ \le{}&\EE_h\sum_{t<n}\rho_i(X_t,A_t)
+       +L_i(x)-\EE_hL_i(X_n)+r_i(n).             \tag{6.2}
+\end{align*}
+Finally suppose prescribed play delivers $v$,
+\[
+ \max_i\left|\EE_\sigma\sum_{t<n}(g_i(t)-v_i)\right|=o(n). \tag{6.3}
+\]
+Then, for each player separately, there is a bounded potential $h_i$ such
+that every randomized history-dependent unilateral deviation satisfies
+\[
+ \EE_h\sum_{t<n}(g_i(t)-v_i)
+ \le \osc(L_i+h_i)+r_i(n).                       \tag{6.4}
+\]
+Thus the one fixed profile $\sigma$ is a uniform equilibrium profile with
+payoff $v$.  No potential common to the players is required.
+\end{theorem}
+
+\begin{proof}
+The dual of the finite global average-reward occupation LP is
+\[
+ \min_{\theta,h}\ \theta
+ \quad\text{subject to}\quad
+ \rho_i(x,a)+\sum_yP_i(y\mid x,a)h(y)-h(x)\le\theta
+\]
+on every reachable row.  This is not a unichain reduction: the primal ranges
+over every normalized invariant occupation in the whole unilateral-reachable
+arena, including every recurrent class.  Its single scalar $\theta$ is the
+maximum gain over all those classes.  Finite-dimensional LP duality and (6.1)
+therefore give a bounded $h_i$ with the right side at most zero even in the
+multichain case.  Under an arbitrary behavior deviation, condition
+on the complete history.  Its randomized action is a convex combination of
+legal rows, hence
+\[
+ \EE[\rho_i(X_t,A_t)+h_i(X_{t+1})-h_i(X_t)\mid\mathcal F_t]\le0.
+\]
+Sum and take expectations to bound the bookkeeping reward by
+$h_i(x)-\EE h_i(X_n)$.  Insert this in (6.2) and combine the two endpoint
+terms to obtain (6.4).  The argument is uniform over all history dependence
+and private randomization.  Equation (6.3) supplies the distinct delivery
+half of uniform equilibrium.
+\end{proof}
+
+Three qualifications are essential.  First, harmlessness on only a selected
+analytic support is insufficient: a deviator may reach another recurrent
+class.  Second, the occupation LP supplies the potential inequality but not
+the payoff compilation (6.2).  Third, no incentive inequality implies
+prescribed delivery (6.3).
+
+\subsection{The discounted endpoint need not be a uniform target}
+\label{sec:sorin-target}
+
+The endpoint defect is not merely that the limiting stationary profile may
+fail to deliver its own limiting discounted payoff.  The payoff itself may be
+impossible as a uniform-equilibrium target.  Sorin's two-player example
+\cite{Sorin1986} has one nonabsorbing state and the payoff table
+\[
+\begin{array}{c|cc}
+ &L&R\\ \hline
+T&(0,2)^*&(1,0)^*\\
+B&(1,0)&(0,1).
+\end{array}
+\tag{6.5}
+\]
+A star means absorption with the displayed payoff forever; after either bottom
+entry the state remains nonabsorbing.  Under normalized $\lambda$-discounting,
+put
+\[
+ p_\lambda=\Pr_1(T)=\frac{\lambda}{2+\lambda},
+ \qquad
+ q_\lambda=\Pr_2(L)=\frac12.
+\tag{6.6}
+\]
+Against $q_\lambda$, player 1 obtains $1/2$ from either row.  For player 2,
+the difference between $L$ and $R$ is
+\[
+ 2p_\lambda-(1-p_\lambda)\lambda=0,
+\]
+and the common continuation payoff is $2/3$.  Hence this is a stationary Nash
+equilibrium with payoff
+\[
+ V^\lambda=\left(\frac12,\frac23\right)
+\tag{6.7}
+\]
+for every $\lambda>0$.  The germ is rational and analytic at $\lambda=0$.
+
+Nevertheless, the uniform-equilibrium payoff set of (6.5) is
+\[
+ \mathcal E_{\rm unif}
+ =\left\{\bigl(\alpha,2(1-\alpha)\bigr):
+          \frac12\le\alpha\le\frac23\right\}
+\tag{6.8}
+\]
+\cite{Sorin1986}.  Every point in this segment satisfies
+$2w_1+w_2=2$, whereas the discounted endpoint satisfies
+\[
+ 2\left(\frac12\right)+\frac23=\frac53.
+\tag{6.9}
+\]
+The separation is therefore from the entire uniform payoff set, not only from
+the payoff generated by the endpoint stationary profile.
+
+The same exclusion survives a commonly observed public randomization device.
+Let $\theta$ be the first time player 1 uses $T$.  The standard survival
+argument forces $\Pr(\theta=\infty)\to0$ along public-randomized uniform
+$\eta$-equilibria as $\eta\downarrow0$: conditional on sufficiently late
+survival, continued nonabsorption yields total payoff at most approximately
+$1$, while the two uniform minmax guarantees sum to $1/2+2/3=7/6$.
+Public signals are part of the conditioning history and are available to the
+deviator.  On every path with $\theta<\infty$, the Ces\`aro average of
+$2g_1+g_2$ converges to $2$.  Thus public correlation cannot produce the
+endpoint (6.7).
+
+The analytic mechanism is transparent.  Since
+$p_\lambda\sim\lambda/2$, the normalized discounted mass before absorption is
+\[
+ \frac{\lambda}
+ {1-(1-\lambda)(1-p_\lambda)}
+ =\frac{2+\lambda}{3}\longrightarrow\frac23.
+\tag{6.10}
+\]
+The expected nonabsorbing payoff at the endpoint mode is
+$(1/2,1/2)$ and the expected absorbing payoff conditional on absorption is
+$(1/2,1)$.  Consequently the discounted endpoint is the Abel mixture
+\[
+ \frac23\left(\frac12,\frac12\right)
+ +\frac13\left(\frac12,1\right)
+ =\left(\frac12,\frac23\right).
+\tag{6.11}
+\]
+A horizon-free uniform equilibrium cannot retain the positive preabsorption
+occupation fraction appearing in this mixture.  The scalar gap $1/3$ in
+(6.9) cannot be hidden in a sublinear potential or account.
+
+This example separates two obligations which must not be conflated:
+\emph{root target selection} may have to replace the analytic endpoint by a
+different payoff, while \emph{internal target transport} must preserve the
+complete vector once a recursive node has declared its target.  By contrast,
+if actions do not affect the transition matrix, the fixed occupation law and
+the classical Abel--Ces\`aro theorem do force endpoint delivery.
+
+\section{Circulations, ownership, and separator compression}
+
+\subsection{Public contextual separators}
+
+Let $E$ be the edges of a finite directed public graph and let
+$z:E\to\RR$ be a bounded transition score.  The following equivalence is the
+finite graph form of ``compressing a contextual monitor to one potential.''
+
+\begin{theorem}[Cycle--potential alternative; \proved]
+\label{thm:cycle-potential}
+The following are equivalent:
+\begin{enumerate}[label=(\roman*)]
+\item $\sum_e m(e)z(e)\le0$ for every nonnegative circulation $m$;
+\item the sum of $z$ on every directed cycle is nonpositive;
+\item there exists $h$ on vertices such that
+      $z(x,y)+h(y)-h(x)\le0$ on every edge.
+\end{enumerate}
+If the system is rational, feasibility and failure have rational
+primal--dual LP certificates of polynomial encoding size.
+\end{theorem}
+
+\begin{proof}
+Every nonnegative circulation is a nonnegative combination of directed
+cycles, so (ii) implies (i); a cycle incidence vector gives the converse.
+The equivalence with (iii) is the difference-constraints theorem, or linear
+programming duality.  Telescoping proves directly that (iii) implies (ii).
+\end{proof}
+
+The same theorem holds for a legal row correspondence
+$\mathcal K(r)\subseteq\Delta(R)$.  A stationary legal edge occupation
+$\ell$ satisfies flow balance and the perspective constraint
+$\ell(r,\cdot)\in m(r)\mathcal K(r)$.  A public edge occupation $a$ admits a
+strict stationary separator precisely when it lies outside this polytope:
+there are $z,h$ with
+\[
+ \sup_{k\in\mathcal K(r)}
+ \sum_{r'}k(r')\bigl[z(r,r')+h(r')-h(r)\bigr]\le0,
+ \qquad \langle a,z\rangle>0.                   \tag{7.1}
+\]
+This is ordinary finite-dimensional separation plus the dual of the legal
+occupation LP.
+
+\subsection{Colored circulation}
+
+Suppose every charged edge or row is assigned an owner.  Let $C$ be the cone
+of nonnegative circulations and $C_i$ the subcone generated by circulations
+using only edges owned by player $i$.
+
+\begin{theorem}[Owner-pure decomposition criterion; \proved]
+\label{thm:colored-circulation}
+Every nonnegative circulation decomposes as a sum of owner-pure circulations,
+\[
+ C=\sum_i C_i,
+\]
+if and only if every directed cycle in the positive support graph is
+monochromatic.  Equivalently, $C$ is generated by owner-pure extreme rays.
+When the condition fails, a mixed-color simple cycle is a finite certificate.
+\end{theorem}
+
+The theorem is elementary but strategically decisive.  Playerwise feasibility
+does not imply that a mixed-player separator can be assigned to one deviator.
+A finite public cover cannot repair this defect unless it changes the graph:
+an owner-purifying cover exists exactly when every lifted simple cycle is
+monochromatic.  Thus ``choose an owner later'' is not a legitimate general
+step.
+
+\subsection{The mixed-owner holonomy example}
+
+Consider two states $x,y$ alternating deterministically.  At $x$, player 1
+chooses $0$ or $1$, with payoffs
+\[
+ g(x,0)=(1,-1),\qquad g(x,1)=(1,1),
+\]
+and at $y$, player 2 chooses,
+\[
+ g(y,0)=(-1,1),\qquad g(y,1)=(1,1).
+\]
+Take action $0$ at both states.  The normalized discounted values are
+\[
+ V^\lambda(x)=\frac{\lambda}{2-\lambda}(1,-1),\qquad
+ V^\lambda(y)=\frac{\lambda}{2-\lambda}(-1,1),
+\]
+so the endpoint target is $v=0$.  Both unused owner rows are exact Bellman
+equalities.  Half of each row forms a positive mixed-owner circulation with
+zero first pairing, but scheduling it produces payoff $(1,1)$ rather than
+$0$.  Every owner-pure occupation is target-neutral, no owner-pure positive
+subray exists, and a common nonnegative bridge would require
+\[
+ \alpha_1+H(y)-H(x)\le0,\qquad
+ \alpha_2+H(x)-H(y)\le0,
+\]
+which contradicts $\alpha_1,\alpha_2>0$.
+
+The prescribed profile nevertheless closes the target directly: neither
+player can improve his own coordinate.  This example simultaneously proves
+that four natural routes---purify the circulation, schedule it, store it in a
+common account, or descend to a proper child---are not exhaustive.  The
+missing fifth route is precisely Theorem~\ref{thm:direct-closure}.
+
+\subsection{Whole-target separation}
+
+For a finite set of legal terminal or recurrent children with payoff set
+$E\subset\RR^I$, exact target matching has the clean convex alternative
+\[
+ v\in\overline{\co E}
+ \quad\text{or}\quad
+ \exists\ell\in(\RR^I)^*:
+ \ell(v)>\sup_{w\in E}\ell(w).                  \tag{7.2}
+\]
+At fixed finite depth, $E$ is compact semialgebraic; over unbounded depths it
+may be a nonclosed union, hence closure is necessary.  A separator $\ell$ is
+not generally a coordinate functional and need not be owned by one player.
+Any theorem that converts (7.2) to a punishment must therefore add an
+\emph{owner-custody} or unilateral-realizability hypothesis.
+
+A canonical whole-target separation theorem has been proved under explicit
+finite realization, exact scalarized lifting, face closure, and circulation
+purification assumptions.  It outputs one of: a coordinate certificate, an
+owner defect, a strict face, an owner-realizable charged circulation, or an
+omitted child.  Each assumption has a small counterexample if removed.  The
+theorem is useful as a typed router; its hypotheses are not consequences of a
+generic Bellman germ.
+
+\section{Causal transport and public factorization}
+
+The distinction between ordinary coupling of complete paths and causal
+coupling of transition noises is a recurring source of false arguments.
+It can be stated exactly.
+
+Let $X$ be a Markov chain on $S$ with kernel $Q$, let
+$Z_t=\pi(X_t)\in R$, and let $Y$ be a legal public chain with one stationary
+selector $K$, chosen once for the whole path.  For a coupling $\Gamma$, define
+the public pair occupation
+\[
+ M_T^\Gamma(r,r')=
+ \sum_{t<T}\Gamma\{Z_{t+1}=r,\,Y_{t+1}=r'\}.
+\]
+Let $\mathfrak B_T$ be the convex hull of occupations induced by legal
+bicausal couplings, and $\mathfrak O_T$ the convex hull induced by arbitrary
+couplings of the two complete path laws, allowing legal $K$ in both cases.
+
+\begin{theorem}[Exact occupation rectangularity; \proved]
+\label{thm:occupation-rect}
+For fixed horizon and initial marginals,
+\[
+ D_T(c)=\widetilde D_T(c)
+ \quad\text{for every }c:R\times R\to[0,1]
+\]
+if and only if
+\[
+ \mathfrak B_T=\mathfrak O_T.                   \tag{8.1}
+\]
+Only the summed one-time pair marginals occur because the same additive cost
+is used at every time.
+\end{theorem}
+
+\begin{proof}
+Both values are lower support functions of the displayed compact convex sets.
+Every occupation has total mass $T$.  Equality for costs in $[0,1]$ therefore
+implies equality for every real linear direction by affine rescaling.
+Compact convex sets are determined by their support functions.
+\end{proof}
+
+There is a stronger local sufficient condition.  For a current joint law
+$\rho$ of $(X,Y)$, let $\mathsf E^{\rm o}_{Q,K}(\rho)$ be the possible laws of
+$(X',Y')$ under arbitrary four-variable couplings having the correct
+$(X,X')$ and $(Y,Y')$ marginals.  Let $\mathsf E^{\rm b}_{Q,K}(\rho)$ require,
+in addition, a rowwise kernel
+\[
+ H(x,y,x',y')=\rho(x,y)L_{x,y}(x',y'),
+ \qquad L_{x,y}\in\Pi(Q(x),K(y)).
+\]
+
+\begin{proposition}[Causal gluing; \proved]
+If $\mathsf E^{\rm o}_{Q,K}(\rho)=\mathsf E^{\rm b}_{Q,K}(\rho)$ for every
+$\rho$ and legal $K$, then every ordinary path coupling can be replaced by a
+legal bicausal coupling with the same law of $(X_t,Y_t)$ at every $t$.
+Consequently ordinary and bicausal values agree for arbitrary time-dependent
+additive costs.  For full-state, one-step tests with fixed $K$, the condition
+is also necessary.
+\end{proposition}
+
+\begin{proof}
+Take the four-time marginal of an ordinary coupling at time $t$.  Its next-pair
+law belongs to $\mathsf E^{\rm o}$.  Replace it by a rowwise coupling in
+$\mathsf E^{\rm b}$ with the same next-pair law and iterate.  The Ionescu--Tulcea
+construction gives the desired causal pair process.
+\end{proof}
+
+Neither lumpability, a preserved fiber posterior, an intertwining
+$\Lambda Q=K\Lambda$, filtration immersion, nor a purely fiberwise coupling
+condition is sufficient.  The smallest full-state example is
+\[
+ Q=K=\begin{pmatrix}0&1\\[1mm]2/3&1/3\end{pmatrix},\qquad
+ \alpha=(2/5,3/5).
+\]
+For $c(i,j)=\one_{\{i=j=1\}}$, the ordinary one-step optimum is the Fr\'echet
+bound $1/5$, whereas the bicausal optimum is $4/15$.  Yet $\pi$ is the
+identity, all fibers are singletons, and the projected law is legal.
+For clarity, contemporaneous transition noises are freely coupled in the
+bicausal problem.  The gap comes from conditioning on the current pair, not
+from independent innovations.  If the initial coupling has
+$\rho_{00}=a$, then
+\[
+ \rho_{01}=\rho_{10}=2/5-a,\qquad \rho_{11}=1/5+a,
+\]
+and the rowwise Fr\'echet minima are respectively
+$1,1/3,1/3,0$.  Hence the bicausal value is
+\[
+ \min_{0\le a\le2/5}
+ \left(a+\frac13(4/5-2a)\right)=\frac4{15}.
+\]
+An arbitrary complete-path coupling instead chooses the terminal pair
+directly and attains terminal mass $1/5$ at $(1,1)$.
+
+Intertwining can even coexist with a linear mismatch gap.  Let
+$S=\{a_0,a_1,b\}$, $R=\{A,B\}$, with $a_0,a_1\mapsto A$ and $b\mapsto B$, and
+\[
+ Q=\begin{array}{c|ccc}
+     &a_0&a_1&b\\ \hline
+ a_0&1/2&1/2&0\\
+ a_1&0&0&1\\
+ b&1/2&1/2&0
+ \end{array},\qquad
+ K(A)=(1/2,1/2),\quad K(B)=(1,0).
+\]
+With $\Lambda(A)=\tfrac12(\delta_{a_0}+\delta_{a_1})$ and
+$\Lambda(B)=\delta_b$, one has $\Lambda Q=K\Lambda$.  At the stationary
+posterior the projected complete path is exactly legal, so ordinary mismatch
+cost is zero.  Bicausally, whenever $X_t=a_1$ the next public state is $B$,
+while a shadow at $A$ must split evenly; stationarity gives mismatch at least
+$T/6$.
+
+\subsection{Exact Bellman factorization}
+
+Put $p_s=\pi_*Q(s)$.  If a continuation is public, the bicausal Bellman step
+at posterior $\beta$ and public state $y$ is
+\[
+ \mathcal T_{K,c}h(\beta,y)
+ =\sum_s\beta(s)W_{d_h}(p_s,K(y)),\qquad
+ d_h(r,y')=c(r,y')+h(y').                       \tag{8.2}
+\]
+It follows immediately that universal public factorization is much stronger
+than lumpability.
+
+\begin{theorem}[Universal public factorization; \proved]
+The operator (8.2) is independent of the posterior for every cost,
+continuation, legal row, public state, and initial belief if and only if
+\[
+ \pi_*Q(s)=\pi_*Q(s')\qquad\forall s,s'.         \tag{8.3}
+\]
+For restricted beliefs, exact equivalence is equality, for every legal row
+$k$, of the Minkowski sums
+\[
+ \sum_s\beta(s)\Pi(p_s,k).
+\]
+\end{theorem}
+
+For a hidden Markov public process, finite exact predictive memory exists if
+and only if the reachable posterior set modulo equality of all future public
+word laws is finite.  The minimal number of states is the cardinality of this
+probabilistic Myhill--Nerode quotient.  It can be $2^{\Omega(|S|)}$ and can be
+infinite.  For the bicausal dual, predictive equivalence must be refined to
+equality of all finite-horizon transport signatures.
+
+These transport results align with the modern theory of causal and bicausal
+optimal transport \cite{BackhoffBeiglbockLinZalashko2017,Moulos2021}, but the
+occupation-rectangularity criterion and the hidden-state counterexamples are
+tailored to the uniform-equilibrium obstruction.
+
+\section{Monitoring, accounts, and information rates}
+
+\subsection{Contextual monitoring}
+
+For finitely many predictable public contexts $q$, run one exponential-weights
+forecaster in each context.  If context $q$ occurs $N_q$ times and has action
+set $A_q$, the pathwise regret against the best fixed contextual policy is
+\[
+ O\!\left(\sum_q\sqrt{N_q\log|A_q|}\right).      \tag{9.1}
+\]
+There is no separate context-switch penalty: the clocks are local.  This is a
+standard online-learning fact, but its use here is structural.  A public
+direction can be monitored whenever it is fixed or belongs to a compressible
+finite family; unrestricted opposing directions can cancel and evade a
+single e-process.
+
+Virtual queues give a parallel alternative.  For feasible finite affine
+constraints, projected queue updates yield $O(\sqrt T)$ cumulative violation.
+If infeasible, the normalized queue converges to a Euclidean maximum-margin
+Farkas ray, not in general to a simplex-normalized separator.  Under moving
+Puiseux constraints the necessary error is the queue-weighted variation, not
+the unweighted parameter variation.
+
+\subsection{Linear debt versus quadratic information}
+
+Suppose a deviation is exposed with conditional probability $p_t$ and creates
+linear incentive debt $cp_t$.  If exposure is latent, the statistical
+distance between prescribed and deviating observations may be only
+$O(p_t^2)$.  Hence one may have
+\[
+ \sum_t p_t=\infty,\qquad \sum_t p_t^2<\infty:   \tag{9.2}
+\]
+unbounded incentive debt but finite total Kullback--Leibler information.
+No purely likelihood-based test can generally pay the debt.  If the exposure
+event itself is publicly observed, the information clock becomes linear and
+the obstruction disappears.  This separates detection from credibility:
+even a valid detector does not say which continuation makes deviation
+unprofitable.
+
+\subsection{Uniform energy and finite memory}
+
+Pointwise nonpositive mean on every recurrent class does not by itself give a
+uniform finite-prefix bound over an unbounded configuration space.  On a
+finite graph, absence of a positive cycle gives a scalar potential and a
+bounded pathwise debt; for a finite configuration set the maximal simple
+prefix debt is at most the number of configurations minus one after
+normalization.  Conversely, a universal $o(T)$ bound for a nonnegative cost
+in a finite time-homogeneous system forces every cycle to have zero cost and
+therefore yields a bounded potential.  Thus an apparently softer sublinear
+account is not more general in a fixed finite arena.
+
+An unbounded quantitative ledger can often be quantized using $O(\log T)$
+bits when its magnitude and sensitivity grow polynomially.  This is not a
+theorem from local semialgebraicity alone: even a scalar affine push/pop map
+can encode an arbitrary binary stack.  A finite-memory claim therefore needs
+a contraction, monotonicity, reset, or bounded-distinguishability hypothesis.
+
+\subsection{A universal analytic calendar}
+
+For every fixed finite family of Puiseux error exponents, the calendar
+\[
+ b_k=2^k,\qquad
+ \lambda_k=\exp\!\left(-\frac{k}{\log(k+e)}\right)           \tag{9.3}
+\]
+separates polynomial mixing debts from the block lengths and drives every
+positive Puiseux error to zero.  The same construction works simultaneously
+for finitely many coordinates and contexts when each uses its own local
+clock.  The result schedules an already proved analytic ledger; it does not
+create the ledger, establish delivery, or supply punishment credibility.
+In particular, it cannot undo an irreversible higher-order leak or make
+incompatible reduced-class fluxes implementable by one global calendar.
+
+\section{Finite trees, stopping, and endogenous targets}
+
+Once genuine lower-ranked children are available, much of their composition
+is understood.  The hard part is that a child must contain an actual strategy,
+a full payoff target, a legal entry map, and historywise unilateral bounds.
+
+\subsection{Backward Nash on a public tree}
+
+Consider a finite public tree.  Each nonterminal node carries a finite
+one-shot game whose payoff for a joint action is the expected continuation
+vector at its children; each leaf carries an arbitrary terminal payoff vector.
+
+\begin{theorem}[Finite public terminal Nash system; \leanchecked]
+\label{thm:terminal-nash}
+Backward induction may select a mixed Nash equilibrium at every node.  The
+resulting public behavior profile is subgame perfect on the tree.  For every
+player and every node, the prescribed continuation payoff equals the supremum
+over all unilateral behavior deviations on the remaining tree.  In
+particular, prescribed and worst-unilateral terminal potentials coincide
+exactly, not merely up to an error.
+\end{theorem}
+
+This theorem makes the parent target endogenous: it is the root payoff of the
+backward-Nash system.  If a proof needs a preassigned target $v$, a separate
+target-transport theorem is still required.  Backward induction cannot force
+its root value to equal an externally chosen analytic endpoint.
+
+\begin{theorem}[Fixed-depth child composition; \leanchecked, conditional]
+\label{thm:fixed-depth}
+Suppose every leaf of a finite public selector tree carries an all-accuracy
+adaptive child certificate.  Suppose public suffix rebasing commutes with
+one-step extension, terminal child targets are the continuation payoffs used
+by the backward-Nash system, and the selector has the required target anchors
+and unilateral safety.  Then the spliced parent profile has an adaptive
+certificate.  The finite prefix contributes only a bounded potential charge.
+\end{theorem}
+
+The checked implementation also has approximate-target and ranked-child
+variants.  Their value is compositional: once the leaf data are genuine, no
+new long-run incentive argument is needed at the parent.
+
+\subsection{Randomized recurrent children}
+
+Let a public selection phase stop by time $L$, under prescribed play and
+under every unilateral deviation, and select a publicly observed child $J$.
+Assume child $c$ has target $v^c$ and a continuation which is uniformly
+$\varepsilon$-equilibrium after every rebased entry at which it can be invoked.
+
+\begin{theorem}[Bounded randomized-child composition; \proved]
+\label{thm:random-child}
+If under prescribed selection
+\[
+ \EE[v^J]=v,                                      \tag{10.1}
+\]
+and every unilateral deviation during selection satisfies
+\[
+ \EE[v_i^J]\le v_i+\eta,                         \tag{10.2}
+\]
+then the composite expected Cesàro payoff converges to $v$ and every
+unilateral asymptotic gain is at most $\varepsilon+\eta$.  More precisely, if
+$A_i(n),B_i(n)=o(n)$ are uniform prescribed and deviation moduli for the
+children, then for $N>L$ the additional selector loss is bounded by
+\[
+ \frac{2L+L\max_c|v_i^c|+\max_{N-L\le n\le N}B_i(n)}{N}
+\]
+up to an inessential normalization of the first two constants.  A single
+behavior deviation used before and after the stopping time causes no extra
+loss.
+\end{theorem}
+
+\begin{proof}[Conditioning argument]
+On a terminal selection history $H_\tau=h$ with child $c$, pull the global
+deviator back along the public suffix-rebasing map.  Commutation with one-step
+extension makes the pullback a legal child behavior strategy and identifies
+the conditional continuation law.  If private information survives the
+selector, condition also on that information; after forgetting it one obtains
+a mixture of legal child deviations, and the child inequality is affine.
+The prefix has at most $L$ bounded-payoff terms.  Condition on
+$\mathcal F_\tau$, apply the child modulus to $N-\tau$, average, and use
+(10.1)--(10.2).
+\end{proof}
+
+Root condition (10.2) is sufficient for semantic composition.  A
+historywise public-phase certificate requires the same inequality after every
+public prefix.  If all public information determining $\tau$ and $J$ is
+generated by an action-independent public kernel, the law of $J$ is invariant
+under unilateral deviation and (10.2) holds with $\eta=0$ whenever (10.1)
+does.  Action-independence of only the physical state is not enough if the
+public stopped history records actions.
+
+\subsection{Public stopping and entry debt}
+
+For a public stopping time $\tau$, the continuation of a global behavior
+strategy after the stopped history is again a legal behavior strategy in the
+rebased child.  This yields exact factorization of stopped cylinder laws and
+is checked for bounded stopping.  Unbounded stopping requires three separate
+controls:
+\begin{enumerate}[label=(\roman*)]
+\item the nonentry event;
+\item uniform integrability or a quantitative tail bound for the prefix;
+\item a child modulus uniform over all stopped entry histories.
+\end{enumerate}
+Confusing positive reachability, almost-sure entry, and positive probability
+in every recurrent class leads to invalid proofs.
+
+Let the target $w(h)$ be harmonic on declared recurrent classes, and suppose a
+stopped child gives a two-sided prescribed estimate and a unilateral upper cap
+after every legal entry.  Then the deviation gain from delaying or changing
+entry differs from the explicit target-entry debt by $o(N)$.  This provides a
+precise reduction: the strategic question is whether that entry debt is
+nonpositive or can be charged, not whether optional stopping mysteriously
+preserves the target.
+
+\begin{remark}
+A semantic continuation after a stopping time need not be an adaptive
+certificate.  It is sometimes only a uniform-payoff/deviation-cap witness.
+The compiler must therefore have a distinct semantic-terminal type rather than
+pretending that every semantic leaf carries historywise ledgers.
+\end{remark}
+
+\section{Approachability, regeneration, and account discharge}
+
+\subsection{Moving-bias Markov approachability}
+
+For vector charges in a controlled finite Markov chain, a Blackwell-type
+approachability rule \cite{Blackwell1956} can be combined with a moving Poisson
+bias.  Literal observation of the required vector charge may fail when it
+depends on hidden transition noise.  Under perfect monitoring, freezing the
+bias over blocks and paying the mixing boundary gives a robust
+$O(T^{-1/3})$ rate.  If a common bounded bias is available, or the bias varies
+with a regularity modulus strong enough to make total variation summable, the
+usual $O(T^{-1/2})$ rate is recovered.  Any descent event used in this
+construction must be measurable when the response is selected; an analytic
+classification revealed only after future play is not a causal strategy.
+
+\subsection{Regeneration and support automata}
+
+For a finite family of public kernels, a common open-loop regeneration word
+exists exactly when the induced subset automaton has a word sending every
+possible support into a common singleton or declared regeneration support.
+If it exists, a shortest word has length at most $2^{|S|}-1$.  A feedback
+regeneration policy is strictly more powerful and is characterized by winning
+in the corresponding finite subset game.  Failure of regeneration produces a
+recurrent subset cycle.  It does \emph{not} automatically give analytic rank
+descent, owner purity, or a credible punishment.
+
+\subsection{Path-complete reset accounting}
+
+A quantitative Streett-style account system consists of finitely many modes,
+debts, and reset events.  A necessary condition for uniform closure is that
+every reset used linearly often has a payer whose accumulated credit is also
+linear, while every unpaid reset is used $o(T)$ times.  On a fixed finite
+time-homogeneous graph, this condition reduces to a small-gain/cycle test and
+hence to a bounded scalar potential.  More elaborate path-complete accounts
+are useful only because the public mode, target, or scale changes; those
+changes must themselves have a finite or sublinear budget.
+
+\section{Full support, deflation, and canonical rank}
+
+Support loss is an attractive source of induction, but full support is exactly
+where it stops.  The program uses a lexicographic rank with a harmonic
+coordinate and a support/operational coordinate.
+
+\subsection{Operational deflation}
+
+In an actual analytic full-support branch, let a strict leading drift identify
+columns whose use would incur a positive charge.  Delete those operational
+columns and charge every subsequent use to the leading-drift account.
+
+\begin{theorem}[Full-support operational deflation; \leanchecked]
+\label{thm:deflation}
+Under the checked full-support leading-drift hypotheses, the deleted
+operational set is nonempty, the third component of the lexicographic rank
+strictly decreases, and both the total mass and the realized number of uses of
+deleted columns are sublinear on the analytic calendar.
+\end{theorem}
+
+This is genuine finite progress.  It does not prove that the remaining action
+profile delivers the original whole target, that entry is legal after every
+deviation, or that the response is credible.  These are independent seams.
+
+At full support with zero leading pairing, the average-reward LP yields an
+exact constant $\gamma$ and a bias $h$ satisfying adjusted row inequalities.
+Full support can equalize every used row at a \emph{positive} $\gamma$; neither
+support, valuation, nor graph structure forces terminal closure.  The mixed
+Farkas alternative is also sharp: each player's rows can be separately
+feasible while the joint positive obstruction is genuinely mixed-owner.
+
+\subsection{Canonical strategic nodes}
+
+A recursive node cannot be identified only by the root state and a numerical
+rank.  It must include the legal suffix type, full target, processed harmonic
+span, active support face, owner/account data, and the public rebasing map.
+For a rooted suffix type $u$, define the semantic rank
+\[
+ \operatorname{srank}(u)=\dim(D_u\cap\ker L_u),
+\]
+where $D_u$ is the current neutral-direction space and $L_u$ the complete
+target/occupation constraint map.  Define global rank as the maximum semantic
+rank over \emph{all} reachable rooted suffix types, not merely those reached
+under prescribed play.
+
+\begin{proposition}[Rank invariance under coherent rebasing; \proved]
+If a suffix correspondence is two-sided and total on every reachable object,
+and carries objectwise neutral-space isomorphisms commuting naturally with
+the target maps, then global rank is invariant under rebasing.  A root-only
+correspondence is insufficient: a deviation can reach a suffix with larger
+neutral dimension.
+\end{proposition}
+
+The naturality clauses are not decorative.  Without them an abstract vector
+space isomorphism preserves dimension but not the strategic meaning of
+support deletion, target transport, ownership, or account discharge.
+
+\subsection{The finite processed-data alternative}
+
+For a fixed processed span, finite linear algebra gives one of four outputs:
+a valid ledger in the span, a new independent harmonic direction, a reachable
+class with nonzero mean, or a finite incompatibility certificate.  Harmonic
+data alone do not decide which output is strategically useful.  Target rows,
+public mode, ownership, and legal entry must be included in the processed
+datum.  A rank-decreasing realization theorem has been proved under six
+explicit hypotheses: joint behavior realization, legal entry, complete target
+transport, one-sided deviation ledgers, exact rebasing, and rank-faithful
+closure.  Removing any of these merely moves the conjecture into the premise.
+
+\section{Zero-pairing algebra and its strategic limits}
+
+At a full-support endpoint, repeated vanishing of the first Bellman pairings
+leads to a finite jet-extension problem.  The algebraic part can be stated
+cleanly.
+
+\begin{theorem}[Finite owner-history zero-pairing trichotomy; \proved]
+\label{thm:zero-pairing}
+For finite analytic row, occupation, and target data, iteratively adjoin the
+first nonzero jet not annihilated by the processed constraint space.  At each
+step exactly one of the following occurs:
+\begin{enumerate}[label=(\roman*)]
+\item a first nonzero oriented pairing is exposed;
+\item the neutral space strictly decreases;
+\item every remaining charge is a circulation-coboundary on the stabilized
+      support.
+\end{enumerate}
+The alternatives have finite linear certificates.  There is no bound on the
+first nonzero analytic order depending only on the state and action counts.
+\end{theorem}
+
+A strengthened normalization schema can attach whole-target data, owner
+history, account orientation, a proper face, a typed zero-pair, or an omitted
+child to the corresponding algebraic output.  A verified normalization
+theorem of precisely this form is available as best-effort mathematics.  It
+does not establish that the output is reachable, credible, or recursively
+closing.  In particular, a circulation-coboundary identity is not a strategy.
+
+The most honest full-support alternative currently has typed outputs for
+direct harmless closure, owner-pure response, processed account, proper-face
+child, zero-pairing continuation, and mixed incompatibility.  The alternative
+is exhaustive as finite algebra.  Routing every output to a uniform strategy
+remains open.
+
+\section{Finite schedulers, plateaux, and proof-carrying recursion}
+
+\subsection{Typed finite public scheduling}
+
+Suppose several local realization contexts prescribe compatible-looking
+state--action occupations but use different public modes, owner histories, or
+target rebasings.  A finite scheduler is not merely a convex combination.  It
+is a Markov lift on an expanded public state space whose stationary flow
+projects to every prescribed context and whose reachable recurrent support is
+entered from the designated root.
+
+\begin{theorem}[Fixed-template schedulability; \proved]
+\label{thm:scheduler}
+For a fixed finite public-mode template, exact simultaneous realization is
+equivalent to feasibility of a finite system consisting of:
+\begin{enumerate}[label=(\roman*)]
+\item stochastic row and public-flow equations on the lifted arena;
+\item projection equations for every typed context occupation;
+\item positive reachability, or exact transient-routing flow, from the entry;
+\item totality of every unilateral row visible to a deviator;
+\item target superharmonicity and owner-history balance on the expanded state;
+\item commutation of suffix, target, account, and analytic-data diagrams.
+\end{enumerate}
+For algebraic input, existence is decidable by quantifier elimination.  Every
+linear subfailure has a Farkas or flow certificate.
+\end{theorem}
+
+Public flow balance alone is insufficient, as are separate stationarity in
+each context, convex-hull membership of row laws, owner homogeneity, or
+reachability under a different scheduler.  Mode erasure is especially
+dangerous: a deviator observes the mode and can condition on it.  All
+unilateral occupation tests must be rerun on the expanded state.
+
+There is no bound on the number of required modes depending only on the
+dimension of the occupation vectors.  One-dimensional families can force
+arbitrarily many modes, and an irrational prescribed frequency can rule out an
+exact rational finite scheduler.  A finite mode bound follows under a genuine
+public-resampling hypothesis that regenerates context independently at
+declared times.
+
+\subsection{Canonical plateaux}
+
+Rank need not decrease along every local rewrite.  A finite semantic signature
+may instead produce a strongly connected plateau of mutually rebased nodes.
+The correct progress measure is
+\[
+ \widehat\rho=(\rho,h_{\mathrm{nr}},h_{\mathrm{pl}}),
+\]
+where $\rho$ is the semantic restriction rank, $h_{\mathrm{nr}}$ is the height
+of the neutral-restriction lattice, and $h_{\mathrm{pl}}$ is the condensation
+height of the finite plateau graph.
+
+\begin{theorem}[Coherent plateau alternative; \conditional]
+\label{thm:plateau}
+Assume a finite atlas-complete semantic signature; coherent, invertible suffix
+transport on the semantic quotient; natural target and germ rebasing; a
+realizable common scheduler; and zero owner/account holonomy on a terminal
+plateau strongly connected component.  Then the whole component, treated as
+one object, yields one of:
+\begin{enumerate}[label=(\roman*)]
+\item semantic closure;
+\item a target-calibrated terminal public system;
+\item a completely discharged realized account;
+\item an exit with strictly smaller $\widehat\rho$;
+\item a typed recurrent obstruction.
+\end{enumerate}
+The refined measure is invariant under continuation-complete strategic
+bisimulation, conservative memory covers, exact target rebasing, and coherent
+germ restart.
+\end{theorem}
+
+The hypotheses are the content.  Continuous target families and unbounded
+memory give infinite plateau graphs; mixed-owner holonomy and incompatible
+realization contexts invalidate closure.  The theorem consumes scheduler and
+holonomy certificates; it does not prove them.
+
+\subsection{Effective audit}
+
+A well-founded codomain does not establish that declared child edges decrease
+rank.  Likewise, a finite list of rule names does not establish guard
+exhaustiveness.  An effective audit is possible only relative to a decidable
+or proof-carrying certificate theory.
+
+\begin{theorem}[Effective progress-completeness; \proved, conditional]
+\label{thm:audit}
+Let a local rule registry have effective canonicalization, finitely many
+decidable or proof-carrying guards, an exhaustive guard cover, an eight-gate
+child verifier (strategy, credibility, target, entry, rebasing, account,
+rank, and certificate provenance), grounded terminal rules, and checkable
+strict-rank or plateau contracts.  Then a finite algorithm constructs the
+status-refined obstruction graph, detects every open vertex and every
+unjustified cycle, verifies finite branching, and emits either:
+\begin{enumerate}[label=(\roman*)]
+\item a proof-carrying progress-completeness certificate; or
+\item a finite obstruction identifying the first failed guard, child gate,
+      rank edge, terminal justification, or accuracy quantifier.
+\end{enumerate}
+\end{theorem}
+
+The theorem cannot turn an unrouted obstruction into progress.  A trivial
+self-child passes superficial interface checks and proves why intrinsic rank
+must be audited.  Allowing an arbitrary claimed modulus in a certificate makes
+total audit undecidable by encoding nonhalting; hence the proof-carrying
+restriction is necessary.
+
+\subsection{From recursion to a finite response tree}
+
+\begin{theorem}[Occurrence-sensitive finite unfolding; \proved, conditional]
+\label{thm:unfolding}
+Let every nonterminal occurrence have finitely many children, each carrying a
+proof of strict decrease in a well-founded rank, and let every terminal
+occurrence carry one of the certified terminal types.  Then the path-tagged
+unfolding from a root is finite.  It can be compiled to an explicit finite
+public response tree.  Choosing the desired accuracy before unfolding and
+combining terminal systems by backward Nash and stopped-history rebasing
+produces the root certificate supplied by the local composition theorems.
+\end{theorem}
+
+Canonical nodes and occurrences must be distinguished.  The same canonical
+node may occur with different inherited targets, ledgers, or error budgets;
+merging them is sound only after an explicit coherence proof.  Finite
+branching plus well-founded descent gives finite height by induction, while
+well-foundedness alone does not.  Most importantly, the quantifiers must be
+\[
+ \forall\varepsilon>0\quad
+ \text{construct the entire finite tree and profile}\quad
+ \forall N\ge N_\varepsilon,
+\]
+not a horizon-dependent tree chosen after $N$ is known.
+
+\section{No-go results that delimit the program}
+
+The project has accumulated a collection of counterexamples which are as
+important as the positive lemmas.
+
+\subsection{Credibility is not detection}
+
+A public score with positive drift under a deviating row can identify a
+statistical inconsistency.  It need not produce a continuation that lowers the
+deviator's payoff.  A credible response requires local lower and upper payoff
+inequalities and a deviation-envelope inequality after every response
+history.  When these inequalities and sublinear residual ledgers are supplied,
+a finite enforcement compiler gives an adaptive certificate.  Without them,
+the detector is only evidence.
+
+\subsection{Positive circulation is not target transport}
+
+A positive recurrent circulation can move the entire payoff vector away from
+the endpoint target, as the mixed-owner example in Section~7 shows.  Even an
+owner-pure positive circulation need not preserve all coordinates.  The
+target must be carried as data and checked at every child.  A harmonic
+direction is a separating functional, not a replacement payoff vector.
+
+\subsection{Entry is class-relative}
+
+Positive probability of reaching a set, almost-sure eventual entry, and
+positive stationary mass in every entered recurrent class are inequivalent.
+A global circulation may live entirely in a class which the declared public
+response never reaches.  Exact finite MDP linear programs characterize
+deviation-robust reachability and nonentry for one player; profiles that solve
+these entry problems separately for different players may be incompatible.
+
+\subsection{Finite phases do not exhaust adaptive play}
+
+For a fixed bounded phase template, existence of a semialgebraic certificate
+is a first-order theory of the reals problem and is decidable.  This does not
+give completeness over all public strategies.  Observer quotients may be
+exponential or infinite, mode requirements are unbounded, and the Big Match
+requires a genuinely adaptive schedule.  Thus exhaustive search over bounded
+templates can certify a discovered construction but cannot settle the general
+conjecture.
+
+\subsection{Absolute terminal control destroys legitimate branch cancellation}
+
+Consider an action-independent game with an initial state $s_0$ which moves
+with probability $1/2$ to an absorbing state of reward $+1$ and with
+probability $1/2$ to an absorbing state of reward $-1$.  Actions are duplicate
+and a trivial uniform equilibrium delivers the ex-ante target $0$.
+
+A tempting stronger certificate asks for a historywise target-relative drift
+inequality with a nonnegative account $C$ and potential $\Phi$, together with
+\[
+ \EE\bigl[C_N+|\Phi_N-\Phi_0|\bigr]=o(N).
+\]
+On the positive absorbing branch the local inequality forces
+$C_N-\Phi_N$ to grow linearly.  Since that branch has probability $1/2$, the
+displayed absolute remainder is impossible.  The negative branch cancels it
+in expected payoff but cannot cancel an absolute value.
+
+Thus this stronger local certificate is not a universal normal form, even for
+action-independent transitions.  For the elementary upper-payoff telescope it
+would be enough to control the signed remainder
+\[
+ \EE\bigl[(C_N-C_0)-(\Phi_N-\Phi_0)\bigr]=o(N).
+\]
+Whether such signed control can be made stable under the stopping, rebasing,
+and recursive operations required by the general proof is a separate
+question.  The counterexample does not affect
+Theorem~\ref{thm:verifier}, whose expectation-level monotonicity already
+preserves the public-branch cancellation.
+
+\subsection{Analytic self-similarity}
+
+A target-coherent analytic leaf may restart into a leaf of the same semantic
+rank.  The Big Match is the model phenomenon: the successful strategy changes
+its testing rate using accumulated evidence rather than descending through a
+finite atlas.  A semantic leaf theorem is useful only if it supplies an actual
+accuracy-indexed strategy with restart and stopped-history guarantees.  A
+record saying “this leaf is semantically solvable” without such a theorem is
+equivalent to the root problem.
+
+\section{Known terminal classes and machine-checked stress tests}
+
+The general bridge is absent, but several terminal classes are complete.
+
+\begin{itemize}
+\item \textbf{Zero-sum games.}  The Mertens--Neyman criterion supplies the
+      adaptive scalar strategy once the discounted value has the necessary
+      regularity.  The present formal development checks an abstract version
+      of the criterion but does not yet derive its deepest tracking estimate
+      from the general analytic germ.
+\item \textbf{Absorbing and single-state classes.}  Uniform equilibrium
+      constructions are checked for the corresponding finite special cases.
+\item \textbf{Action-independent transitions.}  Abel--Cesàro delivery and
+      static equilibrium selection reduce the problem to a finite public
+      terminal system; this class is checked.
+\item \textbf{The Big Match.}  A Blackwell--Ferguson history-dependent
+      witness and its uniform payoff are checked.  A separate theorem proves
+      that no calendar-time state-Markov profile witnesses the value.  This is
+      a precise formal stress test for any proposed finite-memory closure.
+\item \textbf{Single-controller and related LP classes.}  The strategic
+      compiler is checked conditional on the appropriate average-reward LP
+      input.
+\item \textbf{Pure externality cycle.}  The two-state mixed-owner example and
+      its holonomy obstruction are formalized as a keeper counterexample.
+\end{itemize}
+
+These special cases validate the certificate API and several leaf types.
+They do not establish that every analytic endpoint reduces to one of those
+terminal classes.
+
+\section{What is genuinely new, and what is supporting technology}
+
+Table~\ref{tab:results} summarizes the main outputs.  “New” here means a
+result developed in this program in the displayed form and not merely an
+invocation of a standard theorem.  It is not a bibliographic priority claim.
+
+\begin{longtable}{p{0.30\textwidth}p{0.17\textwidth}p{0.45\textwidth}}
+\caption{Result ledger.}\label{tab:results}\\
+\toprule
+Result & Status & Role and limitation\\
+\midrule
+\endfirsthead
+\toprule
+Result & Status & Role and limitation\\
+\midrule
+\endhead
+Adaptive-certificate verifier & \leanchecked &
+Converts expectation-level lower, upper, and deviation potentials to uniform
+equilibrium; one sound route to the semantic deviation-cap waist.\\
+\addlinespace
+Coupled analytic Bellman germ & \leanchecked &
+Unconditional for every finite game; retains support and sign cells.\\
+\addlinespace
+Finite analytic endpoint atlas & \leanchecked &
+Exhaustive classification, but thirteen generic leaves remain unclosed.\\
+\addlinespace
+Sorin endpoint-target separation & classical counterexample &
+A rational analytic discounted Nash endpoint may lie outside the entire
+uniform-equilibrium payoff set; endogenous root retargeting is mandatory.\\
+\addlinespace
+Neutral-action order dichotomy & \proved &
+Extracts either a bounded transition monitor or an exact discount-scale
+correction.\\
+\addlinespace
+Analytic Markov occupation theorem & \proved &
+Exact stationary mean plus uniform meromorphic Poisson remainder.\\
+\addlinespace
+Reduced Abel endpoint and calendar no-go & \proved &
+Exact first-order generator formula and Poisson trajectory reduction; a
+zero-defect higher-order leak and a vector log-hazard incompatibility refute
+one universal positive-parameter calendar.\\
+\addlinespace
+Coupled-scale Abel hierarchy & \proved &
+Canonical faster/critical/slower recurrent reduction, at most $|S|-1$ fast
+quotients, one critical resolvent, and reparameterization invariance.\\
+\addlinespace
+Finite-mode feedback and nonclosed attainment & \proved &
+Exact randomized occupation--flux criterion and specified-mode test;
+unrestricted deterministic exact attainment is nonclosed, so the
+uniform-equilibrium lift must be accuracy-indexed.\\
+\addlinespace
+Absolute-remainder certificate no-go & finite counterexample &
+Public absorbing branches may cancel ex ante while absolute terminal
+sublinearity fails; soundness does not imply certificate completeness.\\
+\addlinespace
+Direct closure by occupation harmlessness & \proved &
+Closes strategically inert mixed certificates using separate player
+potentials; still needs payoff compilation and delivery.\\
+\addlinespace
+Cycle--potential and public separator criteria & \proved &
+Exact LP compression of contextual transition scores.\\
+\addlinespace
+Colored-circulation criterion & \proved &
+Characterizes when mixed occupation can be purified by owner.\\
+\addlinespace
+Occupation rectangularity and causal gluing & \proved &
+Exact cost-class criterion and stronger local causal replacement theorem;
+rules out lumpability shortcuts.\\
+\addlinespace
+Universal public Bellman factorization & \proved &
+Equivalent to equality of all hidden-state projected rows; posterior quotient
+handles restricted memory.\\
+\addlinespace
+Finite public terminal Nash & \leanchecked &
+Produces endogenous safe parent values on arbitrary finite public trees.\\
+\addlinespace
+Bounded stopped-child composition & \proved; parts checked &
+Exact conditioning of a single pre/post-stopping deviation and explicit
+finite-prefix loss.\\
+\addlinespace
+Operational full-support deflation & \leanchecked &
+Strict operational rank loss and sublinear deleted-use account; does not
+supply target or credibility.\\
+\addlinespace
+Canonical rank and coherent rebasing & \proved &
+Prevents false descent caused by root-only or presentation-dependent ranks.\\
+\addlinespace
+Zero-pairing jet trichotomy & \proved &
+Finite algebraic normalization with no dimension-only order bound.\\
+\addlinespace
+Fixed-template public scheduler & \proved &
+Exact typed lift, reachability, and unilateral-mode audit; no universal mode
+bound.\\
+\addlinespace
+Coherent plateau alternative & \conditional &
+Closes or exits a finite terminal plateau once scheduler and holonomy
+invariants are supplied.\\
+\addlinespace
+Proof-carrying progress audit & \conditional &
+Verifies a proposed rule system but cannot close an open obstruction.\\
+\addlinespace
+Well-founded recursion compiler & \conditional &
+Converts genuine finite-branching decreasing children to a finite response
+tree.\\
+\addlinespace
+Contextual monitor, queues, analytic calendar & supporting &
+Quantitative scheduling and concentration tools; they consume rather than
+create strategic ledgers.\\
+\addlinespace
+Regeneration and memory criteria & \proved &
+Exact automata boundaries and exponential/infinite lower examples.\\
+\bottomrule
+\end{longtable}
+
+\section{The remaining mathematical program}
+
+The gap can now be stated without reference to implementation.
+
+\begin{problem}[Endogenous germ and target selection with realization]
+\label{prob:master}
+Given a finite stochastic game and an initial state, select an analytic Bellman
+germ and endpoint leaf from the discounted-equilibrium correspondence, select
+a payoff vector $w$---not necessarily the germ endpoint---and construct one of
+the following from finite or proof-carrying source data:
+\begin{enumerate}[label=(\roman*)]
+\item an actual public profile satisfying the hypotheses of
+      Theorem~\ref{thm:direct-closure} at target $w$;
+\item a credible public response with complete transport of $w$ and a
+      discharged account;
+\item finitely many legal children, together with proved target bridges from
+      $w$ to their declared complete-vector targets, whose canonical rank is
+      strictly smaller;
+\item an accuracy-indexed semantic strategy with restartable,
+      stopped-history uniform bounds and payoff $w$.
+\end{enumerate}
+Prove that germ selection, target selection, and the alternatives cover every
+game and commute with canonical rebasing.  The target-selection stage must handle
+\S\ref{sec:sorin-target}: it must not attempt to preserve the discounted
+endpoint $(1/2,2/3)$ in Sorin's game.
+\end{problem}
+
+Problem~\ref{prob:master} is still too large to attack as one lemma, but it
+splits into scoped questions:
+\begin{enumerate}[label=\textbf{P\arabic*.},leftmargin=3.2em]
+\item \textbf{Root germ and target selection.}  Choose a useful analytic
+branch and define a finite or proof-carrying correspondence of strategically
+implementable candidate targets.  Prove it is nonempty for every initial state
+and show how analytic endpoint data enters the selection without forcing
+equality to the endpoint.  It must select a
+point of (6.8), rather than (6.7), in Sorin's example.
+\item \textbf{Whole-target lifting after selection.}  Characterize when an analytic scalar
+separator has a player-owned unilateral lift, and route failure to a strict
+face or a harmlessness certificate.
+\item \textbf{Credibility.}  From the first nonzero owned Bellman jet,
+construct an actual response profile with historywise deviation envelopes, or
+give a finite incompatibility certificate consumed by another route.
+\item \textbf{Payoff compilation.}  Derive the shifted inequality (6.2) from
+the analytic germ, including invisible unused rows and moving target terms.
+\item \textbf{Prescribed delivery.}  The coupled-scale Abel reduction and the
+finite-mode feedback criteria are now known.  Lift them to an accuracy-indexed
+game-theoretic scheduler with endogenous public randomness, complete-vector
+target error, and uniform unilateral-deviation caps.  Exact one-policy
+realization cannot be imposed: Example~\ref{ex:multiscale-nonclosed} is
+unattainable but arbitrarily approximable.
+\item \textbf{Robust entry.}  Build one public selector satisfying all
+players' entry and nonentry requirements, rather than separate incompatible
+MDP selectors.
+\item \textbf{Full-support zero pairing.}  Turn every algebraic output of
+Theorem~\ref{thm:zero-pairing} into direct closure, a credible account, or a
+proper whole-target child.
+\item \textbf{Scheduler/holonomy.}  Decide and consume the incompatible-mode
+and mixed-owner holonomy outputs of Theorems~\ref{thm:scheduler} and
+\ref{thm:plateau}.
+\item \textbf{Target-coherent child analysis.}  Show that every recursive child
+admits analytic source data and a proved bridge to its declared child target.
+Equality between a restarted discounted endpoint and the child target may be a
+useful special case, but cannot be imposed as a universal invariant.
+\item \textbf{Adaptive semantic supply.}  Generalize the scalar
+Mertens--Neyman adaptive mechanism to the multiplayer, vector-target,
+deviation-specific setting, or prove that every leaf requiring it has already
+decreased a canonical rank.
+\item \textbf{Joint completeness.}  With the preceding outputs as concrete
+data, prove exhaustive guarded coverage and apply the occurrence-sensitive
+finite-tree compiler.
+\end{enumerate}
+
+No local item says “prove the uniform-equilibrium conjecture,” yet their joint
+solution would do so: Theorem~\ref{thm:germ} and the endpoint atlas supply a
+nonempty source correspondence, P1 selects a germ and admissible root target,
+P2--P10 supply a
+terminal or strictly lower children with target bridges, P11 gives a finite
+tree, and Theorem~\ref{thm:verifier} gives the uniform equilibrium.
+Conversely, negative answers are valuable only if their obstruction has a
+declared consumer.  An opaque incompatibility does not close a game.
+
+\subsection{The seven-seam acceptance test}
+
+Future claims of a generic leaf closure should be evaluated against seven
+questions:
+\begin{enumerate}
+\item Where are the analytic branch and root target selected, and why is the
+      latter strategically implementable rather than merely a discounted
+      endpoint?
+\item Where is the actual behavior profile?
+\item Why is the response safe against every unilateral continuation?
+\item Once selected, where is the complete payoff vector anchored and
+      transported?
+\item Why can the response be entered and rebased after the histories in
+      question?
+\item What strictly decreases, or which realized account is completely
+      discharged?
+\item Where is the direct sound-certificate, semantic deviation-cap, or
+      semantic-terminal theorem, without a “closer” assumption returning the
+      same object?
+\end{enumerate}
+At present the generic score is zero closed nonsemantic atlas leaves out of
+thirteen under the existing bookkeeping.  Sorin's example shows that this
+cannot be read as thirteen discounted endpoints waiting to be preserved: the
+root target-selection interface is itself missing.  The correct interpretation
+is not that the project has stalled completely: the analytic source, semantic
+verifier, composition calculus, and many boundary theorems are substantial.
+It is that the remaining difficulty has been localized and corrected, rather
+than solved.
+
+\section{Conclusion}
+
+The central conceptual invariant emerging from this work is not a single
+scalar potential.  It has a germ-and-target-selection front end followed by a
+proof-carrying public continuation object coupling four kinds of conservation:
+\[
+\boxed{
+\begin{array}{c}
+\text{endogenous selection of a useful germ and implementable root target}\\[1mm]
+\downarrow\\[-1mm]
+\text{whole-target transport}\\
+\text{unilateral incentive supermartingales}\\
+\text{legal stopped-history rebasing}\\
+\text{well-founded support/harmonic progress or realized account discharge}.
+\end{array}}
+\]
+Analytic Bellman germs generate precise infinitesimal data, but the endpoint
+need not be a uniform payoff, and germ selection, target selection, causality,
+ownership, and delivery are not consequences of analytic regularity.
+Occupation LPs can close a surprisingly broad strategically inert branch
+without a common potential.  Finite public trees can compose genuine children
+without further asymptotic ingenuity.  Causal transport and mixed-owner
+examples show exactly why several elegant shortcuts fail.
+
+The open conjecture therefore sits at a narrower but still formidable bridge:
+select useful analytic source data and an implementable target, then
+build a continuation object which coherently transports that target.
+The merit of the present framework is
+falsifiability.  A proposed solution can now fail at a named finite seam, and
+a successful local theorem can be incorporated without pretending that the
+other seams have disappeared.
+
+\appendix
+
+\section{Formal provenance and reproducibility}
+
+The status labels in this manuscript refer to a Lean development of finite
+stochastic games.  The following declaration-level map is included so that
+the mathematical claims can be audited independently of the surrounding
+architecture.
+
+\begin{sloppypar}
+\begin{itemize}
+\item The coupled germ theorem is
+      \path{analyticBellmanGermExistence} in
+      \path{AnalyticBellmanExistence.lean}.
+\item The unconditional root bridge from a finite game to a germ, first
+      hierarchy response, and endpoint leaf is supplied by
+      \path{exists_initialAnalyticEndpointLeaf} and its companion
+      declarations in \path{AnalyticEndpointExistence.lean}.
+\item The exhaustive leaf type and classifier are in
+      \path{AnalyticEndpointAtlas.lean}.  The reconstruction records in that
+      module should not be counted as closures: their decisive fields assume
+      a map to the desired adaptive certificate.
+\item The semantic verifier is
+      \path{isUniformEquilibriumPayoff_of_isAdaptivePotentialEquilibriumCertificate}
+      in \path{AdaptiveCertificate.lean}.
+\item The strict operational deletion and sublinear-use theorems are
+      \path{childOperationalRank_lt},
+      \path{deletedExpectedUse_isAsymptoticallySublinear}, and related
+      declarations in \path{PlayerNeutralFullSupportDeflation.lean}.
+\item Finite-tree backward Nash and equality of prescribed and
+      worst-unilateral potentials are in
+      \path{FinitePublicTerminalNashSystem.lean}; fixed-depth adaptive
+      splicing is in \path{PublicFixedDepthAdaptiveCertificate.lean}.
+\item Exact stopped-law and rebasing infrastructure is distributed among the
+      bounded-stopping, causal-stopping, and public-history factorization
+      modules.  Some higher-level unbounded-stopping consumers remain
+      conditional.
+\item The Blackwell--Ferguson witness and the calendar-time Markov no-go are
+      checked separately in the Big Match modules.
+\end{itemize}
+\end{sloppypar}
+
+At the audited stable snapshot, the sole intended admission is the arbitrary
+game constructor in the uniform-equilibrium capstone.  Since the development
+is under active refactoring, line numbers and import paths are not mathematical
+identifiers; theorem names and statement shapes are the stable provenance.
+
+\begin{thebibliography}{99}
+
+\bibitem{Shapley1953}
+L.~S. Shapley,
+\newblock Stochastic games,
+\newblock \emph{Proceedings of the National Academy of Sciences} 39 (1953),
+1095--1100.
+\newblock \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC1063912/}
+
+\bibitem{Fink1964}
+A.~M. Fink,
+\newblock Equilibrium in a stochastic $n$-person game,
+\newblock \emph{Journal of Science of the Hiroshima University, Series A-I}
+28 (1964), 89--93.
+
+\bibitem{Sorin1986}
+S.~Sorin,
+\newblock Asymptotic properties of a non-zero sum stochastic game,
+\newblock \emph{International Journal of Game Theory} 15 (1986), 101--107.
+\newblock \url{https://doi.org/10.1007/BF01770978}
+
+\bibitem{BewleyKohlberg1976}
+T.~Bewley and E.~Kohlberg,
+\newblock The asymptotic theory of stochastic games,
+\newblock \emph{Mathematics of Operations Research} 1 (1976), 197--208.
+\newblock \url{https://pubsonline.informs.org/doi/10.1287/moor.1.3.197}
+
+\bibitem{MertensNeyman1981}
+J.-F. Mertens and A.~Neyman,
+\newblock Stochastic games,
+\newblock \emph{International Journal of Game Theory} 10 (1981), 53--66.
+\newblock \url{https://abrahamneyman.huji.ac.il/publications/stochastic-games}
+
+\bibitem{Vieille2000I}
+N.~Vieille,
+\newblock Two-player stochastic games I: a reduction,
+\newblock \emph{Israel Journal of Mathematics} 119 (2000), 55--91.
+\newblock \url{https://doi.org/10.1007/BF02810663}
+
+\bibitem{Vieille2000II}
+N.~Vieille,
+\newblock Two-player stochastic games II: the case of recursive games,
+\newblock \emph{Israel Journal of Mathematics} 119 (2000), 93--126.
+\newblock \url{https://doi.org/10.1007/BF02810664}
+
+\bibitem{Solan1999}
+E.~Solan,
+\newblock Three-player absorbing games,
+\newblock \emph{Mathematics of Operations Research} 24 (1999), 669--698.
+\newblock \url{https://pubsonline.informs.org/doi/10.1287/moor.24.3.669}
+
+\bibitem{SolanVieille2001}
+E.~Solan and N.~Vieille,
+\newblock Quitting games,
+\newblock \emph{Mathematics of Operations Research} 26 (2001), 265--285.
+\newblock \url{https://pubsonline.informs.org/doi/10.1287/moor.26.2.265.10549}
+
+\bibitem{SolanVieille2002}
+E.~Solan and N.~Vieille,
+\newblock Correlated equilibrium in stochastic games,
+\newblock \emph{Games and Economic Behavior} 38 (2002), 362--399.
+\newblock \url{https://doi.org/10.1006/game.2001.0887}
+
+\bibitem{BlackwellFerguson1968}
+D.~Blackwell and T.~S. Ferguson,
+\newblock The Big Match,
+\newblock \emph{Annals of Mathematical Statistics} 39 (1968), 159--163.
+\newblock \url{https://doi.org/10.1214/aoms/1177698513}
+
+\bibitem{Blackwell1956}
+D.~Blackwell,
+\newblock An analog of the minimax theorem for vector payoffs,
+\newblock \emph{Pacific Journal of Mathematics} 6 (1956), 1--8.
+\newblock \url{https://doi.org/10.2140/pjm.1956.6.1}
+
+\bibitem{SolanVieilleSurvey2015}
+E.~Solan and N.~Vieille,
+\newblock Stochastic games,
+\newblock \emph{Proceedings of the National Academy of Sciences} 112 (2015),
+13743--13746.
+\newblock \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC4653174/}
+
+\bibitem{FleschSolan2023}
+J.~Flesch and E.~Solan,
+\newblock Stochastic games with general payoff functions,
+\newblock \emph{Journal de Mathématiques Pures et Appliquées} 179 (2023),
+1--42.
+\newblock \url{https://doi.org/10.1016/j.matpur.2023.09.002}
+
+\bibitem{BackhoffBeiglbockLinZalashko2017}
+J.~Backhoff-Veraguas, M.~Beiglböck, Y.~Lin, and A.~Zalashko,
+\newblock Causal transport in discrete time and applications,
+\newblock \emph{SIAM Journal on Optimization} 27 (2017), 2528--2562.
+\newblock \url{https://arxiv.org/abs/1606.04062}
+
+\bibitem{Moulos2021}
+V.~Moulos,
+\newblock Bicausal optimal transport for Markov chains via dynamic
+programming,
+\newblock 2021.
+\newblock \url{https://arxiv.org/abs/2010.06831}
+
+\bibitem{HansenIbsenJensenNeyman2025}
+K.~A. Hansen, R.~Ibsen-Jensen, and A.~Neyman,
+\newblock Stochastic games with limited public memory,
+\newblock preprint, 2025.
+\newblock \url{https://arxiv.org/abs/2505.02623}
+
+\bibitem{SolanVieille2025}
+E.~Solan and N.~Vieille,
+\newblock Positive recursive absorbing games,
+\newblock preprint, December 2025.
+\newblock \url{https://arxiv.org/abs/2512.04306}
+
+\bibitem{BochnakCosteRoy}
+J.~Bochnak, M.~Coste, and M.-F. Roy,
+\newblock \emph{Real Algebraic Geometry},
+\newblock Springer, 1998.
+
+\bibitem{BasuPollackRoy}
+S.~Basu, R.~Pollack, and M.-F. Roy,
+\newblock \emph{Algorithms in Real Algebraic Geometry},
+\newblock Springer, second edition, 2006.
+
+\bibitem{CesaBianchiLugosi}
+N.~Cesa-Bianchi and G.~Lugosi,
+\newblock \emph{Prediction, Learning, and Games},
+\newblock Cambridge University Press, 2006.
+
+\end{thebibliography}
+
+\end{document}

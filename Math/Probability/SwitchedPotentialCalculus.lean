@@ -26,9 +26,9 @@ path contributes only its two endpoints, and everything else is a *charge*.
 
 The design is deliberately **mode/phase-lifted** rather than state-only.  Two
 independent sources say a state-only potential is not enough: the answered
-research question `questions/Question89-ControllerCapsUnderSwitchedHarmlessEnvironments.md`
+research question `questions/old/Question89-ControllerCapsUnderSwitchedHarmlessEnvironments.md`
 (its Part A switching identity and its Part C.3 phase-augmented biases), and
-experiment `E03` of `ephemeral/experiments/` (path-complete accounts are
+experiment `E03` of `experiments/` (path-complete accounts are
 coboundaries on lifted `(mode, state)` graphs).  The falsifier probes at the end
 of this file check both obstructions inside Lean.
 

@@ -101,7 +101,7 @@ This note makes that proposal precise enough to generate theorem statements.
 It separates:
 
 - statements already landed in production;
-- generic statements checked under `ephemeral/experiments`; and
+- generic statements checked under `experiments`; and
 - global statements which remain conjectural.
 
 ## 2. The unresolved object

@@ -7,10 +7,11 @@ live; the mechanism is not exclusive to that program. The unit of organization
 is one coherent **idea group**, not one theorem, experiment, question, or work
 session.
 
-New groups should normally get one file in this directory. Existing substantial
-notes under `ephemeral/` may remain in place and count as the group
-file once they carry the lifecycle card below. Migrate files only when the move
-improves navigation; do not duplicate their mathematical content.
+Every lifecycle-owned group gets one file in this directory. Mutable notes may
+begin under `ephemeral/`, but they do not become lifecycle owners there: extract
+the coherent claim here once it is retained. Survey portfolios that intentionally
+span several mechanisms live under [`wild/`](wild/README.md) and route promoted
+descendants back to one-file groups. Do not duplicate mathematical content.
 
 ## Open intake, orchestrated promotion
 
@@ -19,7 +20,7 @@ Idea generation and independent proof work are decentralized:
 - anyone may add an idea-group file, append a falsifier or correction to an
   existing group, or propose a self-contained mathematical question;
 - anyone may add an independent Lean proof probe under
-  `ephemeral/experiments/`, including a competing formulation or
+  `experiments/`, including a competing formulation or
   counterexample;
 - prior assignment is not required. Lack of an active worker is never a reason
   to withhold a precise idea or proof;
@@ -200,7 +201,7 @@ but it remains infrastructure rather than closure progress.
 - Questions under `questions/` remain self-contained; project cross-references
   belong in the group file and index.
 - Experiments remain isolated. Production modules never import
-  `ephemeral/experiments`.
+  `experiments`.
 - Do not scaffold speculative APIs. Promote the smallest theorem surface with
   a known consumer, then generalize when a second use makes the abstraction
   real.
