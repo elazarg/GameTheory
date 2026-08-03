@@ -6,9 +6,9 @@ Pinned roots: `GameTheory/Languages/FOSG/Basic.lean`; `GameTheory/Languages/FOSG
 Pinned commit: `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`
 Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
-Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28, EXP-058/D29
+Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28, EXP-058/D29, EXP-059/D30
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; 418/776 reviewed, 358 unreviewed
+Status: in progress; 483/776 reviewed, 293 unreviewed
 Last verified: 2026-08-02
 
 This ledger is an exact generated review queue for the L-FOSG family.
@@ -25,6 +25,15 @@ attributes the latter to those exact pinned paths: `Protocol.Information`
 owns the canonical policy and law machinery, while `Languages.FOSG.Kuhn`
 supplies the named FOSG-facing correspondence.  It does not revive the native scalar
 marginal calculus.
+
+EXP-059/D30 disposes the 65-declaration `Compile.lean` batch (the earlier
+54-row estimate missed attributed declarations). Canonical Protocol runners and
+`BoundedHorizon` retain the genuine execution fragments; the duplicate PMF
+terminal-law, finite enumeration, transport, and KernelGame compiler are
+retired. Terminal-support and coefficient laws remain deferred to the
+ordinary-continuation / named FOSG-to-EFG serialization gate.
+EXP-059 closes only the one-round feasibility risk; a two-round signal-replay
+slice remains mandatory before a generic explicit-order bridge is promoted.
 
 EXP-058/D29 disposes `ReachableHistory/ObsModelFacts.lean`.  Only its two
 final-law definitions project directly to canonical Protocol execution, and
@@ -73,71 +82,71 @@ module they require rather than a FOSG-wide umbrella.
 | same | `LegalAction.val_eq_noop_of_active_empty` | theorem | adapt | `GameTheory.Protocol.ExecutionProtocol.eq_noop_of_legal_of_inactive` | focused build (1,723 jobs); axiom audit | The mathematical uniqueness fact is public without preserving the retired subtype wrapper. |
 | same | `noopLegalAction` | def | retired | `ExecutionProtocol.noop_isLegal`; `ExecutionProtocol.chanceLaw` | D6/D7; focused build | Canonical code constructs the step subtype locally; a language-specific certificate constructor is unnecessary. |
 | same | `noopLegalAction_val` | theorem | retired | `ExecutionProtocol.noop` | D7 | Reflexive projection theorem for the retired constructor. |
-| `GameTheory/Languages/FOSG/Compile.lean` | `extendByOutcome` | def | unreviewed | review required | generated index seed only | public, pinned line 39 |
-| same | `extendByOutcome_of_support` | theorem | unreviewed | review required | generated index seed only | public, pinned line 43 |
-| same | `extendByOutcome_of_no_support` | theorem | unreviewed | review required | generated index seed only | public, pinned line 49 |
-| same | `extendByOutcome_isPrefix` | theorem | unreviewed | review required | generated index seed only | public, pinned line 55 |
-| same | `extendByOutcome_prefix_canonical_imp` | theorem | unreviewed | review required | generated index seed only | public, pinned line 65 |
-| same | `extendByOutcome_eq_appendStep_of_head` | theorem | unreviewed | review required | generated index seed only | public, pinned line 87 |
-| same | `initialSegment` | def | unreviewed | review required | generated index seed only | public, pinned line 101 |
-| same | `initialSegment_steps` | theorem | unreviewed | review required | generated index seed only | public, pinned line 109 |
-| same | `initialSegment_isPrefix` | theorem | unreviewed | review required | generated index seed only | public, pinned line 112 |
-| same | `initialSegment_length` | theorem | unreviewed | review required | generated index seed only | public, pinned line 117 |
-| same | `runDistFrom` | def | unreviewed | review required | generated index seed only | public, pinned line 124 |
-| same | `runDistFrom_zero` | theorem | unreviewed | review required | generated index seed only | public, pinned line 138 |
-| same | `runDistFrom_succ_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 145 |
-| same | `runDistFrom_terminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 154 |
-| same | `runDistFrom_succ_nonterminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 165 |
-| same | `runDistFrom_congr` | theorem | unreviewed | review required | generated index seed only | public, pinned line 177 |
-| same | `runDistFrom_bind_runDistFrom` | theorem | unreviewed | review required | generated index seed only | public, pinned line 200 |
-| same | `runDistFrom_succ_active_empty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 228 |
-| same | `runDistFrom_eq_zero_of_exactHorizon_not_prefix` | theorem | unreviewed | review required | generated index seed only | public, pinned line 244 |
-| same | `ExactHorizon` | def | unreviewed | review required | generated index seed only | public, pinned line 302 |
-| same | `BoundedHorizon` | def | unreviewed | review required | generated index seed only | public, pinned line 309 |
-| same | `exactHorizon_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 313 |
-| same | `ExactHorizon.bounded` | theorem | unreviewed | review required | generated index seed only | public, pinned line 319 |
-| same | `runDistFrom_eq_zero_of_length_gt` | theorem | unreviewed | review required | generated index seed only | public, pinned line 326 |
-| same | `runDistFrom_eq_zero_of_nonterminal_target_lt` | theorem | unreviewed | review required | generated index seed only | public, pinned line 373 |
-| same | `runDistFrom_eq_zero_of_exactHorizon_length_ne` | theorem | unreviewed | review required | generated index seed only | public, pinned line 420 |
-| same | `runDist` | def | unreviewed | review required | generated index seed only | public, pinned line 469 |
-| same | `runDist_congr` | theorem | unreviewed | review required | generated index seed only | public, pinned line 476 |
-| same | `runDist_zero` | theorem | unreviewed | review required | generated index seed only | public, pinned line 486 |
-| same | `runDist_eq_zero_of_exactHorizon_length_ne` | theorem | unreviewed | review required | generated index seed only | public, pinned line 493 |
-| same | `runDist_eq_zero_of_length_gt` | theorem | unreviewed | review required | generated index seed only | public, pinned line 505 |
-| same | `runDist_eq_zero_of_nonterminal_of_boundedHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 516 |
-| same | `runDist_support_isTerminal_of_boundedHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 535 |
-| same | `runDistFrom_eq_zero_of_terminal_not_prefix` | theorem | unreviewed | review required | generated index seed only | public, pinned line 548 |
-| same | `runDistFrom_eq_probFrom_of_terminal_target` | theorem | unreviewed | review required | generated index seed only | public, pinned line 601 |
-| same | `runDist_support_isTerminal_of_exactHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 785 |
-| same | `runDistFrom_eq_probFrom_of_exactHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 801 |
-| same | `runDist_eq_terminalWeight_of_exactHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 988 |
-| same | `length_le_of_boundedHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1011 |
-| same | `history_length_le_of_boundedHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1042 |
-| same | `historyFintypeOfLengthLe` | def | unreviewed | review required | generated index seed only | public, pinned line 1075 |
-| same | `historyFintypeOfBoundedHorizon` | def | unreviewed | review required | generated index seed only | public, pinned line 1098 |
-| same | `runDist_eq_terminalWeight_of_boundedHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1105 |
-| same | `HasNormalizedTerminalLaw` | def | unreviewed | review required | generated index seed only | public, pinned line 1130 |
-| same | `hasNormalizedTerminalLaw_of_exactHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1140 |
-| same | `hasNormalizedTerminalLaw_of_boundedHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1159 |
-| same | `terminalLawPMF` | def | unreviewed | review required | generated index seed only | public, pinned line 1182 |
-| same | `terminalLawPMF_apply` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1192 |
-| same | `terminalLawPMF_eq_runDist_of_boundedHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1200 |
-| same | `terminalLawPMF_eq_runDist_of_exactHorizon` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1210 |
-| same | `toKernelGame` | def | unreviewed | review required | generated index seed only | public, pinned line 1222 |
-| same | `toKernelGame_outcomeKernel` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1231 |
-| same | `toKernelGame_eu_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1240 |
-| same | `toKernelGameAtHorizon` | def | unreviewed | review required | generated index seed only | public, pinned line 1257 |
-| same | `toKernelGameAtHorizon_outcomeKernel` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1267 |
-| same | `toKernelGameAtHorizon_eu_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1274 |
-| same | `toKernelGameOfBoundedHorizon` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 1287 |
-| same | `toKernelGameOfBoundedHorizon_outcomeKernel` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1294 |
-| same | `toKernelGameOfBoundedHorizon_support_isTerminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1304 |
-| same | `toKernelGameAtHorizon_eq_toKernelGameOfBoundedHorizon_outcomeKernel` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1319 |
-| same | `toKernelGameOfBoundedHorizon_eu_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1328 |
-| same | `toKernelGameOfExactHorizon` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 1344 |
-| same | `toKernelGameOfExactHorizon_outcomeKernel` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1351 |
-| same | `toKernelGameOfExactHorizon_support_isTerminal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1361 |
-| same | `toKernelGameOfExactHorizon_eu_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1376 |
+| `GameTheory/Languages/FOSG/Compile.lean` | `extendByOutcome` | def | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 39 |
+| same | `extendByOutcome_of_support` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 43 |
+| same | `extendByOutcome_of_no_support` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 49 |
+| same | `extendByOutcome_isPrefix` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 55 |
+| same | `extendByOutcome_prefix_canonical_imp` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 65 |
+| same | `extendByOutcome_eq_appendStep_of_head` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 87 |
+| same | `initialSegment` | def | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 101 |
+| same | `initialSegment_steps` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 109 |
+| same | `initialSegment_isPrefix` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 112 |
+| same | `initialSegment_length` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 117 |
+| same | `runDistFrom` | def | adapt | InformationModel.runBehavioralFrom | EXP-059/D30 hostile serialization witness | Canonical Protocol history-runner/horizon API owns this semantic fragment. | public, pinned line 124 |
+| same | `runDistFrom_zero` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 138 |
+| same | `runDistFrom_succ_terminal` | theorem | adapt | ExecutionProtocol.runRandomizedFor_of_terminal | EXP-059/D30 hostile serialization witness | Canonical Protocol history-runner/horizon API owns this semantic fragment. | public, pinned line 145 |
+| same | `runDistFrom_terminal` | theorem | adapt | ExecutionProtocol.runRandomizedFor_of_terminal | EXP-059/D30 hostile serialization witness | Canonical Protocol history-runner/horizon API owns this semantic fragment. | public, pinned line 154 |
+| same | `runDistFrom_succ_nonterminal` | theorem | adapt | ExecutionProtocol.runRandomizedFor_succ_of_not_terminal | EXP-059/D30 hostile serialization witness | Canonical Protocol history-runner/horizon API owns this semantic fragment. | public, pinned line 165 |
+| same | `runDistFrom_congr` | theorem | adapt | InformationModel.runBehavioralFrom_congr | EXP-059/D30 hostile serialization witness | Canonical Protocol history-runner/horizon API owns this semantic fragment. | public, pinned line 177 |
+| same | `runDistFrom_bind_runDistFrom` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 200 |
+| same | `runDistFrom_succ_active_empty` | theorem | adapt | ExecutionProtocol.chanceLaw | EXP-059/D30 hostile serialization witness | Canonical Protocol history-runner/horizon API owns this semantic fragment. | public, pinned line 228 |
+| same | `runDistFrom_eq_zero_of_exactHorizon_not_prefix` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 244 |
+| same | `ExactHorizon` | def | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 302 |
+| same | `BoundedHorizon` | def | adapt | ExecutionProtocol.BoundedHorizon | EXP-059/D30 hostile serialization witness | Canonical Protocol history-runner/horizon API owns this semantic fragment. | public, pinned line 309 |
+| same | `exactHorizon_iff` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 313 |
+| same | `ExactHorizon.bounded` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 319 |
+| same | `runDistFrom_eq_zero_of_length_gt` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 326 |
+| same | `runDistFrom_eq_zero_of_nonterminal_target_lt` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 373 |
+| same | `runDistFrom_eq_zero_of_exactHorizon_length_ne` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 420 |
+| same | `runDist` | def | adapt | InformationModel.runBehavioral | EXP-059/D30 hostile serialization witness | Canonical Protocol history-runner/horizon API owns this semantic fragment. | public, pinned line 469 |
+| same | `runDist_congr` | theorem | adapt | InformationModel.runBehavioralFrom_congr at initHistory | EXP-059/D30 hostile serialization witness | Canonical Protocol history-runner/horizon API owns this semantic fragment. | public, pinned line 476 |
+| same | `runDist_zero` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 486 |
+| same | `runDist_eq_zero_of_exactHorizon_length_ne` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 493 |
+| same | `runDist_eq_zero_of_length_gt` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 505 |
+| same | `runDist_eq_zero_of_nonterminal_of_boundedHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 516 |
+| same | `runDist_support_isTerminal_of_boundedHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 535 |
+| same | `runDistFrom_eq_zero_of_terminal_not_prefix` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 548 |
+| same | `runDistFrom_eq_probFrom_of_terminal_target` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 601 |
+| same | `runDist_support_isTerminal_of_exactHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 785 |
+| same | `runDistFrom_eq_probFrom_of_exactHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 801 |
+| same | `runDist_eq_terminalWeight_of_exactHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 988 |
+| same | `length_le_of_boundedHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 1011 |
+| same | `history_length_le_of_boundedHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 1042 |
+| same | `historyFintypeOfLengthLe` | def | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1075 |
+| same | `historyFintypeOfBoundedHorizon` | def | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1098 |
+| same | `runDist_eq_terminalWeight_of_boundedHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 1105 |
+| same | `HasNormalizedTerminalLaw` | def | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1130 |
+| same | `hasNormalizedTerminalLaw_of_exactHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 1140 |
+| same | `hasNormalizedTerminalLaw_of_boundedHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 1159 |
+| same | `terminalLawPMF` | def | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1182 |
+| same | `terminalLawPMF_apply` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1192 |
+| same | `terminalLawPMF_eq_runDist_of_boundedHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 1200 |
+| same | `terminalLawPMF_eq_runDist_of_exactHorizon` | theorem | deferred | ordinary-continuation / FOSG-to-EFG serialization gate | EXP-059/D30 | No exact current terminal-support or coefficient theorem; reopen only with the ordinary continuation law. | public, pinned line 1210 |
+| same | `toKernelGame` | def | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1222 |
+| same | `toKernelGame_outcomeKernel` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1231 |
+| same | `toKernelGame_eu_eq` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1240 |
+| same | `toKernelGameAtHorizon` | def | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1257 |
+| same | `toKernelGameAtHorizon_outcomeKernel` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1267 |
+| same | `toKernelGameAtHorizon_eu_eq` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1274 |
+| same | `toKernelGameOfBoundedHorizon` | abbrev | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1287 |
+| same | `toKernelGameOfBoundedHorizon_outcomeKernel` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1294 |
+| same | `toKernelGameOfBoundedHorizon_support_isTerminal` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1304 |
+| same | `toKernelGameAtHorizon_eq_toKernelGameOfBoundedHorizon_outcomeKernel` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1319 |
+| same | `toKernelGameOfBoundedHorizon_eu_eq` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1328 |
+| same | `toKernelGameOfExactHorizon` | abbrev | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1344 |
+| same | `toKernelGameOfExactHorizon_outcomeKernel` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1351 |
+| same | `toKernelGameOfExactHorizon_support_isTerminal` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1361 |
+| same | `toKernelGameOfExactHorizon_eu_eq` | theorem | retired | no successor; retired scalar/PMF compiler | EXP-059/D30 | No stable generic compiler is promoted; native PMF and transport machinery are retired. | public, pinned line 1376 |
 | `GameTheory/Languages/FOSG/Examples.lean` | `historyFintypeOfLengthLeOne` | def | unreviewed | review required | generated index seed only | public, pinned line 32 |
 | same | `Solo` | inductive | unreviewed | review required | generated index seed only | public, pinned line 90 |
 | same | `soloIndex` | def | unreviewed | review required | generated index seed only | private, pinned line 94 |

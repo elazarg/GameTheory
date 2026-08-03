@@ -69,6 +69,7 @@ becomes difficult to scan.
 | EXP-056 | 2026-08-02 | D9/D10/D25/D26 / knapsack approximation | Can a certified executable ratio order support an actual feasible half-approximate allocation after repairing the pinned theorem's overweight-singleton defect? | Supports after narrowing to a direct integral exchange proof; decides D27 | [`decisions/D27-executable-knapsack-half-approximation.md`](decisions/D27-executable-knapsack-half-approximation.md); `GameTheory/Mechanism/Knapsack/Approximation*.lean`; hostile witness |
 | EXP-057 | 2026-08-02 | D6/D7/D9/D15 / FOSG observation and Kuhn surface | Does FOSG need any native observation-model/Kuhn execution layer, or only transparent named theorems over the canonical `InformationModel`? | Supports theorem-only projection; decides D28 | [`decisions/D28-fosg-kuhn-protocol-projection.md`](decisions/D28-fosg-kuhn-protocol-projection.md); `Languages/FOSG/Kuhn.lean`; same-execution hostile witness |
 | EXP-058 | 2026-08-02 | D6/D7/D15/D28 / FOSG reachable-observation facts | Which parts of the pinned reachable-observation proof machine survive once Protocol owns histories and information? | Retires the adapter; decides D29 | [`decisions/D29-fosg-reachable-observation-retirement.md`](decisions/D29-fosg-reachable-observation-retirement.md); terminal-activity and compressed-information hostile witnesses |
+| EXP-059 | 2026-08-02 | D6/D8/D14/D15/D28 / FOSG-to-EFG serialization | Can a simultaneous stochastic FOSG be serialized as a single-mover EFG while hiding within-round choices and preserving its mapped history law? | Supports explicit hidden-phase serialization; decides D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFG.lean` |
 
 ## Entry template
 
@@ -3815,3 +3816,30 @@ memory.
   simultaneous stochastic FOSG-to-EFG serialization comparison next.  Any
   later counterfactual/CFR recovery must start from the canonical history law
   and earn its own checked theorem gate.
+
+### EXP-059: hidden-phase FOSG-to-EFG serialization
+
+- **Date / revision:** 2026-08-02, working tree based on `698d0eb`
+- **Status:** complete; supports explicit hidden-phase serialization; decides D30
+- **Question / designs:** compare the pinned separate serial-FOSG machine,
+  prefix erasure or disclosure, and an explicit-order EFG whose execution state
+  retains the prefix while its information state exposes only the microstep.
+- **Hostile slice:** two simultaneous Boolean players plus a fair Boolean
+  transition, compiled in both player orders.  Distinct stored first choices
+  give the later mover equal information; both actions and the coin separately
+  change the full terminal outcome.
+- **Measurements:** 1,320 nonblank lines and 108 declarations; only EFG/FOSG
+  imports; focused build 1,723 jobs.  Source/target policy maps are inverse at
+  reached decision sites; literal target-history erasure equals the canonical
+  source-history law for every target profile; both orders preserve it.
+- **Integration:** full build 3,417 jobs; Phase 2 static, Phase 3 static, and
+  exact coverage audits report `VERIFIED=1`.
+- **Audit:** no placeholders, custom axioms, raw updates, `Fintype.ofFinite`,
+  `open Classical`, or transport tokens.  Audited theorems use only `propext`,
+  `Classical.choice`, and `Quot.sound`.  Generic single-mover behavioral-joint
+  facts moved from MAID to their Protocol owner.
+- **Outcome / next action:** adopt D30's feasibility result but do not promote
+  a generic API yet.  Reserve a two-round stochastic explicit-order experiment
+  covering source signal replay, own-action memory, inactive slots, arbitrary
+  target projection, and exact scaled canonical-history laws.  Do not port the
+  unrelated pinned `FOSG.Serial` machine.

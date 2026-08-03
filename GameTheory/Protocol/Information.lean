@@ -622,6 +622,102 @@ theorem behavioralJoint_congr {first second : (i : ι) → M.BehavioralPolicy i}
   rw [behavioralJoint, behavioralJoint]
   exact congrArg _ (congrArg FinDist.pi (funext hagree))
 
+section SingleMoverBehavioralJoint
+
+variable [DecidableEq ι]
+
+/-- If nobody acts, the behavioral product is the unique all-`none` joint
+action. -/
+theorem behavioralJoint_eq_pure_of_no_active
+    (policies : (i : ι) → M.BehavioralPolicy i)
+    {state : E.State} (trace : E.Trace state)
+    (hterminal : ¬ E.terminal state)
+    (hinactive : ∀ i, ¬ E.active state i) :
+    M.behavioralJoint policies trace hterminal =
+      FinDist.pure
+        ⟨fun _ => none,
+          ExecutionProtocol.legal_of_legalOption hterminal
+            hinactive⟩ := by
+  let idle :
+      (i : ι) → M.Choice i (M.infoOf i trace) :=
+    fun i => ⟨none, (M.menu_adequate i trace none).mpr
+      (hinactive i)⟩
+  have hpolicy (i : ι) :
+      policies i (M.infoOf i trace) =
+        FinDist.pure (idle i) := by
+    haveI : Subsingleton (M.Choice i (M.infoOf i trace)) :=
+      M.subsingleton_choice_of_not_active trace (hinactive i)
+    exact FinDist.eq_pure_of_subsingleton _ (idle i)
+  unfold behavioralJoint
+  simp_rw [hpolicy]
+  rw [FinDist.pi_pure, FinDist.map_pure]
+
+/-- If at most one player can act, the behavioral product is that player's
+local law embedded in the only possibly active joint coordinate. -/
+theorem behavioralJoint_eq_map_of_at_most_one_active
+    (policies : (i : ι) → M.BehavioralPolicy i)
+    {state : E.State} (trace : E.Trace state)
+    (hterminal : ¬ E.terminal state)
+    (active : ι)
+    (hunique : ∀ i, E.active state i → i = active) :
+    M.behavioralJoint policies trace hterminal =
+      FinDist.map
+        (fun choice : M.Choice active (M.infoOf active trace) =>
+          ⟨(fun other =>
+              if howner : other = active then by
+                subst other
+                exact choice.1
+              else none),
+            ExecutionProtocol.legal_of_legalOption hterminal
+              fun other => by
+                by_cases howner : other = active
+                · subst other
+                  simpa using
+                    (M.menu_adequate active trace choice.1).mp
+                      choice.2
+                · have hinactive : ¬ E.active state other := by
+                    intro hother
+                    exact howner (hunique other hother)
+                  simpa only [howner, dite_false, LegalOption]
+                    using hinactive⟩)
+        (policies active (M.infoOf active trace)) := by
+  let idle :
+      (other : {other : ι // other ≠ active}) →
+        M.Choice other.1 (M.infoOf other.1 trace) :=
+    fun other => ⟨none,
+      (M.menu_adequate other.1 trace none).mpr <| by
+        intro hother
+        exact other.2 (hunique other.1 hother)⟩
+  have hpolicy (other : {other : ι // other ≠ active}) :
+      policies other.1 (M.infoOf other.1 trace) =
+        FinDist.pure (idle other) := by
+    have hinactive : ¬ E.active state other.1 := by
+      intro hother
+      exact other.2 (hunique other.1 hother)
+    haveI :
+        Subsingleton
+          (M.Choice other.1 (M.infoOf other.1 trace)) :=
+      M.subsingleton_choice_of_not_active trace hinactive
+    exact FinDist.eq_pure_of_subsingleton _ (idle other)
+  unfold behavioralJoint
+  rw [FinDist.pi_eq_map_product active, FinDist.map_comp]
+  simp_rw [hpolicy]
+  rw [FinDist.pi_pure]
+  unfold FinDist.product
+  simp only [FinDist.map_eq_bind,
+    FinDist.bind_bind, FinDist.pure_bind]
+  apply FinDist.bind_congr
+  intro choice _
+  apply congrArg FinDist.pure
+  apply Subtype.ext
+  funext other
+  by_cases howner : other = active
+  · subst other
+    simp
+  · simp [howner, idle]
+
+end SingleMoverBehavioralJoint
+
 /-- A behavioral profile, as a chooser. -/
 def randomizedChooser (policies : (i : ι) → M.BehavioralPolicy i) : E.RandomizedChooser :=
   fun h hterm => M.behavioralJoint policies h.trace hterm
