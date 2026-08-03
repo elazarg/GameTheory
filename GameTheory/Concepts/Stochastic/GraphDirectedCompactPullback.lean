@@ -6,7 +6,9 @@ Authors: GameTheory contributors
 
 import Mathlib.Topology.Compactness.Compact
 import Mathlib.Topology.ContinuousOn
+import Mathlib.Topology.Algebra.InfiniteSum.Real
 import Mathlib.Topology.MetricSpace.Bounded
+import Mathlib.Analysis.SpecificLimits.Basic
 
 /-!
 # Compact graph-directed pullback paths
@@ -331,5 +333,155 @@ theorem GraphDirectedCompactSystem.exists_compatiblePullbackPath
     Set.mem_iInter.mp hvalue
   refine ⟨value, (hprefix 0).1, fun time ↦ ?_⟩
   exact (hprefix (time + 1)).2 ⟨time, Nat.lt_succ_self time⟩
+
+/-! ## Uniqueness under a common contraction -/
+
+section Metric
+
+variable {MetricPoint : Type*} [MetricSpace MetricPoint]
+
+/-- A common contraction factor for all branch maps, only on their certified
+target boxes. -/
+def GraphDirectedCompactSystem.IsUniformContraction
+    (system : GraphDirectedCompactSystem Vertex Edge MetricPoint)
+    (contraction : ℝ) : Prop :=
+  ∀ edge point₁, point₁ ∈ system.box (system.target edge) →
+    ∀ point₂, point₂ ∈ system.box (system.target edge) →
+      dist (system.branch edge point₁) (system.branch edge point₂) ≤
+        contraction * dist point₁ point₂
+
+/-- A finite family of compact boxes has this canonical common diameter
+budget. -/
+def GraphDirectedCompactSystem.diameterBudget
+    [Fintype Vertex]
+    (system : GraphDirectedCompactSystem Vertex Edge MetricPoint) : ℝ :=
+  ∑ vertex, Metric.diam (system.box vertex)
+
+/-- Every pair in one vertex box is bounded by the common finite-box diameter
+budget. -/
+theorem GraphDirectedCompactSystem.dist_le_diameterBudget
+    [Fintype Vertex]
+    (system : GraphDirectedCompactSystem Vertex Edge MetricPoint)
+    (vertex : Vertex) {point₁ point₂ : MetricPoint}
+    (hpoint₁ : point₁ ∈ system.box vertex)
+    (hpoint₂ : point₂ ∈ system.box vertex) :
+    dist point₁ point₂ ≤ system.diameterBudget := by
+  classical
+  calc
+    dist point₁ point₂ ≤ Metric.diam (system.box vertex) :=
+      Metric.dist_le_diam_of_mem (system.box_compact vertex).isBounded
+        hpoint₁ hpoint₂
+    _ ≤ ∑ other, Metric.diam (system.box other) :=
+      Finset.single_le_sum
+        (fun other _ ↦ Metric.diam_nonneg) (Finset.mem_univ vertex)
+
+/-- Along two compatible paths, iterating the common one-step contraction
+gives a power of the contraction factor. -/
+theorem dist_compatiblePullbackPath_le_pow_mul
+    (system : GraphDirectedCompactSystem Vertex Edge MetricPoint)
+    (vertex : ℕ → Vertex) (edge : ℕ → Edge)
+    (hpath : system.IsAdmissiblePath vertex edge)
+    {contraction : ℝ} (hcontraction0 : 0 ≤ contraction)
+    (hcontract : system.IsUniformContraction contraction)
+    {value₁ value₂ : ℕ → MetricPoint}
+    (hvalue₁ : system.IsCompatiblePullbackPath vertex edge value₁)
+    (hvalue₂ : system.IsCompatiblePullbackPath vertex edge value₂) :
+    ∀ start fuel,
+      dist (value₁ start) (value₂ start) ≤
+        contraction ^ fuel *
+          dist (value₁ (start + fuel)) (value₂ (start + fuel)) := by
+  intro start fuel
+  induction fuel generalizing start with
+  | zero => simp
+  | succ fuel ih =>
+      have hpoint₁ : value₁ (start + 1) ∈
+          system.box (system.target (edge start)) := by
+        rw [(hpath start).2]
+        exact hvalue₁.1 (start + 1)
+      have hpoint₂ : value₂ (start + 1) ∈
+          system.box (system.target (edge start)) := by
+        rw [(hpath start).2]
+        exact hvalue₂.1 (start + 1)
+      have hone := hcontract (edge start) _ hpoint₁ _ hpoint₂
+      have htail := ih (start + 1)
+      have hscaled := mul_le_mul_of_nonneg_left htail hcontraction0
+      calc
+        dist (value₁ start) (value₂ start) =
+            dist (system.branch (edge start) (value₁ (start + 1)))
+              (system.branch (edge start) (value₂ (start + 1))) := by
+                rw [hvalue₁.2 start, hvalue₂.2 start]
+        _ ≤ contraction *
+            dist (value₁ (start + 1)) (value₂ (start + 1)) := hone
+        _ ≤ contraction * (contraction ^ fuel *
+            dist (value₁ (start + 1 + fuel))
+              (value₂ (start + 1 + fuel))) := hscaled
+        _ = contraction ^ fuel.succ *
+            dist (value₁ (start + fuel.succ))
+              (value₂ (start + fuel.succ)) := by
+                rw [pow_succ]
+                have hindex : start + 1 + fuel = start + fuel.succ := by omega
+                rw [hindex]
+                ring
+
+/-- A common strict contraction makes the compatible pullback path unique.
+Finiteness of the vertex family is used only to obtain a uniform diameter. -/
+theorem GraphDirectedCompactSystem.compatiblePullbackPath_unique
+    [Finite Vertex]
+    (system : GraphDirectedCompactSystem Vertex Edge MetricPoint)
+    (vertex : ℕ → Vertex) (edge : ℕ → Edge)
+    (hpath : system.IsAdmissiblePath vertex edge)
+    {contraction : ℝ}
+    (hcontraction0 : 0 ≤ contraction)
+    (hcontraction1 : contraction < 1)
+    (hcontract : system.IsUniformContraction contraction)
+    {value₁ value₂ : ℕ → MetricPoint}
+    (hvalue₁ : system.IsCompatiblePullbackPath vertex edge value₁)
+    (hvalue₂ : system.IsCompatiblePullbackPath vertex edge value₂) :
+    value₁ = value₂ := by
+  letI := Fintype.ofFinite Vertex
+  funext time
+  have hiterate := dist_compatiblePullbackPath_le_pow_mul
+    system vertex edge hpath hcontraction0 hcontract hvalue₁ hvalue₂
+      time
+  have hbound : ∀ fuel,
+      dist (value₁ time) (value₂ time) ≤
+        contraction ^ fuel * system.diameterBudget := by
+    intro fuel
+    exact (hiterate fuel).trans
+      (mul_le_mul_of_nonneg_left
+        (system.dist_le_diameterBudget (vertex (time + fuel))
+          (hvalue₁.1 (time + fuel)) (hvalue₂.1 (time + fuel)))
+        (pow_nonneg hcontraction0 fuel))
+  have hpow : Tendsto (fun fuel : ℕ ↦ contraction ^ fuel)
+      atTop (nhds 0) :=
+    tendsto_pow_atTop_nhds_zero_of_lt_one hcontraction0 hcontraction1
+  have hlimit : Tendsto
+      (fun fuel : ℕ ↦ contraction ^ fuel * system.diameterBudget)
+      atTop (nhds 0) := by
+    simpa using hpow.mul_const system.diameterBudget
+  have hzero : dist (value₁ time) (value₂ time) ≤ 0 :=
+    ge_of_tendsto' hlimit hbound
+  exact dist_eq_zero.mp (le_antisymm hzero dist_nonneg)
+
+/-- Compact existence and strict contraction uniqueness in one statement. -/
+theorem GraphDirectedCompactSystem.existsUnique_compatiblePullbackPath
+    [Finite Vertex] [T2Space MetricPoint]
+    (system : GraphDirectedCompactSystem Vertex Edge MetricPoint)
+    (vertex : ℕ → Vertex) (edge : ℕ → Edge)
+    (hpath : system.IsAdmissiblePath vertex edge)
+    {contraction : ℝ}
+    (hcontraction0 : 0 ≤ contraction)
+    (hcontraction1 : contraction < 1)
+    (hcontract : system.IsUniformContraction contraction) :
+    ∃! value : ℕ → MetricPoint,
+      system.IsCompatiblePullbackPath vertex edge value := by
+  letI := Fintype.ofFinite Vertex
+  obtain ⟨value, hvalue⟩ := system.exists_compatiblePullbackPath
+    vertex edge hpath
+  exact ⟨value, hvalue, fun other hother ↦
+    system.compatiblePullbackPath_unique vertex edge hpath
+      hcontraction0 hcontraction1 hcontract hother hvalue⟩
+
+end Metric
 
 end GameTheory
