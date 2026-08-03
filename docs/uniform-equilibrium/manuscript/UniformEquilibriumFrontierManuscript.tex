@@ -16,13 +16,19 @@
 \newcommand{\EE}{\mathbb E}
 \newcommand{\RR}{\mathbb R}
 \newcommand{\one}{\mathbf 1}
-\newcommand{\Prod}{\textcolor{green!45!black}{\textsc{production Lean}}}
-\newcommand{\Exp}{\textcolor{blue!60!black}{\textsc{checked experiment}}}
-\newcommand{\Audit}{\textcolor{violet}{\textsc{audited mathematics}}}
-\newcommand{\Cond}{\textcolor{orange!70!black}{\textsc{conditional}}}
-\newcommand{\Open}{\textcolor{red!65!black}{\textsc{open}}}
-\newcommand{\Refuted}{\textcolor{red!65!black}{\textsc{refuted}}}
-\newcommand{\Status}[1]{\fbox{\strut #1}}
+\newcommand{\LTag}{\textsf{L}}
+\newcommand{\XTag}{\textsf{X}}
+\newcommand{\MTag}{\textsf{M}}
+\newcommand{\CTag}{\textsf{C}}
+\newcommand{\OTag}{\textsf{O}}
+\newcommand{\FTag}{\textsf{F}}
+\newcommand{\Prod}{\LTag}
+\newcommand{\Exp}{\XTag}
+\newcommand{\Audit}{\MTag}
+\newcommand{\Cond}{\CTag}
+\newcommand{\Open}{\OTag}
+\newcommand{\Refuted}{\FTag}
+\newcommand{\Status}[1]{#1}
 
 \title{Uniform Equilibrium in Finite Stochastic Games\\
 \large Research Atlas, Evidence Ledger, and Current Decision Map}
@@ -35,9 +41,9 @@
 \begin{abstract}
 This is a research atlas rather than a publication claiming a new general
 existence theorem.  It is written for a mathematically capable project owner,
-adjacent researchers, and future proof agents.  It separates production Lean,
-checked experiments, audited mathematics, conditional statements, open
-problems, and refuted proof patterns.
+adjacent researchers, and future proof agents.  Its compact evidence tags
+separate formal results, experiments, audited mathematics, hypotheses, open
+problems, and fenced-off proof patterns.
 
 The central open statement is that every finite stochastic game has a
 uniform-equilibrium payoff.  The repository has a semantic verification waist,
@@ -54,7 +60,7 @@ exit as an executable repair or a uniform optimized-debt descent.
 
 \section{Status discipline and the exact question}
 
-\subsection{Snapshot and evidence labels}
+\subsection{Snapshot and evidence legend}
 
 This document describes the committed repository state at
 \texttt{e1fe7dc} (Bundle calibrated finite-chain boundary holonomy).  It
@@ -64,28 +70,27 @@ reorganization; the durable records consulted here are under
 \texttt{docs/uniform-equilibrium/}, \texttt{ideas/}, and
 \texttt{known-results/}.
 
-\begin{longtable}{@{}p{.23\textwidth}p{.68\textwidth}@{}}
+\begin{longtable}{@{}p{.10\textwidth}p{.81\textwidth}@{}}
 \toprule
-Label & Meaning in this atlas\\
+Tag & Exact meaning and scope\\
 \midrule
 \endhead
-\Status{\Prod} & A theorem is in the ordinary Lean import graph at this
-snapshot.  It proves its formal statement, but a supplied-witness interface
-is not silently treated as a generic constructor.\\
-\Status{\Exp} & A bounded Lean probe supports exactly its stated
-finite/compactness fact.  It is not production coverage and may lack an
-adapter to the semantic goal.\\
-\Status{\Audit} & A mathematical proof, source check, or counterexample has
-been reviewed in the durable research record but is not claimed formalized.\\
-\Status{\Cond} & A sound implication whose named strategic input is still a
-hypothesis.\\
-\Status{\Open} & A current obligation.  It does not imply that neighboring
-interfaces are open.\\
-\Status{\Refuted} & A scoped claim or strategy grammar has a counterexample.
-It is a negative theorem for the full conjecture only if it establishes an
-all-behavior, uniform positive gap.\\
+\LTag & Production Lean: in the ordinary import graph at this snapshot.  It
+proves its stated formal theorem, not an unstated generic witness producer.\\
+\XTag & Checked experiment: a bounded Lean probe with the stated scope; it
+may lack a production adapter or semantic consumer.\\
+\MTag & Audited mathematics: reviewed proof, source alignment, or
+counterexample, not asserted formalized.\\
+\CTag & Conditional: a sound implication whose named strategic input remains
+a hypothesis.\\
+\OTag & Open: a live obligation; neighboring interfaces may still be settled.\\
+\FTag & Refuted or fenced: a scoped claim/grammar has a counterexample.  It
+is a full negative theorem only with an all-behavior uniform positive gap.\\
 \bottomrule
 \end{longtable}
+
+Tags are deliberately neutral and short.  Citations identify external
+published results; an \LTag is reserved for an internal formal result.
 
 The Lean development has one intentional admission:
 \texttt{StochasticGame.exists\_uniformDeviationCapConstructor} in
@@ -135,7 +140,7 @@ equilibrium does not by itself solve (UE).
 \tag{1}
 \]
 
-The final verification arrow is production Lean.  The generic difficulty is
+The final verification arrow has an \LTag consumer.  The generic difficulty is
 the middle.  A construction must retain the whole target vector, make every
 public entry credible, and exhibit a well-founded decrease or a fully
 discharged account.  A scalar limit or an attractive Bellman equality cannot
@@ -284,8 +289,8 @@ potentials, a common \(O(1/N)\) delivery bound, unilateral caps, and
 rebasing.  The domain split is load-bearing: the prescribed delivery union is
 not the union of every player's deviation arena.
 
-The fixed-class converse is also now production Lean.  All-start history
-semantics on these exact domains imply target, occupation, and bias packets.
+The fixed-class converse is also available.  All-start history semantics on
+these exact domains imply target, occupation, and bias packets.
 This characterizes a supplied architecture; it does not synthesize an
 architecture for an arbitrary game or show that finite public architectures
 cover all uniform strategies.
@@ -359,9 +364,9 @@ Thus
 One may need both favorable-germ selection and a different, implementable
 target selection.
 
-\subsection{Major landed analytic infrastructure}
+\subsection{Analytic infrastructure}
 
-\Status{\Prod} The production graph also contains sign-stable Bellman rows,
+\Status{\Prod} The library also contains sign-stable Bellman rows,
 neutral-action drift alternatives, harmonic directions, support-face and
 deflation tools, player-owned and neutral occupation/circulation alternatives,
 public separator compression, causal stopping and target-transport
@@ -375,13 +380,13 @@ positive charge might help one player, but it does not specify where the
 remaining coordinates go after a public branch or why every player can
 credibly continue there.
 
-\section{Landed special cases and permanent no-go tests}
+\section{Special cases and permanent no-go tests}
 
 \subsection{Positive theorem surface}
 
 \begin{longtable}{@{}p{.31\textwidth}p{.27\textwidth}p{.33\textwidth}@{}}
 \toprule
-Class & Production result & Scope boundary\\
+Class & Formal result & Scope boundary\\
 \midrule
 \endhead
 Absorbing initial state, one state, action-independent transitions, and all
@@ -473,7 +478,7 @@ producer of terminal approximate profiles for the general multi-player game.
 
 \subsection{Finite exact chains and dynamic debt}
 
-For each cutoff, production modules build compact sets of exact
+For each cutoff, the finite-chain modules build compact sets of exact
 zero-boundary Nash--Bellman chains.  Backward recursion compares prescribed
 value with best stopping value; the difference is playerwise dynamic debt
 \(B_i^t\).  The optimized aggregate initial debt \(d_K\) is attained and
@@ -533,7 +538,7 @@ cyclic, or behavioral repair could still exist.
 
 \section{Boundary holonomy after HEAD \texttt{e1fe7dc}}
 
-\subsection{The landed finite middle}
+\subsection{Finite-middle holonomy}
 
 \Status{\Prod} \texttt{QuittingBoundaryHolonomy.lean} packages every nonempty
 finite block from one actual common product-root chain.  For each player, it
@@ -665,7 +670,7 @@ germ selection alone as sufficient.
 The gain--bias characterization in (3) is a clear synthesis target.  A
 positive theorem would produce a finite controller, declare its delivery union
 and owner arenas, prove target transport and neutral occupation, then invoke
-the production verifier.  Open questions are why a suitable finite
+the existing verifier.  The remaining questions are why a suitable finite
 architecture exists, how large it must be, and whether general strategies
 require hidden or unbounded memory.
 
@@ -676,7 +681,7 @@ APS/self-generating certificates might have a gain--bias limit
  V^\lambda\approx g+\lambda^{-1}h,\qquad g+h=r+Ph.
 \tag{20}
 \]
-The consumer exists in production Lean.  Pointwise value convergence does not
+The consumer is already available.  Pointwise value convergence does not
 supply bounded bias: changing supports, multichain classes, and singular
 resolvent scales can invalidate one fixed architecture.  A positive result
 needs stable domains/support or a sound resolved limit; a chattering example
