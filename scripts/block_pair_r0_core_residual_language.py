@@ -19,11 +19,12 @@ skeletons survive:
     6-9-3-6,     6-2-9-3-6.
 
 Thus there is no remaining combinatorial period search inside this core.
-The singleton-block cases are already ranked for arbitrary finite blocks.
-The four pair-containing skeletons are ranked when each 9/3 letter is one
-phase.  To obtain an all-finite-core-cycle theorem it remains to lift those
-pair ranks/obstructions to arbitrary nonempty support-9/support-3 blocks and
-to exclude finite 3/9 block cycles that never visit support 6.
+The singleton-block cases are already ranked for arbitrary finite blocks,
+and a companion value argument excludes every finite strict cycle using only
+supports 3 and 9.  The four pair-containing 6-return skeletons are ranked
+when each 9/3 letter is one phase.  To obtain an all-finite-core-cycle theorem
+it remains to lift those endpoint ranks to arbitrary nonempty support-9 and
+support-3 blocks.
 
 This is a grammar theorem only.  It does not claim those block lifts, does not
 cover supports outside the five-mask core, and says nothing about infinite
@@ -44,6 +45,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import block_pair_r0_9_run_3_run_obstruction as pair_backtrack  # noqa: E402
 import block_pair_r0_core_excursion_grammar as grammar  # noqa: E402
 import block_pair_r0_singleton_bridge_ranks as singleton_bridge  # noqa: E402
+import block_pair_r0_support3_9_cycle_exclusion as pair_cycles  # noqa: E402
 import block_pair_r0_support9_to_singleton_obstruction as nine_exit  # noqa: E402
 
 
@@ -161,6 +163,9 @@ def replay_local_ingredients() -> None:
     nine_exit.assert_one_step_positivity_packet()
 
     pair_backtrack.assert_block_obstruction()
+    pair_cycles.assert_support_nine_player_three_transport()
+    pair_cycles.assert_support_three_player_three_bound()
+    pair_cycles.assert_cycle_gap()
 
 
 def main() -> None:
@@ -179,7 +184,8 @@ def main() -> None:
     for path in sorted(returns):
         print("  " + "->".join(map(str, path)))
     print("singleton skeletons are ranked for arbitrary finite blocks")
-    print("remaining lift: arbitrary positive 9/3 block lengths and 3/9-only cycles")
+    print("all finite strict 3/9-only cycles are excluded separately")
+    print("remaining lift: arbitrary positive 9/3 blocks in four 6-returns")
     print("scope: strict five-mask finite grammar; infinite/boundary paths remain")
 
 

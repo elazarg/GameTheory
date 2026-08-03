@@ -108,7 +108,9 @@ def players(mask: int) -> tuple[int, int]:
     return result  # type: ignore[return-value]
 
 
-def main() -> None:
+def assert_constant_pair_support_exclusion() -> None:
+    """Replay all constant strict pair-support exclusions."""
+
     assert N == 4
     assert COEFFICIENTS == EXPECTED_COEFFICIENTS
 
@@ -146,6 +148,11 @@ def main() -> None:
         assert active_slope != current_slope
 
     assert set(monotone_masks) | set(degeneracies) == set(PAIR_MASKS)
+
+
+def main() -> None:
+    assert_constant_pair_support_exclusion()
+
     print("exact constant pair-support periodic exclusion passed")
     print(f"theta = {THETA}")
     print("monotone-to-stationary masks = 3,9")
