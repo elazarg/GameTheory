@@ -239,4 +239,225 @@ theorem markedNegative_advance_or_absorptionMass_ge
   · right
     linarith
 
+/-! ## A successor escape makes the product jump playerwise charged -/
+
+/-- One-stage absorption probability after forcing `who` to Continue.  This
+is the opponent-absorption hazard for `who` at the root. -/
+def quittingRootOpponentAbsorptionMass
+    (root : ι → PMF Bool) (who : ι) : ℝ :=
+  quittingRootAbsorptionMass
+    (Function.update root who (PMF.pure false))
+
+omit [DecidableEq ι] in
+/-- The all-continue mass is the product of the displayed Continue
+probabilities. -/
+theorem quittingStationaryContinueMass_eq_prod_continueProbability
+    (root : ι → PMF Bool) :
+    quittingStationaryContinueMass root =
+      ∏ player, (root player false).toReal := by
+  unfold quittingStationaryContinueMass
+  rw [pmfPi_apply, ENNReal.toReal_prod]
+  rfl
+
+/-- A marked player's Quit hazard is part of every other player's opponent
+absorption hazard. -/
+theorem quittingProbability_le_opponentAbsorptionMass
+    (root : ι → PMF Bool) {marked who : ι} (hne : marked ≠ who) :
+    (root marked true).toReal ≤
+      quittingRootOpponentAbsorptionMass root who := by
+  let forced : ι → PMF Bool :=
+    Function.update root who (PMF.pure false)
+  let continueProbability : ι → ℝ := fun player ↦
+    (forced player false).toReal
+  have hfactor0 (player : ι) : 0 ≤ continueProbability player :=
+    ENNReal.toReal_nonneg
+  have hfactor1 (player : ι) : continueProbability player ≤ 1 := by
+    exact ENNReal.toReal_mono ENNReal.one_ne_top
+      (PMF.coe_le_one (forced player) false)
+  have hrest0 :
+      0 ≤ ∏ player ∈ (Finset.univ.erase marked : Finset ι),
+        continueProbability player :=
+    Finset.prod_nonneg fun player _ ↦ hfactor0 player
+  have hrest1 :
+      (∏ player ∈ (Finset.univ.erase marked : Finset ι),
+        continueProbability player) ≤ 1 :=
+    Finset.prod_le_one
+      (fun player _ ↦ hfactor0 player)
+      (fun player _ ↦ hfactor1 player)
+  have hproductSplit :
+      (∏ player, continueProbability player) =
+        (∏ player ∈ (Finset.univ.erase marked : Finset ι),
+          continueProbability player) * continueProbability marked := by
+    simpa using (Finset.prod_erase_mul Finset.univ continueProbability
+      (Finset.mem_univ marked)).symm
+  have hproductLe :
+      (∏ player, continueProbability player) ≤
+        continueProbability marked := by
+    rw [hproductSplit]
+    nlinarith [mul_nonneg (sub_nonneg.mpr hrest1)
+      (hfactor0 marked)]
+  have hforcedMarked : forced marked = root marked := by
+    simp [forced, hne]
+  have hcontinueLe :
+      quittingStationaryContinueMass forced ≤
+        (root marked false).toReal := by
+    rw [quittingStationaryContinueMass_eq_prod_continueProbability]
+    change (∏ player, continueProbability player) ≤ _
+    rw [← hforcedMarked]
+    exact hproductLe
+  have hsum :=
+    quittingRoot_continueProbability_add_quitProbability root marked
+  unfold quittingRootOpponentAbsorptionMass quittingRootAbsorptionMass
+  change (root marked true).toReal ≤
+    1 - quittingStationaryContinueMass forced
+  linarith
+
+/-- If an exact-Nash root starts with a `θ`-negative marked value but its
+survived successor rises by `η`, the marked player's *opponents* must absorb
+with mass at least `η/(2M)`.  Otherwise pure Continue would beat the current
+value. -/
+theorem successorEscape_le_two_mul_opponentAbsorptionMass
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (current successor : Payoff ι) (root : ι → PMF Bool)
+    (marked : ι) (M θ η : ℝ)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hsuccessorBound : |successor marked| ≤ M)
+    (hbellman : current =
+      quittingRootSuccessorPayoff reward successor root)
+    (hnash : IsεQuittingRootNash reward successor 0 root)
+    (hnegative : current marked ≤ -θ)
+    (hescape : -θ + η ≤ successor marked) :
+    η ≤ 2 * M * quittingRootOpponentAbsorptionMass root marked := by
+  have hcontinueNash := hnash marked (PMF.pure false)
+  have hcontinue :
+      quittingRootContinuePayoff reward successor root marked ≤
+        current marked := by
+    rw [congrFun hbellman marked]
+    simpa [quittingRootContinuePayoff,
+      quittingRootSuccessorPayoff] using hcontinueNash
+  have hjumpBound :=
+    abs_quittingRootSuccessorPayoff_sub_tail_le_two_mul_absorptionMass
+      reward successor
+        (Function.update root marked (PMF.pure false)) marked M
+        hreward hsuccessorBound
+  change
+    |quittingRootContinuePayoff reward successor root marked -
+        successor marked| ≤
+      2 * M * quittingRootOpponentAbsorptionMass root marked at hjumpBound
+  have hforward :
+      successor marked -
+          quittingRootContinuePayoff reward successor root marked ≤
+        |quittingRootContinuePayoff reward successor root marked -
+          successor marked| := by
+    simpa [abs_sub_comm] using le_abs_self
+      (successor marked -
+        quittingRootContinuePayoff reward successor root marked)
+  linarith
+
+/-- Ratio form of `successorEscape_le_two_mul_opponentAbsorptionMass`. -/
+theorem ratio_le_opponentAbsorptionMass_of_successorEscape
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (current successor : Payoff ι) (root : ι → PMF Bool)
+    (marked : ι) (M θ η : ℝ) (hM : 0 < M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hsuccessorBound : |successor marked| ≤ M)
+    (hbellman : current =
+      quittingRootSuccessorPayoff reward successor root)
+    (hnash : IsεQuittingRootNash reward successor 0 root)
+    (hnegative : current marked ≤ -θ)
+    (hescape : -θ + η ≤ successor marked) :
+    η / (2 * M) ≤ quittingRootOpponentAbsorptionMass root marked := by
+  have hcharge := successorEscape_le_two_mul_opponentAbsorptionMass
+    reward current successor root marked M θ η hreward hsuccessorBound
+      hbellman hnash hnegative hescape
+  exact (div_le_iff₀ (mul_pos (by norm_num) hM)).2
+    (by simpa [mul_comm] using hcharge)
+
+/-- A same-date marked root with marked Quit mass `β` and a successor escape
+of size `η` is charged for every player.  Other players see the marked Quit
+hazard; the marked player sees the opponent hazard forced by exact Nash. -/
+theorem min_le_opponentAbsorptionMass_of_markedHazard_of_successorEscape
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (current successor : Payoff ι) (root : ι → PMF Bool)
+    (marked : ι) (M θ η β : ℝ) (hM : 0 < M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hsuccessorBound : |successor marked| ≤ M)
+    (hbellman : current =
+      quittingRootSuccessorPayoff reward successor root)
+    (hnash : IsεQuittingRootNash reward successor 0 root)
+    (hnegative : current marked ≤ -θ)
+    (hescape : -θ + η ≤ successor marked)
+    (hmarkedHazard : β ≤ (root marked true).toReal) :
+    ∀ who, min β (η / (2 * M)) ≤
+      quittingRootOpponentAbsorptionMass root who := by
+  intro who
+  by_cases hwho : who = marked
+  · subst who
+    exact (min_le_right β (η / (2 * M))).trans
+      (ratio_le_opponentAbsorptionMass_of_successorEscape
+        reward current successor root marked M θ η hM hreward
+          hsuccessorBound hbellman hnash hnegative hescape)
+  · exact (min_le_left β (η / (2 * M))).trans
+      (hmarkedHazard.trans
+        (quittingProbability_le_opponentAbsorptionMass root
+          (Ne.symm hwho)))
+
+/-- **Actual-suffix restart or playerwise-charged jump.**  The carrier is the
+genuine Bellman edge `current → successor`, not a re-rooted copy.  If the
+marked coordinate stays inside its negative band at `successor`, the marked
+construction can restart one calendar stage later.  Otherwise the current
+root has a quantitative opponent-absorption charge for every player: other
+players see the marked Quit hazard `β`, while the marked player sees the
+Nash-forced opponent charge `η/(2M)`.
+
+This is the local jump-or-strict-time rule.  The charged edge still has to be
+retained in a compatible recurrent segment or consumed by a separately
+proved local discharge; it is not itself asserted to be an equilibrium. -/
+theorem markedNegative_advance_or_playerwiseChargedJump
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (current successor : Payoff ι) (root : ι → PMF Bool)
+    (marked : ι) (M θ η β : ℝ) (hM : 0 < M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hsuccessorBound : |successor marked| ≤ M)
+    (hbellman : current =
+      quittingRootSuccessorPayoff reward successor root)
+    (hnash : IsεQuittingRootNash reward successor 0 root)
+    (hnegative : current marked ≤ -θ)
+    (hmarkedHazard : β ≤ (root marked true).toReal) :
+    successor marked ≤ -θ + η ∨
+      ∀ who, min β (η / (2 * M)) ≤
+        quittingRootOpponentAbsorptionMass root who := by
+  by_cases hadvance : successor marked ≤ -θ + η
+  · exact Or.inl hadvance
+  · right
+    exact min_le_opponentAbsorptionMass_of_markedHazard_of_successorEscape
+      reward current successor root marked M θ η β hM hreward
+        hsuccessorBound hbellman hnash hnegative (le_of_not_ge hadvance)
+        hmarkedHazard
+
+/-- With positive marked mass and a positive escape budget, the charged-jump
+branch contracts every player's one-stage opponent clock. -/
+theorem opponentAbsorptionMass_pos_of_chargedJump
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (current successor : Payoff ι) (root : ι → PMF Bool)
+    (marked : ι) (M θ η β : ℝ)
+    (hM : 0 < M) (hη : 0 < η) (hβ : 0 < β)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hsuccessorBound : |successor marked| ≤ M)
+    (hbellman : current =
+      quittingRootSuccessorPayoff reward successor root)
+    (hnash : IsεQuittingRootNash reward successor 0 root)
+    (hnegative : current marked ≤ -θ)
+    (hescape : -θ + η ≤ successor marked)
+    (hmarkedHazard : β ≤ (root marked true).toReal) :
+    ∀ who, 0 < quittingRootOpponentAbsorptionMass root who := by
+  have hcharge :=
+    min_le_opponentAbsorptionMass_of_markedHazard_of_successorEscape
+      reward current successor root marked M θ η β hM hreward
+        hsuccessorBound hbellman hnash hnegative hescape hmarkedHazard
+  have hratio : 0 < η / (2 * M) :=
+    div_pos hη (mul_pos (by norm_num) hM)
+  intro who
+  exact (lt_min hβ hratio).trans_le (hcharge who)
+
 end GameTheory
