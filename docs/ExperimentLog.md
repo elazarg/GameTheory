@@ -75,6 +75,7 @@ becomes difficult to scan.
 | EXP-062 | 2026-08-03 | D4/D6/D7/D9 / intrinsic games ownership | Does configuration-dependent causality and closed-loop solvability earn a native intrinsic-game branch by proving a theorem or counterexample unavailable from bare Protocol without first choosing a temporal compiler? | Supports; native closed-loop and causality root approved, later compiler/mixed/utility/Kuhn layers remain gated | `GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean`; D31; focused compile, hazard, axiom, and premise-independence audits |
 | EXP-063 | 2026-08-03 | D12 / dependency maintenance | Do Lean and Mathlib 4.32.2 preserve the fixed-point dependency, trust profile, and enforced architecture boundaries? | Supports; toolchain-aligned maintained fork repinned without theorem-source change | `lean-toolchain`; `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
 | EXP-064 | 2026-08-03 | D5/D11 / repeated public monitoring | Can finite-prefix signal laws support canonical PPE and the bounded one-shot-deviation principle without an infinite-path law? | Supports; closes the public-monitoring equilibrium waist | `GameTheory/Repeated/Monitoring*.lean`; `GameTheory/Tests/MonitoringEquilibrium.lean`; [`coverage/D-REPEAT-monitoring-equilibrium.md`](coverage/D-REPEAT-monitoring-equilibrium.md) |
+| EXP-065 | 2026-08-03 | D0/D2/D4/D9 / finite contracts | Does hidden-action contract theory earn a native finite-support principal-agent branch, with an explicit outside option, rather than a one-player `GameForm` or an auction specialization? | Active | reserved on `abf5901`; hostile two-action fixture planned |
 
 ## Entry template
 
@@ -4174,3 +4175,29 @@ memory.
   Approximate allowances, garbling breadth, rank/self-generation, and uniform
   results return to dependency-gated D-REPEAT harvesting; private-history
   deviations or a stochastic Protocol compiler require a separate experiment.
+
+### EXP-065: finite hidden-action contract ownership
+
+- **Date / revision:** 2026-08-03, reserved on `abf5901`
+- **Status:** active
+- **Decision / question:** whether the pinned hidden-action model earns a
+  native `Mechanism` branch over action-indexed `FinDist` outcome laws, or
+  should be encoded as a one-player `GameForm` or an auction specialization.
+- **Prediction:** capability-free principal-agent data, expected transfers,
+  an explicit outside option, and theorem-local action finiteness suffice for
+  the welfare identity, existence of an incentivized action, and a genuine
+  participation theorem.  Neither a duplicate Nash predicate nor stored
+  carrier finiteness is needed.
+- **Representative slice:** two actions and two outcomes, with a costless
+  outside action, a costly productive action, nonnegative rewards, and a
+  nonnegative outcome-contingent payment.  Remove the costless action in a
+  negative control to refute automatic participation from limited liability
+  and incentive compatibility alone.
+- **Competing designs:** a native role-asymmetric hidden-action model; a
+  deterministic one-player utility game; or reuse of the auction
+  `QuasiLinear`/VCG surface.
+- **Kill conditions:** the accounting and participation chain cannot be stated
+  without a strategic-game wrapper; `FinDist` loses a pinned theorem that PMF
+  supplied; explicit outside options force duplicate normalized predicates;
+  the negative control fails; or the slice needs stored `Finite`/`Fintype`,
+  raw `Function.update`, public transports, placeholders, or custom axioms.
