@@ -28,6 +28,11 @@ through support 3; the companion clock-charge theorem ranks arbitrary
 nonempty support-3 blocks (and the optional support-2 prefix).  Consequently
 no finite strict cycle exists inside this five-mask core.
 
+The separate ``block_pair_r0_core_return_clock_charge.py`` strengthens all
+six support-6 return families to the common quantitative bound
+``A-a >= (1/50)(1-S)``.  That is still a return theorem, not a potential on
+every edge of the lifted atlas.
+
 This remains conditional on the constructed five-mask atlas.  It does not
 prove that atlas exhaustive for the full game, does not cover supports outside
 the core, and says nothing about infinite walks converging to the zero-hazard
@@ -201,6 +206,7 @@ def main() -> None:
     print("entered support-9 blocks have length one")
     print("arbitrary support-3 blocks in the final two 6-returns are charged")
     print("conclusion: no finite strict cycle inside the five-mask core")
+    print("companion theorem gives all six returns the common charge 1/50")
     print("scope: strict five-mask finite grammar; infinite/boundary paths remain")
 
 
