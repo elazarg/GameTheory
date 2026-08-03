@@ -295,7 +295,9 @@ def assert_first_inactive_clock() -> None:
     )
 
 
-def main() -> None:
+def assert_single_phase_obstruction() -> None:
+    """Replay the exact contradiction for one intervening support-3 phase."""
+
     assert_first_inactive_clock()
     e_value, f_value = derived_middle_hazards()
     c_value, d_value = second_support_hazards(e_value, f_value)
@@ -303,6 +305,10 @@ def main() -> None:
     assert_payoff_upper_bound()
     assert_clock_sign_certificate()
     assert_credible_first_unchanged()
+
+
+def main() -> None:
+    assert_single_phase_obstruction()
 
     print("exact support motif {2,6}->9->3->9 obstruction passed")
     print("second support-9 player-1 deviation is strictly profitable")
