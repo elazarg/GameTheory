@@ -608,7 +608,7 @@ theorem stationaryRepairRoot_fixedOpponentsQuitValue (who : Player) :
   fin_cases who <;>
     simp [stationaryRepairRoot, halfCoin, quarterCoin,
       expect_hazardCoin, quittingRootPayoff,
-      stationaryRepairValue, reward] <;>
+      stationaryRepairValue, reward] ;
     norm_num
 
 theorem stationaryRepairRoot_fixedOpponentsContinueReward
@@ -637,7 +637,7 @@ theorem stationaryRepairRoot_fixedOpponentsContinueMass
   fin_cases who <;>
     simp [stationaryRepairRoot, halfCoin, quarterCoin,
       stationaryRepairOpponentContinueMass,
-      quittingAllContinueAction] <;>
+      quittingAllContinueAction] ;
     norm_num
 
 theorem stationaryRepairRoot_unilateralCap (who : Player) :
