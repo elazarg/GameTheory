@@ -194,6 +194,16 @@ theorem translated_policy_reads_own_action
     translatedFalseOptionLaw_eq source hfalse]
   exact false_signal_policy_reads_own_action
 
+/-- On the hostile two-round source, every arbitrary serialized target policy
+is recovered exactly after projection and translation, including its forced
+non-owner and resolver local laws. -/
+theorem falseFirst_full_profile_round_trip
+    (target : (player : Bool) →
+      (FOSGToEFG.information Source.game falseFirst).BehavioralPolicy player) :
+    FOSGToEFG.translateBehavioral Source.game falseFirst
+      (FOSGToEFG.projectBehavioral Source.game falseFirst target) = target :=
+  FOSGToEFG.translate_project_profile Source.game falseFirst target
+
 theorem falseFirst_exact
     (target : (player : Bool) →
       (FOSGToEFG.information Source.game falseFirst).BehavioralPolicy player) :
@@ -239,7 +249,9 @@ theorem arbitrary_order_transport
 
 #print axioms FinDist.runDependent_eq_pi
 #print axioms FOSGToEFG.treeShaped
+#print axioms FOSGToEFG.translate_project_profile
 #print axioms FOSGToEFG.map_erase_runBehavioral_eq_source
+#print axioms falseFirst_full_profile_round_trip
 #print axioms falseFirst_exact
 #print axioms arbitrary_order_transport
 

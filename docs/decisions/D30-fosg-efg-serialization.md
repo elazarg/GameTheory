@@ -140,3 +140,20 @@ profile is exactly `propext`, `Classical.choice`, and `Quot.sound`.  The full
 pass.  No D30 kill condition fired.  The pinned live bridge chain may now be
 recovered or retired against this canonical adapter; equilibrium transfer
 still requires a separate strategic gate.
+
+The immediate breadth-first recovery reviewed all 104 declarations in the
+pinned `SerialExec`, `AugmentedEFG`, and `EFG_FOSG` chain.  The only new stable
+surface warranted was `translate_project_profile`: projection followed by
+translation recovers every target behavioral profile, not only scheduled
+views or profiles satisfying a validity predicate.  Owner views use the
+scheduled inverse; non-owner and resolver menus are singleton by construction.
+Thus the old `EFGProfileRespectsFOSG`, invalid-action legalization, bounded
+encoding, and cast proof spine disappear rather than becoming wrappers.
+
+The exact ledger classifies 11 declarations as adapted, 27 as subsumed, 47 as
+retired, and 19 as deferred.  The deferred set is not serializer debt: it
+belongs to separately named ordinary-continuation/terminal-support,
+augmentation, strategic/utility, and language-expressiveness gates.  The
+post-gate focused 1,727-job and full 3,422-job builds pass; exact coverage rises
+to 1,677 accounted declarations with no duplicates, omissions, or open rows in
+complete bounded ledgers, and Phase 2/3 remain verified.

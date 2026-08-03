@@ -937,6 +937,73 @@ theorem translate_project_scheduled [DecidableEq ι]
   apply Subtype.ext
   rfl
 
+/-- Projecting and then translating recovers every target behavioral profile.
+Outside a player's own selection phase the target menu is the singleton
+administrative choice `none`, so no reachability restriction or default action
+is needed. -/
+theorem translate_project_profile [DecidableEq ι]
+    (target : (player : ι) →
+      (information G order).BehavioralPolicy player) :
+    translateBehavioral G order (projectBehavioral G order target) = target := by
+  funext player view
+  rcases view with ⟨phase, sourceInfo⟩
+  cases phase with
+  | select owner =>
+      by_cases howner : owner = player
+      · subst owner
+        exact translate_project_scheduled G order target player sourceInfo
+      · have hsubsingleton : Subsingleton
+            ((information G order).Choice player ⟨.select owner, sourceInfo⟩) := by
+          constructor
+          intro first second
+          apply Subtype.ext
+          have hfirst : first.1 = none := by
+            simpa [information, menu, Ne.symm howner] using first.2
+          have hsecond : second.1 = none := by
+            simpa [information, menu, Ne.symm howner] using second.2
+          exact hfirst.trans hsecond.symm
+        letI := hsubsingleton
+        have htranslation :
+            translateBehavioral G order (projectBehavioral G order target)
+              player ⟨.select owner, sourceInfo⟩ =
+              FinDist.pure ⟨none, by simp [menu, Ne.symm howner]⟩ := by
+          simp [translateBehavioral, howner]
+        rw [htranslation]
+        exact (FinDist.eq_pure_of_subsingleton
+          (target player ⟨.select owner, sourceInfo⟩)
+          ⟨none, by simp [menu, Ne.symm howner]⟩).symm
+  | resolve =>
+      have hsubsingleton : Subsingleton
+          ((information G order).Choice player ⟨.resolve, sourceInfo⟩) := by
+        constructor
+        intro first second
+        apply Subtype.ext
+        have hfirst : first.1 = none := by
+          have hmem : first.1 ∈ menu G player ⟨.resolve, sourceInfo⟩ :=
+            first.2
+          have hsingleton : first.1 ∈
+              ({none} : Set (Option (G.execution.Action player))) := by
+            exact hmem
+          exact Set.mem_singleton_iff.mp hsingleton
+        have hsecond : second.1 = none := by
+          have hmem : second.1 ∈ menu G player ⟨.resolve, sourceInfo⟩ :=
+            second.2
+          have hsingleton : second.1 ∈
+              ({none} : Set (Option (G.execution.Action player))) := by
+            exact hmem
+          exact Set.mem_singleton_iff.mp hsingleton
+        exact hfirst.trans hsecond.symm
+      letI := hsubsingleton
+      have htranslation :
+          translateBehavioral G order (projectBehavioral G order target)
+            player ⟨.resolve, sourceInfo⟩ =
+            FinDist.pure ⟨none, by simp [menu]⟩ := by
+        simp [translateBehavioral]
+      rw [htranslation]
+      exact (FinDist.eq_pure_of_subsingleton
+        (target player ⟨.resolve, sourceInfo⟩)
+        ⟨none, by simp [menu]⟩).symm
+
 /-! ## Exact behavioral-law preservation -/
 
 /-- A source menu choice, recertified as a local contribution at the carried
