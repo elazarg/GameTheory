@@ -7,9 +7,9 @@
 | Lifecycle | `ACTIVE` |
 | Verdict | `MIXED` |
 | Objective priority | `P1` |
-| Last audited | 2026-08-03, through `fa4621d` and experiments E42--E50 |
+| Last audited | 2026-08-03, through E50 and production `QuittingBoundaryHolonomy` |
 | Central live claim | Couple the landed forward exact-D seam chart to E50's reverse anchored terminal-packet chart through the common finite minimizers, then decode a seam or certified buffered exit as repair or uniform root-debt descent. |
-| Next discriminant | Prove a finite-chain bridge/holonomy interface that transports E50's reverse depth-one packet across a forward close seam, or prove that failure of such transport gives a uniform optimized-debt exit. |
+| Next discriminant | Prove closedness or a decisive nonclosedness falsifier for the realized arbitrary-length anchored-holonomy correspondence. The actual finite-chain semigroup and its compact scalar envelope are now production Lean; transport across a limiting middle and the repair/debt decoder remain open. |
 | Production destination | Quitting relative-boundary producer and one-seam reinsertion consumer |
 | Supersedes / superseded by | Supersedes the invariant-circle/Sturmian reading locally; no successor yet. |
 
@@ -28,6 +28,7 @@
 | CG9 | The production positive-debt split can retain its supplied exact-D tail and select a downstream finite-cover one-seam pair without changing any internal edge. | `PROVED` | `M+X` | E47 actual-data adapter; the selected states omit terminal packet, terminal distance/scale, and calibrated-prefix provenance, so no repair is claimed. |
 | CG10 | Selected finite min-max chains admit a common-subsequence two-ended exact-D limit: a forward positive/summable-clock ray and a reverse ray ending on the zero-payoff/singleton-cap face, with positive debt and a quantitative full-action packet at reverse depth one. | `PROVED` | `M+X` | E50 checks the unscaled two-end core of PB5. The reverse action is selected from the limiting terminal edge; bridge survival and convergence of a preselected finite marked atom are not packaged. The middle escapes, so there is no bi-infinite orbit or proved transport to the forward seam. |
 | CG11 | Without any seriality hypothesis, the greedy buffered path yields an exhaustive trichotomy within the covering number of steps: a fully buffered one-seam return, a certified first exit, or a typed dead end — an exact buffered prefix ending at a state of `K` with no admissible successor. | `PROVED` | `M+X` | E46 extension (`greedyBufferedPath_return_or_certified_exit_or_deadEnd`). Keeps the compactness layer consumable while CG5's plateau seriality is only partial: a dead end becomes structured producer output rather than a failed hypothesis. No decoding or debt conclusion is claimed. |
+| CG12 | Every actual nonempty block of a selected finite min-max quitting chain yields one associative multiplayer boundary holonomy with exact `(B,P)` prescribed and `(A,T,χ)` arbitrary-behavior cap semantics. Adjacent blocks compose chronologically, the calibrated wrapper retains all common roots, exact-D entry/exit and the separated terminal packet, and the scalar image lies in a fixed compact product box. | `PROVED` | `M+L` | `QuittingBoundaryHolonomy`. The realized arbitrary-length subset is not proved closed; coefficient projection alone is not splice admissibility or anchor persistence. |
 
 ### Falsifiers and wrong turns
 
@@ -50,6 +51,7 @@
 ```text
 contracting graph data -> pullback/periodicity/prefix estimates       [L]
 finite quitting prefix -> max-affine acceptance geometry             [L]
+actual calibrated middle -> compact compositional holonomy envelope [L]
 hazard vector -> first direction chart and stationary barycenter     [X]
 iterated scales + terminal anchor -> compact exhaustive relation      [?]
 serial buffer -> greedy one-seam return or certified-exit dichotomy   [X]
@@ -852,8 +854,12 @@ terms may require one extra homogeneous coordinate.
 1. Periodic density for finite strongly connected graph shifts using bounded
    connectors.
 2. Bundle prescribed affine and best-response semigroups into one
-   `BoundaryHolonomy` object.
-3. Fixed-point and cap-safety decision theorem for one holonomy word.
+   `BoundaryHolonomy` object — **LANDED in production** as
+   `QuittingBoundaryHolonomy`, including extraction from actual selected
+   finite chains and chronological composition.
+3. Fixed-point and cap-safety decision theorem for one holonomy word —
+   **LANDED in production** (`QuittingAffineSummary.eval_fixedPoint` and
+   `QuittingBoundaryHolonomy.gap_le_iff`).
 4. Extended-real identity, if a literal block monoid has a consumer.
 5. Scale-direction homeomorphism between the punctured nonnegative cone and
    \((0,\infty)\times\Delta_I\), upgrading E44's algebraic inverse laws.

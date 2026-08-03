@@ -7,9 +7,9 @@
 | Lifecycle | `ACTIVE` |
 | Verdict | `MIXED` |
 | Objective priority | `P0` |
-| Last audited | 2026-08-03, through the Q132 audit, full-rate stationary calibration, and E50's unscaled two-ended Lean probe |
+| Last audited | 2026-08-03, through E50 and the production finite-chain `QuittingBoundaryHolonomy` interface |
 | Central live claim | Every fully summable positive plateau of optimized exact zero-boundary quitting chains yields either an executable accuracy-indexed repair or a bounded exact chain extension decreasing optimized initial debt by a uniform positive amount, while retaining the full terminal-packet anchor. |
-| Next discriminant | Add the preterminal survival scale, full marked quitter set, terminal atom, and calibrated-prefix provenance to one closed exact-D relation; then prove or refute anchor-preserving seriality and a decoder from its downstream seam or exit to repair or root-debt descent. |
+| Next discriminant | Prove or refute closedness of the *realized* anchored-holonomy correspondence under unbounded middle length, then decode its limiting seam or exit as repair or root-debt descent. The scalar coefficient envelope is now compact, but scalar projection deliberately forgets the source roots and does not prove realized closedness. |
 | Production destination | Finite-quitting terminal-equilibrium existence, followed by terminal-to-uniform payoff selection. |
 | Supersedes / superseded by | Consolidates the positive-plateau lane of Q132 and proof-mining §79; no successor. |
 
@@ -32,6 +32,7 @@
 | PB13 | In two players, the terminal packet and universal owner-solo obstruction yield an accuracy-indexed pair repair with \(O(p)\) exploitability. | `PROVED` | `M+L+C` | Exactly two players. | Closes the two-player escalation. |
 | PB14 | Terminal approximate equilibria at every positive error are equivalent, at the existence level, to a uniform-equilibrium payoff in a finite quitting game. | `PROVED` | `M+L+C` | All finite quitting games. | Final semantic consumer of PB7. |
 | PB15 | The packet lower bound controls the owner's opponent clock over the whole finite chain, including the marked final root. | `WRONG` | `M` | The preterminal survival product excludes the final root, whose opponent-Continue mass may be zero. | Correct state design for PB5/PB8. |
+| PB16 | Every nonempty block of a selected finite min-max chain has one compositional multiplayer boundary holonomy with exact playerwise `(B,P)` and `(A,T,χ)` semantics; its source retains exact-D entry/exit, all common product roots, calibrated minimizer provenance, owner, full marked action/quitter set, and separate preterminal-survival/final-atom factors. All scalar coordinates lie in one compact product box and fixed-word cap safety is two affine inequalities per player. | `PROVED` | `M+L` | `QuittingBoundaryHolonomy`. Compactness is for the coefficient envelope; the subset realized by arbitrary-length finite blocks is not proved closed, and the provenance-carrying wrapper is not asserted compact. | Finite-middle bridge producer. |
 
 ## Falsifiers and wrong turns
 
@@ -66,6 +67,13 @@
 - **Ordinary chain recurrence supplies one exact seam:** false. Multiple
   pseudo-edge errors require a closing theorem, and a downstream exact return
   may discard the calibrated anchor.
+- **Compact scalar holonomy is a compact repair relation:** not established.
+  PB16 puts the five playerwise coefficients in a fixed compact box, but the
+  forgetful map drops the full chronological root word. Retaining the actual
+  selected chain restores splice admissibility and provenance at finite
+  length, at the cost of an unbounded-length witness whose realized image is
+  not known to be closed. A subsequential scalar limit is therefore not yet
+  an executable finite block or an anchor-persistent bridge.
 - **Pointwise debt decrease gives fixed descent:** false in general. If
   \(S_K\downarrow s_\infty\), a one-step decrement \(c_m\) contradicts the
   plateau only when
@@ -104,6 +112,9 @@
     common forward/reverse extraction with bridge products                [M]
             |
             v
+    actual finite middle -> compact five-scalar holonomy envelope          [L]
+            |
+            v
     closed, serial, anchor-preserving exact-D relation                     [?]
             |
             +---- supplied finite/static/cyclic repair ------------------> [L verifiers]
@@ -139,6 +150,9 @@
 - certified-boundary reinsertion and max-affine acceptance geometry
   (`QuittingCertifiedBoundaryReinsertion` and
   `QuittingCertifiedBoundaryPolyhedron`);
+- actual finite-chain multiplayer holonomy, compact coefficient envelope,
+  exact arbitrary-behavior evaluation, and calibrated terminal-anchor
+  provenance (`QuittingBoundaryHolonomy`);
 - contracting periodic compilers; and
 - terminal-to-uniform transfer and payoff selection
   (`QuittingTerminalUniformization` and
@@ -151,10 +165,13 @@
    corrected preterminal bridge products, preselected finite mark, and their
    exact factorization still need a production representation only when they
    feed the next arrow.
-2. **Anchored relation.** No closed state retains all of
-   \(i_*,T_*,\omega\), bridge scale, terminal distance, and calibrated-prefix
-   provenance while remaining serial under exact Nash--Bellman predecessor
-   edges.
+2. **Anchored relation.** `QuittingBoundaryHolonomy` now retains all actual
+   roots, exact-D entry/exit, \(i_*,T_*,\omega\), the separated packet factors,
+   and calibrated-minimizer provenance at each finite length, and its scalar
+   image lies in a compact box. What is still missing is closedness of the
+   *realized* arbitrary-length correspondence (or a strategically sound
+   relaxation) together with plateau seriality. Compactness of the scalar
+   envelope does not supply either fact.
 3. **Decoder.** A downstream close seam must yield an actual cap-certified
    repair, and a buffered exit must lower debt measured at the original
    entry. Topology alone proves neither.
@@ -179,10 +196,13 @@
    the missing explicit bridge is the induced stopping-time law on
    \(\mathbb N\cup\{\infty\}\) and its exact-time atoms. This packet is the
    production falsifier for closed-attainable-tail arguments.
-2. **Corrected two-ended record.** Use E50's forward/reverse exact-D rays as
-   the baseline, then package the preterminal survival scale and preselected
-   marked terminal atom as separate fields before proving the bridge or a
-   decoder theorem.
+2. **Realized-holonomy closedness test.** The finite calibrated anchor now
+   packages the preterminal survival scale and preselected marked terminal
+   atom separately, and every actual middle block has compositional exact cap
+   semantics. Determine whether limits in the compact coefficient envelope
+   admit a closed support/root/provenance lift. If not, produce two calibrated
+   chain families with the same limiting coefficients but incompatible splice
+   data; if so, connect that lift to E50's two endpoint charts.
 3. **Wire the landed full-rate static regression.** The exact table already
    excludes all owner/sure-set profiles by a uniform gap and closes through a
    different stationary product root. Keep
