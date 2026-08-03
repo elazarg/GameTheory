@@ -6,7 +6,7 @@ in the linked group file. Rows are ordered by objective priority, not recency.
 | Priority | Idea group | Lifecycle | Verdict | Current gate |
 | --- | --- | --- | --- | --- |
 | `P0` | [Quitting relative-boundary producer](QuittingGameConjecture/README.md) | `ACTIVE` | `OPEN` | Resolve the escaping finite middle, then decode its anchored seam or failure as repair or uniform optimized-debt descent. |
-| `P0` | [Positive-plateau boundary closure](PositivePlateauBoundaryClosure/README.md) | `ACTIVE` | `MIXED` | Fixed-cutoff provenance is compact/closed and literal unbounded length is noncompact; prove uniform length tightness, build an infinity/stopping-law chart with bounded decoder, or exhibit calibrated incompatibility. |
+| `P0` | [Positive-plateau boundary closure](PositivePlateauBoundaryClosure/README.md) | `ACTIVE` | `MIXED` | Encode exact blocks as marked subprobability absorption cylinders; then prove the enriched payoff/obstacle/packet graph closed and decode it as a terminal repair or strict finite root-debt surgery. |
 | `P1` | [Cycle geometry resolution](CycleGeometryResolution/README.md) | `ACTIVE` | `MIXED` | Fixed-cutoff holonomy topology is landed; decide the escaping-length chart and its game-facing seam/exit decoder. |
 | `P1` | [Stationary repair exhaustion](StationaryRepairExhaustion/README.md) | `ACTIVE` | `MIXED` | Formalize the actual-profile infimum split, then test whether a finite scale/direction graph represents every zero escape without spurious relaxed roots. |
 | `P1` | [Two-player base-case exhaustion](TwoPlayerBaseCaseExhaustion/README.md) | `ACTIVE` | `PROVED` | Formalize the known six-scalar case split and connect its stationary approximate profiles to terminal-to-uniform selection. |

@@ -1,13 +1,23 @@
 # Uniform-equilibrium project pipeline
 
-**Audited checkpoint:** `14d75ff` on 2026-08-03.
+**Production-Lean checkpoint:** `14d75ff`; **research-control checkpoint:**
+`cd1db11`, both audited on 2026-08-03.
 
 This is project-control truth: decisions, dependency priorities, gates, and
-acceptance conditions. It is not a mathematical exposition. At this checkpoint
-the fixed-cutoff holonomy compactness work is committed and counted. The
-remaining working-tree changes are documentation/idea migration; new Lean
-files are never counted as landed until committed, built, and reflected in the
+acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
+holonomy compactness work is committed and counted; the marked absorption-path
+route is a selected open design, not production mathematics. New Lean files
+are never counted as landed until committed, built, and reflected in the
 owning claim and [`FRONTIER.md`](FRONTIER.md).
+
+**Handoff validation.** `lake build` succeeds. Local Markdown links under
+`docs/`, `ideas/`, and `REORG.md` resolve. The stricter repository audit is
+known red, not silently green: it reports four `opaque` declarations, ten
+`native_decide` proofs, and 25 tracked Lean modules outside the default import
+targets; `Uniform.lean` also retains one explicit `sorry`. These are owned by
+the engineering queue below and the
+[proof-engineering audit](../../ephemeral/ProofEngineeringAudit.md), rather
+than blockers hidden in the P0 mathematical status.
 
 ## Project-control decisions
 

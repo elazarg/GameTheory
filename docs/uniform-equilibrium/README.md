@@ -14,8 +14,10 @@ program.
    attributed result under
    [`ideas/UniformEquilibriumLiterature/`](../../ideas/UniformEquilibriumLiterature/README.md).
 4. Read [Program.md](Program.md) when changing the research/formalization
-   method, and the [research atlas](manuscript/UniformEquilibriumFrontierManuscript.tex)
-   for long-form exposition.
+   method, the [research atlas](manuscript/UniformEquilibriumFrontierManuscript.tex)
+   for the detailed theorem/idea map, and
+   [intuition.tex](manuscript/intuition.tex) for a shorter conceptual account of
+   the current escaping-middle problem.
 
 For a provisional, non-authoritative literature/novelty assessment, see
 [`ephemeral/UniformEquilibriumNoveltyAssessment.md`](../../ephemeral/UniformEquilibriumNoveltyAssessment.md).
@@ -43,7 +45,11 @@ The measured repository/CI assessment is
 - [case-studies/FTVArchitectureAnalysis.md](case-studies/FTVArchitectureAnalysis.md)
   records the verified FTV architecture analysis.
 - [manuscript/UniformEquilibriumFrontierManuscript.tex](manuscript/UniformEquilibriumFrontierManuscript.tex)
-  is the manuscript source; the generated PDF is kept beside it locally.
+  is the detailed manuscript source;
+- [manuscript/intuition.tex](manuscript/intuition.tex) is its conceptual
+  companion.  Both are derivative exposition: resolve status conflicts in
+  favor of `PIPELINE.md`, `FRONTIER.md`, the owning claim file, and finally the
+  production Lean declaration. Generated PDFs are local build artifacts.
 
 Questions, reviews, proof-mining notebooks, experiments, and archived
 `ephemeral/` files are intake/evidence; none is current truth by itself. The
