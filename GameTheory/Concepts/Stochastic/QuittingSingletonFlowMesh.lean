@@ -199,6 +199,76 @@ theorem quittingMeshPayoffInterpolant_at_length_eq_next
   field_simp [hcontinue]
   all_goals ring
 
+/-- Closed form for an interpolant whose start lies on the geometric arc
+from `root` to `next`. -/
+theorem quittingMeshInterpolant_eq_pow_sub
+    {root start next q : ℝ} {m k : ℕ}
+    (hq : q ≠ 0) (hk : k ≤ m)
+    (hstart : start = root + q ^ m * (next - root)) :
+    quittingMeshInterpolant root start q k =
+      root + q ^ (m - k) * (next - root) := by
+  unfold quittingMeshInterpolant
+  rw [hstart]
+  have hpow := pow_sub₀ q hq hk
+  rw [hpow]
+  field_simp [hq]
+  all_goals ring
+
+/-- Every microstage of a subdivided singleton arc lies between its two
+coarse endpoints.  Consequently, any coordinatewise lower bound shared by
+the current and next coarse values holds throughout the microblock. -/
+theorem le_quittingMeshPayoffInterpolant_of_arcEndpoints
+    {p : ℝ} {m : ℕ} (hp0 : 0 ≤ p) (hp1 : p < 1) (hm : 0 < m)
+    {root start next lower : Payoff ι}
+    (harc : start = quittingSingletonArcPayoff p root next)
+    (hlowerStart : ∀ who, lower who ≤ start who)
+    (hlowerNext : ∀ who, lower who ≤ next who)
+    (k : ℕ) (hk : k ≤ m) (who : ι) :
+    lower who ≤
+      quittingMeshPayoffInterpolant root start
+        (1 - quittingMeshHazard p m) k who := by
+  let q := 1 - quittingMeshHazard p m
+  have hqpos : 0 < q := by
+    dsimp only [q]
+    rw [one_sub_quittingMeshHazard]
+    exact Real.rpow_pos_of_pos (sub_pos.mpr hp1) _
+  have hqle : q ≤ 1 := by
+    dsimp only [q]
+    have hhazard := quittingMeshHazard_nonneg m hp0 hp1.le
+    linarith
+  have hqpow : q ^ m = 1 - p := by
+    dsimp only [q]
+    exact one_sub_quittingMeshHazard_pow hp1.le hm
+  have harcWho : start who =
+      p * root who + (1 - p) * next who := by
+    simpa [quittingSingletonArcPayoff] using congrFun harc who
+  have hstart : start who =
+      root who + q ^ m * (next who - root who) := by
+    rw [hqpow, harcWho]
+    ring
+  have hform := quittingMeshInterpolant_eq_pow_sub
+    hqpos.ne' hk hstart
+  rw [quittingMeshPayoffInterpolant_apply, hform]
+  have hpowerLower : q ^ m ≤ q ^ (m - k) :=
+    pow_le_pow_of_le_one hqpos.le hqle (Nat.sub_le m k)
+  have hpowerUpper : q ^ (m - k) ≤ 1 :=
+    pow_le_one₀ hqpos.le hqle
+  by_cases hdirection : 0 ≤ next who - root who
+  · have hscaled := mul_le_mul_of_nonneg_right
+      hpowerLower hdirection
+    calc
+      lower who ≤ start who := hlowerStart who
+      _ = root who + q ^ m * (next who - root who) := hstart
+      _ ≤ root who + q ^ (m - k) * (next who - root who) :=
+        add_le_add (le_refl _) hscaled
+  · have hscaled := mul_le_mul_of_nonpos_right
+      hpowerUpper (le_of_not_ge hdirection)
+    calc
+      lower who ≤ next who := hlowerNext who
+      _ = root who + 1 * (next who - root who) := by ring
+      _ ≤ root who + q ^ (m - k) * (next who - root who) :=
+        add_le_add (le_refl _) hscaled
+
 /-! ## Local quit slack -/
 
 /-- If quitting alone is no better than the live value, mixing in a collision

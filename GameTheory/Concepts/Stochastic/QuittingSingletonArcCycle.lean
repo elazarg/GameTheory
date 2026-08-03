@@ -206,6 +206,32 @@ theorem quittingSingletonArcCycleValue_rotate
     exact (quittingMeshPayoffInterpolant_at_length_eq_next
       (hp1 block) hm (harc block)).symm
 
+omit [Fintype ι] [DecidableEq ι] in
+/-- Singleton lower bounds need only be checked at the finitely many coarse
+vertices; the arc interpolants preserve them at every subdivision scale and
+microphase. -/
+theorem quittingSoloReward_le_quittingSingletonArcCycleValue_of_coarse
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (owner : Fin L → ι) (p : Fin L → ℝ)
+    (coarse : Fin L → Payoff ι) (m : ℕ) (hm : 0 < m)
+    (hp0 : ∀ block, 0 ≤ p block) (hp1 : ∀ block, p block < 1)
+    (harc : ∀ block,
+      coarse block = quittingSingletonArcPayoff (p block)
+        (quittingSoloReward reward (owner block))
+        (coarse (finRotate L block)))
+    (hcoarseSolo : ∀ block who,
+      quittingSoloReward reward who who ≤ coarse block who)
+    (phase : Fin (L * m)) (who : ι) :
+    quittingSoloReward reward who who ≤
+      quittingSingletonArcCycleValue reward owner p coarse m phase who := by
+  let block := quittingSingletonMeshBlock phase
+  let offset := quittingSingletonMeshOffset phase
+  exact le_quittingMeshPayoffInterpolant_of_arcEndpoints
+    (hp0 block) (hp1 block) hm (harc block)
+    (hcoarseSolo block)
+    (hcoarseSolo (finRotate L block))
+    offset.val offset.isLt.le who
+
 /-- Each phase of the assembled arc cycle satisfies exact prescribed policy
 evaluation, exact prescribed-Continue transport, and the local `D * h` Quit
 bound required by the cyclic supersolution compiler. -/
@@ -222,9 +248,8 @@ theorem quittingSingletonArcCycle_phase_certificate
     (hactive : ∀ block,
       coarse block (owner block) =
         quittingSoloReward reward (owner block) (owner block))
-    (hsolo : ∀ phase who,
-      quittingSoloReward reward who who ≤
-        quittingSingletonArcCycleValue reward owner p coarse m phase who)
+    (hcoarseSolo : ∀ block who,
+      quittingSoloReward reward who who ≤ coarse block who)
     (hcollision : ∀ block other, other ≠ owner block →
       max (quittingSingletonCollisionReward
           reward (owner block) other -
@@ -259,8 +284,11 @@ theorem quittingSingletonArcCycle_phase_certificate
           (quittingSoloReward reward (owner block)) (coarse block)
           (1 - quittingMeshHazard (p block) m) offset.val who := by
     intro who
+    have hphaseSolo :=
+      quittingSoloReward_le_quittingSingletonArcCycleValue_of_coarse
+        reward owner p coarse m hm hp0 hp1 harc hcoarseSolo phase who
     simpa only [quittingSingletonArcCycleValue, block, offset] using
-      hsolo phase who
+      hphaseSolo
   have hcertificate :=
     singletonMeshStationaryRoot_interpolant_certificate
       reward (owner block) m (hp0 block) (hp1 block)
@@ -353,9 +381,8 @@ theorem singletonArcCycle_isTerminalNash_and_hasValue
     (hactive : ∀ block,
       coarse block (owner block) =
         quittingSoloReward reward (owner block) (owner block))
-    (hsolo : ∀ phase who,
-      quittingSoloReward reward who who ≤
-        quittingSingletonArcCycleValue reward owner p coarse m phase who)
+    (hcoarseSolo : ∀ block who,
+      quittingSoloReward reward who who ≤ coarse block who)
     (hcollision : ∀ block other, other ≠ owner block →
       max (quittingSingletonCollisionReward
           reward (owner block) other -
@@ -400,7 +427,7 @@ theorem singletonArcCycle_isTerminalNash_and_hasValue
               (p (quittingSingletonMeshBlock cyclePhase)) m := by
     intro cyclePhase
     exact quittingSingletonArcCycle_phase_certificate
-      reward owner p coarse m hm hp0 hp1 harc hD hactive hsolo
+      reward owner p coarse m hm hp0 hp1 harc hD hactive hcoarseSolo
       hcollision cyclePhase
   have hpolicy := fun cyclePhase ↦ (hphaseCertificate cyclePhase).1
   have hcontinue := fun cyclePhase ↦
@@ -478,9 +505,8 @@ theorem singletonArcCycle_isUniformEquilibriumPayoff
     (hactive : ∀ block,
       coarse block (owner block) =
         quittingSoloReward reward (owner block) (owner block))
-    (hsoloAll : ∀ m, 0 < m → ∀ phase who,
-      quittingSoloReward reward who who ≤
-        quittingSingletonArcCycleValue reward owner p coarse m phase who)
+    (hcoarseSolo : ∀ block who,
+      quittingSoloReward reward who who ≤ coarse block who)
     (hcollision : ∀ block other, other ≠ owner block →
       max (quittingSingletonCollisionReward
           reward (owner block) other -
@@ -513,7 +539,7 @@ theorem singletonArcCycle_isUniformEquilibriumPayoff
   obtain ⟨hterminalNash, hterminalValue⟩ :=
     singletonArcCycle_isTerminalNash_and_hasValue
       reward owner p coarse initial m hm hp0 hp1 ha hD harc hactive
-      (hsoloAll m hm) hcollision hcoarseContracts
+      hcoarseSolo hcollision hcoarseContracts
   have huniform : (quittingGame reward).IsUniformεEquilibrium
       none (ε / 2) profile := by
     exact quittingGame_isUniformεEquilibrium_of_terminalNash_finite
@@ -571,10 +597,8 @@ theorem singletonArcCycle_isHorizonNash_and_delivers
     (hactive : ∀ block,
       coarse block (owner block) =
         quittingSoloReward reward (owner block) (owner block))
-    (hsolo : ∀ phase who,
-      quittingSoloReward reward who who ≤
-        quittingSingletonArcCycleValue reward owner p coarse
-          (quittingSqrtMeshScale N) phase who)
+    (hcoarseSolo : ∀ block who,
+      quittingSoloReward reward who who ≤ coarse block who)
     (hcollision : ∀ block other, other ≠ owner block →
       max (quittingSingletonCollisionReward
           reward (owner block) other -
@@ -637,7 +661,7 @@ theorem singletonArcCycle_isHorizonNash_and_delivers
     intro phase
     exact quittingSingletonArcCycle_phase_certificate
       reward owner p coarse (quittingSqrtMeshScale N) hm hp0 hp1 harc
-      hD hactive hsolo hcollision phase
+      hD hactive hcoarseSolo hcollision phase
   have hpolicy := fun phase ↦ (hphaseCertificate phase).1
   have hcontinue := fun phase ↦ (hphaseCertificate phase).2.1
   have hquit := fun phase ↦ (hphaseCertificate phase).2.2
