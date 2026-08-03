@@ -451,6 +451,7 @@ import GameTheory.Concepts.Stochastic.QuittingPeriodicMeshRate
 import GameTheory.Concepts.Stochastic.QuittingPeriodicFiniteHorizonRate
 import GameTheory.Concepts.Stochastic.QuittingCyclicSupersolution
 import GameTheory.Concepts.Stochastic.QuittingSingletonFlowMesh
+import GameTheory.Concepts.Stochastic.QuittingSingletonStationaryRoot
 import GameTheory.Concepts.Stochastic.TerminalToUniformDeviationApproximation
 import GameTheory.Concepts.Stochastic.QuittingAlmostSureOpponentUniformization
 import GameTheory.Concepts.Stochastic.QuittingTerminalUniformization
