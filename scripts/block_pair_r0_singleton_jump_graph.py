@@ -18,14 +18,17 @@ sign changes only at explicitly enumerated rational points.  This checker
 enumerates all such transition domains exactly and prints the resulting graph
 on ordered player pairs.
 
-This script is an exact finite reduction for the singleton-support periodic
-subclass with no equal adjacent active identities.  It also applies when each
-maximal same-player run satisfies the inactive inequalities after aggregation
-to one jump.  Stagewise Nash inequalities do not in general survive that
-aggregation, so arbitrary repeated runs are separately left open.  A graph
-cycle is merely a necessary combinatorial condition: the associated
-fractional transition maps must still share a periodic point.  An acyclic
-graph excludes the stated reduced subclass.  The checker says nothing about
+The first graph is the exact finite reduction for singleton-support periodic
+profiles with no equal adjacent active identities.  A second, larger graph
+handles arbitrary finite same-player runs: after a reciprocal-coordinate
+change, the first and last substage conditions are linear, and exact
+Fourier--Motzkin projection gives a necessary endpoint envelope.  That
+overgraph is also acyclic, so no compatibility claim for intermediate
+substage choices is needed.  The checker imports the exact sure-quitter audit
+for the hazard-one boundary and separately excludes one-identity cycles.
+Zero-hazard phases may be compressed from a terminal-payoff profile; if every
+hazard is zero the profile is Never.  Thus the checker excludes every exact
+finite-period singleton-support terminal Nash profile.  It says nothing about
 phases with several active quitters or nonperiodic paths.
 """
 
@@ -42,6 +45,9 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from block_pair_stationary_certificate import N, TERMINAL  # noqa: E402
+from block_pair_r0_singleton_perturbation_fences import (  # noqa: E402
+    assert_credible_first_unchanged,
+)
 
 
 Q = Fraction
@@ -614,6 +620,12 @@ def main() -> None:
     assert frozenset(run_intervals) == EXPECTED_RUN_ENVELOPE_TRIPLES
     assert len(run_edges) == len(EXPECTED_RUN_ENVELOPE_TRIPLES) == 10
     assert not run_cyclic
+
+    # A hazard-one phase is outside the finite reciprocal-coordinate chart.
+    # The exact perturbed sure-face audit proves that every such local root
+    # gives its designated sure quitter a continuation deviation of at least
+    # 13/15, independently of a periodic tail.
+    assert_credible_first_unchanged()
     print("exact singleton-jump transition graph generated")
     print(f"vertices = {len(vertices)}")
     print(f"feasible triples = {len(witnesses)}")
@@ -642,12 +654,14 @@ def main() -> None:
     print(f"finite repeated-run envelope edges = {len(run_edges)}")
     print(f"finite repeated-run envelope SCCs = {run_components}")
     print("the finite repeated-run necessary envelope is acyclic")
+    print("hazard-one faces excluded by exact credible-First gap >= 13/15")
 
     # A periodic singleton profile using just one identity absorbs at that
     # player's solo outcome.  Player 0 rejects its negative solo reward in
     # favor of Never.  For players 1--3 the displayed inactive player has a
     # strictly profitable immediate quit at every own hazard h in [0,1].
     assert SOLO[0] == Q(-189, 100) < 0
+    assert SOLO[1:] == (Q(2), Q(2), Q(2))
     same_mode_witnesses = {
         1: (2, Q(2), Q(4)),
         2: (0, Q(211, 100), Q(189, 100)),
@@ -660,6 +674,9 @@ def main() -> None:
         assert pair - SOLO[deviator] == slope
         assert intercept > 0 and intercept + slope > 0
     print("same-identity singleton cycles are excluded exactly")
+    print(
+        "zero-hazard phases compress harmlessly; the all-zero profile is Never"
+    )
     print(
         "conclusion: no finite periodic singleton-support terminal Nash path"
     )
