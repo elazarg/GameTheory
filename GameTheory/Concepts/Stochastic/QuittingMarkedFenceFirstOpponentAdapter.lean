@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Concepts.Stochastic.QuittingMarkedFencePacket
 import GameTheory.Concepts.Stochastic.QuittingBellmanTelescope
 import GameTheory.Concepts.Stochastic.QuittingOpponentActionMass
+import GameTheory.Concepts.Stochastic.QuittingExceptionalTailLimits
 
 /-!
 # Actual first-opponent packets for finite quitting chains
@@ -282,6 +283,136 @@ theorem quittingFirstOpponentRawMean_eq_sum_continueReward
   rw [sum_opponentActionMass_mul_ownerReward]
   rfl
 
+/-- Peeling the first live date gives the ordinary finite Never recursion. -/
+theorem quittingFirstOpponentRawMean_succ
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (owner : ι) (start fuel : ℕ) :
+    quittingFirstOpponentRawMean reward roots owner start (fuel + 1) =
+      quittingFixedOpponentsContinueReward reward roots owner start +
+        quittingFixedOpponentsContinueMass roots owner start *
+          quittingFirstOpponentRawMean reward roots owner (start + 1) fuel := by
+  rw [quittingFirstOpponentRawMean_eq_sum_continueReward,
+    Finset.sum_range_succ']
+  simp only [quittingOpponentSurvivalWeight, Finset.range_zero,
+    Finset.prod_empty, one_mul, Nat.add_zero]
+  rw [quittingFirstOpponentRawMean_eq_sum_continueReward, Finset.mul_sum]
+  let currentReward :=
+    quittingFixedOpponentsContinueReward reward roots owner start
+  let leftTail := ∑ offset ∈ Finset.range fuel,
+    quittingOpponentSurvivalWeight roots owner start (offset + 1) *
+      quittingFixedOpponentsContinueReward reward roots owner
+        (start + (offset + 1))
+  let rightTail := ∑ offset ∈ Finset.range fuel,
+    quittingFixedOpponentsContinueMass roots owner start *
+      (quittingOpponentSurvivalWeight roots owner (start + 1) offset *
+        quittingFixedOpponentsContinueReward reward roots owner
+          ((start + 1) + offset))
+  change leftTail + currentReward = currentReward + rightTail
+  rw [add_comm leftTail currentReward]
+  apply congrArg (fun tail : ℝ ↦ currentReward + tail)
+  dsimp only [leftTail, rightTail]
+  apply Finset.sum_congr rfl
+  intro offset hoffset
+  have hweight := quittingOpponentSurvivalWeight_add
+    roots owner start 1 offset
+  have hone : quittingOpponentSurvivalWeight roots owner start 1 =
+      quittingFixedOpponentsContinueMass roots owner start := by
+    simp [quittingOpponentSurvivalWeight]
+  rw [hone] at hweight
+  calc
+    quittingOpponentSurvivalWeight roots owner start (offset + 1) *
+          quittingFixedOpponentsContinueReward reward roots owner
+            (start + (offset + 1)) =
+        (quittingFixedOpponentsContinueMass roots owner start *
+            quittingOpponentSurvivalWeight roots owner (start + 1) offset) *
+          quittingFixedOpponentsContinueReward reward roots owner
+            ((start + 1) + offset) := by
+      rw [show offset + 1 = 1 + offset by omega, hweight]
+      congr 2 <;> omega
+    _ = quittingFixedOpponentsContinueMass roots owner start *
+        (quittingOpponentSurvivalWeight roots owner (start + 1) offset *
+          quittingFixedOpponentsContinueReward reward roots owner
+            ((start + 1) + offset)) := by ring
+
+/-- On an exact finite Nash--Bellman chain with zero terminal boundary, the
+actual finite Never payoff is no larger than the declared current value.
+
+The proof uses only the pure-Continue test from local root Nash.  It peels
+the concrete first-opponent moment one date at a time, so there is no
+separate strategic `Never` hypothesis hidden in the marked-fence adapter. -/
+theorem quittingFirstOpponentRawMean_le_value_of_finiteExactChain
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (owner : ι) (start fuel : ℕ)
+    (hterminal : value (start + fuel) = 0)
+    (hpolicy : ∀ offset, offset < fuel →
+      value (start + offset) =
+        quittingRootSuccessorPayoff reward
+          (value (start + offset + 1)) (roots (start + offset)))
+    (hnash : ∀ offset, offset < fuel →
+      IsεQuittingRootNash reward (value (start + offset + 1)) 0
+        (roots (start + offset))) :
+    quittingFirstOpponentRawMean reward roots owner start fuel ≤
+      value start owner := by
+  induction fuel generalizing start with
+  | zero =>
+      have hterminal' : value start = 0 := by
+        simpa using hterminal
+      rw [hterminal']
+      simp [quittingFirstOpponentRawMean]
+  | succ fuel ih =>
+      have htailTerminal : value ((start + 1) + fuel) = 0 := by
+        rw [show (start + 1) + fuel = start + Nat.succ fuel by omega]
+        exact hterminal
+      have htailPolicy : ∀ offset, offset < fuel →
+          value ((start + 1) + offset) =
+            quittingRootSuccessorPayoff reward
+              (value ((start + 1) + offset + 1))
+              (roots ((start + 1) + offset)) := by
+        intro offset hoffset
+        simpa only [Nat.add_assoc, Nat.one_add] using
+          hpolicy (offset + 1) (by omega)
+      have htailNash : ∀ offset, offset < fuel →
+          IsεQuittingRootNash reward
+            (value ((start + 1) + offset + 1)) 0
+            (roots ((start + 1) + offset)) := by
+        intro offset hoffset
+        simpa only [Nat.add_assoc, Nat.one_add] using
+          hnash (offset + 1) (by omega)
+      have htail := ih (start + 1) htailTerminal htailPolicy htailNash
+      have hpolicyZero : value start owner =
+          quittingRootSuccessorPayoff reward (value (start + 1))
+            (roots start) owner := by
+        simpa using congrFun (hpolicy 0 (by omega)) owner
+      have hcontinue := (hnash 0 (by omega)) owner (PMF.pure false)
+      have hrootContinue :
+          quittingFixedOpponentsContinueReward reward roots owner start +
+              quittingFixedOpponentsContinueMass roots owner start *
+                value (start + 1) owner ≤
+            value start owner := by
+        rw [← quittingRootContinuePayoff_eq_fixedOpponents
+          reward roots owner (value (start + 1)) start]
+        change quittingRootContinuePayoff reward (value (start + 1))
+            (roots start) owner ≤
+          quittingRootSuccessorPayoff reward (value (start + 1))
+            (roots start) owner + 0 at hcontinue
+        rw [← hpolicyZero] at hcontinue
+        simpa only [add_zero] using hcontinue
+      rw [quittingFirstOpponentRawMean_succ]
+      calc
+        quittingFixedOpponentsContinueReward reward roots owner start +
+              quittingFixedOpponentsContinueMass roots owner start *
+                quittingFirstOpponentRawMean reward roots owner
+                  (start + 1) fuel ≤
+            quittingFixedOpponentsContinueReward reward roots owner start +
+              quittingFixedOpponentsContinueMass roots owner start *
+                value (start + 1) owner := by
+          exact add_le_add_right
+            (mul_le_mul_of_nonneg_left htail
+              (quittingStationaryContinueMass_nonneg
+                (Function.update (roots start) owner (PMF.pure false)))) _
+        _ ≤ value start owner := hrootContinue
+
 /-! ## Bounds and normalization -/
 
 /-- The displayed owner reward inherits the common lower reward bound. -/
@@ -475,5 +606,47 @@ theorem quittingFirstOpponent_markedFenceDichotomy
   · exact sum_normalizedOwnerReward_le_neg_theta reward roots value owner
       start fuel θ hθ.le hmass hnever hnegative
   · exact quittingFirstOpponent_owner_not_quitter owner
+
+/-- **Exact-chain marked-fence theorem.**  A negative coordinate on a
+finite, zero-boundary Nash--Bellman chain directly yields the concrete
+first-opponent packet dichotomy.  Unlike
+`quittingFirstOpponent_markedFenceDichotomy`, this statement does not assume
+the strategic Never inequality: local exact root Nash proves it by backward
+induction through the supplied policy-evaluation chain. -/
+theorem quittingFiniteExactChain_firstOpponent_markedFenceDichotomy
+    [Nontrivial ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (owner : ι) (start fuel : ℕ) (θ M : ℝ)
+    (hterminal : value (start + fuel) = 0)
+    (hpolicy : ∀ offset, offset < fuel →
+      value (start + offset) =
+        quittingRootSuccessorPayoff reward
+          (value (start + offset + 1)) (roots (start + offset)))
+    (hnash : ∀ offset, offset < fuel →
+      IsεQuittingRootNash reward (value (start + offset + 1)) 0
+        (roots (start + offset)))
+    (hθ : 0 < θ) (hM : 0 ≤ M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hnegative : value start owner ≤ -θ) :
+    θ ≤ 4 * M * QuittingMarkedFencePacket.packetMass
+        (quittingFirstOpponentWeight roots owner start fuel)
+        (QuittingMarkedFencePacket.IsGoodBoundary θ
+          (quittingFirstOpponentOwnerReward reward owner)
+          (quittingFirstOpponentQuitters owner)
+          (quittingFirstOpponentValue value start)) ∨
+      ∃ j ∈ (Finset.univ.erase owner : Finset ι),
+        θ ≤ 4 * M * ((Finset.univ.erase owner : Finset ι).card : ℝ) *
+          QuittingMarkedFencePacket.packetMass
+            (quittingFirstOpponentWeight roots owner start fuel)
+            (QuittingMarkedFencePacket.IsNewNegativeOwner θ
+              (quittingFirstOpponentOwnerReward reward owner)
+              (quittingFirstOpponentQuitters owner)
+              (quittingFirstOpponentValue value start) j) := by
+  apply quittingFirstOpponent_markedFenceDichotomy reward roots value owner
+    start fuel θ M hθ hM hreward
+  · exact quittingFirstOpponentRawMean_le_value_of_finiteExactChain
+      reward roots value owner start fuel hterminal hpolicy hnash
+  · exact hnegative
 
 end GameTheory
