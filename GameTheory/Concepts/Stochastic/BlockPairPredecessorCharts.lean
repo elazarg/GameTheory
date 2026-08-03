@@ -320,4 +320,168 @@ theorem supportTen_active_values
     simp [supportTenValue, supportTenHazard] <;>
     field_simp <;> ring
 
+/-! ## Three-player rational charts -/
+
+/-- The middle denominator in the support-7 triangular solve. -/
+def supportSevenMiddle (successor : Player → ℝ) : ℝ :=
+  3 * successor 0 + 5 * successor 2 + 8
+
+/-- The final coefficient in the support-7 triangular solve. -/
+def supportSevenCoefficient (successor : Player → ℝ) : ℝ :=
+  18 * successor 0 - successor 1 * successor 2 - 22 * successor 1 +
+    38 * successor 2 + 224
+
+/-- Rational support-7 hazard chart, with active players 0, 1, and 2. -/
+def supportSevenHazard (successor : Player → ℝ) : Player → ℝ := ![
+  -((successor 1 - 2) * (successor 2 + 22)) /
+    supportSevenCoefficient successor,
+  (successor 2 - 2) / (successor 2 + 4),
+  3 * (2 * successor 0 + 3 * successor 2 - 2) /
+    (2 * supportSevenMiddle successor),
+  0
+]
+
+/-- The exact predecessor-value chart for support mask 7. -/
+def supportSevenValue (successor : Player → ℝ) : Player → ℝ :=
+  let x₀ := supportSevenHazard successor 0
+  let x₁ := supportSevenHazard successor 1
+  let x₂ := supportSevenHazard successor 2
+  let survival := (1 - x₀) * (1 - x₁) * (1 - x₂)
+  ![
+    -3 * x₁ * x₂ - 3 * x₁ + 2 * x₂ - 2,
+    4 * x₀ * x₂ - 3 * x₀ - 2 * x₂ + 2,
+    -5 * x₀ * x₁ - 2 * x₀ + 4 * x₁ + 2,
+    4 * x₀ * x₁ * x₂ + 2 * x₀ * x₁ - 12 * x₀ * x₂ -
+      5 * x₁ * x₂ + 8 * x₂ + survival * successor 3
+  ]
+
+theorem supportSeven_active
+    (successor : Player → ℝ)
+    (htwo : successor 2 + 4 ≠ 0)
+    (hmiddle : supportSevenMiddle successor ≠ 0)
+    (hcoefficient : supportSevenCoefficient successor ≠ 0) :
+    difference (supportSevenHazard successor) successor 0 = 0 ∧
+      difference (supportSevenHazard successor) successor 1 = 0 ∧
+      difference (supportSevenHazard successor) successor 2 = 0 := by
+  constructor
+  · rw [difference_eq_expanded]
+    simp [expandedDifference, supportSevenHazard]
+    field_simp
+    simp only [supportSevenMiddle]
+    ring
+  constructor
+  · rw [difference_eq_expanded]
+    simp [expandedDifference, supportSevenHazard]
+    field_simp
+    simp only [supportSevenMiddle, supportSevenCoefficient]
+    ring
+  · rw [difference_eq_expanded]
+    simp [expandedDifference, supportSevenHazard]
+    field_simp
+    simp only [supportSevenCoefficient]
+    ring
+
+/-- The terminal-table expectation agrees with formula (38) on the rational
+support-7 denominator domain. -/
+theorem supportSeven_predecessorValue
+    (successor : Player → ℝ)
+    (htwo : successor 2 + 4 ≠ 0)
+    (hmiddle : supportSevenMiddle successor ≠ 0)
+    (hcoefficient : supportSevenCoefficient successor ≠ 0) :
+    predecessorValue (supportSevenHazard successor) successor =
+      supportSevenValue successor := by
+  funext who
+  fin_cases who <;>
+    simp +decide [predecessorValue, opponentAbsorbingContribution,
+      opponentSurvival, maskProbability, actionFactor, realSum, realProduct,
+      supportSevenHazard, supportSevenValue,
+      terminalRewardNat] <;>
+    field_simp <;>
+    simp only [supportSevenMiddle, supportSevenCoefficient] <;>
+    ring
+
+/-- The middle denominator in the support-14 triangular solve. -/
+def supportFourteenMiddle (successor : Player → ℝ) : ℝ :=
+  5 * successor 1 + 3 * successor 2 + 2
+
+/-- The numerator of player 2's support-14 hazard. -/
+def supportFourteenNumerator (successor : Player → ℝ) : ℝ :=
+  5 * successor 1 * successor 3 - 20 * successor 1 -
+    12 * successor 2 + 26 * successor 3 - 8
+
+/-- The final coefficient in the support-14 triangular solve. -/
+def supportFourteenCoefficient (successor : Player → ℝ) : ℝ :=
+  5 * successor 1 * successor 3 - 65 * successor 1 -
+    30 * successor 2 + 26 * successor 3 - 98
+
+/-- Rational support-14 hazard chart, with active players 1, 2, and 3. -/
+def supportFourteenHazard (successor : Player → ℝ) : Player → ℝ := ![
+  0,
+  (5 * successor 1 + 6 * successor 2 - 22) /
+    (2 * supportFourteenMiddle successor),
+  supportFourteenNumerator successor / supportFourteenCoefficient successor,
+  (successor 1 - 2) / (successor 1 + 4)
+]
+
+/-- The exact predecessor-value chart for support mask 14. -/
+def supportFourteenValue (successor : Player → ℝ) : Player → ℝ :=
+  let x₁ := supportFourteenHazard successor 1
+  let x₂ := supportFourteenHazard successor 2
+  let x₃ := supportFourteenHazard successor 3
+  let survival := (1 - x₁) * (1 - x₂) * (1 - x₃)
+  ![
+    2 * x₁ * x₂ * x₃ - 7 * x₁ * x₂ - 2 * x₁ * x₃ + 4 * x₁ +
+      9 * x₂ * x₃ - 4 * x₂ - 4 * x₃ + survival * successor 0,
+    2 * (1 - x₂) * (2 * x₃ + 1),
+    -x₁ * x₃ + 4 * x₁ + x₃ + 2,
+    2 * (1 - x₁ * x₂)
+  ]
+
+theorem supportFourteen_active
+    (successor : Player → ℝ)
+    (hone : successor 1 + 4 ≠ 0)
+    (hmiddle : supportFourteenMiddle successor ≠ 0)
+    (hcoefficient : supportFourteenCoefficient successor ≠ 0) :
+    difference (supportFourteenHazard successor) successor 1 = 0 ∧
+      difference (supportFourteenHazard successor) successor 2 = 0 ∧
+      difference (supportFourteenHazard successor) successor 3 = 0 := by
+  constructor
+  · rw [difference_eq_expanded]
+    simp [expandedDifference, supportFourteenHazard]
+    field_simp
+    simp only [supportFourteenNumerator, supportFourteenCoefficient]
+    ring
+  constructor
+  · rw [difference_eq_expanded]
+    simp [expandedDifference, supportFourteenHazard]
+    field_simp
+    simp only [supportFourteenMiddle]
+    ring
+  · rw [difference_eq_expanded]
+    simp [expandedDifference, supportFourteenHazard]
+    field_simp
+    simp only [supportFourteenMiddle, supportFourteenNumerator,
+      supportFourteenCoefficient]
+    ring
+
+/-- The terminal-table expectation agrees with formula (39) on the rational
+support-14 denominator domain. -/
+theorem supportFourteen_predecessorValue
+    (successor : Player → ℝ)
+    (hone : successor 1 + 4 ≠ 0)
+    (hmiddle : supportFourteenMiddle successor ≠ 0)
+    (hcoefficient : supportFourteenCoefficient successor ≠ 0) :
+    predecessorValue (supportFourteenHazard successor) successor =
+      supportFourteenValue successor := by
+  funext who
+  fin_cases who <;>
+    simp +decide [predecessorValue, opponentAbsorbingContribution,
+      opponentSurvival, maskProbability, actionFactor, realSum, realProduct,
+      supportFourteenHazard, supportFourteenValue,
+      terminalRewardNat] <;>
+    field_simp <;>
+    simp only [supportFourteenMiddle, supportFourteenNumerator,
+      supportFourteenCoefficient] <;>
+    ring
+
 end GameTheory.BlockPairCharts
