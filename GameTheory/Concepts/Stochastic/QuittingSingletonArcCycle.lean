@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingSingletonStationaryRoot
+import GameTheory.Concepts.Stochastic.QuittingTerminalUniformization
 
 /-!
 # Cyclic assembly of subdivided singleton-flow arcs
@@ -21,7 +22,7 @@ noncomputable section
 
 namespace GameTheory
 
-open StochasticGame Math.Probability Math.PMFProduct
+open StochasticGame Filter Math.Probability Math.PMFProduct
 
 variable {L m : ℕ} {ι : Type} [Fintype ι] [DecidableEq ι]
 
@@ -330,6 +331,219 @@ theorem prod_quittingSingletonArcCycleRoot_continueMass
   intro block
   exact prod_quittingSingletonArcCycleRoot_continueMass_block
     owner p m hm hp0 hp1 block who
+
+/-! ## Fixed-m terminal compilation -/
+
+/-- For one fixed subdivision count `m`, the concrete arc cycle is a terminal
+`D * aStar / m`-Nash profile and its terminal payoff is exactly the selected
+coarse value.  This is deliberately separate from the horizon-indexed
+`m = ceil (sqrt N)` construction below. -/
+theorem singletonArcCycle_isTerminalNash_and_hasValue
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (owner : Fin L → ι) (p : Fin L → ℝ)
+    (coarse : Fin L → Payoff ι) (initial : Fin L)
+    (m : ℕ) (hm : 0 < m) {aStar D : ℝ}
+    (hp0 : ∀ block, 0 ≤ p block) (hp1 : ∀ block, p block < 1)
+    (ha : ∀ block, quittingMeshIntensity (p block) ≤ aStar)
+    (hD : 0 ≤ D)
+    (harc : ∀ block,
+      coarse block = quittingSingletonArcPayoff (p block)
+        (quittingSoloReward reward (owner block))
+        (coarse (finRotate L block)))
+    (hactive : ∀ block,
+      coarse block (owner block) =
+        quittingSoloReward reward (owner block) (owner block))
+    (hsolo : ∀ phase who,
+      quittingSoloReward reward who who ≤
+        quittingSingletonArcCycleValue reward owner p coarse m phase who)
+    (hcollision : ∀ block other, other ≠ owner block →
+      max (quittingSingletonCollisionReward
+          reward (owner block) other -
+        quittingSoloReward reward other other) 0 ≤ D)
+    (hcoarseContracts : ∀ who,
+      (∏ block : Fin L,
+        if who = owner block then 1 else 1 - p block) < 1) :
+    (quittingGame reward).IsεAsymptoticNash
+        (quittingTerminalPayoff reward) (D * aStar / (m : ℝ))
+        (quittingCyclicBehaviorProfile reward
+          (quittingSingletonArcCycleRoot owner p m hp0 hp1)
+          (quittingSingletonMeshInitialPhase initial m hm)) ∧
+      quittingTerminalPayoff reward
+          (quittingCyclicBehaviorProfile reward
+            (quittingSingletonArcCycleRoot owner p m hp0 hp1)
+            (quittingSingletonMeshInitialPhase initial m hm)) =
+        coarse initial := by
+  let cycle := quittingSingletonArcCycleRoot owner p m hp0 hp1
+  let value := quittingSingletonArcCycleValue reward owner p coarse m
+  let phase := quittingSingletonMeshInitialPhase initial m hm
+  let terminalError := D * aStar / (m : ℝ)
+  have haStar : 0 ≤ aStar :=
+    (quittingMeshIntensity_nonneg (hp0 initial) (hp1 initial).le).trans
+      (ha initial)
+  have hmReal : 0 < (m : ℝ) := by exact_mod_cast hm
+  have hterminalError0 : 0 ≤ terminalError :=
+    div_nonneg (mul_nonneg hD haStar) hmReal.le
+  have hphaseCertificate : ∀ cyclePhase,
+      value cyclePhase = quittingRootSuccessorPayoff reward
+          (value (finRotate (L * m) cyclePhase)) (cycle cyclePhase) ∧
+        (∀ who,
+          quittingStationaryFixedOpponentsContinueReward reward
+                (cycle cyclePhase) who +
+              quittingStationaryFixedOpponentsContinueMass
+                  (cycle cyclePhase) who *
+                value (finRotate (L * m) cyclePhase) who =
+            value cyclePhase who) ∧
+        ∀ who,
+          quittingStationaryFixedOpponentsQuitValue reward
+              (cycle cyclePhase) who ≤
+            value cyclePhase who + D * quittingMeshHazard
+              (p (quittingSingletonMeshBlock cyclePhase)) m := by
+    intro cyclePhase
+    exact quittingSingletonArcCycle_phase_certificate
+      reward owner p coarse m hm hp0 hp1 harc hD hactive hsolo
+      hcollision cyclePhase
+  have hpolicy := fun cyclePhase ↦ (hphaseCertificate cyclePhase).1
+  have hcontinue := fun cyclePhase ↦
+    (hphaseCertificate cyclePhase).2.1
+  have hquitLocal := fun cyclePhase ↦
+    (hphaseCertificate cyclePhase).2.2
+  have hquit : ∀ cyclePhase who,
+      quittingStationaryFixedOpponentsQuitValue reward
+          (cycle cyclePhase) who ≤
+        value cyclePhase who + terminalError := by
+    intro cyclePhase who
+    have hhazard := quittingMeshHazard_le_intensityBound_div
+      (m := m) p hp1 ha (quittingSingletonMeshBlock cyclePhase)
+    have hscaled := mul_le_mul_of_nonneg_left hhazard hD
+    calc
+      quittingStationaryFixedOpponentsQuitValue reward
+            (cycle cyclePhase) who ≤
+          value cyclePhase who + D * quittingMeshHazard
+            (p (quittingSingletonMeshBlock cyclePhase)) m :=
+        hquitLocal cyclePhase who
+      _ ≤ value cyclePhase who + D * (aStar / (m : ℝ)) :=
+        add_le_add (le_refl _) hscaled
+      _ = value cyclePhase who + terminalError := by
+        dsimp only [terminalError]
+        ring
+  have hcontracts : ∀ who,
+      (∏ cyclePhase : Fin (L * m),
+        quittingStationaryFixedOpponentsContinueMass
+          (cycle cyclePhase) who) < 1 := by
+    intro who
+    dsimp only [cycle]
+    rw [prod_quittingSingletonArcCycleRoot_continueMass
+      owner p m hm hp0 hp1 who]
+    exact hcoarseContracts who
+  have hterminalNash : (quittingGame reward).IsεAsymptoticNash
+      (quittingTerminalPayoff reward) terminalError
+      (quittingCyclicBehaviorProfile reward cycle phase) :=
+    isεAsymptoticNash_quittingCyclicBehaviorProfile_of_quitError_exactContinue
+      reward cycle value phase hterminalError0
+      (quittingRewardBound_nonneg reward)
+      (abs_reward_le_quittingRewardBound reward)
+      hpolicy hquit hcontinue hcontracts
+  constructor
+  · simpa only [cycle, phase, terminalError] using hterminalNash
+  · have hcyclicValue :=
+      eq_quittingCyclicTerminalValue_of_rootSuccessorPayoff
+        reward cycle value hpolicy hcontracts
+    change quittingTerminalPayoff reward
+        (quittingCyclicBehaviorProfile reward cycle phase) = coarse initial
+    rw [quittingTerminalPayoff_cyclicBehaviorProfile, ← hcyclicValue]
+    exact quittingSingletonArcCycleValue_initialPhase
+      reward owner p coarse initial m hm
+
+/-- If one coarse singleton-flow cycle admits the concrete subdivision
+certificate at every positive mesh scale, then its selected coarse value is
+itself a uniform-equilibrium payoff.
+
+For each requested accuracy this proof chooses one sufficiently large, but
+then fixed, `m`.  Terminal exploitability is `D * aStar / m`; terminal payoff
+is exactly `coarse initial`; the finite quitting-game terminal-to-uniform
+theorem supplies one profile valid at every sufficiently long horizon.  This
+quantifier pattern is distinct from the horizon-indexed square-root family. -/
+theorem singletonArcCycle_isUniformEquilibriumPayoff
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (owner : Fin L → ι) (p : Fin L → ℝ)
+    (coarse : Fin L → Payoff ι) (initial : Fin L)
+    {aStar D : ℝ}
+    (hp0 : ∀ block, 0 ≤ p block) (hp1 : ∀ block, p block < 1)
+    (ha : ∀ block, quittingMeshIntensity (p block) ≤ aStar)
+    (hD : 0 ≤ D)
+    (harc : ∀ block,
+      coarse block = quittingSingletonArcPayoff (p block)
+        (quittingSoloReward reward (owner block))
+        (coarse (finRotate L block)))
+    (hactive : ∀ block,
+      coarse block (owner block) =
+        quittingSoloReward reward (owner block) (owner block))
+    (hsoloAll : ∀ m, 0 < m → ∀ phase who,
+      quittingSoloReward reward who who ≤
+        quittingSingletonArcCycleValue reward owner p coarse m phase who)
+    (hcollision : ∀ block other, other ≠ owner block →
+      max (quittingSingletonCollisionReward
+          reward (owner block) other -
+        quittingSoloReward reward other other) 0 ≤ D)
+    (hcoarseContracts : ∀ who,
+      (∏ block : Fin L,
+        if who = owner block then 1 else 1 - p block) < 1) :
+    (quittingGame reward).IsUniformEquilibriumPayoff none
+      (coarse initial) := by
+  intro ε hε
+  have haStar : 0 ≤ aStar :=
+    (quittingMeshIntensity_nonneg (hp0 initial) (hp1 initial).le).trans
+      (ha initial)
+  have hA : 0 ≤ D * aStar := mul_nonneg hD haStar
+  obtain ⟨m, hmLarge⟩ := exists_nat_gt (2 * (D * aStar) / ε)
+  have hmReal : 0 < (m : ℝ) := by
+    have hthreshold0 : 0 ≤ 2 * (D * aStar) / ε :=
+      div_nonneg (mul_nonneg (by norm_num) hA) hε.le
+    exact lt_of_le_of_lt hthreshold0 hmLarge
+  have hm : 0 < m := by exact_mod_cast hmReal
+  have hhalf : 0 < ε / 2 := by linarith
+  have hterminalError : D * aStar / (m : ℝ) < ε / 2 := by
+    have hscaled : 2 * (D * aStar) < (m : ℝ) * ε := by
+      exact (div_lt_iff₀ hε).mp hmLarge
+    rw [div_lt_iff₀ hmReal]
+    nlinarith
+  let cycle := quittingSingletonArcCycleRoot owner p m hp0 hp1
+  let phase := quittingSingletonMeshInitialPhase initial m hm
+  let profile := quittingCyclicBehaviorProfile reward cycle phase
+  obtain ⟨hterminalNash, hterminalValue⟩ :=
+    singletonArcCycle_isTerminalNash_and_hasValue
+      reward owner p coarse initial m hm hp0 hp1 ha hD harc hactive
+      (hsoloAll m hm) hcollision hcoarseContracts
+  have huniform : (quittingGame reward).IsUniformεEquilibrium
+      none (ε / 2) profile := by
+    exact quittingGame_isUniformεEquilibrium_of_terminalNash_finite
+      reward profile hterminalError hterminalNash
+  obtain ⟨nashThreshold, hnash⟩ := huniform
+  have heventuallyDelivery : ∀ᶠ horizon : ℕ in atTop, ∀ who,
+      |(quittingGame reward).finiteAveragePayoff none horizon profile who -
+        coarse initial who| < ε := by
+    apply Filter.eventually_all.mpr
+    intro who
+    have htendsto : Tendsto
+        (fun horizon ↦
+          (quittingGame reward).finiteAveragePayoff none horizon profile who)
+        atTop (nhds (coarse initial who)) := by
+      rw [← congrFun hterminalValue who]
+      exact tendsto_finiteAveragePayoff_quittingGame reward profile who
+    have hball := htendsto.eventually
+      (Metric.ball_mem_nhds (coarse initial who) hε)
+    filter_upwards [hball] with horizon hhorizon
+    simpa only [Metric.mem_ball, Real.dist_eq] using hhorizon
+  obtain ⟨deliveryThreshold, hdelivery⟩ :=
+    Filter.eventually_atTop.1 heventuallyDelivery
+  refine ⟨profile, max nashThreshold deliveryThreshold,
+    fun horizon hhorizon ↦ ?_⟩
+  constructor
+  · exact (hnash horizon
+      (le_trans (Nat.le_max_left _ _) hhorizon)).mono (by linarith)
+  · intro who
+    exact (hdelivery horizon
+      (le_trans (Nat.le_max_right _ _) hhorizon) who).le
 
 /-! ## Canonical horizon compilation from coarse arcs -/
 
