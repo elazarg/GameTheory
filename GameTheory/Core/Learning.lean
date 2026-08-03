@@ -37,6 +37,12 @@ def externalRegret (G : UtilityGame.{uι, us, uo} ι)
         G.form.play (Profile.update profile who replacement)) -
     expectedUtility G.utility who (G.form.outcomeLaw statusQuo)
 
+/-- An `ε`-coarse correlated equilibrium is the canonical coarse correlated
+equilibrium predicate for expected utility relaxed by `ε`. -/
+def IsεCoarseCorrelatedEq (G : UtilityGame.{uι, us, uo} ι) (ε : ℝ)
+    (statusQuo : FinDist (Profile G.form.sig)) : Prop :=
+  IsCoarseCorrelatedEq G.form (euPreferenceWithin ε G.utility) statusQuo
+
 /-- External regret is the status-quo expectation of pointwise deviation
 gain. This is the affine form used by finite time averaging. -/
 theorem externalRegret_eq_expect_gain (G : UtilityGame.{uι, us, uo} ι)
@@ -80,18 +86,25 @@ theorem externalRegret_eq_expect_gain (G : UtilityGame.{uι, us, uo} ι)
               funext profile
               ring
 
-/-- An `ε`-coarse correlated equilibrium: every constant unilateral
-deviation has external regret at most `ε`. -/
-def IsεCoarseCorrelatedEq (G : UtilityGame.{uι, us, uo} ι) (ε : ℝ)
-    (statusQuo : FinDist (Profile G.form.sig)) : Prop :=
-  ∀ who replacement, G.externalRegret statusQuo who replacement ≤ ε
-
+/-- The learning-facing external-regret characterization of the canonical
+approximate coarse-correlated-equilibrium predicate. -/
 theorem isεCoarseCorrelatedEq_iff_externalRegret_le
     (G : UtilityGame.{uι, us, uo} ι) {ε : ℝ}
     {statusQuo : FinDist (Profile G.form.sig)} :
     G.IsεCoarseCorrelatedEq ε statusQuo ↔
-      ∀ who replacement, G.externalRegret statusQuo who replacement ≤ ε :=
-  Iff.rfl
+      ∀ who replacement, G.externalRegret statusQuo who replacement ≤ ε := by
+  rw [UtilityGame.IsεCoarseCorrelatedEq, isCoarseCorrelatedEq_iff]
+  constructor
+  · intro h who replacement
+    have hpref := h who replacement
+    rw [euPreferenceWithin_apply] at hpref
+    unfold externalRegret
+    linarith
+  · intro h who replacement
+    rw [euPreferenceWithin_apply]
+    have hregret := h who replacement
+    unfold externalRegret at hregret
+    linarith
 
 /-- Exact CCE is the zero-tolerance case of the regret formulation. -/
 theorem isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
@@ -99,17 +112,18 @@ theorem isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
     {statusQuo : FinDist (Profile G.form.sig)} :
     IsCoarseCorrelatedEq G.form G.preference statusQuo ↔
       G.IsεCoarseCorrelatedEq 0 statusQuo := by
-  rw [isCoarseCorrelatedEq_iff]
+  rw [isCoarseCorrelatedEq_iff, UtilityGame.IsεCoarseCorrelatedEq,
+    isCoarseCorrelatedEq_iff]
   constructor
   · intro h who replacement
     have hpref := h who replacement
     rw [UtilityGame.preference, euPreference_apply] at hpref
-    unfold externalRegret
+    rw [euPreferenceWithin_apply]
     linarith
   · intro h who replacement
     rw [UtilityGame.preference, euPreference_apply]
-    have hregret := h who replacement
-    unfold externalRegret at hregret
+    have hpref := h who replacement
+    rw [euPreferenceWithin_apply] at hpref
     linarith
 
 /-- The uniform time average of finitely many laws over pure profiles. -/
@@ -142,6 +156,7 @@ theorem timeAverage_isεCoarseCorrelatedEq_of_regret_le
       ∀ who replacement,
         (∑ t, G.externalRegret (roundLaw t) who replacement) ≤ R) :
     G.IsεCoarseCorrelatedEq (R / T) (G.timeAverage roundLaw) := by
+  rw [G.isεCoarseCorrelatedEq_iff_externalRegret_le]
   intro who replacement
   rw [externalRegret_timeAverage]
   have hT : (0 : ℝ) < T := by

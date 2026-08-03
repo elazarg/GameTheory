@@ -18,19 +18,6 @@ universe uι us uo
 
 variable {ι : Type uι}
 
-/-- Expected-utility preference with an additive deviation allowance. -/
-def euPreferenceWithin {Outcome : Type uo} (ε : ℝ) (utility : Outcome → ι → ℝ) :
-    WeakPreference ι Outcome :=
-  fun agent preferred alternative =>
-    expectedUtility utility agent alternative ≤ expectedUtility utility agent preferred + ε
-
-@[simp]
-theorem euPreferenceWithin_apply {Outcome : Type uo} (ε : ℝ) (utility : Outcome → ι → ℝ)
-    (agent : ι) (preferred alternative : FinDist Outcome) :
-    euPreferenceWithin ε utility agent preferred alternative =
-      (expectedUtility utility agent alternative ≤
-        expectedUtility utility agent preferred + ε) := rfl
-
 variable [DecidableEq ι] (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
 
 /-- An `ε`-Nash equilibrium is ordinary Nash for the expected-utility

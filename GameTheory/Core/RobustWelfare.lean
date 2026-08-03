@@ -50,7 +50,8 @@ theorem IsSmooth.epsilonCoarseCorrelated_bound [Fintype ι] [DecidableEq ι]
           ∑ i, (law.expect (fun profile =>
             expectedUtility G.utility i (G.form.play profile)) + ε) := by
         refine Finset.sum_le_sum fun i _ => ?_
-        have hregret := hlaw i (target i)
+        have hregret :=
+          (G.isεCoarseCorrelatedEq_iff_externalRegret_le.mp hlaw) i (target i)
         unfold externalRegret at hregret
         rw [expectedUtility_bind, expectedUtility_outcomeLaw] at hregret
         linarith

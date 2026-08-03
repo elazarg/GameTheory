@@ -93,6 +93,7 @@ theorem timeAverage_not_coarseCorrelatedEq :
       (game.timeAverage roundLaw) := by
   rw [game.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero]
   intro h
+  rw [game.isεCoarseCorrelatedEq_iff_externalRegret_le] at h
   have hnonpos := h 0 false
   rw [game.externalRegret_timeAverage] at hnonpos
   simp_rw [game.externalRegret_eq_expect_gain] at hnonpos

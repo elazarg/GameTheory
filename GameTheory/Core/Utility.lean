@@ -93,6 +93,19 @@ theorem euPreference_apply (utility : Outcome → ι → ℝ) (agent : ι)
       (expectedUtility utility agent alternative ≤
         expectedUtility utility agent preferred) := rfl
 
+/-- Expected-utility preference with an additive deviation allowance. -/
+def euPreferenceWithin (ε : ℝ) (utility : Outcome → ι → ℝ) :
+    WeakPreference ι Outcome :=
+  fun agent preferred alternative =>
+    expectedUtility utility agent alternative ≤ expectedUtility utility agent preferred + ε
+
+@[simp]
+theorem euPreferenceWithin_apply (ε : ℝ) (utility : Outcome → ι → ℝ)
+    (agent : ι) (preferred alternative : FinDist Outcome) :
+    euPreferenceWithin ε utility agent preferred alternative =
+      (expectedUtility utility agent alternative ≤
+        expectedUtility utility agent preferred + ε) := rfl
+
 /-- The preference package of a bundled utility game. -/
 def UtilityGame.preference (G : UtilityGame ι) : WeakPreference ι G.form.sig.Outcome :=
   euPreference G.utility
