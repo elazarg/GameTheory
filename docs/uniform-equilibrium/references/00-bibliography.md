@@ -7,8 +7,8 @@ research passes unless flagged.
 `bib?` column: whether the work has an entry in `latex/references.bib` (`R`),
 in the manuscript bibliography of
 `docs/uniform-equilibrium/manuscript/UniformEquilibriumFrontierManuscript.tex` (`M`), both, or neither
-(`—`). Entries marked `—` are the concrete bibliography gap; see
-[`ephemeral/MISSING.md`](../../../ephemeral/MISSING.md).
+(`—`). Entries marked `—` are the concrete bibliography gap; see the durable
+[bibliography maintenance queue](BibliographyMaintenance.md).
 
 ---
 
@@ -213,7 +213,15 @@ bibliography gave GEB 33:85–96, which is wrong.
 DOI [`10.1287/moor.26.2.265.10549`](https://doi.org/10.1287/moor.26.2.265.10549).
 `M` — working-paper version: Northwestern CMS-EMS DP 1227 (1998).
 
-**Solan & Vieille 2002** — *Correlated equilibrium in stochastic games*. GEB
+**Solan & Vieille 2002a** — *Quitting Games--An Example*. International
+Journal of Game Theory **31**(3), 365--381.
+DOI [`10.1007/s001820200125`](https://doi.org/10.1007/s001820200125). `M` —
+author-hosted final paper available. This is the citation for the four-player
+fallback-collapse/Figure-2 fence; do not attribute that example to the 2001
+MOR paper. The repository's audit disputes the printed period-two numerical
+packet, so use the source-stable qualitative propositions pending recheck.
+
+**Solan & Vieille 2002b** — *Correlated equilibrium in stochastic games*. GEB
 **38**(2), 362–399.
 DOI [`10.1006/game.2001.0887`](https://doi.org/10.1006/game.2001.0887).
 `M` — working-paper version: Northwestern CMS-EMS DP 1226 (1998). Theorem

@@ -4,7 +4,8 @@
 
 This document explains how to run independent investigations without confusing
 them with the current critical path. The changing portfolio of concrete ideas
-is in `ephemeral/UniformEquilibriumCurrentFrontier.md`.
+is in [`../FRONTIER.md`](../FRONTIER.md), with priorities in
+[`../PIPELINE.md`](../PIPELINE.md).
 
 ## Why pursue independent tracks
 
@@ -82,5 +83,5 @@ direction as an implied obligation.
 ## Documentation rule
 
 The methodology stays stable. Add, remove, and reprioritize concrete
-cross-field ideas only in `ephemeral/UniformEquilibriumCurrentFrontier.md` or another
+cross-field ideas only in a claim file under `ideas/<Group>/` or another
 dated research note.

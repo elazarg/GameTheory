@@ -11,9 +11,9 @@ Current promotions are explicit:
 
 | Survey material | Lifecycle owner |
 | --- | --- |
-| terminal-set retargeting, separated anchors, and one-seam decoding | [`../PositivePlateauBoundaryClosure.md`](../PositivePlateauBoundaryClosure.md) and [`../CycleGeometryResolution.md`](../CycleGeometryResolution.md) |
-| positive separation and Bellman welfare ceilings | [`../PositiveWelfareSeparator.md`](../PositiveWelfareSeparator.md) |
-| finite-group transport, cyclic phases, invariant weights, and orbit gluing | [`../CoalitionSplittingGroupActions.md`](../CoalitionSplittingGroupActions.md) and its four linked component groups |
+| terminal-set retargeting, separated anchors, and one-seam decoding | [`PositivePlateauBoundaryClosure`](../PositivePlateauBoundaryClosure/README.md) and [`CycleGeometryResolution`](../CycleGeometryResolution/README.md) |
+| positive separation and Bellman welfare ceilings | [`PositiveWelfareSeparator`](../PositiveWelfareSeparator/README.md) |
+| finite-group transport, cyclic phases, invariant weights, and orbit gluing | [`CoalitionSplittingGroupActions`](../CoalitionSplittingGroupActions/README.md) and its four linked component groups |
 | controlled Schur/Puiseux closure, causal rounding, and predictive compression | no active lifecycle owner; retain here until an actual consumer and falsifier are supplied |
 
 Do not record task status in these surveys. Update the owning group when a
@@ -103,5 +103,6 @@ new player's dynamic debt; that implication is now false by exact theorem.
   robust public coins, commitment resources, private secret sharing, live
   entropy, Byzantine attribution, and publicly verifiable deviation evidence.
 
-Experiments are indexed in [experiments/README.md](../../experiments/README.md), with
-results and limitations in [experiments/RESULTS.md](../../experiments/RESULTS.md).
+Ignored intake experiments are indexed locally in `experiments/README.md`,
+with results and limitations in `experiments/RESULTS.md`. Neither file is
+status authority in a clean checkout.

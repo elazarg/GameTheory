@@ -21,7 +21,7 @@
 | CS2 | Playerwise one-sided security at `v`, together with one saturated strictly positive weighted all-profile welfare cap at `v`, implies that `v` is a uniform-equilibrium payoff. | `PROVED` | `M+L` | `WeightedSecurityWelfareAssembly.lean`. |
 | CS3 | A bounded weighted Bellman bias implies the all-profile welfare cap with endpoint loss `2*C/T`. | `PROVED` | `M+L` | `WeightedWelfareBias.lean`; consumed by CS2. |
 | CS4 | Uniform equilibria of all coalition splits, without further compatibility assumptions, produce the security floors and saturated welfare cap required by CS2. | `OPEN` | `I` | This is the remaining content of the user's original possible implication. |
-| CS5 | Game automorphisms and cyclic phases can reduce the number of split certificates and align them before CS2 is applied. | `CONDITIONAL` | `I+X` | Separated into `CoalitionSplittingGroupActions.md`; an actual game-automorphism adapter is missing. |
+| CS5 | Game automorphisms and cyclic phases can reduce the number of split certificates and align them before CS2 is applied. | `CONDITIONAL` | `I+X` | Separated into `ideas/CoalitionSplittingGroupActions/README.md`; an actual game-automorphism adapter is missing. |
 
 ### Falsifiers and wrong turns
 
@@ -58,7 +58,7 @@ interfaces.
 - Mark CS4 `WRONG` only after a genuine game-level counterexample, not merely
   the abstract quantifier objection.
 - The symmetry/periodic offshoot is mined or parked independently in
-  `CoalitionSplittingGroupActions.md`.
+  `ideas/CoalitionSplittingGroupActions/README.md`.
 
 The central assembly claim is mined and in production. The naive inference
 from separately existing split equilibria is wrong. The dynamic-potential,
@@ -640,21 +640,21 @@ diagnostic even when exact saturation fails.
 
 Three standalone experiments now check the main algebraic claims.
 
-- [`experiments/WeightedSecurityWelfareAssembly.lean`](../experiments/WeightedSecurityWelfareAssembly.lean)
+- `experiments/WeightedSecurityWelfareAssembly.lean`
   proves Experiments A and B.  It includes the semantic assembly theorem,
   normalization from arbitrary strictly positive weights, the universal
   weighted Bellman-bias certificate, and their composition into a uniform
   equilibrium payoff theorem.
-- [`experiments/ContinuationLatticeGluing.lean`](../experiments/ContinuationLatticeGluing.lean)
+- `experiments/ContinuationLatticeGluing.lean`
   proves Experiment C for finite joins and, dually, finite meets.  It also
   gives the coordinatewise continuation-vector specialization and a
   quantitative join lemma for antitone violation measures.
-- [`experiments/DynamicPotentialCoboundary.lean`](../experiments/DynamicPotentialCoboundary.lean)
+- `experiments/DynamicPotentialCoboundary.lean`
   proves Experiment D.  The result holds for every behavior profile: the
   finite average is exactly the affine common-reward average plus the two
   endpoint potentials divided by `T`.  If the potential is bounded in
   absolute value by `C`, the discrepancy is at most `2*C/T`.
-- [`experiments/WeightedSaturationDefect.lean`](../experiments/WeightedSaturationDefect.lean)
+- `experiments/WeightedSaturationDefect.lean`
   proves the finite-dimensional core of Experiment E.  A welfare-cap slack
   `Delta` and security error `eta` imply the sharp coordinate excess bound
   `(Delta + eta * sum(other weights)) / weight i`; the file also derives the
@@ -670,7 +670,7 @@ common interest modulo a bounded dynamic coboundary.
 The group-theoretic question raised after this report has its own
 coalition-specific note:
 
-- [`CoalitionSplittingGroupActions.md`](CoalitionSplittingGroupActions.md)
+- [`CoalitionSplittingGroupActions`](../CoalitionSplittingGroupActions/README.md)
   studies player permutations acting on coalitions, rotating-role periodic
   split certificates, stabilizer compatibility, phase holonomy, and the
   equivariant security--welfare assembly theorem schema.
@@ -678,13 +678,13 @@ coalition-specific note:
 Four independent mathematical ingredients are deliberately kept out of this
 coalition report:
 
-- [`CyclicPhaseReynolds.md`](CyclicPhaseReynolds.md) develops periodic
+- [`CyclicPhaseReynolds`](../CyclicPhaseReynolds/README.md) develops periodic
   phase signals as the regular representation of a finite cyclic group;
-- [`FiniteGroupOrbitGluing.md`](FiniteGroupOrbitGluing.md) develops
+- [`FiniteGroupOrbitGluing`](../FiniteGroupOrbitGluing/README.md) develops
   invariant join/meet constructions for monotone orbit constraints;
-- [`EquivariantWordTransport.md`](EquivariantWordTransport.md) develops
+- [`EquivariantWordTransport`](../EquivariantWordTransport/README.md) develops
   action-groupoid transport of finite block words and periodic fixed points;
-- [`FiniteGroupInvariantWeights.md`](FiniteGroupInvariantWeights.md)
+- [`FiniteGroupInvariantWeights`](../FiniteGroupInvariantWeights/README.md)
   develops Reynolds orbit sums for positive invariant welfare caps.
 
 The coalition note imports these ingredients conceptually and states exactly

@@ -53,8 +53,8 @@ printed discrete sequential-perfection clause omits sure terminal jumps,
 although its path class permits them; the theorem proof does not visibly
 repair the omission. A naïve all-jumps test against continuation zero is also
 wrong because it erases credible off-path punishment. The exact source audit
-and two candidate repairs are recorded in
-[Review 07](../../../ephemeral/reviews/Review07-AbsorptionPathTerminalJumpConvention.md).
+and two candidate repairs were recorded in the historical intake note
+`ephemeral/reviews/Review07-AbsorptionPathTerminalJumpConvention.md`.
 Accordingly, the four-player path-or-barrier search remains a discriminant,
 not an imported equivalence theorem.
 
@@ -75,7 +75,7 @@ The problem *is* solved at every `n` if you weaken the solution concept:
 
 **This is the sharpest available statement of what the open problem costs.**
 The entire `n ≥ 3` difficulty is the cost of manufacturing correlation from
-observed play rather than being handed a device. `UniformEquilibriumProgram.md`
+observed play rather than being handed a device. [`Program.md`](../Program.md)
 already forbids a free public lottery as a modelling decision; the correlated
 theorems say exactly what that decision is worth. The frontier's "endogenous
 jointly controlled lotteries" portfolio item is therefore not one idea among
@@ -228,11 +228,16 @@ These are honest gaps in the citation record, not settled negatives.
 2. **arXiv:2201.05148 and arXiv:1301.1967 were never identified.** Both were
    commissioned; no surviving claim covers them. Treat as unresearched.
 
-3. **The Solan–Vieille (2001) Figure 2 numerical discrepancy is unresolved.**
-   Is the printed `√2` period-2 equilibrium an error in the 1998 discussion
-   paper corrected in the published Math. of OR version, or does it stand in
-   print? Resolving it requires the paywalled MOR pages 265–285. The
-   qualitative `n = 4` conclusions are unaffected either way.
+3. **The Solan–Vieille (2002) Figure 2 numerical discrepancy is unresolved.**
+   The relevant source is *Quitting Games--An Example*, IJGT **31**(3),
+   365--381, DOI `10.1007/s001820200125`, not the 2001 MOR paper. The final
+   article is author-hosted; source availability is no longer the blocker.
+   The printed `√2` period-2 packet in the final IJGT text fails the current
+   independent recomputation. Resolving whether this is a source typo, a
+   transcription error, or a convention mismatch requires another direct
+   audit of the author-hosted final PDF and the exact table—not a MOR source.
+   The source-stable qualitative `n = 4` propositions do not require those
+   constants.
 
 4. **Definable/o-minimal and Blackwell-game routes to `n ≥ 3` were requested
    but never surfaced** beyond the bare mention of *Absorbing Blackwell Games*
@@ -244,9 +249,10 @@ These are honest gaps in the citation record, not settled negatives.
 
 5. **Full texts never read** (paywalled): Vieille 2000 a/b/c, Vrieze–Thuijsman
    1989, Solan 1999, Simon 2012. Abstract-level statements only. For
-   Solan–Vieille 2001 and 2002 the verified text is the 1998 Northwestern
-   CMS-EMS working paper (DP 1227, DP 1226), not the published article —
-   theorem numbering could have shifted in copy-editing, though published
+   the 2001 MOR *Quitting Games* and 2002 GEB correlated-equilibrium papers,
+   the verified text is the 1998 Northwestern CMS-EMS working papers (DP 1227
+   and DP 1226), not the published articles—theorem numbering could have
+   shifted in copy-editing, though published
    abstracts match in substance.
 
 6. **Verification ran out of search budget.** Sessions repeatedly exhausted

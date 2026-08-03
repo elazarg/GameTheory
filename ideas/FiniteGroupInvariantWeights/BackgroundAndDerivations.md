@@ -11,7 +11,7 @@
 | Central live claim | Orbit-summing a positive welfare weight produces a positive invariant weight, and summing transported welfare caps produces the cap for that invariant weight. |
 | Next discriminant | Supply or refute the game-automorphism transport of one non-invariant all-profile welfare cap. |
 | Production destination | Possible producer for the invariant-weight hypothesis of coalition security--welfare assembly; none without an actual cap-transport adapter. |
-| Supersedes / superseded by | Independent Reynolds component used by `CoalitionSplittingGroupActions.md`; distinct from cyclic clock averaging. |
+| Supersedes / superseded by | Independent Reynolds component used by `ideas/CoalitionSplittingGroupActions/README.md`; distinct from cyclic clock averaging. |
 
 ### Claim ledger
 

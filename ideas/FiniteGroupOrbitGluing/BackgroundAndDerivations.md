@@ -11,7 +11,7 @@
 | Central live claim | Orbit joins or meets turn equivariant translated witnesses into one invariant common witness exactly when the feasibility predicates have the matching order closure. |
 | Next discriminant | Identify a concrete coalition continuation constraint that is genuinely upward- or downward-closed and retains all strategic labels. |
 | Production destination | None yet; possible small order-theoretic helper only after a second actual consumer appears. |
-| Supersedes / superseded by | None; it must not be used as a quotient replacement for the resolved groupoid in `ideas/CycleGeometryResolution.md`. |
+| Supersedes / superseded by | None; it must not be used as a quotient replacement for the resolved groupoid in `ideas/CycleGeometryResolution/README.md`. |
 
 ### Claim ledger
 
@@ -56,7 +56,7 @@ actual coalition certificates -----------> those hypotheses         [?]
 This note concerns group actions on ordered feasibility spaces.  It is
 independent of stochastic games and coalition modeling.  Its coalition-split
 application is isolated in
-[`CoalitionSplittingGroupActions.md`](CoalitionSplittingGroupActions.md).
+[`CoalitionSplittingGroupActions`](../CoalitionSplittingGroupActions/README.md).
 
 Let a finite group `Gamma` act on a partially ordered type `L`.  Assume every
 group element acts by an order automorphism.  The Lean experiment proves a
@@ -68,7 +68,7 @@ joins or meets.
 This construction is safe only in the ordered feasibility coordinate for
 which closure was proved.  In particular, it does not authorize quotienting
 the resolved cycle atlas or forgetting the groupoid labels retained by
-[`ideas/CycleGeometryResolution.md`](../ideas/CycleGeometryResolution.md).
+[`CycleGeometryResolution`](../CycleGeometryResolution/README.md).
 
 ## 1. Orbit joins
 
@@ -168,7 +168,7 @@ Lower Bellman subsolutions have the dual join orientation.
 ## 6. Formalization status
 
 The independent experiment
-[`experiments/FiniteGroupOrbitGluing.lean`](../experiments/FiniteGroupOrbitGluing.lean)
+`experiments/FiniteGroupOrbitGluing.lean`
 proves:
 
 1. finite orbit joins are invariant under a finite group action preserving

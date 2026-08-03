@@ -20,7 +20,7 @@
 | QG1 | Terminal approximate Nash profiles at every positive accuracy are equivalent, at the existence level, to a uniform-equilibrium payoff. | `PROVED` | `M+L+C` | Finite quitting games; final semantic reduction. |
 | QG2 | Finite exact zero-boundary Nash--Bellman chains have attained optimized debt, and vanishing optimized debt produces terminal approximate equilibria. | `PROVED` | `M+L+A+C` | Positive/zero debt split. |
 | QG3 | A positive optimized-debt plateau yields a marked owner, the exhaustive owner-clock split, separated preterminal survival and terminal-action mass, and compatible forward/reverse exact-D boundary rays. | `PROVED` | `M+L+A+X` | The finite middle is not retained by the two-ended experiment. |
-| QG4 | Every fully summable positive plateau yields an executable repair or a bounded exact extension with one cutoff-independent positive debt drop. | `OPEN` | `I` | This is the remaining relative-boundary producer, developed precisely in `PositivePlateauBoundaryClosure.md`. |
+| QG4 | Every fully summable positive plateau yields an executable repair or a bounded exact extension with one cutoff-independent positive debt drop. | `OPEN` | `I` | This is the remaining relative-boundary producer, developed precisely in `ideas/PositivePlateauBoundaryClosure/README.md`. |
 
 ## Falsifiers and wrong turns
 
@@ -41,7 +41,7 @@ probes under `experiments/` supply the two-ended compactification, max-affine
 block summaries, buffered return/exit topology, and depth-free seam penalty.
 The missing arrow is an actual-chain bridge retaining the marked packet and
 all playerwise cap data through the finite middle, followed by a strategic
-decoder. [`PositivePlateauBoundaryClosure.md`](PositivePlateauBoundaryClosure.md)
+decoder. [`PositivePlateauBoundaryClosure`](../PositivePlateauBoundaryClosure/README.md)
 owns that arrow; this file owns the exhaustive conjecture-level assembly.
 
 ## Exit conditions
@@ -389,9 +389,9 @@ game enters an absorbing state with payoff \(r(S)\in\mathbb R^I\). In the
 repository, the active-state payoff is zero.
 
 The model is implemented in
-[`QuittingGame.lean`](../GameTheory/Concepts/Stochastic/QuittingGame.lean), and
+[`QuittingGame.lean`](../../GameTheory/Concepts/Stochastic/QuittingGame.lean), and
 the repository's exact general target is the deviation-cap constructor in
-[`Uniform.lean`](../GameTheory/Concepts/Stochastic/Uniform.lean#L207): for every
+[`Uniform.lean`](../../GameTheory/Concepts/Stochastic/Uniform.lean#L207): for every
 positive error, construct one behavior profile and one horizon threshold that
 simultaneously
 
@@ -408,7 +408,7 @@ There are nevertheless two logically distinct payoff levels:
 For each fixed profile, finite Cesàro payoffs converge to expected terminal
 reward. This is formalized by
 `tendsto_finiteAveragePayoff_quittingGame` in
-[`QuittingAsymptotic.lean`](../GameTheory/Concepts/Stochastic/QuittingAsymptotic.lean#L221).
+[`QuittingAsymptotic.lean`](../../GameTheory/Concepts/Stochastic/QuittingAsymptotic.lean#L221).
 A uniform finite-horizon equilibrium therefore induces a terminal-payoff
 approximate equilibrium.
 
@@ -427,7 +427,7 @@ opponent-only absorbing and nonabsorbing tails separately.
 This conclusion is now formalized for the repository's ordinary behavior
 profiles by
 `quittingGame_isUniformεEquilibrium_of_terminalNash_finite` in
-[`QuittingTerminalUniformization.lean`](../GameTheory/Concepts/Stochastic/QuittingTerminalUniformization.lean).
+[`QuittingTerminalUniformization.lean`](../../GameTheory/Concepts/Stochastic/QuittingTerminalUniformization.lean).
 The Lean proof uses the equivalent live-mass bookkeeping directly. If the
 deviator's singleton reward is nonnegative, the same deviation is compared to
 its terminal payoff. If it is negative, the comparison deviation agrees up to
@@ -438,7 +438,7 @@ deviations.
 
 The repository also retains the negative direction:
 `quittingGame_not_exists_uniformEquilibriumPayoff_of_no_terminalNash` at
-[`QuittingAsymptotic.lean`](../GameTheory/Concepts/Stochastic/QuittingAsymptotic.lean#L235).
+[`QuittingAsymptotic.lean`](../../GameTheory/Concepts/Stochastic/QuittingAsymptotic.lean#L235).
 A fixed positive terminal exploitability gap rules out a uniform-equilibrium
 payoff.  Conversely, Proposition 2.13 implies that failure of uniform
 approximate existence forces failure of terminal approximate existence and
@@ -453,7 +453,7 @@ choose one sufficiently accurate member, use Proposition 2.13 with a strict
 error enlargement, and then use fixed-profile Cesàro convergence.  This yields
 one fixed common-horizon uniform-equilibrium payoff. This is now formalized by
 `quittingGame_exists_uniformEquilibriumPayoff_iff_terminalNash_all_errors` in
-[`QuittingTerminalUniformPayoffSelection.lean`](../GameTheory/Concepts/Stochastic/QuittingTerminalUniformPayoffSelection.lean),
+[`QuittingTerminalUniformPayoffSelection.lean`](../../GameTheory/Concepts/Stochastic/QuittingTerminalUniformPayoffSelection.lean),
 landed at `daf2780` and publicly routed at `08f5dd1`. It does not fill the
 general stochastic-game `sorry` in `Uniform.lean`; it proves the exact
 existence equivalence only for finite quitting games.
@@ -536,7 +536,7 @@ against the repository definitions.
 
 ### 3.1 Root continuation is a substantive advance
 
-[`QuittingRootContinuation.lean`](../GameTheory/Concepts/Stochastic/QuittingRootContinuation.lean)
+[`QuittingRootContinuation.lean`](../../GameTheory/Concepts/Stochastic/QuittingRootContinuation.lean)
 proves the exact first-stage payoff decomposition and the key theorem
 `quittingTerminalPayoff_update_rootThenContinuation_le` at line 376.
 
@@ -558,7 +558,7 @@ Consequences:
 
 ### 3.2 The `Never` branch is exact
 
-[`QuittingSimpleBranches.lean`](../GameTheory/Concepts/Stochastic/QuittingSimpleBranches.lean)
+[`QuittingSimpleBranches.lean`](../../GameTheory/Concepts/Stochastic/QuittingSimpleBranches.lean)
 proves that the all-continue profile is a terminal
 \(\varepsilon\)-equilibrium exactly when every player's singleton-quitter
 payoff is at most \(\varepsilon\). Consequently, all-continue works for every positive
@@ -573,7 +573,7 @@ desired quitting-game trichotomy, not merely an example.
 
 ### 3.3 The scheduling kernel has advanced
 
-[`BoundedDiscrepancyCirculation.lean`](../GameTheory/Concepts/Stochastic/BoundedDiscrepancyCirculation.lean)
+[`BoundedDiscrepancyCirculation.lean`](../../GameTheory/Concepts/Stochastic/BoundedDiscrepancyCirculation.lean)
 now proves the exact finite rational equivalence between a
 bounded-discrepancy infinite walk, an eventually periodic witness, a
 zero-charge lasso, and a reachable connected zero-charge integer circulation.
@@ -670,7 +670,7 @@ event that the designated quitter instead continues. The continuation is not
 represented by the residual on-path payoff after sure absorption.
 
 The exact audit, including minimal sanity examples, is in
-[`Review07-AbsorptionPathTerminalJumpConvention.md`](../ephemeral/reviews/Review07-AbsorptionPathTerminalJumpConvention.md).
+`ephemeral/reviews/Review07-AbsorptionPathTerminalJumpConvention.md`.
 No proof plan should cite the printed path equivalence without repairing this
 endpoint.  This defect is distinct from Q107's posed plateau transcription:
 the published (A.2) correctly removes (S(\pi)\cup T(\pi)), while the launched
@@ -695,7 +695,7 @@ existence hinge.
 ### 5.1 Exact `First` theorem
 
 This supplied-profile theorem is now exact and landed in
-[`QuittingFirstBranch.lean`](../GameTheory/Concepts/Stochastic/QuittingFirstBranch.lean)
+[`QuittingFirstBranch.lean`](../../GameTheory/Concepts/Stochastic/QuittingFirstBranch.lean)
 at `c0fd129`. If a root product law has a sure quitter, then its splice with a
 continuation profile is a terminal \(\varepsilon\)-equilibrium exactly when
 the root law is an \(\varepsilon\)-Nash action in the one-stage continuation
@@ -804,7 +804,7 @@ surviving mass. Any proof that divides by survival probability must explicitly
 control the terminal tail.
 
 The full theorem-or-counterexample specification is
-[Question 107](../questions/old/Question107-ProperAbsorptionPathBridge.md).
+[Question 107](../../questions/old/Question107-ProperAbsorptionPathBridge.md).
 
 ### 5.4 Uniformization
 
@@ -956,7 +956,7 @@ uniform equilibrium payoff
 
 The essential APS operator is relevant to the viability and path arrows. The
 existing discounted APS machinery in
-[`MonitoringSelfGeneration.lean`](../GameTheory/Concepts/Repeated/MonitoringSelfGeneration.lean)
+[`MonitoringSelfGeneration.lean`](../../GameTheory/Concepts/Repeated/MonitoringSelfGeneration.lean)
 already contains the fixed-point/self-generation proof pattern, selector-built
 public strategies, continuation decomposition, and one-shot-deviation logic.
 It cannot be applied verbatim: the current theorems are discounted, while an
@@ -1118,7 +1118,7 @@ general recursion.
 
 ### 9.3 Product-image convexification
 
-[`ProductImageConvexification.lean`](../GameTheory/Concepts/Correlation/ProductImageConvexification.lean)
+[`ProductImageConvexification.lean`](../../GameTheory/Concepts/Correlation/ProductImageConvexification.lean)
 proves that the convex hull of outcomes generated by independent product laws
 equals the correlated observation image. This identifies the correlation gap
 precisely:
@@ -1150,7 +1150,7 @@ obstruction inside an actual game with the required strategic quantifiers.
 
 Continuous singleton absorption flow resembles a target occupation vector.
 The landed offline equivalence in
-[`BoundedDiscrepancyCirculation.lean`](../GameTheory/Concepts/Stochastic/BoundedDiscrepancyCirculation.lean)
+[`BoundedDiscrepancyCirculation.lean`](../../GameTheory/Concepts/Stochastic/BoundedDiscrepancyCirculation.lean)
 converts a reachable connected zero-charge integer circulation into an exact
 closed walk and eventually periodic bounded-discrepancy schedule, and extracts
 such a circulation from every bounded-discrepancy witness. The FTV cyclic

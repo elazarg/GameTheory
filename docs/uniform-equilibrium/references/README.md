@@ -4,17 +4,20 @@ This directory is the project's **citation of record** for results that already
 exist in the published literature. It answers one question: *what is known, by
 whom, in exactly what form, and how does this repository relate to it?*
 
-It is deliberately separate from mutable working state:
+It is deliberately separate from project-control state:
 
-- `ephemeral/UniformEquilibriumCurrentFrontier.md` records **our** theorem boundary and
-  working hypotheses;
+- [`FRONTIER.md`](../FRONTIER.md) records **our** theorem boundary and working
+  hypotheses, while [`PIPELINE.md`](../PIPELINE.md) owns priorities;
 - `questions/` records **our** self-contained mathematical questions;
 - this directory records **other people's theorems**, with durable citations,
   so that no route is re-derived by accident and no known obstruction is
   rediscovered the hard way.
 
-Companion file: [`ephemeral/MISSING.md`](../../../ephemeral/MISSING.md) — the gap list, i.e. known
-results that this repository does *not* yet record, formalize, or consume.
+Companion lifecycle:
+[`UniformEquilibriumLiterature`](../../../ideas/UniformEquilibriumLiterature/README.md).
+The old `ephemeral/MISSING.md` is a frozen intake snapshot, not a gap ledger.
+Its durable citation work is now in
+[`BibliographyMaintenance.md`](BibliographyMaintenance.md).
 
 ## Files
 
@@ -55,7 +58,7 @@ it:
 | `T` | Tracked in a planning file (frontier, manuscript, question corpus, README) but not formalized |
 | `—` | Not recorded anywhere in this repository |
 
-These are the same seals as `UniformEquilibriumProgram.md` uses (`M`/`L`/`A`/`C`)
+These are the same seals as [`Program.md`](../Program.md) uses (`M`/`L`/`A`/`C`)
 restricted to what is relevant here: whether *someone else's* theorem is
 represented in our tree.
 
@@ -78,8 +81,9 @@ Mertens–Neyman and Kohlberg full texts were never read, Sorin's numbers were
 never cross-checked against a textbook, and the Lean-side formalization sweep
 did not survive verification (the mathlib facts in
 [`50-formalization-status.md`](50-formalization-status.md) come from direct
-inspection instead, which is stronger). The complete list of such gaps is in
-[`ephemeral/MISSING.md`](../../../ephemeral/MISSING.md) §5.
+inspection instead, which is stronger). Actionable citation gaps are maintained
+in [`BibliographyMaintenance.md`](BibliographyMaintenance.md); the original
+audit notes remain historical intake only.
 
 **Targeted addendum, 2026-08-02.** The Q98 audit directly read the
 Ummels--Wojtczak LMCS paper (arXiv:1109.4017) and Ummels's thesis around

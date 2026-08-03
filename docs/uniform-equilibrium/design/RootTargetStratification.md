@@ -15,12 +15,13 @@ compactness/refinement/block lemmas, the corrected terminal quitting-game
 Never/credible-First/standard-proper-path bridge at the mathematical level,
 while Solan--Vieille Proposition 2.13 separately identifies terminal
 approximate existence with common-horizon uniform existence and compact target
-selection. Their finite kernels are only partially formalized; the full bridge
-and quitting-specific uniformization theorem are not. The current
-cross-layer interpretation is in
-[UniformEquilibriumStrategicSynthesis.md](../../../ephemeral/UniformEquilibriumStrategicSynthesis.md);
-the mutable theorem status lives in
-[UniformEquilibriumCurrentFrontier.md](../../../ephemeral/UniformEquilibriumCurrentFrontier.md).
+selection. The quitting-specific terminal-to-uniform bridge and fixed-payoff
+selection are now formalized in `QuittingTerminalUniformization.lean` and
+`QuittingTerminalUniformPayoffSelection.lean`. The remaining gap is terminal
+approximate-equilibrium production, not uniformization. The current
+cross-layer interpretation and theorem status live in
+[`FRONTIER.md`](../FRONTIER.md); project decisions and priorities live in
+[`PIPELINE.md`](../PIPELINE.md).
 This note records the idea and its rationale so neither depends on which
 design branch is eventually taken.
 

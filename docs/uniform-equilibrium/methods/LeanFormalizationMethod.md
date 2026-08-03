@@ -4,7 +4,7 @@
 
 This document describes the stable formalization method. It is not a module
 backlog. Current mathematical and Lean frontiers are recorded in
-`ephemeral/UniformEquilibriumCurrentFrontier.md`; the detailed historical
+[`../FRONTIER.md`](../FRONTIER.md); the detailed historical
 inventory is in `docs/uniform-equilibrium/audits/LeanSettlementAudit.md`.
 
 ## Preserve the semantic waist

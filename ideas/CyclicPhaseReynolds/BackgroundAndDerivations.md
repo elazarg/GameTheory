@@ -11,7 +11,7 @@
 | Central live claim | Scalar cyclic oscillations are exactly bounded phase coboundaries after removing their mean; using this on a game cycle additionally requires an actual phase-state bias certificate. |
 | Next discriminant | Exhibit one certified periodic game block whose weighted welfare slack factors through this phase clock, or park the construction as reusable infrastructure. |
 | Production destination | Possible adapter to `Math.Probability.SwitchedPotentialCalculus`; none nominated without an actual-data consumer. |
-| Supersedes / superseded by | Complements, and does not supersede, `ideas/CycleGeometryResolution.md`. |
+| Supersedes / superseded by | Complements, and does not supersede, `ideas/CycleGeometryResolution/README.md`. |
 
 ### Claim ledger
 
@@ -60,9 +60,9 @@ remain isolated verification infrastructure.
 This note is the phase-analysis component used by periodic game
 constructions.  It contains no coalition-specific claims.  Its role in
 coalition splitting is stated separately in
-[`CoalitionSplittingGroupActions.md`](CoalitionSplittingGroupActions.md).
+[`CoalitionSplittingGroupActions`](../CoalitionSplittingGroupActions/README.md).
 
-In [`ideas/CycleGeometryResolution.md`](../ideas/CycleGeometryResolution.md),
+In [`CycleGeometryResolution`](../CycleGeometryResolution/README.md),
 "periodic" primarily means a periodic word in a resolved graph-directed
 system.  Such a word is evaluated by the max-affine block-composition
 semigroup.  The cyclic group here is only the clock acting on an already
@@ -258,7 +258,7 @@ phase-state operators are studied.
 ## 6. Formalization status
 
 The isolated experiment
-[`experiments/CyclicPhaseReynolds.lean`](../experiments/CyclicPhaseReynolds.lean)
+`experiments/CyclicPhaseReynolds.lean`
 proves:
 
 1. centered phase sums vanish;
@@ -268,7 +268,7 @@ proves:
 5. bounded primitives give the uniform `2*C/T` estimate.
 
 The independent game-facing experiment
-[`experiments/PhaseLiftedWelfareCap.lean`](../experiments/PhaseLiftedWelfareCap.lean)
+`experiments/PhaseLiftedWelfareCap.lean`
 proves the policy-universal phase-state Bellman telescope and returns the
 production `HasUniformWeightedWelfareCap` predicate.  Both results retain seal
 `X`; no certified coalition cycle has yet supplied their hypotheses.

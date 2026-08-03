@@ -11,7 +11,7 @@
 | Central live claim | An automorphism action that intertwines each certified block map transports every finite word, its fixed points, and equivariant acceptance tests to the corresponding word orbit. |
 | Next discriminant | Define or refute the required action on fully labelled edges and fibers in one certified resolved component. |
 | Production destination | Possible adapter to graph-directed periodic lift and max-affine word validation; none until actual resolved data supplies the action. |
-| Supersedes / superseded by | Independent infrastructure consumed conceptually by `CoalitionSplittingGroupActions.md`; does not supersede `CycleGeometryResolution.md`. |
+| Supersedes / superseded by | Independent infrastructure consumed conceptually by `ideas/CoalitionSplittingGroupActions/README.md`; does not supersede `ideas/CycleGeometryResolution/README.md`. |
 
 ### Claim ledger
 
@@ -160,7 +160,7 @@ field retained by the resolved atlas.
 ## 5. Relation to the two cycle structures
 
 For the graph-directed part of
-[`ideas/CycleGeometryResolution.md`](../ideas/CycleGeometryResolution.md),
+[`CycleGeometryResolution`](../CycleGeometryResolution/README.md),
 Theorem 1 transports a supplied periodic code and its lift.  Under strict
 contraction, uniqueness supplies the stabilizer conclusion automatically.
 

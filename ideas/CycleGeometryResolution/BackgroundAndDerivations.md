@@ -619,7 +619,7 @@ the reverse end rather than discarded as an atom at infinity. The action is
 reselected from the limiting edge; E50 does not yet package convergence of a
 chosen finite marked action or its transported root-cylinder scale. Those
 stronger coupled coordinates are PB5 in
-`PositivePlateauBoundaryClosure.md` and remain the P0 bridge input.
+`ideas/PositivePlateauBoundaryClosure/README.md` and remain the P0 bridge input.
 
 This is still not the resolved repair relation.  Equation (7.3) produces two
 one-sided charts, not a bi-infinite orbit: the middle of the same finite

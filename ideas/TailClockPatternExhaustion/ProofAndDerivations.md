@@ -10,8 +10,8 @@
 | Last audited | 2026-08-03, against the positive-debt tail, marginal-hazard domination, and Q128 closure |
 | Central live claim | Resolved: once positive debt selects an owner with summable opponent clock, that owner's own hazard is either nonsummable, which is the closure branch, or summable, which forces every individual hazard and every opponent clock to be summable. No third clock pattern exists. |
 | Next discriminant | none; reopen only if a later producer uses a clock notion not pointwise comparable to the landed opponent-absorption charge |
-| Production destination | No independent producer. The resolved split is consumed by the fully summable exceptional branch in `PositivePlateauBoundaryClosure.md`. |
-| Supersedes / superseded by | Superseded operationally by `PositivePlateauBoundaryClosure.md`; retained as the proof and terminology record for the exhausted split. |
+| Production destination | No independent producer. The resolved split is consumed by the fully summable exceptional branch in `ideas/PositivePlateauBoundaryClosure/README.md`. |
+| Supersedes / superseded by | Superseded operationally by `ideas/PositivePlateauBoundaryClosure/README.md`; retained as the proof and terminology record for the exhausted split. |
 
 ### Claim ledger
 

@@ -164,19 +164,23 @@ upgrades operative-queue item 6 ("transcribe the FTV cyclic game from the
 published paper") from *to do* to *done and verified at the mathematical
 level*. What remains is the Lean actual-data adapter.
 
-**Repo status.** `T` (tracked and mathematically verified, in
-`docs/uniform-equilibrium/case-studies/FTVArchitectureAnalysis.md` and the Q56/Q95/Q97 question files) but `—` in
-Lean: the game and its adapter are not formalized. Note that the repo's
-`QuittingGame.lean` construction is general in the player type and terminal
-reward `r`, so the FTV instance is a **direct instantiation**, not new
-infrastructure — this is a short, high-value formalization.
+**Repo status.** `L~`. The concrete FTV architecture and credibility checks,
+the exact finite-horizon delivery constants `16/7`, `22/7`, `18/7` and common
+modulus `22/(7T)`, the all-start semantic credibility bridge, and the exact
+cyclic packet adapter are formalized in `FTVCyclicCredibility.lean`,
+`FTVCyclicFiniteHorizon.lean`, `FTVCyclicSemanticBridge.lean`, and
+`FTVCyclicMinimality.lean`. The remaining source-aligned target is the
+published stationary-impossibility/approximate-boundary theorem; do not
+describe the game or finite-horizon delivery as absent.
 
 ---
 
-## SOLAN–VIEILLE 2001 §3 — the consolation prizes collapse at n = 4
+## SOLAN–VIEILLE 2002 — the consolation prizes collapse at n = 4
 
-`[primary]` Solan–Vieille (2001) §3 exhibits an explicit **four-player quitting
-game** (Figure 2) with:
+`[primary]` Solan--Vieille, *Quitting Games--An Example*, International
+Journal of Game Theory **31**(3), 365--381 (2002), DOI
+`10.1007/s001820200125`, exhibits an explicit **four-player quitting game**
+(Figure 2) with:
 
 - no stationary equilibrium (§3.2),
 - no stationary ε-equilibrium,
@@ -209,15 +213,17 @@ player 1 mixes. Numerically solving for `(12)(34)`-symmetric period-2
 equilibria gives continuation probabilities `≈ 0.746097` and `≈ 0.734525` with
 payoffs `≈ (1, 1.361424, 1, 1.340307)` and its swap.
 
-**A period-2 cyclic equilibrium does exist, so the qualitative claim stands** —
-but the printed constants appear wrong. Only the 1998 discussion paper was
-readable, so this may be a DP typo corrected in print. Unresolved; see
-[`40-open-status.md`](40-open-status.md).
+**A period-2 cyclic equilibrium appears to exist, so the qualitative claim may
+stand**, but the printed constants and the exact corrected certificate remain
+under source-specific audit. The final 2002 paper is author-hosted, so the old
+claim that only the 1998 discussion paper was readable is obsolete. Do not put
+the disputed constants into Lean; see [`40-open-status.md`](40-open-status.md).
 
-**Repo status.** `—`. This example is not in the tree and is not mentioned in
-the frontier. It is arguably the *second* most valuable transcription target
-after FTV, because it is the sharpest available fence on `n ≥ 4` interfaces —
-and again a direct instantiation of `QuittingGame.lean`.
+**Repo status.** `P1, not formalized`. This is the sharpest available fence on
+stationary, perturbed, near-all-Continue/small-termination, and
+solo-payoff-convex-hull fallback languages at `n = 4`. Formalize only the
+source-stable qualitative propositions until the Figure-2 numerical packet is
+reconciled.
 
 ---
 

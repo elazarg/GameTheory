@@ -7,7 +7,7 @@ instead of topic alone. Do not recreate the old paths.
 | --- | --- | --- |
 | production Lean and reusable mathematics | `GameTheory/`, `Math/`, `Semantics/` | tracked and imported normally |
 | durable uniform-equilibrium documentation | `docs/uniform-equilibrium/` | stable methods, references, audits, design records, and manuscript |
-| lifecycle-owned ideas | `ideas/` | one coherent group per file, using `ideas/README.md` |
+| lifecycle-owned ideas | `ideas/<Group>/README.md` | one coherent group per directory, using `ideas/README.md` |
 | cross-field survey portfolios | `ideas/wild/` | intake only; extract an actionable claim to its own lifecycle group |
 | isolated proof and computation probes | `experiments/` | gitignored by default; production never imports it |
 | active self-contained questions | `questions/` | launch queue; no project-specific cross-references in question bodies |

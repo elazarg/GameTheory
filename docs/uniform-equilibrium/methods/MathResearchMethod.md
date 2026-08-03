@@ -5,7 +5,7 @@
 This document describes how to conduct the mathematical research. It contains
 no current backlog and makes no claim about which open route is presently most
 promising. The changing theorem boundary is recorded separately in
-`ephemeral/UniformEquilibriumCurrentFrontier.md`.
+[`../FRONTIER.md`](../FRONTIER.md), with the exact claim in `ideas/<Group>/`.
 
 ## Start from the semantic deficit
 

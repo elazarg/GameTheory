@@ -1,17 +1,20 @@
 # Idea-to-production pipeline
 
-This directory is the repository-wide durable lifecycle pipeline for
-methodological and structural ideas. The current index is concentrated on the
+This directory is the repository-wide **internal scientific publishing venue**
+and durable lifecycle pipeline for methodological and structural ideas. The
+current index is concentrated on the
 uniform-equilibrium program because that is where the active groups presently
 live; the mechanism is not exclusive to that program. The unit of organization
 is one coherent **idea group**, not one theorem, experiment, question, or work
 session.
 
-Every lifecycle-owned group gets one file in this directory. Mutable notes may
-begin under `ephemeral/`, but they do not become lifecycle owners there: extract
-the coherent claim here once it is retained. Survey portfolios that intentionally
-span several mechanisms live under [`wild/`](wild/README.md) and route promoted
-descendants back to one-file groups. Do not duplicate mathematical content.
+Every lifecycle-owned group gets one directory with a short `README.md`
+navigator and one or more descriptively named scientific claim files. Mutable
+notes may begin under `ephemeral/`, but they do not become lifecycle owners
+there: extract each coherent retained claim here. Survey portfolios that
+intentionally span several mechanisms live under [`wild/`](wild/README.md) and
+route promoted descendants back to claim-owning groups. Do not duplicate
+mathematical content.
 
 ## Open intake, orchestrated promotion
 
@@ -59,13 +62,24 @@ lifecycle and an epistemic verdict.
 | `PENDING` | Triaged enough to retain, with a concrete claim or falsifier, but not yet actively mined. |
 | `ACTIVE` | Has objective priority, a named next discriminant, and an assigned research or formalization lane. |
 | `BLOCKED` | Remains high-value but cannot advance until a named mathematical prerequisite, artifact, or external input arrives. |
-| `MINED` | All presently valuable consequences, counterexamples, and production candidates have been extracted; revisit only on new evidence. |
+| `MINED` | All presently valuable consequences, counterexamples, and production candidates have been extracted into the active program; revisit only on new evidence. |
+| `INDEPENDENT` | Sound or credibly publishable standalone work with no current dependency or consumer on the active program route. It remains a first-class citable group, but leaves the operative priority queue. |
 | `PARKED` | Still plausible or useful, but downstream or deliberately deprioritized. |
 | `SUPERSEDED` | A better idea group now owns every live obligation; the replacement path is recorded. |
 
 `MINED` is a workflow conclusion, not a truth claim. An idea can be mined
 because it was proved, because its useful fragment was promoted, or because a
 counterexample exhausted it.
+
+`INDEPENDENT` is not a euphemism for `PARKED`, `MINED`, or `SUPERSEDED`.
+An independent group must identify its standalone theorem or scientific value,
+the evidence or formalization supporting it, why it is not currently
+load-bearing, likely external audiences or uses, and the concrete new consumer
+that would return it to `ACTIVE`. Do not use this label merely to clear an
+attractive speculation from the queue. Attribution to a published external
+result is a separate literature axis inside
+[`UniformEquilibriumLiterature/`](UniformEquilibriumLiterature/README.md), not
+an internal idea lifecycle.
 
 `BLOCKED` and `PARKED` are deliberately distinct. A blocked group remains an
 objective priority and names the prerequisite preventing progress. A parked
@@ -106,6 +120,25 @@ group into the implementation plan requires an exact claim, scope, and
 consumer. An `X` result never silently becomes `M`; an `L` verifier never
 silently becomes `A`; and `L+A` does not imply strategy-class coverage.
 
+## Required group and claim structure
+
+Each group directory is a container, not the publication itself:
+
+- `ideas/<Group>/README.md` is a short navigator containing group scope,
+  lifecycle/priority, a contents table, dependencies/consumers, and the next
+  group-level decision;
+- `ideas/<Group>/<DescriptiveClaimName>.md` contains one substantive theorem,
+  conjecture, fence, or mechanism. Its name describes the mathematics, not a
+  question/report number. It records exact statement, status/maturity,
+  provenance, attribution caveat, intuition, proof/evidence or missing step,
+  falsifiers, formalization destination, and consumer or reactivation trigger;
+  and
+- longer supporting derivations may live in a descriptively named background
+  file, but cannot be the sole place where the claim is published.
+
+Do not make one file per helper lemma. Do not make a group README a giant
+undifferentiated research note. The claim file is the citable scientific unit.
+
 ## Required lifecycle card
 
 Place this immediately below the title of every idea-group file:
@@ -117,7 +150,7 @@ Place this immediately below the title of every idea-group file:
 | --- | --- |
 | Lifecycle | `PENDING` |
 | Verdict | `OPEN` |
-| Objective priority | `P0`, `P1`, `P2`, or `P3` |
+| Objective priority | `P0`, `P1`, `P2`, `P3`, or `independent` |
 | Last audited | YYYY-MM-DD, checkpoint or commit |
 | Central live claim | One falsifiable sentence |
 | Next discriminant | One experiment, theorem, or counterexample |
@@ -169,7 +202,7 @@ ACTIVE: alternate proof attempts and adversarial counterexamples
                          update implementation/frontier docs
                                       |
                                       v
-                  MINED / PARKED / SUPERSEDED with exit reason
+          MINED / INDEPENDENT / PARKED / SUPERSEDED with exit reason
 ```
 
 Stable production code is committed as soon as its own target and umbrella
@@ -192,7 +225,7 @@ but it remains infrastructure rather than closure progress.
 
 ## Maintenance rules
 
-- [`INDEX.md`](INDEX.md) is the routing table; group files are the source of
+- [`INDEX.md`](INDEX.md) is the routing table; group `README.md` files are the source of
   truth.
 - Update a group when a claim changes verdict, a seal lands, its objective
   priority changes, or a falsifier redirects the producer.

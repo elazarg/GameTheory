@@ -61,8 +61,8 @@ positive absorbing recursive games. The existence problem for this class is
 solved in a subsequent paper." Vieille's own later texts always cite I and II
 **jointly**. The repository's manuscript already cites
 `\cite{Vieille2000I,Vieille2000II}` correctly; **Part III is missing from
-`latex/references.bib` and from the manuscript bibliography** — see
-[`ephemeral/MISSING.md`](../../../ephemeral/MISSING.md).
+`latex/references.bib` and from the manuscript bibliography** — see the
+[bibliography maintenance queue](BibliographyMaintenance.md).
 
 Also: **Vieille is the sole author.** Solan did not co-author the two-player
 solution. (A stray gloss asserting otherwise was corrected in verification.)
@@ -215,8 +215,9 @@ are therefore:
 
 The source theorem must not be used as a literal path/nonexistence equivalence
 until one repaired bridge is proved. Exact source points, one false positive,
-and one false negative for the naïve all-jumps repair are recorded in
-[Review 07](../../../ephemeral/reviews/Review07-AbsorptionPathTerminalJumpConvention.md).
+and one false negative for the naïve all-jumps repair were recorded in the
+historical intake note
+`ephemeral/reviews/Review07-AbsorptionPathTerminalJumpConvention.md`.
 
 **Citation.** O. Ashkenazi-Golan, I. Krasikov, C. Rainer, and E. Solan,
 *Absorption Paths and Equilibria in Quitting Games*, Mathematical Programming
@@ -290,7 +291,7 @@ a **normal-form** (one-shot pre-play) correlated equilibrium payoff. IJGT
 **31**, 91–121 (2002),
 DOI [`10.1007/s001820200109`](https://doi.org/10.1007/s001820200109).
 
-**Why this matters to us.** `UniformEquilibriumProgram.md` records as a
+**Why this matters to us.** [`Program.md`](../Program.md) records as a
 standing constraint that a public lottery is **not** freely available and must
 be synthesized endogenously with proved unilateral robustness, entry safety and
 sublinear cost. The correlated results are exactly the theorems obtained when

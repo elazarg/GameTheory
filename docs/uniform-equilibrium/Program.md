@@ -12,18 +12,30 @@ This document is the stable coordination method for three distinct activities:
 - [ParallelResearchMethod.md](methods/ParallelResearchMethod.md) — how independent
   investigations are scoped and promoted when they become relevant.
 
-The dated, changing theorem boundary and working hypotheses are in
-[UniformEquilibriumCurrentFrontier.md](../../ephemeral/UniformEquilibriumCurrentFrontier.md).
-The current strategic interpretation and the separate root-math/formal-adapter
-queues are in
-[UniformEquilibriumStrategicSynthesis.md](../../ephemeral/UniformEquilibriumStrategicSynthesis.md).
+Current project decisions, objective priorities, and active gates are in
+[`PIPELINE.md`](PIPELINE.md). The curated mathematical state of knowledge is in
+[`FRONTIER.md`](FRONTIER.md). Exact internal claims live in descriptively named
+files under [`ideas/<Group>/`](../../ideas/README.md); attributed external
+results live inside
+[`ideas/UniformEquilibriumLiterature/`](../../ideas/UniformEquilibriumLiterature/README.md).
 Detailed historical evidence remains in
 [ProofScaffoldingReview.md](audits/ProofScaffoldingReview.md),
 [LeanSettlementAudit.md](audits/LeanSettlementAudit.md), and the
-[progress monitor](../../ephemeral/progress-monitor/).
-Focused adversarial checks that may rely on repository context live in
-[`reviews/`](../../ephemeral/reviews/); unlike the launch questions, these review packets need
-not restate the whole model.
+local `ephemeral/progress-monitor/` intake.
+Focused adversarial checks, launch questions, proof-mining notebooks, and
+experiments are intake/evidence, never current truth by themselves.
+
+### Source-of-truth hierarchy
+
+1. production Lean is machine-checked truth at its exact declaration scope;
+2. claim files under `ideas/<Group>/<Claim>.md` are the internal scientific
+   record, and literature result files carry mandatory attribution/scope;
+3. `FRONTIER.md` synthesizes the current mathematical boundary;
+4. `PIPELINE.md` owns decisions, priorities, active gates, and blockers;
+5. this `Program.md` owns stable methodology and update rules;
+6. the manuscript is readable derivative exposition; and
+7. questions, reviews, proof-mining reports, experiments, and archived working
+   notes are evidence/intake only.
 
 ## Semantic waist
 
@@ -152,6 +164,20 @@ claim at its source and mark downstream live summaries as superseded. A
 historical record may retain the failed argument only when it is unmistakably
 labelled false and the surviving lesson is stated separately.
 
+## Maintenance protocol
+
+- A theorem or refutation commit updates its owning claim file.
+- If the mathematical boundary changes, update `FRONTIER.md` in that stable
+  commit or an immediately following documentation commit.
+- If priority, route, or a project-control decision changes, add/update a
+  stable PC decision and queue row in `PIPELINE.md`.
+- `FORMALIZED` requires an exact declaration/path and a successful relevant
+  build/check. `PUBLISHED` requires exact attribution, source confidence, and
+  an adapter to repository scope.
+- Refresh the manuscript periodically from `FRONTIER.md`, not on every theorem.
+- Before handoff, update the audited commit, active gates, blockers, and
+  uncommitted-work warning in `PIPELINE.md`.
+
 ## Scheduling discipline
 
 Schedule by objective priority, not by the arrival time of an answer or file.
@@ -180,6 +206,6 @@ credibility or root-boundary theorem merely because it arrived last.
 ## Separation rule
 
 Methodology files change only when the way research or formalization should be
-conducted changes. New theorems, counterexamples, current priorities, candidate
-invariants, and beliefs about the next attainable result belong in
-`UniformEquilibriumCurrentFrontier.md` or another dated status document.
+conducted changes. New theorems and counterexamples update their claim files
+and, when frontier-changing, `FRONTIER.md`. Current priorities and route
+decisions belong in `PIPELINE.md`; neither belongs in an ephemeral status file.

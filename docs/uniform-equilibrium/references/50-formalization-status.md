@@ -141,11 +141,13 @@ The load-bearing absences recorded by this audit are:
 - **Sorin's converse inclusion.** The target-free stopping estimate,
   separation hyperplane, and endpoint exclusion are formalized. The converse
   construction of every point with `1/2 ≤ w₁ ≤ 2/3` is not.
-- **Flesch–Thuijsman–Vrieze semantic characterization and approximate
-  boundary.** The game, ten-node period-three adapter, exact sufficient
-  condition checks, and cyclic packet's `K≥3`/normalized-rigidity algebra are
-  formalized. The equilibrium-theoretic necessity/sufficiency of `(Q1)--(Q5)`,
-  sharp finite-horizon constant, and weighted-regret counterfamily are not.
+- **Flesch–Thuijsman–Vrieze stationary-impossibility/approximate boundary.**
+  The game, ten-node period-three adapter, exact sufficient-condition checks,
+  cyclic packet rigidity, exact finite-horizon delivery constants and
+  `22/(7T)` modulus, and the all-start semantic credibility bridge are
+  formalized. The remaining source-aligned target is the published exclusion
+  of sufficiently accurate stationary equilibria and any stronger weighted-
+  regret counterfamily actually supported by the source.
 - **Ummels finite-state equilibrium undecidability.** Neither the 14-player
   SSMG reduction nor its `FinNE`/`FinSPE` variants are formalized here. Q98
   tracks a source-conditional use of the result; it is not a Lean
@@ -216,7 +218,7 @@ quantifier elimination.
 
 ### External proof-assistant work
 
-**Headline: nothing exists.** No formalization of stochastic games in the
+**Headline: no close counterpart was found in the audited sources.** No formalization of stochastic games in the
 Shapley 1953 sense — nor of the Shapley operator for games, Fink/Takahashi
 discounted stationary equilibria, the uniform value, Mertens–Neyman, Vieille's
 theorem, the Big Match, repeated games, or folk theorems — was found in **any**
@@ -279,10 +281,13 @@ and its future-work list contains nothing stochastic.
 
 ### What this means for this repository
 
-**This repo is, as far as the sweep could establish, the only formalization of
-stochastic games and the uniform value in any proof assistant.** The
-`BigMatchUniform.lean` development in particular has no counterpart anywhere —
-the Big Match is not formalized in Isabelle, Coq, or any other system.
+**This repository is distinctive within the audited subset.** The sweep found
+no close proof-assistant counterpart to its stochastic-game/uniform-value
+development. That is not a certified field-wide uniqueness theorem: the Lean,
+Rocq/Coq, Agda, HOL4, PVS, and Mizar searches were incomplete. In particular,
+no Big Match counterpart was found in the checked sources; do not strengthen
+that observation to “none exists anywhere” without a broader reproducible
+sweep.
 
 The nearest external stepping stone toward a uniform-value formalization would
 be **average-reward / gain-bias / Blackwell optimality for MDPs** (Puterman

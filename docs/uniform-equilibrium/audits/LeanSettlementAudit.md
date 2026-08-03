@@ -4,13 +4,13 @@
 > dependency ledger, and interface-safety record. The operational program is
 > now split into `MathResearchMethod.md`, `LeanFormalizationMethod.md`, and
 > `ParallelResearchMethod.md`, coordinated by
-> `UniformEquilibriumProgram.md`. The mutable theorem boundary and working
-> hypotheses are in `UniformEquilibriumCurrentFrontier.md`. Mathematical
+> [`Program.md`](../Program.md). The current theorem boundary and working
+> hypotheses are in [`FRONTIER.md`](../FRONTIER.md). Mathematical
 > discovery and Lean execution should no longer be scheduled as one
 > undifferentiated plan.
 >
-> **Scheduling note (2026-08-02):** the operative queue is maintained in the
-> "Operative queue" section of `UniformEquilibriumCurrentFrontier.md`. The
+> **Scheduling note (2026-08-02):** the operative queue is maintained in
+> [`PIPELINE.md`](../PIPELINE.md). The
 > step list below is kept for its dependency analysis; per-item status was
 > reconciled against the committed tree on 2026-08-02 (commit hashes cited
 > inline). Do not schedule from this file without checking those statuses.
@@ -107,7 +107,7 @@
 Revised 2026-07-31, twice: first by the wave review, then corrected after
 external review (gate-or-alternative framing, dependency-ordered execution,
 build-verified module status, restored Q55--69 ledger). Companion documents:
-[WaveReviewQ70-78.md](../../../ephemeral/old/WaveReviewQ70-78.md) (review + erratum),
+`ephemeral/old/WaveReviewQ70-78.md` (historical review + erratum),
 [Question79-InertMixedCertificateDirectClosure.md](../../../questions/old/Question79-InertMixedCertificateDirectClosure.md),
 [Question80-AdaptiveSemanticLeafSupply.md](../../../questions/old/Question80-AdaptiveSemanticLeafSupply.md).
 Revised again on 2026-08-01 after

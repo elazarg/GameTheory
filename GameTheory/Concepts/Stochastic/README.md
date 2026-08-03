@@ -11,6 +11,28 @@ The conjecture is stated in [`Uniform.lean`](Uniform.lean) as
 Everything else in this directory is sorry-free; keeper capstones are additionally
 axiom-audited (`propext`, `Classical.choice`, `Quot.sound` only).
 
+## Payoff terminology used here
+
+Three nearby phrases are not interchangeable in this repository:
+
+- **limiting-average** refers to a payoff defined from the asymptotic Cesaro
+  stream, typically through a `liminf`; it is a payoff functional, not by
+  itself a uniformity theorem;
+- **undiscounted equilibrium payoff** may mean a limit of increasingly
+  accurate terminal or asymptotic equilibria; the profile may vary along the
+  approximating sequence; and
+- **uniform-equilibrium payoff** is the stronger repository predicate: for
+  each accuracy, one profile and one fixed target work for every sufficiently
+  long finite horizon against every unilateral behavioral deviation.
+
+Never upgrade the first or second notion to the third without a named theorem.
+Two valid upgrades currently used here are the positivity/monotonicity argument
+for positive recursive absorbing games (Solan--Vieille, Remark 2.9) and the
+finite-quitting terminal-to-uniform bridge in
+[`QuittingTerminalUniformization.lean`](QuittingTerminalUniformization.lean)
+with fixed-payoff selection in
+[`QuittingTerminalUniformPayoffSelection.lean`](QuittingTerminalUniformPayoffSelection.lean).
+
 ## How this directory is organized
 
 The directory is a **research program**, not a conventional library. A small spine

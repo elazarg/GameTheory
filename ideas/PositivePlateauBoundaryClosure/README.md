@@ -2,7 +2,7 @@
 
 | Lifecycle | Verdict | Priority | Group decision |
 | --- | --- | --- | --- |
-| `ACTIVE` | `MIXED` | `P0` | Prove or refute realized anchored-holonomy closedness, then compile the result into repair or fixed debt descent. |
+| `ACTIVE` | `MIXED` | `P0` | Resolve escaping middle length by tightness, an infinity/stopping-law chart with bounded decoder, or calibrated incompatibility; then compile repair or fixed debt descent. |
 
 | Scientific object | Status |
 | --- | --- |

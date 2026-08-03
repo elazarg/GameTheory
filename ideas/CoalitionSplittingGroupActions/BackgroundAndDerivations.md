@@ -11,7 +11,7 @@
 | Central live claim | In a player-transitive game, one transportable singleton-split security certificate plus an invariant positive phase-lifted welfare bias suffices for a uniform-equilibrium payoff. |
 | Next discriminant | Build or refute the actual stochastic-game automorphism transport law for one nontrivial coalition-split certificate. |
 | Production destination | Possible adapter into `WeightedSecurityWelfareAssembly.lean`; no production API is nominated before actual game data supplies transport. |
-| Supersedes / superseded by | Offshoot of `CoalitionSecurityWelfareAssembly.md`; complementary to `CycleGeometryResolution.md`. |
+| Supersedes / superseded by | Offshoot of `ideas/CoalitionSecurityWelfareAssembly/README.md`; complementary to `ideas/CycleGeometryResolution/README.md`. |
 
 ### Claim ledger
 
@@ -40,7 +40,7 @@
 - Orbit averaging or quotienting may erase support, terminal action, owner,
   scale, or provenance, invalidating the resolved strategic certificate.
 - The K11 overlap, owner nontransfer, terminal packet at infinity, and
-  strategic decoder gaps from `CycleGeometryResolution.md` are untouched.
+  strategic decoder gaps from `ideas/CycleGeometryResolution/README.md` are untouched.
 
 ### Production map
 
@@ -76,17 +76,17 @@ This note asks exactly how group actions and periodic profiles can strengthen
 the coalition-splitting approach to uniform equilibrium.  General cyclic
 analysis and general orbit-lattice gluing live in separate notes:
 
-- [`CyclicPhaseReynolds.md`](CyclicPhaseReynolds.md);
-- [`FiniteGroupOrbitGluing.md`](FiniteGroupOrbitGluing.md);
-- [`EquivariantWordTransport.md`](EquivariantWordTransport.md);
-- [`FiniteGroupInvariantWeights.md`](FiniteGroupInvariantWeights.md).
+- [`CyclicPhaseReynolds`](../CyclicPhaseReynolds/README.md);
+- [`FiniteGroupOrbitGluing`](../FiniteGroupOrbitGluing/README.md);
+- [`EquivariantWordTransport`](../EquivariantWordTransport/README.md);
+- [`FiniteGroupInvariantWeights`](../FiniteGroupInvariantWeights/README.md).
 
 The baseline assembly theorem and its limitations are in
-[`CoalitionSecurityWelfareAssembly.md`](CoalitionSecurityWelfareAssembly.md).
+[`CoalitionSecurityWelfareAssembly`](../CoalitionSecurityWelfareAssembly/README.md).
 
 ## Alignment with the cycle-geometry program
 
-[`ideas/CycleGeometryResolution.md`](../ideas/CycleGeometryResolution.md)
+[`CycleGeometryResolution`](../CycleGeometryResolution/README.md)
 already gives two meanings to cycle structure that must not be conflated with
 the groups below:
 
@@ -118,7 +118,7 @@ CG8.  Likewise, rotating a word changes its based semigroup product; it is
 only group conjugacy when the relevant block maps are invertible.
 
 The general word calculation and its stabilizer theorem are proved separately
-in [`EquivariantWordTransport.md`](EquivariantWordTransport.md).  This
+in [`EquivariantWordTransport`](../EquivariantWordTransport/README.md).  This
 coalition note uses them only after the relabeling action has been supplied on
 the fully resolved split certificates.
 
@@ -216,7 +216,7 @@ Then `barAlpha` is strictly positive and invariant.  If a game automorphism
 transports a welfare cap for `alpha` to a cap for every translated weight,
 summing those finitely many caps gives the cap for `barAlpha`.  The finite
 algebra is isolated in
-[`FiniteGroupInvariantWeights.md`](FiniteGroupInvariantWeights.md).
+[`FiniteGroupInvariantWeights`](../FiniteGroupInvariantWeights/README.md).
 The missing statement is again the actual game/profile transport, not the
 Reynolds calculation.
 
@@ -372,27 +372,27 @@ which the naive statement lacks.
 
 The checked files are:
 
-- [`experiments/CyclicPhaseReynolds.lean`](../experiments/CyclicPhaseReynolds.lean),
+- `experiments/CyclicPhaseReynolds.lean`,
   for clock averaging, cyclic coboundaries, exact windows, and the `2*C/T`
   estimate;
-- [`experiments/FiniteGroupOrbitGluing.lean`](../experiments/FiniteGroupOrbitGluing.lean),
+- `experiments/FiniteGroupOrbitGluing.lean`,
   for invariant orbit suprema/infima and monotone constraint gluing;
-- [`experiments/CoalitionPhaseHolonomy.lean`](../experiments/CoalitionPhaseHolonomy.lean),
+- `experiments/CoalitionPhaseHolonomy.lean`,
   for the complete-overlap phase-offset cocycle and diagonal player--phase
   action laws;
-- [`experiments/CoalitionOrbitTransport.lean`](../experiments/CoalitionOrbitTransport.lean),
+- `experiments/CoalitionOrbitTransport.lean`,
   for coalition permutation, complement, singleton-orbit, and abstract
   transitive property transport;
-- [`experiments/PhaseLiftedWelfareCap.lean`](../experiments/PhaseLiftedWelfareCap.lean),
+- `experiments/PhaseLiftedWelfareCap.lean`,
   for the phase-state Bellman telescope into the production welfare-cap
   predicate; and
-- [`experiments/CoalitionEquivariantAssembly.lean`](../experiments/CoalitionEquivariantAssembly.lean),
+- `experiments/CoalitionEquivariantAssembly.lean`,
   for the coalition-specific composition of one representative certificate,
   its explicit transport law, and the landed weighted assembly theorem; and
-- [`experiments/EquivariantWordTransport.lean`](../experiments/EquivariantWordTransport.lean),
+- `experiments/EquivariantWordTransport.lean`,
   for whole-word intertwining, periodic fixed-point transport, and
   stabilizer-fixed uniqueness; and
-- [`experiments/FiniteGroupInvariantWeights.lean`](../experiments/FiniteGroupInvariantWeights.lean),
+- `experiments/FiniteGroupInvariantWeights.lean`,
   for positive invariant orbit weights and summation of translated linear
   welfare caps.
 
