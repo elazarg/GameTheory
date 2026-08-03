@@ -1,0 +1,302 @@
+/-
+Copyright (c) 2026 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
+import GameTheory.Concepts.Stochastic.QuittingFiniteNashBellmanMinimizer
+import GameTheory.Concepts.Stochastic.QuittingExceptionalTailLimits
+
+/-!
+# Monotonicity of minimum finite-chain debt
+
+An admissible zero-boundary chain of length `K` can be extended to length
+`K + 1` by prepending any exact bounded Nash--Bellman predecessor of its
+initial point.  The old chain is then the literal one-stage suffix.  Every
+player's opponent-survival debt is multiplied by the new first-stage
+opponent Continue mass, a number in `[0,1]`.  Thus fixed-cutoff minimum
+aggregate debt is antitone in the cutoff.
+
+This does not prove that the decreasing debts converge to zero.  It turns
+their infimum into the limit of a canonical monotone scalar obstruction.
+-/
+
+set_option autoImplicit false
+
+noncomputable section
+
+namespace GameTheory
+
+open Math.Probability Math.ProbabilityMassFunction
+
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
+/-- The first point of a finite chain, packaged in the canonical compact
+box. -/
+def quittingFiniteNashBellmanPathInitialBoxPoint
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff) :
+    (canonicalQuittingNashBellmanSerialRelation reward).box :=
+  ⟨path 0, hpath.1 0⟩
+
+/-- Prepend the canonical exact predecessor of the initial point. -/
+def quittingFiniteNashBellmanPathPrepend
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff) :
+    QuittingFiniteNashBellmanPath ι (cutoff + 1) :=
+  Fin.cases
+    ((canonicalQuittingNashBellmanSerialRelation reward).predecessor
+      (quittingFiniteNashBellmanPathInitialBoxPoint
+        reward cutoff path hpath))
+    path
+
+@[simp] theorem quittingFiniteNashBellmanPathPrepend_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff) :
+    quittingFiniteNashBellmanPathPrepend reward cutoff path hpath 0 =
+      (canonicalQuittingNashBellmanSerialRelation reward).predecessor
+        (quittingFiniteNashBellmanPathInitialBoxPoint
+          reward cutoff path hpath) := by
+  rfl
+
+@[simp] theorem quittingFiniteNashBellmanPathPrepend_succ
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (time : Fin (cutoff + 1)) :
+    quittingFiniteNashBellmanPathPrepend reward cutoff path hpath
+        (Fin.succ time) = path time := by
+  rfl
+
+/-- Prepending preserves the exact zero-boundary chain constraints. -/
+theorem quittingFiniteNashBellmanPathPrepend_mem
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff) :
+    quittingFiniteNashBellmanPathPrepend reward cutoff path hpath ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward (cutoff + 1) := by
+  classical
+  let system := canonicalQuittingNashBellmanSerialRelation reward
+  let initial := quittingFiniteNashBellmanPathInitialBoxPoint
+    reward cutoff path hpath
+  refine ⟨?_, ?_, ?_⟩
+  · intro time
+    refine Fin.cases ?_ (fun oldTime ↦ ?_) time
+    · exact (system.predecessor initial).property
+    · simpa only [quittingFiniteNashBellmanPathPrepend_succ] using
+        hpath.1 oldTime
+  · rw [show Fin.last (cutoff + 1) = Fin.succ (Fin.last cutoff) by rfl,
+      quittingFiniteNashBellmanPathPrepend_succ]
+    exact hpath.2.1
+  · intro time
+    refine Fin.cases ?_ (fun oldTime ↦ ?_) time
+    · change IsQuittingNashBellmanEdge reward
+        (system.predecessor initial) initial
+      exact system.predecessor_related initial
+    · rw [show oldTime.succ.castSucc = Fin.succ oldTime.castSucc by rfl,
+        quittingFiniteNashBellmanPathPrepend_succ]
+      simpa only [quittingFiniteNashBellmanPathPrepend_succ] using
+        hpath.2.2 oldTime
+
+/-- From time one onward, the prepended operational root sequence is the
+old root sequence with its clock shifted by one. -/
+theorem quittingFiniteNashBellmanPathRoots_prepend_succ
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (time : ℕ) (htime : time < cutoff) :
+    quittingFiniteNashBellmanPathRoots (cutoff + 1)
+        (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath)
+        (time + 1) =
+      quittingFiniteNashBellmanPathRoots cutoff path time := by
+  simp only [quittingFiniteNashBellmanPathRoots,
+    dif_pos (by omega : time + 1 < cutoff + 1), dif_pos htime]
+  congr 1
+
+/-- The time-one survival tail of the prepended path is exactly the old
+time-zero survival. -/
+theorem quittingOpponentSurvivalWeight_prepend_tail
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (who : ι) :
+    quittingOpponentSurvivalWeight
+        (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+          (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath))
+        who 1 cutoff =
+      quittingOpponentSurvivalWeight
+        (quittingFiniteNashBellmanPathRoots cutoff path) who 0 cutoff := by
+  unfold quittingOpponentSurvivalWeight
+  apply Finset.prod_congr rfl
+  intro offset hoffset
+  have hroot := quittingFiniteNashBellmanPathRoots_prepend_succ
+    reward cutoff path hpath offset (Finset.mem_range.mp hoffset)
+  unfold quittingFixedOpponentsContinueMass
+  rw [show 1 + offset = offset + 1 by omega, hroot]
+  simp only [Nat.zero_add]
+
+/-- Prepending multiplies each operational opponent-survival weight by the
+new first-stage opponent Continue mass. -/
+theorem quittingOpponentSurvivalWeight_prepend
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (who : ι) :
+    quittingOpponentSurvivalWeight
+        (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+          (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath))
+        who 0 (cutoff + 1) =
+      quittingFixedOpponentsContinueMass
+          (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+            (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath))
+          who 0 *
+        quittingOpponentSurvivalWeight
+          (quittingFiniteNashBellmanPathRoots cutoff path) who 0 cutoff := by
+  let newRoots := quittingFiniteNashBellmanPathRoots (cutoff + 1)
+    (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath)
+  have hfuel : cutoff + 1 = 1 + cutoff := by omega
+  calc
+    quittingOpponentSurvivalWeight newRoots who 0 (cutoff + 1) =
+        quittingOpponentSurvivalWeight newRoots who 0 (1 + cutoff) :=
+      congrArg (fun fuel ↦
+        quittingOpponentSurvivalWeight newRoots who 0 fuel) hfuel
+    _ = quittingOpponentSurvivalWeight newRoots who 0 1 *
+          quittingOpponentSurvivalWeight newRoots who 1 cutoff :=
+      quittingOpponentSurvivalWeight_add newRoots who 0 1 cutoff
+    _ = quittingFixedOpponentsContinueMass newRoots who 0 *
+          quittingOpponentSurvivalWeight
+            (quittingFiniteNashBellmanPathRoots cutoff path) who 0 cutoff := by
+      rw [quittingOpponentSurvivalWeight_prepend_tail]
+      simp [quittingOpponentSurvivalWeight]
+
+/-- Every player's surviving singleton debt weakly decreases when a
+predecessor is prepended. -/
+theorem quittingFiniteNashBellmanPathPlayerDebt_prepend_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (who : ι) :
+    quittingFiniteNashBellmanPathPlayerDebt reward (cutoff + 1)
+        (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath) who ≤
+      quittingFiniteNashBellmanPathPlayerDebt reward cutoff path who := by
+  rw [quittingFiniteNashBellmanPathPlayerDebt_eq,
+    quittingFiniteNashBellmanPathPlayerDebt_eq,
+    quittingOpponentSurvivalWeight_prepend]
+  let firstMass := quittingFixedOpponentsContinueMass
+    (quittingFiniteNashBellmanPathRoots (cutoff + 1)
+      (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath)) who 0
+  let oldDebt := quittingOpponentSurvivalWeight
+    (quittingFiniteNashBellmanPathRoots cutoff path) who 0 cutoff *
+      max 0 (reward (quittingSingletonTerminal who) who)
+  change firstMass *
+      quittingOpponentSurvivalWeight
+        (quittingFiniteNashBellmanPathRoots cutoff path) who 0 cutoff *
+        max 0 (reward (quittingSingletonTerminal who) who) ≤ oldDebt
+  have hfirst1 : firstMass ≤ 1 :=
+    quittingStationaryContinueMass_le_one _
+  have hold0 : 0 ≤ oldDebt := mul_nonneg
+    (quittingOpponentSurvivalWeight_nonneg _ who 0 cutoff)
+    (le_max_left 0 (reward (quittingSingletonTerminal who) who))
+  rw [mul_assoc]
+  change firstMass * oldDebt ≤ oldDebt
+  exact mul_le_of_le_one_left hold0 hfirst1
+
+/-- Aggregate surviving debt weakly decreases under predecessor
+prepending. -/
+theorem quittingFiniteNashBellmanPathAggregateDebt_prepend_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff) :
+    quittingFiniteNashBellmanPathAggregateDebt reward (cutoff + 1)
+        (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath) ≤
+      quittingFiniteNashBellmanPathAggregateDebt reward cutoff path := by
+  unfold quittingFiniteNashBellmanPathAggregateDebt
+  exact Finset.sum_le_sum fun who _ ↦
+    quittingFiniteNashBellmanPathPlayerDebt_prepend_le
+      reward cutoff path hpath who
+
+/-- **Minimum-debt monotonicity.**  Increasing the cutoff by one cannot
+increase the minimum aggregate surviving debt. -/
+theorem quittingFiniteZeroBoundaryNashBellmanMinDebt_succ_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) :
+    quittingFiniteZeroBoundaryNashBellmanMinDebt reward (cutoff + 1) ≤
+      quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff := by
+  let path :=
+    quittingFiniteZeroBoundaryNashBellmanDebtMinimizer reward cutoff
+  have hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff :=
+    quittingFiniteZeroBoundaryNashBellmanDebtMinimizer_mem reward cutoff
+  exact (quittingFiniteZeroBoundaryNashBellmanMinDebt_le reward (cutoff + 1)
+      (quittingFiniteNashBellmanPathPrepend reward cutoff path hpath)
+      (quittingFiniteNashBellmanPathPrepend_mem
+        reward cutoff path hpath)).trans
+    (quittingFiniteNashBellmanPathAggregateDebt_prepend_le
+      reward cutoff path hpath)
+
+/-- Minimum aggregate debt is antitone over all cutoffs. -/
+theorem antitone_quittingFiniteZeroBoundaryNashBellmanMinDebt
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    Antitone (quittingFiniteZeroBoundaryNashBellmanMinDebt reward) := by
+  apply antitone_nat_of_succ_le
+  exact quittingFiniteZeroBoundaryNashBellmanMinDebt_succ_le reward
+
+/-- The decreasing minimum debts converge to their infimum over cutoffs. -/
+theorem tendsto_quittingFiniteZeroBoundaryNashBellmanMinDebt_iInf
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    Filter.Tendsto
+      (quittingFiniteZeroBoundaryNashBellmanMinDebt reward)
+      Filter.atTop
+      (nhds (⨅ cutoff : ℕ,
+        quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff)) := by
+  apply tendsto_atTop_ciInf
+    (antitone_quittingFiniteZeroBoundaryNashBellmanMinDebt reward)
+  refine ⟨0, ?_⟩
+  rintro debt ⟨cutoff, rfl⟩
+  exact quittingFiniteZeroBoundaryNashBellmanMinDebt_nonneg reward cutoff
+
+/-- The all-cutoff infimum criterion is exactly convergence of the attained
+minimum debts to zero. -/
+theorem iInf_quittingFiniteZeroBoundaryNashBellmanMinDebt_eq_zero_iff_tendsto
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    (⨅ cutoff : ℕ,
+        quittingFiniteZeroBoundaryNashBellmanMinDebt reward cutoff) = 0 ↔
+      Filter.Tendsto
+        (quittingFiniteZeroBoundaryNashBellmanMinDebt reward)
+        Filter.atTop (nhds 0) := by
+  constructor
+  · intro hinf
+    simpa [hinf] using
+      tendsto_quittingFiniteZeroBoundaryNashBellmanMinDebt_iInf reward
+  · intro hzero
+    exact tendsto_nhds_unique
+      (tendsto_quittingFiniteZeroBoundaryNashBellmanMinDebt_iInf reward)
+      hzero
+
+/-- Limit-zero form of the minimum-debt uniform-existence criterion. -/
+theorem quittingGame_exists_uniformEquilibriumPayoff_of_tendsto_finiteMinDebt_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (hzero : Filter.Tendsto
+      (quittingFiniteZeroBoundaryNashBellmanMinDebt reward)
+      Filter.atTop (nhds 0)) :
+    ∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff := by
+  apply quittingGame_exists_uniformEquilibriumPayoff_of_iInf_finiteMinDebt_eq_zero
+  exact
+    (iInf_quittingFiniteZeroBoundaryNashBellmanMinDebt_eq_zero_iff_tendsto
+      reward).2 hzero
+
+end GameTheory
