@@ -32,7 +32,7 @@
 
 \title{Uniform Equilibrium in Finite Stochastic Games\\
 \large Research Atlas, Evidence Ledger, and Current Decision Map}
-\author{Working project document --- committed snapshot \texttt{e1fe7dc}}
+\author{Working project document --- committed snapshot \texttt{cd1db11}}
 \date{3 August 2026}
 
 \begin{document}
@@ -49,11 +49,15 @@ The central open statement is that every finite stochastic game has a
 uniform-equilibrium payoff.  The repository has a semantic verification waist,
 discounted and analytic source machinery, public-response composition,
 several full special cases, and a detailed finite-quitting reduction.  At
-HEAD \texttt{e1fe7dc}, finite calibrated quitting-chain blocks have exact
-associative multi-player boundary holonomy.  The live P0 gap is deliberately
-narrower: prove closedness (or a sound replacement) for realized,
-anchor-preserving holonomies of unbounded middle length, then decode a seam or
-exit as an executable repair or a uniform optimized-debt descent.
+snapshot \texttt{cd1db11}, finite calibrated quitting blocks have exact
+associative multi-player boundary holonomy, their full fixed-cutoff realized
+lifts are compact and closed, and production Lean proves that a compact lift
+retaining literal unbounded finite length cannot exist.  The selected P0 route
+is now to encode those blocks as marked subprobability absorption cylinders,
+prove a closed strategic infinity chart carrying the full stopping obstacle,
+and establish a robust pointwise alternative: an executable terminal repair
+or a bounded surgery with strict optimized-debt descent.  Every arrow in that
+last sentence remains open.
 \end{abstract}
 
 \tableofcontents
@@ -62,13 +66,13 @@ exit as an executable repair or a uniform optimized-debt descent.
 
 \subsection{Snapshot and evidence legend}
 
-This document describes the committed repository state at
-\texttt{e1fe7dc} (Bundle calibrated finite-chain boundary holonomy).  It
-does not promote unstaged notes, local experiments, or an attractive interface
-to a landed theorem.  The surrounding workspace is under active
-reorganization; the durable records consulted here are under
-\texttt{docs/uniform-equilibrium/}, \texttt{ideas/}, and
-\texttt{known-results/}.
+This document describes the committed repository state through
+\texttt{cd1db11} (Specify marked absorption-path attack).  It does not promote
+unstaged notes, local experiments, or an attractive interface to a landed
+theorem.  The surrounding workspace is under active reorganization; the
+durable records consulted here are under
+\texttt{docs/uniform-equilibrium/} and \texttt{ideas/}; attributed external
+results live in \texttt{ideas/UniformEquilibriumLiterature/}.
 
 \begin{longtable}{@{}p{.10\textwidth}p{.81\textwidth}@{}}
 \toprule
@@ -142,8 +146,11 @@ equilibrium does not by itself solve (UE).
 
 The final verification arrow has an \LTag consumer.  The generic difficulty is
 the middle.  A construction must retain the whole target vector, make every
-public entry credible, and exhibit a well-founded decrease or a fully
-discharged account.  A scalar limit or an attractive Bellman equality cannot
+public entry actually used by its compiler credible on the prescribed path and
+on the declared one-deviator response domain, and exhibit a well-founded
+decrease or a fully discharged account.  This is weaker than demanding
+subgame perfection at every unreachable node, but stronger than checking only
+the initial history.  A scalar limit or an attractive Bellman equality cannot
 carry those obligations automatically.
 
 \section{Glossary}
@@ -173,8 +180,17 @@ It is a difficult case, not an equilibrium counterexample.\\
 Owner and packet & A positive-debt player \(i_*\), full terminal quitter set
 \(T_*\), raw marked terminal atom, and distinct preterminal survival scale.\\
 Holonomy & The action of a finite quitting block on prescribed and unilateral
-terminal continuation values.  It is finite and exact at HEAD, but not yet a
-closed correspondence over unbounded block lengths.\\
+terminal continuation values.  It is finite and exact; its full realized lift
+is compact and closed at each cutoff, but literal unbounded length cannot
+remain a complete finite-realizability coordinate in a compact closure.\\
+Marked absorption cylinder & A proposed finite encoding of an exact-
+\(D\) block by ordered terminal subprobability mass, an exit-survival port,
+anchors, a conditional terminal packet, payoff and debt data, and the full
+unilateral stopping obstacle.  Its exact encoding theorem is open.\\
+Stopping obstacle & Player $i$'s quit-time payoff graph, including the
+continuation alternative and terminal allowance, together with its Snell
+envelope.  It retains where an approximately optimal deviation can occur;
+one scalar cap need not.\\
 Repair & An actual accuracy-indexed profile/tail with all-behavior cap proof.
 A scalar limit, public coin, or Bellman row is not itself a repair.\\
 Uniform descent & A bounded extension decreasing debt measured at the
@@ -202,14 +218,37 @@ Uniform-equilibrium payoff existence is settled by Vieille's reduction and
 recursive-game work \cite{Vieille2000I,Vieille2000II,Vieille2000III}. &
 External positive theorem; not a current Lean capstone.\\
 Three-player absorbing games &
-Solan settles the one-live-state, three-player class \cite{Solan1999}. &
-It covers neither four players nor arbitrary multi-live-state games.\\
+Solan proves existence of an undiscounted equilibrium payoff for the
+three-player absorbing class at the paper's notion \cite{Solan1999}. &
+The exact adapter to this repository's terminal/common-horizon semantics is
+not formalized; the result covers neither four players nor arbitrary
+multi-live-state games.\\
 Quitting games &
 Solan--Vieille prove cyclic subgame-perfect uniform approximate equilibrium
 under explicit payoff restrictions \cite{SolanVieille2001}; every two-player
 quitting game has stationary approximate terminal equilibria
 \cite{SolanVieilleExample2002}. &
 General ordinary-Nash existence is open for four or more players.\\
+Absorption paths &
+Reparameterizing by cumulative absorption mass gives a sequentially compact
+path language with continuous payoff and an approximate-equilibrium bridge
+\cite{AshkenaziGolanEtAl2024}. &
+The printed sure-terminal-jump test is underconstrained for this repository's
+terminal all-behavior semantics.  The marked subprobability and cap enrichment
+used below is proposed, not a result of the paper.\\
+Linear complementarity split &
+Every multiplayer quitting game has sunspot approximate equilibria, while a
+derived matrix outside the $Q$-matrix class gives ordinary uniform
+approximate equilibria \cite{SolanSolan2020}. &
+The exact matrix normalization is not yet adapted here.  The unresolved
+ordinary problem remains on the $Q$ side; no plateau-to-$Q$ implication is
+known.\\
+Essential APS &
+The 2026 operator characterizes payoffs supported by a continuous
+one-randomizer-at-a-time absorption-path subclass
+\cite{AshkenaziGolanEtAl2026}. &
+That subset may be empty.  The operator is a structural guide, not a general
+quitting-game producer.\\
 Correlated stochastic games &
 Every finite stochastic game has an autonomous correlated equilibrium payoff
 \cite{SolanVieille2002}. &
@@ -531,12 +570,12 @@ compactification shortcut.
 The P0 task is now exact: from a fully summable positive plateau carrying the
 complete marked packet, produce an executable accuracy-indexed repair, or a
 bounded exact extension that lowers optimized initial debt by a
-cutoff-independent positive amount.  This is QG4 and PB7--PB8 in the
-lifecycle records, and it is \Status{\Open}.  Its failure would refute this
-particular producer only after a genuine falsifier; another stationary,
-cyclic, or behavioral repair could still exist.
+cutoff-independent positive amount.  This is the finite-quitting P0 capstone,
+and it is \Status{\Open}.  Its failure would refute this particular producer
+only after a genuine falsifier; another stationary, cyclic, or behavioral
+repair could still exist.
 
-\section{Boundary holonomy after HEAD \texttt{e1fe7dc}}
+\section{Finite holonomy, the length fence, and the selected infinity chart}
 
 \subsection{Finite-middle holonomy}
 
@@ -579,30 +618,198 @@ two packet factors in (13).  Scalar coordinates lie in a common compact box.
 This preserves cross-player compatibility that independent scalar summaries
 would lose, and it makes seam acceptance a concrete finite test.
 
-\subsection{What did not land}
+\subsection{Fixed-cutoff closure and the literal-length fence}
+
+\Status{\Prod} \texttt{QuittingBoundaryHolonomyCompactness.lean} proves the
+strongest unconditional topological statement currently available.  At every
+fixed cutoff, the graph retaining the complete exact zero-boundary path and
+all of its nonempty subblock holonomies is compact and closed.  At fixed last
+index, a calibrated lift is finite---hence compact and closed---while retaining
+the selected minimizer, owner, marked action, exact-$D$ endpoints, the two
+packet factors, and the common multiplayer holonomy.  Every production
+anchored block embeds in that lift without relaxation.
+
+The same file proves a sharp limitation.  If a compact set retains literal
+finite block length as an ordinary coordinate in $\mathbb N\times X$, then
+the lengths occurring in that set are uniformly bounded.  Thus finite length
+cannot remain a complete finite-realizability certificate under compact
+closure when the selected middles escape.  One can formally add an infinity
+point, but that boundary object no longer supplies a bounded executable block.
+A separate tightness or finite-decoding theorem is then indispensable.
+
+This statement is narrower than ``length cannot be compactified.''  Its point
+is that boundary objects representing an infinite or continuous middle are
+unavoidable unless calibration itself yields a uniform length bound.
+
+\subsection{Why ordinary scalar closure is insufficient}
 
 Compactness of the scalar box is not closedness of the subset realized by
 arbitrary-length anchored blocks.  Projection forgets roots, support changes,
 chronology, packet, and calibrated prefix.  A convergent coefficient sequence
 need not be a realized finite block with legal re-entry at the original root.
 
-\Status{\Exp} The two-ended compactification probe extracts a forward positive
+\Status{\Prod} The two-ended compactification theorem extracts a forward positive
 exact-D ray and a reverse ray ending on a zero-payoff/singleton-cap face, with
 a positive reverse-depth-one packet.  The finite middle escapes.  It does not
 give a bi-infinite orbit, transport a preselected atom across the middle, or
 construct a repair.
 
-The P0 gap after \texttt{e1fe7dc} is therefore
+\subsection{Marked subprobability absorption paths}
+
+\Status{\Audit} Published absorption paths replace calendar time by cumulative
+absorption mass \cite{AshkenaziGolanEtAl2024}.  This directly addresses the
+failure mode above: a long interval of tiny hazards can disappear in stage
+time while its order and terminal absorption measure remain visible.  The
+published compactness theorem therefore provides a much more relevant infinity
+chart than the holonomy coefficient box.  It does not provide the strategic
+enrichment needed here.
+
+The proposed finite object is an anchored marked \emph{subprobability}
+absorption cylinder, schematically
 \[
-\begin{array}{c}
-\text{realized calibrated finite blocks}\\
-\Downarrow\ ?\quad\text{closed or soundly relaxed anchored correspondence}\\
-\text{close seam or certified buffered exit}\\
-\Downarrow\ ?\quad\text{repair or uniform root-debt descent}.
-\end{array}
+ z=\bigl(\pi,s_{\rm exit};e_{\rm in},e_{\rm out};
+          i_*,T_*,\kappa_*;V,\mathcal O,D;\text{provenance}\bigr).
 \tag{18}
 \]
-Both arrows are \Status{\Open}.
+Here $\pi$ records ordered absorption mass for every nonempty quitter set,
+$s_{\rm exit}$ is the probability of surviving a finite block to its exit
+port, the $e$'s are exact-$D$ anchors, $V$ and $D$ retain prescribed
+payoff and debt data, and $\mathcal O$ is the full playerwise unilateral
+stopping obstacle.  For a finite block, missing mass is \emph{not} Never: it
+is transported to the next block and evaluated at its continuation.  Only for
+a completed infinite path does residual survival become the genuine Never
+atom
+\[
+ \nu_\infty=\Pr(\text{no finite quitting date}),
+\tag{19}
+\]
+whose normalized payoff is zero but whose mass still changes conditional
+values and unilateral caps.
+
+The marked coordinate $\kappa_*$ has a different role from the corresponding
+unconditional jump of $\pi$.  It retains the raw conditional terminal kernel
+$p_{-i_*}(T_*)$, separately from the survival probability of reaching that
+root.  Along a limit, the transported mass of the marked packet may vanish
+even while its local incentive remains nonzero.  A pointed or blown-up
+coordinate is therefore necessary; the ordinary absorption measure alone can
+forget precisely the packet extracted from positive debt.
+
+This is a design target, not yet a Lean definition.  The first formal theorem
+must map every calibrated finite exact-$D$ block to (18) and prove exact
+identities for prescribed payoff, unilateral stopping value, entry debt,
+packet factors, anchors, and chronological concatenation.  Only then is it
+sound to ask for an infinite topology.
+
+\subsection{The stopping obstacle and the sure-jump adapter}
+
+A scalar best-response cap repeats the holonomy projection error: it records
+the optimum but not where it is approximately attained or which continuation
+makes that stopping time legal.  For each player the proposed enrichment keeps
+the quit-time payoff graph
+\[
+ q_i(t)=\text{payoff from quitting at the root represented by mass time }t
+\]
+and a Snell-type envelope, schematically
+\[
+ C_i(t)=\max\{\text{Never/continuation alternative},
+                    \sup_{s\geq t}q_i(s)\}.
+\tag{20}
+\]
+The exact representation might be a closed hypo/epigraph rather than a
+pointwise function, so that optimizing times may move under convergence.
+What must be proved is the relevant semicontinuity of the cap together with a
+finite approximately optimal stopping location carrying its local root and
+continuation.  Neither result is currently available.
+
+There is a separate endpoint defect.  The published sequential-perfection
+condition tests a discrete jump only while positive residual survival remains;
+a sure terminal jump can therefore omit the off-path continuation exposed when
+a prescribed quitter instead Continues.  That is insufficient for the
+repository's terminal all-behavior notion.  Two repairs are mathematically
+possible:
+
+\begin{enumerate}
+\item a \emph{restricted adapter}: peel off every sure-jump case and discharge
+it with the existing direct-First/root-continuation verifier, applying the path
+compiler only where every relevant marked jump leaves a proper continuation;
+\item an \emph{augmented adapter}: attach a payoff-and-cap continuation packet
+to every full-absorption jump and test the corresponding one-shot continuation
+game even when prescribed reach probability is zero.
+\end{enumerate}
+
+The restricted adapter appears lower-risk because its endpoint semantics
+already exist in the repository, but neither adapter is formalized.  Until one
+is, the published path-to-equilibrium statement cannot be consumed as a
+repository terminal theorem.
+
+\subsection{The precise P0 theorem stack}
+
+The selected route now has five separately falsifiable obligations.
+
+\begin{enumerate}
+\item[\textbf{P0-A.}] \textbf{Exact finite encoding.}  Construct (18) from
+every calibrated exact-$D$ block and prove all payoff, obstacle/cap, debt,
+packet, anchor, and concatenation identities.
+\item[\textbf{P0-B.}] \textbf{Closed strategic graph.}  Prove sequential
+compactness of the enriched packets and closedness of the exact-$D$, packet,
+anchor, and stopping-obstacle relations.  A decisive falsifier is two finite
+families with the same ordinary absorption-path limit but incompatible
+limiting obstacles, conditional marks, or splice semantics.
+\item[\textbf{P0-C.}] \textbf{Correct endpoint compiler.}  Prove either the
+restricted proper-path plus direct-First adapter or the augmented full-jump
+adapter, yielding an actual terminal $\eta$-Nash profile against every
+behavioral deviation for every $\eta>0$.
+\item[\textbf{P0-D.}] \textbf{Robust local dichotomy.}  At each positive-debt
+limit packet, produce either a stable finite terminal-repair certificate or a
+strict finite local surgery whose accounting returns to the original root.
+\item[\textbf{P0-E.}] \textbf{Sequential uniformization.}  Upgrade those local
+witnesses to common finite bounds, eliminate the positive plateau, and invoke
+the landed terminal-to-uniform consumer.
+\end{enumerate}
+
+P0-C and the surgery half of P0-D are genuinely different decoders.  The
+\emph{AP-to-profile compiler} approximates one globally valid corrected path by
+discrete behavior while preserving all unilateral caps.  The
+\emph{limit-to-finite-surgery decoder} starts from a strict local failure and
+returns a bounded interval, legal splice, or local modification with a strict
+root-debt decrease.  The first needs global approximation; the second needs a
+finite witness whose strict inequalities survive perturbation.
+
+For fixed game, accuracy $\eta>0$, and packet/debt threshold $\rho>0$, the
+load-bearing pointwise assertion has the form: for each generalized plateau
+state $z\in Z_{\eta,\rho}$, there is a neighborhood $U_z$ and either one
+fixed finite repair certificate valid for every sufficiently accurate finite
+realization in $U_z$, or numbers $L_z\in\mathbb N$, $c_z>0$ such that
+\[
+ d_{K+L_z}\leq d_K-c_z
+\tag{21}
+\]
+at the original entry for every such realization.  The words ``fixed finite''
+and $c_z>0$ are essential: a pointwise decoder whose cost diverges or whose
+slack vanishes under perturbation will not uniformize.
+
+Given P0-B and this robust statement, a sequential contradiction supplies
+uniformity.  If no common $L,c$ existed, choose bad states $z_n$ with no
+repair and no debt drop of $1/n$ within $n$ steps.  A convergent subsequence
+has limit $z$; the stable finite witness at $z$ contradicts the defining
+failure for all sufficiently large members.  This is the useful role of
+compactness.  Compactness by itself supplies neither a strategy nor a debt
+decrement.
+
+The current P0 dependency chain is therefore
+\[
+\begin{array}{c}
+\text{calibrated finite exact-}D\text{ blocks and holonomy}\\
+\Downarrow\ ?\quad\text{marked subprobability cylinders and closed graph}\\
+\text{full stopping obstacles plus corrected sure-jump semantics}\\
+\Downarrow\ ?\quad\text{pointwise terminal repair or strict finite surgery}\\
+\Downarrow\ ?\quad\text{sequential compactness uniformization}\\
+\forall\eta>0\ \exists\text{ terminal }\eta\text{-Nash profile}.
+\end{array}
+\tag{22}
+\]
+Every question-marked arrow is \Status{\Open}.  This route would settle all
+finite quitting games through (9), not arbitrary finite stochastic games.
 
 \subsection{Why descent must be uniform}
 
@@ -610,7 +817,7 @@ If at fixed accuracy there are \(L,c>0\), independent of large cutoff, such
 that every calibrated chain repairs or has
 \[
  d_{K+L}\leq d_K-c,
-\tag{19}
+\tag{23}
 \]
 iteration contradicts \(d_K\downarrow d_\infty>0\).
 \Status{\Audit} A decrement \(c_K>0\) with \(c_K\to0\) is compatible with a
@@ -652,9 +859,11 @@ Finite max-affine prefix plus tail &
 a real tail and relative cap. &
 Attainable payoff--cap data are not closed, so a Euclidean limit is not a
 tail.\\
-Standard-proper absorption path &
-\Status{\Cond} A source-conditioned path-to-profile route. &
-The absorption-path endpoint convention requires an exact strategic adapter.\\
+Corrected absorption path &
+\Status{\Cond} Published ordinary path compactness and approximation are the
+leading infinity-chart source. &
+The marked subprobability/obstacle enrichment, sure-jump adapter, and both
+game-facing decoders are open.\\
 \bottomrule
 \end{longtable}
 
@@ -679,13 +888,45 @@ require hidden or unbounded memory.
 APS/self-generating certificates might have a gain--bias limit
 \[
  V^\lambda\approx g+\lambda^{-1}h,\qquad g+h=r+Ph.
-\tag{20}
+\tag{24}
 \]
 The consumer is already available.  Pointwise value convergence does not
 supply bounded bias: changing supports, multichain classes, and singular
 resolvent scales can invalidate one fixed architecture.  A positive result
 needs stable domains/support or a sound resolved limit; a chattering example
 would delimit this route only.
+
+\paragraph{$Q$-matrix preprocessing and the three-player oracle.}
+\Status{\Audit} Solan--Solan prove that if their derived quitting matrix is not
+a $Q$-matrix, ordinary uniform approximate equilibria exist
+\cite{SolanSolan2020}.  Once the matrix normalization and payoff convention are
+adapted exactly, the safe preprocessing order is
+\[
+ R(\Gamma)\notin Q\ \Longrightarrow\ \text{discharge by the published result},
+ \qquad
+ R(\Gamma)\in Q\ \Longrightarrow\ \text{run the P0 machinery}.
+\tag{25}
+\]
+It is not known that a positive optimized-debt plateau forces
+$R(\Gamma)\in Q$.  A machine-checked two-player regression already shows that
+positive debt in the selected zero-boundary grammar can coexist with an
+elementary stationary equilibrium whose payoff lies outside that chain
+geometry.  Thus a plateau-to-$Q$ implication would be a new compatibility
+theorem, not a corollary of external existence.
+
+Solan's three-player absorbing theorem is the nearest solved oracle
+\cite{Solan1999}.  The high-value mining target is not a wholesale port of its
+proof, but a scoped theorem that any three-player positive-debt plateau exposes
+one of P0-C/P0-D's corrected repair or surgery outputs.  This would test the
+proposed grammar where simultaneous packets and player transitions first
+become nontrivial.
+
+\paragraph{Absorption-path APS.}
+The essential-APS operator of \cite{AshkenaziGolanEtAl2026} suggests invariant
+sets and successor rules for continuous absorption paths on which at most one
+player randomizes at a mass time.  Its characterized payoff subset may be
+empty.  It should be mined for the structure of $V$ and $\mathcal O$, not
+reported as coverage of the positive plateau.
 
 \paragraph{Endogenous correlation.}
 The correlated-existence theorem points to a possible mechanism but also a
@@ -710,7 +951,7 @@ filter is
 \[
  g_{\mathrm{stat}}(x)=\max_i\max\{0,c_i(x)-u_i(x)\},\qquad
  \delta_{\mathrm{stat}}=\inf_x g_{\mathrm{stat}}(x).
-\tag{21}
+\tag{26}
 \]
 \Status{\Audit} If \(\delta_{\mathrm{stat}}=0\), actual stationary terminal
 approximate equilibria exist at every accuracy; if it is positive, only the
@@ -720,7 +961,7 @@ an attained profile.
 The two-player table
 \[
  r(\{1\})=(1,-1),\quad r(\{2\})=(-1,-1),\quad r(\{1,2\})=(-2,0)
-\tag{22}
+\tag{27}
 \]
 has stationary exploitability tending to zero but no exact behavioral terminal
 Nash equilibrium.  It refutes closed-attainable-tail and compact-zero-implies-
@@ -758,38 +999,50 @@ Positive/zero debt reduction &
 \texttt{QuittingFiniteDynamicDebt...}, provenance modules &
 \Prod through owner-clock and packet split.\\
 Finite anchored middle &
-\texttt{QuittingBoundaryHolonomy.lean} &
-\Prod at \texttt{e1fe7dc}; no realized closedness.\\
+\texttt{QuittingBoundaryHolonomy.lean} and
+\texttt{QuittingBoundaryHolonomyCompactness.lean} &
+\Prod: exact finite algebra, fixed-cutoff compact/closed realized lift, and
+literal unbounded-length fence.\\
 Two-ended endpoint extraction &
 \texttt{QuittingTwoEndedDynamicDebtCompactification.lean} &
-\Exp; no middle transport or decoder.\\
+\Prod; no middle transport or decoder.\\
+Marked absorption cylinder/path &
+No Lean artifact yet; exact target in the positive-plateau claim files &
+\Open: finite semantic encoding, strategic closed graph, endpoint adapter, and
+two decoders all remain.\\
 \bottomrule
 \end{longtable}
 
 \subsection{Ordered research agenda}
 
 \begin{enumerate}
-\item \textbf{Test realized anchored-holonomy closedness.}  Retain roots,
-exact-D entry/exit, \(i_*,T_*\), both packet factors, and splice legality.
-Either prove a closed lift for unbounded middle length or exhibit calibrated
-families with identical scalar limits but incompatible provenance.
-\item \textbf{State a decoder before proving topology.}  A close seam must
-produce an actual cap-certified repair; a buffered exit must establish (19)
-at the original root.  It must declare target, tail/profile, unilateral caps,
-entry law, and rank/account.
-\item \textbf{Finish or delimit the fully summable producer.}  Permitted
-outputs are a finite/static/cyclic repair, a calibrated prefix plus actual
-tail, a repaired standard-proper path, or uniform debt descent.  Test every
-claim against nonattainment and static-grammar regressions.
+\item \textbf{Fix the finite cylinder semantics.}  Define the smallest marked
+subprobability absorption cylinder and prove P0-A before scaffolding its
+infinite topology.  Exit survival, genuine Never, conditional packet, stopping
+obstacle, anchors, and chronological concatenation must remain distinct.
+\item \textbf{Design topology and consumers together.}  State P0-C/P0-D's two
+decoders with their exact stability needs, then prove only the compactness and
+semicontinuity they consume.  Either establish P0-B or exhibit same-ordinary-
+path families with incompatible obstacles, marks, or provenance.
+\item \textbf{Prove the robust pointwise alternative.}  A valid corrected path
+must compile to terminal \(\eta\)-Nash behavior; a strict failure must produce
+bounded finite surgery satisfying (21) at the original root.  Then discharge
+P0-E by sequential contradiction, not by silently reading a strategy from a
+limit.
+\item \textbf{Run inexpensive repair and refutation searches in parallel.}
+Static/full-set/short-word certificates may close a table early; their failure
+may supply a strict local inequality for P0-D.  No bounded grammar exclusion is
+an all-behavior counterexample.
+\item \textbf{Preprocess and test against solved classes.}  Audit the exact
+Solan--Solan matrix adapter and remove the non-\(Q\) class before dynamic-debt
+analysis.  Ask the marked-path/decoder grammar to reproduce the three-player
+absorbing theorem.
 \item \textbf{Package the known two-player base case.}  Formalize the
 six-scalar pure/no-pure split, vanishing owner-solo branch, role reversal, and
 terminal-to-uniform consumer; retain exact nonattainment as a regression.
 \item \textbf{Use the architecture characterization.}  Any public response
 claim should declare the split delivery/owner domains and prove all of (3),
 rather than replace behavior caps by one-step tests.
-\item \textbf{Keep filters distinct from counterexamples.}  Stationary and
-grammar gaps are valuable search certificates but not a refutation without
-an all-behavior gap.
 \end{enumerate}
 
 \section{Acceptance test and conclusion}
@@ -804,6 +1057,11 @@ accuracy?
 \item Why are all unilateral history-dependent deviations capped?
 \item Where is every target coordinate transported through public branching
 and stopping?
+\item For a quitting boundary object, which missing mass is a finite exit port
+and which is genuine Never?  Where are the conditional marked packet and the
+full stopping obstacle retained?
+\item How is a sure terminal jump tested against the off-path continuation
+created when a prescribed quitter Continues?
 \item Why is entry/rebasing legal after every invoked public history?
 \item What decreases well-foundedly, or which realized account is discharged?
 Is that decrease uniform enough to contradict a plateau?
@@ -818,10 +1076,14 @@ The repository is no longer pursuing a vague claim that discounted equilibria
 should converge.  It has a checked semantic waist and several independently
 useful theorem families.  The finite-quitting route has an exhaustive
 zero-versus-positive-debt split, an exhaustive owner-clock split, and now
-exact finite middle holonomy.  The hard remaining obligation is also
-well-identified: retain realized strategic provenance across an unbounded
-middle, then make the resulting seam or exit strategically executable.  That
-is a concrete research target, not a reason to overstate the current proof.
+exact finite-middle holonomy with fixed-cutoff closure and a precise
+literal-length obstruction.  The selected next object is an anchored marked
+subprobability absorption path carrying the conditional packet and full
+stopping obstacle.  Its exact finite encoding, strategic closed graph,
+sure-jump adapter, and repair/surgery dichotomy are not yet theorems.  Those
+are concrete, independently falsifiable obligations; solving them would close
+finite quitting games, while the general finite-stochastic-game conjecture
+would still require a separate reduction or producer.
 
 \begin{thebibliography}{99}
 
@@ -848,6 +1110,23 @@ S.~Sorin, Asymptotic properties of a non-zero sum stochastic game,
 \bibitem{Solan1999}
 E.~Solan, Three-player absorbing games,
 \emph{Mathematics of Operations Research} 24 (1999), 669--698.
+
+\bibitem{SolanSolan2020}
+E.~Solan and O.~N. Solan, Quitting games and linear complementarity problems,
+\emph{Mathematics of Operations Research} 45 (2020), 626--651.
+\url{https://doi.org/10.1287/moor.2019.0996}
+
+\bibitem{AshkenaziGolanEtAl2024}
+O.~Ashkenazi-Golan, I.~Krasikov, C.~Rainer, and E.~Solan,
+Absorption paths and equilibria in quitting games,
+\emph{Mathematical Programming} 203 (2024), 735--762.
+\url{https://doi.org/10.1007/s10107-022-01807-6}
+
+\bibitem{AshkenaziGolanEtAl2026}
+O.~Ashkenazi-Golan, I.~Krasikov, C.~Rainer, and E.~Solan,
+The APS approach for undiscounted quitting games,
+\emph{International Journal of Game Theory} (2026).
+\url{https://doi.org/10.1007/s00182-026-00982-6}
 
 \bibitem{Vieille2000I}
 N.~Vieille, Two-player stochastic games I: a reduction,
