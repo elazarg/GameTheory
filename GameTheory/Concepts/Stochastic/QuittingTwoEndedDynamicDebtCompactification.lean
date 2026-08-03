@@ -305,7 +305,6 @@ theorem exists_terminalOpponentAdvantage_atom_of_dynamicDebt_terminalEdge
 
 -- The nested compactness/subsequence extraction is substantially more
 -- expensive than the local edge lemmas above.
-set_option maxHeartbeats 1000000 in
 /-- **Two-ended exact-D compactification.**  The independently selected
 finite min-max chains admit one subsequence on which both their root view and
 their terminal view converge.  The root view is a forward exact-D ray.  The
@@ -412,7 +411,6 @@ theorem exists_twoEnded_projective_quittingDynamicDebtTail [Nonempty ι]
 
 -- This theorem combines the two-ended extraction with the calibrated-owner
 -- limit and therefore needs the same enlarged elaboration budget.
-set_option maxHeartbeats 1000000 in
 /-- A positive optimized exact-debt infimum admits a two-ended limit whose
 forward ray retains a positive debt coordinate and its summable opponent
 clock, while the reverse ray retains the literal terminal face. -/

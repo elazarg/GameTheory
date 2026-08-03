@@ -319,7 +319,9 @@ theorem quittingTerminalPayoff_update_quitNow_eq_fixedOpponentsQuitValue
   rw [quittingTerminalPayoff_update_pureTimeBehaviorStrategy]
   unfold quittingRootSequencePureTimeTerminalValue
   rw [quittingRootSequenceHazardTerminalValue_eq_hazardBellman]
-  simp [quittingStationaryFixedOpponentsQuitValue]
+  simp only [quittingPureTimeHazard_some_self, PMF.pure_apply, ↓reduceIte,
+    ENNReal.toReal_one, one_mul, Bool.false_eq_true, ENNReal.toReal_zero,
+    zero_add, zero_mul, add_zero]
   unfold quittingFixedOpponentsQuitValue
   rfl
 

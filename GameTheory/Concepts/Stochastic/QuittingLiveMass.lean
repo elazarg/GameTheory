@@ -61,6 +61,7 @@ theorem quittingLiveHist_snoc
     · simp [quittingLiveHist]
   · rfl
 
+omit [DecidableEq ι] in
 /-- Any supported history whose current state is live is the canonical
 all-continue history. -/
 theorem eq_quittingLiveHist_of_mem_support_histDist_of_snd_eq_none
@@ -108,7 +109,7 @@ theorem eq_quittingLiveHist_of_mem_support_histDist_of_snd_eq_none
         by_contra hquit
         rw [quittingGame_transition_none,
           dif_pos (by simpa [quittingQuitters] using hquit)] at hnext
-        simpa using hnext
+        simp at hnext
       have hactionEq :=
         eq_quittingAllContinueAction_of_quittingQuitters_not_nonempty
           action hnoQuit

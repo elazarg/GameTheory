@@ -160,8 +160,8 @@ theorem quitPayoff_eq_value (who : Player) :
   unfold quittingRootQuitPayoff quittingRootExpectedPayoff
   rw [expect_pmfPi_fin3_bool]
   fin_cases who <;>
-    simp [root, quittingRootPayoff, reward, quitters_vector, value] <;>
-      norm_num
+    simp [root, quittingRootPayoff, reward, quitters_vector, value]
+  all_goals norm_num
 
 theorem continuePayoff_eq_value (who : Player) :
     quittingRootContinuePayoff reward (0 : Payoff Player) root who = value who := by

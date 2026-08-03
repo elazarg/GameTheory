@@ -166,6 +166,7 @@ theorem expectedStagePayoff_succ_quittingGame_eq_rootContinuation
         (quittingGame reward).consHist_snd]]
     simp [quittingQuitters, hquit]
 
+omit [DecidableEq ι] in
 /-- **Correct terminal root equation.**  Expected terminal payoff equals the
 root expectation of terminal reward on quitting actions and of the actual
 shifted continuation payoff on the all-continue action. -/
@@ -288,6 +289,7 @@ theorem shiftProfile_quittingRootThenContinuationProfile
   simp [StochasticGame.shiftProfile,
     quittingRootThenContinuationProfile, StochasticGame.consHist]
 
+omit [DecidableEq ι] in
 /-- Exact prescribed terminal payoff of a root action followed by a
 continuation profile. -/
 theorem quittingTerminalPayoff_rootThenContinuation_eq

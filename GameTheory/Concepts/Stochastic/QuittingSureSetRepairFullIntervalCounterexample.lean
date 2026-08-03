@@ -292,7 +292,7 @@ unilateral gain at least `1/3`.  This theorem covers every nonempty sure set
 of the two nonowners, including the full-rate endpoint `p = 1`. -/
 theorem exists_exactCap_gap_nonempty
     (T : Finset Player) (hT : T.Nonempty) (howner : 0 ∉ T)
-    (p : ℝ) (hp0 : 0 ≤ p) (hp1 : p ≤ 1) (hp : 0 < p) :
+    (p : ℝ) (hp : 0 < p) :
     ∃ who : Player,
       quittingSureSetOwnerValue reward T 0 p who + 1 / 3 ≤
         quittingSureSetOwnerExactCap reward T 0 p who := by
@@ -303,7 +303,6 @@ theorem exists_exactCap_gap_nonempty
       norm_num [quittingSureSetOwnerValue,
         quittingSureSetOwnerExactCap, quittingSetReward, reward]
       linarith
-
     · refine ⟨2, ?_⟩
       norm_num [quittingSureSetOwnerValue,
         quittingSureSetOwnerExactCap, quittingSetReward, reward]
@@ -318,7 +317,6 @@ theorem exists_exactCap_gap_nonempty
       norm_num [quittingSureSetOwnerValue,
         quittingSureSetOwnerExactCap, quittingSetReward, reward]
       linarith
-
   · subst T
     by_cases hlarge : 1 / 9 ≤ p
     · refine ⟨0, ?_⟩
@@ -345,7 +343,7 @@ theorem not_isεAsymptoticNash_sureSetOwnerRoot
     (isεAsymptoticNash_sureSetOwnerRoot_iff_exactCap_le
       reward hT howner p hp0 hp1 hp ε).1 hnash
   obtain ⟨who, hgap⟩ :=
-    exists_exactCap_gap_nonempty T hT howner p hp0 hp1 hp
+    exists_exactCap_gap_nonempty T hT howner p hp
   have hwho := hcap who
   rw [terminalPayoff_sureSetOwnerRoot
     reward hT howner p hp0 hp1 who] at hwho
@@ -452,7 +450,7 @@ theorem not_isεAsymptoticNash_pureSetRoot_of_never_gain
       reward (quittingPureSetRoot S) who hcontracts 0,
     fixedOpponentsContinueReward_pureSetRoot, hmass,
     terminalPayoff_pureSetRoot S hS who] at hnever
-  simp [quittingStationaryNeverValue] at hnever
+  norm_num [quittingStationaryNeverValue] at hnever
   exact (not_lt_of_ge hnever) hgain
 
 private theorem nonempty_fin3_cases (S : Finset Player)
@@ -506,7 +504,6 @@ theorem not_isεAsymptoticNash_directPureSet
       {0} (by simp) 1 ε
     norm_num [quittingSetReward, reward]
     linarith
-
   · subst S
     apply not_isεAsymptoticNash_pureSetRoot_of_quitNow_gain
       {1} (by simp) 0 ε

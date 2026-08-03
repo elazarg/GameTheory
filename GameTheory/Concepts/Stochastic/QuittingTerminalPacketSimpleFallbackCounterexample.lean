@@ -453,10 +453,12 @@ theorem no_stationary_exact_terminal_equilibrium
             quittingAlwaysContinueProfile reward := by
         rw [hroot]
         funext who time history
-        cases who <;>
-          simp [quittingStationaryProfile, quittingSoloStationaryRoot,
-            quittingAlwaysContinueProfile, quittingAlwaysContinueStrategy,
-            StochasticGame.stationaryBehaviorProfile] <;> rfl
+        cases who
+        · simp [quittingStationaryProfile, quittingSoloStationaryRoot,
+            quittingAlwaysContinueProfile,
+            StochasticGame.stationaryBehaviorProfile]
+          rfl
+        · rfl
       have hdeviation :=
         hnash true (quittingAlwaysContinueStrategy reward true)
       rw [hprofileUpdate, quittingTerminalPayoff_quittingAlwaysContinue,
@@ -712,7 +714,7 @@ theorem isεAsymptoticNash_approximateRoot
       unfold approximationError
       have hden : a + 2 ≠ 0 := by nlinarith
       field_simp [hden]
-      ring
+      ring_nf
       rfl
 
 /-- A concrete positive hazard tending to zero. -/

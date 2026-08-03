@@ -55,6 +55,7 @@ all-continue continuation. -/
   funext who time history
   cases time <;> rfl
 
+omit [DecidableEq ι] in
 /-- The terminal payoff vector of a stationary profile is an exact fixed
 point of its finite root continuation game. -/
 theorem quittingTerminalPayoff_stationary_eq_rootExpectedPayoff

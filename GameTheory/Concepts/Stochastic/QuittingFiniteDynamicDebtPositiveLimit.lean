@@ -131,7 +131,6 @@ theorem iInf_quittingFiniteMinMaxDynamicDebt_nonneg [Nonempty ι]
     quittingFiniteZeroBoundaryNashBellmanMinMaxDynamicDebt_nonneg
       reward cutoff
 
-set_option maxHeartbeats 800000 in
 -- The proof combines product compactness with a finite-coordinate maximum.
 /-- A positive infimum of optimized finite exact debt produces an infinite
 exact-D path with one positive initial coordinate and hence a summable

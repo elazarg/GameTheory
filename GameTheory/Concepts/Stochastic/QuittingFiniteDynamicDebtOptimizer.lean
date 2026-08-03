@@ -133,7 +133,6 @@ theorem quittingFiniteDynamicDebt_succ_eq_endpoints
   rw [hquit, hcontinue]
   ring_nf
 
-set_option maxHeartbeats 800000 in
 -- Recursive composition through the finite simplex path is elaboration-heavy.
 /-- Exact finite dynamic debt is continuous in every displayed coordinate of
 the underlying finite path. -/

@@ -106,9 +106,10 @@ theorem theta_le_two_mul_packetMass_ownerLoss
 /-- In any nonempty finite family, some entry is at least the average, stated
 without division. -/
 theorem exists_sum_le_card_mul
-    {α : Type*} [DecidableEq α]
+    {α : Type*}
     (s : Finset α) (hs : s.Nonempty) (f : α → ℝ) :
     ∃ a ∈ s, ∑ b ∈ s, f b ≤ (s.card : ℝ) * f a := by
+  classical
   by_contra h
   push Not at h
   obtain ⟨a, ha⟩ := hs

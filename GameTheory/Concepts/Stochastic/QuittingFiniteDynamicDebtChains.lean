@@ -95,7 +95,6 @@ theorem isQuittingLivePrescribedValue_finiteNashBellmanPath
       (quittingRootSuccessorPayoff_allContinueRoot_eq
         reward (0 : Payoff ι)) who).symm
 
-set_option maxHeartbeats 800000 in
 -- Scalarizing the finite vector path through continuation congruence is costly.
 /-- Exact root Nash makes the scalar prescribed Bellman residual vanish at
 every pre-terminal time of an admissible path. -/

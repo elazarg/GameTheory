@@ -248,16 +248,19 @@ theorem soloCertification_or_universalJoining
     obtain ⟨other, hne, hgt⟩ := hfeasible p hp0 hp1
     exact ⟨other, hne, hgt⟩
 
+omit [Fintype ι] in
 /-- A universal joining obstruction has a weak preemptor: some opponent's
 own solo exit is at least as valuable as the owner's solo absorption payoff.
 The proof uses a finite minimum gap, not a limiting choice of opponents. -/
 theorem exists_weak_preemptor_of_universalJoining
+    [Finite ι]
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (owner : ι)
     (hobstruction : ∀ p : ℝ, 0 < p → p ≤ 1 →
       QuittingSoloJoiningObstruction reward owner p) :
     ∃ other, other ≠ owner ∧
       quittingSoloReward reward owner other ≤
         quittingSoloReward reward other other := by
+  letI := Fintype.ofFinite ι
   by_contra hnot
   push Not at hnot
   obtain ⟨witness, hwitnessNe, _⟩ := hobstruction 1 one_pos le_rfl

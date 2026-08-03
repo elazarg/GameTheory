@@ -109,6 +109,7 @@ theorem quittingRootSequenceHazardTerminalGap_le_finiteBudget
         quittingOpponentSurvivalWeight roots who start fuel * debt :=
       add_le_add_right hscaled _
 
+omit [DecidableEq ι] in
 /-- From the cutoff onward, a root sequence which is identically
 all-Continue has prescribed terminal value zero. -/
 theorem quittingRootSequenceTerminalValue_eq_zero_of_allContinue_from
@@ -184,6 +185,7 @@ theorem quittingFiniteChain_terminalDebt_le_singletonSnell
 
 /-! ## Supplied boundary-zero chains -/
 
+omit [DecidableEq ι] in
 /-- A finite policy-evaluation chain with boundary value zero is selected
 exactly by its all-Continue extension.  The proof is finite backward
 induction, so no compactness or infinite-path selection is involved. -/
@@ -352,6 +354,7 @@ theorem quittingRootSequenceHazardTerminalGap_le_finiteExactChain
   rw [hsum, zero_add, ← hvalueZero] at hgap
   exact hgap
 
+omit [DecidableEq ι] in
 /-- The all-Continue extension of an exact boundary-zero finite chain
 delivers its declared initial value exactly. -/
 theorem quittingTerminalPayoff_finiteExactChainProfile

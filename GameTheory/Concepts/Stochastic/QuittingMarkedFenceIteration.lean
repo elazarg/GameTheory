@@ -307,6 +307,7 @@ theorem exists_goodBoundary_or_activeNegativeTransfer_of_finiteExactChain
 
 /-! ## Finite player-flag iteration -/
 
+omit [DecidableEq ι] in
 /-- Abstract finite-label walk lemma.  If every nongood state has a next
 state, then within `card ι` transitions the walk either sees a good state or
 repeats a label.  The constructed walk is proof-local; this theorem does not
