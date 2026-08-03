@@ -36,6 +36,19 @@ The endpoint-credible support-9 lemma gives ``A>x`` even when H=0, hence
 ``A>a``.  This closes the simple skeleton ``6,2,9,6`` and arbitrary finite
 same-support-2 repetitions without prescribing what follows the final 6.
 
+There is also a complete singleton-word return rank.  In every nonempty
+finite excursion
+
+    support 6 -> word over {support 1, support 2} -> support 6,
+
+player 2 receives zero at either possible singleton absorption.  Collapsing
+the whole word to its survival S gives
+
+    S*(2+4A) = 2+6a/(1-a),
+
+and an exact positive factorization forces ``A>a``.  This includes arbitrary
+owner changes and closes the simple skeleton ``6,2,1,6``.
+
 Scope: these are finite strict-run reductions inside the five-mask core.
 Changing singleton owners in another order, support-3 excursions,
 nonperiodic boundary convergence, and zero-hazard flow are not claimed.
@@ -131,6 +144,45 @@ def assert_support_two_effective_hazard_rank() -> None:
     ) == {}
 
 
+def assert_arbitrary_singleton_word_return_rank() -> None:
+    # Player 2 receives zero at either singleton support, while its current
+    # value at the final support 6 is 2+4A.
+    assert (terminal(1, 2), terminal(2, 2)) == (0, 0)
+    assert (terminal(4, 2), terminal(6, 2)) == (2, 6)
+
+    endpoint = x
+    survival = H
+    bellman = algebra.sub(
+        algebra.mul(
+            survival,
+            algebra.mul(
+                algebra.sub(one, a),
+                algebra.add(algebra.const(2), algebra.scale(4, endpoint)),
+            ),
+        ),
+        algebra.add(algebra.const(2), algebra.scale(4, a)),
+    )
+    cleared_increment = algebra.scale(
+        2,
+        algebra.mul(
+            survival,
+            algebra.mul(algebra.sub(one, a), algebra.sub(endpoint, a)),
+        ),
+    )
+    positive_factor = algebra.mul(
+        algebra.add(one, algebra.scale(2, a)),
+        algebra.sub(one, algebra.mul(survival, algebra.sub(one, a))),
+    )
+    # On Bellman=0, the positive left multiplier times A-a equals the
+    # positive_factor.  For strict a in (0,1) and 0<S<=1, the latter is
+    # strictly positive (even if the singleton word has zero aggregate
+    # hazard after compressing boundary stages).
+    assert algebra.sub(
+        algebra.sub(cleared_increment, positive_factor),
+        algebra.scale(Q(1, 2), bellman),
+    ) == {}
+
+
 def replay_endpoint_rank() -> None:
     # The endpoint proof is uniform in its incoming hazard variable.  Replay
     # every algebraic component before instantiating that variable with x.
@@ -143,12 +195,14 @@ def replay_endpoint_rank() -> None:
 def main() -> None:
     assert_support_one_block_obstruction()
     assert_support_two_effective_hazard_rank()
+    assert_arbitrary_singleton_word_return_rank()
     replay_endpoint_rank()
     assert_credible_first_unchanged()
 
     print("exact singleton-bridge support-6 reductions passed")
     print("excluded prefix: 6 -> nonempty support-1 block -> 2")
     print("ranked family: 6 -> finite support-2 block -> 9 -> 6 has A>a")
+    print("ranked family: every finite singleton-word 6-return has A>a")
     print("the endpoint rank leaves the outgoing support after the final 6 free")
     print("scope: finite strict core runs; nonperiodic boundaries remain")
 
