@@ -4,7 +4,7 @@
 This strengthens ``block_pair_r0_alternating_6_9_rank.py`` without expanding
 any period equations.  In the perturbed block-pair quitting game, consider
 
-    support 6 -> support 9 -> ... -> support 9 -> support 6 -> support 9,
+    support 6 -> support 9 -> ... -> support 9 -> support 6,
 
 with a nonempty finite run of strict support-9 phases.  Let ``a`` and ``A``
 be player 1's hazards at the two support-6 endpoints.  Then the Bellman
@@ -45,10 +45,19 @@ run data consumed below.  The aggregate Bellman equations then contradict
 ``A<=a``.  The final two-case inequality is replayed by exact polynomial
 identities and Bernstein sign certificates.
 
-Scope: this excludes finite strict cycles confined to supports 6 and 9.  It
-does not cover excursions through other supports, nonperiodic paths, or
-zero-hazard/product-flow hybrids.  Sure hazards are separately covered by
-the credible-First certificate.
+The incoming coordinate ``a`` is consumed only through player 2's value
+``2+6a/(1-a)`` and player 1's entry value 2.  It may therefore be an
+effective hazard supplied by a preceding singleton-support block.
+
+The support after the final 6 is unrestricted.  The only continuation bound
+needed there is that player 3's value is at most its global terminal maximum
+8; strictness of the support-6 hazards makes the current value strictly less
+than 8 and forces the last support-9 player-0 hazard below 1/2.
+
+Scope: this excludes finite strict cycles confined to supports 6 and 9 and
+provides a local rank usable inside larger core cycles.  It does not cover
+support-3 excursions, nonperiodic paths, or zero-hazard/product-flow hybrids.
+Sure hazards are separately covered by the credible-First certificate.
 """
 
 from __future__ import annotations
@@ -65,6 +74,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import block_pair_r0_alternating_6_9_rank as algebra  # noqa: E402
+from block_pair_r0_constant_pair_support import terminal  # noqa: E402
 from block_pair_r0_singleton_perturbation_fences import (  # noqa: E402
     assert_credible_first_unchanged,
 )
@@ -202,41 +212,63 @@ def assert_mobius_and_phase_bound() -> None:
 
 
 def assert_last_hazard_lt_half() -> None:
-    """Check the strict upper bound used to restrict ell to (0,1/2)."""
+    """Restrict ell to (0,1/2) without prescribing the outgoing support."""
 
     active_a = algebra.a
     active_b = algebra.A
-    next_c = algebra.b
-    rhs_with_c_one = algebra.sum_polys(
+    assert max(terminal(mask, 3) for mask in range(1, 16)) == 8
+
+    # At support 6, player 3 gets 0 if player 1 quits alone, 8 if player 2
+    # quits alone, 3 if both quit, and at most 8 after survival.  Replacing
+    # the arbitrary successor value by 8 gives the displayed strict bound.
+    value_with_successor_eight = algebra.sum_polys(
         [
-            algebra.scale(-3, algebra.mul(active_a, active_b)),
-            algebra.scale(-2, active_a),
-            algebra.scale(6, active_b),
             algebra.scale(
-                4,
+                8,
+                algebra.mul(algebra.sub(one, active_a), active_b),
+            ),
+            algebra.scale(3, algebra.mul(active_a, active_b)),
+            algebra.scale(
+                8,
                 algebra.mul(
                     algebra.sub(one, active_a), algebra.sub(one, active_b)
                 ),
             ),
         ]
     )
-    simplified = algebra.sum_polys(
-        [
-            algebra.const(4),
-            algebra.scale(-6, active_a),
-            algebra.scale(2, active_b),
-            algebra.mul(active_a, active_b),
-        ]
+    simplified = algebra.sub(
+        algebra.const(8),
+        algebra.mul(active_a, algebra.sub(algebra.const(8), algebra.scale(3, active_b))),
     )
-    assert rhs_with_c_one == simplified
-    # Since b<1, simplified < 6-5A < 6.  E3 identifies the actual right
-    # side with 6*ell/(1-ell), forcing ell<1/2.
-    assert algebra.sub(
-        algebra.sub(algebra.const(6), algebra.scale(5, active_a)),
-        simplified,
-    ) == algebra.mul(
-        algebra.sub(one, active_b), algebra.add(algebra.const(2), active_a)
+    assert value_with_successor_eight == simplified
+    assert algebra.sub(algebra.const(8), simplified) == algebra.mul(
+        active_a, algebra.sub(algebra.const(8), algebra.scale(3, active_b))
     )
+
+    # Active player 3 at the last support 9 fixes the final support-6 value
+    # to 2+6*ell/(1-ell).  Its strict upper bound by 8 is equivalent to
+    # ell<1/2.  The cleared difference is 6*(1-2ell).
+    cleared_gap = algebra.sub(
+        algebra.scale(8, algebra.sub(one, algebra.b)),
+        algebra.add(
+            algebra.scale(2, algebra.sub(one, algebra.b)),
+            algebra.scale(6, algebra.b),
+        ),
+    )
+    assert cleared_gap == algebra.scale(
+        6, algebra.sub(one, algebra.scale(2, algebra.b))
+    )
+
+
+def assert_arbitrary_support9_run_rank() -> None:
+    """Replay the local arbitrary-run rank and all of its sign packets."""
+
+    assert_mobius_and_phase_bound()
+    assert_last_hazard_lt_half()
+    assert_boundary_polynomial_positive()
+    assert_p2_strictly_decreasing()
+    assert_two_case_identities()
+    assert_credible_first_unchanged()
 
 
 def substitute_l_half(poly: Poly) -> Poly:
@@ -457,15 +489,11 @@ def assert_two_case_identities() -> None:
 
 
 def main() -> None:
-    assert_mobius_and_phase_bound()
-    assert_last_hazard_lt_half()
-    assert_boundary_polynomial_positive()
-    assert_p2_strictly_decreasing()
-    assert_two_case_identities()
-    assert_credible_first_unchanged()
+    assert_arbitrary_support9_run_rank()
 
     print("exact arbitrary support-9-run hazard rank passed")
     print("local invariant: next support-6 player-1 hazard A is strictly > a")
+    print("outgoing support after the final 6 is unrestricted")
     print("rank excludes: every finite 6/9 cycle containing support 6")
     print("the separate constant-support certificate excludes the all-9 case")
     print("proof scope is run-length independent; no period equations enumerated")

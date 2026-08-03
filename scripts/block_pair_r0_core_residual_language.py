@@ -19,12 +19,13 @@ skeletons survive:
     6-9-3-6,     6-2-9-3-6.
 
 Thus there is no remaining combinatorial period search inside this core.
-The singleton-block cases are already ranked for arbitrary finite blocks,
-and a companion value argument excludes every finite strict cycle using only
-supports 3 and 9.  The four pair-containing 6-return skeletons are ranked
-when each 9/3 letter is one phase.  To obtain an all-finite-core-cycle theorem
-it remains to lift those endpoint ranks to arbitrary nonempty support-9 and
-support-3 blocks.
+The singleton-block cases and the two 6-return skeletons ending directly
+after support 9 are already ranked for arbitrary finite blocks.  A companion
+value argument excludes every finite strict cycle using only supports 3 and
+9.  The two remaining 6-return skeletons pass through support 3 and are
+ranked when each 9/3 letter is one phase.  To obtain an all-finite-core-cycle
+theorem it remains to lift that endpoint rank to arbitrary nonempty
+support-9 and support-3 blocks.
 
 This is a grammar theorem only.  It does not claim those block lifts, does not
 cover supports outside the five-mask core, and says nothing about infinite
@@ -46,6 +47,7 @@ import block_pair_r0_9_run_3_run_obstruction as pair_backtrack  # noqa: E402
 import block_pair_r0_core_excursion_grammar as grammar  # noqa: E402
 import block_pair_r0_singleton_bridge_ranks as singleton_bridge  # noqa: E402
 import block_pair_r0_support3_9_cycle_exclusion as pair_cycles  # noqa: E402
+import block_pair_r0_support9_run_rank as support_nine_run  # noqa: E402
 import block_pair_r0_support9_to_singleton_obstruction as nine_exit  # noqa: E402
 
 
@@ -160,6 +162,8 @@ def enumerate_returns() -> tuple[
 def replay_local_ingredients() -> None:
     singleton_bridge.assert_support_one_block_obstruction()
     singleton_bridge.assert_arbitrary_singleton_word_return_rank()
+    singleton_bridge.assert_support_two_effective_hazard_rank()
+    support_nine_run.assert_arbitrary_support9_run_rank()
     nine_exit.assert_one_step_positivity_packet()
 
     pair_backtrack.assert_block_obstruction()
@@ -185,7 +189,8 @@ def main() -> None:
         print("  " + "->".join(map(str, path)))
     print("singleton skeletons are ranked for arbitrary finite blocks")
     print("all finite strict 3/9-only cycles are excluded separately")
-    print("remaining lift: arbitrary positive 9/3 blocks in four 6-returns")
+    print("arbitrary support-9 blocks in the two direct 6-returns are ranked")
+    print("remaining lift: arbitrary 9/3 blocks in two support-3 6-returns")
     print("scope: strict five-mask finite grammar; infinite/boundary paths remain")
 
 

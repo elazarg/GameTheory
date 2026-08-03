@@ -19,7 +19,7 @@ repeated support-1 phases.
 
 Second, consider
 
-    support 6 -> (a finite support-2 block) -> support 9 -> support 6,
+    support 6 -> (a finite support-2 block) -> support 9+ -> support 6,
 
 where the final support-6 phase is endpoint-credible in the sense of
 ``block_pair_r0_support9_endpoint_rank.py``.  Player 2 receives zero when the
@@ -33,9 +33,11 @@ Exact elimination gives
 
     x-a = H(1-a)(2a+1) / (3-2H(1-a)) >= 0.
 
-The endpoint-credible support-9 lemma gives ``A>x`` even when H=0, hence
-``A>a``.  This closes the simple skeleton ``6,2,9,6`` and arbitrary finite
-same-support-2 repetitions without prescribing what follows the final 6.
+The arbitrary support-9-run lemma consumes only that effective incoming
+hazard and the fact that player 1's value at the first support 9 is 2.  It
+gives ``A>x`` even when H=0, hence ``A>a``.  This closes the skeleton
+``6,2,9,6`` with arbitrary positive support-2 and support-9 block lengths,
+without prescribing what follows the final 6.
 
 There is also a complete singleton-word return rank.  In every nonempty
 finite excursion
@@ -67,7 +69,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import block_pair_r0_alternating_6_9_rank as algebra  # noqa: E402
-import block_pair_r0_support9_endpoint_rank as endpoint  # noqa: E402
+import block_pair_r0_support9_run_rank as support_nine_run  # noqa: E402
 from block_pair_r0_constant_pair_support import terminal  # noqa: E402
 from block_pair_r0_singleton_perturbation_fences import (  # noqa: E402
     assert_credible_first_unchanged,
@@ -185,12 +187,9 @@ def assert_arbitrary_singleton_word_return_rank() -> None:
 
 
 def replay_endpoint_rank() -> None:
-    # The endpoint proof is uniform in its incoming hazard variable.  Replay
-    # every algebraic component before instantiating that variable with x.
-    endpoint.assert_payoff_origin()
-    _, _, _, _, den, num, transfer = endpoint.local_polynomials()
-    endpoint.assert_inactive_clock()
-    endpoint.assert_clock_coefficients(den, num, transfer)
+    # The run proof is uniform in its effective incoming hazard variable.
+    # Replay it before instantiating that variable with x.
+    support_nine_run.assert_arbitrary_support9_run_rank()
 
 
 def main() -> None:
@@ -202,7 +201,7 @@ def main() -> None:
 
     print("exact singleton-bridge support-6 reductions passed")
     print("excluded prefix: support 2 or 6 -> nonempty support-1 block -> 2")
-    print("ranked family: 6 -> finite support-2 block -> 9 -> 6 has A>a")
+    print("ranked family: 6 -> finite support-2 block -> 9+ -> 6 has A>a")
     print("ranked family: every finite singleton-word 6-return has A>a")
     print("the endpoint rank leaves the outgoing support after the final 6 free")
     print("scope: finite strict core runs; nonperiodic boundaries remain")
