@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 import Math.PMFProduct.Basic
 import Math.PMFProduct.Bind
+import Math.PMFProduct.Bool
 import Math.PMFProduct.Conditioning
 import Math.PMFProduct.Update
 import Math.PMFProduct.Independence

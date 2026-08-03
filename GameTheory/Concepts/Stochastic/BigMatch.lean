@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Stochastic.Absorbing
+import Math.PMFProduct.Bool
 
 /-!
 # The Big Match
@@ -125,37 +126,16 @@ def oneIndicator : State → ℝ
   cases s <;> simp [liveIndicator, zeroIndicator, oneIndicator]
 
 lemma pmfBool_false_toReal (μ : PMF Bool) :
-    (μ false).toReal = 1 - (μ true).toReal := by
-  have h := expect_const μ (1 : ℝ)
-  rw [expect_eq_sum, Fintype.sum_bool] at h
-  norm_num at h ⊢
-  linarith
+    (μ false).toReal = 1 - (μ true).toReal :=
+  Math.PMFProduct.pmfBool_false_toReal μ
 
 /-- Fubini expansion of a product of two Boolean mixed actions. -/
 lemma expect_pmfPi_bool (m : Player → PMF Bool)
     (f : (Player → Bool) → ℝ) :
     expect (pmfPi m) f =
       expect (m false) (fun a =>
-        expect (m true) (fun b => f (fun who => if who then b else a))) := by
-  classical
-  have hfalse : Function.update m false (m false) = m :=
-    Function.update_eq_self false m
-  rw [← hfalse, pmfPi_update_bind, expect_bind]
-  apply congrArg (expect (m false))
-  funext a
-  have htrue : Function.update (Function.update m false (PMF.pure a))
-      true (m true) = Function.update m false (PMF.pure a) := by
-    funext who
-    cases who <;> simp
-  rw [← htrue, pmfPi_update_bind, expect_bind]
-  apply congrArg (expect (m true))
-  funext b
-  have hpure : Function.update (Function.update m false (PMF.pure a))
-        true (PMF.pure b) =
-      fun who => PMF.pure (if who then b else a) := by
-    funext who
-    cases who <;> simp
-  rw [hpure, pmfPi_pure, expect_pure]
+        expect (m true) (fun b => f (fun who => if who then b else a))) :=
+  Math.PMFProduct.expect_pmfPi_bool m f
 
 lemma expect_live_reward (m : Player → PMF Bool) :
     expect (pmfPi m) (fun a => reward .live a) =
