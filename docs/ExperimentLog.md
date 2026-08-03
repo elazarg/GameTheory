@@ -3936,6 +3936,13 @@ memory.
   theorem-only construction specialized per game; or promotion of the pinned
   separate `FOSG.Serial` semantics.  The last design remains excluded by D30;
   the experiment distinguishes the first two by API and proof cost.
+- **Early observation:** duplicate-freedom alone is insufficient: an order
+  that omits a player cannot assemble a legal simultaneous source joint.  The
+  candidate therefore represents a schedule by an explicit equivalence
+  `Fin slots ≃ ι`, enforcing exhaustiveness and no duplicates by construction
+  while storing no `Fintype` instance.  Empty player types remain supported.
+  The independent-draw blocker has also been isolated: the new recursive
+  `FinDist.piFin` is proved equal to canonical `FinDist.pi`.
 - **Kill conditions:** inability to state exact canonical history laws without
   reconstruction or defaults; information leakage from partial joints;
   strategy projection that depends on unreachable guesses; stored global
