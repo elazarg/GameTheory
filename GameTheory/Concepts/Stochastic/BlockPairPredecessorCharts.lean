@@ -151,6 +151,12 @@ def predecessorValue (hazard successor : Player → ℝ) (who : Player) : ℝ :=
 def difference (hazard successor : Player → ℝ) (who : Player) : ℝ :=
   opponentQuitValue hazard who - predecessorValue hazard successor who
 
+theorem predecessorValue_eq_quit_of_difference_eq_zero
+    {hazard successor : Player → ℝ} {who : Player}
+    (hzero : difference hazard successor who = 0) :
+    predecessorValue hazard successor who = opponentQuitValue hazard who := by
+  exact (sub_eq_zero.mp hzero).symm
+
 /-- Expanded indifference polynomials from the terminal table. -/
 def expandedDifference (hazard successor : Player → ℝ) :
     Player → ℝ := ![
@@ -482,6 +488,152 @@ theorem supportFourteen_predecessorValue
     field_simp <;>
     simp only [supportFourteenMiddle, supportFourteenNumerator,
       supportFourteenCoefficient] <;>
+    ring
+
+/-! ## Quadratic three-player charts -/
+
+/-- Denominator of player 0's hazard in the support-13 chart. -/
+def supportThirteenZeroDenominator
+    (successor : Player → ℝ) (z : ℝ) : ℝ :=
+  (successor 2 - 2) * (z - 1)
+
+/-- Denominator of player 2's hazard in the support-13 chart. -/
+def supportThirteenTwoDenominator
+    (successor : Player → ℝ) (z : ℝ) : ℝ :=
+  successor 0 * z - successor 0 + 12 * z - 6
+
+def supportThirteenA (successor : Player → ℝ) : ℝ :=
+  2 * successor 0 * successor 2 - 29 * successor 0 +
+    36 * successor 2 - 30 * successor 3 - 192
+
+def supportThirteenB (successor : Player → ℝ) : ℝ :=
+  -4 * successor 0 * successor 2 + 33 * successor 0 -
+    52 * successor 2 + 10 * successor 3 + 194
+
+def supportThirteenC (successor : Player → ℝ) : ℝ :=
+  2 * successor 0 * successor 2 - 4 * successor 0 +
+    16 * successor 2 - 32
+
+/-- The quadratic compatibility polynomial for support mask 13. -/
+def supportThirteenPolynomial
+    (successor : Player → ℝ) (z : ℝ) : ℝ :=
+  supportThirteenA successor * z ^ 2 +
+    supportThirteenB successor * z + supportThirteenC successor
+
+/-- The support-13 hazards on the sheet parameterized by `z = x₃`. -/
+def supportThirteenHazard
+    (successor : Player → ℝ) (z : ℝ) : Player → ℝ := ![
+  (successor 2 * z - successor 2 - 7 * z + 2) /
+    supportThirteenZeroDenominator successor z,
+  0,
+  (successor 0 * z - successor 0 - 2) /
+    supportThirteenTwoDenominator successor z,
+  z
+]
+
+theorem supportThirteen_zero_two_active
+    (successor : Player → ℝ) (z : ℝ)
+    (hzero : supportThirteenZeroDenominator successor z ≠ 0)
+    (htwo : supportThirteenTwoDenominator successor z ≠ 0) :
+    difference (supportThirteenHazard successor z) successor 0 = 0 ∧
+      difference (supportThirteenHazard successor z) successor 2 = 0 := by
+  constructor
+  · rw [difference_eq_expanded]
+    simp [expandedDifference, supportThirteenHazard]
+    field_simp
+    simp only [supportThirteenTwoDenominator]
+    ring
+  · rw [difference_eq_expanded]
+    simp [expandedDifference, supportThirteenHazard]
+    field_simp
+    simp only [supportThirteenZeroDenominator]
+    ring
+
+/-- After solving the first two active equations, the third is exactly the
+quadratic compatibility equation (40). -/
+theorem supportThirteen_difference_three
+    (successor : Player → ℝ) (z : ℝ)
+    (hzero : supportThirteenZeroDenominator successor z ≠ 0)
+    (htwo : supportThirteenTwoDenominator successor z ≠ 0) :
+    difference (supportThirteenHazard successor z) successor 3 =
+      2 * supportThirteenPolynomial successor z /
+        (supportThirteenZeroDenominator successor z *
+          supportThirteenTwoDenominator successor z) := by
+  rw [difference_eq_expanded]
+  simp [expandedDifference, supportThirteenHazard]
+  field_simp
+  simp only [supportThirteenZeroDenominator,
+    supportThirteenTwoDenominator, supportThirteenPolynomial,
+    supportThirteenA, supportThirteenB, supportThirteenC]
+  ring
+
+theorem supportThirteen_active
+    (successor : Player → ℝ) (z : ℝ)
+    (hzero : supportThirteenZeroDenominator successor z ≠ 0)
+    (htwo : supportThirteenTwoDenominator successor z ≠ 0)
+    (hpolynomial : supportThirteenPolynomial successor z = 0) :
+    difference (supportThirteenHazard successor z) successor 0 = 0 ∧
+      difference (supportThirteenHazard successor z) successor 2 = 0 ∧
+      difference (supportThirteenHazard successor z) successor 3 = 0 := by
+  obtain ⟨hactiveZero, hactiveTwo⟩ :=
+    supportThirteen_zero_two_active successor z hzero htwo
+  refine ⟨hactiveZero, hactiveTwo, ?_⟩
+  rw [supportThirteen_difference_three successor z hzero htwo,
+    hpolynomial]
+  simp
+
+/-- The exact predecessor-value chart for support mask 13. -/
+def supportThirteenValue
+    (successor : Player → ℝ) (z : ℝ) : Player → ℝ :=
+  let x₀ := supportThirteenHazard successor z 0
+  let x₂ := supportThirteenHazard successor z 2
+  let survival := (1 - x₀) * (1 - x₂) * (1 - z)
+  ![
+    -3 * x₂ * z + 2 * x₂ - 4 * z - 2,
+    -x₀ * (2 * x₂ * z + 4 * x₂ + 5 * z - 8) +
+      survival * successor 1,
+    (1 - x₀) * (z + 2),
+    2 * (1 + 2 * x₀ - 3 * x₀ * x₂)
+  ]
+
+/-- On a root of `P₁₃`, the terminal-table expectation agrees with the
+algebraic predecessor chart (42). -/
+theorem supportThirteen_predecessorValue
+    (successor : Player → ℝ) (z : ℝ)
+    (hzero : supportThirteenZeroDenominator successor z ≠ 0)
+    (htwo : supportThirteenTwoDenominator successor z ≠ 0)
+    (hpolynomial : supportThirteenPolynomial successor z = 0) :
+    predecessorValue (supportThirteenHazard successor z) successor =
+      supportThirteenValue successor z := by
+  have hactive := supportThirteen_active successor z hzero htwo hpolynomial
+  funext who
+  fin_cases who
+  · change predecessorValue (supportThirteenHazard successor z) successor 0 =
+      supportThirteenValue successor z 0
+    rw [predecessorValue_eq_quit_of_difference_eq_zero hactive.1]
+    simp +decide [opponentQuitValue, maskProbability, actionFactor, realSum,
+      realProduct, maskWithPlayer, supportThirteenHazard, supportThirteenValue,
+      terminalRewardNat]
+    ring
+  · change predecessorValue (supportThirteenHazard successor z) successor 1 =
+      supportThirteenValue successor z 1
+    simp +decide [predecessorValue, opponentAbsorbingContribution,
+      opponentSurvival, maskProbability, actionFactor, realSum, realProduct,
+      supportThirteenHazard, supportThirteenValue, terminalRewardNat]
+    ring
+  · change predecessorValue (supportThirteenHazard successor z) successor 2 =
+      supportThirteenValue successor z 2
+    rw [predecessorValue_eq_quit_of_difference_eq_zero hactive.2.1]
+    simp +decide [opponentQuitValue, maskProbability, actionFactor, realSum,
+      realProduct, maskWithPlayer, supportThirteenHazard, supportThirteenValue,
+      terminalRewardNat]
+    ring
+  · change predecessorValue (supportThirteenHazard successor z) successor 3 =
+      supportThirteenValue successor z 3
+    rw [predecessorValue_eq_quit_of_difference_eq_zero hactive.2.2]
+    simp +decide [opponentQuitValue, maskProbability, actionFactor, realSum,
+      realProduct, maskWithPlayer, supportThirteenHazard, supportThirteenValue,
+      terminalRewardNat]
     ring
 
 end GameTheory.BlockPairCharts
