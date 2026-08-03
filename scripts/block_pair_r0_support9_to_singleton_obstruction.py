@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Exclude every finite ``6 -> 9+ -> 2`` support prefix exactly.
+"""Exclude every finite ``{2,6} -> 9+ -> 2`` support prefix exactly.
 
 Work in the perturbed block-pair quitting game.  Let a nonempty finite block
-of strict support-9 phases lie between a support-6 phase and a support-2
-phase.  For player 1 put ``y=V_1-2`` at a support-9 phase and ``y_plus`` at
+of strict support-9 phases lie between a phase of support 2 or 6 and a
+support-2 phase.  For player 1 put ``y=V_1-2`` at a support-9 phase and ``y_plus`` at
 its successor.  With c,d the hazards of players 0,3,
 
     y = h(c,d) + (1-c)(1-d)y_plus,
@@ -21,13 +21,13 @@ q<=0, then d<=3c/4 and the exact decomposition
 shows h>0.  Therefore ``y_plus>=0`` implies ``y>0`` at every strict support-9
 phase.  The following support-2 phase has value 2, hence terminal offset zero;
 backward induction makes the entry offset of every nonempty support-9 block
-strictly positive.  But active player 1 at the preceding support 6 requires
-its successor offset to be exactly zero.  Contradiction.
+strictly positive.  But active player 1 at either preceding support 2 or 6
+requires its successor offset to be exactly zero.  Contradiction.
 
 This excludes the final simple five-mask skeleton ``6,9,2,1,6`` before its
-support-1 suffix is reached, and it already permits arbitrary finite
-same-support-9 waiting.  It is a finite-run result: an infinite support-9
-tail converging to the zero-hazard boundary is not excluded here.
+support-1 suffix is reached, every bare ``2,9+,2`` backtrack, and arbitrary
+finite same-support-9 waiting.  It is a finite-run result: an infinite
+support-9 tail converging to the zero-hazard boundary is not excluded here.
 """
 
 from __future__ import annotations
@@ -60,9 +60,9 @@ def assert_payoff_origin() -> None:
     assert tuple(terminal(mask, 1) for mask in (1, 8, 9)) == (8, 0, 3)
     assert tuple(terminal(mask, 1) for mask in (2, 3, 10, 11)) == (2, -1, 6, 3)
 
-    # The support-2 endpoint has player-1 value 2.  At the preceding support
-    # 6, player 1's active successor coefficient is zero, so it also demands
-    # successor value 2.
+    # The support-2 endpoint has player-1 value 2.  At either possible
+    # preceding support 2 or 6, active player 1 also demands successor value
+    # 2 (the support-6 active successor coefficient is zero).
     assert (terminal(2, 1), terminal(4, 1), terminal(6, 1)) == (2, 0, 0)
 
 
@@ -111,9 +111,9 @@ def main() -> None:
     assert_one_step_positivity_packet()
     assert_credible_first_unchanged()
 
-    print("exact finite support 6->9+->2 prefix obstruction passed")
+    print("exact finite support {2,6}->9+->2 prefix obstruction passed")
     print("one-step invariant: y_plus>=0 implies current y>0")
-    print("excluded: every nonempty finite support-9 block from 6 to 2")
+    print("excluded: every nonempty finite support-9 block from 2 or 6 to 2")
     print("therefore simple skeleton 6-9-2-1-6 is impossible")
     print("scope: infinite zero-hazard support-9 tails remain open")
 
