@@ -271,6 +271,34 @@ theorem quittingHazardStoppingLaw_toReal_tsum_one
       (quittingHazardStoppingLaw hazard choice).toReal = 1 :=
   pmf_toReal_tsum_one (quittingHazardStoppingLaw hazard)
 
+/-- Expectation under the stopping law splits into its Never atom and its
+finite first-Quit atoms.  Boundedness justifies the countable real sums. -/
+theorem quittingHazardStoppingLaw_expect
+    (hazard : ℕ → PMF Bool) (value : Option ℕ → ℝ)
+    {M : ℝ} (hvalue : ∀ choice, |value choice| ≤ M) :
+    expect (quittingHazardStoppingLaw hazard) value =
+      quittingHazardNeverMass hazard * value none +
+        ∑' time : ℕ,
+          quittingHazardStopMass hazard time * value (some time) := by
+  rw [quittingHazardStoppingLaw, expect_map]
+  have hsummable := expect_summable_of_bounded
+    (quittingHazardEncodedLaw hazard)
+    (fun code => value (quittingStoppingChoiceEquivNat.symm code))
+    (fun code => hvalue (quittingStoppingChoiceEquivNat.symm code))
+  unfold expect
+  rw [hsummable.tsum_eq_zero_add]
+  congr 1
+  · change (ENNReal.ofReal (quittingHazardNeverMass hazard)).toReal *
+      value none = _
+    rw [ENNReal.toReal_ofReal
+      (quittingHazardNeverMass_nonneg hazard)]
+  · apply tsum_congr
+    intro time
+    change (ENNReal.ofReal (quittingHazardStopMass hazard time)).toReal *
+      value (some time) = _
+    rw [ENNReal.toReal_ofReal
+      (quittingHazardStopMass_nonneg hazard time)]
+
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-- Stopping law read from a behavior strategy along the unique live public
