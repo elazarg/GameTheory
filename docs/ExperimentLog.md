@@ -72,7 +72,7 @@ becomes difficult to scan.
 | EXP-059 | 2026-08-02 | D6/D8/D14/D15/D28 / FOSG-to-EFG serialization | Can a simultaneous stochastic FOSG be serialized as a single-mover EFG while hiding within-round choices and preserving its mapped history law? | Supports explicit hidden-phase serialization; decides D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFG.lean` |
 | EXP-060 | 2026-08-02 | D6/D8/D14/D15/D30 / two-round FOSG-to-EFG signal replay | Can the hidden-phase serializer replay nontrivial source public/private signals over two stochastic rounds, including own-action memory and inactive slots, while preserving the scaled canonical-history law? | Supports two-round signal replay; generic explicit-order implementation unblocked; extends D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound{,Witnesses}.lean` |
 | EXP-061 | 2026-08-02 | D6/D8/D14/D15/D30 / generic explicit-order FOSG-to-EFG bridge | Can D30's validated hidden-phase construction be expressed once over the canonical FOSG/EFG APIs, with explicit finite player order and the same exact history, signal, policy, inactivity, and order laws? | Supports; promotes the stable generic bridge and completes D30's API gate | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Languages/Bridges/FOSGToEFG.lean`; generic hostile witnesses |
-| EXP-062 | 2026-08-03 | D4/D6/D7/D9 / intrinsic games ownership | Does configuration-dependent causality and closed-loop solvability earn a native intrinsic-game branch by proving a theorem or counterexample unavailable from bare Protocol without first choosing a temporal compiler? | Active; hostile solvability/causality slice reserved | Reserved on `6c37ac8`; pinned `Languages/Intrinsic/{Syntax,Examples,Tests}.lean`; experimental artifacts pending |
+| EXP-062 | 2026-08-03 | D4/D6/D7/D9 / intrinsic games ownership | Does configuration-dependent causality and closed-loop solvability earn a native intrinsic-game branch by proving a theorem or counterexample unavailable from bare Protocol without first choosing a temporal compiler? | Supports; native closed-loop and causality root approved, later compiler/mixed/utility/Kuhn layers remain gated | `GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean`; D31; focused compile, hazard, axiom, and premise-independence audits |
 
 ## Entry template
 
@@ -3998,7 +3998,8 @@ memory.
 ### EXP-062: intrinsic games ownership and closed-loop causality
 
 - **Date / revision:** 2026-08-03, reserved on `6c37ac8`
-- **Status:** active; no intrinsic public API or pinned coverage credited
+- **Status:** complete; supports a native intrinsic root and
+  configuration-dependent causality surface
 - **Decision / question:** whether the pinned finite Witsenhausen-style
   intrinsic model retains theorem-relevant product/configuration information
   that cannot be represented honestly by the canonical Protocol history and
@@ -4011,10 +4012,9 @@ memory.
   utility, equilibrium, PMF runner, or Kuhn theorem is needed for that test.
 - **Representative slice:** reconstruct the pinned trivial-information
   two-agent solvability witness and the `futureLookingModel` causality
-  rejection on capability-light data.  The negative witness must genuinely
-  distinguish dependence on a not-yet-predecessor decision; the positive
-  witness must prove unique closed-loop solutions for every pure profile, not
-  merely exhibit one hand-picked profile.
+  rejection on capability-light data.  Then test the full representation with
+  a nonconstant three-agent schedule whose configuration cell and predecessor
+  agreement are independently necessary for the positive causality theorem.
 - **Competing designs:** a native intrinsic configuration/information root with
   later named compilation; direct encoding as Protocol after an explicit
   ordering, retiring the intrinsic branch; or a theorem-only fixed-point
@@ -4025,10 +4025,27 @@ memory.
   updates, public transports, or a chosen temporal execution merely to state
   causality; the future-looking fixture fails to distinguish the designs; or
   trusted code needs placeholders/custom axioms/forbidden imports.
-- **Artifacts / commands:** pending experimental syntax and hostile witnesses;
-  focused build; source-hazard and axiom audit; Phase 2/3 reachability probes if
-  a stable root is earned; exact L-INTR ledger update only after the result.
-- **Outcome / next action:** implement the smallest falsifying slice under
-  `Experimental/PostArchitecture`.  Do not port the pinned mixed/behavioral,
-  perfect-recall, Kuhn, PMF, or KernelGame hierarchy until the native ownership
-  question is decided.
+- **Artifacts / commands:**
+  `GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean` (357
+  nonblank lines, 39 declarations); `lake env lean
+  GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean`; source
+  hazard scan; printed axiom profiles; independent Sol audit with compiling
+  counterexamples to both premise-erased causality variants.  The artifact
+  imports only `Mathlib.Logic.Equiv.Bool`.
+- **Observations:** universal information proves unique simultaneous
+  closed-loop solutions for every pure profile and nature state.  A first
+  mover that observes a later decision is noncausal before Protocol exists.
+  `Fin slots ≃ Agent` packages exhaustive duplicate-free scheduling without
+  stored global finiteness.  `SamePrefixThrough` matches direct `PrefixCell`
+  membership through the current slot.  The final three-agent witness is
+  genuinely nonconstant, and concrete configuration pairs show that neither
+  prefix-cell agreement nor predecessor agreement implies the other; the
+  positive proof needs both.  Axiom profiles contain only `propext`,
+  `Classical.choice`, and `Quot.sound` as applicable, and the hazard audit is
+  empty.
+- **Outcome / next action:** **supports**; D31 adopts a capability-light native
+  configuration/model/pure-strategy/solvability root and the explicit-slot
+  causality surface.  Promote them with independent universes, then classify
+  the pinned `Syntax.lean` batch exactly.  Temporal compilation, perfect
+  recall, mixed/behavioral strategies, PMF outcome laws, ownership/utility,
+  equilibrium, and Kuhn remain separate gates.
