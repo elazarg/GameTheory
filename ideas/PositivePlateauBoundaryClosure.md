@@ -7,7 +7,7 @@
 | Lifecycle | `ACTIVE` |
 | Verdict | `MIXED` |
 | Objective priority | `P0` |
-| Last audited | 2026-08-03, through the Q132 audit and full-rate stationary calibration |
+| Last audited | 2026-08-03, through the Q132 audit, full-rate stationary calibration, and E50's unscaled two-ended Lean probe |
 | Central live claim | Every fully summable positive plateau of optimized exact zero-boundary quitting chains yields either an executable accuracy-indexed repair or a bounded exact chain extension decreasing optimized initial debt by a uniform positive amount, while retaining the full terminal-packet anchor. |
 | Next discriminant | Add the preterminal survival scale, full marked quitter set, terminal atom, and calibrated-prefix provenance to one closed exact-D relation; then prove or refute anchor-preserving seriality and a decoder from its downstream seam or exit to repair or root-debt descent. |
 | Production destination | Finite-quitting terminal-equilibrium existence, followed by terminal-to-uniform payoff selection. |
@@ -21,7 +21,7 @@
 | PB2 | If optimized finite-chain debt tends to zero, terminal approximate equilibria exist at every accuracy. | `PROVED` | `M+L+C` | Finite quitting games. | Terminal-to-uniform payoff selection. |
 | PB3 | A positive optimized-debt limit yields a fixed positive-solo debt owner and a projective exact-D forward path with summable opponent-only clock; divergence of the owner's own clock closes by an exact terminal equilibrium, leaving the fully summable branch. | `PROVED` | `M+L+A` | The owner is selected from calibrated minimizers. | PB4 and PB7. |
 | PB4 | Positive root debt yields a nonempty full simultaneous opponent set \(T_*\) with positive owner joining loss and transported raw mass bounded below linearly in the debt. | `PROVED` | `M+L+A` | The survival product stops immediately before the marked terminal root. | Anchored boundary relation. |
-| PB5 | One common diagonal subsequence retains all fixed forward windows, fixed reverse windows, \((i_*,T_*,\omega)\), and every bridge-survival product with its exact factorization. | `PROVED` | `M` | Compact coordinate extraction only; no executable continuation follows. | Anchored boundary relation. |
+| PB5 | One common diagonal subsequence retains all fixed forward windows, fixed reverse windows, \((i_*,T_*,\omega)\), and every bridge-survival product with its exact factorization. | `PROVED` | `M+X` | E50 Lean-checks the common forward/reverse exact-D rays, terminal face, positive reverse depth-one debt, and a newly selected limiting packet. It does not yet package the preselected finite mark or bridge-survival coordinates, so `X` covers only that stated subclaim. | Anchored boundary relation. |
 | PB6 | Cutoff-one, direct First, owner-solo, two-player pair, arbitrary stationary-product, sure-set/owner, contracting periodic, and finite max-affine prefix certificates have exact all-behavior cap criteria or compilers at their stated scopes. | `PROVED` | `M+L` | Verification of supplied finite data; the list is not complete. | R1/R2 repair verification. |
 | PB7 | Positive plateau plus the fully summable branch implies, at every accuracy, an explicit finite repair, an attainable-tail intersection after a positive calibrated prefix, or a standard-proper sequentially perfect absorption path. | `OPEN` | `I` | PPBC; at least as strong as the unresolved finite-quitting existence step. | Terminal approximate existence. |
 | PB8 | For fixed accuracy there are \(L,c,m_0\), independent of the large cutoff, such that either PB7 produces a repair or every calibrated minimizer admits an exact zero-boundary extension of length \(L\) lowering total initial debt by \(c>0\). | `OPEN` | `I` | Must construct new exact Nash roots and preserve the original entry and terminal boundary. | PB7 by plateau contradiction. |
@@ -146,9 +146,11 @@
 
 ### Missing production arrows
 
-1. **Coupled extraction package.** PB5 is audited mathematics, but its common
-   subsequence object and corrected preterminal/terminal split need a
-   production representation only when they feed the next arrow.
+1. **Coupled extraction package.** PB5 is audited mathematics, and E50 checks
+   its unscaled two-ray core plus the limiting terminal-edge packet. The
+   corrected preterminal bridge products, preselected finite mark, and their
+   exact factorization still need a production representation only when they
+   feed the next arrow.
 2. **Anchored relation.** No closed state retains all of
    \(i_*,T_*,\omega\), bridge scale, terminal distance, and calibrated-prefix
    provenance while remaining serial under exact Nash--Bellman predecessor
@@ -177,8 +179,9 @@
    the missing explicit bridge is the induced stopping-time law on
    \(\mathbb N\cup\{\infty\}\) and its exact-time atoms. This packet is the
    production falsifier for closed-attainable-tail arguments.
-2. **Corrected two-ended record.** Package the preterminal survival scale and
-   marked terminal atom as separate fields before proving compactness or a
+2. **Corrected two-ended record.** Use E50's forward/reverse exact-D rays as
+   the baseline, then package the preterminal survival scale and preselected
+   marked terminal atom as separate fields before proving the bridge or a
    decoder theorem.
 3. **Wire the landed full-rate static regression.** The exact table already
    excludes all owner/sure-set profiles by a uniform gap and closes through a
