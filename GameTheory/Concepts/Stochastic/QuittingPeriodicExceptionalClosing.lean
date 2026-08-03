@@ -276,6 +276,61 @@ theorem contractingFixedPoint_sub_le_positivePartResidual
   dsimp only [η] at hcap
   linarith
 
+/-- Exact player-specific closing for a contracting opponent clock.  The
+prescribed block seam and the positive Snell residual are amplified by their
+own survival denominators; no common contraction constant is required. -/
+theorem finiteBlockClosingGap_le_tailRelative
+    (T : ℝ → ℝ) {G σ σi V B w : ℝ}
+    (hσ0 : 0 ≤ σ) (hσ1 : σ < 1)
+    (hσi0 : 0 ≤ σi) (hσi1 : σi < 1)
+    (hVfixed : V = G + σ * V)
+    (hTlipschitz : ∀ x y, |T x - T y| ≤ σi * |x - y|)
+    (hBfixed : T B = B) :
+    B - V ≤
+      max (T w - w) 0 / (1 - σi) +
+        |(G + σ * w) - w| / (1 - σ) := by
+  have hprescribed := affineFixedPoint_dist_le_of_residual
+    hσ0 (le_refl σ) hσ1 (abs_nonneg ((G + σ * w) - w)) hVfixed
+      (le_refl |(G + σ * w) - w|)
+  have hprescribedGap :
+      w - V ≤ |(G + σ * w) - w| / (1 - σ) :=
+    (le_abs_self (w - V)).trans
+      (by simpa [abs_sub_comm] using hprescribed)
+  have hcapGap := contractingFixedPoint_sub_le_positivePartResidual
+    T (w := w) hσi0 hσi1 hTlipschitz hBfixed
+  calc
+    B - V = (B - w) + (w - V) := by ring
+    _ ≤ max (T w - w) 0 / (1 - σi) +
+        |(G + σ * w) - w| / (1 - σ) :=
+      add_le_add hcapGap hprescribedGap
+
+/-- Exact player-specific closing at the noncontracting opponent-clock
+endpoint.  `max 0 quitValue` is the full terminal cap, including Never, so
+its positive defect at the reference value replaces division by `1 - σi`. -/
+theorem finiteBlockClosingGap_le_exceptionalBoundary
+    {G σ quitValue V w : ℝ}
+    (hσ0 : 0 ≤ σ) (hσ1 : σ < 1)
+    (hVfixed : V = G + σ * V) :
+    max 0 quitValue - V ≤
+      max (max 0 quitValue - w) 0 +
+        |(G + σ * w) - w| / (1 - σ) := by
+  have hprescribed := affineFixedPoint_dist_le_of_residual
+    hσ0 (le_refl σ) hσ1 (abs_nonneg ((G + σ * w) - w)) hVfixed
+      (le_refl |(G + σ * w) - w|)
+  have hprescribedGap :
+      w - V ≤ |(G + σ * w) - w| / (1 - σ) :=
+    (le_abs_self (w - V)).trans
+      (by simpa [abs_sub_comm] using hprescribed)
+  have hcapGap :
+      max 0 quitValue - w ≤ max (max 0 quitValue - w) 0 :=
+    le_max_left _ _
+  calc
+    max 0 quitValue - V =
+        (max 0 quitValue - w) + (w - V) := by ring
+    _ ≤ max (max 0 quitValue - w) 0 +
+        |(G + σ * w) - w| / (1 - σ) :=
+      add_le_add hcapGap hprescribedGap
+
 /-- Division-free exceptional endpoint.  If the opponent clock is exactly
 noncontracting, its one-block Snell operator is `z ↦ max quitValue z`, while
 the terminal cap is `max 0 quitValue`: the extra zero is the Never boundary.
