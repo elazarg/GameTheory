@@ -17,12 +17,30 @@
 
 | Claim | Verdict | Seals | Scope | Consumer |
 | --- | --- | --- | --- | --- |
-| A three-coordinate weight with every `r_i({i}) = 1/3 > 0` admits no absorbing complementary cycle of any finite length | `PROVED` | `M`, **relies on an attributed external theorem** | case 2 | refutes the finite carrier |
+| A three-coordinate weight with every `r_i({i}) = 1/3 > 0` admits no absorbing complementary cycle of any finite length | `PROVED` | **no seal** — the attributed external theorem was audited and **could not be located**; see the caveat | case 2 | refutes the finite carrier |
 | A case-3 weight exists whose only cycle-type outcome is an isolated negative discounted limit, with no admissible cycle of any length | `PROVED` | `M` | case 3 | refutes it again, differently |
 | For the case-2 weight there are absorbing cyclic recursions of period `3m` with complementarity defect `~ η·log 2 / (3m) → 0` | `PROVED` | `M` | case 2 | the replacement carrier |
 | The limit of that family is a continuous mass-parametrized absorption path | `PROVED` | `M` | case 2 | the replacement carrier |
 | In case 3 the limiting object must additionally retain the isolated-coordinate mismatch as a mark | `PROVED` | `M` | case 3 | the replacement carrier |
 | No length bound exists; the minimum period diverges as the defect tends to zero | `PROVED` | `M` | case 2 family | closes the bounded-length question |
+
+> **Superseding note, 2026-08-04.** The case-2 refutation's premise, *stated
+> without a boundedness condition on the values*, is **false**. An explicit
+> inverse iterate for that weight has rows `(p,0,0)` and values
+> `(1/3, 1, K·q^{-t})`; the third coordinate grows exactly like the inverse of
+> the survival product, so the survival prefix times the value does not vanish
+> even though the prefix does. That unconsumed homogeneous boundary term is
+> what the Lyapunov shape of the intended argument cannot discard.
+>
+> What survives: repeating a finite cycle produces **bounded** values, so the
+> deduction to "no finite absorbing cyclic array" would follow from the
+> *bounded* form of the premise. That form is neither proved nor refuted here.
+> So the case-2 claim below is **not currently supported**, and whether the
+> cited source carries the boundedness hypothesis is precisely what the audit
+> is checking. See `PC-010`.
+>
+> The rest of this file is unaffected: the defect-vanishing family, its limit,
+> and the case-3 material do not consume the premise.
 
 **Attribution caveat, load-bearing.** The case-2 refutation is obtained by
 repeating a hypothetical finite cycle indefinitely to produce a *completely
