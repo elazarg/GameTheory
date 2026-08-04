@@ -17,7 +17,7 @@
 
 | Claim | Verdict | Seals | Scope | Consumer |
 | --- | --- | --- | --- | --- |
-| A three-coordinate weight with every `r_i({i}) = 1/3 > 0` admits no absorbing complementary cycle of any finite length | `PROVED` | **no seal** — the attributed external theorem was audited and **could not be located**; see the caveat | case 2 | refutes the finite carrier |
+| A three-coordinate weight with every `r_i({i}) = 1/3 > 0` admits no absorbing complementary cycle of any finite length | **`OPEN`** — was `PROVED`; the citation is not locatable and the internal route is refuted in the form it was stated | no seal | case 2 | **no longer refutes anything**; see below |
 | A case-3 weight exists whose only cycle-type outcome is an isolated negative discounted limit, with no admissible cycle of any length | `PROVED` | `M` | case 3 | refutes it again, differently |
 | For the case-2 weight there are absorbing cyclic recursions of period `3m` with complementarity defect `~ η·log 2 / (3m) → 0` | `PROVED` | `M` | case 2 | the replacement carrier |
 | The limit of that family is a continuous mass-parametrized absorption path | `PROVED` | `M` | case 2 | the replacement carrier |
@@ -42,14 +42,62 @@
 > The rest of this file is unaffected: the defect-vanishing family, its limit,
 > and the case-3 material do not consume the premise.
 
-**Attribution caveat, load-bearing.** The case-2 refutation is obtained by
-repeating a hypothetical finite cycle indefinitely to produce a *completely
-absorbing admissible inverse iterate*, and citing an external theorem
-(Solan, inverse-iterate counterexample, Thm 2.1) that no such iterate exists
-for small positive perturbations of that table. **This repository has not
-verified that theorem against its source.** If it is misquoted or its scope is
-narrower than used, the case-2 refutation falls. Verifying it is the single
-highest-value audit on this claim.
+**Attribution caveat — audited 2026-08-04, verdict `NOT LOCATABLE`.** The
+case-2 refutation is obtained by repeating a hypothetical finite cycle
+indefinitely to produce a *completely absorbing* infinite complementary
+recursion (the "inverse iterate" of
+[`Question147`](../../questions/Question147-NoCompletelyAbsorbingComplementaryArray.md)),
+and citing an external theorem recorded here as "Solan, inverse-iterate
+counterexample, Thm 2.1" for the assertion that no such iterate exists for all
+sufficiently small positive perturbations of that table. **A source audit
+failed to find any such theorem, and found positive evidence that it does not
+exist under that attribution.** Every Solan quitting-game paper was retrieved
+and searched — Solan–Vieille 2001 and 2002a, Solan–Vohra 2001, Solan 2005,
+Solan–Solan 2018 and 2020, Munk–Solan 2020, Ashkenazi-Golan–Krasikov–Rainer–Solan
+2020 and 2023, Solan–Vieille 2025, and Solan's textbook — together with a full
+arXiv author sweep. None of them contains the terms *inverse iterate* or
+*completely absorbing*; none of the quitting-game papers has a Theorem 2.1 at
+all. So the citation cannot be used, and this row carries no external support.
+
+Three findings bound how much of the claim survives that.
+
+- **The repetition step is sound.** Periodic extension of a cyclic array
+  satisfies the inverse-iterate conditions at every stage *including the seam*,
+  because the cycle condition already closes `z_{L+1} = z_1` and demands
+  complementarity of `(y_L, z_1)`; and `∏_k c(y_k) < 1` forces the infinite
+  product to `0`. So the deduction is valid — only its premise is unsupported.
+- **The `η = 0` weight is the Flesch–Thuijsman–Vrieze (1997) cubic game
+  divided by 3**, on every one of the seven rows, pair rows included. That game
+  has an exact absorbing complementary cycle of length 3: each coordinate in
+  turn quits with probability `1/2`, values `(1/3, 2/3, 1/3)` cyclically. It is
+  FTV's cyclic Markov `0`-equilibrium, and is also the equilibrium exhibited in
+  Ashkenazi-Golan–Krasikov–Rainer–Solan 2020, Example 5.4. **So the claim is
+  false at `η = 0` and the perturbation carries the entire statement.**
+- **The perturbation is aimed exactly at that cycle, and destroys it by a
+  knife-edge.** Against `y = (1/2, 0, 0)` the idle third coordinate has
+  `g_3 = η/6`: zero at `η = 0`, so complementarity holds with the third
+  coordinate exactly indifferent, and strictly positive for every `η > 0`, so
+  complementarity fails. That is why the asserted scope is "all sufficiently
+  small `η > 0`" rather than a fixed table.
+
+**On the boundedness question raised by the superseding note above:** the audit
+cannot answer it from a source, because there is no source to read. Whether the
+attributed theorem carries a boundedness hypothesis on the values is not a
+question about the literature but about an assertion with no located referent.
+What the audit does supply is a data point on the *bounded* form: the length-3
+FTV cycle above is a **bounded** completely absorbing inverse iterate, so the
+bounded form of the premise is also false at `η = 0`, and it too stands or
+falls entirely on `η > 0`.
+
+The premise is therefore non-vacuous, correctly targeted, and consistent with
+what is known — three-player quitting games have `ε`-equilibria (Solan 1999),
+which does not give exact absorbing ones — but it is **not attested**. Nothing
+found refutes the bounded form; nothing found supports it. The row's `PROVED`
+verdict rests on `Question147` being settled internally, and this file no longer
+supplies a citation for it.
+
+Do not re-cite "Solan, Thm 2.1" anywhere. If a later worker believes the result
+exists, the burden is a bibliographic identifier, not a name.
 
 ## What was refuted
 
