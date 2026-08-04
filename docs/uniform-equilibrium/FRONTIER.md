@@ -73,15 +73,32 @@ The finite-quitting front is now sharply reduced.
    compact added coordinate closes the finite realized set with continuous
    projection**, so a missing-coordinate repair of that shape does not exist.
 
-   Completed chronological graphs repair it: the closed completed hypograph of
-   the stage obstacle trace, retaining zero-mass stages, together with the
-   completed graph of `t ↦ (τ(t), S_{-i}(t))`. In that topology the ambient
-   space is compact, the cap is continuous with a retained maximizing witness,
-   anchored splice legality is closed, concatenation is continuous, a uniform
-   cap bound survives limits, and a limit self-splice pulls back to a nearby
-   finite one under boundary-row flexibility. The object to prove compact is
-   therefore the space of **generalized completed chronological traces**, with
-   finite blocks dense in it. The exact adapter remains unproved.
+   Completed chronological graphs repair it, and the carrier is now settled.
+   Take the closure `𝔗_r` of the joint completed **vector-factor** trace
+   `t ↦ (τ(t), (P_j(t))_j)` together with the joint obstacle hypographs,
+   retaining zero-mass stages. There is **no compactness-versus-determination
+   trade-off**: the enriched space is compact, and the vector trace determines
+   `S`, every `S_{-i}`, and the origin value *continuously*, with the hypograph
+   determining the cap. Finite complementary arrays are dense, and every object
+   in the closure **pulls back simultaneously in trace, cap, and origin value**
+   — which is what makes the limit usable rather than decorative.
+
+   The aggregated carrier is not an acceptable fallback: its fibres can carry
+   different origin values at the same obstacle trace, so aggregation loses
+   payoff-relevant information rather than merely coordinate detail.
+
+   What is lost is finiteness and *literal rowwise* complementarity. The latter
+   is replaced by exact complementarity on retained atoms, a closed differential
+   condition on diffuse interior pieces, and an existential closed
+   chronological-profile lift on zero-mass pieces; adding that profile mark is
+   itself a compact enrichment, so even this does not force a trade-off.
+
+   Two caveats travel with the result. The completion convention is
+   load-bearing: segments must be piecewise-affine chords between cumulative
+   points, since forcing them onto the product manifold erases stage atoms and
+   destroys determination. And the terminal vector is assumed fixed; if it
+   varies it must be retained as one further compact coordinate. The exact
+   finite adapter remains unproved.
 
 The chain is exhaustive up to the positive fully summable plateau. It is not a
 claim that every equilibrium belongs to one finite grammar.
@@ -255,13 +272,21 @@ condition, since they live in a compact box rather than a finite set. A common
 total mass bound is insufficient throughout: prefix shortening needs a common
 **tail modulus**.
 
-This anchored-shortening failure should be treated as **unimported** for now.
-Both witnesses are reachability-degenerate — the endpoint fiber contains a
-single word, so shortening fails for pure transition-system reasons with the
-semigroup inert. That is a correct answer to the question as posed, which
-deliberately left anchors uncoupled from the letter data, but it transfers only
-if the repository's anchors also have thin fibers. The coupled version has not
-been asked.  E40 gives depth-free error once a certified
+The coupled version has since been asked and answered, and the failure is
+**real, not an artifact of uncoupled anchors**. With the anchor determined by
+the letter data: exact-endpoint shortening is false — singleton fibres occur at
+every depth; and bounded depth uniform in the weight is false already at three
+coordinates. For one fixed weight it holds only nonuniformly, by total
+boundedness of the observable set.
+
+The mechanism is the one that recurs throughout this program. A determined
+anchor pins the **common** continue factor `c(y)` but not an individual
+**deleted** factor `c_{-i}(y)`: at `y_i = 1` one can have `c(y) = 0` while
+`c_{-i}(y) ≈ 1`, which is exactly how a three-coordinate construction stores
+unbounded observable depth with every anchor equal. Approximate internal
+excision is not generally valid either — the exact join and complementarity are
+unstable — though a distinguished orbit is approximately shortenable with an
+`O(1/ε)` prefix.  E40 gives depth-free error once a certified
 seam is supplied; E46 gives a greedy buffered return/exit/dead-end trichotomy;
 E47 applies a downstream seam to the actual exact-D tail. None transports the
 root anchor and reverse packet through the middle or turns an exit into new
