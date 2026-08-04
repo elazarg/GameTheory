@@ -86,12 +86,20 @@ false; see [the zero-solo disjunct](TheCarrierNeedsTheZeroSoloDisjunct.md) for
 the two-coordinate counterexample. The corrected reduction is:
 
 > For every weight, either `Λ = 0` — and the landed zero branch applies — or
-> the weight admits an admissible absorbing cycle.
+> the weight admits an admissible absorbing cycle **of some finite length**.
 
 The first disjunct is landed. The second is open, and by the dichotomy can only
 fail in the vanishing-absorption branch. The conditional from an admissible
 absorbing cycle to a uniform payoff is machine-checked and unaffected by the
 counterexample.
+
+**No bound on the length is required.** The formalized conditional quantifies
+over the period with no bound, so "of length at most `L(n)`" — which earlier
+statements of this reduction carried — was never needed and should not be
+asked for. Relatedly, a uniform absorption bound `θ = 1/2` is free by repeating
+a cycle until its survival product drops below `1/2`; that costs length, so
+bounded absorption and bounded length are different asks and only the former is
+available cheaply. Neither is on the critical path.
 
 The counterexample is instructive rather than damaging: the absorption fence,
 required to keep the cycle notion from being vacuous, also excludes the

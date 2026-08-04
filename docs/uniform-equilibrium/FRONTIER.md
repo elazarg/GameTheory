@@ -192,7 +192,11 @@ either isolates coordinate `2`, whose solo weight is `-1`, or contradicts
 complementarity at coordinate `2`. The corrected reduction is:
 
 > For every weight, either `Λ = 0` — and the landed zero branch applies — or
-> the weight admits an admissible absorbing cycle.
+> the weight admits an admissible absorbing cycle **of some finite length**.
+
+No bound on the length is required: the formalized conditional quantifies over
+the period with no bound, so earlier statements asking for `L(n)` were stronger
+than necessary.
 
 The counterexample has `Λ = 0`, so it lies in the already-solved disjunct: its
 exact equilibrium is the all-continue profile with payoff `(0,0)`, which no
