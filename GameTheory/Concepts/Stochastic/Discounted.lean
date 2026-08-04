@@ -33,6 +33,8 @@ vanishing-discount analysis behind uniform values
   series converges for `|β| < 1`
 * `StochasticGame.le_discountedPayoff_of_bellman_le` — an excessive-function
   inequality at every history guarantees the corresponding discounted value
+* `StochasticGame.discountedPayoff_le_of_bellman_ge` — the dual: a
+  subexcessive-function inequality at every history caps the discounted value
 * `StochasticGame.finiteAveragePayoff_ge_of_averageReward_bellman_le` — a
   time-varying average-reward Bellman certificate gives a quantitative
   finite-horizon guarantee
@@ -363,6 +365,87 @@ theorem le_discountedPayoff_of_bellman_le
     ring
   change 0 ≤ (∑' (t : ℕ), ((A t + B t) - β ^ t * V t)) at htsumD0
   rw [(hsumA.add hsumB).tsum_sub hsumV, hsumA.tsum_add hsumB,
+    htsumA, htsumB] at htsumD0
+  have hV0 : V 0 = v s₀ := by simp [V]
+  linarith
+
+/-- **Subexcessive-function discounted cap.**  Dual of
+`le_discountedPayoff_of_bellman_le`: suppose `v` satisfies the one-step
+Bellman upper inequality at every finite history under `σ`: current value is
+at least normalized current payoff plus discounted expected successor value.
+Then `σ` cannot guarantee more than `v` from the initial state.
+
+The hypothesis is historywise, so the theorem applies directly to a
+unilateral behavior-strategy deviation once the non-deviating history-value
+map is fixed. -/
+theorem discountedPayoff_le_of_bellman_ge
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] {who : ι} {C : ℝ}
+    (hC : ∀ s a, |G.stagePayoff s a who| ≤ C)
+    (σ : G.BehaviorProfile) (s₀ : G.State) (v : G.State → ℝ)
+    {β : ℝ} (hβ0 : 0 ≤ β) (hβ1 : β < 1)
+    (hbellman : ∀ (t : ℕ) (h : G.Hist t),
+      (1 - β) * G.stageEUAt σ h who +
+        β * expect (G.stageActionDist σ h) (fun a =>
+          expect (G.transition h.2 a) v) ≤ v h.2) :
+    G.discountedPayoff β σ s₀ who ≤ v s₀ := by
+  let V : ℕ → ℝ := fun t => G.expectedStateValue σ s₀ t v
+  let r : ℕ → ℝ := fun t => G.expectedStagePayoff σ s₀ t who
+  have hstep : ∀ t, (1 - β) * r t + β * V (t + 1) ≤ V t := by
+    intro t
+    calc (1 - β) * r t + β * V (t + 1)
+        = expect (G.histDist σ s₀ t) (fun h =>
+            (1 - β) * G.stageEUAt σ h who +
+              β * expect (G.stageActionDist σ h) (fun a =>
+                expect (G.transition h.2 a) v)) := by
+          rw [expect_add, expect_const_mul, expect_const_mul,
+            ← G.expectedStateValue_succ]
+          rfl
+      _ ≤ V t := expect_mono _ _ _ (hbellman t)
+  obtain ⟨Cv, hCv⟩ := exists_abs_bound_of_finite v
+  have hV : ∀ t, |V t| ≤ Cv := by
+    intro t
+    exact abs_expect_le_of_abs_le _ _ fun h => hCv h.2
+  have hβabs : |β| < 1 := by rwa [abs_of_nonneg hβ0]
+  have hsumV : Summable (fun t : ℕ => β ^ t * V t) :=
+    summable_pow_mul_of_abs_le hβabs hV
+  have hsumVsucc : Summable (fun t : ℕ => β ^ t * V (t + 1)) :=
+    summable_pow_mul_of_abs_le hβabs fun t => hV (t + 1)
+  have hsumR : Summable (fun t : ℕ => β ^ t * r t) :=
+    G.summable_discounted_expectedStagePayoff hC σ s₀ hβabs
+  let A : ℕ → ℝ := fun t => β ^ t * ((1 - β) * r t)
+  let B : ℕ → ℝ := fun t => β ^ t * (β * V (t + 1))
+  let D : ℕ → ℝ := fun t => β ^ t * V t - (A t + B t)
+  have hsumA : Summable A := by
+    exact (hsumR.mul_right (1 - β)).congr fun t => by simp [A]; ring
+  have hsumB : Summable B := by
+    exact (hsumVsucc.mul_left β).congr fun t => by simp [B]; ring
+  have hD0 : ∀ t, 0 ≤ D t := by
+    intro t
+    unfold D A B
+    rw [← mul_add, ← mul_sub]
+    exact mul_nonneg (pow_nonneg hβ0 t) (sub_nonneg.mpr (hstep t))
+  have htsumD0 : 0 ≤ ∑' t : ℕ, D t := tsum_nonneg hD0
+  have htsumA : (∑' t : ℕ, A t) = G.discountedPayoff β σ s₀ who := by
+    unfold A discountedPayoff r
+    rw [← tsum_mul_left]
+    congr 1
+    funext t
+    ring
+  have htsumB : (∑' t : ℕ, B t) =
+      (∑' t : ℕ, β ^ t * V t) - V 0 := by
+    have hshift := hsumV.tsum_eq_zero_add
+    have htail : (∑' t : ℕ, β ^ (t + 1) * V (t + 1)) =
+        (∑' t : ℕ, β ^ t * V t) - V 0 := by
+      rw [hshift]
+      simp
+    rw [← htail]
+    apply tsum_congr
+    intro t
+    simp [B, pow_succ']
+    ring
+  change 0 ≤ (∑' (t : ℕ), (β ^ t * V t - (A t + B t))) at htsumD0
+  rw [hsumV.tsum_sub (hsumA.add hsumB), hsumA.tsum_add hsumB,
     htsumA, htsumB] at htsumD0
   have hV0 : V 0 = v s₀ := by simp [V]
   linarith

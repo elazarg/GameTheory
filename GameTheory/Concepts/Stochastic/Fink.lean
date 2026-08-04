@@ -1283,6 +1283,40 @@ theorem IsDiscountedStationaryBellmanEq.deviation_bellman_ge
   rw [← G.discountedAuxEU_eq]
   exact hopt
 
+/-- **A Fink discounted stationary Bellman equilibrium's induced stationary
+play is an exact `β`-discounted Nash equilibrium.**  This packages, as one
+theorem, the historywise Bellman facts (`onProfile_bellman_eq`,
+`deviation_bellman_ge`) together with the excessive/subexcessive-function
+discounted bounds (`le_discountedPayoff_of_bellman_le`,
+`discountedPayoff_le_of_bellman_ge`) that downstream files have otherwise
+reassembled piecewise: no unilateral behavior-strategy deviation from
+`G.markovBehaviorProfile x` gains anything in `β`-discounted payoff.
+
+The discount factor must be strictly below `1` (`hβ1`), since
+`discountedPayoff` is only the sum of a geometric-type series there; Fink's
+existence theorem itself only produces certificates for `β ≤ 1` and must be
+specialized to this range.  Stage payoffs must be uniformly bounded (`hpay`)
+for the same summability reason, matching the hypothesis Fink's own
+existence theorem already carries. -/
+theorem IsDiscountedStationaryBellmanEq.isDiscountedεNash
+    {G : StochasticGame ι} [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {β : ℝ} {x : G.StationaryMixedProfile} {V : G.State → Payoff ι}
+    (hF : G.IsDiscountedStationaryBellmanEq β x V)
+    (hβ0 : 0 ≤ β) (hβ1 : β < 1) {U : ℝ}
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U) (s₀ : G.State) :
+    G.IsDiscountedεNash β s₀ 0 (G.markovBehaviorProfile x) := by
+  intro who dev
+  have hle : V s₀ who ≤ G.discountedPayoff β (G.markovBehaviorProfile x) s₀ who :=
+    G.le_discountedPayoff_of_bellman_le (fun s a => hpay s a who) _ s₀
+      (fun s => V s who) hβ0 hβ1
+      (fun t h => le_of_eq (hF.onProfile_bellman_eq who t h))
+  have hdev : G.discountedPayoff β
+      (Function.update (G.markovBehaviorProfile x) who dev) s₀ who ≤ V s₀ who :=
+    G.discountedPayoff_le_of_bellman_ge (fun s a => hpay s a who) _ s₀
+      (fun s => V s who) hβ0 hβ1 (hF.deviation_bellman_ge who dev)
+  linarith
+
 /-- The on-profile Fink certificate gives a quantitative lower
 finite-horizon payoff bound. -/
 theorem IsDiscountedStationaryBellmanEq.finiteAveragePayoff_ge
