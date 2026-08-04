@@ -17,10 +17,11 @@
 
 | Claim | Verdict | Seals | Scope | Consumer |
 | --- | --- | --- | --- | --- |
-| The cyclic composite `T_i` is `P_i`-Lipschitz and fixes `z_{1,i}` | `PROVED` | `M` | any cycle, **any sign** of terminal mismatch | everything below |
-| The mismatch is `0` whenever `P_i < 1` | `PROVED` | `M` | as above | reduces existence of zero-mismatch cycles to existence of cycles |
-| `P_i = 1` forces the isolated configuration, and then the mismatch is `[-r_i({i})]₊` | `PROVED` | `M` | absorbing cycles | the admissibility condition in the carrier |
-| At most one coordinate is isolated in an absorbing cycle | `PROVED` | `M` | absorbing cycles | makes the mismatch value unambiguous |
+| The cyclic composite `T_i` is `P_i`-Lipschitz and fixes `z_{1,i}` | `PROVED` | `M+L` | any cycle, **any sign** of terminal mismatch | everything below |
+| The mismatch is `0` whenever `P_i < 1` | `PROVED` | `M+L` | general period, sign-free | reduces existence of zero-mismatch cycles to existence of cycles |
+| `P_i = 1` forces the isolated configuration, and then the mismatch is `[-r_i({i})]₊` | `PROVED` | `M` | absorbing cycles; **not formalized** | the admissibility condition in the carrier |
+| At most one coordinate is isolated in an absorbing cycle | `PROVED` | `M` | absorbing cycles; **not formalized** | makes the mismatch value unambiguous |
+| Absorption does **not** imply `P_i < 1` | `PROVED` | `M+L` | the owner may be the sole quitter | keeps the two hypotheses distinct |
 | Unrolling the transport law gives `δ_i^{(N)} = [P_i^N μ_i - C_i(1 + P_i + … + P_i^{N-1})]₊` | `PROVED` | `M` | **only when `μ_i ≥ 0`** | superseded as the main route; see below |
 
 Notation: `P_i = ∏_k c_{-i}(y_k)` is the deleted survival product around the

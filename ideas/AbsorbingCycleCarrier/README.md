@@ -52,7 +52,8 @@ was caught only by an adversarial audit.
 
 | Result | Believed true | Machine-checked |
 | --- | --- | --- |
-| Mismatch vanishes unless a negative-solo coordinate is isolated | yes | **no** — contraction route in formalization |
+| Mismatch vanishes when the deleted survival product is below one | yes | yes — general period, sign-free |
+| Isolation forces mismatch exactly `[-r_i({i})]₊`, and at most one coordinate is isolated | yes | **no** — the `P_i = 1` branch |
 | Solo-quitter criterion, root level, with necessity | yes | yes |
 | Solo-quitter criterion, behavioral level | yes | yes (pre-existing) |
 | Zero pin unrealizable, exhibited family | yes | yes |
