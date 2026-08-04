@@ -39,6 +39,11 @@ package GameTheory where
 
 require "leanprover-community" / "mathlib" @ git "v4.32.2"
 require FixedPointTheorems from "fixed-point-theorems-lean4"
+-- PROVISIONAL (2026-08-05): experiments-only entropy/coding dependency, pinned.
+-- Production modules must not import `InformationTheory.*` until the
+-- dependency is confirmed or the library is upstreamed to mathlib.
+require InformationTheory from git
+  "https://github.com/elazarg/kraft" @ "c937feb9ba679e19bfd3908fbeb4dd6c844f9ed5"
 
 @[default_target]
 lean_lib GameTheory where

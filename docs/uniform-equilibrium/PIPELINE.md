@@ -899,10 +899,35 @@ history-dependent equilibria and break exactly the needed direction.
 
 Building the separating game there needs two objects the repository lacks: a
 normalized `StochasticGame` presentation, and a legality-constrained analogue
-of `IsUniformEquilibriumPayoff` over legal behaviour profiles. Resolution
-otherwise requires normalized-action histories, normalization-invariant
-strategies, or a semantics-preserving dependent-action compiler. Until that
-lands, the conjecture is still formally stated for the state-independent class.
+of `IsUniformEquilibriumPayoff` over legal behaviour profiles.
+
+**The candidate repairs are not equal, and the choice is now decided (`M`).**
+
+*Normalized-action histories* is the load-bearing one. Under it the padded
+game's histories become literally the legal game's histories, so **every**
+equilibrium transports definitionally, with no selection step.
+
+*Normalization-invariant strategies* does not substitute. Restricting the
+**deviator** to invariant strategies is unsound outright — the uniform cap
+quantifies over all behaviour, and a restricted cap is a strategy-class-scoped
+theorem, which this program polices. Restricting only the **prescribed**
+profile does kill the channel: if no coordinate reads labels and payoffs and
+transitions factor through the quotient, the deviator's label choice reaches
+nothing. But the converse must transport an *arbitrary* padded-game
+equilibrium, while invariance transports only invariant ones — so it needs an
+invariant-selection theorem ("any equilibrium implies an invariant one"), which
+is symmetrization over the label groupoid and runs straight into the recorded
+non-convexity fence: Nash sets are not convex, so averaging equilibrium arcs
+fails (`ideas/wild/RepresentationTheory.md:38`). Profile invariance is at best a
+synthesis-side convenience whose completeness costs an unproved and probably
+false-in-general step.
+
+Consistency check: the Markov-level converse holds precisely because the
+profile type carries no history — the channel does not exist there. That is the
+mechanism's degenerate case, and it confirms the history *is* the channel.
+
+Until normalized-action histories land, the conjecture is still formally stated
+for the state-independent class.
 
 ### `LEAN-F0-2` — make the absorption fence structural, closing the all-continue vacuity trap
 

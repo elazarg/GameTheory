@@ -12,6 +12,7 @@ This group asks when players can strategically manufacture a usable correlation 
 | [Public transcripts do not automatically implement private recommendations](PublicTranscriptsDoNotAutomaticallyImplementPrivateRecommendations.md) | `MIXED: distinction proved; general compiler question open` | Prevents public correlation from being silently identified with private contingent advice. |
 | [Safe signaling actions may compile sunspot randomness](SafeSignalingActionsMayCompileSunspotRandomness.md) | `CONDITIONAL (M+L interfaces)` | Records the positive route and its transition, deviation, disclosure, and splice hypotheses. |
 | [Fixed-target communication separation does not rule out retargeting](FixedTargetCommunicationSeparationDoesNotRuleOutRetargeting.md) | `PROVED (M+L), scope fence` | Keeps target-specific nonimplementation separate from existence of some equilibrium payoff. |
+| [Device guarantees need quotient measurability on both sides](DeviceGuaranteesNeedQuotientMeasurabilityOnBothSides.md) | `M [reported]` unification; instances at `X`, `M+L` | Unifies three device failures — group-sum input-side, action-padding output-side, jointly-controlled-XOR factorization — and decides which repair of the padding converse is load-bearing. |
 | [Fixed setup communication cost is asymptotically negligible](FixedSetupCommunicationCostIsAsymptoticallyNegligible.md) | `PROVED (M+L), accounting only` | Removes fixed finite prefix cost as a standalone Cesaro obstruction while preserving irreversibility and incentive caveats. |
 
 ## Group boundary
