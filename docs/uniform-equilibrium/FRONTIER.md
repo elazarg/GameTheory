@@ -62,43 +62,30 @@ The finite-quitting front is now sharply reduced.
    exact-D endpoints, survival, atom, and common holonomy. Conversely, every
    compact subset of `ℕ × X` has bounded length, so no compact lift retaining
    literal unbounded game-stage cost can cover the escaping middles.
-9. **Infinity chart: generalized completed traces (`M`).** Published
+9. **Infinity chart: generalized completed traces (`M [reported]`).** Published
    absorption paths compactify quitting behavior by accumulated absorption
    mass rather than calendar time. For the stricter marked object, closure of
    the *finite* realized set fails, and fails structurally. The unilateral
    stopping obstacle is not a function of accumulated mass — equal accumulated
-   mass does not determine the current row — and neither are the deleted
-   clocks after full absorption. Finite `μ`-paths are finitely piecewise
-   affine while limits are genuinely nonlinear. Decisively, **no sequentially
-   compact added coordinate closes the finite realized set with continuous
-   projection**, so a missing-coordinate repair of that shape does not exist.
+   mass does not determine the current row (`M`, machine-checked:
+   `QuittingObstacleMassDescentCounterexample.not_exists_obstacle_as_function_of_accumulatedMass`)
+   — and neither are the deleted clocks after full absorption. Finite
+   `μ`-paths are finitely piecewise affine while limits are genuinely
+   nonlinear. Decisively, **no sequentially compact added coordinate closes
+   the finite realized set with continuous projection**, so a
+   missing-coordinate repair of that shape does not exist.
 
-   Completed chronological graphs repair it, and the carrier is now settled.
-   Take the closure `𝔗_r` of the joint completed **vector-factor** trace
-   `t ↦ (τ(t), (P_j(t))_j)` together with the joint obstacle hypographs,
-   retaining zero-mass stages. There is **no compactness-versus-determination
-   trade-off**: the enriched space is compact, and the vector trace determines
-   `S`, every `S_{-i}`, and the origin value *continuously*, with the hypograph
-   determining the cap. Finite complementary arrays are dense, and every object
-   in the closure **pulls back simultaneously in trace, cap, and origin value**
-   — which is what makes the limit usable rather than decorative.
-
-   The aggregated carrier is not an acceptable fallback: its fibres can carry
-   different origin values at the same obstacle trace, so aggregation loses
-   payoff-relevant information rather than merely coordinate detail.
-
-   What is lost is finiteness and *literal rowwise* complementarity. The latter
-   is replaced by exact complementarity on retained atoms, a closed differential
-   condition on diffuse interior pieces, and an existential closed
-   chronological-profile lift on zero-mass pieces; adding that profile mark is
-   itself a compact enrichment, so even this does not force a trade-off.
-
-   Two caveats travel with the result. The completion convention is
-   load-bearing: segments must be piecewise-affine chords between cumulative
-   points, since forcing them onto the product manifold erases stage atoms and
-   destroys determination. And the terminal vector is assumed fixed; if it
-   varies it must be retained as one further compact coordinate. The exact
-   finite adapter remains unproved.
+   A candidate repair — completed chronological graphs, closing on the joint
+   vector-factor trace plus obstacle hypographs — is claimed compact and
+   determining, with finite complementary arrays dense and pulling back in
+   trace, cap, and origin value simultaneously. **This is an unaudited,
+   unformalized solver's answer, not a landed result**; see
+   [`CompletedVectorFactorTraceIsCompactAndDetermining.md`](../../ideas/PositivePlateauBoundaryClosure/CompletedVectorFactorTraceIsCompactAndDetermining.md)
+   for the exact statement, scope, and what would raise its seal. The claimed
+   aggregated-carrier fallback failure (fibres carrying different origin
+   values at the same obstacle trace) is likewise `M [reported]`; see
+   [`AggregatedCarrierConflatesOriginValues.md`](../../ideas/PositivePlateauBoundaryClosure/AggregatedCarrierConflatesOriginValues.md).
+   The exact finite adapter remains unproved regardless.
 
 The chain is exhaustive up to the positive fully summable plateau. It is not a
 claim that every equilibrium belongs to one finite grammar.
@@ -272,21 +259,15 @@ condition, since they live in a compact box rather than a finite set. A common
 total mass bound is insufficient throughout: prefix shortening needs a common
 **tail modulus**.
 
-The coupled version has since been asked and answered, and the failure is
-**real, not an artifact of uncoupled anchors**. With the anchor determined by
-the letter data: exact-endpoint shortening is false — singleton fibres occur at
-every depth; and bounded depth uniform in the weight is false already at three
-coordinates. For one fixed weight it holds only nonuniformly, by total
-boundedness of the observable set.
-
-The mechanism is the one that recurs throughout this program. A determined
-anchor pins the **common** continue factor `c(y)` but not an individual
-**deleted** factor `c_{-i}(y)`: at `y_i = 1` one can have `c(y) = 0` while
-`c_{-i}(y) ≈ 1`, which is exactly how a three-coordinate construction stores
-unbounded observable depth with every anchor equal. Approximate internal
-excision is not generally valid either — the exact join and complementarity are
-unstable — though a distinguished orbit is approximately shortenable with an
-`O(1/ε)` prefix.  E40 gives depth-free error once a certified
+The coupled version has since been asked and answered (`M [reported]`, not
+audited or formalized here), and the failure is claimed **real, not an
+artifact of uncoupled anchors**: with the anchor determined by the letter
+data, both exact-endpoint shortening and uniform approximate shortening fail,
+via a mechanism where a determined anchor pins the common continue factor
+`c(y)` but not an individual deleted factor `c_{-i}(y)`. See
+[`AnchoredShorteningFailsUnderDeterminedAnchors.md`](../../ideas/PositivePlateauBoundaryClosure/AnchoredShorteningFailsUnderDeterminedAnchors.md)
+for the exact statement, the two counterexample weights, and what would raise
+its seal. E40 gives depth-free error once a certified
 seam is supplied; E46 gives a greedy buffered return/exit/dead-end trichotomy;
 E47 applies a downstream seam to the actual exact-D tail. None transports the
 root anchor and reverse packet through the middle or turns an exit into new

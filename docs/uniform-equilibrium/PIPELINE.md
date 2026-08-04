@@ -232,24 +232,18 @@ has a positive plateau". That premise looked like it might be about the grammar:
 both plateau witnesses are two-player tables with equilibria, and the surgery
 witness carries a machine-checked zero-gain array.
 
-**The free-terminal test has now resolved, and it splits.** `M` Two candidate
-unpinnings are rejected outright: the constant offset `v + Λ` measures
-sensitivity to a terminal shift rather than repeated deviation gain, and
-selecting only the deviating continuation makes the optimum identically zero,
-since the zero array with `v = 1` suppresses every positive difference. The
-faithful formulation selects **both** the prescribed and the deviating terminal
-values by zero-seeded repeated-period iteration.
-
-Under that formulation the surgery witness does collapse — its optimum is zero
-at every length, so its plateau was indeed an artifact. But the weight
-`r({1}) = r({2}) = (-1,1)`, `r({1,2}) = (1,-1)` has optimum **exactly `1` at
-every length**. So a gap can survive faithful unpinning, and the surviving gap
-is precisely a negative singleton value carried by the unique active
-coordinate. Compactification is therefore **not** categorically work on an
-artifact.
-
-One caveat that limits how far this settles things: algebraic self-consistency
-is a closed condition, but the canonical boundary selection is **not**.
+**The free-terminal test has now been answered by an unaudited, unformalized
+solver's answer, and it splits (`M [reported]`).** Two candidate unpinnings
+are rejected; the faithful formulation selects both the prescribed and the
+deviating terminal values by zero-seeded repeated-period iteration. Under it
+the surgery witness collapses to gap zero, but the weight
+`r({1}) = r({2}) = (-1,1)`, `r({1,2}) = (1,-1)` has gap **exactly `1` at every
+length** — so a gap can survive faithful unpinning, and compactification is
+therefore **not** categorically work on an artifact. See
+[`FaithfulUnpinningLeavesASurvivingGap.md`](../../ideas/PositivePlateauBoundaryClosure/FaithfulUnpinningLeavesASurvivingGap.md)
+for the exact statement, the per-row seals (the "unpinning kills both known
+plateau witnesses" sub-claim has independent machine-checked support; the
+faithful-formulation content does not), and what would raise the seal.
 
 **Rejected.** Continue building marked-cylinder semantics at P0 before knowing
 whether the plateau survives unpinning.
@@ -486,6 +480,8 @@ remain active even while P0 mathematics is open.
   provenance.
 - **Record:** [Realized anchored holonomy
   closedness](../../ideas/PositivePlateauBoundaryClosure/RealizedAnchoredHolonomyClosedness.md),
+  [the carrier claim](../../ideas/PositivePlateauBoundaryClosure/CompletedVectorFactorTraceIsCompactAndDetermining.md),
+  [the aggregated-carrier fence](../../ideas/PositivePlateauBoundaryClosure/AggregatedCarrierConflatesOriginValues.md),
   [enriched absorption paths][ep], [cylinder design
   note](design/MarkedAbsorptionCylinder.md)
 
@@ -499,29 +495,23 @@ stopping-obstacle hypograph, deleted-clock graphs, and debt.
 Closure of the finite realized set is refuted, and no sequentially compact added
 coordinate can close it with continuous projection. Completed chronological
 graphs supply ambient compactness, a continuous cap with retained witness,
-closed anchored splice, and continuous concatenation. **The carrier is settled
-(`M`, 2026-08-04).** Take `𝔗_r` = the closure of the joint completed
-**vector-factor** trace `t ↦ (τ(t), (P_j(t))_j)` together with the joint
-obstacle hypographs. There is **no compactness-versus-determination trade-off**:
-the enriched ambient space is compact, and the vector trace determines `S`,
-every `S_{-i}`, and the origin value *continuously*, with the hypograph
-determining the cap continuously. Finite complementary arrays are dense, and —
-the usability point — **every object in the closure pulls back simultaneously in
-trace, cap, and origin value**. What is lost is finiteness and *literal rowwise*
-complementarity, replaced by exact complementarity on retained atoms, a closed
-differential condition on diffuse pieces, and an existential closed
-chronological-profile lift on zero-mass pieces; adding that profile mark is
-itself a compact enrichment. Two load-bearing caveats: the **completion
-convention matters** — segments must be piecewise-affine chords between
-cumulative points, since forcing them onto the product manifold erases stage
-atoms and destroys determination — and the **terminal vector is assumed fixed**;
-if it varies it must be retained as one further compact coordinate.
+closed anchored splice, and continuous concatenation. **A carrier construction
+is claimed settled (`M [reported]`, 2026-08-04) — unaudited, unformalized.**
+Take `𝔗_r` = the closure of the joint completed **vector-factor** trace
+`t ↦ (τ(t), (P_j(t))_j)` together with the joint obstacle hypographs; the
+claim is that it is compact and determining with no compactness-versus-
+determination trade-off, finite complementary arrays dense, and every object
+pulling back simultaneously in trace, cap, and origin value. See
+[`CompletedVectorFactorTraceIsCompactAndDetermining.md`](../../ideas/PositivePlateauBoundaryClosure/CompletedVectorFactorTraceIsCompactAndDetermining.md)
+for the exact statement, the two load-bearing conventions (piecewise-affine
+completion; fixed terminal vector), and what would raise the seal.
 
 **Acceptance.** Build `𝔗_r` and the exact finite adapter against it. Do **not**
 pursue a missing-compact-coordinate closure of the finite set; that shape is
 impossible. Do **not** fall back on the aggregated carrier: its fibres can carry
-*different origin values* at the same obstacle trace, so aggregation is not
-harmless.
+*different origin values* at the same obstacle trace (`M [reported]`; see
+[`AggregatedCarrierConflatesOriginValues.md`](../../ideas/PositivePlateauBoundaryClosure/AggregatedCarrierConflatesOriginValues.md)),
+so aggregation is not harmless.
 
 ### `MATH-P0-4` — map AGKRS Theorem 3.4 clause by clause against the internal trichotomy
 
@@ -558,7 +548,7 @@ argument leans on.
 - **Lane:** P1
 - **Depends:** the free-terminal formulation (zero-seeded repeated-period
   iteration of both terminal values); existing two-player table machinery.
-- **Record:** this file
+- **Record:** [`FaithfulUnpinningLeavesASurvivingGap.md`](../../ideas/PositivePlateauBoundaryClosure/FaithfulUnpinningLeavesASurvivingGap.md)
 
 **Objective.** Machine-check that `r({1}) = r({2}) = (-1,1)`,
 `r({1,2}) = (1,-1)` has free-terminal optimum exactly `1` at every length, and
@@ -585,7 +575,8 @@ weight.
 - **Depends:** `MATH-P0-1`, corrected full-jump continuation semantics, E40,
   E46, E47, exact root construction.
 - **Record:** [Anchored repair or descent][anchored-repair], [enriched
-  absorption paths][ep]
+  absorption paths][ep], [the relaxed-limit
+  fence](../../ideas/PositivePlateauBoundaryClosure/RelaxedLimitPackageDoesNotCertifySmallGain.md)
 
 **Objective.** Prove the robust pointwise alternative: a corrected
 augmented-AP-to-terminal-profile compiler, within the zero-pinned exact-`D`
@@ -594,22 +585,17 @@ at the original root is closed (see
 [`AnchoredRepairOrUniformDebtDescent.md`][anchored-repair]); uniformize the
 surviving repair branch by sequential compactness.
 
-**The limit-object route to this is closed as posed (`M`).** The settled
-carrier is a valid closed *description* of relaxed limits, but the relaxed
-package is **not a local certificate of approximate solutions**. Specifically:
-the relaxation is a strict weakening, with an explicit non-finite trace
-satisfying it; it is closed; but it does not certify small gain. No continuity
-in the carrier controls gain — value-approximation and gain-approximation come
-apart — and enriching by the chronological-profile mark does not repair the
-terminal debt.
-
-The witness is the damaging part. The obstructing object is **itself finite and
-complementary**, with a robust gain floor: every array near it in the trace has
-gain bounded below. So density and usability come apart inside the finite
-family, not merely at non-finite limits, and pulling back from the carrier
-cannot be the repair. Note this does **not** refute existence — a finite array
-with positive gain is unremarkable; what it refutes is that trace-nearness
-transports low gain.
+**The limit-object route to this is closed as posed (`M [reported]`).** An
+unaudited, unformalized solver's answer claims: the carrier of
+`MATH-P0-1` is a valid closed *description* of relaxed limits, but the relaxed
+package is **not a local certificate of approximate solutions** — value-
+approximation and gain-approximation come apart, with an explicit finite
+complementary witness carrying a robust gain floor that the chronological-
+profile mark does not repair. See
+[`RelaxedLimitPackageDoesNotCertifySmallGain.md`](../../ideas/PositivePlateauBoundaryClosure/RelaxedLimitPackageDoesNotCertifySmallGain.md)
+for the exact witness, scope, and what would raise the seal. This does
+**not** refute existence — a finite array with positive gain is unremarkable;
+what it refutes is that trace-nearness transports low gain.
 
 **State.** `ACTIVE`; the abstract buffered-path trichotomy is complete, but
 neither game-facing decoder nor its local stability theorem is proved.
@@ -794,7 +780,9 @@ infer all-size failure or unrestricted coverage.
 - **Lane:** P2
 - **Depends:** Anchor space and the admissibility relation
   `out(ℓ_k) = in(ℓ_{k+1})`; `Math/BoundedDiscrepancyCirculation.lean`'s `Walk`.
-- **Record:** [Anchored repair or descent][anchored-repair]
+- **Record:** [Anchored repair or descent][anchored-repair], [bounded
+  reachability
+  depth](../../ideas/PositivePlateauBoundaryClosure/AnchoredShorteningFailsUnderDeterminedAnchors.md)
 
 **Objective.** Give the exact-`D` anchors a digraph structure and decide whether
 admissible words admit **bounded loop erasure**: a deletion bound `D` with
@@ -805,18 +793,17 @@ a reachability question — exact endpoint fibers can have unbounded depth, and
 this survives compact letter sets with continuous, injective, locally open
 anchor maps and uniformly summable defects, so injectivity and local openness
 are not the missing hypotheses. A finite anchor space or a bounded-deletion
-property restores it. **Answered negatively for determined anchors (Q141)**:
-exact-endpoint shortening is false (singleton fibres at every depth), and
-bounded depth uniform in the weight is false already at three coordinates; for
-one fixed weight it holds only nonuniformly. The determined anchor pins the
-common factor `c(y)` but not an individual deleted factor `c_{-i}(y)` — at
-`y_i = 1` one can have `c(y) = 0` with `c_{-i}(y) ≈ 1`, storing unbounded
-observable depth while every anchor is equal. So this row is no longer about
-whether shortening holds; it is about whether any usable weaker form survives.
-The repository has no digraph over anchors to state the property about;
-Mathlib's graph API is unused in the quitting tree, and the two existing uses
-(`QuittingRefutedRouteFences`'s `BlockingDigraphUnsolvable`, and the hand-rolled
-`Walk`) are one-offs.
+property restores it. **Answered negatively for determined anchors (Q141,
+`M [reported]`, unaudited and unformalized)**: exact-endpoint shortening is
+false, and bounded depth uniform in the weight is false already at three
+coordinates; for one fixed weight it holds only nonuniformly. See
+[`AnchoredShorteningFailsUnderDeterminedAnchors.md`](../../ideas/PositivePlateauBoundaryClosure/AnchoredShorteningFailsUnderDeterminedAnchors.md)
+for the exact statement, the two counterexample weights, and what would raise
+the seal. So this row is no longer about whether shortening holds; it is
+about whether any usable weaker form survives. The repository has no digraph
+over anchors to state the property about; Mathlib's graph API is unused in
+the quitting tree, and the two existing uses (`QuittingRefutedRouteFences`'s
+`BlockingDigraphUnsolvable`, and the hand-rolled `Walk`) are one-offs.
 
 **Acceptance.** Either a bounded-deletion theorem over the actual exact-`D`
 anchors, or a demonstration that their fibers are thin and the question does not
