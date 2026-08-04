@@ -512,8 +512,10 @@ import GameTheory.Concepts.Stochastic.QuittingSoloQuitterEquilibrium
 import GameTheory.Concepts.Stochastic.QuittingCyclePinnedDebt
 import GameTheory.Concepts.Stochastic.QuittingCyclicPeriodicExtension
 import GameTheory.Concepts.Stochastic.QuittingCycleMismatchContraction
+import GameTheory.Concepts.Stochastic.QuittingCycleIsolatedCoordinate
 import GameTheory.Concepts.Stochastic.QuittingAdmissibleCycleTerminalEquilibrium
 import GameTheory.Concepts.Stochastic.QuittingZeroSoloDisjunct
+import GameTheory.Concepts.Stochastic.QuittingConjecture
 import GameTheory.Concepts.Stochastic.CyclicFourPlayerQuitting
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
