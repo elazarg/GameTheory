@@ -19,8 +19,8 @@
 | --- | --- | --- | --- | --- |
 | A three-coordinate weight with every `r_i({i}) = 1/3 > 0` admits no absorbing complementary cycle of any finite length | `PROVED` | `M` | case 2 | refutes the finite-cycle carrier in case 2 |
 | A case-3 weight exists whose only cycle-type outcome is an isolated negative discounted limit, with no admissible cycle of any length | `PROVED` | `M` | case 3 | refutes it again, differently |
-| For the case-2 weight there are absorbing cyclic recursions of period `3m` with complementarity defect `~ η·log 2 / (3m) → 0` | `PROVED` | `M` | case 2 | the replacement carrier |
-| The limit of that family is a continuous mass-parametrized absorption path | `PROVED` | `M` | case 2 | the replacement carrier |
+| For the case-2 weight there are absorbing cyclic recursions of period `3m` with complementarity defect `~ η·log 2 / (3m) → 0` | `PROVED` | `M` | case 2 | the replacement carrier. The family itself is **published** (AGKRS p. 741); only the defect asymptotic is internal. |
+| The limit of that family is a continuous mass-parametrized absorption path | `PROVED` | `M` | case 2 | the replacement carrier. **Published** as AGKRS Example 5.6, an explicit continuous equilibrium. |
 | In case 3 the limiting object must additionally retain the isolated-coordinate mismatch as a mark | `PROVED` | `M` | case 3 | the replacement carrier |
 | No length bound exists; the minimum period diverges as the defect tends to zero | `PROVED` | `M` | case 2 family | closes the bounded-length question; independently attested by Solan's Theorem 2.2 |
 
@@ -128,6 +128,27 @@ three coordinates act in successive blocks, each block having combined survival
 
 > There are absorbing cyclic recursions with complementarity defect tending to
 > zero, but no exact finite complementary cycle.
+
+**This family is published, and so is its limit.** The case-2 weight is
+Ashkenazi-Golan–Krasikov–Rainer–Solan's own `Γ_η` (Fig. 1, p. 741) under the
+map `t ↦ (t+1)/3` on every payoff of every player, all eight rows included. On
+that same page they print the family verbatim: each player quits with
+probability `ρ` over its own block of `m` stages, `(1−ρ)^m = 1/2`, and the
+profile is an `ε`-equilibrium for `m` large. Their Example 5.6, p. 758, gives
+the limit as an explicit **continuous equilibrium** `(1,½),(2,½),(3,½),…`,
+justified by their Theorem 5.4 because the matrix
+`M_{ij} = r_i({j}) − r_i({i})` is a `Q̄`-matrix. `M` is built from the
+singleton rows alone, so it is **independent of `η`** — which is exactly why
+the continuous object survives the perturbation that destroys every finite
+cycle. Record:
+[`QBarMatrixQuittingGamesHaveContinuousEquilibria`](../UniformEquilibriumLiterature/QBarMatrixQuittingGamesHaveContinuousEquilibria.md).
+
+Two corrections this forces. The internal `M` seals on the period-`3m` family
+and its limit were re-derivations of published results, not new mathematics;
+the value of the internal work is the *defect asymptotic* `η·log 2/(3m)`, which
+the source does not compute. And the `ε`-equilibrium existence for this weight
+is **free**, from Solan (1999) on three-player quitting games — not a
+consequence of the `Q̄` condition, which has content only at `|I| ≥ 4`.
 
 **Terminology matters here and the distinction is not cosmetic.** The vanishing
 quantity is the *complementarity defect*, not the *mismatch*. Mismatch is

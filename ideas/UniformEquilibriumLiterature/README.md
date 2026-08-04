@@ -21,6 +21,7 @@ attribution.
 - [Four-player quitting fallback conclusions fail](FourPlayerQuittingFallbacksFail.md).
 - [FTV's cyclic game excludes stationary approximate equilibria](FTVCyclicGameHasNoStationaryApproximateEquilibria.md).
 - [The perturbed FTV game has no bounded completely absorbing inverse iterate](PerturbedFTVGameHasNoBoundedCompletelyAbsorbingInverseIterate.md) — and its minimal periodic-equilibrium period diverges. Carries a located proof gap: the literal unbounded statement is refuted in this repository.
+- [`Q̄`-matrix quitting games have continuous equilibria](QBarMatrixQuittingGamesHaveContinuousEquilibria.md) — the LCP split of the open problem, the published `S.1/S.2/S.3` characterization, and the identification of this program's canonical hard weight with the source's own `Γ_η`.
 - [Positive-recursive nonrectangular games have uniform payoffs](PositiveRecursiveNonrectangularGamesHaveUniformPayoffs.md).
 - [Absorbing games have normal-form correlated equilibria](AbsorbingGamesHaveNormalFormCorrelatedEquilibria.md).
 - [Sorin's finite-horizon payoff set is a singleton](SorinFiniteHorizonPayoffSetIsSingleton.md).

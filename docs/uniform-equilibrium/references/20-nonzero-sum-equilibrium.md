@@ -228,6 +228,16 @@ historical intake note
 **Repo status.** Mathematical bridge `R?`. No formal theorem should consume
 the printed equivalence before the endpoint convention is repaired.
 
+**Section 5 of the same paper is a separate and safe import**, and is recorded
+on its own terms in
+[`QBarMatrixQuittingGamesHaveContinuousEquilibria`](../../../ideas/UniformEquilibriumLiterature/QBarMatrixQuittingGamesHaveContinuousEquilibria.md):
+the `Q̄`-matrix sufficient condition (Thm 5.4), the published
+`S.1`/`S.2`/`S.3` characterization of `ε`-equilibrium existence (Thm 3.4,
+Simon 2007 + Solan–Vieille 2001), the `ε^{1/6}` bound (Thm 3.5), the
+identification of this program's canonical hard weight with the paper's own
+`Γ_η`, and four printed defects in Remark 5.3 and Definition 5.1 that must not
+be quoted as-is.
+
 ---
 
 ## Simon 2012 — an implication, not an existence theorem
