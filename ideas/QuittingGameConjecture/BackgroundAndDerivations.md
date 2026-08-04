@@ -474,7 +474,8 @@ a sequential-perfectness framework:
 
 - Ashkenazi-Golan, Krasikov, Rainer, and Solan,
   [*Absorption Paths and Equilibria in Quitting Games*](https://link.springer.com/article/10.1007/s10107-022-01807-6),
-  *Mathematical Programming* 203 (2024), 735--762.
+  *Mathematical Programming* 203 (2024), 735--762. Repository record:
+  [`QBarMatrixQuittingGamesHaveContinuousEquilibria`](../UniformEquilibriumLiterature/QBarMatrixQuittingGamesHaveContinuousEquilibria.md).
 
 The 2026 essential-APS paper also says that terminal equilibrium existence is
 not known for at least four players. It characterizes only the payoff subset supported by
@@ -494,8 +495,14 @@ changes the product-implementation and credible-punishment problem.
 
 - Solan and Solan,
   [*Quitting Games and Linear Complementarity Problems*](https://arxiv.org/abs/1707.02598).
+  Repository record:
+  [`NonQQuittingGamesHaveUniformApproximateEquilibria`](../UniformEquilibriumLiterature/NonQQuittingGamesHaveUniformApproximateEquilibria.md).
 
-The known two- and three-player terminal results therefore do not currently
+The known two-player
+([`TwoPlayerQuittingGamesHaveStationaryApproximateEquilibria`](../UniformEquilibriumLiterature/TwoPlayerQuittingGamesHaveStationaryApproximateEquilibria.md))
+and three-player
+([`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](../UniformEquilibriumLiterature/ThreePlayerAbsorbingGamesHaveUniformEquilibria.md))
+terminal results therefore do not currently
 extend to the first open case, (n=4).  For ordinary behavior profiles, that
 terminal problem is now the same existence problem as the repository's
 common-horizon uniform conjecture, and that equivalence is now formalized
@@ -1154,7 +1161,9 @@ The landed offline equivalence in
 converts a reachable connected zero-charge integer circulation into an exact
 closed walk and eventually periodic bounded-discrepancy schedule, and extracts
 such a circulation from every bounded-discrepancy witness. The FTV cyclic
-example demonstrates why temporal correlation can be strategically essential
+example (Flesch–Thuijsman–Vrieze 1997; see
+[`FTVCyclicGameHasNoStationaryApproximateEquilibria`](../UniformEquilibriumLiterature/FTVCyclicGameHasNoStationaryApproximateEquilibria.md))
+demonstrates why temporal correlation can be strategically essential
 even when no stationary profile works.
 
 The missing connection is causal robustness: the schedule must remain a valid

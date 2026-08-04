@@ -116,7 +116,9 @@ absorbing surroundings.
 
 ## n = 3, absorbing — SETTLED (Solan 1999)
 
-**Statement.** `[primary, abstract-level]` Verbatim from the INFORMS abstract:
+**Statement.** `[primary, abstract-level]` Verbatim from the INFORMS abstract,
+independently re-fetched and cross-checked against Crossref metadata
+2026-08-04 (both agree verbatim):
 
 > An `n`-player absorbing game is an `n`-player stochastic game where all the
 > states but one are absorbing (a state is absorbing if once it is reached, the
@@ -125,12 +127,132 @@ absorbing surroundings.
 
 **Citation.** E. Solan, *Three-Player Absorbing Games*, Mathematics of
 Operations Research **24**(3), 669–698 (1999),
-DOI [`10.1287/moor.24.3.669`](https://doi.org/10.1287/moor.24.3.669).
+DOI [`10.1287/moor.24.3.669`](https://doi.org/10.1287/moor.24.3.669). MOR full
+text paywalled; not obtained.
 
-**Uniform reading, confirmed by Solan himself** (Munk–Solan arXiv:2001.03094):
-"Solan (1999) proved the existence of a uniform ε-equilibrium in three-player
-absorbing games… To date it is not known whether every four-player absorbing
-game admits a uniform ε-equilibrium, for every ε > 0."
+### The undiscounted/uniform question — resolved, `PRIMARY_FULLTEXT` on the dissertation
+
+The published abstract's headline word is **undiscounted**. Under this
+document's own terminology table that is *a priori* the weaker notion, and
+the equivalence proved elsewhere in this file (Remark 2.9 of
+arXiv:2512.04306) is stated only for *positive recursive* absorbing games —
+a class three-player **quitting** games with negative payoffs need not belong
+to. That gap is real enough to require independent evidence, not an
+assumption. Three converging sources, none of them the MOR text itself, close
+it:
+
+`[secondary]` **Solan's own contemporaneous exposition.** E. Solan, *Uniform
+Equilibrium: More Than Two Players*, a lecture chapter dated 30 July 1999 —
+the same year as the MOR paper — later published as *Uniform Equilibrium:
+More than Two Players*, in Neyman & Sorin (eds.), *Stochastic Games and
+Applications*, NATO Science Series C **570** (Kluwer, 2003), DOI
+[`10.1007/978-94-010-0189-2_20`](https://doi.org/10.1007/978-94-010-0189-2_20)
+— the same NATO ASI volume that contains Thuijsman 2003, already in this
+bibliography. Author-hosted preprint fetched 2026-08-04:
+`math.tau.ac.il/~eilons/natoasi4.pdf`. Its Section 2, verbatim:
+
+> **Theorem 2.1 (Solan, 1999)** *Every three-player absorbing game admits a
+> uniform equilibrium payoff.*
+
+followed by a genuine proof sketch (Steps 1–3), not a bare citation: a
+stationary `ε`-discounted equilibrium is chosen as a Puiseux function of the
+discount rate `ε`, the limit `ε → 0` is taken algebraically, and the two
+cases (limit strategy absorbing / non-absorbing) are each shown to yield an
+"`(x,ε)`-perturbed" profile — Definition 2.4's statistical-test-plus-threat
+construction, which is *by definition* an equilibrium simultaneously for all
+sufficiently small `ε`, i.e. the **uniform** notion directly, not a weaker
+notion later upgraded. This is the same "vanishing discount factor" technique
+titling Ch. 10 of Solan's 2022 Cambridge textbook, *A Course in Stochastic
+Game Theory* ("The vanishing discount factor approach and uniform equilibrium
+in absorbing games") — corroborating that this is the field's standard route
+to the *uniform*, not merely undiscounted, conclusion for absorbing games.
+**No positivity or sign hypothesis appears anywhere in Theorem 2.1's
+statement or proof** — payoffs `r_i(a)`, `r*_i(a)` are general reals throughout,
+and Step 2 is explicitly titled "General non-absorbing payoffs". Section 3 of
+the same chapter defines quitting games as the special case of absorbing
+games where each player's two actions are continue/quit — so **Theorem 2.1
+already covers every three-player quitting game, any sign of payoffs,
+unconditionally**, with no need for Solan–Vieille's A.1/A.2-restricted
+quitting-game theorem (recorded below), which exists to reach beyond `n = 3`,
+not to cover it.
+
+`[secondary]` **Munk–Solan (arXiv:2001.03094), confirmed verbatim by
+downloading and re-extracting the PDF text 2026-08-04** (title: *Sunspot
+Equilibrium in Positive Recursive Two-Dimensions Quitting Absorbing Games*;
+the paper's own new contribution is restricted to that narrow class, but
+these two citations of Solan 1999 are general background statements, not
+scoped to it):
+
+> "Solan (1999) proved the existence of a uniform `ε`-equilibrium in
+> three-player absorbing games." (Introduction, p. 1)
+
+> "It follows from Vrieze and Thuijsman (1989) that every two-player non-zero
+> sum absorbing game admits a uniform `ε`-equilibrium, for every `ε` > 0.
+> Solan (1999) extended this result to every three-player absorbing game. To
+> date it is not known whether every four-player absorbing game admits a
+> uniform `ε`-equilibrium, for every `ε` > 0." (§2, p. ~5)
+
+**arXiv-trap check performed** (per this file's own standing caution about
+`arxiv.org/pdf/<id>` serving stale/withdrawn content): the Atom API lists a
+single version, v1, submitted 2020-01-07, comment "42 pages", no
+withdrawal notice, no journal-ref; the PDF fetched under that URL contains
+42 pages of ordinary mathematical content (not a withdrawal stub). Treat as a
+live, unrefereed preprint — not disqualifying, but do not upgrade its status
+past that.
+
+`[primary, dissertation-text]` **The decisive source: Solan's own doctoral
+dissertation.** A local copy already sat unread in the repository at
+`ephemeral/old/_source_eilons_thesis.pdf` (97 pp., PDF `CreationDate`
+10 Nov 1998, Center for the Study/Rationality and Interactive Decision
+Theory, Hebrew University of Jerusalem, advisor Prof. Abraham Neyman). The
+Acknowledgments name **three anonymous referees of Mathematics of Operations
+Research, whose comments substantially improved the presentation of the
+results in section 4** — i.e. this dissertation's Section 4 is, by its own
+declaration, the material refereed into the MOR 1999 paper, not merely a
+related document. Section 4.7, verbatim:
+
+> **Theorem 4.23** *Every three-player repeated game with absorbing states has
+> a perturbed equilibrium payoff.*
+
+with a full formal proof (not a sketch) assembled from Lemmas 4.1, 4.2, 4.4,
+4.8, 4.22 and 4.24, each independently proved earlier in the chapter.
+
+**"Perturbed equilibrium payoff" is the dissertation's own name for the
+uniform notion, stated as a blanket convention, not left implicit.**
+Definition 3.9, verbatim: "The payoff vector `g` ... is a uniform
+`x`-perturbed equilibrium payoff (**or a perturbed equilibrium payoff**) if it
+is an `(x,ε)`-perturbed equilibrium payoff for every `ε > 0`" — the two names
+are given as literal synonyms in the definition itself. And immediately
+before Section 4 begins, the dissertation states its global reading
+convention outright: "Since the results in this monograph refer to uniform
+equilibria, **whenever we write equilibrium payoff**, `ε`-equilibrium
+profiles and min-max value, **we mean the uniform equilibrium payoff**,
+uniform `ε`-equilibrium profile and uniform min-max value respectively."
+Applying that convention to Theorem 4.23 exactly as instructed yields: every
+three-player absorbing game has a **uniform** equilibrium payoff — with no
+sign or positivity hypothesis anywhere in the statement, the definitions
+feeding it, or the five sufficient-condition lemmas section 4.2 lists.
+
+**Verdict.** Effectively closed. The dissertation is `PRIMARY_FULLTEXT` on
+the mathematical content — a complete, formally structured proof by the
+paper's own author, tied to the MOR paper by the dissertation's own
+acknowledgments — though it is not literally the MOR-typeset PDF itself
+(that remains paywalled and unread; theorem/lemma numbering could differ
+after copy-editing, though the referee acknowledgment makes wholesale
+mathematical divergence very unlikely). Combined with the independent
+contemporaneous conference exposition (Theorem 2.1 above) and the two
+Munk–Solan restatements, three independent Solan-authored documents now
+agree explicitly on the uniform reading, one of them with a complete formal
+proof. The published abstract's "undiscounted" wording is best read as the
+field's standard headline framing for this class of open problem (see the
+Dec-2025 Solan–Vieille quote in [`40-open-status.md`](40-open-status.md):
+"the main open problem... is whether every multiplayer stochastic game
+admits an undiscounted equilibrium payoff") while the interior theorem proves
+the strictly stronger uniform notion — the same pattern already recorded
+above for Vrieze–Thuijsman 1989, whose abstract says "limiting average" yet
+is uniformly re-cited as "uniform" by Solan–Vohra and by Munk–Solan, now
+corroborated for Solan 1999 by an actual complete proof rather than by
+pattern alone.
 
 ⚠ **The theorem is for `n = 3` only.** It defines the `n`-player class but
 proves nothing for `n ≥ 4`. It has also resisted extension to general

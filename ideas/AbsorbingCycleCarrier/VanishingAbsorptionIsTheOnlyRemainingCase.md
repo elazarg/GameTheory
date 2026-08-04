@@ -69,9 +69,15 @@ needed. The `L > 1` machinery — the blocking digraph, the square closure
 system — is required only on the vanishing branch.
 
 **The hard branch is not empty.** The published three-coordinate cyclic table
-has no stationary approximate equilibrium, so it cannot be in the easy branch;
-its complementary fixed points must degenerate. Its length-three packet is the
-model for what the vanishing branch needs.
+has no stationary `ε`-equilibrium for sufficiently small `ε`
+(Flesch–Thuijsman–Vrieze, *Cyclic Markov equilibria in stochastic games*, IJGT
+26(3), 303–314 (1997), Theorem 3.2 — the abstract's unqualified "(ε > 0)"
+reading is loose, since payoffs lie in `[0,3]` and every stationary profile is
+trivially a `3`-equilibrium; see
+[`FTVCyclicGameHasNoStationaryApproximateEquilibria`](../UniformEquilibriumLiterature/FTVCyclicGameHasNoStationaryApproximateEquilibria.md)),
+so it cannot be in the easy branch; its complementary fixed points must
+degenerate. Its length-three packet is the model for what the vanishing
+branch needs.
 
 ## Falsifiers and wrong turns
 

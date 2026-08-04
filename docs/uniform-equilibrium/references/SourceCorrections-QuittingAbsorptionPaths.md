@@ -130,8 +130,10 @@ This uniformization theorem does not repair a wrong path certificate. Q107's
 path equivalence remains terminal internally; Proposition 2.13 is applied
 only after a terminal approximate equilibrium has been produced.
 
-The current Lean boundary is narrower than the mathematical statement:
+The current Lean boundary matches the mathematical statement:
 `333d9c5` formalizes a generic one-sided deviation-approximation interface and
-its strict-margin equilibrium transfer, while `00c6c73` formalizes the unique
-live history and live mass of a quitting profile. The quitting-specific proof
-that Proposition 2.13 satisfies that interface remains to be landed.
+its strict-margin equilibrium transfer, `00c6c73` formalizes the unique
+live history and live mass of a quitting profile, and the quitting-specific
+proof that Proposition 2.13 satisfies that interface has landed as
+`quittingGame_hasUniformDeviationUpperApproximation` in
+`GameTheory/Concepts/Stochastic/QuittingTerminalUniformization.lean`.

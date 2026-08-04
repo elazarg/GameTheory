@@ -34,9 +34,11 @@ recursion — the "inverse iterate" of
 exists for all sufficiently small positive perturbations of that table.
 
 **The source is E. Solan, *The dynamics of the Nash correspondence and
-`n`-player stochastic games*, Int. Game Theory Rev. 3, 291–300 (2003);
-preprint at `math.tau.ac.il/~eilons/value4.pdf`, local copy
-`ephemeral/solan-nash-correspondence-dynamics-value4.pdf`.** Its **Theorem
+`n`-player stochastic games*, International Game Theory Review **3**(4),
+291–299 (2001), DOI
+[`10.1142/S0219198901000488`](https://doi.org/10.1142/S0219198901000488);
+preprint dated 25 January 2001 at `math.tau.ac.il/~eilons/value4.pdf`, local
+copy `ephemeral/solan-nash-correspondence-dynamics-value4.pdf`.** Its **Theorem
 2.1** is exactly the cited statement, its vocabulary is verbatim
 ("inverse iterate", "completely absorbing", "admissible sequence"), and the
 game `G_ε` of its Figure 1 is the `Question147` weight multiplied by `3` on all
@@ -83,7 +85,10 @@ Two further findings bound the claim's shape.
 
 The premise is therefore attested, non-vacuous, correctly targeted, and
 consistent with what is known: the source records in its own voice that `G_ε`
-**does** admit a uniform equilibrium payoff by Solan (1999), so a weight can be
+**does** admit a uniform equilibrium payoff by Solan, *Three-player absorbing
+games*, Math. Oper. Res. **24**(3), 669–698 (1999), recorded at
+[`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](../UniformEquilibriumLiterature/ThreePlayerAbsorbingGamesHaveUniformEquilibria.md),
+so a weight can be
 solved and still have no exact absorbing inverse iterate. That is the whole
 point of its Theorem 2.1, and it is the same point this file makes about the
 carrier.
@@ -147,7 +152,11 @@ Two corrections this forces. The internal `M` seals on the period-`3m` family
 and its limit were re-derivations of published results, not new mathematics;
 the value of the internal work is the *defect asymptotic* `η·log 2/(3m)`, which
 the source does not compute. And the `ε`-equilibrium existence for this weight
-is **free**, from Solan (1999) on three-player quitting games — not a
+is **free**, from Solan, *Three-Player Absorbing Games*, MOR 24(3):669–698
+(1999), on three-player absorbing games (recorded at
+[`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](../UniformEquilibriumLiterature/ThreePlayerAbsorbingGamesHaveUniformEquilibria.md);
+`PRIMARY_FULLTEXT` on Solan's own doctoral dissertation)
+— not a
 consequence of the `Q̄` condition, which has content only at `|I| ≥ 4`.
 
 **Terminology matters here and the distinction is not cosmetic.** The vanishing

@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| Citation of record | E. Solan, *The dynamics of the Nash correspondence and `n`-player stochastic games*, Int. Game Theory Rev. **3**, 291–300 (2003). Preprint dated 25 January 2001, [`value4.pdf`](https://www.math.tau.ac.il/~eilons/value4.pdf), local copy `ephemeral/solan-nash-correspondence-dynamics-value4.pdf`. |
-| Source confidence | `PRIMARY_FULLTEXT` on the 2001 preprint (10 pages, complete with proofs); the published IGTR numbering is not cross-checked. |
+| Citation of record | E. Solan, *The dynamics of the Nash correspondence and `n`-player stochastic games*, International Game Theory Review **3**(4), 291–299 (2001), DOI [`10.1142/S0219198901000488`](https://doi.org/10.1142/S0219198901000488). Preprint dated 25 January 2001, [`value4.pdf`](https://www.math.tau.ac.il/~eilons/value4.pdf), local copy `ephemeral/solan-nash-correspondence-dynamics-value4.pdf`. |
+| Source confidence | `PRIMARY_FULLTEXT` on the 2001 preprint (10 pages, complete with proofs). The year/volume/issue/pages above are cross-checked against the published record (dblp, IDEAS/RePEc); the published version's internal theorem/lemma numbering is not cross-checked against the preprint's. |
 | Mathematical status | `PROVED` at the **bounded** form. The literal unbounded statement is **refuted** in this repository — see below. |
 | Repository status | `ADAPTED` |
 | Lean status | `PARTIAL` — the refutation of the literal form is landed; the theorem itself is not formalized. |
@@ -117,7 +117,11 @@ completely absorbing inverse iterate, which Theorem 2.1 excludes for small
 length, and the finite-cycle carrier is refuted in case 2 on an attested basis.
 
 The paper also records, in its own voice, that `G_ε` **does** admit a uniform
-equilibrium payoff, by Solan (1999) on three-player absorbing games. Together
+equilibrium payoff, by Solan, *Three-Player Absorbing Games*, MOR 24(3):
+669–698 (1999) (recorded at
+[`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](ThreePlayerAbsorbingGamesHaveUniformEquilibria.md);
+`PRIMARY_FULLTEXT` on Solan's own doctoral dissertation, MOR-typeset text
+itself unread). Together
 with Theorem 2.2 that is the whole picture the program had reconstructed
 internally: the weight is solved, its solutions have diverging period, and it
 has no exact discrete inverse iterate — so the carrier for it is a limit

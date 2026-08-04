@@ -26,7 +26,8 @@ three-coordinate weight, for every value of the weight's parameter `η ≥ 0`.
 ## Relation to the source
 
 E. Solan, *The dynamics of the Nash correspondence and `n`-player stochastic
-games*, Int. Game Theory Rev. **3**, 291–300 (2003), Theorem 2.1: for every
+games*, Int. Game Theory Rev. **3**(4), 291–299 (2001),
+doi:10.1142/S0219198901000488, Theorem 2.1: for every
 `ε > 0` sufficiently small, `F_ε` contains only trivial vectors.  There an
 *admissible sequence* is exactly an `IsQuittingInverseIterate`, *completely
 absorbing* is exactly `IsCompletelyAbsorbing`, `F_ε` is the set of first

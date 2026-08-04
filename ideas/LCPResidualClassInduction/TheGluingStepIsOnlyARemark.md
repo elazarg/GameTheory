@@ -86,7 +86,14 @@ non-`Q` route. `G` is what turns that into a solution of the whole game. With
 Without `G` there is no reduction at all, and the residual class is a
 description rather than a route.
 
-The base of the induction is external and solid: `n ≤ 3` is settled.
+The base of the induction is external and solid: `n ≤ 3` is settled by Solan,
+*Three-player absorbing games*, Math. Oper. Res. **24**(3), 669–698 (1999),
+recorded at
+[`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](../UniformEquilibriumLiterature/ThreePlayerAbsorbingGamesHaveUniformEquilibria.md)
+— `PRIMARY_FULLTEXT` on Solan's own doctoral dissertation (MOR-typeset PDF
+itself still unread, but the dissertation carries a full formal proof of the
+uniform reading, not just a gloss), so the base of this induction inherits
+only that residual exposure.
 
 ## Falsifiers and wrong turns
 

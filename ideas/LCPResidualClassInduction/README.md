@@ -42,10 +42,15 @@ Then:
 That residual is the whole open problem, for `n ≥ 4`. At `n ≤ 3` everything is
 settled independently — Solan, *Three-player absorbing games*, Math. Oper. Res.
 **24**(3), 669–698 (1999), recorded at
-[`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](../UniformEquilibriumLiterature/ThreePlayerAbsorbingGamesHaveUniformEquilibria.md),
-whose conclusion is *undiscounted* and whose upgrade to *uniform* is sourced
-separately. That record is `SECONDARY_VERIFIED`, primary text unread — and this
-group's C1 has no meaning without it, so it is C1's largest single exposure.
+[`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](../UniformEquilibriumLiterature/ThreePlayerAbsorbingGamesHaveUniformEquilibria.md).
+The published abstract's headline word is *undiscounted*; the *uniform*
+reading needed here is now backed by Solan's own doctoral dissertation (a
+full formal proof, not a gloss), corroborated by his contemporaneous
+conference exposition and by Munk–Solan's twice-repeated restatement, all
+quoted in full at that record. That record is `PRIMARY_FULLTEXT` on the
+dissertation — the MOR-typeset PDF itself still unread — and this group's C1
+has no meaning without it, so it remains C1's largest single exposure, now at
+a much firmer confidence level than before.
 
 > ⚠ **Two gates on the `Q̄` half, neither discharged here.** Theorem 5.4
 > delivers a *continuous equilibrium*; reaching "`ε`-equilibria for every `ε`"

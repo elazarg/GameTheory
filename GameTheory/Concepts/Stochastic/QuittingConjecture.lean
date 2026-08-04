@@ -40,7 +40,12 @@ weights admitting no absorbing cycle at all lie outside its scope.
 ## External status of the target
 
 Two-player quitting games are settled, and three-player quitting games follow
-from Solan (1999) on three-player absorbing games; the open range is `n ≥ 4`.
+from Solan, *Three-Player Absorbing Games*, Math. Oper. Res. 24(3):669-698
+(1999) (uniform equilibrium payoff, unconditional on payoff sign; source
+confidence `PRIMARY_FULLTEXT` on Solan's own doctoral dissertation, MOR
+journal PDF itself unread, see
+`docs/uniform-equilibrium/references/20-nonzero-sum-equilibrium.md`); the open
+range is `n ≥ 4`.
 There is a published characterization — Ashkenazi-Golan--Krasikov--Rainer--Solan,
 Math. Program. 203 (2024), Theorem 3.4, after Simon (2007) and
 Solan--Vieille (2001) — of when a quitting game has `ε`-equilibria for every

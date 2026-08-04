@@ -190,6 +190,30 @@ Open-access copy: Maastricht institutional repository.
 Research **24**(3), 669–698.
 DOI [`10.1287/moor.24.3.669`](https://doi.org/10.1287/moor.24.3.669). `M`
 
+**Solan 1999b** — *Uniform Equilibrium: More Than Two Players*. Author-hosted
+lecture chapter (30 July 1999), `math.tau.ac.il/~eilons/natoasi4.pdf`;
+published as *Uniform Equilibrium: More than Two Players*, in Neyman & Sorin
+(eds.), *Stochastic Games and Applications*, NATO Science Series C **570**
+(Kluwer, 2003), DOI
+[`10.1007/978-94-010-0189-2_20`](https://doi.org/10.1007/978-94-010-0189-2_20).
+`—` States Theorem 2.1 ("Every three-player absorbing game admits a uniform
+equilibrium payoff") with a proof sketch, contemporaneous with and by the same
+author as Solan 1999 above. See
+[`20-nonzero-sum-equilibrium.md`](20-nonzero-sum-equilibrium.md).
+
+**Solan 1998 (dissertation)** — E. Solan's doctoral dissertation, Center for
+the Study of Rationality, Hebrew University of Jerusalem, advisor A. Neyman
+(PDF `CreationDate` 10 Nov 1998). Local copy:
+`ephemeral/old/_source_eilons_thesis.pdf`. `—` Section 4 is, per its own
+Acknowledgments, the material refereed by three anonymous MOR referees into
+Solan 1999 above. Theorem 4.23 ("Every three-player repeated game with
+absorbing states has a perturbed equilibrium payoff") plus Definition 3.9 and
+the chapter's own global convention ("whenever we write equilibrium payoff...
+we mean the uniform equilibrium payoff") together give, verbatim, the
+**uniform** reading unconditionally — the decisive source closing the
+undiscounted/uniform gap for the `n = 3` absorbing-game citation. See
+[`20-nonzero-sum-equilibrium.md`](20-nonzero-sum-equilibrium.md).
+
 **Vieille 2000a** — *Two-player stochastic games I: A reduction*. Israel J.
 Math. **119**, 55–91.
 DOI [`10.1007/BF02810663`](https://doi.org/10.1007/BF02810663). `M`

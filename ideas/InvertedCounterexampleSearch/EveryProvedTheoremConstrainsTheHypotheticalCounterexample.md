@@ -33,7 +33,7 @@ perfectly valid and still cut nothing.
 
 | ID | Constraint on the counterexample | Seals | Status |
 | --- | --- | --- | --- |
-| K1 | `n ≥ 4` | `M [reported]` | attributed to the literature; **not checked here** |
+| K1 | `n ≥ 4` | `M [reported]` | pinned to Solan, *Three-player absorbing games*, Math. Oper. Res. **24**(3), 669–698 (1999) — recorded at [`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](../UniformEquilibriumLiterature/ThreePlayerAbsorbingGamesHaveUniformEquilibria.md), itself `PRIMARY_FULLTEXT` on Solan's doctoral dissertation, MOR-typeset PDF unread |
 | K2 | Some diagonal entry is strictly positive — indeed strictly exceeds the accuracy | `M+L` | machine-checked |
 | K3 | No admissible absorbing cycle of any finite length | `M+L` | machine-checked as an *implication*: possessing one supplies a uniform-equilibrium payoff |
 | K4 | **The algebraic screen.** For every `i` with `r_i({i}) ≥ 0` there is some `j ≠ i` with `r_j({i}) < r_j({i,j})` and `r_j({i}) ≤ r_j({j})` | `M [verified]` | verified by hand; the only constraint immediately runnable as a computation, and **of very low discriminating power** — see below |
@@ -43,11 +43,15 @@ perfectly valid and still cut nothing.
 Seal markers: `[reported]` means supplied externally and not audited here;
 `[verified]` means checked by hand inside this repository.
 
-`K1` is recorded with its attribution *unpinned*: the file does not name the
-source theorem, because the source was not supplied with the constraint. The
-literature axis is [`../UniformEquilibriumLiterature/`](../UniformEquilibriumLiterature/README.md);
-pinning `K1` to a specific recorded result there, with its own source
-confidence, is a cheap and worthwhile task and is not done here.
+`K1` is now pinned: `n ≥ 4` is exactly the open range left by Solan's
+three-player absorbing-games theorem, which settles `n ≤ 3` and is what
+`quittingGame`'s own external-status note (`QuittingConjecture.lean`) already
+cites for the same fact. The literature axis is
+[`../UniformEquilibriumLiterature/`](../UniformEquilibriumLiterature/README.md);
+the recorded result carries its own source confidence
+(`PRIMARY_FULLTEXT` on Solan's doctoral dissertation, MOR-typeset PDF
+unread), which `K1` now inherits — pinning
+narrows the exposure to that one upstream record rather than closing it.
 
 `K2` and `K3` are the two constraints already in production. `K3` is a
 constraint by contraposition: `exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle`
@@ -141,11 +145,15 @@ the distinction so the apparent contradiction is not read as one.
 - **`K4` is refuted as a filter** — this has already happened, above. Preserved
   as a regression: any future claim that the screen narrows the search must
   explain why the FTV table passes it.
-- **`K1` falls** if the attributed literature result is misquoted or narrower
-  in scope than used. It is unaudited and it is the constraint doing the most
-  work in cutting the dimension of the search — nothing below four coordinates
-  need be examined *only* because of it. Pinning it is the cheapest high-value
-  audit here.
+- **`K1` falls** if the pinned literature result (Solan, *Three-Player
+  Absorbing Games*, MOR 24(3):669–698 (1999), recorded at
+  [`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](../UniformEquilibriumLiterature/ThreePlayerAbsorbingGamesHaveUniformEquilibria.md))
+  is misquoted or narrower in scope than used, or if the MOR-typeset text
+  (still unread; the record is `PRIMARY_FULLTEXT` on Solan's doctoral
+  dissertation, not the journal PDF) turns out to disagree with the
+  dissertation. It is the constraint doing the most work in cutting the
+  dimension of the search — nothing below four coordinates need be examined
+  *only* because of it.
 - **`K5` falls** with the dichotomy it restates. It is `[reported]` here and
   `M` in the companion file; if the companion's discounted-family argument
   fails, both go.
@@ -163,7 +171,7 @@ the distinction so the apparent contradiction is not read as one.
 ## Production map
 
 ```text
-literature (unpinned)                  ->  K1  [MISSING: attribution]
+Solan 1999 (pinned)                    ->  K1
 QuittingZeroSoloDisjunct.lean          ->  K2, K3   (landed, by contraposition)
 hand verification                      ->  K4       (no production surface)
 discounted-limit dichotomy (reported)  ->  K5       (no production analogue)
@@ -185,8 +193,11 @@ counterexample); the open premise `quitting_zeroSolo_or_admissibleCycle` in
 constraint set would discharge).
 
 Missing arrows, in order of value: (1) the finitisation question for `K3`;
-(2) attribution for `K1`; (3) for each constraint, an explicit statement of what
-it excludes, so inertness is visible at a glance.
+(2) MOR-typeset-text verification of the `K1` attribution (Solan 1999 is now
+`PRIMARY_FULLTEXT` on Solan's own doctoral dissertation, see
+[`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](../UniformEquilibriumLiterature/ThreePlayerAbsorbingGamesHaveUniformEquilibria.md),
+but the MOR journal PDF itself is still unread); (3) for each constraint, an
+explicit statement of what it excludes, so inertness is visible at a glance.
 
 ## Exit conditions
 

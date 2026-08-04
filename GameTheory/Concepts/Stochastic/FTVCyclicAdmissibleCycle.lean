@@ -41,9 +41,15 @@ absorbing-cycle reduction of `QuittingZeroSoloDisjunct`:
 ## Why this table
 
 It is the standard witness that stationary strategies are not enough: it has
-no stationary `ε`-equilibrium for small `ε`.  So it is exactly the case the
-absorbing-cycle carrier was built for, and it is a case where admissibility is
-*automatic* rather than assumed.
+no stationary `ε`-equilibrium for small `ε` (Flesch--Thuijsman--Vrieze,
+*Cyclic Markov equilibria in stochastic games*, IJGT 26(3), 303--314, 1997,
+Theorem 3.2; the abstract's unqualified "(ε > 0)" reading is loose -- payoffs
+lie in `[0,3]`, so every stationary profile is trivially a `3`-equilibrium,
+and only the small-`ε` reading is correct -- see the record at
+`ideas/UniformEquilibriumLiterature/` in
+`FTVCyclicGameHasNoStationaryApproximateEquilibria.md`).  So it is exactly the
+case the absorbing-cycle carrier was built for, and it is a case where
+admissibility is *automatic* rather than assumed.
 
 ## Scale
 

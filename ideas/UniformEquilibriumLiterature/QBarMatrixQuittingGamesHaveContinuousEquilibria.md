@@ -95,7 +95,11 @@ the paper.
 
 > **Scope warning.** For `|I| ≤ 3` this theorem buys **nothing**:
 > three-player quitting games have `ε`-equilibria for every `ε > 0`
-> unconditionally (Solan 1999), as the paper itself says on p. 738. Theorem
+> unconditionally (Solan, *Three-Player Absorbing Games*, MOR 24(3):669–698
+> (1999), recorded at
+> [`ThreePlayerAbsorbingGamesHaveUniformEquilibria`](ThreePlayerAbsorbingGamesHaveUniformEquilibria.md);
+> `PRIMARY_FULLTEXT` on Solan's own doctoral dissertation),
+> as the paper itself says on p. 738. Theorem
 > 5.4's content is at `|I| ≥ 4`, which is why its non-trivial examples (5.7,
 > 5.8) are five-player. Do not cite it as the reason a three-player weight is
 > solved.

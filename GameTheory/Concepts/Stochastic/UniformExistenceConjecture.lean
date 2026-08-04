@@ -25,7 +25,10 @@ by `hasUniformDeviationCapConstructor_iff`, and the two derived theorems below
 are one-line consequences of it.
 
 Known cases: two-player zero-sum games (Mertens--Neyman 1981), two-player games
-(Vieille 2000), three-player absorbing games (Solan 1999), and various
+(Vieille 2000), three-player absorbing games (Solan, *Three-Player Absorbing
+Games*, MOR 24(3):669-698, 1999; `PRIMARY_FULLTEXT` on Solan's own doctoral
+dissertation, MOR journal PDF itself unread, see
+`docs/uniform-equilibrium/references/20-nonzero-sum-equilibrium.md`), and various
 structured classes.  The general `n`-player case is open.
 
 The repository's other intentional open declaration is
@@ -105,7 +108,10 @@ every initial state.
 
 This is the central open problem of stochastic game theory.  Known cases:
 two-player zero-sum games (Mertens–Neyman 1981), two-player games
-(Vieille 2000), three-player absorbing games (Solan 1999), and various
+(Vieille 2000), three-player absorbing games (Solan, *Three-Player Absorbing
+Games*, MOR 24(3):669-698, 1999; `PRIMARY_FULLTEXT` on Solan's own doctoral
+dissertation, MOR journal PDF itself unread, see
+`docs/uniform-equilibrium/references/20-nonzero-sum-equilibrium.md`), and various
 structured classes (recursive games, quitting games under conditions).  The
 general n-player case is open.  The theorem is derived from the equivalent
 quantitative constructor above; no weakening of the semantic statement is

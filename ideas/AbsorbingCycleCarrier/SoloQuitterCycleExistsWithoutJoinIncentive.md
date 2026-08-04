@@ -81,8 +81,13 @@ for every `i`. For `i = 0` and `j = 2`: `r_2({2}) = 1`, `r_2({0,2}) = 1`,
 `r_2({0}) = 0`, so (★) reads `1 ≤ 0`, false for every `p`. Cyclic symmetry
 gives the same for `i = 1, 2`.
 
-That table is exactly the published witness for stationary incompleteness, and
-it carries a length-three candidate cycle: at phase `k`, coordinate `k` quits at
+That table is exactly the published witness that stationary `ε`-equilibria
+fail for sufficiently small `ε` (Flesch–Thuijsman–Vrieze, *Cyclic Markov
+equilibria in stochastic games*, IJGT 26(3), 303–314 (1997), Theorem 3.2 —
+the abstract's unqualified "(ε > 0)" reading is loose, since payoffs lie in
+`[0,3]` and every stationary profile is trivially a `3`-equilibrium; see
+[`FTVCyclicGameHasNoStationaryApproximateEquilibria`](../UniformEquilibriumLiterature/FTVCyclicGameHasNoStationaryApproximateEquilibria.md)),
+and it carries a length-three candidate cycle: at phase `k`, coordinate `k` quits at
 rate `1/2` and the others are silent, with values `(1,2,1)`, `(1,1,2)`,
 `(2,1,1)` up to scale. Phase-zero complementarity is checked by hand
 (`g = (0, -1/2, 0)`), and the composite absorbs, so `L = 3` plausibly succeeds
