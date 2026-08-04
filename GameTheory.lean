@@ -519,6 +519,7 @@ import GameTheory.Concepts.Stochastic.QuittingAdmissibleCycleTerminalEquilibrium
 import GameTheory.Concepts.Stochastic.QuittingZeroSoloDisjunct
 import GameTheory.Concepts.Stochastic.QuittingConjecture
 import GameTheory.Concepts.Stochastic.CyclicFourPlayerQuitting
+import GameTheory.Concepts.Stochastic.QuittingAnalyticGerm
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
 import Math.LinearAlgebra.ExactBlockEliminationConfluence
