@@ -5,6 +5,10 @@
 > that theorems proved about them mean what everyone assumes? Six checks, with
 > file:line evidence. The verdicts below are the auditor's; where this program
 > has since acted on one, the action is noted.
+>
+> **Read twice, independently.** A second pass reached the same verdict on all
+> six points from its own reads. Treat the six as corroborated. Its three
+> additions are at the end.
 
 ## Summary
 
@@ -178,3 +182,39 @@ omitting both reintroduces it silently and passes every existing test.
 **Queued as `LEAN-F0-2`**: make the fence structural, so vacuity becomes a type
 error rather than a missing hypothesis. This trap has been rediscovered
 independently five or more times.
+
+## Additions from the second, independent pass
+
+**A soundness argument by import graph, verified.** Exactly two `sorry`s exist
+in `GameTheory/`, in `QuittingConjecture.lean` and
+`UniformExistenceConjecture.lean`. Those two modules are imported by **nothing
+except each other and the root `GameTheory.lean` aggregator** — checked
+directly: `QuittingConjecture` has one importer (`GameTheory.lean`),
+`UniformExistenceConjecture` has two (`QuittingConjecture` and
+`GameTheory.lean`). So **no landed theorem can transitively depend on
+`sorryAx`**, by the import graph alone, independently of any `#print axioms`
+run. That is a stronger and cheaper guarantee than per-theorem axiom audits,
+and it is worth preserving deliberately: keep the conjecture modules leaves.
+
+**One more unformalized WLOG.** Deviations are *behavior* strategies, not mixed
+strategies. Perfect recall holds — a player sees its own past actions — so
+Kuhn's theorem makes the restriction vacuous, but Kuhn is not in this
+repository. Same shape as the `Act` padding reduction: it does not make any
+landed theorem false, it makes a statement *about* the theorems unchecked.
+
+**Two load-bearing non-redundancy claims are prose, not theorems.** That (H2)
+admissibility cannot be dropped from the cycle bridge
+(`QuittingAdmissibleCycleTerminalEquilibrium.lean:54-65`, "hand check, not
+formalized here") and that the `carrierReward` table admits no admissible cycle
+(`QuittingZeroSoloDisjunct.lean:186-194`). Both are two-player concrete tables,
+so both are promotable to `¬`-theorems in a few hours each, which removes prose
+from the load path.
+
+**Tooling note carried forward.** The second pass could not complete a clean
+`#print axioms` sweep: the docstring edit to `StochasticGame.lean` invalidates
+the whole downstream olean tree, and concurrent `lean_verify` calls collided
+and aborted a build. One clean run correctly reported `sorryAx` for
+`quittingGame_exists_uniformEquilibriumPayoff`; two others returned an empty
+axiom list, which is not credible and was treated as tool failure rather than
+evidence. **Do not run concurrent `lean_verify` calls against a tree with a
+build in flight.**
