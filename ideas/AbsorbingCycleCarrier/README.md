@@ -9,6 +9,7 @@
 | [Mismatch vanishes except on isolated negative coordinates](MismatchVanishesExceptOnIsolatedNegativeCoordinates.md) | `PROVED` (`M`), Lean destination named |
 | [A solo-quitter cycle exists without a join incentive](SoloQuitterCycleExistsWithoutJoinIncentive.md) | `PROVED` (`M`), formalization in flight |
 | [The zero pin is not a realizable continuation](TheZeroPinIsNotARealizableContinuation.md) | `PROVED` (`M+L`) at the exhibited family; general statement `OPEN` |
+| [Vanishing absorption is the only remaining case](VanishingAbsorptionIsTheOnlyRemainingCase.md) | `PROVED` (`M`) as a dichotomy; hard branch `OPEN` |
 
 ## Why this group exists
 
@@ -50,7 +51,13 @@ same route the zero branch already uses.
 
 ## Next group decision
 
-Existence. The base case is settled positively by the solo-quitter criterion,
-and that criterion fails on cyclic tables — so the open question is whether
-`L > 1` always suffices, and whether `L` is bounded in the number of
-coordinates.
+Existence, now sharply localized. Complementary fixed data exist for every
+weight, so the question is never whether a cycle exists but whether one
+**absorbs**. The dichotomy says: either a discounted limit absorbs, and the
+conjecture holds for that weight at length one; or absorption degenerates along
+every such limit, and the length-one route is unavailable.
+
+The whole remaining problem is the vanishing-absorption branch. The
+solo-quitter criterion settles a sub-case of the easy branch; the blocking
+digraph and its square closure system are the candidate construction for the
+hard one.
