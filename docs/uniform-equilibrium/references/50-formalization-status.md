@@ -88,7 +88,7 @@ formalized in Lean, and the citations do not certify those bridge steps.
 
 ### The conjecture itself
 
-`GameTheory/Concepts/Stochastic/Uniform.lean:207` —
+`GameTheory/Concepts/Stochastic/UniformExistenceConjecture.lean` (`exists_uniformDeviationCapConstructor`) —
 `StochasticGame.exists_uniformDeviationCapConstructor`, whose body is the
 repository's **only** intentional `sorry` (line 211, enforced by
 `scripts/check_lean_placeholders.py`). Verified: `rg sorry` over `GameTheory/`

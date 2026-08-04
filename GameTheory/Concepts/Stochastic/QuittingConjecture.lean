@@ -51,7 +51,7 @@ split further by the sign pattern of the solo rewards:
 This is the conjecture for finite **quitting** games, which are a strict
 subclass of finite stochastic games with one live state.  Discharging
 `quitting_zeroSolo_or_admissibleCycle` would close this file's conjecture; it
-would **not** discharge `exists_uniformDeviationCapConstructor` in `Uniform.lean`,
+would **not** discharge `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean`,
 the general finite-stochastic-game problem, for which no reduction to quitting
 games is known.
 
@@ -59,7 +59,7 @@ games is known.
 
 This file contains one `sorry`, deliberately, in
 `quitting_zeroSolo_or_admissibleCycle`.  The repository's other intentional open
-declaration is `exists_uniformDeviationCapConstructor`; these are the only two.
+declaration is `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean`; these are the only two.
 -/
 
 set_option autoImplicit false
@@ -105,7 +105,7 @@ Every finite quitting game has a uniform-equilibrium payoff.
 landed reduction, so the entire finite-quitting route now has exactly one
 unproved input.  This covers quitting games only; the general
 finite-stochastic-game problem is `exists_uniformDeviationCapConstructor` in
-`Uniform.lean` and does not follow from this. -/
+`UniformExistenceConjecture.lean` and does not follow from this. -/
 theorem quittingGame_exists_uniformEquilibriumPayoff
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
     ∃ payoff : Payoff ι,

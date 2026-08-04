@@ -16,7 +16,7 @@ owning claim and [`FRONTIER.md`](FRONTIER.md).
 `docs/`, `ideas/`, and `REORG.md` resolve. The stricter repository audit is
 known red, not silently green: it reports four `opaque` declarations, ten
 `native_decide` proofs, and 25 tracked Lean modules outside the default import
-targets; `Uniform.lean` also retains one explicit `sorry`. These are owned by
+targets; the two intentional `sorry` declarations are `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean` and `quitting_zeroSolo_or_admissibleCycle` in `QuittingConjecture.lean`. These are owned by
 the engineering queue below and the
 [proof-engineering audit](../../ephemeral/ProofEngineeringAudit.md), rather
 than blockers hidden in the P0 mathematical status.

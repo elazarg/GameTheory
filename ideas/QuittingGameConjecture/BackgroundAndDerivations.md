@@ -455,7 +455,7 @@ one fixed common-horizon uniform-equilibrium payoff. This is now formalized by
 `quittingGame_exists_uniformEquilibriumPayoff_iff_terminalNash_all_errors` in
 [`QuittingTerminalUniformPayoffSelection.lean`](../../GameTheory/Concepts/Stochastic/QuittingTerminalUniformPayoffSelection.lean),
 landed at `daf2780` and publicly routed at `08f5dd1`. It does not fill the
-general stochastic-game `sorry` in `Uniform.lean`; it proves the exact
+general stochastic-game `sorry` in `UniformExistenceConjecture.lean`; it proves the exact
 existence equivalence only for finite quitting games.
 
 ## 2. External status
