@@ -82,6 +82,7 @@ import Math.CoordinatewisePuiseuxCurve
 import Math.AnalyticImplicitFunction
 import Math.AnalyticMixedObstruction
 import Math.AnalyticPowerNormalization
+import Math.AnalyticOrderComparison
 import Math.AnalyticFiniteRayMaximum
 import Math.PolynomialSignCell
 import Math.RamifiedBinomialBranch
