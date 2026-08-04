@@ -442,6 +442,7 @@ import Math.Topology.GraphDirectedCompactPullback
 import Math.Topology.GraphDirectedPeriodicLift
 import Math.Topology.CompactSerialRelation
 import GameTheory.Concepts.Stochastic.QuittingNashBellmanSpine
+import GameTheory.Concepts.Stochastic.QuittingComplementarityClosed
 import GameTheory.Concepts.Stochastic.QuittingBlockSurvival
 import GameTheory.Concepts.Stochastic.QuittingInfinitePathCompiler
 import GameTheory.Concepts.Stochastic.QuittingFiniteChainTerminalCompiler

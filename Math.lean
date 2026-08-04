@@ -93,4 +93,5 @@ import Math.WeierstrassCurve
 import Math.RamifiedWeierstrass
 import Math.InfinitesimalRatFunc
 import Math.GradedConvolution
+import Math.BonferroniProductBounds
 import Math.Topology.WeakDominance
