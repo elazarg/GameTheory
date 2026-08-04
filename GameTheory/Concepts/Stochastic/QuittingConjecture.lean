@@ -99,6 +99,12 @@ every absorbing complementary cycle for this weight has coordinate `1` silent at
 every phase, so the deleted survival product at coordinate `2` is `1`; since
 `r₂({2}) = -1 < 0`, the mismatch there is `1` and no cycle is admissible.
 
+All of that is machine-checked in
+`QuittingDisjunctionCounterexample.lean`, whose
+`not_forall_isQuittingZeroSolo_or_hasAdmissibleAbsorbingQuittingCycle` refutes
+the disjunction outright; this paragraph is a summary of that file, not a hand
+argument.
+
 The weight has two coordinates, so a uniform-equilibrium payoff does exist for
 it externally.  Its equilibrium therefore lies outside the cycle carrier, and
 what the carrier needs is a third branch covering weights of this shape — not a
