@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Concepts.Stochastic.AnalyticBellmanExistence
 import GameTheory.Concepts.Stochastic.QuittingStationaryGain
 import Math.AnalyticOrderComparison
+import Math.BonferroniProductBounds
 
 /-!
 # Analytic Bellman germs of quitting games
@@ -59,12 +60,22 @@ of two natural numbers.
 
 The one-stage absorption probability along the germ is
 `quittingGermAbsorption g t = 1 - ∏_j (1 - y_j t)`.  It is analytic at `0` and
-squeezed between the total quit mass and its `|ι|`-th part, so the comparison
-against `t ^ q` transfers verbatim from the quit mass to absorption
-(`tendsto_pow_div_quittingGermAbsorption_nhds_zero` and
-`..._atTop`).  Only the *matching* case `q = m` is not transferred: there the
-squeeze bounds the limit between `1/(|ι| · ∑ a)` and `1/∑ a` rather than
-pinning it.
+squeezed between the total quit mass and its `|ι|`-th part, so the two
+non-matching comparisons against `t ^ q` transfer verbatim from the quit mass
+to absorption, in both directions.
+
+The *matching* case `q = m` needs more than the squeeze, which would only bound
+the limit between `1/(|ι| · ∑ a)` and `1/∑ a`.  The sharp input is the second
+Bonferroni bound of `Math.BonferroniProductBounds`: absorption differs from the
+total quit mass by at most half the square of that mass.  When the family's
+leading order satisfies `m ≥ 1` the rates vanish, the error is `o(∑ y)`, and
+`absorption / ∑ y → 1`.  Hence the absorption curve has analytic order exactly
+`m` with leading coefficient exactly `∑ a`, and `t ^ m / absorption → 1/∑ a`
+(`analyticOrderAt_quittingGermAbsorption_eq`).  Along a germ the hypothesis
+`m ≥ 1` is free in the matching branch, since `g.ramification = m` and the
+ramification of a germ is positive; it is *not* removable from the underlying
+comparison, where `m = 0` leaves some rate bounded away from `0` and the
+leading coefficient of the absorption is `1 - ∏_j (1 - a j)`, not `∑ a`.
 
 ## Scope and gaps
 
@@ -105,8 +116,18 @@ pinning it.
 * `exists_quittingGermQuitRate_leadingOrder_normalization` — the leading-order
   normalization of the quit family
 * `tendsto_pow_div_quittingGermAbsorption_nhds_zero`,
-  `tendsto_pow_div_quittingGermAbsorption_atTop` — the transfer of the
-  comparison from the quit mass to absorption
+  `tendsto_pow_div_quittingGermAbsorption_atTop`,
+  `tendsto_pow_div_quittingGermAbsorption_nhds` and the three reverse
+  statements `tendsto_pow_div_sum_quittingGermQuitRate_nhds_zero`,
+  `..._atTop`, `..._nhds` — all six transfer directions between the quit mass
+  and the absorption
+* `tendsto_quittingGermAbsorption_div_sum` — absorption is asymptotically the
+  total quit mass, for `m ≥ 1`
+* `analyticOrderAt_quittingGermAbsorption_eq` — **HEADLINE**, the matching case
+  pinned: the absorption has analytic order exactly `m` and leading
+  coefficient exactly `∑ a`
+* `exists_quittingGermAbsorption_leadingOrder_normalization` — the whole
+  three-way comparison, read on absorption itself
 -/
 
 set_option autoImplicit false
@@ -299,32 +320,17 @@ end OneStage
 
 /-! ## Absorption versus total quit mass
 
-Two elementary comparisons between the one-stage absorption probability
-`1 - ∏_j (1 - y_j)` and the total quit mass `∑_j y_j`: a union bound in one
-direction and a crude `|ι|`-fold bound in the other.  Together they say the
-two quantities are within a fixed factor of each other, which is what lets a
-leading-order statement about the quit family be read as a statement about
-vanishing absorption. -/
+The `Finset`-general comparisons between the one-stage absorption probability
+`1 - ∏_j (1 - y_j)` and the total quit mass `∑_j y_j` live in
+`Math.BonferroniProductBounds`: the union bound
+`Math.one_sub_prod_one_sub_le_sum` in one direction, and — sharply — the
+two-sided Bonferroni estimate
+`Math.abs_one_sub_prod_one_sub_sub_sum_le_sq_sum_div_two`.
 
-omit [Fintype ι] [DecidableEq ι] in
-/-- **Union bound.**  Independent absorption is at most the total quit mass. -/
-theorem one_sub_prod_one_sub_le_sum (w : ι → ℝ)
-    (h0 : ∀ j, 0 ≤ w j) (h1 : ∀ j, w j ≤ 1) (s : Finset ι) :
-    1 - ∏ j ∈ s, (1 - w j) ≤ ∑ j ∈ s, w j := by
-  classical
-  refine Finset.induction_on s (by simp) ?_
-  intro a s ha ih
-  rw [Finset.prod_insert ha, Finset.sum_insert ha]
-  have hprod : ∏ j ∈ s, (1 - w j) ≤ 1 :=
-    Finset.prod_le_one (fun j _ => by linarith [h1 j]) (fun j _ => by linarith [h0 j])
-  have hexp : 1 - (1 - w a) * ∏ j ∈ s, (1 - w j) =
-      (1 - ∏ j ∈ s, (1 - w j)) + w a * ∏ j ∈ s, (1 - w j) := by ring
-  have hle : w a * ∏ j ∈ s, (1 - w j) ≤ w a := by
-    calc w a * ∏ j ∈ s, (1 - w j) ≤ w a * 1 :=
-          mul_le_mul_of_nonneg_left hprod (h0 a)
-      _ = w a := mul_one _
-  rw [hexp]
-  linarith
+What is *not* there, because it is specific to a `Fintype` index, is the crude
+`|ι|`-fold reverse bound below.  It is weaker than Bonferroni but needs no
+smallness of the weights, which is why it still carries the two non-matching
+transfer regimes, where the quit rates need not vanish. -/
 
 omit [DecidableEq ι] in
 /-- Every individual quit probability is at most the absorption probability. -/
@@ -699,7 +705,7 @@ theorem quittingRootAbsorptionMass_quittingGermRoot_bounds
   have h1 : ∀ j, quittingGermQuitRate g j t ≤ 1 :=
     fun j => quittingGermQuitRate_le_one g ht j
   rw [quittingRootAbsorptionMass_quittingGermRoot g ht]
-  exact ⟨one_sub_prod_one_sub_le_sum _ h0 h1 Finset.univ,
+  exact ⟨Math.one_sub_prod_one_sub_le_sum _ Finset.univ (fun j _ => h0 j) (fun j _ => h1 j),
     sum_le_card_mul_one_sub_prod_one_sub _ h0 h1⟩
 
 /-- **The absorption curve of a germ**, as a total function of the curve
@@ -816,7 +822,23 @@ theorem exists_quittingGermQuitRate_leadingOrder_normalization
   rw [hq]
   exact hmatch
 
-/-! ### Transferring the comparison to absorption -/
+/-! ### Transferring the comparison to absorption
+
+Six statements: the three scaling regimes, each in both directions between the
+total quit mass `∑_j y_j` and the absorption `1 - ∏_j (1 - y_j)`.  The two
+non-matching regimes are carried by the `|ι|`-fold squeeze
+`quittingGermAbsorption_bounds` alone and need no smallness of the rates; the
+matching regime is carried by `tendsto_quittingGermAbsorption_div_sum`, which
+needs `1 ≤ m`. -/
+
+/-- The absorption is eventually positive to the right of `0` wherever the
+total quit mass is. -/
+theorem eventually_quittingGermAbsorption_pos
+    (g : (quittingGame reward).AnalyticBellmanGerm)
+    (hsum : ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < ∑ j, quittingGermQuitRate g j t) :
+    ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < quittingGermAbsorption g t := by
+  filter_upwards [eventually_mem_Ioo_radius g, hsum] with t ht hs
+  exact quittingGermAbsorption_pos g ht hs
 
 /-- **Transfer, negligible case.**  A scale negligible against the total quit
 mass is negligible against the absorption probability. -/
@@ -860,5 +882,271 @@ theorem tendsto_pow_div_quittingGermAbsorption_atTop
   have htq : (0 : ℝ) ≤ t ^ q := pow_nonneg ht.1.le q
   rw [div_le_div_iff₀ hs hA]
   exact mul_le_mul_of_nonneg_left hbound htq
+
+/-- **Transfer, negligible case, reverse direction.**  A scale negligible
+against the absorption probability is negligible against the total quit mass.
+This direction needs only the union bound. -/
+theorem tendsto_pow_div_sum_quittingGermQuitRate_nhds_zero
+    (g : (quittingGame reward).AnalyticBellmanGerm) {q : ℕ}
+    (hsum : ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < ∑ j, quittingGermQuitRate g j t)
+    (h : Tendsto (fun t : ℝ => t ^ q / quittingGermAbsorption g t)
+      (𝓝[>] (0 : ℝ)) (𝓝 0)) :
+    Tendsto (fun t : ℝ => t ^ q / ∑ j, quittingGermQuitRate g j t)
+      (𝓝[>] (0 : ℝ)) (𝓝 0) := by
+  refine squeeze_zero' ?_ ?_ h
+  · filter_upwards [eventually_mem_Ioo_radius g, hsum] with t ht hs
+    exact div_nonneg (pow_nonneg ht.1.le q) hs.le
+  · filter_upwards [eventually_mem_Ioo_radius g, hsum] with t ht hs
+    have hA : 0 < quittingGermAbsorption g t := quittingGermAbsorption_pos g ht hs
+    have hbound := (quittingGermAbsorption_bounds g ht).1
+    rw [div_le_div_iff₀ hs hA]
+    exact mul_le_mul_of_nonneg_left hbound (pow_nonneg ht.1.le q)
+
+/-- A positive total quit mass forces the index type to be nonempty. -/
+theorem nonempty_of_eventually_sum_quittingGermQuitRate_pos
+    (g : (quittingGame reward).AnalyticBellmanGerm)
+    (hsum : ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < ∑ j, quittingGermQuitRate g j t) :
+    Nonempty ι := by
+  by_contra hc
+  rw [not_nonempty_iff] at hc
+  obtain ⟨t, hs⟩ := hsum.exists
+  simp at hs
+
+/-- **Transfer, dominant case, reverse direction.**  A scale dominating the
+absorption probability dominates the total quit mass.  This is where the crude
+`|ι|`-fold bound is used, so it is also where `ι` must be nonempty — which the
+positivity of the total quit mass supplies. -/
+theorem tendsto_pow_div_sum_quittingGermQuitRate_atTop
+    (g : (quittingGame reward).AnalyticBellmanGerm) {q : ℕ}
+    (hsum : ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < ∑ j, quittingGermQuitRate g j t)
+    (h : Tendsto (fun t : ℝ => t ^ q / quittingGermAbsorption g t)
+      (𝓝[>] (0 : ℝ)) atTop) :
+    Tendsto (fun t : ℝ => t ^ q / ∑ j, quittingGermQuitRate g j t)
+      (𝓝[>] (0 : ℝ)) atTop := by
+  haveI := nonempty_of_eventually_sum_quittingGermQuitRate_pos g hsum
+  have hcard : (0 : ℝ) < (Fintype.card ι : ℝ) := by
+    exact_mod_cast Fintype.card_pos
+  have hlim : Tendsto (fun t : ℝ =>
+      (Fintype.card ι : ℝ)⁻¹ * (t ^ q / quittingGermAbsorption g t))
+      (𝓝[>] (0 : ℝ)) atTop :=
+    Filter.Tendsto.const_mul_atTop (inv_pos.mpr hcard) h
+  refine tendsto_atTop_mono' _ ?_ hlim
+  filter_upwards [eventually_mem_Ioo_radius g, hsum] with t ht hs
+  have hA : 0 < quittingGermAbsorption g t := quittingGermAbsorption_pos g ht hs
+  have hbound := (quittingGermAbsorption_bounds g ht).2
+  have htq : (0 : ℝ) ≤ t ^ q := pow_nonneg ht.1.le q
+  rw [inv_mul_eq_div, div_div, div_le_div_iff₀ (by positivity) hs]
+  calc t ^ q * ∑ j, quittingGermQuitRate g j t
+      ≤ t ^ q * ((Fintype.card ι : ℝ) * quittingGermAbsorption g t) :=
+        mul_le_mul_of_nonneg_left hbound htq
+    _ = t ^ q * (quittingGermAbsorption g t * (Fintype.card ι : ℝ)) := by ring
+
+/-! ### The matching case: absorption is asymptotically the total quit mass
+
+The `|ι|`-fold squeeze is too crude to pin the matching case.  The sharp input
+is the second Bonferroni bound of `Math.BonferroniProductBounds`: absorption
+differs from the total quit mass by at most half its square.  Along a germ
+whose quit family has leading order `m ≥ 1` the rates vanish, so that error is
+`o(∑ y)` and the ratio of absorption to total quit mass tends to `1`.
+
+`1 ≤ m` is **not** removable: at `m = 0` some rate stays bounded away from
+`0`, the quadratic correction is not small, and `absorption / ∑ y` has no
+reason to be `1` — the union bound is then strict in the limit. -/
+
+/-- **The sharp two-sided estimate, along the germ.**  The absorption differs
+from the total quit mass by at most half the square of that mass. -/
+theorem abs_quittingGermAbsorption_sub_sum_le
+    (g : (quittingGame reward).AnalyticBellmanGerm) {t : ℝ}
+    (ht : t ∈ Ioo (0 : ℝ) g.radius) :
+    |quittingGermAbsorption g t - ∑ j, quittingGermQuitRate g j t| ≤
+      (∑ j, quittingGermQuitRate g j t) ^ 2 / 2 :=
+  Math.abs_one_sub_prod_one_sub_sub_sum_le_sq_sum_div_two
+    (fun j => quittingGermQuitRate g j t) Finset.univ
+    (fun j _ => quittingGermQuitRate_nonneg g ht j)
+    (fun j _ => quittingGermQuitRate_le_one g ht j)
+
+/-- Once the quit family's leading order is positive, every quit rate vanishes
+at `t = 0`: its own analytic order is at least the family's, hence nonzero. -/
+theorem quittingGermQuitRate_zero_eq_zero
+    (g : (quittingGame reward).AnalyticBellmanGerm) {m : ℕ} (hm : 1 ≤ m)
+    (horder : Math.familyAnalyticOrder (quittingGermQuitRate g) = m) (i : ι) :
+    quittingGermQuitRate g i 0 = 0 := by
+  have hle : (1 : ℕ∞) ≤ analyticOrderAt (quittingGermQuitRate g i) 0 := by
+    refine le_trans ?_ (Math.familyAnalyticOrder_le i)
+    rw [horder]
+    exact_mod_cast hm
+  exact (analyticOrderAt_ne_zero.mp (Order.one_le_iff_ne_zero.mp hle)).2
+
+/-- **The total quit mass vanishes** as `t ↓ 0`, once the leading order is
+positive.  This is the statement that fails at `m = 0`, and with it the whole
+matching-case argument. -/
+theorem tendsto_sum_quittingGermQuitRate_nhds_zero
+    (g : (quittingGame reward).AnalyticBellmanGerm) {m : ℕ} (hm : 1 ≤ m)
+    (horder : Math.familyAnalyticOrder (quittingGermQuitRate g) = m) :
+    Tendsto (fun t => ∑ j, quittingGermQuitRate g j t) (𝓝[>] (0 : ℝ)) (𝓝 0) := by
+  have hcont : ContinuousAt (fun t => ∑ j, quittingGermQuitRate g j t) 0 :=
+    (Finset.univ.analyticAt_fun_sum
+      fun j _ => analyticAt_quittingGermQuitRate g j).continuousAt
+  have h := hcont.tendsto.mono_left (nhdsWithin_le_nhds (s := Ioi (0 : ℝ)))
+  simpa [quittingGermQuitRate_zero_eq_zero g hm horder] using h
+
+/-- **Absorption is asymptotically the total quit mass.**  The sharp
+replacement for the `|ι|`-fold squeeze, valid exactly when the rates vanish,
+i.e. when the family's leading order is positive. -/
+theorem tendsto_quittingGermAbsorption_div_sum
+    (g : (quittingGame reward).AnalyticBellmanGerm) {m : ℕ} (hm : 1 ≤ m)
+    (horder : Math.familyAnalyticOrder (quittingGermQuitRate g) = m)
+    (hsum : ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < ∑ j, quittingGermQuitRate g j t) :
+    Tendsto (fun t => quittingGermAbsorption g t / ∑ j, quittingGermQuitRate g j t)
+      (𝓝[>] (0 : ℝ)) (𝓝 1) := by
+  have hS := tendsto_sum_quittingGermQuitRate_nhds_zero g hm horder
+  have hmaj : Tendsto (fun t => (∑ j, quittingGermQuitRate g j t) / 2)
+      (𝓝[>] (0 : ℝ)) (𝓝 0) := by simpa using hS.div_const 2
+  have key : Tendsto
+      (fun t => quittingGermAbsorption g t / (∑ j, quittingGermQuitRate g j t) - 1)
+      (𝓝[>] (0 : ℝ)) (𝓝 0) := by
+    refine squeeze_zero_norm' ?_ hmaj
+    filter_upwards [eventually_mem_Ioo_radius g, hsum] with t ht hs
+    have hb := abs_quittingGermAbsorption_sub_sum_le g ht
+    have hsq : (∑ j, quittingGermQuitRate g j t) ^ 2 =
+        (∑ j, quittingGermQuitRate g j t) * ∑ j, quittingGermQuitRate g j t := pow_two _
+    have hrw : quittingGermAbsorption g t / (∑ j, quittingGermQuitRate g j t) - 1 =
+        (quittingGermAbsorption g t - ∑ j, quittingGermQuitRate g j t) /
+          ∑ j, quittingGermQuitRate g j t := by
+      field_simp
+    rw [Real.norm_eq_abs, hrw, abs_div, abs_of_pos hs,
+      div_le_div_iff₀ hs (by norm_num : (0 : ℝ) < 2)]
+    linarith
+  have hfinal := key.add (tendsto_const_nhds (x := (1 : ℝ)) (f := 𝓝[>] (0 : ℝ)))
+  simpa using hfinal
+
+/-- The reciprocal form: the total quit mass is asymptotically the
+absorption. -/
+theorem tendsto_sum_div_quittingGermAbsorption
+    (g : (quittingGame reward).AnalyticBellmanGerm) {m : ℕ} (hm : 1 ≤ m)
+    (horder : Math.familyAnalyticOrder (quittingGermQuitRate g) = m)
+    (hsum : ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < ∑ j, quittingGermQuitRate g j t) :
+    Tendsto (fun t => (∑ j, quittingGermQuitRate g j t) / quittingGermAbsorption g t)
+      (𝓝[>] (0 : ℝ)) (𝓝 1) := by
+  have h := (tendsto_quittingGermAbsorption_div_sum g hm horder hsum).inv₀ one_ne_zero
+  simpa [inv_div] using h
+
+/-- **Transfer, matching case.**  A scale comparable to the total quit mass is
+comparable to the absorption *with the same constant*: the limit is not merely
+squeezed between `1/(|ι| ∑ a)` and `1/∑ a`, it is transferred verbatim. -/
+theorem tendsto_pow_div_quittingGermAbsorption_nhds
+    (g : (quittingGame reward).AnalyticBellmanGerm) {q m : ℕ} {L : ℝ} (hm : 1 ≤ m)
+    (horder : Math.familyAnalyticOrder (quittingGermQuitRate g) = m)
+    (hsum : ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < ∑ j, quittingGermQuitRate g j t)
+    (h : Tendsto (fun t : ℝ => t ^ q / ∑ j, quittingGermQuitRate g j t)
+      (𝓝[>] (0 : ℝ)) (𝓝 L)) :
+    Tendsto (fun t : ℝ => t ^ q / quittingGermAbsorption g t)
+      (𝓝[>] (0 : ℝ)) (𝓝 L) := by
+  have hmul := h.mul (tendsto_sum_div_quittingGermAbsorption g hm horder hsum)
+  rw [mul_one] at hmul
+  refine hmul.congr' ?_
+  filter_upwards [eventually_mem_Ioo_radius g, hsum] with t ht hs
+  have hA : (quittingGermAbsorption g t) ≠ 0 := (quittingGermAbsorption_pos g ht hs).ne'
+  have hs' : (∑ j, quittingGermQuitRate g j t) ≠ 0 := hs.ne'
+  field_simp
+
+/-- **Transfer, matching case, reverse direction.** -/
+theorem tendsto_pow_div_sum_quittingGermQuitRate_nhds
+    (g : (quittingGame reward).AnalyticBellmanGerm) {q m : ℕ} {L : ℝ} (hm : 1 ≤ m)
+    (horder : Math.familyAnalyticOrder (quittingGermQuitRate g) = m)
+    (hsum : ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < ∑ j, quittingGermQuitRate g j t)
+    (h : Tendsto (fun t : ℝ => t ^ q / quittingGermAbsorption g t)
+      (𝓝[>] (0 : ℝ)) (𝓝 L)) :
+    Tendsto (fun t : ℝ => t ^ q / ∑ j, quittingGermQuitRate g j t)
+      (𝓝[>] (0 : ℝ)) (𝓝 L) := by
+  have hmul := h.mul (tendsto_quittingGermAbsorption_div_sum g hm horder hsum)
+  rw [mul_one] at hmul
+  refine hmul.congr' ?_
+  filter_upwards [eventually_mem_Ioo_radius g, hsum] with t ht hs
+  have hA : (quittingGermAbsorption g t) ≠ 0 := (quittingGermAbsorption_pos g ht hs).ne'
+  have hs' : (∑ j, quittingGermQuitRate g j t) ≠ 0 := hs.ne'
+  field_simp
+
+/-- **HEADLINE — the matching scaling case, pinned.**
+
+Along a germ whose quit family has leading order `m ≥ 1` and leading vector
+`a`, the absorption curve `1 - ∏_j (1 - y_j)` has analytic order **exactly**
+`m` at `0`, with leading coefficient **exactly** `∑ j, a j`; consequently
+`t ^ m / absorption → 1 / ∑ a`.
+
+This closes `LEAN-P0-3`: the matching regime of the germ bridge is no longer
+squeezed between `1/(|ι| · ∑ a)` and `1/∑ a` but pinned to `1/∑ a`, so the
+three-way scaling comparison of `t ^ q` against the germ's absorption is
+complete on absorption itself.
+
+`1 ≤ m` is carried explicitly and is not removable: at `m = 0` some rate stays
+bounded away from `0`, the quadratic Bonferroni correction is not small, and
+the leading coefficient of the absorption is `1 - ∏_j (1 - a j)`, not
+`∑ j, a j`. -/
+theorem analyticOrderAt_quittingGermAbsorption_eq
+    (g : (quittingGame reward).AnalyticBellmanGerm) {m : ℕ} {a : ι → ℝ} (hm : 1 ≤ m)
+    (horder : Math.familyAnalyticOrder (quittingGermQuitRate g) = m)
+    (hsum : ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < ∑ j, quittingGermQuitRate g j t)
+    (hapos : 0 < ∑ j, a j)
+    (hmatch : Tendsto (fun t : ℝ => t ^ m / ∑ j, quittingGermQuitRate g j t)
+      (𝓝[>] (0 : ℝ)) (𝓝 (1 / ∑ j, a j))) :
+    analyticOrderAt (quittingGermAbsorption g) 0 = m ∧
+      Tendsto (fun t : ℝ => quittingGermAbsorption g t / t ^ m)
+        (𝓝[>] (0 : ℝ)) (𝓝 (∑ j, a j)) ∧
+      Tendsto (fun t : ℝ => t ^ m / quittingGermAbsorption g t)
+        (𝓝[>] (0 : ℝ)) (𝓝 (1 / ∑ j, a j)) := by
+  have htransfer :=
+    tendsto_pow_div_quittingGermAbsorption_nhds g hm horder hsum hmatch
+  have habs : Tendsto (fun t : ℝ => quittingGermAbsorption g t / t ^ m)
+      (𝓝[>] (0 : ℝ)) (𝓝 (∑ j, a j)) := by
+    simpa [inv_div] using htransfer.inv₀ (one_div_ne_zero hapos.ne')
+  exact ⟨Math.analyticOrderAt_eq_of_tendsto_div_pow
+      (analyticAt_quittingGermAbsorption g) hapos.ne' habs, habs, htransfer⟩
+
+/-- **The three-way scaling comparison, read on absorption itself.**  The
+absorption analogue of `exists_quittingGermQuitRate_leadingOrder_normalization`:
+the exact discount complement `t ^ q` is negligible, comparable, or dominant
+against the germ's absorption according as the ramification `q` is larger
+than, equal to, or smaller than the quit family's leading order `m`, and in the
+matching branch the absorption's own analytic order and leading coefficient are
+pinned.
+
+No `1 ≤ m` hypothesis appears: in the matching branch it is *free*, because
+`g.ramification = m` and the ramification of a germ is positive. -/
+theorem exists_quittingGermAbsorption_leadingOrder_normalization
+    (g : (quittingGame reward).AnalyticBellmanGerm)
+    (hne : ∃ i, ¬∀ᶠ t in 𝓝[>] (0 : ℝ), quittingGermQuitRate g i t = 0) :
+    ∃ (m : ℕ) (a : ι → ℝ),
+      Math.familyAnalyticOrder (quittingGermQuitRate g) = m ∧
+      (∀ i, 0 ≤ a i) ∧
+      (0 < ∑ j, a j) ∧
+      (∀ i, a i ≠ 0 ↔ i ∈ Math.leadingSet (quittingGermQuitRate g)) ∧
+      (∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < quittingGermAbsorption g t) ∧
+      (m < g.ramification → Tendsto
+        (fun t : ℝ => t ^ g.ramification / quittingGermAbsorption g t)
+        (𝓝[>] (0 : ℝ)) (𝓝 0)) ∧
+      (g.ramification = m →
+        analyticOrderAt (quittingGermAbsorption g) 0 = m ∧
+        Tendsto (fun t : ℝ => quittingGermAbsorption g t / t ^ m)
+          (𝓝[>] (0 : ℝ)) (𝓝 (∑ j, a j)) ∧
+        Tendsto (fun t : ℝ => t ^ g.ramification / quittingGermAbsorption g t)
+          (𝓝[>] (0 : ℝ)) (𝓝 (1 / ∑ j, a j))) ∧
+      (g.ramification < m → Tendsto
+        (fun t : ℝ => t ^ g.ramification / quittingGermAbsorption g t)
+        (𝓝[>] (0 : ℝ)) atTop) := by
+  obtain ⟨m, a, horder, hnonneg, hapos, hsupport, hsum, -, hsmall, hmatch, hbig⟩ :=
+    exists_quittingGermQuitRate_leadingOrder_normalization g hne
+  refine ⟨m, a, horder, hnonneg, hapos, hsupport,
+    eventually_quittingGermAbsorption_pos g hsum,
+    fun hq => tendsto_pow_div_quittingGermAbsorption_nhds_zero g hsum (hsmall hq),
+    fun hq => ?_,
+    fun hq => tendsto_pow_div_quittingGermAbsorption_atTop g hsum (hbig hq)⟩
+  have hmpos : 0 < m := hq ▸ g.ramification_pos
+  have hm : 1 ≤ m := hmpos
+  have hmatch' : Tendsto (fun t : ℝ => t ^ m / ∑ j, quittingGermQuitRate g j t)
+      (𝓝[>] (0 : ℝ)) (𝓝 (1 / ∑ j, a j)) := hq ▸ hmatch hq
+  obtain ⟨horderA, habs, hlim⟩ :=
+    analyticOrderAt_quittingGermAbsorption_eq g hm horder hsum hapos hmatch'
+  exact ⟨horderA, habs, hq ▸ hlim⟩
 
 end GameTheory

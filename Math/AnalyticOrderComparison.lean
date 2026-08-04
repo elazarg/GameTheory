@@ -19,6 +19,8 @@ into limit statements along `t ↓ 0`.
 * `Math.eventuallyEq_zero_nhdsGT_iff_nhds`: for a germ analytic at `0`, vanishing on a right
   neighbourhood of `0` is the same as vanishing on a full neighbourhood.  This is what lets a
   consumer phrase its nondegeneracy hypothesis on the right half-line only.
+* `Math.analyticOrderAt_eq_of_tendsto_div_pow`: conversely, a *nonzero* limit of `f t / t ^ n`
+  as `t ↓ 0` pins the order of `f` at `0` to be exactly `n`.
 * `Math.tendsto_div_nhdsGT_zero_of_analyticOrderAt_lt`: strictly larger order means the ratio
   tends to `0`.
 * `Math.analyticOrderNatAt_trichotomy`: the three-way comparison of two orders, each branch
@@ -151,6 +153,65 @@ theorem lt_analyticOrderAt_of_eq_pow_mul {n : ℕ} {c : ℝ → ℝ} (hc : Analy
     le_analyticOrderAt_of_eq_pow_mul hd hfac'
   refine lt_of_lt_of_le ?_ hle
   exact_mod_cast Nat.lt_succ_self n
+
+/-- A positive power tends to `0` from the right. -/
+theorem tendsto_pow_nhdsGT_zero {p : ℕ} (hp : p ≠ 0) :
+    Tendsto (fun t : ℝ => t ^ p) (𝓝[>] (0 : ℝ)) (𝓝 0) := by
+  have h : Tendsto (fun t : ℝ => t ^ p) (𝓝 (0 : ℝ)) (𝓝 ((0 : ℝ) ^ p)) :=
+    (continuous_pow p).continuousAt.tendsto
+  rw [zero_pow hp] at h
+  exact h.mono_left nhdsWithin_le_nhds
+
+/-- **Reading the order off a ratio limit.**  If `f` is analytic at `0` and `f t / t ^ n`
+converges to a *nonzero* limit as `t ↓ 0`, then `n` is exactly the order of vanishing of `f`
+at `0`.  The limit is then the leading coefficient, but that is not asserted here.
+
+Both hypotheses are used: a zero limit is compatible with every larger order, and without
+analyticity the ratio limit says nothing about a Taylor expansion. -/
+theorem analyticOrderAt_eq_of_tendsto_div_pow (hf : AnalyticAt ℝ f 0) {n : ℕ} {L : ℝ}
+    (hL : L ≠ 0) (h : Tendsto (fun t => f t / t ^ n) (𝓝[>] (0 : ℝ)) (𝓝 L)) :
+    analyticOrderAt f 0 = n := by
+  have hne : ¬∀ᶠ t in 𝓝[>] (0 : ℝ), f t = 0 := by
+    intro hz
+    refine hL (tendsto_nhds_unique h (Tendsto.congr' ?_ tendsto_const_nhds))
+    filter_upwards [hz] with t ht
+    rw [ht, zero_div]
+  have htop : analyticOrderAt f 0 ≠ ⊤ := (analyticOrderAt_ne_top_iff_nhdsGT hf).mpr hne
+  obtain ⟨c, hc, hc0, hfac⟩ := exists_cofactor_of_analyticOrderAt_ne_top hf htop
+  have hccont : Tendsto c (𝓝[>] (0 : ℝ)) (𝓝 (c 0)) :=
+    hc.continuousAt.tendsto.mono_left nhdsWithin_le_nhds
+  have hkn : analyticOrderNatAt f 0 = n := by
+    rcases lt_trichotomy (analyticOrderNatAt f 0) n with hlt | heq | hgt
+    · exfalso
+      have hcongr : ∀ᶠ t in 𝓝[>] (0 : ℝ),
+          f t / t ^ n * t ^ (n - analyticOrderNatAt f 0) = c t := by
+        filter_upwards [hfac.filter_mono nhdsWithin_le_nhds, self_mem_nhdsWithin] with t hft ht
+        have htne : t ≠ 0 := ne_of_gt ht
+        have hsplit : t ^ n =
+            t ^ analyticOrderNatAt f 0 * t ^ (n - analyticOrderNatAt f 0) := by
+          rw [← pow_add, Nat.add_sub_cancel' hlt.le]
+        rw [hft, hsplit]
+        field_simp
+      have hlim : Tendsto c (𝓝[>] (0 : ℝ)) (𝓝 (L * 0)) :=
+        (h.mul (tendsto_pow_nhdsGT_zero (by omega))).congr' hcongr
+      rw [mul_zero] at hlim
+      exact hc0 (tendsto_nhds_unique hccont hlim)
+    · exact heq
+    · exfalso
+      have hcongr : ∀ᶠ t in 𝓝[>] (0 : ℝ),
+          t ^ (analyticOrderNatAt f 0 - n) * c t = f t / t ^ n := by
+        filter_upwards [hfac.filter_mono nhdsWithin_le_nhds, self_mem_nhdsWithin] with t hft ht
+        have htne : t ≠ 0 := ne_of_gt ht
+        have hsplit : t ^ analyticOrderNatAt f 0 =
+            t ^ n * t ^ (analyticOrderNatAt f 0 - n) := by
+          rw [← pow_add, Nat.add_sub_cancel' hgt.le]
+        rw [hft, hsplit]
+        field_simp
+      have hlim : Tendsto (fun t => f t / t ^ n) (𝓝[>] (0 : ℝ)) (𝓝 (0 * c 0)) :=
+        ((tendsto_pow_nhdsGT_zero (by omega)).mul hccont).congr' hcongr
+      rw [zero_mul] at hlim
+      exact hL (tendsto_nhds_unique h hlim)
+  rw [← Nat.cast_analyticOrderNatAt htop, hkn]
 
 /-! ### Comparing two germs -/
 
@@ -459,11 +520,8 @@ theorem tendsto_pow_div_sum_nhds_zero (jet : LeadingOrderJet f)
     exact (mul_div_mul_left (t ^ (q - jet.order)) (∑ j, jet.cofactor j t)
       (pow_ne_zero jet.order (ne_of_gt ht))).symm
   refine Tendsto.congr' hcongr ?_
-  have hpow : Tendsto (fun t : ℝ => t ^ (q - jet.order)) (𝓝[>] (0 : ℝ)) (𝓝 0) := by
-    have h : Tendsto (fun t : ℝ => t ^ (q - jet.order)) (𝓝 (0 : ℝ))
-        (𝓝 ((0 : ℝ) ^ (q - jet.order))) := (continuous_pow (q - jet.order)).continuousAt.tendsto
-    rw [zero_pow (by omega : q - jet.order ≠ 0)] at h
-    exact h.mono_left nhdsWithin_le_nhds
+  have hpow : Tendsto (fun t : ℝ => t ^ (q - jet.order)) (𝓝[>] (0 : ℝ)) (𝓝 0) :=
+    tendsto_pow_nhdsGT_zero (by omega)
   have hlim : Tendsto (fun t : ℝ => t ^ (q - jet.order) / ∑ j, jet.cofactor j t)
       (𝓝[>] (0 : ℝ)) (𝓝 (0 / ∑ j, jet.cofactor j 0)) :=
     hpow.div (jet.analyticAt_sum_cofactor.continuousAt.tendsto.mono_left nhdsWithin_le_nhds) hden
@@ -506,11 +564,8 @@ theorem tendsto_pow_div_sum_atTop (jet : LeadingOrderJet f)
       self_mem_nhdsWithin] with t hpos ht
     exact mul_pos (pow_pos ht _) hpos
   have hzero : Tendsto u (𝓝[>] (0 : ℝ)) (𝓝 0) := by
-    have hpow : Tendsto (fun t : ℝ => t ^ (jet.order - q)) (𝓝[>] (0 : ℝ)) (𝓝 0) := by
-      have h : Tendsto (fun t : ℝ => t ^ (jet.order - q)) (𝓝 (0 : ℝ))
-          (𝓝 ((0 : ℝ) ^ (jet.order - q))) := (continuous_pow (jet.order - q)).continuousAt.tendsto
-      rw [zero_pow (by omega : jet.order - q ≠ 0)] at h
-      exact h.mono_left nhdsWithin_le_nhds
+    have hpow : Tendsto (fun t : ℝ => t ^ (jet.order - q)) (𝓝[>] (0 : ℝ)) (𝓝 0) :=
+      tendsto_pow_nhdsGT_zero (by omega)
     have hlim : Tendsto (fun t : ℝ => t ^ (jet.order - q) * ∑ j, jet.cofactor j t)
         (𝓝[>] (0 : ℝ)) (𝓝 (0 * ∑ j, jet.cofactor j 0)) :=
       hpow.mul (jet.analyticAt_sum_cofactor.continuousAt.tendsto.mono_left nhdsWithin_le_nhds)

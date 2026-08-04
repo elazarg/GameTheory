@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingExceptionalTailFallback
+import Math.BonferroniProductBounds
 
 /-!
 # The direction-barycenter chart of the vanishing-hazard sphere
@@ -39,26 +40,15 @@ open Math.Probability Math.PMFProduct
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 omit [Fintype ι] [DecidableEq ι] in
-/-- Weierstrass product inequality: `1 - ∑ f ≤ ∏ (1 - f)` for `f ∈ [0,1]`. -/
+/-- Weierstrass product inequality: `1 - ∑ f ≤ ∏ (1 - f)` for `f ∈ [0,1]`.
+The rearranged form of `Math.one_sub_prod_one_sub_le_sum`, the first
+Bonferroni bound. -/
 private theorem one_sub_sum_le_prod_one_sub
     (s : Finset ι) (f : ι → ℝ)
     (h0 : ∀ i ∈ s, 0 ≤ f i) (h1 : ∀ i ∈ s, f i ≤ 1) :
     1 - ∑ i ∈ s, f i ≤ ∏ i ∈ s, (1 - f i) := by
-  classical
-  induction s using Finset.induction_on with
-  | empty => simp
-  | insert a s ha ih =>
-      rw [Finset.sum_insert ha, Finset.prod_insert ha]
-      have h0' := fun i hi ↦ h0 i (Finset.mem_insert_of_mem hi)
-      have h1' := fun i hi ↦ h1 i (Finset.mem_insert_of_mem hi)
-      have hfa0 := h0 a (Finset.mem_insert_self a s)
-      have hfa1 := h1 a (Finset.mem_insert_self a s)
-      have ihs := ih h0' h1'
-      have hsum0 : 0 ≤ ∑ i ∈ s, f i := Finset.sum_nonneg h0'
-      have hstep : (1 - f a) * (1 - ∑ i ∈ s, f i) ≤
-          (1 - f a) * ∏ i ∈ s, (1 - f i) :=
-        mul_le_mul_of_nonneg_left ihs (by linarith)
-      nlinarith [mul_nonneg hfa0 hsum0]
+  have h := Math.one_sub_prod_one_sub_le_sum f s h0 h1
+  linarith
 
 /-- Sum of the players' stationary one-stage quit hazards. -/
 def quittingStationaryTotalHazard (root : ι → PMF Bool) : ℝ :=

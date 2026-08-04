@@ -56,6 +56,9 @@ eventually-statement supplies it, but it has to be taken.
 * `exists_quittingGermQuitRate_leadingOrder_normalization_of_not_isQuittingZeroSolo`
   — the entry point of `QuittingAnalyticGerm` with the germ-internal
   nondegeneracy hypothesis replaced by `¬ IsQuittingZeroSolo reward` (4)
+* `exists_quittingGermAbsorption_leadingOrder_normalization_of_not_isQuittingZeroSolo`
+  — the same, read on the germ's absorption `1 - ∏_j (1 - y_j)`, with the
+  matching branch pinned rather than squeezed
 -/
 
 set_option autoImplicit false
@@ -231,6 +234,40 @@ theorem exists_quittingGermQuitRate_leadingOrder_normalization_of_not_isQuitting
         (fun t : ℝ => t ^ g.ramification / ∑ j, quittingGermQuitRate g j t)
         (𝓝[>] (0 : ℝ)) atTop) :=
   exists_quittingGermQuitRate_leadingOrder_normalization g
+    (exists_not_eventually_quittingGermQuitRate_eq_zero_of_not_isQuittingZeroSolo
+      g hnot)
+
+/-- **The absorption form of the entry point.**  The three-way comparison of
+the exact discount complement `t ^ q` against the germ's *absorption*
+`1 - ∏_j (1 - y_j)`, with the germ-internal nondegeneracy hypothesis replaced
+by `¬ IsQuittingZeroSolo reward`.
+
+In the matching branch the absorption's own analytic order and leading
+coefficient are pinned — order exactly `m`, leading coefficient exactly
+`∑ j, a j` — so the limit is `1 / ∑ j, a j` and not merely something between
+`1 / (|ι| · ∑ j, a j)` and `1 / ∑ j, a j`. -/
+theorem exists_quittingGermAbsorption_leadingOrder_normalization_of_not_isQuittingZeroSolo
+    (g : (quittingGame reward).AnalyticBellmanGerm)
+    (hnot : ¬IsQuittingZeroSolo reward) :
+    ∃ (m : ℕ) (a : ι → ℝ),
+      Math.familyAnalyticOrder (quittingGermQuitRate g) = m ∧
+      (∀ i, 0 ≤ a i) ∧
+      (0 < ∑ j, a j) ∧
+      (∀ i, a i ≠ 0 ↔ i ∈ Math.leadingSet (quittingGermQuitRate g)) ∧
+      (∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < quittingGermAbsorption g t) ∧
+      (m < g.ramification → Tendsto
+        (fun t : ℝ => t ^ g.ramification / quittingGermAbsorption g t)
+        (𝓝[>] (0 : ℝ)) (𝓝 0)) ∧
+      (g.ramification = m →
+        analyticOrderAt (quittingGermAbsorption g) 0 = m ∧
+        Tendsto (fun t : ℝ => quittingGermAbsorption g t / t ^ m)
+          (𝓝[>] (0 : ℝ)) (𝓝 (∑ j, a j)) ∧
+        Tendsto (fun t : ℝ => t ^ g.ramification / quittingGermAbsorption g t)
+          (𝓝[>] (0 : ℝ)) (𝓝 (1 / ∑ j, a j))) ∧
+      (g.ramification < m → Tendsto
+        (fun t : ℝ => t ^ g.ramification / quittingGermAbsorption g t)
+        (𝓝[>] (0 : ℝ)) atTop) :=
+  exists_quittingGermAbsorption_leadingOrder_normalization g
     (exists_not_eventually_quittingGermQuitRate_eq_zero_of_not_isQuittingZeroSolo
       g hnot)
 
