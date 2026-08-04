@@ -130,7 +130,46 @@ optimized debt at the original root.
 
 **The surgery decoder is closed negatively (`M`)** — see the capstone claim.
 No bounded-length modification achieves a cutoff-independent decrement, and
-accumulation does not rescue it. Repair is the only surviving branch.
+accumulation does not rescue it. Within this grammar, repair is the only
+surviving branch.
+
+**But the plateau driving that closure is manufactured by the zero pin (`M`).**
+Both known plateau witnesses are two-player tables that have exact equilibria
+with debt zero once the terminal continuation is unpinned, and both equilibria
+are machine-checked: player one mixes at rate `1/2`, player two never quits,
+values `(a,0)` and `(1/4,0)` respectively, with both coordinates exactly
+indifferent and absorption rate `1/2`. The pin forces a strictly positive gap
+at every finite horizon, which forces the opponent survival product below one,
+which creates the debt; let the gap go to zero and the plateau vanishes.
+
+So "repair is the only surviving branch" is a fact about the exact-`D`
+zero-boundary grammar, **not** a demonstrated requirement of the program. A
+positive plateau in that grammar is evidence the grammar missed the
+equilibrium. Do not read the descent closure as urgency to find a repair for
+the games; read it as a reason to fix the carrier. `PC-008` accordingly
+deprioritizes escaping-middle compactification pending the free-terminal test.
+
+**The replacement carrier (`M`, partial).** Instead of a finite chain with an
+inert zero tail, take a **cycle**: rows `y_1,…,y_L` and values `z_1,…,z_L` with
+`z_k = F_{y_k}(z_{k+1})` cyclically, each `(y_k, z_{k+1})` complementary, and
+`∏_k c(y_k) < 1`. Absorption is load-bearing — without it the all-continue list
+reproduces *every* value vector and the notion is vacuous, and the same trap
+appears at the level of single rows, where the all-continue row is exact
+endpoint-Nash against both plateau tables' equilibrium values.
+
+Two results are in hand. The deviation mismatch of an absorbing cycle is zero
+unless some coordinate `i` is *isolated* in it — every opponent silent at every
+phase — and `r_i({i}) < 0`, in which case it is exactly `-r_i({i})`. And a
+length-one admissible cycle exists whenever some `i` with `r_i({i}) > 0` admits
+a rate `p ∈ (0,1]` with `(1-p)·r_j({j}) + p·r_j({i,j}) ≤ r_j({i})` for every
+`j ≠ i` — the classical no-join condition, here in exact cycle form, affine in
+`p` and hence one-dimensionally decidable. Both plateau tables satisfy it at
+exactly `p = 1/2`.
+
+The open object is therefore **existence of an admissible absorbing cycle when
+that criterion fails for every coordinate**. That failure class is nonempty and
+contains the published cyclic three-player table, which carries a length-three
+candidate. See [the carrier group](../../ideas/AbsorbingCycleCarrier/README.md).
 
 **Mark transport is not the obstruction (`M`).** The long-standing worry that a
 packet sitting arbitrarily deep in the middle cannot be carried through a
