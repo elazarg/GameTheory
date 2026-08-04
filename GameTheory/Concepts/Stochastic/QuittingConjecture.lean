@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingZeroSoloDisjunct
+import GameTheory.Concepts.Stochastic.UniformExistenceConjecture
 
 /-!
 # The finite-quitting conjecture and its one open premise
@@ -107,5 +108,30 @@ theorem quittingGame_exists_uniformEquilibriumPayoff
     ∃ payoff : Payoff ι,
       (quittingGame reward).IsUniformEquilibriumPayoff none payoff := by
   sorry
+
+/-- The general conjecture implies this one, since a quitting game *is* a
+finite stochastic game.
+
+`HEADLINE` — the direction that actually holds between the two intentional open
+declarations, recorded so the relation between them is a theorem rather than a
+remark.  The converse fails to be available: no reduction from arbitrary finite
+stochastic games to quitting games is known, which is why
+`quittingGame_exists_uniformEquilibriumPayoff` carries its own `sorry` rather
+than being derived from this.  Discharging the quitting conjecture directly, by
+means special to one live state, is the point of stating it separately. -/
+theorem quittingGame_exists_uniformEquilibriumPayoff_of_general
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (hgeneral : ∀ (G : StochasticGame ι) [Finite G.State]
+      [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (s₀ : G.State),
+      ∃ v : Payoff ι, G.IsUniformEquilibriumPayoff s₀ v) :
+    ∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff := by
+  haveI : Finite (quittingGame reward).State :=
+    inferInstanceAs (Finite (Option {S : Finset ι // S.Nonempty}))
+  haveI : ∀ i : ι, Finite ((quittingGame reward).Act i) :=
+    fun _ => inferInstanceAs (Finite Bool)
+  haveI : ∀ i : ι, Nonempty ((quittingGame reward).Act i) :=
+    fun _ => inferInstanceAs (Nonempty Bool)
+  exact hgeneral (quittingGame reward) none
 
 end GameTheory
