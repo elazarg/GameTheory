@@ -521,6 +521,7 @@ import GameTheory.Concepts.Stochastic.QuittingDisjunctionCounterexample
 import GameTheory.Concepts.Stochastic.QuittingConjecture
 import GameTheory.Concepts.Stochastic.CyclicFourPlayerQuitting
 import GameTheory.Concepts.Stochastic.QuittingAnalyticGerm
+import GameTheory.Concepts.Stochastic.QuittingGermNondegeneracy
 import GameTheory.Concepts.Stochastic.QuittingRefutedRouteFences
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
