@@ -43,6 +43,30 @@ the level of single rows: the all-continue row is exact endpoint-Nash against
 the equilibrium value of both plateau tables and reproduces every tail, so an
 endpoint certificate plus a fixed point certifies nothing on its own.
 
+## Closure status — what is actually closed
+
+Nothing in this group is closed by a proof alone. The seals separate
+believed-true from machine-checked, and the distinction is load-bearing here
+because one of these claims already had a wrong proof that survived review and
+was caught only by an adversarial audit.
+
+| Result | Believed true | Machine-checked |
+| --- | --- | --- |
+| Mismatch vanishes unless a negative-solo coordinate is isolated | yes | **no** — contraction route in formalization |
+| Solo-quitter criterion, root level, with necessity | yes | yes |
+| Solo-quitter criterion, behavioral level | yes | yes (pre-existing) |
+| Zero pin unrealizable, exhibited family | yes | yes |
+| Both plateau tables' equilibria and zero debt | yes | yes |
+| Cycle-pinned debt zero on the stationary chain | yes | yes |
+| The dichotomy | yes | **no** — the discounted family has no production analogue |
+| Vanishing branch admits an admissible cycle | **unknown** | no |
+
+The target conditional is: *admissible absorbing cycle of bounded length for
+every weight* implies terminal approximate existence for every accuracy, and
+then the landed terminal-to-uniform consumer gives the uniform payoff. Proving
+that implication on the believed-true premise is worth doing before the premise
+is settled, since it converts the conjecture into a single named statement.
+
 ## Dependencies and consumers
 
 Consumes the exact transport law for the finite dynamic debt. Feeds terminal
