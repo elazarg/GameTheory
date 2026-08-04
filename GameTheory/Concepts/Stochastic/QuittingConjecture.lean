@@ -51,7 +51,8 @@ split further by the sign pattern of the solo rewards:
 This is the conjecture for finite **quitting** games, which are a strict
 subclass of finite stochastic games with one live state.  Discharging
 `quitting_zeroSolo_or_admissibleCycle` would close this file's conjecture; it
-would **not** discharge `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean`,
+would **not** discharge `exists_uniformDeviationCapConstructor` in
+`UniformExistenceConjecture.lean`,
 the general finite-stochastic-game problem, for which no reduction to quitting
 games is known.
 
@@ -59,7 +60,8 @@ games is known.
 
 This file contains one `sorry`, deliberately, in
 `quitting_zeroSolo_or_admissibleCycle`.  The repository's other intentional open
-declaration is `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean`; these are the only two.
+declaration is `exists_uniformDeviationCapConstructor` in
+`UniformExistenceConjecture.lean`; these are the only two.
 -/
 
 set_option autoImplicit false
