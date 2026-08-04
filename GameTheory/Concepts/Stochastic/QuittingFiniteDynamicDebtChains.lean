@@ -38,7 +38,17 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-! ## Prescribed-value and residual interface -/
 
-/-- A zero-boundary path's displayed value is zero from the cutoff onward. -/
+/-- A zero-boundary path's displayed value is zero from the cutoff onward.
+
+This does *not* generalize to a nonzero anchor as a single statement: the
+`time = cutoff` case genuinely needs the zero pin (it reads the path's own
+terminal payoff, via `quittingFiniteNashBellmanPathValue_eq_zero_at_cutoff`),
+while the `time > cutoff` case is purely structural
+(`quittingFiniteNashBellmanPathValue_eq_zero_of_cutoff_lt`) and returns the
+literal padding `0` regardless of anchor.  An anchored path with
+`terminal ≠ 0` would disagree with itself across the two cases, so the
+combined claim is specific to the zero boundary; only its two pieces
+generalize. -/
 theorem quittingFiniteNashBellmanPathValue_eq_zero_of_cutoff_le
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
@@ -49,9 +59,7 @@ theorem quittingFiniteNashBellmanPathValue_eq_zero_of_cutoff_le
   rcases htime.eq_or_lt with rfl | hlt
   · exact quittingFiniteNashBellmanPathValue_eq_zero_at_cutoff
       reward cutoff path hpath
-  · unfold quittingFiniteNashBellmanPathValue
-    rw [dif_neg]
-    omega
+  · exact quittingFiniteNashBellmanPathValue_eq_zero_of_cutoff_lt cutoff path time hlt
 
 /-- Each scalar coordinate of an admissible finite path is a globally
 defined prescribed value for the all-Continue root extension. -/
@@ -97,12 +105,16 @@ theorem isQuittingLivePrescribedValue_finiteNashBellmanPath
 
 -- Scalarizing the finite vector path through continuation congruence is costly.
 /-- Exact root Nash makes the scalar prescribed Bellman residual vanish at
-every pre-terminal time of an admissible path. -/
-theorem quittingPrescribedOneStepResidual_finiteNashBellmanPath_eq_zero
+every pre-terminal time, given only the per-stage edge condition.  This is
+the mechanism underlying
+`quittingPrescribedOneStepResidual_finiteNashBellmanPath_eq_zero`: neither
+the box membership nor the terminal value of `path` is used, only the single
+edge at `time` -- so it holds for any anchor, not only the zero boundary. -/
+theorem quittingPrescribedOneStepResidual_finiteNashBellmanPath_eq_zero_of_edges
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
-    (hpath : path ∈
-      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (hedges : ∀ stage : Fin cutoff, IsQuittingNashBellmanEdge reward
+      (path (Fin.castSucc stage)) (path (Fin.succ stage)))
     (who : ι) (time : ℕ) (htime : time < cutoff) :
     quittingPrescribedOneStepResidual reward
       (quittingFiniteNashBellmanPathRoots cutoff path) who
@@ -113,8 +125,8 @@ theorem quittingPrescribedOneStepResidual_finiteNashBellmanPath_eq_zero
   let index : Fin cutoff := ⟨time, htime⟩
   let current := path (Fin.castSucc index)
   let successor := path (Fin.succ index)
-  have hedge : IsQuittingNashBellmanEdge reward current successor := by
-    exact hpath.2.2 index
+  have hedge : IsQuittingNashBellmanEdge reward current successor :=
+    hedges index
   let root := quittingRootOfSimplex current.2
   let quitValue := quittingRootQuitPayoff reward successor.1 root who
   let continueValue := quittingRootContinuePayoff reward successor.1 root who
@@ -154,6 +166,24 @@ theorem quittingPrescribedOneStepResidual_finiteNashBellmanPath_eq_zero
       reward roots who successor.1 time,
     hroot, hcurrent]
   exact sub_eq_zero.mpr hmax
+
+/-- Exact root Nash makes the scalar prescribed Bellman residual vanish at
+every pre-terminal time of an admissible path.  Specializes
+`quittingPrescribedOneStepResidual_finiteNashBellmanPath_eq_zero_of_edges` to
+the zero-boundary chain set's edge clause. -/
+theorem quittingPrescribedOneStepResidual_finiteNashBellmanPath_eq_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (who : ι) (time : ℕ) (htime : time < cutoff) :
+    quittingPrescribedOneStepResidual reward
+      (quittingFiniteNashBellmanPathRoots cutoff path) who
+      (fun liveTime ↦
+        quittingFiniteNashBellmanPathValue cutoff path liveTime who)
+      time = 0 :=
+  quittingPrescribedOneStepResidual_finiteNashBellmanPath_eq_zero_of_edges
+    reward cutoff path hpath.2.2 who time htime
 
 /-! ## A localized finite dynamic-debt estimate -/
 

@@ -175,6 +175,29 @@ def quittingFiniteNashBellmanPathValue
     0
 
 omit [DecidableEq ι] in
+/-- Before the cutoff, the operational root extension reads the path's own
+simplex coordinate.  Purely definitional -- no admissibility hypothesis is
+needed -- so it serves every chain family alike, not only the zero
+boundary. -/
+theorem quittingFiniteNashBellmanPathRoots_of_lt
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (time : ℕ) (htime : time < cutoff) :
+    quittingFiniteNashBellmanPathRoots cutoff path time =
+      quittingRootOfSimplex (path ⟨time, Nat.lt_succ_of_lt htime⟩).2 :=
+  dif_pos htime
+
+omit [DecidableEq ι] in
+/-- Before the cutoff, the padded displayed value reads the path's own
+value.  Purely definitional, for the same reason as
+`quittingFiniteNashBellmanPathRoots_of_lt`. -/
+theorem quittingFiniteNashBellmanPathValue_of_lt
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (time : ℕ) (htime : time < cutoff) :
+    quittingFiniteNashBellmanPathValue cutoff path time =
+      (path ⟨time, Nat.lt_succ_of_lt htime⟩).1 :=
+  dif_pos (Nat.lt_succ_of_lt htime)
+
+omit [DecidableEq ι] in
 /-- The operational root extension is all-Continue from the cutoff onward. -/
 theorem quittingFiniteNashBellmanPathRoots_eq_allContinue_of_cutoff_le
     (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
@@ -183,24 +206,54 @@ theorem quittingFiniteNashBellmanPathRoots_eq_allContinue_of_cutoff_le
       (quittingAllContinueRoot : ι → PMF Bool) := by
   simp [quittingFiniteNashBellmanPathRoots, not_lt.mpr htime]
 
-/-- An admissible finite path has zero terminal value. -/
+omit [DecidableEq ι] in
+/-- The displayed value at the cutoff is the path's own terminal payoff,
+whatever it is.  This is the mechanism underlying
+`quittingFiniteNashBellmanPathValue_eq_zero_at_cutoff`: the proof never
+inspects the path's terminal value, so it holds for any chain family, not
+only the zero boundary. -/
+theorem quittingFiniteNashBellmanPathValue_eq_last
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff) :
+    quittingFiniteNashBellmanPathValue cutoff path cutoff =
+      (path (Fin.last cutoff)).1 := by
+  rw [quittingFiniteNashBellmanPathValue, dif_pos (Nat.lt_succ_self cutoff)]
+  rfl
+
+omit [DecidableEq ι] in
+/-- Beyond the cutoff, the padded displayed value is unconditionally zero.
+Purely definitional: the padding is the literal `0` written into
+`quittingFiniteNashBellmanPathValue`, regardless of which chain set (if any)
+`path` belongs to. -/
+theorem quittingFiniteNashBellmanPathValue_eq_zero_of_cutoff_lt
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (time : ℕ) (htime : cutoff < time) :
+    quittingFiniteNashBellmanPathValue cutoff path time = 0 := by
+  unfold quittingFiniteNashBellmanPathValue
+  rw [dif_neg]
+  omega
+
+/-- An admissible finite path has zero terminal value.  Specializes
+`quittingFiniteNashBellmanPathValue_eq_last` via the zero-boundary chain
+set's terminal clause. -/
 theorem quittingFiniteNashBellmanPathValue_eq_zero_at_cutoff
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
     (hpath : path ∈
       quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff) :
     quittingFiniteNashBellmanPathValue cutoff path cutoff = 0 := by
-  rw [quittingFiniteNashBellmanPathValue,
-    dif_pos (Nat.lt_succ_self cutoff)]
+  rw [quittingFiniteNashBellmanPathValue_eq_last]
   exact hpath.2.1
 
-/-- The value projection of an admissible path obeys its exact Bellman
-equation before the cutoff. -/
-theorem quittingFiniteNashBellmanPathValue_eq_successor
+/-- The value projection of a path obeys its exact Bellman equation before
+the cutoff, given only the per-stage edge condition.  This is the mechanism
+underlying `quittingFiniteNashBellmanPathValue_eq_successor`: the proof
+never inspects the path's terminal value, so it holds for any anchor, not
+only the zero boundary. -/
+theorem quittingFiniteNashBellmanPathValue_eq_successor_of_edges
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
-    (hpath : path ∈
-      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (hedges : ∀ stage : Fin cutoff, IsQuittingNashBellmanEdge reward
+      (path (Fin.castSucc stage)) (path (Fin.succ stage)))
     (time : ℕ) (htime : time < cutoff) :
     quittingFiniteNashBellmanPathValue cutoff path time =
       quittingRootSuccessorPayoff reward
@@ -211,15 +264,34 @@ theorem quittingFiniteNashBellmanPathValue_eq_successor
   have htime1 : time + 1 < cutoff + 1 := Nat.succ_lt_succ htime
   simpa [quittingFiniteNashBellmanPathValue,
     quittingFiniteNashBellmanPathRoots, htime, htime0, htime1] using
-    (hpath.2.2 (⟨time, htime⟩ : Fin cutoff)).1
+    (hedges ⟨time, htime⟩).1
 
-/-- Every pre-terminal root of an admissible path is exact Nash against its
-displayed successor value. -/
-theorem quittingFiniteNashBellmanPathRoots_isZeroNash
+/-- The value projection of an admissible path obeys its exact Bellman
+equation before the cutoff.  Specializes
+`quittingFiniteNashBellmanPathValue_eq_successor_of_edges` to the
+zero-boundary chain set's edge clause. -/
+theorem quittingFiniteNashBellmanPathValue_eq_successor
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
     (hpath : path ∈
       quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (time : ℕ) (htime : time < cutoff) :
+    quittingFiniteNashBellmanPathValue cutoff path time =
+      quittingRootSuccessorPayoff reward
+        (quittingFiniteNashBellmanPathValue cutoff path (time + 1))
+        (quittingFiniteNashBellmanPathRoots cutoff path time) :=
+  quittingFiniteNashBellmanPathValue_eq_successor_of_edges reward cutoff path
+    hpath.2.2 time htime
+
+/-- Every pre-terminal root along an edge-satisfying path is exact Nash
+against its displayed successor value, given only the per-stage edge
+condition.  This is the mechanism underlying
+`quittingFiniteNashBellmanPathRoots_isZeroNash`; it holds for any anchor. -/
+theorem quittingFiniteNashBellmanPathRoots_isZeroNash_of_edges
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hedges : ∀ stage : Fin cutoff, IsQuittingNashBellmanEdge reward
+      (path (Fin.castSucc stage)) (path (Fin.succ stage)))
     (time : ℕ) (htime : time < cutoff) :
     IsεQuittingRootNash reward
       (quittingFiniteNashBellmanPathValue cutoff path (time + 1)) 0
@@ -231,7 +303,23 @@ theorem quittingFiniteNashBellmanPathRoots_isZeroNash
       (quittingFiniteNashBellmanPathRoots cutoff path time)).1
   simpa [quittingFiniteNashBellmanPathValue,
     quittingFiniteNashBellmanPathRoots, htime, htime1] using
-    (hpath.2.2 (⟨time, htime⟩ : Fin cutoff)).2
+    (hedges ⟨time, htime⟩).2
+
+/-- Every pre-terminal root of an admissible path is exact Nash against its
+displayed successor value.  Specializes
+`quittingFiniteNashBellmanPathRoots_isZeroNash_of_edges` to the
+zero-boundary chain set's edge clause. -/
+theorem quittingFiniteNashBellmanPathRoots_isZeroNash
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (time : ℕ) (htime : time < cutoff) :
+    IsεQuittingRootNash reward
+      (quittingFiniteNashBellmanPathValue cutoff path (time + 1)) 0
+      (quittingFiniteNashBellmanPathRoots cutoff path time) :=
+  quittingFiniteNashBellmanPathRoots_isZeroNash_of_edges reward cutoff path
+    hpath.2.2 time htime
 
 /-- One pre-terminal stage's probability that every opponent of `who`
 continues, written directly in simplex coordinates.  It is set to one away

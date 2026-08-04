@@ -543,23 +543,6 @@ theorem quittingRootSequence_fixedContinuation_unique_period_one
   rw [quittingRootAbsorptionMass] at habsorb
   linarith
 
-/-- One exact backward step of an anchored chain, read off its edges alone.
-The anchoring value is not used. -/
-theorem quittingFiniteNashBellmanPathValue_eq_successor_of_edges
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
-    (hedges : ∀ stage : Fin cutoff, IsQuittingNashBellmanEdge reward
-      (path (Fin.castSucc stage)) (path (Fin.succ stage)))
-    (time : ℕ) (htime : time < cutoff) :
-    quittingFiniteNashBellmanPathValue cutoff path time =
-      quittingRootSuccessorPayoff reward
-        (quittingFiniteNashBellmanPathValue cutoff path (time + 1))
-        (quittingFiniteNashBellmanPathRoots cutoff path time) := by
-  unfold quittingFiniteNashBellmanPathValue quittingFiniteNashBellmanPathRoots
-  rw [dif_pos (Nat.lt_succ_of_lt htime), dif_pos (Nat.succ_lt_succ htime),
-    dif_pos htime]
-  exact (hedges ⟨time, htime⟩).1
-
 /-- An anchored exact chain is the backward composition of its own roots over
 the remaining horizon, terminated at its anchor. -/
 theorem quittingFiniteAnchoredChain_value_eq_backwardPayoff
