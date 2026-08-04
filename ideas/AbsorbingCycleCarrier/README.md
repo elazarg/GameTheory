@@ -10,6 +10,12 @@
 | [A solo-quitter cycle exists without a join incentive](SoloQuitterCycleExistsWithoutJoinIncentive.md) | `PROVED` (`M`), formalization in flight |
 | [The zero pin is not a realizable continuation](TheZeroPinIsNotARealizableContinuation.md) | `PROVED` (`M+L`) at the exhibited family; general statement `OPEN` |
 | [Vanishing absorption is the only remaining case](VanishingAbsorptionIsTheOnlyRemainingCase.md) | `PROVED` (`M`) as a dichotomy; hard branch `OPEN` |
+| [Finite cycles are refuted; the carrier is a mass path](FiniteCyclesAreRefutedTheCarrierIsAMassPath.md) | `WRONG` for the finite carrier; replacement `OPEN` |
+
+**Read the last row first.** The finite-cycle carrier this group is named for is
+refuted as a *complete* carrier in every open case. Its sufficiency stands and
+is machine-checked; its completeness does not. The replacement is a continuous
+mass-parametrized absorption path, marked in the mixed-sign case.
 
 ## Why this group exists
 
