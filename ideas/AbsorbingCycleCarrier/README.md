@@ -13,6 +13,8 @@
 | [Finite cycles are refuted; the carrier is a mass path](FiniteCyclesAreRefutedTheCarrierIsAMassPath.md) | `WRONG` for the finite carrier; replacement `OPEN` |
 | [The uniform defect-to-gain conversion is false](UniformDefectToGainConversionIsFalse.md) | `WRONG` for the uniform conversion; replacement `OPEN`; all rows `M [reported]` |
 | [Quitting weights have analytic vanishing-discount germs](QuittingWeightsHaveAnalyticVanishingDiscountGerms.md) | `PROVED` (`M+L`); matching scaling case and nondegeneracy `OPEN` |
+| [The signed accumulation is the gain](TheSignedAccumulationIsTheGain.md) | `PROVED` (`M`) identity and instance; general statement `OPEN` |
+| [Zero-loss projective-tail extraction is hypothetical](ZeroLossProjectiveTailExtractionIsHypothetical.md) | `OPEN`; machinery currently unconsumable |
 
 **Read the last three rows first.** The finite-cycle carrier this group is named
 for is refuted as a *complete* carrier in every open case. Its sufficiency
