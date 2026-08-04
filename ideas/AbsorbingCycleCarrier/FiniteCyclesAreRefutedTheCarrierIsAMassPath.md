@@ -59,6 +59,36 @@ arXiv author sweep. None of them contains the terms *inverse iterate* or
 *completely absorbing*; none of the quitting-game papers has a Theorem 2.1 at
 all. So the citation cannot be used, and this row carries no external support.
 
+> **Second sweep, 2026-08-04 — the repository's own corpus.** The audit above
+> was conducted against external sources only. The repository holds eleven
+> local PDFs (the Math. Prog. copy of Ashkenazi-Golan–Krasikov–Rainer–Solan
+> and ten more under `ephemeral/old/counterexample-research/sources/`,
+> including Solan–Solan's Q-matrix preprint, Solan–Vieille's *Quitting
+> games — an example*, both Simon papers, Renault–Ziliotto,
+> Laraki–Solan–Vieille, and Solan's thesis). All eleven were extracted to
+> text and searched. **Neither *inverse iterate* nor *completely absorbing*
+> occurs anywhere in the local corpus**, and the only section-2 numbered
+> result matching `2.1` in any of them is Renault–Ziliotto's Proposition 2.1,
+> about a compact set of limit equilibrium payoffs in hidden stochastic games
+> — unrelated. In the Math. Prog. paper specifically, `2.1` is **Definition
+> 2.1, the definition of a quitting game**; that paper has no Theorem 2.1.
+> The `NOT LOCATABLE` verdict therefore survives a check against the sources
+> actually on disk, and is stronger than when it was recorded.
+>
+> One candidate remains unchecked *locally*: Solan–Vieille, *Quitting games*,
+> Math. Oper. Res. **26**, 265–285 (2001), which is cited elsewhere for its
+> Propositions 2.4 and 2.13 and so does carry section-2 numbering. No local
+> copy exists. The external sweep reports having searched it; that report has
+> not been independently confirmed against a fulltext.
+>
+> **Methodological note.** The first audit's prompt directed the agent at the
+> literature and not at `ephemeral/`. Any future source audit must sweep the
+> repository's own PDFs first — they are the cheapest and most likely home for
+> a citation someone in this program actually read. Note also that
+> `ephemeral/old/counterexample-research/sources/aps-quitting-2026.pdf` is a
+> 3 KB HTML bot-block page, not a paper; a sweep that trusts filenames will
+> silently skip it.
+
 Three findings bound how much of the claim survives that.
 
 - **The repetition step is sound.** Periodic extension of a cyclic array
