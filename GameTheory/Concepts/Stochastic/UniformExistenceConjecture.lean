@@ -29,11 +29,22 @@ Known cases: two-player zero-sum games (Mertens--Neyman 1981), two-player games
 structured classes.  The general `n`-player case is open.
 
 The repository's other intentional open declaration is
-`quitting_zeroSolo_or_admissibleCycle` in `QuittingConjecture.lean`, which is
-the remaining premise of the *finite-quitting* route.  Discharging it would
-close finite quitting games and would **not** discharge this file: quitting
-games are a strict subclass, and no reduction from arbitrary finite stochastic
-games to them is known.
+`quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`,
+the *finite-quitting* case.  Discharging it would **not** discharge this file:
+quitting games are a strict subclass, and no reduction from arbitrary finite
+stochastic games to them is known.
+
+## The `sorry` here does not assert belief
+
+A counterexample to approximate-equilibrium existence in finite-state,
+finite-action stochastic games is **claimed** in the literature: R. S. Simon,
+*A Stochastic Game without Approximate Equilibria*, arXiv:2310.04217 (2023),
+a four-player "Mousetrap".  Whether its hypotheses fall inside the ones stated
+below -- in particular whether its payoff is a limit average of stage payoffs
+and whether perfect monitoring survives its stage-combining reduction -- has
+not been settled in this repository.  Until it is, read the `sorry` as *not
+proved here*, not as *believed true*.  If the claim stands at these
+hypotheses, this statement is false and must be replaced rather than proved.
 -/
 
 namespace GameTheory

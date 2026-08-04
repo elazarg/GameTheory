@@ -8,60 +8,66 @@ import GameTheory.Concepts.Stochastic.QuittingZeroSoloDisjunct
 import GameTheory.Concepts.Stochastic.UniformExistenceConjecture
 
 /-!
-# The finite-quitting conjecture and its one open premise
+# The finite-quitting conjecture
 
 Every finite quitting game is conjectured to have a uniform-equilibrium
-payoff.  This file states that conjecture and isolates the single premise it
-now rests on, so that the remaining obligation is a named declaration rather
-than prose.
+payoff.  This file states that conjecture, and nothing else, so that the
+`sorry` warning a build emits names the conjecture itself.
 
-The reduction is landed:
+## What reaches the target
+
 `exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle` proves that a
 weight has a uniform-equilibrium payoff as soon as it is zero-solo *or* admits
 an admissible absorbing cyclic continuation block.  Both implications are
 theorems, with no gap in the deviation class — the consumed predicate
 quantifies over all behavior strategies.
 
-What is **not** proved is that those two cases are exhaustive.  That
-completeness statement is `quitting_zeroSolo_or_admissibleCycle` below, and it
-is an intentional open declaration.  It is not a weakening of the conjecture
-and not a convenience hypothesis: by the reduction it is *equivalent in force*
-to the conjecture on this route, and the conjecture is derived from it in one
-line.
+Those two cases are **not** exhaustive.
+`not_forall_isQuittingZeroSolo_or_hasAdmissibleAbsorbingQuittingCycle` in
+`QuittingDisjunctionCounterexample.lean` refutes the disjunction outright, on
+the two-coordinate weight quoted in the conjecture's own docstring below.  So
+the conjecture carries its own `sorry` rather than being reduced to a
+completeness premise; an earlier architecture that stated such a premise was
+removed once it was refuted.
 
-## Why completeness can fail only in one place
+What is proved about exhaustiveness is weaker and precisely scoped:
+`quittingCycle_zeroSolo_or_admissible_or_isolatedNegative` gives a
+**three**-branch disjunction — zero-solo, admissible, or isolated-negative —
+exhaustive over weights that admit *some* absorbing complementary cycle.  Its
+branches are not mutually exclusive, the third has no sufficiency theorem, and
+weights admitting no absorbing cycle at all lie outside its scope.
 
-Complementary rows exist against every continuation vector, so a cycle is never
-the scarce object; the question is whether one absorbs.  Along a family of
-discounted complementary rows with the discount tending to one, either some
-limit absorbs — giving a cycle of length one, admissible unless it isolates a
-coordinate of negative solo reward — or absorption degenerates and the limit is
-the all-continue row.  So the open premise reduces to the degenerate case,
-split further by the sign pattern of the solo rewards:
+## External status of the target
 
-* all solo rewards nonpositive: settled here, the zero-solo branch fires;
-* some positive and none negative: admissibility is automatic, since a mismatch
-  can be nonzero only at an isolated coordinate of negative solo reward, so only
-  existence of an absorbing cycle is at issue;
-* some positive and some negative: admissibility is a genuine constraint, and an
-  absorbing limit isolating a negative coordinate supplies no cycle even though
-  absorption did not degenerate.
+Two-player quitting games are settled, and three-player quitting games follow
+from Solan (1999) on three-player absorbing games; the open range is `n ≥ 4`.
+There is a published characterization — Ashkenazi-Golan--Krasikov--Rainer--Solan,
+Math. Program. 203 (2024), Theorem 3.4, after Simon (2007) and
+Solan--Vieille (2001) — of when a quitting game has `ε`-equilibria for every
+`ε > 0`, as a disjunction of three conditions on *strategies* rather than on
+the weight.  It is not consumed here, and it is not the same trichotomy as the
+one above.
+
+Note also that Simon, arXiv:2310.04217 (2023), states a belief that a
+counterexample exists for quitting games, and claims one for four-player
+finite stochastic games.  Neither claim has been assessed in this repository.
+Read the `sorry` as *not proved here*, not as *believed true*.
 
 ## Scope
 
-This is the conjecture for finite **quitting** games, which are a strict
-subclass of finite stochastic games with one live state.  Discharging
-`quitting_zeroSolo_or_admissibleCycle` would close this file's conjecture; it
-would **not** discharge `exists_uniformDeviationCapConstructor` in
-`UniformExistenceConjecture.lean`,
-the general finite-stochastic-game problem, for which no reduction to quitting
-games is known.
+This is the conjecture for finite **quitting** games, a strict subclass of
+finite stochastic games with one live state.  Discharging it would **not**
+discharge `exists_uniformDeviationCapConstructor` in
+`UniformExistenceConjecture.lean`, the general finite-stochastic-game problem,
+for which no reduction to quitting games is known.  The implication that does
+hold, from the general problem to this one, is
+`quittingGame_exists_uniformEquilibriumPayoff_of_general` below.
 
 ## Open declarations
 
 This file contains one `sorry`, deliberately, in
-`quitting_zeroSolo_or_admissibleCycle`.  The repository's other intentional open
-declaration is `exists_uniformDeviationCapConstructor` in
+`quittingGame_exists_uniformEquilibriumPayoff`.  The repository's other
+intentional open declaration is `exists_uniformDeviationCapConstructor` in
 `UniformExistenceConjecture.lean`; these are the only two.
 -/
 
