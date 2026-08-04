@@ -8,7 +8,7 @@
 | Verdict | `MIXED` |
 | Objective priority | `P1` |
 | Last audited | 2026-08-03, through E50 and production `QuittingBoundaryHolonomy` |
-| Central live claim | Couple the landed forward exact-D seam chart to E50's reverse anchored terminal-packet chart through the common finite minimizers, then decode a seam or certified buffered exit as repair or uniform root-debt descent. |
+| Central live claim | Couple the landed forward exact-D seam chart to E50's reverse anchored terminal-packet chart through the common finite minimizers, then decode a seam or certified buffered exit as repair within the zero-pinned grammar; uniform root-debt descent is closed ([`AnchoredRepairOrUniformDebtDescent.md`](../PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md)). |
 | Next discriminant | Prove closedness or a decisive nonclosedness falsifier for the realized arbitrary-length anchored-holonomy correspondence. The actual finite-chain semigroup and its compact scalar envelope are now production Lean; transport across a limiting middle and the repair/debt decoder remain open. |
 | Production destination | Quitting relative-boundary producer and one-seam reinsertion consumer |
 | Supersedes / superseded by | Supersedes the invariant-circle/Sturmian reading locally; no successor yet. |

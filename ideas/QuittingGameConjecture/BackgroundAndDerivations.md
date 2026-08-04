@@ -8,8 +8,8 @@
 | Verdict | `OPEN` |
 | Objective priority | `P0` |
 | Last audited | 2026-08-03, through `6a64b15`, `bc86435`, `e2d5170`, and the Q132 audit at `18adbd2` |
-| Central live claim | Every positive optimized-debt plateau yields a terminal approximate equilibrium, or a bounded exact extension uniformly lowers the optimized debt. |
-| Next discriminant | Refine `e2d5170` along `9334ab4`'s separately positive preterminal-survival and terminal-atom coordinates, retaining one marked action and its bridge factorizations; then decode that bridge as an executable repair or uniform optimized-debt descent. In parallel formalize Q132's behavioral nonclosedness regression. |
+| Central live claim | Every positive optimized-debt plateau yields a terminal approximate equilibrium via an executable repair, within the zero-pinned exact-`D` grammar. The bounded-exact-extension descent alternative is closed — no bounded extension uniformly lowers the optimized debt (see [`AnchoredRepairOrUniformDebtDescent.md`](../PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md)) — and both known plateaus are themselves manufactured by pinning the terminal continuation to zero. |
+| Next discriminant | Refine `e2d5170` along `9334ab4`'s separately positive preterminal-survival and terminal-atom coordinates, retaining one marked action and its bridge factorizations; then decode that bridge as an executable repair within the zero-pinned grammar — uniform optimized-debt descent is closed ([`AnchoredRepairOrUniformDebtDescent.md`](../PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md)). In parallel formalize Q132's behavioral nonclosedness regression. |
 | Production destination | Terminal approximate-equilibrium existence, hence a uniform-equilibrium payoff. |
 | Supersedes / superseded by | Supersedes the uncorrected proper-path-only plan; no successor. |
 
@@ -20,7 +20,7 @@
 | QG1 | Terminal approximate Nash profiles at every positive accuracy are equivalent, at the existence level, to a uniform-equilibrium payoff. | `PROVED` | `M+L+C` | Finite quitting games; final semantic reduction. |
 | QG2 | Finite exact zero-boundary Nash--Bellman chains have attained optimized debt, and vanishing optimized debt produces terminal approximate equilibria. | `PROVED` | `M+L+A+C` | Positive/zero debt split. |
 | QG3 | A positive optimized-debt plateau yields a marked owner, the exhaustive owner-clock split, separated preterminal survival and terminal-action mass, and compatible forward/reverse exact-D boundary rays. | `PROVED` | `M+L+A+X` | The finite middle is not retained by the two-ended experiment. |
-| QG4 | Every fully summable positive plateau yields an executable repair or a bounded exact extension with one cutoff-independent positive debt drop. | `OPEN` | `I` | This is the remaining relative-boundary producer, developed precisely in `ideas/PositivePlateauBoundaryClosure/README.md`. |
+| QG4 | Every fully summable positive plateau yields an executable repair or a bounded exact extension with one cutoff-independent positive debt drop. | `OPEN` | `I` | This is the remaining relative-boundary producer, developed precisely in `ideas/PositivePlateauBoundaryClosure/README.md`. The extension-descent disjunct is refuted as a general mechanism there ([`AnchoredRepairOrUniformDebtDescent.md`](../PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md)); the live obligation is the repair disjunct within the zero-pinned grammar. |
 
 ## Falsifiers and wrong turns
 

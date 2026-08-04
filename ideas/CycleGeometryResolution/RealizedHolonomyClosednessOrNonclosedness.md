@@ -37,4 +37,9 @@ topologically compact, but topology then supplies no bounded-cost exact
 decoder.  The strongest presently justified closed subclass is the uniformly
 bounded-cutoff class.  To cover the positive plateau one must prove a uniform
 finite-support/length reduction, or add an infinity chart together with a
-separate theorem converting it to bounded finite repair or debt descent.
+separate theorem converting it to bounded finite repair. The debt-descent
+alternative is closed within the zero-pinned grammar — no bounded exact
+extension achieves a cutoff-independent decrement — and that closure is itself
+an artifact of the pin, since the plateaus driving it vanish once the terminal
+continuation is unpinned. See
+[anchored repair or uniform debt descent](../PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md).
