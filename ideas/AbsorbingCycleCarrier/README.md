@@ -63,7 +63,9 @@ was caught only by an adversarial audit.
 | Cycle-pinned debt zero on the stationary chain | yes | yes |
 | The dichotomy | yes | **no** — the discounted family has no production analogue |
 | **Admissible absorbing cycle implies a uniform equilibrium payoff** | yes | **yes** |
-| Vanishing branch admits an admissible cycle | **unknown** | no |
+| **Zero solo weights imply a uniform equilibrium payoff, namely `0`** | yes | **yes** |
+| **The disjunction of those two implies a uniform equilibrium payoff** | yes | **yes** |
+| The disjunction is *complete* — every weight satisfies one branch | **unknown** | no |
 
 **The conditional is closed.** From a cyclic continuation block together with
 admissibility — for every coordinate, either its deleted survival product

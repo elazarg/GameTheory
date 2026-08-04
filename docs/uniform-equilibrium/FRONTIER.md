@@ -194,9 +194,16 @@ complementarity at coordinate `2`. The corrected reduction is:
 > For every weight, either `Λ = 0` — and the landed zero branch applies — or
 > the weight admits an admissible absorbing cycle **of some finite length**.
 
+**The implication is one machine-checked theorem** (`M+L`),
+`exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle`: either branch
+yields a uniform equilibrium payoff, the zero-solo branch delivering the named
+payoff `0`. What remains open is **completeness of the disjunction** — whether
+every weight satisfies one branch — not either implication.
+
 No bound on the length is required: the formalized conditional quantifies over
 the period with no bound, so earlier statements asking for `L(n)` were stronger
-than necessary.
+than necessary. The zero-solo branch is moreover an iff, so its hypothesis
+cannot be weakened.
 
 The counterexample has `Λ = 0`, so it lies in the already-solved disjunct: its
 exact equilibrium is the all-continue profile with payoff `(0,0)`, which no
