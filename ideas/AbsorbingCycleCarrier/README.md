@@ -1,0 +1,55 @@
+# Absorbing cycle carrier
+
+| Lifecycle | Verdict | Priority | Group decision |
+| --- | --- | --- | --- |
+| `ACTIVE` | `MIXED` | `P0` | Decide whether every finite quitting weight admits an admissible absorbing complementary cycle. The mismatch half is characterized; existence is the whole remaining question. |
+
+| Scientific object | Status |
+| --- | --- |
+| [Mismatch vanishes except on isolated negative coordinates](MismatchVanishesExceptOnIsolatedNegativeCoordinates.md) | `PROVED` (`M`), Lean destination named |
+| [A solo-quitter cycle exists without a join incentive](SoloQuitterCycleExistsWithoutJoinIncentive.md) | `PROVED` (`M`), formalization in flight |
+
+## Why this group exists
+
+The exact-`D` chain grammar pins the terminal continuation to zero. That pin
+manufactures positive optimized-debt plateaus on games that are easy: both
+known plateau witnesses are two-player tables whose exact equilibria have debt
+zero once the continuation is unpinned, and both are now machine-checked. See
+[anchored repair or uniform debt descent](../PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md)
+for the refutation of the descent branch and the diagnosis.
+
+This group carries the replacement. Instead of a finite chain with an inert
+zero tail, the carrier is a **cycle**: a finite list of rows that reproduces its
+own value and absorbs. The conjecture, in this carrier, becomes a
+finite-dimensional existence statement rather than a compactness statement
+about escaping middles — which is why `PC-008` deprioritized the latter.
+
+## The carrier
+
+For rows `y_1, … , y_L` and values `z_1, … , z_L`, cyclically:
+
+- `z_k = F_{y_k}(z_{k+1})` with `z_{L+1} := z_1`;
+- each `(y_k, z_{k+1})` is complementary;
+- **absorbing**: `∏_k c(y_k) < 1`.
+
+Absorption is not a technicality. Without it the all-continue list reproduces
+*every* value vector, is complementary whenever `z_i ≥ r_i({i})`, and has zero
+mismatch — so the notion would be satisfied vacuously by every weight, with the
+values not determined by the rows at all. Under absorption the cyclic composite
+contracts and `z` is uniquely determined by the rows. The same trap appears at
+the level of single rows: the all-continue row is exact endpoint-Nash against
+the equilibrium value of both plateau tables and reproduces every tail, so an
+endpoint certificate plus a fixed point certifies nothing on its own.
+
+## Dependencies and consumers
+
+Consumes the exact transport law for the finite dynamic debt. Feeds terminal
+approximate existence and then the landed terminal-to-uniform selection, by the
+same route the zero branch already uses.
+
+## Next group decision
+
+Existence. The base case is settled positively by the solo-quitter criterion,
+and that criterion fails on cyclic tables — so the open question is whether
+`L > 1` always suffices, and whether `L` is bounded in the number of
+coordinates.
