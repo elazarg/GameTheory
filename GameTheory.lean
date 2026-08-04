@@ -518,6 +518,7 @@ import GameTheory.Concepts.Stochastic.QuittingCycleIsolatedCoordinate
 import GameTheory.Concepts.Stochastic.QuittingAdmissibleCycleTerminalEquilibrium
 import GameTheory.Concepts.Stochastic.QuittingZeroSoloDisjunct
 import GameTheory.Concepts.Stochastic.QuittingDisjunctionCounterexample
+import GameTheory.Concepts.Stochastic.QuittingThreeBranchDisjunction
 import GameTheory.Concepts.Stochastic.QuittingConjecture
 import GameTheory.Concepts.Stochastic.CyclicFourPlayerQuitting
 import GameTheory.Concepts.Stochastic.QuittingAnalyticGerm
