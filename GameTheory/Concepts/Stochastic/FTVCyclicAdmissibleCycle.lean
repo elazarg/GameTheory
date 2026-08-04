@@ -119,7 +119,7 @@ theorem quittingRootPayoff_ftv (tail : Payoff Player) (action : Player → Bool)
 
 /-- A displayed three-coordinate action row has a quitter exactly when one of
 its coordinates is `true`. -/
-@[simp] theorem quittingQuitters_vec_nonempty (a b d : Bool) :
+theorem quittingQuitters_vec_nonempty (a b d : Bool) :
     (quittingQuitters ![a, b, d]).Nonempty ↔ a = true ∨ b = true ∨ d = true := by
   constructor
   · rintro ⟨who, hwho⟩
@@ -128,6 +128,17 @@ its coordinates is `true`. -/
     · exact ⟨0, by simp [quittingQuitters, ha]⟩
     · exact ⟨1, by simp [quittingQuitters, hb]⟩
     · exact ⟨2, by simp [quittingQuitters, hd]⟩
+
+/-- The one-stage row payoff on a displayed action row, with the absorption
+test already decided.  This is the form the phase computations consume. -/
+@[simp] theorem quittingRootPayoff_ftv_vec (tail : Payoff Player) (a b d : Bool)
+    (who : Player) :
+    quittingRootPayoff ftvReward tail ![a, b, d] who =
+      if a || b || d then terminalReward ![a, b, d] who else tail who := by
+  rw [quittingRootPayoff_ftv]
+  refine if_congr ?_ rfl rfl
+  rw [quittingQuitters_vec_nonempty]
+  cases a <;> cases b <;> cases d <;> simp
 
 /-! ## The three phase rows -/
 
@@ -197,7 +208,7 @@ def phaseRoot (c : Player) : Player → PMF Bool :=
 /-- The phase rows carry exactly the packet's quitting matrix. -/
 theorem phaseRoot_quitProbability (c who : Player) :
     (phaseRoot c who true).toReal = standardQuitProb c who := by
-  fin_cases c <;> fin_cases who <;> norm_num [phaseRoot, standardQuitProb]
+  fin_cases c <;> fin_cases who <;> simp [phaseRoot, standardQuitProb]
 
 /-! ## The value recursion, imported from the packet -/
 
@@ -229,8 +240,8 @@ theorem quittingRootSuccessorPayoff_phaseRoot (c : Player) (tail : Payoff Player
   unfold quittingRootExpectedPayoff
   rw [expect_pmfPi_fin3_bool]
   fin_cases c <;> fin_cases who <;>
-    simp [phaseRoot, quittingRootPayoff_ftv, terminalReward, soloReward,
-      Matrix.cons_val_two, expect_pure] <;> ring
+    simp [phaseRoot, terminalReward, soloReward, Matrix.cons_val_two,
+      expect_pure]
 
 /-! ## The exact endpoint-Nash certificate -/
 
@@ -248,8 +259,8 @@ theorem endpointDifference_phaseRoot (c who : Player) :
     quittingRootContinuePayoff quittingRootExpectedPayoff
   rw [expect_pmfPi_fin3_bool, expect_pmfPi_fin3_bool]
   fin_cases c <;> fin_cases who <;>
-    norm_num [phaseRoot, quittingRootPayoff_ftv, terminalReward, standardPromise,
-      nextThree, Matrix.cons_val_two, expect_pure, Function.update_apply]
+    simp [phaseRoot, terminalReward, standardPromise, nextThree,
+      Matrix.cons_val_two, expect_pure] <;> norm_num
 
 /-- The gaps are nonpositive at every coordinate. -/
 theorem endpointDifference_phaseRoot_nonpos (c who : Player) :
@@ -263,7 +274,7 @@ theorem endpointDifference_phaseRoot_self (c : Player) :
     quittingRootEndpointDifference ftvReward (standardPromise (nextThree c))
       (phaseRoot c) c = 0 := by
   rw [endpointDifference_phaseRoot]
-  fin_cases c <;> norm_num [nextThree]
+  fin_cases c <;> simp [nextThree]
 
 /-- **The phase row is exactly (`ε = 0`) endpoint Nash against the next
 promise.** -/
@@ -272,7 +283,7 @@ theorem isZeroEndpointNash_phaseRoot (c : Player) :
       (phaseRoot c) := by
   intro who
   rw [endpointDifference_phaseRoot]
-  fin_cases c <;> fin_cases who <;> norm_num [phaseRoot, nextThree]
+  fin_cases c <;> fin_cases who <;> simp [phaseRoot, nextThree] <;> norm_num
 
 /-! ## Absorption and opponent survival -/
 
@@ -281,7 +292,7 @@ theorem quittingRootAbsorptionMass_phaseRoot (c : Player) :
     quittingRootAbsorptionMass (phaseRoot c) = 1 / 2 := by
   rw [quittingRootAbsorptionMass,
     quittingStationaryContinueMass_eq_prod_continueProbability, Fin.prod_univ_three]
-  fin_cases c <;> norm_num [phaseRoot]
+  fin_cases c <;> simp [phaseRoot] <;> norm_num
 
 /-- The deleted (opponent) survival mass of a phase row: `1` at the active
 coordinate, `1/2` at the two silent ones. -/
@@ -292,8 +303,7 @@ theorem fixedOpponentsContinueMass_phaseRoot (c who : Player) :
     (Function.update (phaseRoot c) who (PMF.pure false)) = _
   rw [quittingStationaryContinueMass_eq_prod_continueProbability,
     Fin.prod_univ_three]
-  fin_cases c <;> fin_cases who <;>
-    norm_num [phaseRoot, Function.update_apply]
+  fin_cases c <;> fin_cases who <;> simp [phaseRoot]
 
 /-! ## The block -/
 
@@ -332,13 +342,9 @@ theorem phasePoint_mem_box (c : Player) :
       (fun _ ↦ quittingRewardBound ftvReward)
   constructor
   · intro who
-    fin_cases c <;> fin_cases who <;>
-      simp only [standardPromise, Matrix.cons_val_zero, Matrix.cons_val_one,
-        Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons] <;> linarith
+    fin_cases c <;> fin_cases who <;> simp [standardPromise] <;> linarith
   · intro who
-    fin_cases c <;> fin_cases who <;>
-      simp only [standardPromise, Matrix.cons_val_zero, Matrix.cons_val_one,
-        Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons] <;> linarith
+    fin_cases c <;> fin_cases who <;> simp [standardPromise] <;> linarith
 
 /-- Every stage of the block is an exact Nash--Bellman edge: the value clause
 is the packet's recursion, the Nash clause the endpoint certificate. -/
@@ -398,6 +404,21 @@ theorem isQuittingCycleAdmissible_ftvBlockCycle :
   rw [ftvReward_singletonTerminal, soloReward_self]
   norm_num
 
+/-- The joint all-continue mass around the whole cycle is `1/8`: three
+independent stages each surviving with probability `1/2`.  This is the
+quantitative content of the block's absorption clause. -/
+theorem prod_continueMass_ftvBlockCycle :
+    (∏ stage : Fin 3, quittingStationaryContinueMass
+      (quittingCyclicContinuationBlockCycle 2 ftvBlock stage)) = 1 / 8 := by
+  have hmass : ∀ c : Player, quittingStationaryContinueMass (phaseRoot c) = 1 / 2 := by
+    intro c
+    have h := quittingRootAbsorptionMass_phaseRoot c
+    rw [quittingRootAbsorptionMass] at h
+    linarith
+  rw [Fin.prod_univ_three]
+  simp only [quittingCyclicContinuationBlockCycle_ftvBlock, hmass]
+  norm_num
+
 /-- The contracting branch happens to hold here as well: the deleted survival
 product at every coordinate is `1/4`.  Recorded for contrast with the surgery
 table of `QuittingAdmissibleCycleTerminalEquilibrium`, where the contracting
@@ -408,7 +429,7 @@ theorem prod_fixedOpponentsContinueMass_ftvBlockCycle (who : Player) :
   rw [Fin.prod_univ_three]
   simp only [quittingCyclicContinuationBlockCycle_ftvBlock,
     fixedOpponentsContinueMass_phaseRoot]
-  fin_cases who <;> norm_num
+  fin_cases who <;> simp <;> norm_num
 
 /-! ## The conclusion -/
 

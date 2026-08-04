@@ -72,45 +72,38 @@ open StochasticGame
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
-/-- **The open premise of the finite-quitting route.**
-
-Every weight is zero-solo, or admits an admissible absorbing cyclic
-continuation block.
-
-`HEADLINE` — this is the sole remaining obligation on the finite-quitting
-route, and it is an *intentional open declaration*.  Both implications from
-this disjunction to a uniform-equilibrium payoff are proved
-(`exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle`); only
-exhaustiveness is missing.
-
-Known constraints on any proof.  The first disjunct is not removable: there are
-zero-solo weights admitting no admissible absorbing cycle of any length, so the
-statement genuinely needs both cases.  The absorption clause inside the second
-disjunct is not removable either: without it the all-continue list reproduces
-every value vector and the disjunct would be vacuously true for every weight.
-No bound on the block's period is asserted or needed.  Two natural routes are
-refuted: the construction following the blocking digraph does not always yield a
-solvable system, and the complementary-successor correspondence is not
-convex-valued, so a direct Kakutani argument does not apply. -/
-theorem quitting_zeroSolo_or_admissibleCycle
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
-    IsQuittingZeroSolo reward ∨ HasAdmissibleAbsorbingQuittingCycle reward := by
-  sorry
-
 /-- **The finite-quitting uniform-equilibrium conjecture.**
 
 Every finite quitting game has a uniform-equilibrium payoff.
 
-`HEADLINE` — derived in one line from the open premise above together with the
-landed reduction, so the entire finite-quitting route now has exactly one
-unproved input.  This covers quitting games only; the general
-finite-stochastic-game problem is `exists_uniformDeviationCapConstructor` in
-`UniformExistenceConjecture.lean` and does not follow from this. -/
+`HEADLINE` — an *intentional open declaration*.  This covers quitting games
+only; the general finite-stochastic-game problem is
+`exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean`
+and does not follow from this.
+
+**Do not attempt to derive this from
+`exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle`.**  That
+reduction is sound, but its hypothesis is *not* satisfied by every weight, so it
+cannot discharge this conjecture on its own.  Witness, for `ι = Bool`:
+
+    r({1}) = (1, -1),   r({2}) = (1, -1),   r({1,2}) = (0, 1).
+
+Here `r₁({1}) = 1 > 0`, so the weight is not zero-solo.  It does admit
+absorbing cyclic continuation blocks — for instance the single row where
+coordinate `2` quits with probability one, against the value `(1, -1)`, at which
+coordinate `1` has gap `-1 ≤ 0` and coordinate `2` is exactly indifferent.  But
+every absorbing complementary cycle for this weight has coordinate `1` silent at
+every phase, so the deleted survival product at coordinate `2` is `1`; since
+`r₂({2}) = -1 < 0`, the mismatch there is `1` and no cycle is admissible.
+
+The weight has two coordinates, so a uniform-equilibrium payoff does exist for
+it externally.  Its equilibrium therefore lies outside the cycle carrier, and
+what the carrier needs is a third branch covering weights of this shape — not a
+proof that the existing two are exhaustive. -/
 theorem quittingGame_exists_uniformEquilibriumPayoff
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
     ∃ payoff : Payoff ι,
-      (quittingGame reward).IsUniformEquilibriumPayoff none payoff :=
-  exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle reward
-    (quitting_zeroSolo_or_admissibleCycle reward)
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff := by
+  sorry
 
 end GameTheory
