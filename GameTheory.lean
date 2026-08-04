@@ -113,6 +113,7 @@ import GameTheory.Concepts.Repeated.MonitoringHyperplanes
 -- Stochastic games (uniform equilibrium program)
 import GameTheory.Concepts.Stochastic.Basic
 import GameTheory.Concepts.Stochastic.ActionLegalityNormalization
+import GameTheory.Concepts.Stochastic.ActionLegalityMarkovConverse
 import GameTheory.Concepts.Stochastic.Uniform
 import GameTheory.Concepts.Stochastic.InfinitePlayMeasure
 import GameTheory.Concepts.Stochastic.LiminfAverageBridge

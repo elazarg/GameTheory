@@ -443,6 +443,97 @@ theorem not_isQuittingCyclicContinuationBlock_allContinueBlock
     quittingRootAbsorptionMass_allContinueRoot] at hstage
   exact lt_irrefl 0 hstage
 
+/-! ## The structural wrapper: absorption as a field, not a side condition
+
+`IsQuittingCyclicContinuationBlock` already states absorption, but it is a
+*Prop*: a semantic consumer that merely names the Prop as a hypothesis type
+can just as easily be restated, elsewhere, against a differently-shaped
+hypothesis that drops the absorption conjunct -- exactly the omission
+`quittingAllContinueBlock_forced` shows is silent and passes every other
+clause.  `QuittingRealizedContinuation` closes that off at the type level for
+every consumer that is phrased in terms of it: absorption is a *field*, so a
+term of this structure cannot exist without a proof of absorption baked in,
+and there is no route to one except through `IsQuittingCyclicContinuationBlock`
+itself (`QuittingRealizedContinuation.ofBlock`) or an equivalent direct
+construction that still has to supply the `absorbs` field. -/
+
+/-- **A realized cyclic continuation for `terminal`.**  The structural form of
+`IsQuittingCyclicContinuation`: the same three clauses as
+`IsQuittingCyclicContinuationBlock`, bundled as fields of a type instead of
+conjuncts of a Prop that a future hypothesis list could omit.  Consumers
+stated against this structure, rather than against the raw predicate or some
+future look-alike, cannot be fed a continuation whose absorption obligation
+was never discharged. -/
+structure QuittingRealizedContinuation
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (terminal : Payoff ι) where
+  /-- The block has `period + 1` displayed stages. -/
+  period : ℕ
+  /-- The underlying exact Nash--Bellman block. -/
+  block : QuittingFiniteNashBellmanPath ι (period + 1)
+  /-- The block is a bounded exact Nash--Bellman chain anchored at `terminal`. -/
+  mem_chainSet : block ∈
+    quittingFiniteAnchoredNashBellmanChainSet reward terminal (period + 1)
+  /-- The block reproduces `terminal` at its origin. -/
+  origin_eq : (block 0).1 = terminal
+  /-- **Absorption obligation.**  Some stage of the block absorbs with
+  positive probability.  Dropping this field is exactly what would let the
+  all-Continue block (`quittingAllContinueBlock`) inhabit the structure for
+  every `terminal` dominating the solo-quit rewards
+  (`quittingAllContinueBlock_forced`); see `block_ne_allContinueBlock` below
+  for the proof that, with this field present, it cannot. -/
+  absorbs : ∃ stage : Fin (period + 1),
+    0 < quittingRootAbsorptionMass
+      (quittingRootOfSimplex (block (Fin.castSucc stage)).2)
+
+/-- Unbundling: a `QuittingRealizedContinuation` yields the raw
+`IsQuittingCyclicContinuationBlock` predicate on its own block. -/
+theorem QuittingRealizedContinuation.isQuittingCyclicContinuationBlock
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι} {terminal : Payoff ι}
+    (rc : QuittingRealizedContinuation reward terminal) :
+    IsQuittingCyclicContinuationBlock reward terminal (rc.period + 1) rc.block :=
+  ⟨rc.mem_chainSet, rc.origin_eq, rc.absorbs⟩
+
+/-- Unbundling further: a `QuittingRealizedContinuation` witnesses
+`IsQuittingCyclicContinuation`. -/
+theorem QuittingRealizedContinuation.isQuittingCyclicContinuation
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι} {terminal : Payoff ι}
+    (rc : QuittingRealizedContinuation reward terminal) :
+    IsQuittingCyclicContinuation reward terminal :=
+  ⟨rc.period, rc.block, rc.isQuittingCyclicContinuationBlock⟩
+
+/-- **Constructor from the existing block predicate.**  The cheap migration
+path: any call site already holding an `IsQuittingCyclicContinuationBlock`
+proof produces a `QuittingRealizedContinuation` for free, so existing
+certificates need no rework, only their consumers' signatures change. -/
+def QuittingRealizedContinuation.ofBlock
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (terminal : Payoff ι)
+    (period : ℕ) (block : QuittingFiniteNashBellmanPath ι (period + 1))
+    (hblock : IsQuittingCyclicContinuationBlock reward terminal (period + 1) block) :
+    QuittingRealizedContinuation reward terminal where
+  period := period
+  block := block
+  mem_chainSet := hblock.1
+  origin_eq := hblock.2.1
+  absorbs := hblock.2.2
+
+/-- **Regression: the all-Continue block does not inhabit the wrapper**, at
+any period and against any terminal.  Reuses
+`not_isQuittingCyclicContinuationBlock_allContinueBlock` rather than
+reproving it: unbundle `rc` to the raw predicate and apply that lemma to the
+substituted block directly.  This is the precise sense in which the vacuity
+trap becomes a type error here: there is no way to build a
+`QuittingRealizedContinuation` whose block is the identity-Bellman
+all-Continue row. -/
+theorem QuittingRealizedContinuation.block_ne_allContinueBlock
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι} {terminal : Payoff ι}
+    (rc : QuittingRealizedContinuation reward terminal) :
+    rc.block ≠ quittingAllContinueBlock terminal (rc.period + 1) := by
+  intro hcontra
+  refine not_isQuittingCyclicContinuationBlock_allContinueBlock
+    reward terminal (rc.period + 1) ?_
+  rw [← hcontra]
+  exact rc.isQuittingCyclicContinuationBlock
+
 /-- Against any continuation dominating the solo-quit rewards the terminal
 mismatch vanishes.  Combined with `quittingAllContinueBlock_forced` this is
 the precise statement that an unfenced predicate would make the cycle-pinned

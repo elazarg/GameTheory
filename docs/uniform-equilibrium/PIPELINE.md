@@ -891,19 +891,31 @@ carries only `IsMarkovNash` -- exact, no epsilon -- so the transfer is proved
 against a locally-defined Markov epsilon-Nash notion, not against the
 behaviour-strategy notion `IsUniformEquilibriumPayoff` actually uses, which is
 built on the heavier `BehaviorProfile`/`Hist` machinery in `Uniform.lean`.
-**Blocking issue for the converse -- which is the direction the reduction
-actually needs.** Histories record the *raw* joint action played
-(`StageRecord = Fin t -> State x JointAct`, `Basic.lean:61`). Padding normalizes
-payoffs and transitions but leaves illegal action labels **observable**, so
-distinct illegal actions collapsing onto the same legal one stay distinguishable
-in the history and can serve as costless public signals or memory. That can
-*enlarge* the set of history-dependent equilibria, breaking precisely the needed
-direction: state-independent existence would not imply state-dependent
-existence. Resolution requires one of -- normalized-action histories,
-normalization-invariant strategies, or a semantics-preserving dependent-action
-compiler. Until then the converse is OPEN and may be FALSE. Also remaining: lift
-the transfer to the behaviour-strategy notion. Until both land, the conjecture
-is still formally stated for the state-independent class.
+**The converse splits by level, and the split is now settled at the lower one.**
+
+*Markov level: PROVED.* `isεNormalizedMarkovNash_of_legal`
+(`ActionLegalityMarkovConverse.lean`) closes it. The observability worry cannot
+arise here for two independent reasons. `MarkovProfile` has no history
+argument, and both notions are single-stage payoff comparisons with no
+continuation, so a signal received earlier has no channel to a later decision.
+And structurally, `normalizeAct` sends **every** illegal action at a state to
+the *same* chosen legal one, so two distinct illegal actions are never
+distinguishable to `normStagePayoff` at all.
+
+*Behaviour level: OPEN, and still suspected FALSE.* This is where the reduction
+actually needs the converse, and where the worry is real: histories record the
+*raw* joint action played (`StageRecord = Fin t -> State x JointAct`,
+`Basic.lean:61`). In the padded game every action is legal and payoff-equivalent
+under normalization, yet the history still distinguishes which was played — so
+the labels are free public signalling, which can *enlarge* the set of
+history-dependent equilibria and break exactly the needed direction.
+
+Building the separating game there needs two objects the repository lacks: a
+normalized `StochasticGame` presentation, and a legality-constrained analogue
+of `IsUniformEquilibriumPayoff` over legal behaviour profiles. Resolution
+otherwise requires normalized-action histories, normalization-invariant
+strategies, or a semantics-preserving dependent-action compiler. Until that
+lands, the conjecture is still formally stated for the state-independent class.
 
 ### `LEAN-F0-2` — make the absorption fence structural, closing the all-continue vacuity trap
 
@@ -935,6 +947,27 @@ existing test.
 
 **Acceptance.** Vacuity becomes a type error instead of a missing hypothesis.
 This trap has been rediscovered independently five or more times.
+
+**PARTIAL.** `QuittingRealizedContinuation` (in `QuittingCyclePinnedDebt.lean`)
+bundles the absorption obligation as a field, with `ofBlock` as the
+cheap-migration constructor, unbundling companions, and the regression that the
+all-continue block does not inhabit it — reusing the existing forced-block
+lemmas rather than reproving them. The tree's headline consumer is migrated,
+plus an end-to-end re-derivation through the constructor.
+
+**The type-error guarantee is not yet achieved, and the gap is precise.** Three
+routes still bypass the interface. Every theorem still taking the raw
+`IsQuittingCyclicContinuationBlock` remains callable — the original headline
+theorem is deliberately kept, since three modules depend on it, and the
+isolated-coordinate, mismatch-contraction, periodic-extension, and
+disjunction-counterexample files are unmigrated. A future author can define a
+look-alike predicate omitting absorption and write new theorems against that.
+And the genuinely `tail`-generic per-row certificate is correctly left alone,
+so hand-chained certificates can still be fed to any unmigrated consumer.
+
+So the fence holds for signatures written to require the wrapper and nowhere
+else. Closing it means migrating the remaining consumers, which is mechanical
+but touches five files.
 
 ### `LEAN-F0-3` — bridge finite-horizon average to the liminf-average game
 

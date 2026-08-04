@@ -567,6 +567,29 @@ theorem exists_uniformEquilibriumPayoff_of_admissible_quittingCyclicContinuation
     (fun ε hε ↦ exists_isεAsymptoticNash_of_admissible_quittingCyclicContinuationBlock
       reward terminal period block hblock hadmissible ε hε)
 
+/-! ## The structural (wrapper-level) consumer -/
+
+/-- **The wrapper-level form of the chain to a uniform equilibrium payoff.**
+Identical conclusion to
+`exists_uniformEquilibriumPayoff_of_admissible_quittingCyclicContinuationBlock`,
+but stated against `QuittingRealizedContinuation` instead of a raw
+`(period, block, hblock)` triple.  A caller at this signature cannot omit the
+absorption witness: the only way to produce a `QuittingRealizedContinuation`
+is to supply its `absorbs` field (directly, or via
+`QuittingRealizedContinuation.ofBlock`, which reads it off
+`IsQuittingCyclicContinuationBlock`), so the vacuity trap this file's module
+docstring describes is a type error at this entry point rather than a
+hypothesis a future call site could forget to state. -/
+theorem exists_uniformEquilibriumPayoff_of_admissible_quittingRealizedContinuation
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (terminal : Payoff ι)
+    (rc : QuittingRealizedContinuation reward terminal)
+    (hadmissible : IsQuittingCycleAdmissible reward
+      (quittingCyclicContinuationBlockCycle rc.period rc.block)) :
+    ∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff :=
+  exists_uniformEquilibriumPayoff_of_admissible_quittingCyclicContinuationBlock
+    reward terminal rc.period rc.block rc.isQuittingCyclicContinuationBlock hadmissible
+
 namespace QuittingBoundedSurgeryDescentCounterexample
 
 /-! ## A worked instance: the surgery table's stationary block
@@ -671,6 +694,21 @@ theorem exists_uniformEquilibriumPayoff_reward (a : ℝ) (ha0 : 0 < a) :
   exists_uniformEquilibriumPayoff_of_admissible_quittingCyclicContinuationBlock
     (reward a) (stationaryValue a) 0 (stationaryBlock a)
     (stationaryBlock_isQuittingCyclicContinuationBlock a ha0)
+    (isQuittingCycleAdmissible_stationaryBlockCycle a ha0)
+
+/-- The same result reached through the structural wrapper: the stationary
+block is packaged into a `QuittingRealizedContinuation` via
+`QuittingRealizedContinuation.ofBlock`, and the wrapper-level consumer
+`exists_uniformEquilibriumPayoff_of_admissible_quittingRealizedContinuation`
+is applied directly, with no separate absorption hypothesis to state. -/
+theorem exists_uniformEquilibriumPayoff_reward_viaRealizedContinuation
+    (a : ℝ) (ha0 : 0 < a) :
+    ∃ payoff : Payoff Bool,
+      (quittingGame (reward a)).IsUniformEquilibriumPayoff none payoff :=
+  exists_uniformEquilibriumPayoff_of_admissible_quittingRealizedContinuation
+    (reward a) (stationaryValue a)
+    (QuittingRealizedContinuation.ofBlock (reward a) (stationaryValue a) 0
+      (stationaryBlock a) (stationaryBlock_isQuittingCyclicContinuationBlock a ha0))
     (isQuittingCycleAdmissible_stationaryBlockCycle a ha0)
 
 end QuittingBoundedSurgeryDescentCounterexample

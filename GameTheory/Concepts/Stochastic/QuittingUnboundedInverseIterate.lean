@@ -177,6 +177,45 @@ an honest reading of `∏_t c(y t) = 0` and not a convention choice. -/
 def IsCompletelyAbsorbing (rows : ℕ → ι → PMF Bool) : Prop :=
   Tendsto (quittingSurvivalPrefix rows) atTop (𝓝 0)
 
+/-! ## The vanishing boundary term
+
+The step of Solan's proof that this file's counterexample defeats is exactly
+this squeeze: a bounded value sequence against a completely absorbing row
+array forces the survival-prefix-weighted value to `0`.  The hypothesis used
+below is an *eventual* bound on a single real sequence, which is strictly
+weaker than the uniform bound over all times and all players that
+`NoBoundedCompletelyAbsorbingInverseIterate` states: any array satisfying that
+uniform bound satisfies this one, coordinate by coordinate, but not
+conversely (a sequence may be unbounded yet still eventually bounded past
+some horizon, or bounded only along the one coordinate examined). -/
+
+/-- **The vanishing boundary term, general form.** If a real sequence is
+eventually bounded and the rows are completely absorbing, the survival
+prefix times the sequence tends to `0`.  `survivalPrefix_mul_value_two` below
+is the case where even this weaker hypothesis fails: coordinate `2`'s value
+is unbounded, on every tail, so no `M` works. -/
+theorem tendsto_survivalPrefix_mul_of_bounded (rows : ℕ → ι → PMF Bool)
+    (f : ℕ → ℝ) (M : ℝ) (hbound : ∀ᶠ t in atTop, |f t| ≤ M)
+    (habsorb : IsCompletelyAbsorbing rows) :
+    Tendsto (fun N => quittingSurvivalPrefix rows N * f N) atTop (𝓝 0) := by
+  have hM : Tendsto (fun N => quittingSurvivalPrefix rows N * M) atTop (𝓝 0) := by
+    simpa using habsorb.mul_const M
+  refine squeeze_zero_norm' (hbound.mono fun N hN => ?_) hM
+  rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (quittingSurvivalPrefix_nonneg rows N)]
+  exact mul_le_mul_of_nonneg_left hN (quittingSurvivalPrefix_nonneg rows N)
+
+/-- **The vanishing boundary term, uniform-bound corollary.** The shape
+`NoBoundedCompletelyAbsorbingInverseIterate` actually states: a bound holding
+at *every* time and for *every* player still gives the vanishing product, one
+coordinate at a time. -/
+theorem tendsto_survivalPrefix_mul_value_of_bounded
+    (rows : ℕ → ι → PMF Bool) (values : ℕ → Payoff ι) (M : ℝ)
+    (hbound : ∀ t who, |values t who| ≤ M) (habsorb : IsCompletelyAbsorbing rows)
+    (who : ι) :
+    Tendsto (fun N => quittingSurvivalPrefix rows N * values N who) atTop (𝓝 0) :=
+  tendsto_survivalPrefix_mul_of_bounded rows (fun t => values t who) M
+    (Eventually.of_forall fun t => hbound t who) habsorb
+
 /-! ## Inverse iterates and the two forms of the claim -/
 
 variable [DecidableEq ι]
@@ -210,7 +249,26 @@ def NoCompletelyAbsorbingInverseIterate
 /-- **The bounded claim.**  The same statement restricted to arrays whose
 values stay in a fixed box.  Nothing in this file refutes it; it is weaker
 than `NoCompletelyAbsorbingInverseIterate` and it is the statement the
-research route needs. -/
+research route needs.
+
+**Status: neither established nor refuted here, and it is left as a bare
+statement.**  `tendsto_survivalPrefix_mul_value_of_bounded` above proves
+exactly the analytic step Solan's proof needs from boundedness — the
+homogeneous boundary term `quittingSurvivalPrefix rows N * values N who`
+vanishes — for *any* weight, not only the one below.  That step is not the
+whole theorem: Solan's Theorem 2.1 goes on to use the vanished boundary term
+to identify `values 0` with the equilibrium payoff of the profile induced by
+`rows`, and from there derives the convex-hull bound `Σ_i y_i ≤ 4`,
+`0 ≤ y_i ≤ 3` of its display (1) by a case analysis on the induced profile's
+best-response structure — content with no counterpart in this file at all.
+Establishing `NoBoundedCompletelyAbsorbingInverseIterate` for the weight
+`reward` below would need that whole argument, not just the vanishing
+boundary term.  Separately, the source proves its claim only "for `ε`
+sufficiently small"; nothing here pins down whether
+`NoBoundedCompletelyAbsorbingInverseIterate (reward η)` is even true at
+every `η ≥ 0`, as opposed to some bounded range of `η`, so a further proof
+attempt should not assume the unqualified-in-`η` statement is the right one
+to target. -/
 def NoBoundedCompletelyAbsorbingInverseIterate
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
   ¬ ∃ (rows : ℕ → ι → PMF Bool) (values : ℕ → Payoff ι) (M : ℝ),
