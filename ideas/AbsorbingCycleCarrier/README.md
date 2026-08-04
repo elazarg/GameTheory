@@ -35,12 +35,14 @@ For rows `y_1, … , y_L` and values `z_1, … , z_L`, cyclically:
 - **absorbing**: `∏_k c(y_k) < 1`.
 
 Absorption is not a technicality. Without it the all-continue list reproduces
-*every* value vector, is complementary whenever `z_i ≥ r_i({i})`, and has zero
-mismatch — so the notion would be satisfied vacuously by every weight, with the
-values not determined by the rows at all. Under absorption the cyclic composite
-contracts and `z` is uniquely determined by the rows. The same trap appears at
-the level of single rows: the all-continue row is exact endpoint-Nash against
-the equilibrium value of both plateau tables and reproduces every tail, so an
+*every* value vector and is complementary whenever `z_i ≥ r_i({i})`; taking
+`z = Λ` in particular gives `F_0(Λ) = Λ`, complementarity since
+`g_i = r_i({i}) - Λ_i ≤ 0` always, and mismatch exactly zero. So the notion
+would be satisfied vacuously by **every** weight, with the values not
+determined by the rows at all. Under absorption the cyclic composite contracts
+and `z` is uniquely determined by the rows. The same trap appears at the level
+of single rows: the all-continue row is exact endpoint-Nash against the
+equilibrium value of both plateau tables and reproduces every tail, so an
 endpoint certificate plus a fixed point certifies nothing on its own.
 
 ## Closure status — what is actually closed
@@ -78,12 +80,23 @@ with `r_i({i}) = -1`, the owner quitting at rate `1/2` and its opponent silent,
 satisfies every clause of the block predicate while the owner gains `1` by
 continuing forever.
 
-So for finite quitting games the conjecture now reduces to **one statement**:
+So for finite quitting games the conjecture reduces to one statement — but
+**not** the naive one. "Every weight admits an admissible absorbing cycle" is
+false; see [the zero-solo disjunct](TheCarrierNeedsTheZeroSoloDisjunct.md) for
+the two-coordinate counterexample. The corrected reduction is:
 
-> every weight admits an admissible absorbing cycle.
+> For every weight, either `Λ = 0` — and the landed zero branch applies — or
+> the weight admits an admissible absorbing cycle.
 
-Everything else on the path is machine-checked. The dichotomy says that
-statement can only fail in the vanishing-absorption branch.
+The first disjunct is landed. The second is open, and by the dichotomy can only
+fail in the vanishing-absorption branch. The conditional from an admissible
+absorbing cycle to a uniform payoff is machine-checked and unaffected by the
+counterexample.
+
+The counterexample is instructive rather than damaging: the absorption fence,
+required to keep the cycle notion from being vacuous, also excludes the
+genuinely **non-absorbing** equilibria — which are exactly the `Λ = 0` weights,
+and exactly the ones already solved.
 
 ## Dependencies and consumers
 

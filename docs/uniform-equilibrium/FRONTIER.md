@@ -184,18 +184,31 @@ with negative solo weight, its owner quitting at rate `1/2` against a silent
 opponent, satisfies every other clause while the owner gains by continuing
 forever.
 
-**Consequently the finite-quitting conjecture reduces to one statement:**
+**Consequently the finite-quitting conjecture reduces to one statement — but
+not the naive one.** "Every weight admits an admissible absorbing cycle" is
+**false** (`M`): for `r({1})=(0,-1)`, `r({2})=(1,-1)`, `r({1,2})=(0,0)` every
+discounted complementary row vanishes, and every absorbing complementary cycle
+either isolates coordinate `2`, whose solo weight is `-1`, or contradicts
+complementarity at coordinate `2`. The corrected reduction is:
 
-> Every weight admits an admissible absorbing cycle.
+> For every weight, either `Λ = 0` — and the landed zero branch applies — or
+> the weight admits an admissible absorbing cycle.
+
+The counterexample has `Λ = 0`, so it lies in the already-solved disjunct: its
+exact equilibrium is the all-continue profile with payoff `(0,0)`, which no
+coordinate can improve on. The lesson is that the absorption fence, required to
+keep the cycle notion from being vacuous, also excludes the genuinely
+**non-absorbing** equilibria — and those are exactly the `Λ = 0` weights, which
+the matched-boundary argument already handles.
 
 Everything else on that path is machine-checked. Complementary fixed data
-always exist, so the only way the statement can fail is for absorption itself
-to degenerate: the dichotomy says either some discounted limit absorbs — giving
-the cycle at length one — or every such limit is the all-continue row with
-quitting rates tending to zero. **The vanishing-absorption branch is the entire
-remaining content**, and it necessarily contains the published cyclic
-three-player table, which has no stationary approximate equilibrium but carries
-a length-three candidate cycle. See
+always exist, so the open disjunct can only fail by absorption degenerating:
+the dichotomy says either some discounted limit absorbs — giving the cycle at
+length one — or every such limit is the all-continue row with quitting rates
+tending to zero. **The vanishing-absorption branch with some `r_i({i}) > 0` is
+the entire remaining content**, and it necessarily contains the published
+cyclic three-player table, which has no stationary approximate equilibrium but
+carries a length-three candidate cycle. See
 [the carrier group](../../ideas/AbsorbingCycleCarrier/README.md).
 
 **Mark transport is not the obstruction (`M`).** The long-standing worry that a
