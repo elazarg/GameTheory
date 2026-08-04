@@ -60,13 +60,30 @@ was caught only by an adversarial audit.
 | Both plateau tables' equilibria and zero debt | yes | yes |
 | Cycle-pinned debt zero on the stationary chain | yes | yes |
 | The dichotomy | yes | **no** — the discounted family has no production analogue |
+| **Admissible absorbing cycle implies a uniform equilibrium payoff** | yes | **yes** |
 | Vanishing branch admits an admissible cycle | **unknown** | no |
 
-The target conditional is: *admissible absorbing cycle of bounded length for
-every weight* implies terminal approximate existence for every accuracy, and
-then the landed terminal-to-uniform consumer gives the uniform payoff. Proving
-that implication on the believed-true premise is worth doing before the premise
-is settled, since it converts the conjecture into a single named statement.
+**The conditional is closed.** From a cyclic continuation block together with
+admissibility — for every coordinate, either its deleted survival product
+around the cycle is below one, or its solo weight is nonnegative — the block's
+periodic profile is terminal `0`-Nash at every phase, hence terminal
+`ε`-Nash at every accuracy, hence the game has a uniform equilibrium payoff by
+the landed selection theorem. Machine-checked with clean axioms, and with **no
+strategy-class gap**: the consumed predicate quantifies over all behavior
+strategies, not merely stopping times.
+
+Note the admissibility hypothesis is exactly the disjunction the mismatch
+characterization predicts, and it is genuinely needed — a single-stage block
+with `r_i({i}) = -1`, the owner quitting at rate `1/2` and its opponent silent,
+satisfies every clause of the block predicate while the owner gains `1` by
+continuing forever.
+
+So for finite quitting games the conjecture now reduces to **one statement**:
+
+> every weight admits an admissible absorbing cycle.
+
+Everything else on the path is machine-checked. The dichotomy says that
+statement can only fail in the vanishing-absorption branch.
 
 ## Dependencies and consumers
 

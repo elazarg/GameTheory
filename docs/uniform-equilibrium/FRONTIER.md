@@ -173,10 +173,30 @@ a rate `p ∈ (0,1]` with `(1-p)·r_j({j}) + p·r_j({i,j}) ≤ r_j({i})` for eve
 `p` and hence one-dimensionally decidable. Both plateau tables satisfy it at
 exactly `p = 1/2`.
 
-The open object is therefore **existence of an admissible absorbing cycle when
-that criterion fails for every coordinate**. That failure class is nonempty and
-contains the published cyclic three-player table, which carries a length-three
-candidate. See [the carrier group](../../ideas/AbsorbingCycleCarrier/README.md).
+**The conditional is closed (`M+L`).** An admissible absorbing cycle — one in
+which every coordinate has either deleted survival product below one around the
+cycle, or nonnegative solo weight — yields a periodic profile that is terminal
+`0`-Nash at every phase, hence terminal `ε`-Nash at every accuracy, hence a
+uniform equilibrium payoff through the landed selection theorem. There is **no
+strategy-class gap**: the consumed predicate quantifies over all behavior
+strategies. The admissibility hypothesis is not removable; a one-stage block
+with negative solo weight, its owner quitting at rate `1/2` against a silent
+opponent, satisfies every other clause while the owner gains by continuing
+forever.
+
+**Consequently the finite-quitting conjecture reduces to one statement:**
+
+> Every weight admits an admissible absorbing cycle.
+
+Everything else on that path is machine-checked. Complementary fixed data
+always exist, so the only way the statement can fail is for absorption itself
+to degenerate: the dichotomy says either some discounted limit absorbs — giving
+the cycle at length one — or every such limit is the all-continue row with
+quitting rates tending to zero. **The vanishing-absorption branch is the entire
+remaining content**, and it necessarily contains the published cyclic
+three-player table, which has no stationary approximate equilibrium but carries
+a length-three candidate cycle. See
+[the carrier group](../../ideas/AbsorbingCycleCarrier/README.md).
 
 **Mark transport is not the obstruction (`M`).** The long-standing worry that a
 packet sitting arbitrarily deep in the middle cannot be carried through a
