@@ -549,7 +549,12 @@ theorem quittingTerminalPayoff_quittingCyclicContinuationBlockProfile
 theorem with the landed terminal-to-uniform selection
 `quittingGame_exists_uniformEquilibriumPayoff_of_terminalNash_all_errors`:
 a weight admitting an admissible absorbing cyclic continuation block has a
-uniform equilibrium payoff. -/
+uniform equilibrium payoff.
+
+`HEADLINE` — the conditional half of the finite-quitting reduction. Together
+with the zero-solo disjunct this is the whole path from a cycle to the
+conjecture. The deviation class is *all* behavior strategies, not stopping
+times. -/
 theorem exists_uniformEquilibriumPayoff_of_admissible_quittingCyclicContinuationBlock
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (terminal : Payoff ι)
     (period : ℕ) (block : QuittingFiniteNashBellmanPath ι (period + 1))

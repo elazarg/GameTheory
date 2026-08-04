@@ -568,7 +568,10 @@ theorem not_isQuittingCyclicContinuation_of_shape (a : ℝ) (ha0 : 0 < a) (ha1 :
 `quittingFiniteZeroBoundaryNashBellmanChainSet` is *not* an admissible
 cycle-pinned terminal continuation for this table.  The positive plateau of
 `quittingFiniteZeroBoundaryNashBellmanMinMaxDynamicDebt_eq` is therefore
-charged against a boundary the game itself never realizes. -/
+charged against a boundary the game itself never realizes.
+
+`HEADLINE` — the strongest form of the pin diagnosis: the zero boundary is
+not a bad choice for this weight, it is an impossible one. -/
 theorem not_isQuittingCyclicContinuation_zero (a : ℝ) (ha0 : 0 < a) (ha1 : a < 1) :
     ¬ IsQuittingCyclicContinuation (reward a) (0 : Payoff Bool) := by
   have hshape : (fun who : Bool ↦ if who then (0 : ℝ) else 0) = (0 : Payoff Bool) := by

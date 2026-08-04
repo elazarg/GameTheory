@@ -159,7 +159,13 @@ theorem quittingFiniteDynamicDebt_succ_eq_max_zero_stageGap
 minus the accumulated survival-weighted positive stage gaps, floored at
 zero.  Only residual-zero on the traversed window `[start, start + fuel)`
 is used, matching the localized hypothesis of the coarse survival-weighted
-bound. -/
+bound.
+
+`HEADLINE` — all debt is transported terminal debt, less credit spendable
+only where a coordinate is pure.  **The hypothesis `0 ≤ terminalDebt` is not
+removable**: it fails on genuine absorbing cycles, so this law must not be
+used to compute cyclic mismatch.  See `QuittingCycleMismatchContraction` for
+the sign-free route and for the counterexample. -/
 theorem quittingFiniteDynamicDebt_eq_max_zero_sub_accumulatedStageGaps
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (roots : ℕ → ι → PMF Bool) (who : ι)

@@ -809,7 +809,12 @@ vanishes whenever the deleted survival product is strictly below one.
 
 No hypothesis on the sign of `quittingPositiveSingletonDebtCap reward who -
 terminal who` appears anywhere in the hypothesis list or in the proof; this
-is exactly what the transport-law route could not deliver. -/
+is exactly what the transport-law route could not deliver.
+
+`HEADLINE` — the contraction half of the mismatch characterization. Supplies
+the admissibility hypothesis consumed by the conditional reduction. The
+remaining half, where the deleted survival product equals one, is not
+formalized. -/
 theorem quittingCyclicContinuationBlock_mismatch_eq_zero
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (terminal : Payoff ι) (period : ℕ)

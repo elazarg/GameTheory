@@ -370,3 +370,18 @@ outside the repository (untracked `ephemeral/`); this README is the in-tree map.
 The generic mathematics developed for the program (couplings, stitched
 martingales, hitting-time potentials, closed classes, occupation flows, curve
 selection) lives under `Math/Probability/` and `Math/CurveSelection/`.
+
+## Headline markers
+
+A declaration whose docstring contains the token `HEADLINE` is a load-bearing
+result of the uniform-equilibrium program, not a helper. Grep for it to find
+the current spine:
+
+```
+grep -rn "HEADLINE" GameTheory/Concepts/Stochastic/
+```
+
+The marker is for searchability. It records three things a reader needs before
+citing the declaration: what it is the headline *of*, what it does **not**
+cover, and any hypothesis that is known to be non-removable. Add it sparingly —
+if everything is marked, nothing is.
