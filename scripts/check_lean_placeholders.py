@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-"""Fail if tracked Lean sources contain executable `sorry` or `admit` tokens."""
+"""Fail if tracked Lean sources contain unexpected `sorry` or `admit` tokens.
+
+The repository states two open conjectures as `sorry`-carrying declarations on
+purpose.  They are listed in `INTENTIONAL` below, keyed by path and declaration
+name, so that this check stays *green* while still failing on a third
+placeholder appearing anywhere.
+
+The allowlist is checked in both directions.  An entry that no longer
+corresponds to a placeholder is itself a failure: when a conjecture is
+discharged, its entry must be removed, and a silently stale allowlist is how a
+guard stops guarding.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +21,33 @@ import sys
 
 
 TOKEN_RE = re.compile(r"\b(sorry|admit)\b")
+
+DECL_RE = re.compile(
+    r"^\s*(?:@\[[^\]]*\]\s*)*"
+    r"(?:private\s+|protected\s+|noncomputable\s+|partial\s+|unsafe\s+)*"
+    r"(?:theorem|lemma|def|instance|abbrev|example)\s+([^\s({\[:]+)"
+)
+
+# (path as posix, declaration name) -> why it is allowed to carry a placeholder.
+INTENTIONAL: dict[tuple[str, str], str] = {
+    (
+        "GameTheory/Concepts/Stochastic/QuittingConjecture.lean",
+        "quittingGame_exists_uniformEquilibriumPayoff",
+    ): "The finite-quitting uniform-equilibrium conjecture.",
+    (
+        "GameTheory/Concepts/Stochastic/UniformExistenceConjecture.lean",
+        "exists_uniformDeviationCapConstructor",
+    ): "The general uniform-equilibrium existence problem, quantitative form.",
+}
+
+
+def enclosing_declaration(lines: list[str], index: int) -> str | None:
+    """Name of the declaration containing `lines[index]`, scanning upward."""
+    for line in reversed(lines[: index + 1]):
+        match = DECL_RE.match(line)
+        if match:
+            return match.group(1)
+    return None
 
 
 def tracked_lean_files() -> list[pathlib.Path]:
@@ -106,11 +144,29 @@ def strip_comments_and_strings(text: str) -> str:
 
 def main() -> int:
     failures: list[str] = []
+    seen: set[tuple[str, str]] = set()
+
     for path in tracked_lean_files():
         stripped = strip_comments_and_strings(path.read_text(encoding="utf-8"))
-        for line_no, line in enumerate(stripped.splitlines(), start=1):
-            if TOKEN_RE.search(line):
-                failures.append(f"{path}:{line_no}: placeholder token")
+        lines = stripped.splitlines()
+        for index, line in enumerate(lines):
+            if not TOKEN_RE.search(line):
+                continue
+            line_no = index + 1
+            declaration = enclosing_declaration(lines, index)
+            key = (path.as_posix(), declaration or "")
+            if key in INTENTIONAL:
+                seen.add(key)
+                continue
+            where = declaration or "<no enclosing declaration>"
+            failures.append(f"{path}:{line_no}: placeholder token in {where}")
+
+    for key, reason in INTENTIONAL.items():
+        if key not in seen:
+            failures.append(
+                f"{key[0]}: allowlisted declaration {key[1]} no longer carries a "
+                f"placeholder ({reason}) -- remove it from INTENTIONAL"
+            )
 
     if failures:
         print("Lean placeholder check failed:", file=sys.stderr)
@@ -118,7 +174,10 @@ def main() -> int:
             print(failure, file=sys.stderr)
         return 1
 
-    print("Lean placeholder check passed.")
+    print(
+        f"Lean placeholder check passed "
+        f"({len(INTENTIONAL)} intentional open declarations)."
+    )
     return 0
 
 

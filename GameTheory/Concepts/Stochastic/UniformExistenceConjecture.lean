@@ -34,17 +34,49 @@ the *finite-quitting* case.  Discharging it would **not** discharge this file:
 quitting games are a strict subclass, and no reduction from arbitrary finite
 stochastic games to them is known.
 
-## The `sorry` here does not assert belief
+## Scope: action sets are state-independent
 
-A counterexample to approximate-equilibrium existence in finite-state,
-finite-action stochastic games is **claimed** in the literature: R. S. Simon,
-*A Stochastic Game without Approximate Equilibria*, arXiv:2310.04217 (2023),
-a four-player "Mousetrap".  Whether its hypotheses fall inside the ones stated
-below -- in particular whether its payoff is a limit average of stage payoffs
-and whether perfect monitoring survives its stage-combining reduction -- has
-not been settled in this repository.  Until it is, read the `sorry` as *not
-proved here*, not as *believed true*.  If the claim stands at these
-hypotheses, this statement is false and must be replaced rather than proved.
+`StochasticGame.Act : ι → Type` does not depend on the state, so the statement
+below is the conjecture for finite stochastic games whose action sets are the
+same at every state.  Formulations with state-dependent action sets reduce to
+this one by padding, which preserves `ε`-equilibria in both directions, but
+**that reduction is not formalized here**.  Until it is, the statement is the
+conjecture for the state-independent class rather than for every textbook
+presentation of a finite stochastic game.  Quitting games are unaffected:
+their action set is `Bool` at every state.
+
+## The nearest claimed counterexample is retracted
+
+R. S. Simon, *A Stochastic Game without Approximate Equilibria*,
+arXiv:2310.04217 (2023), announced a four-player "Mousetrap" with finitely many
+states and actions and no approximate equilibria.  **It was withdrawn by its
+author on 20 October 2023, fourteen days after posting, with the comment "The
+proof is flawed."**  There is no published version and no repaired one.
+
+Two independent readings of the withdrawn preprint agree on what it would have
+cost us (`docs/uniform-equilibrium/audits/2026-08-04-SimonMousetrapRetraction.md`).
+**Three defences a reader might reach for do not work.**  Its state space is
+finite -- the paper's one-line justification is a non-sequitur, but the claim
+holds for its numbers, since every stage payoff lies in `(1/10^4)ℤ` and the
+totals are boxed.  Its payoff *is* recastable as a limit average of stage
+payoffs; the one non-sum term is the most limit-average object in the game.
+And perfect monitoring genuinely survives the stage-combining reduction -- the
+cat's `102^101` action set is the standard agent-normal-form encoding of an
+informational advantage, not a leak.  Do not cite finiteness, payoff shape, or
+monitoring as reasons this statement is out of reach.
+
+**One defence does work, and it is narrow.**  This file's notion is
+`lim_T E[(1/T)Σ]` under a `∀T ≥ T₀` quantifier; the non-existence claim was
+about `E[liminf]` on infinite plays.  Carrying an upper bound across needs
+Fatou in the direction it does not go: `E[liminf] ≤ lim E` is the only
+inequality available, and the on-path half needs the reverse.  Simon flags the
+same distinction himself, noting his argument fails if `limsup` replaces
+`liminf`.  So the escape is the *equilibrium notion*, not the model class --
+and closing that gap in either direction is `LEAN-F0-3`.
+
+`arxiv.org/pdf/2310.04217` still serves the withdrawn v1, so a fetched PDF
+looks current.  The Atom API's version list and `<arxiv:comment>` are
+authoritative.
 -/
 
 namespace GameTheory

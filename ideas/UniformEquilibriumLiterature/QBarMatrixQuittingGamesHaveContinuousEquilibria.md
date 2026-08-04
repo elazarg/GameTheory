@@ -41,6 +41,29 @@ which every player is sequentially `ε`-perfect, for all small `ε`. This is an
 every absorbing profile at which all players are sequentially `ε`-perfect is an
 `ε^{1/6}`-equilibrium.* The exponent is `1/6` on `ε`, not a factor.
 
+> ⚠ **Do not import Theorem 3.5 as printed.** This repository already holds a
+> record — [`SourceCorrections-QuittingAbsorptionPaths.md`](../../docs/uniform-equilibrium/references/SourceCorrections-QuittingAbsorptionPaths.md),
+> §3 — asserting that the source propositions it rests on
+> (Solan–Vieille 2001, Prop. 2.4, restated as 2.6) prove a **disjunction**:
+> the absorbing sequentially-perfect profile is globally approximately optimal
+> **or** a stationary approximate equilibrium exists. Theorem 3.5 states the
+> first disjunct alone, and that record supplies a machine-checked two-player
+> regression against it: `r(Q₁,C₂) = (−1,0)`, `r(C₁,Q₂) = (0,0)`,
+> `r(Q₁,Q₂) = (−1,0)`, non-absorption payoff `0`, player 1 quitting at a fixed
+> rate `h ∈ (0,1)` while player 2 always continues. That profile absorbs almost
+> surely and is exactly sequentially perfect, yet player 1 gains `1` by always
+> continuing — the missing stationary alternative being the all-continue
+> profile.
+>
+> **Two records in this repository therefore disagree about one published
+> theorem, and the reconciliation is owed.** The loose joint is most likely the
+> mapping from the regression's profile to AGKRS's exact Definition 4.13
+> (`SP.1`/`SP.2`) rather than an error in a refereed theorem, and the same
+> file's §1 independently records a defect in that very definition's endpoint
+> convention. Until someone checks the regression against Definition 4.13
+> verbatim, use the **2001 disjunction**, not the 2024 restatement. Nothing
+> else in this file depends on Theorem 3.5.
+
 **Theorem 4.15.** For a game with neither a sure-first-stage-termination
 `ε`-equilibrium nor an all-continue one, `ε`-equilibria for every `ε > 0` exist
 **iff** a `0`-AP exists.

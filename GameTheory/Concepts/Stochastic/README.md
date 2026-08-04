@@ -5,11 +5,22 @@ existence problem** — the central open problem of stochastic game theory: ever
 stochastic game with finitely many players, states, and actions admits a uniform
 equilibrium payoff from every initial state.
 
-The conjecture is stated in [`Uniform.lean`](Uniform.lean) as
-`StochasticGame.exists_uniformDeviationCapConstructor` and carries the repository's
-**only intentional `sorry`** (enforced by `scripts/check_lean_placeholders.py`).
-Everything else in this directory is sorry-free; keeper capstones are additionally
-axiom-audited (`propext`, `Classical.choice`, `Quot.sound` only).
+There are **two intentional `sorry`s**, and no others:
+
+- `StochasticGame.exists_uniformDeviationCapConstructor` in
+  [`UniformExistenceConjecture.lean`](UniformExistenceConjecture.lean) — the
+  general problem above, in its quantitative form;
+- `quittingGame_exists_uniformEquilibriumPayoff` in
+  [`QuittingConjecture.lean`](QuittingConjecture.lean) — the finite-quitting
+  case, the program's middle target.
+
+Both are allowlisted by name in `scripts/check_lean_placeholders.py`, which
+fails on any third placeholder and equally on an allowlist entry that no longer
+carries one — so discharging a conjecture forces the list to be updated.
+[`Uniform.lean`](Uniform.lean) holds only the definitions and their proved
+equivalence and is itself sorry-free. Everything else in this directory is
+sorry-free; keeper capstones are additionally axiom-audited (`propext`,
+`Classical.choice`, `Quot.sound` only).
 
 ## Payoff terminology used here
 
