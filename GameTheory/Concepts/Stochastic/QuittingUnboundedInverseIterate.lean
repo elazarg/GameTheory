@@ -12,20 +12,42 @@ import GameTheory.Concepts.Stochastic.QuittingBoundedSurgeryDescentCounterexampl
 
 ## The claim this file fences
 
-A project-control decision reopened a research route on the strength of a
-claim of the shape
+An *inverse iterate* for a quitting weight is an `IsQuittingInverseIterate`:
+rows `y t` and values `z t` with `z t = F_{y t}(z (t+1))` and `(y t, z (t+1))`
+complementary at every time.  Its survival product is `∏_t c(y t)`, and it is
+*completely absorbing* when that product is `0`.  The claim
 
-> this weight admits no infinite complementary array whose survival product
-> tends to zero,
+> this weight admits no completely absorbing inverse iterate,
 
-**stated with no boundedness condition on the continuation values**.  In the
-vocabulary of this development an "infinite complementary array" is an
-`IsQuittingInverseIterate`: rows `y t` and values `z t` with
-`z t = F_{y t}(z (t+1))` and `(y t, z (t+1))` complementary at every time; its
-survival product is `∏_t c(y t)`, and "completely absorbing" means that
-product is `0`.  So the loose claim is `NoCompletelyAbsorbingInverseIterate`,
-and this file refutes it for an explicit three-coordinate weight, for every
-value of the weight's parameter `η ≥ 0`.
+**stated with no boundedness condition on the values**, is
+`NoCompletelyAbsorbingInverseIterate`.  This file refutes it for an explicit
+three-coordinate weight, for every value of the weight's parameter `η ≥ 0`.
+
+## Relation to the source
+
+E. Solan, *The dynamics of the Nash correspondence and `n`-player stochastic
+games*, Int. Game Theory Rev. **3**, 291–300 (2003), Theorem 2.1: for every
+`ε > 0` sufficiently small, `F_ε` contains only trivial vectors.  There an
+*admissible sequence* is exactly an `IsQuittingInverseIterate`, *completely
+absorbing* is exactly `IsCompletelyAbsorbing`, `F_ε` is the set of first
+elements of admissible sequences, and `y ∈ F_ε` is *trivial* when no admissible
+sequence for it is completely absorbing.  The game `G_ε` of its Figure 1 is
+the table below multiplied by `3` on all seven entries, with `η = ε`.  So the
+statement matches, and **no boundedness hypothesis appears in it**.
+
+Its proof runs through display (1), `Σ_i y_i ≤ 4` and `0 ≤ y_i ≤ 3` — the
+convex hull of the terminal payoffs — asserted for non-trivial `y` on the
+ground that a completely absorbing admissible sequence makes `y(1)` the
+*equilibrium payoff* of the induced profile.  That step needs the homogeneous
+boundary term to vanish, which needs the values bounded.  The witness below is
+a machine-checked instance where it does not: in the source's scaling it is
+`y = (1, 3, 1 + η p)`, whose coordinate sum `5 + η p` exceeds the `4` of
+display (1), and its induced profile is not an equilibrium of `G_ε` because
+the third player receives `0` and can profit by quitting.
+
+So the literal statement is false and the unstated hypothesis is boundedness;
+the theorem's intended content is the bounded form, which its proof
+establishes and which nothing here touches.
 
 ## What is and is not refuted
 
@@ -37,8 +59,8 @@ leaves every bounded box (`not_bddAbove_value`).  Consequently:
   false, and `not_noCompletelyAbsorbingInverseIterate` is the machine-checked
   fence saying so;
 * the **bounded** form, `NoBoundedCompletelyAbsorbingInverseIterate`, is
-  **not** refuted by anything in this file and remains open.  It is the
-  statement the research route actually needs.
+  **not** refuted by anything in this file.  It is the statement the research
+  route actually needs, and it is what Solan's Theorem 2.1 proves.
 
 A reader who takes away "the no-absorbing-iterate claim is false" without the
 boundedness qualifier will draw a wrong conclusion about the route.  Both
