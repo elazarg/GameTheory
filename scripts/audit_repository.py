@@ -13,7 +13,7 @@ import re
 import subprocess
 import sys
 
-from check_lean_placeholders import strip_comments_and_strings, tracked_lean_files
+from check_lean_placeholders import TOKEN_RE, strip_comments_and_strings, tracked_lean_files
 
 
 ALLOWED_AXIOMS = {"propext", "Classical.choice", "Quot.sound"}
@@ -35,6 +35,7 @@ DEFAULT_ROOTS = {
 }
 STANDALONE_LEAN_MODULES = {"lakefile", "scripts.AxiomAudit"}
 RAW_SEMANTIC_MODULES = {"GameTheory.Core.GameForm"}
+ROOT_AGGREGATOR = "GameTheory"
 
 
 def static_escape_hatch_audit() -> list[str]:
@@ -94,6 +95,72 @@ def tracked_import_graph() -> tuple[dict[str, pathlib.Path], dict[str, list[str]
     tracked_modules = {module_name(path): path for path in tracked_lean_files()}
     imports = {mod: module_imports(path) for mod, path in tracked_modules.items()}
     return tracked_modules, imports
+
+
+def sorry_carrying_modules(tracked_modules: dict[str, pathlib.Path]) -> set[str]:
+    """Modules with a live `sorry`/`admit`, discovered by scanning rather than
+    hard-coded, so this stays correct if the set of open conjectures changes."""
+    modules: set[str] = set()
+    for mod, path in tracked_modules.items():
+        stripped = strip_comments_and_strings(path.read_text(encoding="utf-8"))
+        if TOKEN_RE.search(stripped):
+            modules.add(mod)
+    return modules
+
+
+def root_aggregator_non_import_lines(path: pathlib.Path) -> list[int]:
+    """Line numbers in `path` that are neither blank nor an `import` line."""
+    stripped = strip_comments_and_strings(path.read_text(encoding="utf-8"))
+    offending: list[int] = []
+    for line_no, line in enumerate(stripped.splitlines(), start=1):
+        text = line.strip()
+        if not text or text.startswith("import "):
+            continue
+        offending.append(line_no)
+    return offending
+
+
+def leaf_invariant_audit(
+    tracked_modules: dict[str, pathlib.Path], imports: dict[str, list[str]]
+) -> list[str]:
+    """Make the repository's soundness argument build-checkable.
+
+    No landed theorem can transitively depend on `sorryAx` only if (a) every
+    `sorry`-carrying module is imported by nothing but the root aggregator and
+    the other `sorry`-carrying module, and (b) the root aggregator itself
+    declares nothing -- otherwise a declaration added directly to the root
+    could depend on `sorryAx` while (a) still held.
+    """
+    failures: list[str] = []
+
+    importers: dict[str, list[str]] = {mod: [] for mod in tracked_modules}
+    for mod, deps in imports.items():
+        for dep in deps:
+            if dep in importers:
+                importers[dep].append(mod)
+
+    if ROOT_AGGREGATOR not in tracked_modules:
+        failures.append(f"root aggregator module {ROOT_AGGREGATOR} is not tracked")
+    else:
+        root_path = tracked_modules[ROOT_AGGREGATOR]
+        for line_no in root_aggregator_non_import_lines(root_path):
+            failures.append(
+                f"{root_path}:{line_no}: root aggregator must be a pure import "
+                f"list but has non-import content here"
+            )
+
+    sorry_modules = sorry_carrying_modules(tracked_modules)
+    for mod in sorted(sorry_modules):
+        allowed = {ROOT_AGGREGATOR} | (sorry_modules - {mod})
+        for importer in sorted(importers.get(mod, [])):
+            if importer not in allowed:
+                failures.append(
+                    f"{tracked_modules[mod]}: sorry-carrying module is imported "
+                    f"by {importer}, outside {{{ROOT_AGGREGATOR}}} ∪ other "
+                    f"sorry-carrying modules"
+                )
+
+    return failures
 
 
 def semantic_layer_audit(
@@ -156,6 +223,7 @@ def main() -> int:
     failures = static_escape_hatch_audit()
     failures.extend(semantic_layer_audit(tracked_modules, imports))
     failures.extend(import_reachability_audit(tracked_modules, imports))
+    failures.extend(leaf_invariant_audit(tracked_modules, imports))
     axiom_failures, axiom_output = run_axiom_audit()
     failures.extend(axiom_failures)
 
