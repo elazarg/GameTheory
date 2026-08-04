@@ -84,7 +84,7 @@ not a proven envelope for the full exploitability of the infinitely repeated
 block.  No optimization over the cycle-pinned family is defined here, and no
 compactness or attainment statement is made about it.
 
-General nonnegativity of the cycle-pinned debt is also *not* proved here.
+General nonnegativity of the cycle-pinned debt is not proved *in this file*.
 The reason is an API limitation rather than a mathematical one:
 `quittingFiniteDynamicDebt_nonneg` wants `IsQuittingLivePrescribedValue`,
 which is a condition at *every* time, while
@@ -93,8 +93,15 @@ pad beyond the cutoff with `0` and all-Continue -- a padding that is coherent
 only for the zero boundary.  The debt itself never reads that padding (the
 recursion is run with fuel `cutoff - time`, and
 `quittingFiniteDynamicDebt_congr` below localizes it), but the global
-hypothesis is unavailable.  A periodic extension of the anchored chain by its
-own cyclic block would supply it; that is left undone.
+hypothesis is unavailable here.  The periodic extension of the anchored chain
+by its own cyclic block supplies it, and is built in
+`QuittingCyclicPeriodicExtension`; nonnegativity is
+`quittingCyclePinnedDynamicDebt_nonneg` there.
+
+Uniqueness of the realized continuation is likewise proved only at period one
+below (`quittingCyclicContinuation_unique_of_absorbing_period_one`); the
+general-period form is `quittingCyclicContinuation_unique_of_absorbing` in the
+same downstream file.
 -/
 
 set_option autoImplicit false
