@@ -8,6 +8,7 @@
 | --- | --- |
 | [Mismatch vanishes except on isolated negative coordinates](MismatchVanishesExceptOnIsolatedNegativeCoordinates.md) | `PROVED` (`M`), Lean destination named |
 | [A solo-quitter cycle exists without a join incentive](SoloQuitterCycleExistsWithoutJoinIncentive.md) | `PROVED` (`M`), formalization in flight |
+| [The zero pin is not a realizable continuation](TheZeroPinIsNotARealizableContinuation.md) | `PROVED` (`M+L`) at the exhibited family; general statement `OPEN` |
 
 ## Why this group exists
 
