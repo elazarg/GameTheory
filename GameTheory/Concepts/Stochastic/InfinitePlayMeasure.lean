@@ -58,7 +58,8 @@ input the Ionescu-Tulcea theorem needs; `infinitePlayMeasure` is its output.
   so `infinitePlayMeasure`'s finite-horizon marginals agree with the existing finite-horizon
   history distribution
 * `StochasticGame.integral_histOfPlay_infinitePlayMeasure` — the projection property
-  transported through integration, used in `LiminfAverageBridge` to discharge `hrep`
+  transported through integration, which is what makes `LiminfAverageBridge`'s
+  game-facing corollaries unconditional in their pathwise realization
 -/
 
 set_option autoImplicit false
@@ -554,7 +555,7 @@ omit [DecidableEq ι] [DecidableEq G.State] [∀ i, DecidableEq (G.Act i)] in
 /-- **Integrating a bounded function of the `Hist t` implicit in a play against
 `infinitePlayMeasure` agrees with its `expect`-ation against `histDist`.** This transports the
 projection property through integration, and is what lets `finiteAveragePayoff` be realized
-pathwise by `infinitePlayMeasure` — discharging `LiminfAverageBridge`'s `hrep` hypothesis. -/
+pathwise by `infinitePlayMeasure`. -/
 theorem integral_histOfPlay_infinitePlayMeasure (σ : G.BehaviorProfile) (s₀ : G.State)
     (t : ℕ) (f : G.Hist t → ℝ) :
     ∫ p, f (G.histOfPlay t p) ∂(G.infinitePlayMeasure σ s₀) =

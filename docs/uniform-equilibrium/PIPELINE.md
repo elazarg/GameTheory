@@ -228,11 +228,28 @@ free-terminal test.** `MATH-P0-1` and `LEAN-P1-4` drop to P1 until the optimized
 debt over chains with a *free admissible* terminal continuation is decided.
 
 **Rationale.** The entire P0 hinge is downstream of "the exact-D chain grammar
-has a positive plateau". That premise is now known to be about the grammar: both
-plateau witnesses are two-player tables with equilibria, and for the surgery
-witness the equilibrium is machine-checked at exactly zero debt once the
-terminal continuation is unpinned. Compactifying the escaping middles of a
-family that is biased away from the object may be work on an artifact.
+has a positive plateau". That premise looked like it might be about the grammar:
+both plateau witnesses are two-player tables with equilibria, and the surgery
+witness carries a machine-checked zero-gain array.
+
+**The free-terminal test has now resolved, and it splits.** `M` Two candidate
+unpinnings are rejected outright: the constant offset `v + Λ` measures
+sensitivity to a terminal shift rather than repeated deviation gain, and
+selecting only the deviating continuation makes the optimum identically zero,
+since the zero array with `v = 1` suppresses every positive difference. The
+faithful formulation selects **both** the prescribed and the deviating terminal
+values by zero-seeded repeated-period iteration.
+
+Under that formulation the surgery witness does collapse — its optimum is zero
+at every length, so its plateau was indeed an artifact. But the weight
+`r({1}) = r({2}) = (-1,1)`, `r({1,2}) = (1,-1)` has optimum **exactly `1` at
+every length**. So a gap can survive faithful unpinning, and the surviving gap
+is precisely a negative singleton value carried by the unique active
+coordinate. Compactification is therefore **not** categorically work on an
+artifact.
+
+One caveat that limits how far this settles things: algebraic self-consistency
+is a closed condition, but the canonical boundary selection is **not**.
 
 **Rejected.** Continue building marked-cylinder semantics at P0 before knowing
 whether the plateau survives unpinning.
@@ -380,6 +397,69 @@ module-level resolution. Note the decline rests partly on unverified ground: the
 toolchain mismatch and the no-install fence meant nobody confirmed
 `result-graph` runs here at all.
 
+### `LEAN-F0-7` — the tail-average transfer is mirrored, not doubled
+
+- **Status:** DONE
+- **Lane:** F0
+- **Depends:** `LiminfAverageBridge`, `InfinitePlayMeasure`.
+- **Record:** [Notion lattice](NotionLattice.md)
+
+**Objective.** Settle how `IsUniformEquilibriumPayoff` transfers to the
+tail-average notions, and record the limsup node the registry lacked.
+
+**State.** Landed, and it refutes the framing this row was opened with. That
+framing said the liminf on-path failure signals liminf is the wrong target,
+with limsup getting **both** directions free. Only half is right.
+
+Negation exchanges the two limits unconditionally, so each abstract lemma
+dualizes with no change to the `ENNReal`/Fatou internals. But dualizing the
+*conditional* lemma yields a *conditional* statement: the almost-sure
+hypothesis is relabelled, not removed. The moving-bump family dualizes too,
+refuting the unconditional limsup-deviation bound exactly as the original
+refutes the unconditional liminf-on-path bound.
+
+So the split is **mirrored**: liminf gives the deviation direction free and the
+on-path direction conditional; limsup gives the on-path direction free and the
+deviation direction conditional. Neither tail notion is the uniform notion's
+"natural home" — each buys one direction and owes the other. Both game
+corollaries are free of any representation hypothesis, since they run on the
+landed play measure.
+
+**Acceptance.** The two-directional limsup transfer as a named theorem, the
+limsup node and its edges in the registry, and the liminf edges restated as the
+conditional ones they are. Cheapest adjacent item: formalize the
+typewriter/moving-bump family, converting the registry's FALSE-by-reason edge
+into FALSE-by-machine.
+
+### `LEAN-F0-8` — the bounded-transversality lemma behind the case-2 repair
+
+- **Status:** READY
+- **Lane:** F0
+- **Depends:** `QuittingUnboundedInverseIterate`.
+- **Record:** [Perturbed FTV inverse iterate][perturbed-ftv]
+
+**Objective.** Prove that a bounded completely-absorbing iterate has vanishing
+survival-weighted value: `|values| ≤ M` and completely absorbing imply
+`survivalPrefix · value → 0`. Reportedly three lines by squeeze.
+
+**State.** The published theorem this program depends on is false as printed,
+and holds in the bounded form. That bounded form is currently prose plus an
+unused `Prop` placeholder that is never established and never consumed — while
+the only formal artifact in the file *refutes a different statement*. The
+mechanism is exactly failure of transversality of the homogeneous boundary
+term: the witness keeps `survivalPrefix · value` at a nonzero constant while
+the survival prefix vanishes.
+
+The honest repair of the source's step is strictly weaker than boundedness —
+"the homogeneous boundary term vanishes". Nobody has attempted that
+re-derivation. The same phenomenon governs whether a periodic deviation
+recursion determines its continuation value at all: when the survival product
+fails to decay the fixed set is a ray, and the recursion selects nothing.
+
+**Acceptance.** The squeeze lemma landed, the `Prop` placeholder either
+established or removed, and the case-2 row resting on a formal artifact that
+proves the statement it cites.
+
 ### `PC-007` — keep one formalization lane active whenever source-ready mathematics exists
 
 **Decision.** Keep one formalization lane active whenever source-ready
@@ -443,6 +523,61 @@ impossible. Do **not** fall back on the aggregated carrier: its fibres can carry
 *different origin values* at the same obstacle trace, so aggregation is not
 harmless.
 
+### `MATH-P0-4` — map AGKRS Theorem 3.4 clause by clause against the internal trichotomy
+
+- **Status:** READY
+- **Lane:** P0
+- **Depends:** `QuittingThreeBranchDisjunction`; AGKRS Theorem 3.4 and its two
+  sources.
+- **Record:** [carrier group](../../ideas/AbsorbingCycleCarrier/README.md)
+
+**Objective.** AGKRS Theorem 3.4 is a published **iff**: `ε`-equilibria for
+every `ε` hold exactly when (S.1) ∨ (S.2) ∨ (S.3). The internal three-branch
+disjunction is machine-checked. Map the clauses against each other — is
+zero-solo (S.1)? is the admissible cycle (S.3)? what is (S.2) internally?
+
+**State.** If the trichotomies align, the published iff says something much
+sharper than anything currently claimed: **completeness of the internal
+disjunction is equivalent to the quitting conjecture**, which re-types the
+third branch's sufficiency question as the exact published boundary rather
+than as one open disjunct among three.
+
+**Fence.** Theorem 3.4's two sources — Simon 2007 and Solan–Vieille 2001
+Prop. 2.13 — have **zero wing records between them**. Both are already flagged,
+by the borrowed-premise census and by reference-chain closure. Do not consume
+Theorem 3.4 before at least one of them is recorded; that is the precise
+pattern that produced the not-locatable saga.
+
+**Acceptance.** A clause-by-clause map with each correspondence either proved,
+refuted, or explicitly open, plus wing records for whichever source the
+argument leans on.
+
+### `MATH-P1-4` — formalize the weight whose gap survives faithful unpinning
+
+- **Status:** READY
+- **Lane:** P1
+- **Depends:** the free-terminal formulation (zero-seeded repeated-period
+  iteration of both terminal values); existing two-player table machinery.
+- **Record:** this file
+
+**Objective.** Machine-check that `r({1}) = r({2}) = (-1,1)`,
+`r({1,2}) = (1,-1)` has free-terminal optimum exactly `1` at every length, and
+that the surgery witness `r({1}) = (a,0)`, `r({2}) = (1,-1)`,
+`r({1,2}) = (0,1)` has optimum `0` at every length.
+
+**State.** This is the first weight whose gap is not a terminal-pinning
+artifact, so it is the first honest instance of the hard case. The pair is
+worth landing together: one weight collapses under faithful unpinning and one
+does not, which is exactly the separation the pinned formulation could not see.
+Reported structure: the surviving gap is a negative singleton value carried by
+the unique active coordinate.
+
+**Acceptance.** Both computations machine-checked, with the free-terminal
+formulation itself defined in Lean rather than assumed. Translate carefully —
+the pinned-versus-free distinction is precisely where earlier de-gamed
+transcriptions went wrong, and a matched terminal pair gives zero on every
+weight.
+
 ### `MATH-P0-2` — prove the robust pointwise alternative (augmented-AP-to-terminal-profile compiler)
 
 - **Status:** ACTIVE
@@ -458,6 +593,23 @@ grammar. The bounded-finite-surgery cutoff-independent-debt-descent alternative
 at the original root is closed (see
 [`AnchoredRepairOrUniformDebtDescent.md`][anchored-repair]); uniformize the
 surviving repair branch by sequential compactness.
+
+**The limit-object route to this is closed as posed (`M`).** The settled
+carrier is a valid closed *description* of relaxed limits, but the relaxed
+package is **not a local certificate of approximate solutions**. Specifically:
+the relaxation is a strict weakening, with an explicit non-finite trace
+satisfying it; it is closed; but it does not certify small gain. No continuity
+in the carrier controls gain — value-approximation and gain-approximation come
+apart — and enriching by the chronological-profile mark does not repair the
+terminal debt.
+
+The witness is the damaging part. The obstructing object is **itself finite and
+complementary**, with a robust gain floor: every array near it in the trace has
+gain bounded below. So density and usability come apart inside the finite
+family, not merely at non-finite limits, and pulling back from the carrier
+cannot be the repair. Note this does **not** refute existence — a finite array
+with positive gain is unremarkable; what it refutes is that trace-nearness
+transports low gain.
 
 **State.** `ACTIVE`; the abstract buffered-path trichotomy is complete, but
 neither game-facing decoder nor its local stability theorem is proved.

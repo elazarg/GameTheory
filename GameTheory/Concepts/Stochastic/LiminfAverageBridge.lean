@@ -14,7 +14,7 @@ import GameTheory.Concepts.Stochastic.Uniform
 import GameTheory.Concepts.Stochastic.InfinitePlayMeasure
 
 /-!
-# Bridging finite-horizon-average payoffs to the liminf-average game
+# Bridging finite-horizon-average payoffs to the liminf- and limsup-average games
 
 `GameTheory.Concepts.Stochastic.Uniform` states `IsUniformEquilibriumPayoff`
 entirely in terms of **finite-horizon averages** `finiteAveragePayoff s₀ T σ`
@@ -25,11 +25,16 @@ stated for the **liminf-average** game instead: the payoff of an infinite
 play `ω` is `liminf_T A_T ω`, where `A_T ω` is the average of the first `T`
 stage payoffs realized along `ω`, and the game-theoretic payoff is the
 expectation `E[liminf_T A_T]` of that pathwise quantity under the measure
-induced by a fixed profile.
+induced by a fixed profile. The **limsup-average** game replaces `liminf_T`
+by `limsup_T` in that same payoff functional; nothing else about the setup
+changes.
 
-This file supplies the bridge between the two notions in two layers. The
-abstract lemmas (`integral_liminf_le_of_bounded_of_eventually_le`,
-`le_integral_liminf_of_bounded_of_tendsto_ae_of_eventually_le`) work at the
+This file supplies the bridge between `finiteAveragePayoff` and both
+tail-average notions, in two layers. The abstract lemmas
+(`integral_liminf_le_of_bounded_of_eventually_le`,
+`le_integral_liminf_of_bounded_of_tendsto_ae_of_eventually_le`, and their
+limsup duals `le_integral_limsup_of_bounded_of_eventually_le`,
+`integral_limsup_le_of_bounded_of_tendsto_ae_of_eventually_le`) work at the
 level of generality the bridge actually needs: an arbitrary probability
 space `(Ω, μ)` carrying a uniformly bounded family `A : ℕ → Ω → ℝ` of the
 finite-horizon averages of one fixed profile, realized pathwise. They stay
@@ -91,12 +96,68 @@ direction's extra hypothesis:
   missing half, and it costs a genuine extra hypothesis (a.s. convergence)
   that a bare uniform equilibrium payoff does not supply.
 
+## The limsup dual, and the asymmetry it makes explicit
+
+Negation exchanges `liminf` and `limsup` pointwise
+(`liminf_neg_eq_neg_limsup`), unconditionally: no boundedness or convergence
+hypothesis is needed for that identity by itself, since `Real.sSup`/
+`Real.sInf` already return the junk value `0` on unbounded or empty sets,
+consistently with negation. Applying each of the two abstract lemmas above
+to `-A` therefore produces a dual pair, stated for `limsup` instead of
+`liminf`, with **no change to the ENNReal/`ofReal` machinery inside either
+proof** — the sign flip is absorbed entirely by
+`liminf_neg_eq_neg_limsup` and `MeasureTheory.integral_neg`, applied once
+each, from the outside:
+
+* `le_integral_limsup_of_bounded_of_eventually_le` is the dual of
+  `integral_liminf_le_of_bounded_of_eventually_le`. It is **unconditional**:
+  negation turns "eventually `∫ A_n ≤ bound`" into "eventually
+  `bound ≤ ∫ A_n`", and Fatou dualizes to reverse Fatou
+  (`limsup E[A_n] ≤ E[limsup A_n]`) without picking up any new hypothesis.
+* `integral_limsup_le_of_bounded_of_tendsto_ae_of_eventually_le` is the dual
+  of `le_integral_liminf_of_bounded_of_tendsto_ae_of_eventually_le`, and it
+  stays **conditional** on the same a.s.-convergence hypothesis: negation
+  relabels which sign of inequality needs the hypothesis, it does not
+  remove it. The moving-bump construction refutes the unconditional form
+  here too, by the same negation: a constant sequence of expectations
+  `1/2` with `limsup_T A_T ω = 1` and `liminf_T A_T ω = 0` at every `ω`
+  satisfies "eventually `E[A_T] ≤ bound`" at `bound = 1/2`, while
+  `E[limsup_T A_T] = 1 > bound`.
+
+So the two liminf-side game corollaries have exact limsup-side twins with
+the **same** free/conditional split, mirrored rather than doubled:
+`onPath_le_limsup_integral_of_isUniformEquilibriumPayoff` is unconditional
+— it is the *on-path* bound, not the deviation bound — and
+`deviation_limsup_le_of_isUniformEquilibriumPayoff` is conditional on
+`hconv` — it is the *deviation* bound, not the on-path bound. This is the
+opposite pairing from the liminf game, not an extra free direction:
+
+| Notion   | Deviation (upper bound on `E[·]`)  | On-path/delivery (lower bound)     |
+|----------|-------------------------------------|-------------------------------------|
+| liminf   | unconditional (Fatou)               | conditional on a.s. convergence     |
+| limsup   | conditional on a.s. convergence     | unconditional (reverse Fatou)       |
+
+Consequently `IsUniformEquilibriumPayoff` does **not** transfer to the
+limsup-average notion in both directions for free: swapping the aggregation
+from liminf to limsup only swaps *which* of the two directions is free: it
+does not make both free at once. Each notion gets exactly one unconditional
+half and one conditional half, and the two notions' free halves are duals
+of each other under `A ↦ -A`.
+
 ## Main definitions and results
 
 * `integral_liminf_le_of_bounded_of_eventually_le` — real Fatou for a
   uniformly bounded family, composed with an eventual expectation bound
 * `le_integral_liminf_of_bounded_of_tendsto_ae_of_eventually_le` — the
   on-path converse, conditional on almost-sure convergence
+* `liminf_neg_eq_neg_limsup` — negation exchanges `liminf` and `limsup`
+  pointwise, unconditionally
+* `le_integral_limsup_of_bounded_of_eventually_le` — the unconditional
+  limsup dual of the deviation-direction Fatou lemma; the on-path bound in
+  the limsup game
+* `integral_limsup_le_of_bounded_of_tendsto_ae_of_eventually_le` — the
+  limsup dual of the on-path lemma, conditional on almost-sure convergence;
+  the deviation bound in the limsup game
 * `StochasticGame.pathwiseAveragePayoff` — the finite-horizon average payoff
   realized pathwise along an infinite play
 * `StochasticGame.integral_pathwiseAveragePayoff` — its expectation against
@@ -107,6 +168,11 @@ direction's extra hypothesis:
 * `StochasticGame.onPath_le_liminf_integral_of_isUniformEquilibriumPayoff` —
   the on-path direction instantiated against `IsUniformEquilibriumPayoff`,
   conditional on the same almost-sure convergence hypothesis as before
+* `StochasticGame.onPath_le_limsup_integral_of_isUniformEquilibriumPayoff` —
+  the on-path direction in the limsup game, unconditionally
+* `StochasticGame.deviation_limsup_le_of_isUniformEquilibriumPayoff` — the
+  deviation direction in the limsup game, conditional on almost-sure
+  convergence of the deviation profile's own pathwise realization
 -/
 
 set_option autoImplicit false
@@ -117,6 +183,20 @@ open Filter MeasureTheory
 open scoped Topology
 
 namespace GameTheory
+
+/-- **Negation exchanges `liminf` and `limsup` pointwise, unconditionally.**
+No boundedness or convergence hypothesis is needed: `Real.sSup`/`Real.sInf`
+already return the junk value `0` on unbounded or empty sets, consistently
+with negation, so the identity holds for every `u` and every filter `f`.
+This is the single fact that lets the limsup lemmas below be obtained from
+the liminf ones by applying them to `-A`, rather than by re-deriving the
+Fatou argument for the opposite sign. -/
+theorem liminf_neg_eq_neg_limsup {β : Type*} (u : β → ℝ) (f : Filter β) :
+    liminf (fun n => -u n) f = -limsup u f := by
+  rw [liminf_eq, limsup_eq, ← Real.sSup_neg]
+  congr 1
+  ext a
+  simp only [Set.mem_neg, Set.mem_setOf_eq, le_neg]
 
 /-- **Real Fatou for a uniformly bounded family, composed with an eventual
 expectation bound.** If `A : ℕ → Ω → ℝ` is uniformly bounded by `C` and its
@@ -220,6 +300,40 @@ theorem integral_liminf_le_of_bounded_of_eventually_le
   simp only [MeasureTheory.probReal_univ, smul_eq_mul, one_mul] at hrealchain
   linarith
 
+/-- **Reverse Fatou for a uniformly bounded family, composed with an eventual
+expectation bound.** The dual of `integral_liminf_le_of_bounded_of_eventually_le`
+under `A ↦ -A`. If `A : ℕ → Ω → ℝ` is uniformly bounded by `C` and its
+expectation is eventually at least `bound`, then the expectation of its
+pathwise `limsup` is at least `bound` too.
+
+This is the on-path/delivery direction of the finite-horizon/limsup-average
+bridge, and it is **unconditional**: no almost-sure-convergence hypothesis is
+needed, unlike the liminf on-path direction
+(`le_integral_liminf_of_bounded_of_tendsto_ae_of_eventually_le`). The proof is
+exactly `integral_liminf_le_of_bounded_of_eventually_le` applied to `-A`,
+translated by `liminf_neg_eq_neg_limsup` and `MeasureTheory.integral_neg`: the
+`ENNReal.ofReal`/Fatou route inside that lemma is not touched. -/
+theorem le_integral_limsup_of_bounded_of_eventually_le
+    {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
+    {A : ℕ → Ω → ℝ} {C bound : ℝ}
+    (hmeas : ∀ n, Measurable (A n))
+    (hbound : ∀ n ω, |A n ω| ≤ C)
+    (hle : ∀ᶠ n in atTop, bound ≤ ∫ ω, A n ω ∂μ) :
+    bound ≤ ∫ ω, limsup (fun n => A n ω) atTop ∂μ := by
+  have hkey := integral_liminf_le_of_bounded_of_eventually_le
+    (A := fun n ω => -A n ω) (C := C) (bound := -bound)
+    (fun n => (hmeas n).neg)
+    (fun n ω => by simpa using hbound n ω)
+    (by
+      filter_upwards [hle] with n hn
+      rw [MeasureTheory.integral_neg]
+      linarith)
+  have hfun : (fun ω => liminf (fun n => -A n ω) atTop) =
+      fun ω => -limsup (fun n => A n ω) atTop :=
+    funext fun ω => liminf_neg_eq_neg_limsup (fun n => A n ω) atTop
+  rw [hfun, MeasureTheory.integral_neg] at hkey
+  linarith
+
 /-- **On-path direction, conditional on almost-sure convergence.** If
 `A : ℕ → Ω → ℝ` is uniformly bounded, converges almost everywhere to `f`, and
 its expectation is eventually at least `bound`, then the expectation of its
@@ -252,6 +366,41 @@ theorem le_integral_liminf_of_bounded_of_tendsto_ae_of_eventually_le
   have hle' : bound ≤ ∫ ω, f ω ∂μ := ge_of_tendsto hdomconv hle
   calc bound ≤ ∫ ω, f ω ∂μ := hle'
     _ = ∫ ω, liminf (fun n => A n ω) atTop ∂μ := (integral_congr_ae hliminf_eq).symm
+
+/-- **Limsup bound, conditional on almost-sure convergence.** The dual of
+`le_integral_liminf_of_bounded_of_tendsto_ae_of_eventually_le` under `A ↦ -A`.
+If `A : ℕ → Ω → ℝ` is uniformly bounded, converges almost everywhere to `f`,
+and its expectation is eventually at most `bound`, then the expectation of
+its pathwise `limsup` is at most `bound` too.
+
+Unlike `le_integral_limsup_of_bounded_of_eventually_le`, this direction is
+**not** free: the a.s.-convergence hypothesis is not removed by the sign
+flip, only relabeled to the opposite inequality (see the module docstring
+for the dualized moving-bump counterexample). -/
+theorem integral_limsup_le_of_bounded_of_tendsto_ae_of_eventually_le
+    {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
+    {A : ℕ → Ω → ℝ} {f : Ω → ℝ} {C bound : ℝ}
+    (hmeas : ∀ n, Measurable (A n))
+    (hbound : ∀ n ω, |A n ω| ≤ C)
+    (hconv : ∀ᵐ ω ∂μ, Tendsto (fun n => A n ω) atTop (𝓝 (f ω)))
+    (hle : ∀ᶠ n in atTop, ∫ ω, A n ω ∂μ ≤ bound) :
+    ∫ ω, limsup (fun n => A n ω) atTop ∂μ ≤ bound := by
+  have hconv' : ∀ᵐ ω ∂μ, Tendsto (fun n => -A n ω) atTop (𝓝 (-f ω)) := by
+    filter_upwards [hconv] with ω hω using hω.neg
+  have hkey := le_integral_liminf_of_bounded_of_tendsto_ae_of_eventually_le
+    (A := fun n ω => -A n ω) (f := fun ω => -f ω) (C := C) (bound := -bound)
+    (fun n => (hmeas n).neg)
+    (fun n ω => by simpa using hbound n ω)
+    hconv'
+    (by
+      filter_upwards [hle] with n hn
+      rw [MeasureTheory.integral_neg]
+      linarith)
+  have hfun : (fun ω => liminf (fun n => -A n ω) atTop) =
+      fun ω => -limsup (fun n => A n ω) atTop :=
+    funext fun ω => liminf_neg_eq_neg_limsup (fun n => A n ω) atTop
+  rw [hfun, MeasureTheory.integral_neg] at hkey
+  linarith
 
 namespace StochasticGame
 
@@ -377,6 +526,71 @@ theorem onPath_le_liminf_integral_of_isUniformEquilibriumPayoff
   filter_upwards [eventually_ge_atTop T₀] with T hT
   rw [G.integral_pathwiseAveragePayoff σ s₀ who T]
   have hlower := (abs_le.mp ((hσ T hT).2 who)).1
+  linarith
+
+omit [DecidableEq G.State] [∀ i, DecidableEq (G.Act i)] in
+/-- The on-path direction of the finite-horizon/limsup-average bridge,
+instantiated against `IsUniformEquilibriumPayoff`. The limsup-side twin of
+`onPath_le_liminf_integral_of_isUniformEquilibriumPayoff`, obtained from
+`le_integral_limsup_of_bounded_of_eventually_le` instead of its liminf
+counterpart. `σ`, `T₀`, `hσ` are the witnesses `IsUniformEquilibriumPayoff`
+supplies at accuracy `ε`. Given a uniform bound on stage payoffs (`hC0`,
+`hC`), the limsup-average payoff of `σ`, realized pathwise on
+`infinitePlayMeasure`, is at least `v who - ε`.
+
+Unconditionally: unlike the liminf on-path bound, no almost-sure-convergence
+hypothesis is needed here — this is the free half of the limsup game (see
+the module docstring's asymmetry table). -/
+theorem onPath_le_limsup_integral_of_isUniformEquilibriumPayoff
+    (s₀ : G.State) (v : Payoff ι) {ε : ℝ} (who : ι)
+    {σ : G.BehaviorProfile} {T₀ : ℕ}
+    (hσ : ∀ T, T₀ ≤ T → G.IsεHorizonNash s₀ T ε σ ∧
+      ∀ who', |G.finiteAveragePayoff s₀ T σ who' - v who'| ≤ ε)
+    {C : ℝ} (hC0 : 0 ≤ C) (hC : ∀ s a, |G.stagePayoff s a who| ≤ C) :
+    v who - ε ≤ ∫ p, limsup (fun n => G.pathwiseAveragePayoff who n p) atTop
+      ∂(G.infinitePlayMeasure σ s₀) := by
+  apply le_integral_limsup_of_bounded_of_eventually_le
+    (G.measurable_pathwiseAveragePayoff who) (G.abs_pathwiseAveragePayoff_le who hC0 hC)
+  filter_upwards [eventually_ge_atTop T₀] with T hT
+  rw [G.integral_pathwiseAveragePayoff σ s₀ who T]
+  have hlower := (abs_le.mp ((hσ T hT).2 who)).1
+  linarith
+
+omit [DecidableEq G.State] [∀ i, DecidableEq (G.Act i)] in
+/-- The deviation direction of the finite-horizon/limsup-average bridge,
+instantiated against `IsUniformEquilibriumPayoff`. The limsup-side twin of
+`deviation_liminf_le_of_isUniformEquilibriumPayoff`, obtained from
+`integral_limsup_le_of_bounded_of_tendsto_ae_of_eventually_le` instead of its
+liminf counterpart. `σ`, `T₀`, `hσ` are the witnesses `IsUniformEquilibriumPayoff`
+supplies at accuracy `ε`. Given a uniform bound on stage payoffs to `who`
+(`hC0`, `hC`) and that the deviation profile's own pathwise averages on
+`infinitePlayMeasure` converge almost surely (`hconv`), the limsup-average
+payoff of the deviation profile `Function.update σ who dev` is capped by
+`v who + 2 * ε`.
+
+Unlike the on-path direction above, `hconv` is a genuine extra mathematical
+hypothesis here, not just an infrastructure gap: this is the *costly* half of
+the limsup game, dual to the liminf game's costly (on-path) half — see the
+module docstring's asymmetry table. Negating the moving-bump counterexample
+shows `hconv` cannot be dropped. -/
+theorem deviation_limsup_le_of_isUniformEquilibriumPayoff
+    (s₀ : G.State) (v : Payoff ι) {ε : ℝ} {who : ι} (dev : G.BehaviorStrategy who)
+    {σ : G.BehaviorProfile} {T₀ : ℕ}
+    (hσ : ∀ T, T₀ ≤ T → G.IsεHorizonNash s₀ T ε σ ∧
+      ∀ who', |G.finiteAveragePayoff s₀ T σ who' - v who'| ≤ ε)
+    {C : ℝ} (hC0 : 0 ≤ C) (hC : ∀ s a, |G.stagePayoff s a who| ≤ C)
+    {f : G.Play → ℝ}
+    (hconv : ∀ᵐ p ∂(G.infinitePlayMeasure (Function.update σ who dev) s₀),
+      Tendsto (fun n => G.pathwiseAveragePayoff who n p) atTop (𝓝 (f p))) :
+    ∫ p, limsup (fun n => G.pathwiseAveragePayoff who n p) atTop
+      ∂(G.infinitePlayMeasure (Function.update σ who dev) s₀) ≤ v who + 2 * ε := by
+  apply integral_limsup_le_of_bounded_of_tendsto_ae_of_eventually_le
+    (G.measurable_pathwiseAveragePayoff who) (G.abs_pathwiseAveragePayoff_le who hC0 hC) hconv
+  filter_upwards [eventually_ge_atTop T₀] with T hT
+  rw [G.integral_pathwiseAveragePayoff (Function.update σ who dev) s₀ who T]
+  obtain ⟨hNash, hpin⟩ := hσ T hT
+  have hdev := hNash who dev
+  have hupper := (abs_le.mp (hpin who)).2
   linarith
 
 end StochasticGame

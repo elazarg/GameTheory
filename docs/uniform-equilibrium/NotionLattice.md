@@ -104,15 +104,28 @@ functional) is a distinct payoff notion. Two instantiations matter below:
 `u = quittingTerminalPayoff reward` (Cluster 7) and the never-built
 liminf-average functional (Cluster 4).
 
-### Cluster 4 — liminf-average (no Lean `Prop` exists)
+### Cluster 4 — liminf/limsup-average (no Lean `Prop` exists for either)
 
-No infinite-play measure is built for `StochasticGame` anywhere in the tree,
-so **there is no Lean node here** — no `IsLiminfAverageEquilibrium` `Prop`.
-`LiminfAverageBridge.lean` states conditional bridge theorems from U3 to the
-literature's liminf-average game, each carrying an explicit representation
-hypothesis `hrep : "some probability space realizes the finite-horizon
-averages pathwise"`, because that space cannot yet be constructed in-tree.
-Recorded as edges in §2.4, not as a node.
+**There is no Lean node here for either aggregation** — no
+`IsLiminfAverageEquilibrium` and no `IsLimsupAverageEquilibrium` `Prop`
+anywhere in the tree (`grep -rn "def.*LiminfAverage\|LiminfAverageEquilibrium\|
+def.*LimsupAverage\|LimsupAverageEquilibrium" GameTheory/` returns no
+matches). The infinite-play measure itself **is** built —
+`StochasticGame.infinitePlayMeasure`
+(`Concepts/Stochastic/InfinitePlayMeasure.lean:160`), by the Ionescu-Tulcea
+theorem from the game's transition kernel and a fixed behavior profile — and
+`LiminfAverageBridge.lean` uses it directly, with no representation
+hypothesis, via `StochasticGame.pathwiseAveragePayoff`
+(`LiminfAverageBridge.lean:415`) and
+`StochasticGame.integral_pathwiseAveragePayoff`
+(`LiminfAverageBridge.lean:462`). `LiminfAverageBridge.lean` states four
+bridge theorems from U3 to the literature's liminf- and limsup-average
+games — one deviation-direction and one on-path-direction theorem for each
+aggregation — every one unconditional in its pathwise realization. Exactly
+one of the two directions is unconditional in its *mathematics* for each
+aggregation (Fatou for liminf-deviation and limsup-on-path; nothing for
+liminf-on-path and limsup-deviation without an extra a.s.-convergence
+hypothesis). Recorded as edges in §2.4, not as nodes.
 
 ### Cluster 5 — monitored / realized-action repeated games
 
@@ -204,23 +217,35 @@ design — the two clusters share nothing to compare.
 | U5 → U3 | **LANDED** | `IsUniformScheduledMarkovEquilibriumPayoff.isUniformEquilibriumPayoff` (`FinkMarkovEndpoint.lean:39`) — forgetting the scheduled-Markov form of the witness. |
 | U1 ↔ K1 of `horizonGame` | **LANDED** | `isεHorizonNash_iff_horizonGame` (`Uniform.lean:123`) — full iff; "per horizon, a stochastic game *is* a kernel game." |
 
-### 2.4 Liminf-average (Cluster 4) — three distinct edges, not one
+### 2.4 Liminf/limsup-average (Cluster 4) — mirrored, not doubled
 
 The task's orientation instance #2. `LiminfAverageBridge.lean`'s own docstring
-separates these explicitly; they must not be merged.
+separates these explicitly; they must not be merged. The infinite-play
+measure is landed (`infinitePlayMeasure`, `InfinitePlayMeasure.lean:160`), so
+every edge below is unconditional in its pathwise *realization* — no
+representation hypothesis remains anywhere in this cluster. What remains
+conditional is a genuine mathematical fact about a.s. convergence, and it is
+conditional for exactly one direction of each aggregation, mirrored: liminf's
+deviation direction is free and its on-path direction costs `hconv`; limsup's
+on-path direction is free and its *deviation* direction costs `hconv`. This
+is the exact opposite pairing, not two free directions for either notion.
 
 | Edge | Verdict | Evidence |
 |---|---|---|
-| U3 (deviation direction) → liminf-average cap on one fixed deviation, **conditional only on `hrep`** | **LANDED, conditional on `hrep` (infrastructure only)** | `deviation_liminf_le_of_isUniformEquilibriumPayoff` (`LiminfAverageBridge.lean:261`), real Fatou. `hrep` states that some probability space realizes the deviation's finite-horizon averages pathwise — a missing *construction*, not a missing *hypothesis on the game*; tracked by `LEAN-F0-4` (`PIPELINE.md:72`). |
-| U3 (on-path direction), **unconditional** — pinned expectations alone ⇒ `E[liminf A_T] ≥ v_i - ε` | **FALSE** | Module docstring (`LiminfAverageBridge.lean:53-66`) records the standard moving-bump/typewriter-sequence construction: a uniformly bounded sequence of expectations converging to `L` can have `liminf_T A_T ω = 0` almost everywhere pathwise. This is the documented *reason*, not a separately Lean-formalized counterexample game — recorded as FALSE-by-reason per the task's own rule ("FALSE — with the counterexample **or the reason**"), not overclaimed as machine-checked. |
-| U3 (on-path direction), **conditional on `hconv` (a.s. convergence of `A_T`)** | **LANDED, conditional on `hconv` — a genuine extra mathematical hypothesis, not infrastructure** | `onPath_le_liminf_integral_of_isUniformEquilibriumPayoff` (`LiminfAverageBridge.lean:295`), via `le_integral_liminf_of_bounded_of_tendsto_ae_of_eventually_le` (dominated convergence). Tracked by `LEAN-F0-3` (`PIPELINE.md:71`). |
+| U3 (deviation direction) → liminf-average cap on one fixed deviation | **LANDED, unconditional** | `deviation_liminf_le_of_isUniformEquilibriumPayoff` (`LiminfAverageBridge.lean:481`), real Fatou (`integral_liminf_le_of_bounded_of_eventually_le`, `LiminfAverageBridge.lean:209`). No representation hypothesis: `infinitePlayMeasure` supplies the pathwise realization directly. |
+| U3 (on-path direction), **unconditional** — pinned expectations alone ⇒ `E[liminf A_T] ≥ v_i - ε` | **FALSE** | Module docstring (`LiminfAverageBridge.lean` §"Two directions, two different stories") records the standard moving-bump/typewriter-sequence construction: a uniformly bounded sequence of expectations converging to `L` can have `liminf_T A_T ω = 0` almost everywhere pathwise. This is the documented *reason*, not a separately Lean-formalized counterexample game — recorded as FALSE-by-reason per the task's own rule ("FALSE — with the counterexample **or the reason**"), not overclaimed as machine-checked. |
+| U3 (on-path direction), **conditional on `hconv` (a.s. convergence of `A_T`)** → liminf-average payoff of `σ` itself | **LANDED, conditional on `hconv` — a genuine extra mathematical hypothesis, not infrastructure** | `onPath_le_liminf_integral_of_isUniformEquilibriumPayoff` (`LiminfAverageBridge.lean:513`), via `le_integral_liminf_of_bounded_of_tendsto_ae_of_eventually_le` (`LiminfAverageBridge.lean:348`, dominated convergence). Tracked by `LEAN-F0-3` (`PIPELINE.md:930`). |
+| U3 (on-path direction) → limsup-average payoff of `σ` itself | **LANDED, unconditional** | `onPath_le_limsup_integral_of_isUniformEquilibriumPayoff` (`LiminfAverageBridge.lean:544`), reverse Fatou (`le_integral_limsup_of_bounded_of_eventually_le`, `LiminfAverageBridge.lean:316`) — the dual of the liminf-deviation lemma under `A ↦ -A` (`liminf_neg_eq_neg_limsup`, `LiminfAverageBridge.lean:194`). This is the direction the deviation-direction reasoning does **not** give: it is on-path, not deviation. |
+| U3 (deviation direction), **unconditional** — pinned expectations alone ⇒ `E[limsup A_T] ≤ v_i + 2ε` on a deviation | **FALSE** | Dual of the liminf on-path counterexample under `A ↦ -A`: a constant sequence of expectations `1/2` with `limsup_T A_T ω = 1` and `liminf_T A_T ω = 0` at every `ω` satisfies "eventually `E[A_T] ≤ 1/2`" while `E[limsup_T A_T] = 1 > 1/2`. Documented reason (`LiminfAverageBridge.lean` §"The limsup dual, and the asymmetry it makes explicit"), not a separately Lean-formalized counterexample game — FALSE-by-reason, not machine-checked. |
+| U3 (deviation direction), **conditional on `hconv` (a.s. convergence of the deviation profile's own `A_T`)** → limsup-average cap on one fixed deviation | **LANDED, conditional on `hconv`** | `deviation_limsup_le_of_isUniformEquilibriumPayoff` (`LiminfAverageBridge.lean:576`), via `integral_limsup_le_of_bounded_of_tendsto_ae_of_eventually_le` (`LiminfAverageBridge.lean:380`, dominated convergence dualized). Same hypothesis shape as the liminf on-path edge, applied to the deviation profile instead of `σ`. No pipeline row yet. |
 
-**Building the infinite-play measure (discharging `hrep`) does not discharge
-`hconv`.** These are independent gaps: one is missing infrastructure
-(`LEAN-F0-4`), the other is a missing mathematical property of the sequence
-that pinned expectations alone cannot supply (`LEAN-F0-3`, and permanently
-FALSE without it per the edge above). No Lean theorem in the tree conflates
-them, and this document does not either.
+**`hconv` is not discharged by anything currently in the tree, for either
+aggregation.** It is a missing mathematical property of the specific process
+(`pathwiseAveragePayoff`), not missing infrastructure: `IsUniformEquilibriumPayoff`
+pins expectations and nothing more, and pinned expectations do not force a.s.
+convergence (the moving-bump family above, and its dual, are the reason). No
+Lean theorem in the tree discharges `hconv` for any profile, and this
+document does not claim one does.
 
 ### 2.5 Repeated/monitored (Cluster 5) ↔ Uniform (Cluster 3)
 
