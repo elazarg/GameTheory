@@ -62,18 +62,53 @@ The finite-quitting front is now sharply reduced.
    exact-D endpoints, survival, atom, and common holonomy. Conversely, every
    compact subset of `ℕ × X` has bounded length, so no compact lift retaining
    literal unbounded game-stage cost can cover the escaping middles.
-9. **Leading infinity-chart candidate (`P+I`).** Published absorption paths
-   compactify quitting behavior by accumulated absorption mass rather than
-   calendar time.  The P0 candidate is stricter: a marked subprobability path
-   with a finite-block exit port or infinite Never atom, the conditional
-   terminal packet, entry/exit anchors, payoff/debt paths, and the full
-   unilateral stopping-obstacle graph.  Neither its closedness nor its exact
-   adapter is proved.
+9. **Infinity chart: generalized completed traces (`M`).** Published
+   absorption paths compactify quitting behavior by accumulated absorption
+   mass rather than calendar time. For the stricter marked object, closure of
+   the *finite* realized set fails, and fails structurally. The unilateral
+   stopping obstacle is not a function of accumulated mass — equal accumulated
+   mass does not determine the current row — and neither are the deleted
+   clocks after full absorption. Finite `μ`-paths are finitely piecewise
+   affine while limits are genuinely nonlinear. Decisively, **no sequentially
+   compact added coordinate closes the finite realized set with continuous
+   projection**, so a missing-coordinate repair of that shape does not exist.
+
+   Completed chronological graphs repair it: the closed completed hypograph of
+   the stage obstacle trace, retaining zero-mass stages, together with the
+   completed graph of `t ↦ (τ(t), S_{-i}(t))`. In that topology the ambient
+   space is compact, the cap is continuous with a retained maximizing witness,
+   anchored splice legality is closed, concatenation is continuous, a uniform
+   cap bound survives limits, and a limit self-splice pulls back to a nearby
+   finite one under boundary-row flexibility. The object to prove compact is
+   therefore the space of **generalized completed chronological traces**, with
+   finite blocks dense in it. The exact adapter remains unproved.
 
 The chain is exhaustive up to the positive fully summable plateau. It is not a
 claim that every equilibrium belongs to one finite grammar.
 
 ## Exact open hinge
+
+**Uniform middle-length tightness is refuted (`M`).** An explicit two-player
+weight — `r({1})=(1/4,0)`, `r({2})=(1,-1/4)`, `r({1,2})=(3/4,1/4)` — has
+optimized debt `1/8` at every cutoff with unique complementary minimizers and
+total absorption mass `3/4`. The minimizer's only positive-mass row is the
+*last* one, so for every window length `L` the mass beyond `L` remains `3/4`
+and the tails are not uniformly tight. The escaping structure is therefore
+explicit: a bounded terminal packet carrying positive deleted hazard and
+boundary debt, preceded by an arbitrarily long **inert** region of zero
+absorption mass and zero deleted clock.
+
+This closes the first horn of `PC-003`'s revisit trigger negatively — no
+common finite truncation length exists, so the bounded-decoder route via
+tightness is unavailable, and an infinity/stopping-law chart is mandatory
+rather than merely preferred. It also supplies the missing witness for the
+chart's design: the inert middle collapses to a single point of the mass
+clock, so everything strategic sits at a receding row that mass alone cannot
+locate — exactly the failure of mass-parametrization recorded in item 9.
+
+A positive plateau in this chain grammar does **not** imply nonexistence; by
+the Q125 fence an equilibrium may lie outside the zero-boundary chain
+geometry, and for two players one is guaranteed externally.
 
 Fixed-cutoff closedness is settled; arbitrary-length executability is not.
 Projection to scalar coefficients forgets splice admissibility, while a state
@@ -88,10 +123,44 @@ actual finite blocks exactly; the next must prove the enriched strategic graph
 closed or exhibit two identical ordinary path limits with incompatible caps,
 marks, or splice semantics.
 
-The second question is strategic and splits into two decoders.  One compiles a
-globally valid corrected path into terminal approximate profiles.  The other
+The second question is strategic and splits into two decoders. One compiles a
+globally valid corrected path into terminal approximate profiles. The other
 extracts a bounded finite surgery from a strict local failure and decreases
-optimized debt at the original root.  E40 gives depth-free error once a certified
+optimized debt at the original root.
+
+**The surgery decoder is closed negatively (`M`)** — see the capstone claim.
+No bounded-length modification achieves a cutoff-independent decrement, and
+accumulation does not rescue it. Repair is the only surviving branch.
+
+**Mark transport is not the obstruction (`M`).** The long-standing worry that a
+packet sitting arbitrarily deep in the middle cannot be carried through a
+shortening is false. Splitting at the marked letter yields mark preservation
+with `L_C(ε) ≤ 2 L_B(ε/5) + 1`; there is no separate deep-mark obstruction, and
+the transported weight staying bounded below is not the difficulty either.
+
+The hypothesis must travel with the claim: the collapse needs endpoint-
+preserving shortening for **every admissible factor** with exact endpoints,
+which is strictly stronger than shortening whole words, since the two factors
+carry endpoint pairs the full family need not contain. If the repository's
+factor fibers are not covered, the collapse does not fire.
+
+What actually fails is plain **anchored** shortening: exact reachable endpoint
+fibers can have unbounded depth, and this persists even for a compact letter
+set with continuous, injective, locally open anchor maps and uniformly summable
+defects — so injectivity and local openness are not the missing hypotheses. A
+finite anchor space, or a bounded-deletion property giving `L(ε) ≤ N(ε/4)+D`,
+restores it. The open question is whether the exact-`D` anchors admit such a
+condition, since they live in a compact box rather than a finite set. A common
+total mass bound is insufficient throughout: prefix shortening needs a common
+**tail modulus**.
+
+This anchored-shortening failure should be treated as **unimported** for now.
+Both witnesses are reachability-degenerate — the endpoint fiber contains a
+single word, so shortening fails for pure transition-system reasons with the
+semigroup inert. That is a correct answer to the question as posed, which
+deliberately left anchors uncoupled from the letter data, but it transfers only
+if the repository's anchors also have thin fibers. The coupled version has not
+been asked.  E40 gives depth-free error once a certified
 seam is supplied; E46 gives a greedy buffered return/exit/dead-end trichotomy;
 E47 applies a downstream seam to the actual exact-D tail. None transports the
 root anchor and reverse packet through the middle or turns an exit into new

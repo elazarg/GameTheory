@@ -1,43 +1,26 @@
-# Marked Absorption Cylinder — finite semantics for P0-A
+# Marked absorption cylinder and generalized traces
 
-Dated design note, 2026-08-03. This fixes the **finite** object required by
-`MATH-P0-1` / `LEAN-P1-4` before any infinite topology is scaffolded, per the
-standing decision in [`PIPELINE.md`](../PIPELINE.md) (`PC-003`) and the ordered
-agenda in the [frontier manuscript](../manuscript/UniformEquilibriumFrontierManuscript.tex).
+Design record for the boundary object of `MATH-P0-1` / `LEAN-P1-4`: the finite
+encoding of a calibrated exact-`D` block, and the limit space it sits densely
+inside.
 
-Evidence discipline: statements marked `L` are production Lean at `14d75ff`;
-statements marked `A` are derivations audited on paper **in this note only**
-and are not machine-checked; statements marked `O` are the open obligations
-this design is meant to make precise. Nothing here is landed mathematics.
+Evidence discipline: `L` is production Lean; `M` is audited mathematics, not
+formalized; `O` is an open obligation. Nothing here is landed Lean.
 
-## 0. What this note decides
-
-The route selected at `cd1db11` encodes each calibrated exact-`D` block as a
-marked subprobability absorption cylinder, schematically
-
-\[
- z=\bigl(\pi,s_{\rm exit};e_{\rm in},e_{\rm out};
-          i_*,T_*,\kappa_*;V,\mathcal O,D;\text{provenance}\bigr).
-\]
-
-That schema names the coordinates but does not settle their types, their
-clocks, or which of them are independent. This note settles exactly that, and
-records one finding that changes the schema.
-
-## 1. Notation for an actual finite block
+## 1. Notation for a finite block
 
 Let `ι` be the finite player set and `𝒥` the nonempty subsets of `ι`, with
 reward `r : 𝒥 → Payoff ι`. A block of length `m` is a family of live product
-roots `x_t : ι → PMF Bool`, `t < m`, taken from one actual common
-zero-boundary Nash–Bellman chain. Write, for a single root `x`:
+roots `x_t : ι → PMF Bool`, `t < m`, from one actual common zero-boundary
+Nash–Bellman chain. For a single root `x`:
 
 | Quantity | Definition |
 | --- | --- |
-| continue mass | `c(x) = ∏_{i} x_i(false)` |
+| continue mass | `c(x) = ∏_i x_i(false)` |
 | absorption into `J ∈ 𝒥` | `a(x)(J) = ∏_{i∈J} x_i(true) · ∏_{i∉J} x_i(false)` |
 | opponent-only continue mass | `c_{-i}(x) = ∏_{j≠i} x_j(false)` |
 
-so that `Σ_{J∈𝒥} a(x)(J) = 1 - c(x)`. Define the two survival products
+so `Σ_{J∈𝒥} a(x)(J) = 1 - c(x)`. The two survival products are
 
 \[
  S(t)=\prod_{u<t}c(x_u),
@@ -45,18 +28,15 @@ so that `Σ_{J∈𝒥} a(x)(J) = 1 - c(x)`. Define the two survival products
  S_{-i}(t)=\prod_{u<t}c_{-i}(x_u),
 \]
 
-and the corresponding absorbed masses `M(t) = 1 - S(t)`,
-`M_{-i}(t) = 1 - S_{-i}(t)`.
+with accumulated mass `τ(t) = 1 - S(t)`.
 
-## 2. The finding: the cylinder carries `|ι|+1` clocks, not one
+## 2. The cylinder carries `|ι|+1` clocks
 
-`L` The landed holonomy coordinates already separate two survival factors:
-the prescribed slope is full survival `P = S(m)`, while the unilateral
-max-affine slope is opponent-only survival `χ_i = S_{-i}(m)`
-(`QuittingBoundaryHolonomy.lean`, "the max-affine slope is actual
-opponent-only survival"). This is not a presentational duplication.
+`L` The landed holonomy coordinates already separate two survival factors: the
+prescribed slope is full survival `P = S(m)`, while the unilateral max-affine
+slope is opponent-only survival `χ_i = S_{-i}(m)`.
 
-`A` Player `i`'s quit-at-`t` value is
+`M` This is not presentational duplication. Player `i`'s quit-at-`t` value is
 
 \[
  Q_i(t)=S_{-i}(t)\cdot
@@ -66,161 +46,190 @@ opponent-only survival"). This is not a presentational duplication.
  \, r_i\bigl(J\cup\{i\}\bigr),
 \]
 
-because a deviator who quits at `t` has obeyed only up to `t`, so its
-weight is opponent-only survival, and its absorption at `t` is certain.
+because a deviator quitting at `t` has obeyed only up to `t`, so its weight is
+opponent-only survival. Total mass advances whenever player `i` alone quits,
+while `S_{-i}` does not move: the clocks differ by exactly `i`'s own
+contribution, and `S_{-i}` is not recoverable from the aggregate absorption
+path. Collapsing stages destroys the per-stage product structure relating them.
 
-Consequently a reparametrization by **total** absorption mass `τ = M(t)` is
-the correct clock for the prescribed payoff and for `P`, but it is *not* the
-clock of any player's stopping obstacle. Total mass advances whenever player
-`i` alone quits with positive probability, while `S_{-i}` does not move at
-all. The two clocks differ by exactly player `i`'s own contribution.
+The playerwise clocks are therefore load-bearing for **every** player's cap,
+not only for bookkeeping the debt owner.
 
-**Design consequence.** The cylinder must carry the total-absorption path
-*and*, for each player, the opponent-only survival as a separate monotone
-function of the same parameter. These are not recoverable from the aggregated
-absorption path: collapsing calendar stages destroys the per-stage product
-structure that relates them. The schema's single `π` is therefore
-insufficient, and the "playerwise clocks" item is load-bearing for **every**
-player's cap, not only for bookkeeping the debt owner.
+**Carrier.** The absorption and clock coordinates are paths in the mass
+parameter `τ ∈ [0, 1 - s_exit]`, not block totals and not endpoint scalars.
+Build the path by setting it at the stage masses `τ(t)` to
+`Σ_{u<t} S(u) a(x_u)(J)`, then extending affinely on each `[τ(t), τ(t+1)]`,
+splitting the increment across coalitions in proportion to `a(x_t)(·)`. This
+makes `τ` an honest arclength, so `Σ_J` of the path is exactly `τ` and the path
+is `1`-Lipschitz in `ℓ¹` — the bound the compactness argument consumes.
+Snapping `τ` to the nearest completed stage does **not** satisfy the identity:
+between stage masses the snapped value is a jump value.
 
-## 3. The obstacle is a function at finite level and a closed graph at the limit
+`τ` is mass, not calendar time, so paths do not reintroduce the length fence. A
+finite list of absorption atoms is rejected for the opposite reason: its atom
+count is a natural-number coordinate that diverges exactly as calendar length
+does, re-importing the `14d75ff` obstruction.
 
-A natural fear is that reparametrizing by mass makes `Q_i` ill-defined,
-because many calendar stages collapse to one mass time. `A` It does not, at
-finite level:
+Every mass and survival coordinate is bounded in `[0,1]`: in particular
+`0 ≤ s_exit ≤ 1` and `0 ≤ χ_i ≤ 1` are both required as fields. The upper
+bounds are not decoration — without `s_exit ≤ 1` the domain `[0, 1 - s_exit]`
+can be empty and the "recorded points lie in the mass domain" obligations are
+unprovable, in the encoding and again in every composition.
 
-- If `τ` does not advance across a stretch, then `c(x_u) = 1` there, hence
-  every `x_{u,i}(false) = 1`, hence `c_{-i}(x_u) = 1` and the bracket above
-  equals `r_i({i})`. So `S_{-i}` and `Q_i` are both constant on the stretch.
-- If `τ` advances while `S_{-i}` does not, all opponents surely continue on
-  that stretch, so the bracket again equals `r_i({i})` and `Q_i` is constant.
+**Endpoint scalars are stored and pinned, not derived.** Keep `s_exit`, `χ_i`,
+and the cap as fields, each carrying a hypothesis pinning it to its path. `ℝ`'s
+order is classical and not kernel-reducible, so a cap defined by `sSup` and a
+defect defined by a sum over a *spliced* path both fail to reduce
+definitionally, and `forgetful_compose` stops being `rfl`. That `rfl` is the
+only line machine-checking the encoding against the landed holonomy law; it is
+worth more than eliminating five fields.
 
-In both degenerate directions `Q_i` is constant, so **`Q_i` descends to a
-well-defined function of `τ`**. This is a genuinely favourable finding: the
-finite encoding theorem can state `Q_i` as a function, not a correspondence.
+## 3. The obstacle is not a function of mass
 
-`O` The limit object is different. `Q_i(·)` is càdlàg in `τ` with jumps at
-absorption atoms, and under convergence of blocks the atoms move. Pointwise
-limits therefore fail. The limiting obstacle must be the **closed completed
-hypograph** of `Q_i` — the graph with its jump segments filled in — and the
-cap `sup_τ Q_i(τ)` must be shown upper semicontinuous with a retained
-approximately-optimal location. Neither is proved. This replaces the
-manuscript's hedged "might be a closed hypo/epigraph" with a specific claim:
-a function finitely, a closed completed hypograph in the limit.
+`M` The stopping obstacle does **not** descend to accumulated mass, and neither
+do the deleted clocks after full absorption.
 
-## 4. Exit port and Never are different types, not different values
+The tempting argument — a stretch with no mass advance has `c(x_u) = 1`, so all
+coordinates continue, so the bracket is `r_i({i})` and `Q_i` is constant — is
+true but irrelevant. `τ(t)` is the mass absorbed **strictly before** `t`, so
+`τ(t) = τ(t')` constrains the preceding rows and says nothing about the row the
+obstacle reads at `t'`. That row is unconstrained.
 
-`L`/`A` For a finite block the defect `s_exit = S(m)` is survival to the exit
-port. It is transported into the successor block and evaluated at *its*
-continuation. Genuine `Never` mass arises only for a completed infinite path,
-as the limit of `s_exit` along a concatenation chain.
+Minimal counterexample, `I = {1,2}`, `i = 1`, `r_1({1}) = 0`,
+`r_1({1,2}) = 1`, so `Q_1(p,t) = S_{-1}(t)·p_{t,2}`:
 
-**Design consequence.** These must be separated at the level of types, not by
-a boolean field on one type:
+```
+p_0 = (0,0),  p_1 = (0,1)
+τ(0) = τ(1) = 0        (row 0 absorbs nothing)
+Q_1(p,0) = 0,  Q_1(p,1) = 1
+```
 
-- `MarkedAbsorptionCylinder` — the finite object. Its total mass is a
-  subprobability on `𝒥` with defect `s_exit`. It has **no** `Never` field.
-- `MarkedAbsorptionPath` — the completed object. It has a `Never` atom
-  `ν_∞`, and no exit port.
+Same accumulated mass, different obstacle. The missing datum is the current
+row. The failure is not confined to zero rows; the universal all-scheme descent
+property holds only in the degenerate case `r_i(K) = 0` for every `K ∋ i`.
+Separately, after total mass reaches `1` a deleted clock can still change, and
+under uniform convergence the family of deleted clocks is not compact — it can
+converge pointwise to a terminal jump.
 
-Conflating them is the specific error the manuscript flags as producing wrong
-block composition and wrong deviation values. A single type with an
-"is-final" flag reintroduces exactly that risk at every concatenation lemma,
-so it is rejected.
+**Consequence.** The obstacle and clock coordinates are completed graphs, not
+functions:
 
-## 5. The mark is an independent coordinate, by construction
+```
+G_i = completed chronological graph of  t ↦ (τ(t), S_{-i}(t))
+H_i = closed completed hypograph of the stage obstacle trace,
+      including values at zero-mass stages
+```
 
-`L` The calibrated anchor already separates preterminal opponent survival
-from the final marked atom (`QuittingCalibratedTerminalAnchor`:
-`preterminalSurvival`, `terminalMass`, `terminalAdvantage`, and the marked
-`action`/`terminalQuitters`).
+`H_i` must retain zero-mass stages, since that is where the counterexample
+lives. In this topology the results are favourable: the graph-completed ambient
+space is compact, the cap `sup H_i` is **continuous** (not merely
+semicontinuous), a maximizing witness is retained, and concatenation is
+continuous. The uniform-clock topology delivers none of these.
 
-`A` The transported mass of the marked packet is
-`preterminalSurvival × terminalMass`, and this product may tend to zero along
-a family whose conditional kernel `κ_*` and advantage stay bounded away from
-zero. Hence `κ_*` is **not** a continuous function of the absorption path
-`π`, and cannot be reconstructed from it.
+## 4. Exit port and Never are different types
 
-**Design consequence.** `κ_*` enters as an independent (pointed / blown-up)
-coordinate: the raw conditional kernel at the marked root, the owner `i_*`,
-the full marked action profile and its quitter set `T_*`, and the advantage
-scalar — each stored separately from the transported mass. Storing only the
-jump size of `π` loses the packet.
+`M` For a finite block the defect `s_exit = S(m)` is survival to the exit port,
+transported into the successor and evaluated at *its* continuation. Genuine
+`Never` mass arises only for a completed infinite path, as the limit of
+`s_exit` along a concatenation chain.
 
-This is also where the route is most likely to fail, and the failure is
-exactly the `P0-B` falsifier: two families with the same limiting `π` but
-different limiting `κ_*` would show the enriched relation is not closed. The
-independence established here does not by itself decide closedness.
+These are separated at the level of types:
 
-## 6. Anchors make splice legality a closed condition
+- `MarkedAbsorptionCylinder` — finite. Subprobability with defect `s_exit`. No
+  `Never` field.
+- `MarkedAbsorptionPath` — completed. A `Never` atom `ν_∞`, no exit port.
 
-`O`→`A` Entry and exit anchors `e_in, e_out` are exact-`D` root data, valued
-in a compact space (product roots lie in `[0,1]^ι`; the debt point lies in a
-fixed compact box, `L` at `14d75ff`). Concatenation is legal exactly when
-`e_out(z) = e_in(z')`.
+A single type with an "is-final" flag is rejected: it reinstates the
+wrong-composition risk at every concatenation lemma. Declaring a finite block's
+remainder to be `Never` gives the wrong payoff and the wrong deviation values.
 
-Because that is an equality in a Hausdorff space, **splice legality is a
-closed condition** whenever the anchors are retained as fields. This is the
-positive reason anchors must be coordinates rather than side conditions: it
-converts admissibility, which the scalar-coefficient projection forgets, into
-a relation that can survive a limit. It is also the precise sense in which
-this design does not repeat the projection error of the coefficient box.
+## 5. The mark is an independent coordinate
 
-## 7. What the cylinder deliberately forgets
+`L` The calibrated anchor separates preterminal opponent survival from the
+final marked atom.
 
-Retained by the fixed-cutoff lift but **excluded** here:
+`M` The transported packet mass is `preterminalSurvival × terminalMass`, and
+this may tend to zero along a family whose conditional kernel `κ_*` and
+advantage stay bounded away from zero. So `κ_*` is not a continuous function of
+the absorption path and cannot be reconstructed from it — nor from the other
+enriched coordinates. It enters as an independent pointed coordinate: the raw
+conditional kernel at the marked root, the owner `i_*`, the marked action
+profile and quitter set `T_*`, and the advantage scalar, each stored separately
+from the transported mass.
+
+`(i_*, J_*)` must be globally fixed, or else carried as a finite discrete
+coordinate. Allowing them to vary silently leaves the mark-composition law
+undefined.
+
+## 6. Anchors make splice legality closed
+
+`M` Entry and exit anchors are exact-`D` root data valued in a compact space.
+Concatenation is legal exactly when `e_out(z) = e_in(z')` — an equality in a
+Hausdorff space, hence a **closed** condition whenever anchors are retained as
+fields. This is why anchors are coordinates rather than side conditions: it
+converts admissibility, which the scalar projection forgets, into a relation
+surviving limits. Anchor-free spliceability is not even well-defined.
+
+## 7. What the cylinder forgets
 
 | Dropped | Reason |
 | --- | --- |
-| literal block length `m` | `L` at `14d75ff`: every compact subset of `ℕ × X` has bounded length, so retaining literal length forecloses the compactification the route exists to obtain. |
-| the complete source word | It is what makes the fixed-cutoff lift compact at each cutoff and what cannot survive an escaping middle. The encoding must recover semantics without it. |
+| literal block length `m` | `L`: every compact subset of `ℕ × X` has bounded length, so retaining literal length forecloses the compactification the route exists to obtain. |
+| the complete source word | It is what makes the fixed-cutoff lift compact at each cutoff and what cannot survive an escaping middle. |
 
-The encoding map is therefore intentionally non-injective. Proving that the
-retained data still determines all semantics is the content of P0-A, not an
-incidental check.
+The encoding map is intentionally non-injective. Proving the retained data
+still determines all semantics is the content of P0-A.
 
-## 8. The P0-A obligation list
+## 8. The finite-encoding obligations
 
-`O` Define the finite type of §4 with the coordinates fixed in §§2–6, and
-prove, for every calibrated exact-`D` block:
+`O` For every calibrated exact-`D` block, prove:
 
-1. **Payoff identity.** The cylinder's prescribed value equals the block's
-   literal finite policy value, with slope `P = s_exit`.
-2. **Obstacle identity.** For each player, the cylinder's `Q_i(·)` equals the
-   block's literal quit-at-`t` values under the reparametrization of §3, and
-   its supremum equals the landed max-affine cap coordinate, with slope
-   `χ_i = S_{-i}(m)`.
-3. **Clock identity.** The retained total and opponent-only clocks agree with
-   `S(·)` and `S_{-i}(·)`.
-4. **Packet identity.** `preterminalSurvival`, `terminalMass`, `κ_*`, `T_*`,
-   and the advantage agree with the calibrated anchor's fields, with the two
-   mass factors kept separate.
-5. **Debt identity.** The retained entry debt equals the block's dynamic debt
-   at its entry root.
-6. **Anchor identity.** `e_in`, `e_out` are the block's exact-`D` endpoints.
-7. **Concatenation.** For chronologically adjacent blocks, the cylinder of the
-   concatenation equals the composition of the cylinders, and this composition
-   is associative and agrees with the landed `(B,P)` / `(A,T,χ)` composition
-   laws under the forgetful map to holonomy coordinates.
+1. **Payoff.** The cylinder's prescribed value equals the block's literal
+   finite policy value, slope `P = s_exit`.
+2. **Obstacle.** `H_i` equals the completed hypograph of the block's literal
+   quit-at-`t` trace, and `sup H_i` equals the landed max-affine cap
+   coordinate, slope `χ_i = S_{-i}(m)`.
+3. **Clocks.** `G_i` and the absorption path agree with `S(·)`, `S_{-i}(·)`.
+4. **Packet.** `preterminalSurvival`, `terminalMass`, `κ_*`, `T_*`, advantage
+   agree with the calibrated anchor, the two mass factors kept separate.
+5. **Debt.** Retained entry debt equals the block's dynamic debt at entry.
+6. **Anchors.** `e_in`, `e_out` are the block's exact-`D` endpoints.
+7. **Concatenation.** The cylinder of a concatenation equals the composition of
+   cylinders, associatively, agreeing with the landed `(B,P)`/`(A,T,χ)` laws
+   under the forgetful map.
 
-Item 7 subsumes the correctness test that matters most: the forgetful map from
-cylinders to landed holonomy coordinates must be a homomorphism. If it is not,
-the encoding is wrong, independently of any topology.
+Item 7 subsumes the test that matters most: the forgetful map to holonomy
+coordinates must be a homomorphism. If it is not, the encoding is wrong
+independently of any topology.
 
-## 9. Non-goals and standing fences
+## 9. The limit space
 
-- This note defines no topology on cylinders and claims no compactness. `P0-B`
-  remains open and may be false; §5 identifies where.
-- It supplies neither decoder (`P0-C`, `P0-D`). A cylinder is a semantic
-  encoding, not a repair.
-- It does not repair the published sure-terminal-jump endpoint defect; the
-  restricted and augmented adapters remain the two open options.
-- Q132's nonattainment fence still applies: exact identities for attainable
-  data do not make the attainable set closed.
+`M` The finite realizable set is **not closed**. Finite `μ`-paths are finitely
+piecewise affine while limits can be genuinely nonlinear. This is not a
+missing-coordinate problem:
 
-## 10. Status
+> No additional coordinate valued in a sequentially compact space can make the
+> finite realizable image closed while the projection back to the enriched
+> coordinates stays continuous.
 
-`O` Nothing in this note is formalized. §§2–3 and §5 are paper derivations
-made here and should be re-derived by the implementer rather than cited; §§4,
-6, 7 are design decisions with stated rationale. The immediate consumer is
-`LEAN-P1-4`, which should not begin before §8's list is accepted or amended.
+So there is no "smallest compact coordinate that closes it". The alternatives
+are a noncompact complexity coordinate, or admitting infinite/diffuse
+generalized objects.
+
+`O` The target is therefore a compactness theorem for **generalized completed
+chronological traces**, in which finite blocks are dense, value and cap extend
+continuously, and concatenation extends continuously once anchors are retained
+and a mark-transport convention is fixed. Two facts make this route viable
+rather than merely available: a uniform cap bound survives to the limit, and a
+limit self-splice pulls back to a nearby finite self-splice under boundary-row
+flexibility — the pullback that a surgery decoder needs.
+
+## 10. Standing fences
+
+- Do not pursue a compact added coordinate closing the finite realizable set.
+  That shape is proved impossible.
+- Do not state the obstacle or the deleted clocks as functions of `τ`.
+- A cylinder is a semantic encoding, not a repair. It supplies neither decoder.
+- The published sure-terminal-jump endpoint defect is unrepaired; the
+  restricted and augmented adapters remain the two options.
+- Exact identities for attainable data do not make the attainable set closed.
