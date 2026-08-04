@@ -205,14 +205,25 @@ keep the cycle notion from being vacuous, also excludes the genuinely
 **non-absorbing** equilibria — and those are exactly the `Λ = 0` weights, which
 the matched-boundary argument already handles.
 
-Everything else on that path is machine-checked. Complementary fixed data
-always exist, so the open disjunct can only fail by absorption degenerating:
-the dichotomy says either some discounted limit absorbs — giving the cycle at
-length one — or every such limit is the all-continue row with quitting rates
-tending to zero. **The vanishing-absorption branch with some `r_i({i}) > 0` is
-the entire remaining content**, and it necessarily contains the published
-cyclic three-player table, which has no stationary approximate equilibrium but
-carries a length-three candidate cycle. See
+Everything else on that path is machine-checked. The open disjunct splits
+exhaustively by the sign pattern of the diagonal, with `S₊ = {i : r_i({i}) > 0}`
+and `S₋ = {i : r_i({i}) < 0}`:
+
+1. **`S₊ = ∅`** — settled; this is the `Λ = 0` disjunct above.
+2. **`S₊ ≠ ∅`, `S₋ = ∅`** — admissibility is *automatic*, since a mismatch can
+   be nonzero only at an isolated coordinate with negative solo weight and
+   there are none. So every absorbing cycle is admissible and the sole
+   obstruction is absorption degenerating. **This is where the published cyclic
+   three-player table lives** — all its solo weights are positive — so for the
+   leading hard candidate only existence is at issue.
+3. **`S₊ ≠ ∅`, `S₋ ≠ ∅`** — a second failure mode. An absorbing discounted
+   limit that isolates a coordinate of `S₋` is necessarily the solo row `p·e_i`
+   with value `r_i({i}) < 0`: a genuine absorbing cycle that is not admissible.
+   The dichotomy then supplies nothing even though absorption did not
+   degenerate, and one must argue about the whole supply of cycles rather than
+   the selected limit.
+
+Cases 2 and 3 are the remaining content. See
 [the carrier group](../../ideas/AbsorbingCycleCarrier/README.md).
 
 **Mark transport is not the obstruction (`M`).** The long-standing worry that a

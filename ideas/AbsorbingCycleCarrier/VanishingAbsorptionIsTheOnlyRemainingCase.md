@@ -22,7 +22,26 @@
 | If the limit row absorbs, it is exactly complementary against its own value, with one-step excess exactly zero | `PROVED` | `M` | any weight | the easy branch |
 | That row is a length-one absorbing cycle, hence of zero mismatch unless it isolates a coordinate with `r_i({i}) < 0` | `PROVED` | `M` | via the mismatch characterization | existence, `L = 1` |
 | Otherwise the limit row is the all-continue row and absorption vanishes along the approximating sequence | `PROVED` | `M` | any weight | the hard branch |
-| The vanishing branch admits an admissible absorbing cycle of some bounded length | — | — | — | `OPEN` — this is the conjecture |
+| The remaining cases admit an admissible absorbing cycle of some finite length | — | — | — | `OPEN` — this is the conjecture |
+
+**Correction (2026-08-04).** An earlier version of this file said the vanishing
+branch is the *entire* remaining content. That is true only when no coordinate
+has a negative solo weight. The exhaustive split is by the sign pattern of the
+diagonal, with `S₊ = {i : r_i({i}) > 0}` and `S₋ = {i : r_i({i}) < 0}`:
+
+1. `S₊ = ∅` — settled, the all-continue profile is an exact equilibrium;
+2. `S₊ ≠ ∅`, `S₋ = ∅` — **admissibility is automatic**, since a mismatch can be
+   nonzero only at an isolated coordinate with negative solo weight and there
+   are none; so every absorbing cycle is admissible and the only obstruction is
+   the vanishing branch. The original claim holds here;
+3. `S₊ ≠ ∅`, `S₋ ≠ ∅` — a **second** failure mode appears. An absorbing
+   discounted limit isolating a coordinate of `S₋` is necessarily the solo row
+   `p·e_i` with `z_i = r_i({i}) < 0`; it is a genuine absorbing cycle and is not
+   admissible, so the dichotomy supplies nothing even though absorption did not
+   degenerate.
+
+The leading hard candidate — a weight with every `r_i({i}) > 0` — lies in case
+2, where admissibility is free and only existence is open.
 
 Provenance: the existence and discounted-limit half is external, from the
 answered estimator question; the mismatch half is
