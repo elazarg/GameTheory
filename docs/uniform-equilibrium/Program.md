@@ -178,6 +178,33 @@ labelled false and the surviving lesson is stated separately.
 - Before handoff, update the audited commit, active gates, blockers, and
   uncommitted-work warning in `PIPELINE.md`.
 
+### Reconciliation is a step, not an accident
+
+A result written before a neighbouring result landed does not learn what the
+neighbour proved. Twice now this has hidden a strictly stronger theorem that
+neither author knew: a bridge module and a refutation committed one commit
+apart, never cross-checked, jointly gave a canonical trichotomy discharging an
+open pipeline row; and a group's index entry advertised a gate that a later
+claim in the same group had already answered.
+
+So, explicitly:
+
+- When a commit changes the status of a claim, update the index row and the
+  superseded claim's lifecycle card **in that same commit**, not eventually.
+  `ideas/README.md` already requires this; it is restated here because it is
+  the rule most often skipped.
+- When two results touch the same object within a short window, reconcile them
+  before either is cited downstream. The cheap check is: does the later result
+  weaken a hypothesis the earlier one carries, or discharge one of its gaps?
+- Periodic cross-lane mining is not polish. Both findings above came from a
+  mining pass rather than from the authors, which means the default workflow
+  does not produce them and something must be scheduled that does.
+
+A corollary for claim files: a card recording "this has no consumer" or "this
+hypothesis is undischarged" is a *dated* observation. Re-check it before
+treating it as current, especially when quoting it as a reason not to pursue
+something.
+
 ## Scheduling discipline
 
 Schedule by objective priority, not by the arrival time of an answer or file.
