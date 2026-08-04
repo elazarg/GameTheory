@@ -69,6 +69,14 @@ coordinator's request, finds a candidate exact zero-debt stationary
 equilibrium for this exact table once the terminal continuation is freed --
 consistent with exactly that "pinning artifact" reading.  See the postscript
 after `plateauPath_dynamicDebt` below for the computation and its caveats.
+
+That check has since been turned into Lean theorems: the final section of
+this file proves `stationaryRoot_isEndpointNash` (an exact, `ε = 0`,
+endpoint-Nash certificate for the stationary row against its own value
+`(1/4, 0)`) and `quittingConstantDynamicDebt_eq_zero` (the same dynamic-debt
+recursion, run against that free continuation with terminal debt `0`, is
+exactly zero at every fuel and start, for both players).  So the `1/8`
+plateau is manufactured by the zero pin, not by the game.
 -/
 
 set_option autoImplicit false
@@ -615,7 +623,195 @@ case analysis as
 `QuittingTerminalPacketSimpleFallbackCounterexample.no_stationary_exact_terminal_equilibrium`
 uses to rule equilibria *out*, run in the opposite direction to rule one
 *in*.  Treat the indifference computation above as a lead, not a result.
+
+**Update.**  The endpoint half of the lead is no longer prose: the section
+below formalizes it.  `stationaryRoot_isEndpointNash` is the exact
+(`ε = 0`) endpoint-Nash certificate at `(a, b) = (1/2, 0)` against the free
+continuation `(1/4, 0)`, `stationaryRoot_successor_eq` verifies that this
+continuation is that row's own value (so the profile really is stationary),
+and `quittingConstantDynamicDebt_eq_zero` computes the dynamic debt against
+it as exactly `0` at every fuel and start, for both players.  What is still
+prose is only the *behavioral* deviation analysis (deviations that are not
+unilateral one-shot root deviations); the endpoint certificate is the same
+kind of certificate the zero-pinned chain family above is built from, so it
+is exactly the right comparison object for the plateau claim.
 -/
+
+/-! ## The `1/8` plateau is manufactured by the zero pin
+
+Everything before this point pins the terminal continuation to `0`.  Freeing
+it to the game's own stationary value `(1/4, 0)` erases the plateau
+completely.  The declarations here mirror
+`QuittingBoundedSurgeryDescentCounterexample.stationaryRoot_isEndpointNash`
+and `.quittingConstantDynamicDebt_eq_zero` for this table.
+-/
+
+/-! ### Exact root endpoint formulas for this table -/
+
+/-- Player one's pure-Quit endpoint is `1/4 + q/2`, where `q` is player two's
+Quit probability.  It does not depend on the continuation value. -/
+theorem false_quitPayoff (tail : Payoff Bool) (root : Bool → PMF Bool) :
+    quittingRootQuitPayoff reward tail root false =
+      1 / 4 + (root true true).toReal / 2 := by
+  unfold quittingRootQuitPayoff quittingRootExpectedPayoff
+  rw [expect_pmfPi_bool]
+  have hsum := quittingRoot_continueProbability_add_quitProbability root true
+  have hc : (root true false).toReal = 1 - (root true true).toReal := by linarith
+  simp only [expect_eq_sum, Fintype.sum_bool]
+  simp [quittingRootPayoff, reward, hc]
+  ring
+
+/-- Player one's pure-Continue endpoint is `(1 - q) tail_1 + q`, where `q` is
+player two's Quit probability. -/
+theorem false_continuePayoff (tail : Payoff Bool) (root : Bool → PMF Bool) :
+    quittingRootContinuePayoff reward tail root false =
+      (1 - (root true true).toReal) * tail false + (root true true).toReal := by
+  unfold quittingRootContinuePayoff quittingRootExpectedPayoff
+  rw [expect_pmfPi_bool]
+  have hsum := quittingRoot_continueProbability_add_quitProbability root true
+  have hc : (root true false).toReal = 1 - (root true true).toReal := by linarith
+  simp only [expect_eq_sum, Fintype.sum_bool]
+  simp [quittingRootPayoff, reward, hc]
+  ring
+
+/-- Player two's pure-Quit endpoint is `p/2 - 1/4`, where `p` is player one's
+Quit probability.  It does not depend on the continuation value. -/
+theorem true_quitPayoff (tail : Payoff Bool) (root : Bool → PMF Bool) :
+    quittingRootQuitPayoff reward tail root true =
+      (root false true).toReal / 2 - 1 / 4 := by
+  unfold quittingRootQuitPayoff quittingRootExpectedPayoff
+  rw [expect_pmfPi_bool]
+  have hsum := quittingRoot_continueProbability_add_quitProbability root false
+  have hc : (root false false).toReal = 1 - (root false true).toReal := by linarith
+  simp only [expect_eq_sum, Fintype.sum_bool]
+  simp [quittingRootPayoff, reward, hc]
+  ring
+
+/-- Player two's pure-Continue endpoint is `(1 - p) tail_2`, where `p` is
+player one's Quit probability. -/
+theorem true_continuePayoff (tail : Payoff Bool) (root : Bool → PMF Bool) :
+    quittingRootContinuePayoff reward tail root true =
+      (1 - (root false true).toReal) * tail true := by
+  unfold quittingRootContinuePayoff quittingRootExpectedPayoff
+  rw [expect_pmfPi_bool]
+  have hsum := quittingRoot_continueProbability_add_quitProbability root false
+  have hc : (root false false).toReal = 1 - (root false true).toReal := by linarith
+  simp only [expect_eq_sum, Fintype.sum_bool]
+  simp [quittingRootPayoff, reward, hc]
+
+/-- Player one's endpoint difference against a `(t1, 0)`-shaped tail. -/
+theorem false_endpointDifference (t1 : ℝ) (root : Bool → PMF Bool) :
+    quittingRootEndpointDifference reward
+        (fun who => if who then (0 : ℝ) else t1) root false =
+      (1 - (root true true).toReal) * (1 / 4 - t1) - (root true true).toReal / 4 := by
+  rw [quittingRootEndpointDifference, false_quitPayoff, false_continuePayoff]
+  simp
+  ring
+
+/-- Player two's endpoint difference against a `(t1, 0)`-shaped tail. -/
+theorem true_endpointDifference (t1 : ℝ) (root : Bool → PMF Bool) :
+    quittingRootEndpointDifference reward
+        (fun who => if who then (0 : ℝ) else t1) root true =
+      (root false true).toReal / 2 - 1 / 4 := by
+  rw [quittingRootEndpointDifference, true_quitPayoff, true_continuePayoff]
+  simp
+
+/-! ### The free-continuation stationary equilibrium -/
+
+/-- The stationary root freeing the terminal continuation: player one Quits
+with probability one half at every stage, player two never Quits. -/
+def stationaryRoot : Bool → PMF Bool :=
+  fun who => if who then PMF.pure false else PMF.uniformOfFintype Bool
+
+/-- The stationary root's own value, `(1/4, 0)`. -/
+def stationaryValue : Payoff Bool := fun who => if who then 0 else 1 / 4
+
+/-- `stationaryValue` in the `(t1, 0)` shape used by the endpoint-difference
+formulas. -/
+theorem stationaryValue_eq :
+    stationaryValue = fun who => if who then (0 : ℝ) else 1 / 4 := rfl
+
+@[simp] theorem stationaryRoot_false_true :
+    (stationaryRoot false true).toReal = 1 / 2 := by
+  norm_num [stationaryRoot, PMF.uniformOfFintype_apply]
+
+@[simp] theorem stationaryRoot_false_false :
+    (stationaryRoot false false).toReal = 1 / 2 := by
+  norm_num [stationaryRoot, PMF.uniformOfFintype_apply]
+
+@[simp] theorem stationaryRoot_true_true :
+    (stationaryRoot true true).toReal = 0 := by simp [stationaryRoot]
+
+/-- The stationary row absorbs with probability `1/2` at every stage.  This is
+the non-degeneracy guard behind `stationaryRoot_successor_eq`: for the
+all-Continue row *every* tail is a fixed point of the successor map, so a
+fixed-point equation alone certifies nothing; here the row absorbs at a
+uniformly positive rate, so play is absorbed with probability one and
+`(1/4, 0)` is a genuine expected terminal payoff. -/
+theorem stationaryRoot_absorptionMass :
+    quittingRootAbsorptionMass stationaryRoot = 1 / 2 := by
+  unfold quittingRootAbsorptionMass quittingStationaryContinueMass
+  rw [pmfPi_apply, ENNReal.toReal_prod]
+  norm_num [quittingAllContinueAction, stationaryRoot, PMF.uniformOfFintype_apply,
+    Fintype.prod_bool]
+
+/-- The stationary root, run against the constant continuation `(1/4, 0)`,
+reproduces exactly that continuation: it is a genuine stationary root, not
+merely an approximate one.  This is what makes `(1/4, 0)` the honest
+continuation to compare the zero pin against. -/
+theorem stationaryRoot_successor_eq :
+    quittingRootSuccessorPayoff reward stationaryValue stationaryRoot =
+      stationaryValue := by
+  funext who
+  rw [quittingRootSuccessorPayoff_eq_endpointMix]
+  cases who
+  · rw [false_quitPayoff, false_continuePayoff, stationaryRoot_true_true,
+      stationaryRoot_false_true, stationaryRoot_false_false]
+    norm_num [stationaryValue]
+  · rw [true_quitPayoff, true_continuePayoff, stationaryRoot_false_true,
+      stationaryRoot_true_true]
+    norm_num [stationaryValue]
+
+/-- **The `1/8` plateau is manufactured by the zero pin, not by the game
+(endpoint half).**  Against its own constant continuation `(1/4, 0)` both
+players of this table are *exactly* indifferent between Quitting and
+Continuing, so the stationary row is an exact (`ε = 0`) endpoint-Nash root --
+the very certificate the zero-pinned chain family above is built from.  The
+positive `1/8` debt therefore comes from pinning the terminal continuation
+to `0` rather than to `(1/4, 0)`. -/
+theorem stationaryRoot_isEndpointNash :
+    IsεQuittingRootEndpointNash reward stationaryValue 0 stationaryRoot := by
+  intro who
+  rw [stationaryValue_eq]
+  cases who
+  · rw [false_endpointDifference, stationaryRoot_true_true]
+    norm_num
+  · rw [true_endpointDifference, stationaryRoot_false_true]
+    norm_num
+
+/-- **The `1/8` plateau is manufactured by the zero pin, not by the game
+(debt half).**  Run the exact same dynamic-debt Bellman recursion used for
+`plateauPath_dynamicDebt`, but against the game's own stationary
+continuation `(1/4, 0)` instead of the zero-boundary pin, and with the
+honest terminal debt `0` instead of the positive singleton cap: the debt is
+exactly zero at every fuel, every start and both players.  Contrast
+`plateauPath_dynamicDebt`, whose zero-pinned date-zero debt is the strictly
+positive `1/8`. -/
+theorem quittingConstantDynamicDebt_eq_zero (who : Bool) :
+    ∀ fuel start : ℕ,
+      quittingFiniteDynamicDebt reward (fun _ => stationaryRoot) who
+        (fun _ => stationaryValue who) 0 start fuel = 0 := by
+  intro fuel
+  induction fuel with
+  | zero => intro start; rfl
+  | succ fuel ih =>
+      intro start
+      rw [quittingFiniteDynamicDebt_succ_eq_endpoints, ih (start + 1)]
+      cases who
+      · rw [false_quitPayoff, false_continuePayoff, stationaryRoot_true_true]
+        norm_num [stationaryValue]
+      · rw [true_quitPayoff, true_continuePayoff, stationaryRoot_false_true]
+        norm_num [stationaryValue]
 
 end QuittingPositiveDebtPlateauTable
 
