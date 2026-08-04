@@ -2,7 +2,7 @@
 
 | Lifecycle | Verdict | Priority | Group decision |
 | --- | --- | --- | --- |
-| `ACTIVE` | `MIXED` | `P0` | Decide whether every finite quitting weight admits an admissible absorbing complementary cycle. The mismatch half is characterized; existence is the whole remaining question. |
+| `ACTIVE` | `MIXED` | `P0` | The finite-cycle carrier is refuted as complete; its sufficiency is machine-checked. Relaxed objects are not scarce, so the gate is the **conversion**: the fixed-cycle bound `gain ≤ ε·C` is exact with `C` a cyclic fixed point that blows up as the deleted survival product tends to one, and no cycle-independent constant exists even at fixed weight. Decide whether `ε·C` is also necessary, and what the limiting mass path must retain. |
 
 | Scientific object | Status |
 | --- | --- |
@@ -11,11 +11,26 @@
 | [The zero pin is not a realizable continuation](TheZeroPinIsNotARealizableContinuation.md) | `PROVED` (`M+L`) at the exhibited family; general statement `OPEN` |
 | [Vanishing absorption is the only remaining case](VanishingAbsorptionIsTheOnlyRemainingCase.md) | `PROVED` (`M`) as a dichotomy; hard branch `OPEN` |
 | [Finite cycles are refuted; the carrier is a mass path](FiniteCyclesAreRefutedTheCarrierIsAMassPath.md) | `WRONG` for the finite carrier; replacement `OPEN` |
+| [The uniform defect-to-gain conversion is false](UniformDefectToGainConversionIsFalse.md) | `WRONG` for the uniform conversion; replacement `OPEN`; all rows `M [reported]` |
+| [Quitting weights have analytic vanishing-discount germs](QuittingWeightsHaveAnalyticVanishingDiscountGerms.md) | `PROVED` (`M+L`); matching scaling case and nondegeneracy `OPEN` |
 
-**Read the last row first.** The finite-cycle carrier this group is named for is
-refuted as a *complete* carrier in every open case. Its sufficiency stands and
-is machine-checked; its completeness does not. The replacement is a continuous
-mass-parametrized absorption path, marked in the mixed-sign case.
+**Read the last three rows first.** The finite-cycle carrier this group is named
+for is refuted as a *complete* carrier in every open case. Its sufficiency
+stands and is machine-checked; its completeness does not. The replacement is a
+continuous mass-parametrized absorption path, marked in the mixed-sign case.
+
+The gate then moved from existence to **conversion**. Relaxed objects are not
+scarce — defect-vanishing families exist, and one two-coordinate weight even has
+relaxed admissible cycles at every accuracy with no exact one. What fails is the
+bridge: there is no uniform constant `K` with `gain ≤ K · ε` across cycles, so
+neither the relaxation route nor the mass-path route may assume that vanishing
+defect means vanishing gain. That result is externally reported and unaudited
+here, which is why auditing it is the group's cheapest high-value task.
+
+The germ row is infrastructure rather than closure progress: it regularizes the
+discounted family the dichotomy runs on, upgrading a convergent subsequence to a
+genuine limit, but it has no consumer yet and its nondegeneracy hypothesis is
+undischarged precisely on the hard branch.
 
 ## Why this group exists
 
