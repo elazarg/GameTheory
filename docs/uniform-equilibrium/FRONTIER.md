@@ -157,9 +157,16 @@ reproduces *every* value vector and the notion is vacuous, and the same trap
 appears at the level of single rows, where the all-continue row is exact
 endpoint-Nash against both plateau tables' equilibrium values.
 
-Two results are in hand. The deviation mismatch of an absorbing cycle is zero
-unless some coordinate `i` is *isolated* in it — every opponent silent at every
-phase — and `r_i({i}) < 0`, in which case it is exactly `-r_i({i})`. And a
+Two results are in hand. Define the mismatch against the anchor
+`ẑ_i := lim_N T_i^N(Λ_i)`, where `T_i` is the cyclic composite of the phase maps
+`w ↦ max{Σ_i, A_i + c_{-i} w}` — the anchor carries the content, since
+anchoring at the cycle's own value makes the mismatch identically zero, and in
+the isolated case `T_i` has a continuum of fixed points. Then: `T_i` is
+`P_i`-Lipschitz with `P_i = ∏_k c_{-i}(y_k)` and fixes the cycle's value, so the
+mismatch is zero whenever `P_i < 1`, for either sign of the terminal gap. It is
+nonzero only when `P_i = 1` — every opponent of `i` silent at every phase, the
+*isolated* configuration, of which an absorbing cycle admits at most one — and
+`r_i({i}) < 0`, in which case it is exactly `-r_i({i})`. And a
 length-one admissible cycle exists whenever some `i` with `r_i({i}) > 0` admits
 a rate `p ∈ (0,1]` with `(1-p)·r_j({j}) + p·r_j({i,j}) ≤ r_j({i})` for every
 `j ≠ i` — the classical no-join condition, here in exact cycle form, affine in

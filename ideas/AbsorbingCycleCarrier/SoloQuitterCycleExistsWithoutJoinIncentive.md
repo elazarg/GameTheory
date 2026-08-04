@@ -8,19 +8,32 @@
 | Verdict | `PROVED` |
 | Objective priority | `P0` |
 | Last audited | 2026-08-04, `7af7acc` |
-| Central live claim | If some coordinate `i` has `r_i({i}) > 0` and some rate `p ∈ (0,1]` makes every opponent weakly prefer continuing, then the length-one absorbing cycle in which `i` quits at rate `p` and all opponents are silent is complementary with mismatch zero. |
+| Central live claim | If some rate `p ∈ (0,1]` makes every opponent weakly prefer continuing, the length-one absorbing cycle in which `i` quits at rate `p` and all opponents are silent is complementary; and it has mismatch zero as soon as `r_i({i}) ≥ 0`. |
 | Next discriminant | Whether the criterion's failure for every `i` is exactly the class needing `L > 1`. |
-| Production destination | `QuittingSoloQuitterEquilibrium.lean` (in flight) |
+| Production destination | `QuittingSoloQuitterEquilibrium.lean` (landed, `38ffba6`) |
 | Supersedes / superseded by | none |
 
 ## Claim ledger
 
 | Claim | Verdict | Seals | Scope | Consumer |
 | --- | --- | --- | --- | --- |
-| The solo-`i` row at rate `p` with `z_i = r_i({i})`, `z_j = r_j({i})` reproduces its own value | `PROVED` | `M` | any weight, any `p ∈ (0,1]` | the criterion |
-| It is complementary iff `(1-p)·r_j({j}) + p·r_j({i,j}) ≤ r_j({i})` for every `j ≠ i` | `PROVED` | `M` | as above | the criterion |
-| Under `r_i({i}) > 0` it is absorbing with mismatch zero | `PROVED` | `M` | as above | existence base case |
-| The criterion is a one-dimensional feasibility problem in `p` | `PROVED` | `M` | the inequality is affine in `p` | decidability of the base case |
+| The solo-`i` row at rate `p` with `z_i = r_i({i})`, `z_j = r_j({i})` reproduces its own value | `PROVED` | `M+L` | any weight, **any** `p ∈ [0,1]` | the criterion |
+| It is complementary **iff** `(1-p)·r_j({j}) + p·r_j({i,j}) ≤ r_j({i})` for every `j ≠ i` | `PROVED` | `M+L` | as above; necessity also proved | the criterion |
+| It absorbs iff `p > 0`, and then `z` is the unique reproduced value | `PROVED` | `M+L` | as above | non-vacuity |
+| Its mismatch is zero once `r_i({i}) ≥ 0` | `PROVED` | `M` | needs the companion claim's contraction estimate at the non-isolated coordinates | existence base case |
+| The criterion is a one-dimensional feasibility problem in `p`, with convex feasible set | `PROVED` | `M+L` | the inequality is affine in `p` | decidability of the base case |
+
+## Attribution
+
+**The criterion is not new to the repository.** It exists in production at the
+*behavioral* level as `isεAsymptoticNash_soloStationary_exact` in
+`QuittingOwnerSoloCertification.lean`, whose `hinactive` hypothesis is
+literally the inequality below, together with a characterization and the
+joining dichotomy. What was missing, and is what
+`QuittingSoloQuitterEquilibrium.lean` adds, is the **root-level** counterpart
+stated in terms of the endpoint-Nash certificate, the successor payoff and the
+absorption mass — which is what allows specialization to the plateau tables'
+landed row certificates, unreachable from the behavioral statement.
 
 ## Statement
 
@@ -84,12 +97,20 @@ cycles always cover that class with `L` bounded in the number of coordinates.
 - If (★) holds for some `i, p` but the constructed pair is not complementary,
   the endpoint computation for `j` is wrong — most likely the deleted survival
   factor `c_{-j}(y) = 1-p` or the identification `z_j = r_j({i})`.
-- Dropping `r_i({i}) > 0` does not destroy the cycle, only its zero mismatch:
+- Dropping `r_i({i}) ≥ 0` does not destroy the cycle, only its zero mismatch:
   with `r_i({i}) < 0` the isolated coordinate `i` has mismatch `-r_i({i}) > 0`.
   The hypothesis belongs to the mismatch claim, not the complementarity claim,
-  and the two should stay separate in production.
+  and they are separate in production. **The reason is structural**: the root
+  certificate pins the continuation and therefore cannot see the owner's
+  deviation to never quitting; the behavioral theorem genuinely needs
+  `r_i({i}) ≥ 0` for exactly that deviation. The mismatch anchor `Λ_i` is what
+  restores visibility of it.
 - Absorption must be stated: without `p > 0` the row is all-continue and
-  certifies nothing.
+  certifies nothing. **Note what `p > 0` does and does not do.** It is *not*
+  what makes the value equation hold — `z` solves it for every `p`, including
+  `p = 0`. It is what makes `z` the *unique* solution. So absorption is an
+  independent clause, not a consequence, which is precisely why the all-continue
+  configuration slips through when it is omitted.
 
 ## Production map
 
