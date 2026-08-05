@@ -95,8 +95,15 @@ hold, from the general problem to this one, is
 
 This file contains one `sorry`, deliberately, in
 `quittingGame_exists_uniformEquilibriumPayoff`.  The repository's other
-intentional open declaration is `exists_uniformDeviationCapConstructor` in
-`UniformExistenceConjecture.lean`; these are the only two.
+intentional open declarations are `exists_uniformDeviationCapConstructor` in
+`UniformExistenceConjecture.lean`, the general finite-stochastic-game problem,
+and `quittingGame_hasQuittingLedgerCapPackage` in
+`QuittingReducedCapConjecture.lean`, a quantitative reduction of *this*
+conjecture: a weight admitting the ledger-shaped package of that file at every
+tolerance has a uniform-equilibrium payoff, by
+`quittingGame_exists_uniformEquilibriumPayoff_of_hasQuittingLedgerCapPackage`,
+which is proved with no gap.  Those three are the only intentional open
+declarations.
 -/
 
 noncomputable section
@@ -150,8 +157,8 @@ theorem quittingGame_exists_uniformEquilibriumPayoff
 /-- The general conjecture implies this one, since a quitting game *is* a
 finite stochastic game.
 
-`HEADLINE` — the direction that actually holds between the two intentional open
-declarations, recorded so the relation between them is a theorem rather than a
+`HEADLINE` — the direction that actually holds between this conjecture and the
+general one, recorded so the relation between them is a theorem rather than a
 remark.  The converse fails to be available: no reduction from arbitrary finite
 stochastic games to quitting games is known, which is why
 `quittingGame_exists_uniformEquilibriumPayoff` carries its own `sorry` rather

@@ -589,6 +589,9 @@ import GameTheory.Concepts.Stochastic.QuittingWeightedContinueMassBound
 import GameTheory.Concepts.Stochastic.QuittingLedgerPunishClock
 import GameTheory.Concepts.Stochastic.QuittingLiveChainDominationCap
 import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchResiduals
+import GameTheory.Concepts.Stochastic.QuittingBoundedWindowLanding
+import GameTheory.Concepts.Stochastic.QuittingTruncationLedgerFold
+import GameTheory.Concepts.Stochastic.QuittingReducedCapConjecture
 import GameTheory.Concepts.Stochastic.RepairedFourPlayerStressCirculation
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination

@@ -142,3 +142,12 @@ import Math.SchauderFixedPoint
 
 -- The pinned-pure row decoupling exclusion.
 #print axioms GameTheory.not_isExactRowComplementary_cyclicWeight_of_pinned
+
+-- The bounded survival-window landing, the truncation fold, and the reduced
+-- conjecture's gap-free implication.  The reduced conjecture itself
+-- (`GameTheory.quittingGame_hasQuittingLedgerCapPackage`) is deliberately
+-- excluded: it is the third intentional open declaration.
+#print axioms GameTheory.exists_pos_ratio_forall_exists_jointSurvivalWeight_mem_survivalWindow
+#print axioms GameTheory.quittingRootSequenceHazardTerminalValue_quittingTruncatedRoots_le_of_plan_ledger_le
+#print axioms GameTheory.quittingTerminalPayoff_update_quittingPhaseSwitchProfile_le_of_plan_ledger_le
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_hasQuittingLedgerCapPackage
