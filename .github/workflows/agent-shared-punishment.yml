@@ -19,10 +19,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build shared-punishment module
+      - name: Build shared-punishment modules
         uses: leanprover/lean-action@v1
         with:
           build: true
-          build-args: GameTheory.Concepts.Stochastic.QuittingSharedPunishment
+          build-args: GameTheory.Concepts.Stochastic.QuittingSharedPunishmentThreePlayer
           test: false
           use-mathlib-cache: true
