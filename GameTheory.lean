@@ -537,6 +537,7 @@ import GameTheory.Concepts.Stochastic.QuittingUnboundedInverseIterate
 import GameTheory.Concepts.Stochastic.QuittingJointComplementarity
 import GameTheory.Concepts.Stochastic.QuittingCandidateHardWeightCycle
 import GameTheory.Concepts.Stochastic.QuittingCandidateHardWeightCoordinateSilence
+import GameTheory.Concepts.Stochastic.QuittingCyclicWeightRowDichotomy
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
 import Math.LinearAlgebra.ExactBlockEliminationConfluence
