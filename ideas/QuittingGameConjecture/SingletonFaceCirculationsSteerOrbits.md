@@ -60,6 +60,32 @@ granted constant.
   arbitrarily-large-quit-mass rational orbits there. A genuine `n = 3`
   subcase reproved; not the whole external `n = 3` theorem.
 
+## Search-mode results (X, 2026-08-05)
+
+The certificate search runs with the floor direction resolved correctly —
+an **upper** bound on `χ` makes the check conservative and sound, a lower
+bound unsound; my dispatch prose had it backwards, the agent derived it from
+the requirement, and demonstrated the direction live (the two-player
+counterexample manufactures a spurious witness under the unsound floor and
+is empty under the sound one). With the sound floor (`χ` bounded by the
+solo-clipped ceiling):
+
+- **certified**: the scaled cyclic weight (reproducing the machine-checked
+  witness exactly, and rediscovered independently), the unperturbed FTV
+  table, `G_ε` at `ε = 1/10`, and the hostile table;
+- **`F′(1, ε)` certifies for every tested `ε`** — at `L = 1` via a genuine
+  three-owner mixed support `λ = (1/3, 0, 2/3, 0)`, not the singleton path.
+  Since the floor there is `1 = d` uniformly (the hard case the followup
+  flagged), this is a certificate **at the diagonal-tight floor**. Cash-out
+  to a uniform payoff awaits the multi-owner orbit theorem (in flight): if
+  it lands, `x = 1` is the first interior point of the open region solved by
+  this program's own machinery;
+- `F′(x, ε)` at `x ∈ {1/4, 1/2, 2}`: empty at the searched depth — not
+  evidence of absence (`L ≤ 3`, coarse `α` grid), and consistent with the
+  followup's difficulty assessment;
+- Q154's weight and the two-player counterexample: empty under the sound
+  floor, as their solo values force.
+
 ## Open
 
 - Machine-check the theorem. Dispatched (the counterexample computation
