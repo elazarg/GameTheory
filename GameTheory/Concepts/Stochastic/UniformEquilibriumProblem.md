@@ -21,11 +21,13 @@ games (Solan–Vieille, quitting games; Simon, *Adv. Appl. Math.* 38 (2007)).
 Open from four players on, already for **quitting games** — each player
 chooses only quit-or-continue, the game ends at the first quit, payoffs
 depend on the set of simultaneous quitters. This repository attacks the
-quitting core. Two intentional `sorry` declarations mark the targets
-(`UniformExistenceConjecture.lean`, `QuittingConjecture.lean`); a build-time
-audit enforces that they are import-leaves — no landed result depends on
-them — and that the landed corpus reports only the standard classical
-axioms.
+quitting core. Three intentional `sorry` declarations mark the targets
+(`UniformExistenceConjecture.lean`, `QuittingConjecture.lean`, and the
+reduced six-clause ledger-cap package `QuittingReducedCapConjecture.lean`,
+whose implication to the quitting conjecture is machine-checked gap-free,
+so the program's progress metric is clause shrinkage); a build-time audit
+enforces that they are import-leaves — no landed result depends on them —
+and that the landed corpus reports only the standard classical axioms.
 
 ## The reduction (machine-checked)
 
@@ -124,12 +126,11 @@ claim about all possible proofs.
 
 ## Proved on paper, formalization pending
 
-- **The min-max of a quitting weight is a stationary stopping value**:
-  `χ_j = inf_y max{S_j(y), H_j(y)/(1−c(y))}` over constant opponent rows —
-  no non-stationary punishment does better, `ε`-attained by rational rows.
-  The solo-clipped ceiling `max{0, d_j}` is not tight in general (a
-  machine-checked two-player table has finite-horizon punishment value
-  strictly below it: `QuittingPunishmentFloor`).
+- ~~The min-max of a quitting weight is a stationary stopping value~~ —
+  **now machine-checked**, see the closing section: `χ_j = inf_y
+  max{S_j(y), H_j(y)/(1−c(y))}` over constant opponent rows, both
+  inequalities, against all history-dependent plans
+  (`QuittingStationaryMinMax`).
 - **The repaired equivalence.** Simon (2007), Theorem 3, links approximate
   equilibria to relaxed cycles and to unbounded-variation orbit families.
   This development located and repaired defects in its proof: the
@@ -164,11 +165,23 @@ Two questions, different certificate shapes:
    some `ε₀ > 0`, every `ε₀`-rational orbit of the one-stage relation has
    bounded total quit mass. A *local certificate* — a potential function
    decreasing along every relation step by a quit-mass-proportional
-   quantum — would settle a negative instance decisively. Read the
-   asymmetry correctly: absent a converse (a ranking-function/duality
-   representation for every bounded orbit relation), the potential search
-   is a search through *sufficient* certificates, not a decision procedure
-   — failure to find one carries little evidence; finding one is decisive.
+   quantum — would settle a negative instance decisively. The converse now
+   *exists* and is machine-checked at the abstract level
+   (`Math/ChargedPathBudget`): an orbit relation has uniformly bounded
+   total quit mass **iff** a bounded potential exists, with exact strong
+   duality (the least oscillation equals the budget, attained by the
+   budget-to-go), and the negative filters (positive-charge self-loops and
+   cycles) refute every potential class at once — calibrated on this
+   repository's own one-stage operator, where the two-player quit-bonus
+   table's exact half-charge self-loop correctly kills every potential
+   (`QuittingQuitBonusSelfLoopBridge`). Read the remaining asymmetry
+   correctly, for it is now itself a theorem: the format is semantically
+   complete but effectively sufficient-only — the affine level and every
+   fixed semialgebraic template are exactly decidable, yet continuous,
+   affine, and polynomial classes are provably incomplete (a compact
+   relation of budget one admits only discontinuous potentials), and no
+   decision procedure covers the full format. Failure of any finite search
+   level carries little evidence; finding a certificate is decisive.
 
    **The shared failure mode of both questions, named.** At any fixed
    certificate length, membership in each engine class is a first-order
@@ -241,13 +254,47 @@ one-owner, and every one-stage sure-blocker collision branch — for the
 scalar reason, machine-checked, that owner endpoint optimality forces the
 collision rate to a boundary value at which either the resulting pair
 set fails the sure-exit criterion or the spectator preempts. The
-derivation alongside (paper-pending, like the min-max formula it prices
-against): collision compensation for a blocker strictly below its exact
-punishment floor requires collision intensity bounded away from zero, so
-no single-scale mechanism covers the residue — the open construction is
-a **two-scale producer** turning a switching-blocker cover into a
-relaxed orbit whose rare phases carry interior collision intensity, which
-the circulation machinery would then compile.
+derivation alongside is now machine-checked on both of its legs.
+
+**The punishment floor and the repair criterion are now theorems.** The
+min-max formula is formalized in full generality
+(`QuittingStationaryMinMax`): the punishment value — infimum over *all*
+history-dependent opponent plans of the supremum over all replies — equals
+the infimum over constant rows of the two-branch stopping value, with no
+attainment asserted; the reply value against a constant row needs no
+contraction hypothesis; and the solo-clipped ceiling is *strictly* loose
+(an explicit table has punishment value `0` against ceiling `2`). Priced
+against that exact floor, the one-stage collision repair is exactly
+characterized (`QuittingCollisionRepairCharacterization`): the mechanism
+admits accuracy-indexed equilibria **iff** owner endpoint optimality,
+every spectator's punishment-independent no-join, and the blocker-floor
+balance hold — both directions, arbitrary player count, the sufficiency
+leg constructing its punishment row from the min-max theorem. A sub-floor
+gap `γ` forces collision intensity `δ ≥ γ/(γ+p)`, the mechanism provably
+fails at every rate below `γ/(4M)`, and at the sure rate the criterion
+collapses to the sure-exit test.
+
+**The two-scale producer is refuted, and the road turns** *(paper)*. The
+conjectured missing engine — rare collision phases at vanishing occupation
+repairing a failed one-stage mechanism — cannot exist: the occupation
+charge occurs in none of the pointwise phase inequalities, so a
+vanishing-error family of such phases exists only where an exact one-stage
+repair or sure-exit set already does, and rotating owners against a fixed
+blocker does not average failure away. The escaping regression table was
+in fact never residual: it carries an exact rational period-one orbit
+(row `(1, 2/7, 1)`, value `(5/7, 0, 2/7)`), absorbed by the exact-cycle
+engine, with exact floors `(2/3, 0, 2/7)` and no sub-floor gap — the
+obstruction lives at the branch interface, not in the orbit relation. The
+genuinely missing operation is **support enlargement**: with a sure
+blocker, let *both* remaining players mix; the two interior indifference
+equations have explicit rational solutions, and together with the
+blocker's quit-now inequality and the min-max floors they are necessary
+and sufficient for an exact stationary terminal equilibrium on that cell
+*(paper)*. After the full catalogue — sure-exit sets, the blocker gate,
+collision repair, two-owner roots — the residue at three players is a
+finite semialgebraic class; whether it is empty, or which of its members
+the cycle and circulation engines absorb, is the current three-player
+closing question.
 
 ## References
 
