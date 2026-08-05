@@ -1893,11 +1893,17 @@ families of unbounded period, an off-path punishment component, deviation
 pricing in the deleted deficit, and no compactness/budget/projection shortcut.
 Component inventory: phase-switch wrapper landed; stopping index `i♯` landed;
 punishment floor landed; ε-bridge landed; reached-stage transfer in flight.
-**Missing**: the cumulative-advantage ledger `W` and its index `i*`; the
-rank-one decision-discrepancy argument (the paper's Propositions 1–2); and the
-"only repetitive continuing matters" deviation reduction, which
-`ArchitectureCapSeparators` explicitly warns must be proved rather than
-imported.
+**Missing**: ~~the cumulative-advantage ledger `W` and its index `i*`~~
+(**landed**, `QuittingLedgerPunishClock.lean` — summand pinned to the deleted
+normalization, clocks and combinator, Abel cash-out, the assembled cap
+consuming a ledger condition); the rank-one decision-discrepancy argument and
+the "only repetitive continuing matters" deviation reduction — **both now
+posed as Question 162** (the DDP maximal inequality, the rank-variation
+bound, the rank-one corollary, and the domination consequence with the
+unrestricted deviation quantifier made explicit — the step the architecture
+guard warns about is Part D, and the question says so); plus the small
+residuals (truncated-ledger transfer, ceiling-IR punishment attainment,
+Case-2 wiring) — agent in flight.
 
 **Acceptance.** The compiler as a theorem consuming a per-tolerance family and
 producing the terminal `ε`-Nash objects the selection theorem eats. Landing it
