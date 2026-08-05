@@ -75,11 +75,26 @@ window); under the paper's intended reading `θ ∈ (0,1]` this is automatic.
   quitting one-shot-deviation principle with reach-probability scaling, which
   the formal development also lacks.
 
+## Formalized
+
+`L` (`QuittingSurvivalWindowLanding.lean`): the reached-stage transfer, the
+continuation lift, the no-large-jump lemma, and the landing — with the granted
+continue-mass bound (the published Lemma 5(2)(b)) as a named hypothesis, as it
+must be. The sequence lemma landed stronger than posed: no monotonicity, no
+unit bound on the ratio. The global cap notion is the root-sequence hazard
+cap, chosen because it is verbatim what the phase-switch deviation cap
+consumes — the compiler components now interoperate — with an iff-bridge to
+the asymptotic-Nash notion so nothing is lost. The reservation vector is a
+parameter with a conditional securing hypothesis; it appears in both the
+securing hypothesis and the granted bound's rationality clause, pulling
+opposite ways — the honest encoding of why it must be the true min-max.
+
 ## Open
 
-- Formalize the transfer + lift + no-large-jump chain. Dispatched, in the
-  mixture encoding against the root-sequence machinery.
-- The counterexample direction was not needed, but its impossibility is not
-  proved either: whether (K1) alone (without global equilibrium) permits
-  window-jumping sequences is untested — irrelevant to the paper, possibly
-  relevant to how sharp (25) is.
+- **The reservation bridge**: instantiating the reservation by
+  `punishmentLevel` needs the conversion from an infimum over profiles to a
+  conditional securing tail — a lemma-sized, unproved step, and the last link
+  between the punishment module and this chain.
+- Whether (K1) alone (without global equilibrium) permits window-jumping
+  sequences is untested — irrelevant to the paper, possibly relevant to how
+  sharp the no-large-jump lemma is.
