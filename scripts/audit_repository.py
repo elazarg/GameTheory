@@ -66,14 +66,48 @@ RAW_SEMANTIC_MODULES = {"GameTheory.Core.GameForm"}
 ROOT_AGGREGATOR = "GameTheory"
 
 
-def static_escape_hatch_audit() -> list[str]:
+def module_name_of(path: pathlib.Path) -> str:
+    return ".".join(path.with_suffix("").parts)
+
+
+def static_escape_hatch_audit() -> tuple[list[str], list[str]]:
+    """Forbidden constructs, split into hard failures and accepted exceptions.
+
+    The `BlockPairK11` island is exempt *only* because it is unreachable from
+    the default targets, so its `Lean.ofReduceBool` axiom cannot reach any
+    landed theorem.  That containment is not assumed here: it is checked by
+    `island_containment_audit`, and if it ever breaks these become failures
+    again.  Reporting them as notices rather than failures is what lets the
+    audit exit zero, so a genuinely new escape hatch fails loudly instead of
+    hiding behind a permanently red run.
+    """
     failures: list[str] = []
+    notices: list[str] = []
     for path in tracked_lean_files():
+        exempt = module_name_of(path) in BLOCK_PAIR_K11_ISLAND
         stripped = strip_comments_and_strings(path.read_text(encoding="utf-8"))
         for line_no, line in enumerate(stripped.splitlines(), start=1):
             for pattern, label in FORBIDDEN_PATTERNS:
                 if pattern.search(line):
-                    failures.append(f"{path}:{line_no}: forbidden {label}")
+                    bucket = notices if exempt else failures
+                    bucket.append(f"{path}:{line_no}: forbidden {label}")
+    return failures, notices
+
+
+def island_containment_audit(
+    tracked_modules: dict[str, pathlib.Path], imports: dict[str, list[str]]
+) -> list[str]:
+    """The island's escape-hatch exemption is void if anything imports it."""
+    failures: list[str] = []
+    for mod, deps in imports.items():
+        if mod in BLOCK_PAIR_K11_ISLAND or mod not in tracked_modules:
+            continue
+        for dep in deps:
+            if dep in BLOCK_PAIR_K11_ISLAND:
+                failures.append(
+                    f"{tracked_modules[mod]}: imports quarantined island module {dep}; "
+                    "its native_decide/opaque certificates would reach landed theorems"
+                )
     return failures
 
 
@@ -248,10 +282,11 @@ def import_reachability_audit(
 
 def main() -> int:
     tracked_modules, imports = tracked_import_graph()
-    failures = static_escape_hatch_audit()
+    failures, escape_hatch_notices = static_escape_hatch_audit()
     failures.extend(semantic_layer_audit(tracked_modules, imports))
     failures.extend(import_reachability_audit(tracked_modules, imports))
     failures.extend(leaf_invariant_audit(tracked_modules, imports))
+    failures.extend(island_containment_audit(tracked_modules, imports))
     axiom_failures, axiom_output = run_axiom_audit()
     failures.extend(axiom_failures)
 
@@ -264,6 +299,11 @@ def main() -> int:
             print(axiom_output, file=sys.stderr)
         return 1
 
+    if escape_hatch_notices:
+        print("Accepted escape hatches in the quarantined island "
+              "(contained; not reachable from default targets):")
+        for notice in escape_hatch_notices:
+            print(f"  {notice}")
     print("Repository audit passed.")
     return 0
 
