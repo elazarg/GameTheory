@@ -1889,13 +1889,14 @@ imported.
 producing the terminal `ε`-Nash objects the selection theorem eats. Landing it
 replaces the exact-cycle branch wholesale.
 
-### `MATH-P1-6` — the lock/unlock dichotomy for orbit variation
+### `MATH-P0-9` — the lock/unlock dichotomy for orbit variation
 
-- **Status:** READY
-- **Lane:** P1
+- **Status:** IN FLIGHT — **this is the open core, and the project's point.**
+- **Lane:** P0
 - **Depends:** the label lock (in flight), transported leverage, the
   survival-window landing.
-- **Record:** this file
+- **Record:** this file; **Question 159 is filed on it** — orbit production
+  with rationality maintenance, the general existence engine.
 
 **Objective.** Decide the conjecture: on a weight with no stationary and no
 instant approximate equilibria, either some coordinate's value can lock (and a
