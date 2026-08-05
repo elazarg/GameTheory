@@ -1208,7 +1208,36 @@ history, and `normalizeAct` is non-injective -- every illegal action at a state
 goes to the same legal one -- so the raw history is unrecoverable. The
 obstruction is therefore not the signalling intuition alone but a definite
 failure of information recovery, and it lands precisely where the row already
-said it would: normalized-action histories, a `Hist`/`histDist` redefinition.
+said it would: normalized-action histories.
+
+**Normalized histories are built, additively (`L`), and the obstruction is now
+localized.** `ActionLegalityNormalizedHistory.lean` gets them as a *subtype*
+rather than a quotient — stagewise normalization is idempotent, so each class
+already has a canonical representative inside `Hist`, and everything stays
+within the existing `histDist`/`totalPayoff` machinery. No core type changed.
+
+Three things are proved. Two raw histories with the same normalization induce
+the *literally same* one-stage continuation for a label-blind profile, and the
+padded game's `histDist` pushed forward by normalization satisfies the same
+one-step recursion as `histDist`. Payoff bookkeeping is normalization-blind for
+**any** profile, since the padded stage payoff normalizes idempotently. And
+label-blind strategies are characterized exactly — invariance is equivalent to
+factoring through the normalization, via a mutually inverse pair with strategies
+whose domain is the normalized history type.
+
+The payoff transfer remains open, with a sharper diagnosis: a single raw label
+is unconditionally payoff- and transition-free, but this does not extend to a
+multi-stage cap even with the prescribed profile strengthened to invariant.
+Bounding an arbitrary deviator needs a matching legal one, and the
+pointwise-normalized candidate is evaluated along *its own* trajectory at
+already-normalized histories — the same non-injective inversion. So **the
+obstruction lives entirely inside the deviator's own strategy and does not
+depend on opponent behaviour**, which is a strictly stronger localization than
+the signalling reading.
+
+The named next mechanism is **disintegration**: condition the deviator's
+realized action on the normalized history rather than projecting pointwise. The
+conditional-distribution infrastructure for it already exists.
 
 **The candidate repairs are not equal, and the choice is now decided (`M`).**
 
