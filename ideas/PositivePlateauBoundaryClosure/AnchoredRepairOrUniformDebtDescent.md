@@ -109,25 +109,51 @@ new exact Nash--Bellman root. Acceptance requires all quantifiers above and the
 existing terminal-to-uniform consumer; fixed-cutoff compactness alone is not
 the capstone.
 
-## The decrement was measured in the wrong currency
+## The seam price, and the three deficits it must not be confused between
 
-`M [reported]`, from Simon 2007's Lemma 4. Closing a pseudo-orbit whose
-endpoints are `δ`-close into a playable cycle costs
+`M`, tested. The `δ/ρ` seam law is **exact for one object, a sharp bound for a
+second, and false for the third** — and the third is the one this group's
+descent work is about.
 
-\[
- \delta/\rho,\qquad \rho=\text{total absorbed mass along the block},
-\]
+Three contraction deficits are involved and are not interchangeable:
 
-so the seam error is **inversely proportional to quitting mass**: no absorption,
-no closure. That turns this group's qualitative fence — chain recurrence alone
-does not concentrate pseudo-orbit error into one exact seam, and pointwise debt
-decrease need not have a uniform decrement — into a formula, and it identifies
-the correct currency for "uniform decrement": **absorbed probability mass, not
-step count**. Every descent attempt recorded here measured in steps.
+- `ρ_G = 1 - ∏_{t∈G} c(x_t)` — the ordinary **value** recursion over a segment;
+- `ρ⁻_{G,i} = 1 - ∏_{t∈G} c_{-i}(x_t)` — coordinate `i`'s **deviation**
+  recursion, built from the *deleted* products;
+- `μ(B) = S(a)·ρ_B` — the amount of a local block transported to the origin.
 
-It also explains the shape of the refutation below without contradicting it: an
-appended block's repair propagates and decays because the absorption available
-to pay for the seam is what governs the cost.
+Against those:
+
+- for **continuation-value closure with fixed rows** the law is an exact
+  residual formula, not an estimate: `z_m - v = d/ρ`, and more generally
+  `z_t - v_t = (∏_{u=t}^{m-1} c_u)·(d/ρ)`;
+- for **rowwise complementarity loss** it is a sharp upper bound, which may be
+  zero;
+- for **optimized deviation gain** it is **false**. The correct denominator for
+  deviation closure is the *deleted* deficit `1 - ∏ c_{-i}`, not `ρ`. Prefix
+  survival is a multiplicative transport factor, never the denominator.
+
+That the deviation objective is priced by the deleted product rather than the
+full one is the same deleted-versus-full gap that governs every other
+obstruction recorded in this program.
+
+**Two corrections to earlier readings of this law.** It does **not** explain the
+refutation below: the exponential decay at the origin and division by absorption
+are **independent** effects, the exact factorization being prefix transport
+times global re-closing amplification, with local absorption entering only
+through a bound on the local map discrepancy. And `ρ → 0` gives an inverse pole
+but **not** automatic non-existence at `ρ = 0` — a mass-free value block is the
+identity, so it cannot alter an externally prescribed mismatch, yet exact
+closure still exists. The stronger gain singularity can occur while full `ρ`
+stays bounded away from zero.
+
+**Absorption is statically additive but not consumable.** There is a genuine
+one-shot budget for absorption-normalized value corrections, but it does **not**
+follow that sequential repairs exhaust a resource, and it does not price
+arbitrary complementarity repairs or control the optimized gain recursion. The
+conjecture that repeated repair is exhausted by conservation — which would have
+closed the accumulation route for every weight rather than one witness — is
+**false**.
 
 Related, same source: *extended orbits* — countably many orbit segments, each
 either ending at or **converging to** the next, with junk variation summable —
