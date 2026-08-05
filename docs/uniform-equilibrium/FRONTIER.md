@@ -375,14 +375,27 @@ period-one solo-quitter row is verified only against a *passive* continuation),
 and untouched by the plateau and optimized-debt splits, which are on-path
 finite-chain algebra.
 
-The gap is structural, not a missing case: **no file in the quitting apparatus
-has a predicate for behaviour that differs at stage two depending on stage-one
-history.** Stationary rows, cyclic row-sequences, and zero-pinned finite chains
-have no off-path branch anywhere. Nor is the punishment target expressible —
-a sweep of all quitting modules and `Uniform.lean` finds **no min-max or
-punishment construction at all**; the one `χ` in the tree is an unrelated
-best-response-summary coefficient, a name collision. Computing it would need an
-`(n-1)`-versus-one coalition value theorem, itself unlanded.
+The gap is structural, not a missing case, and it has now narrowed to a single
+item: **no file in the quitting apparatus has a predicate for behaviour that
+differs at stage two depending on stage-one history.** Stationary rows, cyclic
+row-sequences, and zero-pinned finite chains have no off-path branch anywhere.
+That trigger shape is the remaining obstruction.
+
+**The punishment target is no longer inexpressible (`L`).** An earlier sweep
+found no min-max or punishment construction anywhere, and that verdict is now
+falsified: `PunishmentLevel.lean` supplies a finite-horizon min-max level,
+individual rationality in exact and approximate form, and the necessary
+condition that a uniform equilibrium payoff is eventually approximately
+individually rational. The `χ` in the older quitting files remains an unrelated
+best-response-summary coefficient — a name collision, not a punishment notion.
+
+What the punishment module does **not** yet do is refute anything. For quitting
+games only a *ceiling* is proved, and a ceiling is the wrong direction: the
+no-go generator needs a **lower** bound before it can reject a concrete table.
+Also missing on that side is a stochastic `feasibleSet` — the kernel-game half
+exists, the stochastic half does not — and a capping theorem for the landed
+planned-survival stopping index, which currently carries its three defining
+properties and no cap.
 
 The general semantic layer does not *forbid* such a profile — `IsUniformEquilibriumPayoff`
 quantifies over arbitrary behaviour — so this is a gap in the decompositions,

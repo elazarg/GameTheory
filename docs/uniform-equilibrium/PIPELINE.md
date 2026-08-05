@@ -13,10 +13,14 @@ never counted as landed until committed, built, and reflected in the owning
 claim and [`FRONTIER.md`](FRONTIER.md).
 
 **Handoff validation.** `lake build` succeeds. Local Markdown links under
-`docs/`, `ideas/`, and `REORG.md` resolve. The stricter repository audit is
-known red, not silently green: it reports four `opaque` declarations, ten
-`native_decide` proofs, and 25 tracked Lean modules outside the default import
-targets; the two intentional `sorry` declarations are
+`docs/`, `ideas/`, and `REORG.md` resolve. **The repository audit now exits
+zero**, and is a usable gate rather than a permanently red one: zero orphans,
+the restored axiom audit reporting only `propext`, `Classical.choice`, and
+`Quot.sound`, and the leaf invariant checked by the script. The `opaque` and
+`native_decide` occurrences survive only inside the quarantined `BlockPairK11`
+island, reported as accepted exceptions whose exemption is **earned** by a
+containment check that fails the audit if anything imports the island. The two
+intentional `sorry` declarations are
 `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean` and
 `quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`.
 These are owned by the engineering queue below and the [proof-engineering
@@ -1246,19 +1250,31 @@ normalization-blind payoff bookkeeping this gives **exact payoff equality** at
 every horizon and player, not merely domination. The construction is total,
 including at normalized histories of probability zero.
 
-So the transfer holds *conditional on a label-blind, legal witness existing at
-each accuracy*, and the whole row now reduces to:
+**The honest residual is *legality*, not blindness.** The assembled target
+theorem binds a label-blindness hypothesis and **never uses it** — the proof
+runs on legality alone. So the row reduces to:
 
-> can a padded-game equilibrium be taken label-blind without loss?
+> can a padded-game equilibrium be taken **legal** without loss?
 
-The obstruction to getting there by the same means is machine-checked rather
-than argued: the induction needs the background profile **already** invariant to
-rewrite the one-stage kernel as a function of the normalized history alone.
-Disintegrating the deviator's coordinate alone leaves the other coordinates
-free to leak raw labels, and disintegrating every coordinate simultaneously
-against an already-invariant background is circular as stated. That is a
-technical reason for the recorded verdict on this route, replacing the
-non-convexity prose argument.
+Blindness is what the *disintegration route* needs, not what the target needs,
+and conflating the two overstates what is open. The obstruction to blinding is
+nonetheless machine-checked rather than argued: the induction needs the
+background profile already invariant to rewrite the one-stage kernel as a
+function of the normalized history alone; disintegrating the deviator's
+coordinate alone leaves the others free to leak labels; disintegrating all at
+once against an already-invariant background is circular.
+
+Two consequences worth acting on. The disintegration module currently feeds one
+unconsumed inequality, since the target does not need it. And an "`ε`-Nash
+against the legal shadows of all unrestricted deviations" notion is one
+quantifier away and undefined — that is plausibly the statement the row actually
+wants.
+
+**The chain is more general than its statement.** Legality is never used either,
+only componentwise idempotence of the normalization: the whole development is an
+idempotent-relabeling theorem that happens to be instantiated at legality.
+Finiteness is likewise an artifact of one conditional-distribution lemma; a
+countable-support version would remove it.
 
 Note the disintegration identities require finite state and action carriers,
 stated explicitly and used nowhere upstream.
@@ -1678,11 +1694,16 @@ development.
 block, and machine-check that the same formula **fails** for the optimized
 deviation objective.
 
-**State.** `IN FLIGHT`. Three deficits must not be conflated: the value
-recursion's, the deviation recursion's built from deleted products, and a local
-block's transported mass. The law is an exact identity for the first, a sharp
-upper bound for the second, and false for the third. Prefix survival is a
+**State.** `DONE`. Three deficits must not be conflated: the value recursion's,
+the deviation recursion's built from deleted products, and a local block's
+transported mass. The law is an exact identity for the first, a sharp upper
+bound for the second, and false for the third. Prefix survival is a
 multiplicative transport factor, never a denominator.
+
+**Seals differ by leg.** The exact identity and the falsity witness are `L`. The
+**sharp middle leg is `M [reported]` and has no theorem** — the formalization's
+middle deliverable was the transport split, not a bound on rowwise
+complementarity loss. Do not cite the three legs under one seal.
 
 **Acceptance.** **DONE, 2026-08-05**, `QuittingSeamPriceResidual.lean`. All four
 parts landed. The exact form needed no hypothesis beyond the definitions — the
@@ -1704,7 +1725,7 @@ vanishing absorption gives no pole.
 complementarity conditions agrees with the Bool-valued mixture encoding the main
 development uses.
 
-**State.** `READY`, and this is a duplication introduced deliberately and
+**State.** `DONE`, and this was a duplication introduced deliberately and
 knowingly. The questions corpus states everything over arrays of reals; the Lean
 development states everything over `PMF Bool` mixtures. Formalizing a question's
 answer therefore produced a **second** encoding of `Σ_i`, `Γ_i`, `g_i` and

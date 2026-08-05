@@ -111,9 +111,15 @@ the capstone.
 
 ## The seam price, and the three deficits it must not be confused between
 
-`L`, machine-checked. The `δ/ρ` seam law is **exact for one object, a sharp
-bound for a second, and false for the third** — and the third is the one this
-group's descent work is about.
+The `δ/ρ` seam law is **exact for one object, a sharp bound for a second, and
+false for the third** — and the third is the one this group's descent work is
+about. Seals differ by leg and must not be quoted as one:
+
+- the exact leg is `L`, machine-checked;
+- **the sharp-bound middle leg is `M [reported]` — there is no theorem for it.**
+  The formalization's middle deliverable was the transport split, not a bound on
+  rowwise complementarity loss;
+- the falsity leg is `L`, with an explicit witness.
 
 The exact form needed no hypothesis beyond what the definitions already give:
 the successor payoff is affine in the tail value with slope the *full* joint
