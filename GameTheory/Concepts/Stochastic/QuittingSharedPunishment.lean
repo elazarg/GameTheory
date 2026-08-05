@@ -9,26 +9,23 @@ import GameTheory.Concepts.Stochastic.QuittingStationaryMinMax
 /-!
 # Shared punishment in two-player quitting games
 
-A player's quitting punishment value is defined by a committed opponent plan:
-the plan is fixed first, then the designated player takes a best reply.  A
-*shared* punishment asks one committed plan to be used for every possible
-designated player.  This is not an equilibrium or credibility assertion.
+A player's quitting punishment value fixes an opponent plan and then takes the
+player's best reply.  A shared punishment uses one committed plan for every
+possible designated player.  This is not an equilibrium or credibility
+assertion.
 
 For two players the shared problem factorizes exactly.  The plan used to
 punish `false` contributes only player `true`'s strategy, while the plan used
-to punish `true` contributes only player `false`'s strategy.  Hence the two
-opponent coordinates can be spliced into one profile without changing either
+to punish `true` contributes only player `false`'s strategy.  Those two
+coordinates can therefore be spliced into one profile without changing either
 best-reply value.  The same statement holds for constant product rows.
 
-Consequences:
-
-* every coordinatewise property separately realizable by two plans is
-  simultaneously realizable by one plan;
-* one stationary row simultaneously approaches both individual punishment
-  floors at every positive accuracy;
-* the exact shared excess, for arbitrary behavior plans and for stationary
-  rows, is zero.  Attainment is not asserted and can fail because the
-  individual infima need not be attained.
+Consequently every coordinatewise property separately realizable by two plans
+is simultaneously realizable by one plan; one stationary row approaches both
+individual punishment floors at every positive accuracy; and the exact shared
+excess is zero both for arbitrary behavior plans and for stationary rows.
+Attainment is not asserted and can fail because the individual infima need
+not be attained.
 -/
 
 noncomputable section
@@ -151,6 +148,8 @@ theorem exists_quittingTwoPlayerSharedPunishmentProfile_lt_add
     ∃ profile : (quittingGame reward).BehaviorProfile, ∀ who,
       quittingBestReplyValue reward profile who <
         quittingPunishmentValue reward who + ε := by
+  haveI : Nonempty ((quittingGame reward).BehaviorProfile) :=
+    ⟨quittingAlwaysContinueProfile reward⟩
   have hseparate : ∀ who : Bool,
       ∃ profile : (quittingGame reward).BehaviorProfile,
         quittingBestReplyValue reward profile who <
@@ -233,9 +232,10 @@ private theorem bddBelow_range_quittingTwoPlayerSharedPunishmentGap
           quittingPunishmentValue reward true)) := by
   refine ⟨0, ?_⟩
   rintro _ ⟨profile, rfl⟩
-  apply max_nonneg
-  left
-  linarith [quittingPunishmentValue_le reward false profile]
+  have hgap : 0 ≤ quittingBestReplyValue reward profile false -
+      quittingPunishmentValue reward false :=
+    sub_nonneg.mpr (quittingPunishmentValue_le reward false profile)
+  exact hgap.trans (le_max_left _ _)
 
 private theorem bddBelow_range_quittingTwoPlayerSharedStationaryGap
     (reward : {S : Finset Bool // S.Nonempty} → Payoff Bool) :
@@ -246,14 +246,17 @@ private theorem bddBelow_range_quittingTwoPlayerSharedStationaryGap
           quittingStationaryPunishmentValue reward true)) := by
   refine ⟨0, ?_⟩
   rintro _ ⟨root, rfl⟩
-  apply max_nonneg
-  left
-  linarith [quittingStationaryPunishmentValue_le reward false root]
+  have hgap : 0 ≤ quittingStationaryUnilateralCap reward root false -
+      quittingStationaryPunishmentValue reward false :=
+    sub_nonneg.mpr (quittingStationaryPunishmentValue_le reward false root)
+  exact hgap.trans (le_max_left _ _)
 
 /-- **Zero price of shared punishment at two coordinates.** -/
 theorem quittingTwoPlayerSharedPunishmentExcess_eq_zero
     (reward : {S : Finset Bool // S.Nonempty} → Payoff Bool) :
     quittingTwoPlayerSharedPunishmentExcess reward = 0 := by
+  haveI : Nonempty ((quittingGame reward).BehaviorProfile) :=
+    ⟨quittingAlwaysContinueProfile reward⟩
   apply le_antisymm
   · refine le_of_forall_pos_le_add fun ε hε => ?_
     obtain ⟨profile, hprofile⟩ :=
@@ -264,20 +267,28 @@ theorem quittingTwoPlayerSharedPunishmentExcess_eq_zero
     have htrue : quittingBestReplyValue reward profile true -
         quittingPunishmentValue reward true ≤ ε := by
       linarith [hprofile true]
-    exact le_trans
-      (ciInf_le (bddBelow_range_quittingTwoPlayerSharedPunishmentGap reward)
-        profile)
-      (max_le hfalse htrue)
+    have hmax : max
+        (quittingBestReplyValue reward profile false -
+          quittingPunishmentValue reward false)
+        (quittingBestReplyValue reward profile true -
+          quittingPunishmentValue reward true) ≤ ε :=
+      max_le hfalse htrue
+    exact (ciInf_le
+      (bddBelow_range_quittingTwoPlayerSharedPunishmentGap reward) profile).trans
+        (by simpa using hmax)
   · unfold quittingTwoPlayerSharedPunishmentExcess
     exact le_ciInf fun profile => by
-      apply max_nonneg
-      left
-      linarith [quittingPunishmentValue_le reward false profile]
+      have hgap : 0 ≤ quittingBestReplyValue reward profile false -
+          quittingPunishmentValue reward false :=
+        sub_nonneg.mpr (quittingPunishmentValue_le reward false profile)
+      exact hgap.trans (le_max_left _ _)
 
 /-- The stationary shared excess is also exactly zero. -/
 theorem quittingTwoPlayerSharedStationaryPunishmentExcess_eq_zero
     (reward : {S : Finset Bool // S.Nonempty} → Payoff Bool) :
     quittingTwoPlayerSharedStationaryPunishmentExcess reward = 0 := by
+  haveI : Nonempty (Bool → PMF Bool) :=
+    ⟨fun _ => PMF.pure false⟩
   apply le_antisymm
   · refine le_of_forall_pos_le_add fun ε hε => ?_
     obtain ⟨root, hroot⟩ :=
@@ -288,15 +299,21 @@ theorem quittingTwoPlayerSharedStationaryPunishmentExcess_eq_zero
     have htrue : quittingStationaryUnilateralCap reward root true -
         quittingStationaryPunishmentValue reward true ≤ ε := by
       linarith [hroot true]
-    exact le_trans
-      (ciInf_le
-        (bddBelow_range_quittingTwoPlayerSharedStationaryGap reward) root)
-      (max_le hfalse htrue)
+    have hmax : max
+        (quittingStationaryUnilateralCap reward root false -
+          quittingStationaryPunishmentValue reward false)
+        (quittingStationaryUnilateralCap reward root true -
+          quittingStationaryPunishmentValue reward true) ≤ ε :=
+      max_le hfalse htrue
+    exact (ciInf_le
+      (bddBelow_range_quittingTwoPlayerSharedStationaryGap reward) root).trans
+        (by simpa using hmax)
   · unfold quittingTwoPlayerSharedStationaryPunishmentExcess
     exact le_ciInf fun root => by
-      apply max_nonneg
-      left
-      linarith [quittingStationaryPunishmentValue_le reward false root]
+      have hgap : 0 ≤ quittingStationaryUnilateralCap reward root false -
+          quittingStationaryPunishmentValue reward false :=
+        sub_nonneg.mpr (quittingStationaryPunishmentValue_le reward false root)
+      exact hgap.trans (le_max_left _ _)
 
 /-- Arbitrary behavior plans and stationary rows have the same shared
 punishment price at two coordinates. -/
