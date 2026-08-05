@@ -227,23 +227,17 @@ The trichotomy leaves **two holes**, and these are the open content:
 
 1. It is exhaustive only under the hypothesis that the weight admits an
    absorbing complementary cycle **at all**. Weights admitting none of any
-   period are outside it entirely. **This hole is occupied.** The published
-   `ε`-perturbation of the cyclic three-player table has solo values all `1 > 0`
-   — so the zero-solo branch fails — and admits no absorbing cyclic continuation
-   at any period, by the published Theorem 2.1 in its bounded form
-   (`M [reported]`, unformalized here).
-
-   Two families are excluded internally (`L`), with quantifiers that differ and
-   matter. Every period-one block isolating a single coordinate as sole quitter
-   fails, for every owner and rate, since the affine no-join condition reads
-   `1 + pε ≤ 0` there — but rows with two or three coordinates mixing at once
-   are **not** covered. And the unperturbed phase-rotation block stops being
-   admissible, its endpoint difference being exactly `ε/2` — but **that block
-   only**, not every period-three block.
-
-   So the leading hard candidate is *outside the trichotomy* rather than inside
-   an unproved branch of it, on the strength of a published theorem plus two
-   machine-checked families. The general statement is still reported.
+   period are outside it entirely. **This hole is occupied, and the occupancy
+   is machine-checked end to end (`L`)**: for every `ε ∈ (0, 2]`,
+   `¬∃ terminal, IsQuittingCyclicContinuation (ftvRewardEps ε) terminal` —
+   the trichotomy's own predicate — via the label lock in the real encoding
+   (all periods, with the `ε = 0` rotation as the in-file boundary witness)
+   and the cycle-level transport with entry-for-entry weight alignment
+   (`PerturbedCyclicWeightNoExactCycle.lean`,
+   `PerturbedCyclicWeightCycleExistenceHoleOccupied.lean`). The leading hard
+   candidate provably lies *outside the trichotomy*; the cycle route's
+   incompleteness is an internal theorem, and the published Theorem 2.1 is
+   independent confirmation only.
 2. The isolated-negative branch has **no sufficiency theorem**. One specific
    two-coordinate weight in it does have a uniform equilibrium payoff, by an
    explicit symmetric contracting perturbation, but that construction is stated

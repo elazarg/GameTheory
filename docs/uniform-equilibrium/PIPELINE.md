@@ -1819,9 +1819,17 @@ since it turns the criterion into something checkable on a concrete table.
 - **Depends:** `LEAN-P0-9`.
 - **Record:** [exact-vs-relaxed]
 
-**Objective.** Machine-check that the `ε`-perturbed cyclic three-player weight
-admits no exact cycle at any period — **via Q156's self-contained argument, not
-the published six-lemma port**, which it supersedes for this weight.
+**Objective.** ~~Machine-check that the `ε`-perturbed cyclic three-player weight
+admits no exact cycle at any period.~~ **DONE, end to end, 2026-08-05.**
+`PerturbedCyclicWeightNoExactCycle.lean` (the label lock, real encoding, with
+the `ε = 0` witness and mechanical verification that positivity is needed)
+plus `PerturbedCyclicWeightCycleExistenceHoleOccupied.lean` (the cycle-level
+transport and the statement against the trichotomy's own predicate:
+`¬∃ terminal, IsQuittingCyclicContinuation (ftvRewardEps ε) terminal`,
+`ε ∈ (0,2]`, weight alignment machine-checked entry-for-entry). The leading
+hard candidate provably lies outside the trichotomy; the cycle route's
+incompleteness is an internal theorem, and the published chain is independent
+confirmation only.
 
 **State.** `READY`, and the motivation is settled rather than speculative: that
 weight already **occupies** the trichotomy's cycle-existence hole. Its solo

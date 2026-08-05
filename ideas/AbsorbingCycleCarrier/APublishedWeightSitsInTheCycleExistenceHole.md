@@ -79,13 +79,14 @@ rejected; both consumers of the predecessor inequality need `ε` times a
 positive rate). Scaling invariance is checked and transports to the normalized
 table.
 
-**Encoding boundary, stated so it cannot be silently crossed**: the theorem
-lives in the real-hazard encoding (`ExactCycle` over `ZMod m`). The
-trichotomy's hypothesis is the PMF-mixture statement
-`¬∃ terminal, IsQuittingCyclicContinuation`. The row-level `ε = 0` bridge
-exists; the **cycle-level** correspondence (periodic value recursion across
-the encodings) is the one remaining lemma before the hole occupancy is `L`
-end-to-end in the trichotomy's own vocabulary.
+**The encoding boundary is closed
+(`PerturbedCyclicWeightCycleExistenceHoleOccupied.lean`).** The cycle-level
+transport exists — a cyclic continuation block maps to a real-encoding
+`ExactCycle` of the same period, with the weight alignment machine-checked
+entry-for-entry — and the occupancy is now stated against the trichotomy's
+own predicate: `¬∃ terminal, IsQuittingCyclicContinuation (ftvRewardEps ε)
+terminal` for every `ε ∈ (0, 2]`. **The hole occupancy is `L` end-to-end**,
+fully internal; the published theorem is independent confirmation only.
 
 The proof, substantially simpler than the published six-lemma route:
 
