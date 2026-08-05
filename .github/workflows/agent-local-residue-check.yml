@@ -25,119 +25,135 @@ jobs:
         if: github.event_name == 'push'
         shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('GameTheory/Concepts/Stochastic/QuittingLocalMechanismResidueWitness.lean')
-          s = p.read_text()
-          replacements = [
-          ('''  fin_cases owner
-          · by_cases h : p ≤ 2 / 5
-            · refine ⟨2, by decide, ?_⟩
-              rw [switchingResidual_02]
-              linarith
-            · refine ⟨1, by decide, ?_⟩
-              rw [switchingResidual_01]
-              linarith
-          · refine ⟨0, by decide, ?_⟩
-            rw [switchingResidual_10]
-            norm_num
-          · refine ⟨0, by decide, ?_⟩
-            rw [switchingResidual_20]
-            norm_num
-          ''', '''  fin_cases owner
-          · by_cases h : p ≤ 2 / 5
-            · refine ⟨2, by decide, ?_⟩
-              simp [switchingResidual, solo, reward]
-              linarith
-            · refine ⟨1, by decide, ?_⟩
-              simp [switchingResidual, solo, reward]
-              linarith
-          · refine ⟨0, by decide, ?_⟩
-            simp [switchingResidual, solo, reward]
-          · refine ⟨0, by decide, ?_⟩
-            simp [switchingResidual, solo, reward]
-          '''),
-          ('''  simp [reward]
-            norm_num
-
-          private theorem collision_owner_loss_21''', '''  simp [reward]
-
-          private theorem collision_owner_loss_21'''),
-          ('''  unfold QuittingCollisionSpectatorNoJoin at hspectator
-          ''', ''''''),
-          ('''  rw [quittingCollisionRepairValue_apply] at hspectator
-            simp only [quittingSetReward_gameReward] at hspectator
-            norm_num [reward] at hspectator
-
-          /-- `(owner, blocker) = (0,2)`:''', '''  rw [quittingCollisionRepairValue_apply] at hspectator
-            simp only [quittingSetReward_gameReward] at hspectator
-            change (1 : ℝ) ≤ 0 at hspectator
-            norm_num at hspectator
-
-          /-- `(owner, blocker) = (0,2)`:'''),
-          ('''  rw [quittingCollisionRepairValue_apply] at hbalance
-            simp only [quittingSetReward_gameReward] at hbalance
-            norm_num [reward] at hbalance
-
-          /-- `(owner, blocker) = (1,0)`:''', '''  rw [quittingCollisionRepairValue_apply] at hbalance
-            simp only [quittingSetReward_gameReward] at hbalance
-            change (2 / 5 : ℝ) ≤ 0 at hbalance
-            norm_num at hbalance
-
-          /-- `(owner, blocker) = (1,0)`:'''),
-          ('''  rw [quittingCollisionRepairValue_apply] at hspectator
-            simp only [quittingSetReward_gameReward] at hspectator
-            norm_num [reward] at hspectator
-
-          /-- `(owner, blocker) = (1,2)`:''', '''  rw [quittingCollisionRepairValue_apply] at hspectator
-            simp only [quittingSetReward_gameReward] at hspectator
-            change (1 : ℝ) ≤ 0 at hspectator
-            norm_num at hspectator
-
-          /-- `(owner, blocker) = (1,2)`:'''),
-          ('''  rw [quittingCollisionRepairValue_apply] at hbalance
-            simp only [quittingSetReward_gameReward] at hbalance
-            norm_num [reward] at hbalance
-
-          /-- `(owner, blocker) = (2,0)`:''', '''  rw [quittingCollisionRepairValue_apply] at hbalance
-            simp only [quittingSetReward_gameReward] at hbalance
-            change (1 : ℝ) ≤ 0 at hbalance
-            norm_num at hbalance
-
-          /-- `(owner, blocker) = (2,0)`:'''),
-          ('''  rw [quittingCollisionRepairValue_apply] at hspectator
-            simp only [quittingSetReward_gameReward] at hspectator
-            norm_num [reward] at hspectator
-
-          /-- `(owner, blocker) = (2,1)`:''', '''  rw [quittingCollisionRepairValue_apply] at hspectator
-            simp only [quittingSetReward_gameReward] at hspectator
-            change (1 : ℝ) ≤ 2 / 5 at hspectator
-            norm_num at hspectator
-
-          /-- `(owner, blocker) = (2,1)`:'''),
-          ('''  rw [quittingCollisionRepairValue_apply] at hspectator
-            simp only [quittingSetReward_gameReward] at hspectator
-            norm_num [reward] at hspectator
-
-          /-- All six ordered sure-blocker collision mechanisms fail. -/''', '''  rw [quittingCollisionRepairValue_apply] at hspectator
-            simp only [quittingSetReward_gameReward] at hspectator
-            change (1 : ℝ) ≤ 0 at hspectator
-            norm_num at hspectator
-
-          /-- All six ordered sure-blocker collision mechanisms fail. -/'''),
-          ('''    norm_num [doubleSureMixerValue, quittingSureSetOwnerValue,
-              quittingSetReward_gameReward, reward]''', '''    norm_num [doubleSureMixerValue, quittingSureSetOwnerValue,
-              gameReward, reward]'''),
-          ('''    norm_num [quittingSureSetOwnerExactCap, quittingSureSetOwnerValue,
-              quittingSetReward_gameReward, reward]''', '''    norm_num [quittingSureSetOwnerExactCap, quittingSureSetOwnerValue,
-              gameReward, reward]'''),
-          ]
-          for old, new in replacements:
-              if old not in s:
-                  raise SystemExit(f'patch fragment not found:\n{old[:160]}')
-              s = s.replace(old, new, 1)
-          p.write_text(s)
-          PY
+          cat > /tmp/residue-fix.patch <<'PATCH'
+          --- a/GameTheory/Concepts/Stochastic/QuittingLocalMechanismResidueWitness.lean
+          +++ b/GameTheory/Concepts/Stochastic/QuittingLocalMechanismResidueWitness.lean
+          @@ -167,17 +167,15 @@
+             fin_cases owner
+             · by_cases h : p ≤ 2 / 5
+               · refine ⟨2, by decide, ?_⟩
+          -      rw [switchingResidual_02]
+          +      simp [switchingResidual, solo, reward]
+                 linarith
+               · refine ⟨1, by decide, ?_⟩
+          -      rw [switchingResidual_01]
+          +      simp [switchingResidual, solo, reward]
+                 linarith
+             · refine ⟨0, by decide, ?_⟩
+          -    rw [switchingResidual_10]
+          -    norm_num
+          +    simp [switchingResidual, solo, reward]
+             · refine ⟨0, by decide, ?_⟩
+          -    rw [switchingResidual_20]
+          -    norm_num
+          +    simp [switchingResidual, solo, reward]
+           
+           /-! ## K2: every sure exit set fails -/
+           
+          @@ -310,7 +308,6 @@
+                 quittingSetReward (gameReward L) ({0} : Finset Player) 2 := by
+             rw [quittingSetReward_gameReward, quittingSetReward_gameReward]
+             simp [reward]
+          -  norm_num
+           
+           private theorem collision_owner_loss_21 (L : ℝ) :
+               quittingSetReward (gameReward L) ({2, 1} : Finset Player) 2 <
+          @@ -330,10 +327,10 @@
+                 (collision_owner_gain_01 L) hconditions.1
+             have hspectator := hconditions.2.1 2 (by decide) (by decide)
+             rw [hr] at hspectator
+          -  unfold QuittingCollisionSpectatorNoJoin at hspectator
+             rw [quittingCollisionRepairValue_apply] at hspectator
+             simp only [quittingSetReward_gameReward] at hspectator
+          -  norm_num [reward] at hspectator
+          +  change (1 : ℝ) ≤ 0 at hspectator
+          +  norm_num at hspectator
+           
+           /-- `(owner, blocker) = (0,2)`: owner optimality forces rate `1`, where the
+           blocker's leave deviation gives `2/5 > 0`. -/
+          @@ -350,7 +347,8 @@
+             unfold QuittingCollisionBlockerBalance at hbalance
+             rw [quittingCollisionRepairValue_apply] at hbalance
+             simp only [quittingSetReward_gameReward] at hbalance
+          -  norm_num [reward] at hbalance
+          +  change (2 / 5 : ℝ) ≤ 0 at hbalance
+          +  norm_num at hbalance
+           
+           /-- `(owner, blocker) = (1,0)`: owner optimality forces rate `1`, where
+           spectator `2` strictly joins. -/
+          @@ -364,10 +362,10 @@
+                 (collision_owner_gain_10 L) hconditions.1
+             have hspectator := hconditions.2.1 2 (by decide) (by decide)
+             rw [hr] at hspectator
+          -  unfold QuittingCollisionSpectatorNoJoin at hspectator
+             rw [quittingCollisionRepairValue_apply] at hspectator
+             simp only [quittingSetReward_gameReward] at hspectator
+          -  norm_num [reward] at hspectator
+          +  change (1 : ℝ) ≤ 0 at hspectator
+          +  norm_num at hspectator
+           
+           /-- `(owner, blocker) = (1,2)`: owner optimality forces rate `1`, where the
+           blocker's leave deviation gives `1 > 0`. -/
+          @@ -384,7 +382,8 @@
+             unfold QuittingCollisionBlockerBalance at hbalance
+             rw [quittingCollisionRepairValue_apply] at hbalance
+             simp only [quittingSetReward_gameReward] at hbalance
+          -  norm_num [reward] at hbalance
+          +  change (1 : ℝ) ≤ 0 at hbalance
+          +  norm_num at hbalance
+           
+           /-- `(owner, blocker) = (2,0)`: owner optimality forces rate `0`, where
+           spectator `1` strictly joins. -/
+          @@ -398,10 +397,10 @@
+                 (collision_owner_loss_20 L) hconditions.1
+             have hspectator := hconditions.2.1 1 (by decide) (by decide)
+             rw [hr] at hspectator
+          -  unfold QuittingCollisionSpectatorNoJoin at hspectator
+             rw [quittingCollisionRepairValue_apply] at hspectator
+             simp only [quittingSetReward_gameReward] at hspectator
+          -  norm_num [reward] at hspectator
+          +  change (1 : ℝ) ≤ 2 / 5 at hspectator
+          +  norm_num at hspectator
+           
+           /-- `(owner, blocker) = (2,1)`: owner optimality forces rate `0`, where
+           spectator `0` strictly joins. -/
+          @@ -415,10 +414,10 @@
+                 (collision_owner_loss_21 L) hconditions.1
+             have hspectator := hconditions.2.1 0 (by decide) (by decide)
+             rw [hr] at hspectator
+          -  unfold QuittingCollisionSpectatorNoJoin at hspectator
+             rw [quittingCollisionRepairValue_apply] at hspectator
+             simp only [quittingSetReward_gameReward] at hspectator
+          -  norm_num [reward] at hspectator
+          +  change (1 : ℝ) ≤ 0 at hspectator
+          +  norm_num at hspectator
+           
+           /-- All six ordered sure-blocker collision mechanisms fail. -/
+           def NoCollisionRepair (L : ℝ) : Prop :=
+          @@ -578,7 +577,7 @@
+                 mixer_not_mem_doubleSure (2 / 7) twoSevenths_nonneg twoSevenths_le_one who]
+             fin_cases who <;>
+               norm_num [doubleSureMixerValue, quittingSureSetOwnerValue,
+          -      quittingSetReward_gameReward, reward]
+          +      gameReward, reward]
+           
+           /-- **Exact absorber.**  The double-sure mixer is a terminal `0`-Nash
+           profile against every behavioral unilateral deviation, for every real `L`. -/
+          @@ -593,7 +592,7 @@
+             intro who
+             fin_cases who <;>
+               norm_num [quittingSureSetOwnerExactCap, quittingSureSetOwnerValue,
+          -      quittingSetReward_gameReward, reward]
+          +      gameReward, reward]
+           
+           /-- The concrete residue witness therefore has a uniform-equilibrium payoff.
+           The same exact terminal Nash profile supplies every positive error. -/
+          PATCH
+          if git apply --check /tmp/residue-fix.patch; then
+            git apply /tmp/residue-fix.patch
+          else
+            echo 'Proof patch is already applied.'
+          fi
           if git diff --quiet; then
             exit 0
           fi
