@@ -163,6 +163,41 @@ conjecture that repeated repair is exhausted by conservation — which would hav
 closed the accumulation route for every weight rather than one witness — is
 **false**.
 
+## The currency has a name: transported leverage
+
+`M [reported]`, and this is the constructive replacement for the refuted law.
+The quantity that actually controls a local modification `B` inside an array `G`
+is not absorbed mass but **transported leverage** — the modification's effect on
+the block map, amplified by the deficit of the return map being closed:
+
+- **value channel** — `L^val(B;G) = (C_P / ρ̃_G) · sup_{|z|≤1} ‖Φ̃_B(z) − Φ_B(z)‖`,
+  which absorption bounds only coarsely, via
+  `L^val ≤ 2C_P(ρ_B + ρ̃_B) / ρ̃_G`;
+- **deviation channel** — `L^dev_i(B;G) = (Q_{P,i} / (1 − Q̃_{G,i})) ·
+  sup_{w∈[-1,1]} |H̃_{B,i}(w) − H_{B,i}(w)|` when `Q̃_{G,i} < 1`, built from the
+  block deviation operator
+  `H_{t,i}(w) = max{Σ_i(x_t), A_i(x_t) + c_{-i}(x_t)·w}`.
+
+**There is no bound on the deviation leverage in terms of `ρ_B` alone.** That is
+the precise sense in which the deviation channel escapes absorption pricing.
+
+Note the block deviation operator is exactly the **anchored max-affine** system
+already formalized in this repository — `max{A, T + P·w}` with `A = Σ_i`,
+`T = A_i`, `P = c_{-i}` — so its unit-slope dichotomy applies directly, and
+`P = 1` is precisely the isolated configuration.
+
+**The corrected obstruction.** A family of modifications whose transported
+leverage tends to zero cannot change the origin objective by a fixed positive
+amount.
+
+This is **stronger** than the bounded-support refutation recorded above, not a
+restatement of it: on a receding-absorber family it also rules out modifications
+of arbitrarily large support with vanishing leverage. Across unrestricted arrays
+the two are **incomparable** — small support can carry order-one leverage, and
+large support can carry vanishing leverage. So the descent branch is closed
+against a strictly wider class of repair attempts than the `L`-bounded ones it
+was originally stated for.
+
 Related, same source: *extended orbits* — countably many orbit segments, each
 either ending at or **converging to** the next, with junk variation summable —
 suffice for existence. That is a ready-made replacement for the demand that two
