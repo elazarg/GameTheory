@@ -163,9 +163,126 @@ theorem Φ_le_of_isFixedPt_le {b y : ℝ} (hy : Function.IsFixedPt s.Φ y) (hyb 
     calc s.A ≤ s.T + s.P * y := hcase
       _ = y := haff
       _ ≤ b := hyb
-  · have hya : y = s.A := (max_eq_left hcase).symm.trans hy'
-    have haff : s.T + s.P * y ≤ y := by rw [← hya] at hcase ⊢; linarith
+  · have hya : s.A = y := (max_eq_left hcase).symm.trans hy'
+    have haff : s.T + s.P * y ≤ y := by rw [hya] at hcase; linarith
     have hprod : (0 : ℝ) ≤ (1 - s.P) * (b - y) :=
       mul_nonneg (sub_nonneg.mpr s.P_le_one) (sub_nonneg.mpr hyb)
-    refine max_le (by rw [← hya]; exact hyb) ?_
+    refine max_le (by rw [hya]; exact hyb) ?_
     nlinarith [hprod]
+
+/-! ## The anchored value -/
+
+/-- The **anchored value** at anchor `b`: the least fixed point of `Φ`
+dominating `b`, computed as the limit of the `Φ`-iterates started at `b`.
+Since `Φ` is monotone and `ℝ` is linearly ordered, `b` is always either a
+subsolution or a supersolution of `Φ`; the two branches below pick out the
+matching one-sided limit.  Both formulas compute the genuine iterate limit
+whenever some fixed point of `Φ` is comparable to `b`
+(`tendsto_iterate_anchoredValue_of_le_isFixedPt` and its dual). -/
+def anchoredValue (b : ℝ) : ℝ :=
+  if b ≤ s.Φ b then ⨆ n : ℕ, s.Φ^[n] b else ⨅ n : ℕ, s.Φ^[n] b
+
+/-- **Existence of the anchored value, subsolution case.**  If `b` is
+dominated by some fixed point `y`, the `Φ`-iterates from `b` increase
+monotonically -- bounded above by `y` -- so they converge, to the anchored
+value by definition. -/
+theorem tendsto_iterate_anchoredValue_of_le_isFixedPt {b y : ℝ}
+    (hy : Function.IsFixedPt s.Φ y) (hby : b ≤ y) :
+    Filter.Tendsto (fun n : ℕ => s.Φ^[n] b) Filter.atTop (nhds (s.anchoredValue b)) := by
+  have hsub : b ≤ s.Φ b := s.le_Φ_of_le_isFixedPt hy hby
+  have hmono : Monotone (fun n : ℕ => s.Φ^[n] b) := s.monotone_Φ.monotone_iterate_of_le_map hsub
+  have hbdd : BddAbove (Set.range (fun n : ℕ => s.Φ^[n] b)) := by
+    refine ⟨y, ?_⟩
+    rintro _ ⟨n, rfl⟩
+    calc s.Φ^[n] b ≤ s.Φ^[n] y := s.monotone_Φ.iterate n hby
+      _ = y := Function.iterate_fixed hy n
+  have hval : s.anchoredValue b = ⨆ n : ℕ, s.Φ^[n] b := if_pos hsub
+  rw [hval]
+  exact tendsto_atTop_ciSup hmono hbdd
+
+/-- **The anchored value is a fixed point, subsolution case.**  The limit of
+a convergent orbit of a continuous map is itself a fixed point. -/
+theorem isFixedPt_anchoredValue_of_le_isFixedPt {b y : ℝ}
+    (hy : Function.IsFixedPt s.Φ y) (hby : b ≤ y) :
+    Function.IsFixedPt s.Φ (s.anchoredValue b) := by
+  have htendsto := s.tendsto_iterate_anchoredValue_of_le_isFixedPt hy hby
+  have hcont : Filter.Tendsto (fun n : ℕ => s.Φ (s.Φ^[n] b)) Filter.atTop
+      (nhds (s.Φ (s.anchoredValue b))) :=
+    (s.continuous_Φ.tendsto (s.anchoredValue b)).comp htendsto
+  have heq : (fun n : ℕ => s.Φ (s.Φ^[n] b)) = fun n : ℕ => s.Φ^[n + 1] b := by
+    funext n; rw [Function.iterate_succ_apply']
+  rw [heq] at hcont
+  have hshift : Filter.Tendsto (fun n : ℕ => s.Φ^[n + 1] b) Filter.atTop
+      (nhds (s.anchoredValue b)) := htendsto.comp (Filter.tendsto_add_atTop_nat 1)
+  exact tendsto_nhds_unique hcont hshift
+
+/-- The anchored value dominates its anchor, subsolution case. -/
+theorem le_anchoredValue_of_le_isFixedPt {b y : ℝ}
+    (hy : Function.IsFixedPt s.Φ y) (hby : b ≤ y) : b ≤ s.anchoredValue b := by
+  have hval : s.anchoredValue b = ⨆ n : ℕ, s.Φ^[n] b :=
+    if_pos (s.le_Φ_of_le_isFixedPt hy hby)
+  rw [hval]
+  have hbdd : BddAbove (Set.range (fun n : ℕ => s.Φ^[n] b)) := by
+    refine ⟨y, ?_⟩
+    rintro _ ⟨n, rfl⟩
+    calc s.Φ^[n] b ≤ s.Φ^[n] y := s.monotone_Φ.iterate n hby
+      _ = y := Function.iterate_fixed hy n
+  simpa using le_ciSup hbdd 0
+
+/-- **Least-ness, subsolution case.**  The anchored value is `≤` every fixed
+point dominating the anchor, independently of which such fixed point was
+used to prove convergence. -/
+theorem anchoredValue_le_of_le_isFixedPt {b y : ℝ}
+    (hy : Function.IsFixedPt s.Φ y) (hby : b ≤ y) : s.anchoredValue b ≤ y := by
+  have hval : s.anchoredValue b = ⨆ n : ℕ, s.Φ^[n] b :=
+    if_pos (s.le_Φ_of_le_isFixedPt hy hby)
+  rw [hval]
+  refine ciSup_le fun n => ?_
+  calc s.Φ^[n] b ≤ s.Φ^[n] y := s.monotone_Φ.iterate n hby
+    _ = y := Function.iterate_fixed hy n
+
+/-- **Existence of the anchored value, supersolution case.**  Dual to
+`tendsto_iterate_anchoredValue_of_le_isFixedPt`: if `b` dominates some fixed
+point, the `Φ`-iterates from `b` decrease monotonically to the anchored
+value. -/
+theorem tendsto_iterate_anchoredValue_of_isFixedPt_le {b y : ℝ}
+    (hy : Function.IsFixedPt s.Φ y) (hyb : y ≤ b) :
+    Filter.Tendsto (fun n : ℕ => s.Φ^[n] b) Filter.atTop (nhds (s.anchoredValue b)) := by
+  have hsuper : s.Φ b ≤ b := s.Φ_le_of_isFixedPt_le hy hyb
+  by_cases hle : b ≤ s.Φ b
+  · -- `b` is itself already a fixed point: both branches agree, trivially.
+    have hbfix : Function.IsFixedPt s.Φ b := le_antisymm hsuper hle
+    have hconst : ∀ n : ℕ, s.Φ^[n] b = b := fun n => Function.iterate_fixed hbfix n
+    have hfun : (fun n : ℕ => s.Φ^[n] b) = fun _ : ℕ => b := funext hconst
+    have hval : s.anchoredValue b = b := by
+      unfold anchoredValue
+      rw [if_pos hle, hfun]
+      exact ciSup_const
+    rw [hval, hfun]
+    exact tendsto_const_nhds
+  · have hanti : Antitone (fun n : ℕ => s.Φ^[n] b) :=
+      s.monotone_Φ.antitone_iterate_of_map_le hsuper
+    have hbdd : BddBelow (Set.range (fun n : ℕ => s.Φ^[n] b)) := by
+      refine ⟨y, ?_⟩
+      rintro _ ⟨n, rfl⟩
+      calc y = s.Φ^[n] y := (Function.iterate_fixed hy n).symm
+        _ ≤ s.Φ^[n] b := s.monotone_Φ.iterate n hyb
+    have hval : s.anchoredValue b = ⨅ n : ℕ, s.Φ^[n] b := if_neg hle
+    rw [hval]
+    exact tendsto_atTop_ciInf hanti hbdd
+
+/-- **The anchored value is a fixed point, supersolution case.**  Dual to
+`isFixedPt_anchoredValue_of_le_isFixedPt`. -/
+theorem isFixedPt_anchoredValue_of_isFixedPt_le {b y : ℝ}
+    (hy : Function.IsFixedPt s.Φ y) (hyb : y ≤ b) :
+    Function.IsFixedPt s.Φ (s.anchoredValue b) := by
+  have htendsto := s.tendsto_iterate_anchoredValue_of_isFixedPt_le hy hyb
+  have hcont : Filter.Tendsto (fun n : ℕ => s.Φ (s.Φ^[n] b)) Filter.atTop
+      (nhds (s.Φ (s.anchoredValue b))) :=
+    (s.continuous_Φ.tendsto (s.anchoredValue b)).comp htendsto
+  have heq : (fun n : ℕ => s.Φ (s.Φ^[n] b)) = fun n : ℕ => s.Φ^[n + 1] b := by
+    funext n; rw [Function.iterate_succ_apply']
+  rw [heq] at hcont
+  have hshift : Filter.Tendsto (fun n : ℕ => s.Φ^[n + 1] b) Filter.atTop
+      (nhds (s.anchoredValue b)) := htendsto.comp (Filter.tendsto_add_atTop_nat 1)
+  exact tendsto_nhds_unique hcont hshift

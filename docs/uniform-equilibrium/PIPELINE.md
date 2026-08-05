@@ -454,6 +454,45 @@ fails to decay the fixed set is a ray, and the recursion selects nothing.
 established or removed, and the case-2 row resting on a formal artifact that
 proves the statement it cites.
 
+### `LEAN-P0-8` — joint complementarity, and absorption derived rather than assumed
+
+- **Status:** DONE (`M+L`), 2026-08-05
+- **Lane:** P0
+- **Depends:** the fixed-opponents stage primitives; the cyclic-block predicate.
+- **Record:** this file
+
+**Objective.** Give the repository a predicate for "an arbitrary infinite row
+sequence is complementary in every coordinate", and decide whether absorption
+follows from optimality.
+
+**State.** Both landed in `QuittingJointComplementarity.lean`, `sorry`-free.
+
+The predicate closes a **structural absence**: the tree had only a
+single-coordinate live-value notion and a periodic-only cyclic-block notion, so
+claims quantified over "every complementary sequence" — which several recent
+results are — **could not be stated at all**. They now can. The tail value
+converges from boundedness alone, with no assumption of eventual absorption, and
+the compatibility bridge is proved: a periodic sequence satisfying the cyclic
+block predicate satisfies this one. That bridge needed a
+uniqueness-of-bounded-solutions lemma and a proof that the periodic extension's
+joint survival vanishes from *every* start, not just from zero.
+
+**The new mathematics is the second result: a positive solo reward forces
+absorption.** If a sequence is jointly complementary and some coordinate has
+strictly positive solo reward, play absorbs almost surely from every time. Every
+prior result in this tree takes absorption as a **hypothesis**; none derived it.
+Consequently a non-absorbing complementary sequence requires every solo reward
+non-positive — close to the zero-solo branch, which suggests why that branch has
+the shape it does rather than being a case that happens to be listed first.
+
+The flagged risk — that the tail value's vanishing depends on what the other
+coordinates do — resolved without an extra hypothesis, via a sharper tail bound
+against a known survival limit rather than against the reward bound alone.
+
+**Acceptance.** Met. Consumers: this discharges the tail-product step of the
+isolated-negative floor argument, and makes the universal claims of the carrier
+and certification results formalizable for the first time.
+
 ### `MATH-P0-5` — is the exact-cycle disjunct complete, or do ε-cycles diverge?
 
 - **Status:** READY — highest-priority item from the Simon 2007 farm
