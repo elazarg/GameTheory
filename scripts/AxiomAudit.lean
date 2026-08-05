@@ -207,3 +207,28 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.QuittingSwitchingResidueRegressionBridge.quittingSetReward_gameReward
 #print axioms GameTheory.QuittingSwitchingResidueRegressionBridge.not_isQuittingSureExitSet_of_sureExitFails
 #print axioms GameTheory.QuittingSwitchingResidueRegressionBridge.not_isQuittingSureExitSet_gameReward
+
+-- The quitting min-max is a stationary stopping value: the punishment
+-- value, an infimum over all history-dependent opponent plans of the
+-- supremum over all replies, is computed by constant opponent rows.
+#print axioms GameTheory.quittingBestReplyValue_stationary
+#print axioms GameTheory.quittingPunishmentValue_le_stationaryPunishmentValue
+#print axioms GameTheory.quittingStationaryPunishmentValue_le_quittingPunishmentValue
+#print axioms GameTheory.quittingPunishmentValue_eq_stationaryPunishmentValue
+#print axioms GameTheory.quittingStationaryPunishmentValue_le_of_forall_hazard_le
+#print axioms GameTheory.quittingRootSequenceHazardTerminalValue_const_le_cap
+#print axioms GameTheory.quittingPunishmentValue_le_max_solo
+#print axioms GameTheory.QuittingHostileTwoCoordinate.quittingPunishmentValue_eq
+#print axioms GameTheory.QuittingProfitableSoloTwoCoordinate.quittingPunishmentValue_lt_max_solo
+
+-- Path budgets and bounded potentials.
+#print axioms Math.ChargedPathBudget.ChargedRelation.hasFiniteBudget_iff_exists_boundedPotential
+#print axioms Math.ChargedPathBudget.ChargedRelation.isLeast_oscillation
+#print axioms Math.ChargedPathBudget.ChargedRelation.budgetEN_eq_iInf_oscillation
+#print axioms Math.ChargedPathBudget.ChargedRelation.isLeast_value
+#print axioms Math.ChargedPathBudget.ChargedRelation.not_exists_boundedPotential_of_positive_selfLoop
+#print axioms Math.ChargedPathBudget.Towers.not_hasFiniteBudget
+#print axioms Math.ChargedPathBudget.Interpolation.budget_eq_one
+#print axioms Math.ChargedPathBudget.Interpolation.not_continuous_of_isPotential
+#print axioms Math.ChargedPathBudget.QuitBonus.oneStageUpdate_fixed
+#print axioms Math.ChargedPathBudget.QuitBonus.no_boundedPotential
