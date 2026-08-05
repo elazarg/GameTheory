@@ -286,6 +286,35 @@ is known. The current quitting decomposition is exhaustive **inside the
 quitting model**; it is not an induction or normal form for general stochastic
 games.
 
+**And "exhaustive inside the quitting model" is narrower than it reads (`M`).**
+The optimized-debt split is exhaustive as a *numerical* dichotomy over one chain
+class — zero-boundary exact-`D` chains — and its own claim file says so: it is
+"not an exhaustive grammar of the repair" and "can omit a valid stationary
+repair". It is not exhaustive over equilibrium-profile **shapes**.
+
+A concrete family falls through every split the program has. An *instant*
+approximate equilibrium — some coordinate quits with certainty at the first
+stage, and is punished to its min-max value plus `ε` if it reneges — is
+excluded by the stationary ladder (which forbids history-dependence outright),
+excluded by the absorbing-cycle carrier (whose admissibility discriminator is a
+no-join condition on opponents, not a threat aimed at the quitter, so the
+period-one solo-quitter row is verified only against a *passive* continuation),
+and untouched by the plateau and optimized-debt splits, which are on-path
+finite-chain algebra.
+
+The gap is structural, not a missing case: **no file in the quitting apparatus
+has a predicate for behaviour that differs at stage two depending on stage-one
+history.** Stationary rows, cyclic row-sequences, and zero-pinned finite chains
+have no off-path branch anywhere. Nor is the punishment target expressible —
+a sweep of all quitting modules and `Uniform.lean` finds **no min-max or
+punishment construction at all**; the one `χ` in the tree is an unrelated
+best-response-summary coefficient, a name collision. Computing it would need an
+`(n-1)`-versus-one coalition value theorem, itself unlanded.
+
+The general semantic layer does not *forbid* such a profile — `IsUniformEquilibriumPayoff`
+quantifies over arbitrary behaviour — so this is a gap in the decompositions,
+not in the conjecture's statement.
+
 - A positive solution would prove the uniform-equilibrium conjecture for every
   finite quitting game. It would likely export reusable stopping-law,
   credibility, and boundary-repair mechanisms, but it would not by itself
