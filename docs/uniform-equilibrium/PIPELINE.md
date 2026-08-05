@@ -1811,9 +1811,9 @@ since it turns the criterion into something checkable on a concrete table.
 - **Depends:** `LEAN-P0-9`.
 - **Record:** [exact-vs-relaxed]
 
-**Objective.** Port the published Theorem 2.1, in its bounded form, to get
-`¬∃ terminal, IsQuittingCyclicContinuation reward terminal` at **every** period
-for the `ε`-perturbed cyclic three-player weight.
+**Objective.** Machine-check that the `ε`-perturbed cyclic three-player weight
+admits no exact cycle at any period — **via Q156's self-contained argument, not
+the published six-lemma port**, which it supersedes for this weight.
 
 **State.** `READY`, and the motivation is settled rather than speculative: that
 weight already **occupies** the trichotomy's cycle-existence hole. Its solo
@@ -1830,10 +1830,11 @@ payoff converges to it unconditionally for every profile including off-path
 deviations, so an absorbing cyclic continuation block is the same object as the
 literature's completely absorbing admissible sequence.
 
-**Acceptance.** The non-existence theorem for this weight, or a precise account
-of which lemma in the chain resists. The farmed defect register must be checked
-against every lemma relied on; it records an unbounded boundary term in the
-printed statement, and the bounded form is what carries the periodic case.
+**Acceptance.** The non-existence theorem for this weight at every period, for
+`ε ∈ (0, 2]`, via the floor + row dichotomy + label lock. The formalization
+must **fail at `ε = 0`** — a cycle exists there — and the point of failure must
+be the predecessor-value strict inequality, which is where `ε` enters. The
+published theorem remains as independent confirmation only.
 
 ### `MATH-P0-7` — a sufficiency theorem for the isolated-negative branch
 
