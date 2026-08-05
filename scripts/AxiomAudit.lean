@@ -82,6 +82,10 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.QuittingDisjunctionCounterexample.not_zeroSolo_and_not_admissible_and_isolatedNegative
 #print axioms GameTheory.quittingThreeBranch_not_mutually_exclusive
 
+-- The two-player closure of the quitting conjecture.
+#print axioms GameTheory.QuittingTwoPlayerExistence.quittingGame_exists_uniformEquilibriumPayoff_twoPlayer
+#print axioms GameTheory.QuittingTwoPlayerExistence.quittingGame_isUniformEquilibriumPayoff_jointExit
+
 -- The exact dynamic-debt transport law and the seam-price results.
 #print axioms GameTheory.quittingFiniteDynamicDebt_eq_max_zero_sub_accumulatedStageGaps
 #print axioms GameTheory.quitting_sub_blockFixedPoint_eq_div
