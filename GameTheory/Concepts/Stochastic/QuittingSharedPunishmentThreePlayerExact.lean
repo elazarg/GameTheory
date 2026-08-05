@@ -51,6 +51,13 @@ theorem quittingStationaryFixedOpponentsContinueReward_eq
   rw [expect_pmfPi_badEvent _ (next_ne_other who)]
   simp [next_ne_self who, other_ne_self who]
 
+private theorem prod_player (f : Player → ℝ) :
+    ∏ player, f player =
+      f Player.a * f Player.b * f Player.c := by
+  rw [show (Finset.univ : Finset Player) =
+      {Player.a, Player.b, Player.c} by decide]
+  simp [mul_assoc]
+
 /-- The opponents survive one stage exactly when both cyclic opponent
 coordinates continue. -/
 theorem quittingStationaryFixedOpponentsContinueMass_eq
@@ -62,7 +69,7 @@ theorem quittingStationaryFixedOpponentsContinueMass_eq
     simp [quittingStationaryFixedOpponentsContinueMass,
       quittingFixedOpponentsContinueMass,
       quittingStationaryContinueMass, quittingAllContinueAction,
-      pmfPi_apply_update_family, next, other]
+      prod_player, next, other, mul_assoc, mul_comm, mul_left_comm]
 
 /-! ## The fair stationary row -/
 
