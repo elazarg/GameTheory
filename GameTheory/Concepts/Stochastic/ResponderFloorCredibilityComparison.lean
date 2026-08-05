@@ -37,8 +37,6 @@ the reusable strategy-level comparison, without introducing an architecture
 interface ahead of that model.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

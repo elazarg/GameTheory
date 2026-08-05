@@ -27,8 +27,6 @@ statement first needs an explicit arbitrary-`K` controller constructor and a
 declared reachability/reduction convention.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

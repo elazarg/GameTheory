@@ -14,8 +14,6 @@ strictly lowers active-set rank.  These are the unconditional rank facts the
 trace carries, stated independently of any strategic interpretation.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

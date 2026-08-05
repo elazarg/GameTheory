@@ -21,8 +21,6 @@ enforcement ledger.  Nothing here asserts delivery on the union of owner
 arenas, recurrent coverage, a converse, necessity, or obstruction extraction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

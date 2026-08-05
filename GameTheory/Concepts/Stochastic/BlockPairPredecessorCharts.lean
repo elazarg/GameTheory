@@ -19,8 +19,6 @@ terminal table.  Their expanded forms are then used to prove exact rational
 predecessor formulas for support masks 9 and 10.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory.BlockPairCharts

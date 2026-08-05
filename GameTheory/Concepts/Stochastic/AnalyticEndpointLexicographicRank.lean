@@ -20,8 +20,6 @@ proves that a full-support recurrent class is stagnant in both coordinates,
 so this two-coordinate rank cannot silently close that branch.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

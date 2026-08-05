@@ -35,8 +35,6 @@ and is out of scope here.
 * `punishmentLevel_quittingGame_le_max` — the punishment-level ceiling
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

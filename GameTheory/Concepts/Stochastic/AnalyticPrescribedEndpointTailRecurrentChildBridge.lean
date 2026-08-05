@@ -30,8 +30,6 @@ entry interface.  The exact parent-entry, child-entry, whole-vector target,
 rank, and legal-entry obligations are therefore exposed below.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

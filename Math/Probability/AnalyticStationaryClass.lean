@@ -27,8 +27,6 @@ explicit hypotheses here so that the theorem does not silently identify a
 closed class, a legal game continuation, or an externally reachable child.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

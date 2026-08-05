@@ -15,8 +15,6 @@ Applying the scalar statement coordinatewise transports an entire finite or
 infinite payoff vector; no positivity of an occupation charge is involved.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

@@ -26,8 +26,6 @@ Every completed public recursion embeds into this adaptive recursion.  The
 reverse implication is intentionally absent.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

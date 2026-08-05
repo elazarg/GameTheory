@@ -15,8 +15,6 @@ evaluation computes exact interval enclosures for both values and every
 formal partial derivative.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace Interval
 

@@ -26,8 +26,6 @@ does not claim that the continuation gain against the endpoint value remains
 zero away from the endpoint.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

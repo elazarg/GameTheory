@@ -17,8 +17,6 @@ the stopped process for enough fuel and projecting terminal states to outcomes
 returns the initial continuation value.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace OutcomeClosure
 

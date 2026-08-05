@@ -26,8 +26,6 @@ Nash inequalities, the resulting stationary profile is a terminal
 `β` when `η` tends to zero.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

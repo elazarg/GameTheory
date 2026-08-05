@@ -25,8 +25,6 @@ after the stopping history here; suffix rebasing and the child charge remain
 separate splice fields.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

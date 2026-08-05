@@ -38,8 +38,6 @@ deviations, splice epochs, treat strict actions, or construct a punishment
 certificate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

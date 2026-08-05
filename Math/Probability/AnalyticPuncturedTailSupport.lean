@@ -27,8 +27,6 @@ marginal supported in this same fixed subtype.  No communicating-class,
 stationary-law, charge, or game-theoretic claim is made.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

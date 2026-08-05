@@ -5,8 +5,6 @@ import Mathlib.RingTheory.Ideal.Quotient.Operations
 import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.RingTheory.MvPolynomial.Ideal
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Set

@@ -26,8 +26,6 @@ not turn the state-dependent endpoint target into the value at one public
 entry; that still uses harmonic/excessive target transport.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

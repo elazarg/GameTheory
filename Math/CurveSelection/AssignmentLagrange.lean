@@ -2,8 +2,6 @@ import Math.CurveSelection.NormalLagrange
 import Mathlib.Algebra.MvPolynomial.PDeriv
 import Mathlib.Analysis.Calculus.FDeriv.Mul
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Set

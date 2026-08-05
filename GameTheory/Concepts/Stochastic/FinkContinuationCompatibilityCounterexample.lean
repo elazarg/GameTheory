@@ -28,8 +28,6 @@ of player zero's lower bound `x ≥ 2/3` and player one's upper bound
 `-x ≥ -1/3`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

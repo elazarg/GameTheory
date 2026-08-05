@@ -22,8 +22,6 @@ zero opponent-survival factor before the starting time is never used to infer
 contraction after that time.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -105,8 +105,6 @@ game -- that compilation is the standing program's in-flight chain, not
 something this file or its imports discharge.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

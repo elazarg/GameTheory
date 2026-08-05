@@ -25,8 +25,6 @@ support, that it preserves a whole payoff-vector target, or that any
 game-theoretic recursion rank decreases.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

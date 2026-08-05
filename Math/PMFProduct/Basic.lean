@@ -22,8 +22,6 @@ open Math.ProbabilityMassFunction
 
 universe uι uA uα uβ uγ
 
-set_option autoImplicit false
-
 -- ============================================================================
 -- Prod-tsum commutation for ENNReal (foundation for countable factors)
 -- ============================================================================

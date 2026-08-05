@@ -40,8 +40,6 @@ equilibrium.  In particular, the compiler produces a `NodeGluingGate`, not a
 remain separate obligations.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

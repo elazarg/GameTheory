@@ -26,8 +26,6 @@ This is the exact one-step compiler needed before assembling a predictable
 history-dependent shadow process.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

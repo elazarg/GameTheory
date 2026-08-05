@@ -29,8 +29,6 @@ The finite prefix is retained explicitly through `supportEpoch` and
 made.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

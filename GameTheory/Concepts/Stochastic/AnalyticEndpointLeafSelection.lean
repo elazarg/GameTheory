@@ -61,8 +61,6 @@ finite-bias labels
 (`finiteBiasSeedLeaf_label_of_not_isUniformEquilibriumPayoff`).
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory
 namespace StochasticGame
 namespace AnalyticBellmanGerm

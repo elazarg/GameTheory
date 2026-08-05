@@ -30,8 +30,6 @@ such edge is already a terminal discharge.  Those are separate SCC/path
 questions.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

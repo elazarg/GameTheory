@@ -21,8 +21,6 @@ conditional law constructed here still requires a strategic law identity;
 that identity is packaged as `IsRootStoppedSuffixDisintegration`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -20,8 +20,6 @@ case play remains live with probability one at every finite time, or `q < 1`,
 in which case live mass converges geometrically to zero.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

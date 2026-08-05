@@ -95,8 +95,6 @@ absorption *is* used, through
 `prod_quittingStationaryContinueMass_lt_one_of_absorbing`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

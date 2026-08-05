@@ -26,8 +26,6 @@ circulation: one coordinate need not balance the occupation columns, and
 its endpoint mass or endpoint charge may vanish.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

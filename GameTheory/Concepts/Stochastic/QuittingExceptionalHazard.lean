@@ -22,8 +22,6 @@ the total live mass.  Hence, if total survival tends to zero, opponent-only
 survival can fail to tend to zero for at most one player.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

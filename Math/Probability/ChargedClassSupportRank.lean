@@ -16,8 +16,6 @@ whole active support.  In the latter case the active kernel itself is one
 closed communicating class carrying positive aggregate charge.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

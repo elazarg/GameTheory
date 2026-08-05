@@ -20,8 +20,6 @@ not control the prescribed Bellman residual, which is a separate payoff
 interface.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

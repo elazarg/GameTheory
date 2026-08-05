@@ -30,8 +30,6 @@ A branching local-response recursion must supply a closer for both the
 compatible-continuation branch and the extracted-response branch.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -17,8 +17,6 @@ one-stage identity is the action-level kernel for the persistent-live case
 of quitting-game uniformization.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

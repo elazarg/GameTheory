@@ -14,8 +14,6 @@ Total-variation identities and expectation bounds for changing one
 coordinate of an independent finite product.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

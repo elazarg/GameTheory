@@ -63,8 +63,6 @@ set is the singleton `{stay}`), and quitting has to happen at a separate state
   — the unconditional padding transfer is false
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

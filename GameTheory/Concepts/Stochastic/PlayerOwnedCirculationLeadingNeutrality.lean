@@ -27,8 +27,6 @@ circulation already has positive charge; that depends on whether its order
 equals the analytic circulation's clearing order.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

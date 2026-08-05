@@ -22,8 +22,6 @@ entry.  That stronger implication is false, as shown by
 and `ChargeLossCounterexample.unrestricted_positive_but_restricted_not`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

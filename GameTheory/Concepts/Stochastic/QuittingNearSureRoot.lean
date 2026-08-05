@@ -27,8 +27,6 @@ compactness or subsequence extraction needed to obtain its hypotheses from a
 sequence whose absorption probabilities converge to one.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -108,8 +108,6 @@ nonsemantic leaf, and no claim is made that the classification path
 `Nonempty`, and the semantic leaf is exhibited separately.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

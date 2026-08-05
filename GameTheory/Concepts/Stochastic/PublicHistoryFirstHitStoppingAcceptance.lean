@@ -15,8 +15,6 @@ length-three history stops strictly before the fuel.  This gives a genuinely
 history-dependent inhabitant of the repaired online stopping-rule API.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

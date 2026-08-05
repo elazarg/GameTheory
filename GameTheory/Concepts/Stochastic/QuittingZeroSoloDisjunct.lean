@@ -40,8 +40,6 @@ terminal-to-uniform step is `quittingGame_isUniformEquilibriumPayoff_of_terminal
 of `QuittingOwnerSoloCertification`.  Nothing here rebuilds them.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -21,8 +21,6 @@ This is the positive-sign half of the Solan--Vieille terminal-to-uniform
 argument for quitting games.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

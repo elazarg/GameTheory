@@ -63,8 +63,6 @@ sides compute Quit-payoff-minus-Continue-payoff for the same reward and the
 same continuation value.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -19,8 +19,6 @@ and a two-state counterexample showing that a positive actual occupation
 circulation does not provide it.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

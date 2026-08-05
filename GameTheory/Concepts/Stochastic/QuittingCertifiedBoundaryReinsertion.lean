@@ -23,8 +23,6 @@ are certified, no additional strategy scaffolding is needed inside the
 finite prefix.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

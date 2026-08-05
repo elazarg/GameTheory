@@ -29,8 +29,6 @@ unilateral behavior deviation, rather than only by unrelated local Bellman
 witnesses.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

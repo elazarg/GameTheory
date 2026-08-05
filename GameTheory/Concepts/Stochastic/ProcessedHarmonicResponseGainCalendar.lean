@@ -34,8 +34,6 @@ discharges all moving analytic error, but cannot erase a nonzero endpoint
 stage incentive.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

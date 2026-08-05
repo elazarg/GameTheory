@@ -32,8 +32,6 @@ declared values with this terminal value and turn exact local root Nash into
 zero residual.  Those facts are not assumed here implicitly.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

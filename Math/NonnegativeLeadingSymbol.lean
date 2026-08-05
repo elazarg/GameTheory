@@ -23,8 +23,6 @@ last section records the product, simplex, successor-bundle, state-balance,
 and cut shapes used by finite product flows.
 -/
 
-set_option autoImplicit false
-
 open Filter Finset BigOperators
 open Asymptotics
 open scoped NNReal

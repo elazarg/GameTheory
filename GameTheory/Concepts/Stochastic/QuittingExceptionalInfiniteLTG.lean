@@ -17,8 +17,6 @@ then sends that boundary term to zero and charges the deviation only to the
 summable weighted prescribed residuals.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

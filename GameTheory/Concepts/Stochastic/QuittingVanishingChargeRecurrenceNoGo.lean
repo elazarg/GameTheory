@@ -25,8 +25,6 @@ at `a`.  Thus no subsequence selection based on compactness alone can produce
 `|z a - z b| = o(q a)`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -27,8 +27,6 @@ is superharmonicity of the endpoint target for every actual moving
 player-owned action row.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

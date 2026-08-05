@@ -18,8 +18,6 @@ Abstract fixed-point and local optimality theory: `IsFixedPoint`, `NoImprovement
 `LocallyOptimal`. Transfer lemmas for objectives and neighborhoods.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace Optimization
 namespace LocalGlobal

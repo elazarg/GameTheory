@@ -17,8 +17,6 @@ it does not discard the own-never atom `π * R * α` and makes no infinite-tail
 closure claim.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

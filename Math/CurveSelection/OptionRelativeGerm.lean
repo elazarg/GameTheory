@@ -1,7 +1,5 @@
 import Math.CurveSelection.OptionRelativeCoordinates
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter

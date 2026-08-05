@@ -21,8 +21,6 @@ the expectation level.  Pointwise `PublicPhaseSuffixInterface` equalities for
 global potential and account extensions remain separate gluing data.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

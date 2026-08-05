@@ -26,8 +26,6 @@ This is only a neutral-family charge account.  It does not classify strict
 actions, bound a payoff, or construct a punishment certificate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

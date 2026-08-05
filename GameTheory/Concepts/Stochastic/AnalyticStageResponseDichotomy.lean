@@ -19,8 +19,6 @@ by a public-response construction: moving harmonic adjustment, or a fixed
 player-owned stage response.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

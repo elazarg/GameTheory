@@ -25,8 +25,6 @@ sequence of marginals satisfying the Markov recurrence.  Witness-state
 occupation remains available as a specialization.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

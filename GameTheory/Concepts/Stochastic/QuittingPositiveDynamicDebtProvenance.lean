@@ -24,8 +24,6 @@ not choose a new owner, and is not claimed to be a terminal equilibrium or a
 finite discharge.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

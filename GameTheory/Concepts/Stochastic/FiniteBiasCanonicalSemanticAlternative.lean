@@ -28,8 +28,6 @@ All other circulation, endpoint-response, processed-harmonic, and
 rank-decrease branches pass through unchanged.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

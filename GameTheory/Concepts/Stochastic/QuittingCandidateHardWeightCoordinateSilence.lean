@@ -36,8 +36,6 @@ has coordinate `2` (`true`) quitting with probability zero at every time.
   corollary under full joint complementarity, for existing consumers.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

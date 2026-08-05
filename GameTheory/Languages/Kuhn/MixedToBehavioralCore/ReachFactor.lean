@@ -6,8 +6,6 @@ Authors: GameTheory contributors
 import GameTheory.Languages.Kuhn.KuhnModel
 import Math.PMFProduct
 
-set_option autoImplicit false
-
 namespace ObsModelCore
 
 open Math.PMFProduct Math.ProbabilityMassFunction

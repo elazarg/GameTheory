@@ -29,8 +29,6 @@ or a separate vanishing calendar envelope, a fixed nonzero residual can be
 paid on every round and need not be sublinear.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

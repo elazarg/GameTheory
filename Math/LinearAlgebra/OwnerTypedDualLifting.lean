@@ -85,8 +85,6 @@ namespace OwnerTypedDualLifting
 
 noncomputable section
 
-set_option autoImplicit false
-
 /-! ### The coefficient pairing -/
 
 /-- The pairing `∑ j, a j * z j` of a coefficient row `a` with a variable

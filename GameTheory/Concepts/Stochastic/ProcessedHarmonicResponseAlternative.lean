@@ -27,8 +27,6 @@ branch.  It does not construct the phase strategy that realizes a supplied
 behavioral selector.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

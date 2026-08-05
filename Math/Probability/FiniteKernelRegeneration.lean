@@ -21,8 +21,6 @@ does not provide it.  This file concerns one fixed kernel and makes no
 claim about a power-law lower bound for a parameterized family.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

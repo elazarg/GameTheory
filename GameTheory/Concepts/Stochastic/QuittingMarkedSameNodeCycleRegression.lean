@@ -29,8 +29,6 @@ counterexample to equilibrium existence: the displayed two-edge chain itself
 ends at a surely absorbing exact Nash root.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

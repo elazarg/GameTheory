@@ -1,8 +1,6 @@
 import Math.CurveSelection.LexIsolation
 import Math.CurveSelection.SquareLift
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

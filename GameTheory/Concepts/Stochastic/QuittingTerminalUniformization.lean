@@ -24,8 +24,6 @@ equilibrium for every larger error.  This is the profile-level content of the
 terminal-to-uniform proposition for finite quitting games.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

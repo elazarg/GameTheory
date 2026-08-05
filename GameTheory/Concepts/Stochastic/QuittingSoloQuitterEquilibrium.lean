@@ -60,8 +60,6 @@ non-degeneracy guard that rules this out, and it is exactly where the
 hypothesis `0 < p` enters.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

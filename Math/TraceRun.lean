@@ -26,8 +26,6 @@ Probabilistic bisimulation lifts through `traceRun` just as it does for
 state-only iteration: see `traceRun_HasCoupling_of_bisim`.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace TraceRun
 

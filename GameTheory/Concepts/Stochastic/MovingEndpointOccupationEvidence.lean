@@ -28,8 +28,6 @@ It does not assert that the selected state belongs to a legally closed
 continuation class, preserves the whole payoff target, or decreases rank.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

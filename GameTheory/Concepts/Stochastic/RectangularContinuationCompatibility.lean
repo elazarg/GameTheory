@@ -26,8 +26,6 @@ the diagonal segment in `FinkContinuationCompatibilityCounterexample` are
 not rectangular and are intentionally outside the theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

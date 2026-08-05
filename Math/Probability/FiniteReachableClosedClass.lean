@@ -20,8 +20,6 @@ smaller forward reachable set by inclusion, hence the same set by
 minimality. It can therefore return to the chosen state.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

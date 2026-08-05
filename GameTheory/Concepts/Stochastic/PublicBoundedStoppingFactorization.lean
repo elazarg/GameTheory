@@ -16,8 +16,6 @@ predicate.  It is the finite combinatorial input to the strong stopping
 factorization of public-history laws.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -28,8 +28,6 @@ equal to, by a single bridging lemma living next to each original
 definition.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 
 /-- The product of `C` over the half-open window `[start, start + fuel)`,

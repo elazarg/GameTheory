@@ -110,8 +110,6 @@ capstones `isDiscountedStationaryBellmanEq`, `discountedPayoff_eq_value`,
   show the discount-constancy of the value is a genuine aggregation effect
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

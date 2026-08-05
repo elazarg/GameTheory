@@ -21,8 +21,6 @@ Over real-valued stopping floors this is a composition semigroup; a literal
 identity summary would require an extended-real early floor `-∞`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

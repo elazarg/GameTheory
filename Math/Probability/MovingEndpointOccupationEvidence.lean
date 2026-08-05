@@ -21,8 +21,6 @@ Bellman datum enters it.  The prescribed analytic calendar that supplies such
 a law lives with the stochastic-game development.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

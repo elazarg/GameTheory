@@ -139,8 +139,6 @@ closure) are not formalized here; they bear on the converse and on whether
 gate 5 can be *derived* from proper support, which it cannot.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

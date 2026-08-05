@@ -16,8 +16,6 @@ is that `finRotate (L*m)` increments the micro-offset inside a block and sends
 the final offset to offset zero of the next coarse block.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

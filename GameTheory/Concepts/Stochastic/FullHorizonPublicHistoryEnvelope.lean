@@ -37,8 +37,6 @@ the obstacle with a child certificate, or splice the child after the
 horizon.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -24,8 +24,6 @@ span membership, circulation, or rank comparison cannot masquerade as a
 successful terminal leaf.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

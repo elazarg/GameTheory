@@ -1,8 +1,6 @@
 /- Real representatives of a relative standard-smooth germ chart. -/
 import Math.CurveSelection.RelativePresentation
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter

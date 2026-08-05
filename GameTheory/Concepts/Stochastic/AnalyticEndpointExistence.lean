@@ -16,8 +16,6 @@ the first endpoint classification.  It deliberately stops at an honest
 certificate without its missing strategic reconstruction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

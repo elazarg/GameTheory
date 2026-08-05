@@ -20,8 +20,6 @@ with `calendarStateDist`, and exposes its exact recurrence.  No stationarity,
 recurrence-class, or target-transport assertion is made.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

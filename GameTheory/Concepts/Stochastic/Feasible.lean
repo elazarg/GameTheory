@@ -48,8 +48,6 @@ whether every point of that hull is itself attained by some profile is a
 separate, harder question this file does not address.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

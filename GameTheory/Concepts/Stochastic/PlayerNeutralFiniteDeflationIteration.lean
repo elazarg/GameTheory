@@ -36,8 +36,6 @@ same strict-drift constructor.  Repeated analytic iteration needs either:
 No public strategy or recurrent-child claim is made here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

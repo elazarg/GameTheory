@@ -17,8 +17,6 @@ the selected cap.  Consequently pointwise cap inequalities suffice for a
 terminal approximate Nash certificate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -87,8 +87,6 @@ the row's quitter has a silent opponent).  The results below replace it by
 (H1) + (H2), which that example does satisfy.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

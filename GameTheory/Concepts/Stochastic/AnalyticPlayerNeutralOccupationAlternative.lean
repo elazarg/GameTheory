@@ -21,8 +21,6 @@ alternative can therefore be applied without introducing formal action
 reversals or actions owned by another player.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -64,8 +64,6 @@ the same debt recursion against the honest continuation `(a, 0)` and gets
 chain *method*, not the game.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

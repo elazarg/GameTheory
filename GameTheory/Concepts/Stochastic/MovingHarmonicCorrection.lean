@@ -20,8 +20,6 @@ gains; its obstruction branch has a pure-stage target. Thus no
 residual-drift valuation comparison is needed in that branch.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

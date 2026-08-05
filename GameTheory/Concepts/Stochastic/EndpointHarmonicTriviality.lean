@@ -48,8 +48,6 @@ The module is standalone, contains no formal admissions, and need not be importe
 to serve as a checked negative result about the proposed refinement.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

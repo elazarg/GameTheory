@@ -104,8 +104,6 @@ general-period form is `quittingCyclicContinuation_unique_of_absorbing` in the
 same downstream file.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

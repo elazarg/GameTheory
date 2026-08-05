@@ -25,8 +25,6 @@ The compact graph-directed pullback which produces such paths is deliberately
 kept in a separate layer.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

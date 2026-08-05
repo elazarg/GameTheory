@@ -22,8 +22,6 @@ persistence, and canonical completion fields of
 probabilistic reachability or strategic condition on the stopping region.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

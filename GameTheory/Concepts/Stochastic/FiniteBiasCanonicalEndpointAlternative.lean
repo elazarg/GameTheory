@@ -29,8 +29,6 @@ deviation-cap branch still needs a separate two-sided on-path realization
 of the endpoint target.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

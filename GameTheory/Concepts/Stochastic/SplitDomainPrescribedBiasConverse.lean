@@ -20,8 +20,6 @@ This module formalizes that argument for the inertly restricted kernel used by
 then from ordinary history-semantic finite-average delivery.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

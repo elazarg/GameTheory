@@ -21,8 +21,6 @@ certificate. Orientation records the sign of a public statistical contrast;
 it does not reverse the controlled transition.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

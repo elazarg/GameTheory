@@ -19,8 +19,6 @@ The resulting theorem returns the existing adaptive-potential certificate
 interface at the parent state and target.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

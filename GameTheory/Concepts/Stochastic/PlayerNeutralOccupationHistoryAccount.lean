@@ -19,8 +19,6 @@ All accounting is performed under the resulting `G.histDist`; no Markov
 claim is made for the projected state process.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

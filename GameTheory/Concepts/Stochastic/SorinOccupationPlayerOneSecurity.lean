@@ -21,8 +21,6 @@ transports the already formalized Blackwell--Ferguson uniform `1 / 2`
 guarantee.  Nothing here uses a target payoff or an equilibrium hypothesis.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

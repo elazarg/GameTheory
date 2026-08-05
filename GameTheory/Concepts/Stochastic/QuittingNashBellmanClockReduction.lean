@@ -25,8 +25,6 @@ clocks.  Meaningful consumers must supply additional provenance, such as a
 zero-boundary finite-chain construction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

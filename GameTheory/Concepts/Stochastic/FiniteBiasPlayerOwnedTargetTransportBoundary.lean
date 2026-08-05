@@ -22,8 +22,6 @@ simultaneous unilateral deviation caps.  No target-transport account is
 inferred from endpoint harmonicity alone.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

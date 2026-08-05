@@ -92,8 +92,6 @@ composite from `Λ_who`, not from an arbitrary continuation or from
   statement and reproduced on the pre-existing machine-checked witness.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

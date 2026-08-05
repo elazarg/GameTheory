@@ -22,8 +22,6 @@ the selected `Never` value is a genuine recurrence quotient rather than a
 zero-tail shortcut.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

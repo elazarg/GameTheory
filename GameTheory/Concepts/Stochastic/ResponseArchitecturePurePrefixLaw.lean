@@ -20,8 +20,6 @@ The resulting finite-average identity upgrades ordinary shifted unilateral
 caps to owner-arena target superharmonicity (A3/Ti).
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

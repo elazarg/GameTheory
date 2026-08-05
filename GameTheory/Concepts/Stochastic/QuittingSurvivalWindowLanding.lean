@@ -69,8 +69,6 @@ closed window `[ρ * T, T]`.
 * `exists_jointSurvivalWeight_mem_survivalWindow` — the landing
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -2,8 +2,6 @@ import Math.CurveSelection.AlgebraicApproach
 import Math.CurveSelection.SourceCell
 import Math.CurveSelection.UltrafilterSubsequence
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

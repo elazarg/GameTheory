@@ -27,8 +27,6 @@ Thus deleting a prescribed transition row does not require falsely claiming
 that a later potential is harmonic for the original full kernel.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

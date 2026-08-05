@@ -25,8 +25,6 @@ the all-Continue-tail compiler; the displayed formula is not an unrelated
 scalar surrogate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

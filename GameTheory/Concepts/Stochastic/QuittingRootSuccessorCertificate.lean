@@ -26,8 +26,6 @@ No absorption-path object, projective zero-hazard blow-up, compact closure, or
 tangency relation is introduced here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

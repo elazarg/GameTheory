@@ -21,8 +21,6 @@ We also prove an approximate-to-exact fixed-point principle on compact sets,
 specialised to the product-simplex domain.
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory
 
 open Math.Probability

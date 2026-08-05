@@ -25,8 +25,6 @@ proposition. No theorem can manufacture such a map from the opaque
 proposition alone.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -74,8 +74,6 @@ examined stage, which is enough to open a strict gap at that one stage
 without disturbing the survival-weight computation at all.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

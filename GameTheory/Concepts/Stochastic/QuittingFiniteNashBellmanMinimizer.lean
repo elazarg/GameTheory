@@ -21,8 +21,6 @@ the nonempty compact chain space.  This removes the arbitrary predecessor
 selection from the fixed-cutoff optimization problem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

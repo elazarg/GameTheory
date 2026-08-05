@@ -23,8 +23,6 @@ than selecting a single positive transition: negative contributions in
 the same class are included before the class is selected.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

@@ -16,8 +16,6 @@ measure: the later stopping estimate can work entirely with finite public
 history laws and the real limit of the survival sequence.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators Topology

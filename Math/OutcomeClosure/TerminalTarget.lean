@@ -16,8 +16,6 @@ process at any horizon past its rank agrees with reading it under the
 process's limiting value law.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

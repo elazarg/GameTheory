@@ -27,8 +27,6 @@ leaver deviations inside that set; the two inequalities below do not control
 those deviations.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

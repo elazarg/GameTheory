@@ -19,8 +19,6 @@ This is useful when an analytic or polyhedral construction supplies only an
 approximate child lottery at the finite accuracy currently being compiled.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

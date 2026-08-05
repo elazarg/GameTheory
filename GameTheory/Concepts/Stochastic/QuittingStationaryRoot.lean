@@ -26,8 +26,6 @@ No compactness, stationary-regime subsequence, or absorption-path structure
 is introduced here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

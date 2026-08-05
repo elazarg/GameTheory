@@ -30,8 +30,6 @@ the initial active set, or its terminal active-set rank is strictly smaller.
 Zero pairing itself does not rule out the stationary case.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

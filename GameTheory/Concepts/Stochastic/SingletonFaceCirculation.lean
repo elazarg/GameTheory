@@ -65,8 +65,6 @@ that reading the microsteps actually consume.  The gluing of phases into a
 single orbit of arbitrary quit mass is not built here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

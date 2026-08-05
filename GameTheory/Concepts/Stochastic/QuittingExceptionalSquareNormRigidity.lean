@@ -28,8 +28,6 @@ This is only a finite weighted-law statement.  No ergodicity, recurrence,
 pathwise constancy, or component-selection conclusion is asserted here.
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory
 
 namespace QuittingExceptionalSquareNormRigidity

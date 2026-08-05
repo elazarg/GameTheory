@@ -2,8 +2,6 @@ import Mathlib.FieldTheory.Separable
 import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.RingTheory.Localization.Integer
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Polynomial

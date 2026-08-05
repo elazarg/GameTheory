@@ -31,8 +31,6 @@ This is a one-step suffix theorem.  It does not identify repeated player
 names with recurrent payoff states or compile a repeated flag into a path.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

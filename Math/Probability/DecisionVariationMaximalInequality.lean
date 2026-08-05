@@ -45,8 +45,6 @@ the countable case would go through `expect_bind_of_bounded` and `expect_add_of_
 place of `expect_bind` and `expect_add`; that generalization is not carried out here.
 -/
 
-set_option autoImplicit false
-
 namespace Math.Probability
 
 noncomputable section

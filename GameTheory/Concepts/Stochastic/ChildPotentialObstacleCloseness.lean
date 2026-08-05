@@ -64,8 +64,6 @@ only ever evaluates the child witnesses at time zero.
   whole chain on that inhabited coverage.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

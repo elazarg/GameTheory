@@ -28,8 +28,6 @@ credible target-preserving continuation remain separate play-law and
 strategic obligations.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -66,8 +66,6 @@ coordinate" without first having to (impossibly) recover row structure from a
 Bool-side Nash hypothesis.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

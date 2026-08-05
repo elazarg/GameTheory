@@ -47,8 +47,6 @@ proved with the same `∀ε>0, ∃T₀, ∀T≥T₀` quantifier shape that
   sufficiently large horizon is not a uniform equilibrium payoff
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

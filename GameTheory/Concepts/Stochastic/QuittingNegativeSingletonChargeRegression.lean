@@ -23,8 +23,6 @@ an additional support, indifference, or properness condition.  The example
 does not challenge any upper-bound theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

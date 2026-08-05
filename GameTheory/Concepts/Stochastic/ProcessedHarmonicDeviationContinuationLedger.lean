@@ -32,8 +32,6 @@ account has zero residual under every law while a unilateral action can
 still have a positive stage gain.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

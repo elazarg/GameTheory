@@ -1,8 +1,6 @@
 import Math.CurveSelection.AlgebraicReduction
 import Math.CurveSelection.SourceCell
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

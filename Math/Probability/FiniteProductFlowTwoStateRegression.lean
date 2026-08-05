@@ -26,8 +26,6 @@ the rare outgoing flux is strictly positive; the two terms cancel exactly.
 Thus the second-scale equation is signed, not a new positive balance law.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace Probability
 namespace TwoStateProductFlowRegression

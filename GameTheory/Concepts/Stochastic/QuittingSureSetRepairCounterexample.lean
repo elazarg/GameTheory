@@ -29,8 +29,6 @@ In fact, the sure coalition `{0,1}` is an exact direct First certificate;
 this is proved explicitly below.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

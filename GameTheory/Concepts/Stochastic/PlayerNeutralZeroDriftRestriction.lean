@@ -20,8 +20,6 @@ the residual subtype with a legal recurrent child or construct its public
 entry interface.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

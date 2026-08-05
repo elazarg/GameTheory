@@ -50,8 +50,6 @@ the states is inherited from the certificate's vertices, which is a property
 of the certificate and is not re-derived here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

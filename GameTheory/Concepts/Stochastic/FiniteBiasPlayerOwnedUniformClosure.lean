@@ -23,8 +23,6 @@ player-owned potential, and moving-row superharmonicity.  Its only separate
 on-path input is the named two-sided prescribed endpoint-transport boundary.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

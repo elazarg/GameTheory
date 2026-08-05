@@ -1,8 +1,6 @@
 import Math.CurveSelection.AmbientCriticalAlgebraicity
 import Math.CurveSelection.GermChart
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter

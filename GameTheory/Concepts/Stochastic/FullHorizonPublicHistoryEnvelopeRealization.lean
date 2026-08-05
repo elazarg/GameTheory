@@ -24,8 +24,6 @@ No stopping rule, child selector, or punishment certificate is constructed
 here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -8,8 +8,6 @@ import Math.CurveSelection.SourceFinalization
 import Math.CurveSelection.SourceLexExtrema
 import Math.CurveSelection.SourceSequence
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

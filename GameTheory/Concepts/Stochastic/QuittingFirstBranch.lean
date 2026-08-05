@@ -19,8 +19,6 @@ Only this profile-level closure is developed here.  No absorption-path
 equivalence is asserted.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

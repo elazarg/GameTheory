@@ -19,8 +19,6 @@ No unilateral arena, recurrent-class coverage, credibility converse, or
 additional obstruction is asserted here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

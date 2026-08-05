@@ -19,8 +19,6 @@ epoch envelope read through that calendar charges the current epoch in full,
 which also controls unfinished epochs, and stays sublinear.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

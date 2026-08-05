@@ -28,8 +28,6 @@ account of `OccupationBellmanAccountIdentity`, whose orientation sends a
 continuation-neutral response to its public source and its owned action.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

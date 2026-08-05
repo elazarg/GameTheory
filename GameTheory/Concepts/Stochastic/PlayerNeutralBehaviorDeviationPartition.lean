@@ -37,8 +37,6 @@ general behavior deviation may also depend on past public actions; that
 full-history realization and account is a separate interface.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

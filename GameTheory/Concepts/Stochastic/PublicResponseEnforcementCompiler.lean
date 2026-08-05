@@ -28,8 +28,6 @@ punishment system and hence to the existing adaptive certificate.  No
 potential, harmonicity, or certificate field is assumed.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

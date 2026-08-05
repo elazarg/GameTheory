@@ -23,8 +23,6 @@ Both leaves contain positive data.  In particular, the second leaf is not
 merely the negation of target feasibility.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

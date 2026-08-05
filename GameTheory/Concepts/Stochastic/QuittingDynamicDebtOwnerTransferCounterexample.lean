@@ -22,8 +22,6 @@ its action on player one's current action, so neither positive atomwise
 regret creates a new dynamic-debt owner.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

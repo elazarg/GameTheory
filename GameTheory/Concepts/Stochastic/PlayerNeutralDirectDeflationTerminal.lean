@@ -28,8 +28,6 @@ rank-child plumbing, but it does not derive the missing entry, whole-target,
 and credibility/account arguments.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

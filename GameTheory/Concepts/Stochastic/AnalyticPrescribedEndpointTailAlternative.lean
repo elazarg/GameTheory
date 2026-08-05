@@ -33,8 +33,6 @@ target transport, a strategic entry/continuation interface, and strict rank
 descent remain separate obligations.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

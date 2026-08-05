@@ -23,8 +23,6 @@ inequality is allowed to begin at a finite relative epoch
 negligible compared with the exact quadratic epoch length.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

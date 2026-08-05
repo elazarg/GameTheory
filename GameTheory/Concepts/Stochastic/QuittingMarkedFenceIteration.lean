@@ -20,8 +20,6 @@ specialized to anchored minimum-debt chains without changing the transfer
 relation.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

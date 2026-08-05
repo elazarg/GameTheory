@@ -19,8 +19,6 @@ The endpoint-indexed formulation makes composition orientation explicit: for
 two temporal phases, the return derivative is `T₀.comp T₁`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math.LinearAlgebra.CyclicSchur

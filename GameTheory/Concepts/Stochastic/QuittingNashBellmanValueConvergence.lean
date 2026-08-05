@@ -23,8 +23,6 @@ player's opponent clock implies absolute summability of that player's value
 increments and hence convergence of the value coordinate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

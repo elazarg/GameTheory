@@ -23,8 +23,6 @@ charged circulation there.  This is the static endpoint object consumed by
 the player-neutral occupation, recurrent-class, and potential-jet hierarchy.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

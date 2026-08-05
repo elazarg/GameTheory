@@ -27,8 +27,6 @@ coefficients, make the response coherent between different germ parameters,
 or construct the global public-response invariant.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Set

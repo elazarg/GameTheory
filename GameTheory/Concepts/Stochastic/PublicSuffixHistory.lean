@@ -27,8 +27,6 @@ This agreement is strategic data; it does not follow from a child certificate
 alone.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

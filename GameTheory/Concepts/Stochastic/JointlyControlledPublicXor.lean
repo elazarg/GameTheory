@@ -22,8 +22,6 @@ individual controller's action, and the uniform XOR marginal gives no child
 law guarantee.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

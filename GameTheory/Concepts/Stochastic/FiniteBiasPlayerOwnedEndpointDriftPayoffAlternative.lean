@@ -33,8 +33,6 @@ certificate.  A two-sided on-path realization of the endpoint target is
 still a separate obligation.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

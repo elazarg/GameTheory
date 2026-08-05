@@ -21,8 +21,6 @@ account of `OccupationBellmanAccountIdentity`, whose orientation is the
 pair of projections of an owned state/action row.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

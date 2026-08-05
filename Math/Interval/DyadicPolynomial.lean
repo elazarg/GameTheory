@@ -17,8 +17,6 @@ therefore connects computed integer endpoints directly to the real value and
 formal partial derivatives of the reflected polynomial.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace Interval
 

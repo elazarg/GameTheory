@@ -96,8 +96,6 @@ independent argument that it vanishes in the limit relevant to Proposition 3.
 That is more than a wiring lemma and is not attempted here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -79,8 +79,6 @@ complementarity predicate and a new absorption theorem; neither is a
 routine consequence of what already exists.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

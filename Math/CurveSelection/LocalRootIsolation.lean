@@ -1,7 +1,5 @@
 import Math.AlgebraicSelection
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

@@ -6,8 +6,6 @@ import Mathlib.RingTheory.KrullDimension.Zero
 import Mathlib.RingTheory.Smooth.Field
 import Mathlib.RingTheory.Smooth.StandardSmoothOfFree
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter

@@ -18,8 +18,6 @@ The reachability hypothesis is essential.  Its omission is refuted by
 `ChargeLossCounterexample.unrestricted_positive_but_restricted_not`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

@@ -70,8 +70,6 @@ exhaustive and cannot be upgraded to an unconditional existence theorem as it
 stands.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

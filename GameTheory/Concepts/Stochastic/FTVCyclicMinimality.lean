@@ -21,8 +21,6 @@ arguments, not fields of a certificate carrying the desired conclusion.
 The later layer connects them to the concrete `(Q1)--(Q5)` packet.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

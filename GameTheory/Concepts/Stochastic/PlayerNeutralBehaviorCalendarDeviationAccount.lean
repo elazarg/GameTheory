@@ -21,8 +21,6 @@ directly to every such behavior deviation.  Strict actions and payoff caps
 remain outside this module.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

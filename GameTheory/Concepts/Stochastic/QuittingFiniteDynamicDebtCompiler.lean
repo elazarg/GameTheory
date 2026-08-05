@@ -25,8 +25,6 @@ then closes an all-accuracy family.
 No compactness or assertion that such small-debt chains exist is made here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

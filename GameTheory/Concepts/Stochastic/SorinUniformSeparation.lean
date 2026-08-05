@@ -32,8 +32,6 @@ quantitative stopping theorem.  All accounting, limit passage, and endpoint
 arithmetic below are unconditional and contain no formal admissions.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

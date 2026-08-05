@@ -20,8 +20,6 @@ a one-player mixture statement against fixed opponents; it does not construct
 a joint stopping-time process or add a filtration API.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

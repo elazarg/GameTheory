@@ -44,8 +44,6 @@ symmetric contracting perturbation of the isolated configuration).  No general s
 theorem for `HasIsolatedNegativeAbsorbingQuittingCycle` is produced here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

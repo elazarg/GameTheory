@@ -21,8 +21,6 @@ and row blocks.  No asymptotic truncation or stochastic interpretation occurs
 here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped Matrix

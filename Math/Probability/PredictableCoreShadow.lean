@@ -28,8 +28,6 @@ component.  That core-entry compatibility is a separate game-theoretic
 interface condition.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

@@ -15,8 +15,6 @@ with the horizon, producing the semantic all-profile welfare cap consumed by
 the weighted security--welfare assembly theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

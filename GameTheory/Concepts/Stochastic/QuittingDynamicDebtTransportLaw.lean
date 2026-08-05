@@ -37,8 +37,6 @@ a consistency check on the closed form, not as a replacement for the
 existing theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -77,8 +77,6 @@ exactly zero at every fuel and start, for both players).  So the `1/8`
 plateau is manufactured by the zero pin, not by the game.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

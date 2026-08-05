@@ -7,8 +7,6 @@ import GameTheory.Languages.Kuhn.ObsModel
 import GameTheory.Languages.Kuhn.MixedToBehavioralCore
 import GameTheory.Theorems.Kuhn.CorrelatedRealization.ProductPreservation
 
-set_option autoImplicit false
-
 namespace ObsModel
 
 open Math.ProbabilityMassFunction Math.ParameterizedChain Math.TraceRun

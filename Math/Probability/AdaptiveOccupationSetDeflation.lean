@@ -21,8 +21,6 @@ strategy, construct a child game, or prove that a remaining transition is
 reachable.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

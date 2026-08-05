@@ -23,8 +23,6 @@ behavior profile may depend on the horizon `N`.  It does not assert that one
 fixed strategy works at every horizon.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -81,8 +81,6 @@ theorems reach their conclusion by the shorter direct induction instead of
 routing through it.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

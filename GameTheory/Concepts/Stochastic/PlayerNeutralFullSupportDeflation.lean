@@ -35,8 +35,6 @@ the full-support class is reached only after a strict leading-drift
 certificate has removed its nonempty exceptional set.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

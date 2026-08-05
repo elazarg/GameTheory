@@ -30,8 +30,6 @@ transported cylinder mass, a bi-infinite orbit, a splice between the two ends,
 or an equilibrium repair.  Those require a separate bridge/holonomy theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

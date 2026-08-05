@@ -21,8 +21,6 @@ prescribed analytic target, nor does it turn terminal histories into legal
 lower-rank continuation children.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

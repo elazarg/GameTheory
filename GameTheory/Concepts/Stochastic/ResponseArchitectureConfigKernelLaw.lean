@@ -20,8 +20,6 @@ corollaries, and the resulting history-semantic route to the gain-bias
 criterion's prescribed target harmonicity condition.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

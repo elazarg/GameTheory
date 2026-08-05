@@ -18,8 +18,6 @@ the exact quadratic derivative throughout the isolating interval makes that
 root unique.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory.BlockPairCharts

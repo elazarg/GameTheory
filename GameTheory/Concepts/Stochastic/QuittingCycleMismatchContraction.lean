@@ -73,8 +73,6 @@ about the deviation gain of the infinitely repeated block beyond the scalar
 companion recursion.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

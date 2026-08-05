@@ -150,8 +150,6 @@ whatever the opponents do.
   one-shot content, and exactly as far as this file gets
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

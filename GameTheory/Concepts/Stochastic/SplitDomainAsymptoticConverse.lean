@@ -23,8 +23,6 @@ ordinary history-level delivery and unilateral-cap hypotheses into these
 results.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

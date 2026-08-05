@@ -3,8 +3,6 @@ import Math.CurveSelection.FunctionField
 import Math.CurveSelection.GermComponent
 import Math.CurveSelection.RelativeSmoothGerm
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter

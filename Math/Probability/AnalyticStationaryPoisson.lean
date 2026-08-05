@@ -24,8 +24,6 @@ the argument uses Cesàro sums and an exact one-step coboundary identity, not
 convergence of the unaveraged kernel powers.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

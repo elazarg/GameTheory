@@ -27,8 +27,6 @@ fixed-parameter form proved here is therefore the strongest result available
 on this line, and it is not being pursued further.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

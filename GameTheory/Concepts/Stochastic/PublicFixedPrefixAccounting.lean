@@ -19,8 +19,6 @@ separate stopped-history type or a finite disjoint union of history lengths;
 that seam is deliberately not hidden by casts here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

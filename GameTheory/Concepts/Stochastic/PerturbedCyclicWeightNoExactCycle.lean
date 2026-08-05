@@ -70,8 +70,6 @@ from one active label to the next, and indeed the period-three phase
 rotation is an exact cycle there.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

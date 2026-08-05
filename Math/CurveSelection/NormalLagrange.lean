@@ -4,8 +4,6 @@ import Mathlib.Analysis.Calculus.FDeriv.Mul
 import Mathlib.Analysis.Calculus.LagrangeMultipliers
 import Mathlib.Analysis.InnerProductSpace.PiL2
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Set

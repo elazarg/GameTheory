@@ -26,8 +26,6 @@ results below neither construct nor forbid parent and child enforcement
 ledgers.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

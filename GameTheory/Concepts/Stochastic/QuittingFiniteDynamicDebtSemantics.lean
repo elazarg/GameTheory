@@ -25,8 +25,6 @@ boundary.
 No infinite-horizon limit or equilibrium construction is asserted here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

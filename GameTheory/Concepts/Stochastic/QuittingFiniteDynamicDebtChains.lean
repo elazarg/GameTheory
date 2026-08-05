@@ -26,8 +26,6 @@ No claim is made that the infimum of the exact-debt objectives is zero, nor
 that this finite-chain architecture is dense in all terminal equilibria.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

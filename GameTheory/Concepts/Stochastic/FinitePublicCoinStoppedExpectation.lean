@@ -32,8 +32,6 @@ payoff-plus-target bound.  A strategic suffix theorem must still identify its
 actual stopped-history law with this mathematical law.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

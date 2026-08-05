@@ -95,8 +95,6 @@ one.
   `punishmentLevel` strictly below the ceiling.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

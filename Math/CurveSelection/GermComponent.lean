@@ -3,8 +3,6 @@ import Mathlib.Order.Filter.FilterProduct
 import Mathlib.Order.Filter.Ultrafilter.Basic
 import Mathlib.RingTheory.NoetherNormalization
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter

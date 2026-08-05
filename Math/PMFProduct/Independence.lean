@@ -21,8 +21,6 @@ open Math.ProbabilityMassFunction
 
 universe uι uA uα uβ uγ
 
-set_option autoImplicit false
-
 
 -- ============================================================================
 -- Product-measure independence for bind

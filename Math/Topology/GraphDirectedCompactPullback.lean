@@ -25,8 +25,6 @@ No numerical box inclusion or game-specific Bellman calculation is built
 into this abstraction; those remain hypotheses of an application.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

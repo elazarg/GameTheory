@@ -30,8 +30,6 @@ example; it deliberately does not add off-node named actions whose effects
 are left unspecified.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

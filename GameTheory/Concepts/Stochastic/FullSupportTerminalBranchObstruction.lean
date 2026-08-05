@@ -27,8 +27,6 @@ input:
   realized account).
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

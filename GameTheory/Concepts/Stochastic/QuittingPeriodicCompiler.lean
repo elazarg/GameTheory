@@ -19,8 +19,6 @@ the corresponding weighted cycle charge divided by `1 - ρ`.  Exact cyclic
 fixed-point uniqueness is the zero-error special case.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

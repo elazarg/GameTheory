@@ -30,8 +30,6 @@ target anchors.  A root unilateral deviation is conditioned at each
 realized stopped base as `afterHistoryStrategy deviation base`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

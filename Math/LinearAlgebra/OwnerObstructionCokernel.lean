@@ -132,8 +132,6 @@ namespace OwnerObstructionCokernel
 
 noncomputable section
 
-set_option autoImplicit false
-
 /-! ### Weighted row sums -/
 
 section RowSums

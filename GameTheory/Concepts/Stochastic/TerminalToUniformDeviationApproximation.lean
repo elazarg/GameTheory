@@ -27,8 +27,6 @@ approximation property from the unique live history and stopping-time
 structure of a quitting game.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

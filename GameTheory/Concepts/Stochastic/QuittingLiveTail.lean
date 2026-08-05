@@ -15,8 +15,6 @@ Consequently, terminal payoff differs from the payoff of the cutoff state by
 at most the reward bound times that live tail.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

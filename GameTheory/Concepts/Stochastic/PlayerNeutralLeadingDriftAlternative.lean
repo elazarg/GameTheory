@@ -23,8 +23,6 @@ mass budgets. It does not construct a punishment or show that the selected
 column is reached.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

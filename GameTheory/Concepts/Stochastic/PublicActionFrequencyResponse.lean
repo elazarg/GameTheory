@@ -24,8 +24,6 @@ existing public-phase certificate. A finite one-state counterexample proves
 that a positive public detector alone cannot supply this closer.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -20,8 +20,6 @@ terminal payoff is therefore the one-stage absorbing contribution divided by
 about compactness or extraction from nonstationary profiles.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

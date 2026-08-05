@@ -20,8 +20,6 @@ analytic scaled occupation potentials sharing one pole-clearing order.
 This remains a finite flow certificate and does not construct a strategy.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -28,8 +28,6 @@ slower-than-polynomial feature of the universal calendar remains available
 to the simultaneous lower-bound monitoring arguments.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

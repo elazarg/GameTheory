@@ -28,8 +28,6 @@ stage.  No assertion is made that a terminal atom in a weak path limit
 produces such a stage; that mass-time extraction remains a separate lemma.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

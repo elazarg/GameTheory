@@ -18,8 +18,6 @@ same `rho < 1`, then aligned multi-block survival is bounded by powers of
 live time from every aligned boundary is at most `K / (1-rho)`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -17,8 +17,6 @@ local-to-global theorem.  Thus every unilateral behavioral deviation is
 controlled after checking a singleton-reward sign for at most one player.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

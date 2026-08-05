@@ -8,8 +8,6 @@ import GameTheory.Concepts.Stochastic.BlockPairK11LocalInterval
 
 /-! # Exact dyadic box data for the block-pair K11 certificate -/
 
-set_option autoImplicit false
-
 namespace GameTheory.BlockPairK11.DyadicCertificate
 
 open LocalInterval Math.Interval

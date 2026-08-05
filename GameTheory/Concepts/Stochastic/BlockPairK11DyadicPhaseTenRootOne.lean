@@ -8,8 +8,6 @@ import GameTheory.Concepts.Stochastic.BlockPairK11DyadicData
 
 /-! # Independently checked second active root of K11 phase 10 -/
 
-set_option autoImplicit false
-
 namespace GameTheory.BlockPairK11.DyadicCertificate
 
 open Math.Interval

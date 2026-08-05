@@ -30,8 +30,6 @@ a sure-first limit from profiles whose first-stage absorption probabilities
 merely converge to one.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

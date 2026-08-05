@@ -6,8 +6,6 @@ Authors: GameTheory contributors
 import GameTheory.Languages.Kuhn.ObsModel
 import GameTheory.Languages.Kuhn.MixedToBehavioralCore
 
-set_option autoImplicit false
-
 namespace ObsModel
 
 open Math.ProbabilityMassFunction Math.ParameterizedChain Math.TraceRun

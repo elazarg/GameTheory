@@ -37,8 +37,6 @@ coverage across owners or a fifth upper-delivery obstruction on prescribed
 classes outside an owner's arena.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

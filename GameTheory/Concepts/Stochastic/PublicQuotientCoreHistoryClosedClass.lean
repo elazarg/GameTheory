@@ -21,8 +21,6 @@ class the finite support-graph theorem may select. Core-strategy
 authorization remains explicit.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

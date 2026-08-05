@@ -114,8 +114,6 @@ hypothesis implies the signed one, and `TwoChildFence` records that the
 implication is strict.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -19,8 +19,6 @@ own sublinear upper budget.  No such residual hypothesis is inferred from a
 charged-occupation potential.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

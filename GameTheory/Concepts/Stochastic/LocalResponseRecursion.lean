@@ -31,8 +31,6 @@ accuracy.  No strategic content is added or removed by this file: the closers
 are hypotheses, and the only theorems are the two well-founded compilations.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

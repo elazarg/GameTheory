@@ -34,8 +34,6 @@ The monitored branch orients only the public score, never the action.  No
 branch is called a credible punishment.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

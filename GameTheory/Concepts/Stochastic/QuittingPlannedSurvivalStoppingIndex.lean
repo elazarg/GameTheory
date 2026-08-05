@@ -52,8 +52,6 @@ separate, larger work and is not attempted here.
   below the threshold from the stopping index on
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

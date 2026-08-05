@@ -21,8 +21,6 @@ must supply equality of its suffix laws with these conditional laws; that
 typed interface is stated explicitly below.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

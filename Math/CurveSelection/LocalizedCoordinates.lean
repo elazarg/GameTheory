@@ -2,8 +2,6 @@
 curve selection. -/
 import Math.CurveSelection.RelativeChartSequence
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter

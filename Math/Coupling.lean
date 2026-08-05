@@ -27,8 +27,6 @@ lifting its compositional power: if a relation lifts at the leaves and
 through one step, it lifts through the whole Kleisli computation.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace Coupling
 

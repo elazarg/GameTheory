@@ -20,8 +20,6 @@ or recursive data do not enter this conversion. They must first construct
 the adaptive system by an independent argument.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

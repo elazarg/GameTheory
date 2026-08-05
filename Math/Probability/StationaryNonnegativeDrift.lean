@@ -21,8 +21,6 @@ statements use explicit stationarity, positivity, closure, and communication
 hypotheses; no recurrence assumption is inferred from terminology.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

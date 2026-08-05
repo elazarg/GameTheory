@@ -65,8 +65,6 @@ the failure of the motion price *as an inequality about the weighted
 correspondence*, at one explicit continuation vector of one explicit weight.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

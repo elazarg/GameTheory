@@ -23,8 +23,6 @@ This is a kinematic interface only: it contains no converse realization or
 strategic-sufficiency assertion.
 -/
 
-set_option autoImplicit false
-
 open Finset BigOperators
 
 namespace Math

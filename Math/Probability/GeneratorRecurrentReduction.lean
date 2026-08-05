@@ -61,8 +61,6 @@ the invariant-graph equation at the base point with `W ↦ G * W`, and
 carried out in this file.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

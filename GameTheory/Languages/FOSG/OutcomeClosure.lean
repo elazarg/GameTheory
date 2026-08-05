@@ -16,8 +16,6 @@ that one nonterminal FOSG step preserves it.  The generic closure theorem then
 identifies the observed finite-horizon run distribution with that value.
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory
 
 namespace FOSG

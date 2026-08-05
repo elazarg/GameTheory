@@ -20,8 +20,6 @@ This is the strategy-level kernel needed for the negative solo-reward half of
 the terminal-to-uniform argument.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

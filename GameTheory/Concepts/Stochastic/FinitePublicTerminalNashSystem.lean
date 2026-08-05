@@ -30,8 +30,6 @@ the theorem does not identify that value with an arbitrary external parent
 target.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

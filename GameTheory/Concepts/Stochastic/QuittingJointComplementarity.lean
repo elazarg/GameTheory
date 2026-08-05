@@ -49,8 +49,6 @@ infinite-horizon notion, built from the existing single-stage machinery
   versions of both are kept as corollaries under the full joint predicate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

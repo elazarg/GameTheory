@@ -2,8 +2,6 @@ import Math.CurveSelection.Convergence
 import Math.CurveSelection.RootCoverage
 import Math.CurveSelection.PositiveRoot
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Polynomial Set Topology

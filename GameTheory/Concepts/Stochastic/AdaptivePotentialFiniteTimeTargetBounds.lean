@@ -28,8 +28,6 @@ payoff bound and the `error` charge bound.  The opposite one-sided estimate
 uses the potential's initial anchor and monotonicity and is sharper.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

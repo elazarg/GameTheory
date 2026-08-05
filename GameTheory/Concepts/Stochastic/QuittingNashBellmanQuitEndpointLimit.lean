@@ -22,8 +22,6 @@ of a summable opponent clock shows that a limiting value strictly above the
 singleton reward forces the player's own Quit hazard to vanish eventually.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

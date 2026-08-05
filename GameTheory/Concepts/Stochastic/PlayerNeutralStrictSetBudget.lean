@@ -21,8 +21,6 @@ separated response at once.  It does not claim that the remaining zero-drift
 family has already been compiled into a recurrent child or punishment.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

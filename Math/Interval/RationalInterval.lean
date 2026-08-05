@@ -17,8 +17,6 @@ checker computations live in `ℚ`; `Contains` is the sole semantic bridge to
 the expression blow-up caused by materializing every symbolic derivative.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace Interval
 

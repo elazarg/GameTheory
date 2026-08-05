@@ -48,8 +48,6 @@ finite index type `ι`, specialized where needed to the explicit rational weight
   of goals 1 and 2 together, independent of the next-phase value's sign).
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory
 
 /-! ## Goal 1: decoupling, for a general finite index type and a general weight -/

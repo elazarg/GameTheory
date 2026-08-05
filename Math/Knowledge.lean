@@ -21,8 +21,6 @@ projection of a finer view, then anything known from the coarser view is also
 known from the finer view.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace ViewKnowledge
 

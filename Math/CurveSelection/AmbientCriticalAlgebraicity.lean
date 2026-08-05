@@ -1,7 +1,5 @@
 import Math.CurveSelection.LexDifferential
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

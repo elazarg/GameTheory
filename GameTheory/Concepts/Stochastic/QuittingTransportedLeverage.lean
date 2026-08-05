@@ -81,8 +81,6 @@ objects; the abstract value-channel machinery (`blockValueMap`,
   `Math.MaxAffineStoppingValue`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

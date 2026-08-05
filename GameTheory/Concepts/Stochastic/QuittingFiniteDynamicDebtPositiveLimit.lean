@@ -22,8 +22,6 @@ not ruled out here, and no converse from unrestricted uniform equilibria to
 finite exact Nash--Bellman chains is asserted.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

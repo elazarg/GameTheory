@@ -21,8 +21,6 @@ so its normalized stationary frequency has a power-law lower bound with the
 same exponent.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

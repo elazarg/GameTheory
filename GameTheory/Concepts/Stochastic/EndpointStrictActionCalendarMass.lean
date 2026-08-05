@@ -26,8 +26,6 @@ This is an action-mass account only.  It does not replace strict actions by a
 shadow transition and makes no payoff-cap or punishment claim.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

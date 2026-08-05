@@ -34,8 +34,6 @@ initial target or deviation potential at that terminal history.  No
 globally absorbing implementation is assumed here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

@@ -21,8 +21,6 @@ the dual strict separator is encoded as a second normalized Farkas system
 with nonnegative slack coordinates and receives the same analytic treatment.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

@@ -31,8 +31,6 @@ This is only a finite analytic descent step.  It does not construct a
 strategy, a public response, or a legally reachable recurrent child.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

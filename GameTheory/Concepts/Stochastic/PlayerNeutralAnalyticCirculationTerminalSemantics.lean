@@ -27,8 +27,6 @@ whole-target transport (and hence cannot by itself provide a credible parent
 resume).
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

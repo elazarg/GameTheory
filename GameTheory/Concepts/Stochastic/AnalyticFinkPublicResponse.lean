@@ -29,8 +29,6 @@ after supplying the semantic equation recorded by
 `FinkDeviationConstraintSemantics`; no such identification is inferred here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

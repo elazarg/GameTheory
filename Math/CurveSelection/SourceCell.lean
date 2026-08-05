@@ -1,8 +1,6 @@
 import Math.CurveSelection.Projection
 import Math.CurveSelection.SquareLift
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Math.PolynomialSignCell

@@ -19,8 +19,6 @@ all signed coordinates into positive and negative orientations, and then
 uses the fixed-support Cramer selector for normalized Farkas systems.
 -/
 
-set_option autoImplicit false
-
 open Filter Finset Set
 
 namespace Math

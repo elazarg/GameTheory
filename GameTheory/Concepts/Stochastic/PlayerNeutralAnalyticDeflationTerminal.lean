@@ -38,8 +38,6 @@ credible continuation/punishment strategy.  Those entry, target, and
 strategic-interface obligations remain explicit blockers.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

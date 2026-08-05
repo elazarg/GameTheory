@@ -16,8 +16,6 @@ root law is related to the dependent stopped-base/suffix law through the
 explicit joint-law factorization interface.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -21,8 +21,6 @@ does not state schedule confluence, an initial-form criterion, or any Puiseux
 effectivity claim.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators Matrix

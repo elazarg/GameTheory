@@ -5,8 +5,6 @@ import Mathlib.Algebra.MvPolynomial.PDeriv
 import Mathlib.RingTheory.Unramified.Field
 import Math.CurveSelection.KaehlerAlgebraicity
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Set

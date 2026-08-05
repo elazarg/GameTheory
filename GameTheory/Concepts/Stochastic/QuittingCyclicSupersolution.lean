@@ -20,8 +20,6 @@ This file formalizes that sharper comparison and packages it as a terminal
 behavioral `e`-Nash compiler.  No cycle-length amplification occurs.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

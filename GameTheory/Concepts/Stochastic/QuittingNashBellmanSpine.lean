@@ -20,8 +20,6 @@ bounded infinite sequence of continuation values and mixed roots satisfying
 the exact Bellman equation and exact root Nash inequalities at every time.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

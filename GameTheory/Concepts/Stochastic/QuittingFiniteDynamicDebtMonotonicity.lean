@@ -25,8 +25,6 @@ competitor at the new cutoff.  No assertion that the decreasing minimum
 converges to zero is made here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

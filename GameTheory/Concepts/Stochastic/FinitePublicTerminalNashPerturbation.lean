@@ -65,8 +65,6 @@ three actual delayed obstacles.  They are stated against the real
 direction — the structure is consumed here, never produced.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

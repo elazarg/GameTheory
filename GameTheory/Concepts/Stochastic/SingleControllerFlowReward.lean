@@ -20,8 +20,6 @@ The closed-core Poisson correction extending this identity through transient
 states is proved in the second half of this file.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

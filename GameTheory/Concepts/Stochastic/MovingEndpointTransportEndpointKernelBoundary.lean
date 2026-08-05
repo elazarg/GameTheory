@@ -24,8 +24,6 @@ the punctured support and the calendar rate; it cannot freeze only the
 endpoint kernel.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

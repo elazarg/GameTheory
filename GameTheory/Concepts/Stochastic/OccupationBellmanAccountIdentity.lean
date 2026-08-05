@@ -28,8 +28,6 @@ its payoff-residual rearrangement are proved once.  Concrete orientations
 (player-neutral rows, full player-owned rows) are instantiations.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

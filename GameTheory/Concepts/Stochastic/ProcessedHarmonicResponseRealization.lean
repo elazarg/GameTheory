@@ -33,8 +33,6 @@ mixed kernels.  It is therefore an admissible `historyLaw` for the calendar
 response alternative, with no opaque realization interface.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

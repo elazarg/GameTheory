@@ -24,8 +24,6 @@ sufficient scalar target for this selection, not a necessary condition over
 all possible anchored selections.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

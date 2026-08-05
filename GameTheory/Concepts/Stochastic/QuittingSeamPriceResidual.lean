@@ -71,8 +71,6 @@ exactly the hypothesis the prose's `Φ(z)_i = B_i + C · z_i` needed.  The
 formula survived checking intact; no unstated hypothesis was found.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

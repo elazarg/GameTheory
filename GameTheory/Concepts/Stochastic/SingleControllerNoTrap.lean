@@ -26,8 +26,6 @@ completed policy into a mean-ergodic transience/projection statement; that is
 the next, genuinely probabilistic, step.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

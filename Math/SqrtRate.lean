@@ -19,8 +19,6 @@ scale for each horizon gives an anytime family; it is not the assertion that
 one fixed profile works at every horizon.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 
 /-- The scalar square-root optimization behind accuracy-indexed periodic

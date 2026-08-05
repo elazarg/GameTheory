@@ -55,8 +55,6 @@ vanishing rate and therefore genuinely approximate, is what covers those
 weights.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -22,8 +22,6 @@ No occupation measure, invariant law, or Palm/marked-burst implication is
 claimed here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

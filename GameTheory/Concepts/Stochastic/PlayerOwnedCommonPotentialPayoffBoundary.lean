@@ -21,8 +21,6 @@ does not infer the residual account from the analytic potential, and it does
 not provide the separate two-sided on-path payoff estimate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -30,8 +30,6 @@ punishment, and endpoint harmonicity does not make the same potential
 harmonic for the positive-parameter moving baseline kernels.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

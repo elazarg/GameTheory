@@ -130,8 +130,6 @@ leading coefficient of the absorption is `1 - ∏_j (1 - a j)`, not `∑ a`.
   three-way comparison, read on absorption itself
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

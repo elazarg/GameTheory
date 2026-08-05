@@ -25,8 +25,6 @@ The systems combine into an ordinary `AdaptivePotentialSystemAt`, so no
 change to the final verifier is required.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -27,8 +27,6 @@ This permits independently obtained alternatives, including opposite
 charge orientations, to be synchronized by taking a later common start.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

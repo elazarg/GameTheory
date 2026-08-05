@@ -1,7 +1,5 @@
 import Math.AnalyticCoordinateCurve
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Set

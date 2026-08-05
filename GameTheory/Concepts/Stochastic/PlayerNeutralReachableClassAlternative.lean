@@ -26,8 +26,6 @@ identify source-support cardinality with a public-recursion rank.  Those
 remain separate strategic obligations.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

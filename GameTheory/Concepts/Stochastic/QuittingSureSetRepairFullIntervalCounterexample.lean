@@ -26,8 +26,6 @@ section gives an exact mixed stationary repair with one sure quitter and two
 nontrivial hazard coordinates, sharply delimiting the negative result.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -70,8 +70,6 @@ This module packages and verifies; it neither constructs nor searches for
 stationary roots, and it supplies no uniform-equilibrium delivery theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

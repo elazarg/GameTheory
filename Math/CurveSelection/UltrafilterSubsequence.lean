@@ -1,8 +1,6 @@
 import Math.CurveSelection.GermComponent
 import Mathlib.Data.Nat.Nth
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter

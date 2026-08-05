@@ -2,8 +2,6 @@ import Mathlib.Topology.Order.Compact
 import Mathlib.Topology.MetricSpace.ProperSpace.Real
 import Mathlib.Topology.Algebra.Ring.Real
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Set

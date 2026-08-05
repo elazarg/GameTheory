@@ -67,8 +67,6 @@ weakness beyond this one witness family -- remain open; only S1's condition
 number and the conversion factor are connected here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

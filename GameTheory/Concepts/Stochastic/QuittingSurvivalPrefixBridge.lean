@@ -46,8 +46,6 @@ for the deleted-product form) so that any file consuming either side can also
 consume the bridge without an extra import of its own.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

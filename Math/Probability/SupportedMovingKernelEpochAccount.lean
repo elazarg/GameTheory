@@ -22,8 +22,6 @@ an early epoch, while its asymptotic rate is governed only by the tail
 potential bills.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

@@ -17,8 +17,6 @@ which cannot exceed that payoff bound.  The resulting lower bound on the
 standard-form minimization objective feeds finite LP attainment.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

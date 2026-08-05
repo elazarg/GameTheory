@@ -15,8 +15,6 @@ projection theorems below prove that it is exactly the value component of
 that already-sound evaluator.
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory.BlockPairK11.LocalValue
 
 open LocalInterval Math.Interval

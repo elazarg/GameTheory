@@ -27,8 +27,6 @@ cost is exactly `fuel * chargeBound`, and a ceiling formula chooses an
 explicit horizon for every positive requested error.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

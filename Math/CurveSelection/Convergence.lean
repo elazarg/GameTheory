@@ -11,8 +11,6 @@ import Mathlib.RingTheory.Polynomial.GaussLemma
 import Mathlib.RingTheory.PowerSeries.Derivative
 import Mathlib.RingTheory.UniqueFactorizationDomain.NormalizedFactors
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

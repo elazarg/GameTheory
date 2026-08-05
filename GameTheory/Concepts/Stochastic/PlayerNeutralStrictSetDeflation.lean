@@ -22,8 +22,6 @@ not construct a strategy on the complementary zero-drift family or assert
 that deleting the strict set preserves incentives.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -19,8 +19,6 @@ the conditional tail tends to zero, and it dominates the current one-stage
 opponent hazard.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -18,8 +18,6 @@ this gives exactly the local `h * (collision - solo)⁺` error used by the
 cyclic supersolution compiler.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

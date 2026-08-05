@@ -30,8 +30,6 @@ half of an adaptive equilibrium certificate; two-sided on-path realization
 of the endpoint target remains separate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

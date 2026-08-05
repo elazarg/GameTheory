@@ -19,8 +19,6 @@ through regeneration, equal local support rank, the positive tail-law seed
 path, and aggregate oriented charge.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

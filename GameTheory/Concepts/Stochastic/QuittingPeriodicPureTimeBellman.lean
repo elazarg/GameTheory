@@ -68,8 +68,6 @@ value at the cycle's start plus `quittingRelaxedCycleGain`.
   whose live root sequence is periodic and prescribed-value-consistent.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

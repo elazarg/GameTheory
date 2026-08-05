@@ -16,8 +16,6 @@ stopping-process coordinate needed when opponent nonabsorption has positive
 probability.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

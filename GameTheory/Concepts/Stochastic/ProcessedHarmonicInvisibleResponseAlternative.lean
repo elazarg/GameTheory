@@ -30,8 +30,6 @@ absorption statement, not yet a bounded realized account: the new potential
 need not be harmonic under the endpoint baseline kernel.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

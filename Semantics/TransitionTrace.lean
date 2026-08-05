@@ -10,8 +10,6 @@ import Mathlib.Logic.Relation
 # Semantics.TransitionTrace
 -/
 
-set_option autoImplicit false
-
 namespace Semantics
 namespace Transition
 

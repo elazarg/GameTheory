@@ -25,8 +25,6 @@ calendar telescope is independent of analytic selection.  A witness-state
 indicator is retained as an important specialization.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

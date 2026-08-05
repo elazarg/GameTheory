@@ -30,8 +30,6 @@ characterization of a **supplied finite architecture**; it does not construct
 one or claim that finite public architectures exhaust uniform equilibria.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -21,8 +21,6 @@ bursts, or that such bursts can be converted into a uniform strategy.  That
 is the separate Palm/rare-event boundary.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

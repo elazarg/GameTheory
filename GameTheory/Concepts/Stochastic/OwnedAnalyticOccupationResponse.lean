@@ -34,8 +34,6 @@ stronger conclusions require a separate nonnegative charge-lifting
 hypothesis.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

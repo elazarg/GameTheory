@@ -25,8 +25,6 @@ column.  It does not assert that the terminal positive class constructed
 above fails whole-vector harmonicity.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

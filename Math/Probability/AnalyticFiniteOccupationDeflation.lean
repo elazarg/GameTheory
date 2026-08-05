@@ -29,8 +29,6 @@ The result is purely finite-dimensional and analytic.  It does not attach a
 strategy or reachability interpretation to an active set.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

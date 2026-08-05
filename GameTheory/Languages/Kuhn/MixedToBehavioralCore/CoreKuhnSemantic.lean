@@ -7,8 +7,6 @@ import GameTheory.Languages.Kuhn.KuhnModel
 import Math.PMFProduct
 import GameTheory.Languages.Kuhn.MixedToBehavioralCore.ReachFactor
 
-set_option autoImplicit false
-
 namespace ObsModelCore
 
 open Math.PMFProduct Math.ProbabilityMassFunction

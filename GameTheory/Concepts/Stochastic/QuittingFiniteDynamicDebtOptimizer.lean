@@ -19,8 +19,6 @@ The later monotonicity question is kept separate: attainment at each cutoff
 does not make independently selected minimizers nested.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

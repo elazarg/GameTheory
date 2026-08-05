@@ -19,8 +19,6 @@ that a public response has already been compiled into a punishment or that
 a harmonic obstruction has already produced a recurrent child.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

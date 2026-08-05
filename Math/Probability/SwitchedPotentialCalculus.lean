@@ -94,8 +94,6 @@ Actually rewriting those three files on top of this one is future work; nothing
 here depends on them and nothing there is changed.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

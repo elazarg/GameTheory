@@ -16,8 +16,6 @@ zero- and singleton-support boundaries are kept separate from the later
 contracting equivalences.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

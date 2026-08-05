@@ -23,8 +23,6 @@ error while the branchwise strengthening fails by a full unit at each
 positive-probability branch.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

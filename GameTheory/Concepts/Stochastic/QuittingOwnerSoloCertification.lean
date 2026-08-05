@@ -29,8 +29,6 @@ obstruction.  The obstruction supplies both a sure-rate strict joiner and,
 by a finite minimum-gap argument, a weak preemptor at the vanishing-rate end.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

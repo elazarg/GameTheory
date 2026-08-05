@@ -29,8 +29,6 @@ strict calendar-time advancement, near-return extraction, and game-facing
 periodic closing hypotheses remain separate inputs.
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory
 
 namespace QuittingMarkedStrictTimeClosing

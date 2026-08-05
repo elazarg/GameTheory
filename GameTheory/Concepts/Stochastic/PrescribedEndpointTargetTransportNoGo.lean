@@ -23,8 +23,6 @@ a counterexample to uniform-equilibrium existence: a different profile can
 remain at the low state.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

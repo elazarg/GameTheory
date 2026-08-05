@@ -21,8 +21,6 @@ input laws all live here; bounded iteration is the invariant specialization in
 `Math.PMFIter`.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace Probability
 namespace Kernel

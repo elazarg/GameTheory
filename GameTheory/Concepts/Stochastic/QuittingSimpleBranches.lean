@@ -18,8 +18,6 @@ reward.  The all-continue profile is therefore a terminal
 No claim about absorption paths or the non-simple branch is made.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

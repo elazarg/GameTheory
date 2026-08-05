@@ -22,8 +22,6 @@ These are root-law statements.  They do not assert a proper-path bridge or a
 stationary discretization estimate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

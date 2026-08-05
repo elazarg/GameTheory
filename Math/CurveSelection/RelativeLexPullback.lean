@@ -1,8 +1,6 @@
 import Math.CurveSelection.LexIsolation
 import Math.CurveSelection.RelativeFiberPullback
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set

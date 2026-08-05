@@ -10,8 +10,6 @@ import Semantics.TransitionTrace
 # Semantics.Simulation
 -/
 
-set_option autoImplicit false
-
 namespace Semantics
 namespace Transition
 

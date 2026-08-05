@@ -21,8 +21,6 @@ transport boundary fails.  This is a boundary no-go, not a counterexample to
 uniform-equilibrium existence.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

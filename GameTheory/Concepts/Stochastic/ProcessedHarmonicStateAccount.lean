@@ -25,8 +25,6 @@ counterexample in `Math.Probability.HarmonicStateAccount` shows it cannot
 follow from harmonicity alone.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

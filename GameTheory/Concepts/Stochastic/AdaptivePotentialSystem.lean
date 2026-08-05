@@ -19,8 +19,6 @@ The equivalence theorem below is the acceptance test: constructing an
 input, not a new intermediate promise.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

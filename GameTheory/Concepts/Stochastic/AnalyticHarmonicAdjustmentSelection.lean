@@ -20,8 +20,6 @@ first lower-order coefficient is a nonzero endpoint-harmonic direction.
 The latter is exactly the datum consumed by the harmonic-jet rank.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

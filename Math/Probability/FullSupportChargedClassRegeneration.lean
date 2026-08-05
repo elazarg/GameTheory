@@ -20,8 +20,6 @@ credibility, target compatibility, or an analytic power law in an external
 parameter.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

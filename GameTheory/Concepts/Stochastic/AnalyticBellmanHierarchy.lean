@@ -33,8 +33,6 @@ these local responses along public histories belongs to the global
 game-theoretic invariant.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Math.Probability Set Topology

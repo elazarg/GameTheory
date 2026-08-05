@@ -2,8 +2,6 @@
 an `Option`-indexed affine germ. -/
 import Math.CurveSelection.LocalizedCoordinates
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter

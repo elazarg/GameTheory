@@ -18,8 +18,6 @@ intermediate numerator sizes remain bounded throughout a reflected numerical
 certificate.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace Interval
 

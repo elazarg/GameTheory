@@ -176,8 +176,6 @@ of each other under `A ↦ -A`.
   convergence of the deviation profile's own pathwise realization
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter MeasureTheory

@@ -23,8 +23,6 @@ The algebraic parameter is selected only after proving existence and
 uniqueness.  No decimal approximation enters the construction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

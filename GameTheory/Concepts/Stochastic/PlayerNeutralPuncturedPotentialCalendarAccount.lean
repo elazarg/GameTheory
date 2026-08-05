@@ -28,8 +28,6 @@ The resulting account is one-sided: cumulative expected charge is bounded
 above by a nonnegative sublinear budget.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

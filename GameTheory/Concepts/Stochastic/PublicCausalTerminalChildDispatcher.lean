@@ -25,8 +25,6 @@ the actual root law must equal the conditional law from
 `PublicRootHorizonStoppedAccounting`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

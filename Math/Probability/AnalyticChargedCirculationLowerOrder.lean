@@ -25,8 +25,6 @@ cannot obtain it by subtracting the endpoint mass while preserving
 nonnegativity.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

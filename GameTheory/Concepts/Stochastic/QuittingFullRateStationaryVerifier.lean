@@ -27,8 +27,6 @@ stationary roots, prove that one exists, characterize nonstationary equilibrium
 profiles, or provide a uniform-equilibrium delivery theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

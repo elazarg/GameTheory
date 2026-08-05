@@ -31,8 +31,6 @@ everywhere else in the development; `ι → PMF Bool` has no topology here, and
 `quittingRootOfSimplex` is the bridge.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -33,8 +33,6 @@ namespace LinearAlgebra
 
 noncomputable section
 
-set_option autoImplicit false
-
 variable {Facet Player : Type*}
   [Fintype Facet] [Fintype Player]
 variable {Constraint : Player → Type*}

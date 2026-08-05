@@ -32,8 +32,6 @@ construct a quotient, prove strong lumpability of a game kernel, or show that
 the quotient shadow is strategically legal.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

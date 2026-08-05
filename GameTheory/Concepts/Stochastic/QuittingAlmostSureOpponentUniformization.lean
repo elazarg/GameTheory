@@ -18,8 +18,6 @@ common Cesaro survival error.  This proves the first case of the
 Solan--Vieille terminal-to-uniform argument.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

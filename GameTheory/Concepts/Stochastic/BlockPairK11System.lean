@@ -17,8 +17,6 @@ continuation values using `V = N / (1 - ρ)` and clear the common positive
 denominator.
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory
 
 namespace BlockPairK11

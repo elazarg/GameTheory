@@ -29,8 +29,6 @@ interface.  This is a precise compactness obstruction, not a scalar
 coefficient defect.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

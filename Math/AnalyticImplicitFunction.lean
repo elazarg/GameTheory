@@ -21,8 +21,6 @@ derivative, and a positively oriented kernel vector suffice.  A finite family
 of strict polynomial signs is preserved by openness.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

@@ -46,8 +46,6 @@ of `7/8` per period -- the obstruction is not a mass-poor block.
 * `atMostOnePositive_of_isExactRowComplementary`: the row dichotomy.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

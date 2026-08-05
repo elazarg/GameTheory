@@ -22,8 +22,6 @@ and `A` is injective, Banach's fixed-point theorem supplies an exact zero of
 `F` in that ball.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 
 open Function Metric Set

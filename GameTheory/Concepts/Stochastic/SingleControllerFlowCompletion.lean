@@ -22,8 +22,6 @@ gain and reward identities.  No strict-complementarity upgrade is needed for
 this flow-routing layer.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

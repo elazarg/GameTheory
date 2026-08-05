@@ -66,8 +66,6 @@ This file replaces nothing.  Nothing in
 constructor below is built alongside it.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Math Math.OnlineLearning Math.Probability Set

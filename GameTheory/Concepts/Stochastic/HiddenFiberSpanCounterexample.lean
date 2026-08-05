@@ -28,8 +28,6 @@ not introduce a causal-policy or filtration API, and it makes no formal
 minimality claim.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

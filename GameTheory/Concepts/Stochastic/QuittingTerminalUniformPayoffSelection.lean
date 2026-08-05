@@ -21,8 +21,6 @@ equilibria at every positive accuracy is equivalent to existence of a uniform
 equilibrium payoff.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

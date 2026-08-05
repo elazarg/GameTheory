@@ -27,8 +27,6 @@ The definition is a finite Bellman quantity.  No compactness, recurrence, or
 infinite-tail conclusion is encoded in it.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

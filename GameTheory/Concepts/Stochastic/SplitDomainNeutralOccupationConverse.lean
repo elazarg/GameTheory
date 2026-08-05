@@ -33,8 +33,6 @@ does not use target neutrality, so it establishes the stronger assertion for
 every normalized balanced occupation supported in the owner arena.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -34,8 +34,6 @@ escaped stationary occupation explicitly.  No converse or general
 fifth-obstruction API is introduced.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

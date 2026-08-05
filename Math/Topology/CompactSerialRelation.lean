@@ -17,8 +17,6 @@ predecessor at a time from a terminal anchor; compactness then closes all
 finite compatibility conditions simultaneously.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

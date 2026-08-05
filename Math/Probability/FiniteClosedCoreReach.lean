@@ -21,8 +21,6 @@ uniformly bounded, and the indicator has zero harmonic component in every
 mean-ergodic Poisson decomposition.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

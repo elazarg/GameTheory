@@ -57,8 +57,6 @@ well-foundedness that `StrictProgress` supplies in general (`not_infinite_branch
 hypotheses, so the interface is inhabited and the positive theorem is not empty.
 -/
 
-set_option autoImplicit false
-
 universe u v w
 
 namespace Math

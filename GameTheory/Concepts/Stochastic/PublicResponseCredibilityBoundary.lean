@@ -28,8 +28,6 @@ Thus the remaining interface is specifically strategic credibility, not
 observability, target feasibility, or statistical power.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

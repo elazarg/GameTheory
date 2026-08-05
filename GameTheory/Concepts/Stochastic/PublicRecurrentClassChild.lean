@@ -31,8 +31,6 @@ Reachability already fails in the two-state example in
 `Math.Probability.ReachableClosedClass`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

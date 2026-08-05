@@ -101,8 +101,6 @@ the gap is `0`); this file's identity is the strict generalization of that gap t
 case where `prescribed` need not be any kind of Nash value.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

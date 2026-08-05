@@ -17,8 +17,6 @@ target transport, child selection, and the legal entry interface remain
 explicit inputs.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

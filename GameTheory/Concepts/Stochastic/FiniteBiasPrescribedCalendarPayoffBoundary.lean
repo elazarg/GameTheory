@@ -26,8 +26,6 @@ boundary is two-sided sublinearity of the prescribed baseline endpoint
 transport.  No target-realization conclusion is assumed in that boundary.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

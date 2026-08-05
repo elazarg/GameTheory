@@ -21,8 +21,6 @@ The exceptional noncontracting player and its singleton-reward sign remain a
 separate local-to-global boundary.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

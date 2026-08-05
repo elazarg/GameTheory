@@ -18,8 +18,6 @@ This is the key advantage of the full operational family: no endpoint-strict
 action is discarded, shadowed, or charged a restart bill.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

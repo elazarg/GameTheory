@@ -21,8 +21,6 @@ kernel-iteration definitions in this library (see e.g.
 `Languages.MAID.SOS.iterDist`).
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace PMFIter
 

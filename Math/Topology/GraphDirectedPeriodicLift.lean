@@ -19,8 +19,6 @@ close at its start.  When the two terminal points lie in the same vertex box,
 the common finite-box diameter gives a code-independent bound.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

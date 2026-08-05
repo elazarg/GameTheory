@@ -96,8 +96,6 @@ argument of Propositions 1-2, a separate component.  Everything else on the
 plan-phase side of Proposition 3 is discharged.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -19,8 +19,6 @@ The capstone proves the previously isolated proposition
 `UniformEquilibriaForceBottomRightOccupationVanishing` unconditionally.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators Topology

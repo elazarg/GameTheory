@@ -26,8 +26,6 @@ public-phase certificate after the stopping history still requires a suffix
 rebase and finite-prefix accounting.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

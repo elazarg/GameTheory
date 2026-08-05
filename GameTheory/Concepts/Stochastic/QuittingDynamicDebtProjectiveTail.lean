@@ -23,8 +23,6 @@ positive exact debt selects the summable-clock branch.  This is a structural
 tail restriction, not an equilibrium or recurrence theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -20,8 +20,6 @@ zero-discount Bellman endpoint and reduces the game-theoretic construction
 to that geometric theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

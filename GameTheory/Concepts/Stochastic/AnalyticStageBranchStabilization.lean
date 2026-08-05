@@ -21,8 +21,6 @@ slice has a normalized pure-stage obstruction. The latter branch feeds
 directly into the coherent analytic action repair.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

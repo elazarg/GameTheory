@@ -24,8 +24,6 @@ The circulation remains an explicit hypothesis. This file does not infer
 one from the scaled-potential branch.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

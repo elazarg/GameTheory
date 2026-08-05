@@ -7,8 +7,6 @@ import Math.CurveSelection.FiniteBranchCoverage
 import Math.CurveSelection.Puiseux
 import Mathlib.Analysis.Complex.Polynomial.Basic
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Polynomial Set Topology

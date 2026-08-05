@@ -30,8 +30,6 @@ the operational preterminal roots and values, never literal equality of whole
 finite paths.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

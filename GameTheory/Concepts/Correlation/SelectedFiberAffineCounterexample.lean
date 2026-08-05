@@ -24,8 +24,6 @@ specified context, but no feasible packet is product-realizable at both
 contexts at once.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

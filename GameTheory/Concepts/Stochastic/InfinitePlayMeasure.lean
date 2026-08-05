@@ -62,8 +62,6 @@ input the Ionescu-Tulcea theorem needs; `infinitePlayMeasure` is its output.
   game-facing corollaries unconditional in their pathwise realization
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open MeasureTheory ProbabilityTheory Kernel Set

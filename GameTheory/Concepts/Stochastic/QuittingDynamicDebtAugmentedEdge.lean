@@ -29,8 +29,6 @@ projective extraction, occupation law, recurrence, or equilibrium conclusion
 is claimed here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

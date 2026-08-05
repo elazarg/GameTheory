@@ -23,8 +23,6 @@ force a repeated player name, but does not by itself identify recurrent
 charts, values, or continuation states.
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory
 
 namespace QuittingMarkedFencePacket

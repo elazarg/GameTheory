@@ -17,8 +17,6 @@ predictable mixed mass, of every strictly separated transition is uniformly
 bounded in the horizon.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

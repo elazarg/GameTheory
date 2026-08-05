@@ -19,8 +19,6 @@ The proof is finite Bellman algebra.  It introduces neither an infinite
 stopping-time type nor extended-real or measure-theoretic scaffolding.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

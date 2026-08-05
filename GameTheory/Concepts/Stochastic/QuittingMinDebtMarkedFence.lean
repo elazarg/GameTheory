@@ -20,8 +20,6 @@ SCC.  It only identifies the canonical finite chains on which those remaining
 questions can now be asked.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

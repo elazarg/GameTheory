@@ -17,8 +17,6 @@ reconstruction, occurrence, compatible-persistence, and completion fields are
 jointly satisfiable.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

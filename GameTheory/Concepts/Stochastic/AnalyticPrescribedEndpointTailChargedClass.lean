@@ -33,8 +33,6 @@ positive calendar event, construct a legal recursive child, preserve a
 whole payoff-vector target, or prove rank descent.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

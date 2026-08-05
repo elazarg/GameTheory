@@ -30,8 +30,6 @@ child.  This theorem also makes no claim that a class of a frozen kernel is
 a legal continuation class for a time-inhomogeneous analytic calendar.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

@@ -21,8 +21,6 @@ not make any assertion about transporting a full payoff target between
 recurrent classes.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

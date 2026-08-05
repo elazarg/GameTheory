@@ -5,8 +5,6 @@ import Mathlib.RingTheory.Flat.FaithfullyFlat.Algebra
 import Mathlib.RingTheory.Kaehler.Polynomial
 import Mathlib.RingTheory.Smooth.Field
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Algebra Set TensorProduct

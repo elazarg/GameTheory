@@ -20,8 +20,6 @@ that the class is a legal continuation component of a stochastic game or
 that it preserves a vector payoff target.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

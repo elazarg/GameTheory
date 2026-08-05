@@ -26,8 +26,6 @@ the response is a credible punishment or that it transports a recurrent
 continuation target.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

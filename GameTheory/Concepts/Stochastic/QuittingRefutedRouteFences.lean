@@ -38,8 +38,6 @@ forces both quitting rates to zero, so no admissible closure with both rates
 positive exists.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

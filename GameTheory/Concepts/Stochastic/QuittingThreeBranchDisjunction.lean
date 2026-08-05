@@ -87,8 +87,6 @@ exact content of admissibility.  The weight-level branches quantify over
 different blocks, so they can and do overlap.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -42,8 +42,6 @@ budget is allocated in this file, and no incentive-safety statement for the
 composed object is claimed.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

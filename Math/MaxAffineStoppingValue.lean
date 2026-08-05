@@ -82,8 +82,6 @@ multi-phase composite: the shapes genuinely differ, and no attempt is made
 to reformulate one in terms of the other.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math.MaxAffineStopping

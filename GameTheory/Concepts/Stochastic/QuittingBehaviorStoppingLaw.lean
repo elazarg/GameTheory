@@ -20,8 +20,6 @@ atoms sum to one.  No stopping-time filtration, payoff representation, or
 best-response theorem is introduced here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

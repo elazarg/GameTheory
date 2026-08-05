@@ -25,8 +25,6 @@ two-coordinate regression records why no all-coordinate conclusion follows.
 No nested selection of minimizers and no compatible infinite path is asserted.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

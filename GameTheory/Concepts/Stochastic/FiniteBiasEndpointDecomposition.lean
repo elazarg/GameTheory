@@ -23,8 +23,6 @@ This file does not construct a public response, a recurrent child, or a
 punishment strategy.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -43,8 +43,6 @@ nonabsorbing recurrent child immediately when a merely local
 `FinitePublicCoinStoppingRegion` terminates.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

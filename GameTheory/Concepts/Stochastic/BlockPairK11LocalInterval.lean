@@ -18,8 +18,6 @@ in four local coordinates, caches the sixteen mask probabilities, and only
 then lifts the five phase summaries into the 31-dimensional global gradient.
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory
 
 namespace BlockPairK11

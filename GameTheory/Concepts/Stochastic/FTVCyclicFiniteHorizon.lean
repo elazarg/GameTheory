@@ -20,8 +20,6 @@ The proof is an exact Poisson-bias telescope.  No asymptotic absorption
 argument or credibility converse is used.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

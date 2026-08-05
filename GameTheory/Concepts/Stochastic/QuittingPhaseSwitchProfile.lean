@@ -52,8 +52,6 @@ history-measurable switch of the literature is not claimed.
   and for an arbitrary unilateral hazard deviation
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -60,8 +60,6 @@ adapted to `scaledCyclicWeight`'s own constants.
 * `scaledCyclicWeight_neither_stationary_nor_instant`: the package lemma.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

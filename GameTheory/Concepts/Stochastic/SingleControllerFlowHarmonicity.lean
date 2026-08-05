@@ -23,8 +23,6 @@ harmonic as well.  Reward/projection compatibility is intentionally left to
 a separate layer.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

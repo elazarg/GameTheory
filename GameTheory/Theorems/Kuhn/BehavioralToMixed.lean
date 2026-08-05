@@ -21,8 +21,6 @@ The theorem `ObsModel.kuhn_behavioral_to_mixed` is therefore obtained by
 instantiating the core theorem on `O.toCore`.
 -/
 
-set_option autoImplicit false
-
 namespace ObsModel
 
 variable {ι σ : Type} {Obs : ι → Type} {Act : (i : ι) → Obs i → Type}

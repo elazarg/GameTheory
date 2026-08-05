@@ -22,8 +22,6 @@ This does not prove that the decreasing debts converge to zero.  It turns
 their infimum into the limit of a canonical monotone scalar obstruction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

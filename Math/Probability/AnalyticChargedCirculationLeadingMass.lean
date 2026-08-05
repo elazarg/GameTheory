@@ -18,8 +18,6 @@ larger than the clearing order.  At the endpoint its weighted charge is zero
 below the clearing order and one at the clearing order.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

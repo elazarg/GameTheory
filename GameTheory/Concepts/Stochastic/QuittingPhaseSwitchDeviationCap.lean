@@ -55,8 +55,6 @@ though they are stated for hazards.
   approximate-equilibrium consumer statement
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

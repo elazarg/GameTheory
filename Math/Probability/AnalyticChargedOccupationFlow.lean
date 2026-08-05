@@ -21,8 +21,6 @@ charged circulation existing only at the endpoint persists at positive
 parameters.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

@@ -21,8 +21,6 @@ profile whenever `c + d < ε₀`.  No convergence uniform over deviations is
 used.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

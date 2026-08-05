@@ -25,8 +25,6 @@ sublinear.  Eventual membership of the universal calendar in the germ
 interval is precisely what removes the finite fallback prefix.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

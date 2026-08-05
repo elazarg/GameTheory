@@ -37,8 +37,6 @@ exactly because `absorbedMass_eq_one_sub_survivalMass` holds with no slack).
 
 namespace Math.PMFProduct
 
-set_option autoImplicit false
-
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
 
 /-- The probability that every coordinate of `x` stays put. -/

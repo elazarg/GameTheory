@@ -18,8 +18,6 @@ This turns approximate target transport into an ordinary error-budget term
 rather than a separate strategic obstruction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

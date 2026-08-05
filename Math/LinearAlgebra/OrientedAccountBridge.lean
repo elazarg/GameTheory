@@ -86,8 +86,6 @@ namespace OrientedAccountBridge
 
 noncomputable section
 
-set_option autoImplicit false
-
 section General
 
 variable {R V : Type*} [Fintype R] [Fintype V] [DecidableEq V]

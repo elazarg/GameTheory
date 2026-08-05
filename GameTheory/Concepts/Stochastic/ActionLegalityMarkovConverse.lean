@@ -67,8 +67,6 @@ separate, larger piece of work.
   Nash
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

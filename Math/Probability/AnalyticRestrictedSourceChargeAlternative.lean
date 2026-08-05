@@ -38,8 +38,6 @@ an actual time-inhomogeneous path, calendar accounting, or game-theoretic
 child is constructed here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

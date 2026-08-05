@@ -16,8 +16,6 @@ This file transports the named system along that agreement and specializes
 the result to canonical terminal-child dispatch.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

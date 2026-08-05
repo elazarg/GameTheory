@@ -3,8 +3,6 @@ import Mathlib.Algebra.BigOperators.Ring.Multiset
 import Mathlib.RingTheory.Polynomial.Content
 import Mathlib.RingTheory.UniqueFactorizationDomain.NormalizedFactors
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Polynomial

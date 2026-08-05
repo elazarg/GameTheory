@@ -30,8 +30,6 @@ asymptotic-property converse, recurrent coverage, necessity, or a fifth
 obstruction theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

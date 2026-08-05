@@ -36,8 +36,6 @@ not an adaptive-potential hypothesis: the adaptive systems supplied to that
 theorem are compiled here from the strictly lower-rank public ledgers.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

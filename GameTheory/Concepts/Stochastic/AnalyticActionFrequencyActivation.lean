@@ -35,8 +35,6 @@ law, history contexts, and reset convention. No punishment or target-payoff
 closure is asserted here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped ENNReal Topology

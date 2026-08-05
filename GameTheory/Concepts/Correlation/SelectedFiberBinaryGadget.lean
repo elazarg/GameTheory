@@ -22,8 +22,6 @@ top edge `r + s = 1` are its two endpoints, and hence that the product image
 is not convex.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

@@ -62,8 +62,6 @@ is **not** a claim that every period-three block fails; other period-three
 blocks for this weight are not examined here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -24,8 +24,6 @@ Only the finite root and behavior-profile claims are formalized.  No
 absorption-path compactification or discretization theorem is asserted.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

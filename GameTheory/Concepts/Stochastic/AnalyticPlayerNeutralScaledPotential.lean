@@ -23,8 +23,6 @@ about the clearing exponent: the analytic numerator may also vanish, so no
 divergence or boundedness claim about the punctured correction is made.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

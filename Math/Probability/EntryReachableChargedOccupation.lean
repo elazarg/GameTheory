@@ -26,8 +26,6 @@ minimal two-state example and isolates the exact support condition under
 which an existing circulation survives restriction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

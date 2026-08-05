@@ -22,8 +22,6 @@ is trivial. This isolates exactly the case in which repeated visits cannot
 distinguish behavioral resampling from ex-ante pure-strategy sampling.
 -/
 
-set_option autoImplicit false
-
 namespace ObsModelCore
 
 open Math.ProbabilityMassFunction Math.ParameterizedChain Math.PMFProduct

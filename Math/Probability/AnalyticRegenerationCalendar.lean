@@ -21,8 +21,6 @@ success probability tending to one.  This file makes no claim about
 strategies, monitoring, punishments, or closure of an equilibrium recursion.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

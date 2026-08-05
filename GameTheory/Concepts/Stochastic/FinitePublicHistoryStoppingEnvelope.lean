@@ -28,8 +28,6 @@ selector causal, or assemble the post-stopping dispatcher.  Those are the
 separate strategic interfaces in the variable-stopping compiler.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

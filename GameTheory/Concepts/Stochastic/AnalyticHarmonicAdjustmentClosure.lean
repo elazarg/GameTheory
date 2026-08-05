@@ -23,8 +23,6 @@ The final theorem below states the resulting stationary closure with exactly
 those residual hypotheses exposed.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -21,8 +21,6 @@ the opponents' live tail.
 This is the cutoff half of the Solan--Vieille terminal-to-uniform argument.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

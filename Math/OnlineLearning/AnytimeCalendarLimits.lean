@@ -17,8 +17,6 @@ with the analytic parameter has vanishing calendar average, including over
 unfinished epochs.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped Topology

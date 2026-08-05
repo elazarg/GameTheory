@@ -6,8 +6,6 @@ import Mathlib.Topology.Algebra.MvPolynomial
 import Mathlib.Topology.MetricSpace.Bounded
 import Mathlib.Analysis.Analytic.Polynomial
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

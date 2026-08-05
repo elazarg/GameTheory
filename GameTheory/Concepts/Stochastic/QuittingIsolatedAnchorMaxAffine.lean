@@ -28,8 +28,6 @@ the anchored orbit is a direct corollary of the regime dichotomy's fixed-set
 characterization, not a bespoke argument.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

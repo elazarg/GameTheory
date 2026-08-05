@@ -17,8 +17,6 @@ each arithmetic node.  The `toDyadicDual` homomorphism proves that caching
 does not change either the interval value or any gradient coordinate.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace Interval
 

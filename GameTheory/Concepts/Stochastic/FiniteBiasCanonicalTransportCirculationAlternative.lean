@@ -28,8 +28,6 @@ All other branches pass through unchanged.  No branch is interpreted here
 as a punishment, a legal recurrent child, or an equilibrium certificate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

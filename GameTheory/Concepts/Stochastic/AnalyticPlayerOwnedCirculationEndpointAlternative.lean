@@ -30,8 +30,6 @@ entry, whole-target transport, public-response credibility, or a recursive
 child.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

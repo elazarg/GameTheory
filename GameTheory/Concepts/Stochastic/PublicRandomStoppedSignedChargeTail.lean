@@ -22,8 +22,6 @@ result below upgrades ordinary finite-child adaptive-system bounds to the
 common-root signed-tail interface at error `childError + slack`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

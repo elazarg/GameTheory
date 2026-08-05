@@ -16,8 +16,6 @@ continuation envelope gives a node-dependent pure policy whose controlled
 stopping value equals the worst-case potential, by backward induction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

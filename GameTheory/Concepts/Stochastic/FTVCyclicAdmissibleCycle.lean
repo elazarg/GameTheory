@@ -69,8 +69,6 @@ the only uniform-equilibrium payoff.  The nonexistence of a stationary
 table is interesting, not a hypothesis or a conclusion of anything below.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

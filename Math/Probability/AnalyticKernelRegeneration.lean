@@ -25,8 +25,6 @@ the absorbing target turns the source-dependent path lengths into one common
 hit-by-`H` horizon.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

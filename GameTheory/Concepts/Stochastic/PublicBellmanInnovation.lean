@@ -26,8 +26,6 @@ continuation or prove that the comparison remains profitable after a phase
 change.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -142,8 +142,6 @@ here as the side condition this file specifically needs.
   deliverable (4), conditional on a label-blind legal background profile
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

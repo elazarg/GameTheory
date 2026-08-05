@@ -16,8 +16,6 @@ Every unilateral deviation has smaller live mass, stage by stage.  This is
 the first uniform domination used in the terminal-to-uniform proof.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

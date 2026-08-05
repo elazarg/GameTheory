@@ -19,8 +19,6 @@ completed epoch and one bill for the current epoch.
 No game, behavior strategy, recurrence class, or payoff target occurs here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

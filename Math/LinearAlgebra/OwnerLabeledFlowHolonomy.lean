@@ -64,8 +64,6 @@ namespace OwnerLabeledFlowHolonomy
 
 noncomputable section
 
-set_option autoImplicit false
-
 section General
 
 variable {R V ι : Type*} [Fintype R] [Fintype V] [DecidableEq V]

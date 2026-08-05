@@ -25,8 +25,6 @@ the uniform finite telescope bound at the chosen horizon into the allocated
 continuation error.  It contains no behavior law or strategic assertion.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

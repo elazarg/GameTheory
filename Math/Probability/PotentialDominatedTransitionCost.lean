@@ -14,8 +14,6 @@ transition cost which is pointwise dominated by its transition drift.  The
 resulting bound is independent of both the horizon and the selector.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

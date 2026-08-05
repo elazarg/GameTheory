@@ -23,8 +23,6 @@ enforcement ledger at every positive error.  No minimality or rigidity claim
 is made here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

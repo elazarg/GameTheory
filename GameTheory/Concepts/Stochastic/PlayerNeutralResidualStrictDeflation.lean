@@ -34,8 +34,6 @@ arbitrary ambient active finset, rather than only to the first
 No public strategy or recurrent-child assertion is made here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -23,8 +23,6 @@ Crabtree--Haynsworth quotient formula: D. E. Crabtree and E. V. Haynsworth,
 (1969), DOI 10.1090/S0002-9939-1969-0255573-1.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped Matrix

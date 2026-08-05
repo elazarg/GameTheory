@@ -20,8 +20,6 @@ is `0, 3, 2, 1`, and the four coarse vertices are rotations of
 uniform-equilibrium payoff and an explicit horizon-indexed square-root rate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

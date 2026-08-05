@@ -20,8 +20,6 @@ row-wise bias inequality.  It makes no converse, necessity, union-domain,
 recurrent-coverage, or prescribed-delivery claim.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

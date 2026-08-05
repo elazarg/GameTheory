@@ -76,8 +76,6 @@ nonnegative the second is not needed at all.
   uniform equilibrium payoff
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

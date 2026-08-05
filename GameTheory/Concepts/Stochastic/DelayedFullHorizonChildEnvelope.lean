@@ -39,8 +39,6 @@ the online rule, nor does it construct target anchors or rule out the unsafe
 branch.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

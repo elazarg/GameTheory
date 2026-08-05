@@ -24,8 +24,6 @@ Thus the generic data do not determine a first nonconstant gauge-fixed
 coefficient.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

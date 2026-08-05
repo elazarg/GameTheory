@@ -17,8 +17,6 @@ gives an expected-use budget for that transition. The transition selected at
 each step may depend on the complete finite state history.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

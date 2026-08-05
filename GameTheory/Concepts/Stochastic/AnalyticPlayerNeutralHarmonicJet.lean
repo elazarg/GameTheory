@@ -22,8 +22,6 @@ processed span, or adjoining it strictly lowers the remaining harmonic rank.
 No strict-drift strategy or public punishment is constructed here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

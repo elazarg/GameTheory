@@ -23,8 +23,6 @@ This is a typed assembly of the strict-drift and harmonic-jet results. It
 does not construct a strategy, punishment, or public response.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

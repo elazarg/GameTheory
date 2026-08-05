@@ -79,8 +79,6 @@ each pure shape; the never-quit shape is exactly the always-Continue
 deviation the ledger cash-out already prices.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

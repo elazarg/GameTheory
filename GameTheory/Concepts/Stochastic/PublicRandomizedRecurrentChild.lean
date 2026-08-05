@@ -33,8 +33,6 @@ preservation only after a strategic stopped-process lemma supplies:
   stopping history.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

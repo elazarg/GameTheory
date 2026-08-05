@@ -17,8 +17,6 @@ live history.  It then applies infinite pure quit-time extremality to arbitrary
 unilateral behavior deviations.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

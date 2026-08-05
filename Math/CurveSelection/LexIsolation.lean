@@ -1,8 +1,6 @@
 import Math.CurveSelection.LocalRootIsolation
 import Math.CurveSelection.NormalLagrange
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

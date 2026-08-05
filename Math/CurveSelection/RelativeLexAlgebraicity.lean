@@ -8,8 +8,6 @@ Relative smooth-chart Lagrange multipliers for a finite lexicographic
 objective list, and the resulting algebraicity in the parameter germ field.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set

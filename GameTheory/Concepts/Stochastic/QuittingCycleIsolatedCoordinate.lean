@@ -62,8 +62,6 @@ about the deviation gain of the infinitely repeated block beyond the scalar
 companion recursion, and nothing about blocks that fail to absorb.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

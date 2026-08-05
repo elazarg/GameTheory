@@ -15,8 +15,6 @@ stage payoff at the cutoff.  Consequently the finite root payoffs converge
 to the existing terminal payoff selected by the stochastic-game API.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

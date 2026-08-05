@@ -22,8 +22,6 @@ corollary.  The final theorem records the contrapositive obstruction which
 any counterexample to uniform existence would have to contain.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

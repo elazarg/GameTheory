@@ -20,8 +20,6 @@ opponent-only live mass is nonincreasing.  Passing to the limit yields the
 tail estimate used by cutoff deviations in the terminal-to-uniform bridge.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

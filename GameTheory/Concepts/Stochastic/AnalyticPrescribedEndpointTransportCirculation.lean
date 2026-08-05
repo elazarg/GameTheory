@@ -30,8 +30,6 @@ implementation of the class, preservation of the whole payoff target, or
 descent of a game-theoretic recursion rank.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

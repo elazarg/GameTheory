@@ -22,8 +22,6 @@ themselves.  No conclusion is inferred past a zero factor: positivity is
 derived from the explicitly assumed positive global limit.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

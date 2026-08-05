@@ -3,8 +3,6 @@ import Math.CurveSelection.AlgebraicRelation
 import Math.CurveSelection.GermChart
 import Math.CurveSelection.LocalRootIsolation
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter

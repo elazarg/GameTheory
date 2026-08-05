@@ -29,8 +29,6 @@ realization for that adverse noise belongs to the concrete play-law
 compiler; no punishment closure is asserted here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

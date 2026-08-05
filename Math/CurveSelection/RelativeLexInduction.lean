@@ -1,7 +1,5 @@
 import Math.CurveSelection.RelativeLexAlgebraicity
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set

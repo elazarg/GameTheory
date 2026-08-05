@@ -11,8 +11,6 @@ forward windows converge to the `false` loop and their reverse windows to the
 mark.
 -/
 
-set_option autoImplicit false
-
 namespace GameTheory.TwoEndedAnchorPersistenceCounterexample
 
 /-- The two-point exact relation: every edge except `true → false`. -/

@@ -24,8 +24,6 @@ No finite-graph recurrence, hazard divergence, or equilibrium conclusion is
 claimed.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

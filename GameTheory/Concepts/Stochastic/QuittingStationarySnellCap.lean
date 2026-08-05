@@ -22,8 +22,6 @@ of a Bellman equation when `q = 1`; all results below therefore state the
 strict contraction hypothesis `q < 1`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

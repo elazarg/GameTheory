@@ -99,8 +99,6 @@ intentional open declaration is `exists_uniformDeviationCapConstructor` in
 `UniformExistenceConjecture.lean`; these are the only two.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

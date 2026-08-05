@@ -61,8 +61,6 @@ eventually-statement supplies it, but it has to be taken.
   matching branch pinned rather than squeezed
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

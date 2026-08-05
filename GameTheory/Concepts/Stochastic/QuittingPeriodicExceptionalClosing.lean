@@ -20,8 +20,6 @@ positive phase error repeats forever and its opponent-survival-weighted sum
 need not be finite.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

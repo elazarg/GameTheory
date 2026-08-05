@@ -16,8 +16,6 @@ It also provides the disintegration lift used to turn a coupling of a
 pushforward law into a coupling of the original law.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace Probability
 

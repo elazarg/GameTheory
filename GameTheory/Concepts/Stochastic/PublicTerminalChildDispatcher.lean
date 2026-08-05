@@ -22,8 +22,6 @@ start at that state makes fixed-depth branch cones disjoint and makes the
 selected terminal history recoverable from every branch history.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

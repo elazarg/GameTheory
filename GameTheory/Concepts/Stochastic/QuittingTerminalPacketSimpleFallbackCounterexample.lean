@@ -23,8 +23,6 @@ provenance, or a playerwise scalar prefix summary, from being mistaken for a
 producer of a stationary/First boundary.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

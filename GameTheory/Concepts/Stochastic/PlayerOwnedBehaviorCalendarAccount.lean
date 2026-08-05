@@ -23,8 +23,6 @@ profile's `histDist`.  Completed epochs and the current prefix are paid by
 one explicit asymptotically sublinear budget.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

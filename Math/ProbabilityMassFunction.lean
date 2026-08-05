@@ -15,8 +15,6 @@ extensionality, conditioning (`condOn`), and sequential fold/bind composition.
 Does not cover product structure (see `PMFProduct.lean`).
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace ProbabilityMassFunction
 

@@ -8,8 +8,6 @@ import GameTheory.Concepts.Stochastic.BlockPairK11DyadicData
 
 /-! # Independently checked K11 phase group 3--5 -/
 
-set_option autoImplicit false
-
 namespace GameTheory.BlockPairK11.DyadicCertificate
 
 open LocalInterval

@@ -22,8 +22,6 @@ calendar envelope.  The actual full-history behavior law is constructed in
 `PlayerOwnedBehaviorCalendarAccount`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -20,8 +20,6 @@ finite payoff from continuing throughout the truncation; that atom converges
 to the explicit infinite `Never` payoff.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -15,8 +15,6 @@ history and the probability of reaching it.  These are the elementary
 stopping-process coordinates used by the terminal-to-uniform bridge.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

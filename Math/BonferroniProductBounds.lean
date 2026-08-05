@@ -44,8 +44,6 @@ Mathlib has `Finset.prod_one_sub_ordered` (an exact identity) but neither of
 these inequalities.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 
 variable {ι : Type*}

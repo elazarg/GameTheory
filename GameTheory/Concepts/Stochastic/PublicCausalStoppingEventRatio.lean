@@ -14,8 +14,6 @@ stopping time.  It is kept separate from the finite factorization API so the
 probabilistic proof can be audited independently.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

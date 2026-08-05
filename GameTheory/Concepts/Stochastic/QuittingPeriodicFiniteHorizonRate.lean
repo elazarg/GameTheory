@@ -21,8 +21,6 @@ finite-horizon boundary charge of order `B * m / N` give the game-facing
 `(A + 2 * B) / sqrt N` Nash bound.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

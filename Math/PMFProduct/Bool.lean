@@ -17,8 +17,6 @@ namespace Math.PMFProduct
 
 open Math.Probability Math.ProbabilityMassFunction
 
-set_option autoImplicit false
-
 /-- The mass of `false` in a Boolean PMF is one minus the mass of `true`. -/
 lemma pmfBool_false_toReal (mu : PMF Bool) :
     (mu false).toReal = 1 - (mu true).toReal := by

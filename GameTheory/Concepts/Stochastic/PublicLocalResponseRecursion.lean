@@ -29,8 +29,6 @@ completed recursion for every positive accuracy.  The existing public-phase
 and adaptive-potential bridges then yield a uniform equilibrium payoff.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

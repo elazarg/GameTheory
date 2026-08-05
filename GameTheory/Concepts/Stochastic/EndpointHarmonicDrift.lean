@@ -23,8 +23,6 @@ The final finite example shows why this is not enough to dominate a positive
 target of order two.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

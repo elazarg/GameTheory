@@ -27,8 +27,6 @@ finite-kernel fact to the exact mean-ergodic projection identity required by
 `IsControllerProjectionWitness` remains separate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

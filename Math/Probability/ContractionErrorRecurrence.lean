@@ -26,8 +26,6 @@ predictive-compression theorem must establish the displayed one-step
 recurrence separately before applying this module.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 
 namespace Probability

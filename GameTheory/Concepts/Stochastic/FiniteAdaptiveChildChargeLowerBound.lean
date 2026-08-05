@@ -28,8 +28,6 @@ positive slack.  No positivity normalization or additional charge
 hypothesis is needed.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

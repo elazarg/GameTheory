@@ -6,8 +6,6 @@ import Mathlib.Algebra.MvPolynomial.Equiv
 import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 import Mathlib.Topology.Algebra.MvPolynomial
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

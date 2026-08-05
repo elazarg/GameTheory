@@ -20,8 +20,6 @@ legal entry interface all remain explicit hypotheses.  Positive occupation
 charge alone supplies none of them.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

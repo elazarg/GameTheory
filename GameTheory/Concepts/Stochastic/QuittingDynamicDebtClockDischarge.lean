@@ -20,8 +20,6 @@ does not construct that sequence, identify the finite Bellman quantity with
 an unrestricted infinite-horizon deviation value, or produce an equilibrium.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

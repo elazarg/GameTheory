@@ -29,8 +29,6 @@ product law by quitter set, and the landed `absorbingContribution / (1 − m)`
 representation of stationary values.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

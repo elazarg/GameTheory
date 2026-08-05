@@ -33,8 +33,6 @@ relevant row family and rank hypotheses are provided; strategic realization
 remains separate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

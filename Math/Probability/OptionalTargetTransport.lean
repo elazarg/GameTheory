@@ -60,8 +60,6 @@ the estimate is pure linearity plus a pointwise comparison, which is why it
 is stated once here instead of being re-derived at each use site.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

@@ -29,8 +29,6 @@ alternative and its pointwise game semantics.  It does not yet compile the
 potential into a calendar account or the circulation into a punishment.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

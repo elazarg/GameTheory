@@ -20,8 +20,6 @@ adaptive local-response recursion.  These results are conceptual guardrails:
 they assume a particular uniform payoff and do not prove that one exists.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -25,8 +25,6 @@ nondegenerate lottery over several absorbing continuation games.  The
 finite initial prefix disappears from every long-run average.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

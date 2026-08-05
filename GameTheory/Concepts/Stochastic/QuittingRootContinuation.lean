@@ -18,8 +18,6 @@ Only this finite first-stage identity and its immediate bounds are proved
 here.  No absorption-path/proper-path equivalence is asserted.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

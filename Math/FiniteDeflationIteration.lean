@@ -28,8 +28,6 @@ The module is purely finite and algebraic.  It does not construct a
 deflation step or attach any stochastic or strategic meaning to one.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

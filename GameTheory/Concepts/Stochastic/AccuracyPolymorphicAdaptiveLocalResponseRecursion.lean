@@ -33,8 +33,6 @@ the same as that compiler: selector terminal states are globally stopped
 under every joint action.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

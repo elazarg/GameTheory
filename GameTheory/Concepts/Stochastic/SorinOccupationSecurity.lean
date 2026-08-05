@@ -23,8 +23,6 @@ the later deterministic live-history splice can consume it without importing
 any target-payoff or equilibrium hypotheses.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

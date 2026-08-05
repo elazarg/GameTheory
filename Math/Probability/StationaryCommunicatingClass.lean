@@ -18,8 +18,6 @@ The results here isolate the finite Markov-chain fact needed to decompose a
 positive occupation circulation into closed communicating classes.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

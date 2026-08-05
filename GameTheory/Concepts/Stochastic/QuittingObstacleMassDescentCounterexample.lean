@@ -58,8 +58,6 @@ retaining the zero-mass stages where this counterexample lives, rather than
 collapsing it to a function of `τ` alone.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

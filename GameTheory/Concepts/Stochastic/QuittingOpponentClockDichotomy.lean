@@ -33,8 +33,6 @@ theorem records the additional all-tail absorption and terminal-Nash
 hypotheses consumed by the existing exceptional stationary fallback.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

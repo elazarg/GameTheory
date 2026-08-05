@@ -23,8 +23,6 @@ the raw mixing coordinates of an `AnalyticBellmanGerm`. At every positive
 valid parameter these formulas agree with the semantic Fink quantities.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -21,8 +21,6 @@ point of that return therefore decodes to a cyclic chain of valid one-phase
 predecessor links.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory.BlockPairCharts

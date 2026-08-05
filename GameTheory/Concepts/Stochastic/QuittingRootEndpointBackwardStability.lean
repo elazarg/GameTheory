@@ -91,8 +91,6 @@ the stratum-frame ledger above).
   simultaneously repairing several candidate rows with a shared `d`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

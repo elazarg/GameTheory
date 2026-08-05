@@ -11,8 +11,6 @@ is the corrected finite-chain datum; it does not fold the final root into the
 preterminal opponent clock.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

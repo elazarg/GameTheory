@@ -20,8 +20,6 @@ the root with the terminal-payoff expectation for an arbitrary behavior
 profile.  Neither result uses equilibrium or a special stopping rule.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

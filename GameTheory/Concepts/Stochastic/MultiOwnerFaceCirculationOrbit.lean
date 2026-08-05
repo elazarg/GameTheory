@@ -93,8 +93,6 @@ The chain runs forward, `R_{n+1} = f(R_n, x_n)`; reversing a finite prefix
 gives the backward orbit convention of the source question.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

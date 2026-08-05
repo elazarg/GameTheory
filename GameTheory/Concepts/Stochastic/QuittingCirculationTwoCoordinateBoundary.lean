@@ -85,8 +85,6 @@ Circulation, at `L = 1`, is confirmed a genuinely high-`n` device: at
 `n = 2` it is neither implied by nor implies the class the capstone closed.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

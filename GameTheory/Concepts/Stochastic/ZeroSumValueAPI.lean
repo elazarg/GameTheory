@@ -39,8 +39,6 @@ the *reward* that varies, using Mathlib's
   row payoff equal to the normalized discounted Shapley value
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped NNReal

@@ -24,8 +24,6 @@ removes an artificial total-source-coverage hypothesis without claiming that
 the positive-response branch is already a credible punishment.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

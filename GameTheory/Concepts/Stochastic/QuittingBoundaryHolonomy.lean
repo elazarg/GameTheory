@@ -30,8 +30,6 @@ realized holonomies remain realized by finite blocks, or that a close seam is
 splice-admissible.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

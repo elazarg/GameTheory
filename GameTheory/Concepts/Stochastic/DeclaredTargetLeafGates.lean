@@ -152,8 +152,6 @@ So the gate verdict is not a function of `IsEndpointDeclared`: both nodes
 declare their germ's endpoint value, and they land on opposite sides.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

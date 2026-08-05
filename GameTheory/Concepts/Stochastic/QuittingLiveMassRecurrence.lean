@@ -15,8 +15,6 @@ one more stage multiplies it by the conditional probability of the unique
 all-continue joint action at the live history.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

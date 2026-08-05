@@ -27,8 +27,6 @@ bounded-account drift and an independent moving-kernel quotient.  Processed
 span membership pays the former but does not make the latter vanish.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

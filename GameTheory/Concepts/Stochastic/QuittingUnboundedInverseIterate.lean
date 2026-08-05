@@ -114,8 +114,6 @@ indifferent, coordinate `1` has gap `q/3 - 1 < 0`, and coordinate `2` has gap
 survival prefix is `q^N → 0`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

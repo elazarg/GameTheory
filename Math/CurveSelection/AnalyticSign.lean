@@ -3,8 +3,6 @@ import Math.AlgebraicSelection
 import Mathlib.Analysis.Analytic.Polynomial
 import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set Topology

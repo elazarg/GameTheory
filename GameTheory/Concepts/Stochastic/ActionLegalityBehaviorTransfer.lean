@@ -130,8 +130,6 @@ state-independent class only.
   two-directional legal-play transfer
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

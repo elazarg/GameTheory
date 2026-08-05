@@ -31,8 +31,6 @@ This is the accounting invariant needed to iterate analytic deflation even
 when a prescribed baseline column was deleted.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

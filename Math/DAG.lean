@@ -32,8 +32,6 @@ topological order.
 - `Math.DAG.topologicalOrder_of_acyclic` — acyclicity implies a topological order exists
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace DAG
 

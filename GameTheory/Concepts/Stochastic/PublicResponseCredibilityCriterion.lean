@@ -113,8 +113,6 @@ every state in the union of owner-specific arenas needs the recurrent-class
 coverage/fifth-obstruction correction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

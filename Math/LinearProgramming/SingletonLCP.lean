@@ -53,8 +53,6 @@ is explicitly the game-facing instantiation. The bridge is one-directional
 and does not create an import cycle.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

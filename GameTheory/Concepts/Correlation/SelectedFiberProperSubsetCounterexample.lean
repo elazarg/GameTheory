@@ -15,8 +15,6 @@ Consequently every prescribed pair of contexts can simultaneously be made
 product-realizable, but all three cannot.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

@@ -13,8 +13,6 @@ import Math.RamifiedWeierstrass
 import Mathlib.Data.Complex.Basic
 import GameTheory.Concepts.Stochastic.BellmanCurveGate
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set SignType Topology

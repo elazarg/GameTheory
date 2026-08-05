@@ -28,8 +28,6 @@ nonterminal initial state.  This consequence is proved explicitly below;
 it is the corner case needed for the rank-one/rank-zero process.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

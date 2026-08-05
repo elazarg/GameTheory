@@ -32,8 +32,6 @@ selection.  Inequalities which vanish at the base point, and singular level
 sets, remain outside this regular-locus result.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open Filter Set SignType Topology

@@ -23,8 +23,6 @@ counterexample in that module proves that span membership alone does not
 supply such an account.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

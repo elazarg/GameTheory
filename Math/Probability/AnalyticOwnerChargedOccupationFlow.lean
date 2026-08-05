@@ -20,8 +20,6 @@ missing nonnegative power of the parameter. Thus the result has one common
 pole order while retaining a separate analytic potential for each owner.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

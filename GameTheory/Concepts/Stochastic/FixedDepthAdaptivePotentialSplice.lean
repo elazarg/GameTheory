@@ -22,8 +22,6 @@ charges are combined into one explicit Cesàro budget.  The final constructor
 returns an `AdaptivePotentialSystemAt` for the parent target.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

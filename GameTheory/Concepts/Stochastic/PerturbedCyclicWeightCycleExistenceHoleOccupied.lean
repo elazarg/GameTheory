@@ -58,8 +58,6 @@ positive-absorption clause supplies the strict survival bound.
 against `PerturbedCyclicWeightNoExactCycle.no_exactCycle`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

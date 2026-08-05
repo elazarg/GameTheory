@@ -18,8 +18,6 @@ This reusable law is the bridge needed to operationalize invariant neutral
 occupations in the gain-bias criterion's necessity direction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

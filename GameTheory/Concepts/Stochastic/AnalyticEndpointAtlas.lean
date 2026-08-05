@@ -39,8 +39,6 @@ potential.  The first branch contains a strict support-cardinality
 inequality, while the latter two remain explicit obstructions.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

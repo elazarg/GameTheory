@@ -19,8 +19,6 @@ This is the abstract core of Kuhn's theorem: conditioning distributes over
 sequential Kleisli composition.
 -/
 
-set_option autoImplicit false
-
 namespace Math.ParameterizedChain
 
 open Math.ProbabilityMassFunction

@@ -42,8 +42,6 @@ build on this vocabulary. It builds on `Math.Coupling` for the relational
 variant and is the law-family companion to `Math.TraceRun`.
 -/
 
-set_option autoImplicit false
-
 namespace Math
 namespace NondetRefinement
 
