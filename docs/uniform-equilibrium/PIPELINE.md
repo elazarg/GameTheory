@@ -1562,6 +1562,82 @@ leaves.
 leaf property of the `sorry`-carrying modules is asserted somewhere a build can
 check it, not left as an audit observation.
 
+### `LEAN-P0-9` — machine-check the weight with relaxed cycles at every tolerance and no exact one
+
+- **Status:** IN FLIGHT
+- **Lane:** P0
+- **Depends:** the complementarity predicate, the transport law.
+- **Record:** [exact-vs-relaxed]
+
+**Objective.** Machine-check that an explicit rational three-coordinate cyclic
+weight admits no exact cycle of any finite period, while admitting relaxed
+cycles of period `3m` for every `m`.
+
+**State.** `IN FLIGHT`. The hand proof is complete and finite: centered values
+are nonnegative since every reward to `i` from an outcome containing `i` is at
+least `-1/2`; the local gain identity forces at most one positive coordinate per
+exact row; singleton rows pin the active coordinate's centered value to zero
+while forcing the predecessor's strictly positive; the coordinate sum is `1/2`
+at every phase, which the block-endpoint vertices cannot meet. The row
+dichotomy alone is purely algebraic and is the first landing target.
+
+**Acceptance.** The no-exact-cycle statement as a theorem, or the row dichotomy
+plus an explicit account of what remains. The gain identity must be recomputed
+from the repository's own definitions before anything is built on it.
+
+### `LEAN-P0-10` — separate the three contraction deficits and price re-closing
+
+- **Status:** IN FLIGHT
+- **Lane:** P0
+- **Depends:** the transport law, the survival-prefix bridge, the anchored
+  max-affine object.
+- **Record:** [anchored-repair]
+
+**Objective.** Formalize the exact residual formula for closing a modified
+block, and machine-check that the same formula **fails** for the optimized
+deviation objective.
+
+**State.** `IN FLIGHT`. Three deficits must not be conflated: the value
+recursion's, the deviation recursion's built from deleted products, and a local
+block's transported mass. The law is an exact identity for the first, a sharp
+upper bound for the second, and false for the third. Prefix survival is a
+multiplicative transport factor, never a denominator.
+
+**Acceptance.** The exact identity, the transport-factor separation, and a
+machine-checked witness for the failure. Vanishing absorption gives an inverse
+pole but not non-existence, and that must be stated so the earlier reading
+cannot return.
+
+### `MATH-P0-6` — decide whether the published cyclic family admits an admissible absorbing cycle
+
+- **Status:** READY
+- **Lane:** P0
+- **Depends:** the imported cyclic table.
+- **Record:** [exact-vs-relaxed]
+
+**Objective.** Decide whether the published cyclic three-player family admits an
+admissible absorbing cycle. A negative answer falsifies completeness of the
+disjunction **without touching existence**, since that family has a uniform
+equilibrium payoff.
+
+**State.** `READY`, and this is the question that actually bears on
+completeness. The family sits in the `S₊ ≠ ∅, S₋ = ∅` case, where admissibility
+is automatic and the sole obstruction is absorption degenerating — so the
+question reduces to whether absorption can vanish there. That is itself a finite
+check: relaxed cycles at small tolerance have absorption bounded below exactly
+when the normalized singleton LCP on the weight is infeasible, and when it is
+feasible, period one already suffices.
+
+Two related facts do **not** settle it and must not be mistaken for it. The
+three-coordinate weight of `LEAN-P0-9` has no exact cycle but is zero-solo, so
+it satisfies the *first* disjunct and says nothing about completeness. And the
+published family's lack of an exact *equilibrium* is not the lack of an
+admissible cycle — the compiler sends cycles to uniform payoffs, not conversely.
+
+**Acceptance.** A decision, with the absorption computation. If absorption is
+bounded below, the disjunction survives on the leading hard candidate and the
+remaining content is case 3.
+
 ## Literature import lane
 
 ### `LIT-P1-1` — audit and formalize four-player fallback-collapse propositions
@@ -1847,6 +1923,7 @@ short, at the cost of these definition lines, some of which still exceed 100
 columns -- that residual is the path length itself, not a wrapping choice.
 
 [anchored-repair]: ../../ideas/PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md
+[exact-vs-relaxed]: ../../ideas/AbsorbingCycleCarrier/ExactCyclesAreNotLimitsOfRelaxedOnes.md
 [ep]: ../../ideas/PositivePlateauBoundaryClosure/EnrichedAbsorptionPathsMayCompactifyTheEscapingMiddle.md
 [gbp]: ../../ideas/VanishingDiscountResponseSynthesis/DiscountedCertificatesConvergeToGainBiasPackets.md
 [welf]: ../../ideas/PositiveWelfareSeparator/FailedRepairMayYieldPositiveGlobalWelfareSeparator.md
