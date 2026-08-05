@@ -125,6 +125,7 @@ import GameTheory.Concepts.Stochastic.ActionLegalityNormalization
 import GameTheory.Concepts.Stochastic.ActionLegalityMarkovConverse
 import GameTheory.Concepts.Stochastic.Uniform
 import GameTheory.Concepts.Stochastic.PunishmentLevel
+import GameTheory.Concepts.Stochastic.Feasible
 import GameTheory.Concepts.Stochastic.ActionLegalityBehaviorTransfer
 import GameTheory.Concepts.Stochastic.ActionLegalityNormalizedHistory
 import GameTheory.Concepts.Stochastic.ActionLegalityDisintegration
@@ -421,6 +422,7 @@ import Math.FiniteLinearCompatibility
 import Math.FiniteInequalityCompatibility
 import Math.LinearAlgebra.MixedCompatibilityAlternative
 import Math.LinearProgramming.OneDimensionalAffineMinimax
+import Math.LinearProgramming.SingletonLCP
 import Math.InvisibleNeutralActionDrift
 import GameTheory.Concepts.Stochastic.FinkMarkovEndpoint
 import GameTheory.Concepts.Stochastic.BigMatch
