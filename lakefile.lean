@@ -4,6 +4,7 @@ open Lake DSL
 
 abbrev gameTheoryLeanOptions : Array LeanOption := #[
   ⟨`pp.unicode.fun, true⟩,
+  ⟨`autoImplicit, false⟩,
   ⟨`relaxedAutoImplicit, false⟩,
   ⟨`weak.linter.flexible, true⟩,
   ⟨`weak.linter.hashCommand, true⟩,
@@ -43,7 +44,7 @@ require FixedPointTheorems from "fixed-point-theorems-lean4"
 -- Production modules must not import `InformationTheory.*` until the
 -- dependency is confirmed or the library is upstreamed to mathlib.
 require InformationTheory from git
-  "https://github.com/elazarg/kraft" @ "d888214c54cbf7526013890f5ab8efd8ffb7081c"
+  "https://github.com/elazarg/kraft" @ "2fe04082089d7834dca24f3cfe6055b67ba33d67"
 
 @[default_target]
 lean_lib GameTheory where
