@@ -1235,9 +1235,33 @@ obstruction lives entirely inside the deviator's own strategy and does not
 depend on opponent behaviour**, which is a strictly stronger localization than
 the signalling reading.
 
-The named next mechanism is **disintegration**: condition the deviator's
-realized action on the normalized history rather than projecting pointwise. The
-conditional-distribution infrastructure for it already exists.
+**Disintegration works (`L`), and the row now reduces to one question.**
+`ActionLegalityDisintegration.lean` conditions an arbitrary deviator's realized
+action on the normalized history instead of projecting pointwise, which defeats
+the non-injective inversion outright. Against a background profile that is both
+label-blind and legal, the disintegrated deviator's raw trajectory equals the
+original's pushed forward along normalization — for a **literally unrestricted**
+deviator, no strategy-class restriction anywhere. Combined with
+normalization-blind payoff bookkeeping this gives **exact payoff equality** at
+every horizon and player, not merely domination. The construction is total,
+including at normalized histories of probability zero.
+
+So the transfer holds *conditional on a label-blind, legal witness existing at
+each accuracy*, and the whole row now reduces to:
+
+> can a padded-game equilibrium be taken label-blind without loss?
+
+The obstruction to getting there by the same means is machine-checked rather
+than argued: the induction needs the background profile **already** invariant to
+rewrite the one-stage kernel as a function of the normalized history alone.
+Disintegrating the deviator's coordinate alone leaves the other coordinates
+free to leak raw labels, and disintegrating every coordinate simultaneously
+against an already-invariant background is circular as stated. That is a
+technical reason for the recorded verdict on this route, replacing the
+non-convexity prose argument.
+
+Note the disintegration identities require finite state and action carriers,
+stated explicitly and used nowhere upstream.
 
 **The candidate repairs are not equal, and the choice is now decided (`M`).**
 
