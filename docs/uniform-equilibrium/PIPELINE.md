@@ -657,6 +657,28 @@ a route — that branch is the whole problem, not a residual case. And it licens
 `NEG-P0-1` to restrict its search to the isolated-negative branch **without loss
 of generality**, since a counterexample anywhere yields one in the branch.
 
+**Evidence from the sharpest concrete instance (`M+L`, 2026-08-05).** The
+program's only weight provably in the third branch **alone** — not zero-solo, no
+admissible cycle of any period, isolated-negative present — **is repairable**,
+and the repair delivers the real `IsUniformEquilibriumPayoff`, machine-checked
+(`QuittingDisjunctionCounterexampleRepair.lean`). Its isolated mismatch is
+exactly `1 = -r_2({2})`, and `δ = 0`: no positive floor exists against all
+behaviour on this weight.
+
+The mechanism is the structurally interesting part. The exact isolated witness
+sits at survival slope `1`, in the fixed-point-ray regime, where the honest
+value `-1` is dominated by the boundary payoff `0` of never quitting — a genuine
+gain-`1` deviation. The repair **leaves the isolated regime entirely**: both
+coordinates play the same constant hazard, so nothing is isolated and the ray
+never arises, giving gains `≤ 2p` and an `ε`-equilibrium at `p = min(ε/2, 1)`.
+
+So on this instance the obstruction is an artifact of insisting on the exact
+isolated cycle, and repair is found by moving off it. That is consistent with
+the separate result that a floor exists *within* exact complementarity: the two
+together say the approximate equilibria are real but do not live in the
+complementary grammar. **No general sufficiency theorem follows** — the
+symmetric-coin construction is specific to this table.
+
 ### `MATH-P1-2` — test affine hazard domination on the exact-D families
 
 - **Status:** READY
