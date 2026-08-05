@@ -1605,7 +1605,7 @@ from the repository's own definitions before anything is built on it.
 
 ### `LEAN-P0-10` — separate the three contraction deficits and price re-closing
 
-- **Status:** IN FLIGHT
+- **Status:** DONE
 - **Lane:** P0
 - **Depends:** the transport law, the survival-prefix bridge, the anchored
   max-affine object.
@@ -1621,10 +1621,14 @@ block's transported mass. The law is an exact identity for the first, a sharp
 upper bound for the second, and false for the third. Prefix survival is a
 multiplicative transport factor, never a denominator.
 
-**Acceptance.** The exact identity, the transport-factor separation, and a
-machine-checked witness for the failure. Vanishing absorption gives an inverse
-pole but not non-existence, and that must be stated so the earlier reading
-cannot return.
+**Acceptance.** **DONE, 2026-08-05**, `QuittingSeamPriceResidual.lean`. All four
+parts landed. The exact form needed no hypothesis beyond the definitions — the
+successor payoff is affine in the tail value with slope the full joint continue
+mass, unconditionally. The failure witness is an isolated coordinate at hazard
+rates `1/2` and `1/3`, where the mismatch is rate-independent while the full
+deficit varies, so no single numerator reproduces it; the deleted deficit there
+is exactly `0`. Unit continue mass makes the successor map the identity, so
+vanishing absorption gives no pole.
 
 ### `MATH-P0-6` — port the all-periods non-existence theorem
 
