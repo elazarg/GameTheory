@@ -42,23 +42,33 @@ r({3}) = (3, 0, 1)        r({1,3}) = (0, 1, 1+ε)
 Solo values are all `1 > 0`, so it is **not zero-solo**: the trichotomy's first
 branch fails outright.
 
-**No period-one cycle.** The affine no-join condition asks, for some coordinate
-`i` with positive solo value, a rate `p ∈ (0,1]` with
+**No period-one *solo-quitter* cycle (`L`).** The affine no-join condition —
+the repository's `QuittingSoloQuitterCriterion` — asks, for some coordinate `i`
+with positive solo value, a rate `p ∈ (0,1]` with
 `(1-p)·r_j({j}) + p·r_j({i,j}) ≤ r_j({i})` for every `j ≠ i`. At `i = 1, j = 3`
-it reads `(1-p)·1 + p·(1+ε) ≤ 0`, i.e. `1 + pε ≤ 0`, false for every `p`. The
-cyclic symmetry gives the same at `i = 2` and `i = 3`.
+it reads `(1-p)·1 + p·(1+ε) ≤ 0`, i.e. `1 + pε ≤ 0`, false for every `p`. It
+fails at **every** coordinate and every rate, and that lifts to the block level:
+no period-one block whose row isolates a single coordinate as the sole possible
+quitter is admissible, for any owner, hazard, or terminal.
+
+Rows in which **two or three coordinates mix simultaneously are not covered**,
+and no machinery for them exists. So period one is excluded for the solo-quitter
+family only, not outright.
 
 Note this already fails at `ε = 0`, where an admissible cycle nonetheless
 **exists** at period three. So no-join failing is not by itself evidence of
 non-existence — period three is where the unperturbed table lives, and the fence
 only rules out period one.
 
-**No period-three cycle.** The unperturbed phase-rotation block, machine-checked
-for `ε = 0`, breaks under the perturbation: at the phase where the silent
-creditor coordinate is promised value `1`, deviating to sure-quit against the
-opponent's mixing at `1/2` pays `½(1+ε) + ½·1 = 1 + ε/2`, a strictly profitable
-deviation of size `ε/2`. This is the published preemption mechanism, recomputed
-inside our own endpoint-difference formula.
+**The period-three block breaks (`L`).** The unperturbed phase-rotation block,
+machine-checked for `ε = 0`, stops being admissible under the perturbation: at
+the phase where the silent creditor coordinate is promised value `1`, quitting
+pays `½·1 + ½·(1+ε) = 1 + ε/2` while continuing pays `½·0 + ½·2 = 1`, an
+endpoint difference of exactly `ε/2`. Computed from the repository's own quit
+and continue payoff lemmas, not postulated — this is the published preemption
+mechanism reproduced internally.
+
+This covers **that one block**. Other period-three blocks are not examined.
 
 **No cycle at any period** is the published Theorem 2.1 — that the relevant
 fixed-point set contains only trivial vectors. **Unformalized here.** The farmed

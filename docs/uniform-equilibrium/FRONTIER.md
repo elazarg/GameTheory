@@ -231,11 +231,19 @@ The trichotomy leaves **two holes**, and these are the open content:
    `ε`-perturbation of the cyclic three-player table has solo values all `1 > 0`
    — so the zero-solo branch fails — and admits no absorbing cyclic continuation
    at any period, by the published Theorem 2.1 in its bounded form
-   (`M [reported]`, unformalized here). Period one is excluded by the affine
-   no-join condition, which at one coordinate pair reads `1 + pε ≤ 0`; period
-   three is excluded because the unperturbed phase-rotation block acquires a
-   strictly profitable deviation of size exactly `ε/2`. So the leading hard
-   candidate is *outside the trichotomy*, not inside an unproved branch of it.
+   (`M [reported]`, unformalized here).
+
+   Two families are excluded internally (`L`), with quantifiers that differ and
+   matter. Every period-one block isolating a single coordinate as sole quitter
+   fails, for every owner and rate, since the affine no-join condition reads
+   `1 + pε ≤ 0` there — but rows with two or three coordinates mixing at once
+   are **not** covered. And the unperturbed phase-rotation block stops being
+   admissible, its endpoint difference being exactly `ε/2` — but **that block
+   only**, not every period-three block.
+
+   So the leading hard candidate is *outside the trichotomy* rather than inside
+   an unproved branch of it, on the strength of a published theorem plus two
+   machine-checked families. The general statement is still reported.
 2. The isolated-negative branch has **no sufficiency theorem**. One specific
    two-coordinate weight in it does have a uniform equilibrium payoff, by an
    explicit symmetric contracting perturbation, but that construction is stated
