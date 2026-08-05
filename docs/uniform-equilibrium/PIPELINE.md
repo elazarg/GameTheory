@@ -1953,6 +1953,40 @@ linearization couples the perturbation through the value recursion, and the
 fixed-tail vs cycle-feedback gap is the same three-legged split the seam-price
 law had.
 
+### `MATH-P0-10` — the drift device: uniform threats against moving states
+
+- **Status:** READY
+- **Lane:** P0 of the **general** conjecture; explicitly **not** on the
+  quitting critical path — a quitting game has one live state and nowhere to
+  drift, which is why the entire quitting program runs without this.
+- **Depends:** the Puiseux/curve-selection wing (shared with the germ-route
+  shortcut), `Kernel.trajMeasure`, the phase-switch engine as the static
+  special case.
+- **Record:** this file; necessity is witnessed in-tree by the Big Match
+  fence — stationary punishment is provably insufficient against drift, so no
+  routing around the device exists for threat-based constructions.
+
+**Objective.** The punisher's uniform guarantee for general finite stochastic
+games: one history-dependent strategy holding the deviator's average at or
+below the min-max plus `ε`, simultaneously at every large horizon, against
+state drift.
+
+**State.** Two layers. **BK regularity** — bounded variation of the
+discounted value curve as the discount vanishes — is semialgebraic geometry,
+the general-state target of the existing Puiseux wing. **The adaptive-clock
+potential** — the discount updated by realized payoffs so that patience
+absorbs drift — is the genuinely new device: an *adaptive* version of the
+phase-switch clock, where ours is static. The honest target is one-sided
+(the punisher's guarantee), though the one-sided form is not obviously
+easier. The modern textbook proof is the natural farming target before any
+Lean is written; the novel-device question — whether the landing lemma and
+an adaptive switch clock can produce a potential argument native to this
+program's machinery — goes to the questions corpus after the farm.
+
+**Acceptance.** The one-sided uniform guarantee as a theorem, or an honest
+partial: the potential lemma over a granted BK-regular value curve, with the
+regularity layer tracked separately. Nothing here gates the quitting lane.
+
 ## Literature import lane
 
 ### `LIT-P1-1` — audit and formalize four-player fallback-collapse propositions
