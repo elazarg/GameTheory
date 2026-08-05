@@ -1,6 +1,9 @@
 # The notion lattice
 
-**Curated at commit `6523070`, 2026-08-04.** Tracks pipeline row `LEAN-F0-5`.
+**Curated at commit `6523070`, 2026-08-04; disambiguation note added
+2026-08-05** (this file's `K0`/`K1` cluster IDs are unrelated to any
+question's `K`-numbering used elsewhere — see `PIPELINE.md`). Tracks pipeline
+row `LEAN-F0-5`.
 This file is the artifact that row asks for: every ordered pair of
 payoff/equilibrium notions in its declared universe is LANDED with a named
 theorem, OPEN with a tracked row, FALSE with a counterexample or reason, or
@@ -44,6 +47,10 @@ restricted class, or quitting-only).
 |---|---|---|---|---|---|---|---|
 | K0 | `KernelGame.IsNash` | `Concepts/Equilibrium/SolutionConcepts.lean:68` | one-shot `eu` | pure/mixed strategy of a `KernelGame` | none (single shot) | exact | any `KernelGame` |
 | K1 | `KernelGame.IsεNash` | `Concepts/Equilibrium/ApproximateNash.lean:43` | one-shot `eu` | as K0 | none | ε | any `KernelGame` |
+
+(`K0`/`K1` here are this registry's own cluster-node IDs, unrelated to any
+question's `K`-numbering — e.g. `PIPELINE.md`'s Q148/Q159 `K1`–`K4` labels,
+which name different objects entirely.)
 
 Not stochastic-game notions themselves, but the base every stage-level and
 horizon-level notion below reduces to (`isεHorizonNash_iff_horizonGame`,

@@ -1,8 +1,12 @@
 # Uniform-equilibrium project pipeline
 
 **Production-Lean checkpoint:** `14d75ff`; **research-control checkpoint:**
-`cd1db11`, both audited on 2026-08-03. **This file revised 2026-08-04.** Lean
-work landing after the last audited commit is uncommitted-or-newer and not yet
+`cd1db11`, both audited on 2026-08-03. **This file revised 2026-08-05** —
+Session IX capstone wave: the two-player capstone landed and is recorded, the
+published cycle-existence hole is occupied end to end (`MATH-P0-6` `DONE`),
+the status index is rebuilt to cover every row, and its self-contradictions
+(`LEAN-P1-5`, `MATH-P0-6`, `LEAN-P1-1`, `PC-010`) are reconciled. Lean work
+landing after the last audited commit is uncommitted-or-newer and not yet
 reflected in these checkpoints.
 
 This is project-control truth: decisions, dependency priorities, gates, and
@@ -44,11 +48,25 @@ content it organizes.
 
 One line per item, grouped by work-cycle stage so what is ready, moving,
 stalled, and finished is visible at a glance. Within a group, items are listed
-lane by lane in the order they appear below.
+lane by lane (`MATH`, `NEG`, `LEAN-F0`, `LEAN-P*`, `GEN`, `LIT`, `ENG`), then
+by number, not in file order. Every status word carried by any `###`-headed
+row below has a home in exactly one of the four buckets. `PC-*`
+project-control decisions are not work items and are tracked by the
+[Project-control decisions](#project-control-decisions) section itself; the
+one decision that carries its own `Status:` field (`PC-010`, `RESOLVED`) is
+cross-listed under `DONE / SOLVED / RESOLVED` for that reason alone.
 
-**READY** — pick up now
+**READY / PLANNED / DESIGN** — pick up now
+- `MATH-P0-5` — is the exact-cycle disjunct complete, or do ε-cycles diverge?
+- `MATH-P0-6` — port the all-periods non-existence theorem
+- `MATH-P0-7` — a sufficiency theorem for the isolated-negative branch
+- `MATH-P0-8` — the relaxed compiler: formalize Proposition 3
+- `MATH-P0-10` — the drift device: uniform threats against moving states
 - `MATH-P1-1` — re-derive Q148's encoding into the isolated-negative branch
 - `MATH-P1-2` — test affine hazard domination on the exact-D families
+- `MATH-P1-4` — formalize the weight whose gap survives faithful unpinning
+- `MATH-P1-5` — audit the decomposition for instant approximate equilibria
+- `NEG-P0-2` — the orbit-side counterexample criterion
 - `LEAN-F0-1` — formalize the state-dependent-to-independent action-set padding
   reduction
 - `LEAN-F0-2` — make the absorption fence structural, closing the all-continue
@@ -56,13 +74,20 @@ lane by lane in the order they appear below.
 - `LEAN-F0-3` — bridge finite-horizon average to the liminf-average game
 - `LEAN-F0-4` — construct the infinite-play measure by Kolmogorov extension
 - `LEAN-F0-6` — package three implications used as self-evident
-- `LEAN-P1-2` — define stationary regret and its zero/positive gap dichotomy
+- `LEAN-F0-8` — the bounded-transversality lemma behind the case-2 repair
 - `LEAN-P0-5` — formalize that signed phasewise accumulation equals
   relaxed-cycle gain
 - `LEAN-P0-6` — prove the pure quit-time supremum equals the companion map's
   fixed point
+- `LEAN-P0-7` — two-clock punishment for the deviation-cap constructor
+- `LEAN-P1-1` — the n≥3 blocker-designation lemma (retargeted; n=2 closed
+  separately by the capstone)
+- `LEAN-P1-2` — define stationary regret and its zero/positive gap dichotomy
+- `LEAN-P1-4` — define the finite marked absorption-cylinder encoding and its
+  identities (`DESIGN`)
 - `LEAN-P2-2` — discharge three prose-only items the model-faithfulness audit
   found
+- `GEN-P1-1` — the positive-recursive program (V5), scoped (`PLANNED`)
 - `LIT-P1-2` — complete the FTV source statement audit
 - `LIT-P2-1` — define the positive-recursive nonrectangular theorem's repository
   adapter
@@ -73,6 +98,7 @@ lane by lane in the order they appear below.
 - `ENG-P0-2` — make the axiom audit exact and add P0 keeper capstones
 - `ENG-P1-1` — classify the 25 root-unreachable Lean modules and
   opaque/native_decide policy
+- `ENG-P1-3` — dependency drift, and an over-specific upstream lemma
 
 **ACTIVE / IN FLIGHT**
 - `MATH-P0-1` — prove compactness for generalized completed chronological traces
@@ -86,37 +112,62 @@ lane by lane in the order they appear below.
   exploitability gap
 - `NEG-P1-1` — exact screens on rational four-player tables
 - `LEAN-F0-5` — maintain the notion lattice and drive the F0 queue off it
-- `LEAN-P1-1` — prove every two-player quitting game has stationary
-  eps-equilibria
+- `LEAN-F0-9` — name the recurring mechanisms as objects
 - `LEAN-P0-2` — formalize the two carrier refutations that exist only as prose
+- `LEAN-P0-9` — machine-check the weight with relaxed cycles at every tolerance
+  and no exact one (`IN FLIGHT`)
 - `LIT-P1-4` — second round of reference-chain closure and flagged-item intake
 - `ENG-P0-3` — run integration-sweep after every parallel-work wave, before
   committing
 - `ENG-P1-2` — keep the pipeline/frontier and claim-level links clean and
   current
 
-**PARTIAL / BLOCKED**
-- `MATH-P1-3` — decide whether quitting is complete for the general conjecture
-- `MATH-P2-2` — derive a positive global welfare separator, or refute the lift
-- `MATH-P2-3` — route an analytic Bellman/value leaf through a strategic gate or
-  obstruction
-- `MATH-P2-5` — give exact-D anchors a digraph structure and test bounded loop
-  erasure
+**PARTIAL / BLOCKED / PENDING / ANSWERED IN PART**
+- `MATH-P0-4` — map AGKRS Theorem 3.4 clause by clause against the internal
+  trichotomy
+- `MATH-P0-9` — the lock/unlock dichotomy for orbit variation (`ANSWERED IN
+  PART`) — the open core, reshaped
+- `MATH-P1-3` — decide whether quitting is complete for the general
+  conjecture (`BLOCKED`)
+- `MATH-P2-2` — derive a positive global welfare separator, or refute the
+  lift (`PENDING`)
+- `MATH-P2-3` — route an analytic Bellman/value leaf through a strategic gate
+  or obstruction (`PENDING`)
+- `MATH-P2-5` — give exact-D anchors a digraph structure and test bounded
+  loop erasure (`PENDING`)
 - `LEAN-P1-3` — package Q132's exact behavioral nonattainment table
-- `LEAN-P1-4` — define the finite marked absorption-cylinder encoding and its
-  identities
 - `LEAN-P2-1` — source-aligned FTV stationary-impossibility theorem
+  (`BLOCKED`)
 - `LIT-P1-1` — audit and formalize four-player fallback-collapse propositions
 - `LIT-P1-3` — audit the Solan-Solan Q-matrix normalization for a quitting
   preprocessor
 
-**DONE**
+**DONE / SOLVED / RESOLVED**
 - `LEAN-P0-1` — landed debt-transport, cycle-mismatch, FTV, and germ-bridge
   results this cycle — see [archive](PIPELINE-Archive.md)
 - `LEAN-P0-3` — pin the matching scaling case in the germ bridge — see
   [archive](PIPELINE-Archive.md)
 - `LEAN-P0-4` — discharge nondegeneracy of the germ quit family — see
   [archive](PIPELINE-Archive.md)
+- `LEAN-F0-7` — the tail-average transfer is mirrored, not doubled —
+  **to archive**
+- `LEAN-P0-8` — joint complementarity, and absorption derived rather than
+  assumed — **to archive**
+- `LEAN-P0-10` — separate the three contraction deficits and price
+  re-closing — **to archive**
+- `LEAN-P0-11` — bridge the two encodings of complementarity — **to archive**
+- `LEAN-P1-5` — linear complementarity infrastructure — **to archive**
+- `MATH-P0-11` — the minimal open family: the four-player cyclic phase
+  diagram (`SOLVED`) — **to archive**
+- `PC-010` — PC-009's stated basis is established, at the bounded form
+  (`RESOLVED`); a project-control decision, cross-listed here only because it
+  carries a `Status` field, not an archive-rule item
+
+**To archive.** Six rows above carry a finished status but still have a live
+`###` section, in violation of "finished items move to
+[`PIPELINE-Archive.md`](PIPELINE-Archive.md) exactly once": `LEAN-F0-7`,
+`LEAN-P0-8`, `LEAN-P0-10`, `LEAN-P0-11`, `LEAN-P1-5`, `MATH-P0-11`. Noted here
+rather than moved — moving sections is a separate pass.
 
 ## Project-control decisions
 
@@ -274,9 +325,14 @@ Review **3**(4), 291–299 (2001), DOI
 **Theorem 2.1**; the game of its Figure 1 is the case-2 weight times `3`. Its
 literal statement carries no boundedness hypothesis and is machine-checked
 **false**; its proof runs through the convex-hull bound `Σ_i y_i ≤ 4`, which is
-where boundedness enters unstated, so the bounded form is what is proved — and
-the bounded form is what the finite-cycle deduction needs, since repeating a
-cycle lands inside that hull. The case-2 row returns to `PROVED`. Full record:
+where boundedness enters unstated, so the bounded form is mathematically
+established (the gap is a missing step in a published proof, not a wrong
+result) — and the bounded form is what the finite-cycle deduction needs,
+since repeating a cycle lands inside that hull. The case-2 row returns to
+`PROVED` **at the math level**: `NoBoundedCompletelyAbsorbingInverseIterate`
+itself is not machine-checked and remains an open `Prop` (`LEAN-F0-8`, still
+`READY`, owns formalizing it) — this is consistent with, not a reversal of,
+the "open" verdict recorded below in the original entry. Full record:
 [`PerturbedFTVGameHasNoBoundedCompletelyAbsorbingInverseIterate`](../../ideas/UniformEquilibriumLiterature/PerturbedFTVGameHasNoBoundedCompletelyAbsorbingInverseIterate.md).
 The same paper's **Theorem 2.2** independently attests the diverging-period
 claim. Original entry follows. The case-2 refutation was deduced from "this
@@ -304,8 +360,9 @@ structure, survivals and defect asymptotic — not the attribution. So the carri
 being non-finite still has support; what lapses is the claim that a specific
 weight admits *no* finite cycle.
 
-**Revisit trigger.** **Audit returned 2026-08-04: `NOT LOCATABLE`.** No such
-theorem was found under that attribution — every Solan quitting-game paper and
+**Revisit trigger.** Historical audit trail, preserved for record and
+resolved within this same entry — not a live future trigger. **Audit
+returned 2026-08-04: `NOT LOCATABLE`.** No such theorem was found under that attribution — every Solan quitting-game paper and
 an arXiv author sweep were searched; none contains the cited terminology and
 none of the quitting papers has a Theorem 2.1. Worse for the claim: the weight
 at `η = 0` is the Flesch–Thuijsman–Vrieze cubic game divided by three on all
@@ -912,7 +969,9 @@ consumable by `MATH-P0-2`/welfare separation.
 
 - **Status:** READY
 - **Lane:** P1
-- **Depends:** Q148's normal form of the isolated cycle; `K1`–`K2`.
+- **Depends:** Q148's normal form of the isolated cycle; `K1`–`K2` (Q148's
+  own numbering — distinct from Q159's `K1`/`K4` below and from
+  `InvertedCounterexampleSearch`'s `K1`/`K4`).
 - **Record:** [carrier group](../../ideas/AbsorbingCycleCarrier/README.md)
 
 **Objective.** Re-derive Q148's encoding — an arbitrary weight admitting no
@@ -1498,21 +1557,42 @@ unrestricted case has no theorem and had no row.
 consumed in 37 files is either proved once or recorded as an assumption — not
 left implicit in the member lemmas that happen to discharge it.
 
-### `LEAN-P1-1` — prove every two-player quitting game has stationary eps-equilibria
+### `LEAN-P1-1` — retargeted: the n≥3 blocker-designation lemma, after the capstone closed n=2 by a different route
 
-- **Status:** ACTIVE
+- **Status:** READY
 - **Lane:** P1
-- **Depends:** Full-rate cap, pair repair, source case split.
-- **Record:** [Two-player
-  theorem](../../ideas/TwoPlayerBaseCaseExhaustion/EveryTwoPlayerQuittingGameHasStationaryApproximateEquilibria.md)
+- **Depends:** `le_of_lt_affine_on_unitInterval` (landed,
+  `QuittingTwoPlayerExistence.lean`); the general sure-exit-set theorem.
+- **Record:** [Two-player is
+  closed](../../ideas/TwoPlayerBaseCaseExhaustion/TwoPlayerQuittingIsClosed.md)
 
-**Objective.** Source-aligned six-scalar proof that every two-player quitting
-game has stationary terminal epsilon equilibria.
+**Objective (retargeted).** The original aim — a source-aligned six-scalar
+proof that every two-player quitting game has stationary terminal epsilon
+equilibria — is **refuted as a complete route, even at `n = 2`**: the
+capstone's docstring exhibits a two-player weight,
+`r({owner}) = (1, −2)`, `r({blocker}) = (0, −1)`,
+`r({owner,blocker}) = (−1, 0)`, with no exact stationary equilibrium anywhere
+on the rate square (hand-checked over all four corners and the interior), so
+genuinely non-stationary approximate equilibria are mandatory for some
+weights. `n = 2` itself is independently and unconditionally closed by
+`quittingGame_exists_uniformEquilibriumPayoff_twoPlayer`
+(`QuittingTwoPlayerExistence.lean`), via branch classification (zero-solo,
+solo-quitter rate, pair-repair, joint-exit) rather than the six-scalar route,
+and needs no further work under this row. What survives here is the forward
+direction mined from that proof: generalize blocker designation to `n ≥ 3` —
+finitely many opponents plus affine-in-`p` failure of the no-join condition
+forces one opponent to block on all of `(0,1]`, and
+`le_of_lt_affine_on_unitInterval` nearly suffices as is.
 
-**State.** `ACTIVE`; pure-case/orientation/vanishing-solo branch missing.
+**State.** `READY`. What breaks past `n = 2` is the pair-repair branch:
+coalitions of size `≥ 2` open internal-leaver deviations and spectator
+preemption that the two-player proof never enters — the precise `n = 3`
+frontier the mined map identifies.
 
-**Acceptance.** Target and umbrella build; terminal-to-uniform consumer; Q132
-nonattainment regression.
+**Acceptance.** Blocker designation restated and proved at general `n`; the
+general sure-exit-set theorem ("no member leaves, no outsider joins",
+arbitrary coalition `S`) stated — one instantiation away from landed
+machinery.
 
 ### `LEAN-P1-2` — define stationary regret and its zero/positive gap dichotomy
 
@@ -1793,7 +1873,9 @@ transport.
   characterization with no residual existential. Decidability for rational
   data is **blocked, precisely**: the Fourier–Motzkin/Farkas material is
   Prop-level, not computable; a `Decidable` instance is a separate project.
-  The absorption equivalence (`K4`) is now stateable.
+  The absorption equivalence (`K4`, Q159 §5's numbering — "the relaxed
+  compiler", distinct from Q148's `K1`–`K2` above and from
+  `InvertedCounterexampleSearch`'s `K1`/`K4`) is now stateable.
 - **Lane:** P1
 - **Depends:** none.
 - **Record:** [exact-vs-relaxed]
@@ -1801,12 +1883,16 @@ transport.
 **Objective.** Provide the normalized singleton LCP as a Lean object with a
 feasibility predicate.
 
-**State.** `READY`. Several recorded results now turn on the feasibility of
+**State.** `DONE`. Several recorded results turn on the feasibility of
 `λ ∈ Δ(I)`, `q = Bλ ≥ 0`, `λᵢqᵢ = 0` with `Bᵢⱼ = rᵢ({j}) - rᵢ({i})` — in
 particular the equivalence deciding whether absorption can vanish, and with it
-whether a diverging period is even possible. **No LCP infrastructure exists in
-the repository**; the residual-class material is an ideas group, not Lean. Any
-attempt to formalize those equivalences is blocked on this.
+whether a diverging period is even possible. **LCP infrastructure now exists**
+in `Math/LinearProgramming/SingletonLCP.lean` (`SingletonLCPFeasible`, its
+scaling/permutation invariance, the support-pattern reduction via
+`singletonLCPFeasible_iff_exists_supportPattern`, and the game-facing
+`quittingSingletonLCPFeasible`); the residual-class material stays an ideas
+group, not Lean, but formalizing the absorption-vanishing equivalences is no
+longer blocked on the predicate itself.
 
 **Acceptance.** The predicate and enough API to state the absorption
 equivalence. Decidability for rational data would be a genuine strengthening,
@@ -1814,7 +1900,7 @@ since it turns the criterion into something checkable on a concrete table.
 
 ### `MATH-P0-6` — port the all-periods non-existence theorem
 
-- **Status:** READY
+- **Status:** DONE
 - **Lane:** P0
 - **Depends:** `LEAN-P0-9`.
 - **Record:** [exact-vs-relaxed]
@@ -1831,8 +1917,9 @@ hard candidate provably lies outside the trichotomy; the cycle route's
 incompleteness is an internal theorem, and the published chain is independent
 confirmation only.
 
-**State.** `READY`, and the motivation is settled rather than speculative: that
-weight already **occupies** the trichotomy's cycle-existence hole. Its solo
+**State.** `DONE`, and the motivation was settled rather than speculative
+before the last piece landed: that weight already **occupies** the
+trichotomy's cycle-existence hole. Its solo
 values are all `1 > 0`, so the zero-solo branch fails; period one is excluded by
 the affine no-join condition, which at one coordinate pair reads `1 + pε ≤ 0`;
 period three is excluded because the unperturbed phase-rotation block acquires a
@@ -1927,7 +2014,9 @@ replaces the exact-cycle branch wholesale.
 
 **Dispatch state (2026-08-05, evening wave).** Agents: the multi-owner
 circulation case, the §2.1 absence proofs (completing the K1-falsity package
-at `L`), the pinned-pure decoupling lemma, and certsearch's
+at `L`; `K1` here is Q159's own numbering, distinct from Q148's `K1`–`K2` and
+from `InvertedCounterexampleSearch`'s `K1`/`K4`), the pinned-pure decoupling
+lemma, and certsearch's
 circulation-certificate mode with the `F′(x, ε)` grid. Questions filed:
 **Q162** — the true min-max of a quitting weight (stationarity of the worst
 plan, the finite reduction, the three named tables including `F′`'s
@@ -2378,6 +2467,39 @@ refutation lane is logically independent after the terminal/nonexistence waist.
 Two-player formalization, literature imports, and engineering work are safe
 parallel lanes; none should be described as closing the P0 hinge.
 
+**The parallel route: the quitting three-branch disjunction (the
+trichotomy).** A second, independent path to terminal existence for finite
+quitting games, not shown in the diagram above because it does not run
+through the compactification bridge.
+
+```text
+finite quitting weight
+        |
+QuittingThreeBranchDisjunction (the trichotomy), machine-checked -------- [L]
+   zero-solo  |  admissible cycle  |  isolated-negative
+        |             |                    |
+   exists_..._of_  exists_..._of_admissible_   MATH-P0-9: the open core
+   zeroSolo  [L]   quittingCyclicContinuation   (lock/unlock dichotomy)
+                   Block            [L]          -- ANSWERED IN PART (Q159)
+        |             |                    |
+        +-------------+--------------------+
+                       |
+        MATH-P0-8: the relaxed compiler (formalize Proposition 3) --
+                     converts the open core's unbounded-variation orbit
+                     families into terminal ε-Nash objects -------------- READY
+                       |
+        n = 2 capstone: quittingGame_exists_uniformEquilibriumPayoff_twoPlayer
+                     (QuittingTwoPlayerExistence.lean) -- branch
+                     classification directly, not via the compiler -------- [L]
+                       |
+        n >= 3: LEAN-P1-1, retargeted -- blocker designation generalizes;
+                     pair-repair (coalitions >= 2) is the open frontier --- READY
+```
+
+The capstone answers `n = 2` unconditionally by branch classification, so it
+does not itself depend on `MATH-P0-8`; the compiler is the route by which the
+trichotomy's open core (`MATH-P0-9`) is meant to close the general case.
+
 ## Milestones that changed this queue
 
 - Terminal-to-uniform quitting uniformization and fixed-payoff selection moved
@@ -2402,6 +2524,21 @@ parallel lanes; none should be described as closing the P0 hinge.
   continuation to zero -- both witnesses are two-player tables with exact
   zero-debt equilibria once unpinned, and both equilibria are machine-checked
   (`3b04928`).
+- The published cycle-existence hole is occupied: a weight from the
+  literature (Solan 2001, via AGKRS's reference chain) provably lies outside
+  the trichotomy's cycle branch at every period, `MATH-P0-6` landed end to
+  end, and the case-2 refutation is restored on an attested basis
+  (`PC-010`).
+- The two-player capstone landed: `n = 2` finite quitting is closed
+  unconditionally by branch classification, independent of the six-scalar
+  stationary route that `LEAN-P1-1` originally targeted (refuted as a
+  complete route, even at `n = 2`); the mined `n = 3` map retargets that row
+  to blocker designation.
+- `MATH-P0-9`'s open core was answered in part (Q159): the weighted
+  one-stage correspondence's motion floor is false by a tremble
+  counterexample, and the constructive replacement -- the singleton-face
+  circulation theorem -- supplies a new existence class through the relaxed
+  compiler (`MATH-P0-8`), still `READY`.
 
 ## Handoff maintenance
 

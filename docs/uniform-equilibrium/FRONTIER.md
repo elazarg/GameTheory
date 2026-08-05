@@ -1,8 +1,12 @@
 # Uniform-equilibrium mathematical frontier
 
-**Curated at commit `14d75ff`, 2026-08-03.** Production Lean is machine truth;
-checked experiments and uncommitted files are labelled separately and do not
-become landed by appearing here.
+**Curated at commit `14d75ff`, 2026-08-03; prose updated through `52aabd3`,
+2026-08-05.** Session IX capstone wave: the punishment-floor/feasible-set
+paragraph (edited stale before both landed) is corrected, the two-player
+capstone and its no-exact-stationary-equilibrium negative are recorded, and
+the minimality corollary is fixed. Production Lean is machine truth; checked
+experiments and uncommitted files are labelled separately and do not become
+landed by appearing here.
 
 ## Conjecture and semantic waist
 
