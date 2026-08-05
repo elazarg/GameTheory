@@ -3,6 +3,8 @@ name: Agent shared-punishment check
 on:
   push:
     branches: ["agent/shared-punishment"]
+  pull_request:
+    branches: ["uniform-existence"]
   workflow_dispatch:
 
 permissions:
