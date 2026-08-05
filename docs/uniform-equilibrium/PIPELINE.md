@@ -1787,7 +1787,13 @@ transport.
 
 ### `LEAN-P1-5` — linear complementarity infrastructure
 
-- **Status:** READY
+- **Status:** DONE — `Math/LinearProgramming/SingletonLCP.lean`. Predicate,
+  scaling/permutation invariance, the support-pattern reduction, the
+  game-facing instantiation, and a closed-form two-coordinate
+  characterization with no residual existential. Decidability for rational
+  data is **blocked, precisely**: the Fourier–Motzkin/Farkas material is
+  Prop-level, not computable; a `Decidable` instance is a separate project.
+  The absorption equivalence (`K4`) is now stateable.
 - **Lane:** P1
 - **Depends:** none.
 - **Record:** [exact-vs-relaxed]
