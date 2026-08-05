@@ -1,0 +1,26 @@
+name: Agent shared-punishment check
+
+on:
+  push:
+    branches: ["agent/shared-punishment"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build shared-punishment module
+        uses: leanprover/lean-action@v1
+        with:
+          build: true
+          build-args: GameTheory.Concepts.Stochastic.QuittingSharedPunishment
+          test: false
+          use-mathlib-cache: true
