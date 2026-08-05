@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/local-residue-double-sure-mixer
+  pull_request:
+    branches:
+      - uniform-existence
   workflow_dispatch:
 
 permissions:
