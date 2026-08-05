@@ -594,6 +594,38 @@ already addresses.
 **Acceptance.** A verdict on whether the two-clock design fits the constructor's
 interface, and if so a proof plan for the placeholder that uses it.
 
+### `ENG-P1-3` — dependency drift, and an over-specific upstream lemma
+
+- **Status:** READY
+- **Lane:** engineering
+- **Depends:** the `InformationTheory` dependency.
+- **Record:** this file
+
+**Objective.** Two items on the same dependency.
+
+**(a) Manifest sync.** The `InformationTheory` dependency was added
+deliberately, for two entropy experiments. The build's "manifest out of date"
+warning is therefore expected, not drift; the residual action is only to sync
+the manifest so the warning stops masking a real one later. That is a
+dependency-level command and belongs to whoever runs the full build.
+
+**(b) An upstream lemma is stated too narrowly to be reused.** The Gibbs
+log-ratio nonnegativity result there assumes **normalized** measures. A second
+consumer needed it for an *unnormalized* double sum over edges, could not use
+it, and reproved the termwise bound independently — so the tree now carries two
+proofs of the same inequality for want of one hypothesis.
+
+The general form reportedly needs only that the two masses agree
+(`∑p = ∑q`), with no normalization, and would cover both consumers. That is
+strictly more general at no evident cost.
+
+**Acceptance.** The pin resolved, and either the upstream statement generalized
+or a local unnormalized variant landed with both consumers pointed at it.
+
+**Why this is tracked rather than dispatched:** the lemma is not in this
+repository, so changing it is a dependency edit, and the same dependency is
+currently in flux. Sequencing matters.
+
 ### `LEAN-F0-9` — name the recurring mechanisms as objects
 
 - **Status:** ACTIVE (first entity in flight)
