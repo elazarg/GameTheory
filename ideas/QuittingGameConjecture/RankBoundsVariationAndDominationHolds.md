@@ -24,17 +24,24 @@ corrected rank is the right object, and Proposition 2 itself is the proof.
 **(3) The rank-one corollary, strengthened.**
 `P(sup_m S_m ≥ ε) ≤ 2Mδ/ε²`, and more strongly `≤ 2Mδ/(ε² + 2Mδ)`.
 
-**(4) Domination with the unrestricted quantifier — sharper than the
-published assertion.** In the live-chain plan application, **every**
-unilateral behavioural deviation satisfies `Adv(α) ≤ max{A_C, ε + δ}` (plus
-explicit trigger-cost additions), where `A_C` is the always-continue
-deviation's advantage. Proved by an exact performance-difference
-decomposition and summation by parts over survival probabilities — the
-answer is explicit that this is **not** a consequence of the crossing
-estimate alone, and it is stronger than the published "only repetitive
-continuing matters", which asserted the reduction informally. The
-architecture guard's warning about exactly this step is discharged by proof,
-not by citation.
+**(4) Domination with the unrestricted quantifier — corrected on
+formalization.** In the live-chain plan application, **every** unilateral
+behavioural deviation is capped — proved by an exact performance-difference
+decomposition and summation by parts over survival probabilities, not as a
+consequence of the crossing estimate, and stronger than the published
+informal "only repetitive continuing matters". **Two corrections from the
+Lean (`QuittingLiveChainDominationCap.lean`):** the result discharges the
+assembly's **hypothesis (a)** directly (the cap relative to the plan's own
+value `V₀`, with `planError = ε + δ` and the deviation quantifier over all
+hazard sequences visible) — it does **not** discharge `hdominate` as
+literally stated, because `hdominate` (deviation ≤ always-continue + slack)
+is **false**: one-player counterexample with solo reward `1` and a
+surely-quitting plan, where every ledger term vanishes yet quitting beats
+always-continue by `1`. The assembled cap theorem now exists **without
+`hdominate`**. And one side condition surfaced as unavoidable: past the
+truncation the plan is all-continue, so any `ε + δ` regret cap forces
+`δ ≥ reward({who}) who` — a real constraint on the compiler's parameter
+bookkeeping, not an artefact.
 
 ## The K2 correction — my supplied explanation was wrong
 

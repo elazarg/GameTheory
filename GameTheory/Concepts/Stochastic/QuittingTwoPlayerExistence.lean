@@ -36,12 +36,11 @@ the repository except for the joint-exit branch built below.
   surely is then an exact terminal equilibrium.  That branch is the new
   content here: a full-rate `p = 1` instance of the sure-set/owner machinery.
 
-## Relation to Q156's B1
+## Exact rows versus equilibria at two coordinates
 
-Q156's part B1 claims that every two-coordinate weight has a period-one
-*exact row*, by the same `p = 1` argument used in the joint-exit branch.  Its case
-analysis survives verification at the row level and is reproduced by the split
-above.  But a row certificate is not an equilibrium: the sure-set row needs no
+Every two-coordinate weight has a period-one *exact row*, by the same
+`p = 1` argument used in the joint-exit branch; the case analysis is
+reproduced by the split above.  But a row certificate is not an equilibrium: the sure-set row needs no
 side condition, whereas a *solo* row certifies an equilibrium of the game only
 when the owner's own solo value is nonnegative — its `IsQuittingCycleAdmissible`
 obligation, since the owner's opponents never absorb at a solo row.  B1's

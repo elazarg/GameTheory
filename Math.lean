@@ -20,6 +20,7 @@ import Math.Probability.OptionalTargetTransport
 import Math.Probability.SwitchedPotentialCalculus
 import Math.Probability.GeneratorRecurrentReduction
 import Math.Probability.TriangularLedger
+import Math.Probability.DecisionVariationMaximalInequality
 import Math.Fin
 import Math.Fintype
 import Math.Fintype.Transport

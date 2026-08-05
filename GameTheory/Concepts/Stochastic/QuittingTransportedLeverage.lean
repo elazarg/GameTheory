@@ -10,13 +10,14 @@ import GameTheory.Concepts.Stochastic.QuittingIsolatedAnchorMaxAffine
 /-!
 # Transported leverage: the corrected surgery currency
 
-`ideas/PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md`
-("The currency has a name: transported leverage") and
-`questions/Question155-TheAbsorptionBudgetForRepair.md` (`B3`) replace the
-refuted `δ / ρ` seam-price law with a constructive currency: what controls a
-local block modification `B` inside an array `G` is not absorbed mass but
-**transported leverage** -- the modification's effect on the block map,
-amplified by the contraction deficit of the return map being re-closed.
+This development replaces the refuted `δ / ρ` seam-price law — the reading
+that a re-closing's cost is priced by absorbed mass, in the tradition of the
+cyclic-repair estimates of R. S. Simon, *The structure of non-zero-sum
+stochastic games*, Adv. Appl. Math. 38 (2007), Lemma 4 — with a constructive
+currency: what controls a local block modification `B` inside an array `G`
+is not absorbed mass but **transported leverage** -- the modification's
+effect on the block map, amplified by the contraction deficit of the return
+map being re-closed.
 
 This file names both leverage quantities as definitions over objects already
 in the repository, proves the coarse absorption bound and the exact
