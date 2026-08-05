@@ -1927,6 +1927,26 @@ trap is a weight at uniformly positive backward distance from every
 low-period stratum. The numerical signature test on the period-`3m` family is
 in flight from the intake note; its output should be read against this row.
 
+**First signature results (`Γ_η`, `η = 1/8`, `m = 1..8`, discovery-grade,
+frozen values).** The defect tracks the documented `η·log2/(3m)` asymptotic
+(ratio `0.72 → 0.96`); the best single own-set shift leaves a residual of
+**exactly half** the defect at every `m` (ten digits) — a hard floor, read as
+Chebyshev centering of sign-alternating phase defects; and the four-parameter
+refinement is brittle, feasibility flipping with arithmetic accidents of `m` —
+the overdetermination signature. Within this construction family the backward
+distance to `Σ_{3m}` is therefore of order `1/m`, which under the
+stratum-conditioning conjecture predicts the **linear** `d(ε,δ) ~ 1/δ` law
+for `Γ_η` — upper-bound-family evidence only; a faster-approaching family
+would restore the `log` option. The exact `½` wants a proof: the predicted
+mechanism is **seam localization** — per-player defect concentrated at the
+handoff phases and near-zero mid-block, so a uniform own-set shift can only
+center the seam against the block, optimum at half. Checkable immediately by
+printing per-phase defect vectors, and provable-looking from the family's
+closed form. Frozen values remain the standing caveat: the honest
+linearization couples the perturbation through the value recursion, and the
+fixed-tail vs cycle-feedback gap is the same three-legged split the seam-price
+law had.
+
 ## Literature import lane
 
 ### `LIT-P1-1` — audit and formalize four-player fallback-collapse propositions

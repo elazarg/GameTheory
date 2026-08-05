@@ -70,9 +70,24 @@ mechanism reproduced internally.
 
 This covers **that one block**. Other period-three blocks are not examined.
 
-**No cycle at any period now has a self-contained proof (`M [reported]`,
-Q156), superseding the ported chain.** For every `ε ∈ (0, 2]`, period-uniform,
-and substantially simpler than the published six-lemma route:
+**No cycle at any period is machine-checked (`L`,
+`PerturbedCyclicWeightNoExactCycle.lean`) — in the real-hazard encoding.** For
+every `ε ∈ (0, 2]`, period-uniform over `ZMod m`, with the `ε = 0` rotation
+constructed in the same encoding as the in-file correctness witness, and the
+dependence on `ε > 0` verified mechanically (the nonnegative weakening is
+rejected; both consumers of the predecessor inequality need `ε` times a
+positive rate). Scaling invariance is checked and transports to the normalized
+table.
+
+**Encoding boundary, stated so it cannot be silently crossed**: the theorem
+lives in the real-hazard encoding (`ExactCycle` over `ZMod m`). The
+trichotomy's hypothesis is the PMF-mixture statement
+`¬∃ terminal, IsQuittingCyclicContinuation`. The row-level `ε = 0` bridge
+exists; the **cycle-level** correspondence (periodic value recursion across
+the encodings) is the one remaining lemma before the hole occupancy is `L`
+end-to-end in the trichotomy's own vocabulary.
+
+The proof, substantially simpler than the published six-lemma route:
 
 - a global-minimum argument over the finitely many phase values gives the
   floor: every phase value is at least `1`;
