@@ -73,16 +73,16 @@ solo-clipped ceiling):
 - **certified**: the scaled cyclic weight (reproducing the machine-checked
   witness exactly, and rediscovered independently), the unperturbed FTV
   table, `G_ε` at `ε = 1/10`, and the hostile table;
-- **`F′(1, ε)` certifies for every tested `ε`** — at `L = 1` via a genuine
-  three-owner mixed support `λ = (1/3, 0, 2/3, 0)`, not the singleton path.
-  Since the floor there is `1 = d` uniformly (the hard case the followup
-  flagged), this is a certificate **at the diagonal-tight floor**. Cash-out
-  to a uniform payoff awaits the multi-owner orbit theorem (in flight): if
-  it lands, `x = 1` is the first interior point of the open region solved by
-  this program's own machinery;
-- `F′(x, ε)` at `x ∈ {1/4, 1/2, 2}`: empty at the searched depth — not
-  evidence of absence (`L ≤ 3`, coarse `α` grid), and consistent with the
-  followup's difficulty assessment;
+- **`F′(1, ε)` certifies for every tested `ε`** — at `L = 1` via a
+  three-owner mixed support, at the diagonal-tight floor;
+- `F′(x, ε)` at `x ∈ {1/4, 1/2, 2}`: empty at the searched depth —
+  **and the followup answer explains why**: the family's circulations exist
+  for all `x > 0` but at longer `L` and finer `α` than the search's grid
+  (`M [reported]`, explicit rational data, payoff
+  `v(x) = (1, 3−2a, 1/a, 1)`). The search's incompleteness disclaimer was
+  load-bearing. Since those circulations are **singleton-face**, their
+  cash-out rides the machine-checked orbit theorem — no multi-owner
+  dependency, correcting the earlier note here;
 - Q154's weight and the two-player counterexample: empty under the sound
   floor, as their solo values force.
 

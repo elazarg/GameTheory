@@ -2039,7 +2039,28 @@ the question.
 
 ### `MATH-P0-11` — the minimal open family: the four-player cyclic phase diagram
 
-- **Status:** REPOSED — Q160's family **collapsed by an authoring flaw**
+- **Status:** **SOLVED (followup answer)** — the repaired family contains no
+  counterexample region and no open region. Every `F′(x, λ)` with `x > 0`
+  admits a **rational singleton-face circulation** with explicit payoff
+  `v(x) = (1, 3−2a, 1/a, 1)`, `a` the root of `2a² + (x−1)a − 1 = 0` —
+  `λ`-independent payoff, period `O(1/δ)`; `x ≤ 0` has the exact
+  opposite-pair equilibrium. Extracted en route, each valuable beyond the
+  family: the **exact true min-max** with explicit boundaries (`x = 1/2`,
+  `x₊(λ) = 1 − 1/((1+λ)²(2+λ))`) — answering Q162's Part C for this family
+  in advance; **no instant equilibrium even with true-min-max punishment**;
+  the complete **singleton-carrier lock classification at four coordinates**;
+  a hand-assembled local-defects-to-arbitrary-deviations chain (§5, the
+  compiler's shape done directly for this family); and the hardest remaining
+  stress point for *exact-cycle classification* (not existence):
+  `(x, λ) = (2, 1)`, circulation payoff `(1, 2, 2, 1)`. Because the
+  circulations are singleton-face, cash-out rides the **already
+  machine-checked** orbit theorem; machine-checking the `(2,1)` certificate
+  dispatched. **Strategic consequence**: the circulation class swallowed the
+  minimal candidate whole, including the diagonal-tight-floor case — the
+  counterexample hunt must target weights *outside* the circulation class,
+  and the class's true boundary is now the sharpest open question.
+
+  Previous state, kept for the record: Q160's family **collapsed by an authoring flaw**
   (all triples zeroed made all-quit a period-one exact subgame-perfect
   equilibrium at the true min-max, everywhere; a lone continuer must face a
   nondegenerate `(n−1)`-coalition payoff, and the sparsity shrink went one
