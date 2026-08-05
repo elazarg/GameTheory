@@ -32,6 +32,8 @@ namespace Probability
 open Filter
 open scoped BigOperators
 
+variable {α β γ δ : Type*}
+
 -- ============================================================================
 -- Kernels (using Mathlib's PMF)
 -- ============================================================================

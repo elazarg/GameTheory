@@ -3,7 +3,7 @@ import Mathlib.Tactic
 /-!
 # Two-ended compactness does not preserve an anchor
 
-This is the exact finite falsifier from Question 133.  The relation has two
+This is the exact finite falsifier.  The relation has two
 points, all self-loops, and the one-way edge `false → true`, but no return
 edge.  The finite paths spend longer and longer at each endpoint.  Their
 forward windows converge to the `false` loop and their reverse windows to the

@@ -13,7 +13,7 @@ import Mathlib.Topology.Order.IntermediateValue
 /-!
 # An exact stationary equilibrium in a cyclic four-player quitting game
 
-This file formalizes the positive certificate from Question 116.  The game
+This file formalizes the positive certificate for this game.  The game
 has the explicit fifteen-row terminal table below.  A common quit
 probability is selected as the unique root of a rational polynomial in a
 small rational interval; at that root, Quit and Continue have exactly the
@@ -38,7 +38,7 @@ abbrev Player := Fin 4
 /-- A nonempty terminal quitter set. -/
 abbrev Terminal := {S : Finset Player // S.Nonempty}
 
-/-- The complete fifteen-row terminal table from Question 116. -/
+/-- The complete fifteen-row terminal table for this game. -/
 def terminalReward (S : Terminal) : Payoff Player :=
   match decide (0 ∈ S.1), decide (1 ∈ S.1),
       decide (2 ∈ S.1), decide (3 ∈ S.1) with

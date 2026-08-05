@@ -18,8 +18,8 @@ This file records the exact backward scalar recursion.  Starting with a
 nonnegative terminal debt `terminalDebt`, `quittingFiniteDynamicDebt` applies
 the player's pure-action Bellman maximum backwards through a supplied root
 sequence and subtracts the prescribed value.  Under genuine prescribed
-policy evaluation the debt is nonnegative, so the recursion is exactly the
-positive-part formula in Question 123, equation (111).  It is bounded above
+policy evaluation the debt is nonnegative, so the recursion is exactly a
+positive-part Bellman recursion.  It is bounded above
 by the familiar survival-weighted terminal debt when every local residual is
 zero.
 
@@ -125,7 +125,7 @@ theorem quittingFiniteDynamicDebt_nonneg
       rw [quittingFiniteDynamicDebt_succ]
       linarith
 
-/-- Exact Q123-(111) positive-part form of the recursion.  The outer maximum
+/-- Exact positive-part form of the recursion.  The outer maximum
 does not change the value because genuine dynamic debt is nonnegative. -/
 theorem quittingFiniteDynamicDebt_succ_eq_positivePart
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)

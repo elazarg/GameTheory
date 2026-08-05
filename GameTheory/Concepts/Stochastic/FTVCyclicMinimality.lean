@@ -9,9 +9,10 @@ import GameTheory.Concepts.Stochastic.QuittingGame
 /-!
 # Minimality and normalized rigidity of the FTV quitting cycle
 
-This file isolates the finite algebra in Question 97.  Its scope is the
-uniformly absorbing cyclic quitting class from that question; it makes no
-claim about arbitrary public controllers.
+This file isolates the finite algebra of the FTV cyclic quitting class's
+minimality and rigidity argument.  Its scope is the uniformly absorbing
+cyclic quitting class; it makes no claim about arbitrary public
+controllers.
 
 The first layer below is the exact algebra consumed after the exposed-face
 argument has shown that each live phase has one active solo-quitter role and
@@ -52,7 +53,7 @@ def nextThree : Fin 3 → Fin 3 := ![1, 2, 0]
   fin_cases who <;> rfl
 
 /-- Three distinct solo roles cannot be supplied by fewer than three phases.
-This is the cardinality step in Q97's minimality proof, after exposure has
+This is the cardinality step in the minimality proof, after exposure has
 produced a surjective active-role map. -/
 theorem period_ge_three_of_surjective_activeRole {K : ℕ} [NeZero K]
     (activeRole : Fin K → Player) (hcover : Function.Surjective activeRole) :
@@ -226,7 +227,8 @@ def terminalReward (a : JointQuit) : Payoff Player :=
   | false, true, true => ![1, 1, 0]
   | true, true, true => ![0, 0, 0]
 
-/-- Sum of the three payoff coordinates, the exposing functional in Q97. -/
+/-- Sum of the three payoff coordinates, the functional used to expose the
+terminal-reward bound below. -/
 def coordinateSum (u : Payoff Player) : ℝ := u 0 + u 1 + u 2
 
 /-- A pure terminal row has exactly one quitter. -/
@@ -381,11 +383,12 @@ def IsExactlyComplementary (prob continueValue quitValue : ℝ) : Prop :=
   (0 < prob ∧ prob < 1 ∧ continueValue = quitValue) ∨
   (prob = 1 ∧ continueValue ≤ quitValue)
 
-/-- The finite data and the exact `(Q1)--(Q5)` assumptions from Q97.
+/-- The finite data and the exact `(Q1)--(Q5)` assumptions for the cyclic
+quitting minimality argument.
 
-`live` is the question's live-phase restriction.  `q5` is recorded
-separately even though, in this live finite cyclic class, it also follows
-from the phasewise strict survival bound.  No unique-role or role-coverage
+`live` is the live-phase restriction.  `q5` is recorded separately even
+though, in this live finite cyclic class, it also follows from the
+phasewise strict survival bound.  No unique-role or role-coverage
 fact is included in this structure. -/
 structure ExactCyclicPacket (K : ℕ) [NeZero K] where
   quitProb : Fin K → Player → ℝ
@@ -899,7 +902,8 @@ theorem activeRole_surjective : Function.Surjective A.activeRole := by
   have hs := (A.live m).2
   nlinarith [abs_nonneg (roleWeight who (A.promise (nextPhase K m)))]
 
-/-- Q97 minimality in its exact stated cyclic domain. -/
+/-- Minimality in the exact stated cyclic domain: at least three phases
+are needed. -/
 theorem period_ge_three (A : ExactCyclicPacket K) : 3 ≤ K :=
   period_ge_three_of_surjective_activeRole (activeRole A) (activeRole_surjective A)
 
@@ -953,10 +957,10 @@ def standardPacket : ExactCyclicPacket 3 where
         allContinue, Fin.prod_univ_three] <;> norm_num
   initial := rfl
 
-/-- Q97 rigidity at the minimum, with the named phase-zero promise fixed.
+/-- Rigidity at the minimum, with the named phase-zero promise fixed.
 The result is literal uniqueness at that named node.  The diagonal cyclic
-player/phase relabeling from Q97 maps this displayed packet back to itself;
-a player relabeling alone or phase rotation alone is not asserted here. -/
+player/phase relabeling maps this displayed packet back to itself; a
+player relabeling alone or phase rotation alone is not asserted here. -/
 theorem three_phase_rigidity (A : ExactCyclicPacket 3) :
     activeRole A = ![0, 1, 2] ∧
       A.quitProb = standardQuitProb ∧

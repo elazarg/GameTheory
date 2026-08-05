@@ -11,10 +11,9 @@ import GameTheory.Concepts.Stochastic.QuittingRelaxedHazardRowBridge
 # The lens identity, leg one: the backward condition number is the weighted-
 # to-unweighted conversion factor
 
-`ideas/CycleGeometryResolution/ExactCycleStrataCarryTheRelaxedFamilies.md`'s
-S4 entry postulates that three quantities in the exact-vs-relaxed-cycle
-program are one phenomenon: the backward-stability condition number (S1,
-`QuittingRootEndpointBackwardStability.lean`), the lock margin (Q156), and
+Three quantities in the exact-vs-relaxed-cycle program are conjectured to be
+one phenomenon: the backward-stability condition number (S1,
+`QuittingRootEndpointBackwardStability.lean`), the lock margin, and
 the `ε`-bridge's weighted-gain weakness at extreme hazards
 (`QuittingRelaxedHazardRowBridge.lean`'s
 `exists_weighted_bound_not_isεRowComplementary`). This file proves the first
@@ -63,7 +62,7 @@ machinery, with the resulting factor `1 / min x y`.
 
 Period-one / fixed-tail only, matching `QuittingRootEndpointBackwardStability
 .lean`'s scope. The other two legs of the three-lens identity -- the lock
-margin (Q156) and a general account of the `ε`-bridge's weighted-gain
+margin and a general account of the `ε`-bridge's weighted-gain
 weakness beyond this one witness family -- remain open; only S1's condition
 number and the conversion factor are connected here.
 -/

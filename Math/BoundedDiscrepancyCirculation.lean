@@ -15,11 +15,11 @@ import Math.Periodicity
 /-!
 # Bounded-discrepancy walks and zero-charge lassos
 
-This file begins the exact finite kernel of Question 104.  A finite directed
-multigraph is represented by a finite edge type with source and target maps,
-so parallel edges retain their identities.  Charges take values in a finite
-integer lattice.  This is the denominator-cleared form of finite rational
-charge data.
+This file begins the exact finite kernel of bounded-discrepancy walks.  A
+finite directed multigraph is represented by a finite edge type with source
+and target maps, so parallel edges retain their identities.  Charges take
+values in a finite integer lattice.  This is the denominator-cleared form of
+finite rational charge data.
 
 The first theorem is the lattice pigeonhole step: an infinite walk whose
 prefix-charge range is finite contains a reachable nonempty closed segment of

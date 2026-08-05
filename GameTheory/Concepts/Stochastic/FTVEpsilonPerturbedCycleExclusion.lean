@@ -10,8 +10,7 @@ import GameTheory.Concepts.Stochastic.QuittingSoloQuitterEquilibrium
 /-!
 # The published `ε`-perturbation excludes period-one and period-three cycles
 
-`ideas/AbsorbingCycleCarrier/APublishedWeightSitsInTheCycleExistenceHole.md`
-records a hand computation: the `ε`-bonus perturbation (`ε > 0`) of the
+The `ε`-bonus perturbation (`ε > 0`) of the
 Flesch--Thuijsman--Vrieze three-player table already formalized in
 `FTVCyclicAdmissibleCycle.lean`,
 

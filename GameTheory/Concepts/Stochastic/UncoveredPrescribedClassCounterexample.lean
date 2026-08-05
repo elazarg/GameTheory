@@ -9,7 +9,7 @@ import GameTheory.Concepts.Stochastic.ExplicitDomainGainBiasVerifier
 /-!
 # The two-node uncovered prescribed-class counterexample
 
-This module formalizes the minimal counterexample from Question 96.  Player
+This module formalizes the minimal two-node counterexample.  Player
 one cannot leave the entry node while player two follows the prescription;
 player two can deviate once and enter a second prescribed-absorbing node.
 Player one's prescribed payoff is zero at the entry and one at the escaped
@@ -18,7 +18,7 @@ node, while the proposed target is zero everywhere.
 The game API has state-independent action types, so player two's Boolean
 action remains syntactically available at the escaped node; both choices have
 the same absorbing transition and zero payoff there.  This is behaviorally the
-state-dependent singleton action set in Q96.
+state-dependent singleton action set of the underlying counterexample.
 
 The support-pruned target, owner-occupation, and nonnegative prescribed
 delivery checks all pass.  Nevertheless exact prescribed target delivery and
@@ -27,11 +27,11 @@ node, which lies outside player one's arena.
 
 The current `IsReachableCredibilityCriterion` deliberately supports its
 prescribed stationary occupations only on `R.prescribed`.  Here that set is
-the singleton entry node.  To match Q96's broader nonnegative test as closely
-as the present APIs permit, this file additionally proves the *global*
-`IsPrescribedDelivery` predicate and exhibits the positive escaped stationary
-occupation explicitly.  No converse or general fifth-obstruction API is
-introduced.
+the singleton entry node.  To match the counterexample's broader nonnegative
+test as closely as the present APIs permit, this file additionally proves
+the *global* `IsPrescribedDelivery` predicate and exhibits the positive
+escaped stationary occupation explicitly.  No converse or general
+fifth-obstruction API is introduced.
 -/
 
 set_option autoImplicit false
@@ -76,7 +76,7 @@ def stagePayoff (state : State) (_action : ∀ who, Act who)
     (who : Player) : ℝ :=
   if who then 0 else if state then 1 else 0
 
-/-- Q96's two-player/two-node stochastic game. -/
+/-- The two-player/two-node stochastic game underlying the counterexample. -/
 abbrev game : StochasticGame Player where
   State := State
   Act := Act
@@ -118,7 +118,7 @@ abbrev architecture : game.FiniteResponseArchitecture false where
   start_publicState := rfl
   step_publicState := fun _ _ _ => rfl
 
-/-- The proposed Q96 target is zero for both players at both nodes. -/
+/-- The proposed target is zero for both players at both nodes. -/
 def target : architecture.Config → Payoff Player := fun _ _ => 0
 
 theorem actionDist_playerOne (z : State) (act : game.Act false) :
@@ -325,7 +325,7 @@ theorem isNeutralOccupationNonpositiveOn :
       rw [stagePayoffAt_playerTwo_eq]
       simp [target]
 
-/-- Q96's nonnegative prescribed stationary-delivery test (P) holds even on
+/-- The nonnegative prescribed stationary-delivery test (P) holds even on
 the ambient two-node configuration set. -/
 theorem isPrescribedDelivery : architecture.IsPrescribedDelivery target := by
   intro who ν
@@ -342,7 +342,7 @@ theorem isPrescribedDelivery : architecture.IsPrescribedDelivery target := by
 
 /-- The closest four-field bundle in the current support-pruned API passes.
 Its prescribed stationary field is restricted to `region.prescribed = {e}`;
-the preceding theorem separately verifies Q96's stronger ambient (P) check. -/
+the preceding theorem separately verifies the stronger ambient (P) check. -/
 theorem isReachableCredibilityCriterion :
     architecture.IsReachableCredibilityCriterion region target where
   targetHarmonic := fun who z _ => isPrescribedTargetHarmonic who z

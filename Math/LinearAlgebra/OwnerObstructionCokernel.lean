@@ -15,9 +15,9 @@ import Mathlib.LinearAlgebra.Quotient.Basic
 # The owner-obstruction cokernel
 
 **Provenance.**  This file glues the two "Layer A" routing interfaces
-`Math.LinearAlgebra.OwnerTypedDualLifting` (Question 72: owner-typed dual
+`Math.LinearAlgebra.OwnerTypedDualLifting` (owner-typed dual
 lifting, custody) and `Math.LinearAlgebra.OwnerLabeledFlowHolonomy`
-(Question 71: account potentials, circulations, holonomy) into a single
+(account potentials, circulations, holonomy) into a single
 finite-dimensional invariant: the quotient of the target-normal space by
 everything a *single owner* can certify, either through its own unilateral
 Bellman rows or through a global scalar account potential.
@@ -1254,7 +1254,7 @@ end TrivialSystem
 
 /-! ### Falsifier (a): the two-row owner-switching cycle
 
-The Question 71 falsifier of `OwnerLabeledFlowHolonomy.TwoCycle`, recomputed
+The falsifier of `OwnerLabeledFlowHolonomy.TwoCycle`, recomputed
 as a class computation.  Every owner-pure circulation vanishes there
 (`TwoCycle.ownerPure_circulation_eq_zero`), yet the mixed uniform circulation
 is a legitimate obstruction test and separates the charge cochain. -/
@@ -1310,7 +1310,7 @@ end TwoCycleObstruction
 
 /-! ### Falsifier (b): cross-owner incidence cancellation
 
-The Question 72 falsifier of `OwnerTypedDualLifting.CrossOwnerCancellation`,
+The falsifier of `OwnerTypedDualLifting.CrossOwnerCancellation`,
 recomputed as a class computation.  The flow structure is the one-vertex
 self-loop, so every account coboundary vanishes and the obstruction is purely
 one of typed liftability: the escape direction, which owner `i`'s custody map
@@ -1364,7 +1364,7 @@ theorem obstructionClass_ne_zero (i : Bool) :
   rw [← dot_eq_holonomy, CrossOwnerCancellation.dot_crossNormal_escape]
   norm_num
 
-/-- **The class computation recovers the Question 72 falsifier.**  The
+/-- **The class computation recovers the cross-owner falsifier.**  The
 no-typed-lift statement is *derived* here from the nonzero class, rather than
 quoted: a nonzero class kills every typed lift at every bound. -/
 theorem not_hasTypedLift_of_class (i : Bool) (β : ℝ) :

@@ -34,7 +34,7 @@ sound criterion-to-ledger direction; it does not claim the converse from a
 uniform strategic property at every state in the union of the owner-specific
 arenas.  That stronger equivalence additionally needs either recurrent-class
 coverage across owners or a fifth upper-delivery obstruction on prescribed
-classes outside an owner's arena (Question 96).
+classes outside an owner's arena.
 -/
 
 set_option autoImplicit false

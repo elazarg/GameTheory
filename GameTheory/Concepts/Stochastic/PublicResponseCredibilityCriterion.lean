@@ -110,7 +110,7 @@ formulation at a declared entry, its canonical least reachable region, and
 the same ledger and adaptive-certificate consumers.  It is still a sound
 criterion direction.  The stronger converse for uniform statements based at
 every state in the union of owner-specific arenas needs the recurrent-class
-coverage/fifth-obstruction correction of Question 96.
+coverage/fifth-obstruction correction.
 -/
 
 set_option autoImplicit false
@@ -215,7 +215,7 @@ theorem expect_histDist_congr_of_succ
 -- The finite closed response architecture
 -- ---------------------------------------------------------------------------
 
-/-- A **finite closed response architecture** (Question 56, §1).
+/-- A **finite closed response architecture**.
 
 `Config` collects the normal, monitoring, response, reserve, reset and
 child-entry modes into one finite public configuration set; `publicState`

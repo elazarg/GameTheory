@@ -9,9 +9,10 @@ import GameTheory.Concepts.Stochastic.ResponseArchitectureConfigKernelLaw
 /-!
 # Pure-prefix response-architecture law
 
-To extract Q96's unilateral target inequality from a history-level uniform
-cap, deviate with one pure action at the restarted entry and obey the supplied
-architecture thereafter.  This module identifies that experiment exactly:
+To extract the gain-bias criterion's unilateral target inequality from a
+history-level uniform cap, deviate with one pure action at the restarted
+entry and obey the supplied architecture thereafter.  This module
+identifies that experiment exactly:
 its first stage uses the selected unilateral row and its tail is the iterated
 prescribed configuration kernel from the random successor configuration.
 
@@ -293,9 +294,10 @@ namespace SplitResponseDomain
 
 variable {A : G.FiniteResponseArchitecture initial}
 
-/-- History-level shifted delivery and unilateral caps imply Q96's two target
-conditions on their exact split domains.  For the unilateral step it is enough
-to instantiate the cap with `purePrefixDeviation`. -/
+/-- History-level shifted delivery and unilateral caps imply the gain-bias
+criterion's two target conditions on their exact split domains.  For the
+unilateral step it is enough to instantiate the cap with
+`purePrefixDeviation`. -/
 theorem targetConditions_of_tendsto_finiteAverage_and_unilateralCap
     (D : A.SplitResponseDomain) {u : A.Config → Payoff ι}
     (hdelivery : ∀ (who : ι) (z : A.Config), D.delivery z →

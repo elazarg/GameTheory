@@ -16,8 +16,8 @@ observation is
 
 `(α * β, (1 - α) * (1 - β))`.
 
-This file proves the exact formula through the product-image API from the
-Q103 kernel.  It also proves that the only product observations on the affine
+This file proves the exact formula through the product-image convexification
+API.  It also proves that the only product observations on the affine
 top edge `r + s = 1` are its two endpoints, and hence that the product image
 is not convex.
 -/

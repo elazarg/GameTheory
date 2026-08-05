@@ -544,7 +544,7 @@ theorem neutralOccupationNonpositive_of_history_unilateralCap
   D.ownerRegion.neutralOccupationNonpositive_of_history_unilateralCap
     u error herror hcap
 
-/-- **Q96 semantic necessity-to-verifier capstone.** Shifted prescribed
+/-- **Semantic necessity-to-verifier capstone.** Shifted prescribed
 delivery and shifted unilateral caps now synthesize both gain--bias families
 on their exact split domains; (N) is derived rather than assumed. -/
 theorem exists_gainBiases_of_historyDelivery_and_unilateralCap

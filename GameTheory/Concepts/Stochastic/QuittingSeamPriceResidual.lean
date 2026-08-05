@@ -13,10 +13,9 @@ import Math.SurvivalProduct
 /-!
 # The seam price: exact residual formula, transport factor, and the deviation no-go
 
-`ideas/PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md`
-records a `δ / ρ` "seam price" law and warns that it is exact for one object,
-a sharp bound for a second, and **false** for a third.  This file audits and
-formalizes that law against the three contraction deficits it names:
+A `δ / ρ` "seam price" law is exact for one object, a sharp bound for a
+second, and **false** for a third.  This file audits and formalizes that
+law against the three contraction deficits it names:
 
 * `ρ = 1 - ∏_{t<m} c(x_t)` -- the ordinary **value** recursion's deficit;
 * `ρ⁻ᵢ = 1 - ∏_{t<m} c_{-i}(x_t)` -- coordinate `i`'s **deviation**

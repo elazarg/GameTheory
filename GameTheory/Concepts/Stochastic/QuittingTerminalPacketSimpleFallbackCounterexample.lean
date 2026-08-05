@@ -10,12 +10,11 @@ import GameTheory.Concepts.Stochastic.QuittingStationaryGain
 /-!
 # A positive terminal-debt packet need not supply a simple fallback
 
-This is the minimal two-player terminal packet from Question 124.  The
-half--half root is an exact zero-boundary Nash--Bellman edge and carries
-positive exact dynamic debt for player one.  Its joining-loss atom has fixed
-positive mass.  Nevertheless the underlying game has no exact stationary
-terminal equilibrium, hence in particular no stationary singleton-First
-fallback.
+This is a minimal two-player terminal packet.  The half--half root is an
+exact zero-boundary Nash--Bellman edge and carries positive exact dynamic
+debt for player one.  Its joining-loss atom has fixed positive mass.
+Nevertheless the underlying game has no exact stationary terminal
+equilibrium, hence in particular no stationary singleton-First fallback.
 
 The result is deliberately local.  It does not exclude nonstationary
 equilibria or accuracy-indexed periodic profiles, and it makes no claim about

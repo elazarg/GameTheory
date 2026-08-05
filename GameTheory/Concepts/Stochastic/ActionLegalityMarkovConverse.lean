@@ -14,9 +14,8 @@ correspondence between the legality-constrained stage game and its
 state-independent, normalized presentation: a legal Markov profile that is
 `ε`-Nash of the *normalized* stage game (`IsεNormalizedMarkovNash`) is `ε`-Nash
 of the *legality-constrained* stage game (`IsεLegalMarkovNash`). Its docstring
-leaves the converse open, and `docs/uniform-equilibrium/PIPELINE.md`
-(`LEAN-F0-1`) records a specific suspected obstruction to it: histories record
-the *raw* joint action played (`StageRecord = Fin t → State × JointAct`,
+leaves the converse open, with a specific suspected obstruction: histories
+record the *raw* joint action played (`StageRecord = Fin t → State × JointAct`,
 `Basic.lean`), so padding normalizes payoffs and transitions but leaves
 illegal action labels observable, and distinct illegal actions collapsing onto
 the same legal one could stay distinguishable in the history, serving as

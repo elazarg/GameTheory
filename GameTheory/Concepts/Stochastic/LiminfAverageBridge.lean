@@ -18,10 +18,11 @@ import GameTheory.Concepts.Stochastic.InfinitePlayMeasure
 
 `GameTheory.Concepts.Stochastic.Uniform` states `IsUniformEquilibriumPayoff`
 entirely in terms of **finite-horizon averages** `finiteAveragePayoff s₀ T σ`
-for `T ≥ T₀`.  The non-existence literature (e.g. Simon's withdrawn Mousetrap
-preprint; see
-`docs/uniform-equilibrium/audits/2026-08-04-SimonMousetrapRetraction.md`) is
-stated for the **liminf-average** game instead: the payoff of an infinite
+for `T ≥ T₀`.  The non-existence literature (e.g. Simon's Mousetrap preprint,
+whose claimed counterexample was later retracted; what survives is the
+order-of-limits distinction between expected-liminf payoffs and limits of
+finite averages, which is what this file bridges) is stated for the
+**liminf-average** game instead: the payoff of an infinite
 play `ω` is `liminf_T A_T ω`, where `A_T ω` is the average of the first `T`
 stage payoffs realized along `ω`, and the game-theoretic payoff is the
 expectation `E[liminf_T A_T]` of that pathwise quantity under the measure

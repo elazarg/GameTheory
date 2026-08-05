@@ -10,9 +10,9 @@ import Mathlib.FieldTheory.RatFunc.AsPolynomial
 /-!
 # Exact cancellation regressions against leading-only truncation
 
-These finite algebra examples record the verified C1 and C4 obstructions from
-Q109.  They use rational functions in one indeterminate, a field already large
-enough for the examples.  A proper two-block elimination leaves the retained
+These finite algebra examples record the verified C1 and C4 obstructions to
+leading-only truncation.  They use rational functions in one indeterminate, a
+field already large enough for the examples.  A proper two-block elimination leaves the retained
 coordinate unchanged; rebasing then cancels every displayed low-order term and
 exposes the first omitted term.
 

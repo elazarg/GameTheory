@@ -20,11 +20,10 @@ cyclic fixed point coincides with `prescribed`, so the anchored mismatch is zero
 entirely and computes the *gap* between the companion map's cyclic fixed point and
 `prescribed` in closed form.
 
-This is the formalization of the reported claim in
-`ideas/AbsorbingCycleCarrier/TheSignedAccumulationIsTheGain.md`: "the signed phasewise
-accumulation of the local gaps ... equals the gain exactly."  The **local gap** at phase
+This file formalizes the claim that the signed phasewise
+accumulation of the local gaps ... equals the gain exactly.  The **local gap** at phase
 `k` is `quittingRootEndpointDifference reward (fun _ => prescribed (k + 1)) (roots k) who`
-(`g_k` in the reported derivation), and the **gain** is identified here with the amount
+(`g_k` below), and the **gain** is identified here with the amount
 by which the companion map's own cyclic fixed point exceeds `prescribed 0` -- this is
 exactly what "gain of a relaxed cycle" means once the companion-map machinery already
 proved in `QuittingCycleMismatchContraction.lean` is applied without the exact-Nash
@@ -32,8 +31,7 @@ hypothesis.
 
 ## Re-derivation, and where it strengthens the reported claim
 
-The reported claim (`ideas/AbsorbingCycleCarrier/TheSignedAccumulationIsTheGain.md`,
-seals `M [reported]`) states the identity under a *relaxed complementarity* hypothesis
+The claim above states the identity under a *relaxed complementarity* hypothesis
 (`IsεQuittingRootEndpointNash` at some defect `ε`, matched exactly against the source's
 own equations (5)-(6) once the two one-sided defect inequalities are read jointly).  The
 re-derivation carried out to build this file establishes the identity **without any
@@ -277,8 +275,8 @@ theorem quittingSignedCycleFixedPointEq (M B P : ℝ) (hP : P < 1) :
 
 /-- **The main identity.**  Adding the signed phasewise accumulation to the prescribed
 value at the start of the cycle gives a fixed point of the one-period companion
-composite -- the precise sense in which "the signed phasewise accumulation is the gain of
-a relaxed cycle" (`ideas/AbsorbingCycleCarrier/TheSignedAccumulationIsTheGain.md`). No
+composite -- the precise sense in which the signed phasewise accumulation is the gain of
+a relaxed cycle.  No
 complementarity or Nash hypothesis is used: only the value recursion `hprescribed`, the
 wraparound `hwrap`, and the survival bound `hP`. -/
 theorem quittingCompanionComposite_prescribed_add_gain_eq

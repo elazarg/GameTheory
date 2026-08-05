@@ -19,12 +19,12 @@ cutoff preserves compactness.  A calibrated anchored block lands in this
 resolved graph with its selected minimizing path literally present, so root,
 support, exact-D, and prefix provenance have not been projected away.
 
-The final theorem is the Q133 bounded-cost fence.  Any compact lift which
-retains the literal number of game stages as a natural-valued coordinate has
+The final theorem is a bounded-cost fence: any compact lift which retains
+the literal number of game stages as a natural-valued coordinate has
 a uniform stage bound.  Consequently an arbitrary-length positive-plateau
 middle cannot have such a compact lift unless one first proves a uniform
 length/tightness theorem, or changes the length coordinate by adding a point
-at infinity.  The latter change no longer supplies Q133's bounded edge-cost
+at infinity.  The latter change no longer supplies the bounded edge-cost
 interface.  This is a precise compactness obstruction, not a scalar
 coefficient defect.
 -/
@@ -569,11 +569,11 @@ theorem QuittingAnchoredBoundaryBlock.resolvedData_mem_fixedLastLift
   exact ⟨anchor.owner, anchor.action, block.start, block.extra,
     anchor.isPacketAt, block.within, rfl⟩
 
-/-! ## Q133: compact literal cost forces bounded length -/
+/-! ## Compact literal cost forces bounded length -/
 
 /-- A compact set of resolved objects which retains a literal natural-valued
-stage cost has a uniform cost bound.  This is the exact bounded-edge-cost
-interface required by Q133. -/
+stage cost has a uniform cost bound.  This is the bounded-cost fence
+described in the module docstring above. -/
 theorem IsCompact.exists_uniform_nat_fst_bound
     {α : Type} [TopologicalSpace α]
     {K : Set (ℕ × α)} (hK : IsCompact K) :

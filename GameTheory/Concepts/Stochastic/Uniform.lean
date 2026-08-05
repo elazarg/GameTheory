@@ -30,9 +30,8 @@ to exist even in two-player zero-sum games — the Big Match
 * Two-player zero-sum games have a uniform value (Mertens–Neyman 1981).
 * Two-player games admit uniform equilibrium payoffs (Vieille 2000).
 * Three-player absorbing games admit them (Solan, *Three-Player Absorbing
-  Games*, MOR 24(3):669-698, 1999; source confidence `PRIMARY_FULLTEXT` on
-  Solan's own doctoral dissertation, MOR journal PDF itself unread,
-  see `docs/uniform-equilibrium/references/20-nonzero-sum-equilibrium.md`).
+  Games*, MOR 24(3):669-698, 1999; verified against Solan's own doctoral
+  dissertation, the MOR journal PDF itself unread).
 * The general n-player case is **open**; it is the central open problem of
   the field (Mertens 1986; Solan–Vieille 2010).
 

@@ -13,16 +13,14 @@ import Mathlib.Data.Real.Basic
 /-!
 # Owner-typed dual lifting and the owner-custody obstruction
 
-**Provenance.**  This is the second "Layer A" routing interface, distilled
-from Question 72 (*Owner-Correct Routing of a Complete-Target
-Separator*): the typed finite cell presentation of its Answer §A.1
-(eq. 2-4), the typed dual cone of §A.2 (eq. 5-9), the cross-owner
-incidence-cancellation counterexample of §A.5, and the custody map
-`J` together with the owner-invisible target coordinates of Part E
-(eq. 23, 26-27).  The game-level tagging layer -- which rows are genuine
-unilateral Bellman rows of which player, in which legal public response
-context, under which common behavioral realization -- is future work and
-lives in the consumers of this interface, not here.
+**Provenance.**  This is the second "Layer A" routing interface: the typed
+finite cell presentation (eq. 2-4), the typed dual cone (eq. 5-9), the
+cross-owner incidence-cancellation counterexample, and the custody map
+`J` together with the owner-invisible target coordinates (eq. 23, 26-27).
+The game-level tagging layer -- which rows are genuine unilateral Bellman
+rows of which player, in which legal public response context, under which
+common behavioral realization -- is future work and lives in the
+consumers of this interface, not here.
 
 **This file is deliberately game-free.**  Everything below is finite
 linear algebra over `ℝ`: no games, no strategies, no payoffs, no
@@ -37,9 +35,9 @@ consumers.
 
 ## Main definitions
 
-* `TypedCell`: the affine data of one owner-context pair, Question 72
-  eq. (2)-(4): `A y + R t = b`, `C y + Q t ≤ c`, and the owner-tagged
-  rows `B y + S t ≤ d`.
+* `TypedCell`: the affine data of one owner-context pair, eq. (2)-(4):
+  `A y + R t = b`, `C y + Q t ≤ c`, and the owner-tagged rows
+  `B y + S t ≤ d`.
 * `MemVisible P i y t` / `MemFull P y t`: the owner-`i`-visible relaxation
   (keep (2), (3) and only owner `i`'s rows of (4)) and the full system.
 * `IsTypedLift` / `HasTypedLift`: eq. (6)-(8).  Free multipliers `η` on
@@ -65,9 +63,10 @@ consumers.
   charged recession direction of the visible relaxation kills every typed
   lift, for every bound `β`.
 * `CrossOwnerCancellation.not_hasTypedLift`: the mandatory falsifier, the
-  abstract skeleton of Question 72 §A.5 and Part E.  On a two-owner
-  system where owner `i`'s rows touch only target coordinate `i`, the
-  inequality `t₀ + t₁ ≤ 0` is valid on the **full** system
+  abstract skeleton of the cross-owner incidence-cancellation
+  counterexample and the owner-invisible-target-coordinate obstruction.
+  On a two-owner system where owner `i`'s rows touch only target
+  coordinate `i`, the inequality `t₀ + t₁ ≤ 0` is valid on the **full** system
   (`CrossOwnerCancellation.validOnFull`) but has **no** typed lift for
   **either** owner and **any** bound, because each owner's escape
   direction is invisible to that owner's custody map
@@ -91,7 +90,7 @@ set_option autoImplicit false
 /-! ### The coefficient pairing -/
 
 /-- The pairing `∑ j, a j * z j` of a coefficient row `a` with a variable
-vector `z`.  All rows of Question 72 eq. (2)-(4) are evaluated with it. -/
+vector `z`.  All rows of eq. (2)-(4) are evaluated with it. -/
 def dot {J : Type*} [Fintype J] (a z : J → ℝ) : ℝ := ∑ j, a j * z j
 
 variable {J : Type*} [Fintype J]
@@ -139,10 +138,10 @@ section General
 
 variable {Ω E N U Y T : Type*}
 
-/-! ### The typed finite cell presentation (Question 72, §A.1) -/
+/-! ### The typed finite cell presentation (eq. 2-4) -/
 
-/-- The affine data of one owner-context pair `p = (i, κ)`, Question 72
-eq. (2)-(4).  The internal variables are indexed by `Y`, the complete
+/-- The affine data of one owner-context pair `p = (i, κ)`, eq. (2)-(4).
+The internal variables are indexed by `Y`, the complete
 boundary target by `T`.
 
 * `E` indexes the structural equations `A y + R t = b` of eq. (2): public
@@ -179,19 +178,19 @@ structure TypedCell (Ω E N U Y T : Type*) where
 
 variable [Fintype Y] [Fintype T]
 
-/-- Question 72, eq. (2): the structural equations hold at `(y, t)`. -/
+/-- Eq. (2): the structural equations hold at `(y, t)`. -/
 def SatEq (P : TypedCell Ω E N U Y T) (y : Y → ℝ) (t : T → ℝ) : Prop :=
   ∀ e, dot (P.A e) y + dot (P.R e) t = P.b e
 
-/-- Question 72, eq. (3): the owner-neutral inequalities hold at `(y, t)`. -/
+/-- Eq. (3): the owner-neutral inequalities hold at `(y, t)`. -/
 def SatNeutral (P : TypedCell Ω E N U Y T) (y : Y → ℝ) (t : T → ℝ) : Prop :=
   ∀ n, dot (P.C n) y + dot (P.Q n) t ≤ P.c n
 
-/-- Question 72, eq. (4) restricted to the rows owned by `i`. -/
+/-- Eq. (4) restricted to the rows owned by `i`. -/
 def SatOwner (P : TypedCell Ω E N U Y T) (i : Ω) (y : Y → ℝ) (t : T → ℝ) : Prop :=
   ∀ u, P.ownerOf u = i → dot (P.B u) y + dot (P.S u) t ≤ P.d u
 
-/-- Question 72, eq. (4) for every owner at once. -/
+/-- Eq. (4) for every owner at once. -/
 def SatAll (P : TypedCell Ω E N U Y T) (y : Y → ℝ) (t : T → ℝ) : Prop :=
   ∀ u, dot (P.B u) y + dot (P.S u) t ≤ P.d u
 
@@ -235,11 +234,11 @@ theorem validOnFull_of_validOnVisible {P : TypedCell Ω E N U Y T} {i : Ω}
     {α : T → ℝ} {β : ℝ} (h : ValidOnVisible P i α β) : ValidOnFull P α β :=
   fun y t hmem => h y t (memVisible_of_memFull hmem i)
 
-/-! ### The typed dual cone (Question 72, §A.2) -/
+/-! ### The typed dual cone (eq. 5-9) -/
 
 variable [Fintype E] [Fintype N] [Fintype U]
 
-/-- Question 72, eq. (6)-(8).  `(η, ν, μ)` is an `i`-typed Bellman lift of
+/-- Eq. (6)-(8).  `(η, ν, μ)` is an `i`-typed Bellman lift of
 the inequality `α · t ≤ β`:
 
 * `ν ≥ 0` on the owner-neutral rows (3) and `μ ≥ 0` on the unilateral rows
@@ -270,14 +269,14 @@ structure IsTypedLift (P : TypedCell Ω E N U Y T) (i : Ω) (α : T → ℝ) (β
   rhs_bound :
     (∑ e, η e * P.b e) + (∑ n, ν n * P.c n) + (∑ u, μ u * P.d u) ≤ β
 
-/-- Question 72, eq. (9): the inequality `α · t ≤ β` admits an `i`-typed
+/-- Eq. (9): the inequality `α · t ≤ β` admits an `i`-typed
 Bellman lift. -/
 def HasTypedLift (P : TypedCell Ω E N U Y T) (i : Ω) (α : T → ℝ) (β : ℝ) : Prop :=
   ∃ (η : E → ℝ) (ν : N → ℝ) (μ : U → ℝ), IsTypedLift P i α β η ν μ
 
 /-! ### Soundness of a typed lift -/
 
-/-- The weighted-sum computation of Question 72, §A.2: summing the rows
+/-- The weighted-sum computation: summing the rows
 against `(η, ν, μ)` and using eq. (6)-(7) gives
 `α · t ≤ bᵀη + cᵀν + dᵢᵀμ` at every point of the owner-`i`-visible
 relaxation.  No feasibility hypothesis is needed. -/
@@ -490,7 +489,7 @@ theorem visibleFeasible_iff (P : TypedCell Ω E N U Y T) (i : Ω) (y : Y → ℝ
       · rw [ownerMask_of_ne P i hu, zero_mul, zero_mul]
 
 omit [DecidableEq Ω] in
-/-- **The Farkas characterization (Question 72, eq. (6)-(9)).**  When the
+/-- **The Farkas characterization (eq. (6)-(9)).**  When the
 owner-`i`-visible relaxation is nonempty, `α · t ≤ β` has an `i`-typed
 Bellman lift exactly when it is valid on that relaxation.  Typed
 liftability is therefore *nothing but* validity over the owner-`i`-visible
@@ -557,7 +556,7 @@ theorem hasTypedLift_iff_validOnVisible_of_full (P : TypedCell Ω E N U Y T)
 
 /-! ### The custody map and the owner-invisible obstruction -/
 
-/-- Question 72, eq. (23)/(26): the owner-`i` **custody map** `J_{i,κ}`.
+/-- Eq. (23)/(26): the owner-`i` **custody map** `J_{i,κ}`.
 It records exactly the boundary-target information that owner `i`'s own
 unilateral rows can see, namely the load `Sᵢ t` those rows place on the
 target; every other owner's row returns `0`.  A target discrepancy in the
@@ -598,7 +597,7 @@ structure IsVisibleRecession (P : TypedCell Ω E N U Y T) (i : Ω) (y₀ : Y →
 omit [Fintype E] [Fintype N] [Fintype U] in
 /-- Owner `i`'s block of the recession condition only constrains the
 *internal* direction as soon as the target direction is owner-`i`-invisible:
-this is exactly the custody failure of Question 72, Part E. -/
+this is exactly the owner-invisible-target-coordinate custody failure. -/
 theorem recession_unilateral_of_custody_eq_zero [DecidableEq Ω]
     {P : TypedCell Ω E N U Y T} {i : Ω} {y₀ : Y → ℝ} {t₀ : T → ℝ}
     (hinv : custody P i t₀ = 0)
@@ -655,8 +654,8 @@ end General
 
 /-! ### The cross-owner cancellation falsifier
 
-The abstract skeleton of Question 72, §A.5 (*cross-owner incidence
-cancellation*) and Part E (*owner-invisible target coordinates*).
+The abstract skeleton of the cross-owner incidence-cancellation
+counterexample and the owner-invisible-target-coordinate obstruction.
 
 Two owners `false`, `true`; one internal variable `y`; two boundary target
 coordinates `t false`, `t true`; one owner-neutral row `y ≤ 0`; and two
@@ -673,12 +672,12 @@ but that cancellation is intrinsically cross-owner.  Owner `i`'s rows
 constrain only the target coordinate `i`; the other coordinate is
 invisible to owner `i`'s custody map and escapes to `+∞` inside owner
 `i`'s relaxation.  Hence *neither* owner has a typed lift, for *any*
-bound.  This is exactly Question 72's missing invariant: coordinate
-`!i` has no custodian in owner `i`'s Bellman system. -/
+bound.  This is exactly the missing invariant: coordinate `!i` has no
+custodian in owner `i`'s Bellman system. -/
 
 namespace CrossOwnerCancellation
 
-/-- The cross-owner normal `α = (1, 1)` of Question 72, §A.5. -/
+/-- The cross-owner normal `α = (1, 1)` of the cancellation counterexample. -/
 def crossNormal : Bool → ℝ := fun _ => 1
 
 /-- The indicator of owner `i`'s own visible target coordinate. -/
@@ -729,8 +728,8 @@ theorem dot_Q (t : Bool → ℝ) : dot (system.Q ()) t = 0 := by
 
 /-! #### Validity over the full system -/
 
-/-- Question 72, §A.5: adding the two unilateral rows cancels the internal
-variable and yields `t false + t true ≤ 0` on the full system. -/
+/-- Adding the two unilateral rows cancels the internal variable and
+yields `t false + t true ≤ 0` on the full system. -/
 theorem validOnFull : ValidOnFull system crossNormal 0 := by
   intro y t hmem
   have h0 := hmem.unilateral false
@@ -756,8 +755,8 @@ theorem memVisible_zero (i : Bool) :
 
 /-! #### The escape direction is owner-invisible -/
 
-/-- Question 72, Part E: the escape direction lies in the kernel of the
-owner-`i` custody map.  Owner `i` literally cannot see it. -/
+/-- The escape direction lies in the kernel of the owner-`i` custody
+map.  Owner `i` literally cannot see it. -/
 theorem custody_escape (i : Bool) : custody system i (escape i) = 0 := by
   funext u
   rw [custody, dot_S]
@@ -777,7 +776,7 @@ theorem isVisibleRecession_escape (i : Bool) :
 
 /-! #### The falsifier -/
 
-/-- **The falsifier (Question 72, §A.5 and Part E).**  The inequality
+/-- **The falsifier.**  The inequality
 `t false + t true ≤ 0` is valid on the full system, yet it has *no*
 typed Bellman lift for *either* owner and *any* bound `β`.  The obstruction
 is custody: owner `i`'s rows constrain only coordinate `i`, so the

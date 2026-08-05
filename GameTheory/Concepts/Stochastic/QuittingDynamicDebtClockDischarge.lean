@@ -10,7 +10,7 @@ import GameTheory.Concepts.Stochastic.QuittingOpponentClockDichotomy
 /-!
 # Exact quitting debt discharged by a divergent opponent clock
 
-The finite dynamic debt of Question 123, equation (111), is bounded by the
+The finite dynamic debt is bounded by the
 terminal debt times the probability that all opponents continue.  Hence a
 divergent additive opponent clock discharges that exact debt at every fixed
 chronological start, provided the displayed local Bellman residuals vanish.

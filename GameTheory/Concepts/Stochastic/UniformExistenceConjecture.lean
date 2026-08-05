@@ -26,9 +26,8 @@ are one-line consequences of it.
 
 Known cases: two-player zero-sum games (Mertens--Neyman 1981), two-player games
 (Vieille 2000), three-player absorbing games (Solan, *Three-Player Absorbing
-Games*, MOR 24(3):669-698, 1999; `PRIMARY_FULLTEXT` on Solan's own doctoral
-dissertation, MOR journal PDF itself unread, see
-`docs/uniform-equilibrium/references/20-nonzero-sum-equilibrium.md`), and various
+Games*, MOR 24(3):669-698, 1999; verified against Solan's own doctoral
+dissertation, the MOR journal PDF itself unread), and various
 structured classes.  The general `n`-player case is open.
 
 The repository's other intentional open declaration is
@@ -57,8 +56,7 @@ author on 20 October 2023, fourteen days after posting, with the comment "The
 proof is flawed."**  There is no published version and no repaired one.
 
 Two independent readings of the withdrawn preprint agree on what it would have
-cost us (`docs/uniform-equilibrium/audits/2026-08-04-SimonMousetrapRetraction.md`).
-**Three defences a reader might reach for do not work.**  Its state space is
+cost us.  **Three defences a reader might reach for do not work.**  Its state space is
 finite -- the paper's one-line justification is a non-sequitur, but the claim
 holds for its numbers, since every stage payoff lies in `(1/10^4)ℤ` and the
 totals are boxed.  Its payoff *is* recastable as a limit average of stage
@@ -109,9 +107,8 @@ every initial state.
 This is the central open problem of stochastic game theory.  Known cases:
 two-player zero-sum games (Mertens–Neyman 1981), two-player games
 (Vieille 2000), three-player absorbing games (Solan, *Three-Player Absorbing
-Games*, MOR 24(3):669-698, 1999; `PRIMARY_FULLTEXT` on Solan's own doctoral
-dissertation, MOR journal PDF itself unread, see
-`docs/uniform-equilibrium/references/20-nonzero-sum-equilibrium.md`), and various
+Games*, MOR 24(3):669-698, 1999; verified against Solan's own doctoral
+dissertation, the MOR journal PDF itself unread), and various
 structured classes (recursive games, quitting games under conditions).  The
 general n-player case is open.  The theorem is derived from the equivalent
 quantitative constructor above; no weakening of the semantic statement is

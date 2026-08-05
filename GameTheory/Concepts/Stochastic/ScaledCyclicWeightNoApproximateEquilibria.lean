@@ -10,10 +10,9 @@ import Mathlib.Analysis.SpecificLimits.Basic
 /-!
 # The scaled cyclic weight has neither stationary nor instant approximate equilibria
 
-This file completes the `M [reported]` leg of the counterexample package in
-`ideas/UniformEquilibriumLiterature/WeightedOneStageNashCannotPriceMotion.md`.
-That package exhibits a weight (the FTV cyclic table scaled by `1/3`,
-`scaledCyclicWeight`) for which the granted constant of (K1) fails on the
+This file completes a counterexample package that exhibits a weight (the
+FTV cyclic table scaled by `1/3`, `scaledCyclicWeight`) for which the
+granted constant of (K1) fails on the
 **weighted** correspondence, at a continuation vector claimed to satisfy
 (K1)'s hypothesis package: "neither stationary nor instant approximate
 equilibria". This file proves that hypothesis holds for `scaledCyclicWeight`,

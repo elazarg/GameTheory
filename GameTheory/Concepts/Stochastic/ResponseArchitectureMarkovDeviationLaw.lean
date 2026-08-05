@@ -15,7 +15,7 @@ as a behavior deviation against the architecture's prescribed opponents, the
 full public-history semantics project exactly to those two finite objects.
 
 This reusable law is the bridge needed to operationalize invariant neutral
-occupations in the Q96 necessity direction.
+occupations in the gain-bias criterion's necessity direction.
 -/
 
 set_option autoImplicit false

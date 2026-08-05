@@ -9,7 +9,7 @@ import GameTheory.Concepts.Stochastic.QuittingRootContinuation
 /-!
 # Simple terminal branches in quitting games
 
-This module proves the exact `Never` test from Question 101.  Against
+This module proves the exact `Never` test.  Against
 opponents who always continue, a player can only reach their singleton
 quitter state, so every deviation payoff lies between zero and that singleton
 reward.  The all-continue profile is therefore a terminal

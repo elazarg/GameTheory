@@ -10,7 +10,7 @@ import GameTheory.Concepts.Stochastic.QuittingExactDynamicDebtVanishingCounterex
 /-!
 # Atomwise terminal regret does not transfer exact dynamic debt
 
-This is the two-player, one-edge regression from Question 129.  At the
+This is a two-player, one-edge regression example.  At the
 half--half zero-boundary root, player one has exact dynamic debt `1 / 2`.
 Both atoms in that owner's terminal-live stopping law are noncredible for
 player two: quitting alone has leaver regret one, while joining player one's

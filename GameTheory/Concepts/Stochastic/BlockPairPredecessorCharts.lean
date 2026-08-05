@@ -13,7 +13,7 @@ import Mathlib.Tactic.Ring
 /-!
 # Exact predecessor charts for the block-pair game
 
-This file begins the low-dimensional chart formalization from Question 118.
+This file begins the low-dimensional chart formalization.
 The one-phase indifference functions are defined directly from the public
 terminal table.  Their expanded forms are then used to prove exact rational
 predecessor formulas for support masks 9 and 10.

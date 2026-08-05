@@ -10,7 +10,7 @@ import Math.MeanErgodic
 /-!
 # Split-domain gain--bias verification
 
-Question 96 has two genuinely different relevant domains.  Prescribed
+There are two genuinely different relevant domains here.  Prescribed
 delivery is asserted on `R = ⋃ i, R_i`, while unilateral caps for player `i`
 are asserted only on `R_i`.  The older `ClosedResponseRegion` cannot express
 this split: its `prescribed_unilateral` field requires its prescribed domain
@@ -50,7 +50,7 @@ section SplitFoundation
 
 variable {initial : G.State} [Fintype ι] [DecidableEq ι]
 
-/-- Q96's split relevant domains for one supplied finite architecture.
+/-- The split relevant domains for one supplied finite architecture.
 
 `delivery` is exactly the union of the owner-specific `unilateral` arenas.
 Entries are kept explicit because credibility may be claimed at more than the
@@ -206,7 +206,8 @@ theorem exists_unilateralBias_of_targetOccupation
   exact A.exists_deviationPotentialOn hTiOn hN who
 
 /-- Mean-ergodic prescribed charges together with owner-local (Ti) and (N)
-produce both Q96 bias families on their exact split domains. -/
+produce both prescribed and unilateral bias families on their exact split
+domains. -/
 theorem exists_gainBiases_of_cesaro_targetOccupation
     (D : A.SplitResponseDomain) {u : A.Config → Payoff ι}
     (hTi : ∀ (who : ι) (z : A.Config), D.unilateral who z →
@@ -245,7 +246,7 @@ variable {initial : G.State} (A : G.FiniteResponseArchitecture initial)
   [Fintype ι] [DecidableEq ι] [Finite G.State]
   [∀ i, Finite (G.Act i)]
 
-/-- **Q96 split-domain gain--bias sufficiency.**
+/-- **Split-domain gain--bias sufficiency.**
 
 The exact prescribed endpoint identity is valid at every node of the delivery
 union.  The unilateral endpoint cap is valid at every node of the selected

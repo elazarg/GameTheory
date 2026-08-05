@@ -13,14 +13,12 @@ import Mathlib.Data.Real.Basic
 /-!
 # Owner-labeled flow systems and the zero-holonomy gluing condition
 
-**Provenance.**  This is the "Layer A" routing interface distilled from
-Question 71 (*Strategic Routing of a Full-Support Mixed-Context
-Certificate*): the typed incidence and circulation notation of its Answer
-§1 (eq. 2-3), the two-row account obstruction of §16 (eq. 78-81), and the
-global gluing invariant of §20 (eq. 94-99).  It is consumed later by the
-mixed-owner routing no-go, which needs the gluing condition
-`ZeroHolonomy` as a *separate* hypothesis rather than as a consequence of
-ownerwise Bellman provenance.
+**Provenance.**  This is the "Layer A" routing interface for strategic
+routing under a full-support mixed-context certificate: the typed incidence
+and circulation notation, the two-row account obstruction, and the global
+gluing invariant.  It is consumed later by the mixed-owner routing no-go,
+which needs the gluing condition `ZeroHolonomy` as a *separate* hypothesis
+rather than as a consequence of ownerwise Bellman provenance.
 
 **This file is deliberately game-free.**  Everything below is finite
 linear algebra over `ℝ`: no games, no strategies, no payoffs, no
@@ -33,25 +31,27 @@ consumers of this interface, not here.
 
 ## Main definitions
 
-* `incidence src P x`: the incidence operator `B` of eq. (2),
+* `incidence src P x`: the incidence operator `B`,
   `(B x)(v) = ∑_{src r = v} x r - ∑_r x r * P r v`.
-* `IsCirculation` / `IsNormalizedCirculation`: eq. (3).
+* `IsCirculation` / `IsNormalizedCirculation`: a nonnegative flow balanced
+  at every vertex, resp. one whose total row mass is also normalized to `1`.
 * `IsOwnerPure ownerOf i x`: the flow `x` is supported on owner `i`'s rows.
 * `holonomy c x`: the account pairing `∑_r x r * c r`.
-* `ZeroHolonomy src P c`: the gluing condition of eq. (96) — every
-  circulation pairs nonpositively with the charge cochain `c`.
-* `IsAccountPotential src P c H`: eq. (78)-(79), the pointwise
+* `ZeroHolonomy src P c`: the gluing condition — every circulation pairs
+  nonpositively with the charge cochain `c`.
+* `IsAccountPotential src P c H`: the pointwise
   superharmonicity `c r + ∑_v P r v * H v - H (src r) ≤ 0`.
 
 ## Main results
 
-* `zeroHolonomy_iff_exists_accountPotential`: the Farkas duality
-  (95) ⇔ (96).  Zero holonomy holds exactly when a single scalar account
-  potential discharges every row charge.
+* `zeroHolonomy_iff_exists_accountPotential`: the Farkas duality between the
+  gluing condition and existence of an account potential.  Zero holonomy
+  holds exactly when a single scalar account potential discharges every row
+  charge.
 * `TwoCycle.not_zeroHolonomy` together with
   `TwoCycle.ownerPure_circulation_eq_zero`: the abstract skeleton of the
-  §14-16 falsifier.  On the two-row two-vertex owner-switching cycle every
-  owner-pure circulation vanishes (so each owner is separately harmless)
+  owner-switching falsifier.  On the two-row two-vertex owner-switching
+  cycle every owner-pure circulation vanishes (so each owner is separately harmless)
   while the mixed uniform circulation has holonomy `(α₁ + α₂) / 2 > 0`.
   Owner-pure harmlessness therefore does **not** imply zero holonomy.
 -/
@@ -80,7 +80,7 @@ structure IsStochastic (P : R → V → ℝ) : Prop where
   /-- Every row is a probability vector. -/
   row_sum : ∀ r, ∑ v, P r v = 1
 
-/-- The incidence operator `B` of Question 71, eq. (2):
+/-- The incidence operator `B`:
 `(B x)(v) = ∑_{src r = v} x r - ∑_r x r * P r v`.  The first term collects
 the mass leaving `v`, the second the mass arriving at `v`. -/
 def incidence (src : R → V) (P : R → V → ℝ) (x : R → ℝ) (v : V) : ℝ :=
@@ -92,7 +92,7 @@ def incidenceEntry (src : R → V) (P : R → V → ℝ) (r : R) (v : V) : ℝ :
   (if src r = v then 1 else 0) - P r v
 
 omit [Fintype V] in
-/-- `incidence` written with the fibre sum of eq. (2) literally. -/
+/-- `incidence` written with the fibre sum literally. -/
 theorem incidence_eq_sum_filter (src : R → V) (P : R → V → ℝ) (x : R → ℝ)
     (v : V) :
     incidence src P x v
@@ -147,15 +147,15 @@ theorem sum_incidence_eq_zero {P : R → V → ℝ} (hP : IsStochastic P)
 /-! ### Circulations -/
 
 /-- A circulation: a nonnegative flow in the kernel of the incidence
-operator (Question 71, eq. (3) without the normalization). -/
+operator (without the total-mass normalization). -/
 structure IsCirculation (src : R → V) (P : R → V → ℝ) (x : R → ℝ) : Prop where
   /-- Row masses are nonnegative. -/
   nonneg : ∀ r, 0 ≤ x r
   /-- Every vertex balances: `B x = 0`. -/
   balanced : ∀ v, incidence src P x v = 0
 
-/-- A normalized circulation: eq. (3) in full, `x ≥ 0`, `1ᵀx = 1`,
-`B x = 0`. -/
+/-- A normalized circulation: a circulation with unit total mass,
+`x ≥ 0`, `1ᵀx = 1`, `B x = 0`. -/
 structure IsNormalizedCirculation (src : R → V) (P : R → V → ℝ)
     (x : R → ℝ) : Prop extends IsCirculation src P x where
   /-- The total row mass is one. -/
@@ -172,13 +172,14 @@ def IsOwnerPure (ownerOf : R → ι) (i : ι) (x : R → ℝ) : Prop :=
 `∑_r x r * c r`. -/
 def holonomy (c : R → ℝ) (x : R → ℝ) : ℝ := ∑ r, x r * c r
 
-/-- The gluing condition of Question 71, eq. (96): every global oriented
+/-- The gluing condition: every global oriented
 circulation pairs nonpositively with the charge cochain. -/
 def ZeroHolonomy (src : R → V) (P : R → V → ℝ) (c : R → ℝ) : Prop :=
   ∀ η : R → ℝ, IsCirculation src P η → holonomy c η ≤ 0
 
-/-- A scalar *account potential* discharging the charges: Question 71,
-eq. (78)-(79).  This is the primal side of eq. (95), `c ∈ -im B - ℝ₊`. -/
+/-- A scalar *account potential* discharging the charges: the pointwise
+superharmonicity inequality below.  This is the primal side of the Farkas
+dual pair, `c ∈ -im B - ℝ₊`. -/
 def IsAccountPotential (src : R → V) (P : R → V → ℝ) (c : R → ℝ)
     (H : V → ℝ) : Prop :=
   ∀ r, c r + (∑ v, P r v * H v) - H (src r) ≤ 0
@@ -217,7 +218,7 @@ theorem sum_mul_incidence (src : R → V) (P : R → V → ℝ) (x : R → ℝ)
         refine Finset.sum_congr rfl fun r _ => ?_
         rw [← Finset.mul_sum, sum_incidenceEntry_mul]
 
-/-! ### The duality (95) ⇔ (96) -/
+/-! ### The gluing/potential duality -/
 
 /-- **Easy direction.**  An account potential forces every circulation to
 have nonpositive holonomy: multiply the row inequality by the row mass,
@@ -293,7 +294,7 @@ theorem exists_accountPotential_of_zeroHolonomy {src : R → V}
   rw [holonomy] at hle
   linarith
 
-/-- **Main theorem (Question 71, eq. (95) ⇔ (96)).**  The gluing condition
+/-- **Main theorem (the gluing/potential duality).**  The gluing condition
 holds exactly when the charge cochain is discharged by a scalar account
 potential. -/
 theorem zeroHolonomy_iff_exists_accountPotential (src : R → V)
@@ -316,16 +317,16 @@ end General
 
 /-! ### The two-row owner-switching falsifier
 
-The abstract skeleton of Question 71, §14-16.  Two vertices `false`,
+The abstract skeleton: two vertices `false`,
 `true`; two rows, row `b` sourced at `b` and moving deterministically to
 `!b`; the two rows are owned by two different owners, and carry charges
 `α₁`, `α₂` with `α₁ + α₂ > 0`.
 
 The uniform occupation `(1/2, 1/2)` is a normalized circulation with
 holonomy `(α₁ + α₂) / 2 > 0`, so the gluing condition fails and (by the
-main theorem) no account potential exists — this is eq. (78)-(81).  Yet
-every owner-pure circulation is identically zero (§13: "every one-owner
-subsystem is harmless").  Owner-pure harmlessness therefore does not imply
+main theorem) no account potential exists.  Yet
+every owner-pure circulation is identically zero (every one-owner
+subsystem is harmless).  Owner-pure harmlessness therefore does not imply
 zero holonomy. -/
 
 namespace TwoCycle
@@ -372,7 +373,7 @@ theorem holonomy_uniform (a₁ a₂ : ℝ) :
 
 /-- **(b)** The gluing condition fails whenever the two charges have
 positive sum: the uniform circulation is the exact Farkas witness of
-Question 71, eq. (81). -/
+that failure. -/
 theorem not_zeroHolonomy {a₁ a₂ : ℝ} (h : 0 < a₁ + a₂) :
     ¬ ZeroHolonomy src transition (charge a₁ a₂) := by
   intro hzero
@@ -380,14 +381,14 @@ theorem not_zeroHolonomy {a₁ a₂ : ℝ} (h : 0 < a₁ + a₂) :
   rw [holonomy_uniform] at hle
   linarith
 
-/-- Question 71, eq. (78)-(80): no common scalar account potential exists,
+/-- No common scalar account potential exists,
 because adding the two row inequalities gives `α₁ + α₂ ≤ 0`. -/
 theorem not_exists_accountPotential {a₁ a₂ : ℝ} (h : 0 < a₁ + a₂) :
     ¬ ∃ H : Bool → ℝ, IsAccountPotential src transition (charge a₁ a₂) H :=
   fun hH => not_zeroHolonomy h (zeroHolonomy_of_exists_accountPotential hH)
 
 /-- **(c)** Every owner-pure circulation vanishes: neither owner has any
-nonzero circulation on the active two-row cone (Question 71, §13). -/
+nonzero circulation on the active two-row cone. -/
 theorem ownerPure_circulation_eq_zero {i : Bool} {x : Bool → ℝ}
     (hcirc : IsCirculation src transition x) (hpure : IsOwnerPure ownerOf i x) :
     x = 0 := by

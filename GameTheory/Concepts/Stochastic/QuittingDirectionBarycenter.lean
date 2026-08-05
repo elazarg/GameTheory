@@ -19,9 +19,9 @@ proves the zeroth-order chart of that blow-up, exactly and division-free:
 where `v` is the stationary terminal payoff of the root with hazards `h`.
 Thus stationary values factor through the direction simplex (the barycenter
 `∑ ĥᵢ · r({i})` of singleton rewards) up to an error linear in the scale.
-This is the quantitative content of Q107's fourth stationary regime — hazards
+This is the quantitative content of the fourth stationary regime — hazards
 tending to zero while the absorption distribution survives — and the chart in
-which Q130's normalized-direction escape and the owner-solo vertex analysis
+which the normalized-direction escape and the owner-solo vertex analysis
 live.
 
 The proof needs only the Weierstrass product inequality, the partition of the

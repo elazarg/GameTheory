@@ -18,18 +18,17 @@ root ε-complementarity predicate `IsεQuittingRootEndpointNash` from
 ε-complementary root row *exactly* complementary for a nearby reward table,
 against the same fixed tail payoff?
 
-This is the production port of `experiments/BackwardStableComplementarity.lean`
-(E64 in the pipeline's numbering), cited as the stratum frame's strongest leg
-in `ideas/CycleGeometryResolution/ExactCycleStrataCarryTheRelaxedFamilies.md`
-(S1). The statements and proofs below are unchanged from the experiments
-original: every lemma the original leaned on (`quittingRootPayoff`,
+This is a production port of a companion development, the strongest leg of
+the exact-cycle stratum frame (S1). The statements and proofs below are
+unchanged from that companion development: every lemma it leaned on
+(`quittingRootPayoff`,
 `quittingRootQuitPayoff`, `quittingRootContinuePayoff`,
 `quittingRootEndpointDifference`, `IsεQuittingRootEndpointNash`,
 `quittingRoot_continueProbability_add_quitProbability`,
 `action_eq_true_of_mem_support_pmfPi_update_pure_true`,
 `action_eq_false_of_mem_support_pmfPi_update_pure_false`) already exists in
 production with the identical name and signature, so no encoding
-reconciliation was needed -- the experiments file was already written
+reconciliation was needed -- the companion development was already written
 against this file's production API.
 
 ## The mechanism

@@ -608,7 +608,7 @@ theorem quittingRootSequenceHazardTerminalGap_le_tsum_residual_of_survival_zero
     reward roots who prescribed deviationValue hdeviation hresidual
       hsummable hboundary
 
-/-- Umbrella form of the Q115 local-to-global conclusion.  The same weighted
+/-- Umbrella form of the local-to-global conclusion.  The same weighted
 residual bound holds either when opponent survival contracts to zero, or—on
 the only possible positive-survival branch—when the singleton reward is
 nonnegative. -/

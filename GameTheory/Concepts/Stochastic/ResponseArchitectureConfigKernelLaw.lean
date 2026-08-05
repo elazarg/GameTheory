@@ -16,8 +16,8 @@ architecture's current configuration gives exactly the iterated prescribed
 configuration kernel.
 
 This file proves that finite-horizon law, its expected-stage and finite-average
-corollaries, and the resulting history-semantic route to Q96's prescribed
-target harmonicity condition.
+corollaries, and the resulting history-semantic route to the gain-bias
+criterion's prescribed target harmonicity condition.
 -/
 
 set_option autoImplicit false
@@ -180,8 +180,8 @@ namespace SplitResponseDomain
 
 variable [DecidableEq ι] {A : G.FiniteResponseArchitecture initial}
 
-/-- History-semantic shifted delivery implies Q96's prescribed target
-harmonicity condition on the full split delivery union. -/
+/-- History-semantic shifted delivery implies the gain-bias criterion's
+prescribed target harmonicity condition on the full split delivery union. -/
 theorem prescribedTargetHarmonic_of_tendsto_finiteAverage
     (D : A.SplitResponseDomain) {u : A.Config → Payoff ι}
     (hdelivery : ∀ (who : ι) (z : A.Config), D.delivery z →

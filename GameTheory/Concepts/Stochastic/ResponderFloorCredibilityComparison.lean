@@ -11,7 +11,7 @@ import Mathlib.Order.ConditionallyCompleteLattice.Basic
 # Responder-floor comparison from unilateral credibility
 
 This file isolates the value comparison underlying the implication from
-responder credibility to the responder-floor condition in Question 110.
+responder credibility to the responder-floor condition.
 
 For a responder strategy `response` and a coalition strategy `coalition`, let
 `floorPayoff response coalition` be the payoff in the floor game and let
@@ -31,10 +31,10 @@ explicitly: the same responder strategy type is used in both games, the fixed
 prescribed coalition strategy is an admissible floor-game coalition strategy,
 and the payoff comparison holds for every strategy pair.
 
-The repository does not yet contain Question 110's finite turn-based
-absorbing response arena and its derived floor game.  This module therefore
-formalizes only the reusable strategy-level comparison, without introducing
-an architecture interface ahead of that model.
+The repository does not yet contain a finite turn-based absorbing response
+arena and its derived floor game.  This module therefore formalizes only
+the reusable strategy-level comparison, without introducing an architecture
+interface ahead of that model.
 -/
 
 set_option autoImplicit false
@@ -64,8 +64,7 @@ against a fixed coalition strategy, provided actual payoffs dominate floor
 payoffs pointwise.
 
 The boundedness assumptions are exactly those needed to use `sInf` and `sSup`
-over `ℝ`; they are automatic for the finite bounded-payoff games intended in
-Question 110.
+over `ℝ`; they are automatic for finite bounded-payoff games.
 -/
 theorem securityFloor_le_unilateralValueAgainst
     [Nonempty ResponderStrategy]

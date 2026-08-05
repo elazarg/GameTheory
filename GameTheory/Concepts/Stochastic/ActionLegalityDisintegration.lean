@@ -103,11 +103,10 @@ invariant-and-legal witness *from an arbitrary unrestricted one* would need
 disintegrating *every* coordinate simultaneously against a background that is
 itself already invariant -- circular as stated -- confirming, with a precise
 technical reason rather than only the non-convexity argument already on
-record, why `docs/uniform-equilibrium/PIPELINE.md`'s `LEAN-F0-1` entry
-records that route as closed ("Restricting only the prescribed profile does
-kill the channel... the converse must transport an arbitrary padded-game
-equilibrium, while invariance transports only invariant ones"). This file
-does not attempt to route around that; deliverable (4) here is stated
+record, that this route is closed: restricting only the prescribed profile
+does kill the channel, but the converse must transport an arbitrary
+padded-game equilibrium, while invariance transports only invariant ones.
+This file does not attempt to route around that; deliverable (4) here is stated
 honestly as *conditional* on a label-blind, legal `ρ`, which the row already
 flags as a permitted strengthening of the *prescribed* profile only.
 

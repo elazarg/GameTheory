@@ -48,9 +48,8 @@ behaviour-strategy machinery (`BehaviorProfile`/`Hist`/`histDist`) of
 
 ## What does not close, and exactly why
 
-The consequence the padding reduction is supposed to deliver
-(`docs/uniform-equilibrium/PIPELINE.md`, `LEAN-F0-1`) is stronger: take the
-**unrestricted** witness that the general conjecture
+The consequence the padding reduction is supposed to deliver is stronger:
+take the **unrestricted** witness that the general conjecture
 (`exists_uniformDeviationCapConstructor`, stated for arbitrary
 state-independent games and hence applicable to `G.normalizedGame` once
 proved) would hand back, and produce a *legal* equilibrium of `G`.  That

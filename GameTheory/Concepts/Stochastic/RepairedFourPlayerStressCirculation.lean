@@ -9,7 +9,7 @@ import GameTheory.Concepts.Stochastic.SingletonFaceCirculationOrbit
 /-!
 # The repaired four-player family's circulation certificate at its stress point
 
-Question 160's followup ("## Followup to Question 160") repairs the four-player
+This followup repairs the four-player
 cyclic weight `F(x, ε)` to `F'(x, λ)` by moving the second solo coordinate from
 `0` to `x` (`solo r({i})`: `i ↦ 1, i+1 ↦ 3, i+2 ↦ x, i+3 ↦ 0`).  The followup's
 answer ("## Answer to followup") produces a singleton-face circulation
@@ -118,7 +118,7 @@ open Finset Math.PMFProduct
 abbrev Player := Fin 4
 
 /-- **The repaired family's weight at the stress point `(x, λ) = (2, 1)`**,
-from Question 160's followup "## The repaired family": solo `r({i})` pays
+from the followup's repaired family: solo `r({i})` pays
 `i ↦ 1, i+1 ↦ 3, i+2 ↦ x, i+3 ↦ 0`; adjacent pairs `r({i,i+1})` pay
 `i ↦ 1+λ, i+1 ↦ 0`, both outsiders `↦ 1`; distance-two pairs pay both
 outsiders `↦ 1`, both members `↦ 0`; triples pay the outsider `↦ 1`, all

@@ -200,10 +200,10 @@ theorem exists_prescribedBias_of_tendsto_finiteAverage
     (u z player) (hdelivery player z hz)
 
 /-- History-semantic shifted delivery and unilateral caps, together with the
-owner-local neutral-occupation condition, synthesize both Q96 bias families.
-Thus after the strategic hypotheses have supplied (T0) and (Ti), (N) is the
-only additional input needed by the existing controlled-Farkas theorem for
-the unilateral bias. -/
+owner-local neutral-occupation condition, synthesize both prescribed and
+unilateral bias families.  Thus after the strategic hypotheses have supplied
+(T0) and (Ti), (N) is the only additional input needed by the existing
+controlled-Farkas theorem for the unilateral bias. -/
 theorem exists_gainBiases_of_historyDelivery_cap_and_neutralOccupation
     (D : A.SplitResponseDomain) {u : A.Config → Payoff ι}
     (hdelivery : ∀ (who : ι) (z : A.Config), D.delivery z →

@@ -433,7 +433,7 @@ def verdictOf (p : Prop) [Decidable p] : GateVerdict := if p then .pass else .fa
 
 /-- **The gluing gate at a declared-target node.**  It carries the node and
 the owner-labeled flow system built on the node's data.  Its verdict is the
-Question 71 gluing condition for the target-relative charge. -/
+gluing condition for the target-relative charge. -/
 structure NodeGluingGate (G : StochasticGame ι)
     [Fintype G.State] [DecidableEq G.State] [Fintype ι] [DecidableEq ι]
     [∀ i, Fintype (G.Act i)] [∀ i, DecidableEq (G.Act i)]
@@ -481,8 +481,8 @@ def HasAccountPotential (gate : NodeGluingGate G Row) : Prop :=
   ∃ H : G.State → ℝ,
     IsAccountPotential gate.rows.src gate.rows.transition gate.rows.charge H
 
-/-- **Adapter (Question 71, eq. (95) ⇔ (96)), at a node.**  A one-line
-consumer of `zeroHolonomy_iff_exists_accountPotential`. -/
+/-- **Adapter, at a node.**  A one-line consumer of
+`zeroHolonomy_iff_exists_accountPotential`. -/
 theorem glues_iff_hasAccountPotential (gate : NodeGluingGate G Row) :
     gate.Glues ↔ gate.HasAccountPotential :=
   zeroHolonomy_iff_exists_accountPotential _ _ _
@@ -574,8 +574,9 @@ end NodeGluingGate
 
 /-- **The oriented account-bridge gate at a declared-target node.**
 
-It refines the gluing gate by a strictly positive circulation witness, which is
-the finite shadow of Question 74's recurrence side condition.  Carrying the
+It refines the gluing gate by a strictly positive circulation witness — the
+finite shadow of the reachability/recurrence side condition, witnessing that
+the cone of circulations spans the whole signed cycle space.  Carrying the
 witness as data — rather than assuming `HasFullSupportCirculation` globally —
 is what makes the two-sided adapter below unconditional *on this record* while
 leaving the hypothesis refutable in general: `ParallelRows` admits no such
@@ -595,8 +596,7 @@ namespace NodeAccountBridgeGate
 
 variable {Row : Type} [Fintype Row]
 
-/-- The record's witness discharges the full-support hypothesis of
-Question 74, Part C. -/
+/-- The record's witness discharges the full-support hypothesis. -/
 theorem hasFullSupportCirculation (gate : NodeAccountBridgeGate G Row) :
     HasFullSupportCirculation gate.rows.src gate.rows.transition :=
   ⟨gate.witness, gate.witness_isCirculation, gate.witness_pos⟩
@@ -611,7 +611,8 @@ def Bridges (gate : NodeAccountBridgeGate G Row) : Prop :=
 def NeutralGlues (gate : NodeAccountBridgeGate G Row) : Prop :=
   NeutralHolonomy gate.rows.src gate.rows.transition gate.rows.charge
 
-/-- One ledger per orientation at the node (Question 74, Part B). -/
+/-- One ledger per orientation at the node, with the two potentials allowed
+to differ. -/
 def HasBothOrientationsAt (gate : NodeAccountBridgeGate G Row) : Prop :=
   HasBothOrientations gate.rows.src gate.rows.transition gate.rows.charge
 
@@ -669,9 +670,8 @@ theorem bridges_or_not_bridges (gate : NodeAccountBridgeGate G Row) :
 
 /-- **Falsifier preservation.**  A row system whose only circulation is the
 zero flow admits *no* bridge gate at all: the record's positivity witness
-cannot exist.  This is the `ParallelRows` separation of Question 74,
-transported to nodes — it is why the full-support datum is carried and not
-assumed. -/
+cannot exist.  This is the `ParallelRows` separation, transported to nodes —
+it is why the full-support datum is carried and not assumed. -/
 theorem noGate_of_circulation_eq_zero [Nonempty Row] {node : DeclaredTargetNode G}
     (rows : NodeFlowRows node Row)
     (hzero : ∀ x : Row → ℝ, IsCirculation rows.src rows.transition x → x = 0) :
@@ -748,7 +748,7 @@ def ValidVisible (gate : NodeCustodyGate G E N U Y) (i : ι) (α : ι → ℝ)
 def ValidFull (gate : NodeCustodyGate G E N U Y) (α : ι → ℝ) (β : ℝ) : Prop :=
   ValidOnFull gate.cell α β
 
-/-- **Adapter (Question 72, eq. (6)-(9)), at a node.**  A one-line consumer of
+/-- **Adapter, at a node.**  A one-line consumer of
 `hasTypedLift_iff_validOnVisible_of_full`, unconditional thanks to the
 `target_memFull` coherence field. -/
 theorem lifts_iff_validVisible (gate : NodeCustodyGate G E N U Y) (i : ι)
@@ -1121,7 +1121,7 @@ theorem oneBridgeGate_neutralGlues : oneBridgeGate.NeutralGlues :=
 /-! ### The custody gate -/
 
 /-- The owner-custody gate at the prescribed node.  The typed cell is the
-two-owner cross-cancellation system of Question 72: `Ω = T = Player`, one
+two-owner cross-cancellation system: `Ω = T = Player`, one
 internal variable, one owner-neutral row, and one unilateral row per owner.
 The coherence field checks that the declared target `(0, 0)` is a feasible
 point of the full typed system. -/
@@ -1186,8 +1186,8 @@ def prescribedCustodyGate_escape (i : Player) :
 Two declared-target nodes over the same game, both *endpoint-declared*, carry
 the same tagged owner-labeled row system and land on opposite sides of every
 flow gate; a third node shows the declared target is not coerced from the
-endpoint value; and the custody gate reproduces the Question 72 falsifier at a
-node while still passing on an owned coordinate.
+endpoint value; and the custody gate reproduces the cross-owner-cancellation
+falsifier at a node while still passing on an owned coordinate.
 
 Read together with `PureExternalityCycleHolonomy.routeZero_acceptance` — which
 certifies that the prescribed profile *does* deliver `(0, 0)` as a uniform

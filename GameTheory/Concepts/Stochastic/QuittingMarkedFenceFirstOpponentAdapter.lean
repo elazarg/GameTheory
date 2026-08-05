@@ -460,7 +460,7 @@ theorem neg_M_mul_quittingFirstOpponentMass_le_rawMean
         (quittingFirstOpponentRawWeight_nonneg roots owner start fuel mark)
 
 /-- A Never inequality at a negative suffix forces a quantitative amount of
-actual opponent-fence mass.  This is Q124's division-free fence bound. -/
+actual opponent-fence mass.  This is a division-free fence bound. -/
 theorem theta_le_M_mul_quittingFirstOpponentMass
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)

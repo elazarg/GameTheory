@@ -10,13 +10,13 @@ import Mathlib.Data.Set.Finite.Lattice
 /-!
 # Guarded routing audit: the abstract skeleton
 
-Provenance: this file is the game-free skeleton of the Question 77 audit, whose
-full statement is recorded in an untracked local research note.  It formalizes
+Provenance: this file is the game-free skeleton of the guarded-routing audit,
+whose full statement is recorded in an untracked local research note.  It formalizes
 only the bookkeeping layer of that audit -- the part which is genuinely
-independent of the analytic atlas -- over an arbitrary node type.  It is deliberately *not*
-Theorem 77: the full guarded registry (refined obstruction cells, the coverage
-formulas (8)-(9), the status-refined neutral graph (17) and its phase map (18))
-is future work gated on the rank re-review.
+independent of the analytic atlas -- over an arbitrary node type.  It is
+deliberately *not* the full guarded registry (refined obstruction cells, the
+coverage formulas, the status-refined neutral graph and its phase map); that
+full registry is future work gated on the rank re-review.
 
 The abstract package is a `LocalRuleSystem`: a well-founded rank codomain, a
 rank assignment, and a local rule sending each node to `closed`, an explicit
@@ -31,14 +31,14 @@ Both must remain assumable *and refutable*, so neither is a structure field
 carrying its own proof.  Under them, `auditCertificate_of_strictProgress_of_`
 `obstructionFree` produces an `AuditCertificate`: the reachable unfolding is a
 finite set of nodes and every reachable leaf is closed.  This is Koenig-style
-bookkeeping, not game mathematics: the strategic content of Question 77 (the
-eight-gate child verifier, minimal strategic closure, guard coverage) lives
+bookkeeping, not game mathematics: the strategic content — the eight-gate
+child verifier, minimal strategic closure, guard coverage — lives
 entirely in *establishing* `StrictProgress` for a concrete system, not here.
 
 ## The self-child falsifier
 
-Question 77 section 1 exhibits the one-state, one-action, zero-payoff game whose
-single local rule returns the singleton child list `[N]`.  Every child-validity
+The self-child falsifier exhibits the one-state, one-action, zero-payoff game
+whose single local rule returns the singleton child list `[N]`.  Every child-validity
 field passes and the rank codomain is well founded, yet the recursion is the
 infinite self-chain `N ⇝ N ⇝ N ⇝ ⋯`.  `selfChildSystem` is that example, and
 `not_strictProgress_selfChildSystem` machine-checks its lesson: a well-founded
@@ -77,8 +77,8 @@ inductive LocalRuleOutput (Node : Type u) (Obstruction : Type w) where
 
 /-- An abstract local rule system.
 
-The `rankLt_wf` field is only the *codomain* hypothesis of Question 77 equation
-(1): it says the order on ranks is well founded.  It deliberately says nothing
+The `rankLt_wf` field is only a *codomain* hypothesis: it says the order on
+ranks is well founded.  It deliberately says nothing
 about the child relation; `StrictProgress` is the separate, refutable statement
 that children actually descend, and `selfChildSystem` shows the gap is real. -/
 structure LocalRuleSystem (Node : Type u) (Rank : Type v)
@@ -192,7 +192,7 @@ def StrictProgress (S : LocalRuleSystem Node Rank Obstruction) : Prop :=
   ∀ n : Node, ∀ c ∈ S.childrenOf n, S.rankLt (S.rank c) (S.rank n)
 
 /-- Obstruction freedom: no node reachable from the root emits an obstruction.
-This is the abstract shadow of the coverage formula (8) of Question 77. -/
+This is the abstract shadow of the guard-coverage condition. -/
 def ObstructionFree (S : LocalRuleSystem Node Rank Obstruction) (root : Node) : Prop :=
   ∀ n : Node, S.Reachable root n → ¬ S.EmitsObstruction n
 
@@ -279,7 +279,7 @@ structure AuditCertificate (S : LocalRuleSystem Node Rank Obstruction)
 /-- Positive theorem.  Strict progress plus obstruction freedom yield the audit
 certificate at the given root.
 
-This is bookkeeping, not game mathematics: all strategic content of Question 77
+This is bookkeeping, not game mathematics: all strategic content
 is consumed in discharging `StrictProgress` and `ObstructionFree`. -/
 theorem auditCertificate_of_strictProgress_of_obstructionFree
     (S : LocalRuleSystem Node Rank Obstruction) {root : Node}
@@ -292,7 +292,7 @@ end LocalRuleSystem
 
 open LocalRuleSystem
 
-/-! ### The self-child falsifier of Question 77 section 1 -/
+/-! ### The self-child falsifier -/
 
 /-- The one-node self-child system: a single node whose rule returns the
 singleton child list containing that same node.  The rank codomain is `Unit`
@@ -339,8 +339,8 @@ theorem not_wellFounded_childRel_selfChildSystem :
     | intro y _ ih => exact ih () (by simp)
   exact key () (hwf.apply ())
 
-/-- The self-chain `N ⇝ N ⇝ N ⇝ ⋯` of Question 77 section 1, exhibited as an
-infinite branch.  Contrast `LocalRuleSystem.not_infinite_branch`. -/
+/-- The self-chain `N ⇝ N ⇝ N ⇝ ⋯`, exhibited as an infinite branch.  Contrast
+`LocalRuleSystem.not_infinite_branch`. -/
 theorem selfChildSystem_infinite_branch (k : ℕ) :
     (fun _ : ℕ => ()) (k + 1) ∈
       selfChildSystem.childrenOf ((fun _ : ℕ => ()) k) := by

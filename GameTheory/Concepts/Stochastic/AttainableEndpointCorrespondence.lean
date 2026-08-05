@@ -11,7 +11,7 @@ import GameTheory.Concepts.Stochastic.AnalyticPrescribedEndpointTailRecurrentChi
 /-!
 # The attainable-endpoint correspondence, restarted branch
 
-**Provenance.**  Question 64 (*target-coherent analytic child germs*) states
+**Provenance.**  The target-coherent analytic child germ correspondence is
 the endpoint correspondence
 
 `𝒜_re(h', C) = { y : (0, y) ∈ closure Y_C }`
@@ -22,13 +22,13 @@ now that correspondence appeared in this repository only as a *hypothesis*:
 the `ChildObligations` bundle of
 `GameTheory.Concepts.Stochastic.AnalyticPrescribedEndpointTailRecurrentChildBridge`
 carries fields `whole_vector_target` and `rank_decreases` that restate the
-conclusion of Question 64 as an assumption.
+restarted-coherence theorem's conclusion as an assumption.
 
 This file is the first pass at the missing *definitional* layer.  It defines
 the restarted branch of the correspondence as an actual set of payoff
 vectors, proves the easy facts about it, and exhibits the exact way a
 `ChildObligations`-style consumer is fed from a membership statement.  It
-proves no part of Question 64.
+proves no part of the restarted-coherence theorem itself.
 
 **What is in scope.**
 
@@ -44,10 +44,10 @@ proves no part of Question 64.
 
 **What is explicitly out of scope.**
 
-* The *inherited* branch of Question 64 (`w = T_C(0) V⁰`, equation (77))
-  needs germ morphisms — Bellman/row/target morphisms whose cell, quotient,
-  harmonic, jet, and account data commute.  This repository has no germ
-  morphism, so the inherited branch is not defined here.
+* The *inherited* branch (`w = T_C(0) V⁰`) needs germ morphisms —
+  Bellman/row/target morphisms whose cell, quotient, harmonic, jet, and
+  account data commute.  This repository has no germ morphism, so the
+  inherited branch is not defined here.
 * The full `iff` of Theorem B (equation (78)) needs semialgebraic curve
   selection for a *child* continuation presentation `𝔠 = (Z_c, z'₀, s_c,
   A_c, q_c, g_c, U_c, Ξ_C)`.  This repository has no child continuation
@@ -57,7 +57,7 @@ proves no part of Question 64.
   configuration space and legacy interface `Ξ_C`, is future work.
 * Consequently `attainableEndpoint` is the *unconstrained* restarted
   correspondence: it carries no face, forbidden-row, quotient, account, or
-  rank constraint.  It is therefore an over-approximation of Question 64's
+  rank constraint.  It is therefore an over-approximation of
   `𝒜_re(h', C)`, which is the honest direction for a *nonemptiness*
   statement but not for an exact characterization.
 
@@ -90,9 +90,10 @@ function `G.State → Payoff ι`.  A germ therefore carries no intrinsic
 starting state; the only thing a "restart at `entry`" adds is the
 designation of the coordinate at which its endpoint vector is read.  This is
 the lightest faithful bundling the repository supports, and it is
-deliberately weaker than Question 64's restarted child: a genuine restarted
-child would be a germ of a *child continuation presentation* with its own
-public configuration space and legacy interface, which does not exist here.
+deliberately weaker than the correspondence's restarted child: a genuine
+restarted child would be a germ of a *child continuation presentation* with
+its own public configuration space and legacy interface, which does not
+exist here.
 -/
 structure RestartedChildGerm (entry : G.State) where
   /-- The underlying analytic Bellman germ of the ambient game `G`. -/
@@ -113,7 +114,8 @@ theorem germ_ofGerm (germ : G.AnalyticBellmanGerm) (entry : G.State) :
   rfl
 
 /-- The endpoint payoff vector delivered by a restarted child germ at its
-designated entry state.  This is the `w` of Question 64's equation (33). -/
+designated entry state.  This is the `w` of the restarted-coherence
+theorem. -/
 def endpointTarget {entry : G.State} (child : G.RestartedChildGerm entry) :
     Payoff ι :=
   child.germ.endpointValue entry
@@ -133,9 +135,9 @@ end RestartedChildGerm
 The **attainable-endpoint correspondence** at `entry`: the set of payoff
 vectors arising as the endpoint value of some restarted child germ.
 
-This is the restarted branch of Question 64's correspondence
-`𝒜_re(h', C)`, taken without the target constraints of the child Bellman
-system (see the module docstring): no face selection, forbidden-row
+This is the restarted branch of the correspondence `𝒜_re(h', C)`, taken
+without the target constraints of the child Bellman system (see the module
+docstring): no face selection, forbidden-row
 condition, owner-history quotient, account status, or rank constraint is
 imposed.  The inherited branch of the correspondence — targets that are
 restrictions or affine images of the parent endpoint `V⁰` under a germ
@@ -206,9 +208,9 @@ coordinates and is therefore not a bound in terms of the game data.  What
 *is* cheap is the structural constraint: every attainable endpoint is the
 `entry` coordinate of a solution of the undiscounted (discount factor `1`)
 stationary Bellman system of `G`, equivalently of a polynomial Bellman
-solution whose discount-complement coordinate vanishes.  This is the
-Lean-level shadow of Question 64's "constrained endpoint correspondence"; it
-does *not* establish that the constraint is proper for any particular game.
+solution whose discount-complement coordinate vanishes.  This is a
+Lean-level shadow of the constrained endpoint correspondence; it does *not*
+establish that the constraint is proper for any particular game.
 -/
 
 /-- Every attainable endpoint extends to a full solution of the
@@ -239,15 +241,15 @@ theorem attainableEndpoint_subset_zeroDiscountSolutionValue (entry : G.State) :
 /-! ## De-smuggling `ChildObligations` -/
 
 /--
-`MemAttainableTarget G entry target` is Question 64's membership statement
+`MemAttainableTarget G entry target` is the membership statement
 `w ∈ 𝒜_re` for the restarted branch, with `w = target` and the child entry
 `h'` represented by the state `entry`.
 
 Under the exact restarted-coherence theorem this is *equivalent* to the
 existence of a restarted child germ with endpoint `target` at `entry`.  Here
 it is *defined* to be that existence (via `attainableEndpoint`); the content
-that Question 64 adds — that the same set is cut out by the closure of the
-constrained child root-value graph `Y_C` — is not formalized.
+that the correspondence adds — that the same set is cut out by the closure
+of the constrained child root-value graph `Y_C` — is not formalized.
 -/
 def MemAttainableTarget (entry : G.State) (target : Payoff ι) : Prop :=
   target ∈ G.attainableEndpoint entry
@@ -271,7 +273,7 @@ This is the honest replacement for the bare equation
 `nodeTarget child = nodeTarget parent` assumed by `ChildObligations`: the
 equation is recovered (see `whole_vector_target`), but only from the strictly
 stronger data that both nodes are *labelled by the same attainable target*.
-The `attainable` field is what carries the Question 64 content; the two
+The `attainable` field is what carries the correspondence's content; the two
 labelling equations are the bookkeeping that the ambient recursion must
 supply.
 -/
@@ -354,10 +356,10 @@ construction — they are exactly what the correspondence does *not* supply:
 
 * `parent_entry`, `child_entry` — the graph-theoretic identification of both
   node entries with the positive-charge class representative;
-* `rank_decreases` — the strict rank descent, which is
-  `Question 64` rank-faithfulness and is *not* implied by endpoint equality
-  (see the final section of the Question 64 answer: "endpoint equality alone
-  proves none of the rank, row, quotient, face, or account assertions");
+* `rank_decreases` — the strict rank descent, which is rank-faithfulness of
+  the target-coherent correspondence and is *not* implied by endpoint
+  equality: endpoint equality alone proves none of the rank, row, quotient,
+  face, or account assertions;
 * `legal_entry_interface` — the application-specific legal-entry evidence.
 
 Note also that the `label` hypothesis is strictly stronger than membership

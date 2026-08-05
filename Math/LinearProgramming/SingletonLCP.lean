@@ -22,7 +22,7 @@ appear throughout the quitting-game reduction: for a coalition reward
 `Bᵢⱼ = r({j})ᵢ - r({i})ᵢ` compares player `i`'s payoff at `j`'s solo
 termination against its own. Feasibility of this LCP is what several
 recorded results (the absorption-vanishing equivalence, in particular) turn
-on; see `docs/uniform-equilibrium/PIPELINE.md`, item `LEAN-P1-5`.
+on.
 
 ## Main definitions
 

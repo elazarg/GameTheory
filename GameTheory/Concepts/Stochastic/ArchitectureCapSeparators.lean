@@ -11,7 +11,8 @@ import GameTheory.Concepts.Welfare.FolkTheorem.Feasible
 /-!
 # Regression examples separating architecture caps from static tests
 
-This file formalizes the two small separators in Question 95, §6.
+This file formalizes two small separators between architecture caps and
+static tests.
 
 * `ArchitectureCapVsMinmax` is the one-state two-player game which pays
   `(1, 1)` only at `(A, L)`.  The one-node architecture prescribing `(A, L)`
@@ -26,7 +27,7 @@ The second game uses one Boolean action whose interpretation is
 state-dependent: `false` is `Stay` at `x` and `Back` at `y`, while `true` is
 `Go` at `x` and `Exploit` at `y`.  This is the smallest faithful model of the
 example; it deliberately does not add off-node named actions whose effects
-Question 95 does not specify.
+are left unspecified.
 -/
 
 set_option autoImplicit false

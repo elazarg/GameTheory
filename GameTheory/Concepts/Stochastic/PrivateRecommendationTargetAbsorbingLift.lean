@@ -11,10 +11,10 @@ import GameTheory.Concepts.Stochastic.Absorbing
 # The one-decision absorbing lift of the private-recommendation separator
 
 This file realizes the strategic-form matrix in
-`PrivateRecommendationTargetSeparator.lean` as the four-state stochastic game
-used in Question 100.  The decision state moves immediately to one of three
-absorbing states.  The expected absorbing payoff, conditional on every pure
-first action, is exactly that action's strategic-form payoff.
+`PrivateRecommendationTargetSeparator.lean` as a four-state stochastic game.
+The decision state moves immediately to one of three absorbing states.  The
+expected absorbing payoff, conditional on every pure first action, is
+exactly that action's strategic-form payoff.
 
 More strongly, after fixing the action at every visit to the decision state,
 the expected average payoff equals the same strategic-form payoff at every

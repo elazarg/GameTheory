@@ -10,9 +10,9 @@ import Mathlib.Algebra.Group.Subgroup.ZPowers.Basic
 /-!
 # A hidden-fiber span counterexample
 
-This file records the exact finite regression from Question 111 showing that
-the span of within-public-fiber charge differences is only a quotient
-obstruction, not a sufficient online balancing criterion.
+This file records an exact finite counterexample showing that the span of
+within-public-fiber charge differences is only a quotient obstruction, not a
+sufficient online balancing criterion.
 
 There is one vertex, one mode, two public observations, and three loop edges.
 The target edge masses are `1/4`, `1/6`, and `7/12`; the respective charges

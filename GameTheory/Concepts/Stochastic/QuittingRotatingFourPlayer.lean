@@ -9,8 +9,8 @@ import GameTheory.Concepts.Stochastic.QuittingSingletonArcCycle
 /-!
 # The normalized rotating four-player quitting family
 
-This file instantiates the singleton-arc compiler for the rotating family in
-Question 121.  The algebraic parameterization
+This file instantiates the singleton-arc compiler for the rotating four-player
+quitting family.  The algebraic parameterization
 
 `kappa = (2 - v) * (1 - v)`, `u = 2 * v - v ^ 2`, with `0 < v < 1`,
 
@@ -61,7 +61,7 @@ theorem u_eq_one_sub_sq (v : ℝ) :
   unfold u
   ring
 
-/-- The exact normalized terminal table from (24)--(26) of Question 121.
+/-- The exact normalized terminal table for the rotating four-player family.
 The impossible all-false branch is assigned zero to make the match total. -/
 def terminalReward (cost : ℝ) (S : Terminal) : Payoff Player :=
   match decide (0 ∈ S.1), decide (1 ∈ S.1),

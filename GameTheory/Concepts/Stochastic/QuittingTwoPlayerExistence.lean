@@ -40,10 +40,11 @@ the repository except for the joint-exit branch built below.
 
 Every two-coordinate weight has a period-one *exact row*, by the same
 `p = 1` argument used in the joint-exit branch; the case analysis is
-reproduced by the split above.  But a row certificate is not an equilibrium: the sure-set row needs no
-side condition, whereas a *solo* row certifies an equilibrium of the game only
-when the owner's own solo value is nonnegative — its `IsQuittingCycleAdmissible`
-obligation, since the owner's opponents never absorb at a solo row.  This
+reproduced by the split above.  But a row certificate is not an equilibrium:
+the sure-set row needs no side condition, whereas a *solo* row certifies an
+equilibrium of the game only when the owner's own solo value is nonnegative —
+its `IsQuittingCycleAdmissible` obligation, since the owner's opponents never
+absorb at a solo row.  This
 exact-row trichotomy therefore does not close the two-player conjecture on its own: a
 weight whose only exact singleton row belongs to a coordinate with negative
 solo value, such as `r({owner}) = (1, -2)`, `r({blocker}) = (0, -1)`,

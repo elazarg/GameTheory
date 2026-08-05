@@ -11,8 +11,9 @@ import GameTheory.Concepts.Potential.MixedPotential
 /-!
 # Provenance forced by positive exact dynamic debt
 
-This file develops the local, selector-free part of Question 127.  Positive
-exact debt propagates forward through every finite exact-D edge.  At the last
+This file develops the local, selector-free part of positive-debt
+provenance.  Positive exact debt propagates forward through every finite
+exact-D edge.  At the last
 live edge of a zero-boundary chain it forces a genuine positive-probability
 opponent action whose *full simultaneous quitter set* gives the debt owner a
 strictly larger payoff when the owner continues than when the owner joins the
@@ -61,7 +62,7 @@ theorem quittingDynamicDebtEdge_pos_propagates
 /-- When the exact debt is positive and every local Bellman residual
 vanishes, its uniquely selected stopping alternative is to Continue at every
 remaining live date and take the supplied terminal live value.  This is the
-recursive, expectation-level form of Q129's exact first-opponent identity. -/
+recursive, expectation-level form of the exact first-opponent identity. -/
 theorem quittingFiniteTerminalNeverHazardValue_eq_prescribed_add_dynamicDebt_of_pos
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (roots : ℕ → ι → PMF Bool) (owner : ι)
@@ -316,8 +317,8 @@ theorem positiveSingletonReward_of_finiteDynamicDebt_pos
 /-- **Positive-debt terminal-solo provenance.**  The probability that every
 opponent continues from `start` to the zero boundary is at least current
 exact debt divided by the owner's positive singleton reward.  This is the
-quantitative terminal atom in Q129; it uses no atom selection and has no
-dependence on the number of players. -/
+quantitative terminal atom of the first-opponent identity; it uses no atom
+selection and has no dependence on the number of players. -/
 theorem quittingFiniteNashBellmanPathDynamicDebt_div_singleton_le_survival
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)

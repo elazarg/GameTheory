@@ -11,11 +11,10 @@ import GameTheory.Concepts.Stochastic.QuittingExactDynamicDebtVanishingCounterex
 # The unilateral stopping obstacle is not a function of accumulated mass
 
 This is the minimal two-player, two-row regression from the marked-absorption-
-cylinder design record (`docs/uniform-equilibrium/design/MarkedAbsorptionCylinder.md`,
-§3).  It is a permanent fence, not a step toward a repair: **the unilateral
-quit-at-`t` stopping obstacle does not descend to accumulated absorption
-mass.**  Two rows can carry the same accumulated mass and different obstacle
-values.
+cylinder design.  It is a permanent fence, not a step toward a repair:
+**the unilateral quit-at-`t` stopping obstacle does not descend to
+accumulated absorption mass.**  Two rows can carry the same accumulated mass
+and different obstacle values.
 
 ## Why the naive descent argument fails
 

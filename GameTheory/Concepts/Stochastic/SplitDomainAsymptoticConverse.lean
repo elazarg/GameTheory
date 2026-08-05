@@ -10,8 +10,7 @@ import GameTheory.Concepts.Stochastic.SplitDomainGainBiasVerifier
 # Split-domain asymptotic converse
 
 This module isolates the two elementary converse steps behind the gain--bias
-criterion for Question 96.  They are stated directly for the finite
-configuration kernel:
+criterion.  They are stated directly for the finite configuration kernel:
 
 * shifted prescribed Cesaro delivery forces target harmonicity (A1/T0);
 * an asymptotic cap on a pure one-step deviation followed by prescribed play
@@ -211,7 +210,7 @@ theorem unilateralTargetSuperharmonic_of_eventually_purePrefixCap
   simpa using hle
 
 /-- Combined configuration-kernel converse for the target clauses (A1) and
-(A3) on Q96's exact split domains. -/
+(A3) on the gain-bias criterion's exact split domains. -/
 theorem targetConditions_of_configCesaroDelivery_and_purePrefixCap
     (D : A.SplitResponseDomain) {u : A.Config → Payoff ι}
     (hdelivery : ∀ (who : ι) (z : A.Config), D.delivery z →

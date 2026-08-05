@@ -9,8 +9,8 @@ import GameTheory.Concepts.Stochastic.BigMatchPublicPhase
 /-!
 # The exact live-cycle core of Big Match self-similarity
 
-This file formalizes the elementary structural part of Question 80, Part D.
-In the repository's Boolean convention, player `false` is the maximizer,
+This file formalizes the elementary structural part of the Big Match
+self-similarity argument.  In the repository's Boolean convention, player `false` is the maximizer,
 whose actions are `false = Continue` and `true = Stop`; player `true` is the
 minimizer, whose actions are `false = Left` and `true = Right`.
 
@@ -48,7 +48,7 @@ def continueRight : game.JointAct := fun who => who
 
 @[simp] theorem continueRight_minimizer : continueRight true = true := rfl
 
-/-- The concrete two-stage history used in Question 80's self-similarity
+/-- The concrete two-stage history used in the Big Match self-similarity
 argument.  The stored state at both completed stages and at the endpoint is
 the live state. -/
 def liveCycleHistory : game.Hist 2 :=
@@ -89,7 +89,7 @@ theorem liveCycleHistory_isLegal :
     game.stagePayoff .live continueRight who = if who then -1 else 1 := by
   cases who <;> rfl
 
-/-- The corrected stage order in Question 80 is `0, 1` for the maximizer. -/
+/-- The maximizer's stage payoffs occur in the order `0, 1`. -/
 theorem maximizer_liveCycle_stagePayoffs :
     (game.stagePayoff .live continueLeft false,
         game.stagePayoff .live continueRight false) = (0, 1) := by

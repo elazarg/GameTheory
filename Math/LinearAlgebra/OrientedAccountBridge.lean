@@ -9,26 +9,26 @@ import Math.LinearAlgebra.OwnerLabeledFlowHolonomy
 /-!
 # Oriented account bridges: the exact common-bridge core
 
-**Provenance.**  This is the finite linear-algebra core of Question 74
-(*Routing Processed Owner-History and Account Obstructions*), built on the
-Question 71 holonomy substrate of `Math.LinearAlgebra.OwnerLabeledFlowHolonomy`.
-It formalizes three pieces of that Answer:
+**Provenance.**  This is the finite linear-algebra core of an owner-history
+account-obstruction analysis, built on the holonomy substrate of
+`Math.LinearAlgebra.OwnerLabeledFlowHolonomy`.  It formalizes three pieces of
+that analysis:
 
-* the drift operator `D` and the signed public cycle space of the Answer's
-  "Common notation" — here `D` is the negated coboundary
+* the drift operator `D` and the signed public cycle space of its "Common
+  notation" — here `D` is the negated coboundary
   `H ↦ (r ↦ H (src r) - ∑ v, P r v * H v)` already available through
   `OwnerLabeledFlowHolonomy.sum_incidenceEntry_mul`, and the cycle space is
   the kernel of `incidence`;
 * Part B (orientation completion): a charge may admit a ledger for one
   orientation and not the other, so "both orientations, one ledger each"
-  (`HasBothOrientations`, eq. (B4) with `K⁺` and `K⁻` carried separately) is
-  a genuinely weaker datum than a single two-sided account;
-* Part C and §7-8 (the common Bellman bridge and the exact cycle criterion):
+  (`HasBothOrientations`, carrying separate credit and debit potentials
+  `K⁺` and `K⁻`) is a genuinely weaker datum than a single two-sided account;
+* Part C (the common Bellman bridge and the exact cycle criterion):
   the scalar bridge `c = D B` is an *equality*, so its feasibility is
   governed by the cycle space with both signs, not by the one-sided cone.
 
 **Scope, honestly.**  Only the orientation/bridge gates of the strategic
-account-completeness invariant `SAC` (Answer §E.1) are treated here.  The
+account-completeness invariant `SAC` are treated here.  The
 other two clauses — *finite public observability* (Part A) and *shift
 compactness or bounded restart* (Part D) — are **future work** and are not
 formalized in this file, nor is any statement below strong enough to imply
@@ -44,9 +44,9 @@ matrix.  The strategic reading belongs to the consumers.
   `OwnerLabeledFlowHolonomy.IsAccountPotential`, i.e. `c` is an exact
   coboundary, `c r = H (src r) - ∑ v, P r v * H v` for every row.
 * `NeutralHolonomy src P c`: every circulation pairs to exactly `0` with `c`
-  (eq. (C3) for the scalar bridge: the two-sided cycle criterion).
-* `HasBothOrientations src P c`: Question 74, Part B — one ledger per
-  orientation, with the two potentials allowed to differ.
+  (the two-sided cycle criterion for the scalar bridge).
+* `HasBothOrientations src P c`: Part B — one ledger per orientation, with
+  the two potentials allowed to differ.
 * `HasFullSupportCirculation src P`: the irreducibility-flavoured hypothesis
   that some circulation charges every row strictly positively.
 
@@ -69,11 +69,11 @@ matrix.  The strategic reading belongs to the consumers.
   exists.  So `HasBothOrientations` does **not** imply an exact bridge in
   general.
 * `SelfLoop.not_hasBothOrientations` and
-  `SelfLoop.not_exists_isExactBridge`: Question 74, §B.4 and §E.3(c), the
+  `SelfLoop.not_exists_isExactBridge`: the
   *pure common-orientation obstruction*.  On the one-state self-loop with a
   strictly negative charge the credit ledger exists (`H = 0` works) while the
   debit ledger does not: the unique normalized circulation is the Farkas
-  witness `φ(e) = 1` of §B.4.  Here `HasFullSupportCirculation` *holds*, so
+  witness `φ(e) = 1`.  Here `HasFullSupportCirculation` *holds*, so
   the failure is one of orientation only.
 -/
 
@@ -99,8 +99,8 @@ omit [Fintype R] [DecidableEq V] in
 scalar potential, `c r = H (src r) - ∑ v, P r v * H v` for every row.  This is
 the equality version of `OwnerLabeledFlowHolonomy.IsAccountPotential`, whose
 sign convention it matches: `IsAccountPotential` asserts `c r ≤ H (src r) -
-∑ v, P r v * H v`.  It is the scalar case `k = 1`, `α = 1` of Question 74,
-eq. (C1). -/
+∑ v, P r v * H v`.  It is the scalar case `k = 1`, `α = 1` of the general
+weighted exact-bridge equation. -/
 def IsExactBridge (src : R → V) (P : R → V → ℝ) (c : R → ℝ) (H : V → ℝ) : Prop :=
   ∀ r, c r = H (src r) - ∑ v, P r v * H v
 
@@ -141,7 +141,7 @@ theorem holonomy_neg (c : R → ℝ) (x : R → ℝ) :
     holonomy (fun r => -(c r)) x = -holonomy c x := by
   simp [holonomy, mul_neg]
 
-/-- The two-sided cycle criterion of Question 74, eq. (C3) in the scalar case:
+/-- The scalar two-sided cycle criterion:
 every circulation pairs to *exactly* zero with the charge cochain.  Contrast
 `OwnerLabeledFlowHolonomy.ZeroHolonomy`, which only asks for `≤ 0`. -/
 def NeutralHolonomy (src : R → V) (P : R → V → ℝ) (c : R → ℝ) : Prop :=
@@ -164,9 +164,9 @@ theorem neutralHolonomy_iff_zeroHolonomy_pair (src : R → V) (P : R → V → �
     rw [holonomy_neg] at h2
     linarith
 
-/-! ### One ledger per orientation (Question 74, Part B) -/
+/-! ### One ledger per orientation (Part B) -/
 
-/-- Question 74, Part B, eq. (B4) in the separated form: the charge is carried
+/-- The separated (Part B) form: the charge is carried
 by a credit ledger *and* its opposite by a debit ledger, the two potentials
 being allowed to differ.  This is strictly weaker than one exact two-sided
 account; see `ParallelRows.not_exists_isExactBridge_charge`. -/
@@ -220,10 +220,10 @@ theorem sum_drift_eq_zero_of_circulation {src : R → V} {P : R → V → ℝ}
   exact Finset.sum_eq_zero fun v _ => by rw [hx.balanced v, mul_zero]
 
 /-- A circulation charging **every** row strictly positively.  This is the
-finite-linear-algebra shadow of the reachability/recurrence side condition of
-Question 74's "Common notation" (a nonnegative member of the cycle space is an
-occupation measure only when its support is reachable and jointly realizable):
-it says the cone of circulations spans the whole signed cycle space. -/
+finite-linear-algebra shadow of the reachability/recurrence side condition
+that a nonnegative member of the cycle space is an occupation measure only
+when its support is reachable and jointly realizable: it says the cone of
+circulations spans the whole signed cycle space. -/
 def HasFullSupportCirculation (src : R → V) (P : R → V → ℝ) : Prop :=
   ∃ z : R → ℝ, IsCirculation src P z ∧ ∀ r, 0 < z r
 
@@ -267,7 +267,7 @@ theorem isExactBridge_of_accountPotential_of_pos_circulation {src : R → V}
 
 /-- **Hard direction, under the full-support hypothesis.**  If every
 circulation pairs to exactly zero with `c` and some circulation charges every
-row, then `c` is an exact coboundary.  Question 74, Part C: the cycle-quotient
+row, then `c` is an exact coboundary.  Part C: the cycle-quotient
 criterion becomes sufficient once the nonnegative cycle cone spans the signed
 cycle space. -/
 theorem exists_isExactBridge_of_neutralHolonomy {src : R → V} {P : R → V → ℝ}
@@ -295,7 +295,7 @@ theorem exists_isExactBridge_iff_zeroHolonomy_pair {src : R → V}
     exists_isExactBridge_of_neutralHolonomy hfull⟩
 
 /-- **Main theorem, ledger form.**  Under the full-support circulation
-hypothesis the two Question 74 notions coincide: one ledger per orientation
+hypothesis the two notions coincide: one ledger per orientation
 already forces a single two-sided account. -/
 theorem exists_isExactBridge_iff_hasBothOrientations {src : R → V}
     {P : R → V → ℝ} {c : R → ℝ} (hfull : HasFullSupportCirculation src P) :
@@ -380,16 +380,16 @@ end ParallelRows
 
 /-! ### The one-state orientation falsifier
 
-Question 74, §B.4 and §E.3(c): the *pure common-orientation obstruction*.
+The *pure common-orientation obstruction*.
 One public mode, one row, a self-loop, and a strictly negative charge `a`.
 
 The unique normalized circulation is the constant `1`; it pairs to `a` with
 the charge.  So the credit ledger exists — `H = 0` discharges `a ≤ 0` — while
 the debit ledger for `-a > 0` cannot exist: the self-loop circulation is the
-Farkas witness `φ(e) = 1` of §B.4.  Here the *full-support* hypothesis
+Farkas witness `φ(e) = 1`.  Here the *full-support* hypothesis
 `hasFullSupportCirculation` **holds**, so this is not a connectivity failure:
-it is an orientation failure, the outcome §E.3(c) that the unconditional
-five-way routing statement misses. -/
+it is a pure orientation failure that a full-support hypothesis alone cannot
+rule out. -/
 
 namespace SelfLoop
 

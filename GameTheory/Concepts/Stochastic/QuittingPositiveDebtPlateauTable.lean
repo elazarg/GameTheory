@@ -57,10 +57,8 @@ of the quitting game need not respect that pin, so it may lie entirely
 outside the geometry this file explores.  Two-player quitting games are
 known externally to admit stationary approximate equilibria for every
 positive error (Solan--Vieille, *Quitting Games -- An Example*, 2002, §2.1,
-citing Flesch--Thuijsman--Vrieze 1996; see the record at
-`ideas/UniformEquilibriumLiterature/` in
-`TwoPlayerQuittingGamesHaveStationaryApproximateEquilibria.md`), so nothing
-here suggests this table poses any obstruction to approximate equilibrium.
+citing Flesch--Thuijsman--Vrieze 1996), so nothing here suggests this table
+poses any obstruction to approximate equilibrium.
 
 The positive plateau proved below may simply be an artifact of pinning the
 terminal continuation to zero rather than a property of the game.  A

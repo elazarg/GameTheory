@@ -12,8 +12,8 @@ import GameTheory.Concepts.Stochastic.BigMatch
 /-!
 # Exact finite dynamic debt need not vanish
 
-This file records the two-player quitting game isolated in Question 125.  Its
-zero-boundary exact Nash--Bellman chain is strategically forced: the final
+This file records a two-player quitting game whose zero-boundary exact
+Nash--Bellman chain is strategically forced: the final
 predecessor uses the unique half--half root and has value `(3/2, 0)`, while
 every earlier predecessor is all-Continue and preserves that value.  The
 corresponding exact dynamic debt is `(1/2, 0)` at every preterminal time.

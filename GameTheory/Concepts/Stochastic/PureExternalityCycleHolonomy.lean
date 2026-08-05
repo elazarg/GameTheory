@@ -9,11 +9,10 @@ import Math.LinearAlgebra.OwnerLabeledFlowHolonomy
 /-!
 # The Route-0 acceptance pair of the pure-externality cycle
 
-The mandatory acceptance test of Question 79 (*Direct Closure of
-Strategically Inert Mixed Certificates*), Part C: the two-state
-pure-externality game of Question 71 Part E must be closed **at the target
-`v = (0, 0)` by the prescribed profile, leaving the mixed circulation
-unconsumed**.
+The mandatory acceptance test for direct closure of strategically inert
+mixed certificates: the two-state pure-externality game must be closed
+**at the target `v = (0, 0)` by the prescribed profile, leaving the mixed
+circulation unconsumed**.
 
 This file assembles the two halves of that test, which until now lived in
 two unrelated modules:
@@ -27,8 +26,8 @@ two unrelated modules:
   component and no common scalar account potential.
 
 The bridge is the *tagged-row reading* of the game's two unilateral
-zero-slack deviation rows (Question 71, eq. (62)-(63)): row `b` is player
-`b`'s deviation to action `1` at the state `b` that player `b` controls.
+zero-slack deviation rows: row `b` is player `b`'s deviation to action `1`
+at the state `b` that player `b` controls.
 Under that reading the row system **is** `TwoCycle`, and the row charge is
 identically `1` (eq. (77)).
 
@@ -40,7 +39,7 @@ directions and are both true of the same finite datum:
 
 * the row system carries a normalized mixed circulation whose holonomy is
   `1 > 0`, no owner-pure circulation at all, and no common account
-  potential (Question 71, eq. (78)-(81));
+  potential;
 * the game nevertheless *has* `IsUniformEquilibriumPayoff` at `(0, 0)`,
   witnessed by the prescribed profile.
 
@@ -55,9 +54,9 @@ consuming the circulation*.
 `stagePayoffOf b b true - target b`, the deviating owner's own stage payoff
 on their deviation row minus their target coordinate.  Informally this is
 the Bellman slack of the tagged row, and the underlying discounted Bellman
-equalities are *exact* (Question 71, §12, eq. (64)-(67): neither a player's
-own payoff nor the transition depends on that player's own action, so every
-action is an exact discounted best reply at every discount factor).  But
+equalities are *exact* (neither a player's own payoff nor the transition
+depends on that player's own action, so every action is an exact
+discounted best reply at every discount factor).  But
 this file does **not** formalize a germ-level tagging layer that would
 derive the charge from a formally defined Bellman slack; that bridge would
 need infrastructure this acceptance test does not require, and is future
@@ -93,9 +92,9 @@ open PureExternalityCycle (game Player stagePayoffOf)
 
 /-! ## The tagged-row reading
 
-Question 71, eq. (62)-(63).  There are exactly two unilateral zero-slack
-deviation rows: player `1` playing action `1` at state `x`, and player `2`
-playing action `1` at state `y`.  In the `Bool` encoding of
+There are exactly two unilateral zero-slack deviation rows: player `1`
+playing action `1` at state `x`, and player `2` playing action `1` at
+state `y`.  In the `Bool` encoding of
 `PureExternalityCycle` — where state `s` is the state controlled by player
 `s` — both rows are indexed by the single bit `b`: *row `b` is player `b`
 deviating at state `b`*. -/
@@ -132,14 +131,13 @@ deviation row, minus that owner's target coordinate.
 
 Informally this is the row's Bellman slack against the target; see the
 honesty note in the module docstring — the discounted Bellman equalities
-of Question 71 §12 are exact, but no germ-level tagging layer is
-formalized here. -/
+are exact, but no germ-level tagging layer is formalized here. -/
 def rowCharge : Row → ℝ := fun b =>
   stagePayoffOf (rowSrc b) (rowOwner b) (rowAction b) - target (rowOwner b)
 
 /-- Both row charges are `1`: the owner of a state is paid `1` there
 whatever it does (pure externality), and the target is `0`.  This is the
-positive owner-labelled mean of Question 71, eq. (77). -/
+positive owner-labelled mean. -/
 @[simp] theorem rowCharge_eq_one (b : Row) : rowCharge b = 1 := by
   cases b <;>
     norm_num [rowCharge, rowSrc, rowOwner, rowAction, target, stagePayoffOf,
@@ -157,10 +155,10 @@ theorem isStochastic_rowTransition : IsStochastic rowTransition :=
 
 /-! ## The mixed certificate -/
 
-/-- **The mixed certificate `m`** of Question 71, eq. (69): the uniform
-occupation `m(r₁) = m(r₂) = 1/2` of the two tagged deviation rows.  It is
-the unique normalized point of the active circulation cone (eq. (70)), and
-it is *mixed*: both owners carry mass. -/
+/-- **The mixed certificate `m`**: the uniform occupation
+`m(r₁) = m(r₂) = 1/2` of the two tagged deviation rows.  It is the unique
+normalized point of the active circulation cone, and it is *mixed*: both
+owners carry mass. -/
 def mixedCertificate : Row → ℝ := TwoCycle.uniform
 
 /-- The mixed certificate is a normalized circulation of the tagged-row
@@ -191,15 +189,15 @@ theorem holonomy_mixedCertificate_pos : 0 < holonomy rowCharge mixedCertificate 
 /-! ## The three abstract refutations, read in the game -/
 
 /-- **The gluing condition fails.**  The game's mixed circulation is the
-exact Farkas witness of Question 71, eq. (81): it is a genuine circulation
-of the tagged-row system whose pairing with the charge cochain is
-`(1 + 1) / 2 = 1 > 0`, so not every circulation pairs nonpositively. -/
+exact Farkas witness: it is a genuine circulation of the tagged-row system
+whose pairing with the charge cochain is `(1 + 1) / 2 = 1 > 0`, so not
+every circulation pairs nonpositively. -/
 theorem mixedCertificate_not_zeroHolonomy :
     ¬ ZeroHolonomy rowSrc rowTransition rowCharge := by
   rw [rowCharge_eq_charge]
   exact TwoCycle.not_zeroHolonomy (a₁ := 1) (a₂ := 1) (by norm_num)
 
-/-- **No common scalar account potential** (Question 71, eq. (78)-(80)).
+/-- **No common scalar account potential.**
 A potential `H` would have to satisfy `1 + H y - H x ≤ 0` on player 1's row
 and `1 + H x - H y ≤ 0` on player 2's row; adding gives `2 ≤ 0`.  The
 common-account route (Route C) is therefore closed for this datum. -/
@@ -208,7 +206,7 @@ theorem mixedCertificate_no_accountPotential :
   rw [rowCharge_eq_charge]
   exact TwoCycle.not_exists_accountPotential (a₁ := 1) (a₂ := 1) (by norm_num)
 
-/-- **Owner-pure harmlessness on the active cone** (Question 71, §13).
+/-- **Owner-pure harmlessness on the active cone.**
 Every circulation of the tagged-row system supported on a single owner's
 rows is identically zero: neither owner has any nonzero circulation at
 all, so the certificate has no owner-pure component to purify.  This is
@@ -220,7 +218,7 @@ theorem ownerPure_harmless {i : Player} {μ : Row → ℝ}
 
 /-! ## The acceptance pair -/
 
-/-- **The Route-0 acceptance pair of Question 79 Part C.**  The two sides
+/-- **The Route-0 acceptance pair.**  The two sides
 of the mandatory acceptance test, as one proposition: the flow side (a
 normalized mixed circulation with positive holonomy, no owner-pure
 component, no common account potential) and the game side (the prescribed
@@ -258,14 +256,14 @@ constant-`0` profile
 
 Two consequences, which are the point of the file.
 
-* **Any general Route-0 theorem (Question 79 Part A) must reproduce this
-  closure without consuming the circulation.**  The certificate `m` is
-  still a full-support normalized circulation after the closure; nothing
-  in the equilibrium proof spends it.
+* **Any general Route-0 theorem must reproduce this closure without
+  consuming the circulation.**  The certificate `m` is still a
+  full-support normalized circulation after the closure; nothing in the
+  equilibrium proof spends it.
 * **Any claim that positive mixed holonomy obstructs equilibrium is
   refuted by this instance.**  Here the holonomy is `1 > 0`, the gluing
-  invariant of Question 71 §20 fails, every account route is closed — and
-  the equilibrium exists anyway.  The mixed certificate encodes a *joint*
+  invariant fails, every account route is closed — and the equilibrium
+  exists anyway.  The mixed certificate encodes a *joint*
   improvement that no unilateral deviator can realize, because in this
   game a player's own payoff never depends on that player's own action
   (`PureExternalityCycle.stagePayoff_indep_own_action`). -/
