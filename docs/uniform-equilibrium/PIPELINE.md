@@ -1695,7 +1695,7 @@ vanishing absorption gives no pole.
 
 ### `LEAN-P0-11` — bridge the two encodings of complementarity
 
-- **Status:** READY
+- **Status:** DONE
 - **Lane:** P0
 - **Depends:** `QuittingCyclicWeightRowDichotomy.lean`, the Bool-valued spine.
 - **Record:** this file
@@ -1715,10 +1715,22 @@ Until the bridge exists, a theorem proved in one encoding says nothing about the
 other, and a reader may reasonably assume otherwise. That is exactly the shape
 that rots.
 
-**Acceptance.** A translation sending a Bool-valued cycle to its hazard vector,
-with the gain values agreeing, so results transport in both directions. If the
-encodings differ in scope — for instance if one admits hazards the other cannot
-represent — state precisely where.
+**Acceptance.** **DONE, 2026-08-05**, `QuittingHazardRowBridge.lean`. The
+encodings are **equivalent**, not merely analogous: quit payoff, continue
+payoff, and endpoint difference agree exactly with the real-valued `Σ`, `Γ`, `g`
+for every reward and continuation value, with no sign or scope mismatch and no
+extra hypotheses. Exact row complementarity corresponds to zero-error root
+endpoint Nash in both directions, which the development already identifies with
+exact root Nash. The row dichotomy transports as a demonstration.
+
+The proof needed one new combinatorial lemma: the expectation of a family of
+independent Bernoulli coordinates expanded as a powerset sum.
+
+One asymmetry, recorded rather than hidden. Mixture to hazards is total; hazards
+back to a mixture needs the row in the unit interval, since the polynomials stay
+meaningful outside it but no mixture realizes such a row. Harmless where used,
+and it means results proved over unrestricted real rows do **not** automatically
+transport.
 
 ### `LEAN-P1-5` — linear complementarity infrastructure
 
