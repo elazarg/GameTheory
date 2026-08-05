@@ -62,3 +62,49 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.SocialChoice.FairDivision.Indivisible.exists_efx_two_agents
 #print axioms GameTheory.KernelGame.strictDominant_isCoarseCorrelationSaturated
 #print axioms GameTheory.KernelGame.IsIESDSSolvable.isCorrelationSaturated
+
+-- ============================================================================
+-- Uniform-equilibrium / quitting-game program: headline landed declarations.
+-- The two intentional open declarations (`GameTheory.quittingGame_exists_
+-- uniformEquilibriumPayoff` and `GameTheory.exists_uniformDeviationCapConstructor`)
+-- are deliberately excluded: they carry `sorry` and are expected to report it.
+-- ============================================================================
+
+-- Terminal-to-uniform selection and the asymptotic-Nash bridge.
+#print axioms GameTheory.StochasticGame.isUniformεEquilibrium_of_isεAsymptoticNash_of_upperApproximation
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_terminalNash_all_errors
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_iff_terminalNash_all_errors
+
+-- The admissible-cycle compiler and the three-branch trichotomy.
+#print axioms GameTheory.exists_uniformEquilibriumPayoff_of_admissible_quittingCyclicContinuationBlock
+#print axioms GameTheory.exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle
+#print axioms GameTheory.quittingCycle_zeroSolo_or_admissible_or_isolatedNegative
+#print axioms GameTheory.QuittingDisjunctionCounterexample.not_zeroSolo_and_not_admissible_and_isolatedNegative
+#print axioms GameTheory.quittingThreeBranch_not_mutually_exclusive
+
+-- The exact dynamic-debt transport law and the seam-price results.
+#print axioms GameTheory.quittingFiniteDynamicDebt_eq_max_zero_sub_accumulatedStageGaps
+#print axioms GameTheory.quitting_sub_blockFixedPoint_eq_div
+#print axioms GameTheory.QuittingSeamPriceDeviationFalsity.seamPriceLaw_fails_for_deviation_via_fullDeficit
+
+-- Punishment level and individual rationality.
+#print axioms GameTheory.StochasticGame.punishmentLevel_le_add_of_isUniformEquilibriumPayoff
+#print axioms GameTheory.StochasticGame.not_isUniformEquilibriumPayoff_of_punishmentLevel_gt
+#print axioms GameTheory.StochasticGame.eventually_isεIndividuallyRational_of_isUniformEquilibriumPayoff
+#print axioms GameTheory.punishmentLevel_quittingGame_le_max
+
+-- The action-legality chain, including the disintegration payoff equality.
+#print axioms GameTheory.StochasticGame.finiteAveragePayoff_devPrime_eq
+#print axioms GameTheory.StochasticGame.isLegalUniformEquilibriumPayoff_of_witness
+
+-- The `PMF Bool` / real-hazard encoding bridge.
+#print axioms GameTheory.isExactRowComplementary_hazardOfRoot_iff
+
+-- The perturbed-cyclic-weight exclusion and the row dichotomy it restates.
+#print axioms GameTheory.atMostOnePositive_of_isεQuittingRootEndpointNash_cyclicWeightReward
+#print axioms GameTheory.atMostOnePositive_of_isExactRowComplementary
+
+-- Joint complementarity, absorption-from-optimality, and coordinate silence.
+#print axioms GameTheory.isQuittingJointComplementary_quittingCyclicBlockRoots
+#print axioms GameTheory.isCompletelyAbsorbing_of_isQuittingJointComplementary_of_solo_pos
+#print axioms GameTheory.QuittingCandidateHardWeightCoordinateSilence.quitProbability_true_eq_zero_of_isQuittingJointComplementary
