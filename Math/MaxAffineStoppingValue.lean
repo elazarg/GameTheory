@@ -39,7 +39,7 @@ P)`, is correct only when `P < 1` **and** it already dominates `A`; at `P = 1`
 it divides by zero, and Lean's `x / 0 = 0` convention silently returns *a*
 fixed point of the degenerate ray, generally the wrong one.  This file gives
 the object that is correct in both regimes and fences the naive formula's
-failure at `P = 1` (`naiveClosedForm_eq_anchoredValue_iff_of_P_eq_one`).
+failure at `P = 1` (`naiveClosedForm_eq_anchoredValue_iff_of_P_eq_one_of_T_eq_zero`).
 
 ## Main definitions
 
@@ -68,6 +68,18 @@ failure at `P = 1` (`naiveClosedForm_eq_anchoredValue_iff_of_P_eq_one`).
 * `System.naiveClosedForm_eq_anchoredValue_iff_of_P_eq_one_of_T_eq_zero` --
   **the fence**: the naive `T / (1 - P)` closed form agrees with the anchored
   value at `P = 1` only in the accident `max A b = 0`.
+
+## Relation to `CyclicMaxAffineBound`
+
+`Math.CyclicMaxAffine.CyclicSolution` solves a *genuinely cyclic* system,
+composing `L` **different** phase maps `w ↦ max {1 - p k, q k * w + p k}`
+around a wraparound; the single-phase system here is one such map applied
+repeatedly, and only its `L = 1` instance is a `System.Φ` fixed-point
+equation, with the extra normalization `A + T = 1` that `CyclicSolution`
+imposes and the nonnegativity `p k ≥ 0` in place of the signed data this file
+allows.  So this file does not cheaply subsume `CyclicMaxAffineBound`'s
+multi-phase composite: the shapes genuinely differ, and no attempt is made
+to reformulate one in terms of the other.
 -/
 
 set_option autoImplicit false
@@ -286,3 +298,122 @@ theorem isFixedPt_anchoredValue_of_isFixedPt_le {b y : ℝ}
   have hshift : Filter.Tendsto (fun n : ℕ => s.Φ^[n + 1] b) Filter.atTop
       (nhds (s.anchoredValue b)) := htendsto.comp (Filter.tendsto_add_atTop_nat 1)
   exact tendsto_nhds_unique hcont hshift
+
+/-! ## Regime dichotomy: `P < 1`
+
+Here `Φ` is a genuine metric contraction (Lipschitz constant `P < 1`), so it
+has a *unique* fixed point, and the anchored value equals it regardless of
+where the anchor sits relative to that point. -/
+
+/-- At `P < 1`, `Φ` has a fixed point: the affine solution `T / (1 - P)` of
+the continuation-only recursion `w = T + P * w`, capped at the stop payoff
+`A`.  This closed form is *correct* here -- contrast the fence theorem below,
+which shows it becomes meaningless once `P = 1`. -/
+theorem isFixedPt_max_div_of_P_lt_one (hP : s.P < 1) :
+    Function.IsFixedPt s.Φ (max s.A (s.T / (1 - s.P))) := by
+  change max s.A (s.T + s.P * max s.A (s.T / (1 - s.P))) = max s.A (s.T / (1 - s.P))
+  rcases le_total s.A (s.T / (1 - s.P)) with hcase | hcase
+  · have heq : s.T + s.P * (s.T / (1 - s.P)) = s.T / (1 - s.P) := by
+      have hne : (1 : ℝ) - s.P ≠ 0 := by linarith
+      field_simp
+      ring
+    rw [max_eq_right hcase, heq]
+    exact max_eq_right hcase
+  · have h2 : s.T ≤ s.A * (1 - s.P) := by
+      rwa [div_le_iff₀ (by linarith : (0 : ℝ) < 1 - s.P)] at hcase
+    have h3 : s.T + s.P * s.A ≤ s.A := by nlinarith [h2]
+    rw [max_eq_left hcase, max_eq_left h3]
+
+/-- At `P < 1`, `Φ` has **at most one** fixed point: any two are within
+factor `P` of each other, forcing them to coincide. -/
+theorem eq_of_isFixedPt_of_P_lt_one (hP : s.P < 1) {x y : ℝ}
+    (hx : Function.IsFixedPt s.Φ x) (hy : Function.IsFixedPt s.Φ y) : x = y := by
+  have hlip := s.abs_Φ_sub_Φ_le x y
+  rw [hx, hy] at hlip
+  have hz : |x - y| = 0 := by nlinarith [abs_nonneg (x - y)]
+  have hxy := abs_eq_zero.mp hz
+  linarith
+
+/-- **Regime dichotomy, `P < 1`, existence and uniqueness.**  The fixed point
+is unique. -/
+theorem existsUnique_isFixedPt_of_P_lt_one (hP : s.P < 1) :
+    ∃! w, Function.IsFixedPt s.Φ w :=
+  ⟨max s.A (s.T / (1 - s.P)), s.isFixedPt_max_div_of_P_lt_one hP,
+    fun _ hw => s.eq_of_isFixedPt_of_P_lt_one hP hw (s.isFixedPt_max_div_of_P_lt_one hP)⟩
+
+/-- **Regime dichotomy, `P < 1`, the anchored value.**  The anchored value
+equals the unique fixed point *for every anchor* `b`: whichever side of the
+fixed point `b` falls on, the anchored value is a fixed point on that same
+side, and uniqueness forces it to be the one fixed point there is. -/
+theorem anchoredValue_eq_of_P_lt_one (hP : s.P < 1) (b : ℝ) :
+    s.anchoredValue b = max s.A (s.T / (1 - s.P)) := by
+  have hw : Function.IsFixedPt s.Φ (max s.A (s.T / (1 - s.P))) :=
+    s.isFixedPt_max_div_of_P_lt_one hP
+  rcases le_total b (max s.A (s.T / (1 - s.P))) with hbw | hbw
+  · exact s.eq_of_isFixedPt_of_P_lt_one hP
+      (s.isFixedPt_anchoredValue_of_le_isFixedPt hw hbw) hw
+  · exact s.eq_of_isFixedPt_of_P_lt_one hP
+      (s.isFixedPt_anchoredValue_of_isFixedPt_le hw hbw) hw
+
+/-! ## Regime dichotomy: `P = 1`, `T = 0`
+
+Here `Φ(w) = max {A, w}` is only `1`-Lipschitz, and its fixed set is the
+whole ray `{w ≥ A}`, not a point: which fixed point is reached depends on the
+anchor, not just on `Φ`. -/
+
+/-- At `P = 1`, `T = 0`, the fixed set of `Φ` is exactly `{w | A ≤ w}`. -/
+theorem isFixedPt_iff_of_P_eq_one_of_T_eq_zero (hP : s.P = 1) (hT : s.T = 0) (w : ℝ) :
+    Function.IsFixedPt s.Φ w ↔ s.A ≤ w := by
+  change max s.A (s.T + s.P * w) = w ↔ s.A ≤ w
+  rw [hT, hP, zero_add, one_mul]
+  exact ⟨fun h => h ▸ le_max_left _ _, max_eq_right⟩
+
+/-- **Regime dichotomy, `P = 1`, `T = 0`, the anchored value.**  The anchored
+value is `max {A, b}`: every anchor is automatically a subsolution here
+(`Φ b = max A b ≥ b` always), so the least fixed point dominating it is
+exactly the least point of the ray `{w ≥ A}` that also dominates `b`. -/
+theorem anchoredValue_eq_max_of_P_eq_one_of_T_eq_zero (hP : s.P = 1) (hT : s.T = 0) (b : ℝ) :
+    s.anchoredValue b = max s.A b := by
+  have hy : Function.IsFixedPt s.Φ (max s.A b) :=
+    (s.isFixedPt_iff_of_P_eq_one_of_T_eq_zero hP hT (max s.A b)).mpr (le_max_left _ _)
+  have hby : b ≤ max s.A b := le_max_right _ _
+  have hfix := s.isFixedPt_anchoredValue_of_le_isFixedPt hy hby
+  have hle := s.anchoredValue_le_of_le_isFixedPt hy hby
+  have hge := s.le_anchoredValue_of_le_isFixedPt hy hby
+  have hA_le : s.A ≤ s.anchoredValue b :=
+    (s.isFixedPt_iff_of_P_eq_one_of_T_eq_zero hP hT _).mp hfix
+  exact le_antisymm hle (max_le hA_le hge)
+
+/-! ## The fence: the naive closed form at `P = 1`
+
+The naive closed form `T / (1 - P)` for the affine-only fixed point is
+correct at `P < 1` (`isFixedPt_max_div_of_P_lt_one`).  At `P = 1` the
+denominator vanishes; Lean's `x / 0 = 0` convention turns the whole
+expression into the *constant* `0`, independent of `A`, `T`, or the anchor
+`b`.  This is exactly the shape of the bug in
+`GameTheory.quittingRelaxedCycleGain`'s own `P_who = 1` extension
+(`QuittingRelaxedCycleGainIsolatedCoordinate.lean`): dividing by the vanished
+survival gap silently discards a term that should have taken part in a
+`max`, landing on a fixed point of the ray that need not be the anchored
+one. -/
+
+/-- **The fence.**  At `P = 1`, `T = 0`, the naive closed form `T / (1 - P)`
+(always `0`, by the division convention) agrees with the anchored value only
+in the accident `max A b = 0`.  So reaching for `T / (1 - P)` at `P = 1` is
+visibly wrong for every other anchor. -/
+theorem naiveClosedForm_eq_anchoredValue_iff_of_P_eq_one_of_T_eq_zero
+    (hP : s.P = 1) (hT : s.T = 0) (b : ℝ) :
+    s.T / (1 - s.P) = s.anchoredValue b ↔ max s.A b = 0 := by
+  rw [hT, hP, sub_self, div_zero, s.anchoredValue_eq_max_of_P_eq_one_of_T_eq_zero hP hT b, eq_comm]
+
+/-- **The fence, concretely.**  At `A = 1`, `T = 0`, `P = 1`, `b = 0` the
+naive closed form is `0`, but the anchored value is `1`: quitting is worth
+acting on, and `x / 0 = 0` silently throws that away. -/
+example : ∃ sys : System, sys.T / (1 - sys.P) ≠ sys.anchoredValue 0 := by
+  refine ⟨⟨1, 0, 1, by norm_num, le_refl 1⟩, ?_⟩
+  rw [anchoredValue_eq_max_of_P_eq_one_of_T_eq_zero _ rfl rfl 0]
+  norm_num
+
+end System
+
+end Math.MaxAffineStopping

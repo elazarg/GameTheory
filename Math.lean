@@ -32,6 +32,7 @@ import Math.PMFProduct
 import Math.Coupling
 import Math.CofiniteIdeal
 import Math.CyclicMaxAffineBound
+import Math.MaxAffineStoppingValue
 import Math.PMFIter
 import Math.OutcomeClosure
 import Math.Knowledge
