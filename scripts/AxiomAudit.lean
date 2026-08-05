@@ -232,3 +232,24 @@ import Math.SchauderFixedPoint
 #print axioms Math.ChargedPathBudget.Interpolation.not_continuous_of_isPotential
 #print axioms Math.ChargedPathBudget.QuitBonus.oneStageUpdate_fixed
 #print axioms Math.ChargedPathBudget.QuitBonus.no_boundedPotential
+
+-- The one-stage collision repair works iff owner endpoint optimality,
+-- spectator no-join, and the blocker-floor balance against the exact
+-- min-max all hold; sub-floor gaps force the collision intensity.
+#print axioms GameTheory.quittingCollisionRepairWorks_iff
+#print axioms GameTheory.quittingCollisionRepairWorks_one_iff
+#print axioms GameTheory.quittingCollisionOwnerCap_le_of_isεAsymptoticNash
+#print axioms GameTheory.quittingCollisionSpectatorJoin_le_of_isεAsymptoticNash
+#print axioms GameTheory.quittingCollisionBlockerFloor_le_of_isεAsymptoticNash
+#print axioms GameTheory.isεAsymptoticNash_quittingCollisionRepairProfile
+#print axioms GameTheory.quittingTerminalPayoff_update_oneStagePunishedProfile_le
+#print axioms GameTheory.quittingRootSequenceHazardTerminalValue_zero_split
+#print axioms GameTheory.quittingCollisionRate_ge_of_blockerBalance
+#print axioms GameTheory.quittingCollisionBlockerGain_ge_of_subFloor
+#print axioms GameTheory.not_quittingCollisionRepairWorks_of_subFloor_of_rate_lt
+#print axioms GameTheory.quittingCollisionOwnerOptimal_iff_of_mem_Ioo
+
+-- The repo's canonical one-stage operator realizes the quit-bonus
+-- calibration self-loop exactly; no bounded potential exists for it.
+#print axioms GameTheory.QuittingQuitBonusSelfLoopBridge.oneStageNext_reward_isSelfLoop
+#print axioms GameTheory.QuittingQuitBonusSelfLoopBridge.no_boundedPotential

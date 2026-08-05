@@ -614,6 +614,8 @@ import GameTheory.Concepts.Stochastic.QuittingCirculationChiFloorBoundary
 import GameTheory.Concepts.Stochastic.QuittingStationaryMinMax
 import Math.ChargedPathBudget
 import Math.ChargedPathBudgetCounterexamples
+import GameTheory.Concepts.Stochastic.QuittingCollisionRepairCharacterization
+import GameTheory.Concepts.Stochastic.QuittingQuitBonusSelfLoopBridge
 
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
