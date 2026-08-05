@@ -1,0 +1,19 @@
+name: Agent local residue Lean check
+
+on:
+  push:
+    branches:
+      - agent/local-residue-double-sure-mixer
+  workflow_dispatch:
+
+jobs:
+  build-witness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          build: true
+          build-args: GameTheory.Concepts.Stochastic.QuittingLocalMechanismResidueWitness
+          test: false
+          lint: false
