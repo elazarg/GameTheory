@@ -204,13 +204,23 @@ extend the engine) or a bounded-orbit potential (which would refute
 existence). The fences above close every simpler route **within the
 cycle/orbit/one-stage-correspondence family, against the pre-2007
 technology they formalize**; the later topological line and post-2007
-partial results sit outside the fences and are honestly unfenced. One
-caution on the habitat itself: the boundary theorem measures the engine
-against the *solo* floor, which this program's own punishment results show
-is not the rationality floor — the true habitat is the set of weights
-where the min-max-to-solo corridor is nonempty at every potential owner,
-and sharpening the certificate's floor to the true min-max is an active
-step that may move the target.
+partial results sit outside the fences and are honestly unfenced.
+
+**The habitat has since been re-measured and it moved**
+(`QuittingCirculationChiFloorBoundary`). Sharpening the certificate's floor
+to the true min-max and freeing the owner's hazard covers, at two players,
+exactly the branches the original boundary excluded — the sub-solo blind
+spot was an artifact of the solo floor. The two branches that *survive*
+outside the sharpened class escape for a structural reason no floor can
+touch: their equilibrium payoffs lie **outside the solo-row hull** (the
+all-continue payoff, and simultaneous-quit payoffs, are provably not convex
+combinations of solo rows — while every circulation target is). So the
+corrected habitat specification is: weights whose every equilibrium payoff
+leaves the solo hull *and* which admit no exact mechanism (sure-exit sets,
+all-continue). The corresponding engine extension is equally explicit:
+circulations through arbitrary **coalition faces**, whose per-phase
+deterrence condition is the sure-exit-set criterion — no member leaves, no
+outsider joins.
 
 ## References
 
