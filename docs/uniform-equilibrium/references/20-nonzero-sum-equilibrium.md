@@ -303,14 +303,69 @@ theorem — it substitutes a different hypothesis keyed to the same A.1
 normalization, and the Dynkin-game extension (Thm 2.8) re-assumes both A.1 and
 A.2.
 
-**Source note.** Verified against the Northwestern CMS-EMS DP 1227 (28 Sept
-1998), the working-paper version; published MOR pages are paywalled.
+**Source note.** Theorem 1.2 above verified against the Northwestern CMS-EMS
+DP 1227 (28 Sept 1998, `kellogg.northwestern.edu/research/math/papers/1227.pdf`),
+the working-paper version. The **published** MOR text is not paywalled after
+all: it is author-hosted at
+`math.tau.ac.il/~eilons/quitting19.pdf` — a JSTOR-digitized scan whose header
+confirms *Mathematics of Operations Research*, Vol. 26, No. 2 (May 2001),
+pp. 265–285, DOI `10.1287/moor.26.2.265.10549`, matching the citation above
+exactly. Both versions were read in full for this record.
 
 **Repo status.** `L~` for the *model*: `QuittingGame.lean` builds quitting
 games as stochastic games, general in the player type and terminal reward, and
 `QuittingAsymptotic.lean` formalizes the translation from expected-terminal
 equilibria to our finite-horizon-average `IsUniformEquilibriumPayoff`. The
 Solan–Vieille **theorem** is `—`.
+
+### Proposition 2.13 — the terminal-payoff / uniform-equilibrium bridge
+
+`[primary]` No prior wing record existed for this proposition, despite it
+being cited roughly 15 times across this program's literature notes as
+"Solan–Vieille (2001), Proposition 2.13," with no title, journal, or quoted
+statement anywhere. Read directly against the published text (see Source note
+above — the JSTOR scan, not the 1998 working paper). Section 2.6,
+"Equilibrium and uniformity," verbatim:
+
+> PROPOSITION 2.13. *If x is an ε-equilibrium then it is a uniform
+> ε′-equilibrium, provided ε′ > ε.*
+
+where `γ_n(x) := E_x[1_{t≤n} r_{S_t}(n−t)/n]` is the expected payoff if
+players receive `0` before termination and the termination payoff repeated at
+every stage after, and a **uniform ε-equilibrium** is a profile that is an
+ε-equilibrium for `γ_n` simultaneously, for every `n` large enough — this
+program's own "uniform" reading, verbatim from the source. **This is a
+bridge, not a structural result.** It says that in quitting games, the paper's
+baseline notion of ε-equilibrium (Definition 1.1, built on the expected
+terminal payoff `γ(x) = E_x[r_{S_t} 1_{t<∞}]`) automatically upgrades to a
+genuine uniform ε′-equilibrium, with no extra construction needed. The proof
+is an averaging argument the authors call routine ("Since the details are
+standard, we only sketch the proof"), not new machinery.
+
+**Numbering is confirmed NOT to match the 1998 working paper**, resolving the
+question `40-open-status.md` and the audits flagged as open. DP 1227 has **no
+Section 2.6 and nothing numbered past Theorem 2.8** — its highest label in
+§2 is Lemma 2.7 (an independent-Bernoulli-race lemma), followed immediately
+by Theorem 2.8 ("General payoff processes"). The entire "Equilibrium and
+uniformity" section — and Proposition 2.13 with it — was added between the
+1998 preprint and the 2001 publication. Any citation of "Prop. 2.13" checked
+against the working paper is citing a section that is not there.
+
+**For contrast, Proposition 2.4** (also widely re-cited, e.g. paired with
+2.13 in AGKRS's Theorem 3.5 above): published Prop. 2.4 *is* present in the
+working paper, as Lemma 2.2/Lemma 2.6 — "either **x** is a subgame-perfect
+ε^{1/6}-equilibrium, or there is a stationary ε^{1/6}-equilibrium," proved in
+the published §2.5 ("Proof of the main proposition," which explicitly restates
+it as Proposition 2.6 for the write-up, exactly as
+[`SourceCorrections-QuittingAbsorptionPaths.md`](SourceCorrections-QuittingAbsorptionPaths.md)
+§3 already found). That finding is **unaffected** by today's read — Prop.
+2.4's content was already read correctly there; only Prop. 2.13 was missing a
+record.
+
+**Confidence: `[primary]`**, full text of both the 1998 and 2001 documents,
+JSTOR/DOI front matter confirmed. The 15 citing sites elsewhere in this repo
+that invoke "Prop. 2.13" without further detail can now be checked against
+the statement above rather than trusted on the strength of a number alone.
 
 ---
 
@@ -359,6 +414,77 @@ Simon 2007 + Solan–Vieille 2001), the `ε^{1/6}` bound (Thm 3.5), the
 identification of this program's canonical hard weight with the paper's own
 `Γ_η`, and four printed defects in Remark 5.3 and Definition 5.1 that must not
 be quoted as-is.
+
+---
+
+## Simon 2007 — the escape-game extension (Theorem 3.4's other source)
+
+R.S. Simon, *The Structure of Non-Zero-Sum Stochastic Games*, Advances in
+Applied Mathematics **38**(1), 1–26 (2007), DOI
+[`10.1016/j.aam.2006.07.002`](https://doi.org/10.1016/j.aam.2006.07.002).
+
+**Full text not obtained — genuinely paywalled, not merely unsearched.**
+ScienceDirect (direct-PDF URL) and `core.ac.uk` both returned HTTP 403 to
+automated fetch; LSE Research Online's record (`eprints.lse.ac.uk/6897`)
+states "Full text not available from this repository"; no author-hosted copy,
+arXiv preprint, or green open-access mirror was found anywhere. This matches
+— and now closes out — the prior "not located in this research" note this
+repo carried under the Simon 2012 entry.
+
+**What follows is `[unverified]` unless marked otherwise** — a WebSearch
+text-extraction of the (still unseen) abstract, not a direct read of the
+abstract page:
+
+- `[unverified]` The paper introduces **δ-perfect strategies** and shows that
+  in special cases, δ-perfect play for every `δ > 0` forces the existence of
+  an ε-equilibrium for every `ε > 0`.
+- `[unverified]` Section 5 defines a class of quitting games called **escape
+  games** and proves, via algebraic topology applied to the equilibria of the
+  induced one-stage games, that every escape game has "the perfection
+  property," hence an ε-equilibrium for every `ε > 0`.
+
+**Corroboration at `[secondary]`**, read directly from a local copy of
+Simon's own later survey — R.S. Simon, *The challenge of non-zero-sum
+stochastic games*, IJGT **45**(1):191–204 (2016),
+`ephemeral/old/counterexample-research/sources/simon-challenge.pdf` (text
+layer at the sibling `.txt`) — corroborates both bullets independently and
+adds detail not in the extracted abstract: the δ-perfect machinery is a
+generalization of a martingale argument "used also by E. Solan and N. Vieille
+(2001) in their analysis of quitting games, but where the strategies are
+Markovian rather than stationary," and, verbatim, "There is a proof of
+approximate equilibria by E. Solan and N. Vieille (2001) for a subclass of
+quitting games involving very restricted conditions on the payoffs, and this
+result was extended to 'escape' games by R.S. Simon (2007)." The survey also
+records that Simon 2007 poses, and leaves open at the time, a conjecture
+about extending the δ-ε relationship from stationary to Markovian processes
+(revisited in Simon 2012 — see below).
+
+**"Theorem 3," as cited by AGKRS.** AGKRS's Theorem 3.4 (`[primary]`, read
+directly in `ephemeral/s10107-022-01807-6.pdf`, p. 739) cites "Simon [13],
+Theorem 3" as one of its two sources; reference [13] in that paper's own
+bibliography (p. 762) resolves to exactly this paper — `Simon, R.S.: The
+structure of non-zero-sum stochastic games. Adv. Appl. Math. 38, 1–26
+(2007)` — with no volume/page discrepancy. **That citation match is
+confirmed primary.** What "Theorem 3" actually states is not: given the
+abstract's account of a general perfection-implies-existence principle proved
+early and *specialized* to escape games only later in §5, Theorem 3 is
+plausibly the general principle rather than the escape-game theorem itself —
+but this is inference from unverified and secondary sources, not a read of
+Theorem 3's statement, hypotheses, or exact quantifiers.
+
+**Is Simon 2007 the result AGKRS Theorem 3.4 depends on?** Yes, in the only
+sense that can currently be checked: it is verifiably the paper AGKRS cites
+by author, year, journal, volume, and page range for exactly this theorem.
+Whether *this specific structural content* (escape games, or the general
+perfection principle, or both) supplies which of (S.1)/(S.2)/(S.3) is **not
+determined by anything read here** — that mapping is `MATH-P0-4`'s job, and it
+still requires the primary text, which this pass did not obtain.
+
+**Confidence: `[unverified]` for the two content bullets, `[secondary]` for
+the survey corroboration, `[primary]` only for the bibliographic identity and
+AGKRS's citation of it.** Do not upgrade any of this without the actual paper
+— institutional access or interlibrary loan is the only route found; no
+further web search turned up a free copy.
 
 ---
 

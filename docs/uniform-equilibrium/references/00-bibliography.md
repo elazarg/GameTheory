@@ -263,11 +263,26 @@ or reduce the problem to a public coin.
 absorbing games. IJGT **31**, 91–121.
 DOI [`10.1007/s001820200109`](https://doi.org/10.1007/s001820200109). `—`
 
+**Simon 2007** — *The Structure of Non-Zero-Sum Stochastic Games*. Advances in
+Applied Mathematics **38**(1), 1–26.
+DOI [`10.1016/j.aam.2006.07.002`](https://doi.org/10.1016/j.aam.2006.07.002). `—`
+⚠ **Paywalled, full text not obtained.** ScienceDirect and `core.ac.uk` both
+refused automated fetch (HTTP 403); LSE Research Online's record
+(`eprints.lse.ac.uk/6897`) states "Full text not available from this
+repository"; no author-hosted PDF, arXiv preprint, or green open-access copy
+was found. What is recorded in
+[`20-nonzero-sum-equilibrium.md`](20-nonzero-sum-equilibrium.md) is an
+`[unverified]` search-engine text extraction of the abstract plus `[secondary]`
+corroboration from Simon's own later survey — not a primary read. This is the
+paper AGKRS's Theorem 3.4 cites as "Simon [13], Theorem 3" (bibliographic
+match confirmed primary against `ephemeral/s10107-022-01807-6.pdf`); the
+content of that theorem itself is not independently verified.
+
 **Simon 2012** — *A Topological Approach to Quitting Games*. Mathematics of
 Operations Research **37**(1), 180–195.
 DOI [`10.1287/moor.1110.0524`](https://doi.org/10.1287/moor.1110.0524). `—`
-⚠ Conditional result. Simon (2007) is also cited by Solan–Vieille 2025 but was
-not located in this research.
+⚠ Conditional result. Simon (2007), entry above, is also cited by
+Solan–Vieille 2025.
 
 ## Non-zero-sum: post-2020
 

@@ -532,11 +532,19 @@ disjunction is equivalent to the quitting conjecture**, which re-types the
 third branch's sufficiency question as the exact published boundary rather
 than as one open disjunct among three.
 
-**Fence.** Theorem 3.4's two sources — Simon 2007 and Solan–Vieille 2001
-Prop. 2.13 — have **zero wing records between them**. Both are already flagged,
-by the borrowed-premise census and by reference-chain closure. Do not consume
-Theorem 3.4 before at least one of them is recorded; that is the precise
-pattern that produced the not-locatable saga.
+**Fence — records now exist, mapping still does not.** Both sources are
+recorded in `references/20-nonzero-sum-equilibrium.md`. Solan–Vieille 2001
+Prop. 2.13 is `[primary]` — full text of both the working paper and the
+published version read; it turned out to be a terminal-payoff/uniform-
+equilibrium **bridge lemma**, not a structural characterization, and its
+numbering does not exist in the 1998 working paper at all (added at
+publication). Simon 2007 is genuinely paywalled and remains `[unverified]`/
+`[secondary]` at best — abstract-level content only, no primary read of
+"Theorem 3" itself. Since Prop. 2.13 is now known *not* to carry the S.1/S.2/
+S.3 content, Simon 2007's Theorem 3 is the more load-bearing of the two for
+the clause map below, and it is the one still unread. Do not consume Theorem
+3.4's *characterization* content before Simon 2007's Theorem 3 is obtained in
+full; the borrowed-premise pattern is only half-defused.
 
 **Acceptance.** A clause-by-clause map with each correspondence either proved,
 refuted, or explicitly open, plus wing records for whichever source the
