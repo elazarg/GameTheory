@@ -1925,6 +1925,19 @@ replaces the exact-cycle branch wholesale.
   and
   [`SingletonFaceCirculationsSteerOrbits`](../../ideas/QuittingGameConjecture/SingletonFaceCirculationsSteerOrbits.md).
 
+**Dispatch state (2026-08-05, evening wave).** Agents: the multi-owner
+circulation case, the §2.1 absence proofs (completing the K1-falsity package
+at `L`), the pinned-pure decoupling lemma, and certsearch's
+circulation-certificate mode with the `F′(x, ε)` grid. Questions filed:
+**Q162** — the true min-max of a quitting weight (stationarity of the worst
+plan, the finite reduction, the three named tables including `F′`'s
+diagonal-tightness suspicion, and the three consumer shapes) — and **Q163** —
+support purification or the weighted lemma (the one unsound joint left in
+the equivalence's hard direction, with the published-lemma verdict as its
+Part D). Deferred deliberately: the branch-three sufficiency question, which
+should be posed *after* Q162 returns, since its mismatch is ceiling-minus-
+honest-value and the true `χ` reshapes it.
+
 **Q159's verdict reshapes this row.** The dichotomy as posed was the wrong
 axis: the granted motion constant is **false on the weighted one-stage
 correspondence** (tremble counterexample at the scaled cyclic weight), so
