@@ -1599,9 +1599,19 @@ while forcing the predecessor's strictly positive; the coordinate sum is `1/2`
 at every phase, which the block-endpoint vertices cannot meet. The row
 dichotomy alone is purely algebraic and is the first landing target.
 
-**Acceptance.** The no-exact-cycle statement as a theorem, or the row dichotomy
-plus an explicit account of what remains. The gain identity must be recomputed
-from the repository's own definitions before anything is built on it.
+**Acceptance.** **PARTIAL, 2026-08-05**, `QuittingCyclicWeightRowDichotomy.lean`.
+The row dichotomy is proved: every exactly complementary row of this weight has
+at most one positive coordinate. The gain identity was **proved against the
+table, not assumed** — an independent hand re-derivation mis-copied an entry and
+the proof would not close until it was corrected against the source, which was
+right.
+
+The periodic half remains: singleton rows pinning the active coordinate's
+centered value to zero while forcing its predecessor's strictly positive, the
+phase-invariant coordinate sum, and the block-endpoint vertex contradiction.
+That half needs block machinery the row-level file does not have, and it is
+blocked on `LEAN-P0-11` if it is to say anything about the Bool-valued
+development.
 
 ### `LEAN-P0-10` — separate the three contraction deficits and price re-closing
 
@@ -1629,6 +1639,54 @@ rates `1/2` and `1/3`, where the mismatch is rate-independent while the full
 deficit varies, so no single numerator reproduces it; the deleted deficit there
 is exactly `0`. Unit continue mass makes the successor map the identity, so
 vanishing absorption gives no pole.
+
+### `LEAN-P0-11` — bridge the two encodings of complementarity
+
+- **Status:** READY
+- **Lane:** P0
+- **Depends:** `QuittingCyclicWeightRowDichotomy.lean`, the Bool-valued spine.
+- **Record:** this file
+
+**Objective.** Prove that the real-valued hazard encoding of the gain and
+complementarity conditions agrees with the Bool-valued mixture encoding the main
+development uses.
+
+**State.** `READY`, and this is a duplication introduced deliberately and
+knowingly. The questions corpus states everything over arrays of reals; the Lean
+development states everything over `PMF Bool` mixtures. Formalizing a question's
+answer therefore produced a **second** encoding of `Σ_i`, `Γ_i`, `g_i` and
+exact complementarity, generic over a finite index type. Both are correct and
+neither can currently feed the other.
+
+Until the bridge exists, a theorem proved in one encoding says nothing about the
+other, and a reader may reasonably assume otherwise. That is exactly the shape
+that rots.
+
+**Acceptance.** A translation sending a Bool-valued cycle to its hazard vector,
+with the gain values agreeing, so results transport in both directions. If the
+encodings differ in scope — for instance if one admits hazards the other cannot
+represent — state precisely where.
+
+### `LEAN-P1-5` — linear complementarity infrastructure
+
+- **Status:** READY
+- **Lane:** P1
+- **Depends:** none.
+- **Record:** [exact-vs-relaxed]
+
+**Objective.** Provide the normalized singleton LCP as a Lean object with a
+feasibility predicate.
+
+**State.** `READY`. Several recorded results now turn on the feasibility of
+`λ ∈ Δ(I)`, `q = Bλ ≥ 0`, `λᵢqᵢ = 0` with `Bᵢⱼ = rᵢ({j}) - rᵢ({i})` — in
+particular the equivalence deciding whether absorption can vanish, and with it
+whether a diverging period is even possible. **No LCP infrastructure exists in
+the repository**; the residual-class material is an ideas group, not Lean. Any
+attempt to formalize those equivalences is blocked on this.
+
+**Acceptance.** The predicate and enough API to state the absorption
+equivalence. Decidability for rational data would be a genuine strengthening,
+since it turns the criterion into something checkable on a concrete table.
 
 ### `MATH-P0-6` — port the all-periods non-existence theorem
 
