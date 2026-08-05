@@ -1861,6 +1861,59 @@ mismatch is exactly `-r_i({i})` at the isolated coordinate, the perturbation
 must trade that fixed mismatch against the continuation mass it frees, and any
 general argument has to control that trade rather than compute it on one table.
 
+### `MATH-P0-8` — the relaxed compiler: formalize Proposition 3
+
+- **Status:** READY
+- **Lane:** P0
+- **Depends:** phase-switch engine, `quittingPlannedSurvivalStoppingIndex`,
+  punishment floor, the ε-bridge, the reached-stage transfer (in flight).
+- **Record:** [`SurvivalWindowLandingByContinuationLifting`](../../ideas/UniformEquilibriumLiterature/SurvivalWindowLandingByContinuationLifting.md), Q158
+
+**Objective.** The per-tolerance existence engine: an `ε`-rational chain with
+divergent quit mass whose consecutive values are `δ`-linked compiles to a
+`3ε`-equilibrium, via punish-at-a-clock.
+
+**State.** `READY`, and this is the decisive chunk. The four no-gos of this
+wave jointly force any closing proof into exactly this architecture: per-`ε`
+families of unbounded period, an off-path punishment component, deviation
+pricing in the deleted deficit, and no compactness/budget/projection shortcut.
+Component inventory: phase-switch wrapper landed; stopping index `i♯` landed;
+punishment floor landed; ε-bridge landed; reached-stage transfer in flight.
+**Missing**: the cumulative-advantage ledger `W` and its index `i*`; the
+rank-one decision-discrepancy argument (the paper's Propositions 1–2); and the
+"only repetitive continuing matters" deviation reduction, which
+`ArchitectureCapSeparators` explicitly warns must be proved rather than
+imported.
+
+**Acceptance.** The compiler as a theorem consuming a per-tolerance family and
+producing the terminal `ε`-Nash objects the selection theorem eats. Landing it
+replaces the exact-cycle branch wholesale.
+
+### `MATH-P1-6` — the lock/unlock dichotomy for orbit variation
+
+- **Status:** READY
+- **Lane:** P1
+- **Depends:** the label lock (in flight), transported leverage, the
+  survival-window landing.
+- **Record:** this file
+
+**Objective.** Decide the conjecture: on a weight with no stationary and no
+instant approximate equilibria, either some coordinate's value can lock (and a
+lock-adjacent branch applies), or every exact-complementarity attempt forces
+value handoffs, and each forced handoff contributes a quantified variation
+increment — so relaxed-cycle families of unbounded variation exist.
+
+**State.** `READY` as a conjecture; this is the program's attack on the open
+residue — producing the unbounded-variation orbits that the repaired published
+equivalence converts into equilibria. The label lock is the first
+machine-checked instance of the locked side; the postulation is that its
+negation is generative. The leverage and landing lemmas are the calculus for
+"forced handoff implies a variation quantum."
+
+**Acceptance.** Either direction advanced honestly: a lock classification, or
+a handoff-to-variation lower bound on an explicit class. This row is a
+research direction, not a port; scope accordingly.
+
 ## Literature import lane
 
 ### `LIT-P1-1` — audit and formalize four-player fallback-collapse propositions
