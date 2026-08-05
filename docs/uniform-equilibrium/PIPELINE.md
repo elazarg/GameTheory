@@ -1266,6 +1266,26 @@ runs on legality alone. So the row reduces to:
 
 > can a padded-game equilibrium be taken **legal** without loss?
 
+**ANSWERED: NO (`M [reported]`, Q157).** Padding with raw-action histories is
+**unsound**: a sharp minimal system — two players, two states, one two-element
+duplicate fiber per player — has reduced attainable set `{(0,0),(1,1)}` and
+enlarged attainable set the whole diagonal segment. The duplicate labels carry
+a jointly controlled lottery (`Z = B₁ ⊕ B₂`, unbiasable unilaterally), and
+reduced profiles, whose live-path history is forced, are held to independent
+products: the always-continue deviation collects `√p` against target `p`. No
+cheap hypothesis rescues it — two players, fiber size two, and one non-identity
+action already fail. The conditional transfer (label-blind + legal witness)
+stands untouched; the unconditional step is dead.
+
+The repair is exact but changes the game: record **normalized** actions in
+histories, i.e. the quotient must be baked into the game's own monitoring, not
+recovered afterwards — which is what the normalized-history subtype was built
+for. Consequently the route from the state-independent conjecture to
+state-dependent action sets goes through the normalized-history padded game or
+through generalizing the conjecture to dependent action types directly; the
+raw-history padding route is closed. See
+[`DuplicateActionLabelsCarryAJointlyControlledLottery`](../../ideas/StrategicCorrelationCommunication/DuplicateActionLabelsCarryAJointlyControlledLottery.md).
+
 Blindness is what the *disintegration route* needs, not what the target needs,
 and conflating the two overstates what is open. The obstruction to blinding is
 nonetheless machine-checked rather than argued: the induction needs the
