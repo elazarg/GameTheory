@@ -6,6 +6,11 @@ on:
       - agent/local-residue-double-sure-mixer
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   build-witness:
     runs-on: ubuntu-latest
@@ -13,7 +18,36 @@ jobs:
       - uses: actions/checkout@v4
       - uses: leanprover/lean-action@v1
         with:
-          build: true
-          build-args: GameTheory.Concepts.Stochastic.QuittingLocalMechanismResidueWitness
+          auto-config: false
+          build: false
           test: false
           lint: false
+      - name: Build residue witness
+        id: witness
+        shell: bash
+        run: |
+          set +e
+          lake build GameTheory.Concepts.Stochastic.QuittingLocalMechanismResidueWitness 2>&1 | tee residue-build.log
+          status=${PIPESTATUS[0]}
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Report Lean result on PR 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_STATUS: ${{ steps.witness.outputs.status }}
+        shell: bash
+        run: |
+          {
+            echo "### Automated Lean check"
+            echo
+            echo "Commit: \`${GITHUB_SHA}\`"
+            echo "Exit status: \`${BUILD_STATUS}\`"
+            echo
+            echo '```text'
+            tail -c 60000 residue-build.log
+            echo '```'
+          } > residue-comment.md
+          gh pr comment 5 --repo "${GITHUB_REPOSITORY}" --body-file residue-comment.md
+      - name: Fail after reporting
+        if: steps.witness.outputs.status != '0'
+        run: exit 1
