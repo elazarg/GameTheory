@@ -34,6 +34,34 @@ DEFAULT_ROOTS = {
     "GameTheoryExamples",
 }
 STANDALONE_LEAN_MODULES = {"lakefile", "scripts.AxiomAudit"}
+# The `BlockPairK11` research island: a self-contained, mutually-importing
+# cluster (see docs/uniform-equilibrium/audits/2026-08-04-QuittingTreeCensus.md
+# and .../2026-08-04-ModelFaithfulness.md) whose `native_decide`/`opaque`
+# numeric certificates the static escape-hatch audit above forbids. It is
+# deliberately unreachable from the default targets so its
+# `Lean.ofReduceBool` axiom cannot reach the quitting/uniform-equilibrium
+# chain. Wiring it into `GameTheory.lean` would make the escape-hatch audit
+# fail for a different reason, so it is allowlisted here instead of left to
+# show up as orphan noise that could hide a real orphan.
+BLOCK_PAIR_K11_ISLAND = {
+    f"GameTheory.Concepts.Stochastic.{name}"
+    for name in (
+        "BlockPairK11System",
+        "BlockPairK11LocalInterval",
+        "BlockPairK11LocalValue",
+        "BlockPairK11DyadicData",
+        "BlockPairK11DyadicPhaseGroupZeroTwo",
+        "BlockPairK11DyadicPhaseGroupThreeFive",
+        "BlockPairK11DyadicPhaseGroupSixEight",
+        "BlockPairK11DyadicPhaseNine",
+        "BlockPairK11DyadicPhaseTenRootZero",
+        "BlockPairK11DyadicPhaseTenRootOne",
+        "BlockPairPredecessorCharts",
+        "BlockPairPredecessorComposition",
+        "BlockPairQuadraticRootSelection",
+    )
+}
+STANDALONE_LEAN_MODULES |= BLOCK_PAIR_K11_ISLAND
 RAW_SEMANTIC_MODULES = {"GameTheory.Core.GameForm"}
 ROOT_AGGREGATOR = "GameTheory"
 
