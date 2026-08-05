@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.QuittingSwitchingResidueRegression
 import GameTheory.Concepts.Stochastic.QuittingSureExitSet
+import GameTheory.Concepts.Stochastic.QuittingLocalMechanismResidueWitness
 
 /-!
 # The switching-residue regression table has no sure exit set
