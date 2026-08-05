@@ -246,12 +246,13 @@ theorem exists_badProbability_le_quarter
       have hmul := mul_le_mul_of_nonneg_right hab (by linarith : 0 ≤ 1 - xb)
       exact hmul.trans (hquad xb)
   · by_cases hac : xa ≤ xc
-    · refine ⟨Player.b, ?_⟩
+    · refine ⟨Player.a, ?_⟩
       rw [pmfBool_false_toReal]
-      change xc * (1 - xa) ≤ (1 / 4 : ℝ)
-      have hle : xc ≤ xa := le_of_not_ge hac
-      have hmul := mul_le_mul_of_nonneg_right hle (by linarith : 0 ≤ 1 - xa)
-      exact hmul.trans (hquad xa)
+      change xb * (1 - xc) ≤ (1 / 4 : ℝ)
+      have hba : xb ≤ xa := le_of_not_ge hab
+      have hbc : xb ≤ xc := hba.trans hac
+      have hmul := mul_le_mul_of_nonneg_right hbc (by linarith : 0 ≤ 1 - xc)
+      exact hmul.trans (hquad xc)
     · refine ⟨Player.b, ?_⟩
       rw [pmfBool_false_toReal]
       change xc * (1 - xa) ≤ (1 / 4 : ℝ)
