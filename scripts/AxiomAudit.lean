@@ -86,6 +86,14 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.QuittingTwoPlayerExistence.quittingGame_exists_uniformEquilibriumPayoff_twoPlayer
 #print axioms GameTheory.QuittingTwoPlayerExistence.quittingGame_isUniformEquilibriumPayoff_jointExit
 
+-- The sure-exit-set characterization at every number of players: a pure
+-- exit profile is an exact terminal equilibrium exactly when no player
+-- gains by toggling its own membership in the exit set.
+#print axioms GameTheory.isεAsymptoticNash_pureSetRoot_iff
+#print axioms GameTheory.isεAsymptoticNash_pureSetRoot_iff_isQuittingSureExitSet
+#print axioms GameTheory.isUniformEquilibriumPayoff_setReward_of_isQuittingSureExitSet
+#print axioms GameTheory.isεAsymptoticNash_pureSetRoot_univ_iff
+
 -- The exact dynamic-debt transport law and the seam-price results.
 #print axioms GameTheory.quittingFiniteDynamicDebt_eq_max_zero_sub_accumulatedStageGaps
 #print axioms GameTheory.quitting_sub_blockFixedPoint_eq_div
@@ -143,6 +151,17 @@ import Math.SchauderFixedPoint
 -- The pinned-pure row decoupling exclusion.
 #print axioms GameTheory.not_isExactRowComplementary_cyclicWeight_of_pinned
 
+-- The two-blocker interval cover, its non-exclusivity fence, the corrected
+-- solo-quitter gate, and the three-player table refuting the single-blocker
+-- designation.
+#print axioms GameTheory.exists_switchingPair_of_forall_not_isUniversalRateBlocker
+#print axioms GameTheory.exists_universalRateBlocker_or_switchingPair
+#print axioms GameTheory.exists_family_isUniversalRateBlocker_and_switchingPair
+#print axioms GameTheory.isUniversalRateBlocker_quittingJoiningGain_iff
+#print axioms GameTheory.exists_soloQuitterRate_or_universalJoiner_or_switchingPair
+#print axioms GameTheory.exists_soloQuitterRate_or_universalJoiner_of_card_le_two
+#print axioms GameTheory.QuittingSwitchingBlockerTable.not_exists_universalJoiner
+
 -- The bounded survival-window landing, the truncation fold, and the reduced
 -- conjecture's gap-free implication.  The reduced conjecture itself
 -- (`GameTheory.quittingGame_hasQuittingLedgerCapPackage`) is deliberately
@@ -151,3 +170,31 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.quittingRootSequenceHazardTerminalValue_quittingTruncatedRoots_le_of_plan_ledger_le
 #print axioms GameTheory.quittingTerminalPayoff_update_quittingPhaseSwitchProfile_le_of_plan_ledger_le
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_hasQuittingLedgerCapPackage
+
+-- ============================================================================
+-- The three-player switching-residue regression table (pure arithmetic;
+-- no stochastic-game dynamics) and its two general scalar lemmas.
+-- ============================================================================
+
+#print axioms GameTheory.QuittingSwitchingResidueRegression.q_one_pos
+#print axioms GameTheory.QuittingSwitchingResidueRegression.max_d12_d13_ge
+#print axioms GameTheory.QuittingSwitchingResidueRegression.d12_le_zero
+#print axioms GameTheory.QuittingSwitchingResidueRegression.d13_le_zero
+#print axioms GameTheory.QuittingSwitchingResidueRegression.d21_eq_one
+#print axioms GameTheory.QuittingSwitchingResidueRegression.d31_eq_one
+#print axioms GameTheory.QuittingSwitchingResidueRegression.sureExitFails_1
+#print axioms GameTheory.QuittingSwitchingResidueRegression.sureExitFails_2
+#print axioms GameTheory.QuittingSwitchingResidueRegression.sureExitFails_3
+#print axioms GameTheory.QuittingSwitchingResidueRegression.sureExitFails_12
+#print axioms GameTheory.QuittingSwitchingResidueRegression.sureExitFails_13
+#print axioms GameTheory.QuittingSwitchingResidueRegression.sureExitFails_23
+#print axioms GameTheory.QuittingSwitchingResidueRegression.sureExitFails_123
+#print axioms GameTheory.QuittingSwitchingResidueRegression.collisionRepairFails12
+#print axioms GameTheory.QuittingSwitchingResidueRegression.collisionRepairFails13
+#print axioms GameTheory.QuittingSwitchingResidueRegression.collisionRepairFails21
+#print axioms GameTheory.QuittingSwitchingResidueRegression.collisionRepairFails23
+#print axioms GameTheory.QuittingSwitchingResidueRegression.collisionRepairFails31
+#print axioms GameTheory.QuittingSwitchingResidueRegression.collisionRepairFails32
+#print axioms GameTheory.QuittingSwitchingResidueRegression.collisionRate_ge_of_balance_nonneg
+#print axioms GameTheory.QuittingSwitchingResidueRegression.not_balance_nonneg_of_gain_nonpos
+#print axioms GameTheory.QuittingSwitchingResidueRegression.fixedGap_ge_half
