@@ -152,8 +152,7 @@ theorem expect_pmfPi_badEvent
           (expect_pmfPi_two_coordinates root hne
             (fun a b => if a = true ∧ b = false then (-1 : ℝ) else 0))
     _ = -(root first true).toReal * (root second false).toReal := by
-      simp [expect_eq_sum, Fintype.sum_bool]
-      ring
+      simp [expect_eq_sum]
 
 /-! ## Exact one-stage coefficients -/
 
@@ -188,6 +187,7 @@ theorem quittingRootPayoff_eq_badEvent
       · simpa [quittingQuitters] using hreward.2
     · unfold quittingRootPayoff
       rw [dif_neg hquit]
+      simp
 
 /-- Quitting now has value `-x_next * (1-x_other)`. -/
 theorem quittingStationaryFixedOpponentsQuitValue_eq
