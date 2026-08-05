@@ -112,3 +112,13 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.isQuittingJointComplementary_quittingCyclicBlockRoots
 #print axioms GameTheory.isCompletelyAbsorbing_of_isQuittingJointComplementary_of_solo_pos
 #print axioms GameTheory.QuittingCandidateHardWeightCoordinateSilence.quitProbability_true_eq_zero_of_isQuittingJointComplementary
+
+-- Backward stability of root ε-complementarity (E64, period-one base case)
+-- and the lens-identity's first leg: the condition number is the
+-- weighted-to-unweighted conversion factor.
+#print axioms GameTheory.exists_exact_of_isεQuittingRootEndpointNash
+#print axioms GameTheory.exists_exact_of_pure
+#print axioms GameTheory.abs_le_div_min_of_weighted_bounds
+#print axioms GameTheory.abs_quittingRootEndpointDifference_le_div_min_of_isεQuittingRootEndpointNash
+#print axioms GameTheory.exists_exact_ownShift_abs_eq_abs_quittingRootEndpointDifference
+#print axioms GameTheory.min_lt_inv_of_exists_weighted_bound_not_isεRowComplementary

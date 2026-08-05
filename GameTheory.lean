@@ -600,6 +600,7 @@ import Math.Probability.FiniteProductFlowTwoStateRegression
 import Math.BoundedDiscrepancyCirculation
 import GameTheory.Concepts.Stochastic.HiddenFiberSpanCounterexample
 import GameTheory.Concepts.Stochastic.UniformNonexistenceCertificate
+import GameTheory.Concepts.Stochastic.QuittingCirculationTwoCoordinateBoundary
 
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties

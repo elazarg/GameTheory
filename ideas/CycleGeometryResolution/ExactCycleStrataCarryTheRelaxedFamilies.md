@@ -16,11 +16,14 @@ questions about cycles become quantitative questions about stratum geometry.
 
 ## Ledger
 
-- **(S1) `L` (E64, experiments lane).** The base case is a theorem: every
-  `ε`-complementary row is exactly complementary for a table within
-  `C·ε`, via the per-player own-set shift, with the condition number
-  explicit: `C = 1/min(yᵢ, 1−yᵢ)` over interior coordinates, `C = 1` at pure
-  rows. **Fixed tail only** — the cycle-feedback case is open and is the
+- **(S1) `L`, production-landed (E64 ported).** The base case is a theorem
+  in production: every `ε`-complementary row is exactly complementary for a
+  table within `C·ε`, via the per-player own-set shift, with the condition
+  number explicit: `C = 1/min(yᵢ, 1−yᵢ)` over interior coordinates, `C = 1`
+  at pure rows —
+  `GameTheory.Concepts.Stochastic.QuittingRootEndpointBackwardStability`
+  (`exists_exact_of_isεQuittingRootEndpointNash`, `exists_exact_of_pure`),
+  audited. **Fixed tail only** — the cycle-feedback case is open and is the
   lens's genuine frontier (the same fixed-rows-versus-optimized split the
   seam-price law had; expect the middle leg to be the hard one).
 - **(S2) `X` (E65).** On the `Γ_η` period-`3m` family: defect tracks
@@ -37,11 +40,25 @@ questions about cycles become quantitative questions about stratum geometry.
   cycle with positive and negative controls. First computational certificate
   feeding the trichotomy lane; the Lean port path is the K11 island pattern
   (quarantined certificates, containment-checked).
-- **(S4) postulate.** The three-lens identity: the backward condition number,
-  the lock margin (Q156), and the `ε`-bridge's weighted-gain weakness at
-  extreme hazards are one phenomenon. If it holds, a lock is a certificate of
-  positive stratum distance in a named direction, and the lock/unlock
-  dichotomy and the `d(ε,δ)` law are two faces of the same geometry.
+- **(S4) postulate, one leg proved.** The three-lens identity: the backward
+  condition number, the lock margin (Q156), and the `ε`-bridge's
+  weighted-gain weakness at extreme hazards are one phenomenon. If it holds,
+  a lock is a certificate of positive stratum distance in a named direction,
+  and the lock/unlock dichotomy and the `d(ε,δ)` law are two faces of the
+  same geometry. **Leg one (backward condition number ↔ weighted-to-unweighted
+  conversion factor) is now a machine-checked theorem, not an analogy**:
+  `GameTheory.Concepts.Stochastic.QuittingBackwardStabilityConditionNumber`
+  proves the two quantities are the same division applied to the same pair
+  of inequalities (`abs_le_div_min_of_weighted_bounds`,
+  `abs_quittingRootEndpointDifference_le_div_min_of_isεQuittingRootEndpointNash`),
+  that E64's own-set shift magnitude and the raw endpoint gap it bounds
+  literally coincide at interior coordinates
+  (`exists_exact_ownShift_abs_eq_abs_quittingRootEndpointDifference`), and
+  that the ε-bridge's reverse-failure witness is forced through the same
+  `1/min(x,1−x)` blowup
+  (`min_lt_inv_of_exists_weighted_bound_not_isεRowComplementary`), all
+  audited. The lock margin (Q156) leg and a general (not single-witness)
+  account of the ε-bridge weakness remain open.
 - **(S5) reading of the open core.** A Q159 trap — and any counterexample to
   the conjecture, through the repaired equivalence — is a weight the
   accumulating strata *permanently avoid* at some fixed distance, uniformly
