@@ -1915,6 +1915,18 @@ negation is generative. The leverage and landing lemmas are the calculus for
 a handoff-to-variation lower bound on an explicit class. This row is a
 research direction, not a port; scope accordingly.
 
+**Quantitative companion (backward-error lens, `ephemeral/NumericalAnalysis.md`
+§1).** The conjecture that `d(ε,δ)` — minimal relaxed period at tolerance —
+is governed by the conditioning of the exact-cycle strata: the least `L`
+whose stratum passes within backward-distance `δ` of the weight. Three
+independently-derived quantities appear to be one: the backward condition
+number `1/min(yᵢ, 1−yᵢ)`, the lock margin, and the `ε`-bridge's weighted-gain
+weakness at extreme hazards. If that identity holds, the lock/unlock
+dichotomy and the `d(ε,δ)` law are two faces of stratum geometry, and a Q159
+trap is a weight at uniformly positive backward distance from every
+low-period stratum. The numerical signature test on the period-`3m` family is
+in flight from the intake note; its output should be read against this row.
+
 ## Literature import lane
 
 ### `LIT-P1-1` — audit and formalize four-player fallback-collapse propositions
