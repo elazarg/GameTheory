@@ -572,6 +572,7 @@ import GameTheory.Concepts.Stochastic.PerturbedCyclicWeightNoExactCycle
 import GameTheory.Concepts.Stochastic.PerturbedCyclicWeightCycleExistenceHoleOccupied
 import GameTheory.Concepts.Stochastic.WeightedRowMotionSeparation
 import GameTheory.Concepts.Stochastic.SingletonFaceCirculation
+import GameTheory.Concepts.Stochastic.SingletonFaceCirculationOrbit
 import GameTheory.Concepts.Stochastic.QuittingHazardRowBridge
 import GameTheory.Concepts.Stochastic.QuittingRelaxedHazardRowBridge
 import GameTheory.Concepts.Stochastic.QuittingIsolatedPunishmentCeiling

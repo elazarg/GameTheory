@@ -1898,7 +1898,7 @@ punishment floor landed; ε-bridge landed; reached-stage transfer in flight.
 normalization, clocks and combinator, Abel cash-out, the assembled cap
 consuming a ledger condition); the rank-one decision-discrepancy argument and
 the "only repetitive continuing matters" deviation reduction — **both now
-posed as Question 162** (the DDP maximal inequality, the rank-variation
+posed as Question 161** (the DDP maximal inequality, the rank-variation
 bound, the rank-one corollary, and the domination consequence with the
 unrestricted deviation quantifier made explicit — the step the architecture
 guard warns about is Part D, and the question says so); plus the small
@@ -1907,8 +1907,8 @@ residuals: **ceiling-IR punishment attainment and Case-2 wiring landed**
 premise is **false** — the seed discrepancy at the truncation back-propagates
 geometrically, leaving a survival-weighted correction at every prefix index —
 and its honest form is a folding lemma riding the assembly's own
-reach-probability bounds (Case 1 via Q162's corollary, Case 2 via the wired
-clock), to be landed once Q162 returns.
+reach-probability bounds (Case 1 via Q161's corollary, Case 2 via the wired
+clock), to be landed once Q161 returns.
 
 **Acceptance.** The compiler as a theorem consuming a per-tolerance family and
 producing the terminal `ε`-Nash objects the selection theorem eats. Landing it
