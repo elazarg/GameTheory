@@ -171,7 +171,15 @@ closed the accumulation route for every weight rather than one witness — is
 
 ## The currency has a name: transported leverage
 
-`M [reported]`, and this is the constructive replacement for the refuted law.
+`L`, machine-checked (`QuittingTransportedLeverage.lean`): both leverage
+quantities, the coarse absorption bound, the exact re-closing identity, the
+vanishing-leverage no-go, and incomparability witnessed in both directions.
+The deviation denominator vanishes **exactly** at the isolated window, proved
+as an iff — the unit-slope regime under its fourth name. One conflation was
+caught by the type-checker rather than review: the enclosing-array deficit is
+not the block's own deficit, and the definitions take it as an explicit
+parameter so the two cannot be merged. This is the constructive replacement
+for the refuted law.
 The quantity that actually controls a local modification `B` inside an array `G`
 is not absorbed mass but **transported leverage** — the modification's effect on
 the block map, amplified by the deficit of the return map being closed:
