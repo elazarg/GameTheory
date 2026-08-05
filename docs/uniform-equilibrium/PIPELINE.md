@@ -1192,6 +1192,24 @@ Building the separating game there needs two objects the repository lacks: a
 normalized `StochasticGame` presentation, and a legality-constrained analogue
 of `IsUniformEquilibriumPayoff` over legal behaviour profiles.
 
+**Both objects now exist (`L`), and the projection repair is refuted.**
+`ActionLegalityBehaviorTransfer.lean` assembles the padded game as an actual
+`StochasticGame`, lifts agreement from a single stage to whole trajectories --
+equal history distributions and payoffs at every horizon for any profile that
+plays only legal actions -- and closes the legality-restricted transfer in both
+directions as genuine `iff`s.
+
+What that leaves is exactly the unrestricted direction, and one candidate repair
+is now closed rather than merely doubted. Projecting an unrestricted witness by
+mapping each behavioural mixture through the normalization **provably fails**:
+the induction needs the projected profile evaluated at an already-normalized
+history, which requires the original profile's value at the corresponding *raw*
+history, and `normalizeAct` is non-injective -- every illegal action at a state
+goes to the same legal one -- so the raw history is unrecoverable. The
+obstruction is therefore not the signalling intuition alone but a definite
+failure of information recovery, and it lands precisely where the row already
+said it would: normalized-action histories, a `Hist`/`histDist` redefinition.
+
 **The candidate repairs are not equal, and the choice is now decided (`M`).**
 
 *Normalized-action histories* is the load-bearing one. Under it the padded
