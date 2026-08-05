@@ -222,6 +222,33 @@ circulations through arbitrary **coalition faces**, whose per-phase
 deterrence condition is the sure-exit-set criterion — no member leaves, no
 outsider joins.
 
+**The front end of that road is now closed, formally.** The sure-exit-set
+criterion is a theorem (`QuittingSureExitSet`): "exactly `S` quits surely"
+is an exact terminal equilibrium iff no member prefers to leave and no
+outsider prefers to join, with the unilateral deviation cap computed
+unconditionally as the membership-toggle maximum. The gate for the
+one-owner branch is also a theorem, and it is *not* the naive one
+(`QuittingBlockerIntervalCover`): when every owner rate is blocked, a
+single blocking opponent need not exist — the affine no-join gains cut
+`(0,1]` into initial and terminal positivity intervals, so the failure is
+witnessed by a universal blocker *or a switching pair of blockers*, never
+more; with at most two opponents the switching branch is vacuous, so
+three players is exactly the threshold at which the naive designation
+breaks. And the branch map built from these exact mechanisms is provably
+not total: a rational three-player table
+(`QuittingSwitchingResidueRegression`) escapes the zero-solo, sure-exit,
+one-owner, and every one-stage sure-blocker collision branch — for the
+scalar reason, machine-checked, that owner endpoint optimality forces the
+collision rate to a boundary value at which either the resulting pair
+set fails the sure-exit criterion or the spectator preempts. The
+derivation alongside (paper-pending, like the min-max formula it prices
+against): collision compensation for a blocker strictly below its exact
+punishment floor requires collision intensity bounded away from zero, so
+no single-scale mechanism covers the residue — the open construction is
+a **two-scale producer** turning a switching-blocker cover into a
+relaxed orbit whose rare phases carry interior collision intensity, which
+the circulation machinery would then compile.
+
 ## References
 
 J. Flesch, F. Thuijsman, O. J. Vrieze, *Cyclic Markov equilibria in
