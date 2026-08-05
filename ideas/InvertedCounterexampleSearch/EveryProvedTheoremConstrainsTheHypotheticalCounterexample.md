@@ -99,6 +99,34 @@ machine-checked.
    that treats screen-passing as evidence of cycle-freeness is wrong, and the
    FTV table is its counterexample.
 
+## The exit-direction LP screen has the same disease, with a mechanism
+
+`X`, from the homotopy-germ endgame probe (2026-08-05), with the symbolic
+check still owed. The exit-direction LP screen is **boundary-tight on all
+three tested weights**, and the probe's reading is that this is a theorem in
+disguise rather than a disappointment: the LP came from endpoint
+complementarity, and at coordinates **inside** the exit support,
+complementarity at leading order should force the equality
+`(1+ρ)·r_i({i}) = (Mā)_i` — strict inequality is possible only at
+**off-support** coordinates. So the screen's entire cutting power lives at
+off-support coordinates: it can only ever cut weights whose germs exit
+through a **proper face**. Full-support exits — all three tested weights —
+pass automatically.
+
+Sharper, and structural rather than coincidental: **`Γ_η` sits on the
+screen's boundary for every `η`, by an algebraic identity** — the LP matrix
+sees only singleton rows while `η` perturbs only doubletons. The screen is
+inert on the entire canonical hard family, at every parameter, for a reason
+legible in the table's sparsity pattern.
+
+Consequence for this group's program: two independent screens (the algebraic
+`K4` and the exit-direction LP) have now each turned out necessary-but-inert
+on the hard families, and for the LP the inertness has a mechanism —
+support-interior complementarity saturates it. Any future screen proposal
+must state, before running, **which face structure it can cut** — a screen
+whose cutting region excludes full-support exits is inert on every family
+whose germs exit through the interior, and the hard families apparently do.
+
 The general lesson, and the method's characteristic failure mode: a valid
 necessary condition adds nothing unless it *cuts*. The ledger should record, for
 each constraint, not only that it holds but what it excludes.

@@ -56,6 +56,26 @@ Absorbed states being pinned to the weight —
 `quittingGerm_assignment_val_some` — is what makes the dictionary a statement
 about the quitting weight rather than about an arbitrary value assignment.
 
+## Germ data from the endgame probe (2026-08-05, `X`)
+
+Numerical germ extractions, discovery-grade, recorded here so the symbolic
+ledger and the probe do not drift apart:
+
+- **The disjunction witness has ramification `q = 2`** — both quit rates
+  scale as `√t`, and the germ's natural parameter for that weight is
+  `√(1−β)`. Not previously stated anywhere in the symbolic record; a direct
+  target for `G6`'s machinery (extract `q` symbolically and confirm).
+- **`ρ` is a germ invariant, not a weight invariant — fence confirmed on
+  data.** The probe's `ρ̂ ≈ 1/3` for the FTV table against the hand-computed
+  `ρ = 0` traces to *different germs*: the symmetric stationary branch versus
+  the nonstationary period-3 cycle. Not a contradiction — the fence firing
+  exactly as written. Any future use of a numerically extracted `ρ` must name
+  which germ it rode.
+- All three tested paths tracked a **single support pattern over twenty
+  orders of magnitude** of `t` — the pattern-redetection machinery is built
+  but unstressed; a weight with a genuine support switch is still wanted as a
+  test article.
+
 ## What this buys
 
 The dichotomy of
