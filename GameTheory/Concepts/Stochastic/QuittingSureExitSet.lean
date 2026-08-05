@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Concepts.Stochastic.QuittingSureSetOwnerRepair
 import GameTheory.Concepts.Stochastic.QuittingStationaryBestResponse
 import GameTheory.Concepts.Stochastic.QuittingSimpleBranches
-import GameTheory.Concepts.Stochastic.QuittingSureSetRepairFullIntervalCounterexample
+import GameTheory.Concepts.Stochastic.QuittingSureSetRepairCounterexample
 
 /-!
 # Sure exit sets in quitting games
@@ -682,30 +682,14 @@ theorem isεAsymptoticNash_pureSetRoot_singleton_iff_isQuittingSureExitSet
   · rintro ⟨howner, hother⟩
     exact ⟨howner, fun other hne ↦ by simpa using hother other hne⟩
 
-/-! ## Consistency with the sure-set repair regressions
+/-! ## Consistency with the sure-set repair regression
 
 The characterization is an exact test on a *given* set, and says nothing
-about the existence of one.  The two landed three-player regressions are
-statements of the second kind, and the tests below confirm that the two
-readings agree on their tables. -/
-
-section FullIntervalRegression
-
-open QuittingSureSetRepairFullIntervalCounterexample
-
-/-- The full-interval regression table has **no** sure exit set at all: its
-landed statement that every nonempty pure exit profile is exploitable by at
-least one is, through the characterization, exactly the failure of the
-sure-exit conditions at every nonempty set. -/
-theorem not_isQuittingSureExitSet_fullIntervalRegression
-    (S : Finset Player) (hS : S.Nonempty) :
-    ¬ IsQuittingSureExitSet reward S := by
-  intro hsure
-  exact not_isεAsymptoticNash_directPureSet S hS 0 (by norm_num)
-    ((isεAsymptoticNash_pureSetRoot_iff_isQuittingSureExitSet
-      reward S).mpr hsure)
-
-end FullIntervalRegression
+about the existence of one.  The landed three-player repair regression below
+is a statement of the second kind, and the test confirms that the two
+readings agree on its table.  A companion regression table, on which no
+nonempty coalition passes the sure-exit test at all, carries the matching
+cross-check next to its own direct-pure-set exploitability bound. -/
 
 section RepairRegression
 
