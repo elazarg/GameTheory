@@ -366,8 +366,9 @@ class — zero-boundary exact-`D` chains — and its own claim file says so: it 
 repair". It is not exhaustive over equilibrium-profile **shapes**.
 
 A concrete family falls through every split the program has. An *instant*
-approximate equilibrium — some coordinate quits with certainty at the first
-stage, and is punished to its min-max value plus `ε` if it reneges — is
+approximate equilibrium — Simon 2007's notion (his "instant equilibria", one of
+the three clauses of his Theorem 3): some coordinate quits with certainty at
+the first stage, and is punished to its min-max value plus `ε` if it reneges — is
 excluded by the stationary ladder (which forbids history-dependence outright),
 excluded by the absorbing-cycle carrier (whose admissibility discriminator is a
 no-join condition on opponents, not a threat aimed at the quitter, so the

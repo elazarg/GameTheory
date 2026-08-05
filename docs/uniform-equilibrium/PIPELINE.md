@@ -532,7 +532,13 @@ disjunct's status corrected either way.
 
 - **Status:** READY
 - **Lane:** P0 (negative lane, complements `NEG-P0-1`)
-- **Depends:** Simon 2007 Theorem 3 `(i)⇒(iii)`.
+- **Depends:** Simon 2007 Theorem 3 `(i)⇒(iii)` — **which carries the paper's one
+  uncertified proof step** (farm defect register №13): the existence of a stage
+  whose no-quitting survival lands in `[θρ/3, θ/3]` silently needs that
+  per-stage survival cannot jump across the interval, and that is not spelled
+  out in the paper. Any use of this row's criterion inherits that step until it
+  is repaired or reproved. Defect №12 (`(iii)⇒(ii)`, the asserted constant
+  `1/2`) is judged repairable and also touches the equivalence.
 - **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §2
 
 **Objective.** Adopt the equivalent orbit-side certificate for refutation:
