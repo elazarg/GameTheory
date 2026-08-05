@@ -44,7 +44,7 @@ theorem not_hasQuittingLedgerCapPackage_unit_one :
     simpa using hledger () 0 (Nat.zero_le switch)
 
   have hreachOne : 1 ≤ reach := by
-    simpa [quittingOpponentSurvivalWeight_unit] using hreach ()
+    simpa only [quittingOpponentSurvivalWeight_unit] using hreach ()
 
   have hboundNonneg :
       0 ≤ quittingRewardBound quittingLedgerCapPackageUnitReward :=
@@ -56,45 +56,44 @@ theorem not_hasQuittingLedgerCapPackage_unit_one :
       (abs_reward_le_quittingRewardBound quittingLedgerCapPackageUnitReward
         (⟨{()}, by simp⟩ : {S : Finset Unit // S.Nonempty}) ())
 
-  let punishmentTerm : ℝ := max (punishCap () + punishError) 0
-  have hpunishmentTerm : 0 ≤ punishmentTerm := by
-    dsimp [punishmentTerm]
-    exact le_max_right _ _
-
   have hreachFive :
       5 * quittingRewardBound quittingLedgerCapPackageUnitReward ≤
         reach * (5 * quittingRewardBound quittingLedgerCapPackageUnitReward) := by
-    have hproduct :
-        0 ≤ (reach - 1) *
-          (5 * quittingRewardBound quittingLedgerCapPackageUnitReward) :=
-      mul_nonneg (sub_nonneg.mpr hreachOne)
-        (mul_nonneg (by norm_num) hboundNonneg)
-    nlinarith
+    have hfiveNonneg :
+        0 ≤ 5 * quittingRewardBound quittingLedgerCapPackageUnitReward :=
+      mul_nonneg (by norm_num) hboundNonneg
+    calc
+      5 * quittingRewardBound quittingLedgerCapPackageUnitReward =
+          1 * (5 * quittingRewardBound quittingLedgerCapPackageUnitReward) := by ring
+      _ ≤ reach * (5 * quittingRewardBound quittingLedgerCapPackageUnitReward) :=
+        mul_le_mul_of_nonneg_right hreachOne hfiveNonneg
+
+  have hmaxNonneg : 0 ≤ max (punishCap () + punishError) 0 :=
+    le_max_right _ _
 
   have hreachPunishment :
       quittingRewardBound quittingLedgerCapPackageUnitReward ≤
         reach *
-          (punishmentTerm +
+          (max (punishCap () + punishError) 0 +
             quittingRewardBound quittingLedgerCapPackageUnitReward) := by
-    have hsum :
-        0 ≤ punishmentTerm +
+    have hsumNonneg :
+        0 ≤ max (punishCap () + punishError) 0 +
           quittingRewardBound quittingLedgerCapPackageUnitReward :=
-      add_nonneg hpunishmentTerm hboundNonneg
-    have hproduct :
-        0 ≤ (reach - 1) *
-          (punishmentTerm +
+      add_nonneg hmaxNonneg hboundNonneg
+    calc
+      quittingRewardBound quittingLedgerCapPackageUnitReward ≤
+          max (punishCap () + punishError) 0 +
+            quittingRewardBound quittingLedgerCapPackageUnitReward := by
+        linarith
+      _ = 1 *
+          (max (punishCap () + punishError) 0 +
+            quittingRewardBound quittingLedgerCapPackageUnitReward) := by ring
+      _ ≤ reach *
+          (max (punishCap () + punishError) 0 +
             quittingRewardBound quittingLedgerCapPackageUnitReward) :=
-      mul_nonneg (sub_nonneg.mpr hreachOne) hsum
-    nlinarith
+        mul_le_mul_of_nonneg_right hreachOne hsumNonneg
 
-  have herr := herror ()
-  change
-    (ledgerCap + quitRegretCap +
-        reach * (5 * quittingRewardBound quittingLedgerCapPackageUnitReward)) +
-      reach *
-        (punishmentTerm +
-          quittingRewardBound quittingLedgerCapPackageUnitReward) ≤ 1 at herr
-  nlinarith
+  nlinarith [herror ()]
 
 /-- Hence the universal reduced conjecture itself is false at `Unit`, reward
 one, and tolerance one. -/
