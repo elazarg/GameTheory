@@ -2007,7 +2007,22 @@ the question.
 
 ### `MATH-P0-11` — the minimal open family: the four-player cyclic phase diagram
 
-- **Status:** IN FLIGHT — **Question 160 filed**; quitting core.
+- **Status:** REPOSED — Q160's family **collapsed by an authoring flaw**
+  (all triples zeroed made all-quit a period-one exact subgame-perfect
+  equilibrium at the true min-max, everywhere; a lone continuer must face a
+  nondegenerate `(n−1)`-coalition payoff, and the sparsity shrink went one
+  size too far — the vacuity rule now covers game families). **Question 161
+  files the repaired family** — every coalition pays its outsiders `1` — with
+  the trivial witnesses probed in authoring and recorded as supplied facts;
+  the open region is `x > 0`. Salvaged from Q160's answer, methods not
+  values: the true-min-max computation, the symmetric-stationary
+  classification with its tangential bifurcation, the pure-First-set
+  classification. New load-bearing subquestion: `F′`'s min-max plausibly sits
+  *tight against the diagonal* (best responses to both extreme opponent
+  profiles earn exactly the solo value), a structure no solved example has —
+  and the circulation-certificate check against `F′` is Part B, either
+  solving `x > 0` outright or exhibiting the first natural habitat outside
+  the circulation class.
 - **Lane:** P0.
 - **Depends:** affine invariance (the `d ≡ 1` normalization it legitimizes),
   the lock, the landing, the LCP and solo-quitter criteria, the phase-switch
