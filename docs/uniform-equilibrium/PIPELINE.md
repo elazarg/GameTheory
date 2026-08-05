@@ -538,7 +538,11 @@ disjunct's status corrected either way.
   per-stage survival cannot jump across the interval, and that is not spelled
   out in the paper. Any use of this row's criterion inherits that step until it
   is repaired or reproved. Defect №12 (`(iii)⇒(ii)`, the asserted constant
-  `1/2`) is judged repairable and also touches the equivalence.
+  `1/2`) is judged repairable and also touches the equivalence. **Question 158
+  is filed on exactly this step** — repair with explicit constants or refute —
+  including the worked-out failure of the obvious conditional-scaling repair
+  (the jump destroys the reach probability that would forbid the jump) and the
+  supplementary machine-checked facts a solver gets beyond the paper.
 - **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §2
 
 **Objective.** Adopt the equivalent orbit-side certificate for refutation:
