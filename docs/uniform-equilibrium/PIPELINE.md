@@ -1987,6 +1987,34 @@ already machine-refuted the natural candidate
 Estimated 8–11 waves to the conditional form; the unconditional sits behind
 the question.
 
+### `MATH-P0-11` — the minimal open family: the four-player cyclic phase diagram
+
+- **Status:** IN FLIGHT — **Question 160 filed**; quitting core.
+- **Lane:** P0.
+- **Depends:** affine invariance (the `d ≡ 1` normalization it legitimizes),
+  the lock, the landing, the LCP and solo-quitter criteria, the phase-switch
+  engine; the certsearch toolchain sweeps its parameter square.
+- **Record:** this file; Q160.
+
+**Objective.** The open problem restricted to its plausibly minimal natural
+habitat: the two-parameter family `F(x, ε)` — four coordinates, cyclic,
+diagonal `1`, `G_ε`-sparse, with `x` the payoff to the opposite player, the
+first genuinely four-coordinate degree of freedom. Solve its `(x, ε)` phase
+diagram: solved zones by explicit criteria, the lock's fate at four
+coordinates, existence by rotating relaxed cycles under phase-switch
+punishment, or the first certified counterexample candidate.
+
+**State.** Every known theorem misses the family for a stated reason
+(joining is profitable, four players, not zero-solo; escape-class coverage to
+be verified). The class lattice above it: `n = 4` (minimal open count) →
+diagonal-normalized (legitimate only by our affine invariance — the
+literature could not state this class) → cyclic-invariant (the home of every
+known hard phenomenon) → sparse. The anonymous/fully-symmetric class one
+level up is a cheap dissolves-or-sharpens test (one-dimensional symmetric
+complementarity) worth one probe, no more. **Attribution caveat**: the
+family's open status is internal-knowledge, medium-high confidence; a
+literature verification is owed before any public claim.
+
 ### `MATH-P0-10` — the drift device: uniform threats against moving states
 
 - **Status:** READY
