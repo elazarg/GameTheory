@@ -1608,35 +1608,60 @@ machine-checked witness for the failure. Vanishing absorption gives an inverse
 pole but not non-existence, and that must be stated so the earlier reading
 cannot return.
 
-### `MATH-P0-6` — decide whether the published cyclic family admits an admissible absorbing cycle
+### `MATH-P0-6` — close the trichotomy's cycle-existence hole
 
 - **Status:** READY
 - **Lane:** P0
-- **Depends:** the imported cyclic table.
+- **Depends:** `LEAN-P0-9`.
 - **Record:** [exact-vs-relaxed]
 
-**Objective.** Decide whether the published cyclic three-player family admits an
-admissible absorbing cycle. A negative answer falsifies completeness of the
-disjunction **without touching existence**, since that family has a uniform
-equilibrium payoff.
+**Objective.** Decide whether a weight with **some positive solo value** can
+admit no absorbing exactly-complementary cycle of any finite period.
 
-**State.** `READY`, and this is the question that actually bears on
-completeness. The family sits in the `S₊ ≠ ∅, S₋ = ∅` case, where admissibility
-is automatic and the sole obstruction is absorption degenerating — so the
-question reduces to whether absorption can vanish there. That is itself a finite
-check: relaxed cycles at small tolerance have absorption bounded below exactly
-when the normalized singleton LCP on the weight is infeasible, and when it is
-feasible, period one already suffices.
+**State.** `READY`, and this is one of the trichotomy's two remaining holes. The
+trichotomy is exhaustive only under the hypothesis that the weight admits an
+absorbing complementary cycle at all; weights admitting none are outside it. A
+positive answer therefore exhibits a weight outside the whole statement. A
+negative answer makes the hypothesis automatic off the zero-solo branch and
+closes the hole.
 
-Two related facts do **not** settle it and must not be mistaken for it. The
-three-coordinate weight of `LEAN-P0-9` has no exact cycle but is zero-solo, so
-it satisfies the *first* disjunct and says nothing about completeness. And the
-published family's lack of an exact *equilibrium* is not the lack of an
-admissible cycle — the compiler sends cycles to uniform payoffs, not conversely.
+The technique now exists. `LEAN-P0-9`'s weight admits no exact cycle of any
+period, by a finite argument — nonnegative centered values, at most one positive
+coordinate per exact row, singleton rows pinning one coordinate to zero while
+forcing its predecessor strictly positive, and a phase-invariant coordinate sum
+the block endpoints cannot meet. But that weight is **zero-solo**, so branch one
+already covers it and it demonstrates only the method. The question is whether
+the construction survives giving some coordinate a positive solo value.
 
-**Acceptance.** A decision, with the absorption computation. If absorption is
-bounded below, the disjunction survives on the leading hard candidate and the
-remaining content is case 3.
+Note absorption is not the obstruction: a positive solo value **forces**
+absorption in any exactly-complementary sequence, so any cycle that exists is
+automatically absorbing.
+
+**Acceptance.** A decision with the weight if positive. Do not settle it with a
+zero-solo weight; that is the already-covered case.
+
+### `MATH-P0-7` — a sufficiency theorem for the isolated-negative branch
+
+- **Status:** READY
+- **Lane:** P0
+- **Depends:** the trichotomy.
+- **Record:** [exact-vs-relaxed]
+
+**Objective.** Show that a weight in the isolated-negative branch has a uniform
+equilibrium payoff, or exhibit one that does not.
+
+**State.** `READY`. This is the trichotomy's other hole and the sharper of the
+two: the branch is reachable — the refutation witness lies in it — but carries
+no sufficiency theorem, so a weight landing there gets nothing. One specific
+two-coordinate weight is repaired by a symmetric contracting perturbation that
+keeps both opponents' continuation mass strictly below one, avoiding the `ε = 0`
+degeneracy of the exact isolated configuration; that construction is explicitly
+stated not to generalize.
+
+**Acceptance.** A general theorem, or a counterexample. Since the branch's
+mismatch is exactly `-r_i({i})` at the isolated coordinate, the perturbation
+must trade that fixed mismatch against the continuation mass it frees, and any
+general argument has to control that trade rather than compute it on one table.
 
 ## Literature import lane
 

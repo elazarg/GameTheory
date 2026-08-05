@@ -201,8 +201,25 @@ complementarity at coordinate `2`. The corrected reduction is:
 **The implication is one machine-checked theorem** (`M+L`),
 `exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle`: either branch
 yields a uniform equilibrium payoff, the zero-solo branch delivering the named
-payoff `0`. What remains open is **completeness of the disjunction** — whether
-every weight satisfies one branch — not either implication.
+payoff `0`.
+
+**That two-branch disjunction is machine-checked false** and has been replaced.
+`not_isQuittingZeroSolo_reward` and `not_hasAdmissibleAbsorbingQuittingCycle_reward`
+refute it on a single two-coordinate weight. The repaired statement is the
+trichotomy `quittingCycle_zeroSolo_or_admissible_or_isolatedNegative`, adding a
+third *isolated-negative* branch — a genuine absorbing cycle in which some
+coordinate is isolated with negative solo weight, so its mismatch is exactly
+`-r_i({i})` and admissibility fails without absorption degenerating.
+
+The trichotomy leaves **two holes**, and these are the open content:
+
+1. It is exhaustive only under the hypothesis that the weight admits an
+   absorbing complementary cycle **at all**. Weights admitting none of any
+   period are outside it entirely.
+2. The isolated-negative branch has **no sufficiency theorem**. One specific
+   two-coordinate weight in it does have a uniform equilibrium payoff, by an
+   explicit symmetric contracting perturbation, but that construction is stated
+   not to generalize.
 
 No bound on the length is required: the formalized conditional quantifies over
 the period with no bound, so earlier statements asking for `L(n)` were stronger
