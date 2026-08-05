@@ -237,6 +237,34 @@ and `S₋ = {i : r_i({i}) < 0}`:
 Cases 2 and 3 are the remaining content. See
 [the carrier group](../../ideas/AbsorbingCycleCarrier/README.md).
 
+**Vanishing absorption is now a finite check (`M [reported]`).** Case 2 reduces
+to whether absorption can degenerate, and that question has an answer in terms
+of the table alone. With `dᵢ = rᵢ({i})` and `Bᵢⱼ = rᵢ({j}) - dᵢ`, consider the
+normalized singleton linear complementarity problem
+
+> `λ ∈ Δ(I)`,  `q = Bλ ≥ 0`,  `λᵢqᵢ = 0`.
+
+Then `ε`-complementary cycles at small `ε` have absorption bounded below **iff**
+this LCP is infeasible; and when it *is* feasible, period **one** already
+suffices, so a diverging period is impossible. Vanishing absorption and
+diverging period are therefore mutually exclusive regimes, separated by a
+decidable property of the weight rather than by a limit to be estimated. This is
+the same singleton LCP the residual-class group studies.
+
+**Exact cycles are not limits of relaxed ones (`M [reported]`).** A rational
+three-coordinate cyclic weight has `ε`-complementary cycles at every tolerance,
+of period `3m`, and no exactly complementary cycle of any finite period. So any
+route that manufactures an exact cycle as a limit of relaxed ones is closed in
+general. Absorbed mass along those cycles is constantly `7/8`, so the
+obstruction is not a block too mass-poor to close.
+
+That weight is **zero-solo**, so it sits in case 1 and says nothing about
+completeness — it closes a proof strategy, not a branch. The question that would
+bear on completeness is whether a positive-solo weight can fail to admit an
+admissible absorbing cycle; a published perturbation of the cyclic table, which
+has a uniform equilibrium payoff but provably no exact equilibrium, is the
+current candidate and is under test.
+
 **Mark transport is not the obstruction (`M`).** The long-standing worry that a
 packet sitting arbitrarily deep in the middle cannot be carried through a
 shortening is false. Splitting at the marked letter yields mark preservation
