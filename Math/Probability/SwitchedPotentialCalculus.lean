@@ -24,13 +24,18 @@ switchedLocalSlack (Q t) (f t) (H t) (H (t + 1)) s
 is the exact coboundary defect.  Summing the slack telescopes: the potential
 path contributes only its two endpoints, and everything else is a *charge*.
 
-The design is deliberately **mode/phase-lifted** rather than state-only.  Two
-independent sources say a state-only potential is not enough: the answered
-research question `questions/old/Question89-ControllerCapsUnderSwitchedHarmlessEnvironments.md`
-(its Part A switching identity and its Part C.3 phase-augmented biases), and
-experiment `E03` of `experiments/` (path-complete accounts are
-coboundaries on lifted `(mode, state)` graphs).  The falsifier probes at the end
-of this file check both obstructions inside Lean.
+The design is deliberately **mode/phase-lifted** rather than state-only, for
+two independent reasons made precise by the falsifier probes at the end of
+this file.  First, `AlternatingHarvest` exhibits two modes that are each
+individually harmless — each admits its own bias inequality — yet share no
+common state-only potential, so the per-switch charge is genuinely
+unavoidable and cannot be absorbed into a single account.  Second,
+`PhaseHarvest` exhibits a periodic schedule whose *phase*-indexed potentials
+are exactly slack-free, while every choice of *mode*-indexed potentials still
+pays a strictly positive oscillation charge per cycle: mode-indexed
+accounting is a strictly weaker instrument than phase-indexed accounting,
+because path-complete accounts are coboundaries on the lifted `(mode, state)`
+graph but need not be coboundaries on the base `state` graph alone.
 
 ## Layers
 
@@ -41,16 +46,15 @@ of this file check both obstructions inside Lean.
    which is how the "supremum over policies" strength is obtained.
 3. Switching charges in three payment modes, each a separate theorem:
    * `sum_expect_scheduledCost_le_switchingBill` — span-normalized pairwise
-     oscillation bills, the `C (1 + J)` shape of Question 89 (15);
+     oscillation bills, giving the `C (1 + J)` shape;
    * `sum_expect_scheduledCost_le_directedCharges` — the transition-aware
-     directed cost `Γᵢⱼ` of Question 89 (11)-(12), with
-     `directedCharge_le_oscillationCharge` proving `Γᵢⱼ ≤ Δᵢⱼ` (13);
+     directed cost `Γᵢⱼ`, with `directedCharge_le_oscillationCharge` proving
+     `Γᵢⱼ ≤ Δᵢⱼ`;
    * `sum_expect_cost_le_resetBudget` — total-variation / reset budgets.
 4. `sum_expect_phaseCost_le` — the phase-lifted exactness layer for a periodic
-   mode word, Question 89 (34)-(39): per-phase slack `≤ g` gives the
-   uniform-in-shifts windowed bound `g * N + 2 * bound`.
-5. Falsifier probes `AlternatingHarvest` (Question 89 (16)-(17)) and
-   `PhaseHarvest` (Question 89 (40)-(42)).
+   mode word: per-phase slack `≤ g` gives the uniform-in-shifts windowed
+   bound `g * N + 2 * bound`.
+5. Falsifier probes `AlternatingHarvest` and `PhaseHarvest`.
 
 Every cap here is conditioned on `IsMarginalLawPath`, which
 `isMarginalLawPath_marginalLawPath` shows is always satisfiable, so none of the
@@ -58,14 +62,15 @@ statements is vacuous; the two probes additionally exhibit explicit witnesses.
 
 ## What is *not* formalized
 
-Only the sufficiency half of Question 89 (39) is proved.  The converse
-`g(w) = max over the phase occupation polytope` of Question 89 (38) is a finite
+Only the sufficiency direction of the phase-lifted windowed bound is proved:
+per-phase slack `≤ g` gives the cap.  The converse — that the best-possible
+`g` equals a maximum over the phase occupation polytope — is a finite
 average-reward LP duality statement on the phase-augmented chain; the repo has
 no average-reward LP duality (`Math.LinearAlgebra.FourierMotzkin` is raw
 elimination, not a Farkas certificate for occupation measures), so that
-direction is left open.  Likewise Question 89 (7), the Farkas equivalence
-between per-mode harmlessness and nonemptiness of the bias polyhedron, is
-assumed rather than derived: `IsModeBias` is taken as the primitive input.
+direction is left open.  Likewise the Farkas equivalence between per-mode
+harmlessness and nonemptiness of the bias polyhedron is assumed rather than
+derived: `IsModeBias` is taken as the primitive input.
 
 ## Relation to existing in-tree accounts
 
@@ -170,8 +175,8 @@ variable {S : Type*}
 
 /-- The one-step coboundary defect of a *predictable* potential pair: the cost
 paid now, plus the expected value of the *next* stage's potential, minus the
-current stage's potential.  This is the object Question 89 (34) bounds by a
-per-stage charge `αₜ`. -/
+current stage's potential.  This is the quantity a per-stage charge bounds
+throughout the switching-charge layers below. -/
 def switchedLocalSlack (kernel : S → PMF S) (cost current next : S → ℝ) (state : S) : ℝ :=
   cost state + expect (kernel state) next - current state
 
@@ -225,8 +230,8 @@ theorem expect_stageSlack_eq [Finite S]
 
 /-- **Exact switching identity.**  Over any window `[start, start + horizon)`,
 the accumulated expected slack equals the accumulated expected cost plus the
-boundary motion of the expected potential.  Question 89 (8) and (35) are the
-two one-sided readings of this equation. -/
+boundary motion of the expected potential; solving for either side gives the
+two one-sided switching bounds used below. -/
 theorem sum_expect_stageSlack_eq [Finite S]
     (law : ℕ → PMF S) (kernel : ℕ → S → PMF S) (cost potential : ℕ → S → ℝ)
     (path : IsMarginalLawPath law kernel) (start horizon : ℕ) :
@@ -257,7 +262,7 @@ theorem sum_expect_cost_eq_sum_expect_stageSlack_add_boundary [Finite S]
   linarith
 
 /-- **One-sided switching bound.**  A per-stage charge dominating the slack
-pointwise gives the accumulated cost bound of Question 89 (35). -/
+pointwise gives an accumulated cost bound with the same boundary term. -/
 theorem sum_expect_cost_le_of_stageSlack_le [Finite S]
     (law : ℕ → PMF S) (kernel : ℕ → S → PMF S) (cost potential : ℕ → S → ℝ)
     (path : IsMarginalLawPath law kernel) (charge : ℕ → ℝ) (start horizon : ℕ)
@@ -367,18 +372,18 @@ section Switching
 
 variable {S A K : Type*} [Fintype S] [Nonempty S] [Fintype A] [Nonempty A]
 
-/-- Question 89 (5)/(6): `h mode` is a bias (relative value function) for
-`mode`, i.e. it lies in the mode's bias polyhedron `ℋ_mode`. -/
+/-- `h mode` is a bias (relative value function) for `mode`, i.e. it lies in
+the mode's bias polyhedron `ℋ_mode`. -/
 def IsModeBias (kernel : K → S → A → PMF S) (reward : K → S → A → ℝ) (bias : K → S → ℝ)
     (mode : K) : Prop :=
   ∀ state action,
     reward mode state action + expect (kernel mode state action) (bias mode) - bias mode state ≤ 0
 
-/-- Question 89 (10): the pairwise oscillation charge `Δᵢⱼ = maxₓ (hⱼ x - hᵢ x)`. -/
+/-- The pairwise oscillation charge `Δᵢⱼ = maxₓ (hⱼ x - hᵢ x)`. -/
 def oscillationCharge (bias : K → S → ℝ) (source target : K) : ℝ :=
   finiteMax fun state => bias target state - bias source state
 
-/-- Question 89 (11): the transition-aware directed charge
+/-- The transition-aware directed charge
 `Γᵢⱼ = max_{s,a} [fᵢ + Qᵢ hⱼ - hᵢ]`. -/
 def directedCharge (kernel : K → S → A → PMF S) (reward : K → S → A → ℝ) (bias : K → S → ℝ)
     (source target : K) : ℝ :=
@@ -396,8 +401,8 @@ theorem le_directedCharge (kernel : K → S → A → PMF S) (reward : K → S �
         bias source pair.1)
     (state, action)
 
-/-- Question 89 (13): the directed charge is sharper than the oscillation
-charge.  This is where the bias inequality for the *source* mode is spent. -/
+/-- The directed charge is sharper than the oscillation charge.  This is
+where the bias inequality for the *source* mode is spent. -/
 theorem directedCharge_le_oscillationCharge [Finite S]
     (kernel : K → S → A → PMF S) (reward : K → S → A → ℝ) (bias : K → S → ℝ)
     (source target : K) (source_bias : IsModeBias kernel reward bias source) :
@@ -434,7 +439,7 @@ theorem oscillationCharge_self (bias : K → S → ℝ) (mode : K) :
   simp [oscillationCharge]
 
 /-- Every oscillation charge of a nonnegative, `bound`-dominated bias family is
-at most `bound`.  This is the span normalization of Question 89 (14). -/
+at most `bound`.  This is the span normalization used below. -/
 theorem oscillationCharge_le_of_normalized (bias : K → S → ℝ) (bound : ℝ)
     (nonneg : ∀ mode state, 0 ≤ bias mode state)
     (le_bound : ∀ mode state, bias mode state ≤ bound) (source target : K) :
@@ -476,7 +481,7 @@ theorem normalizedBias_le_finiteSpan (bias : K → S → ℝ) (mode : K) (state 
     normalizedBias bias mode state ≤ finiteSpan (bias mode) :=
   sub_le_sub_right (le_finiteMax _ _) _
 
-/-- Question 89 (14): the uniform span constant `C = maxₖ span hₖ`. -/
+/-- The uniform span constant `C = maxₖ span hₖ`. -/
 def uniformBiasSpan [Fintype K] [Nonempty K] (bias : K → S → ℝ) : ℝ :=
   finiteMax fun mode => finiteSpan (bias mode)
 
@@ -518,7 +523,7 @@ theorem stageSlack_modeLifted_le_directedCharge [Finite A]
   intro source action
   exact le_directedCharge kernel reward bias (schedule stage) (schedule (stage + 1)) source action
 
-/-- **Payment mode (b): transition-aware directed costs.**  Question 89 (12). -/
+/-- **Payment mode (b): transition-aware directed costs.** -/
 theorem sum_expect_scheduledCost_le_directedCharges [Finite A]
     (kernel : K → S → A → PMF S) (reward : K → S → A → ℝ) (bias : K → S → ℝ)
     (schedule : ℕ → K) (policy : ℕ → S → PMF A) (law : ℕ → PMF S)
@@ -551,7 +556,7 @@ def frozenSwitchCharge [DecidableEq K] (bound : ℝ) (schedule : ℕ → K) (las
   if frozenSchedule schedule last (stage + 1) ≠ frozenSchedule schedule last stage then bound
   else 0
 
-/-- Question 89's `J_{s,N}`: the number of mode changes strictly inside the
+/-- `J_{s,N}`: the number of mode changes strictly inside the
 window `[start, start + steps]`, which has length `steps + 1`. -/
 def windowSwitchCount [DecidableEq K] (schedule : ℕ → K) (start steps : ℕ) : ℕ :=
   ((Finset.range steps).filter fun i => schedule (start + i + 1) ≠ schedule (start + i)).card
@@ -630,9 +635,9 @@ theorem stageSlack_frozen_le [Finite S] [Finite A] [DecidableEq K]
   exact stageSlack_controlled_le _ _ _ _ _ _ pointwise _
 
 omit [Fintype S] [Fintype A] in
-/-- **Payment mode (a): the `C (1 + J)` switching bill.**  Question 89 (15),
-verbatim: with a nonnegative bias family dominated by `bound`, the expected
-reward over any window of length `steps + 1` is at most
+/-- **Payment mode (a): the `C (1 + J)` switching bill.**  With a nonnegative
+bias family dominated by `bound`, the expected reward over any window of
+length `steps + 1` is at most
 `bound * (1 + #switches strictly inside the window)`, uniformly in the shift,
 the horizon and the policy. -/
 theorem sum_expect_scheduledCost_le_switchingBill [Finite S] [Finite A] [DecidableEq K]
@@ -678,9 +683,9 @@ theorem sum_expect_scheduledCost_le_switchingBill [Finite S] [Finite A] [Decidab
   rw [expanded]
   linarith
 
-/-- The `o(N)`-switch regime of Question 89 Part B: if the number of switches in
-a growing window is sublinear, the whole switching bill is sublinear in the
-sense of `Math.Probability.IsAsymptoticallySublinear`. -/
+/-- The `o(N)`-switch regime: if the number of switches in a growing window is
+sublinear, the whole switching bill is sublinear in the sense of
+`Math.Probability.IsAsymptoticallySublinear`. -/
 theorem isAsymptoticallySublinear_switchingBill [DecidableEq K]
     (schedule : ℕ → K) (bound : ℝ) (start : ℕ)
     (sparse : IsAsymptoticallySublinear
@@ -697,9 +702,9 @@ theorem isAsymptoticallySublinear_switchingBill [DecidableEq K]
     (IsAsymptoticallySublinear.const_mul sparse bound)
 
 omit [Fintype A] [Nonempty A] in
-/-- If a *single* state potential is a bias for every mode — Question 89 (5) —
-then no switch is ever charged and the cap is the span of that potential,
-uniformly in the schedule, the shift, the horizon and the policy. -/
+/-- If a *single* state potential is a bias for every mode, then no switch is
+ever charged and the cap is the span of that potential, uniformly in the
+schedule, the shift, the horizon and the policy. -/
 theorem sum_expect_scheduledCost_le_span_of_commonBias [Finite A]
     (kernel : K → S → A → PMF S) (reward : K → S → A → ℝ) (common : S → ℝ)
     (schedule : ℕ → K) (policy : ℕ → S → PMF A) (law : ℕ → PMF S)
@@ -823,9 +828,9 @@ end ResetBudget
 /-! ## The phase-lifted exactness layer
 
 For a periodic mode word the *exact* schedule-adapted invariant is indexed by
-the phase, not by the mode: Question 89 (37)-(39).  The same mode occurring at
-two phases may be reachable at different states with different accumulated
-credit, so per-mode biases are strictly conservative (see `PhaseHarvest`). -/
+the phase, not by the mode.  The same mode occurring at two phases may be
+reachable at different states with different accumulated credit, so per-mode
+biases are strictly conservative (see `PhaseHarvest`). -/
 
 section Phase
 
@@ -839,7 +844,7 @@ def phaseSchedule (word : ZMod P → K) : ℕ → K := fun stage => word (stage 
 def phasePotential (phaseBias : ZMod P → S → ℝ) : ℕ → S → ℝ :=
   fun stage => phaseBias (stage : ZMod P)
 
-/-- Question 89 (37): the phase-augmented bias inequalities with slack `g`.
+/-- The phase-augmented bias inequalities with slack `g`.
 The cyclic closure `H_P = H₀` is automatic because the index is `ZMod P`. -/
 def HasPhaseSlack (kernel : K → S → A → PMF S) (reward : K → S → A → ℝ)
     (word : ZMod P → K) (phaseBias : ZMod P → S → ℝ) (g : ℝ) : Prop :=
@@ -863,7 +868,7 @@ theorem stageSlack_phase_le [Finite S] [Finite A]
   exact slack (stage : ZMod P) source action
 
 omit [Fintype S] [Nonempty S] [Fintype A] [Nonempty A] in
-/-- **Phase-lifted uniform windowed bound.**  Question 89 (39), sufficiency
+/-- **Phase-lifted uniform windowed bound.**  Sufficiency
 direction: per-phase slack `≤ g` together with `|H| ≤ bound` gives
 `sup over shifts of E Σ ≤ g * N + 2 * bound`, with the additive constant
 explicit and independent of the shift, the horizon and the policy. -/
@@ -902,7 +907,7 @@ end Phase
 
 /-! ## Falsifier probe 1: the alternating harvest
 
-Question 89 (16)-(17).  Two uncontrolled two-state modes, each harmless on its
+Two uncontrolled two-state modes, each harmless on its
 own invariant measure, which nevertheless earn one unit at *every* stage under
 the alternating schedule.  This checks that
 
@@ -914,19 +919,19 @@ the alternating schedule.  This checks that
 
 namespace AlternatingHarvest
 
-/-- Mode `true` is Question 89's mode 1 (everything moves to state `true`);
-mode `false` is its mode 2 (everything moves to state `false`). -/
+/-- Mode `true` always moves to state `true`;
+mode `false` always moves to state `false`. -/
 def modeNext (mode : Bool) (_state : Bool) : Bool := mode
 
 /-- Both modes are deterministic and uncontrolled: the action type is `Unit`. -/
 def kernel (mode state : Bool) (_action : Unit) : PMF Bool := PMF.pure (modeNext mode state)
 
-/-- Question 89 (16): each mode pays one unit exactly at the state the other
+/-- Each mode pays one unit exactly at the state the other
 mode drives towards. -/
 def reward (mode state : Bool) (_action : Unit) : ℝ := if mode = state then 0 else 1
 
-/-- The per-mode biases `h₁ = (1, 0)`, `h₂ = (0, 1)` of Question 89's Part A.4
-witness, already span-normalized. -/
+/-- The per-mode biases `h₁ = (1, 0)`, `h₂ = (0, 1)`,
+already span-normalized. -/
 def bias (mode state : Bool) : ℝ := if mode = state then 0 else 1
 
 theorem isModeBias_bias (mode : Bool) : IsModeBias kernel reward bias mode := by
@@ -941,7 +946,7 @@ theorem bias_le_one (mode state : Bool) : bias mode state ≤ 1 := by
   unfold bias
   split_ifs <;> norm_num
 
-/-- **No common bias.**  Question 89 (16) has no single state potential valid
+/-- **No common bias.**  No single state potential is valid
 for both modes, so the switch charge cannot be removed. -/
 theorem no_common_bias :
     ¬ ∃ common : Bool → ℝ, ∀ mode, IsModeBias kernel reward (fun _ => common) mode := by
@@ -1028,7 +1033,7 @@ theorem uniformBiasSpan_eq : uniformBiasSpan bias = 1 := by
   unfold uniformBiasSpan
   simp [span_eq]
 
-/-- **Question 89 (17): the switching bill is attained.**  Over the window
+/-- **The switching bill is attained.**  Over the window
 `[start, start + steps]` the alternating harvest earns exactly
 `C * (1 + J)` with `C = 1` the uniform bias span and `J = steps` the internal
 switch count, matching `sum_expect_scheduledCost_le_switchingBill` with
@@ -1057,27 +1062,27 @@ end AlternatingHarvest
 /-! ## Falsifier probe 2: phase-dependent potentials strictly beat mode-indexed
 oscillation accounting
 
-Question 89 (40)-(42).  The `(u, v, v)` schedule admits phase potentials with
+The `(u, v, v)` schedule admits phase potentials with
 per-phase slack `g = 0`, hence a horizon-free cap; but every pair of per-mode
 biases pays at least one unit of oscillation per `u ↔ v` cycle, i.e. at least
 `1 / 3` per stage. -/
 
 namespace PhaseHarvest
 
-/-- Question 89 (40).  Mode `false` is `u` (always resets to state `false`);
+/-- Mode `false` is `u` (always resets to state `false`);
 mode `true` is `v` (the two-cycle). -/
 def modeNext (mode state : Bool) : Bool := if mode then !state else false
 
 def kernel (mode state : Bool) (_action : Unit) : PMF Bool := PMF.pure (modeNext mode state)
 
-/-- Question 89 (40): `f_u = (-1, 0)` and `f_v = (1, -1)`. -/
+/-- `f_u = (-1, 0)` and `f_v = (1, -1)`. -/
 def reward (mode state : Bool) (_action : Unit) : ℝ :=
   if mode then (if state then -1 else 1) else (if state then 0 else -1)
 
-/-- Question 89 (41): the period-three word `(u, v, v)`. -/
+/-- The period-three word `(u, v, v)`. -/
 def word (phase : ZMod 3) : Bool := decide (phase ≠ 0)
 
-/-- Question 89 (42): the phase potentials `H₀ = (0, 0)`, `H₁ = (0, 0)`,
+/-- The phase potentials `H₀ = (0, 0)`, `H₁ = (0, 0)`,
 `H₂ = (1, -1)`. -/
 def phaseBias (phase : ZMod 3) (state : Bool) : ℝ :=
   if phase = 2 then (if state then -1 else 1) else 0
@@ -1099,7 +1104,7 @@ def phaseBias (phase : ZMod 3) (state : Bool) : ℝ :=
 @[simp] theorem phaseBias_three (state : Bool) : phaseBias 3 state = 0 := by
   rw [phaseBias, if_neg (by decide)]
 
-/-- **Question 89 (42) verified.**  The three phase potentials satisfy the
+/-- **The phase potentials verified.**  The three phase potentials satisfy the
 per-phase bias inequalities with slack `g = 0`. -/
 theorem hasPhaseSlack : HasPhaseSlack kernel reward word phaseBias 0 := by
   intro phase state action
@@ -1128,8 +1133,8 @@ theorem sum_expect_cost_le_two
       abs_phaseBias_le_one start horizon
   simpa using windowed
 
-/-- **Mode-indexed oscillation billing is strictly weaker.**  Question 89 C.3:
-whatever per-mode biases are chosen, the two oscillation bills of a `u → v → u`
+/-- **Mode-indexed oscillation billing is strictly weaker.**  Whatever
+per-mode biases are chosen, the two oscillation bills of a `u → v → u`
 cycle already sum to at least one, i.e. at least `1 / 3` per stage of the
 period-three word — even though `sum_expect_cost_le_two` caps the same schedule
 by an absolute constant. -/
