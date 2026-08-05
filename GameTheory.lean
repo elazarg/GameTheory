@@ -580,6 +580,7 @@ import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchProfile
 import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchDeviationCap
 import GameTheory.Concepts.Stochastic.QuittingSurvivalWindowLanding
 import GameTheory.Concepts.Stochastic.QuittingLedgerPunishClock
+import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchResiduals
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
 import Math.LinearAlgebra.ExactBlockEliminationConfluence
