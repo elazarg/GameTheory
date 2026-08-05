@@ -533,6 +533,7 @@ import GameTheory.Concepts.Stochastic.QuittingAnalyticGerm
 import GameTheory.Concepts.Stochastic.QuittingGermNondegeneracy
 import GameTheory.Concepts.Stochastic.QuittingRefutedRouteFences
 import GameTheory.Concepts.Stochastic.QuittingUnboundedInverseIterate
+import GameTheory.Concepts.Stochastic.QuittingJointComplementarity
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
 import Math.LinearAlgebra.ExactBlockEliminationConfluence

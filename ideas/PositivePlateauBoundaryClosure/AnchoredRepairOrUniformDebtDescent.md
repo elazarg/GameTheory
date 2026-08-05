@@ -109,6 +109,32 @@ new exact Nash--Bellman root. Acceptance requires all quantifiers above and the
 existing terminal-to-uniform consumer; fixed-cutoff compactness alone is not
 the capstone.
 
+## The decrement was measured in the wrong currency
+
+`M [reported]`, from Simon 2007's Lemma 4. Closing a pseudo-orbit whose
+endpoints are `δ`-close into a playable cycle costs
+
+\[
+ \delta/\rho,\qquad \rho=\text{total absorbed mass along the block},
+\]
+
+so the seam error is **inversely proportional to quitting mass**: no absorption,
+no closure. That turns this group's qualitative fence — chain recurrence alone
+does not concentrate pseudo-orbit error into one exact seam, and pointwise debt
+decrease need not have a uniform decrement — into a formula, and it identifies
+the correct currency for "uniform decrement": **absorbed probability mass, not
+step count**. Every descent attempt recorded here measured in steps.
+
+It also explains the shape of the refutation below without contradicting it: an
+appended block's repair propagates and decays because the absorption available
+to pay for the seam is what governs the cost.
+
+Related, same source: *extended orbits* — countably many orbit segments, each
+either ending at or **converging to** the next, with junk variation summable —
+suffice for existence. That is a ready-made replacement for the demand that two
+endpoint limits form a genuine bi-infinite orbit through a shared anchor, which
+this program recorded as a falsifier.
+
 ## What the refutation does and does not show
 
 It does **not** refute equilibrium existence. By the Q125 fence a positive

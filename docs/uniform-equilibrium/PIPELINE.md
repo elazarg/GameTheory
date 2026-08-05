@@ -454,6 +454,107 @@ fails to decay the fixed set is a ray, and the recursion selects nothing.
 established or removed, and the case-2 row resting on a formal artifact that
 proves the statement it cites.
 
+### `MATH-P0-5` — is the exact-cycle disjunct complete, or do ε-cycles diverge?
+
+- **Status:** READY — highest-priority item from the Simon 2007 farm
+- **Lane:** P0
+- **Depends:** `QuittingThreeBranchDisjunction`; Simon 2007 Theorem 3 and its
+  post-theorem remark; Solan, *Int. Game Theory Rev.* **3** (2001) 291–299.
+- **Record:** [`ephemeral/Simon2007/program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §1
+
+**Objective.** Decide whether a weight can exist for which approximate
+equilibria exist, ε-cycles exist for **every** ε with minimal length → ∞ as
+ε → 0, and **no exact finite cycle exists**.
+
+**State.** This threatens the completeness of the repository's own
+machine-checked disjunct, not the conjecture. Simon's Theorem 3 equates
+existence with ε-**relaxed** cycles for every ε; the repository's admissible
+absorbing cycles are **exact** — terminal `0`-Nash at every phase. Theorem 3
+never produces an exact cycle, and its splice direction inherently costs
+accuracy. Simon's remark after Theorem 3, citing Solan, states that **the
+minimal cycle length may depend on the size of ε**. If length diverges, the
+program's "either zero-solo or an admissible absorbing cycle of some finite
+length" would be **false** while quitting existence still holds — the reduction
+incomplete rather than the conjecture refuted.
+
+**Note the cited source is already on disk**: it is the same Solan paper whose
+Theorem 2.1 this program proved false as printed. It may contain the growth
+mechanism, and nobody has read it for that.
+
+**Acceptance.** Either a weight exhibiting divergent minimal ε-cycle length
+with no exact cycle, or a proof that exactness is recoverable — with the
+disjunct's status corrected either way.
+
+### `NEG-P0-2` — the orbit-side counterexample criterion
+
+- **Status:** READY
+- **Lane:** P0 (negative lane, complements `NEG-P0-1`)
+- **Depends:** Simon 2007 Theorem 3 `(i)⇒(iii)`.
+- **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §2
+
+**Objective.** Adopt the equivalent orbit-side certificate for refutation:
+given no stationary and no instant approximate equilibria, exhibit `ε₀ > 0` and
+`B` such that **every** orbit of `F_{ε₀}` through feasible `ε₀`-rational vectors
+has total variation `< B`.
+
+**State.** This is a statement about a semi-algebraic correspondence on `ℝ^N`,
+plausibly closer to decidable — and to formalizable — than quantifying over all
+behavioural profiles, which is what `NEG-P0-1` currently does. It is the
+concrete content of the paper's "must involve the topological structure" claim,
+and that direction is **argued for quitting games**, not merely asserted.
+Conversely any positive proof must construct unbounded-variation orbits, so a
+proof strategy that cannot in principle produce them is dead on arrival.
+
+**Acceptance.** The criterion stated in repository vocabulary, and a decision on
+whether the search lane should run on it instead of, or alongside, the
+behavioural-gap criterion.
+
+### `MATH-P1-5` — audit the decomposition for instant approximate equilibria
+
+- **Status:** READY
+- **Lane:** P1
+- **Depends:** the stationary repair ladder; the absorbing-cycle carrier; the
+  positive-plateau split.
+- **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §3
+
+**Objective.** Decide where Simon's third equilibrium family lands in this
+program's splits, or record that it does not.
+
+**State.** Simon's trichotomy is stationary / **instant** / orbit. An *instant*
+approximate equilibrium is a first-stage profile with some coordinate quitting
+with certainty, followed by punishing that coordinate down to its min-max value
+plus ε if it failed to quit — a `2ε`-equilibrium. It is neither stationary nor
+periodic-cycling here: a period-one cycle does not capture the off-path
+punishment clause, and the frontier's falsifier list does not name the family.
+It arises exactly when one-stage ε-equilibria have quitting mass tending to one
+— the `q → 1` boundary where compactness arguments degenerate.
+
+**Acceptance.** Either a demonstration that an existing branch absorbs it, or
+its addition as a named case.
+
+### `LEAN-P0-7` — two-clock punishment for the deviation-cap constructor
+
+- **Status:** READY
+- **Lane:** P0
+- **Depends:** `Uniform.lean`'s deviation-cap constructor (the program's
+  standing intentional placeholder).
+- **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §8
+
+**Objective.** Evaluate Simon's Proposition 3 punishment design against the
+constructor's intended interface before attempting the placeholder.
+
+**State.** Proposition 3 runs punishment off **two stopping times per player**:
+one when the deviation ledger crosses ε — too much extracted by continuing —
+and one when *planned* survival drops below `ε/M`, so the plan says the player
+should already be gone and mere presence is proof of deviation, **requiring no
+statistical test at all**. Punishment fires at the minimum across players with
+slack `ε/10`. The second clock covers exactly the tail where absorption is
+nearly exhausted, which is the regime this program's exceptional-deviation cap
+already addresses.
+
+**Acceptance.** A verdict on whether the two-clock design fits the constructor's
+interface, and if so a proof plan for the placeholder that uses it.
+
 ### `LEAN-F0-9` — name the recurring mechanisms as objects
 
 - **Status:** ACTIVE (first entity in flight)
@@ -501,6 +602,17 @@ The entity would be a device-with-quotient structure plus a transport theorem.
 tree, and forcing one type over them may cost more than the prose. Nominate
 properly only if a fourth instance appears or one of the three needs the
 statement formally.
+
+**Entity 4 — rank of the punished coordinate's decision process. `IDEA`
+(seal `I`), one incident, externally corroborated.** Simon 2007 isolates why
+stagewise-to-global upgrades fail in general and why quitting games are exempt:
+the punished player's decision process has **rank 1**. His Example 1 is the
+canonical stress shape — a δ-balanced, stagewise-ε-optimal process on an
+interval with absorbing ends whose cumulative deviation ledger reaches a
+macroscopic gain with probability one half. Any lemma here capping global
+deviation gain from stagewise caps must carry a rank or finite-partition
+hypothesis or fail on that shape. Nominated because the concept is currently
+unnamed on both sides.
 
 **Entity 3 — boundary-generated debt. `IDEA` (seal `I`), may be absorbed.**
 That *all* positive debt in the exact-`D` grammar originates at the terminal
@@ -575,7 +687,8 @@ so aggregation is not harmless.
 
 ### `MATH-P0-4` — map AGKRS Theorem 3.4 clause by clause against the internal trichotomy
 
-- **Status:** READY
+- **Status:** PARTIAL (2026-08-05) — clause map produced, three of four live
+  cells left `open`; see the fence below
 - **Lane:** P0
 - **Depends:** `QuittingThreeBranchDisjunction`; AGKRS Theorem 3.4 and its two
   sources.
@@ -592,23 +705,40 @@ disjunction is equivalent to the quitting conjecture**, which re-types the
 third branch's sufficiency question as the exact published boundary rather
 than as one open disjunct among three.
 
-**Fence — records now exist, mapping still does not.** Both sources are
-recorded in `references/20-nonzero-sum-equilibrium.md`. Solan–Vieille 2001
-Prop. 2.13 is `[primary]` — full text of both the working paper and the
-published version read; it turned out to be a terminal-payoff/uniform-
-equilibrium **bridge lemma**, not a structural characterization, and its
-numbering does not exist in the 1998 working paper at all (added at
-publication). Simon 2007 is genuinely paywalled and remains `[unverified]`/
-`[secondary]` at best — abstract-level content only, no primary read of
-"Theorem 3" itself. Since Prop. 2.13 is now known *not* to carry the S.1/S.2/
-S.3 content, Simon 2007's Theorem 3 is the more load-bearing of the two for
-the clause map below, and it is the one still unread. Do not consume Theorem
-3.4's *characterization* content before Simon 2007's Theorem 3 is obtained in
-full; the borrowed-premise pattern is only half-defused.
+**Fence — both sources now read; the map is partial, with real gaps, not a
+forced alignment.** Both sources are recorded in
+`references/20-nonzero-sum-equilibrium.md`. Solan–Vieille 2001 Prop. 2.13 is
+`[primary]` — full text of both the working paper and the published version
+read; it turned out to be a terminal-payoff/uniform-equilibrium **bridge
+lemma**, not a structural characterization, and its numbering does not exist
+in the 1998 working paper at all (added at publication). Simon 2007's
+Theorem 3 is now `[primary]` too — full text obtained and read (pp. 1, 5,
+13–20, 24; the PDF's symbol fonts carry no ToUnicode map, so quotes are
+transcribed from rendered page images, not the `pdftotext` layer). Theorem 3
+is confirmed **general** (arbitrary quitting games, not escape-game-scoped),
+proved from §4.1–4.3 before §5's topology is introduced — the earlier
+"plausibly the general principle" inference is now settled, in AGKRS's favor.
+
+The clause map is done and recorded in the same file, in a dedicated
+"clause map" section following the Theorem 3 content: S.1 (stationary
+`ε`-equilibrium) and S.3 (absorbing profile, all players sequentially
+`ε`-perfect) each have a **one-directional, proved** correspondent in the
+repository (zero-solo ⟹ S.1; admissible cycle ⟹ S.3, via a definitional match
+between Simon's `E_ε` and AGKRS's Definition 3.1), but neither is an *iff*,
+S.2 (instant equilibria, keyed to the full stochastic game's min-max value)
+has **no** counterpart anywhere in the repository's current vocabulary, and
+the repository's own third branch (isolated-negative) has no counterpart in
+AGKRS's trichotomy — it is a per-block failure diagnostic internal to the
+repository's cyclic construction, not a residual case Simon's or AGKRS's
+proofs leave open. **The "internal completeness ⟺ quitting conjecture"
+consequence this item flagged does not follow from the map as found, and is
+not claimed.**
 
 **Acceptance.** A clause-by-clause map with each correspondence either proved,
 refuted, or explicitly open, plus wing records for whichever source the
-argument leans on.
+argument leans on. **Met**, with three of four live cells left `open` (S.1
+and S.3 one-directional only; S.2 and isolated-negative uncorrelated) — see
+the wing record for the reasoning behind each verdict.
 
 ### `MATH-P1-4` — formalize the weight whose gap survives faithful unpinning
 

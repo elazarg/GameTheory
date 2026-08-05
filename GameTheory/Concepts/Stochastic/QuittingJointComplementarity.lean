@@ -192,6 +192,48 @@ theorem quittingJointSurvivalWeight_le_quittingOpponentSurvivalWeight
           mul_le_mul_of_nonneg_left hle1 hmass0
       _ = quittingFixedOpponentsContinueMass x who (start + i) := mul_one _
 
+omit [DecidableEq ι] in
+/-- If a joint survival weight from `start` has a positive limit, every
+finite prefix is at least that limit. -/
+theorem le_quittingJointSurvivalWeight_of_tendsto
+    (x : ℕ → ι → PMF Bool) (start : ℕ) {L : ℝ}
+    (hL : Tendsto (quittingJointSurvivalWeight x start) atTop (nhds L)) (n : ℕ) :
+    L ≤ quittingJointSurvivalWeight x start n :=
+  le_of_tendsto' (hL.comp (tendsto_add_atTop_nat n))
+    (fun m => antitone_quittingJointSurvivalWeight x start (Nat.le_add_left n m))
+
+omit [DecidableEq ι] in
+/-- Under a positive limiting joint survival probability, the joint survival
+products after a fixed live cutoff converge to the quotient of the global
+limit by the surviving prefix. -/
+theorem tendsto_quittingJointSurvivalWeight_tail_of_tendsto
+    (x : ℕ → ι → PMF Bool) (start : ℕ) {L : ℝ}
+    (hL : Tendsto (quittingJointSurvivalWeight x start) atTop (nhds L))
+    (hLpos : 0 < L) (n : ℕ) :
+    Tendsto (quittingJointSurvivalWeight x (start + n)) atTop
+      (nhds (L / quittingJointSurvivalWeight x start n)) := by
+  have hprefixNe : quittingJointSurvivalWeight x start n ≠ 0 :=
+    ne_of_gt (lt_of_lt_of_le hLpos (le_quittingJointSurvivalWeight_of_tendsto x start hL n))
+  have hshift : Tendsto (fun fuel => quittingJointSurvivalWeight x start (fuel + n))
+      atTop (nhds L) := hL.comp (tendsto_add_atTop_nat n)
+  have hquotient := hshift.div_const (quittingJointSurvivalWeight x start n)
+  apply hquotient.congr'
+  filter_upwards with fuel
+  rw [show fuel + n = n + fuel by omega, quittingJointSurvivalWeight_add]
+  field_simp
+
+omit [DecidableEq ι] in
+/-- The limiting conditional joint tail-survival probabilities converge to
+one as the live cutoff goes to infinity. -/
+theorem tendsto_quittingJointSurvivalWeight_ratio_one_of_tendsto
+    (x : ℕ → ι → PMF Bool) (start : ℕ) {L : ℝ}
+    (hL : Tendsto (quittingJointSurvivalWeight x start) atTop (nhds L))
+    (hLpos : 0 < L) :
+    Tendsto (fun n => L / quittingJointSurvivalWeight x start n) atTop (nhds 1) := by
+  have hconst : Tendsto (fun _ : ℕ => L) atTop (nhds L) := tendsto_const_nhds
+  have hquotient := hconst.div hL (ne_of_gt hLpos)
+  simpa only [Pi.div_def, div_self hLpos.ne'] using hquotient
+
 /-! ## The tail value -/
 
 omit [DecidableEq ι] in
@@ -309,6 +351,54 @@ theorem abs_quittingComplementarityTailValue_le
     _ ≤ quittingRewardBound reward := by
         nlinarith [quittingRewardBound_nonneg reward,
           quittingJointSurvivalWeight_nonneg x start fuel]
+
+omit [DecidableEq ι] in
+/-- **A sharper tail-value bound, against a known survival limit.**  If the
+joint survival weight from `start` tends to `L`, the tail value is bounded
+by the reward bound times the *surviving* mass `1 - L`, not merely `1`.
+This is what forces the tail value to vanish as `start → ∞` under a
+positive survival limit (Deliverable 2). -/
+theorem abs_quittingComplementarityTailValue_le_of_tendsto
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (x : ℕ → ι → PMF Bool) (i : ι) (start : ℕ) {L : ℝ}
+    (hL : Tendsto (quittingJointSurvivalWeight x start) atTop (nhds L)) :
+    |quittingComplementarityTailValue reward x i start| ≤
+      quittingRewardBound reward * (1 - L) := by
+  have hsummable :=
+    summable_quittingJointSurvivalWeight_mul_quittingRootAbsorbingContribution
+      reward x i start
+  have hnorm : ‖quittingComplementarityTailValue reward x i start‖ ≤
+      ∑' offset, ‖quittingJointSurvivalWeight x start offset *
+        quittingRootAbsorbingContribution reward (x (start + offset)) i‖ :=
+    norm_tsum_le_tsum_norm hsummable.norm
+  simp only [Real.norm_eq_abs] at hnorm
+  refine hnorm.trans (Real.tsum_le_of_sum_range_le (fun offset => abs_nonneg _)
+    (fun fuel => ?_))
+  have hweightGe : L ≤ quittingJointSurvivalWeight x start fuel :=
+    le_of_tendsto' (hL.comp (tendsto_add_atTop_nat fuel))
+      (fun m => antitone_quittingJointSurvivalWeight x start (Nat.le_add_left fuel m))
+  calc ∑ offset ∈ Finset.range fuel,
+        |quittingJointSurvivalWeight x start offset *
+          quittingRootAbsorbingContribution reward (x (start + offset)) i| ≤
+      ∑ offset ∈ Finset.range fuel,
+        quittingJointSurvivalWeight x start offset * quittingRewardBound reward *
+          (1 - quittingStationaryContinueMass (x (start + offset))) :=
+        Finset.sum_le_sum (fun offset _ =>
+          abs_quittingJointSurvivalWeight_mul_quittingRootAbsorbingContribution_le
+            reward x i start offset)
+    _ = quittingRewardBound reward *
+          ∑ offset ∈ Finset.range fuel,
+            quittingJointSurvivalWeight x start offset *
+              (1 - quittingStationaryContinueMass (x (start + offset))) := by
+        rw [Finset.mul_sum]
+        apply Finset.sum_congr rfl
+        intro offset _
+        ring
+    _ = quittingRewardBound reward *
+          (1 - quittingJointSurvivalWeight x start fuel) := by
+        rw [sum_quittingJointSurvivalWeight_mul_one_sub_continueMass]
+    _ ≤ quittingRewardBound reward * (1 - L) := by
+        nlinarith [quittingRewardBound_nonneg reward, hweightGe]
 
 omit [DecidableEq ι] in
 /-- **The tail value solves its own one-step recursion**: the current
@@ -486,6 +576,8 @@ def quittingCyclicBlockValue
     quittingCyclicPeriodicValue 0 (quittingCyclicBlockPath period block)
       period block time who
 
+/-- The trivial path anchors correctly at `terminal`: it lies in the
+zero-cutoff anchored chain set, with a vacuous edge condition. -/
 theorem quittingCyclicBlockPath_mem
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (terminal : Payoff ι)
     (period : ℕ) (block : QuittingFiniteNashBellmanPath ι (period + 1))
@@ -494,6 +586,8 @@ theorem quittingCyclicBlockPath_mem
       quittingFiniteAnchoredNashBellmanChainSet reward terminal 0 :=
   ⟨fun _ => hblock.1.1 0, hblock.2.1, fun time => time.elim0⟩
 
+/-- The block's self-reproduction seam, needed by every periodic-extension
+lemma consumed below. -/
 theorem quittingCyclicBlockPath_hcycle
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (terminal : Payoff ι)
     (period : ℕ) (block : QuittingFiniteNashBellmanPath ι (period + 1))
@@ -530,7 +624,7 @@ theorem isεQuittingRootEndpointNash_quittingCyclicBlockRoots
     (quittingCyclicBlockPath period block) period block hcycle time (Nat.zero_le time)
   have hrootEq := quittingCyclicPeriodicRoots_of_le 0
     (quittingCyclicBlockPath period block) period block time (Nat.zero_le time)
-  show IsεQuittingRootEndpointNash reward
+  change IsεQuittingRootEndpointNash reward
     (fun who => quittingCyclicPeriodicValue 0 (quittingCyclicBlockPath period block)
       period block (time + 1) who) 0
     (quittingCyclicPeriodicRoots 0 (quittingCyclicBlockPath period block) period block time)
@@ -794,7 +888,7 @@ theorem isQuittingJointComplementary_quittingCyclicBlockRoots
   have hgap : quittingComplementarityStageGap reward
       (quittingCyclicBlockRoots period block) i time =
       quittingRootEndpointDifference reward
-        (fun who => quittingCyclicBlockValue period block who (time + 1)) 0
+        (fun who => quittingCyclicBlockValue period block who (time + 1))
         (quittingCyclicBlockRoots period block time) i := by
     unfold quittingComplementarityStageGap quittingRootEndpointDifference
     rw [hveq, hquit, hcontinue]
@@ -802,7 +896,7 @@ theorem isQuittingJointComplementary_quittingCyclicBlockRoots
   have hsum := quittingRoot_continueProbability_add_quitProbability
     (quittingCyclicBlockRoots period block time) i
   set diff := quittingRootEndpointDifference reward
-    (fun who => quittingCyclicBlockValue period block who (time + 1)) 0
+    (fun who => quittingCyclicBlockValue period block who (time + 1))
     (quittingCyclicBlockRoots period block time) i with hdiff
   set quitProb := (quittingCyclicBlockRoots period block time i true).toReal with hqp
   set continueProb := (quittingCyclicBlockRoots period block time i false).toReal with hcp
@@ -811,5 +905,189 @@ theorem isQuittingJointComplementary_quittingCyclicBlockRoots
     nlinarith [hendpoint.2]
   · intro hlt
     nlinarith [hendpoint.1]
+
+/-! ## Deliverable 2: absorption is forced by a positive solo reward -/
+
+/-- If an opponent-only survival weight from `start` has a positive limit,
+every finite prefix is at least that limit. -/
+theorem le_quittingOpponentSurvivalWeight_of_tendsto
+    (x : ℕ → ι → PMF Bool) (who : ι) (start : ℕ) {L : ℝ}
+    (hL : Tendsto (quittingOpponentSurvivalWeight x who start) atTop (nhds L))
+    (n : ℕ) :
+    L ≤ quittingOpponentSurvivalWeight x who start n :=
+  le_of_tendsto' (hL.comp (tendsto_add_atTop_nat n))
+    (fun m => antitone_quittingOpponentSurvivalWeight x who start (Nat.le_add_left n m))
+
+/-- **Positive opponent-only survival forces the per-stage opponent continue
+mass to one.**  The ratio of consecutive convergent partial products of a
+sequence with positive limit tends to one. -/
+theorem tendsto_one_quittingFixedOpponentsContinueMass_of_tendsto
+    (x : ℕ → ι → PMF Bool) (who : ι) (start : ℕ) {L : ℝ}
+    (hL : Tendsto (quittingOpponentSurvivalWeight x who start) atTop (nhds L))
+    (hLpos : 0 < L) :
+    Tendsto (fun n => quittingFixedOpponentsContinueMass x who (start + n))
+      atTop (nhds 1) := by
+  have hnum : Tendsto (fun n => quittingOpponentSurvivalWeight x who start (n + 1))
+      atTop (nhds L) := hL.comp (tendsto_add_atTop_nat 1)
+  have hratio : Tendsto (fun n => quittingOpponentSurvivalWeight x who start (n + 1) /
+      quittingOpponentSurvivalWeight x who start n) atTop (nhds (L / L)) :=
+    hnum.div hL (ne_of_gt hLpos)
+  rw [div_self (ne_of_gt hLpos)] at hratio
+  refine hratio.congr (fun n => ?_)
+  have hne : quittingOpponentSurvivalWeight x who start n ≠ 0 :=
+    ne_of_gt (lt_of_lt_of_le hLpos
+      (le_quittingOpponentSurvivalWeight_of_tendsto x who start hL n))
+  rw [quittingOpponentSurvivalWeight_succ, mul_comm, mul_div_assoc, div_self hne, mul_one]
+
+/-- **Deliverable 2: absorption is forced by a positive solo reward.**  If
+`x` is jointly complementary and some coordinate `i` has a strictly positive
+solo-quit reward, play absorbs almost surely from every starting time.
+
+Proof idea: suppose not, from some `t`.  Then the joint survival weight from
+`t` has a positive limit `L`, hence so does the coarser opponent-only
+survival weight for `i` (joint `≤` opponent, pointwise).  Positive opponent
+survival forces the opponent continue mass to one and, through the
+exceptional-clock estimates, the quit value to the solo reward and the
+continue reward to zero.  It also forces the tail value itself to vanish
+(`abs_quittingComplementarityTailValue_le_of_tendsto`, using that positive
+survival makes the *surviving* mass bound shrink to zero) -- this is the
+step flagged in the design sketch as needing care about the other
+coordinates, and it closes because the tail-value bound is against the
+*joint* survival limit, which the opponent-only argument shows also tends to
+one from `t`.  So the stage gap for `i` tends to the strictly positive solo
+reward, and is eventually positive.  Complementarity then forces `i`'s quit
+probability to be exactly one at that stage, so the joint continue mass
+there is exactly zero, and the joint survival weight is eventually exactly
+zero -- contradicting a positive limit. -/
+theorem quittingJointSurvivalWeight_tendsto_zero_of_isQuittingJointComplementary_of_solo_pos
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (x : ℕ → ι → PMF Bool) (hcomplementary : IsQuittingJointComplementary reward x)
+    (i : ι) (hsolo : 0 < reward (quittingSingletonTerminal i) i) (t : ℕ) :
+    Tendsto (quittingJointSurvivalWeight x t) atTop (nhds 0) := by
+  obtain ⟨L, hL⟩ := exists_tendsto_quittingJointSurvivalWeight x t
+  suffices hLeq : L = 0 by rwa [hLeq] at hL
+  by_contra hL0
+  have hLnonneg : 0 ≤ L :=
+    ge_of_tendsto' hL (fun n => quittingJointSurvivalWeight_nonneg x t n)
+  have hLpos : 0 < L := lt_of_le_of_ne hLnonneg (Ne.symm hL0)
+  have hLi := tendsto_atTop_ciInf (antitone_quittingOpponentSurvivalWeight x i t)
+    (⟨0, by rintro y ⟨n, rfl⟩; exact quittingOpponentSurvivalWeight_nonneg x i t n⟩)
+  set Li := ⨅ n, quittingOpponentSurvivalWeight x i t n with hLidef
+  have hLLi : L ≤ Li := le_of_tendsto_of_tendsto' hL hLi
+    (fun n => quittingJointSurvivalWeight_le_quittingOpponentSurvivalWeight x i t n)
+  have hLipos : 0 < Li := lt_of_lt_of_le hLpos hLLi
+  have hfixedOppTendsto :=
+    tendsto_one_quittingFixedOpponentsContinueMass_of_tendsto x i t hLi hLipos
+  have hbound0 : (0 : ℝ) ≤ quittingRewardBound reward := quittingRewardBound_nonneg reward
+  have hrewardBound : ∀ S, |reward S i| ≤ quittingRewardBound reward :=
+    fun S => abs_reward_le_quittingRewardBound reward S i
+  have honeMinusTendsto : Tendsto
+      (fun n => 1 - quittingFixedOpponentsContinueMass x i (t + n)) atTop (nhds 0) := by
+    have h1 : Tendsto (fun _ : ℕ => (1 : ℝ)) atTop (nhds 1) := tendsto_const_nhds
+    simpa using h1.sub hfixedOppTendsto
+  have hrhsTendsto : Tendsto (fun n => quittingRewardBound reward *
+      (1 - quittingFixedOpponentsContinueMass x i (t + n))) atTop (nhds 0) := by
+    simpa using honeMinusTendsto.const_mul (quittingRewardBound reward)
+  have hquitTendsto : Tendsto (fun n => quittingFixedOpponentsQuitValue reward x i (t + n))
+      atTop (nhds (reward (quittingSingletonTerminal i) i)) := by
+    have hdiffTendsto : Tendsto (fun n => quittingFixedOpponentsQuitValue reward x i (t + n) -
+        quittingFixedOpponentsContinueMass x i (t + n) *
+          reward (quittingSingletonTerminal i) i) atTop (nhds 0) := by
+      apply squeeze_zero_norm (fun n => ?_) hrhsTendsto
+      rw [Real.norm_eq_abs]
+      exact abs_quittingFixedOpponentsQuitValue_sub_continueMass_mul_solo_le reward x i
+        (t + n) (quittingRewardBound reward) hbound0 hrewardBound
+    have hprodTendsto : Tendsto (fun n => quittingFixedOpponentsContinueMass x i (t + n) *
+        reward (quittingSingletonTerminal i) i) atTop
+        (nhds (reward (quittingSingletonTerminal i) i)) := by
+      simpa using hfixedOppTendsto.mul_const (reward (quittingSingletonTerminal i) i)
+    simpa using hdiffTendsto.add hprodTendsto
+  have hcontinueTendsto : Tendsto
+      (fun n => quittingFixedOpponentsContinueReward reward x i (t + n)) atTop (nhds 0) := by
+    apply squeeze_zero_norm (fun n => ?_) hrhsTendsto
+    rw [Real.norm_eq_abs]
+    exact abs_quittingFixedOpponentsContinueReward_le_hazard reward x i (t + n)
+      (quittingRewardBound reward) hbound0 hrewardBound
+  have hratioOne := tendsto_quittingJointSurvivalWeight_ratio_one_of_tendsto x t hL hLpos
+  have hVtendsto : Tendsto
+      (fun n => quittingComplementarityTailValue reward x i (t + n + 1)) atTop (nhds 0) := by
+    have hbound : ∀ n, |quittingComplementarityTailValue reward x i (t + n + 1)| ≤
+        quittingRewardBound reward * (1 - L / quittingJointSurvivalWeight x t (n + 1)) := by
+      intro n
+      have hle := abs_quittingComplementarityTailValue_le_of_tendsto reward x i (t + n + 1)
+        (tendsto_quittingJointSurvivalWeight_tail_of_tendsto x t hL hLpos (n + 1))
+      rwa [show t + n + 1 = t + (n + 1) by ring] at hle
+    have hratioOneShift : Tendsto (fun n => L / quittingJointSurvivalWeight x t (n + 1))
+        atTop (nhds 1) := hratioOne.comp (tendsto_add_atTop_nat 1)
+    have h1 : Tendsto (fun n : ℕ => (1 : ℝ) - L / quittingJointSurvivalWeight x t (n + 1))
+        atTop (nhds 0) := by
+      simpa using (tendsto_const_nhds (α := ℕ) (x := (1 : ℝ))).sub hratioOneShift
+    have hrhsV : Tendsto (fun n => quittingRewardBound reward *
+        (1 - L / quittingJointSurvivalWeight x t (n + 1))) atTop (nhds 0) := by
+      simpa using h1.const_mul (quittingRewardBound reward)
+    exact squeeze_zero_norm (fun n => by rw [Real.norm_eq_abs]; exact hbound n) hrhsV
+  have hcontinueMassBounded : Tendsto
+      (fun n => quittingFixedOpponentsContinueMass x i (t + n)) atTop (nhds 1) := hfixedOppTendsto
+  have hgapTendsto : Tendsto
+      (fun n => quittingComplementarityStageGap reward x i (t + n)) atTop
+      (nhds (reward (quittingSingletonTerminal i) i)) := by
+    have hproduct : Tendsto (fun n => quittingFixedOpponentsContinueMass x i (t + n) *
+        quittingComplementarityTailValue reward x i (t + n + 1)) atTop (nhds 0) := by
+      have := hcontinueMassBounded.mul hVtendsto
+      simpa using this
+    have hcombine : Tendsto (fun n => quittingFixedOpponentsQuitValue reward x i (t + n) -
+        (quittingFixedOpponentsContinueReward reward x i (t + n) +
+          quittingFixedOpponentsContinueMass x i (t + n) *
+            quittingComplementarityTailValue reward x i (t + n + 1))) atTop
+        (nhds (reward (quittingSingletonTerminal i) i)) := by
+      have := hquitTendsto.sub (hcontinueTendsto.add hproduct)
+      simpa using this
+    simpa [quittingComplementarityStageGap] using hcombine
+  obtain ⟨n, hn⟩ := (hgapTendsto.eventually
+    (eventually_gt_nhds hsolo)).exists
+  have hquitOne : (x (t + n) i true).toReal = 1 := by
+    by_contra hne
+    have hlt : (x (t + n) i true).toReal < 1 :=
+      lt_of_le_of_ne (ENNReal.toReal_mono ENNReal.one_ne_top (PMF.coe_le_one _ _) |>.trans_eq
+        (by norm_num)) hne
+    exact absurd ((hcomplementary (t + n) i).2 hlt) (not_le.mpr hn)
+  have hcontinueZero : (x (t + n) i false).toReal = 0 := by
+    have hsum := quittingRoot_continueProbability_add_quitProbability (x (t + n)) i
+    linarith [hquitOne]
+  have hmassZero : quittingStationaryContinueMass (x (t + n)) = 0 := by
+    rw [quittingStationaryContinueMass_eq_deletedContinueMass_mul_own (x (t + n)) i,
+      hcontinueZero, mul_zero]
+  have hweightZero : quittingJointSurvivalWeight x t (n + 1) = 0 := by
+    rw [quittingJointSurvivalWeight_succ, hmassZero, mul_zero]
+  have hLzero : L = 0 := by
+    have hLle := le_quittingJointSurvivalWeight_of_tendsto x t hL (n + 1)
+    rw [hweightZero] at hLle
+    linarith [hLnonneg]
+  exact hL0 hLzero
+
+omit [DecidableEq ι] in
+/-- The joint survival weight from `t` is exactly the pre-existing
+`quittingSurvivalPrefix` of the shifted row sequence. -/
+theorem quittingJointSurvivalWeight_eq_quittingSurvivalPrefix
+    (x : ℕ → ι → PMF Bool) (t fuel : ℕ) :
+    quittingJointSurvivalWeight x t fuel =
+      quittingSurvivalPrefix (fun n => x (t + n)) fuel := by
+  rw [quittingJointSurvivalWeight_eq_prod, quittingSurvivalPrefix]
+
+/-- **Deliverable 2, restated against the pre-existing complete-absorption
+vocabulary.**  Under joint complementarity and a positive solo reward, the
+row sequence shifted to start at any time `t` is completely absorbing in the
+sense of `IsCompletelyAbsorbing`. -/
+theorem isCompletelyAbsorbing_of_isQuittingJointComplementary_of_solo_pos
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (x : ℕ → ι → PMF Bool) (hcomplementary : IsQuittingJointComplementary reward x)
+    (i : ι) (hsolo : 0 < reward (quittingSingletonTerminal i) i) (t : ℕ) :
+    IsCompletelyAbsorbing (fun n => x (t + n)) := by
+  unfold IsCompletelyAbsorbing
+  rw [show quittingSurvivalPrefix (fun n => x (t + n)) =
+      quittingJointSurvivalWeight x t from
+      funext (fun fuel => (quittingJointSurvivalWeight_eq_quittingSurvivalPrefix x t fuel).symm)]
+  exact quittingJointSurvivalWeight_tendsto_zero_of_isQuittingJointComplementary_of_solo_pos
+    reward x hcomplementary i hsolo t
 
 end GameTheory
