@@ -27,6 +27,7 @@ noncomputable section
 namespace GameTheory
 
 open StochasticGame Math.Probability Math.PMFProduct
+open QuittingSureSetOwnerRepair
 
 namespace QuittingSharedThreePlayer
 
@@ -64,17 +65,20 @@ def reward : {S : Finset Player // S.Nonempty} → Payoff Player :=
 
 @[simp] theorem reward_nonpos (S : {S : Finset Player // S.Nonempty})
     (who : Player) : reward S who ≤ 0 := by
-  simp [reward]
+  unfold reward
+  split <;> norm_num
 
 @[simp] theorem neg_one_le_reward
     (S : {S : Finset Player // S.Nonempty}) (who : Player) :
     -1 ≤ reward S who := by
-  simp [reward]
+  unfold reward
+  split <;> norm_num
 
 @[simp] theorem abs_reward_le_one
     (S : {S : Finset Player // S.Nonempty}) (who : Player) :
     |reward S who| ≤ 1 := by
-  simp [reward]
+  unfold reward
+  split <;> norm_num
 
 /-! ## A two-coordinate product expectation -/
 
@@ -94,21 +98,23 @@ theorem expect_pmfPi_two_coordinates
           (root second).bind (fun b => PMF.pure (a, b))) := by
     let g : Bool → (ι → Bool) → PMF (Bool × Bool) :=
       fun a action => PMF.pure (a, action second)
-    have hg : Ignores₂ first g := by
+    have hg : Ignores₂ (A := fun _ : ι => Bool) first g := by
       intro a action replacement
-      simp [g, Function.update, hne]
+      simp [g, Function.update, hne.symm]
     calc
       (pmfPi root).bind
           (fun action => PMF.pure (action first, action second)) =
           (root first).bind (fun a =>
             (pmfPi root).bind (fun action => PMF.pure (a, action second))) := by
-        simpa [g] using pmfPi_bind_factor root first g hg
+        simpa [g] using
+          (pmfPi_bind_factor (A := fun _ : ι => Bool) root first g hg)
       _ = (root first).bind (fun a =>
           (root second).bind (fun b => PMF.pure (a, b))) := by
         apply congrArg (fun k => (root first).bind k)
         funext a
-        simpa using pmfPi_bind_eval root second
-          (fun b => PMF.pure (a, b))
+        simpa using
+          (pmfPi_bind_eval (A := fun _ : ι => Bool) root second
+            (fun b => PMF.pure (a, b)))
   calc
     expect (pmfPi root) (fun action => f (action first) (action second)) =
         expect ((pmfPi root).bind
@@ -136,9 +142,18 @@ theorem expect_pmfPi_badEvent
     expect (pmfPi root) (fun action =>
         if action first = true ∧ action second = false then (-1 : ℝ) else 0) =
       -(root first true).toReal * (root second false).toReal := by
-  rw [expect_pmfPi_two_coordinates root hne]
-  simp [expect_eq_sum, Fintype.sum_bool]
-  ring
+  calc
+    expect (pmfPi root) (fun action =>
+        if action first = true ∧ action second = false then (-1 : ℝ) else 0) =
+      expect (root first) (fun a =>
+        expect (root second) (fun b =>
+          if a = true ∧ b = false then (-1 : ℝ) else 0)) := by
+        simpa using
+          (expect_pmfPi_two_coordinates root hne
+            (fun a b => if a = true ∧ b = false then (-1 : ℝ) else 0))
+    _ = -(root first true).toReal * (root second false).toReal := by
+      simp [expect_eq_sum, Fintype.sum_bool]
+      ring
 
 /-! ## Exact one-stage coefficients -/
 
@@ -153,11 +168,26 @@ theorem quittingRootPayoff_eq_badEvent
     have hquit : (quittingQuitters action).Nonempty := by
       refine ⟨next who, ?_⟩
       simpa [quittingQuitters] using hbad.1
-    simp [quittingRootPayoff, hquit, reward, quittingQuitters, hbad]
+    unfold quittingRootPayoff
+    rw [dif_pos hquit]
+    unfold reward
+    rw [if_pos]
+    constructor
+    · simpa [quittingQuitters] using hbad.1
+    · simpa [quittingQuitters] using hbad.2
   · rw [if_neg hbad]
     by_cases hquit : (quittingQuitters action).Nonempty
-    · simp [quittingRootPayoff, hquit, reward, quittingQuitters, hbad]
-    · simp [quittingRootPayoff, hquit]
+    · unfold quittingRootPayoff
+      rw [dif_pos hquit]
+      unfold reward
+      rw [if_neg]
+      intro hreward
+      apply hbad
+      constructor
+      · simpa [quittingQuitters] using hreward.1
+      · simpa [quittingQuitters] using hreward.2
+    · unfold quittingRootPayoff
+      rw [dif_neg hquit]
 
 /-- Quitting now has value `-x_next * (1-x_other)`. -/
 theorem quittingStationaryFixedOpponentsQuitValue_eq
@@ -184,8 +214,8 @@ theorem quittingFixedOpponentsQuitValue_eq
     quittingFixedOpponentsQuitValue reward roots who time =
       -(roots time (next who) true).toReal *
         (roots time (other who) false).toReal := by
-  simpa [quittingStationaryFixedOpponentsQuitValue] using
-    quittingStationaryFixedOpponentsQuitValue_eq (roots time) who
+  rw [← quittingStationaryFixedOpponentsQuitValue_apply reward roots who time]
+  exact quittingStationaryFixedOpponentsQuitValue_eq (roots time) who
 
 /-! ## Individual punishment floors -/
 
@@ -280,7 +310,7 @@ theorem exists_neg_quarter_le_quittingBestReplyValue
     rw [quittingTerminalPayoff_update_pureTimeBehaviorStrategy,
       quittingRootSequencePureTimeTerminalValue_some_eq]
     simp [quittingLiveLedgerAccum, quittingOpponentSurvivalWeight,
-      quittingFixedOpponentsQuitValue_eq]
+      quittingFixedOpponentsQuitValue_eq, roots]
   rw [hpayoff] at hreply
   linarith
 
