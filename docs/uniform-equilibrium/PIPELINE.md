@@ -1897,12 +1897,30 @@ replaces the exact-cycle branch wholesale.
 
 ### `MATH-P0-9` — the lock/unlock dichotomy for orbit variation
 
-- **Status:** IN FLIGHT — **this is the open core, and the project's point.**
+- **Status:** ANSWERED IN PART (Q159) — **the open core, reshaped.**
 - **Lane:** P0
-- **Depends:** the label lock (in flight), transported leverage, the
+- **Depends:** the label lock (`L`), transported leverage, the
   survival-window landing.
-- **Record:** this file; **Question 159 is filed on it** — orbit production
-  with rationality maintenance, the general existence engine.
+- **Record:** this file; Q159; the two seals
+  [`WeightedOneStageNashCannotPriceMotion`](../../ideas/UniformEquilibriumLiterature/WeightedOneStageNashCannotPriceMotion.md)
+  and
+  [`SingletonFaceCirculationsSteerOrbits`](../../ideas/QuittingGameConjecture/SingletonFaceCirculationsSteerOrbits.md).
+
+**Q159's verdict reshapes this row.** The dichotomy as posed was the wrong
+axis: the granted motion constant is **false on the weighted one-stage
+correspondence** (tremble counterexample at the scaled cyclic weight), so
+quit mass and variation decouple there, and every future motion argument
+must declare its correspondence — support-perfect (constant plausible,
+membership transfer from global equilibria unproven) or weighted (no motion
+floor). Locks split into motion locks (control only overlap mass) and sealed
+locks (imply an instant branch). The **constructive replacement** is the
+singleton-face circulation theorem: a finite, LP-checkable-at-length-one
+certificate yielding arbitrarily-large-quit-mass rational orbits, uniform in
+`n`, support-perfect, hence — through the compiler — a **new existence
+class**. Next moves: machine-check (in flight); run the certificate check
+over Q160's family; the missing branch (strict local continuation rests with
+diffuse trembles) and the support-purification transfer are the two named
+open steps toward all weights.
 
 **Objective.** Decide the conjecture: on a weight with no stationary and no
 instant approximate equilibria, either some coordinate's value can lock (and a
