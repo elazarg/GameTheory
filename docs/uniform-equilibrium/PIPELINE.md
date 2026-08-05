@@ -532,17 +532,19 @@ disjunct's status corrected either way.
 
 - **Status:** READY
 - **Lane:** P0 (negative lane, complements `NEG-P0-1`)
-- **Depends:** Simon 2007 Theorem 3 `(i)⇒(iii)` — **which carries the paper's one
-  uncertified proof step** (farm defect register №13): the existence of a stage
-  whose no-quitting survival lands in `[θρ/3, θ/3]` silently needs that
-  per-stage survival cannot jump across the interval, and that is not spelled
-  out in the paper. Any use of this row's criterion inherits that step until it
-  is repaired or reproved. Defect №12 (`(iii)⇒(ii)`, the asserted constant
-  `1/2`) is judged repairable and also touches the equivalence. **Question 158
-  is filed on exactly this step** — repair with explicit constants or refute —
-  including the worked-out failure of the obvious conditional-scaling repair
-  (the jump destroys the reach probability that would forbid the jump) and the
-  supplementary machine-checked facts a solver gets beyond the paper.
+- **Depends:** Simon 2007 Theorem 3 `(i)⇒(iii)` — whose one uncertified step
+  (farm defect register №13, the survival-window landing) **is now repaired**
+  (`M [reported]`, Q158) by *continuation lifting*: replace the next-stage
+  continuation coordinatewise by `max{r_{i+1,j}, χ_j}`, rational by
+  construction, against which the row is still `ε/S_i`-Nash — the deviation
+  conditions on reaching stage `i`, not `i+1`, so the circularity that blocked
+  the naive repair never arises. General form: `S_i ≥ ε/ρ ⟹ c(p_i) ≥ ρ`, and
+  the landing holds for any window `[ρT, T]` under `ρT ≤ 1`, `ε ≤ ρT`,
+  `S_∞ < ρT`; the paper's own accuracy carries 4× slack. The inheritance is
+  discharged pending formalization; see
+  [`SurvivalWindowLandingByContinuationLifting`](../../ideas/UniformEquilibriumLiterature/SurvivalWindowLandingByContinuationLifting.md).
+  Defect №12 (`(iii)⇒(ii)`, the asserted constant `1/2`) remains open and
+  still touches the equivalence.
 - **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §2
 
 **Objective.** Adopt the equivalent orbit-side certificate for refutation:
