@@ -2,7 +2,20 @@
 
 | Status | Provenance | Consumer | Falsifier |
 | --- | --- | --- | --- |
-| `OPEN`, maturity `M [reported]`, P0 | Q157 | the action-padding foundation (`LEAN-F0-1`), the legality chain | a value-preserving transfer for the separating system, or an error in its deviation analysis |
+| `OPEN`, maturity `L` (separation) / `M [reported]` (minimality, repair), P0 | Q157; `PaddedDuplicateLotterySeparation.lean` | the action-padding foundation (`LEAN-F0-1`), the legality chain | an error in the machine-checked deviation analysis |
+
+**Machine-checked (`L`).** The padded game attains `(½,½)` as an exact
+equilibrium of every horizon `≥ 2`; no legal profile attains it; and the
+transfer-shaped corollary — the unconditional padding direction is false as a
+universally quantified statement — all finite-horizon, no limits. Legal-only
+deviations make the impossibility strictly stronger. **One encoding
+distinction**: the repository's padding retracts illegal actions onto an
+*opaque* classically-chosen fallback, so the abstract two-state witness is not
+expressible there; the repo-level witness uses three states (a lottery state
+with singleton legal set neutralizing the fallback, plus a decision state).
+So `|S| = 2` is sharp in the abstract setting, `|S| = 3` is what the
+repository's own padding forces — the gap is a fact about `Classical.choose`,
+not about the mathematics.
 
 ## The theorem
 
