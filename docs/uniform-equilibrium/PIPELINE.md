@@ -2011,8 +2011,9 @@ the question.
   (all triples zeroed made all-quit a period-one exact subgame-perfect
   equilibrium at the true min-max, everywhere; a lone continuer must face a
   nondegenerate `(n−1)`-coalition payoff, and the sparsity shrink went one
-  size too far — the vacuity rule now covers game families). **Question 161
-  files the repaired family** — every coalition pays its outsiders `1` — with
+  size too far — the vacuity rule now covers game families). **The repaired
+  family is filed as a followup in the Q160 thread** (no separate question
+  file) — every coalition pays its outsiders `1` — with
   the trivial witnesses probed in authoring and recorded as supplied facts;
   the open region is `x > 0`. Salvaged from Q160's answer, methods not
   values: the true-min-max computation, the symmetric-stationary
