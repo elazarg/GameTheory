@@ -198,3 +198,12 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.QuittingSwitchingResidueRegression.collisionRate_ge_of_balance_nonneg
 #print axioms GameTheory.QuittingSwitchingResidueRegression.not_balance_nonneg_of_gain_nonpos
 #print axioms GameTheory.QuittingSwitchingResidueRegression.fixedGap_ge_half
+
+-- ============================================================================
+-- The game-layer bridge: the switching-residue regression table has no sure
+-- exit set at all.
+-- ============================================================================
+
+#print axioms GameTheory.QuittingSwitchingResidueRegressionBridge.quittingSetReward_gameReward
+#print axioms GameTheory.QuittingSwitchingResidueRegressionBridge.not_isQuittingSureExitSet_of_sureExitFails
+#print axioms GameTheory.QuittingSwitchingResidueRegressionBridge.not_isQuittingSureExitSet_gameReward
