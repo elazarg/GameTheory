@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.QuittingPureTimeExtremality
 import GameTheory.Concepts.Stochastic.QuittingExceptionalHazard
+import Math.SurvivalProduct
 
 /-!
 # Bellman residual telescope along a quitting live path
@@ -210,6 +211,17 @@ def quittingOpponentSurvivalWeight
     (start fuel : ℕ) : ℝ :=
   ∏ offset ∈ Finset.range fuel,
     quittingFixedOpponentsContinueMass roots who (start + offset)
+
+/-- **Bridge to the canonical survival product.**  `quittingOpponentSurvivalWeight`
+is `Math.survivalProduct` at the *deleted* (opponent-restricted) continue mass
+-- the genuinely distinct sibling of the joint-side names, not another name
+for the same number -- see the module docstring of `Math.SurvivalProduct` for
+the full census this bridges into. -/
+theorem quittingOpponentSurvivalWeight_eq_survivalProduct
+    (roots : ℕ → ι → PMF Bool) (who : ι) (start fuel : ℕ) :
+    quittingOpponentSurvivalWeight roots who start fuel =
+      Math.survivalProduct (quittingFixedOpponentsContinueMass roots who) start fuel :=
+  rfl
 
 /-- Every finite opponent-survival weight is nonnegative. -/
 theorem quittingOpponentSurvivalWeight_nonneg

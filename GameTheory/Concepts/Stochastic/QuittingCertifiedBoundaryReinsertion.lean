@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingFiniteDynamicDebtSemantics
+import Math.SurvivalProduct
 
 /-!
 # Scalar core of certified quitting-boundary reinsertion
@@ -107,6 +108,21 @@ theorem quittingFiniteFullSurvivalWeight_self_eq_product
   intro offset _
   exact quittingFiniteFullContinueMass_self_eq_stationaryContinueMass
     roots who (start + offset)
+
+/-- **Bridge to the canonical survival product.**  At the prescribed
+player's own root marginal as hazard, `quittingFiniteFullSurvivalWeight`
+collapses to `Math.survivalProduct` at the stationary continue mass -- the
+same target `quittingJointSurvivalWeight_eq_survivalProduct` and
+`quittingSurvivalPrefix_eq_survivalProduct` reach independently.  See the
+module docstring of `Math.SurvivalProduct` for the full census this bridges
+into. -/
+theorem quittingFiniteFullSurvivalWeight_self_eq_survivalProduct
+    (roots : ℕ → ι → PMF Bool) (who : ι) (start fuel : ℕ) :
+    quittingFiniteFullSurvivalWeight roots who
+        (fun time => roots time who) start fuel =
+      Math.survivalProduct (fun t => quittingStationaryContinueMass (roots t))
+        start fuel :=
+  quittingFiniteFullSurvivalWeight_self_eq_product roots who start fuel
 
 /-- Full-profile survival is bounded by opponent-only survival. -/
 theorem quittingFiniteFullSurvivalWeight_le_opponentSurvivalWeight

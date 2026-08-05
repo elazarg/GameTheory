@@ -8,6 +8,7 @@ import GameTheory.Concepts.Stochastic.QuittingCycleIsolatedCoordinate
 import GameTheory.Concepts.Stochastic.QuittingSurvivalPrefixBridge
 import GameTheory.Concepts.Stochastic.QuittingMarkedTimeAdvance
 import GameTheory.Concepts.Stochastic.QuittingNashBellmanClockReduction
+import Math.SurvivalProduct
 
 /-!
 # The seam price: exact residual formula, transport factor, and the deviation no-go
@@ -89,6 +90,12 @@ here, only that the composite of affine maps is affine. -/
 `[start, start + fuel)`: the window's survival factor. -/
 def blockSurvival (C : ℕ → ℝ) (start fuel : ℕ) : ℝ :=
   ∏ offset ∈ Finset.range fuel, C (start + offset)
+
+/-- **Bridge to the canonical survival product.**  `blockSurvival` is
+`Math.survivalProduct` by the identical defining formula -- see the module
+docstring of `Math.SurvivalProduct` for the full census this bridges into. -/
+theorem blockSurvival_eq_survivalProduct (C : ℕ → ℝ) (start fuel : ℕ) :
+    blockSurvival C start fuel = Math.survivalProduct C start fuel := rfl
 
 @[simp] theorem blockSurvival_zero (C : ℕ → ℝ) (start : ℕ) :
     blockSurvival C start 0 = 1 := by

@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingBellmanTelescope
+import Math.SurvivalProduct
 
 /-!
 # Finite exceptional-clock Bellman tail
@@ -247,6 +248,16 @@ theorem quittingFiniteContinueWeight_eq_product
       simp only [quittingFiniteContinueWeight, Finset.prod_range_succ', ih]
       simp only [Nat.add_left_comm, Nat.add_comm]
       exact mul_comm _ _
+
+/-- **Bridge to the canonical survival product.**  `quittingFiniteContinueWeight`
+is exactly `Math.survivalProduct` at the same continue-mass function -- see
+the module docstring of `Math.SurvivalProduct` for the full census this
+bridges into. -/
+theorem quittingFiniteContinueWeight_eq_survivalProduct
+    (continueMass : ℕ → ℝ) (start fuel : ℕ) :
+    quittingFiniteContinueWeight continueMass start fuel =
+      Math.survivalProduct continueMass start fuel :=
+  quittingFiniteContinueWeight_eq_product continueMass start fuel
 
 /-- The generic finite continue weight specializes to the opponent-survival
 weight used by the Bellman telescope. -/

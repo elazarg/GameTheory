@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.QuittingSureSetRepairCounterexample
 import GameTheory.Concepts.Stochastic.QuittingBoundedSurgeryDescentCounterexample
+import Math.SurvivalProduct
 
 /-!
 # A completely absorbing inverse iterate with unbounded values
@@ -130,6 +131,15 @@ variable {ι : Type} [Fintype ι]
 `N` rows all fail to absorb. -/
 def quittingSurvivalPrefix (rows : ℕ → ι → PMF Bool) (N : ℕ) : ℝ :=
   ∏ t ∈ Finset.range N, quittingStationaryContinueMass (rows t)
+
+/-- **Bridge to the canonical survival product.**  `quittingSurvivalPrefix`
+is `Math.survivalProduct` at the stationary continue mass, hardwired to
+`start = 0` -- see the module docstring of `Math.SurvivalProduct` for the
+full census this bridges into. -/
+theorem quittingSurvivalPrefix_eq_survivalProduct (rows : ℕ → ι → PMF Bool) (N : ℕ) :
+    quittingSurvivalPrefix rows N =
+      Math.survivalProduct (fun t => quittingStationaryContinueMass (rows t)) 0 N := by
+  simp [quittingSurvivalPrefix, Math.survivalProduct]
 
 @[simp] theorem quittingSurvivalPrefix_zero (rows : ℕ → ι → PMF Bool) :
     quittingSurvivalPrefix rows 0 = 1 := by

@@ -8,6 +8,7 @@ import GameTheory.Concepts.Stochastic.QuittingExceptionalBellmanTail
 import GameTheory.Concepts.Stochastic.QuittingCyclicPeriodicExtension
 import GameTheory.Concepts.Stochastic.QuittingUnboundedInverseIterate
 import GameTheory.Concepts.Stochastic.QuittingSurvivalPrefixBridge
+import Math.SurvivalProduct
 
 /-!
 # Joint infinite-horizon complementarity for quitting games
@@ -35,8 +36,17 @@ infinite-horizon notion, built from the existing single-stage machinery
   stage gap and the joint complementarity predicate.
 * `isQuittingJointComplementary_quittingCyclicBlockRoots`: the compatibility
   bridge from a periodic `IsQuittingCyclicContinuationBlock`.
-* `quittingJointSurvivalWeight_tendsto_zero_of_isQuittingJointComplementary_of_solo_pos`:
-  Deliverable 2, absorption forced by a positive solo reward.
+* `IsQuittingUpperComplementaryAt` and `IsQuittingLowerComplementaryAt`: the
+  minimal one-coordinate, single-clause hypotheses whose conjunction (at one
+  coordinate) is exactly `IsQuittingJointComplementary` restricted to that
+  coordinate.  `IsQuittingUpperComplementaryAt` alone is strictly weaker and
+  is what Deliverable 2 actually consumes, so it also covers unilateral
+  best-response tails, one-sided `ε`-equilibria, and non-equilibrium plans.
+* `quittingJointSurvivalWeight_tendsto_zero_of_isQuittingUpperComplementaryAt_of_solo_pos`
+  and `isCompletelyAbsorbing_of_isQuittingUpperComplementaryAt_of_solo_pos`:
+  Deliverable 2, absorption forced by a positive solo reward, from the
+  minimal hypothesis.  `..._of_isQuittingJointComplementary_of_solo_pos`
+  versions of both are kept as corollaries under the full joint predicate.
 -/
 
 set_option autoImplicit false
@@ -99,6 +109,16 @@ theorem quittingJointSurvivalWeight_eq_prod
       ∏ offset ∈ Finset.range fuel,
         quittingStationaryContinueMass (x (start + offset)) :=
   quittingFiniteContinueWeight_eq_product _ start fuel
+
+omit [DecidableEq ι] in
+/-- **Bridge to the canonical survival product.**  `quittingJointSurvivalWeight`
+is `Math.survivalProduct` at the stationary continue mass -- see the module
+docstring of `Math.SurvivalProduct` for the full census this bridges into. -/
+theorem quittingJointSurvivalWeight_eq_survivalProduct
+    (x : ℕ → ι → PMF Bool) (start fuel : ℕ) :
+    quittingJointSurvivalWeight x start fuel =
+      Math.survivalProduct (fun t => quittingStationaryContinueMass (x t)) start fuel :=
+  quittingJointSurvivalWeight_eq_prod x start fuel
 
 omit [DecidableEq ι] in
 /-- Adding one stage multiplies survival by that stage's joint continue
@@ -939,9 +959,56 @@ theorem tendsto_one_quittingFixedOpponentsContinueMass_of_tendsto
       (le_quittingOpponentSurvivalWeight_of_tendsto x who start hL n))
   rw [quittingOpponentSurvivalWeight_succ, mul_comm, mul_div_assoc, div_self hne, mul_one]
 
-/-- **Deliverable 2: absorption is forced by a positive solo reward.**  If
-`x` is jointly complementary and some coordinate `i` has a strictly positive
-solo-quit reward, play absorbs almost surely from every starting time.
+/-- **The minimal complementarity hypothesis absorption actually needs.**
+Only the sub-certain-quit ("upper") clause of `IsQuittingJointComplementary`'s
+two clauses, and only at the single coordinate `i` -- not the positive-quit
+clause, and not any other coordinate's clauses at all.  Strictly weaker than
+joint complementarity restricted to `i`, so it also covers, e.g., a
+unilateral best-response tail for `i` alone, a one-sided `ε`-equilibrium at
+`i`, or any non-equilibrium plan that merely never leaves a positive stage
+gap at a sub-certain quit for `i` -- none of which satisfy the full joint
+predicate. -/
+def IsQuittingUpperComplementaryAt
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (x : ℕ → ι → PMF Bool) (i : ι) : Prop :=
+  ∀ time, (x time i true).toReal < 1 →
+    quittingComplementarityStageGap reward x i time ≤ 0
+
+/-- The symmetric ("lower") companion of `IsQuittingUpperComplementaryAt`:
+the positive-quit clause of `IsQuittingJointComplementary`'s two clauses, at
+the single coordinate `i`.  Together, `IsQuittingLowerComplementaryAt reward
+x i` and `IsQuittingUpperComplementaryAt reward x i` are exactly
+`IsQuittingJointComplementary reward x` restricted to coordinate `i`. -/
+def IsQuittingLowerComplementaryAt
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (x : ℕ → ι → PMF Bool) (i : ι) : Prop :=
+  ∀ time, 0 < (x time i true).toReal →
+    0 ≤ quittingComplementarityStageGap reward x i time
+
+/-- Joint complementarity, restricted to one coordinate, is at least as
+strong as the minimal upper-clause hypothesis above. -/
+theorem isQuittingUpperComplementaryAt_of_isQuittingJointComplementary
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (x : ℕ → ι → PMF Bool) (hcomplementary : IsQuittingJointComplementary reward x)
+    (i : ι) :
+    IsQuittingUpperComplementaryAt reward x i :=
+  fun time hlt => (hcomplementary time i).2 hlt
+
+/-- Joint complementarity, restricted to one coordinate, is at least as
+strong as the lower-clause hypothesis above. -/
+theorem isQuittingLowerComplementaryAt_of_isQuittingJointComplementary
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (x : ℕ → ι → PMF Bool) (hcomplementary : IsQuittingJointComplementary reward x)
+    (i : ι) :
+    IsQuittingLowerComplementaryAt reward x i :=
+  fun time hpos => (hcomplementary time i).1 hpos
+
+/-- **Deliverable 2: absorption is forced by a positive solo reward, from the
+minimal upper-clause hypothesis alone.**  If the sub-certain-quit stage-gap
+clause holds at coordinate `i` (`IsQuittingUpperComplementaryAt`) and `i`'s
+solo-quit reward is strictly positive, play absorbs almost surely from every
+starting time -- no hypothesis at any other coordinate, and no positive-quit
+clause at `i` either.
 
 Proof idea: suppose not, from some `t`.  Then the joint survival weight from
 `t` has a positive limit `L`, hence so does the coarser opponent-only
@@ -955,14 +1022,17 @@ step flagged in the design sketch as needing care about the other
 coordinates, and it closes because the tail-value bound is against the
 *joint* survival limit, which the opponent-only argument shows also tends to
 one from `t`.  So the stage gap for `i` tends to the strictly positive solo
-reward, and is eventually positive.  Complementarity then forces `i`'s quit
-probability to be exactly one at that stage, so the joint continue mass
+reward, and is eventually positive, hence eventually strictly above the
+upper clause's threshold.  Since the clause only *forces* a nonpositive gap
+when the quit probability is sub-certain, a positive gap there forces `i`'s
+quit probability to be exactly one at that stage, so the joint continue mass
 there is exactly zero, and the joint survival weight is eventually exactly
 zero -- contradicting a positive limit. -/
-theorem quittingJointSurvivalWeight_tendsto_zero_of_isQuittingJointComplementary_of_solo_pos
+theorem quittingJointSurvivalWeight_tendsto_zero_of_isQuittingUpperComplementaryAt_of_solo_pos
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (x : ℕ → ι → PMF Bool) (hcomplementary : IsQuittingJointComplementary reward x)
-    (i : ι) (hsolo : 0 < reward (quittingSingletonTerminal i) i) (t : ℕ) :
+    (x : ℕ → ι → PMF Bool) (i : ι)
+    (hcomplementary : IsQuittingUpperComplementaryAt reward x i)
+    (hsolo : 0 < reward (quittingSingletonTerminal i) i) (t : ℕ) :
     Tendsto (quittingJointSurvivalWeight x t) atTop (nhds 0) := by
   obtain ⟨L, hL⟩ := exists_tendsto_quittingJointSurvivalWeight x t
   suffices hLeq : L = 0 by rwa [hLeq] at hL
@@ -1050,7 +1120,7 @@ theorem quittingJointSurvivalWeight_tendsto_zero_of_isQuittingJointComplementary
     have hlt : (x (t + n) i true).toReal < 1 :=
       lt_of_le_of_ne (ENNReal.toReal_mono ENNReal.one_ne_top (PMF.coe_le_one _ _) |>.trans_eq
         (by norm_num)) hne
-    exact absurd ((hcomplementary (t + n) i).2 hlt) (not_le.mpr hn)
+    exact absurd (hcomplementary (t + n) hlt) (not_le.mpr hn)
   have hcontinueZero : (x (t + n) i false).toReal = 0 := by
     have hsum := quittingRoot_continueProbability_add_quitProbability (x (t + n)) i
     linarith [hquitOne]
@@ -1065,6 +1135,19 @@ theorem quittingJointSurvivalWeight_tendsto_zero_of_isQuittingJointComplementary
     linarith [hLnonneg]
   exact hL0 hLzero
 
+/-- **Deliverable 2, full joint complementarity.**  Corollary of the minimal
+one-coordinate result above, via
+`isQuittingUpperComplementaryAt_of_isQuittingJointComplementary`.  Kept so
+every existing consumer of the strong hypothesis keeps working unchanged. -/
+theorem quittingJointSurvivalWeight_tendsto_zero_of_isQuittingJointComplementary_of_solo_pos
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (x : ℕ → ι → PMF Bool) (hcomplementary : IsQuittingJointComplementary reward x)
+    (i : ι) (hsolo : 0 < reward (quittingSingletonTerminal i) i) (t : ℕ) :
+    Tendsto (quittingJointSurvivalWeight x t) atTop (nhds 0) :=
+  quittingJointSurvivalWeight_tendsto_zero_of_isQuittingUpperComplementaryAt_of_solo_pos
+    reward x i (isQuittingUpperComplementaryAt_of_isQuittingJointComplementary reward x
+      hcomplementary i) hsolo t
+
 omit [DecidableEq ι] in
 /-- The joint survival weight from `t` is exactly the pre-existing
 `quittingSurvivalPrefix` of the shifted row sequence. -/
@@ -1075,19 +1158,35 @@ theorem quittingJointSurvivalWeight_eq_quittingSurvivalPrefix
   rw [quittingJointSurvivalWeight_eq_prod, quittingSurvivalPrefix]
 
 /-- **Deliverable 2, restated against the pre-existing complete-absorption
-vocabulary.**  Under joint complementarity and a positive solo reward, the
-row sequence shifted to start at any time `t` is completely absorbing in the
+vocabulary, from the minimal upper-clause hypothesis alone.**  Under the
+sub-certain-quit stage-gap clause at coordinate `i`
+(`IsQuittingUpperComplementaryAt`) and a positive solo reward at `i`, the row
+sequence shifted to start at any time `t` is completely absorbing in the
 sense of `IsCompletelyAbsorbing`. -/
-theorem isCompletelyAbsorbing_of_isQuittingJointComplementary_of_solo_pos
+theorem isCompletelyAbsorbing_of_isQuittingUpperComplementaryAt_of_solo_pos
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (x : ℕ → ι → PMF Bool) (hcomplementary : IsQuittingJointComplementary reward x)
-    (i : ι) (hsolo : 0 < reward (quittingSingletonTerminal i) i) (t : ℕ) :
+    (x : ℕ → ι → PMF Bool) (i : ι)
+    (hcomplementary : IsQuittingUpperComplementaryAt reward x i)
+    (hsolo : 0 < reward (quittingSingletonTerminal i) i) (t : ℕ) :
     IsCompletelyAbsorbing (fun n => x (t + n)) := by
   unfold IsCompletelyAbsorbing
   rw [show quittingSurvivalPrefix (fun n => x (t + n)) =
       quittingJointSurvivalWeight x t from
       funext (fun fuel => (quittingJointSurvivalWeight_eq_quittingSurvivalPrefix x t fuel).symm)]
-  exact quittingJointSurvivalWeight_tendsto_zero_of_isQuittingJointComplementary_of_solo_pos
-    reward x hcomplementary i hsolo t
+  exact quittingJointSurvivalWeight_tendsto_zero_of_isQuittingUpperComplementaryAt_of_solo_pos
+    reward x i hcomplementary hsolo t
+
+/-- **Deliverable 2, restated against the pre-existing complete-absorption
+vocabulary, full joint complementarity.**  Corollary of the minimal
+one-coordinate result above.  Kept so every existing consumer of the strong
+hypothesis keeps working unchanged. -/
+theorem isCompletelyAbsorbing_of_isQuittingJointComplementary_of_solo_pos
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (x : ℕ → ι → PMF Bool) (hcomplementary : IsQuittingJointComplementary reward x)
+    (i : ι) (hsolo : 0 < reward (quittingSingletonTerminal i) i) (t : ℕ) :
+    IsCompletelyAbsorbing (fun n => x (t + n)) :=
+  isCompletelyAbsorbing_of_isQuittingUpperComplementaryAt_of_solo_pos
+    reward x i (isQuittingUpperComplementaryAt_of_isQuittingJointComplementary reward x
+      hcomplementary i) hsolo t
 
 end GameTheory

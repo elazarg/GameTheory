@@ -28,7 +28,12 @@ has coordinate `2` (`true`) quitting with probability zero at every time.
 * the closed forms for `quittingFixedOpponentsQuitValue`,
   `quittingFixedOpponentsContinueReward`, `quittingFixedOpponentsContinueMass`
   at both coordinates, for an arbitrary two-marginal root.
-* `quitProbability_true_eq_zero_of_isQuittingJointComplementary`: **Deliverable 1**.
+* `quitProbability_true_eq_zero_of_partial_complementarity`: **Deliverable 1**,
+  from the minimal complementarity hypotheses the proof actually needs (full
+  complementarity at coordinate `2`, only the upper clause at coordinate `1`,
+  and `α < 1` alone -- `0 < α` is never used).
+  `quitProbability_true_eq_zero_of_isQuittingJointComplementary` is kept as a
+  corollary under full joint complementarity, for existing consumers.
 -/
 
 set_option autoImplicit false
@@ -393,28 +398,36 @@ theorem fixedOpponentsContinueMass_false (x : ℕ → Bool → PMF Bool) (t : �
 
 /-! ## Deliverable 1 -/
 
-/-- **Deliverable 1.**  Every jointly complementary sequence for the
-candidate hard weight has coordinate `2` quitting with probability zero at
-every time.  Route: `r_2({2}) = 1 > 0` forces total absorption from every
-time (the general absorption theorem, applied at coordinate `2`); this pins
+/-- **Deliverable 1, from the minimal complementarity hypotheses it actually
+needs.**  Coordinate `2` quitting with probability zero at every time does
+not need full joint complementarity of `x`: it needs `α < 1` (not `0 < α`,
+which never enters the argument), full complementarity
+(`IsQuittingLowerComplementaryAt` and `IsQuittingUpperComplementaryAt`) at
+coordinate `2` alone, and only the upper (sub-certain-quit) clause
+(`IsQuittingUpperComplementaryAt`) at coordinate `1` -- the positive-quit
+clause at coordinate `1` is never invoked.  Route: `r_2({2}) = 1 > 0` forces
+total absorption from every time (the general absorption theorem, applied at
+coordinate `2`, itself needing only the upper clause at `2`); this pins
 coordinate `1`'s next-stage tail value to the tight interval `[-1, -α]`.
 Coordinate `1`'s own stage gap is then nonnegative unconditionally (from
-that interval), so joint complementarity forces it to equal zero whenever
+that interval), so the upper clause at `1` forces it to equal zero whenever
 `1` does not quit for sure, and solving that equation forces coordinate
 `2`'s own quit probability to `0`.  When `1` *does* quit for sure,
-coordinate `2`'s own stage gap is exactly `-1`, forcing the same
-conclusion directly. -/
-theorem quitProbability_true_eq_zero_of_isQuittingJointComplementary
-    (α : ℝ) (hα0 : 0 < α) (hα1 : α < 1)
+coordinate `2`'s own stage gap is exactly `-1`, and the lower clause at `2`
+forces the same conclusion directly. -/
+theorem quitProbability_true_eq_zero_of_partial_complementarity
+    (α : ℝ) (hα1 : α < 1)
     (x : ℕ → Bool → PMF Bool)
-    (hcomplementary : IsQuittingJointComplementary (reward α) x)
+    (hlowerTrue : IsQuittingLowerComplementaryAt (reward α) x true)
+    (hupperTrue : IsQuittingUpperComplementaryAt (reward α) x true)
+    (hupperFalse : IsQuittingUpperComplementaryAt (reward α) x false)
     (t : ℕ) :
     (x t true true).toReal = 0 := by
   have hsolo : 0 < reward α (quittingSingletonTerminal true) true := by
     rw [soloReward_true_true]; norm_num
   have hsurvival :=
-    quittingJointSurvivalWeight_tendsto_zero_of_isQuittingJointComplementary_of_solo_pos
-      (reward α) x hcomplementary true hsolo (t + 1)
+    quittingJointSurvivalWeight_tendsto_zero_of_isQuittingUpperComplementaryAt_of_solo_pos
+      (reward α) x true hupperTrue hsolo (t + 1)
   have hV1le : quittingComplementarityTailValue (reward α) x false (t + 1) ≤ -α :=
     quittingComplementarityTailValue_le_of_tendsto_zero (reward α) x false (t + 1) (-α)
       (reward_false_le α hα1) hsurvival
@@ -435,7 +448,7 @@ theorem quitProbability_true_eq_zero_of_isQuittingJointComplementary
       ring
     by_contra hne
     have hpos : 0 < (x t true true).toReal := lt_of_le_of_ne hp2nonneg (Ne.symm hne)
-    have hge := (hcomplementary t true).1 hpos
+    have hge := hlowerTrue t hpos
     rw [hgap] at hge
     linarith
   · -- Opponent `1` does not quit for sure: coordinate `1`'s own stage gap
@@ -456,7 +469,7 @@ theorem quitProbability_true_eq_zero_of_isQuittingJointComplementary
       nlinarith [mul_nonneg hp2nonneg (show (0:ℝ) ≤
         1 + quittingComplementarityTailValue (reward α) x false (t + 1) by linarith),
         hV1le]
-    have hgapnonpos := (hcomplementary t false).2 hp1lt
+    have hgapnonpos := hupperFalse t hp1lt
     have hgapeq : quittingComplementarityStageGap (reward α) x false t = 0 := by linarith
     rw [hunfold, hc2eq] at hgapeq
     have hkey : (x t true true).toReal *
@@ -479,6 +492,27 @@ theorem quitProbability_true_eq_zero_of_isQuittingJointComplementary
     rcases mul_eq_zero.mp hprodzero with h | h
     · exact h
     · exact absurd h hV1ne1
+
+/-- **Deliverable 1, full joint complementarity.**  Corollary of the minimal
+partial-complementarity result above, via
+`isQuittingLowerComplementaryAt_of_isQuittingJointComplementary` and
+`isQuittingUpperComplementaryAt_of_isQuittingJointComplementary`.  Kept under
+its original name and signature -- including the unused `hα0` -- so every
+existing consumer (e.g. `scripts/AxiomAudit.lean`) keeps resolving. -/
+theorem quitProbability_true_eq_zero_of_isQuittingJointComplementary
+    (α : ℝ) (_hα0 : 0 < α) (hα1 : α < 1)
+    (x : ℕ → Bool → PMF Bool)
+    (hcomplementary : IsQuittingJointComplementary (reward α) x)
+    (t : ℕ) :
+    (x t true true).toReal = 0 :=
+  quitProbability_true_eq_zero_of_partial_complementarity α hα1 x
+    (isQuittingLowerComplementaryAt_of_isQuittingJointComplementary (reward α) x
+      hcomplementary true)
+    (isQuittingUpperComplementaryAt_of_isQuittingJointComplementary (reward α) x
+      hcomplementary true)
+    (isQuittingUpperComplementaryAt_of_isQuittingJointComplementary (reward α) x
+      hcomplementary false)
+    t
 
 end QuittingCandidateHardWeightCoordinateSilence
 
