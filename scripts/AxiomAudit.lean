@@ -122,3 +122,23 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.abs_quittingRootEndpointDifference_le_div_min_of_isεQuittingRootEndpointNash
 #print axioms GameTheory.exists_exact_ownShift_abs_eq_abs_quittingRootEndpointDifference
 #print axioms GameTheory.min_lt_inv_of_exists_weighted_bound_not_isεRowComplementary
+
+-- The weighted continue-mass bound and its scaled-cyclic-weight absence package.
+#print axioms GameTheory.exists_pos_le_continueMass
+#print axioms GameTheory.hasNoInstantApproxEquilibria_scaledCyclicWeight
+
+-- The two-coordinate circulation boundary: the headline closed form.
+#print axioms GameTheory.QuittingCirculationTwoCoordinateBoundary.circulationTwoExists_iff
+
+-- The repaired four-player stress-point orbit and the general multi-owner
+-- face-circulation orbit theorem.
+#print axioms GameTheory.RepairedFourPlayerStress.exists_stressCirculation_orbit
+#print axioms GameTheory.exists_multiCirculation_orbit
+
+-- The one-sided decision-variation maximal inequality and the quitting
+-- live-chain domination cap.
+#print axioms Math.Probability.expect_indicator_scoreRunningMax_le_div
+#print axioms GameTheory.quittingTerminalPayoff_update_quittingPhaseSwitchProfile_le_of_quitRegret_le
+
+-- The pinned-pure row decoupling exclusion.
+#print axioms GameTheory.not_isExactRowComplementary_cyclicWeight_of_pinned
