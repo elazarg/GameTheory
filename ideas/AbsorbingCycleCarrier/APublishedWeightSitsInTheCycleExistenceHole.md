@@ -70,13 +70,43 @@ mechanism reproduced internally.
 
 This covers **that one block**. Other period-three blocks are not examined.
 
-**No cycle at any period** is the published Theorem 2.1 — that the relevant
-fixed-point set contains only trivial vectors. **Unformalized here.** The farmed
-defect register records real flaws in the printed statement, an unbounded
-boundary term, and two bugs in a *different* theorem's sketch, and notes that
-none touch the bounded form. A finite-period exact cycle carries finitely many
-payoff vectors, hence is bounded, so the bounded form suffices for the periodic
-case — which is all this needs.
+**No cycle at any period now has a self-contained proof (`M [reported]`,
+Q156), superseding the ported chain.** For every `ε ∈ (0, 2]`, period-uniform,
+and substantially simpler than the published six-lemma route:
+
+- a global-minimum argument over the finitely many phase values gives the
+  floor: every phase value is at least `1`;
+- the row dichotomy holds for this weight too — at most one positive
+  coordinate per exact row, for every `ε ∈ [0, 2]`;
+- **the label lock**: at a nonzero singleton row the active coordinate's value
+  is pinned to exactly `1`, while the silent predecessor is forced to
+  `≥ 1 + εh > 1` — the single point where `ε > 0` enters — and the silent
+  successor to `1 + 2h > 1`. So "value `= 1`" uniquely identifies the active
+  coordinate, zero rows leave values unchanged, and the active label can never
+  hand off: every nonzero row is supported on one fixed coordinate `k`. Then
+  coordinate `k−1` earns `0` at every phase (`r_{k−1}({k}) = 0`), so its value
+  contracts to `0`, contradicting the floor.
+
+At `ε = 0` the predecessor's value is exactly `1` and the handoff is possible
+— which is the published rotation — so the argument fails at `ε = 0` exactly
+as it must. The published Theorem 2.1 remains as independent confirmation but
+is no longer load-bearing for this weight.
+
+Two structural corollaries from the same answer, both `M [reported]`:
+
+- **`n = 3` is minimal**: every two-coordinate weight admits a period-one
+  exact cycle, so the cycle-existence hole cannot occur with two players.
+- **Cycle sets are affine-invariant; branch membership is not.** Coordinatewise
+  payoff translation and positive scaling preserve exactly-complementary
+  sequences. So the zero-solo three-coordinate weight with no exact cycle
+  (Q154's) translates to a **positive-diagonal second occupant of the hole**
+  with its own self-contained proof — and the zero-solo branch of the
+  trichotomy is revealed as a normalization artifact relative to the cycle
+  object it gates.
+
+One authoring correction: the table as posed violates the corpus's
+`‖r‖_∞ ≤ 1` convention (entries `3`); rescaling by `1/3` fixes it and changes
+nothing, by the same affine invariance.
 
 ## What it exhibits
 
