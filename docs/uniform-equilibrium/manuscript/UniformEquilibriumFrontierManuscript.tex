@@ -1,0 +1,1391 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs,longtable,array}
+\usepackage[margin=1.0in]{geometry}
+\usepackage[expansion=false]{microtype}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{url}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,citecolor=blue!55!black,urlcolor=blue!55!black}
+\allowdisplaybreaks
+\setlist{nosep}
+
+\newcommand{\EE}{\mathbb E}
+\newcommand{\RR}{\mathbb R}
+\newcommand{\one}{\mathbf 1}
+\newcommand{\LTag}{\textsf{L}}
+\newcommand{\XTag}{\textsf{X}}
+\newcommand{\MTag}{\textsf{M}}
+\newcommand{\CTag}{\textsf{C}}
+\newcommand{\OTag}{\textsf{O}}
+\newcommand{\FTag}{\textsf{F}}
+\newcommand{\Prod}{\LTag}
+\newcommand{\Exp}{\XTag}
+\newcommand{\Audit}{\MTag}
+\newcommand{\Cond}{\CTag}
+\newcommand{\Open}{\OTag}
+\newcommand{\Refuted}{\FTag}
+\newcommand{\Status}[1]{#1}
+
+\title{Uniform Equilibrium in Finite Stochastic Games\\
+\large Research Atlas, Evidence Ledger, and Current Decision Map}
+\author{Working project document --- committed snapshot \texttt{34fdc11}}
+\date{6 August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This is a research atlas rather than a publication claiming a new general
+existence theorem.  It is written for a mathematically capable project owner,
+adjacent researchers, and future proof agents.  Its compact evidence tags
+separate formal results, experiments, audited mathematics, hypotheses, open
+problems, and fenced-off proof patterns.
+
+The central open statement is that every finite stochastic game has a
+uniform-equilibrium payoff.  The repository has a semantic verification waist,
+discounted and analytic source machinery, public-response composition,
+several full special cases, and a detailed finite-quitting reduction.  At
+snapshot \texttt{34fdc11} the quitting front carries, in production Lean: the
+exact punishment value as a stationary stopping value (both inequalities, all
+history-dependent plans); an exact characterization of terminal sure-exit
+sets; a total two-blocker branch gate; an exact characterization of the
+one-stage collision-repair mechanism priced against the true punishment
+value; and an abstract duality identifying bounded orbit budgets with bounded
+potentials, calibrated against the repository's own one-stage operator.
+Audited mathematics adds a no-resurrection theorem (vanishing phase
+occupation cannot repair a pointwise-invalid phase), a support-enlarged
+two-owner mechanism, and an exactly characterized semialgebraic residue for
+three-coordinate weights.  The earlier holonomy layer stands: exact
+associative boundary holonomy, fixed-cutoff compact closed lifts, and the
+literal-length fence.  The measured residual of the quitting program is a
+six-clause ledger-cap package isolated as one of three intentional open
+declarations; every remaining arrow is tagged where it appears.
+\end{abstract}
+
+\tableofcontents
+
+\section{Status discipline and the exact question}
+
+\subsection{Snapshot and evidence legend}
+
+This document describes the committed repository state through
+\texttt{34fdc11} (Collision repair characterized exactly against the
+min-max).  It does not promote unstaged notes, local experiments, or an
+attractive interface to a landed theorem.  The durable records consulted
+here are under \texttt{docs/uniform-equilibrium/} and \texttt{ideas/};
+attributed external results live in
+\texttt{ideas/UniformEquilibriumLiterature/}.
+
+\begin{longtable}{@{}p{.10\textwidth}p{.81\textwidth}@{}}
+\toprule
+Tag & Exact meaning and scope\\
+\midrule
+\endhead
+\LTag & Production Lean: in the ordinary import graph at this snapshot.  It
+proves its stated formal theorem, not an unstated generic witness producer.\\
+\XTag & Checked experiment: a bounded Lean probe with the stated scope; it
+may lack a production adapter or semantic consumer.\\
+\MTag & Audited mathematics: reviewed proof, source alignment, or
+counterexample, not asserted formalized.\\
+\CTag & Conditional: a sound implication whose named strategic input remains
+a hypothesis.\\
+\OTag & Open: a live obligation; neighboring interfaces may still be settled.\\
+\FTag & Refuted or fenced: a scoped claim/grammar has a counterexample.  It
+is a full negative theorem only with an all-behavior uniform positive gap.\\
+\bottomrule
+\end{longtable}
+
+Tags are deliberately neutral and short.  Citations identify external
+published results; an \LTag is reserved for an internal formal result.
+
+The Lean development has exactly three intentional open declarations, each
+isolated in a dedicated conjecture file so that build warnings name the
+conjecture: \texttt{exists\_uniformDeviationCapConstructor} (the
+arbitrary-game capstone), \texttt{quittingGame\_exists\_uniform\-Equilibrium\-Payoff}
+(the finite-quitting conjecture), and the reduced ledger-cap package
+\texttt{quittingGame\_hasQuittingLedgerCapPackage} --- six named arithmetic
+clauses whose implication to the quitting conjecture is proved gap-free, so
+every future weakening of a clause transports for free.  A repository gate
+verifies that no fourth admission exists.  This boundary is intentional: the
+results below formalize the route to the conjecture without pretending that
+the last producer already exists.
+
+\subsection{Uniform equilibrium, with its quantifiers visible}
+
+Let \(I\) be a finite player set, \(S\) a finite state space, and
+\(A_i(s)\) finite nonempty action sets.  A finite stochastic game has bounded
+stage rewards \(g_i(s,a)\) and transition law \(q(\,\cdot\mid s,a)\).
+Histories, states, and realized action profiles are public; players have
+perfect recall and private independent randomization.  The base model grants
+no free public correlation device.
+
+For a behavior profile \(\sigma\), write
+\[
+ \gamma_N^i(s,\sigma)
+ =\EE_{s,\sigma}\left[\frac1N\sum_{t=0}^{N-1}g_i(s_t,a_t)\right].
+\]
+A vector \(v\in\RR^I\) is a uniform-equilibrium payoff from \(s\) when
+\[
+ \forall\varepsilon>0\ \exists\sigma\ \exists N_0\
+ \forall N\geq N_0\ \forall i\in I\ \forall\alpha_i,\qquad
+ |\gamma_N^i(s,\sigma)-v_i|\leq\varepsilon,\qquad
+ \gamma_N^i(s,\alpha_i,\sigma_{-i})\leq v_i+\varepsilon .
+\tag{UE}
+\]
+The profile may depend on the accuracy, but not on the eventual horizon.
+The deviator may be a history-dependent behavior strategy.  Thus a
+horizon-by-horizon Nash profile, a limiting-average payoff, or a discounted
+equilibrium does not by itself solve (UE).
+
+\subsection{Program map}
+
+\[
+\boxed{\begin{array}{c}
+\text{finite game}\\
+\downarrow\quad\text{discounted or finite-chain source data}\\
+\text{implementable full payoff target and legal continuation}\\
+\downarrow\quad\text{delivery, all unilateral caps, and rebasing}\\
+\text{adaptive certificate / deviation-cap constructor}\\
+\downarrow\\
+\text{uniform-equilibrium payoff.}
+\end{array}}
+\tag{1}
+\]
+
+The final verification arrow has an \LTag consumer.  The generic difficulty is
+the middle.  A construction must retain the whole target vector, make every
+public entry actually used by its compiler credible on the prescribed path and
+on the declared one-deviator response domain, and exhibit a well-founded
+decrease or a fully discharged account.  This is weaker than demanding
+subgame perfection at every unreachable node, but stronger than checking only
+the initial history.  A scalar limit or an attractive Bellman equality cannot
+carry those obligations automatically.
+
+\section{Glossary}
+
+\begin{longtable}{@{}p{.25\textwidth}p{.66\textwidth}@{}}
+\toprule
+Term & Meaning used in this document\\
+\midrule
+\endhead
+Construction waist & \texttt{HasUniformDeviationCapConstructor}; production
+Lean proves it exactly equivalent to the semantic uniform-payoff predicate.\\
+Verification waist & A concrete sufficient certificate, usually an adaptive
+potential system, which compiles to the construction waist.\\
+Germ & A coupled analytic/Puiseux arc
+\((\lambda(t),\sigma(t),V(t))\) of discounted stationary Bellman equilibria
+as \(\lambda(t)\downarrow0\), with stabilized finite sign/support data.\\
+Endpoint leaf & A typed first response of the analytic hierarchy.  It is an
+obstruction classification, not automatically a strategy.\\
+Root target & The entire vector a response promises to deliver.  It may differ
+from the endpoint of every discounted equilibrium.\\
+Public response architecture & A supplied finite public controller, target,
+transition rules, and player-specific deviation arenas.\\
+Exact \(D\)-chain & A finite zero-boundary Nash--Bellman chain for a quitting
+game; its playerwise best-response excesses are dynamic debt.\\
+Plateau & A positive limit of optimized initial debt as the cutoff grows.
+It is a difficult case, not an equilibrium counterexample.\\
+Owner and packet & A positive-debt player \(i_*\), full terminal quitter set
+\(T_*\), raw marked terminal atom, and distinct preterminal survival scale.\\
+Holonomy & The action of a finite quitting block on prescribed and unilateral
+terminal continuation values.  It is finite and exact; its full realized lift
+is compact and closed at each cutoff, but literal unbounded length cannot
+remain a complete finite-realizability coordinate in a compact closure.\\
+Marked absorption cylinder & A proposed finite encoding of an exact-
+\(D\) block by ordered terminal subprobability mass, an exit-survival port,
+anchors, a conditional terminal packet, payoff and debt data, and the full
+unilateral stopping obstacle.  Its exact encoding theorem is open.\\
+Stopping obstacle & Player $i$'s quit-time payoff graph, including the
+continuation alternative and terminal allowance, together with its Snell
+envelope.  It retains where an approximately optimal deviation can occur;
+one scalar cap need not.\\
+Repair & An actual accuracy-indexed profile/tail with all-behavior cap proof.
+A scalar limit, public coin, or Bellman row is not itself a repair.\\
+Uniform descent & A bounded extension decreasing debt measured at the
+original entry by one cutoff-independent \(c>0\).\\
+Punishment value \(\chi_j\) & The inf over all history-dependent opponent
+plans of the sup over all replies of \(j\)'s terminal payoff; proved equal
+to the best constant row's two-branch stopping value.\\
+Sure-exit set & A coalition prescribed to quit surely at once; exact
+terminal equilibrium iff no member leaves and no outsider joins.\\
+Blocker and gate & An opponent whose joining gain blocks an owner's rate
+interval; the total gate says full blockage needs a universal blocker or a
+switching pair.\\
+Two-owner root & The support-enlarged one-stage mechanism: a sure blocker
+with both remaining players mixing at rational indifference rates.\\
+Charged relation and budget & Abstract states/edges with nonnegative
+charges; the finite-path charge supremum, dual to bounded potentials.\\
+\bottomrule
+\end{longtable}
+
+\section{Literature boundary and solution-concept map}
+
+The table records scope and sources, not a claim that every cited theorem is
+formalized in this repository.
+
+\begin{longtable}{@{}p{.21\textwidth}p{.39\textwidth}p{.29\textwidth}@{}}
+\toprule
+Class or concept & Established result & Boundary relevant here\\
+\midrule
+\endhead
+Two-player zero-sum finite games &
+Discounted values, the asymptotic/uniform value, and uniform optimal
+strategies are classical \cite{Shapley1953,BewleyKohlberg1976,MertensNeyman1981}. &
+The repository formalizes Shapley and a conditional Mertens--Neyman
+criterion, not the unconditional general theorem.\\
+Two-player non-zero-sum finite games &
+Uniform-equilibrium payoff existence is settled by Vieille's reduction and
+recursive-game work \cite{Vieille2000I,Vieille2000II,Vieille2000III}. &
+External positive theorem; not a current Lean capstone.\\
+Three-player absorbing games &
+Solan proves existence of an undiscounted equilibrium payoff for the
+three-player absorbing class at the paper's notion \cite{Solan1999}. &
+The exact adapter to this repository's terminal/common-horizon semantics is
+not formalized; the result covers neither four players nor arbitrary
+multi-live-state games.\\
+Quitting games &
+Solan--Vieille prove cyclic subgame-perfect uniform approximate equilibrium
+under explicit payoff restrictions \cite{SolanVieille2001}; every two-player
+quitting game has stationary approximate terminal equilibria
+\cite{SolanVieilleExample2002}. &
+General ordinary-Nash existence is open for four or more players.\\
+Absorption paths &
+Reparameterizing by cumulative absorption mass gives a sequentially compact
+path language with continuous payoff and an approximate-equilibrium bridge
+\cite{AshkenaziGolanEtAl2024}. &
+The printed sure-terminal-jump test is underconstrained for this repository's
+terminal all-behavior semantics.  The marked subprobability and cap enrichment
+used below is proposed, not a result of the paper.\\
+Linear complementarity split &
+Every multiplayer quitting game has sunspot approximate equilibria, while a
+derived matrix outside the $Q$-matrix class gives ordinary uniform
+approximate equilibria \cite{SolanSolan2020}. &
+The exact matrix normalization is not yet adapted here.  The unresolved
+ordinary problem remains on the $Q$ side; no plateau-to-$Q$ implication is
+known.\\
+Essential APS &
+The 2026 operator characterizes payoffs supported by a continuous
+one-randomizer-at-a-time absorption-path subclass
+\cite{AshkenaziGolanEtAl2026}. &
+That subset may be empty.  The operator is a structural guide, not a general
+quitting-game producer.\\
+Correlated stochastic games &
+Every finite stochastic game has an autonomous correlated equilibrium payoff
+\cite{SolanVieille2002}. &
+The device sends private history-dependent signals.  It is not a proof in
+the ordinary independent-randomization model.\\
+Positive recursive absorbing games &
+A December-2025 preprint proves undiscounted existence when all nonabsorbing
+components are nonrectangular; positivity gives a uniform upgrade
+\cite{SolanVieille2025}. &
+Unrefereed; excludes non-positive, non-recursive, and general multi-live-state
+settings.\\
+Memory &
+The Big Match requires adaptive play, and bounded public memory is
+insufficient for the relevant guarantee \cite{BlackwellFerguson1968,HansenIbsenJensenNeyman2025}. &
+Finite phases can be a certificate language, not an exhaustive strategy class.\\
+\bottomrule
+\end{longtable}
+
+An undiscounted equilibrium can be a limit along changing approximate
+profiles, while a uniform payoff requires one profile for all sufficiently
+large horizons at each accuracy.  A conversion therefore needs a named
+argument.  Positive recursive games obtain one from monotonic finite
+averages; finite quitting games use a different, formalized
+terminal-to-uniform bridge.
+
+\section{Production foundation: the two waists}
+
+\subsection{Semantic cap constructor}
+
+\Status{\Prod} The theorem
+\texttt{hasUniformDeviationCapConstructor\_iff} says that a quantitative
+delivery-and-deviation-cap constructor is exactly (UE).  A future proof may
+use another construction language, but it must ultimately expose those
+quantifiers.
+
+\subsection{Adaptive potential verification}
+
+\Status{\Prod} \texttt{AdaptiveCertificate.lean} verifies expectation-level
+adaptive potential certificates.  At accuracy \(\delta\), a public profile is
+equipped, playerwise, with lower and upper on-path potentials and a deviation
+upper potential.  Their initial values are close to \(v\); on-path processes
+have the right expected sub/supermartingale directions; and the deviation
+bound applies to every unilateral behavior.
+
+If \(L_i,U_i,D_i\) denote the potentials, the proof has the telescoping
+shape
+\[
+\EE\sum_{t<N}(g_i(t)-v_i)
+\quad\hbox{between}\quad
+\EE[L_i(N)-L_i(0)]-o(N)
+\quad\hbox{and}\quad
+\EE[U_i(N)-U_i(0)]+o(N),
+\tag{2}
+\]
+with the same upper estimate using \(D_i\) after a unilateral replacement.
+Division by \(N\) gives (UE), uniformly in the deviator.  Branch cancellation
+is allowed; a construction need not have a pathwise nonnegative account, but
+it must compile to this expectation-level control or directly to the semantic
+cap constructor.
+
+\subsection{Supplied public response architectures}
+
+\Status{\Prod} A separate verification route handles a supplied finite public
+Markov response architecture.  It separates the target and occupation data:
+\[
+\begin{array}{ll}
+\text{(T0)} & v=P^0v\quad\text{on the prescribed delivery domain},\\
+\text{(Ti)} & v_i\geq P_i^a v_i\quad\text{on player \(i\)'s owner arena},\\
+\text{(N)} & \text{every invariant owner-local occupation has nonpositive
+reward charge},\\
+\text{(P)} & \text{the prescribed delivery law matches the target}.
+\end{array}
+\tag{3}
+\]
+Gain--bias/Poisson inequalities convert these conditions to bounded
+potentials, a common \(O(1/N)\) delivery bound, unilateral caps, and
+rebasing.  The domain split is load-bearing: the prescribed delivery union is
+not the union of every player's deviation arena.
+
+The fixed-class converse is also available.  All-start history semantics on
+these exact domains imply target, occupation, and bias packets.
+This characterizes a supplied architecture; it does not synthesize an
+architecture for an arbitrary game or show that finite public architectures
+cover all uniform strategies.
+
+\subsection{Composition and concrete controllers}
+
+\Status{\Prod} Finite public trees have backward Nash and fixed-depth adaptive
+splicing.  Public stopping modules handle bounded causal stopping, stopped
+child laws, prefix accounting, and explicit amortization horizons.  They make
+real child systems composable; they do not create a missing child or a free
+public signal.
+
+\Status{\Prod} The Flesch--Thuijsman--Vrieze three-player quitting example is
+implemented as a ten-configuration controller with a three-phase live clock
+and seven absorbing children.  It satisfies the credibility conditions and
+delivers \((1,2,1)\).  Under the repository's convention the all-start
+finite-horizon coordinate errors are
+\[
+ 16/(7N),\qquad22/(7N),\qquad18/(7N).
+\tag{4}
+\]
+The uniform constant is \(22/(7N)\); the smaller value sometimes quoted uses
+a different convention for the quitting stage.  This is an exact test of the
+verifier for supplied data, not a generic controller producer.
+
+\section{Discounted analytic source data}
+
+\subsection{The analytic germ and endpoint atlas}
+
+For normalized discount \(\lambda\), a stationary discounted equilibrium has
+\[
+ V_i^\lambda(s)=\EE_{s,\sigma^\lambda}
+ \left[\sum_{t\geq0}\lambda(1-\lambda)^t g_i(s_t,a_t)\right].
+\tag{5}
+\]
+\Status{\Prod} \texttt{AnalyticBellmanExistence.lean} proves that every finite
+game has, after finite reparameterization, a coupled real-analytic Bellman
+germ
+\[
+ t\longmapsto(\lambda(t),\sigma(t),V(t)),\qquad\lambda(t)\downarrow0.
+\tag{6}
+\]
+On a punctured interval the finite families of supports, equality patterns,
+and signs stabilize.  \texttt{AnalyticEndpointAtlas.lean} and
+\texttt{AnalyticEndpointExistence.lean} then classify a first unprocessed
+response into a finite typed leaf family carrying player, support, analytic
+order, and occupation information.
+
+This is source organization, not strategic closure.  A nonsemantic leaf may
+ask for a response, target transport, entry proof, or credibility witness.
+Such a field must remain an explicit hypothesis; it is not a generic proof
+hidden inside an interface.
+
+\subsection{Endpoint is not target}
+
+\Status{\Prod} Sorin's absorbing example permanently blocks the most tempting
+shortcut.  The relevant discounted equilibrium payoff is
+\[
+ z^\lambda=(1/2,\,2/3),
+\]
+but the repository proves that this endpoint is not a
+uniform-equilibrium payoff.  The proof combines security, live-tail
+accounting, and occupation vanishing.  The converse characterization of the
+whole uniform segment from Sorin's paper is not formalized \cite{Sorin1986}.
+Thus
+\[
+ \text{discounted analytic source}\ \not\Rightarrow\
+ \text{preserve its endpoint as a uniform root target}.
+\tag{7}
+\]
+One may need both favorable-germ selection and a different, implementable
+target selection.
+
+\subsection{Analytic infrastructure}
+
+\Status{\Prod} The library also contains sign-stable Bellman rows,
+neutral-action drift alternatives, harmonic directions, support-face and
+deflation tools, player-owned and neutral occupation/circulation alternatives,
+public separator compression, causal stopping and target-transport
+interfaces, and rank-aware public recurrent-class machinery.
+\Status{\Audit} The associated durable mathematics includes sharp neutral
+drift, moving-bias minimax, saturated Puiseux rank, multiscale Markov
+occupation, and the distinction between ordinary and causal transport.
+
+The repeated obstacle is whole-target custody.  A scalar circulation or
+positive charge might help one player, but it does not specify where the
+remaining coordinates go after a public branch or why every player can
+credibly continue there.
+
+\section{Special cases and permanent no-go tests}
+
+\subsection{Positive theorem surface}
+
+\begin{longtable}{@{}p{.31\textwidth}p{.27\textwidth}p{.33\textwidth}@{}}
+\toprule
+Class & Formal result & Scope boundary\\
+\midrule
+\endhead
+Absorbing initial state, one state, action-independent transitions, and all
+children absorbing after one step &
+\Status{\Prod} Dedicated capstone theorems. &
+Genuine classes, not reductions of arbitrary games.\\
+The Big Match &
+\Status{\Prod} A Blackwell--Ferguson style history-adaptive uniform witness
+in \texttt{BigMatchUniform.lean}. &
+An essential stress test, not an all-game construction.\\
+Zero-sum single-controller finite games &
+\Status{\Prod} The primal capstone builds LP feasibility/attainment, a fixed
+hybrid kernel, transience/reachability, harmonicity, reward--bias
+compatibility, and a uniform payoff. &
+The theorem is both zero-sum and single-controller.\\
+Supplied finite public architecture &
+\Status{\Prod} The architecture credibility criterion compiles a gain--bias
+packet to enforcement. &
+No generic architecture producer or finite-size bound.\\
+Finite quitting profiles at every accuracy &
+\Status{\Prod} Terminal-to-uniformization and compact payoff selection. &
+The general terminal-profile producer is open.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Negative results that constrain future designs}
+
+\begin{longtable}{@{}p{.28\textwidth}p{.64\textwidth}@{}}
+\toprule
+Shortcut & Scoped conclusion\\
+\midrule
+\endhead
+Calendar-time Markov or bounded public memory &
+\Status{\Prod} Big Match no-go modules rule out the needed Markov
+sufficiency; external limited-memory work strengthens the public-memory
+warning.\\
+Discounted endpoint preservation &
+\Status{\Prod} Sorin endpoint exclusion, described above.\\
+One tangent, a selected Fink branch, or a linear running-deficit index &
+\Status{\Prod} Dedicated counterexamples refute their universality as
+constructors.\\
+Static minmax or deviate-once-then-obey &
+\Status{\Prod} Architecture-cap separator games show these tests can miss a
+history-dependent unilateral gain.\\
+Merging prescribed and owner domains &
+\Status{\Prod} The Q96 two-node regression has local target/occupation
+conditions on declared domains but linear delivery error on an uncovered
+prescribed class.\\
+Public randomization alone &
+\Status{\Prod} Safe coin-selection phases exist for supplied data, but they
+do not replace the private recommendations of an autonomous correlating
+device.\\
+\bottomrule
+\end{longtable}
+
+\section{Finite quitting games: exhaustive reduction to one residual}
+
+\subsection{Model and terminal semantics}
+
+A finite quitting game has one live state.  At every live date each player
+chooses Continue or Quit; the first nonempty quitter set \(J\subseteq I\)
+absorbs with reward vector \(r(J)\), while Never has payoff zero.  For a
+time-dependent product profile \(x=(x^t)_t\) and first absorption time
+\(\theta\),
+\[
+ u_i(x)=\EE_x\bigl[\one_{\{\theta<\infty\}}r_i(J_\theta)\bigr].
+\tag{8}
+\]
+\Status{\Prod} The quitting semantics identify a fixed profile's limiting
+finite-average payoff with (8).  Against fixed opponents, arbitrary
+behavioral deviation has pure deterministic quit-time and Never extremals,
+with a general stopping-law formulation.  Thus terminal cap calculations are
+all-behavior calculations, not only stationary best replies.
+
+\subsection{The final consumer is already available}
+
+\[
+ [\,\forall\varepsilon>0,\ \exists\hbox{ terminal }
+ \varepsilon\hbox{-Nash profile}\,]
+ \quad\Longrightarrow\quad
+ \exists v\ \hbox{a uniform-equilibrium payoff}.
+\tag{9}
+\]
+\Status{\Prod} \texttt{QuittingTerminalUniformization.lean} supplies the
+finite-horizon bridge, and
+\texttt{QuittingTerminalUniformPayoffSelection.lean} uses compact payoff
+selection to retain one target \(v\).  The active problem is therefore the
+producer of terminal approximate profiles for the general multi-player game.
+
+\subsection{Finite exact chains and dynamic debt}
+
+For each cutoff, the finite-chain modules build compact sets of exact
+zero-boundary Nash--Bellman chains.  Backward recursion compares prescribed
+value with best stopping value; the difference is playerwise dynamic debt
+\(B_i^t\).  The optimized aggregate initial debt \(d_K\) is attained and
+\[
+ d_{K+1}\leq d_K,\qquad d_K\geq0.
+\tag{10}
+\]
+The chain factory, minimizer, calibration, monotonicity, and exact
+chain-plus-Never semantics are \Status{\Prod}.  Hence the first split is
+exhaustive:
+\[
+ \lim_{K\to\infty}d_K=0
+\quad\Longrightarrow\quad
+\text{terminal approximate equilibria at every accuracy}.
+\tag{11}
+\]
+The zero-debt branch closes through (9); only a positive plateau
+\(d_K\downarrow d_\infty>0\) remains.
+
+\subsection{What positive debt forces}
+
+\Status{\Prod} Calibration selects an owner \(i_*\) with positive solo debt
+on minimizing chains.  Its exact-D tail has summable opponent-absorption
+clock.  Marginal-hazard domination then makes the owner clock split exhaustive:
+\[
+ \sum_t h_{i_*}(t)=\infty\qquad\hbox{or}\qquad
+ \sum_t h_{i_*}(t)<\infty.
+\tag{12}
+\]
+In the first case, exact Bellman/Nash identities close by an exact terminal
+equilibrium.  In the second, every individual hazard and every player's
+opponent clock is summable.  There is no residual \(2^{|I|}\) clock lattice.
+
+Positive debt also yields a marked simultaneous packet: nonempty
+\(T_*\), positive owner joining loss, and raw terminal mass bounded below by
+debt.  The required datum separates
+\[
+ \underbrace{\prod_{t=0}^{K-2}c_{i_*}(x^t)}
+ _{\text{preterminal opponent survival}}
+\quad\hbox{from}\quad
+ \underbrace{p_{-i_*}^{K-1}(T_*)}_{\text{final marked atom}}.
+\tag{13}
+\]
+The survival product cannot include the final root, whose opponent-continue
+mass may be zero.  This is a proved correction to a former single-scale
+compactification shortcut.
+
+\subsection{The fully summable residual}
+
+The P0 task is now exact: from a fully summable positive plateau carrying the
+complete marked packet, produce an executable accuracy-indexed repair, or a
+bounded exact extension that lowers optimized initial debt by a
+cutoff-independent positive amount.  This is the finite-quitting P0 capstone,
+and it is \Status{\Open}.  Its failure would refute this particular producer
+only after a genuine falsifier; another stationary, cyclic, or behavioral
+repair could still exist.
+
+\section{Finite holonomy, the length fence, and the selected infinity chart}
+
+\subsection{Finite-middle holonomy}
+
+\Status{\Prod} \texttt{QuittingBoundaryHolonomy.lean} packages every nonempty
+finite block from one actual common product-root chain.  For each player, it
+records prescribed and unilateral actions on a terminal continuation value:
+\[
+ G(w)=B+Pw,\qquad F(w)=\max\{A,T+\chi w\},\qquad0\leq P,\chi\leq1.
+\tag{14}
+\]
+With relative terminal allowance \(\beta\), exact block regret is
+\[
+ F(w+\beta)-G(w).
+\tag{15}
+\]
+The all-behavior cap is exactly the two affine inequalities
+\[
+ A-B-Pw\leq\varepsilon,\qquad
+ T-B+(\chi-P)w+\chi\beta\leq\varepsilon.
+\tag{16}
+\]
+The Lean theorems identify this evaluation with the literal finite prescribed
+hazard value and finite Bellman best-response stopping value.
+
+Chronological composition is associative:
+\[
+\begin{array}{ll}
+(B,P)\circ(B',P')=(B+PB',PP'),\\
+(A,T,\chi)\circ(A',T',\chi')=
+(\max\{A,T+\chi A'\},T+\chi T',\chi\chi').
+\end{array}
+\tag{17}
+\]
+
+\subsection{Anchoring is essential data}
+
+The calibrated wrapper retains all common roots, exact-D entry and exit,
+minimizer provenance, owner \(i_*\), full marked action/set \(T_*\), and the
+two packet factors in (13).  Scalar coordinates lie in a common compact box.
+This preserves cross-player compatibility that independent scalar summaries
+would lose, and it makes seam acceptance a concrete finite test.
+
+\subsection{Fixed-cutoff closure and the literal-length fence}
+
+\Status{\Prod} \texttt{QuittingBoundaryHolonomyCompactness.lean} proves the
+strongest unconditional topological statement currently available.  At every
+fixed cutoff, the graph retaining the complete exact zero-boundary path and
+all of its nonempty subblock holonomies is compact and closed.  At fixed last
+index, a calibrated lift is finite---hence compact and closed---while retaining
+the selected minimizer, owner, marked action, exact-$D$ endpoints, the two
+packet factors, and the common multiplayer holonomy.  Every production
+anchored block embeds in that lift without relaxation.
+
+The same file proves a sharp limitation.  If a compact set retains literal
+finite block length as an ordinary coordinate in $\mathbb N\times X$, then
+the lengths occurring in that set are uniformly bounded.  Thus finite length
+cannot remain a complete finite-realizability certificate under compact
+closure when the selected middles escape.  One can formally add an infinity
+point, but that boundary object no longer supplies a bounded executable block.
+A separate tightness or finite-decoding theorem is then indispensable.
+
+This statement is narrower than ``length cannot be compactified.''  Its point
+is that boundary objects representing an infinite or continuous middle are
+unavoidable unless calibration itself yields a uniform length bound.
+
+\subsection{Why ordinary scalar closure is insufficient}
+
+Compactness of the scalar box is not closedness of the subset realized by
+arbitrary-length anchored blocks.  Projection forgets roots, support changes,
+chronology, packet, and calibrated prefix.  A convergent coefficient sequence
+need not be a realized finite block with legal re-entry at the original root.
+
+\Status{\Prod} The two-ended compactification theorem extracts a forward positive
+exact-D ray and a reverse ray ending on a zero-payoff/singleton-cap face, with
+a positive reverse-depth-one packet.  The finite middle escapes.  It does not
+give a bi-infinite orbit, transport a preselected atom across the middle, or
+construct a repair.
+
+\subsection{Marked subprobability absorption paths}
+
+\Status{\Audit} Published absorption paths replace calendar time by cumulative
+absorption mass \cite{AshkenaziGolanEtAl2024}.  This directly addresses the
+failure mode above: a long interval of tiny hazards can disappear in stage
+time while its order and terminal absorption measure remain visible.  The
+published compactness theorem therefore provides a much more relevant infinity
+chart than the holonomy coefficient box.  It does not provide the strategic
+enrichment needed here.
+
+The proposed finite object is an anchored marked \emph{subprobability}
+absorption cylinder, schematically
+\[
+ z=\bigl(\pi,s_{\rm exit};e_{\rm in},e_{\rm out};
+          i_*,T_*,\kappa_*;V,\mathcal O,D;\text{provenance}\bigr).
+\tag{18}
+\]
+Here $\pi$ records ordered absorption mass for every nonempty quitter set,
+$s_{\rm exit}$ is the probability of surviving a finite block to its exit
+port, the $e$'s are exact-$D$ anchors, $V$ and $D$ retain prescribed
+payoff and debt data, and $\mathcal O$ is the full playerwise unilateral
+stopping obstacle.  For a finite block, missing mass is \emph{not} Never: it
+is transported to the next block and evaluated at its continuation.  Only for
+a completed infinite path does residual survival become the genuine Never
+atom
+\[
+ \nu_\infty=\Pr(\text{no finite quitting date}),
+\tag{19}
+\]
+whose normalized payoff is zero but whose mass still changes conditional
+values and unilateral caps.
+
+The marked coordinate $\kappa_*$ has a different role from the corresponding
+unconditional jump of $\pi$.  It retains the raw conditional terminal kernel
+$p_{-i_*}(T_*)$, separately from the survival probability of reaching that
+root.  Along a limit, the transported mass of the marked packet may vanish
+even while its local incentive remains nonzero.  A pointed or blown-up
+coordinate is therefore necessary; the ordinary absorption measure alone can
+forget precisely the packet extracted from positive debt.
+
+This is a design target, not yet a Lean definition.  The first formal theorem
+must map every calibrated finite exact-$D$ block to (18) and prove exact
+identities for prescribed payoff, unilateral stopping value, entry debt,
+packet factors, anchors, and chronological concatenation.  Only then is it
+sound to ask for an infinite topology.
+
+\subsection{The stopping obstacle and the sure-jump adapter}
+
+A scalar best-response cap repeats the holonomy projection error: it records
+the optimum but not where it is approximately attained or which continuation
+makes that stopping time legal.  For each player the proposed enrichment keeps
+the quit-time payoff graph
+\[
+ q_i(t)=\text{payoff from quitting at the root represented by mass time }t
+\]
+and a Snell-type envelope, schematically
+\[
+ C_i(t)=\max\{\text{Never/continuation alternative},
+                    \sup_{s\geq t}q_i(s)\}.
+\tag{20}
+\]
+The exact representation might be a closed hypo/epigraph rather than a
+pointwise function, so that optimizing times may move under convergence.
+What must be proved is the relevant semicontinuity of the cap together with a
+finite approximately optimal stopping location carrying its local root and
+continuation.  Neither result is currently available.
+
+There is a separate endpoint defect.  The published sequential-perfection
+condition tests a discrete jump only while positive residual survival remains;
+a sure terminal jump can therefore omit the off-path continuation exposed when
+a prescribed quitter instead Continues.  That is insufficient for the
+repository's terminal all-behavior notion.  Two repairs are mathematically
+possible:
+
+\begin{enumerate}
+\item a \emph{restricted adapter}: peel off every sure-jump case and discharge
+it with the existing direct-First/root-continuation verifier, applying the path
+compiler only where every relevant marked jump leaves a proper continuation;
+\item an \emph{augmented adapter}: attach a payoff-and-cap continuation packet
+to every full-absorption jump and test the corresponding one-shot continuation
+game even when prescribed reach probability is zero.
+\end{enumerate}
+
+The restricted adapter appears lower-risk because its endpoint semantics
+already exist in the repository, but neither adapter is formalized.  Until one
+is, the published path-to-equilibrium statement cannot be consumed as a
+repository terminal theorem.
+
+\subsection{The precise P0 theorem stack}
+
+The selected route now has five separately falsifiable obligations.
+
+\begin{enumerate}
+\item[\textbf{P0-A.}] \textbf{Exact finite encoding.}  Construct (18) from
+every calibrated exact-$D$ block and prove all payoff, obstacle/cap, debt,
+packet, anchor, and concatenation identities.
+\item[\textbf{P0-B.}] \textbf{Closed strategic graph.}  Prove sequential
+compactness of the enriched packets and closedness of the exact-$D$, packet,
+anchor, and stopping-obstacle relations.  A decisive falsifier is two finite
+families with the same ordinary absorption-path limit but incompatible
+limiting obstacles, conditional marks, or splice semantics.
+\item[\textbf{P0-C.}] \textbf{Correct endpoint compiler.}  Prove either the
+restricted proper-path plus direct-First adapter or the augmented full-jump
+adapter, yielding an actual terminal $\eta$-Nash profile against every
+behavioral deviation for every $\eta>0$.
+\item[\textbf{P0-D.}] \textbf{Robust local dichotomy.}  At each positive-debt
+limit packet, produce either a stable finite terminal-repair certificate or a
+strict finite local surgery whose accounting returns to the original root.
+\item[\textbf{P0-E.}] \textbf{Sequential uniformization.}  Upgrade those local
+witnesses to common finite bounds, eliminate the positive plateau, and invoke
+the landed terminal-to-uniform consumer.
+\end{enumerate}
+
+P0-C and the surgery half of P0-D are genuinely different decoders.  The
+\emph{AP-to-profile compiler} approximates one globally valid corrected path by
+discrete behavior while preserving all unilateral caps.  The
+\emph{limit-to-finite-surgery decoder} starts from a strict local failure and
+returns a bounded interval, legal splice, or local modification with a strict
+root-debt decrease.  The first needs global approximation; the second needs a
+finite witness whose strict inequalities survive perturbation.
+
+For fixed game, accuracy $\eta>0$, and packet/debt threshold $\rho>0$, the
+load-bearing pointwise assertion has the form: for each generalized plateau
+state $z\in Z_{\eta,\rho}$, there is a neighborhood $U_z$ and either one
+fixed finite repair certificate valid for every sufficiently accurate finite
+realization in $U_z$, or numbers $L_z\in\mathbb N$, $c_z>0$ such that
+\[
+ d_{K+L_z}\leq d_K-c_z
+\tag{21}
+\]
+at the original entry for every such realization.  The words ``fixed finite''
+and $c_z>0$ are essential: a pointwise decoder whose cost diverges or whose
+slack vanishes under perturbation will not uniformize.
+
+Given P0-B and this robust statement, a sequential contradiction supplies
+uniformity.  If no common $L,c$ existed, choose bad states $z_n$ with no
+repair and no debt drop of $1/n$ within $n$ steps.  A convergent subsequence
+has limit $z$; the stable finite witness at $z$ contradicts the defining
+failure for all sufficiently large members.  This is the useful role of
+compactness.  Compactness by itself supplies neither a strategy nor a debt
+decrement.
+
+The current P0 dependency chain is therefore
+\[
+\begin{array}{c}
+\text{calibrated finite exact-}D\text{ blocks and holonomy}\\
+\Downarrow\ ?\quad\text{marked subprobability cylinders and closed graph}\\
+\text{full stopping obstacles plus corrected sure-jump semantics}\\
+\Downarrow\ ?\quad\text{pointwise terminal repair or strict finite surgery}\\
+\Downarrow\ ?\quad\text{sequential compactness uniformization}\\
+\forall\eta>0\ \exists\text{ terminal }\eta\text{-Nash profile}.
+\end{array}
+\tag{22}
+\]
+Every question-marked arrow is \Status{\Open}.  This route would settle all
+finite quitting games through (9), not arbitrary finite stochastic games.
+
+\subsection{Why descent must be uniform}
+
+If at fixed accuracy there are \(L,c>0\), independent of large cutoff, such
+that every calibrated chain repairs or has
+\[
+ d_{K+L}\leq d_K-c,
+\tag{23}
+\]
+iteration contradicts \(d_K\downarrow d_\infty>0\).
+\Status{\Audit} A decrement \(c_K>0\) with \(c_K\to0\) is compatible with a
+plateau.  The needed decoder must report a debt drop measured at the original
+entry, not a local later improvement.
+
+\section{The terminal branch architecture and the exact punishment value}
+
+This layer attacks the same residual as the previous section from the
+stationary side: instead of compactifying long chains, it characterizes the
+one-stage terminal mechanisms exactly, prices them against the true
+punishment value, and isolates a finite semialgebraic residue.
+
+\subsection{The punishment value is a stationary stopping value}
+
+\Status{\Prod} \texttt{QuittingStationaryMinMax.lean} proves that for every
+finite quitting weight and player \(j\), the punishment value
+\[
+ \chi_j=\inf_{\text{plans}}\ \sup_{\text{replies}}\ (\text{terminal payoff}),
+\tag{28}
+\]
+with the infimum over \emph{all} history-dependent opponent behavior
+profiles and the supremum over all behavioral replies, equals
+\(\inf_y\Phi_j(y)\) over constant opponent rows, where
+\[
+ \Phi_j(y)=\max\Bigl\{S_j(y),\ \frac{H_j(y)}{1-c_j(y)}\Bigr\}
+ \quad(y\neq0),\qquad
+ \Phi_j(0)=\max\{q_j,0\}.
+\tag{29}
+\]
+Here \(S_j\) is the joint-quit value, \(H_j\) the opponents' one-stage
+absorption contribution, \(c_j\) their continue mass, and \(q_j\) the solo
+reward.  Both inequalities are formalized; the reply side rides pure
+stopping times; no attainment is asserted (it can fail).  The reply value
+against a constant row equals \(\Phi_j(y)\) with \emph{no} contraction
+hypothesis, strictly generalizing the previously landed capped forms.
+
+Two consequences are load-bearing.  A constant punishment row supplies the
+phase-switch punishment hypothesis at cap \(\Phi_j(y)\) for any row --- so
+punishment attainment moved below the old solo-clipped ceiling
+\(\max\{q_j,0\}\); and the gap is real: an explicit two-coordinate table has
+\(\chi=0\) against ceiling \(2\).  \Status{\Prod}
+
+\subsection{Exact mechanism characterizations}
+
+\Status{\Prod} Three one-stage mechanisms now have exact, machine-checked
+characterizations.
+
+\emph{Sure-exit sets} (\texttt{QuittingSureExitSet.lean}): ``exactly
+\(S\) quits surely'' is an exact terminal equilibrium iff no member prefers
+to leave (\(r_i(S)\geq r_i(S\setminus\{i\})\), with \(r(\emptyset)=0\)) and
+no outsider prefers to join (\(r_j(S)\geq r_j(S\cup\{j\})\)).
+
+\emph{The two-blocker gate} (\texttt{QuittingBlockerIntervalCover.lean}):
+the joining gain \(d_{ij}(h)=(1-h)q_j+h\,r_j(ij)-r_j(i)\) is affine in the
+owner rate, so its positivity set on \((0,1]\) is an interval; if every
+owner rate is blocked then one opponent blocks universally or two block by
+overlapping initial/terminal intervals.  A single blocker does not suffice
+(explicit uniform-obstruction counterexample); with at most two opponents
+the switching branch is vacuous, so three players is the exact threshold.
+
+\emph{Collision repair}
+(\texttt{QuittingCollisionRepairCharacterization.lean}): the one-stage
+sure-blocker mechanism --- blocker quits surely, owner at rate
+\(\delta\), all spectators continue, one-stage punishment switch --- admits
+accuracy-indexed equilibria iff owner endpoint optimality, every
+spectator's punishment-independent no-join, and the blocker-floor balance
+\emph{against the exact} \(\chi_j\) hold; both directions are formalized at
+arbitrary player count, with the sufficiency leg producing its punishment
+row from (28)--(29).  Corollaries: a sub-floor gap
+\(\gamma=\chi_j-q_j>0\) forces \(\delta\geq\gamma/(\gamma+p_{ij})\), and
+the mechanism provably fails at every rate below \(\gamma/(4M)\); at
+\(\delta=1\) the criterion collapses to the sure-exit test for the pair.
+A rational regression table escapes every branch of this map
+(\texttt{QuittingSwitchingResidueRegression.lean}), so the fixed-blocker
+branch map is provably not total.
+
+\subsection{No resurrection, support enlargement, and the local residue}
+
+\Status{\Audit} The advertised missing producer --- rare collision phases at
+vanishing occupation repairing a failed one-stage mechanism --- does not
+exist.  The occupation charge occurs in none of the pointwise support,
+blocker-cap, spectator, floor, or Bellman clauses, so a vanishing-error
+family of sure-blocker phases with rates bounded below exists iff an exact
+one-stage repair or exact sure-pair set already does; rotating owners
+against a fixed blocker does not average failure away.  Occupation scaling
+can scale additive ledger charges only.
+
+The regression table above was never a residual instance: it has an exact
+rational period-one root \(x^*=(1,2/7,1)\), \(v^*=(5/7,0,2/7)\), absorbed by
+the existing exact-cycle engine, with exact floors \(\chi=(2/3,0,2/7)\) and
+no sub-floor gap anywhere.  The genuinely missing operation is
+\emph{support enlargement}: with sure blocker \(j\), let \emph{both} other
+players mix.  The two interior indifference equations have explicit rational
+solutions; together with the blocker's quit-now inequality and the floors
+they are necessary and sufficient for an exact stationary terminal
+equilibrium on that support cell (the two-owner root).  \Status{\Audit}
+The residue after the gate, the sure sets, collision repair, and two-owner
+roots is a finite semialgebraic class once the exact algebraic \(\chi\) are
+adjoined; whether it is empty, or which members the cycle/circulation
+engines absorb, is the posed three-coordinate closing question.
+\Status{\Open}
+
+\subsection{Orbit budgets are exactly bounded potentials}
+
+\Status{\Prod} \texttt{Math/ChargedPathBudget.lean} formalizes, for abstract
+charged relations (states, edges, nonnegative charges), the exact duality
+behind the orbit-trap instrument: the supremum \(B^*\) of finite-path
+charges is finite iff a bounded edge-decreasing potential exists, with
+strong duality
+\[
+ B^*=\min\{\operatorname{osc}\Phi:\Phi\ \text{a bounded potential}\},
+\tag{30}
+\]
+the minimum attained by the budget-to-go \(V(s)=\sup\{\text{path charge
+from }s\}\), which is the least nonnegative Bellman supersolution.  A
+positive-charge self-loop or cycle refutes every potential class.  Two
+counterexamples delimit the theory: a countable towers relation has
+budget-to-go finite at \emph{every} state yet \(B^*=\infty\) (pointwise
+finiteness is strictly weaker than uniform), and a compact planar relation
+of budget one admits only discontinuous potentials --- continuous,
+affine, and polynomial classes are provably incomplete.  \Status{\Audit}
+The affine level and every fixed semialgebraic template are exactly
+decidable by quantifier elimination, but no decision procedure exists for
+the full format; searches are positive semidecisions.
+
+\Status{\Prod} The mandatory negative control is machine-checked end to
+end: the two-player quit-bonus table has an exact charge-\(1/2\) self-loop
+under the repository's own canonical one-stage operator
+(\texttt{QuittingQuitBonusSelfLoopBridge.lean}), so no bounded potential of
+any class exists for a weight that carries equilibria --- as must be the
+case.
+
+\subsection{Simultaneous punishment is strictly harder than per-player}
+
+\Status{\Audit} (hand-verified design; formalization queued).  A player's
+punishment exposure depends only on the opponents' plan coordinates, so at
+two players a shared punishment plan reaches both floors: the coordinates
+are disjoint and per-player optimal rows glue.  At three players this
+fails quantitatively: on an explicit cyclic table with \(\chi\equiv-1\),
+every shared plan leaves some player at \(\chi+3/4\) (an AM--GM bound
+visible at the first row alone), attained by the uniform constant row.
+On a second cyclic table the never-quit exposures under time-varying plans
+reproduce the Steinhaus--Trybu{\l}a non-transitive first-passage paradox
+\cite{SteinhausTrybula1959}: staggered hazard sequences push all three
+cyclic domination probabilities above \(1/2\), so \emph{stationarity
+plausibly fails for simultaneous punishment} --- an observation about one
+reply branch, not a theorem, and now a posed question.  The construction
+consequence either way: single-tail phase constructions pay the
+simultaneous excess, while deviator-triggered punishment needs only the
+per-player theory.
+
+\section{Repair languages, alternate routes, and falsifiers}
+
+\subsection{What can be verified now}
+
+\begin{longtable}{@{}p{.25\textwidth}p{.31\textwidth}p{.33\textwidth}@{}}
+\toprule
+Language & Current evidence & Boundary\\
+\midrule
+\endhead
+Never, direct First, and root continuation &
+\Status{\Prod} Exact root disintegration, all-continue tests, and
+continuation-preserving perturbation bounds. &
+A terminal jump needs a credible continuation, not just continuation zero.\\
+Supplied stationary product &
+\Status{\Prod} Full-rate Snell/best-response caps against arbitrary behavior. &
+Verifier only; zero stationary infimum need not be attained.\\
+Two-player pair repair &
+\Status{\Prod} Role-parametric repair with \(O(p)\) terminal exploitability. &
+Does not resolve credibility of arbitrary simultaneous quitter sets.\\
+Two-player all-table stationary existence &
+\Status{\Audit} The source six-scalar case split is complete. &
+The source-aligned all-table producer and terminal consumer are not yet
+packaged in Lean; exact behavioral attainment is false.\\
+Owner plus sure opponent set &
+\Status{\Prod} Exact full-rate criteria and counterexamples. &
+\Status{\Refuted} as a complete grammar: one table defeats every such profile
+but has another exact mixed stationary equilibrium.\\
+Periodic/contracting public repairs &
+\Status{\Prod} Compilers and rates for supplied cycles. &
+No theorem that every fully summable plateau contains the required cycle.\\
+Finite max-affine prefix plus tail &
+\Status{\Prod} Reinsertion has a sharp depth-free seam penalty when supplied
+a real tail and relative cap. &
+Attainable payoff--cap data are not closed, so a Euclidean limit is not a
+tail.\\
+Corrected absorption path &
+\Status{\Cond} Published ordinary path compactness and approximation are the
+leading infinity-chart source. &
+The marked subprobability/obstacle enrichment, sure-jump adapter, and both
+game-facing decoders are open.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Positive routes outside the quitting producer}
+
+\paragraph{Analytic leaf closure or arc improvement.}
+The endpoint atlas can be attacked leaf by leaf, or a theorem can select a
+more useful analytic germ.  Either approach still must select an implementable
+root target and compile legal public continuations.  Sorin prevents treating
+germ selection alone as sufficient.
+
+\paragraph{Fixed architecture synthesis.}
+The gain--bias characterization in (3) is a clear synthesis target.  A
+positive theorem would produce a finite controller, declare its delivery union
+and owner arenas, prove target transport and neutral occupation, then invoke
+the existing verifier.  The remaining questions are why a suitable finite
+architecture exists, how large it must be, and whether general strategies
+require hidden or unbounded memory.
+
+\paragraph{Vanishing-discount response synthesis.}
+\Status{\Open} A controlled analytic family of discounted
+APS/self-generating certificates might have a gain--bias limit
+\[
+ V^\lambda\approx g+\lambda^{-1}h,\qquad g+h=r+Ph.
+\tag{24}
+\]
+The consumer is already available.  Pointwise value convergence does not
+supply bounded bias: changing supports, multichain classes, and singular
+resolvent scales can invalidate one fixed architecture.  A positive result
+needs stable domains/support or a sound resolved limit; a chattering example
+would delimit this route only.
+
+\paragraph{$Q$-matrix preprocessing and the three-player oracle.}
+\Status{\Audit} Solan--Solan prove that if their derived quitting matrix is not
+a $Q$-matrix, ordinary uniform approximate equilibria exist
+\cite{SolanSolan2020}.  Once the matrix normalization and payoff convention are
+adapted exactly, the safe preprocessing order is
+\[
+ R(\Gamma)\notin Q\ \Longrightarrow\ \text{discharge by the published result},
+ \qquad
+ R(\Gamma)\in Q\ \Longrightarrow\ \text{run the P0 machinery}.
+\tag{25}
+\]
+It is not known that a positive optimized-debt plateau forces
+$R(\Gamma)\in Q$.  A machine-checked two-player regression already shows that
+positive debt in the selected zero-boundary grammar can coexist with an
+elementary stationary equilibrium whose payoff lies outside that chain
+geometry.  Thus a plateau-to-$Q$ implication would be a new compatibility
+theorem, not a corollary of external existence.
+
+Solan's three-player absorbing theorem is the nearest solved oracle
+\cite{Solan1999}.  The high-value mining target is not a wholesale port of its
+proof, but a scoped theorem that any three-player positive-debt plateau exposes
+one of P0-C/P0-D's corrected repair or surgery outputs.  This would test the
+proposed grammar where simultaneous packets and player transitions first
+become nontrivial.
+
+\paragraph{Absorption-path APS.}
+The essential-APS operator of \cite{AshkenaziGolanEtAl2026} suggests invariant
+sets and successor rules for continuous absorption paths on which at most one
+player randomizes at a mass time.  Its characterized payoff subset may be
+empty.  It should be mined for the structure of $V$ and $\mathcal O$, not
+reported as coverage of the positive plateau.
+
+\paragraph{Endogenous correlation.}
+The correlated-existence theorem points to a possible mechanism but also a
+boundary.  An autonomous device uses private current recommendations and
+delayed disclosure; it is not merely a public random bit.  Public-coin and
+correlation-separator modules test legal pieces of this question, including a
+target-specific absorbing lift that independent randomization cannot realize.
+A compiler must reproduce the needed information and obedience structure with
+legal play and sublinear cost.
+
+\subsection{What a negative route would have to prove}
+
+A genuine counterexample needs a finite game and \(\eta>0\) such that every
+behavior profile has a player and unilateral behavior deviation with the
+required positive gain at the relevant long horizon.  Failures of stationary,
+periodic, finite-memory, owner-solo, or selected-chain grammars do not meet
+this burden.
+
+For an actual stationary product profile \(x\), let \(u_i(x)\) be terminal
+payoff and \(c_i(x)\) its exact full-rate behavior cap.  The honest stationary
+filter is
+\[
+ g_{\mathrm{stat}}(x)=\max_i\max\{0,c_i(x)-u_i(x)\},\qquad
+ \delta_{\mathrm{stat}}=\inf_x g_{\mathrm{stat}}(x).
+\tag{26}
+\]
+\Status{\Audit} If \(\delta_{\mathrm{stat}}=0\), actual stationary terminal
+approximate equilibria exist at every accuracy; if it is positive, only the
+stationary class is excluded.  A graph-closure zero is an escape family, not
+an attained profile.
+
+The two-player table
+\[
+ r(\{1\})=(1,-1),\quad r(\{2\})=(-1,-1),\quad r(\{1,2\})=(-2,0)
+\tag{27}
+\]
+has stationary exploitability tending to zero but no exact behavioral terminal
+Nash equilibrium.  It refutes closed-attainable-tail and compact-zero-implies-
+root arguments, not finite-quitting existence.
+
+\section{Module map and current agenda}
+
+\begin{longtable}{@{}p{.30\textwidth}p{.30\textwidth}p{.30\textwidth}@{}}
+\toprule
+Need & Main artifact & Current boundary\\
+\midrule
+\endhead
+Semantic payoff iff cap constructor &
+\texttt{Uniform.lean} &
+\Prod, apart from arbitrary-game existence.\\
+Certificate implies uniform payoff &
+\texttt{AdaptiveCertificate.lean} and enforcement ledgers &
+\Prod; producer separate.\\
+Discounted source and analytic leaf &
+\texttt{Fink.lean}, \texttt{AnalyticBellman...} &
+\Prod; generic leaf closure open.\\
+Supplied public architecture &
+\texttt{PublicResponseCredibility...}, \texttt{SplitDomain...} &
+\Prod at the exact stated domains.\\
+Stopping and finite child composition &
+\texttt{Public...Stopping...}, finite-tree modules &
+\Prod for supplied children/rules.\\
+Special games &
+\texttt{BigMatchUniform.lean}, \texttt{SingleControllerPrimalExistence.lean} &
+\Prod at class scope.\\
+Quitting terminal consumer &
+\texttt{QuittingTerminalUniformization.lean} and payoff selection &
+\Prod; all-table producer absent.\\
+Positive/zero debt reduction &
+\texttt{QuittingFiniteDynamicDebt...}, provenance modules &
+\Prod through owner-clock and packet split.\\
+Finite anchored middle &
+\texttt{QuittingBoundaryHolonomy.lean} and
+\texttt{QuittingBoundaryHolonomyCompactness.lean} &
+\Prod: exact finite algebra, fixed-cutoff compact/closed realized lift, and
+literal unbounded-length fence.\\
+Two-ended endpoint extraction &
+\texttt{QuittingTwoEndedDynamicDebtCompactification.lean} &
+\Prod; no middle transport or decoder.\\
+Marked absorption cylinder/path &
+No Lean artifact yet; exact target in the positive-plateau claim files &
+\Open: finite semantic encoding, strategic closed graph, endpoint adapter, and
+two decoders all remain.\\
+Exact punishment value &
+\texttt{QuittingStationaryMinMax.lean} &
+\Prod: both inequalities, all plans; attainment and the finite-horizon
+average bridge deliberately unclaimed.\\
+Terminal mechanism layer &
+\texttt{QuittingSureExitSet.lean},
+\texttt{QuittingBlockerIntervalCover.lean},
+\texttt{QuittingCollisionRepairCharacterization.lean} &
+\Prod: exact characterizations; the two-owner root and the residue decision
+are \Audit/\Open.\\
+Orbit-budget duality and calibration &
+\texttt{Math/ChargedPathBudget...}, \texttt{QuittingQuitBonusSelfLoopBridge.lean} &
+\Prod for the duality, counterexamples, and the operator-level self-loop;
+decidability boundary \Audit.\\
+Reduced ledger-cap package &
+\texttt{QuittingReducedCapConjecture.lean} &
+The measured residual: six clauses, package-to-conjecture gap-free;
+clause (P) dischargeable at exact \(\chi\) for two players (design
+recorded), simultaneous discharge open at three.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Ordered research agenda}
+
+\begin{enumerate}
+\item \textbf{Decide the local residue.}  The gate, sure sets, collision
+repair, and two-owner roots leave a finite semialgebraic residue at three
+coordinates.  Exhibit a member and adjudicate it against the exact-cycle
+and circulation engines, or prove the residue empty --- either outcome is a
+coverage theorem.  This is the posed three-coordinate closing question.
+\item \textbf{Formalize the support-enlargement layer.}  The two-owner root
+characterization, the no-resurrection corollary on the landed
+collision-repair module, and the regression table's exact resolution
+(floors, period-one root, uniform defect) are unblocked formalization
+targets with the mathematics already audited.
+\item \textbf{Land the punishment-attainment module.}  Per-player
+attainment at the exact \(\chi\), the two-player simultaneous clause-(P)
+discharge, and the three-player separation table are designed and
+hand-verified; the simultaneous-stationarity question (the
+Steinhaus--Trybu{\l}a branch) is posed separately.
+\item \textbf{Discharge the remaining borrowed premises.}  The
+Solan--Vieille perfection-to-equilibrium proposition now gates both an
+outer equivalence leg and the repair of the weighted-lemma reading under
+intake; formalizing it removes the last paper IOU.
+\item \textbf{Continue the marked-cylinder lane.}  Fix the finite cylinder
+semantics (P0-A), design topology and decoders together (P0-B/C/D), and
+discharge uniformization by sequential contradiction (P0-E).  The robust
+pointwise alternative remains the load-bearing open arrow of that lane.
+\item \textbf{Run the instrument and refutation searches in parallel.}
+The budget/potential duality gives exact negative filters and decidable
+template levels; searches are positive semidecisions and no bounded
+grammar exclusion is an all-behavior counterexample.
+\item \textbf{Package the known two-player base case.}  Formalize the
+six-scalar pure/no-pure split, vanishing owner-solo branch, role reversal,
+and terminal-to-uniform consumer; retain exact nonattainment as a
+regression.
+\end{enumerate}
+
+\section{Acceptance test and conclusion}
+
+Before accepting a generic closure, ask:
+
+\begin{enumerate}
+\item Which source branch is selected, and why is the complete root target
+implementable rather than merely a limit?
+\item What actual behavior profile or public architecture exists at each
+accuracy?
+\item Why are all unilateral history-dependent deviations capped?
+\item Where is every target coordinate transported through public branching
+and stopping?
+\item For a quitting boundary object, which missing mass is a finite exit port
+and which is genuine Never?  Where are the conditional marked packet and the
+full stopping obstacle retained?
+\item How is a sure terminal jump tested against the off-path continuation
+created when a prescribed quitter Continues?
+\item Why is entry/rebasing legal after every invoked public history?
+\item What decreases well-foundedly, or which realized account is discharged?
+Is that decrease uniform enough to contradict a plateau?
+\item Which existing semantic verifier consumes the object without a circular
+field that asks for uniform equilibrium again?
+\item Does it survive the permanent regressions: Sorin target mismatch, Big
+Match adaptivity, split-domain failure, behavioral nonattainment,
+owner-transfer failure, and static sure-set incompleteness?
+\end{enumerate}
+
+The repository is no longer pursuing a vague claim that discounted equilibria
+should converge.  It has a checked semantic waist and several independently
+useful theorem families.  The finite-quitting route has an exhaustive
+zero-versus-positive-debt split, an exhaustive owner-clock split, exact
+finite-middle holonomy with fixed-cutoff closure and a precise literal-length
+obstruction, and --- new at this snapshot --- an exact punishment value and an
+exactly characterized one-stage terminal mechanism layer.
+
+Two boundaries constrain what the chain machinery can be asked to do.  Uniform
+middle-length tightness is false, and no bounded modification of a minimizer
+lowers its optimized debt by a cutoff-independent amount.  Both are settled by
+explicit two-player weights.  Those same weights show that a positive optimized
+debt need not say anything about the game: pinning the terminal continuation to
+zero forces a strictly positive gap at every finite horizon, and each of the two
+known plateau weights has an exact equilibrium at which the debt vanishes once
+that pin is released.  A positive plateau is therefore evidence that the
+zero-boundary chain grammar has missed the equilibrium, not that none exists.
+
+The carrier that replaces the pinned chain is a \emph{cycle}: finitely many rows
+together with values that the rows reproduce, complementary at every phase, and
+absorbing in the sense that the joint continuation mass over one period is below
+one.  The mechanism layer now says precisely which one-stage cycles exist: the
+sure-exit test for pure coalitions, the collision-repair conditions priced
+against the exact \(\chi\), and the two-owner indifference cell.  It also says
+what cannot substitute for them: occupation-scaled rare phases add nothing
+pointwise, and one blocker never suffices where two are needed.
+
+At three coordinates the open question is therefore no longer a search over an
+unbounded grammar; it is one finite semialgebraic decision.  Either the residue
+after the mechanism layer is empty --- a coverage theorem closing the local
+case --- or a member survives and must be adjudicated against the exact-cycle
+and circulation engines, whose data (continuation values, triple-cell
+interactions) the mechanism scalars provably do not determine.  For the general
+program, the measured residual is the six-clause ledger-cap package: its
+punishment clause is now dischargeable at the exact floor for two players,
+while the three-player shared-punishment cost is quantified by an explicit
+separation and connected, unexpectedly, to non-transitive first-passage
+orderings.  Deciding the residue and the package's remaining clauses would
+close finite quitting games; the general finite-stochastic-game conjecture
+would still require a separate reduction or producer.
+
+\begin{thebibliography}{99}
+
+\bibitem{Shapley1953}
+L.~S. Shapley, Stochastic games, \emph{Proceedings of the National Academy
+of Sciences} 39 (1953), 1095--1100.
+
+\bibitem{BewleyKohlberg1976}
+T.~Bewley and E.~Kohlberg, The asymptotic theory of stochastic games,
+\emph{Mathematics of Operations Research} 1 (1976), 197--208.
+
+\bibitem{MertensNeyman1981}
+J.-F. Mertens and A.~Neyman, Stochastic games,
+\emph{International Journal of Game Theory} 10 (1981), 53--66.
+
+\bibitem{BlackwellFerguson1968}
+D.~Blackwell and T.~S. Ferguson, The Big Match,
+\emph{Annals of Mathematical Statistics} 39 (1968), 159--163.
+
+\bibitem{Sorin1986}
+S.~Sorin, Asymptotic properties of a non-zero sum stochastic game,
+\emph{International Journal of Game Theory} 15 (1986), 101--107.
+
+\bibitem{Solan1999}
+E.~Solan, Three-player absorbing games,
+\emph{Mathematics of Operations Research} 24 (1999), 669--698.
+
+\bibitem{SolanSolan2020}
+E.~Solan and O.~N. Solan, Quitting games and linear complementarity problems,
+\emph{Mathematics of Operations Research} 45 (2020), 626--651.
+\url{https://doi.org/10.1287/moor.2019.0996}
+
+\bibitem{AshkenaziGolanEtAl2024}
+O.~Ashkenazi-Golan, I.~Krasikov, C.~Rainer, and E.~Solan,
+Absorption paths and equilibria in quitting games,
+\emph{Mathematical Programming} 203 (2024), 735--762.
+\url{https://doi.org/10.1007/s10107-022-01807-6}
+
+\bibitem{AshkenaziGolanEtAl2026}
+O.~Ashkenazi-Golan, I.~Krasikov, C.~Rainer, and E.~Solan,
+The APS approach for undiscounted quitting games,
+\emph{International Journal of Game Theory} (2026).
+\url{https://doi.org/10.1007/s00182-026-00982-6}
+
+\bibitem{Vieille2000I}
+N.~Vieille, Two-player stochastic games I: a reduction,
+\emph{Israel Journal of Mathematics} 119 (2000), 55--91.
+
+\bibitem{Vieille2000II}
+N.~Vieille, Two-player stochastic games II: the case of recursive games,
+\emph{Israel Journal of Mathematics} 119 (2000), 93--126.
+
+\bibitem{Vieille2000III}
+N.~Vieille, Small perturbations and stochastic games,
+\emph{Israel Journal of Mathematics} 119 (2000), 127--142.
+
+\bibitem{SolanVieille2001}
+E.~Solan and N.~Vieille, Quitting games,
+\emph{Mathematics of Operations Research} 26 (2001), 265--285.
+
+\bibitem{SolanVieilleExample2002}
+E.~Solan and N.~Vieille, Quitting games---an example,
+\emph{International Journal of Game Theory} 31 (2002), 365--381.
+
+\bibitem{SolanVieille2002}
+E.~Solan and N.~Vieille, Correlated equilibrium in stochastic games,
+\emph{Games and Economic Behavior} 38 (2002), 362--399.
+
+\bibitem{HansenIbsenJensenNeyman2025}
+K.~A. Hansen, R.~Ibsen-Jensen, and A.~Neyman, Stochastic games with limited
+public memory, preprint, 2025.  \url{https://arxiv.org/abs/2505.02623}
+
+\bibitem{SteinhausTrybula1959}
+H.~Steinhaus and S.~Trybu{\l}a, On a paradox in applied probabilities,
+\emph{Bulletin de l'Acad\'emie Polonaise des Sciences} 7 (1959), 67--69.
+
+\bibitem{SolanVieille2025}
+E.~Solan and N.~Vieille, Undiscounted equilibrium in positive recursive
+absorbing games with non-rectangular absorption structure, preprint, December
+2025.  \url{https://arxiv.org/abs/2512.04306}
+
+\end{thebibliography}
+
+\end{document}

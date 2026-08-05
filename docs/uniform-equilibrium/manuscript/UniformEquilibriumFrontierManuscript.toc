@@ -1,0 +1,52 @@
+\contentsline {section}{\numberline {1}Status discipline and the exact question}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Snapshot and evidence legend}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Uniform equilibrium, with its quantifiers visible}{3}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Program map}{4}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Glossary}{4}{section.2}%
+\contentsline {section}{\numberline {3}Literature boundary and solution-concept map}{5}{section.3}%
+\contentsline {section}{\numberline {4}Production foundation: the two waists}{7}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Semantic cap constructor}{7}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Adaptive potential verification}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Supplied public response architectures}{7}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Composition and concrete controllers}{8}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Discounted analytic source data}{8}{section.5}%
+\contentsline {subsection}{\numberline {5.1}The analytic germ and endpoint atlas}{8}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Endpoint is not target}{8}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Analytic infrastructure}{9}{subsection.5.3}%
+\contentsline {section}{\numberline {6}Special cases and permanent no-go tests}{9}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Positive theorem surface}{9}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Negative results that constrain future designs}{9}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Finite quitting games: exhaustive reduction to one residual}{10}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Model and terminal semantics}{10}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}The final consumer is already available}{10}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Finite exact chains and dynamic debt}{10}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}What positive debt forces}{11}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}The fully summable residual}{11}{subsection.7.5}%
+\contentsline {section}{\numberline {8}Finite holonomy, the length fence, and the selected infinity chart}{11}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Finite-middle holonomy}{11}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Anchoring is essential data}{12}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Fixed-cutoff closure and the literal-length fence}{12}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}Why ordinary scalar closure is insufficient}{12}{subsection.8.4}%
+\contentsline {subsection}{\numberline {8.5}Marked subprobability absorption paths}{13}{subsection.8.5}%
+\contentsline {subsection}{\numberline {8.6}The stopping obstacle and the sure-jump adapter}{13}{subsection.8.6}%
+\contentsline {subsection}{\numberline {8.7}The precise P0 theorem stack}{14}{subsection.8.7}%
+\contentsline {subsection}{\numberline {8.8}Why descent must be uniform}{15}{subsection.8.8}%
+\contentsline {section}{\numberline {9}The terminal branch architecture and the exact punishment value}{15}{section.9}%
+\contentsline {subsection}{\numberline {9.1}The punishment value is a stationary stopping value}{15}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Exact mechanism characterizations}{16}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}No resurrection, support enlargement, and the local residue}{16}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Orbit budgets are exactly bounded potentials}{16}{subsection.9.4}%
+\contentsline {subsection}{\numberline {9.5}Simultaneous punishment is strictly harder than per-player}{17}{subsection.9.5}%
+\contentsline {section}{\numberline {10}Repair languages, alternate routes, and falsifiers}{17}{section.10}%
+\contentsline {subsection}{\numberline {10.1}What can be verified now}{17}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Positive routes outside the quitting producer}{18}{subsection.10.2}%
+\contentsline {paragraph}{Analytic leaf closure or arc improvement.}{18}{section*.29}%
+\contentsline {paragraph}{Fixed architecture synthesis.}{18}{section*.30}%
+\contentsline {paragraph}{Vanishing-discount response synthesis.}{18}{section*.31}%
+\contentsline {paragraph}{$Q$-matrix preprocessing and the three-player oracle.}{18}{section*.33}%
+\contentsline {paragraph}{Absorption-path APS.}{19}{section*.35}%
+\contentsline {paragraph}{Endogenous correlation.}{19}{section*.36}%
+\contentsline {subsection}{\numberline {10.3}What a negative route would have to prove}{19}{subsection.10.3}%
+\contentsline {section}{\numberline {11}Module map and current agenda}{19}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Ordered research agenda}{21}{subsection.11.1}%
+\contentsline {section}{\numberline {12}Acceptance test and conclusion}{21}{section.12}%
