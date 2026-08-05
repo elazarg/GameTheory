@@ -7,9 +7,6 @@ CLAUDE.md
 .worktrees/
 .cache/
 .mcp.json
-ephemeral/
-experiments/
-questions/
 *.log
 .codex
 *.pdf
