@@ -585,6 +585,7 @@ import GameTheory.Concepts.Stochastic.QuittingPunishmentFloor
 import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchProfile
 import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchDeviationCap
 import GameTheory.Concepts.Stochastic.QuittingSurvivalWindowLanding
+import GameTheory.Concepts.Stochastic.QuittingWeightedContinueMassBound
 import GameTheory.Concepts.Stochastic.QuittingLedgerPunishClock
 import GameTheory.Concepts.Stochastic.QuittingLiveChainDominationCap
 import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchResiduals
