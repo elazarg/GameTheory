@@ -111,9 +111,17 @@ the capstone.
 
 ## The seam price, and the three deficits it must not be confused between
 
-`M`, tested. The `δ/ρ` seam law is **exact for one object, a sharp bound for a
-second, and false for the third** — and the third is the one this group's
-descent work is about.
+`L`, machine-checked. The `δ/ρ` seam law is **exact for one object, a sharp
+bound for a second, and false for the third** — and the third is the one this
+group's descent work is about.
+
+The exact form needed no hypothesis beyond what the definitions already give:
+the successor payoff is affine in the tail value with slope the *full* joint
+continue mass, unconditionally, with no exactness assumption. The failure for
+the deviation objective has an explicit witness — an isolated coordinate at
+hazard rates `1/2` and `1/3`, where the mismatch is a rate-independent constant
+while the full deficit varies with the rate, so **no** single `δ` reproduces it
+as `δ/ρ`. There the deleted deficit is exactly `0`.
 
 Three contraction deficits are involved and are not interchangeable:
 
