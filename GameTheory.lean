@@ -126,6 +126,7 @@ import GameTheory.Concepts.Stochastic.Uniform
 import GameTheory.Concepts.Stochastic.PunishmentLevel
 import GameTheory.Concepts.Stochastic.ActionLegalityBehaviorTransfer
 import GameTheory.Concepts.Stochastic.ActionLegalityNormalizedHistory
+import GameTheory.Concepts.Stochastic.ActionLegalityDisintegration
 import GameTheory.Concepts.Stochastic.InfinitePlayMeasure
 import GameTheory.Concepts.Stochastic.LiminfAverageBridge
 import GameTheory.Concepts.Stochastic.UniformExistenceConjecture
@@ -560,6 +561,7 @@ import GameTheory.Concepts.Stochastic.QuittingJointComplementarity
 import GameTheory.Concepts.Stochastic.QuittingCandidateHardWeightCycle
 import GameTheory.Concepts.Stochastic.QuittingCandidateHardWeightCoordinateSilence
 import GameTheory.Concepts.Stochastic.QuittingCyclicWeightRowDichotomy
+import GameTheory.Concepts.Stochastic.QuittingHazardRowBridge
 import Math.NonnegativeLeadingSymbol
 import Math.LinearAlgebra.ExactBlockElimination
 import Math.LinearAlgebra.ExactBlockEliminationConfluence
