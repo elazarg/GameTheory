@@ -236,10 +236,15 @@ theorem fullLift_terminalProjection_eq_self
   have hpath := path_eq_backwardMaps (chartDerivative data) z.2
     (value_step_of_fullJacobian_eq_zero data hz)
   ext j
-  · simp [fullLift, hazardLift, terminalProjection]
+  · simp only [fullLift, hazardLift, terminalProjection, LinearMap.coe_mk,
+      AddHom.coe_mk, LinearMap.prod_apply, Function.prod_apply,
+      LinearMap.pi_apply, LinearMap.coe_comp, LinearEquiv.coe_coe,
+      Function.comp_apply]
     rw [← hpath j.succ]
     exact (active_eq_of_fullJacobian_eq_zero data hz j).symm
-  · simp [fullLift, valueLift, terminalProjection]
+  · simp only [fullLift, valueLift, terminalProjection, LinearMap.coe_mk,
+      AddHom.coe_mk, LinearMap.prod_apply, Function.prod_apply,
+      LinearMap.pi_apply]
     exact (hpath j).symm
 
 theorem fullJacobian_fullLift_eq_zero
@@ -253,7 +258,11 @@ theorem fullJacobian_fullLift_eq_zero
   ext j
   · simp [fullJacobian, fullLift, hazardLift, valueLift]
   · refine Fin.cases ?_ (fun k => ?_) j
-    · simp [fullJacobian, fullLift, valueLift]
+    · simp only [fullJacobian, fullLift, valueLift, LinearMap.prod_apply,
+        Function.prod_apply, LinearMap.coe_mk, AddHom.coe_mk,
+        LinearMap.pi_apply, backwardMaps_last, LinearMap.id_coe, id_eq,
+        backwardMaps_castSucc, LinearMap.coe_comp, Function.comp_apply,
+        Fin.cases_zero, Prod.snd_zero, Pi.zero_apply]
       exact sub_eq_zero.mpr hclose
     · simp [fullJacobian, fullLift, hazardLift, valueLift,
         chartDerivative]
