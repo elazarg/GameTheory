@@ -110,8 +110,13 @@ is no longer load-bearing for this weight.
 
 Two structural corollaries from the same answer, both `M [reported]`:
 
-- **`n = 3` is minimal**: every two-coordinate weight admits a period-one
-  exact cycle, so the cycle-existence hole cannot occur with two players.
+- **`n = 3` is minimal — corrected form**: every two-coordinate weight
+  **with some `r_i({i}) > 0`** admits a period-one exact cycle. The
+  unqualified form is false: a zero-solo two-coordinate weight can have
+  all-continue as its only exact structure, which has survival `1` and is no
+  cycle. The hole (which requires a positive solo value to escape branch
+  one) still cannot occur at two players, but the minimality statement must
+  carry the positivity hypothesis.
 - **Cycle sets are affine-invariant; branch membership is not.** Coordinatewise
   payoff translation and positive scaling preserve exactly-complementary
   sequences. So the zero-solo three-coordinate weight with no exact cycle

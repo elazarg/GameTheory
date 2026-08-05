@@ -384,13 +384,32 @@ condition that a uniform equilibrium payoff is eventually approximately
 individually rational. The `χ` in the older quitting files remains an unrelated
 best-response-summary coefficient — a name collision, not a punishment notion.
 
-What the punishment module does **not** yet do is refute anything. For quitting
-games only a *ceiling* is proved, and a ceiling is the wrong direction: the
-no-go generator needs a **lower** bound before it can reject a concrete table.
-Also missing on that side is a stochastic `feasibleSet` — the kernel-game half
-exists, the stochastic half does not — and a capping theorem for the landed
-planned-survival stopping index, which currently carries its three defining
-properties and no cap.
+The folk bill is now two-thirds closed, superseding the previous paragraph
+here. **The floor landed** (`QuittingPunishmentFloor.lean`): the naive floor
+refuted first, the unconditional floor `max{(T−1)/T·mIn, mOut}`, the
+sandwich converging to `max 0 (solo)` under two finitely-checkable table
+conditions, exactness on the hostile witness — and **the no-go generator
+refutes for the first time**: the zero payoff is not a uniform equilibrium
+payoff of the quit-bonus table, margin `1/4` from horizon `4`. **The
+feasible set landed** (`Feasible.lean`): finite-horizon and asymptotic,
+composed with IR into the full necessary direction, with the non-convexity
+fence (`(p−q)² = −1`) proving the classical folk hypothesis shape false for
+this model at horizon one. What remains of the bill: the sufficiency
+direction is not even conjectured in Lean, and its three named blockers are
+punishment attainment below the ceiling (Q162), hull attainability (the
+model lacks public randomization — and note the padding separation proves
+padding *smuggles it in*: the XOR lottery attains a non-product point, so
+padding strictly enlarges the feasible set, not merely the equilibrium set),
+and feeding an all-errors family from the compiler into the landed selection
+theorem. The capping theorem for the planned-survival stopping index arrived
+with the phase-switch engine, its caps as named hypotheses.
+
+**And the first capstone exists**: every two-player quitting game has a
+uniform equilibrium payoff — `quittingGame_exists_uniformEquilibriumPayoff_twoPlayer`,
+zero hypotheses, four branches, no discount limit. Known mathematics since
+Vrieze–Thuijsman, but the first machine-checked existence theorem for a
+nontrivial stochastic-game class, and its route is the branch classification
+aimed at `n ≥ 3`, not the classical vanishing-discount argument.
 
 The general semantic layer does not *forbid* such a profile — `IsUniformEquilibriumPayoff`
 quantifies over arbitrary behaviour — so this is a gap in the decompositions,
