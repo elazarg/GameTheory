@@ -1608,37 +1608,36 @@ machine-checked witness for the failure. Vanishing absorption gives an inverse
 pole but not non-existence, and that must be stated so the earlier reading
 cannot return.
 
-### `MATH-P0-6` — close the trichotomy's cycle-existence hole
+### `MATH-P0-6` — port the all-periods non-existence theorem
 
 - **Status:** READY
 - **Lane:** P0
 - **Depends:** `LEAN-P0-9`.
 - **Record:** [exact-vs-relaxed]
 
-**Objective.** Decide whether a weight with **some positive solo value** can
-admit no absorbing exactly-complementary cycle of any finite period.
+**Objective.** Port the published Theorem 2.1, in its bounded form, to get
+`¬∃ terminal, IsQuittingCyclicContinuation reward terminal` at **every** period
+for the `ε`-perturbed cyclic three-player weight.
 
-**State.** `READY`, and this is one of the trichotomy's two remaining holes. The
-trichotomy is exhaustive only under the hypothesis that the weight admits an
-absorbing complementary cycle at all; weights admitting none are outside it. A
-positive answer therefore exhibits a weight outside the whole statement. A
-negative answer makes the hypothesis automatic off the zero-solo branch and
-closes the hole.
+**State.** `READY`, and the motivation is settled rather than speculative: that
+weight already **occupies** the trichotomy's cycle-existence hole. Its solo
+values are all `1 > 0`, so the zero-solo branch fails; period one is excluded by
+the affine no-join condition, which at one coordinate pair reads `1 + pε ≤ 0`;
+period three is excluded because the unperturbed phase-rotation block acquires a
+strictly profitable deviation of exactly `ε/2`. Only the all-periods statement
+is missing, and it is the published paper's actual contribution — its own
+`ρ`-argument through a chain of six lemmas. Nothing weaker suffices, since the
+two computations above cover two periods.
 
-The technique now exists. `LEAN-P0-9`'s weight admits no exact cycle of any
-period, by a finite argument — nonnegative centered values, at most one positive
-coordinate per exact row, singleton rows pinning one coordinate to zero while
-forcing its predecessor strictly positive, and a phase-invariant coordinate sum
-the block endpoints cannot meet. But that weight is **zero-solo**, so branch one
-already covers it and it demonstrates only the method. The question is whether
-the construction survives giving some coordinate a positive solo value.
+The comparison is sound. The terminal payoff is not a surrogate: finite-average
+payoff converges to it unconditionally for every profile including off-path
+deviations, so an absorbing cyclic continuation block is the same object as the
+literature's completely absorbing admissible sequence.
 
-Note absorption is not the obstruction: a positive solo value **forces**
-absorption in any exactly-complementary sequence, so any cycle that exists is
-automatically absorbing.
-
-**Acceptance.** A decision with the weight if positive. Do not settle it with a
-zero-solo weight; that is the already-covered case.
+**Acceptance.** The non-existence theorem for this weight, or a precise account
+of which lemma in the chain resists. The farmed defect register must be checked
+against every lemma relied on; it records an unbounded boundary term in the
+printed statement, and the bounded form is what carries the periodic case.
 
 ### `MATH-P0-7` — a sufficiency theorem for the isolated-negative branch
 

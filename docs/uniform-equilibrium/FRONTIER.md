@@ -183,7 +183,19 @@ cycle, or nonnegative solo weight — yields a periodic profile that is terminal
 `0`-Nash at every phase, hence terminal `ε`-Nash at every accuracy, hence a
 uniform equilibrium payoff through the landed selection theorem. There is **no
 strategy-class gap**: the consumed predicate quantifies over all behavior
-strategies. The admissibility hypothesis is not removable; a one-stage block
+strategies.
+
+**Nor is there a surrogate gap (`L`).** The terminal payoff is not a stand-in
+for the asymptotic one: `tendsto_finiteAveragePayoff_quittingGame` gives
+convergence of the finite average to `quittingTerminalPayoff`
+**unconditionally, for every profile, including off-path deviations**. So exact
+terminal Nash *is* exact `0`-equilibrium of the asymptotic-payoff game, and per
+stage the Nash–Bellman edge condition is equivalent to full one-shot mixed Nash.
+An absorbing cyclic continuation block is therefore the same object as the
+literature's finite-period completely absorbing admissible sequence — the
+comparison with published non-existence theorems is sound, not an equivocation.
+
+The admissibility hypothesis is not removable; a one-stage block
 with negative solo weight, its owner quitting at rate `1/2` against a silent
 opponent, satisfies every other clause while the owner gains by continuing
 forever.
@@ -215,7 +227,15 @@ The trichotomy leaves **two holes**, and these are the open content:
 
 1. It is exhaustive only under the hypothesis that the weight admits an
    absorbing complementary cycle **at all**. Weights admitting none of any
-   period are outside it entirely.
+   period are outside it entirely. **This hole is occupied.** The published
+   `ε`-perturbation of the cyclic three-player table has solo values all `1 > 0`
+   — so the zero-solo branch fails — and admits no absorbing cyclic continuation
+   at any period, by the published Theorem 2.1 in its bounded form
+   (`M [reported]`, unformalized here). Period one is excluded by the affine
+   no-join condition, which at one coordinate pair reads `1 + pε ≤ 0`; period
+   three is excluded because the unperturbed phase-rotation block acquires a
+   strictly profitable deviation of size exactly `ε/2`. So the leading hard
+   candidate is *outside the trichotomy*, not inside an unproved branch of it.
 2. The isolated-negative branch has **no sufficiency theorem**. One specific
    two-coordinate weight in it does have a uniform equilibrium payoff, by an
    explicit symmetric contracting perturbation, but that construction is stated

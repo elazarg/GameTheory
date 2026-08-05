@@ -1,0 +1,97 @@
+# A published weight sits in the cycle-existence hole
+
+| Status | Provenance | Consumer | Falsifier |
+| --- | --- | --- | --- |
+| `OPEN`, maturity `M [reported]`, P0 | Solan 2001 Thm 2.1, notion audit | the trichotomy's hypothesis | an absorbing cyclic continuation for this weight at some period |
+
+## The compiler's output is not a surrogate
+
+`L`, traced through the definitions. This had to be settled before anything
+below could mean anything, and it settles favourably.
+
+`IsεAsymptoticNash (quittingTerminalPayoff reward) 0 profile` is exact Nash
+against the terminal payoff over **all** behavior-strategy deviations, with no
+restricted class. And `tendsto_finiteAveragePayoff_quittingGame` proves,
+**unconditionally for every profile — including off-path deviations** — that the
+finite-average payoff converges to `quittingTerminalPayoff`. So exact terminal
+Nash *is* exact `0`-equilibrium of the actual asymptotic-payoff game; the
+terminal payoff is not a stand-in for it.
+
+Per stage the same holds: the Nash–Bellman edge condition is proved equivalent
+to full one-shot mixed Nash. So `IsQuittingCyclicContinuationBlock` — value
+recursion, exact edges, positive absorption somewhere — is the *same object* as
+the published notion of a finite-period completely absorbing admissible
+sequence. The bridge onward to `IsUniformEquilibriumPayoff` is a further and
+weaker consequence, not the load-bearing step.
+
+This closes, in the affirmative, the standing worry that our cycle machinery
+might be certifying a weaker object than the literature's.
+
+## The weight
+
+`M [reported]`. The published three-player family, with the `ε`-bonus on
+two-quitter entries:
+
+```
+r({1}) = (1, 3, 0)        r({1,2}) = (1+ε, 0, 1)
+r({2}) = (0, 1, 3)        r({2,3}) = (1, 1+ε, 0)
+r({3}) = (3, 0, 1)        r({1,3}) = (0, 1, 1+ε)
+                          r({1,2,3}) = (0, 0, 0)
+```
+
+Solo values are all `1 > 0`, so it is **not zero-solo**: the trichotomy's first
+branch fails outright.
+
+**No period-one cycle.** The affine no-join condition asks, for some coordinate
+`i` with positive solo value, a rate `p ∈ (0,1]` with
+`(1-p)·r_j({j}) + p·r_j({i,j}) ≤ r_j({i})` for every `j ≠ i`. At `i = 1, j = 3`
+it reads `(1-p)·1 + p·(1+ε) ≤ 0`, i.e. `1 + pε ≤ 0`, false for every `p`. The
+cyclic symmetry gives the same at `i = 2` and `i = 3`.
+
+Note this already fails at `ε = 0`, where an admissible cycle nonetheless
+**exists** at period three. So no-join failing is not by itself evidence of
+non-existence — period three is where the unperturbed table lives, and the fence
+only rules out period one.
+
+**No period-three cycle.** The unperturbed phase-rotation block, machine-checked
+for `ε = 0`, breaks under the perturbation: at the phase where the silent
+creditor coordinate is promised value `1`, deviating to sure-quit against the
+opponent's mixing at `1/2` pays `½(1+ε) + ½·1 = 1 + ε/2`, a strictly profitable
+deviation of size `ε/2`. This is the published preemption mechanism, recomputed
+inside our own endpoint-difference formula.
+
+**No cycle at any period** is the published Theorem 2.1 — that the relevant
+fixed-point set contains only trivial vectors. **Unformalized here.** The farmed
+defect register records real flaws in the printed statement, an unbounded
+boundary term, and two bugs in a *different* theorem's sketch, and notes that
+none touch the bounded form. A finite-period exact cycle carries finitely many
+payoff vectors, hence is bounded, so the bounded form suffices for the periodic
+case — which is all this needs.
+
+## What it exhibits
+
+The trichotomy is exhaustive only under the hypothesis that the weight admits an
+absorbing cyclic continuation at all. This weight has positive solo values and —
+modulo the unformalized theorem — admits none at any period. So the
+cycle-existence hole is **not hypothetical**: a published game sits in it, and
+it is the same game the program already treats as its leading hard candidate.
+
+It does **not** refute existence. The family has a uniform equilibrium payoff.
+What it refutes is the adequacy of the cycle route as a *complete* method.
+
+## What must be formalized
+
+`¬∃ terminal, IsQuittingCyclicContinuation reward terminal` for this weight, at
+every period — a port of the published Theorem 2.1 in its bounded form. That is
+the paper's actual contribution and is substantial: the argument runs through
+its own `ρ`-argument and a chain of six lemmas. Nothing weaker will do, since
+the two negative computations above cover periods one and three only.
+
+## Open
+
+- The port itself.
+- Whether a **rational** weight with positive solo values and no cycle of any
+  period exists, provable self-containedly. This family is rational for rational
+  `ε`, but its non-existence proof is not self-contained here.
+- Whether the isolated-negative branch's missing sufficiency theorem and this
+  hole are independent, or two faces of the same gap.
