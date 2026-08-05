@@ -329,8 +329,8 @@ theorem noCollisionRepair_01 (L rate : ℝ) (h0 : 0 ≤ rate) (h1 : rate ≤ 1) 
   rw [hr] at hspectator
   rw [quittingCollisionRepairValue_apply] at hspectator
   simp only [quittingSetReward_gameReward] at hspectator
-  change (1 : ℝ) ≤ 0 at hspectator
-  norm_num at hspectator
+  have hbad : (1 : ℝ) ≤ 0 := by simpa [reward] using hspectator
+  norm_num at hbad
 
 /-- `(owner, blocker) = (0,2)`: owner optimality forces rate `1`, where the
 blocker's leave deviation gives `2/5 > 0`. -/
@@ -347,8 +347,8 @@ theorem noCollisionRepair_02 (L rate : ℝ) (h0 : 0 ≤ rate) (h1 : rate ≤ 1) 
   unfold QuittingCollisionBlockerBalance at hbalance
   rw [quittingCollisionRepairValue_apply] at hbalance
   simp only [quittingSetReward_gameReward] at hbalance
-  change (2 / 5 : ℝ) ≤ 0 at hbalance
-  norm_num at hbalance
+  have hbad : (2 / 5 : ℝ) ≤ 0 := by simpa [reward] using hbalance
+  norm_num at hbad
 
 /-- `(owner, blocker) = (1,0)`: owner optimality forces rate `1`, where
 spectator `2` strictly joins. -/
@@ -364,8 +364,8 @@ theorem noCollisionRepair_10 (L rate : ℝ) (h0 : 0 ≤ rate) (h1 : rate ≤ 1) 
   rw [hr] at hspectator
   rw [quittingCollisionRepairValue_apply] at hspectator
   simp only [quittingSetReward_gameReward] at hspectator
-  change (1 : ℝ) ≤ 0 at hspectator
-  norm_num at hspectator
+  have hbad : (1 : ℝ) ≤ 0 := by simpa [reward] using hspectator
+  norm_num at hbad
 
 /-- `(owner, blocker) = (1,2)`: owner optimality forces rate `1`, where the
 blocker's leave deviation gives `1 > 0`. -/
@@ -382,8 +382,8 @@ theorem noCollisionRepair_12 (L rate : ℝ) (h0 : 0 ≤ rate) (h1 : rate ≤ 1) 
   unfold QuittingCollisionBlockerBalance at hbalance
   rw [quittingCollisionRepairValue_apply] at hbalance
   simp only [quittingSetReward_gameReward] at hbalance
-  change (1 : ℝ) ≤ 0 at hbalance
-  norm_num at hbalance
+  have hbad : (1 : ℝ) ≤ 0 := by simpa [reward] using hbalance
+  norm_num at hbad
 
 /-- `(owner, blocker) = (2,0)`: owner optimality forces rate `0`, where
 spectator `1` strictly joins. -/
@@ -399,8 +399,8 @@ theorem noCollisionRepair_20 (L rate : ℝ) (h0 : 0 ≤ rate) (h1 : rate ≤ 1) 
   rw [hr] at hspectator
   rw [quittingCollisionRepairValue_apply] at hspectator
   simp only [quittingSetReward_gameReward] at hspectator
-  change (1 : ℝ) ≤ 2 / 5 at hspectator
-  norm_num at hspectator
+  have hbad : (1 : ℝ) ≤ 2 / 5 := by simpa [reward] using hspectator
+  norm_num at hbad
 
 /-- `(owner, blocker) = (2,1)`: owner optimality forces rate `0`, where
 spectator `0` strictly joins. -/
@@ -416,8 +416,8 @@ theorem noCollisionRepair_21 (L rate : ℝ) (h0 : 0 ≤ rate) (h1 : rate ≤ 1) 
   rw [hr] at hspectator
   rw [quittingCollisionRepairValue_apply] at hspectator
   simp only [quittingSetReward_gameReward] at hspectator
-  change (1 : ℝ) ≤ 0 at hspectator
-  norm_num at hspectator
+  have hbad : (1 : ℝ) ≤ 0 := by simpa [reward] using hspectator
+  norm_num at hbad
 
 /-- All six ordered sure-blocker collision mechanisms fail. -/
 def NoCollisionRepair (L : ℝ) : Prop :=
@@ -553,6 +553,9 @@ private theorem doubleSure_nonempty : ({0, 2} : Finset Player).Nonempty := by de
 private theorem mixer_not_mem_doubleSure : (1 : Player) ∉ ({0, 2} : Finset Player) := by
   decide
 
+private theorem player_cases (who : Player) : who = 0 ∨ who = 1 ∨ who = 2 := by
+  fin_cases who <;> simp
+
 /-- The omitted local mechanism: players `0,2` quit surely and player `1`
 mixes at rate `2/7`. -/
 def doubleSureMixerRoot : Player → PMF Bool :=
@@ -575,9 +578,9 @@ theorem terminalPayoff_doubleSureMixerProfile (L : ℝ) :
   rw [doubleSureMixerProfile, doubleSureMixerRoot,
     terminalPayoff_sureSetOwnerRoot (gameReward L) doubleSure_nonempty
       mixer_not_mem_doubleSure (2 / 7) twoSevenths_nonneg twoSevenths_le_one who]
-  fin_cases who <;>
+  rcases player_cases who with rfl | rfl | rfl <;>
     norm_num [doubleSureMixerValue, quittingSureSetOwnerValue,
-      gameReward, reward]
+      gameReward, reward] <;> ring
 
 /-- **Exact absorber.**  The double-sure mixer is a terminal `0`-Nash
 profile against every behavioral unilateral deviation, for every real `L`. -/
@@ -590,8 +593,13 @@ theorem isExactTerminalNash_doubleSureMixerProfile (L : ℝ) :
     (gameReward L) doubleSure_nonempty mixer_not_mem_doubleSure
       (2 / 7) twoSevenths_nonneg twoSevenths_le_one twoSevenths_pos 0 ?_
   intro who
-  fin_cases who <;>
-    norm_num [quittingSureSetOwnerExactCap, quittingSureSetOwnerValue,
+  rcases player_cases who with rfl | rfl | rfl
+  · norm_num [quittingSureSetOwnerExactCap, quittingSureSetOwnerValue,
+      gameReward, reward]
+  · norm_num [quittingSureSetOwnerExactCap, quittingSureSetOwnerValue,
+      gameReward, reward]
+    ring
+  · norm_num [quittingSureSetOwnerExactCap, quittingSureSetOwnerValue,
       gameReward, reward]
 
 /-- The concrete residue witness therefore has a uniform-equilibrium payoff.
