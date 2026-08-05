@@ -53,16 +53,22 @@ approximate Nash families:
   the statement is classical (Vrieze–Thuijsman era); the machine-checked
   route is new: a four-branch classification with no discount limit,
   built to generalize.
-- **The circulation engine**: a *singleton-face circulation certificate* —
-  a closed polygon of feasible payoff vectors stepping through solo faces,
-  each phase owner pinned at its solo value, everything above the
-  solo/min-max floor — produces support-perfect rational orbits of
-  arbitrarily large quit mass (`SingletonFaceCirculationOrbit`,
-  `MultiOwnerFaceCirculationOrbit`), the raw material the conversion
-  machinery consumes. Verified instances include the
+- **The circulation engine — a machine-checked *construction engine*, not
+  yet a machine-checked existence theorem.** A *singleton-face circulation
+  certificate* — a closed polygon of feasible payoff vectors stepping
+  through solo faces, each phase owner pinned at its solo value, everything
+  above the solo/min-max floor — produces support-perfect rational orbits
+  of arbitrarily large quit mass (`SingletonFaceCirculationOrbit`,
+  `MultiOwnerFaceCirculationOrbit`). Verified instances include the
   Flesch–Thuijsman–Vrieze cyclic weight and a four-player stress point
   lying off every bounded-period exact branch
-  (`RepairedFourPlayerStressCirculation`).
+  (`RepairedFourPlayerStressCirculation`). The implication *from* such
+  orbit families *to* uniform payoffs is the repaired equivalence of the
+  next section — paper-level, formalization the program's first priority —
+  so the certificate's payout is currently conditional, and the same
+  applies to the negative direction below. **Both exits of the open core
+  route through the pending items**; they are the precondition for any
+  hunt's output to be a result on the day it is found.
 
 ## The negative map (machine-checked impossibilities)
 
@@ -90,12 +96,19 @@ claim about all possible proofs.
   weighted-near row at a rational vector is bounded below
   (`QuittingWeightedContinueMassBound`) — motion is available; the
   difficulty is steering it without driving any player below min-max.
-- **No public randomization, and padding smuggles it.** The finite-horizon
-  feasible set is provably non-convex (`Feasible.lean`), yet padding action
-  sets with payoff-irrelevant duplicates strictly enlarges attainable
-  values — duplicate labels carry a jointly controlled lottery
-  (`PaddedDuplicateLotterySeparation`). Raw-history padding reductions are
-  unsound.
+- **Why folk-theorem technology dies in quitting games — in one sentence,
+  all machine-checked**: the feasible set is non-convex (`Feasible.lean`),
+  there is no time-sharing (the game ends at the first quit), and there is
+  no on-path signaling capacity (live history is calendar time) — so the
+  three standard folk-theorem resources are simultaneously absent. Padding
+  action sets with payoff-irrelevant duplicates *smuggles* the missing
+  randomization back in — duplicate labels carry a jointly controlled
+  lottery, strictly enlarging attainable values
+  (`PaddedDuplicateLotterySeparation`) — so raw-history padding reductions
+  are unsound. Together with the stationary attainability of the min-max
+  *(paper)*, these three legs also fence the correlated-equilibrium
+  relaxation route: no on-path channel, no smugglable device, and no need
+  for off-path correlation in punishment.
 - **The circulation engine has a real boundary.** At two players and
   certificate length one, all four branches of the two-player theorem
   contain weights outside the class
@@ -146,14 +159,28 @@ Two questions, different certificate shapes:
    guarantee such weights, if any, are covered by *some* mechanism at
    `n = 3` — which makes reproducing three-player existence inside this
    architecture the decisive expressiveness test.
-2. **Orbit boundedness — the tractable negative.** By the (repaired)
-   equivalence, nonexistence at a weight is equivalent to: for some
-   `ε₀ > 0`, every `ε₀`-rational orbit of the one-stage relation has
-   bounded total quit mass. This is falsifiable by a *local certificate* —
-   a potential function decreasing along every relation step by a
-   quit-mass-proportional quantum — and is therefore the machine-tractable
-   direction. No such certificate is known at any weight; the search is
-   instrumented for them.
+2. **Orbit boundedness — the compact-certificate negative.** By the
+   (repaired) equivalence, nonexistence at a weight is equivalent to: for
+   some `ε₀ > 0`, every `ε₀`-rational orbit of the one-stage relation has
+   bounded total quit mass. A *local certificate* — a potential function
+   decreasing along every relation step by a quit-mass-proportional
+   quantum — would settle a negative instance decisively. Read the
+   asymmetry correctly: absent a converse (a ranking-function/duality
+   representation for every bounded orbit relation), the potential search
+   is a search through *sufficient* certificates, not a decision procedure
+   — failure to find one carries little evidence; finding one is decisive.
+
+   **The shared failure mode of both questions, named.** At any fixed
+   certificate length, membership in each engine class is a first-order
+   sentence over the reals — decidable, so every cleared weight is
+   provably clear *at that length*. The only escape is certificate length
+   diverging as tolerance shrinks — which is this program's own signature
+   phenomenon (the period-divergence theorems). Both open questions can
+   therefore be *true without uniform witnesses*: union-completeness
+   holding with diverging certificate length (the search never halts on
+   either answer), accumulation holding but not tamely (the geometric
+   route never closes). This — not any single caveat — is the
+   characteristic unknown of the problem as this program has shaped it.
 
 A quantitative program sits alongside: exact cycles of period `L` form
 semialgebraic strata in weight space, relaxed families exist when strata
@@ -174,7 +201,16 @@ weight, at least three players, positive solo values, every potential owner
 sub-solo-compensated, admitting no stationary or instant approximate
 equilibria — and then either a circulation-type certificate (which would
 extend the engine) or a bounded-orbit potential (which would refute
-existence). The fences above say every simpler route is closed.
+existence). The fences above close every simpler route **within the
+cycle/orbit/one-stage-correspondence family, against the pre-2007
+technology they formalize**; the later topological line and post-2007
+partial results sit outside the fences and are honestly unfenced. One
+caution on the habitat itself: the boundary theorem measures the engine
+against the *solo* floor, which this program's own punishment results show
+is not the rationality floor — the true habitat is the set of weights
+where the min-max-to-solo corridor is nonempty at every potential owner,
+and sharpening the certificate's floor to the true min-max is an active
+step that may move the target.
 
 ## References
 
