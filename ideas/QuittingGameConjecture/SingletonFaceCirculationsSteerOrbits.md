@@ -2,7 +2,21 @@
 
 | Status | Provenance | Consumer | Falsifier |
 | --- | --- | --- | --- |
-| `OPEN`, maturity `M [reported]`, P0 | Q159 §5 | the relaxed compiler (K4); certsearch as a new certificate mode; Q160's Part C | an error in the balanced-owner-word construction, or the certificate class being empty beyond the calibrated example |
+| `OPEN`, maturity `L` (singleton-support phases, `n`-agnostic) / `M [reported]` (multi-owner phases), P0 | Q159 §5; `SingletonFaceCirculation.lean`, `SingletonFaceCirculationOrbit.lean` | the relaxed compiler (K4); certsearch as a new certificate mode; the Q160-thread family's Part B | the certificate class being empty beyond the calibrated example |
+
+**Machine-checked**: the certificate structure over an arbitrary finite index
+type; the one-phase step delivering support-perfection; the calibration
+certificate on the scaled cyclic weight (`norm_num` throughout); and the
+orbit theorem — for every `ε > 0` and every `Q`, a support-perfect rational
+orbit with prefix quit mass `≥ Q`. Scope: **singleton-support phases only**,
+which covers the answer's own calibration and is uniform in `n`; the
+multi-owner balanced-word case remains reported. One sharpening from
+recomputation: for singleton supports the answer's tolerance bound carries a
+spurious summand — the owner word is exactly balanced, the owner's gain
+exactly `0`, rationality exact — so `H ≤ ε/(2M)` suffices there; the
+published bound is sound but not tight for its own instance. The floor is an
+abstract vector with `solo ≤ floor`; the min-max quotation `χ ≤ 1/3` is used,
+not proved.
 
 ## The theorem
 

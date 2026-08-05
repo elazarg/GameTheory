@@ -2,7 +2,15 @@
 
 | Status | Provenance | Consumer | Falsifier |
 | --- | --- | --- | --- |
-| `OPEN`, maturity `M [reported]`, P0 | Q159 §§1–2 | every use of Lemma-5-type bounds; the Q158 discharge gate; `MATH-P0-9` | an error in the tremble computation at the scaled cyclic weight |
+| `OPEN`, maturity `L` (separation, no-motion-price) / `M [reported]` (the absence proofs), P0 | Q159 §§1–2; `WeightedRowMotionSeparation.lean` | every use of Lemma-5-type bounds; the Q158 discharge gate; `MATH-P0-9` | an error in the (machine-checked) tremble computation |
+
+**Machine-checked**: the weighted condition as mixture-`ε`-optimality, the
+one-directional conversion, the tremble membership and motion computations at
+the scaled cyclic weight (every constant reproducing), support-perfection
+failing below `1/9`, and the theorem `no_motion_price_scaledCyclicWeight` —
+no positive `ρ` prices motion by quit mass on the weighted correspondence.
+The §2.1 absence proofs (no stationary, no instant families) remain
+`M [reported]`; the separation theorem does not depend on them.
 
 ## The separation
 
