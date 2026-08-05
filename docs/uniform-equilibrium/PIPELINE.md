@@ -1953,6 +1953,40 @@ linearization couples the perturbation through the value recursion, and the
 fixed-tail vs cycle-feedback gap is the same three-legged split the seam-price
 law had.
 
+### `GEN-P1-1` — the positive-recursive program (V5), scoped
+
+- **Status:** PLANNED — general lane, behind the quitting core.
+- **Lane:** P1 (general conjecture); calibration probe complete.
+- **Record:** the scoping report, distilled here; the [pr] claim file's
+  acceptance line corrected (vacuity).
+
+**Scoping verdict (2026-08-05).** The framing inverts: **Theorem 2.8 is
+vacuous on quitting games** — a quitting game's `B` is the all-continue
+singleton with rectangular component, and the rectangular case is exactly
+what the source cannot do. So the class is *disjoint from* the quitting wing:
+reuse is broader than expected on general engines (`PunishmentLevel`,
+`Feasible`, `Fink`, the germ/curve-selection wing, the terminal-to-uniform
+waist) and narrower on constructions (≈250 `Quitting*` files are templates,
+not libraries — tied to `Act = Bool` and singleton `B`). The repo has **no
+recursive-game class**, a "rectangular" name collision, Kakutani proved but
+imported nowhere in `GameTheory/`, and no Everett value theory — and for this
+class the min-max needs **Everett, not Mertens–Neyman**: `χᵢ = 0` exactly at
+coordinatewise rectangularity, so **non-rectangularity is what breaks the
+zero-punishment witness and threats are the substance of the theorem**.
+
+**Plan:** 8 waves to a *conditional* Theorem 2.8 (statement modulo one named
+correspondence-selection hypothesis, the repository's established terminal
+form) — waves 1–4 low-risk reuse, 5–6 medium (germ transport, the bridge
+discharge), 7 high (phase-switch over live *words*, an engine rewrite, since
+unique-live-history is false beyond quitting). **Wave 8 — the fixed-point
+core — goes to the questions corpus, not to a Lean agent**: over rows with
+support constrained by a non-rectangular `B`, does the one-stage
+`ε`-perfectness correspondence admit a convex-valued selection? The repo has
+already machine-refuted the natural candidate
+(`successorImage_not_convex`), so a new device is genuinely required.
+Estimated 8–11 waves to the conditional form; the unconditional sits behind
+the question.
+
 ### `MATH-P0-10` — the drift device: uniform threats against moving states
 
 - **Status:** READY
