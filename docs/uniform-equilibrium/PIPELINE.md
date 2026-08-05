@@ -454,6 +454,66 @@ fails to decay the fixed set is a ray, and the recursion selects nothing.
 established or removed, and the case-2 row resting on a formal artifact that
 proves the statement it cites.
 
+### `LEAN-F0-9` — name the recurring mechanisms as objects
+
+- **Status:** ACTIVE (first entity in flight)
+- **Lane:** F0
+- **Depends:** `Math/CyclicMaxAffineBound`; the isolated-coordinate anchor
+  iterate; `QuittingRelaxedCycleGainIsolatedCoordinate`.
+- **Record:** this file
+
+**Objective.** Distil recurring mechanisms into named mathematical objects with
+their regime dichotomies and fences, rather than rediscovering them per site.
+
+**The test for when a mechanism earns a name: repetition *with error*.** A
+mechanism appearing many times is a pattern; one that appears many times and
+produces *mistakes* is an object with no name, and the mistakes are the shape of
+the missing definition. Each entity below is nominated on that basis, with the
+incident count.
+
+**Entity 1 — the anchored max-affine value. `IN FLIGHT`, four incidents.**
+The operator `Φ(w) = max{A, T + P·w}` with a boundary payoff `b`, and its value
+defined as the least fixed point dominating `b` — equivalently the limit of
+`Φ`-iterates from `b`, which is what a supremum over strategies computes,
+including the never-act option. Regime dichotomy: at `P < 1` a contraction with
+a unique fixed point and a correct `1/(1-P)` closed form; at `P = 1` a **ray**
+of fixed points where the recursion determines nothing and any
+division-by-`1-P` formula is meaningless — silently returning a wrong member
+under `x/0 = 0`.
+
+Its four incidents: a published theorem false as printed, because its proof
+consumes a homogeneous boundary term that does not vanish when survival fails to
+decay; a repository closed form proved to give the wrong value in exactly this
+regime; a self-consistent terminal value left undetermined on non-absorbing
+arrays; and a weight whose repair works by *escaping* the regime rather than
+solving inside it. The correct mechanism already exists but is game-local and
+unnamed (the solo-quit anchor iterate). The deliverable includes a **fence
+theorem** making the closed-form disagreement a corollary rather than a bug.
+
+**Entity 2 — a device with a designed quotient. `IDEA` (seal `I`), three
+instances.** A correlation, randomization, or padding device carries a
+guarantee relative to a quotient of its realizations, and the guarantee survives
+strategic embedding only under quotient measurability on *both* sides. Recorded
+as prose at
+[`DeviceGuaranteesNeedQuotientMeasurabilityOnBothSides.md`](../../ideas/StrategicCorrelationCommunication/DeviceGuaranteesNeedQuotientMeasurabilityOnBothSides.md).
+The entity would be a device-with-quotient structure plus a transport theorem.
+**Possibly premature** — the three instances live at different levels of the
+tree, and forcing one type over them may cost more than the prose. Nominate
+properly only if a fourth instance appears or one of the three needs the
+statement formally.
+
+**Entity 3 — boundary-generated debt. `IDEA` (seal `I`), may be absorbed.**
+That *all* positive debt in the exact-`D` grammar originates at the terminal
+mismatch and is transported back. Half-named already by the landed transport
+law. **Check whether entity 1 subsumes it before building anything**: "what the
+deviator obtains after the array ends" is exactly an anchor, so this may be the
+anchored value under another description rather than a second object.
+
+**Acceptance.** Each entity is either landed with its dichotomy and fence, or
+recorded as declined with the reason. An entity that nothing consumes is a
+regression — the tree already carries one misnamed predicate with zero importers
+outside its own file, and a second is not wanted.
+
 ### `PC-007` — keep one formalization lane active whenever source-ready mathematics exists
 
 **Decision.** Keep one formalization lane active whenever source-ready
