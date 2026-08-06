@@ -8,6 +8,12 @@ import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailSemantics
 
 /-!
 # Diagonal target-tail pointwise bounds
+
+A matched target coordinate has zero gain: its suffix is already closed and
+its diagonal boundary is exact.  Every non-target coordinate pays at most
+`4 * M` times its opponent-only survival through the finite prefix: `2 * M`
+for suffix best-response debt and `2 * M` for changing from its diagonal
+anchor to the selected target's actual suffix payoff.
 -/
 
 noncomputable section
@@ -17,6 +23,7 @@ namespace GameTheory
 open StochasticGame Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
 
 /-- With a matched, closed target coordinate, the target has no profitable
 deviation through the exact prefix, regardless of its opponent-survival
@@ -57,7 +64,8 @@ theorem quittingPhaseSwitchTargetHazardGap_le_zero
   have hself := quittingFiniteTerminalHazardValue_self_eq_declared
     reward plan value target switch hpolicy 0 switch (by omega)
   simp only [Nat.zero_add, mul_zero, add_zero] at hprefix
-  rw [hmatch] at hprefix hself
+  simp only [Nat.zero_add] at hself
+  rw [hmatch] at hself
   rw [hdeviation, hprescribed]
   linarith
 
@@ -130,9 +138,9 @@ theorem quittingPhaseSwitchHazardGap_le_four_mul_opponentSurvival
       quittingFiniteTerminalBestResponseValue reward plan who boundary 0 switch ≤
         value 0 who +
           quittingOpponentSurvivalWeight plan who 0 switch * (2 * M) := by
-    exact hprefix.trans
-      (add_le_add_left
-        (mul_le_mul_of_nonneg_left hdebtBound hopponent0) _)
+    have hscaledDebt :=
+      mul_le_mul_of_nonneg_left hdebtBound hopponent0
+    exact hprefix.trans (by linarith)
   have hself := quittingFiniteTerminalHazardValue_self_eq_declared
     reward plan value who switch hpolicy 0 switch (by omega)
   simp only [Nat.zero_add] at hself
