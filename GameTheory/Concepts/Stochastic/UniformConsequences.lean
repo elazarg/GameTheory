@@ -9,7 +9,7 @@ Authors: GameTheory contributors
 
 Production entry point for the reverse-consequence layer:
 
-* arbitrarily thin uniform tail intervals;
+* arbitrarily thin uniform tail intervals and their positive obstruction;
 * bounded-work / semantic ledger certificates; and
 * discontinuity under transition-kernel perturbations.
 
@@ -18,5 +18,6 @@ The accompanying mathematical guide is
 -/
 
 import GameTheory.Concepts.Stochastic.UniformTailWidth
+import GameTheory.Concepts.Stochastic.UniformTailWidthObstruction
 import GameTheory.Concepts.Stochastic.UniformBoundedWork
 import GameTheory.Concepts.Stochastic.TransitionPerturbationDiscontinuity
