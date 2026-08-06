@@ -1,0 +1,32 @@
+name: Target-anchored tail proof
+
+on:
+  push:
+    branches:
+      - codex/target-anchored-tail
+  pull_request:
+    branches:
+      - uniform-existence
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Lean and dependencies
+        uses: leanprover/lean-action@v1
+        with:
+          build: false
+          test: false
+          use-mathlib-cache: true
+
+      - name: Compile target-anchored tail module
+        run: lake env lean GameTheory/Concepts/Stochastic/QuittingTargetAnchoredTail.lean
