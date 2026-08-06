@@ -61,7 +61,7 @@ theorem not_exists_uniformEquilibriumPayoff_iff_exists_pos_tailWidth
   · exact G.exists_pos_tailWidth_of_not_exists_uniformEquilibriumPayoff s₀
   · rintro ⟨δ, hδ, hwidth⟩ ⟨v, hv⟩
     obtain ⟨σ, lower, upper, hthin, htail⟩ :=
-      hv.hasArbitrarilyThinTailIntervals G δ hδ
+      IsUniformEquilibriumPayoff.hasArbitrarilyThinTailIntervals G hv δ hδ
     obtain ⟨who, hwho⟩ := hwidth σ lower upper htail
     exact (not_lt_of_ge (hthin who)) hwho
 
