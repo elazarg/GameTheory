@@ -13,12 +13,12 @@ The first finite-path progress theorem assumes every displayed successor fiber
 is nonempty.  That hypothesis is convenient for applying the convex-join
 representation directly, but it is not logically necessary.
 
-At a unique successor, an empty successor fiber collapses the full prefix to
-the convex hull of a singleton.  Hence every greatest-family point at the
-current owner is the viable solo endpoint and is terminal.  Combining this
-empty-fiber case with the nonempty convex-fiber trichotomy yields a total local
-recursion and removes all nonemptiness assumptions from the finite path and
-active-face exclusion theorems.
+At a unique live successor, an empty displayed successor fiber collapses the
+full prefix to the convex hull of a singleton.  Hence every greatest-family
+point at the current owner is the viable solo endpoint and is terminal.
+Combining this empty-fiber case with the nonempty convex-fiber trichotomy yields
+a total local recursion and removes all nonemptiness assumptions from the
+finite path and active-face exclusion theorems.
 -/
 
 noncomputable section
@@ -29,18 +29,21 @@ open StochasticGame
 
 variable {ι : Type}
 
-/-- **Total local progress at a unique successor.**  No nonemptiness hypothesis
-is needed: an empty successor fiber forces the current point to be terminal. -/
+/-- **Total local progress at a unique live successor.**  Other exact graph
+successors may exist, but their greatest-family fibers must be empty.  No
+nonemptiness hypothesis is needed: an empty displayed fiber forces the current
+point to be terminal. -/
 theorem
-    quittingEssentialAPSGreatestFamily_terminal_or_successor_or_proper_of_unique_total
+    quittingEssentialAPSGreatestFamily_terminal_or_successor_or_proper_of_unique_live_total
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (carrier : ι → Set (Payoff ι))
     (hcarrier : ∀ player, Convex ℝ (carrier player))
     {owner successor : ι}
     (hedge : QuittingFleschSuccessor reward owner successor)
-    (hunique : ∀ candidate,
+    (huniqueLive : ∀ candidate,
       QuittingFleschSuccessor reward owner candidate →
-        candidate = successor)
+        candidate ≠ successor →
+          quittingEssentialAPSGreatestFamily reward carrier candidate = ∅)
     {current : Payoff ι}
     (hcurrent : current ∈
       quittingEssentialAPSGreatestFamily reward carrier owner) :
@@ -51,8 +54,8 @@ theorem
   by_cases hnonempty :
       (quittingEssentialAPSGreatestFamily reward carrier successor).Nonempty
   · exact
-      quittingEssentialAPSGreatestFamily_terminal_or_successor_or_proper_of_unique
-        reward carrier hcarrier hedge hunique hnonempty hcurrent
+      quittingEssentialAPSGreatestFamily_terminal_or_successor_or_proper_of_unique_live
+        reward carrier hcarrier hedge huniqueLive hnonempty hcurrent
   · have hfixedOwner := congrFun
       (quittingEssentialAPSGreatestFamily_fixed reward carrier) owner
     have hrestricted : current ∈
@@ -65,8 +68,9 @@ theorem
       quittingEssentialAPSOwnerStep reward
         (quittingEssentialAPSGreatestFamily reward carrier) owner at hprefix
     rw [quittingEssentialAPSOwnerStep_eq_prefix] at hprefix
-    rw [quittingEssentialAPSSuccessorSet_eq_of_unique reward
-      (quittingEssentialAPSGreatestFamily reward carrier) hedge hunique] at hprefix
+    rw [quittingEssentialAPSSuccessorSet_eq_of_unique_live reward
+      (quittingEssentialAPSGreatestFamily reward carrier)
+        hedge huniqueLive] at hprefix
     have hsuccessorEmpty :
         quittingEssentialAPSGreatestFamily reward carrier successor = ∅ :=
       Set.not_nonempty_iff_eq_empty.mp hnonempty
@@ -92,6 +96,32 @@ theorem
     have hroot : current = quittingSoloReward reward owner := by
       simpa only [Set.mem_singleton_iff] using hconvex
     exact ⟨hroot, hprefix.1⟩
+
+/-- Graph-theoretic uniqueness is a special case of total unique-live
+progress. -/
+theorem
+    quittingEssentialAPSGreatestFamily_terminal_or_successor_or_proper_of_unique_total
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (carrier : ι → Set (Payoff ι))
+    (hcarrier : ∀ player, Convex ℝ (carrier player))
+    {owner successor : ι}
+    (hedge : QuittingFleschSuccessor reward owner successor)
+    (hunique : ∀ candidate,
+      QuittingFleschSuccessor reward owner candidate →
+        candidate = successor)
+    {current : Payoff ι}
+    (hcurrent : current ∈
+      quittingEssentialAPSGreatestFamily reward carrier owner) :
+    current ∈ quittingEssentialAPSTerminal reward owner ∨
+      current ∈ quittingEssentialAPSGreatestFamily reward carrier successor ∨
+      current ∈ quittingProperEssentialAPSPrefix reward owner
+        (quittingEssentialAPSGreatestFamily reward carrier successor) := by
+  exact
+    quittingEssentialAPSGreatestFamily_terminal_or_successor_or_proper_of_unique_live_total
+      reward carrier hcarrier hedge
+        (fun candidate hcandidate hne ↦
+          (hne (hunique candidate hcandidate)).elim)
+        hcurrent
 
 /-- **Total finite zero-mass propagation dichotomy.**  Along a unique-successor
 path, either terminal/proper progress occurs before `horizon`, or the same
