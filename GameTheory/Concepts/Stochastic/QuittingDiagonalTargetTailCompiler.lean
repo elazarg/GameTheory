@@ -44,7 +44,6 @@ theorem quittingLiveMass_infinitePathProfile_eq_jointSurvivalWeight
       unfold quittingJointContinueMass StochasticGame.stageActionDist
         quittingInfinitePathProfile quittingRootSequenceProfile
       rw [pmfPi_apply]
-      rfl
 
 /-- Two distinct deleted survival clocks cannot both exceed the square root
 scale of joint survival. -/
