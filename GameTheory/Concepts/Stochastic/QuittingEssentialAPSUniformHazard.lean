@@ -92,9 +92,7 @@ theorem quittingEssentialAPSGreatestFamily_viable
         (quittingEssentialAPSGreatestFamily reward carrier) owner := by
     rw [hfixedOwner]
     exact hcurrent
-  have hprefix := hrestricted.2
-  rw [quittingEssentialAPSOwnerStep_eq_prefix] at hprefix
-  exact hprefix.1
+  exact hrestricted.2.1
 
 /-- On a terminal-free greatest fiber, the singleton-root gap is positive. -/
 theorem quittingEssentialAPSSoloGap_pos_of_terminalFree
@@ -317,22 +315,13 @@ theorem exists_uniform_quittingEssentialAPSHazardCeiling_unique_live
     (hvalueBound : ∀ time who, |value time who| ≤ bound) :
     ∃ pStar : ℝ, 0 ≤ pStar ∧ pStar < 1 ∧
       ∀ time, mass time ≤ pStar := by
-  apply exists_uniform_quittingEssentialAPSHazardCeiling
+  exact exists_uniform_quittingEssentialAPSHazardCeiling
     reward carrier
-  · intro player
-    exact isCompact_quittingEssentialAPSGreatestFamily_of_compact_convex_unique_live
-      reward carrier hcarrierCompact hcarrierConvex successor hedge
-        huniqueLive player
-  · exact hterminalFree
-  · exact hbound
-  · exact owner
-  · exact mass
-  · exact value
-  · exact hvalueMem
-  · exact hmass0
-  · exact hmass1
-  · exact harc
-  · exact hrootBound
-  · exact hvalueBound
+    (fun player ↦
+      isCompact_quittingEssentialAPSGreatestFamily_of_compact_convex_unique_live
+        reward carrier hcarrierCompact hcarrierConvex successor hedge
+          huniqueLive player)
+    hterminalFree hbound owner mass value hvalueMem hmass0 hmass1 harc
+      hrootBound hvalueBound
 
 end GameTheory
