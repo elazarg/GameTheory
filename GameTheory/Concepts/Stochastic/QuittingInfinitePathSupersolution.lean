@@ -93,16 +93,13 @@ theorem quittingRootSequenceHazardTerminalValue_le_add_of_quitError_exactContinu
   have hsuper : ∀ time,
       quittingLiveBellmanValue reward roots player super time ≤ super time := by
     intro time
-    have hmass0 : 0 ≤
-        quittingStationaryFixedOpponentsContinueMass
-          (roots time) player :=
-      quittingStationaryFixedOpponentsContinueMass_nonneg
-        (roots time) player
-    have hmass1 :
-        quittingStationaryFixedOpponentsContinueMass
-            (roots time) player ≤ 1 :=
+    have hmass1 :=
       quittingStationaryContinueMass_le_one
         (Function.update (roots time) player (PMF.pure false))
+    change quittingFixedOpponentsContinueMass roots player time ≤ 1 at hmass1
+    have hscaled :
+        quittingFixedOpponentsContinueMass roots player time * e ≤ e := by
+      simpa only [one_mul] using mul_le_mul_of_nonneg_right hmass1 he
     have hcontinueTime := hcontinue time player
     change quittingFixedOpponentsContinueReward reward roots player time +
           quittingFixedOpponentsContinueMass roots player time *
@@ -111,7 +108,19 @@ theorem quittingRootSequenceHazardTerminalValue_le_add_of_quitError_exactContinu
     dsimp only [quittingLiveBellmanValue, super]
     apply max_le
     · exact hquit time player
-    · nlinarith
+    · calc
+        quittingFixedOpponentsContinueReward reward roots player time +
+              quittingFixedOpponentsContinueMass roots player time *
+                (value (time + 1) player + e) =
+            (quittingFixedOpponentsContinueReward reward roots player time +
+                quittingFixedOpponentsContinueMass roots player time *
+                  value (time + 1) player) +
+              quittingFixedOpponentsContinueMass roots player time * e := by
+          ring
+        _ = value time player +
+              quittingFixedOpponentsContinueMass roots player time * e := by
+          rw [hcontinueTime]
+        _ ≤ value time player + e := add_le_add_left hscaled _
   have hgapBound : ∀ time,
       max (deviationValue time - super time) 0 ≤ 2 * bound := by
     intro time
