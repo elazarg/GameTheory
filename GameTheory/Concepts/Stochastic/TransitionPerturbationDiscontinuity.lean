@@ -20,9 +20,10 @@ and moves to `true` independently each round with probability `p`.
 
 For every `p > 0`, absorption occurs asymptotically and the unique uniform
 payoff from `false` is `1`.  At `p = 0`, the process remains at `false` and
-payoff `1` is not uniform.  Thus transition kernels may converge to a limit
-kernel while their uniform-equilibrium payoffs do not converge to a uniform
-payoff of the limit game.
+payoff `1` is not uniform.  The transition probabilities themselves converge
+coordinatewise whenever `p → 0`.  Thus transition kernels may converge to a
+limit kernel while their uniform-equilibrium payoffs do not converge to a
+uniform payoff of the limit game.
 -/
 
 noncomputable section
@@ -48,6 +49,9 @@ def rareTransitionGame (p : ℝ≥0) (hp : p ≤ 1) : StochasticGame Player wher
   discount_nonneg := le_rfl
   discount_lt_one := zero_lt_one
 
+/-- The unique joint pure action. -/
+def canonicalAction : ∀ _ : Player, PUnit := fun _ => PUnit.unit
+
 /-- Canonical behavior profile; every player always takes the unique action. -/
 def canonicalProfile (p : ℝ≥0) (hp : p ≤ 1) :
     (rareTransitionGame p hp).BehaviorProfile :=
@@ -60,6 +64,47 @@ theorem behaviorProfile_eq_canonical
     σ = canonicalProfile p hp := by
   funext who t h
   exact Math.ProbabilityMassFunction.eq_pure_of_subsingleton _ PUnit.unit
+
+@[simp] theorem transition_false_true_toReal
+    (p : ℝ≥0) (hp : p ≤ 1) :
+    (((rareTransitionGame p hp).transition false canonicalAction) true).toReal =
+      (p : ℝ) := by
+  simp [rareTransitionGame, canonicalAction, PMF.bernoulli_apply]
+
+@[simp] theorem transition_false_false_toReal
+    (p : ℝ≥0) (hp : p ≤ 1) :
+    (((rareTransitionGame p hp).transition false canonicalAction) false).toReal =
+      1 - (p : ℝ) := by
+  simp [rareTransitionGame, canonicalAction, PMF.bernoulli_apply, hp]
+
+@[simp] theorem transition_true_true_toReal
+    (p : ℝ≥0) (hp : p ≤ 1) :
+    (((rareTransitionGame p hp).transition true canonicalAction) true).toReal = 1 := by
+  simp [rareTransitionGame, canonicalAction]
+
+@[simp] theorem transition_true_false_toReal
+    (p : ℝ≥0) (hp : p ≤ 1) :
+    (((rareTransitionGame p hp).transition true canonicalAction) false).toReal = 0 := by
+  simp [rareTransitionGame, canonicalAction]
+
+/-- Coordinatewise convergence of the transition kernels to the `p = 0`
+kernel.  On this finite state-action skeleton this is also uniform convergence
+of the kernel table. -/
+theorem tendsto_transition_toReal_at_zero
+    {p : ℕ → ℝ≥0} (hp : ∀ n, p n ≤ 1)
+    (hp0 : Tendsto (fun n => (p n : ℝ)) atTop (nhds 0))
+    (s s' : Bool) :
+    Tendsto
+      (fun n =>
+        (((rareTransitionGame (p n) (hp n)).transition s canonicalAction) s').toReal)
+      atTop
+      (nhds ((((rareTransitionGame 0 (by norm_num)).transition s canonicalAction) s').toReal)) := by
+  cases s <;> cases s'
+  · simpa using (tendsto_const_nhds.sub hp0 :
+      Tendsto (fun n => 1 - (p n : ℝ)) atTop (nhds (1 - 0)))
+  · simpa using hp0
+  · simpa using (tendsto_const_nhds : Tendsto (fun _ : ℕ => (0 : ℝ)) atTop (nhds 0))
+  · simpa using (tendsto_const_nhds : Tendsto (fun _ : ℕ => (1 : ℝ)) atTop (nhds 1))
 
 /-- Indicator of the bad state. -/
 def badIndicator : Bool → ℝ
