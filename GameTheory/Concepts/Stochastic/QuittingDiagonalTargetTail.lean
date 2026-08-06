@@ -242,14 +242,14 @@ theorem quittingRootSequenceHazardTerminalValue_prefixThenTail_cutoff
       quittingRootSequenceHazardTerminalValue reward tail who
         (fun time => hazard (cutoff + time)) 0 := by
   unfold quittingRootSequenceHazardTerminalValue
-  apply congrArg
-    (fun sequence => quittingRootSequenceTerminalValue reward sequence who 0)
-  funext time player
-  unfold quittingRootSequenceUpdate
+  unfold quittingRootSequenceTerminalValue
+  apply congrArg (fun profile => quittingTerminalPayoff reward profile who)
+  funext player time history
+  unfold quittingRootSequenceProfile quittingRootSequenceUpdate
   by_cases hplayer : player = who
   · subst player
-    simp
-  · simp [Function.update_of_ne hplayer]
+    simp [quittingPrefixThenTailRoots]
+  · simp [Function.update_of_ne hplayer, quittingPrefixThenTailRoots]
 
 /-- Target closure transports from a time-zero tail to the selected splice. -/
 theorem isQuittingTargetClosedAt_prefixThenTail
