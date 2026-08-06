@@ -10,9 +10,9 @@ import GameTheory.Concepts.Stochastic.QuittingSelfSimilarityAffineIteration
 # Max-affine self-similarity algebra for unilateral stopping
 
 A player's unilateral stopping value over a finite quitting block is
-max-affine.  This module identifies the two target-safety halfspaces, the
-absorbed-mass-normalized tail anchor, monotonicity, and all coefficient
-idempotents.
+max-affine. This module identifies the two target-safety halfspaces, the
+absorbed-mass-normalized tail anchor, the max-plus composition law for total
+excess, monotonicity, and all coefficient idempotents.
 -/
 
 noncomputable section
@@ -105,6 +105,48 @@ theorem targetExcess_eq_max
     have h' : summary.tail - (1 - summary.survival) * target ≤
         summary.early - target := by
       linarith
+    rw [max_eq_left h']
+
+/-- Total excess composes by a max-plus Bellman recurrence: the outer early
+obstacle competes with its tail residual plus the inner excess transported by
+outer survival. -/
+theorem targetExcess_mul
+    (outer inner : QuittingMaxAffineSummary) (target : ℝ) :
+    (outer * inner).targetExcess target =
+      max (outer.early - target)
+        (outer.tailResidual target +
+          outer.survival * inner.targetExcess target) := by
+  unfold targetExcess
+  rw [eval_mul]
+  unfold eval tailResidual absorptionMass
+  by_cases h :
+      outer.early ≤ outer.tail + outer.survival * inner.eval target
+  · rw [max_eq_right h]
+    have h' : outer.early - target ≤
+        (outer.tail - (1 - outer.survival) * target) +
+          outer.survival * (inner.eval target - target) := by
+      calc
+        outer.early - target ≤
+            (outer.tail + outer.survival * inner.eval target) - target :=
+          sub_le_sub_right h target
+        _ = (outer.tail - (1 - outer.survival) * target) +
+              outer.survival * (inner.eval target - target) := by ring
+    rw [max_eq_right h']
+    ring
+  · have hle :
+        outer.tail + outer.survival * inner.eval target ≤ outer.early :=
+      le_of_not_ge h
+    rw [max_eq_left hle]
+    have h' :
+        (outer.tail - (1 - outer.survival) * target) +
+            outer.survival * (inner.eval target - target) ≤
+          outer.early - target := by
+      calc
+        (outer.tail - (1 - outer.survival) * target) +
+              outer.survival * (inner.eval target - target) =
+            (outer.tail + outer.survival * inner.eval target) - target := by
+          ring
+        _ ≤ outer.early - target := sub_le_sub_right hle target
     rw [max_eq_left h']
 
 /-- Strategic safety at one target is exactly two scalar halfspaces. -/
