@@ -1,10 +1,12 @@
 # Uniform-equilibrium project pipeline
 
-**Production-Lean checkpoint:** `5e7d0e7a`.  The last complete repository
+**Production-Lean checkpoint:** `1ee8d9c2`, exported through `6391ee01`;
+documentation is current through `5ea42091`. The last complete repository
 audit remains the 2026-08-03 pair `14d75ff` / `cd1db11`. **This file revised
-2026-08-07** — discrete hazard stopping laws, finite phase-occupation duality,
-target-anchored payoff closure, and conditional multi-owner face-circulation
-uniform-payoff compilation are incorporated and reflected below.
+2026-08-07** — discrete hazard stopping, phase-occupation duality,
+target-anchored closure, face-circulation compilation, uniform-payoff
+diagnostics, adaptive essential-APS meshes, and the boundary-holonomy tangent
+layer are incorporated and reflected below.
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
@@ -33,9 +35,9 @@ intentional `sorry` declarations are
 `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean` and
 `quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`,
 and the reduced cap-package leaf in `QuittingReducedCapConjecture.lean`.
-These are owned by the engineering queue below and the [proof-engineering
-audit](../../ephemeral/ProofEngineeringAudit.md), rather than blockers hidden in
-the P0 mathematical status.
+These are guarded by the placeholder/leaf audit and documented in the
+[proof-engineering audit](../../ephemeral/ProofEngineeringAudit.md), rather than
+blockers hidden in the P0 mathematical status.
 
 ## Incorporation checkpoint — 2026-08-07
 
@@ -118,199 +120,10 @@ active, partial/blocked, done) rather than by lane. This is a maintenance
 convention, not a research priority, and it must never displace the mathematical
 content it organizes.
 
-## Priority stack (2026-08-05, post-review reordering)
+## Current priority view
 
-Adopted after four independent reviews of the position summary
-(`ephemeral/ReviewOfSummary.md`); the review acceptance is binding until a
-result changes it. The order is by decisiveness, not by ease:
-
-1. **Compiler assembly — CORE DONE** (`QuittingBoundedWindowLanding`,
-   `QuittingTruncationLedgerFold`, `QuittingReducedCapConjecture`). The
-   landing consumes the bounded predicate directly and composes with WCM
-   into a zero-granted-predicate chain; the fold lives at the value level
-   (raw-ledger folding proved **false** — the truncation correction
-   telescopes to order one at rarely-reached stages; constant `5B·reach`);
-   and **the reduced conjecture exists as the third intentional leaf**:
-   `HasQuittingLedgerCapPackage`, six arithmetic clauses, with
-   package ⟹ conjecture proved gap-free. The program's progress metric is
-   now clause shrinkage. Mathematical residue, named: clause (iv) at the
-   punished player and in Case 1 (awaits the excursion layer); clause (v)
-   below the solo-clipped ceiling (punishment attainment — Q162's band);
-   package *production* (the engines). **Of the two paper IOUs the
-   equivalence's outer legs lean on, the stationary min-max formula LANDED
-   2026-08-05** (production `0829959`, `QuittingStationaryMinMax.lean`):
-   `χ = inf_y Φ(y)` with BOTH legs machine-checked in full
-   history-dependent generality, no attainment asserted;
-   `quittingRootSequenceHazardTerminalValue_const_le_cap` supplies the
-   phase-switch hypothesis (P) with `punishCap = Φ(y)` for ANY constant
-   row — strictly below the solo-clipped ceiling whenever
-   `inf Φ < max(solo, 0)`, witnessed by `QuittingProfitableSoloTwoCoordinate`
-   (χ = 0 vs ceiling 2). Clause (v)'s "below the solo-clipped ceiling"
-   residue is therefore now reachable machinery, not an IOU. Still owed:
-   the Solan–Vieille perfection-to-equilibrium proposition (SV-2.6), and
-   the bridge `lim_T punishmentLevel = quittingPunishmentValue` (inf/sup
-   vs limit uniformity — noted, unclaimed). **The clause (P) attack:
-   design complete, formalization NOT started** (the dispatched agent
-   stopped at the design phase; full hand-verified design recorded at
-   `ephemeral/ClausePAttackDesign.md`). Established there: per-player
-   attainment at `χ + η` is a 4-line route; the opponents-congruence
-   lemma is ≈ rfl and glues a TWO-PLAYER simultaneous clause-(P)
-   discharge at exact χ (under `Fintype.card ι = 2`, replacing the
-   solo-ceiling discharge; remaining two-player clauses L/Q/R/A); and a
-   hand-verified cyclic `Fin 3` table SEPARATES simultaneous from
-   per-player punishment — every shared plan leaves some player at
-   `χ + 3/4` (AM–GM at row zero; Lean-cheap). Flagged discovery, not
-   proved: on the absorption-branch variant, simultaneous punishment is
-   the Steinhaus–Trybuła non-transitive-dice problem and time-varying
-   plans plausibly BEAT stationary ones — the stationarity theorem
-   plausibly fails for simultaneous punishment; POSED as **Question 168**
-   (2026-08-06): the exact 3/4 separation, the dice-table stationarity
-   verdict with the full stopping-reply supremum, attainment and bounds,
-   and the shared-versus-triggered pricing.
-   Next session: dispatch the module from the recorded design. **INTAKE PENDING (2026-08-05,
-   answer arrived, snapshot-committed `9baa177`, NOT yet sealed): the
-   Q163 answer** — verdict headline: the equivalence's hard direction
-   repairs WITHOUT support purification; the weighted correspondence
-   yields exactly the WCM inequality the landing consumes (∃ρ > 0:
-   ρ-rational + weighted-ρ-near ⟹ c(x) ≥ ρ, by separation from the
-   c = 0 face using only absence of instant approximate equilibria) —
-   discharging its K4 directly; global support purification is FALSE
-   (rowwise thresholding fine, but global ε-equilibria exist whose
-   every nearby support-perfect plan has order-one exploitability); the
-   published lemma's weighted reading is false, its support-perfect
-   reading repaired via the Solan–Vieille perfection-to-equilibrium
-   proposition — RAISING SV-2.6's priority (it now gates both an outer
-   leg and this repair). Next session: full read of the 819-line
-   answer, seal in ideas/, then formalize the WCM inequality.
-1a. **The χ-floored certificate re-measurement — DONE, verdict split and
-   decisive** (`QuittingCirculationChiFloorBoundary.lean`). Solo-rate and
-   pair-repair **fall** to the χ-floored free-hazard variant (the previous
-   boundary's own witnesses are inside it; the sub-solo blind spot was a
-   floor artifact — and the premise correction: multi-owner phases supply
-   no simultaneous collision mass, the deterrent is the owner's own
-   hazard). Zero-solo and joint-exit **survive structurally**: their
-   payoffs provably leave the solo-row hull, which every circulation
-   target inhabits — no floor can fix a range restriction. **The habitat
-   moves**: weights whose equilibria pay outside the solo hull with no
-   exact mechanism. **The engine extension is named**: circulations
-   through arbitrary coalition faces, per-phase condition = the
-   sure-exit-set criterion — which is exactly Q165's Part B object, so
-   the `n = 3` test and the engine extension are now one road.
-2. **`n = 3` through the architecture — Q165 ANSWERED 2026-08-05, verdict:
-   inexpressibility, with the missing producer named** (sealed in
-   `ideas/TheBranchGateNeedsTwoBlockersAndSwitchRepair.md`). Single-blocker
-   designation is **false** (uniform-obstruction counterexample); the sharp
-   gate is two-blocker (universal ∨ switching pair) at every `n`. The
-   sure-exit-set theorem holds exactly as posed (= the coalition-face
-   per-phase condition from 1a — that road is confirmed). Collision
-   compensation survives a third party only under three exact scalar
-   conditions (owner indifference at interior rate; punishment-independent
-   spectator no-join; blocker-floor balance against the **exact** χ);
-   the fixed-gap obstruction kills sub-floor compensation at vanishing
-   owner rate — `δ ≥ γ/(γ+p)` is forced. The fixed-blocker branch map is
-   **not total**: a rational regression (C.20) escapes every branch; the
-   missing constructor is `SwitchRepair : two-blocker rate cover ⟶
-   two-scale rational relaxed orbit` (interior collision intensity within
-   phases, occupation charge λ↓0 across them) — circulation is its
-   compiler, not its producer; graded pinning cannot substitute. Successor
-   items: (a) Theorems A/B + the C.20 regression **LANDED 2026-08-05**
-   (production `97b77b6`: `QuittingBlockerIntervalCover`,
-   `QuittingSureExitSet`, `QuittingSwitchingResidueRegression`; root
-   build green, axiom audit clean; bonus: "exactly one" refuted, n = 2
-   threshold corollary); (b) Theorem C equivalence **LANDED 2026-08-05**
-   (production `34fdc11`, `QuittingCollisionRepairCharacterization.lean`:
-   full iff against the exact χ, both legs, general `n`, forced-rate and
-   sub-floor-failure corollaries, rate-1 collapse to the sure-exit test);
-   (c) `SwitchRepair` — **Q166 ANSWERED 2026-08-05, verdict: REFUTED as
-   posed** (sealed in
-   `ideas/TheMissingOperationIsSupportEnlargementNotASecondScale.md`).
-   The no-resurrection theorem: the occupation charge occurs in none of
-   the packet's pointwise clauses, so vanishing-error two-scale families
-   of sure-blocker packets (rates bounded below) exist iff an exact
-   one-stage repair or sure-pair set already does — occupation scaling
-   cannot repair a pointwise inequality, and rotating owners does not
-   average failure away. The K4 regression was never in the residue: it
-   has an exact rational period-one orbit (`x* = (1, 2/7, 1)`,
-   `v* = (5/7, 0, 2/7)`, quit mass 1, Bellman trivial) absorbed by the
-   existing exact-cycle engine, exact floors `χ = (2/3, 0, 2/7)` with NO
-   sub-floor gap anywhere, and uniform packet defect 2/5 — the
-   obstruction lives at the branch interface, not in the orbit relation.
-   The missing operation is **support enlargement**: Theorem C.1, the
-   one-sure-blocker/two-owner root (both non-blockers mix at explicit
-   rational indifference rates; blocker quit-now inequality; floors) is
-   necessary AND sufficient for an exact stationary terminal equilibrium
-   on that cell — on K4 it recovers the second exact root
-   `(1/2, 1, 1/3)`. Residues exactly characterized and semialgebraic:
-   packet residues (switching/universal) ∩ no-two-owner-root =
-   `ℜ₃^local`, which longer cycles/circulation may still absorb but
-   blocker-cover data alone cannot decide. Successor items: (c1)
-   formalize Theorem C.1 + the no-resurrection corollary layer on the
-   landed collision-repair module + the K4 exact checks (χ against
-   `quittingPunishmentValue`, the period-one root, the 2/5 defect) —
-   unblocked, NOT yet dispatched (session stopping point); (c2) the
-   `ℜ₃^local` adjudication is POSED as **Question 167** (2026-08-06):
-   emptiness of the locally-blocked class or a member plus engine
-   adjudication — either outcome a coverage theorem;
-   (d) four-player delta: unchanged and explicitly untouched by Q166
-   (the packet theorem has one spectator, the two-owner root none
-   inactive; the two-spectator common-punishment obligation stands).
-3. **The corrected trap schema — Q164 ANSWERED 2026-08-05, verdict: sound
-   and semantically complete, but effectively sufficient-only** (sealed in
-   `ideas/BoundedOrbitBudgetsAreExactlyBoundedPotentials.md`). The schema
-   is sound by telescoping (consequence via repaired Simon (i)⇒(iii)
-   contrapositively only — the ε/5 bookkeeping is irrelevant), and the
-   format is **complete**: uniform finite-orbit quit mass bounded ⟺ a
-   bounded local potential exists (budget-to-go V; exact strong duality
-   B* = min osc Φ, no compactness or attainment). But no decision
-   procedure: affine and every fixed semialgebraic template are exactly
-   decidable by QE (affine has the convex-separation criterion with a
-   finite Carathéodory dual on failure); continuous classes are provably
-   incomplete (discontinuities at zero-charge accumulation strata can be
-   necessary); the completeness⟹decidability hope is false absent an
-   effective regularity theorem. Negative filters before synthesis:
-   positive-charge fixed edge/cycle (kills all classes; the quit-bonus
-   table's exact q=1/2 self-loop is the mandatory negative control),
-   zero-drift-in-hull (affine). Successor items: (a) + (b) **LANDED
-   2026-08-05** (production `0829959`: `Math/ChargedPathBudget.lean` +
-   `ChargedPathBudgetCounterexamples.lean` — the abstract theorem, exact
-   strong duality attained by the budget-to-go, Bellman
-   least-supersolution characterization, positive-cycle filter, towers,
-   the continuous-incompleteness counterexample FULLY proved, and the
-   quit-bonus q = 1/2 self-loop calibration; the wiring to the repo's
-   `oneStageNext` operator TAKEN same day, production `34fdc11`,
-   `QuittingQuitBonusSelfLoopBridge.lean` — the canonical operator on the
-   repo's own table fixes the calibrating value exactly, no bounded
-   potential); (c) the QE/CAD search instrument itself is
-   experiments-lane work, gated on nothing.
-4. **Directed search in the named habitat** (sub-solo compensation at every
-   owner), instrumented per 3, with the perimeter weights as mandatory
-   negative controls.
-5. **Strata geometry as the long bet — gated**: the route is not
-   well-posed until a uniform-across-periods structure exists (the union of
-   strata over unbounded periods need not be tame); the three-lens
-   identification is demoted to working hypothesis (one leg proved) and is
-   this route's first milestone, not its foundation.
-
-**Conditional essential-APS singleton-flow interface — LANDED.** The exact
-Flesch successor graph, full-convex-hull algebraic operator, executable segment
-subrelation, carrier-restricted greatest fixed family, and zero-mass regression
-are formalized. A supplied finite proper cycle embeds in the algebraic family
-and compiles to a uniform-equilibrium payoff. More generally, compact
-functional unique-live terminal-free fibers with finite-window face avoidance
-produce a coherent infinite path, uniform opponent contraction, and a hazard
-ceiling below one. Fixed subdivision and the nonperiodic supersolution then
-prove that every initial point in that component is a uniform-equilibrium
-payoff. The remaining APS obligation is structural coverage: no theorem shows
-that every quitting game has such a nonempty component. See
-[`EssentialAPS.md`](EssentialAPS.md).
-
-Standing corrections from the same review acceptance: the negative map's
-completeness claim is scoped (proofs factoring through our interfaces; the
-correlated/de-correlation route and the topological route are unfenced);
-"sound end to end" means locally machine-checked joints, not one assembled
-theorem, until 1 closes; the public statement of the position lives at
-`GameTheory/Concepts/Stochastic/UniformEquilibriumProblem.md` and is the
-external attack surface.
+The incorporation checkpoint above and the status index below are the
+authoritative current priority view.
 
 ## Status index
 
@@ -319,14 +132,13 @@ stalled, and finished is visible at a glance. Within a group, items are listed
 lane by lane (`MATH`, `NEG`, `LEAN-F0`, `LEAN-P*`, `GEN`, `LIT`, `ENG`), then
 by number, not in file order. Every status word carried by any `###`-headed
 row below has a home in exactly one of the four buckets. `PC-*`
-project-control decisions are not work items and are tracked by the
-[Project-control decisions](#project-control-decisions) section itself; the
-one decision that carries its own `Status:` field (`PC-010`, `RESOLVED`) is
-cross-listed under `DONE / SOLVED / RESOLVED` for that reason alone.
+project-control decisions are not work items and are tracked only by the live
+[Project-control decisions](#project-control-decisions) section or the
+superseded/resolved decision section in
+[`PIPELINE-Archive.md`](PIPELINE-Archive.md).
 
 **READY / PLANNED / DESIGN** — pick up now
 - `MATH-P0-5` — is the exact-cycle disjunct complete, or do ε-cycles diverge?
-- `MATH-P0-6` — port the all-periods non-existence theorem
 - `MATH-P0-7` — a sufficiency theorem for the isolated-negative branch
 - `MATH-P0-8` — the relaxed compiler: formalize Proposition 3
 - `MATH-P0-10` — the drift device: uniform threats against moving states
@@ -362,10 +174,6 @@ cross-listed under `DONE / SOLVED / RESOLVED` for that reason alone.
 - `LIT-P2-2` — separate Bewley-Kohlberg inputs from the independent Puiseux
   route
 - `LIT-P2-3` — close the three residues of the borrowed-premise census
-- `ENG-P0-1` — put CI under .github/workflows/ and make it green
-- `ENG-P0-2` — make the axiom audit exact and add P0 keeper capstones
-- `ENG-P1-1` — classify the 25 root-unreachable Lean modules and
-  opaque/native_decide policy
 - `ENG-P1-3` — dependency drift, and an over-specific upstream lemma
 
 **ACTIVE / IN FLIGHT**
@@ -417,25 +225,28 @@ cross-listed under `DONE / SOLVED / RESOLVED` for that reason alone.
   [archive](PIPELINE-Archive.md)
 - `LEAN-P0-4` — discharge nondegeneracy of the germ quit family — see
   [archive](PIPELINE-Archive.md)
-- `LEAN-F0-7` — the tail-average transfer is mirrored, not doubled —
-  **to archive**
+- `LEAN-F0-7` — the tail-average transfer is mirrored, not doubled — see
+  [archive](PIPELINE-Archive.md)
 - `LEAN-P0-8` — joint complementarity, and absorption derived rather than
-  assumed — **to archive**
+  assumed — see [archive](PIPELINE-Archive.md)
 - `LEAN-P0-10` — separate the three contraction deficits and price
-  re-closing — **to archive**
-- `LEAN-P0-11` — bridge the two encodings of complementarity — **to archive**
-- `LEAN-P1-5` — linear complementarity infrastructure — **to archive**
+  re-closing — see [archive](PIPELINE-Archive.md)
+- `LEAN-P0-11` — bridge the two encodings of complementarity — see
+  [archive](PIPELINE-Archive.md)
+- `LEAN-P1-5` — linear complementarity infrastructure — see
+  [archive](PIPELINE-Archive.md)
+- `MATH-P0-6` — port the all-periods non-existence theorem — see
+  [archive](PIPELINE-Archive.md)
 - `MATH-P0-11` — the minimal open family: the four-player cyclic phase
-  diagram (`SOLVED`) — **to archive**
-- `PC-010` — PC-009's stated basis is established, at the bounded form
-  (`RESOLVED`); a project-control decision, cross-listed here only because it
-  carries a `Status` field, not an archive-rule item
-
-**To archive.** Six rows above carry a finished status but still have a live
-`###` section, in violation of "finished items move to
-[`PIPELINE-Archive.md`](PIPELINE-Archive.md) exactly once": `LEAN-F0-7`,
-`LEAN-P0-8`, `LEAN-P0-10`, `LEAN-P0-11`, `LEAN-P1-5`, `MATH-P0-11`. Noted here
-rather than moved — moving sections is a separate pass.
+  diagram (`SOLVED`) — see [archive](PIPELINE-Archive.md)
+- `ENG-P0-1` — put CI under `.github/workflows/` and make it green — see
+  [archive](PIPELINE-Archive.md)
+- `ENG-P0-2` — make the axiom audit exact and add P0 keeper capstones — see
+  [archive](PIPELINE-Archive.md)
+- `ENG-P1-1` — classify root-unreachable modules and the
+  `opaque`/`native_decide` policy — see [archive](PIPELINE-Archive.md)
+- `ENG-P2-1` — break the sure-exit cross-check cycle to deduplicate the six
+  pureSetRoot lemmas — see [archive](PIPELINE-Archive.md)
 
 ## Project-control decisions
 
@@ -544,109 +355,6 @@ proof-mining/questions/experiments are evidence only.
 
 **Revisit trigger.** A demonstrated maintenance failure in the hierarchy below.
 
-### `PC-008` — deprioritize escaping-middle compactification pending the free-terminal test
-
-**Decision.** **Deprioritize escaping-middle compactification pending the
-free-terminal test.** `MATH-P0-1` and `LEAN-P1-4` drop to P1 until the optimized
-debt over chains with a *free admissible* terminal continuation is decided.
-
-**Rationale.** The entire P0 hinge is downstream of "the exact-D chain grammar
-has a positive plateau". That premise looked like it might be about the grammar:
-both plateau witnesses are two-player tables with equilibria, and the surgery
-witness carries a machine-checked zero-gain array.
-
-**The free-terminal test has now been answered by an unaudited, unformalized
-solver's answer, and it splits (`M [reported]`).** Two candidate unpinnings
-are rejected; the faithful formulation selects both the prescribed and the
-deviating terminal values by zero-seeded repeated-period iteration. Under it
-the surgery witness collapses to gap zero, but the weight
-`r({1}) = r({2}) = (-1,1)`, `r({1,2}) = (1,-1)` has gap **exactly `1` at every
-length** — so a gap can survive faithful unpinning, and compactification is
-therefore **not** categorically work on an artifact. See
-[`FaithfulUnpinningLeavesASurvivingGap.md`](../../ideas/PositivePlateauBoundaryClosure/FaithfulUnpinningLeavesASurvivingGap.md)
-for the exact statement, the per-row seals (the "unpinning kills both known
-plateau witnesses" sub-claim has independent machine-checked support; the
-faithful-formulation content does not), and what would raise the seal.
-
-**Rejected.** Continue building marked-cylinder semantics at P0 before knowing
-whether the plateau survives unpinning.
-
-**Consequence.** Escaping-middle work continues at P1 and is not abandoned; the
-freed capacity goes to the free-terminal calibration and the zero-mismatch-cycle
-question. If free-terminal debt stays positive on some weight, the compactness
-lane returns to P0 with a target that is informative about the game.
-
-**Revisit trigger.** The free-terminal test resolving either way, or a weight
-exhibiting a plateau that survives unpinning.
-
-### `PC-010` — PC-009's stated basis is established, at the bounded form (RESOLVED)
-
-- **Status:** RESOLVED (2026-08-04)
-
-**Decision.** **RESOLVED 2026-08-04 — `PC-009`'s stated basis is established, at
-the bounded form.**
-
-**Rationale.** The attributed theorem is E. Solan, *The dynamics of the Nash
-correspondence and `n`-player stochastic games*, International Game Theory
-Review **3**(4), 291–299 (2001), DOI
-[`10.1142/S0219198901000488`](https://doi.org/10.1142/S0219198901000488),
-**Theorem 2.1**; the game of its Figure 1 is the case-2 weight times `3`. Its
-literal statement carries no boundedness hypothesis and is machine-checked
-**false**; its proof runs through the convex-hull bound `Σ_i y_i ≤ 4`, which is
-where boundedness enters unstated, so the bounded form is mathematically
-established (the gap is a missing step in a published proof, not a wrong
-result) — and the bounded form is what the finite-cycle deduction needs,
-since repeating a cycle lands inside that hull. The case-2 row returns to
-`PROVED` **at the math level**: `NoBoundedCompletelyAbsorbingInverseIterate`
-itself is not machine-checked and remains an open `Prop` (`LEAN-F0-8`, still
-`READY`, owns formalizing it) — this is consistent with, not a reversal of,
-the "open" verdict recorded below in the original entry. Full record:
-[`PerturbedFTVGameHasNoBoundedCompletelyAbsorbingInverseIterate`](../../ideas/UniformEquilibriumLiterature/PerturbedFTVGameHasNoBoundedCompletelyAbsorbingInverseIterate.md).
-The same paper's **Theorem 2.2** independently attests the diverging-period
-claim. Original entry follows. The case-2 refutation was deduced from "this
-weight admits no completely absorbing inverse iterate". That statement,
-**without a boundedness condition on the values**, is false: an explicit iterate
-has rows `(p,0,0)` and values `(1/3, 1, K·q^{-t})`, whose third coordinate grows
-exactly like the inverse of the survival product, leaving an unconsumed
-homogeneous boundary term. **Machine-checked** in
-`QuittingUnboundedInverseIterate.lean`
-(`not_noCompletelyAbsorbingInverseIterate`, for every `η ≥ 0`), with the
-mechanism isolated as `survivalPrefix_mul_value_two`: the survival prefix times
-the third value is a positive constant at every stage. Repetition of a finite
-cycle does give bounded values, so the deduction to "no finite absorbing cyclic
-array" would go through from the **bounded** form — stated separately as
-`NoBoundedCompletelyAbsorbingInverseIterate`, recorded as the weaker claim, and
-open.
-
-**Rejected.** Treat the case-2 refutation as established, or discard `PC-009`
-outright.
-
-**Consequence.** The absorption-path route is **not** re-deprioritised:
-`PC-009`'s other leg is independent of this. The conversion is available and the
-period-`3m` family has vanishing gains, and that computation uses only the block
-structure, survivals and defect asymptotic — not the attribution. So the carrier
-being non-finite still has support; what lapses is the claim that a specific
-weight admits *no* finite cycle.
-
-**Revisit trigger.** Historical audit trail, preserved for record and
-resolved within this same entry — not a live future trigger. **Audit
-returned 2026-08-04: `NOT LOCATABLE`.** No such theorem was found under that attribution — every Solan quitting-game paper and
-an arXiv author sweep were searched; none contains the cited terminology and
-none of the quitting papers has a Theorem 2.1. Worse for the claim: the weight
-at `η = 0` is the Flesch–Thuijsman–Vrieze cubic game divided by three on all
-seven rows, and that game has an exact bounded absorbing complementary cycle of
-length three — so the **bounded** form is false at `η = 0` too, and the entire
-statement rests on the perturbation. The perturbation is aimed exactly at that
-cycle and kills it on a knife-edge: the idle coordinate's gap is `η/6`, zero at
-`η = 0` and positive after — matching the source's own scope, "for every `ε > 0`
-sufficiently small", with no `ε_0` supplied. **Both sweeps missed the paper**
-because its title names neither quitting games nor absorption and it is not
-among the repository's local PDFs; the citation trail found it, as reference
-`[16]` of Ashkenazi-Golan–Krasikov–Rainer–Solan. A source audit must chase the
-reference lists of papers already on disk before returning `NOT LOCATABLE`, and
-must sweep `ephemeral/` — noting that `sources/aps-quitting-2026.pdf` there is a
-3 KB HTML bot-block page, not a paper.
-
 ### `PC-009` — reopen the absorption-path route; retire the finite-cycle carrier
 
 **Decision.** **Reopen the absorption-path route; retire the finite-cycle
@@ -694,65 +402,27 @@ discipline means a module that is not imported cannot have any of its constants
 named elsewhere, so a **module-level** import check is *equivalent* to the
 declaration-level soundness fact wanted -- not an approximation of it. A heavier
 declaration-graph tool would therefore answer no stronger question here.
-Supporting: `audit_repository.py` (176 lines) already builds the tracked import
-graph, already detects the 25 orphaned modules -- it is the source of that
-figure -- and already flags `opaque`/`native_decide`/`axiom`/`unsafe`/`partial`.
-The three real gaps are CI not wired under `.github/workflows/`, the axiom
-audit's multiline-parser bug, and the unenforced leaf invariant; each is a small
-targeted change to existing Python.
+Supporting: `audit_repository.py` builds the tracked import graph and now
+reports zero unclassified root-unreachable modules. CI is wired at
+`.github/workflows/ci.yml`; axiom parsing and keeper coverage are exact; and
+the leaf invariant is enforced. The `BlockPairK11` `opaque`/`native_decide`
+island is an explicit exception whose containment check fails if another
+production module imports it.
 
 **Rejected.** Adopt a one-week-old, one-star personal project pinned to
 `lean-toolchain v4.33.0-rc1` against this repository's `v4.32.2`, to answer a
 question twenty lines of existing Python answers in under a second.
 
-**Consequence.** Make the **leaf invariant build-checkable**: invert the
-existing forward import dict and assert that the importers of the two
-`sorry`-carrying modules are contained in `{root aggregator, each other}`.
-Independently verified today: importers of `QuittingConjecture` are
-`{GameTheory}`, importers of `UniformExistenceConjecture` are
-`{GameTheory, QuittingConjecture}`. **The check must also assert the root
-aggregator declares nothing**, since the root does import both and the
-equivalence argument only holds for a pure import list.
+**Consequence.** Keep the repository-native import, placeholder, axiom, leaf,
+and quarantine checks as the build-gate implementation of this decision. The
+root aggregator and all intentional placeholder leaves remain covered by the
+enforced audit rather than by an external declaration graph.
 
 **Revisit trigger.** The tool becoming maintained and toolchain-compatible *and*
 a question arising that genuinely needs declaration-level rather than
 module-level resolution. Note the decline rests partly on unverified ground: the
 toolchain mismatch and the no-install fence meant nobody confirmed
 `result-graph` runs here at all.
-
-### `LEAN-F0-7` — the tail-average transfer is mirrored, not doubled
-
-- **Status:** DONE
-- **Lane:** F0
-- **Depends:** `LiminfAverageBridge`, `InfinitePlayMeasure`.
-- **Record:** [Notion lattice](NotionLattice.md)
-
-**Objective.** Settle how `IsUniformEquilibriumPayoff` transfers to the
-tail-average notions, and record the limsup node the registry lacked.
-
-**State.** Landed, and it refutes the framing this row was opened with. That
-framing said the liminf on-path failure signals liminf is the wrong target,
-with limsup getting **both** directions free. Only half is right.
-
-Negation exchanges the two limits unconditionally, so each abstract lemma
-dualizes with no change to the `ENNReal`/Fatou internals. But dualizing the
-*conditional* lemma yields a *conditional* statement: the almost-sure
-hypothesis is relabelled, not removed. The moving-bump family dualizes too,
-refuting the unconditional limsup-deviation bound exactly as the original
-refutes the unconditional liminf-on-path bound.
-
-So the split is **mirrored**: liminf gives the deviation direction free and the
-on-path direction conditional; limsup gives the on-path direction free and the
-deviation direction conditional. Neither tail notion is the uniform notion's
-"natural home" — each buys one direction and owes the other. Both game
-corollaries are free of any representation hypothesis, since they run on the
-landed play measure.
-
-**Acceptance.** The two-directional limsup transfer as a named theorem, the
-limsup node and its edges in the registry, and the liminf edges restated as the
-conditional ones they are. Cheapest adjacent item: formalize the
-typewriter/moving-bump family, converting the registry's FALSE-by-reason edge
-into FALSE-by-machine.
 
 ### `LEAN-F0-8` — the bounded-transversality lemma behind the case-2 repair
 
@@ -782,45 +452,6 @@ fails to decay the fixed set is a ray, and the recursion selects nothing.
 **Acceptance.** The squeeze lemma landed, the `Prop` placeholder either
 established or removed, and the case-2 row resting on a formal artifact that
 proves the statement it cites.
-
-### `LEAN-P0-8` — joint complementarity, and absorption derived rather than assumed
-
-- **Status:** DONE (`M+L`), 2026-08-05
-- **Lane:** P0
-- **Depends:** the fixed-opponents stage primitives; the cyclic-block predicate.
-- **Record:** this file
-
-**Objective.** Give the repository a predicate for "an arbitrary infinite row
-sequence is complementary in every coordinate", and decide whether absorption
-follows from optimality.
-
-**State.** Both landed in `QuittingJointComplementarity.lean`, `sorry`-free.
-
-The predicate closes a **structural absence**: the tree had only a
-single-coordinate live-value notion and a periodic-only cyclic-block notion, so
-claims quantified over "every complementary sequence" — which several recent
-results are — **could not be stated at all**. They now can. The tail value
-converges from boundedness alone, with no assumption of eventual absorption, and
-the compatibility bridge is proved: a periodic sequence satisfying the cyclic
-block predicate satisfies this one. That bridge needed a
-uniqueness-of-bounded-solutions lemma and a proof that the periodic extension's
-joint survival vanishes from *every* start, not just from zero.
-
-**The new mathematics is the second result: a positive solo reward forces
-absorption.** If a sequence is jointly complementary and some coordinate has
-strictly positive solo reward, play absorbs almost surely from every time. Every
-prior result in this tree takes absorption as a **hypothesis**; none derived it.
-Consequently a non-absorbing complementary sequence requires every solo reward
-non-positive — close to the zero-solo branch, which suggests why that branch has
-the shape it does rather than being a case that happens to be listed first.
-
-The flagged risk — that the tail value's vanishing depends on what the other
-coordinates do — resolved without an extra hypothesis, via a sharper tail bound
-against a known survival limit rather than against the reward bound alone.
-
-**Acceptance.** Met. Consumers: this discharges the tail-product step of the
-isolated-negative floor argument, and makes the universal claims of the carrier
-and certification results formalizable for the first time.
 
 ### `MATH-P0-5` — is the exact-cycle disjunct complete, or do ε-cycles diverge?
 
@@ -967,33 +598,7 @@ or a local unnormalized variant landed with both consumers pointed at it.
 repository, so changing it is a dependency edit, and the same dependency is
 currently in flux. Sequencing matters.
 
-### `ENG-P2-1` — break the sure-exit cross-check cycle to deduplicate the six pureSetRoot lemmas
-
-- **Status:** DONE 2026-08-05 (production `258d8b5`) — the cross-check
-  theorem moved next to its table, the cycle broken, all six lemmas
-  deleted with their 18 uses rewired or inlined, no statement changed;
-  root build and both gates green.
-- **Lane:** engineering
-- **Depends:** nothing
-- **Record:** this file
-
-**Objective.** `QuittingSureSetRepairFullIntervalCounterexample.lean` carries six
-file-local `pureSetRoot` lemmas (definitions around lines 370–452) that are
-subsumed by the general versions in `QuittingSureExitSet.lean`. They cannot be
-rewired today: `QuittingSureExitSet.lean` imports the counterexample file for
-its own cross-check section, so the reverse import is a direct two-module cycle
-(verified by attempting it — `lake` reports the cycle). All 18 references to
-the six names are internal to the counterexample file, so once the cycle is
-broken the deletion is mechanical.
-
-**Plan.** Move the cross-check section of `QuittingSureExitSet.lean` (the part
-consuming `not_isεAsymptoticNash_directPureSet`) into the counterexample file
-or a third module that imports both; drop the import at
-`QuittingSureExitSet.lean:10`; then delete the six lemmas and rewire their
-in-file uses to the general versions.
-
-**Acceptance.** The six lemmas gone, no duplicate statements across the two
-modules, both modules and the root build green, axiom audit unchanged.
+### `LEAN-F0-9` — name the recurring mechanisms as objects
 
 - **Status:** ACTIVE (first entity in flight)
 - **Lane:** F0
@@ -2088,151 +1693,6 @@ That half needs block machinery the row-level file does not have, and it is
 blocked on `LEAN-P0-11` if it is to say anything about the Bool-valued
 development.
 
-### `LEAN-P0-10` — separate the three contraction deficits and price re-closing
-
-- **Status:** DONE
-- **Lane:** P0
-- **Depends:** the transport law, the survival-prefix bridge, the anchored
-  max-affine object.
-- **Record:** [anchored-repair]
-
-**Objective.** Formalize the exact residual formula for closing a modified
-block, and machine-check that the same formula **fails** for the optimized
-deviation objective.
-
-**State.** `DONE`. Three deficits must not be conflated: the value recursion's,
-the deviation recursion's built from deleted products, and a local block's
-transported mass. The law is an exact identity for the first, a sharp upper
-bound for the second, and false for the third. Prefix survival is a
-multiplicative transport factor, never a denominator.
-
-**Seals differ by leg.** The exact identity and the falsity witness are `L`. The
-**sharp middle leg is `M [reported]` and has no theorem** — the formalization's
-middle deliverable was the transport split, not a bound on rowwise
-complementarity loss. Do not cite the three legs under one seal.
-
-**Acceptance.** **DONE, 2026-08-05**, `QuittingSeamPriceResidual.lean`. All four
-parts landed. The exact form needed no hypothesis beyond the definitions — the
-successor payoff is affine in the tail value with slope the full joint continue
-mass, unconditionally. The failure witness is an isolated coordinate at hazard
-rates `1/2` and `1/3`, where the mismatch is rate-independent while the full
-deficit varies, so no single numerator reproduces it; the deleted deficit there
-is exactly `0`. Unit continue mass makes the successor map the identity, so
-vanishing absorption gives no pole.
-
-### `LEAN-P0-11` — bridge the two encodings of complementarity
-
-- **Status:** DONE
-- **Lane:** P0
-- **Depends:** `QuittingCyclicWeightRowDichotomy.lean`, the Bool-valued spine.
-- **Record:** this file
-
-**Objective.** Prove that the real-valued hazard encoding of the gain and
-complementarity conditions agrees with the Bool-valued mixture encoding the main
-development uses.
-
-**State.** `DONE`, and this was a duplication introduced deliberately and
-knowingly. The questions corpus states everything over arrays of reals; the Lean
-development states everything over `PMF Bool` mixtures. Formalizing a question's
-answer therefore produced a **second** encoding of `Σ_i`, `Γ_i`, `g_i` and
-exact complementarity, generic over a finite index type. Both are correct and
-neither can currently feed the other.
-
-Until the bridge exists, a theorem proved in one encoding says nothing about the
-other, and a reader may reasonably assume otherwise. That is exactly the shape
-that rots.
-
-**Acceptance.** **DONE, 2026-08-05**, `QuittingHazardRowBridge.lean`. The
-encodings are **equivalent**, not merely analogous: quit payoff, continue
-payoff, and endpoint difference agree exactly with the real-valued `Σ`, `Γ`, `g`
-for every reward and continuation value, with no sign or scope mismatch and no
-extra hypotheses. Exact row complementarity corresponds to zero-error root
-endpoint Nash in both directions, which the development already identifies with
-exact root Nash. The row dichotomy transports as a demonstration.
-
-The proof needed one new combinatorial lemma: the expectation of a family of
-independent Bernoulli coordinates expanded as a powerset sum.
-
-One asymmetry, recorded rather than hidden. Mixture to hazards is total; hazards
-back to a mixture needs the row in the unit interval, since the polynomials stay
-meaningful outside it but no mixture realizes such a row. Harmless where used,
-and it means results proved over unrestricted real rows do **not** automatically
-transport.
-
-### `LEAN-P1-5` — linear complementarity infrastructure
-
-- **Status:** DONE — `Math/LinearProgramming/SingletonLCP.lean`. Predicate,
-  scaling/permutation invariance, the support-pattern reduction, the
-  game-facing instantiation, and a closed-form two-coordinate
-  characterization with no residual existential. Decidability for rational
-  data is **blocked, precisely**: the Fourier–Motzkin/Farkas material is
-  Prop-level, not computable; a `Decidable` instance is a separate project.
-  The absorption equivalence (`K4`, Q159 §5's numbering — "the relaxed
-  compiler", distinct from Q148's `K1`–`K2` above and from
-  `InvertedCounterexampleSearch`'s `K1`/`K4`) is now stateable.
-- **Lane:** P1
-- **Depends:** none.
-- **Record:** [exact-vs-relaxed]
-
-**Objective.** Provide the normalized singleton LCP as a Lean object with a
-feasibility predicate.
-
-**State.** `DONE`. Several recorded results turn on the feasibility of
-`λ ∈ Δ(I)`, `q = Bλ ≥ 0`, `λᵢqᵢ = 0` with `Bᵢⱼ = rᵢ({j}) - rᵢ({i})` — in
-particular the equivalence deciding whether absorption can vanish, and with it
-whether a diverging period is even possible. **LCP infrastructure now exists**
-in `Math/LinearProgramming/SingletonLCP.lean` (`SingletonLCPFeasible`, its
-scaling/permutation invariance, the support-pattern reduction via
-`singletonLCPFeasible_iff_exists_supportPattern`, and the game-facing
-`quittingSingletonLCPFeasible`); the residual-class material stays an ideas
-group, not Lean, but formalizing the absorption-vanishing equivalences is no
-longer blocked on the predicate itself.
-
-**Acceptance.** The predicate and enough API to state the absorption
-equivalence. Decidability for rational data would be a genuine strengthening,
-since it turns the criterion into something checkable on a concrete table.
-
-### `MATH-P0-6` — port the all-periods non-existence theorem
-
-- **Status:** DONE
-- **Lane:** P0
-- **Depends:** `LEAN-P0-9`.
-- **Record:** [exact-vs-relaxed]
-
-**Objective.** ~~Machine-check that the `ε`-perturbed cyclic three-player weight
-admits no exact cycle at any period.~~ **DONE, end to end, 2026-08-05.**
-`PerturbedCyclicWeightNoExactCycle.lean` (the label lock, real encoding, with
-the `ε = 0` witness and mechanical verification that positivity is needed)
-plus `PerturbedCyclicWeightCycleExistenceHoleOccupied.lean` (the cycle-level
-transport and the statement against the trichotomy's own predicate:
-`¬∃ terminal, IsQuittingCyclicContinuation (ftvRewardEps ε) terminal`,
-`ε ∈ (0,2]`, weight alignment machine-checked entry-for-entry). The leading
-hard candidate provably lies outside the trichotomy; the cycle route's
-incompleteness is an internal theorem, and the published chain is independent
-confirmation only.
-
-**State.** `DONE`, and the motivation was settled rather than speculative
-before the last piece landed: that weight already **occupies** the
-trichotomy's cycle-existence hole. Its solo
-values are all `1 > 0`, so the zero-solo branch fails; period one is excluded by
-the affine no-join condition, which at one coordinate pair reads `1 + pε ≤ 0`;
-period three is excluded because the unperturbed phase-rotation block acquires a
-strictly profitable deviation of exactly `ε/2`. Only the all-periods statement
-is missing, and it is the published paper's actual contribution — its own
-`ρ`-argument through a chain of six lemmas. Nothing weaker suffices, since the
-two computations above cover two periods.
-
-The comparison is sound. The terminal payoff is not a surrogate: finite-average
-payoff converges to it unconditionally for every profile including off-path
-deviations, so an absorbing cyclic continuation block is the same object as the
-literature's completely absorbing admissible sequence.
-
-**Acceptance.** The non-existence theorem for this weight at every period, for
-`ε ∈ (0, 2]`, via the floor + row dichotomy + label lock. The formalization
-must **fail at `ε = 0`** — a cycle exists there — and the point of failure must
-be the predecessor-value strict inequality, which is where `ε` enters. The
-published theorem remains as independent confirmation only.
-
 ### `MATH-P0-7` — a sufficiency theorem for the isolated-negative branch
 
 - **Status:** READY
@@ -2424,77 +1884,6 @@ already machine-refuted the natural candidate
 Estimated 8–11 waves to the conditional form; the unconditional sits behind
 the question.
 
-### `MATH-P0-11` — the minimal open family: the four-player cyclic phase diagram
-
-- **Status:** **SOLVED (followup answer); stress-point cashout LANDED.** The
-  scaled-cyclic calibration and repaired four-player stress weight
-  `(x, λ) = (2, 1)` now have concrete production uniform-payoff corollaries
-  through supplied circulation certificates. The broader followup family
-  analysis remains audited mathematics, not a blanket production theorem.
-  Its reported claim was that every `F′(x, λ)`
-  with `x > 0` admits a **rational singleton-face circulation** with explicit payoff
-  `v(x) = (1, 3−2a, 1/a, 1)`, `a` the root of `2a² + (x−1)a − 1 = 0` —
-  `λ`-independent payoff, period `O(1/δ)`; `x ≤ 0` has the exact
-  opposite-pair equilibrium. Extracted en route, each valuable beyond the
-  family: the **exact true min-max** with explicit boundaries (`x = 1/2`,
-  `x₊(λ) = 1 − 1/((1+λ)²(2+λ))`) — answering Q162's Part C for this family
-  in advance; **no instant equilibrium even with true-min-max punishment**;
-  the complete **singleton-carrier lock classification at four coordinates**;
-  a hand-assembled local-defects-to-arbitrary-deviations chain (§5, the
-  compiler's shape done directly for this family); and the hardest remaining
-  stress point for *exact-cycle classification* (not existence):
-  `(x, λ) = (2, 1)`, reported circulation payoff `(1, 2, 2, 1)`. At that
-  stress point the certificate, formal punishment-floor inequality, and
-  uniform-payoff existence are now machine-checked. The compact selector does
-  not identify its existential payoff with `(1, 2, 2, 1)`. **Reported
-  strategic consequence**: the circulation class swallowed the minimal
-  candidate family, including the diagonal-tight-floor case; production Lean
-  currently certifies the stress point, not the whole parameter family. The
-  counterexample hunt should target weights outside the circulation class,
-  whose true boundary remains the sharpest open question.
-
-  Previous state, kept for the record: Q160's family **collapsed by an authoring flaw**
-  (all triples zeroed made all-quit a period-one exact subgame-perfect
-  equilibrium at the true min-max, everywhere; a lone continuer must face a
-  nondegenerate `(n−1)`-coalition payoff, and the sparsity shrink went one
-  size too far — the vacuity rule now covers game families). **The repaired
-  family is filed as a followup in the Q160 thread** (no separate question
-  file) — every coalition pays its outsiders `1` — with
-  the trivial witnesses probed in authoring and recorded as supplied facts;
-  the open region is `x > 0`. Salvaged from Q160's answer, methods not
-  values: the true-min-max computation, the symmetric-stationary
-  classification with its tangential bifurcation, the pure-First-set
-  classification. New load-bearing subquestion: `F′`'s min-max plausibly sits
-  *tight against the diagonal* (best responses to both extreme opponent
-  profiles earn exactly the solo value), a structure no solved example has —
-  and the circulation-certificate check against `F′` is Part B, either
-  solving `x > 0` outright or exhibiting the first natural habitat outside
-  the circulation class.
-- **Lane:** P0.
-- **Depends:** affine invariance (the `d ≡ 1` normalization it legitimizes),
-  the lock, the landing, the LCP and solo-quitter criteria, the phase-switch
-  engine; the certsearch toolchain sweeps its parameter square.
-- **Record:** this file; Q160.
-
-**Objective.** The open problem restricted to its plausibly minimal natural
-habitat: the two-parameter family `F(x, ε)` — four coordinates, cyclic,
-diagonal `1`, `G_ε`-sparse, with `x` the payoff to the opposite player, the
-first genuinely four-coordinate degree of freedom. Solve its `(x, ε)` phase
-diagram: solved zones by explicit criteria, the lock's fate at four
-coordinates, existence by rotating relaxed cycles under phase-switch
-punishment, or the first certified counterexample candidate.
-
-**State.** Every known theorem misses the family for a stated reason
-(joining is profitable, four players, not zero-solo; escape-class coverage to
-be verified). The class lattice above it: `n = 4` (minimal open count) →
-diagonal-normalized (legitimate only by our affine invariance — the
-literature could not state this class) → cyclic-invariant (the home of every
-known hard phenomenon) → sparse. The anonymous/fully-symmetric class one
-level up is a cheap dissolves-or-sharpens test (one-dimensional symmetric
-complementarity) worth one probe, no more. **Attribution caveat**: the
-family's open status is internal-knowledge, medium-high confidence; a
-literature verification is owed before any public claim.
-
 ### `MATH-P0-10` — the drift device: uniform threats against moving states
 
 - **Status:** READY
@@ -2667,32 +2056,6 @@ verdict on (c) recorded in the census.
 
 ## Engineering and documentation lane
 
-### `ENG-P0-1` — put CI under .github/workflows/ and make it green
-
-- **Status:** READY (inferred; source has no explicit status tag here)
-- **Lane:** P0
-
-**Objective.** Put CI under `.github/workflows/` and make its documented
-commands green.
-
-**State.** Current `.github/ci.yml` is not discovered; placeholder and
-repository audits fail.
-
-**Acceptance.** A clean clone runs build, placeholders, repository audit, and
-axiom audit deterministically.
-
-### `ENG-P0-2` — make the axiom audit exact and add P0 keeper capstones
-
-- **Status:** READY (inferred; source has no explicit status tag here)
-- **Lane:** P0
-
-**Objective.** Make axiom audit exact and add P0 keeper capstones.
-
-**State.** Multiline parser misses 10/48 outputs; prerequisite build implicit.
-
-**Acceptance.** Requested declarations equal parsed declarations; explicit build
-target; quitting/uniform keepers audited.
-
 ### `ENG-P0-3` — run integration-sweep after every parallel-work wave, before committing
 
 - **Status:** ACTIVE (inferred; source has no explicit status tag here)
@@ -2713,20 +2076,6 @@ occurred in a single session.
 only what has exactly one correct answer and reports judgment calls unfixed; its
 stop-and-report case is the leaf invariant — if a `sorry`-carrying module
 acquires an importer, the repository's whole `sorryAx`-freedom argument lapses.
-
-### `ENG-P1-1` — classify the 25 root-unreachable Lean modules and opaque/native_decide policy
-
-- **Status:** READY (inferred; source has no explicit status tag here)
-- **Lane:** P1
-
-**Objective.** Classify 25 root-unreachable Lean modules and
-`opaque/native_decide` policy.
-
-**State.** Stable library, regression, certificate, and research surfaces
-currently mixed.
-
-**Acceptance.** Every module has an intentional target/import surface; policy
-exceptions are explicit.
 
 ### `ENG-P1-2` — keep the pipeline/frontier and claim-level links clean and current
 
