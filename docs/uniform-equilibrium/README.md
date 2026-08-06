@@ -36,6 +36,11 @@ The measured repository/CI assessment is
   its remaining producer obligation.
 - [PayoffPerturbationClosure.md](PayoffPerturbationClosure.md) records
   fixed-skeleton reward stability and target-free existence closure.
+- [ReverseConsequences.md](ReverseConsequences.md) develops the reverse
+  direction: tail-width and bounded-work characterizations, robust
+  counterexample consequences, transition discontinuity, current-versus-escape
+  duality, tensor products, patient evaluations, and the enriched absorption
+  interface. Every section carries an explicit evidence status.
 - [methods/MathResearchMethod.md](methods/MathResearchMethod.md)
 - [methods/LeanFormalizationMethod.md](methods/LeanFormalizationMethod.md)
 - [methods/ParallelResearchMethod.md](methods/ParallelResearchMethod.md)
