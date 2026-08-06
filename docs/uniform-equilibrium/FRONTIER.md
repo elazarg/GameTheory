@@ -29,6 +29,12 @@ the repository's one intentional open declaration. Verification of a supplied
 certificate, synthesis in a bounded class, and coverage of all semantic
 equilibria are separate claims.
 
+The established consequence layer is diagnostic rather than productive:
+profile-uniform vanishing payoff gaps preserve exact targets, bounded expected
+potentials give the telescoping instance, tail width and excess work give exact
+reverse characterizations, and rare transitions falsify unrestricted
+transition-kernel continuity.
+
 Payoff terminology is fixed in
 [`Stochastic/README.md`](../../GameTheory/Concepts/Stochastic/README.md):
 limiting-average, undiscounted-limit, and uniform finite-horizon notions are

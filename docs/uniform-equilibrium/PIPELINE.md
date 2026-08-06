@@ -39,6 +39,11 @@ the P0 mathematical status.
 
 ## Incorporation checkpoint — 2026-08-07
 
+- **Uniform consequences (`c81bcba8`, production).** Profile-uniform vanishing
+  finite-average payoff gaps preserve each exact target; bounded expected
+  potential shaping supplies the endpoint-telescope instance. Tail width and
+  excess work are exact reverse diagnostics, while rare transitions rule out
+  unrestricted kernel-continuity transfer. None is a general-game producer.
 - **Face circulations (`5e7d0e7a`, production).** A supplied bounded
   `FaceCirculationCertificate` with a common phase-ratio ceiling below `1` and
   floor at least `quittingPunishmentValue` is a genuine quitting-game producer:

@@ -39,6 +39,8 @@ The measured repository/CI assessment is
   selection, and its concrete quitting-game corollaries.
 - [PayoffPerturbationClosure.md](PayoffPerturbationClosure.md) records
   fixed-skeleton reward stability and target-free existence closure.
+- [UniformConsequences.md](UniformConsequences.md) records the compact
+  invariance, reverse-characterization, and transition-discontinuity layer.
 - [methods/MathResearchMethod.md](methods/MathResearchMethod.md)
 - [methods/LeanFormalizationMethod.md](methods/LeanFormalizationMethod.md)
 - [methods/ParallelResearchMethod.md](methods/ParallelResearchMethod.md)
