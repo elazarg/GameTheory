@@ -1,0 +1,114 @@
+/-
+Copyright (c) 2026 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
+import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailBounds
+
+/-!
+# Exceptional-target selection from joint survival
+-/
+
+noncomputable section
+
+namespace GameTheory
+
+open StochasticGame Math.Probability Math.PMFProduct
+
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
+/-- Root-level version of the multiplicative exceptional-clock inequality. -/
+theorem quittingRootDeletedContinueMass_mul_le_stationaryContinueMass
+    (root : ι → PMF Bool) {first second : ι} (hne : first ≠ second) :
+    quittingRootDeletedContinueMass root first *
+        quittingRootDeletedContinueMass root second ≤
+      quittingStationaryContinueMass root := by
+  let continueProbability : ι → ℝ := fun player =>
+    (root player false).toReal
+  have hnonneg (player : ι) : 0 ≤ continueProbability player :=
+    ENNReal.toReal_nonneg
+  have hleOne (player : ι) : continueProbability player ≤ 1 := by
+    exact (ENNReal.toReal_mono ENNReal.one_ne_top
+      (PMF.coe_le_one (root player) false)).trans_eq (by norm_num)
+  unfold quittingRootDeletedContinueMass
+  rw [quittingStationaryContinueMass_eq_prod_continueProbability,
+    quittingStationaryContinueMass_eq_prod_continueProbability,
+    quittingStationaryContinueMass_eq_prod_continueProbability,
+    ← Finset.prod_mul_distrib]
+  apply Finset.prod_le_prod
+  · intro player _
+    exact mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg
+  · intro player _
+    by_cases hfirst : player = first
+    · subst player
+      simp [hne]
+    · by_cases hsecond : player = second
+      · subst player
+        simp [hfirst]
+      · simp only [Function.update_of_ne hfirst,
+          Function.update_of_ne hsecond]
+        change continueProbability player * continueProbability player ≤
+          continueProbability player
+        nlinarith [hnonneg player, hleOne player]
+
+/-- For distinct players, the product of their finite opponent-survival
+weights is at most joint survival. -/
+theorem quittingOpponentSurvivalWeight_mul_le_jointSurvivalWeight
+    (roots : ℕ → ι → PMF Bool) {first second : ι} (hne : first ≠ second)
+    (start fuel : ℕ) :
+    quittingOpponentSurvivalWeight roots first start fuel *
+        quittingOpponentSurvivalWeight roots second start fuel ≤
+      quittingJointSurvivalWeight roots start fuel := by
+  rw [quittingOpponentSurvivalWeight,
+    quittingOpponentSurvivalWeight,
+    quittingJointSurvivalWeight_eq_prod,
+    ← Finset.prod_mul_distrib]
+  apply Finset.prod_le_prod
+  · intro offset _
+    exact mul_nonneg
+      (quittingStationaryContinueMass_nonneg
+        (Function.update (roots (start + offset)) first (PMF.pure false)))
+      (quittingStationaryContinueMass_nonneg
+        (Function.update (roots (start + offset)) second (PMF.pure false)))
+  · intro offset _
+    simpa only [quittingRootDeletedContinueMass_eq_fixedOpponents] using
+      quittingRootDeletedContinueMass_mul_le_stationaryContinueMass
+        (roots (start + offset)) hne
+
+/-- If joint survival is at most `δ²`, at most one player has opponent survival
+strictly above `δ`; choose that possible exceptional player as target. -/
+theorem exists_target_forall_opponentSurvivalWeight_le_of_joint_le_sq
+    [Nonempty ι] (roots : ℕ → ι → PMF Bool) (cutoff : ℕ)
+    {δ : ℝ} (hδ : 0 ≤ δ)
+    (hjoint : quittingJointSurvivalWeight roots 0 cutoff ≤ δ ^ 2) :
+    ∃ target : ι, ∀ who, who ≠ target →
+      quittingOpponentSurvivalWeight roots who 0 cutoff ≤ δ := by
+  classical
+  by_cases hall : ∀ who : ι,
+      quittingOpponentSurvivalWeight roots who 0 cutoff ≤ δ
+  · exact ⟨Classical.choice (inferInstance : Nonempty ι),
+      fun who _ => hall who⟩
+  · push_neg at hall
+    obtain ⟨target, htarget⟩ := hall
+    refine ⟨target, ?_⟩
+    intro who hwho
+    by_contra hnot
+    have hwhoLarge : δ <
+        quittingOpponentSurvivalWeight roots who 0 cutoff :=
+      lt_of_not_ge hnot
+    have hproduct :=
+      quittingOpponentSurvivalWeight_mul_le_jointSurvivalWeight
+        roots (Ne.symm hwho) 0 cutoff
+    have htargetNonneg : 0 ≤
+        quittingOpponentSurvivalWeight roots target 0 cutoff :=
+      quittingOpponentSurvivalWeight_nonneg roots target 0 cutoff
+    have hstrict :
+        δ ^ 2 <
+          quittingOpponentSurvivalWeight roots target 0 cutoff *
+            quittingOpponentSurvivalWeight roots who 0 cutoff := by
+      rw [pow_two]
+      exact mul_lt_mul htarget hwhoLarge hδ htargetNonneg
+    linarith
+
+end GameTheory
