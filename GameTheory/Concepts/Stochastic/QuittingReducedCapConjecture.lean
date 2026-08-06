@@ -4,6 +4,7 @@ Released under the MIT license as described in the LICENSE file.
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingPunishmentFreeReduction
+import GameTheory.Concepts.Stochastic.QuittingRankOneCrossing
 
 /-!
 # A truncated-ledger reduction of the finite-quitting conjecture
