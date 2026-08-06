@@ -11,7 +11,8 @@ Production entry point for the reverse-consequence layer:
 
 * arbitrarily thin uniform tail intervals and their positive obstruction;
 * bounded-work / semantic ledger certificates;
-* transfer under uniformly vanishing finite-average payoff changes; and
+* transfer under uniformly vanishing finite-average payoff changes;
+* bounded expected-potential gauge invariance; and
 * discontinuity under transition-kernel perturbations.
 
 The accompanying mathematical guide is
@@ -22,4 +23,5 @@ import GameTheory.Concepts.Stochastic.UniformTailWidth
 import GameTheory.Concepts.Stochastic.UniformTailWidthObstruction
 import GameTheory.Concepts.Stochastic.UniformBoundedWork
 import GameTheory.Concepts.Stochastic.UniformAsymptoticPayoffEquivalence
+import GameTheory.Concepts.Stochastic.UniformExpectedPotentialShaping
 import GameTheory.Concepts.Stochastic.TransitionPerturbationDiscontinuity
