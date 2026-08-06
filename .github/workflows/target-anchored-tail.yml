@@ -62,5 +62,8 @@ jobs:
       - name: Check proof placeholders
         run: python3 scripts/check_lean_placeholders.py
 
+      - name: Build public library for repository audit
+        run: lake build GameTheory
+
       - name: Audit reachability and theorem axioms
         run: python3 scripts/audit_repository.py
