@@ -66,13 +66,16 @@ theorem exists_ownSurvival_le_of_survivalPrefix_lt_pow
         ∏ who,
           quittingHazardSurvival
             (quittingRootSequenceOwnHazard roots who) cutoff := by
-    have hlower := Finset.pow_card_le_prod
-      (Finset.univ : Finset ι)
-      (fun who =>
-        quittingHazardSurvival
-          (quittingRootSequenceOwnHazard roots who) cutoff)
-      threshold
-      (fun who _ => (hnone who).le)
+    have hlower :
+        (∏ _who : ι, threshold) ≤
+          ∏ who,
+            quittingHazardSurvival
+              (quittingRootSequenceOwnHazard roots who) cutoff := by
+      apply Finset.prod_le_prod
+      · intro who _
+        exact hthreshold.le
+      · intro who _
+        exact (hnone who).le
     simpa using hlower
   rw [← quittingSurvivalPrefix_eq_prod_ownSurvival roots cutoff] at hproduct
   exact (not_lt_of_ge hproduct) hjoint
