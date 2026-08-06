@@ -163,13 +163,14 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.QuittingSwitchingBlockerTable.not_exists_universalJoiner
 
 -- The bounded survival-window landing, the truncation fold, and the reduced
--- conjecture's gap-free implication.  The reduced conjecture itself
--- (`GameTheory.quittingGame_hasQuittingLedgerCapPackage`) is deliberately
--- excluded: it is the third intentional open declaration.
+-- conjecture's gap-free implication.  The truncated-ledger producer itself
+-- (`GameTheory.quittingGame_hasQuittingTruncatedLedgerCapPackage`) is
+-- deliberately excluded: it is the third intentional open declaration.
 #print axioms GameTheory.exists_pos_ratio_forall_exists_jointSurvivalWeight_mem_survivalWindow
 #print axioms GameTheory.quittingRootSequenceHazardTerminalValue_quittingTruncatedRoots_le_of_plan_ledger_le
 #print axioms GameTheory.quittingTerminalPayoff_update_quittingPhaseSwitchProfile_le_of_plan_ledger_le
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_hasQuittingLedgerCapPackage
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_truncatedLedgerCapPackage
 
 -- ============================================================================
 -- The three-player switching-residue regression table (pure arithmetic;
@@ -207,6 +208,25 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.QuittingSwitchingResidueRegressionBridge.quittingSetReward_gameReward
 #print axioms GameTheory.QuittingSwitchingResidueRegressionBridge.not_isQuittingSureExitSet_of_sureExitFails
 #print axioms GameTheory.QuittingSwitchingResidueRegressionBridge.not_isQuittingSureExitSet_gameReward
+
+-- The stationary endpoint compiler and the two exact solutions of the
+-- switching-residue table.
+#print axioms GameTheory.isZeroAsymptoticNash_stationary_iff_endpointNash_and_boundary
+#print axioms GameTheory.isUniformEquilibriumPayoff_of_stationaryEndpointCertificate
+#print axioms GameTheory.QuittingSwitchingResidueExactRoot.noSureExitSet_but_two_distinct_stationary_uniformPayoffs
+
+-- The parametric witness that escapes the four local mechanisms while
+-- retaining an exact stationary equilibrium.
+#print axioms GameTheory.QuittingLocalMechanismResidueWitness.isLocalMechanismResidue_four
+#print axioms GameTheory.QuittingLocalMechanismResidueWitness.isExactTerminalNash_doubleSureMixerProfile
+#print axioms GameTheory.QuittingLocalMechanismResidueWitness.exists_uniformEquilibriumPayoff_four
+
+-- Shared punishment: zero combination price for two players, versus the
+-- exact positive price and optimizer classification on the cyclic
+-- three-player table.
+#print axioms GameTheory.quittingTwoPlayerSharedPunishmentExcess_eq_zero
+#print axioms GameTheory.QuittingSharedThreePlayer.quittingSharedPunishmentExcess_eq_three_quarters
+#print axioms GameTheory.QuittingSharedThreePlayer.quittingSharedPunishmentGap_eq_three_quarters_iff_first_eq_fair
 
 -- The quitting min-max is a stationary stopping value: the punishment
 -- value, an infimum over all history-dependent opponent plans of the

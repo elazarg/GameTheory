@@ -32,11 +32,10 @@ structured classes.  The general `n`-player case is open.
 
 The repository's other intentional open declarations are
 `quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`,
-the *finite-quitting* case, and `quittingGame_hasQuittingLedgerCapPackage` in
-`QuittingReducedCapConjecture.lean`, a quantitative statement that implies it.
-Discharging either would **not** discharge this file: quitting games are a
-strict subclass, and no reduction from arbitrary finite stochastic games to
-them is known.
+the *finite-quitting* case, and the truncated-ledger producer target in
+`QuittingReducedCapConjecture.lean`.  Discharging either would **not**
+discharge this file: quitting games are a strict subclass, and no reduction
+from arbitrary finite stochastic games to them is known.
 
 ## Scope: action sets are state-independent
 

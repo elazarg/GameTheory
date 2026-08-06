@@ -96,14 +96,11 @@ hold, from the general problem to this one, is
 This file contains one `sorry`, deliberately, in
 `quittingGame_exists_uniformEquilibriumPayoff`.  The repository's other
 intentional open declarations are `exists_uniformDeviationCapConstructor` in
-`UniformExistenceConjecture.lean`, the general finite-stochastic-game problem,
-and `quittingGame_hasQuittingLedgerCapPackage` in
-`QuittingReducedCapConjecture.lean`, a quantitative reduction of *this*
-conjecture: a weight admitting the ledger-shaped package of that file at every
-tolerance has a uniform-equilibrium payoff, by
-`quittingGame_exists_uniformEquilibriumPayoff_of_hasQuittingLedgerCapPackage`,
-which is proved with no gap.  Those three are the only intentional open
-declarations.
+`UniformExistenceConjecture.lean` and the truncated-ledger producer target in
+`QuittingReducedCapConjecture.lean`.  The latter is a sound conditional
+reduction for nontrivial player types; the one-player obstruction concerns its
+quantitative interface rather than equilibrium existence.  These are the only
+intentional open declarations.
 -/
 
 noncomputable section
@@ -118,8 +115,8 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 Every finite quitting game has a uniform-equilibrium payoff.
 
-`HEADLINE` — an *intentional open declaration*.  This covers quitting games
-only; the general finite-stochastic-game problem is
+This is an *intentional open declaration*.  It covers quitting games only;
+the general finite-stochastic-game problem is
 `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean`
 and does not follow from this.
 
@@ -157,7 +154,7 @@ theorem quittingGame_exists_uniformEquilibriumPayoff
 /-- The general conjecture implies this one, since a quitting game *is* a
 finite stochastic game.
 
-`HEADLINE` — the direction that actually holds between this conjecture and the
+The direction that actually holds between this conjecture and the
 general one, recorded so the relation between them is a theorem rather than a
 remark.  The converse fails to be available: no reduction from arbitrary finite
 stochastic games to quitting games is known, which is why
