@@ -45,16 +45,44 @@ The quantitative spectral defect developed in
 [ReverseConsequences.md](ReverseConsequences.md) is `2`-Lipschitz in the reward
 sup norm, giving an explicit robustness radius whenever the defect is positive.
 
+## Beyond pointwise reward closeness
+
+`GameTheory/Concepts/Stochastic/UniformAsymptoticPayoffEquivalence.lean`
+isolates a more general transfer interface. It is enough to have one horizon
+modulus `gap T → 0` that bounds the finite-average payoff difference for every
+behavior profile and player. The theorem
+`isUniformEquilibriumPayoff_withStagePayoff_iff_of_tendsto_gap_zero` then proves
+exact equality of the fixed-target uniform-equilibrium predicates. This covers
+transformations whose stage rewards are not pointwise close but whose cumulative
+effect is only a bounded endpoint term.
+
+The principal example is formalized in
+`GameTheory/Concepts/Stochastic/UniformExpectedPotentialShaping.lean`. Adding
+
+```text
+expect (transition s a) (F i) - F i s
+```
+
+to player `i`'s stage reward telescopes in expectation to
+`expectedStateValue T - F i s₀`. A bounded potential therefore changes every
+finite average by `O(1/T)`, uniformly over prescribed and deviating profiles.
+The theorem
+`isUniformEquilibriumPayoff_withExpectedPotentialShaping_iff` proves exact
+preservation of the entire uniform-equilibrium payoff set. This is the formal
+gauge-invariance statement: a valid asymptotic obstruction must be invariant
+under bounded expected coboundaries.
+
 ## Deliberate scope boundary
 
-This result does **not** prove density of any particular proposed class of
+These results do **not** prove density of any particular proposed class of
 solved payoff tables. That is now the substantive game-specific obligation.
 
-It also does not extend to arbitrary perturbations of the transition kernel.
+They also do not extend to arbitrary perturbations of the transition kernel.
 That stronger statement is **false**, not merely unformalized. The one-player,
 one-action, two-state example in
 `GameTheory/Concepts/Stochastic/TransitionPerturbationDiscontinuity.lean` has
 uniform payoff `1` for every positive transition probability to a good
 absorbing state, but payoff `1` fails at the zero-probability limit kernel.
-Small one-step transition changes can alter recurrent-class entry and have an
-order-one long-run effect.
+The file additionally proves coordinatewise convergence of the finite kernel
+table. Small one-step transition changes can alter recurrent-class entry and
+have an order-one long-run effect.
