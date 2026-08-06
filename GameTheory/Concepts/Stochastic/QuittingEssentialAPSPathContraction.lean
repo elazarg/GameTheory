@@ -39,15 +39,18 @@ def quittingEssentialAPSSuccessorOrbit
   | time + 1 => successor
       (quittingEssentialAPSSuccessorOrbit successor start time)
 
+omit [Fintype ι] [DecidableEq ι] in
 @[simp] theorem quittingEssentialAPSSuccessorOrbit_zero
     (successor : ι → ι) (start : ι) :
     quittingEssentialAPSSuccessorOrbit successor start 0 = start := rfl
 
+omit [Fintype ι] [DecidableEq ι] in
 @[simp] theorem quittingEssentialAPSSuccessorOrbit_succ
     (successor : ι → ι) (start : ι) (time : ℕ) :
     quittingEssentialAPSSuccessorOrbit successor start (time + 1) =
       successor (quittingEssentialAPSSuccessorOrbit successor start time) := rfl
 
+omit [Fintype ι] [DecidableEq ι] in
 /-- A path following `successor` agrees after every shift with the canonical
 successor orbit from its shifted owner. -/
 theorem quittingEssentialAPS_owner_add_eq_successorOrbit
@@ -88,7 +91,7 @@ theorem exists_uniform_quittingFleschSuccessor_forwardGap
     ⟨gain base, ⟨base, rfl⟩⟩
   obtain ⟨_minimum, ⟨minPlayer, rfl⟩, hleast⟩ :=
     hcompact.exists_isLeast hnonempty
-  rw [Set.mem_lowerBounds, Set.forall_mem_range] at hleast
+  rw [mem_lowerBounds, forall_mem_range] at hleast
   exact ⟨gain minPlayer, hgainPos minPlayer, hleast⟩
 
 /-- **One total-mass constant works at every shifted start.**  The local
@@ -173,7 +176,7 @@ theorem
     ⟨localNu (owner 0), ⟨owner 0, rfl⟩⟩
   obtain ⟨_minimum, ⟨minPlayer, rfl⟩, hminimum⟩ :=
     hnuCompact.exists_isLeast hnuNonempty
-  rw [Set.mem_lowerBounds, Set.forall_mem_range] at hminimum
+  rw [mem_lowerBounds, forall_mem_range] at hminimum
   refine ⟨localNu minPlayer, hlocalNuPos minPlayer, ?_⟩
   intro start
   have hshift := hlocalBound (owner start)
