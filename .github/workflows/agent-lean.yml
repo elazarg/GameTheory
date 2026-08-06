@@ -31,11 +31,14 @@ jobs:
 
           path = Path("GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean")
           text = path.read_text()
-          old = """  have hscale : 4 * M * δ ≤ ε := by
-            dsimp only [δ]
-            rw [mul_div_assoc, div_le_iff₀ hdenom]
-            nlinarith [hε.le]
-          """
+          marker = "  have hscale : 4 * M * δ ≤ ε := by\n"
+          start = text.rfind(marker)
+          if start < 0:
+              raise SystemExit("final scaling theorem was not found")
+          end_marker = "  exact ⟨profile, hprofile.mono hscale⟩\n"
+          end = text.find(end_marker, start)
+          if end < 0:
+              raise SystemExit("final scaling theorem terminator was not found")
           new = """  have hscale : 4 * M * δ ≤ ε := by
             dsimp only [δ]
             have hratio : 4 * M / (4 * M + 1) ≤ 1 := by
@@ -47,9 +50,7 @@ jobs:
               _ ≤ ε * 1 := mul_le_mul_of_nonneg_left hratio hε.le
               _ = ε := mul_one ε
           """
-          if old not in text:
-              raise SystemExit("expected final scaling block was not found")
-          path.write_text(text.replace(old, new, 1))
+          path.write_text(text[:start] + new + text[end:])
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
