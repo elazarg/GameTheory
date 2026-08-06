@@ -24,7 +24,6 @@ open StochasticGame Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
-
 /-- Root-level version of the multiplicative exceptional-clock inequality. -/
 theorem quittingRootDeletedContinueMass_mul_le_stationaryContinueMass
     (root : ι → PMF Bool) {first second : ι} (hne : first ≠ second) :
@@ -111,9 +110,19 @@ theorem exists_target_forall_opponentSurvivalWeight_le_of_joint_le_sq
         δ ^ 2 <
           quittingOpponentSurvivalWeight roots target 0 cutoff *
             quittingOpponentSurvivalWeight roots who 0 cutoff := by
-      rw [pow_two]
-      exact mul_lt_mul htarget hwhoLarge.le hδ
-        (lt_of_le_of_lt hδ htarget)
+      by_cases hδzero : δ = 0
+      · subst δ
+        simpa using mul_pos htarget hwhoLarge
+      · have hδpos : 0 < δ := lt_of_le_of_ne hδ (Ne.symm hδzero)
+        rw [pow_two]
+        calc
+          δ * δ <
+              δ * quittingOpponentSurvivalWeight roots who 0 cutoff :=
+            mul_lt_mul_of_pos_left hwhoLarge hδpos
+          _ ≤ quittingOpponentSurvivalWeight roots target 0 cutoff *
+                quittingOpponentSurvivalWeight roots who 0 cutoff :=
+            mul_le_mul_of_nonneg_right htarget.le
+              (quittingOpponentSurvivalWeight_nonneg roots who 0 cutoff)
     linarith
 
 end GameTheory
