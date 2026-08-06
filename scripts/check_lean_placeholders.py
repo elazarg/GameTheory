@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Fail if tracked Lean sources contain unexpected `sorry` or `admit` tokens.
 
-The repository states two open conjectures as `sorry`-carrying declarations on
-purpose.  They are listed in `INTENTIONAL` below, keyed by path and declaration
-name, so that this check stays *green* while still failing on a third
-placeholder appearing anywhere.
+The repository states three open conjectures as `sorry`-carrying declarations
+on purpose. They are listed in `INTENTIONAL` below, keyed by path and
+declaration name, so that this check stays *green* while still failing on any
+additional placeholder appearing anywhere.
 
-The allowlist is checked in both directions.  An entry that no longer
+The allowlist is checked in both directions. An entry that no longer
 corresponds to a placeholder is itself a failure: when a conjecture is
-discharged, its entry must be removed, and a silently stale allowlist is how a
-guard stops guarding.
+discharged or renamed, its entry must be updated, and a silently stale
+allowlist is how a guard stops guarding.
 """
 
 from __future__ import annotations
@@ -40,11 +40,11 @@ INTENTIONAL: dict[tuple[str, str], str] = {
     ): "The general uniform-equilibrium existence problem, quantitative form.",
     (
         "GameTheory/Concepts/Stochastic/QuittingReducedCapConjecture.lean",
-        "quittingGame_hasQuittingLedgerCapPackage",
-    ): "The reduced finite-quitting conjecture: existence, at every tolerance, "
-    "of a ledger-shaped input package for the assembled phase-switch cap. It "
-    "implies the finite-quitting conjecture with no gap, by "
-    "`quittingGame_exists_uniformEquilibriumPayoff_of_hasQuittingLedgerCapPackage`.",
+        "quittingGame_hasQuittingTruncatedLedgerCapPackage",
+    ): "The truncated-ledger producer conjecture: at every positive tolerance, "
+    "construct a controlled finite quitting plan for a nontrivial player type. "
+    "It implies the finite-quitting conjecture in that scope by "
+    "`quittingGame_exists_uniformEquilibriumPayoff_of_truncatedLedgerCapPackage`.",
 }
 
 
