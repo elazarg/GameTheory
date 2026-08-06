@@ -40,6 +40,9 @@ The measured repository/CI assessment is
   residual cocycle, contraction condition number, and neutral pumping law.
 - [SelfSimilarityTangent.md](SelfSimilarityTangent.md) classifies coefficient
   idempotents and develops absorbed-mass affine and max-plus tangent holonomy.
+- [SelfSimilarityExtendedObstacle.md](SelfSimilarityExtendedObstacle.md)
+  compactifies the scaled positive early obstacle in `ℝ≥0∞` and proves the
+  negative/zero/positive max-plus tangent dynamics trichotomy.
 - [SelfSimilarityResearchProgram.md](SelfSimilarityResearchProgram.md) states
   the Puiseux scale stratification, the contracting/tangent/escape producer
   target, the compact-semigroup boundary, and the computational falsifier
