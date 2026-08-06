@@ -30,5 +30,7 @@ jobs:
           test: false
           use-mathlib-cache: true
 
-      - name: Compile target-anchored tail module
-        run: lake build GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
+      - name: Compile target-tail modules
+        run: |
+          lake build GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
+          lake build GameTheory.Concepts.Stochastic.QuittingFiniteEndpointNashBellmanFactory
