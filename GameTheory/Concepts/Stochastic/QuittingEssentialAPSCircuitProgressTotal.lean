@@ -77,8 +77,17 @@ theorem
         Set.insert (quittingSoloReward reward owner)
             (∅ : Set (Payoff ι)) =
           ({quittingSoloReward reward owner} : Set (Payoff ι)) := by
-      ext value
-      simp
+      apply Set.Subset.antisymm
+      · intro value hvalue
+        rcases Set.mem_insert_iff.mp hvalue with hroot | hempty
+        · subst value
+          exact Set.mem_singleton _
+        · exact hempty.elim
+      · intro value hvalue
+        have hroot : value = quittingSoloReward reward owner := by
+          simpa only [Set.mem_singleton_iff] using hvalue
+        subst value
+        exact Set.mem_insert _ _
     rw [hsingleton, convexHull_singleton] at hconvex
     have hroot : current = quittingSoloReward reward owner := by
       simpa only [Set.mem_singleton_iff] using hconvex
