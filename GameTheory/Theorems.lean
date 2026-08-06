@@ -12,6 +12,7 @@ import GameTheory.Theorems.OneShotDeviation
 import GameTheory.Theorems.Zermelo
 import GameTheory.Theorems.CorrelatedEqExistence
 import GameTheory.Concepts.Stochastic.QuittingSupportWitnessUniform
+import GameTheory.Concepts.Stochastic.QuittingSelfSimilarity
 
 /-!
 # GameTheory.Theorems
