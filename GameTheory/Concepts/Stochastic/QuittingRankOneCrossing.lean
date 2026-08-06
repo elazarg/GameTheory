@@ -37,7 +37,7 @@ namespace GameTheory
 
 open Math.Probability
 
-variable {ι : Type*} [Fintype ι] [DecidableEq ι]
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-- A live-event probability is bounded by the adaptive weak-L² estimate as
 soon as every live history has already produced the corresponding score
