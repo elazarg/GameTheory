@@ -11,21 +11,21 @@ import GameTheory.Concepts.Stochastic.QuittingEssentialAPSUniformWindowMass
 
 A total absorption-mass lower bound is not by itself a playerwise survival
 bound: in an arbitrary owner-labelled path all mass could be assigned to one
-owner.  Along an active Flesch path this concentration is impossible.
+owner. Along an active Flesch path this concentration is impossible.
 
 Fix a player `who` and inspect the payoff coordinate of `successor who`.
 Whenever `who` owns the current edge, activity at the next vertex turns the
 singleton arc equation into a strictly positive displacement of that fixed
-coordinate.  Every edge owned by somebody else can compensate by at most
-`2 * bound` times its mass.  Boundedness of the two endpoint values therefore
+coordinate. Every edge owned by somebody else can compensate by at most
+`2 * bound` times its mass. Boundedness of the two endpoint values therefore
 gives
 
 `gap * ownMass ≤ 2 * bound + 2 * bound * opponentMass`.
 
 Combining this inequality with a lower bound on total mass yields a positive
 lower bound on the mass contributed by opponents of every player once enough
-windows are concatenated.  This is the missing deterministic bridge from the
-compact APS `nu`-lemma to opponent-survival contraction.
+windows are concatenated. This is the deterministic bridge from the compact
+APS `nu`-lemma to opponent-survival contraction.
 -/
 
 noncomputable section
@@ -39,20 +39,20 @@ variable {ι : Type} [DecidableEq ι]
 /-- Total absorption mass in the half-open window `[start, start + fuel)`. -/
 def quittingEssentialAPSWindowMass
     (mass : ℕ → ℝ) (start fuel : ℕ) : ℝ :=
-  ∑ offset ∈ Finset.range fuel, mass (start + offset)
+  ∑ offset in Finset.range fuel, mass (start + offset)
 
 /-- Mass in a window carried by edges owned by `who`. -/
 def quittingEssentialAPSOwnerWindowMass
     (owner : ℕ → ι) (mass : ℕ → ℝ) (who : ι)
     (start fuel : ℕ) : ℝ :=
-  ∑ offset ∈ Finset.range fuel,
+  ∑ offset in Finset.range fuel,
     if owner (start + offset) = who then mass (start + offset) else 0
 
 /-- Mass in a window carried by opponents of `who`. -/
 def quittingEssentialAPSOpponentWindowMass
     (owner : ℕ → ι) (mass : ℕ → ℝ) (who : ι)
     (start fuel : ℕ) : ℝ :=
-  ∑ offset ∈ Finset.range fuel,
+  ∑ offset in Finset.range fuel,
     if owner (start + offset) = who then 0 else mass (start + offset)
 
 @[simp] theorem quittingEssentialAPSWindowMass_zero
@@ -73,27 +73,30 @@ def quittingEssentialAPSOpponentWindowMass
 /-- Appending the final stage to a total-mass window. -/
 theorem quittingEssentialAPSWindowMass_succ
     (mass : ℕ → ℝ) (start fuel : ℕ) :
-    quittingEssentialAPSWindowMass mass start (fuel + 1) =
+    quittingEssentialAPSWindowMass mass start fuel.succ =
       quittingEssentialAPSWindowMass mass start fuel + mass (start + fuel) := by
-  simp [quittingEssentialAPSWindowMass]
+  unfold quittingEssentialAPSWindowMass
+  rw [Finset.sum_range_succ]
 
 /-- Appending the final stage to an owner-mass window. -/
 theorem quittingEssentialAPSOwnerWindowMass_succ
     (owner : ℕ → ι) (mass : ℕ → ℝ) (who : ι)
     (start fuel : ℕ) :
-    quittingEssentialAPSOwnerWindowMass owner mass who start (fuel + 1) =
+    quittingEssentialAPSOwnerWindowMass owner mass who start fuel.succ =
       quittingEssentialAPSOwnerWindowMass owner mass who start fuel +
         if owner (start + fuel) = who then mass (start + fuel) else 0 := by
-  simp [quittingEssentialAPSOwnerWindowMass]
+  unfold quittingEssentialAPSOwnerWindowMass
+  rw [Finset.sum_range_succ]
 
 /-- Appending the final stage to an opponent-mass window. -/
 theorem quittingEssentialAPSOpponentWindowMass_succ
     (owner : ℕ → ι) (mass : ℕ → ℝ) (who : ι)
     (start fuel : ℕ) :
-    quittingEssentialAPSOpponentWindowMass owner mass who start (fuel + 1) =
+    quittingEssentialAPSOpponentWindowMass owner mass who start fuel.succ =
       quittingEssentialAPSOpponentWindowMass owner mass who start fuel +
         if owner (start + fuel) = who then 0 else mass (start + fuel) := by
-  simp [quittingEssentialAPSOpponentWindowMass]
+  unfold quittingEssentialAPSOpponentWindowMass
+  rw [Finset.sum_range_succ]
 
 /-- Owner mass plus opponent mass is total mass. -/
 theorem quittingEssentialAPSOwnerWindowMass_add_opponentWindowMass
@@ -115,8 +118,13 @@ theorem quittingEssentialAPSWindowMass_add
     quittingEssentialAPSWindowMass mass start (first + second) =
       quittingEssentialAPSWindowMass mass start first +
         quittingEssentialAPSWindowMass mass (start + first) second := by
-  simp [quittingEssentialAPSWindowMass, Finset.sum_range_add,
-    Nat.add_assoc]
+  unfold quittingEssentialAPSWindowMass
+  rw [Finset.sum_range_add]
+  congr 1
+  apply Finset.sum_congr rfl
+  intro offset _
+  congr 1
+  omega
 
 /-- Repeating a uniform window lower bound gives a linear lower bound over a
 concatenation of windows. -/
@@ -145,6 +153,7 @@ theorem mul_le_quittingEssentialAPSWindowMass_mul
               (start + blocks * window) window :=
           add_le_add (ih start) (hwindow (start + blocks * window))
 
+omit [DecidableEq ι] in
 /-- At an edge owned by `who`, activity at the successor vertex turns the arc
 identity into a positive displacement of the successor coordinate. -/
 theorem gap_mul_mass_le_quittingEssentialAPS_step_of_owner
@@ -183,6 +192,7 @@ theorem gap_mul_mass_le_quittingEssentialAPS_step_of_owner
       rw [harcWho, hnextActive]
       ring
 
+omit [DecidableEq ι] in
 /-- An edge not owned by `who` can offset the chosen successor coordinate by
 at most `2 * bound` times that edge's mass. -/
 theorem quittingEssentialAPS_step_add_mass_bound_nonneg_of_not_owner
@@ -215,8 +225,8 @@ theorem quittingEssentialAPS_step_add_mass_bound_nonneg_of_not_owner
           value (time + 1) (successor who) := neg_abs_le _
   nlinarith
 
-/-- **Bounded successor-coordinate drift.**  Own-owner mass creates at least
-`gap` units of displacement per unit mass.  Opponent mass can cancel at most
+/-- **Bounded successor-coordinate drift.** Own-owner mass creates at least
+`gap` units of displacement per unit mass. Opponent mass can cancel at most
 `2 * bound` units per unit mass. -/
 theorem gap_mul_quittingEssentialAPSOwnerWindowMass_le_endpoint_add_opponentMass
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -253,7 +263,7 @@ theorem gap_mul_quittingEssentialAPSOwnerWindowMass_le_endpoint_add_opponentMass
       intro who
       rw [quittingEssentialAPSOwnerWindowMass_succ,
         quittingEssentialAPSOpponentWindowMass_succ]
-      have htime : start + (fuel + 1) = start + fuel + 1 := by omega
+      have htime : start + fuel.succ = start + fuel + 1 := by omega
       rw [htime]
       by_cases howner : owner (start + fuel) = who
       · simp only [if_pos howner, add_zero]
