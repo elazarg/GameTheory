@@ -127,12 +127,17 @@ theorem abs_finiteAveragePayoff_withExpectedPotentialShaping_sub_le
     exact abs_expect_le_of_abs_le _ _ fun h => hF who h.2
   have hboundary :
       |G.expectedStateValue σ s₀ T (F who) - F who s₀| ≤ 2 * C := by
-    calc
-      |G.expectedStateValue σ s₀ T (F who) - F who s₀|
-          ≤ |G.expectedStateValue σ s₀ T (F who)| + |F who s₀| :=
-        abs_sub _ _
-      _ ≤ C + C := add_le_add hstate (hF who s₀)
-      _ = 2 * C := by ring
+    have htriangle :=
+      abs_sub_le (G.expectedStateValue σ s₀ T (F who)) 0 (F who s₀)
+    have hbasic :
+        |G.expectedStateValue σ s₀ T (F who) - F who s₀| ≤
+          |G.expectedStateValue σ s₀ T (F who)| + |F who s₀| := by
+      simpa using htriangle
+    exact hbasic.trans (by
+      calc
+        |G.expectedStateValue σ s₀ T (F who)| + |F who s₀|
+            ≤ C + C := add_le_add hstate (hF who s₀)
+        _ = 2 * C := by ring)
   rw [abs_mul, abs_of_nonneg (by positivity : 0 ≤ (T : ℝ)⁻¹)]
   calc
     (T : ℝ)⁻¹ *
@@ -158,7 +163,8 @@ theorem hasFiniteAverageGapAtMost_withExpectedPotentialShaping
       4 * C / ((T : ℝ) + 1)
   rcases Nat.eq_zero_or_pos T with hT | hT
   · subst T
-    simp [withExpectedPotentialShaping, hC0]
+    have hfourC : 0 ≤ 4 * C := mul_nonneg (by norm_num) hC0
+    simpa [withExpectedPotentialShaping] using hfourC
   · have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
     have hTone : (1 : ℝ) ≤ T := by exact_mod_cast hT
     have hTplus : (0 : ℝ) < (T : ℝ) + 1 := by positivity
