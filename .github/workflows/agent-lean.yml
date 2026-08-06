@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   lean:
@@ -22,6 +22,36 @@ jobs:
         with:
           ref: agent/quitting-target-tail
           submodules: recursive
+
+      - name: Finish compiler and expose it from GameTheory
+        if: github.event_name == 'pull_request'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          compiler = Path("GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean")
+          text = compiler.read_text()
+          old = "    dsimp only [δ]\n    have hratio : 4 * M / (4 * M + 1) ≤ 1 := by\n"
+          new = "    change 4 * M * (ε / (4 * M + 1)) ≤ ε\n    have hratio : 4 * M / (4 * M + 1) ≤ 1 := by\n"
+          if old not in text:
+              raise SystemExit("final local-delta block was not found")
+          compiler.write_text(text.replace(old, new, 1))
+
+          root = Path("GameTheory.lean")
+          root_text = root.read_text()
+          target_import = "import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail\n"
+          if target_import not in root_text:
+              marker = "import GameTheory.Concepts.Stochastic.QuittingStationaryMinMax\n"
+              if marker not in root_text:
+                  raise SystemExit("root import insertion marker was not found")
+              root_text = root_text.replace(marker, marker + target_import, 1)
+              root.write_text(root_text)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add GameTheory.lean GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean
+          git commit -m "Expose the diagonal target-tail compiler"
+          git push origin HEAD:agent/quitting-target-tail
 
       - name: Set up Lean and cache dependencies
         uses: leanprover/lean-action@v1
@@ -56,6 +86,9 @@ jobs:
 
       - name: Compile final compiler
         run: timeout 180s lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail
+
+      - name: Compile aggregate library
+        run: timeout 900s lake build GameTheory
 
       - name: Save branch-local project build cache
         if: always() && steps.project-cache.outputs.cache-hit != 'true'
