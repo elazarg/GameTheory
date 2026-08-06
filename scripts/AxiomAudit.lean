@@ -241,6 +241,16 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.QuittingHostileTwoCoordinate.quittingPunishmentValue_eq
 #print axioms GameTheory.QuittingProfitableSoloTwoCoordinate.quittingPunishmentValue_lt_max_solo
 
+-- Diagonal target-tail assembly: player-indexed closed tails, exact
+-- arbitrary-endpoint prefixes, exceptional-target selection, and the
+-- resulting conditional uniform-payoff and counterexample restrictions.
+#print axioms GameTheory.exists_quittingTargetClosedTail_of_stationaryRoot
+#print axioms GameTheory.exists_finiteEndpointExactQuittingNashBellmanChain
+#print axioms GameTheory.quittingPhaseSwitchHazardGap_le_four_mul_opponentSurvival
+#print axioms GameTheory.exists_target_forall_opponentSurvivalWeight_le_of_joint_le_sq
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_exactDiagonalTargetTailCertificates
+#print axioms GameTheory.exists_exactDiagonalTargetTailCertificate_errorFloor_of_no_uniformPayoff
+
 -- Path budgets and bounded potentials.
 #print axioms Math.ChargedPathBudget.ChargedRelation.hasFiniteBudget_iff_exists_boundedPotential
 #print axioms Math.ChargedPathBudget.ChargedRelation.isLeast_oscillation

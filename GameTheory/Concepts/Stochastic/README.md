@@ -268,6 +268,20 @@ terminal `ε₀`-equilibrium fails and `c + d < ε₀`; only fixed-profile,
 fixed-deviation convergence is used.  These files make no proper
 absorption-path equivalence or stationary discretization claim.
 
+The diagonal target-tail modules replace a common punishment continuation by
+player-indexed closed tails.  `QuittingTargetAnchoredTail.lean` constructs a
+tail that is optimal for one target against any stationary opponent row;
+`QuittingFiniteEndpointNashBellmanFactory.lean` supplies exact finite prefixes
+with an arbitrary bounded endpoint; and the semantic, bound, and selection
+modules compile joint prefix survival `J ≤ δ²` into a terminal
+`4 M δ`-equilibrium.  The headline theorem in
+`QuittingDiagonalTargetTail.lean` is conditional on accuracy-indexed exact
+prefixes with small joint survival.  It neither constructs those prefixes nor
+claims uniform existence for all quitting games.  Its contrapositive is a
+counterexample restriction: any counterexample has a positive accuracy at
+which every exact diagonal target-tail candidate fails the required survival
+certificate.
+
 ### Proved results (special cases of the conjecture)
 
 | Game class | Theorem | File |

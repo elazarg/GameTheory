@@ -977,22 +977,54 @@ case.
 
 \subsection{Simultaneous punishment is strictly harder than per-player}
 
-\Status{\Audit} (hand-verified design; formalization queued).  A player's
-punishment exposure depends only on the opponents' plan coordinates, so at
-two players a shared punishment plan reaches both floors: the coordinates
-are disjoint and per-player optimal rows glue.  At three players this
-fails quantitatively: on an explicit cyclic table with \(\chi\equiv-1\),
-every shared plan leaves some player at \(\chi+3/4\) (an AM--GM bound
-visible at the first row alone), attained by the uniform constant row.
-On a second cyclic table the never-quit exposures under time-varying plans
-reproduce the Steinhaus--Trybu{\l}a non-transitive first-passage paradox
-\cite{SteinhausTrybula1959}: staggered hazard sequences push all three
-cyclic domination probabilities above \(1/2\), so \emph{stationarity
-plausibly fails for simultaneous punishment} --- an observation about one
-reply branch, not a theorem, and now a posed question.  The construction
-consequence either way: single-tail phase constructions pay the
-simultaneous excess, while deviator-triggered punishment needs only the
-per-player theory.
+\Status{\Prod} A player's punishment exposure depends only on the opponents'
+plan coordinates.  Consequently two-player per-player optimal rows glue into
+one shared row, and \texttt{QuittingSharedPunishment.lean} proves that the
+two-player combination price is zero.  The phenomenon fails quantitatively
+at three players: on the formal cyclic table in
+\texttt{QuittingSharedPunishmentThreePlayer*.lean}, every shared stationary
+row leaves some player at least \(3/4\) above its individual floor; the fair
+row attains that bound, and the optimizer is classified exactly.  Thus a
+single common punishment tail is not a lossless general interface.
+
+\subsection{Diagonal target tails avoid the common-punishment price}
+
+\Status{\Prod} The diagonal target-tail stack replaces a shared punishment
+continuation by one closed tail per possible target.  For player \(i\), choose
+a tail whose opponents follow a stationary row and whose own coordinate
+attains the exact stationary unilateral cap.  Its prescribed payoff is then
+already a best response against those opponents.  Retaining only player
+\(i\)'s payoff from tail \(i\) defines the diagonal endpoint
+\[
+ z_i=U_i(\text{tail}^i).
+\]
+The arbitrary-endpoint Nash--Bellman factory constructs exact finite prefixes
+ending at \(z\), so the splice has no artificial zero-boundary seam.
+
+For a prefix of length \(K\), write \(J_K\) for joint survival and \(O_i(K)\)
+for survival after deleting player \(i\)'s hazard.  The formal exceptional
+coordinate inequality is
+\[
+ O_i(K)O_j(K)\leq J_K\qquad(i\neq j).
+\]
+Hence \(J_K\leq\delta^2\) leaves at most one player with
+\(O_i(K)>\delta\).  Select that possible exception as the target and splice
+its closed tail.  The target's deviation gain is nonpositive; every other
+player's gain is at most
+\[
+ 4M O_i(K)\leq4M\delta.
+\]
+The constant \(4M\) contains both the suffix best-response debt and the
+change from the diagonal anchor to the selected tail's off-diagonal payoff.
+No compatibility among different tails is required.
+
+\Status{\Cond} Accuracy-indexed exact-prefix certificates with
+\(J_K\to0\) therefore imply a uniform-equilibrium payoff.  The proved
+compiler does not produce the small-survival prefixes.  Conversely, any
+counterexample has a positive accuracy at which no exact diagonal target-tail
+certificate exists: every candidate at that scale must fail exact assembly or
+retain too much joint survival.  This is a quantitative restriction on a
+counterexample, not a proof that counterexamples exist.
 
 \section{Repair languages, alternate routes, and falsifiers}
 
@@ -1024,6 +1056,11 @@ but has another exact mixed stationary equilibrium.\\
 Periodic/contracting public repairs &
 \Status{\Prod} Compilers and rates for supplied cycles. &
 No theorem that every fully summable plateau contains the required cycle.\\
+Diagonal target-tail compiler &
+\texttt{QuittingTargetAnchoredTail.lean} and
+\texttt{QuittingDiagonalTargetTail*.lean} &
+\Prod: exact arbitrary-endpoint splice and \(4M\sqrt J\) compiler;
+small-joint-survival producer open.\\
 Finite max-affine prefix plus tail &
 \Status{\Prod} Reinsertion has a sharp depth-free seam penalty when supplied
 a real tail and relative cap. &
@@ -1205,6 +1242,11 @@ recorded), simultaneous discharge open at three.\\
 \subsection{Ordered research agenda}
 
 \begin{enumerate}
+\item \textbf{Decide the diagonal-survival producer.}  Either construct
+accuracy-indexed exact diagonal-endpoint prefixes with joint survival tending
+to zero, or derive a positive survival floor and classify the resulting
+projective residue.  The target-tail compiler makes this a scalar obstruction
+and removes the need for a shared punishment continuation.
 \item \textbf{Decide the local residue.}  The gate, sure sets, collision
 repair, and two-owner roots leave a finite semialgebraic residue at three
 coordinates.  Exhibit a member and adjudicate it against the exact-cycle
