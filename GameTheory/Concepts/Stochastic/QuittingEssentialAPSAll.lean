@@ -35,3 +35,5 @@ calendar time.
 The result remains conditional: it does not identify this structural stratum
 with every finite quitting game.
 -/
+
+-- This umbrella deliberately contains only imports and status documentation.
