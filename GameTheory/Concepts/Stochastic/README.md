@@ -282,6 +282,17 @@ counterexample restriction: any counterexample has a positive accuracy at
 which every exact diagonal target-tail candidate fails the required survival
 certificate.
 
+The essential-APS modules isolate the one-randomizer singleton-flow stratum.
+`QuittingFleschSuccessor.lean` derives its asymmetric successor graph from two
+consecutive proper arcs; `QuittingEssentialAPS.lean` distinguishes executable
+one-continuation segments from the larger full-convex-hull operator; and
+`QuittingEssentialAPSFixedPoint.lean` constructs the carrier-restricted
+greatest algebraic fixed family. `QuittingEssentialAPSCycle.lean` proves that
+a supplied finite proper cycle lies in that family and compiles its selected
+value to a uniform-equilibrium payoff. The reverse direction is intentionally
+absent: convexified fixed-point membership does not produce an executable
+path or cycle, as the zero-mass regression makes explicit.
+
 ### Proved results (special cases of the conjecture)
 
 | Game class | Theorem | File |

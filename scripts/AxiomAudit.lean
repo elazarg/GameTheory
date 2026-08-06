@@ -251,6 +251,15 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_exactDiagonalTargetTailCertificates
 #print axioms GameTheory.exists_exactDiagonalTargetTailCertificate_errorFloor_of_no_uniformPayoff
 
+-- Essential APS on the executable singleton-flow stratum: exact successor
+-- extraction, algebraic greatest fixed family, zero-mass boundary, and the
+-- supplied finite proper-cycle compiler.
+#print axioms GameTheory.quittingFleschSuccessor_of_consecutive_arcs
+#print axioms GameTheory.quittingEssentialAPSGreatestFamily_fixed
+#print axioms GameTheory.quittingEssentialAPS_zeroMassFixedPoint_regression
+#print axioms GameTheory.QuittingEssentialAPSCycleCertificate.opponentContracts
+#print axioms GameTheory.QuittingEssentialAPSCycleCertificate.isUniformEquilibriumPayoff
+
 -- Path budgets and bounded potentials.
 #print axioms Math.ChargedPathBudget.ChargedRelation.hasFiniteBudget_iff_exists_boundedPotential
 #print axioms Math.ChargedPathBudget.ChargedRelation.isLeast_oscillation

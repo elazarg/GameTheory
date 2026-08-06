@@ -23,10 +23,11 @@ the restored axiom audit reporting only `propext`, `Classical.choice`, and
 `Quot.sound`, and the leaf invariant checked by the script. The `opaque` and
 `native_decide` occurrences survive only inside the quarantined `BlockPairK11`
 island, reported as accepted exceptions whose exemption is **earned** by a
-containment check that fails the audit if anything imports the island. The two
+containment check that fails the audit if anything imports the island. The three
 intentional `sorry` declarations are
 `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean` and
-`quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`.
+`quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`,
+and the reduced cap-package leaf in `QuittingReducedCapConjecture.lean`.
 These are owned by the engineering queue below and the [proof-engineering
 audit](../../ephemeral/ProofEngineeringAudit.md), rather than blockers hidden in
 the P0 mathematical status.
@@ -216,6 +217,16 @@ result changes it. The order is by decisiveness, not by ease:
    strata over unbounded periods need not be tame); the three-lens
    identification is demoted to working hypothesis (one leg proved) and is
    this route's first milestone, not its foundation.
+
+**Conditional essential-APS singleton-flow interface — LANDED.** The exact
+Flesch successor graph, full-convex-hull algebraic operator, executable segment
+subrelation, carrier-restricted greatest fixed family, and zero-mass regression
+are formalized. A supplied finite proper cycle embeds in the algebraic family
+and compiles to a uniform-equilibrium payoff; positive hazards plus owner
+changes now derive, rather than assume, the needed opponent contraction. This
+does not reopen the rejected finite-cycle completeness route: no theorem
+extracts a path or cycle from the convexified fixed family. See
+[`EssentialAPS.md`](EssentialAPS.md).
 
 Standing corrections from the same review acceptance: the negative map's
 completeness claim is scoped (proofs factoring through our interfaces; the

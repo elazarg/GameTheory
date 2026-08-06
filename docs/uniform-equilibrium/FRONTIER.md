@@ -94,6 +94,25 @@ The finite-quitting front is now sharply reduced.
 The chain is exhaustive up to the positive fully summable plateau. It is not a
 claim that every equilibrium belongs to one finite grammar.
 
+## Essential APS on the singleton-flow stratum
+
+The essential-APS layer formalizes a genuine but conditional positive stratum.
+For consecutive proper singleton arcs, singleton genericity forces the exact
+asymmetric Flesch successor relation. The owner-indexed full-convex-hull
+operator is monotone and has a greatest fixed family inside every supplied
+carrier. A supplied finite proper cycle embeds in that family and its selected
+value compiles, through the singleton-flow mesh, to a uniform-equilibrium
+payoff. Positive hazards and owner changes imply the opponent contraction
+needed by the compiler.
+
+This does not close the quitting-game problem. The full convex hull can mix
+several continuation points, whereas execution selects one continuation at a
+time. Moreover, a nontrivial affine self-loop can enter the algebraic operator
+only at zero absorption mass. Consequently there is no proved converse from
+fixed-family membership to an executable path or finite cycle, and no claim
+that the one-randomizer stratum covers all equilibria. The durable interface
+and exact theorem map are recorded in [EssentialAPS.md](EssentialAPS.md).
+
 ## Exact open hinge
 
 **Uniform middle-length tightness is refuted (`M`).** An explicit two-player

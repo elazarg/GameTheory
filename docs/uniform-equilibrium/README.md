@@ -29,6 +29,8 @@ The measured repository/CI assessment is
 - [Program.md](Program.md) defines the stable research/formalization workflow.
 - [PIPELINE.md](PIPELINE.md) is project-control truth.
 - [FRONTIER.md](FRONTIER.md) is the curated mathematical state of knowledge.
+- [EssentialAPS.md](EssentialAPS.md) states the exact algebraic/executable
+  boundary of the essential-APS singleton-flow formalization.
 - [methods/MathResearchMethod.md](methods/MathResearchMethod.md)
 - [methods/LeanFormalizationMethod.md](methods/LeanFormalizationMethod.md)
 - [methods/ParallelResearchMethod.md](methods/ParallelResearchMethod.md)

@@ -271,8 +271,10 @@ Essential APS &
 The 2026 operator characterizes payoffs supported by a continuous
 one-randomizer-at-a-time absorption-path subclass
 \cite{AshkenaziGolanEtAl2026}. &
-That subset may be empty.  The operator is a structural guide, not a general
-quitting-game producer.\\
+The singleton-flow successor graph, convexified operator, greatest fixed
+family, zero-mass boundary, and supplied finite-cycle compiler are formalized.
+There is no converse from algebraic fixed-family membership to an executable
+path; the subset may be empty and is not a general quitting-game producer.\\
 Correlated stochastic games &
 Every finite stochastic game has an autonomous correlated equilibrium payoff
 \cite{SolanVieille2002}. &
@@ -1133,7 +1135,14 @@ The essential-APS operator of \cite{AshkenaziGolanEtAl2026} suggests invariant
 sets and successor rules for continuous absorption paths on which at most one
 player randomizes at a mass time.  Its characterized payoff subset may be
 empty.  It should be mined for the structure of $V$ and $\mathcal O$, not
-reported as coverage of the positive plateau.
+reported as coverage of the positive plateau.  The repository now formalizes
+the finite singleton-flow interface: consecutive proper arcs force the Flesch
+successor relation; executable one-continuation segments embed into the larger
+full-convex-hull operator; the restricted operator has a greatest algebraic
+fixed family; and a supplied finite proper cycle compiles to a fixed-target
+uniform payoff.  The zero-mass self-loop regression prevents reading this as a
+converse realization theorem: convexified fixed-family membership alone does
+not produce an executable path or cycle.
 
 \paragraph{Endogenous correlation.}
 The correlated-existence theorem points to a possible mechanism but also a
