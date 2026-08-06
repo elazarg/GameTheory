@@ -391,9 +391,7 @@ theorem quittingFiniteTerminalBestResponseValue_mono_terminal
       have hmass : 0 ≤ quittingFixedOpponentsContinueMass roots who start :=
         quittingStationaryContinueMass_nonneg
           (Function.update (roots start) who (PMF.pure false))
-      exact max_le_max le_rfl
-        (add_le_add_left
-          (mul_le_mul_of_nonneg_left (ih (start + 1)) hmass)
-          (quittingFixedOpponentsContinueReward reward roots who start))
+      have hmul := mul_le_mul_of_nonneg_left (ih (start + 1)) hmass
+      exact max_le_max le_rfl (by linarith)
 
 end GameTheory
