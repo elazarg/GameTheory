@@ -53,6 +53,24 @@ def HasBoundedWorkCertificate
         (T : ℝ) *
             (v who - G.finiteAveragePayoff s₀ T σ who - η) ≤ B
 
+/-- A positive work obstruction for target `v`.
+
+One linear penalty defeats every profile and every proposed finite budget:
+at some horizon either a unilateral behavior deviation exceeds the budget or
+prescribed play accumulates more than that budget of target deficit. -/
+def HasUnboundedWorkObstruction
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    (s₀ : G.State) (v : Payoff ι) : Prop :=
+  ∃ η : ℝ, 0 < η ∧
+    ∀ (σ : G.BehaviorProfile) (B : ℝ), 0 ≤ B →
+      ∃ (T : ℕ) (who : ι),
+        (∃ dev : G.BehaviorStrategy who,
+          B < (T : ℝ) *
+              (G.finiteAveragePayoff s₀ T (Function.update σ who dev) who -
+                v who - η)) ∨
+        B < (T : ℝ) *
+            (v who - G.finiteAveragePayoff s₀ T σ who - η)
+
 /-- A uniform-equilibrium payoff has bounded-work certificates at every
 positive linear penalty. -/
 theorem IsUniformEquilibriumPayoff.hasBoundedWorkCertificate
@@ -191,6 +209,18 @@ theorem isUniformEquilibriumPayoff_iff_hasBoundedWorkCertificate
   constructor
   · exact IsUniformEquilibriumPayoff.hasBoundedWorkCertificate G
   · exact G.isUniformEquilibriumPayoff_of_hasBoundedWorkCertificate s₀ v
+
+/-- A target fails to be a uniform-equilibrium payoff exactly when it has a
+positive unbounded-work obstruction. -/
+theorem not_isUniformEquilibriumPayoff_iff_hasUnboundedWorkObstruction
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (s₀ : G.State) (v : Payoff ι) :
+    (¬ G.IsUniformEquilibriumPayoff s₀ v) ↔
+      G.HasUnboundedWorkObstruction s₀ v := by
+  rw [G.isUniformEquilibriumPayoff_iff_hasBoundedWorkCertificate s₀ v]
+  unfold HasBoundedWorkCertificate HasUnboundedWorkObstruction
+  push_neg
 
 end StochasticGame
 end GameTheory
