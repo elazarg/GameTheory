@@ -70,6 +70,9 @@ theorem quittingEssentialAPSGreatestFamily_active
     rw [hfixedOwner]
     exact hcurrent
   have hprefix := hrestricted.2
+  change current ∈
+    quittingEssentialAPSOwnerStep reward
+      (quittingEssentialAPSGreatestFamily reward carrier) owner at hprefix
   rw [quittingEssentialAPSOwnerStep_eq_prefix] at hprefix
   exact hprefix.2.2
 
