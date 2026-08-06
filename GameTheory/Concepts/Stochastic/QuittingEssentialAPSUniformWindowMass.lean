@@ -49,7 +49,7 @@ specified finite horizon. -/
 def quittingEssentialAPSActiveGapSum
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (owner : ℕ → ι) (horizon : ℕ) (current : Payoff ι) : ℝ :=
-  ∑ time in Finset.range (horizon + 1),
+  ∑ time ∈ Finset.range (horizon + 1),
     |current (owner time) -
       quittingSoloReward reward (owner time) (owner time)|
 
@@ -78,6 +78,7 @@ theorem quittingEssentialAPSActiveGapSum_eq_zero_iff
       IsQuittingEssentialAPSActiveAlong reward owner current horizon := by
   constructor
   · intro hzero time htime
+    unfold quittingEssentialAPSActiveGapSum at hzero
     have htermZero :
         |current (owner time) -
           quittingSoloReward reward (owner time) (owner time)| = 0 := by
@@ -183,7 +184,7 @@ theorem abs_quittingSingletonArcPath_sub_le_massSum
     (hvalueBound : ∀ time who, |value time who| ≤ bound) :
     ∀ time who,
       |value 0 who - value time who| ≤
-        (∑ step in Finset.range time, mass step) * (2 * bound) := by
+        (∑ step ∈ Finset.range time, mass step) * (2 * bound) := by
   intro time
   induction time with
   | zero =>
@@ -205,9 +206,9 @@ theorem abs_quittingSingletonArcPath_sub_le_massSum
             (value time who - value (time + 1) who)| ≤
             |value 0 who - value time who| +
               |value time who - value (time + 1) who| := abs_add _ _
-        _ ≤ (∑ step in Finset.range time, mass step) * (2 * bound) +
+        _ ≤ (∑ step ∈ Finset.range time, mass step) * (2 * bound) +
               mass time * (2 * bound) := add_le_add (ih who) hstep
-        _ = (∑ step in Finset.range (time + 1), mass step) *
+        _ = (∑ step ∈ Finset.range (time + 1), mass step) *
               (2 * bound) := by
           rw [Finset.sum_range_succ]
           ring
@@ -216,8 +217,8 @@ theorem abs_quittingSingletonArcPath_sub_le_massSum
 theorem sum_range_mono_of_nonneg
     (mass : ℕ → ℝ) (hmass : ∀ time, 0 ≤ mass time)
     {first last : ℕ} (hle : first ≤ last) :
-    (∑ time in Finset.range first, mass time) ≤
-      ∑ time in Finset.range last, mass time := by
+    (∑ time ∈ Finset.range first, mass time) ≤
+      ∑ time ∈ Finset.range last, mass time := by
   exact Finset.sum_le_sum_of_subset_of_nonneg
     (Finset.range_mono hle)
     (fun time _ _ ↦ hmass time)
@@ -242,15 +243,15 @@ theorem quittingEssentialAPSActiveGapSum_le_windowMass
     (hvalueBound : ∀ time who, |value time who| ≤ bound) :
     quittingEssentialAPSActiveGapSum reward owner horizon (value 0) ≤
       (((horizon + 1 : ℕ) : ℝ) * (2 * bound)) *
-        (∑ time in Finset.range horizon, mass time) := by
+        (∑ time ∈ Finset.range horizon, mass time) := by
   unfold quittingEssentialAPSActiveGapSum
   calc
-    (∑ time in Finset.range (horizon + 1),
+    (∑ time ∈ Finset.range (horizon + 1),
         |value 0 (owner time) -
           quittingSoloReward reward (owner time) (owner time)|) ≤
-      ∑ _time in Finset.range (horizon + 1),
+      ∑ _time ∈ Finset.range (horizon + 1),
         (2 * bound) *
-          (∑ step in Finset.range horizon, mass step) := by
+          (∑ step ∈ Finset.range horizon, mass step) := by
       apply Finset.sum_le_sum
       intro time htime
       have htimeLe : time ≤ horizon := by
@@ -264,21 +265,21 @@ theorem quittingEssentialAPSActiveGapSum_le_windowMass
       have hprefix := sum_range_mono_of_nonneg
         mass hmass htimeLe
       have hscale :
-          (∑ step in Finset.range time, mass step) * (2 * bound) ≤
-            (∑ step in Finset.range horizon, mass step) *
+          (∑ step ∈ Finset.range time, mass step) * (2 * bound) ≤
+            (∑ step ∈ Finset.range horizon, mass step) *
               (2 * bound) :=
         mul_le_mul_of_nonneg_right hprefix (by linarith)
       calc
         |value 0 (owner time) -
             quittingSoloReward reward (owner time) (owner time)| ≤
-          (∑ step in Finset.range time, mass step) *
+          (∑ step ∈ Finset.range time, mass step) *
             (2 * bound) := htelescope
-        _ ≤ (∑ step in Finset.range horizon, mass step) *
+        _ ≤ (∑ step ∈ Finset.range horizon, mass step) *
             (2 * bound) := hscale
         _ = (2 * bound) *
-            (∑ step in Finset.range horizon, mass step) := by ring
+            (∑ step ∈ Finset.range horizon, mass step) := by ring
     _ = (((horizon + 1 : ℕ) : ℝ) * (2 * bound)) *
-        (∑ time in Finset.range horizon, mass time) := by
+        (∑ time ∈ Finset.range horizon, mass time) := by
       simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
       ring
 
@@ -320,7 +321,7 @@ theorem exists_uniform_quittingEssentialAPS_windowMass
           value time (owner time) =
             quittingSoloReward reward (owner time) (owner time)) →
         (∀ time who, |value time who| ≤ bound) →
-        nu ≤ ∑ time in Finset.range horizon, mass time := by
+        nu ≤ ∑ time ∈ Finset.range horizon, mass time := by
   let greatest :=
     quittingEssentialAPSGreatestFamily reward carrier
   have hgreatestCompact : IsCompact (greatest (owner 0)) :=
@@ -354,7 +355,7 @@ theorem exists_uniform_quittingEssentialAPS_windowMass
         hrootBound hvalueBound
   have hscaled :
       delta ≤ coefficient *
-        (∑ time in Finset.range horizon, mass time) := by
+        (∑ time ∈ Finset.range horizon, mass time) := by
     exact hdeltaLe.trans (by
       simpa only [coefficient] using hgapLe)
   exact (div_le_iff₀ hcoefficientPos).2 hscaled
