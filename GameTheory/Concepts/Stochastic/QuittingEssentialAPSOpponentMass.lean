@@ -39,20 +39,20 @@ variable {ι : Type} [DecidableEq ι]
 /-- Total absorption mass in the half-open window `[start, start + fuel)`. -/
 def quittingEssentialAPSWindowMass
     (mass : ℕ → ℝ) (start fuel : ℕ) : ℝ :=
-  ∑ offset in Finset.range fuel, mass (start + offset)
+  ∑ offset ∈ Finset.range fuel, mass (start + offset)
 
 /-- Mass in a window carried by edges owned by `who`. -/
 def quittingEssentialAPSOwnerWindowMass
     (owner : ℕ → ι) (mass : ℕ → ℝ) (who : ι)
     (start fuel : ℕ) : ℝ :=
-  ∑ offset in Finset.range fuel,
+  ∑ offset ∈ Finset.range fuel,
     if owner (start + offset) = who then mass (start + offset) else 0
 
 /-- Mass in a window carried by opponents of `who`. -/
 def quittingEssentialAPSOpponentWindowMass
     (owner : ℕ → ι) (mass : ℕ → ℝ) (who : ι)
     (start fuel : ℕ) : ℝ :=
-  ∑ offset in Finset.range fuel,
+  ∑ offset ∈ Finset.range fuel,
     if owner (start + offset) = who then 0 else mass (start + offset)
 
 @[simp] theorem quittingEssentialAPSWindowMass_zero
@@ -75,8 +75,7 @@ theorem quittingEssentialAPSWindowMass_succ
     (mass : ℕ → ℝ) (start fuel : ℕ) :
     quittingEssentialAPSWindowMass mass start fuel.succ =
       quittingEssentialAPSWindowMass mass start fuel + mass (start + fuel) := by
-  unfold quittingEssentialAPSWindowMass
-  rw [Finset.sum_range_succ]
+  simp [quittingEssentialAPSWindowMass, Finset.sum_range_succ]
 
 /-- Appending the final stage to an owner-mass window. -/
 theorem quittingEssentialAPSOwnerWindowMass_succ
@@ -85,8 +84,7 @@ theorem quittingEssentialAPSOwnerWindowMass_succ
     quittingEssentialAPSOwnerWindowMass owner mass who start fuel.succ =
       quittingEssentialAPSOwnerWindowMass owner mass who start fuel +
         if owner (start + fuel) = who then mass (start + fuel) else 0 := by
-  unfold quittingEssentialAPSOwnerWindowMass
-  rw [Finset.sum_range_succ]
+  simp [quittingEssentialAPSOwnerWindowMass, Finset.sum_range_succ]
 
 /-- Appending the final stage to an opponent-mass window. -/
 theorem quittingEssentialAPSOpponentWindowMass_succ
@@ -95,8 +93,7 @@ theorem quittingEssentialAPSOpponentWindowMass_succ
     quittingEssentialAPSOpponentWindowMass owner mass who start fuel.succ =
       quittingEssentialAPSOpponentWindowMass owner mass who start fuel +
         if owner (start + fuel) = who then 0 else mass (start + fuel) := by
-  unfold quittingEssentialAPSOpponentWindowMass
-  rw [Finset.sum_range_succ]
+  simp [quittingEssentialAPSOpponentWindowMass, Finset.sum_range_succ]
 
 /-- Owner mass plus opponent mass is total mass. -/
 theorem quittingEssentialAPSOwnerWindowMass_add_opponentWindowMass
@@ -118,13 +115,8 @@ theorem quittingEssentialAPSWindowMass_add
     quittingEssentialAPSWindowMass mass start (first + second) =
       quittingEssentialAPSWindowMass mass start first +
         quittingEssentialAPSWindowMass mass (start + first) second := by
-  unfold quittingEssentialAPSWindowMass
-  rw [Finset.sum_range_add]
-  congr 1
-  apply Finset.sum_congr rfl
-  intro offset _
-  congr 1
-  omega
+  simp [quittingEssentialAPSWindowMass, Finset.sum_range_add,
+    Nat.add_assoc]
 
 /-- Repeating a uniform window lower bound gives a linear lower bound over a
 concatenation of windows. -/
