@@ -19,6 +19,11 @@ successors; uniform positive mass in every shifted window; the deterministic
 conversion from total mass to playerwise opponent mass; and uniform opponent
 block contraction for the implemented singleton roots.
 
+The capstone is
+`exists_quittingEssentialAPSInfiniteRun_with_opponentBlockContraction_unique_live`.
+It simultaneously returns a coherent executable run, exact Bellman transport,
+and a uniform opponent-survival factor strictly below one.
+
 The implementation remains conditional.  It treats the compact functional
 unique-live-successor singleton-flow stratum.  It now supplies path existence,
 exact Bellman transport, and opponent-survival contraction, but it does not by
