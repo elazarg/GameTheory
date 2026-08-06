@@ -11,13 +11,14 @@ import GameTheory.Concepts.Stochastic.QuittingSelfSimilarityRealizedBounds
 
 Raw coefficients approaching the identity forget their first-order direction.
 This module retains prescribed and unilateral absorption masses, their bounded
-conditional anchors, and the unscaled early stopping floor.  Every actual
+conditional anchors, and the unscaled early stopping floor. Every actual
 finite block lies in one compact finite-dimensional box, so every sequence has
 a convergent tangent-core subsequence.
 
-The scaled early obstacle is deliberately absent: existing weighted bounds do
-not control it at an absorption scale.  Compactness of that missing coordinate
-is a separate producer theorem.
+A finite signed early-drift ratio is deliberately absent: existing weighted
+bounds do not control it at the tail-absorption scale. The companion
+`QuittingSelfSimilarityEarlyExcess` module instead adjoins the positive ratio in
+`ℝ≥0∞`, where divergence remains visible as the boundary point `⊤`.
 -/
 
 noncomputable section
@@ -108,7 +109,7 @@ theorem quittingFiniteBoundaryHolonomy_tangentCoreCoordinates_mem_box
     exact ⟨abs_le.mp hearly, ⟨hmass, abs_le.mp hanchor⟩⟩
 
 /-- Every sequence of actual finite blocks admits a subsequence whose bounded
-tangent-core coordinates converge.  No source-path, obstacle, mark, debt, or
+tangent-core coordinates converge. No source-path, obstacle, mark, debt, or
 splice closedness is asserted. -/
 theorem exists_tendsto_subseq_quittingFiniteBoundaryTangentCoreCoordinates
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
