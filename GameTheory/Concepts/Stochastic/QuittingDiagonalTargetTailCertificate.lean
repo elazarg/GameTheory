@@ -27,6 +27,34 @@ open StochasticGame Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
+omit [Fintype ι] [DecidableEq ι] in
+/-- **Abstract exceptional-target selector.**  If every two distinct
+playerwise survival quantities have product at most `joint`, and `joint` is
+at most `δ²`, one player can be selected so that every other survival
+quantity is at most `δ`. -/
+theorem exists_exceptionalTarget_of_pairwise_mul_le_joint
+    [Nonempty ι]
+    (opponentSurvival : ι → ℝ) (joint δ : ℝ)
+    (hδ : 0 ≤ δ)
+    (hpair : ∀ {first second : ι}, first ≠ second →
+      opponentSurvival first * opponentSurvival second ≤ joint)
+    (hjoint : joint ≤ δ ^ 2) :
+    ∃ target : ι, ∀ who, who ≠ target →
+      opponentSurvival who ≤ δ := by
+  classical
+  by_cases hexception : ∃ target : ι, δ < opponentSurvival target
+  · obtain ⟨target, htarget⟩ := hexception
+    refine ⟨target, ?_⟩
+    intro who hwho
+    by_contra hnot
+    have hwhoLarge : δ < opponentSurvival who := lt_of_not_ge hnot
+    have hproduct := hpair (first := target) (second := who) hwho.symm
+    nlinarith
+  · let target : ι := Classical.choice (inferInstance : Nonempty ι)
+    refine ⟨target, ?_⟩
+    intro who _
+    exact le_of_not_gt (fun hlarge => hexception ⟨who, hlarge⟩)
+
 /-- The diagonal endpoint selected from a player-indexed family of tails: only
 player `i`'s payoff in tail `i` is used in coordinate `i`.  The tails need not
 agree in any other coordinate. -/
@@ -112,6 +140,43 @@ theorem exists_finiteDiagonalTailEndpointExactQuittingNashBellmanChain
     (quittingDiagonalTailEndpoint reward tails)
     (abs_quittingDiagonalTailEndpoint_le_rewardBound reward tails)
     cutoff
+
+/-- One call constructs the full **stationary diagonal skeleton**: actual
+player-indexed closed tails and one common exact finite Nash--Bellman prefix
+ending at their diagonal endpoint.  The quantitative joint-survival bound is
+intentionally absent; it is the remaining producer theorem. -/
+theorem exists_stationaryDiagonalTargetTailSkeleton
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (stationaryRoots : ι → ι → PMF Bool) (cutoff : ℕ) :
+    ∃ (tails : ι → ℕ → ι → PMF Bool)
+        (headRoots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι),
+      (∀ player,
+        IsQuittingTargetClosedAt reward (tails player) player 0) ∧
+      (∀ player,
+        quittingDiagonalTailEndpoint reward tails player =
+          quittingStationaryUnilateralCap reward
+            (stationaryRoots player) player) ∧
+      (∀ time, cutoff ≤ time →
+        headRoots time = (quittingAllContinueRoot : ι → PMF Bool)) ∧
+      value cutoff = quittingDiagonalTailEndpoint reward tails ∧
+      (∀ time, time < cutoff →
+        value time = quittingRootSuccessorPayoff reward
+          (value (time + 1)) (headRoots time)) ∧
+      (∀ time, time < cutoff →
+        IsεQuittingRootNash reward (value (time + 1)) 0
+          (headRoots time)) ∧
+      (∀ time player,
+        |value time player| ≤ quittingRewardBound reward) ∧
+      ∀ target time player, player ≠ target →
+        tails target time player = stationaryRoots target player := by
+  obtain ⟨tails, hclosed, hcaps, hopponents⟩ :=
+    exists_quittingTargetClosedTailFamily_of_stationaryRoots
+      reward stationaryRoots
+  obtain ⟨headRoots, value, hafter, hendpoint, hpolicy, hnash, hbound⟩ :=
+    exists_finiteDiagonalTailEndpointExactQuittingNashBellmanChain
+      reward tails cutoff
+  exact ⟨tails, headRoots, value, hclosed, hcaps, hafter, hendpoint,
+    hpolicy, hnash, hbound, hopponents⟩
 
 /-- The complete finite diagonal target-tail certificate consumed by the
 exceptional-target compiler.  All tails coexist only through their diagonal
