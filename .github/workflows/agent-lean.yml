@@ -37,17 +37,18 @@ jobs:
           end = text.find(end_marker, start)
           if start < 0 or end < 0:
               raise SystemExit("final scaling block was not found")
-          replacement = """  have hscale : 4 * M * δ ≤ ε := by
-            change 4 * M * (ε / (4 * M + 1)) ≤ ε
-            rw [← mul_div_assoc, div_le_iff₀ hdenom]
-            nlinarith [hε.le]
-          """
+          replacement = (
+              "  have hscale : 4 * M * δ ≤ ε := by\n"
+              "    change 4 * M * (ε / (4 * M + 1)) ≤ ε\n"
+              "    rw [← mul_div_assoc, div_le_iff₀ hdenom]\n"
+              "    nlinarith [hε.le]\n"
+          )
           path.write_text(text[:start] + replacement + text[end:])
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean
-          git commit -m "Finish the diagonal target-tail scaling bound"
+          git commit -m "Fix the diagonal target-tail scaling indentation"
           git push origin HEAD:agent/quitting-target-tail
 
       - name: Set up Lean and cache dependencies
