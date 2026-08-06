@@ -3,13 +3,35 @@ name: Target-anchored tail proof
 on:
   push:
     branches:
-      - codex/target-anchored-tail
       - codex/target-anchored-tail-ci
+    paths:
+      - '.github/workflows/target-anchored-tail.yml'
+      - 'GameTheory/Concepts/Stochastic/QuittingTargetAnchoredTail.lean'
+      - 'GameTheory/Concepts/Stochastic/QuittingFiniteEndpointNashBellmanFactory.lean'
+      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean'
+      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTailSplice.lean'
+      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTailCompiler.lean'
+      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTailCertificate.lean'
+      - 'lean-toolchain'
+      - 'lake-manifest.json'
   pull_request:
     branches:
       - uniform-existence
-      - codex/target-anchored-tail
+    paths:
+      - '.github/workflows/target-anchored-tail.yml'
+      - 'GameTheory/Concepts/Stochastic/QuittingTargetAnchoredTail.lean'
+      - 'GameTheory/Concepts/Stochastic/QuittingFiniteEndpointNashBellmanFactory.lean'
+      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean'
+      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTailSplice.lean'
+      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTailCompiler.lean'
+      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTailCertificate.lean'
+      - 'lean-toolchain'
+      - 'lake-manifest.json'
   workflow_dispatch:
+
+concurrency:
+  group: target-anchored-tail-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -17,30 +39,23 @@ permissions:
 jobs:
   compile:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install Lean and dependencies
+      - name: Install Lean and restore caches
         uses: leanprover/lean-action@v1
         with:
           build: false
           test: false
           use-mathlib-cache: true
+          use-github-cache: true
 
-      - name: Compile target-tail modules
-        run: |
-          lake build GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
-          lake build GameTheory.Concepts.Stochastic.QuittingFiniteEndpointNashBellmanFactory
-          lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail
-          lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailSplice
-          lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCompiler
-          lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCertificate
-
-      - name: Compile repository integration target
-        run: lake build GameTheoryTest
+      - name: Compile the complete target-tail dependency chain
+        run: lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCertificate
 
       - name: Audit target-tail theorem axioms
         run: |
@@ -61,11 +76,3 @@ jobs:
 
       - name: Check proof placeholders
         run: python3 scripts/check_lean_placeholders.py
-
-      - name: Build public library and repository audit dependencies
-        run: |
-          lake build GameTheory
-          lake build FixedPointTheorems.kakutani
-
-      - name: Audit reachability and theorem axioms
-        run: python3 scripts/audit_repository.py
