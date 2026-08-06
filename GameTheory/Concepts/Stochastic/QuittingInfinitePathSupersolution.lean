@@ -104,6 +104,10 @@ theorem quittingRootSequenceHazardTerminalValue_le_add_of_quitError_exactContinu
       quittingStationaryContinueMass_le_one
         (Function.update (roots time) player (PMF.pure false))
     have hcontinueTime := hcontinue time player
+    change quittingFixedOpponentsContinueReward reward roots player time +
+          quittingFixedOpponentsContinueMass roots player time *
+            value (time + 1) player =
+        value time player at hcontinueTime
     dsimp only [quittingLiveBellmanValue, super]
     apply max_le
     · exact hquit time player
@@ -151,8 +155,13 @@ theorem QuittingInfinitePathQuitErrorCertificate.isεAsymptoticNash_and_delivers
       (quittingInfinitePathProfile reward certificate.roots) = target := by
     funext who
     rw [quittingTerminalPayoff_infinitePathProfile]
-    have hzero := congrFun (hselected 0) who
-    rw [← hzero, certificate.value_zero]
+    change quittingRootSequenceTerminalValue reward certificate.roots who 0 =
+      target who
+    calc
+      quittingRootSequenceTerminalValue reward certificate.roots who 0 =
+          certificate.value 0 who :=
+        (congrFun (hselected 0) who).symm
+      _ = target who := congrFun certificate.value_zero who
   constructor
   · intro player deviation
     have hhazard :=
