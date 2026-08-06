@@ -60,6 +60,23 @@ theorem quittingJointSurvivalWeight_add
   congr 2
   omega
 
+omit [DecidableEq ι] in
+/-- Changing only the declared all-continue tail changes a player's root
+successor payoff by exactly the joint all-continue probability times the tail
+difference. -/
+theorem quittingRootSuccessorPayoff_sub_eq_jointContinueMass_mul
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (first second : Payoff ι) (root : ι → PMF Bool) (who : ι) :
+    quittingRootSuccessorPayoff reward first root who -
+        quittingRootSuccessorPayoff reward second root who =
+      quittingStationaryContinueMass root *
+        (first who - second who) := by
+  change quittingRootExpectedPayoff reward first root who -
+      quittingRootExpectedPayoff reward second root who = _
+  rw [quittingRootExpectedPayoff_eq_absorbingContribution_add,
+    quittingRootExpectedPayoff_eq_absorbingContribution_add]
+  ring
+
 /-- Iterating a homogeneous one-step difference estimate produces the exact
 joint-survival prefix weight. -/
 theorem abs_pathDifference_le_jointSurvival_mul
@@ -174,7 +191,7 @@ theorem
         reward roots who liveTime
     dsimp only [difference, terminal]
     rw [hvalue, hterminal,
-      quittingRootSuccessorPayoff_sub_eq_continueMass_mul,
+      quittingRootSuccessorPayoff_sub_eq_jointContinueMass_mul,
       abs_mul,
       abs_of_nonneg
         (quittingStationaryContinueMass_nonneg (roots liveTime))]
