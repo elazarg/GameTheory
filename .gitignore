@@ -8,6 +8,9 @@ CLAUDE.md
 .cache/
 .mcp.json
 *.log
+*.aux
+*.out
+*.toc
 .codex
 *.pdf
 scripts/__pycache__
