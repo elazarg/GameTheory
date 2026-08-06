@@ -43,6 +43,8 @@ jobs:
         run: |
           cat > /tmp/QuittingDiagonalTargetTailAxiomAudit.lean <<'EOF'
           import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCertificate
+          #print axioms GameTheory.exists_exceptionalTarget_of_pairwise_mul_le_joint
+          #print axioms GameTheory.exists_stationaryDiagonalTargetTailSkeleton
           #print axioms GameTheory.quittingPrefixThenTailHazardGap_le_survival_debt_sub_joint_mismatch
           #print axioms GameTheory.exists_quittingExceptionalTarget_of_jointSurvivalWeight_le_sq
           #print axioms GameTheory.exists_target_quittingPrefixThenTail_isεAsymptoticNash
