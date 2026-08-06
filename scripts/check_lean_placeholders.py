@@ -40,11 +40,11 @@ INTENTIONAL: dict[tuple[str, str], str] = {
     ): "The general uniform-equilibrium existence problem, quantitative form.",
     (
         "GameTheory/Concepts/Stochastic/QuittingReducedCapConjecture.lean",
-        "quittingGame_hasQuittingLedgerCapPackage",
+        "quittingGame_hasQuittingTruncatedLedgerCapPackage",
     ): "The reduced finite-quitting conjecture: existence, at every tolerance, "
-    "of a ledger-shaped input package for the assembled phase-switch cap. It "
+    "of a punishment-free truncated ledger package. It "
     "implies the finite-quitting conjecture with no gap, by "
-    "`quittingGame_exists_uniformEquilibriumPayoff_of_hasQuittingLedgerCapPackage`.",
+    "`quittingGame_exists_uniformEquilibriumPayoff_of_truncatedLedgerCapPackage`.",
 }
 
 

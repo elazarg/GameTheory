@@ -1,8 +1,9 @@
 ## Checks
 
-- [ ] `lake build`
+- [ ] Changed Lean modules compile locally or pass the focused PR build.
 - [ ] `python scripts/check_lean_placeholders.py`
-- [ ] `python scripts/audit_repository.py`
+- [ ] I ran the full build/audit when changing build configuration, repository
+      structure, or axiom policy.
 
 ## Notes
 

@@ -1,0 +1,97 @@
+name: Lean CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lean-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fast-pr:
+    name: Fast PR check
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reject proof placeholders
+        run: python3 scripts/check_lean_placeholders.py
+
+      - name: Select Lean build scope
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mode="$(python3 scripts/ci_changed_lean_targets.py --mode "$BASE_SHA" "$HEAD_SHA")"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Lean build mode: $mode"
+
+      - name: Initialize Lean submodules
+        if: steps.scope.outputs.mode != 'none'
+        run: git submodule update --init --recursive
+
+      - name: Set up Lean and restore caches
+        if: steps.scope.outputs.mode != 'none'
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: false
+          test: false
+          use-mathlib-cache: true
+          # Distinct from Mathlib's cache: persist this checkout's `.lake`,
+          # including GameTheory `.olean` files, across PR commits.
+          use-github-cache: true
+
+      - name: Build changed Lean modules
+        if: steps.scope.outputs.mode == 'focused'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          mapfile -t targets < <(
+            python3 scripts/ci_changed_lean_targets.py --targets "$BASE_SHA" "$HEAD_SHA"
+          )
+          printf 'Building %s\n' "${targets[*]}"
+          lake build "${targets[@]}"
+
+      - name: Build all Lean libraries after structural changes
+        if: steps.scope.outputs.mode == 'full'
+        run: lake build
+
+  full:
+    name: Full build and audit
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build Lean libraries
+        uses: leanprover/lean-action@v1
+        with:
+          build: true
+          test: false
+          use-mathlib-cache: true
+          use-github-cache: true
+
+      - name: Check for proof placeholders
+        run: python3 scripts/check_lean_placeholders.py
+
+      - name: Audit repository and theorem axioms
+        run: python3 scripts/audit_repository.py
