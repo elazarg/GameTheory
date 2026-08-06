@@ -181,14 +181,17 @@ theorem
   · exact exists_ownSurvival_crossing_of_completelyAbsorbing
       plan hscalePos habsorbing
   · intro target
-    exact exists_quittingTargetClosedTail_le_of_punishmentValue_sub_le
-      reward target
-        (quittingRootSequenceTerminalValue reward plan target
-          (quittingSupportSurvivalSwitchIndex plan scale))
-        rationalityError hscalePos
-        (hir target (quittingSupportSurvivalSwitchIndex plan scale))
+    obtain ⟨tail, hclosed, htail⟩ :=
+      exists_quittingTargetClosedTail_le_of_punishmentValue_sub_le
+        reward target
+          (quittingRootSequenceTerminalValue reward plan target
+            (quittingSupportSurvivalSwitchIndex plan scale))
+          rationalityError hscalePos
+          (hir target (quittingSupportSurvivalSwitchIndex plan scale))
+    exact ⟨tail, hclosed, by simpa [add_assoc] using htail⟩
   · dsimp only [scale]
     ring_nf
+    exact le_rfl
 
 /-- The same compiler with Simon's divergent total-absorption condition in
 place of the already-closed complete-absorption predicate. -/
@@ -289,10 +292,13 @@ theorem
         nlinarith
       _ = (coefficient + 3) * scale := by ring
       _ ≤ ε := hfactor
+  have herror' :
+      2 * δ + δ + Real.sqrt δ *
+        (2 + 7 * quittingRewardBound reward) ≤ ε := by
+    simpa [coefficient, bound] using herror
   refine ⟨profile, ?_⟩
   intro who deviation
   have hlocal := hprofile who deviation
-  dsimp only [coefficient, bound] at hlocal
   linarith
 
 end GameTheory
