@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/quitting-target-tail
+  pull_request:
+    branches:
+      - uniform-existence
   workflow_dispatch:
 
 permissions:
