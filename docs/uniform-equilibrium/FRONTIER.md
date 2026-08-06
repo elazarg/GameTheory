@@ -1,18 +1,15 @@
 # Uniform-equilibrium mathematical frontier
 
-**Production-Lean checkpoint `5e7d0e7a`, 2026-08-07.** The conditional
-multi-owner face-circulation producer class, its compact chronological
-selection and uniform-payoff consumer, are now production, with concrete
-scaled-cyclic and four-player stress corollaries. Finite phase-occupation LP
-duality is also production, conditional on occupation nonemptiness. Session IX capstone
-wave: the punishment-floor/feasible-set
-paragraph (edited stale before both landed) is corrected, the two-player
-capstone and its no-exact-stationary-equilibrium negative are recorded, and
-the minimality corollary is fixed. Fixed-skeleton payoff closure,
-support-witness compilation, and the essential-APS conditional positive
-stratum are reflected below. Production Lean is machine truth; checked
-experiments and uncommitted files are labelled separately and do not become
-landed by appearing here.
+**Production-Lean checkpoint `1ee8d9c2`, exported through `6391ee01`,
+2026-08-07.** The current production wave includes target-anchored payoff
+closure, support-witness compilation, finite phase-occupation duality,
+multi-owner face-circulation production, uniform-payoff reverse diagnostics,
+boundary-holonomy tangent coordinates, and the adaptive essential-APS
+compiler. The latter removes a common hazard ceiling and geometric survival
+rate while retaining pointwise proper hazards and the stated component
+hypotheses. Production Lean is machine truth; checked experiments and
+uncommitted files are labelled separately and do not become landed by
+appearing here.
 
 ## Conjecture and semantic waist
 
@@ -616,16 +613,22 @@ Key boundaries are:
 | --- | --- | --- |
 | General semantic waist and deviation-cap equivalence | `L` | Landed; general existence intentionally open. |
 | Finite-quitting terminal-to-uniform equivalence | `M+L+C` | Landed and consumed. |
+| Uniform-payoff closure and reverse diagnostics | `M+L` | Fixed-skeleton reward closure, target equivalence under vanishing payoff gaps, tail-width and bounded-work characterizations, and transition-discontinuity counterexample landed; no forward producer. |
+| Support-retaining path/cycle compiler | `M+L+C` conditional | Landed; path or finite periodic witness production at every tolerance remains open. |
+| Essential-APS adaptive compiler | `M+L+A+C` on the stated component | Landed for compact functional unique-live terminal-free components with finite-window face avoidance; no common hazard ceiling or geometric rate, but arbitrary-game component production and the full-jump boundary remain open. |
+| Multi-owner face-circulation producer | `M+L+A+C` conditional | A supplied bounded circulation above punishment value produces a compactly selected support path and uniform payoff; generic certificate existence remains open. |
+| Finite phase-occupation duality | `M+L` conditional | Semantic/LP equivalence, attainment, bias decoding, and strong duality landed conditional on feasible occupation; strategic occupation production is not included. |
 | Quit-time/Never extremality for behavioral deviations | `M+L` | Landed. |
 | Exact-D optimizer and zero/positive split | `M+L+A+C` on zero branch | Landed. |
 | Owner clock/packet and two-ended core | `M+L+A` | Landed; stronger preselected-mark bridge products remain mathematical/experimental. |
 | Finite-block boundary holonomy | `M+L` | Landed at `e1fe7dc`. |
 | Fixed-cutoff resolved holonomy graph | `M+L` | Compact/closed with full source path; fixed-last calibrated lift finite, in `QuittingBoundaryHolonomyCompactness.lean` at `14d75ff`. |
+| Boundary-holonomy tangent coordinates | `M+L` | Residual cocycles, self-similarity, max-plus tangent dynamics, realized bounds, and compact coordinate subsequences landed; realized-image closedness, source retention, producer, and decoder are not included. |
 | Greedy return/exit/dead-end | `M+X` | Checked experiment, natural abstract stopping point; not production/decoder. |
 | Realized arbitrary-length holonomy/decoder | `M+L/I` | Fixed-cutoff case landed; literal unbounded-length compact lift ruled out. Tightness or an infinity/stopping-law chart plus bounded decoder remains open. |
 | Anchored seam/exit strategic decoder | `I` | Open. |
 | Full-rate stationary cap | `M+L+C` | Landed verifier for supplied profiles. |
-| Two-player all-table stationary approximate producer | external `M`, internal partial `L` | Source case split not fully formalized. |
+| Two-player all-table uniform-payoff existence | `M+L+C` | Unconditional capstone landed in `QuittingTwoPlayerExistence.lean`; it does not claim stationary exact equilibrium or generalize the pair-repair classification to `n ≥ 3`. |
 | Sure-exit-set exact characterization (all `n`) | `M+L` | Landed (`QuittingSureExitSet`, `97b77b6`); coalition-face per-phase criterion is now a theorem; two-player joint exit recovered as instance. |
 | Two-blocker interval-cover gate | `M+L` | Landed (`QuittingBlockerIntervalCover`, `97b77b6`); single-blocker designation refuted by table witness; with ≤ 2 opponents the switching branch is vacuous, so `n = 3` is the exact threshold. |
 | Switching-residue regression and scalar obstructions | `M+L` | Landed (`QuittingSwitchingResidueRegression`, `97b77b6`); the fixed-blocker weight-level branch map is provably not total. |

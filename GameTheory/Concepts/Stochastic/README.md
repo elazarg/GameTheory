@@ -5,17 +5,20 @@ existence problem** — the central open problem of stochastic game theory: ever
 stochastic game with finitely many players, states, and actions admits a uniform
 equilibrium payoff from every initial state.
 
-There are **two intentional `sorry`s**, and no others:
+There are **three intentional `sorry`s**, and no others:
 
 - `StochasticGame.exists_uniformDeviationCapConstructor` in
   [`UniformExistenceConjecture.lean`](UniformExistenceConjecture.lean) — the
   general problem above, in its quantitative form;
 - `quittingGame_exists_uniformEquilibriumPayoff` in
   [`QuittingConjecture.lean`](QuittingConjecture.lean) — the finite-quitting
-  case, the program's middle target.
+  case, the program's middle target; and
+- `quittingGame_hasQuittingTruncatedLedgerCapPackage` in
+  [`QuittingReducedCapConjecture.lean`](QuittingReducedCapConjecture.lean) —
+  the reduced finite-quitting certificate producer.
 
-Both are allowlisted by name in `scripts/check_lean_placeholders.py`, which
-fails on any third placeholder and equally on an allowlist entry that no longer
+All three are allowlisted by name in `scripts/check_lean_placeholders.py`, which
+fails on any fourth placeholder and equally on an allowlist entry that no longer
 carries one — so discharging a conjecture forces the list to be updated.
 [`Uniform.lean`](Uniform.lean) holds only the definitions and their proved
 equivalence and is itself sorry-free. Everything else in this directory is
@@ -53,6 +56,12 @@ developments. Probes promote their unresolved residue to explicitly *named
 hypotheses* (`Has...`/`Is... : Prop`) instead of `sorry`, and candidate interfaces
 are stress-tested against falsifier games (the Big Match no-go is the permanent
 baseline). Dead routes are killed by *proved* no-go theorems, kept permanently.
+
+The production interfaces are indexed by mathematical role in the
+[uniform-equilibrium toolkit](../../../docs/uniform-equilibrium/TOOLKIT.md).
+Use that map to choose among terminal selection, target-tail, support-witness,
+essential-APS, circulation, closure, holonomy, and diagnostic surfaces; the
+filename-prefix map below remains a directory-level orientation aid.
 
 ### The spine
 
@@ -315,7 +324,8 @@ paths, produce strategic blocks, or decode a coefficient limit.
 | All children absorbing after one step | `exists_uniformEquilibriumPayoff_of_absorbingChildren` | `OneStepAbsorbingChildUniform.lean` |
 | Zero-sum single-controller (full finite generality) | `exists_uniformEquilibriumPayoff_of_isZeroSumBoolGame_of_isSingleController` | `SingleControllerPrimalExistence.lean` |
 | **The Big Match** (Blackwell–Ferguson 1968) | `exists_uniformEquilibriumPayoff_live` | `BigMatchUniform.lean` |
-| Compact terminal-free unique-live essential-APS component | `quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live` | `QuittingEssentialAPSUniformPayoff.lean` |
+| Compact terminal-free unique-live essential-APS component | `quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live_adaptiveMesh` | `QuittingEssentialAPSAdaptiveMeshUniformPayoff.lean` |
+| Every finite two-player quitting game | `quittingGame_exists_uniformEquilibriumPayoff_twoPlayer` | `QuittingTwoPlayerExistence.lean` |
 
 `SingleControllerNoTrap.lean` closes the game-specific no-trap part of that
 residual: strong complementarity forces every state to reach the positive

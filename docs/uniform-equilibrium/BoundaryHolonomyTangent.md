@@ -126,6 +126,8 @@ and a decoder from tangent data remain separate obligations.
 
 ## Lean surface
 
+- `QuittingBoundaryHolonomyAll.lean` is the public umbrella for both the
+  source-retaining fixed-cutoff and coefficient/tangent branches.
 - `QuittingBoundaryHolonomyAffineResidual.lean` contains affine residual,
   repetition, pumping, and idempotent algebra.
 - `QuittingBoundaryHolonomyMaxAffineResidual.lean` contains the max-affine

@@ -9,11 +9,12 @@ program.
    active gates, blockers, and acceptance conditions.
 2. [FRONTIER.md](FRONTIER.md) — the mathematical theorem chain, exact open
    hinge, known boundaries, alternatives, and falsifiers.
-3. Follow the direct links there to one exact
-   [`ideas/<Group>/<Claim>.md`](../../ideas/README.md) scientific object or
-   attributed result under
-   [`ideas/UniformEquilibriumLiterature/`](../../ideas/UniformEquilibriumLiterature/README.md).
-4. Read [Program.md](Program.md) when changing the research/formalization
+3. [TOOLKIT.md](TOOLKIT.md) — the production tool collection organized by
+   inputs, outputs, role, canonical import, and nonclaim.
+4. When the local ignored `ideas/` corpus is present, follow optional links to
+   its exact claim cards or attributed literature records. The tracked
+   `FRONTIER.md` and route pages remain sufficient for a clean-clone handoff.
+5. Read [Program.md](Program.md) when changing the research/formalization
    method, the [research atlas](manuscript/UniformEquilibriumFrontierManuscript.tex)
    for the detailed theorem/idea map, and
    [intuition.tex](manuscript/intuition.tex) for a shorter conceptual account of
@@ -29,6 +30,8 @@ The measured repository/CI assessment is
 - [Program.md](Program.md) defines the stable research/formalization workflow.
 - [PIPELINE.md](PIPELINE.md) is project-control truth.
 - [FRONTIER.md](FRONTIER.md) is the curated mathematical state of knowledge.
+- [TOOLKIT.md](TOOLKIT.md) is the stable map of production interfaces and
+  their semantic roles.
 - [EssentialAPS.md](EssentialAPS.md) states the exact algebraic/executable
   boundary of the essential-APS singleton-flow formalization.
 - [SupportWitnessCompiler.md](SupportWitnessCompiler.md) records the
@@ -61,9 +64,10 @@ The measured repository/CI assessment is
 - [manuscript/UniformEquilibriumFrontierManuscript.tex](manuscript/UniformEquilibriumFrontierManuscript.tex)
   is the detailed manuscript source;
 - [manuscript/intuition.tex](manuscript/intuition.tex) is its conceptual
-  companion.  Both are derivative exposition: resolve status conflicts in
-  favor of `PIPELINE.md`, `FRONTIER.md`, the owning claim file, and finally the
-  production Lean declaration. Generated PDFs are local build artifacts.
+  companion. Both are derivative exposition: production Lean decides exact
+  theorem truth, `FRONTIER.md` decides current mathematical synthesis, and
+  `PIPELINE.md` decides project priority. Generated manuscript artifacts are
+  local and untracked.
 
 Questions, reviews, proof-mining notebooks, experiments, and archived
 `ephemeral/` files are intake/evidence; none is current truth by itself. The

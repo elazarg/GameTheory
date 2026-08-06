@@ -28,13 +28,15 @@ experiments are intake/evidence, never current truth by themselves.
 ### Source-of-truth hierarchy
 
 1. production Lean is machine-checked truth at its exact declaration scope;
-2. claim files under `ideas/<Group>/<Claim>.md` are the internal scientific
-   record, and literature result files carry mandatory attribution/scope;
-3. `FRONTIER.md` synthesizes the current mathematical boundary;
-4. `PIPELINE.md` owns decisions, priorities, active gates, and blockers;
-5. this `Program.md` owns stable methodology and update rules;
-6. the manuscript is readable derivative exposition; and
-7. questions, reviews, proof-mining reports, experiments, and archived working
+2. `FRONTIER.md` gives the self-contained current mathematical synthesis;
+3. `PIPELINE.md` owns decisions, priorities, active gates, and blockers;
+4. this `Program.md` owns stable methodology and update rules;
+5. route pages record durable interfaces and exact nonclaims;
+6. when the local `ideas/` corpus is available, its claim files are the
+   scientific working record and literature files carry attribution/scope,
+   but tracked cold handoff does not depend on that ignored corpus;
+7. the manuscript is readable derivative exposition; and
+8. questions, reviews, proof-mining reports, experiments, and archived working
    notes are evidence/intake only.
 
 ## Semantic waist

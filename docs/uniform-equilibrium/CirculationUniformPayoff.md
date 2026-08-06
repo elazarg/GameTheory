@@ -1,5 +1,10 @@
 # Uniform payoffs from face circulations
 
+`QuittingFaceCirculationAll.lean` is the public umbrella for the production
+certificate/orbit/path chain, its concrete payoff examples, and the sharp
+two-coordinate boundary analyses. Downstream proofs that need only the generic
+compiler should import `MultiOwnerFaceCirculationCompactPath.lean` directly.
+
 This note records the production face-circulation producer class for finite
 quitting games. It is a genuine existence class, not an arbitrary-game
 producer: the input is a supplied, finite `FaceCirculationCertificate` whose
