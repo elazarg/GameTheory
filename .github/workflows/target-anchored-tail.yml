@@ -39,6 +39,9 @@ jobs:
           lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCompiler
           lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCertificate
 
+      - name: Compile repository integration target
+        run: lake build GameTheoryTest
+
       - name: Audit target-tail theorem axioms
         run: |
           cat > /tmp/QuittingDiagonalTargetTailAxiomAudit.lean <<'EOF'
