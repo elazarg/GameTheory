@@ -242,7 +242,7 @@ theorem
             (quittingTruncatedRoots plan switch) who
             quittingAlwaysContinueHazard 0 +
           quittingOpponentSurvivalWeight plan who 0 switch *
-            continuationCap := add_le_add_left htailTerm _
+            continuationCap := add_le_add (le_refl _) htailTerm
     _ ≤ quittingRootSequenceTerminalValue reward plan who 0 +
           ledgerCap + continuationSlack := hprefixCap
 
