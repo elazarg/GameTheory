@@ -120,7 +120,15 @@ theorem quittingOpponentSurvivalWeight_le_of_survivalPrefix_le_mul
   have htotal :
       lower * quittingOpponentSurvivalWeight roots who 0 cutoff ≤
         lower * upper := htoJoint.trans hjoint
-  exact (mul_le_mul_left hlower).mp htotal
+  have hlowerNe : lower ≠ 0 := ne_of_gt hlower
+  calc
+    quittingOpponentSurvivalWeight roots who 0 cutoff =
+        lower⁻¹ *
+          (lower * quittingOpponentSurvivalWeight roots who 0 cutoff) := by
+            field_simp
+    _ ≤ lower⁻¹ * (lower * upper) :=
+      mul_le_mul_of_nonneg_left htotal (inv_nonneg.mpr hlower.le)
+    _ = upper := by field_simp
 
 /-- Simon's Case-1 scale.  A prescribed reach probability at most
 `ε² / M²`, while `who`'s own prescribed survival remains at least `ε / M`,
