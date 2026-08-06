@@ -6,8 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.QuittingEssentialAPSCycle
 import GameTheory.Concepts.Stochastic.QuittingEssentialAPSRegression
-import GameTheory.Concepts.Stochastic.QuittingEssentialAPSInfiniteContraction
-import GameTheory.Concepts.Stochastic.QuittingInfinitePathSupersolution
+import GameTheory.Concepts.Stochastic.QuittingEssentialAPSUniformPayoff
 
 /-!
 # Essential APS for the quitting singleton-flow stratum
@@ -16,21 +15,23 @@ Umbrella import for the exact successor graph; algebraic, segment, and proper
 essential-APS prefixes; the carrier-restricted greatest fixed family;
 convex-fiber and unique-live-successor progress extraction; finite and coherent
 infinite executable APS runs; compact greatest fibers under unique live
-successors; uniform positive mass in every shifted window; the deterministic
-conversion from total mass to playerwise opponent mass; uniform opponent block
-contraction for the implemented singleton roots; and the nonperiodic
-quit-only-error supersolution compiler consumed by an accuracy-indexed mesh.
+successors; uniform positive mass in every shifted window; bounded-drift
+opponent charging; block survival contraction; the nonperiodic quit-error
+supersolution; accuracy-indexed variable subdivision; and uniformization.
 
 The structural capstone is
 `exists_quittingEssentialAPSInfiniteRun_with_opponentBlockContraction_unique_live`.
-It simultaneously returns a coherent executable run, exact Bellman transport,
-and a uniform opponent-survival factor strictly below one.
+It returns a coherent executable run, exact Bellman transport, and a uniform
+opponent-survival factor below one.
 
-The implementation remains conditional.  It treats the compact functional
-unique-live-successor singleton-flow stratum.  It now supplies path existence,
-exact Bellman transport, opponent-survival contraction, and the game-facing
-compiler for a uniformly small immediate-Quit error.  The remaining adapter is
-to subdivide the nonperiodic coarse arcs at an accuracy-indexed, possibly
-nonuniform mesh while preserving the selected initial value.  The structural
-hypotheses are not identified with all quitting games.
+The game-theoretic capstone is
+`quittingEssentialAPS_isUniformEquilibriumPayoff_unique_live`.  It compiles the
+same compact functional unique-live, terminal-free stratum to a genuine
+uniform-equilibrium payoff by assigning each coarse arc its own finite mesh
+length.  Exact block products preserve opponent extinction, while the common
+Snell supersolution prevents the local Quit error from accumulating over
+calendar time.
+
+The result remains conditional: it does not identify this structural stratum
+with every finite quitting game.
 -/
