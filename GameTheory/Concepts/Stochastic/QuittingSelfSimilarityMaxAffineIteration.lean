@@ -10,9 +10,10 @@ import GameTheory.Concepts.Stochastic.QuittingSelfSimilarityMaxAffine
 # Nonempty repetition of max-affine stopping holonomy
 
 A max-affine identity would require an infinite early floor, so finite stopping
-summaries do not form a monoid.  This file therefore iterates one or more
-copies.  Tail residuals amplify geometrically, while target safety is preserved
-under every finite nonempty repetition.
+summaries do not form a monoid. This file therefore iterates one or more
+copies. Tail residuals amplify geometrically, total excess follows an exact
+max-plus Bellman recurrence, and target safety is preserved under every finite
+nonempty repetition.
 -/
 
 noncomputable section
@@ -34,6 +35,17 @@ def selfComposeNonempty
     (summary : QuittingMaxAffineSummary) (extra : ℕ) :
     summary.selfComposeNonempty (extra + 1) =
       summary * summary.selfComposeNonempty extra := rfl
+
+/-- Total target excess under repetition obeys the same max-plus recurrence as
+one Bellman step: the one-block early residual competes with one-block tail
+residual plus the surviving repeated excess. -/
+theorem targetExcess_selfComposeNonempty_succ
+    (summary : QuittingMaxAffineSummary) (target : ℝ) (extra : ℕ) :
+    (summary.selfComposeNonempty (extra + 1)).targetExcess target =
+      max (summary.early - target)
+        (summary.tailResidual target + summary.survival *
+          (summary.selfComposeNonempty extra).targetExcess target) := by
+  rw [selfComposeNonempty_succ, targetExcess_mul]
 
 /-- Tail residual after `extra + 1` copies is the geometric amplifier times
 the one-block tail residual. -/
