@@ -48,7 +48,7 @@ theorem exists_exceptionalTarget_of_pairwise_mul_le_joint
     intro who hwho
     by_contra hnot
     have hwhoLarge : δ < opponentSurvival who := lt_of_not_ge hnot
-    have hproduct := hpair (first := target) (second := who) hwho.symm
+    have hproduct := hpair (first := target) (second := who) (Ne.symm hwho)
     nlinarith
   · let target : ι := Classical.choice (inferInstance : Nonempty ι)
     refine ⟨target, ?_⟩
