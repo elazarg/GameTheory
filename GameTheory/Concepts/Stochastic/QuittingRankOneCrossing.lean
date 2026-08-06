@@ -9,26 +9,34 @@ import GameTheory.Concepts.Stochastic.QuittingLedgerPunishClock
 import Math.Probability.DecisionVariationMaximalInequality
 
 /-!
-# Rank-one crossing bounds for quitting plans
+# Abstract rank-one crossing alternative for quitting plans
 
-This file isolates the exact two-step estimate used in Case 1 of Simon's
-quitting-game construction.
+This module records the stochastic route corresponding to Simon's Case 1
+when the one-stage support witness has been forgotten.
 
-First, a finite adaptive decision process whose live histories force a score
-crossing inherits the weak-L² maximal bound.  The statement is deliberately
-agnostic about how the process is constructed; the intended game-specific
-instance has the punished player's one-stage decision discrepancy as its
-score and rank-one decision variation at most twice the payoff diameter.
+It is intentionally abstract.  The main theorem assumes both pieces that a
+game-specific rank-one decision process would have to provide:
 
-Second, a bound on the probability that the prescribed profile reaches the
-ledger trigger is converted into the deleted survival bound needed against a
-player who deviates by never quitting.  The conversion is exact:
+* every live history at the proposed ledger trigger has already produced a
+  score crossing; and
+* the adaptive decision process has a uniform expected-variation budget.
+
+Under those assumptions the weak-L² maximal inequality bounds the prescribed
+joint probability of reaching the trigger.  A separate exact survival identity
+then converts that joint bound into the deleted opponent-survival bound needed
+against a never-quit deviation:
 
 `joint survival = opponent survival * own prescribed survival`.
 
-Thus a joint reach bound `(ε / M)^2`, together with the Case-1 fact that every
-player's own prescribed survival is still at least `ε / M`, gives the required
-deleted reach bound `ε / M`.
+Thus a joint reach bound `(ε / M)^2`, together with own prescribed survival at
+least `ε / M`, gives deleted reach at most `ε / M`.
+
+No theorem in the support-witness compiler depends on this module.  Retaining
+the actual support witness gives the stronger deterministic clock-collapse
+argument in `QuittingSupportWitnessClockCollapse`.  Conversely, this file does
+not construct Simon's rank-one decision-discrepancy process, prove its crossing
+implication, or establish its variation budget; it is reusable scaffolding for
+an alternative route where those data are available.
 -/
 
 noncomputable section
@@ -41,7 +49,7 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-- A live-event probability is bounded by the adaptive weak-L² estimate as
 soon as every live history has already produced the corresponding score
-crossing.  This is the exact abstract interface needed by the rank-one
+crossing.  This is the abstract consumer interface for a possible rank-one
 quitting decision process. -/
 theorem quittingSurvivalPrefix_le_of_crossingMaximalInequality
     {Ω : Type*} [Finite Ω]
@@ -130,10 +138,8 @@ theorem quittingOpponentSurvivalWeight_le_of_survivalPrefix_le_mul
       mul_le_mul_of_nonneg_left htotal (inv_nonneg.mpr hlower.le)
     _ = upper := by field_simp
 
-/-- Simon's Case-1 scale.  A prescribed reach probability at most
-`ε² / M²`, while `who`'s own prescribed survival remains at least `ε / M`,
-forces the deleted reach probability under `who`'s never-quit deviation to be
-at most `ε / M`. -/
+/-- At Simon's Case-1 scale, joint reach at most `ε² / M²` and own survival
+at least `ε / M` force deleted reach at most `ε / M`. -/
 theorem quittingOpponentSurvivalWeight_le_caseOne
     (roots : ℕ → ι → PMF Bool) (who : ι) (cutoff : ℕ)
     {ε M : ℝ} (hε : 0 < ε) (hM : 0 < M)
