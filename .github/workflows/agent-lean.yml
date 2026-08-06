@@ -24,7 +24,7 @@ jobs:
           submodules: recursive
 
       - name: Apply final scaling patch
-        if: github.event_name == 'push'
+        if: github.event_name == 'pull_request'
         run: |
           python - <<'PY'
           from pathlib import Path
