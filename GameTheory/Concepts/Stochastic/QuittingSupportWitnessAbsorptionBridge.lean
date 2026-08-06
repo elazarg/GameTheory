@@ -43,7 +43,8 @@ theorem quittingSurvivalPrefix_eq_prod_ownSurvival
         quittingHazardSurvival
           (quittingRootSequenceOwnHazard roots who) cutoff := by
   classical
-  unfold quittingSurvivalPrefix quittingHazardSurvival
+  simp_rw [quittingHazardSurvival_eq_prod]
+  unfold quittingSurvivalPrefix
   simp_rw [quittingStationaryContinueMass_eq_prod_continueProbability]
   rw [Finset.prod_comm]
   simp only [quittingRootSequenceOwnHazard]

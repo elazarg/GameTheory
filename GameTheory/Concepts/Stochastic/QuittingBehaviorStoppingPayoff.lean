@@ -51,8 +51,8 @@ private theorem quittingFiniteRootPayoff_eq_stoppingMass_decomposition
     rw [quittingFiniteHazardWeight_castSucc,
       quittingFinitePureTimePayoff_castSucc_eq_terminal]
     simp only [Nat.zero_add]
-    rfl
-  · simp [quittingHazardSurvival]
+    rw [quittingHazardStopMass_eq_survival_mul_stop,
+      quittingHazardSurvival_eq_prod]
 
 /-- An arbitrary live-spine hazard payoff is the stopping-law expectation of
 its deterministic finite-Quit and Never payoffs. -/

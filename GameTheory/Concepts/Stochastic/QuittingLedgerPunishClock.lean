@@ -373,7 +373,9 @@ omit [Fintype ι] [DecidableEq ι] in
 theorem quittingHazardSurvival_quittingRootSequenceOwnHazard
     (roots : ℕ → ι → PMF Bool) (who : ι) (cutoff : ℕ) :
     quittingHazardSurvival (quittingRootSequenceOwnHazard roots who) cutoff =
-      ∏ stage ∈ Finset.range cutoff, (roots stage who false).toReal := rfl
+      ∏ stage ∈ Finset.range cutoff, (roots stage who false).toReal := by
+  simpa only [quittingRootSequenceOwnHazard] using
+    quittingHazardSurvival_eq_prod (quittingRootSequenceOwnHazard roots who) cutoff
 
 /-- **The planned-survival clock `i^n_♯` for a root sequence.**  The landed
 index of `QuittingPlannedSurvivalStoppingIndex.lean`, instantiated at the

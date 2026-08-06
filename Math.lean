@@ -1,4 +1,5 @@
 import Math.Probability
+import Math.Probability.DiscreteHazardStopping
 import Math.Probability.Adaptive
 import Math.Probability.CoreShadow
 import Math.Probability.CoreShadowCompiler
