@@ -41,6 +41,10 @@ The measured repository/CI assessment is
   counterexample consequences, transition discontinuity, current-versus-escape
   duality, tensor products, patient evaluations, and the enriched absorption
   interface. Every section carries an explicit evidence status.
+- [ReverseConsequencesLeanMap.md](ReverseConsequencesLeanMap.md) is the exact
+  declaration-level audit map for that layer: theorem names, dependencies,
+  proof ideas, semantic scope, and the boundary between landed Lean and
+  mathematics recorded only in prose.
 - [methods/MathResearchMethod.md](methods/MathResearchMethod.md)
 - [methods/LeanFormalizationMethod.md](methods/LeanFormalizationMethod.md)
 - [methods/ParallelResearchMethod.md](methods/ParallelResearchMethod.md)
