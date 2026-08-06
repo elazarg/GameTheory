@@ -599,6 +599,7 @@ import GameTheory.Concepts.Stochastic.QuittingBoundedWindowLanding
 import GameTheory.Concepts.Stochastic.QuittingTruncationLedgerFold
 import GameTheory.Concepts.Stochastic.QuittingReducedCapConjecture
 import GameTheory.Concepts.Stochastic.QuittingReducedCapConjectureCounterexample
+import GameTheory.Concepts.Stochastic.QuittingRankOneCrossing
 import GameTheory.Concepts.Stochastic.QuittingResidueResults
 import GameTheory.Concepts.Stochastic.QuittingSharedPunishmentResults
 import GameTheory.Concepts.Stochastic.RepairedFourPlayerStressCirculation

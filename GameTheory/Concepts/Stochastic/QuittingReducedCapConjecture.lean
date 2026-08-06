@@ -26,8 +26,10 @@ cannot satisfy the required small-error estimate.  The formal obstruction is
 particular quantitative reduction, not equilibrium existence in one-player
 games.
 
-The declaration below is intentionally open.  Its main unresolved content is
-the uniform deleted-survival estimate at the ledger stopping index.
+This module intentionally contains only the reduced-cap route.  The
+witness-retaining path compiler is exported independently through
+`QuittingSupportWitnessUniform`, and the abstract rank-one crossing route is
+kept in `QuittingRankOneCrossing`.
 -/
 
 noncomputable section
