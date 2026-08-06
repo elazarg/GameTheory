@@ -228,6 +228,13 @@ def withStagePayoff (G : StochasticGame ι)
       G.stageActionDist σ h :=
   rfl
 
+@[simp] theorem transition_withStagePayoff
+    (G : StochasticGame ι)
+    (reward : G.State → G.JointAct → ι → ℝ)
+    (s : G.State) (a : G.JointAct) :
+    (G.withStagePayoff reward).transition s a = G.transition s a :=
+  rfl
+
 /-- Changing only stage payoffs leaves every finite-history law unchanged. -/
 @[simp] theorem histDist_withStagePayoff
     (G : StochasticGame ι) [Fintype ι]
@@ -238,7 +245,8 @@ def withStagePayoff (G : StochasticGame ι)
   induction T with
   | zero => rfl
   | succ T ih =>
-      simp only [histDist_succ, ih, stageActionDist_withStagePayoff]
+      simp only [histDist_succ, ih, stageActionDist_withStagePayoff,
+        transition_withStagePayoff]
 
 /-- A pointwise `ρ` perturbation of one player's stage payoff changes that
 player's total payoff along a length-`T` history by at most `T * ρ`. -/
@@ -294,8 +302,17 @@ theorem abs_finiteAveragePayoff_withStagePayoff_sub_le
         (T : ℝ)⁻¹ *
           Math.Probability.expect (G.histDist σ s₀ T)
             (fun h => G.totalPayoff who h)| ≤ ρ
-    rw [histDist_withStagePayoff, ← mul_sub,
-      ← Math.Probability.expect_sub]
+    rw [histDist_withStagePayoff, ← mul_sub]
+    change
+      |(T : ℝ)⁻¹ *
+          (Math.Probability.expect (G.histDist σ s₀ T)
+              (fun h : G.Hist T =>
+                ∑ k : Fin T, reward (h.1 k).1 (h.1 k).2 who) -
+            Math.Probability.expect (G.histDist σ s₀ T)
+              (fun h : G.Hist T =>
+                ∑ k : Fin T,
+                  G.stagePayoff (h.1 k).1 (h.1 k).2 who))| ≤ ρ
+    rw [← Math.Probability.expect_sub]
     have hExpect :
         |Math.Probability.expect (G.histDist σ s₀ T)
             (fun h => (G.withStagePayoff reward).totalPayoff who h -
@@ -334,9 +351,19 @@ theorem IsεHorizonNash.of_withStagePayoff
   have hdev :=
     abs_finiteAveragePayoff_withStagePayoff_sub_le G reward hρ0 hρ
       s₀ T (Function.update σ who dev) who
-  have honUpper := (abs_le.mp hon).2
-  have hdevLower := (abs_le.mp hdev).1
-  linarith
+  show
+    G.finiteAveragePayoff s₀ T (Function.update σ who dev) who ≤
+      G.finiteAveragePayoff s₀ T σ who + (ε + 2 * ρ)
+  calc
+    G.finiteAveragePayoff s₀ T (Function.update σ who dev) who
+        ≤ (G.withStagePayoff reward).finiteAveragePayoff s₀ T
+            (Function.update σ who dev) who + ρ := by
+          linarith [(abs_le.mp hdev).1]
+    _ ≤ (G.withStagePayoff reward).finiteAveragePayoff s₀ T σ who +
+          ε + ρ := by
+        linarith [hNash]
+    _ ≤ G.finiteAveragePayoff s₀ T σ who + (ε + 2 * ρ) := by
+        linarith [(abs_le.mp hon).2]
 
 /-- Uniform approximate equilibrium transfers across the same payoff
 perturbation with the same horizon threshold. -/
@@ -408,8 +435,8 @@ theorem isUniformEquilibriumPayoff_of_arbitrarily_close_stagePayoffs
       _ ≤ |G.finiteAveragePayoff s₀ T σ who -
                 (G.withStagePayoff reward).finiteAveragePayoff s₀ T σ who| +
               (|(G.withStagePayoff reward).finiteAveragePayoff s₀ T σ who -
-                  w who| + |w who - v who|) :=
-        add_le_add_left (abs_sub_le _ _ _) _
+                  w who| + |w who - v who|) := by
+        exact add_le_add le_rfl (abs_sub_le _ _ _)
       _ ≤ ε / 4 + (ε / 4 + ε / 4) :=
         add_le_add hgame' (add_le_add (hon who) (hw who))
       _ ≤ ε := by
