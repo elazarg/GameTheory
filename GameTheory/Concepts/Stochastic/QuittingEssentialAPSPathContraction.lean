@@ -15,10 +15,10 @@ This module composes the compact `nu`-lemma with the bounded-drift opponent
 mass estimate.
 
 For every possible starting owner, compact active-face separation gives a
-positive total-mass constant on its successor orbit.  There are only finitely
+positive total-mass constant on its successor orbit. There are only finitely
 many owners, so the minimum of these constants is still positive and works at
-every time shift of one infinite path.  The strict Flesch cross-gain also has a
-positive finite minimum.  Concatenating enough `nu`-windows then makes the
+every time shift of one infinite path. The strict Flesch cross-gain also has a
+positive finite minimum. Concatenating enough `nu`-windows then makes the
 playerwise opponent-mass lower bound positive, and the singleton-root product
 estimate yields a uniform block contraction factor `rho < 1`.
 -/
@@ -91,11 +91,13 @@ theorem exists_uniform_quittingFleschSuccessor_forwardGap
     ⟨gain base, ⟨base, rfl⟩⟩
   obtain ⟨_minimum, ⟨minPlayer, rfl⟩, hleast⟩ :=
     hcompact.exists_isLeast hnonempty
-  rw [mem_lowerBounds, forall_mem_range] at hleast
-  exact ⟨gain minPlayer, hgainPos minPlayer, hleast⟩
+  have hleastPlayer : ∀ player, gain minPlayer ≤ gain player := by
+    intro player
+    exact hleast (gain player) ⟨player, rfl⟩
+  exact ⟨gain minPlayer, hgainPos minPlayer, hleastPlayer⟩
 
-/-- **One total-mass constant works at every shifted start.**  The local
-compact separation constants are minimized over the finite owner type.  Empty
+/-- **One total-mass constant works at every shifted start.** The local
+compact separation constants are minimized over the finite owner type. Empty
 greatest fibers are assigned an arbitrary positive constant and never enter
 the path argument. -/
 theorem
@@ -176,7 +178,10 @@ theorem
     ⟨localNu (owner 0), ⟨owner 0, rfl⟩⟩
   obtain ⟨_minimum, ⟨minPlayer, rfl⟩, hminimum⟩ :=
     hnuCompact.exists_isLeast hnuNonempty
-  rw [mem_lowerBounds, forall_mem_range] at hminimum
+  have hminimumPlayer : ∀ player,
+      localNu minPlayer ≤ localNu player := by
+    intro player
+    exact hminimum (localNu player) ⟨player, rfl⟩
   refine ⟨localNu minPlayer, hlocalNuPos minPlayer, ?_⟩
   intro start
   have hshift := hlocalBound (owner start)
@@ -198,7 +203,7 @@ theorem
       exact hactive (start + time))
     (fun time who ↦ hvalueBound (start + time) who)
   calc
-    localNu minPlayer ≤ localNu (owner start) := hminimum (owner start)
+    localNu minPlayer ≤ localNu (owner start) := hminimumPlayer (owner start)
     _ ≤ quittingEssentialAPSWindowMass mass start horizon := by
       simpa only [quittingEssentialAPSWindowMass] using hshift
 
