@@ -28,10 +28,34 @@ jobs:
           test: false
           use-mathlib-cache: true
 
+      - name: Restore branch-local project build cache
+        id: project-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .lake/build
+          key: target-tail-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: |
+            target-tail-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-
+
       - name: Compile target-tail modules
+        id: compile
+        continue-on-error: true
         run: |
-          lake build GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
-          lake build GameTheory.Concepts.Stochastic.QuittingFiniteEndpointNashBellmanFactory
+          status=0
+          lake build GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail || status=1
+          lake build GameTheory.Concepts.Stochastic.QuittingFiniteEndpointNashBellmanFactory || status=1
           if [ -f GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean ]; then
-            lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail
+            lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail || status=1
           fi
+          exit "$status"
+
+      - name: Save branch-local project build cache
+        if: always() && steps.project-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .lake/build
+          key: target-tail-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-${{ github.sha }}
+
+      - name: Propagate compile failure
+        if: steps.compile.outcome == 'failure'
+        run: exit 1
