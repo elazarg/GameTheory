@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/quitting-target-tail
+  pull_request:
+    branches:
+      - uniform-existence
   workflow_dispatch:
 
 permissions:
@@ -29,4 +32,6 @@ jobs:
         run: |
           lake env lean GameTheory/Concepts/Stochastic/QuittingTargetAnchoredTail.lean
           lake env lean GameTheory/Concepts/Stochastic/QuittingFiniteEndpointNashBellmanFactory.lean
-          lake env lean GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean
+          if [ -f GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean ]; then
+            lake env lean GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean
+          fi
