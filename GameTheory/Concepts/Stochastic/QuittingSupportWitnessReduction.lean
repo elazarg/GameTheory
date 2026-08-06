@@ -90,41 +90,42 @@ theorem exists_quittingPhaseSwitchPunishCap_of_targetClosedTail
     (hclosed : IsQuittingTargetClosedTail reward tail target) :
     ∃ cap : ι → ℝ,
       cap target = quittingRootSequenceTerminalValue reward tail target 0 ∧
-      ∀ (who : ι) (hazard : ℕ → PMF Bool),
+      (∀ (who : ι) (hazard : ℕ → PMF Bool),
         quittingRootSequenceHazardTerminalValue reward tail who hazard 0 ≤
-          cap who ∧
-        cap who ≤ quittingRewardBound reward := by
+          cap who) ∧
+      ∀ who : ι, cap who ≤ quittingRewardBound reward := by
   let cap : ι → ℝ := fun who =>
     if who = target then
       quittingRootSequenceTerminalValue reward tail target 0
     else quittingRewardBound reward
-  refine ⟨cap, by simp [cap], ?_⟩
-  intro who hazard
-  by_cases hwho : who = target
-  · subst who
-    have hvalueBound :=
-      abs_quittingRootSequenceTerminalValue_le
-        reward tail target 0 (quittingRewardBound_nonneg reward)
+  refine ⟨cap, by simp [cap], ?_, ?_⟩
+  · intro who hazard
+    by_cases hwho : who = target
+    · subst who
+      simpa [cap] using hclosed hazard
+    · have hdeviationBound :=
+        abs_quittingRootSequenceTerminalValue_le reward
+          (quittingRootSequenceUpdate tail who hazard) who 0
+          (quittingRewardBound_nonneg reward)
           (abs_reward_le_quittingRewardBound reward)
-    constructor
-    · simpa [cap] using hclosed hazard
-    · have hupper :
+      have hupper :
+          quittingRootSequenceHazardTerminalValue reward tail who hazard 0 ≤
+            quittingRewardBound reward := by
+        unfold quittingRootSequenceHazardTerminalValue
+        exact (le_abs_self _).trans hdeviationBound
+      simpa [cap, hwho] using hupper
+  · intro who
+    by_cases hwho : who = target
+    · subst who
+      have hvalueBound :=
+        abs_quittingRootSequenceTerminalValue_le
+          reward tail target 0 (quittingRewardBound_nonneg reward)
+            (abs_reward_le_quittingRewardBound reward)
+      have hupper :
           quittingRootSequenceTerminalValue reward tail target 0 ≤
             quittingRewardBound reward :=
         (le_abs_self _).trans hvalueBound
       simpa [cap] using hupper
-  · have hdeviationBound :=
-      abs_quittingRootSequenceTerminalValue_le reward
-        (quittingRootSequenceUpdate tail who hazard) who 0
-        (quittingRewardBound_nonneg reward)
-        (abs_reward_le_quittingRewardBound reward)
-    have hupper :
-        quittingRootSequenceHazardTerminalValue reward tail who hazard 0 ≤
-          quittingRewardBound reward := by
-      unfold quittingRootSequenceHazardTerminalValue
-      exact (le_abs_self _).trans hdeviationBound
-    constructor
-    · simpa [cap, hwho] using hupper
     · simp [cap, hwho]
 
 /-- **Support-witness terminal-equilibrium compiler.**  A support-local
@@ -171,7 +172,6 @@ theorem exists_isεAsymptoticNash_of_hasQuittingSupportWitnessTailPackage
         threshold *
           (max (punishCap who + 0) 0 + quittingRewardBound reward) ≤ ε := by
     intro who _
-    have hcapNonneg : 0 ≤ max (punishCap who) 0 := le_max_right _ _
     have hcapMax : max (punishCap who) 0 ≤ quittingRewardBound reward := by
       exact max_le (hcapBound who) (quittingRewardBound_nonneg reward)
     have htailFactor :
@@ -193,7 +193,7 @@ theorem exists_isεAsymptoticNash_of_hasQuittingSupportWitnessTailPackage
     (quittingRewardBound_nonneg reward) hδ hcontinuationSlack
     (abs_reward_le_quittingRewardBound reward)
     hledger hregret
-    (fun who hazard => by simpa using (hpunish who hazard).1)
+    (fun who hazard => by simpa using hpunish who hazard)
     htargetContinuation
     (by simpa [switch] using hjoint)
     (fun who hwho => by simpa [switch] using hother who hwho)
