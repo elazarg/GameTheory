@@ -72,8 +72,17 @@ theorem
       Set.not_nonempty_iff_eq_empty.mp hnonempty
     rw [hsuccessorEmpty] at hprefix
     left
-    refine ⟨?_, hprefix.1⟩
-    simpa using hprefix.2.1
+    have hconvex := hprefix.2.1
+    have hsingleton :
+        Set.insert (quittingSoloReward reward owner)
+            (∅ : Set (Payoff ι)) =
+          ({quittingSoloReward reward owner} : Set (Payoff ι)) := by
+      ext value
+      simp
+    rw [hsingleton, convexHull_singleton] at hconvex
+    have hroot : current = quittingSoloReward reward owner := by
+      simpa only [Set.mem_singleton_iff] using hconvex
+    exact ⟨hroot, hprefix.1⟩
 
 /-- **Total finite zero-mass propagation dichotomy.**  Along a unique-successor
 path, either terminal/proper progress occurs before `horizon`, or the same
