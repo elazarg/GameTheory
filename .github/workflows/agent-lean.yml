@@ -30,8 +30,8 @@ jobs:
 
       - name: Compile target-tail modules
         run: |
-          lake env lean GameTheory/Concepts/Stochastic/QuittingTargetAnchoredTail.lean
-          lake env lean GameTheory/Concepts/Stochastic/QuittingFiniteEndpointNashBellmanFactory.lean
+          lake build GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
+          lake build GameTheory.Concepts.Stochastic.QuittingFiniteEndpointNashBellmanFactory
           if [ -f GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean ]; then
-            lake env lean GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean
+            lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail
           fi
