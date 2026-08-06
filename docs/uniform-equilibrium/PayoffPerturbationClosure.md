@@ -33,13 +33,28 @@ limit of strategies and assumes no common memory bound. For the target-free
 statement, equilibrium targets lie in a common finite-dimensional payoff cube;
 only a subsequence of those payoff vectors is passed to a limit.
 
+## Consequences
+
+On every fixed finite skeleton, the reward tables admitting a uniform-equilibrium
+payoff form a closed set. Therefore the counterexample tables form an open set.
+In particular, proving existence on a dense class proves existence everywhere
+on that skeleton. Conversely, any finite quitting-game counterexample can be
+perturbed to a rational counterexample.
+
+The quantitative spectral defect developed in
+[ReverseConsequences.md](ReverseConsequences.md) is `2`-Lipschitz in the reward
+sup norm, giving an explicit robustness radius whenever the defect is positive.
+
 ## Deliberate scope boundary
 
-This result does **not** cover either of the following stronger claims:
+This result does **not** prove density of any particular proposed class of
+solved payoff tables. That is now the substantive game-specific obligation.
 
-1. continuity under perturbations of the transition kernel; or
-2. density of any particular proposed class of solved payoff tables.
-
-The second item is now the substantive game-specific obligation: once a class
-is proved dense, the target-free closure theorem promotes its existence result
-to every payoff table on the same finite skeleton.
+It also does not extend to arbitrary perturbations of the transition kernel.
+That stronger statement is **false**, not merely unformalized. The one-player,
+one-action, two-state example in
+`GameTheory/Concepts/Stochastic/TransitionPerturbationDiscontinuity.lean` has
+uniform payoff `1` for every positive transition probability to a good
+absorbing state, but payoff `1` fails at the zero-probability limit kernel.
+Small one-step transition changes can alter recurrent-class entry and have an
+order-one long-run effect.
