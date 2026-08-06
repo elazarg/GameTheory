@@ -59,8 +59,9 @@ theorem quittingEssentialAPSPrefix_subset_segment_of_convex
             (Set.insert (quittingSoloReward reward owner) E) =
           convexJoin ℝ
             ({quittingSoloReward reward owner} : Set (Payoff ι)) E := by
-      rw [convexHull_insert (𝕜 := ℝ) hEnonempty,
-        hEconvex.convexHull_eq]
+      simpa only [hEconvex.convexHull_eq] using
+        (convexHull_insert (𝕜 := ℝ)
+          (x := quittingSoloReward reward owner) hEnonempty)
     rw [← hrewrite]
     exact hconvexHull
   rcases (mem_convexJoin.mp hjoin) with
