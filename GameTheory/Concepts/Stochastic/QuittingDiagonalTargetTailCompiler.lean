@@ -41,9 +41,6 @@ theorem quittingLiveMass_infinitePathProfile_eq_jointSurvivalWeight
   | succ fuel ih =>
       rw [quittingLiveMass_succ, quittingJointSurvivalWeight_succ, ih]
       congr 1
-      unfold quittingJointContinueMass StochasticGame.stageActionDist
-        quittingInfinitePathProfile quittingRootSequenceProfile
-      rw [pmfPi_apply]
 
 /-- Two distinct deleted survival clocks cannot both exceed the square root
 scale of joint survival. -/
