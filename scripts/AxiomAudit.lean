@@ -227,6 +227,7 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.quittingTwoPlayerSharedPunishmentExcess_eq_zero
 #print axioms GameTheory.QuittingSharedThreePlayer.quittingSharedPunishmentExcess_eq_three_quarters
 #print axioms GameTheory.QuittingSharedThreePlayer.quittingSharedPunishmentGap_eq_three_quarters_iff_first_eq_fair
+#print axioms GameTheory.QuittingSharedThreePlayerDice.quittingBestReplyValue_eq_alwaysContinue
 
 -- The quitting min-max is a stationary stopping value: the punishment
 -- value, an infimum over all history-dependent opponent plans of the

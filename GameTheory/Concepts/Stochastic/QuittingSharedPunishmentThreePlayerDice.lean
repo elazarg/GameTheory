@@ -109,7 +109,8 @@ private theorem expect_pmfPi_update_pure_congr
         (pmfPi (Function.update root who (PMF.pure fixed)) action).toReal = 0 := by
       rw [pmfPi_apply_update_family]
       simp [PMF.pure_apply, haction]
-    simp [hmass]
+    rw [hmass]
+    simp only [zero_mul]
 
 /-- The pure-Quit branch is identically `-1`, independently of the opponents. -/
 theorem quittingStationaryFixedOpponentsQuitValue_eq_neg_one
@@ -195,7 +196,8 @@ theorem quittingPunishmentValue_eq_neg_one (who : Player) :
     quittingPunishmentValue reward who = -1 := by
   apply le_antisymm
   · have h := quittingPunishmentValue_le_stationaryUnilateralCap
-      reward who (quittingPureSetRoot ({next who} : Finset Player))
+      reward who (QuittingSureSetOwnerRepair.quittingPureSetRoot
+        ({next who} : Finset Player))
     rw [quittingStationaryUnilateralCap_pureSetRoot] at h
     cases who <;> simpa [reward, next, other] using h
   · rw [quittingPunishmentValue_eq_stationaryPunishmentValue]
@@ -233,13 +235,17 @@ theorem quittingRootSequencePureTimeTerminalValue_some_le_none
   induction fuel generalizing start with
   | zero =>
       rw [quittingRootSequencePureTimeTerminalValue_some_add]
-      simp [quittingLiveLedgerAccum, quittingOpponentSurvivalWeight]
-      exact neg_one_le_quittingRootSequencePureTimeTerminalValue
-        roots who none start
+      simpa only [quittingLiveLedgerAccum_zero, add_zero,
+        quittingOpponentSurvivalWeight, Finset.range_zero, Finset.prod_empty,
+        quittingFixedOpponentsQuitValue_eq_neg_one, mul_neg, mul_one,
+        zero_add] using
+          (neg_one_le_quittingRootSequencePureTimeTerminalValue
+            roots who none start)
   | succ fuel ih =>
       unfold quittingRootSequencePureTimeTerminalValue
-      rw [quittingRootSequenceHazardTerminalValue_eq_hazardBellman,
-        quittingRootSequenceHazardTerminalValue_eq_hazardBellman]
+      rw [quittingRootSequenceHazardTerminalValue_eq_hazardBellman]
+      conv_rhs =>
+        rw [quittingRootSequenceHazardTerminalValue_eq_hazardBellman]
       have hne : start ≠ start + (fuel + 1) := by omega
       rw [quittingPureTimeHazard_some_of_ne hne,
         quittingPureTimeHazard_none]
@@ -248,9 +254,18 @@ theorem quittingRootSequencePureTimeTerminalValue_some_le_none
         if_true, ENNReal.toReal_one, zero_mul, one_mul, zero_add]
       have htime : start + (fuel + 1) = start + 1 + fuel := by omega
       rw [htime]
-      exact add_le_add_left
+      change
+        quittingFixedOpponentsContinueReward reward roots who start +
+            quittingFixedOpponentsContinueMass roots who start *
+              quittingRootSequencePureTimeTerminalValue reward roots who
+                (some (start + 1 + fuel)) (start + 1) ≤
+          quittingFixedOpponentsContinueReward reward roots who start +
+            quittingFixedOpponentsContinueMass roots who start *
+              quittingRootSequencePureTimeTerminalValue reward roots who
+                none (start + 1)
+      exact add_le_add le_rfl
         (mul_le_mul_of_nonneg_left (ih (start + 1))
-          (quittingFixedOpponentsContinueMass_nonneg roots who start)) _
+          (quittingFixedOpponentsContinueMass_nonneg roots who start))
 
 /-- **Full stopping-exposure identity.**  Against every committed opponent
 plan, Never is an exact best reply. -/
@@ -277,16 +292,27 @@ theorem quittingBestReplyValue_eq_alwaysContinue
             quittingTerminalPayoff reward
               (Function.update profile who
                 (quittingAlwaysContinueStrategy reward who)) who) := by
-          apply expect_mono
-          intro choice
-          cases choice with
-          | none => rfl
-          | some time =>
-              rw [quittingTerminalPayoff_update_pureTimeBehaviorStrategy,
-                quittingTerminalPayoff_update_pureTimeBehaviorStrategy]
-              simpa using
-                (quittingRootSequencePureTimeTerminalValue_some_le_none
-                  (quittingProfileLiveRoot reward profile) who 0 time)
+          apply Math.ProbabilityMassFunction.expect_mono_of_pointwise_bounded
+          · intro choice
+            cases choice with
+            | none => rfl
+            | some time =>
+                rw [show quittingAlwaysContinueStrategy reward who =
+                    quittingPureTimeBehaviorStrategy reward who none by rfl,
+                  quittingTerminalPayoff_update_pureTimeBehaviorStrategy]
+                simpa using
+                  (quittingRootSequencePureTimeTerminalValue_some_le_none
+                    (quittingProfileLiveRoot reward profile) who 0 time)
+          · intro choice
+            exact abs_quittingTerminalPayoff_le reward
+              (Function.update profile who
+                (quittingPureTimeBehaviorStrategy reward who choice)) who
+              (by norm_num) (fun S player => abs_reward_le_one S player)
+          · intro _
+            exact abs_quittingTerminalPayoff_le reward
+              (Function.update profile who
+                (quittingAlwaysContinueStrategy reward who)) who
+              (by norm_num) (fun S player => abs_reward_le_one S player)
       _ = quittingTerminalPayoff reward
           (Function.update profile who
             (quittingAlwaysContinueStrategy reward who)) who :=

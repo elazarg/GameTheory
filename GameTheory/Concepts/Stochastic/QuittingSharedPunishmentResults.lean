@@ -5,6 +5,7 @@ Released under the MIT license as described in the LICENSE file.
 
 import GameTheory.Concepts.Stochastic.QuittingSharedPunishment
 import GameTheory.Concepts.Stochastic.QuittingSharedPunishmentThreePlayerClassification
+import GameTheory.Concepts.Stochastic.QuittingSharedPunishmentThreePlayerDice
 
 /-!
 # Shared-punishment results
@@ -17,13 +18,11 @@ quitting games.
 * `QuittingSharedPunishmentThreePlayerClassification` develops a cyclic
   three-player table with exact shared excess `3/4` and classifies all
   minimizing behavior plans and stationary rows.
-The two-player theorem and the three-player cyclic example give a sharp
-separation: coordinatewise punishment plans can be combined at zero price for
-two players, while a common plan can have a strictly positive unavoidable
-price for three players.
+* `QuittingSharedPunishmentThreePlayerDice` studies the related full-exposure
+  Steinhaus--Trybuła table and identifies Never as an exact best reply against
+  every committed opponent plan.
 
-The related full-exposure table in
-`QuittingSharedPunishmentThreePlayerDice` is a separate development: it studies
-a different reward and best-reply representation rather than the exact
-shared-excess comparison collected here.
+The two-player theorem and the two three-player developments expose distinct
+ways in which common punishment departs from coordinatewise punishment once a
+third player is present.
 -/
