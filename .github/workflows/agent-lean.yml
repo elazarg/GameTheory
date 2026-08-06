@@ -31,11 +31,16 @@ jobs:
 
           compiler = Path("GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean")
           text = compiler.read_text()
-          old = "    dsimp only [δ]\n    have hratio : 4 * M / (4 * M + 1) ≤ 1 := by\n"
-          new = "    change 4 * M * (ε / (4 * M + 1)) ≤ ε\n    have hratio : 4 * M / (4 * M + 1) ≤ 1 := by\n"
-          if old not in text:
-              raise SystemExit("final local-delta block was not found")
-          compiler.write_text(text.replace(old, new, 1))
+          scale = text.rfind("  have hscale :")
+          if scale < 0:
+              raise SystemExit("final scaling theorem was not found")
+          first_newline = text.find("\n", scale)
+          second_newline = text.find("\n", first_newline + 1)
+          old_line = text[first_newline + 1:second_newline]
+          if "dsimp only" not in old_line:
+              raise SystemExit(f"unexpected first scaling line: {old_line!r}")
+          replacement = "    change 4 * M * (\u03b5 / (4 * M + 1)) \u2264 \u03b5"
+          compiler.write_text(text[:first_newline + 1] + replacement + text[second_newline:])
 
           root = Path("GameTheory.lean")
           root_text = root.read_text()
