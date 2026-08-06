@@ -93,7 +93,7 @@ theorem exists_uniform_quittingFleschSuccessor_forwardGap
     hcompact.exists_isLeast hnonempty
   have hleastPlayer : ∀ player, gain minPlayer ≤ gain player := by
     intro player
-    exact hleast (gain player) ⟨player, rfl⟩
+    exact hleast ⟨player, rfl⟩
   exact ⟨gain minPlayer, hgainPos minPlayer, hleastPlayer⟩
 
 /-- **One total-mass constant works at every shifted start.** The local
@@ -181,7 +181,7 @@ theorem
   have hminimumPlayer : ∀ player,
       localNu minPlayer ≤ localNu player := by
     intro player
-    exact hminimum (localNu player) ⟨player, rfl⟩
+    exact hminimum ⟨player, rfl⟩
   refine ⟨localNu minPlayer, hlocalNuPos minPlayer, ?_⟩
   intro start
   have hshift := hlocalBound (owner start)
@@ -194,7 +194,7 @@ theorem
       have hownerEq := quittingEssentialAPS_owner_add_eq_successorOrbit
         successor owner hownerNext start time
       rw [← hownerEq]
-      convert harc (start + time) using 1 <;> omega)
+      simpa only [Nat.add_assoc] using harc (start + time))
     (by
       intro time
       have hownerEq := quittingEssentialAPS_owner_add_eq_successorOrbit
