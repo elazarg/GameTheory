@@ -10,6 +10,7 @@ Authors: GameTheory contributors
 Entry point for the self-similarity layer:
 
 * exact affine/max-affine residual and idempotent algebra;
+* finite repetition and neutral pumping;
 * absorbed-mass tangent normalization near the identity; and
 * first-order and neutral-face consequences for actual finite quitting blocks.
 
@@ -17,7 +18,7 @@ The accompanying derivation and research boundary are documented in
 `docs/uniform-equilibrium/SelfSimilarity.md`.
 -/
 
-import GameTheory.Concepts.Stochastic.QuittingSelfSimilarityHolonomy
+import GameTheory.Concepts.Stochastic.QuittingSelfSimilarityHolonomyIteration
 import GameTheory.Concepts.Stochastic.QuittingSelfSimilarityAffineTangent
 import GameTheory.Concepts.Stochastic.QuittingSelfSimilarityMaxAffineTangent
 import GameTheory.Concepts.Stochastic.QuittingSelfSimilarityRealizedNeutral
