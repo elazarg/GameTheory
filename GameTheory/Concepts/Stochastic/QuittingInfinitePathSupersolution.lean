@@ -18,9 +18,9 @@ supersolution.  Vanishing opponent survival compares every time-dependent
 unilateral deviation with that supersolution without accumulating `e` over
 calendar time.
 
-This is the arbitrary-path counterpart of the cyclic supersolution compiler.
-It separates the game-facing argument from the later construction of an
-accuracy-indexed nonperiodic subdivision.
+Only the survival clock from the initial live state is needed.  The terminal
+Nash predicate and selected target are both evaluated there; no shifted-tail
+or sequential-perfection conclusion is asserted.
 -/
 
 noncomputable section
@@ -31,10 +31,84 @@ open StochasticGame Filter Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
+/-- Initial-state form of bounded Bellman-path selection.  Survival from every
+shift is needed to identify every tail value, but survival from time zero alone
+already identifies the initial value selected by terminal play. -/
+theorem
+    eq_quittingRootSequenceTerminalValue_zero_of_exact_bounded_path_of_survival_tendsto_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool)
+    (value : ℕ → Payoff ι)
+    {bound : ℝ}
+    (hsurvival : ∀ who,
+      Tendsto (quittingOpponentSurvivalWeight roots who 0)
+        atTop (nhds 0))
+    (hbound0 : 0 ≤ bound)
+    (hreward : ∀ terminal who, |reward terminal who| ≤ bound)
+    (hvalueBound : ∀ time who, |value time who| ≤ bound)
+    (hpolicy : ∀ time,
+      value time = quittingRootSuccessorPayoff reward
+        (value (time + 1)) (roots time)) :
+    value 0 =
+      fun who ↦ quittingRootSequenceTerminalValue reward roots who 0 := by
+  funext who
+  let terminal : ℕ → ℝ :=
+    fun liveTime ↦
+      quittingRootSequenceTerminalValue reward roots who liveTime
+  let difference : ℕ → ℝ :=
+    fun liveTime ↦ value liveTime who - terminal liveTime
+  have hstep : ∀ liveTime,
+      |difference liveTime| ≤
+        quittingFixedOpponentsContinueMass roots who liveTime *
+          |difference (liveTime + 1)| := by
+    intro liveTime
+    have hvalue := congrFun (hpolicy liveTime) who
+    have hterminal :=
+      quittingRootSequenceTerminalValue_eq_rootSuccessorPayoff
+        reward roots who liveTime
+    dsimp only [difference, terminal]
+    rw [hvalue, hterminal]
+    exact
+      abs_quittingRootSuccessorPayoff_sub_le_fixedOpponentsContinueMass_mul
+        reward (value (liveTime + 1))
+          (fun _ ↦ quittingRootSequenceTerminalValue reward roots who
+            (liveTime + 1))
+          (roots liveTime) who
+  have hiterate := abs_pathDifference_le_survival_mul
+    roots who difference hstep 0
+  have htailBound : ∀ fuel,
+      |difference fuel| ≤ 2 * bound := by
+    intro fuel
+    have hvalue := hvalueBound fuel who
+    have hterminal := abs_quittingTerminalPayoff_le reward
+      (quittingRootSequenceProfile reward roots fuel) who
+      hbound0 hreward
+    dsimp only [difference, terminal,
+      quittingRootSequenceTerminalValue] at hterminal ⊢
+    exact (abs_sub _ _).trans (by linarith)
+  have hfinite : ∀ fuel,
+      |difference 0| ≤
+        quittingOpponentSurvivalWeight roots who 0 fuel *
+          (2 * bound) := by
+    intro fuel
+    have hscaled := mul_le_mul_of_nonneg_left (htailBound fuel)
+      (quittingOpponentSurvivalWeight_nonneg roots who 0 fuel)
+    simpa using (hiterate fuel).trans hscaled
+  have htendsto : Tendsto (fun fuel ↦
+      quittingOpponentSurvivalWeight roots who 0 fuel * (2 * bound))
+      atTop (nhds 0) := by
+    simpa using (hsurvival who).mul_const (2 * bound)
+  have hzero : |difference 0| ≤ 0 :=
+    ge_of_tendsto' htendsto hfinite
+  have hdifference : difference 0 = 0 :=
+    abs_eq_zero.mp (le_antisymm hzero (abs_nonneg _))
+  dsimp only [difference, terminal] at hdifference
+  exact sub_eq_zero.mp hdifference
+
 /-- Exact prescribed Continue and a uniform immediate-Quit error make
 `value + e` a global Snell supersolution along an arbitrary root sequence.
-If the selected player's opponent-survival clock vanishes, every unilateral
-hazard has terminal value at most `value 0 + e`. -/
+If the selected player's initial opponent-survival clock vanishes, every
+unilateral hazard has terminal value at most `value 0 + e`. -/
 theorem
     quittingRootSequenceHazardTerminalValue_le_add_of_quitError_exactContinue
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -105,7 +179,7 @@ theorem
 /-- **Nonperiodic quit-only-error compiler.**  A bounded exact policy path
 whose prescribed Continue equations are exact and whose immediate Quit values
 are at most `e` above the prescribed path is a terminal behavioral `e`-Nash
-profile whenever every shifted opponent-survival clock vanishes.  The
+profile whenever every player's initial opponent-survival clock vanishes.  The
 terminal payoff is exactly the supplied initial value. -/
 theorem
     infinitePath_isεAsymptoticNash_and_delivers_of_quitError_exactContinue
@@ -126,8 +200,8 @@ theorem
           quittingStationaryFixedOpponentsContinueMass
               (roots time) who * value (time + 1) who =
         value time who)
-    (hsurvival : ∀ who start,
-      Tendsto (quittingOpponentSurvivalWeight roots who start)
+    (hsurvival : ∀ who,
+      Tendsto (quittingOpponentSurvivalWeight roots who 0)
         atTop (nhds 0)) :
     (quittingGame reward).IsεAsymptoticNash
         (quittingTerminalPayoff reward) e
@@ -135,13 +209,13 @@ theorem
       quittingTerminalPayoff reward
           (quittingInfinitePathProfile reward roots) = value 0 := by
   have hselected :=
-    eq_quittingRootSequenceTerminalValue_of_exact_bounded_path_of_survival_tendsto_zero
+    eq_quittingRootSequenceTerminalValue_zero_of_exact_bounded_path_of_survival_tendsto_zero
       reward roots value hsurvival hbound hreward hvalueBound hpolicy
   have hdelivery : quittingTerminalPayoff reward
       (quittingInfinitePathProfile reward roots) = value 0 := by
     funext who
     rw [quittingTerminalPayoff_infinitePathProfile]
-    exact (congrFun (hselected 0) who).symm
+    exact (congrFun hselected who).symm
   constructor
   · intro player deviation
     have hhazard :=
@@ -149,7 +223,7 @@ theorem
         reward roots value player
           (quittingBehaviorLiveHazard reward deviation)
           he hbound hreward hvalueBound hquit hcontinue
-          (hsurvival player 0)
+          (hsurvival player)
     have hdeviation :=
       quittingTerminalPayoff_update_eq_rootSequenceHazardTerminalValue
         reward (quittingInfinitePathProfile reward roots) player deviation
