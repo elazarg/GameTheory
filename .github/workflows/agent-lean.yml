@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - agent/quitting-target-tail
-  pull_request:
-    branches:
-      - uniform-existence
   workflow_dispatch:
 
 permissions:
@@ -15,6 +12,7 @@ permissions:
 jobs:
   lean:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -37,17 +35,23 @@ jobs:
           restore-keys: |
             target-tail-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-
 
-      - name: Compile target-tail modules
-        id: compile
-        continue-on-error: true
-        run: |
-          status=0
-          lake build GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail || status=1
-          lake build GameTheory.Concepts.Stochastic.QuittingFiniteEndpointNashBellmanFactory || status=1
-          if [ -f GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean ]; then
-            lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail || status=1
-          fi
-          exit "$status"
+      - name: Compile target-closed tails
+        run: timeout 180s lake build GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
+
+      - name: Compile arbitrary-endpoint factory
+        run: timeout 180s lake build GameTheory.Concepts.Stochastic.QuittingFiniteEndpointNashBellmanFactory
+
+      - name: Compile diagonal semantics
+        run: timeout 180s lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailSemantics
+
+      - name: Compile diagonal bounds
+        run: timeout 180s lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailBounds
+
+      - name: Compile exceptional selector
+        run: timeout 180s lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailSelection
+
+      - name: Compile final compiler
+        run: timeout 180s lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail
 
       - name: Save branch-local project build cache
         if: always() && steps.project-cache.outputs.cache-hit != 'true'
@@ -55,7 +59,3 @@ jobs:
         with:
           path: .lake/build
           key: target-tail-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-${{ github.sha }}
-
-      - name: Propagate compile failure
-        if: steps.compile.outcome == 'failure'
-        run: exit 1
