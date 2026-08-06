@@ -251,12 +251,12 @@ theorem
     (hnonempty : ∀ time,
       (quittingEssentialAPSGreatestFamily reward carrier
         (owner (time + 1))).Nonempty)
+    (horizon : ℕ)
     (hfaceAvoidance : ∀ value, value ∈ carrier (owner 0) →
       ¬ IsQuittingEssentialAPSActiveAlong reward owner value horizon)
     {current : Payoff ι}
     (hcurrent : current ∈
-      quittingEssentialAPSGreatestFamily reward carrier (owner 0))
-    (horizon : ℕ) :
+      quittingEssentialAPSGreatestFamily reward carrier (owner 0)) :
     ∃ time, time < horizon ∧
       QuittingEssentialAPSPathProgress reward
         (quittingEssentialAPSGreatestFamily reward carrier)
