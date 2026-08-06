@@ -92,9 +92,16 @@ theorem expect_totalPayoff_withExpectedPotentialShaping
   | zero =>
       simp [withExpectedPotentialShaping]
   | succ T ih =>
+      have hstage :
+          expect ((G.withExpectedPotentialShaping F).histDist σ s₀ T)
+              (fun h => (G.withExpectedPotentialShaping F).stageEUAt σ h who) =
+            expect (G.histDist σ s₀ T) (fun h => G.stageEUAt σ h who) +
+              G.expectedStateValue σ s₀ (T + 1) (F who) -
+              G.expectedStateValue σ s₀ T (F who) := by
+        simpa [expectedStagePayoff] using
+          G.expectedStagePayoff_withExpectedPotentialShaping F σ s₀ T who
       rw [(G.withExpectedPotentialShaping F).expect_totalPayoff_succ,
-        G.expect_totalPayoff_succ, ih,
-        G.expectedStagePayoff_withExpectedPotentialShaping F]
+        G.expect_totalPayoff_succ, ih, hstage]
       ring
 
 /-- Exact finite-average payoff difference under potential shaping. -/
