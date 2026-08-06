@@ -148,8 +148,7 @@ import GameTheory.Concepts.Stochastic.AdaptiveCertificate
 import GameTheory.Concepts.Stochastic.WeightedSecurityWelfareAssembly
 import GameTheory.Concepts.Stochastic.WeightedWelfareBias
 import GameTheory.Concepts.Stochastic.PublicPhaseCertificate
-import GameTheory.Concepts.Stochastic.AdaptivePotentialSystem
-import GameTheory.Concepts.Stochastic.AdaptiveCertificateTargetPerturbation
+import GameTheory.Concepts.Stochastic.AdaptivePotentialSystemTools
 import GameTheory.Concepts.Stochastic.PublicSuffixHistory
 import GameTheory.Concepts.Stochastic.PublicFixedPrefixAccounting
 import GameTheory.Concepts.Stochastic.PublicStoppedHistoryAccounting
@@ -171,7 +170,6 @@ import GameTheory.Concepts.Stochastic.FinitePublicTerminalNashTargetTransport
 import GameTheory.Concepts.Stochastic.DelayedFullHorizonChildEnvelope
 import GameTheory.Concepts.Stochastic.PublicTerminalChildDispatcher
 import GameTheory.Concepts.Stochastic.PublicTerminalChildLawTransfer
-import GameTheory.Concepts.Stochastic.PublicTerminalChildAdaptivePotential
 import GameTheory.Concepts.Stochastic.FiniteChildAdaptivePotentialFamily
 import GameTheory.Concepts.Stochastic.FiniteAdaptiveChildChargeLowerBound
 import GameTheory.Concepts.Stochastic.FixedDepthAdaptivePotentialSplice
@@ -242,7 +240,6 @@ import GameTheory.Concepts.Stochastic.AnalyticHarmonicAdjustmentClosure
 import GameTheory.Concepts.Stochastic.PublicActionFrequencyResponse
 import GameTheory.Concepts.Stochastic.PublicResponseCredibilityBoundary
 import GameTheory.Concepts.Stochastic.PublicResponseEnforcementCompiler
-import GameTheory.Concepts.Stochastic.AdaptiveSystemEnforcementLedger
 import GameTheory.Concepts.Stochastic.PublicResponseCredibilityCriterion
 import GameTheory.Concepts.Stochastic.ReachablePublicResponseCredibilityCriterion
 import GameTheory.Concepts.Stochastic.ResponderFloorCredibilityComparison
@@ -264,7 +261,6 @@ import GameTheory.Concepts.Stochastic.FTVCyclicFiniteHorizon
 import GameTheory.Concepts.Stochastic.FTVCyclicMinimality
 import GameTheory.Concepts.Stochastic.FTVCyclicSemanticBridge
 import GameTheory.Concepts.Stochastic.ArchitectureCapSeparators
-import GameTheory.Concepts.Stochastic.AdaptivePotentialFiniteTimeTargetBounds
 import GameTheory.Concepts.Stochastic.FiniteHorizonProfileLawTransfer
 import GameTheory.Concepts.Stochastic.FiniteRankedTerminalChildNashClosure
 import GameTheory.Concepts.Stochastic.PureExternalityCycle
@@ -286,7 +282,6 @@ import GameTheory.Concepts.Stochastic.PublicSignedStoppedTargetComposition
 import GameTheory.Concepts.Stochastic.PublicFirstHitStoppingRule
 import GameTheory.Concepts.Stochastic.PublicHistoryFirstHitStoppingAcceptance
 import GameTheory.Concepts.Stochastic.LocalPublicResponseSelfGeneration
-import GameTheory.Concepts.Stochastic.OwnerSeparatedAdaptivePotentialSystem
 import GameTheory.Concepts.Stochastic.AnalyticActionFrequencyActivation
 import GameTheory.Concepts.Stochastic.PublicBehaviorActionFrequency
 import GameTheory.Concepts.Stochastic.PublicStagePayoffInnovation
