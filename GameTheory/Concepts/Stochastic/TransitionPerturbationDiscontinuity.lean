@@ -19,8 +19,8 @@ This file gives the minimal counterexample.  There is one player, one action,
 and two states.  State `true` is absorbing and pays `1`; state `false` pays `0`
 and moves to `true` independently each round with probability `p`.
 
-For every `p > 0`, absorption occurs asymptotically and the unique uniform
-payoff from `false` is `1`.  At `p = 0`, the process remains at `false` and
+For every `p > 0`, absorption occurs asymptotically and payoff `1` is uniform
+from `false`.  At `p = 0`, the process remains at `false` and
 payoff `1` is not uniform.  The transition probabilities themselves converge
 coordinatewise whenever `p → 0`.  Thus transition kernels may converge to a
 limit kernel while their uniform-equilibrium payoffs do not converge to a

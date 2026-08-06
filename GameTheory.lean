@@ -125,6 +125,7 @@ import GameTheory.Concepts.Stochastic.ActionLegalityNormalization
 import GameTheory.Concepts.Stochastic.ActionLegalityMarkovConverse
 import GameTheory.Concepts.Stochastic.Uniform
 import GameTheory.Concepts.Stochastic.UniformPayoffExistenceClosure
+import GameTheory.Concepts.Stochastic.UniformConsequences
 import GameTheory.Concepts.Stochastic.QuittingSupportWitnessReduction
 import GameTheory.Concepts.Stochastic.QuittingSupportWitnessIndividualRational
 import GameTheory.Concepts.Stochastic.QuittingSupportWitnessAbsorptionBridge
@@ -487,6 +488,7 @@ import GameTheory.Concepts.Stochastic.QuittingPositiveDynamicDebtProvenance
 import GameTheory.Concepts.Stochastic.QuittingSeparatedTerminalAnchor
 import GameTheory.Concepts.Stochastic.QuittingBoundaryHolonomy
 import GameTheory.Concepts.Stochastic.QuittingBoundaryHolonomyCompactness
+import GameTheory.Concepts.Stochastic.QuittingBoundaryHolonomyRealizedTangent
 import GameTheory.Concepts.Stochastic.QuittingTwoEndedDynamicDebtCompactification
 import GameTheory.Concepts.Stochastic.TwoEndedAnchorPersistenceCounterexample
 import GameTheory.Concepts.Stochastic.QuittingJoinMonotoneUniform
