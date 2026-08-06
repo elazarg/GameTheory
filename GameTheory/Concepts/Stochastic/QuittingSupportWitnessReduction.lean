@@ -177,8 +177,12 @@ theorem exists_isεAsymptoticNash_of_hasQuittingSupportWitnessTailPackage
     have htailFactor :
         max (punishCap who + 0) 0 + quittingRewardBound reward ≤
           2 * quittingRewardBound reward := by
-      simpa only [add_zero] using
-        add_le_add_right hcapMax (quittingRewardBound reward)
+      calc
+        max (punishCap who + 0) 0 + quittingRewardBound reward ≤
+            quittingRewardBound reward + quittingRewardBound reward := by
+              simpa only [add_zero] using
+                add_le_add_right hcapMax (quittingRewardBound reward)
+        _ = 2 * quittingRewardBound reward := by ring
     have hscaled := mul_le_mul_of_nonneg_left htailFactor hthreshold.le
     nlinarith
   refine ⟨quittingPhaseSwitchProfile reward plan tail switch, ?_⟩
