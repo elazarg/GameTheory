@@ -5,17 +5,25 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailSelection
+import GameTheory.Concepts.Stochastic.QuittingFiniteEndpointNashBellmanFactory
 
 /-!
 # Diagonal target-tail compiler
 
-A finite exact Nash--Bellman prefix ending at the diagonal vector of
-player-indexed closed tails is compiled to an actual behavior profile. Small
-joint survival selects the possible exceptional opponent clock as target; the
-target has no tail debt, while every other player pays at most `4*M*δ`.
+This module performs the game-facing assembly:
 
-The final uniform-payoff theorems retain small joint survival as an explicit
-certificate premise. No compactness or boundary-continuity assertion is used.
+* a selected exceptional target and its closed suffix compile to a terminal
+  `4 * M * δ`-Nash profile;
+* small joint survival selects that target automatically;
+* the arbitrary-endpoint Nash--Bellman factory supplies the exact prefix;
+* stationary cap-attaining responses supply a concrete family of closed
+  player-indexed suffixes; and
+* terminal approximate equilibria at every accuracy yield a uniform-
+  equilibrium payoff.
+
+The final reductions assume only an accuracy-indexed small-joint-survival
+certificate.  They make no compactness or boundary-continuity assertion over
+varying stationary rows or anchors.
 -/
 
 noncomputable section
@@ -192,8 +200,8 @@ theorem exists_isεAsymptoticNash_of_stationaryCapDiagonalFactory
       reward endpoint endpointBound cutoff
   · simpa only [plan, endpoint, endpointBound] using hjoint
 
-/-- **Stationary-cap one-scalar reduction.** At each accuracy the rows and
-endpoint may vary. The only remaining producer is small joint survival for
+/-- **Stationary-cap one-scalar reduction.**  At each accuracy the rows and
+endpoint may vary.  The only remaining producer is small joint survival for
 the selected exact predecessor prefix of the diagonal cap endpoint. -/
 theorem quittingGame_exists_uniformEquilibriumPayoff_of_stationaryCapDiagonalJointSurvival
     [Nonempty ι]
@@ -219,10 +227,10 @@ theorem quittingGame_exists_uniformEquilibriumPayoff_of_stationaryCapDiagonalJoi
       reward rows cutoff hδ hjoint
   exact ⟨profile, hprofile.mono hscale⟩
 
-/-- **Accuracy-indexed diagonal certificate.** The tail family and its
-diagonal endpoint may vary with the requested accuracy. Each certificate
-consists only of closed player-indexed tails and one finite-factory
-joint-survival bound. -/
+/-- **Accuracy-indexed diagonal certificate.**  The tail family and its
+diagonal endpoint may vary with the requested accuracy.  This is the direct
+semantic reduction: each certificate consists only of closed player-indexed
+tails and one finite-factory joint-survival bound. -/
 theorem quittingGame_exists_uniformEquilibriumPayoff_of_diagonalTargetTailCertificates
     [Nonempty ι]
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -249,9 +257,11 @@ theorem quittingGame_exists_uniformEquilibriumPayoff_of_diagonalTargetTailCertif
       reward tail cutoff hδ hclosed hjoint
   exact ⟨profile, hprofile.mono hscale⟩
 
-/-- **Final conditional uniform-payoff certificate.** Closed player-indexed
+/-- **Final conditional uniform-payoff certificate.**  Closed player-indexed
 tails plus arbitrarily small joint survival of the exact finite factory at
-their diagonal endpoint imply a uniform-equilibrium payoff. -/
+their diagonal endpoint imply a uniform-equilibrium payoff.  This isolates the
+remaining producer as one scalar monotone quantity and uses no shared
+punishment continuation. -/
 theorem quittingGame_exists_uniformEquilibriumPayoff_of_diagonalTargetTails
     [Nonempty ι]
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -281,8 +291,9 @@ theorem quittingGame_exists_uniformEquilibriumPayoff_of_diagonalTargetTails
       reward tail cutoff hδ.le hclosed hjoint
   have hscale : 4 * M * δ ≤ ε := by
     dsimp only [δ]
-    rw [← mul_div_assoc, div_le_iff₀ hdenom]
+    rw [mul_div_assoc, div_le_iff₀ hdenom]
     nlinarith [hε.le]
   exact ⟨profile, hprofile.mono hscale⟩
+
 
 end GameTheory
