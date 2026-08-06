@@ -39,6 +39,21 @@ jobs:
           lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCompiler
           lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCertificate
 
+      - name: Audit target-tail theorem axioms
+        run: |
+          cat > /tmp/QuittingDiagonalTargetTailAxiomAudit.lean <<'EOF'
+          import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCertificate
+          #print axioms GameTheory.quittingPrefixThenTailHazardGap_le_survival_debt_sub_joint_mismatch
+          #print axioms GameTheory.exists_quittingExceptionalTarget_of_jointSurvivalWeight_le_sq
+          #print axioms GameTheory.exists_target_quittingPrefixThenTail_isεAsymptoticNash
+          #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_hasDiagonalTargetTailCertificates
+          EOF
+          lake env lean /tmp/QuittingDiagonalTargetTailAxiomAudit.lean | tee /tmp/target-tail-axioms.log
+          if grep -q sorryAx /tmp/target-tail-axioms.log; then
+            echo "Target-tail theorem unexpectedly depends on sorryAx" >&2
+            exit 1
+          fi
+
       - name: Check proof placeholders
         run: python3 scripts/check_lean_placeholders.py
 
