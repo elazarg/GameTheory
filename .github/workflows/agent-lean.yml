@@ -1,0 +1,32 @@
+name: Agent Lean validation
+
+on:
+  push:
+    branches:
+      - agent/quitting-target-tail
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Lean and cache dependencies
+        uses: leanprover/lean-action@v1
+        with:
+          build: false
+          test: false
+          use-mathlib-cache: true
+
+      - name: Compile target-tail modules
+        run: |
+          lake env lean GameTheory/Concepts/Stochastic/QuittingTargetAnchoredTail.lean
+          lake env lean GameTheory/Concepts/Stochastic/QuittingFiniteEndpointNashBellmanFactory.lean
+          lake env lean GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean
