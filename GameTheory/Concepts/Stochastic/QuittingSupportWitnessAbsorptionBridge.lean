@@ -45,6 +45,7 @@ theorem quittingSurvivalPrefix_eq_prod_ownSurvival
   unfold quittingSurvivalPrefix quittingHazardSurvival
   simp_rw [quittingStationaryContinueMass_eq_prod_continueProbability]
   rw [Finset.prod_comm]
+  simp only [quittingRootSequenceOwnHazard]
 
 /-- If joint survival is strictly below `threshold ^ |ι|`, then some player's
 own survival is at most `threshold`.  The strict inequality on the joint
@@ -60,7 +61,7 @@ theorem exists_ownSurvival_le_of_survivalPrefix_lt_pow
       quittingHazardSurvival
         (quittingRootSequenceOwnHazard roots who) cutoff ≤ threshold := by
   by_contra hnone
-  push_neg at hnone
+  push Not at hnone
   have hproduct :
       threshold ^ Fintype.card ι ≤
         ∏ who,
