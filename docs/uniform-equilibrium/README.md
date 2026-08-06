@@ -36,6 +36,16 @@ The measured repository/CI assessment is
   its remaining producer obligation.
 - [PayoffPerturbationClosure.md](PayoffPerturbationClosure.md) records
   fixed-skeleton reward stability and target-free existence closure.
+- [SelfSimilarity.md](SelfSimilarity.md) derives the strategic return notions,
+  residual cocycle, contraction condition number, and neutral pumping law.
+- [SelfSimilarityTangent.md](SelfSimilarityTangent.md) classifies coefficient
+  idempotents and develops absorbed-mass affine and max-plus tangent holonomy.
+- [SelfSimilarityResearchProgram.md](SelfSimilarityResearchProgram.md) states
+  the Puiseux scale stratification, the contracting/tangent/escape producer
+  target, the compact-semigroup boundary, and the computational falsifier
+  program.
+- [SelfSimilarityLeanMap.md](SelfSimilarityLeanMap.md) is the exact
+  declaration-level map and honesty boundary for the self-similarity layer.
 - [methods/MathResearchMethod.md](methods/MathResearchMethod.md)
 - [methods/LeanFormalizationMethod.md](methods/LeanFormalizationMethod.md)
 - [methods/ParallelResearchMethod.md](methods/ParallelResearchMethod.md)
@@ -54,7 +64,7 @@ The measured repository/CI assessment is
 - [manuscript/UniformEquilibriumFrontierManuscript.tex](manuscript/UniformEquilibriumFrontierManuscript.tex)
   is the detailed manuscript source;
 - [manuscript/intuition.tex](manuscript/intuition.tex) is its conceptual
-  companion.  Both are derivative exposition: resolve status conflicts in
+  companion. Both are derivative exposition: resolve status conflicts in
   favor of `PIPELINE.md`, `FRONTIER.md`, the owning claim file, and finally the
   production Lean declaration. Generated PDFs are local build artifacts.
 
