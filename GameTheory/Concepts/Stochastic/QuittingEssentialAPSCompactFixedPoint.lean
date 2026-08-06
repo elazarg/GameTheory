@@ -258,7 +258,8 @@ theorem isClosed_quittingEssentialAPSGreatestFamily_of_compact_convex_unique
     exact (convex_quittingEssentialAPSGreatestFamily
       reward carrier hcarrierConvex player).closure
   have hclosedSubinvariant :
-      IsQuittingEssentialAPSSubinvariant reward carrier closedFamily := by
+      IsQuittingEssentialAPSSubinvariantWithin
+        reward carrier closedFamily := by
     intro player current hcurrent
     change current ∈ closure
       (quittingEssentialAPSGreatestFamily reward carrier player) at hcurrent
