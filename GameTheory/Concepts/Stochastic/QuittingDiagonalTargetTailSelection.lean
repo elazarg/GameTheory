@@ -5,9 +5,15 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailBounds
+import GameTheory.Concepts.Stochastic.QuittingSurvivalPrefixBridge
 
 /-!
 # Exceptional-target selection from joint survival
+
+For distinct players, the product of their opponent-only survival weights is
+at most the joint survival weight.  Hence `J ≤ δ²` leaves at most one player
+with opponent survival greater than `δ`; that possible exceptional player is
+selected as the target whose own suffix is closed.
 -/
 
 noncomputable section
@@ -17,6 +23,7 @@ namespace GameTheory
 open StochasticGame Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
 
 /-- Root-level version of the multiplicative exceptional-clock inequality. -/
 theorem quittingRootDeletedContinueMass_mul_le_stationaryContinueMass
@@ -29,8 +36,8 @@ theorem quittingRootDeletedContinueMass_mul_le_stationaryContinueMass
   have hnonneg (player : ι) : 0 ≤ continueProbability player :=
     ENNReal.toReal_nonneg
   have hleOne (player : ι) : continueProbability player ≤ 1 := by
-    exact (ENNReal.toReal_mono ENNReal.one_ne_top
-      (PMF.coe_le_one (root player) false)).trans_eq (by norm_num)
+    exact ENNReal.toReal_mono ENNReal.one_ne_top
+      (PMF.coe_le_one (root player) false)
   unfold quittingRootDeletedContinueMass
   rw [quittingStationaryContinueMass_eq_prod_continueProbability,
     quittingStationaryContinueMass_eq_prod_continueProbability,
@@ -89,7 +96,7 @@ theorem exists_target_forall_opponentSurvivalWeight_le_of_joint_le_sq
       quittingOpponentSurvivalWeight roots who 0 cutoff ≤ δ
   · exact ⟨Classical.choice (inferInstance : Nonempty ι),
       fun who _ => hall who⟩
-  · push_neg at hall
+  · push Not at hall
     obtain ⟨target, htarget⟩ := hall
     refine ⟨target, ?_⟩
     intro who hwho
@@ -100,15 +107,13 @@ theorem exists_target_forall_opponentSurvivalWeight_le_of_joint_le_sq
     have hproduct :=
       quittingOpponentSurvivalWeight_mul_le_jointSurvivalWeight
         roots (Ne.symm hwho) 0 cutoff
-    have htargetNonneg : 0 ≤
-        quittingOpponentSurvivalWeight roots target 0 cutoff :=
-      quittingOpponentSurvivalWeight_nonneg roots target 0 cutoff
     have hstrict :
         δ ^ 2 <
           quittingOpponentSurvivalWeight roots target 0 cutoff *
             quittingOpponentSurvivalWeight roots who 0 cutoff := by
       rw [pow_two]
-      exact mul_lt_mul htarget hwhoLarge hδ htargetNonneg
+      exact mul_lt_mul htarget hwhoLarge.le hδ
+        (lt_of_le_of_lt hδ htarget)
     linarith
 
 end GameTheory
