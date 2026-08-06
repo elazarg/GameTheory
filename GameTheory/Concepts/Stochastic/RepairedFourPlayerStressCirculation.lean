@@ -20,8 +20,11 @@ proves (`x > 1` rules out the opposite-player branch, `λ ≤ 2` rules out the
 symmetric branch, `x ≠ 1` and `λ > 0` rule out the singleton lock).
 
 This file machine-checks the answer's §4 certificate data at exactly that
-point, and instantiates the singleton-orbit theorem of
-`SingletonFaceCirculationOrbit.lean` on it.
+point and instantiates the singleton-orbit theorem of
+`SingletonFaceCirculationOrbit.lean` on it. The downstream module
+`QuittingCirculationUniformPayoffExamples.lean` verifies the formal
+punishment-floor condition and compiles this certificate to a
+uniform-equilibrium payoff.
 
 ## The transcribed data
 
@@ -92,17 +95,16 @@ phase owners are pinned on both the ideal vertex and the phase target; and,
 from all of that through `SingletonFaceCirculationOrbit.lean`'s general
 machinery, orbits of arbitrarily large prefix quit mass exist at this weight,
 support-perfect at any prescribed tolerance, above the floor forever.  All of
-this is at the level of `L` (the game's live-state Bellman recursion,
-`oneStageNext`), not at the level of a stochastic-game equilibrium payoff.
+this is first proved at the level of `L` (the game's live-state Bellman
+recursion, `oneStageNext`). The downstream singleton-circulation compiler
+turns the resulting path into a uniform-equilibrium payoff.
 
 What is *not* checked here: that `χ(2,1) = 2/3` (quoted above, from §2.3's
-supersolution algebra); that the displayed floor is in fact a *rationality*
-floor for any strategic notion (that reading is supplied by
-`SingletonFaceCirculationOrbit.lean`'s own scope note, inherited unchanged);
-and the compiler step from a family of support-perfect orbits at every
-tolerance to a genuine uniform equilibrium payoff of the stochastic quitting
-game -- that compilation is the standing program's in-flight chain, not
-something this file or its imports discharge.
+supersolution algebra). That exact value is not needed for the formal
+cashout: `QuittingCirculationUniformPayoffExamples.lean` instead proves that
+the actual `quittingPunishmentValue` is at most the floor `1` from the
+general `max (solo payoff) 0` bound, and then applies the
+singleton-circulation compiler.
 -/
 
 noncomputable section
@@ -273,9 +275,9 @@ discretisation of the stress-point certificate whose every microstep row is
 support-perfect at tolerance `ε` against its own state, whose every state
 stays at or above the floor `1`, whose states obey the one-stage Bellman
 recursion `oneStageNext`, and a finite prefix of which has quit mass at least
-`Q`.  See the module docstring for exactly what this does and does not give:
-this is a machine-checked orbit of the live-state recursion `L`, not (yet) a
-uniform equilibrium payoff of the stochastic quitting game. -/
+`Q`. This theorem records the live-state orbit itself; the downstream module
+`QuittingCirculationUniformPayoffExamples.lean` verifies its strategic floor
+and compiles the certificate to a uniform-equilibrium payoff. -/
 theorem exists_stressCirculation_orbit (ε : ℝ) (hε : 0 < ε) (Q : ℝ) :
     ∃ (N : ℕ) (β : ZMod 4 → ℝ), 0 < N ∧
       (∀ n j, circulationState stressCirculationSupport β N (n + 1) j =
