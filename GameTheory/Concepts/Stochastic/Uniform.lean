@@ -351,7 +351,7 @@ theorem IsUniformεEquilibrium.of_withStagePayoff
     G.IsUniformεEquilibrium s₀ (ε + 2 * ρ) σ := by
   obtain ⟨T₀, hT₀⟩ := h
   refine ⟨T₀, fun T hT => ?_⟩
-  exact (hT₀ T hT).of_withStagePayoff G reward hρ0 hρ
+  exact IsεHorizonNash.of_withStagePayoff G reward hρ0 hρ (hT₀ T hT)
 
 /-- Dense fixed-skeleton approximation principle.
 
@@ -381,7 +381,7 @@ theorem isUniformEquilibriumPayoff_of_arbitrarily_close_stagePayoffs
   · have hTransferred :
         G.IsεHorizonNash s₀ T
           (ε / 4 + 2 * (ε / 4)) σ :=
-      hNash.of_withStagePayoff G reward hquarter.le hreward
+      IsεHorizonNash.of_withStagePayoff G reward hquarter.le hreward hNash
     exact hTransferred.mono (by linarith)
   · intro who
     have hgame :
