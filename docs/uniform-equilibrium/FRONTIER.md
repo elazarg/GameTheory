@@ -70,7 +70,10 @@ The finite-quitting front is now sharply reduced.
 7. **Finite middle algebra (`M+L`, `e1fe7dc`).** Every actual finite middle has
    an associative multiplayer `QuittingBoundaryHolonomy` with exact prescribed
    `(B,P)` and arbitrary-behavior `(A,T,χ)` semantics, source roots, exact-D
-   endpoints, and packet provenance. Fixed-word cap safety is affine.
+   endpoints, and packet provenance. Fixed-word cap safety is affine. The
+   `6cd0a24e` tangent layer adds exact residual cocycles, self-similarity,
+   max-plus tangent dynamics, and compact subsequences of realized coordinates,
+   but not a closed realized image or strategic decoder.
 8. **Fixed-cutoff topology and the length fence (`M+L`, `14d75ff`).** For each
    cutoff, the resolved graph retaining the complete source path and all legal
    subblock holonomies is compact and closed. The fixed-last calibrated lift
@@ -113,13 +116,11 @@ Inside compact convex carriers with a functional unique-live Flesch successor,
 the greatest fibers are convex and compact. Terminal-free fibers admit one
 coherent infinite executable run, rather than unrelated finite paths. Uniform
 finite-window face avoidance forces positive mass in every shifted window;
-strict Flesch cross-gains then charge owner mass to opponent mass and yield a
-single block-contraction factor for every player's deleted survival clock. The
-implemented singleton roots also satisfy exact Bellman transport. Compact
-terminal-freeness gives one coarse-hazard ceiling below one. A fixed
-logarithmic subdivision at each requested accuracy preserves the coarse
-survival contraction and exact Continue transport while making the immediate-
-Quit error uniformly small. The nonperiodic Snell supersolution therefore
+strict Flesch cross-gains and bounded drift force every opponent mass to
+diverge; product/sum accounting gives qualitative deleted-player survival
+decay. Finite adaptive subdivision at each coarse stage with `p_t < 1` preserves
+survival and exact Continue transport while making the immediate-Quit error
+uniformly small. The nonperiodic Snell supersolution therefore
 proves that every initial point in the component is a uniform-equilibrium
 payoff.
 
@@ -127,8 +128,9 @@ This does not close the quitting-game problem. The structural hypotheses are
 not derived for arbitrary games, so no arbitrary game is asserted to contain a
 nonempty component of this kind. But the former local root-Nash gap inside the
 component is closed. The mesh compiler is stated more generally for any
-bounded viable singleton-flow path with a uniform hazard ceiling and opponent
-block contraction; a supplied finite proper cycle remains a separate positive
+bounded viable singleton-flow path with qualitative deleted-player survival
+decay; fixed ceilings and block contractions are stronger specializations. A
+supplied finite proper cycle remains a separate positive
 stratum. The durable interface and exact theorem map are recorded in
 [EssentialAPS.md](EssentialAPS.md).
 

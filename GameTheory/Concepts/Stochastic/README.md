@@ -291,12 +291,19 @@ greatest algebraic fixed family. `QuittingEssentialAPSCycle.lean` proves that
 a supplied finite proper cycle lies in that family and compiles its selected
 value to a uniform-equilibrium payoff. On a compact functional unique-live,
 terminal-free component satisfying finite-window face avoidance, the infinite
-path layer constructs coherent execution and opponent contraction. Compact
-separation gives a uniform hazard ceiling; fixed logarithmic subdivision and a
-nonperiodic Snell supersolution then compile every initial component value to
+path layer constructs coherent execution and qualitative deleted-player
+survival decay. Finite adaptive subdivision at each `p_t < 1` and a nonperiodic
+Snell supersolution then compile every initial component value to
 a uniform-equilibrium payoff. This is not an arbitrary-game coverage theorem:
 convexified fixed-point membership alone does not provide the required
 component hypotheses, as the zero-mass regression makes explicit.
+
+The boundary-holonomy surface also includes the affine-residual, max-affine
+residual, self-similarity, tangent, and realized-tangent modules. Together
+they provide exact residual cocycles, iteration/idempotents, self-similarity,
+max-plus tangents, realized first-order bounds, and compact coordinate
+subsequences. They do not establish realized-image closedness, retain source
+paths, produce strategic blocks, or decode a coefficient limit.
 
 ### Proved results (special cases of the conjecture)
 

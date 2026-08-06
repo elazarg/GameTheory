@@ -29,7 +29,7 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
 def quittingSomeOpponentQuits (who : ι) (action : ι → Bool) : Prop :=
   ∃ other, other ≠ who ∧ action other = true
 
-/-- Real-valued indicator that some opponent quits. -/
+/-- Boolean flag that some opponent quits. -/
 noncomputable def quittingOpponentQuitFlag
     (who : ι) (action : ι → Bool) : Bool := by
   classical

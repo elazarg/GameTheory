@@ -39,6 +39,8 @@ The measured repository/CI assessment is
   selection, and its concrete quitting-game corollaries.
 - [PayoffPerturbationClosure.md](PayoffPerturbationClosure.md) records
   fixed-skeleton reward stability and target-free existence closure.
+- [BoundaryHolonomyTangent.md](BoundaryHolonomyTangent.md) records the
+  residual, tangent, and projected-coordinate layer for finite holonomy.
 - [UniformConsequences.md](UniformConsequences.md) records the compact
   invariance, reverse-characterization, and transition-discontinuity layer.
 - [methods/MathResearchMethod.md](methods/MathResearchMethod.md)

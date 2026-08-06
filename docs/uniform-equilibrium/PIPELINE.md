@@ -39,6 +39,12 @@ the P0 mathematical status.
 
 ## Incorporation checkpoint — 2026-08-07
 
+- **Boundary-holonomy tangent layer (`6cd0a24e`, production).** Exact affine
+  and max-affine residual cocycles, iteration/idempotents, self-similarity,
+  the max-plus tangent trichotomy, and realized first-order bounds give compact
+  coordinate subsequences. This is not realized-image closedness, a retained
+  source path, a strategic producer, or a decoder.
+
 - **Uniform consequences (`c81bcba8`, production).** Profile-uniform vanishing
   finite-average payoff gaps preserve each exact target; bounded expected
   potential shaping supplies the endpoint-telescope instance. Tail width and
@@ -73,14 +79,15 @@ the P0 mathematical status.
   payoff cube, and only a target subsequence is compactified.  Therefore dense
   coverage by solved reward tables would prove full fixed-skeleton coverage.
   No density theorem for the current mechanism catalog is claimed.
-- **Essential APS (`b702f477`, conditional positive stratum).**  Compact
+- **Essential APS (`b702f477`; adaptive compiler `1ee8d9c2`, conditional
+  positive stratum).** Compact
   functional unique-live fibers admit coherent infinite execution, uniform
-  shifted-window mass, opponent-mass charging, exact Bellman transport, and a
-  common opponent-survival block contraction. Compact terminal-freeness also
-  gives a uniform coarse-hazard ceiling. Fixed logarithmic subdivision makes
-  the local Quit error vanish without changing coarse survival, and a
-  nonperiodic Snell supersolution compiles every initial point in the component
-  to a uniform-equilibrium payoff. The theorem does not prove that this
+  shifted-window mass, opponent-mass charging, exact Bellman transport, and
+  qualitative deleted-player survival decay. Finite adaptive subdivision at
+  each `p_t < 1` preserves survival and, with the nonperiodic Snell
+  supersolution, compiles every initial point in the component to a
+  uniform-equilibrium payoff. Fixed ceilings and block contractions are
+  stronger quantitative specializations. The theorem does not prove that this
   component exists or covers the relevant payoff set in arbitrary games.
 - **Support witnesses (`a4f23756`, conditional compiler).**  Retaining the
   support-local endpoint witness collapses the ledger clock deterministically.

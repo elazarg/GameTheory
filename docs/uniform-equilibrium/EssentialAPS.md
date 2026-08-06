@@ -14,16 +14,12 @@ formalization proves the following chain:
 3. local progress choices compose into finite runs and, on the terminal-free
    branch, one coherent infinite run;
 4. compact face separation gives positive total mass in every shifted window;
-5. strict Flesch cross-gains convert total mass into mass contributed by the
-   opponents of every player;
-6. opponent mass yields a uniform block-contraction factor for the singleton
-   roots implementing the path;
-7. compact terminal-freeness bounds every coarse singleton hazard away from
-   one;
-8. fixed logarithmic subdivision makes the local Quit error arbitrarily small
-   without changing coarse opponent survival; and
-9. a nonperiodic Snell supersolution compiles the subdivided path to a uniform-
-   equilibrium payoff.
+5. total mass diverges along the coherent run;
+6. bounded Flesch drift forces every opponent's charged mass to diverge;
+7. product/sum accounting gives qualitative deleted-player survival decay;
+8. each coarse stage with `p_t < 1` admits a finite adaptive subdivision that
+   preserves its survival; and
+9. the adaptive nonperiodic compiler gives a uniform-equilibrium payoff.
 
 Thus every point of the displayed terminal-free greatest family is a uniform-
 equilibrium payoff.  This is a genuine positive theorem on the stated stratum;
@@ -295,11 +291,42 @@ point in the greatest family admits:
 - constants `K > 0`, `eta > 0`, and `rho in [0,1)` satisfying
   `IsQuittingOpponentBlockContraction`.
 
-The existing `QuittingInfinitePathCompiler` can therefore select the supplied
-value and control the survival tail.  The next two layers supply the required
-vanishing local deviation bound without assuming pointwise root Nash.
+This fixed-block route is a quantitative source of the survival hypothesis.
+The adaptive compiler below only needs qualitative survival decay and does not
+use `K`, `eta`, or `rho`.
 
-## 8. Uniform hazard ceiling
+## 8. Qualitative survival decay and adaptive subdivision
+
+Shifted-window mass gives divergent total mass. Strict Flesch cross-gains and
+bounded drift force every opponent's charged mass to diverge; product/sum
+accounting then makes each deleted-player survival clock tend to zero. At each
+coarse stage with `p_t < 1`, a finite stage-dependent subdivision preserves
+coarse survival exactly and makes the local Quit error sufficiently small.
+The adaptive mesh, exact Continue transport, and nonperiodic Snell
+supersolution give the payoff theorem without a common hazard ceiling or fixed
+block contraction. The `p_t = 1` full-jump case remains outside this step.
+Terminal-freeness, functional unique-live execution, and finite-window
+face-avoidance remain structural hypotheses.
+
+The source-agnostic public compiler is
+
+```text
+isUniformEquilibriumPayoff_of_proper_infiniteSingletonPath_of_initialSurvival
+```
+
+and the component capstone is
+
+```text
+quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live_adaptiveMesh
+```
+
+in `QuittingInfiniteVariableSingletonMeshCertificate.lean` and
+`QuittingEssentialAPSAdaptiveMeshUniformPayoff.lean`, respectively.
+
+### Optional common hazard ceiling
+
+The older fixed-mesh specialization obtains a uniform ceiling from compact
+terminal-freeness as follows.
 
 For owner `i`, let
 
@@ -340,7 +367,11 @@ exists_uniform_quittingEssentialAPSHazardCeiling_unique_live
 
 in `QuittingEssentialAPSUniformHazard.lean`.
 
-## 9. Fixed subdivision and nonperiodic compilation
+## 9. Quantitative fixed-mesh specializations
+
+The following ceiling and fixed-subdivision route remains a stronger
+quantitative specialization, not a capstone requirement for the adaptive
+route.
 
 For a positive integer `m`, replace a coarse hazard `p` by the constant
 micro-hazard
@@ -426,6 +457,11 @@ in `QuittingEssentialAPSUniformPayoff.lean`.
     nonperiodic certificates, and the generic singleton-flow payoff theorem.
 22. `QuittingEssentialAPSUniformPayoff.lean`: essential-APS uniform-payoff
     capstone.
+23. `QuittingInfiniteVariableSingletonMesh.lean`,
+    `QuittingInfiniteVariableSingletonMeshSurvival.lean`, and
+    `QuittingInfiniteVariableSingletonMeshCertificate.lean`: adaptive
+    finite per-coarse-stage subdivision, survival transport, and certificates.
+24. `QuittingEssentialAPSAdaptiveMeshUniformPayoff.lean`: adaptive capstone.
 
 `QuittingEssentialAPSAll.lean` exports the complete layer.
 
@@ -436,6 +472,6 @@ terminal-free stratum, its finite-window active-face avoidance, and the stated
 bounds. Those hypotheses are not proved for every quitting game, and the
 formalization does not identify the greatest family with all uniform-
 equilibrium payoffs. Within the stated component, however, no local root-Nash
-assumption remains: fixed subdivision supplies the vanishing Quit error and
-the nonperiodic supersolution controls every history-dependent unilateral
-deviation.
+assumption remains: adaptive finite subdivision supplies the vanishing Quit
+error and the nonperiodic supersolution controls every history-dependent
+unilateral deviation.
