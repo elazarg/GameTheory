@@ -352,34 +352,25 @@ theorem IsεHorizonNash.of_withStagePayoff
   have hdev :=
     abs_finiteAveragePayoff_withStagePayoff_sub_le G reward hρ0 hρ
       s₀ T (Function.update σ who dev) who
-  have honUpper :
-      (G.withStagePayoff reward).finiteAveragePayoff s₀ T σ who ≤
-        G.finiteAveragePayoff s₀ T σ who + ρ := by
-    apply (sub_le_iff_le_add').mp
-    exact (le_abs_self _).trans hon
-  have hdevSymm :
-      |G.finiteAveragePayoff s₀ T (Function.update σ who dev) who -
-          (G.withStagePayoff reward).finiteAveragePayoff s₀ T
-            (Function.update σ who dev) who| ≤ ρ := by
-    simpa [abs_sub_comm] using hdev
-  have hdevUpper :
-      G.finiteAveragePayoff s₀ T (Function.update σ who dev) who ≤
-        (G.withStagePayoff reward).finiteAveragePayoff s₀ T
-            (Function.update σ who dev) who + ρ := by
-    apply (sub_le_iff_le_add').mp
-    exact (le_abs_self _).trans hdevSymm
-  show
-    G.finiteAveragePayoff s₀ T (Function.update σ who dev) who ≤
-      G.finiteAveragePayoff s₀ T σ who + (ε + 2 * ρ)
-  calc
+  let oldOn : ℝ := G.finiteAveragePayoff s₀ T σ who
+  let newOn : ℝ :=
+    (G.withStagePayoff reward).finiteAveragePayoff s₀ T σ who
+  let oldDev : ℝ :=
     G.finiteAveragePayoff s₀ T (Function.update σ who dev) who
-        ≤ (G.withStagePayoff reward).finiteAveragePayoff s₀ T
-            (Function.update σ who dev) who + ρ := hdevUpper
-    _ ≤ (G.withStagePayoff reward).finiteAveragePayoff s₀ T σ who +
-          ε + ρ := by
-        linarith [hNash]
-    _ ≤ G.finiteAveragePayoff s₀ T σ who + (ε + 2 * ρ) := by
-        linarith [honUpper]
+  let newDev : ℝ :=
+    (G.withStagePayoff reward).finiteAveragePayoff s₀ T
+      (Function.update σ who dev) who
+  change newOn + ε ≥ newDev at hNash
+  change |newOn - oldOn| ≤ ρ at hon
+  change |newDev - oldDev| ≤ ρ at hdev
+  change oldDev ≤ oldOn + (ε + 2 * ρ)
+  have hdevUpper : oldDev ≤ newDev + ρ := by
+    have hlow : -ρ ≤ newDev - oldDev := (abs_le.mp hdev).1
+    linarith
+  have honUpper : newOn ≤ oldOn + ρ := by
+    have hupp : newOn - oldOn ≤ ρ := (abs_le.mp hon).2
+    linarith
+  linarith
 
 /-- Uniform approximate equilibrium transfers across the same payoff
 perturbation with the same horizon threshold. -/
