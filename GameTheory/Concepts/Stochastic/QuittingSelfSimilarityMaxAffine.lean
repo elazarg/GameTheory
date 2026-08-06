@@ -44,6 +44,48 @@ def normalizedTailResidual
     (summary : QuittingMaxAffineSummary) (target : ℝ) : ℝ :=
   summary.tailResidual target / summary.absorptionMass
 
+/-- Tail absorption mass obeys the same survival-weighted composition law as
+prescribed absorption mass. -/
+@[simp] theorem absorptionMass_mul
+    (outer inner : QuittingMaxAffineSummary) :
+    (outer * inner).absorptionMass =
+      outer.absorptionMass + outer.survival * inner.absorptionMass := by
+  change 1 - outer.survival * inner.survival =
+    (1 - outer.survival) + outer.survival * (1 - inner.survival)
+  ring
+
+/-- Tail residuals form an exact cocycle under chronological composition. -/
+theorem tailResidual_mul
+    (outer inner : QuittingMaxAffineSummary) (target : ℝ) :
+    (outer * inner).tailResidual target =
+      outer.tailResidual target +
+        outer.survival * inner.tailResidual target := by
+  unfold tailResidual absorptionMass
+  change
+    (outer.tail + outer.survival * inner.tail) -
+        (1 - outer.survival * inner.survival) * target = _
+  ring
+
+/-- The normalized tail residual of a composite is the transported
+absorption-mass-weighted average of the two normalized tail residuals. -/
+theorem normalizedTailResidual_mul
+    (outer inner : QuittingMaxAffineSummary) (target : ℝ)
+    (houter : outer.absorptionMass ≠ 0)
+    (hinner : inner.absorptionMass ≠ 0)
+    (hcompose : (outer * inner).absorptionMass ≠ 0) :
+    (outer * inner).normalizedTailResidual target =
+      (outer.absorptionMass * outer.normalizedTailResidual target +
+        outer.survival * inner.absorptionMass *
+          inner.normalizedTailResidual target) /
+        (outer.absorptionMass + outer.survival * inner.absorptionMass) := by
+  have hcompose' :
+      outer.absorptionMass + outer.survival * inner.absorptionMass ≠ 0 := by
+    simpa only [absorptionMass_mul] using hcompose
+  unfold normalizedTailResidual
+  rw [tailResidual_mul, absorptionMass_mul]
+  field_simp [houter, hinner, hcompose']
+  ring
+
 /-- Target excess is the maximum of early and tail residuals. -/
 theorem targetExcess_eq_max
     (summary : QuittingMaxAffineSummary) (target : ℝ) :
