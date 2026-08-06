@@ -17,11 +17,18 @@ formalization proves the following chain:
 5. strict Flesch cross-gains convert total mass into mass contributed by the
    opponents of every player;
 6. opponent mass yields a uniform block-contraction factor for the singleton
-   roots implementing the path.
+   roots implementing the path;
+7. compact terminal-freeness bounds every coarse singleton hazard away from
+   one;
+8. fixed logarithmic subdivision makes the local Quit error arbitrarily small
+   without changing coarse opponent survival; and
+9. a nonperiodic Snell supersolution compiles the subdivided path to a uniform-
+   equilibrium payoff.
 
-The remaining input for the existing exact nonperiodic equilibrium compiler is
-local root-Nash control.  Exact Bellman transport and opponent-survival decay
-are no longer missing.
+Thus every point of the displayed terminal-free greatest family is a uniform-
+equilibrium payoff.  This is a genuine positive theorem on the stated stratum;
+the remaining limitation is production of such a component for an arbitrary
+quitting game, not a missing local-equilibrium adapter inside the component.
 
 ## 1. Convexification and executable segments
 
@@ -289,8 +296,95 @@ point in the greatest family admits:
   `IsQuittingOpponentBlockContraction`.
 
 The existing `QuittingInfinitePathCompiler` can therefore select the supplied
-value and control the survival tail once local root-Nash inequalities are
-provided.
+value and control the survival tail.  The next two layers supply the required
+vanishing local deviation bound without assuming pointwise root Nash.
+
+## 8. Uniform hazard ceiling
+
+For owner `i`, let
+
+```text
+gap_i(v) = sum_j |v_j - R_i(j)|.
+```
+
+The gap is continuous and vanishes exactly at the singleton endpoint `R_i`.
+Greatest-family membership supplies viability, so terminal-freeness excludes
+that zero. Compactness of each greatest fiber and finiteness of the player set
+therefore give one `delta > 0` with
+
+```text
+delta <= gap_i(v)
+```
+
+at every point in every relevant fiber. Along an arc
+
+```text
+v = p R_i + (1-p) w
+```
+
+whose endpoints are bounded by `B`, coordinatewise estimation gives
+
+```text
+gap_i(v) <= (1-p) * |I| * 2B.
+```
+
+Consequently all coarse hazards satisfy `p <= pStar` for one `pStar < 1`.
+This uniform separation is the compactness input needed to choose one finite
+subdivision width at each requested accuracy.
+
+The carrier-level theorem is
+
+```text
+exists_uniform_quittingEssentialAPSHazardCeiling_unique_live
+```
+
+in `QuittingEssentialAPSUniformHazard.lean`.
+
+## 9. Fixed subdivision and nonperiodic compilation
+
+For a positive integer `m`, replace a coarse hazard `p` by the constant
+micro-hazard
+
+```text
+q = 1 - (1-p)^(1/m).
+```
+
+The `m` microstage Continue probabilities multiply exactly to `1-p`, and the
+interpolated values close exactly at the next coarse boundary.  Because
+`p <= pStar < 1`, one common `m` makes `D*q` smaller than any prescribed
+positive error, uniformly over the entire nonperiodic path.  Full microblocks
+preserve deleted-player survival exactly, so a coarse `K`-block contraction
+becomes a micro `K*m`-block contraction with the same factor `rho`.
+
+At a singleton microstage, viability and the collision-surplus bound give
+
+```text
+immediate Quit value <= prescribed value + D*q,
+```
+
+while prescribed Continue and policy evaluation remain exact. Adding the same
+error to every continuation value is therefore a global Snell supersolution:
+Continue transports only `c*error <= error`. No stagewise error sum appears.
+Opponent-survival decay removes the terminal comparison term, yielding
+terminal approximate Nash play and exact delivery of the initial path value.
+Accuracy-indexed meshes then give a uniform-equilibrium payoff.
+
+The source-agnostic capstone is
+
+```text
+isUniformEquilibriumPayoff_of_singletonFlow_uniformHazard
+```
+
+in `QuittingInfiniteSingletonMeshCertificate.lean`. It assumes only a bounded
+viable singleton-flow path, a common hazard ceiling below one, a collision-
+surplus bound, and opponent block contraction. The essential-APS specialization
+is
+
+```text
+quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live
+```
+
+in `QuittingEssentialAPSUniformPayoff.lean`.
 
 ## Module map
 
@@ -320,15 +414,28 @@ provided.
 15. `QuittingEssentialAPSRegression.lean`: zero-mass self-loop regression.
 16. `QuittingEssentialAPSCycle.lean`: compilation of a supplied finite proper
     cycle.
+17. `QuittingInfinitePathSupersolution.lean`: source-agnostic nonperiodic
+    quit-error comparison and accuracy-indexed compiler.
+18. `QuittingEssentialAPSUniformHazard.lean`: compact terminal-free separation
+    and the uniform coarse-hazard ceiling.
+19. `QuittingInfiniteSingletonMesh.lean`: fixed logarithmic subdivision and
+    exact interpolated Bellman transport.
+20. `QuittingInfiniteSingletonMeshSurvival.lean`: exact survival transport and
+    preservation of opponent block contraction.
+21. `QuittingInfiniteSingletonMeshCertificate.lean`: local collision control,
+    nonperiodic certificates, and the generic singleton-flow payoff theorem.
+22. `QuittingEssentialAPSUniformPayoff.lean`: essential-APS uniform-payoff
+    capstone.
 
 `QuittingEssentialAPSAll.lean` exports the complete layer.
 
 ## Scope boundary
 
-Opponent-specific contraction is proved for the compact functional
-unique-live terminal-free stratum.  Applying the existing nonperiodic
-equilibrium compiler additionally requires exact or asymptotically vanishing
-local root-deviation error along the APS path.  The periodic mesh compiler
-supplies such control for a supplied cycle; the corresponding nonperiodic
-adapter is not proved here.  These results also do not identify the functional
-unique-live stratum with every quitting game.
+The payoff theorem is conditional on the compact functional unique-live,
+terminal-free stratum, its finite-window active-face avoidance, and the stated
+bounds. Those hypotheses are not proved for every quitting game, and the
+formalization does not identify the greatest family with all uniform-
+equilibrium payoffs. Within the stated component, however, no local root-Nash
+assumption remains: fixed subdivision supplies the vanishing Quit error and
+the nonperiodic supersolution controls every history-dependent unilateral
+deviation.

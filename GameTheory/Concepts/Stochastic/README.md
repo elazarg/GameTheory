@@ -289,9 +289,14 @@ one-continuation segments from the larger full-convex-hull operator; and
 `QuittingEssentialAPSFixedPoint.lean` constructs the carrier-restricted
 greatest algebraic fixed family. `QuittingEssentialAPSCycle.lean` proves that
 a supplied finite proper cycle lies in that family and compiles its selected
-value to a uniform-equilibrium payoff. The reverse direction is intentionally
-absent: convexified fixed-point membership does not produce an executable
-path or cycle, as the zero-mass regression makes explicit.
+value to a uniform-equilibrium payoff. On a compact functional unique-live,
+terminal-free component satisfying finite-window face avoidance, the infinite
+path layer constructs coherent execution and opponent contraction. Compact
+separation gives a uniform hazard ceiling; fixed logarithmic subdivision and a
+nonperiodic Snell supersolution then compile every initial component value to
+a uniform-equilibrium payoff. This is not an arbitrary-game coverage theorem:
+convexified fixed-point membership alone does not provide the required
+component hypotheses, as the zero-mass regression makes explicit.
 
 ### Proved results (special cases of the conjecture)
 
@@ -303,6 +308,7 @@ path or cycle, as the zero-mass regression makes explicit.
 | All children absorbing after one step | `exists_uniformEquilibriumPayoff_of_absorbingChildren` | `OneStepAbsorbingChildUniform.lean` |
 | Zero-sum single-controller (full finite generality) | `exists_uniformEquilibriumPayoff_of_isZeroSumBoolGame_of_isSingleController` | `SingleControllerPrimalExistence.lean` |
 | **The Big Match** (Blackwell–Ferguson 1968) | `exists_uniformEquilibriumPayoff_live` | `BigMatchUniform.lean` |
+| Compact terminal-free unique-live essential-APS component | `quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live` | `QuittingEssentialAPSUniformPayoff.lean` |
 
 `SingleControllerNoTrap.lean` closes the game-specific no-trap part of that
 residual: strong complementarity forces every state to reach the positive
