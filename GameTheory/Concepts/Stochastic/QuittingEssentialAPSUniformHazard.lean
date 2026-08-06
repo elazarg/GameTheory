@@ -92,7 +92,9 @@ theorem quittingEssentialAPSGreatestFamily_viable
         (quittingEssentialAPSGreatestFamily reward carrier) owner := by
     rw [hfixedOwner]
     exact hcurrent
-  exact hrestricted.2.1
+  rcases hrestricted.2 with hterminal | hprefix
+  · exact hterminal.2
+  · exact hprefix.1
 
 /-- On a terminal-free greatest fiber, the singleton-root gap is positive. -/
 theorem quittingEssentialAPSSoloGap_pos_of_terminalFree
