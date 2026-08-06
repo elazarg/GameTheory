@@ -34,7 +34,7 @@ namespace GameTheory
 
 open StochasticGame
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 
 /-- Total absorption mass in the half-open window `[start, start + fuel)`. -/
 def quittingEssentialAPSWindowMass
@@ -75,7 +75,7 @@ theorem quittingEssentialAPSWindowMass_succ
     (mass : ℕ → ℝ) (start fuel : ℕ) :
     quittingEssentialAPSWindowMass mass start (fuel + 1) =
       quittingEssentialAPSWindowMass mass start fuel + mass (start + fuel) := by
-  simp [quittingEssentialAPSWindowMass, Finset.sum_range_succ]
+  simp [quittingEssentialAPSWindowMass]
 
 /-- Appending the final stage to an owner-mass window. -/
 theorem quittingEssentialAPSOwnerWindowMass_succ
@@ -84,7 +84,7 @@ theorem quittingEssentialAPSOwnerWindowMass_succ
     quittingEssentialAPSOwnerWindowMass owner mass who start (fuel + 1) =
       quittingEssentialAPSOwnerWindowMass owner mass who start fuel +
         if owner (start + fuel) = who then mass (start + fuel) else 0 := by
-  simp [quittingEssentialAPSOwnerWindowMass, Finset.sum_range_succ]
+  simp [quittingEssentialAPSOwnerWindowMass]
 
 /-- Appending the final stage to an opponent-mass window. -/
 theorem quittingEssentialAPSOpponentWindowMass_succ
@@ -93,7 +93,7 @@ theorem quittingEssentialAPSOpponentWindowMass_succ
     quittingEssentialAPSOpponentWindowMass owner mass who start (fuel + 1) =
       quittingEssentialAPSOpponentWindowMass owner mass who start fuel +
         if owner (start + fuel) = who then 0 else mass (start + fuel) := by
-  simp [quittingEssentialAPSOpponentWindowMass, Finset.sum_range_succ]
+  simp [quittingEssentialAPSOpponentWindowMass]
 
 /-- Owner mass plus opponent mass is total mass. -/
 theorem quittingEssentialAPSOwnerWindowMass_add_opponentWindowMass
@@ -124,7 +124,7 @@ theorem mul_le_quittingEssentialAPSWindowMass_mul
     (mass : ℕ → ℝ) {window : ℕ} {nu : ℝ}
     (hwindow : ∀ start,
       nu ≤ quittingEssentialAPSWindowMass mass start window) :
-    ∀ blocks start,
+    ∀ (blocks start : ℕ),
       (blocks : ℝ) * nu ≤
         quittingEssentialAPSWindowMass mass start (blocks * window) := by
   intro blocks
@@ -251,8 +251,7 @@ theorem gap_mul_quittingEssentialAPSOwnerWindowMass_le_endpoint_add_opponentMass
       simp
   | succ fuel ih =>
       intro who
-      rw [show fuel.succ = fuel + 1 by omega,
-        quittingEssentialAPSOwnerWindowMass_succ,
+      rw [quittingEssentialAPSOwnerWindowMass_succ,
         quittingEssentialAPSOpponentWindowMass_succ]
       have htime : start + (fuel + 1) = start + fuel + 1 := by omega
       rw [htime]
