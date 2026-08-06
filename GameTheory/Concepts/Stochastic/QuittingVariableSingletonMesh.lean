@@ -551,6 +551,6 @@ theorem adaptiveVariableSingletonMesh_isTerminalNash_and_delivers
         hvalueBound hpolicy hquit hcontinue hsurvival
   constructor
   · simpa only [roots] using hnash
-  · simpa only [roots, value] using hdelivery
+  · simpa [roots, value] using hdelivery
 
 end GameTheory
