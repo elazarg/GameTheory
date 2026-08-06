@@ -19,15 +19,17 @@ is convex even when the raw union of successor fibers is not.
 This observation propagates through the carrier-restricted fixed-point
 construction.  If each carrier fiber is convex, then every fiber of the
 greatest essential-APS family inside that carrier is convex.  Consequently,
-at an owner with a unique exact Flesch successor, the successor union is one
-convex fixed-point fiber and the convex progress extraction theorem applies.
-A current value then has exactly three possibilities:
+at an owner with a unique live exact Flesch successor, the successor union is
+one convex fixed-point fiber and the convex progress extraction theorem
+applies.  A current value then has exactly three possibilities:
 
 * it is the viable solo terminal endpoint;
 * it is already in the successor fiber, the zero-mass endpoint case; or
 * it has a proper one-continuation segment witness with mass in `(0,1)`.
 
-Thus the remaining obstruction on unique-successor regions is localized to
+Here “unique live” is weaker than graph-theoretic uniqueness: other exact
+successors may exist, provided their continuation fibers are empty.  Thus the
+remaining obstruction on functional live-successor regions is localized to
 zero-mass endpoint propagation, not convexification.
 -/
 
@@ -187,8 +189,31 @@ theorem quittingEssentialAPSOwnerStep_terminal_or_successor_or_proper_of_convex
   exact quittingEssentialAPSPrefix_terminal_or_continuation_or_proper_of_convex
     reward owner hconvex hnonempty hcurrent
 
-/-- If an owner has a displayed exact successor and every exact successor is
-that player, then the successor union is exactly the displayed fiber. -/
+/-- If a displayed exact successor is the only successor whose continuation
+fiber can be nonempty, then the whole successor union is exactly that fiber. -/
+theorem quittingEssentialAPSSuccessorSet_eq_of_unique_live
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (family : ι → Set (Payoff ι)) {owner successor : ι}
+    (hedge : QuittingFleschSuccessor reward owner successor)
+    (huniqueLive : ∀ candidate,
+      QuittingFleschSuccessor reward owner candidate →
+        candidate ≠ successor → family candidate = ∅) :
+    quittingEssentialAPSSuccessorSet reward family owner =
+      family successor := by
+  ext next
+  constructor
+  · rintro ⟨candidate, hcandidate, hnext⟩
+    by_cases heq : candidate = successor
+    · subst candidate
+      exact hnext
+    · have hempty := huniqueLive candidate hcandidate heq
+      rw [hempty] at hnext
+      exact hnext.elim
+  · intro hnext
+    exact ⟨successor, hedge, hnext⟩
+
+/-- Graph-theoretic successor uniqueness is a special case of unique live
+successor. -/
 theorem quittingEssentialAPSSuccessorSet_eq_of_unique
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (family : ι → Set (Payoff ι)) {owner successor : ι}
@@ -198,16 +223,28 @@ theorem quittingEssentialAPSSuccessorSet_eq_of_unique
         candidate = successor) :
     quittingEssentialAPSSuccessorSet reward family owner =
       family successor := by
-  ext next
-  constructor
-  · rintro ⟨candidate, hcandidate, hnext⟩
-    have heq := hunique candidate hcandidate
-    subst candidate
-    exact hnext
-  · intro hnext
-    exact ⟨successor, hedge, hnext⟩
+  apply quittingEssentialAPSSuccessorSet_eq_of_unique_live
+    reward family hedge
+  intro candidate hcandidate hne
+  exact (hne (hunique candidate hcandidate)).elim
 
-/-- A unique-successor union is convex when the displayed fiber is convex. -/
+/-- A unique-live-successor union is convex when the displayed fiber is
+convex. -/
+theorem convex_quittingEssentialAPSSuccessorSet_of_unique_live
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (family : ι → Set (Payoff ι)) {owner successor : ι}
+    (hedge : QuittingFleschSuccessor reward owner successor)
+    (huniqueLive : ∀ candidate,
+      QuittingFleschSuccessor reward owner candidate →
+        candidate ≠ successor → family candidate = ∅)
+    (hconvex : Convex ℝ (family successor)) :
+    Convex ℝ (quittingEssentialAPSSuccessorSet reward family owner) := by
+  rw [quittingEssentialAPSSuccessorSet_eq_of_unique_live
+    reward family hedge huniqueLive]
+  exact hconvex
+
+/-- A graph-theoretically unique successor union is convex when the displayed
+fiber is convex. -/
 theorem convex_quittingEssentialAPSSuccessorSet_of_unique
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (family : ι → Set (Payoff ι)) {owner successor : ι}
@@ -221,20 +258,21 @@ theorem convex_quittingEssentialAPSSuccessorSet_of_unique
     reward family hedge hunique]
   exact hconvex
 
-/-- **Local fixed-point progress at a unique successor.**  In a convex
-carrier, a greatest-family point at an owner with a unique nonempty successor
-fiber is terminal, is already in that successor fiber, or has a proper
-positive-mass segment into it. -/
+/-- **Local fixed-point progress at a unique live successor.**  In a convex
+carrier, a greatest-family point at an owner whose displayed successor is the
+only successor with a live nonempty fiber is terminal, is already in that
+successor fiber, or has a proper positive-mass segment into it. -/
 theorem
-    quittingEssentialAPSGreatestFamily_terminal_or_successor_or_proper_of_unique
+    quittingEssentialAPSGreatestFamily_terminal_or_successor_or_proper_of_unique_live
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (carrier : ι → Set (Payoff ι))
     (hcarrier : ∀ player, Convex ℝ (carrier player))
     {owner successor : ι}
     (hedge : QuittingFleschSuccessor reward owner successor)
-    (hunique : ∀ candidate,
+    (huniqueLive : ∀ candidate,
       QuittingFleschSuccessor reward owner candidate →
-        candidate = successor)
+        candidate ≠ successor →
+          quittingEssentialAPSGreatestFamily reward carrier candidate = ∅)
     (hnonempty :
       (quittingEssentialAPSGreatestFamily reward carrier successor).Nonempty)
     {current : Payoff ι}
@@ -255,8 +293,8 @@ theorem
       quittingEssentialAPSSuccessorSet reward
           (quittingEssentialAPSGreatestFamily reward carrier) owner =
         quittingEssentialAPSGreatestFamily reward carrier successor :=
-    quittingEssentialAPSSuccessorSet_eq_of_unique reward
-      (quittingEssentialAPSGreatestFamily reward carrier) hedge hunique
+    quittingEssentialAPSSuccessorSet_eq_of_unique_live reward
+      (quittingEssentialAPSGreatestFamily reward carrier) hedge huniqueLive
   have hsuccessorConvex : Convex ℝ
       (quittingEssentialAPSSuccessorSet reward
         (quittingEssentialAPSGreatestFamily reward carrier) owner) := by
@@ -274,5 +312,32 @@ theorem
       hsuccessorConvex hsuccessorNonempty hrestricted.2
   rw [hsuccessorEq] at hstep
   exact hstep
+
+/-- **Local fixed-point progress at a graph-theoretically unique successor.** -/
+theorem
+    quittingEssentialAPSGreatestFamily_terminal_or_successor_or_proper_of_unique
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (carrier : ι → Set (Payoff ι))
+    (hcarrier : ∀ player, Convex ℝ (carrier player))
+    {owner successor : ι}
+    (hedge : QuittingFleschSuccessor reward owner successor)
+    (hunique : ∀ candidate,
+      QuittingFleschSuccessor reward owner candidate →
+        candidate = successor)
+    (hnonempty :
+      (quittingEssentialAPSGreatestFamily reward carrier successor).Nonempty)
+    {current : Payoff ι}
+    (hcurrent : current ∈
+      quittingEssentialAPSGreatestFamily reward carrier owner) :
+    current ∈ quittingEssentialAPSTerminal reward owner ∨
+      current ∈ quittingEssentialAPSGreatestFamily reward carrier successor ∨
+      current ∈ quittingProperEssentialAPSPrefix reward owner
+        (quittingEssentialAPSGreatestFamily reward carrier successor) := by
+  exact
+    quittingEssentialAPSGreatestFamily_terminal_or_successor_or_proper_of_unique_live
+      reward carrier hcarrier hedge
+        (fun candidate hcandidate hne ↦
+          (hne (hunique candidate hcandidate)).elim)
+        hnonempty hcurrent
 
 end GameTheory
