@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.QuittingSupportWitnessReduction
 import GameTheory.Concepts.Stochastic.QuittingStationaryMinMax
+import GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
 
 /-!
 # Individual rationality supplies the support-witness tail
@@ -36,76 +37,6 @@ namespace GameTheory
 open StochasticGame Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
-
-/-- Root-sequence hazard values depend only on the opponents' coordinates. -/
-theorem quittingSupportWitnessHazardTerminalValue_congr_of_opponents
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    {first second : ℕ → ι → PMF Bool} (who : ι)
-    (hagree : ∀ time player, player ≠ who →
-      first time player = second time player)
-    (hazard : ℕ → PMF Bool) (start : ℕ) :
-    quittingRootSequenceHazardTerminalValue reward first who hazard start =
-      quittingRootSequenceHazardTerminalValue reward second who hazard start := by
-  unfold quittingRootSequenceHazardTerminalValue
-  apply congrArg
-    (fun roots => quittingRootSequenceTerminalValue reward roots who start)
-  funext time player
-  unfold quittingRootSequenceUpdate
-  by_cases hplayer : player = who
-  · subst player
-    simp
-  · simp [Function.update_of_ne hplayer, hagree time player hplayer]
-
-/-- Every stationary opponent row admits a closed tail whose target payoff is
-exactly that row's stationary unilateral cap.  The opponents repeat the row;
-the target uses an actual cap-attaining behavioral response. -/
-theorem exists_quittingSupportWitnessTargetClosedTail_of_stationaryRoot
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (root : ι → PMF Bool) (target : ι) :
-    ∃ tail : ℕ → ι → PMF Bool,
-      IsQuittingTargetClosedTail reward tail target ∧
-      quittingRootSequenceTerminalValue reward tail target 0 =
-        quittingStationaryUnilateralCap reward root target := by
-  obtain ⟨response, hresponse⟩ :=
-    exists_quittingTerminalPayoff_update_stationary_eq_cap
-      reward root target
-  let responseHazard : ℕ → PMF Bool :=
-    quittingBehaviorLiveHazard reward response
-  let tail : ℕ → ι → PMF Bool :=
-    quittingRootSequenceUpdate (fun _ => root) target responseHazard
-  have hcollapse :=
-    quittingTerminalPayoff_update_eq_rootSequenceHazardTerminalValue
-      reward (quittingStationaryProfile reward root) target response
-  rw [quittingProfileLiveRoot_stationary] at hcollapse
-  have hvalue :
-      quittingRootSequenceTerminalValue reward tail target 0 =
-        quittingStationaryUnilateralCap reward root target := by
-    dsimp only [tail]
-    change
-      quittingRootSequenceHazardTerminalValue reward (fun _ => root)
-          target responseHazard 0 =
-        quittingStationaryUnilateralCap reward root target
-    rw [← hcollapse]
-    exact hresponse
-  refine ⟨tail, ?_, hvalue⟩
-  intro hazard
-  have hsame :
-      quittingRootSequenceHazardTerminalValue reward tail target hazard 0 =
-        quittingRootSequenceHazardTerminalValue reward (fun _ => root)
-          target hazard 0 := by
-    apply quittingSupportWitnessHazardTerminalValue_congr_of_opponents
-    intro time player hplayer
-    simp [tail, quittingRootSequenceUpdate,
-      Function.update_of_ne hplayer]
-  calc
-    quittingRootSequenceHazardTerminalValue reward tail target hazard 0 =
-        quittingRootSequenceHazardTerminalValue reward (fun _ => root)
-          target hazard 0 := hsame
-    _ ≤ quittingStationaryUnilateralCap reward root target :=
-      quittingRootSequenceHazardTerminalValue_const_le_cap
-        reward root target hazard
-    _ = quittingRootSequenceTerminalValue reward tail target 0 :=
-      hvalue.symm
 
 /-- The stationary-cap infimum can be approximated from above by an actual
 row at every positive slack.  Exact attainment is neither assumed nor needed. -/
@@ -140,14 +71,14 @@ theorem exists_quittingTargetClosedTail_le_of_punishmentValue_le
     (hslack : 0 < slack)
     (hir : quittingPunishmentValue reward target ≤ boundary) :
     ∃ tail : ℕ → ι → PMF Bool,
-      IsQuittingTargetClosedTail reward tail target ∧
+      IsQuittingTargetClosedAt reward tail target 0 ∧
       quittingRootSequenceTerminalValue reward tail target 0 ≤
         boundary + slack := by
   obtain ⟨root, hroot⟩ :=
     exists_stationaryRoot_cap_lt_punishmentValue_add
       reward target hslack
-  obtain ⟨tail, hclosed, hvalue⟩ :=
-    exists_quittingSupportWitnessTargetClosedTail_of_stationaryRoot
+  obtain ⟨tail, hclosed, hvalue, _⟩ :=
+    exists_quittingTargetClosedTail_of_stationaryRoot
       reward root target
   refine ⟨tail, hclosed, ?_⟩
   rw [hvalue]

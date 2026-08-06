@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.QuittingSupportWitnessClockCollapse
 import GameTheory.Concepts.Stochastic.QuittingPunishmentFreeReduction
+import GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
 
 /-!
 # Uniform-equilibrium reduction through support witnesses
@@ -43,15 +44,6 @@ open StochasticGame Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
-/-- A root-sequence tail is closed for one marked player when that player's
-prescribed tail is already a best response to the tail's opponent roots. -/
-def IsQuittingTargetClosedTail
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (tail : ℕ → ι → PMF Bool) (target : ι) : Prop :=
-  ∀ hazard : ℕ → PMF Bool,
-    quittingRootSequenceHazardTerminalValue reward tail target hazard 0 ≤
-      quittingRootSequenceTerminalValue reward tail target 0
-
 /-- The support-witness producer needed by the deterministic phase-switch
 compiler.  The global switch is the first stage at which some player's own
 planned survival falls below `threshold`.
@@ -73,7 +65,7 @@ def HasQuittingSupportWitnessTailPackage
         (quittingRootSequenceOwnHazard plan player) cutoff ≤ threshold) ∧
     (∀ target : ι,
       ∃ tail : ℕ → ι → PMF Bool,
-        IsQuittingTargetClosedTail reward tail target ∧
+        IsQuittingTargetClosedAt reward tail target 0 ∧
         quittingRootSequenceTerminalValue reward tail target 0 ≤
           quittingRootSequenceTerminalValue reward plan target
               (quittingSupportSurvivalSwitchIndex plan threshold) +
@@ -87,7 +79,7 @@ reward bound. -/
 theorem exists_quittingPhaseSwitchPunishCap_of_targetClosedTail
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (tail : ℕ → ι → PMF Bool) (target : ι)
-    (hclosed : IsQuittingTargetClosedTail reward tail target) :
+    (hclosed : IsQuittingTargetClosedAt reward tail target 0) :
     ∃ cap : ι → ℝ,
       cap target = quittingRootSequenceTerminalValue reward tail target 0 ∧
       (∀ (who : ι) (hazard : ℕ → PMF Bool),

@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingSupportWitnessAbsorptionBridge
+import GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
 import Mathlib.Analysis.SpecialFunctions.Exp
 
 /-!
@@ -142,14 +143,14 @@ theorem exists_quittingTargetClosedTail_le_of_punishmentValue_sub_le
     {tailSlack : ℝ} (htailSlack : 0 < tailSlack)
     (hir : quittingPunishmentValue reward target - rationalityError ≤ boundary) :
     ∃ tail : ℕ → ι → PMF Bool,
-      IsQuittingTargetClosedTail reward tail target ∧
+      IsQuittingTargetClosedAt reward tail target 0 ∧
       quittingRootSequenceTerminalValue reward tail target 0 ≤
         boundary + rationalityError + tailSlack := by
   obtain ⟨root, hroot⟩ :=
     exists_stationaryRoot_cap_lt_punishmentValue_add
       reward target htailSlack
-  obtain ⟨tail, hclosed, hvalue⟩ :=
-    exists_quittingSupportWitnessTargetClosedTail_of_stationaryRoot
+  obtain ⟨tail, hclosed, hvalue, _⟩ :=
+    exists_quittingTargetClosedTail_of_stationaryRoot
       reward root target
   refine ⟨tail, hclosed, ?_⟩
   rw [hvalue]

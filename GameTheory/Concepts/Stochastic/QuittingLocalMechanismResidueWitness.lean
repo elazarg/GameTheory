@@ -614,15 +614,24 @@ theorem isExactTerminalNash_doubleSureMixerProfile (L : ℝ) :
       (5 / 7 : ℝ) * 0 + (2 / 7) * 1
     norm_num
 
-/-- The concrete residue witness therefore has a uniform-equilibrium payoff.
-The same exact terminal Nash profile supplies every positive error. -/
+/-- The double-sure mixer cashes out the entire parametric residue family:
+its explicit terminal value is a uniform-equilibrium payoff for every real
+parameter `L`. -/
+theorem isUniformEquilibriumPayoff_doubleSureMixerValue (L : ℝ) :
+    (quittingGame (gameReward L)).IsUniformEquilibriumPayoff none
+      (doubleSureMixerValue L) := by
+  rw [← terminalPayoff_doubleSureMixerProfile L]
+  exact quittingGame_isUniformEquilibriumPayoff_of_terminalNash_exact
+    (gameReward L) (doubleSureMixerProfile L)
+      (isExactTerminalNash_doubleSureMixerProfile L)
+
+/-- The concrete residue witness therefore has the explicit
+uniform-equilibrium payoff `(5/7,4,2/7)`. -/
 theorem exists_uniformEquilibriumPayoff_four :
     ∃ payoff : Payoff Player,
       (quittingGame (gameReward 4)).IsUniformEquilibriumPayoff none payoff := by
-  apply quittingGame_exists_uniformEquilibriumPayoff_of_terminalNash_all_errors
-  intro ε hε
-  refine ⟨doubleSureMixerProfile 4, ?_⟩
-  exact (isExactTerminalNash_doubleSureMixerProfile 4).mono hε.le
+  exact ⟨doubleSureMixerValue 4,
+    isUniformEquilibriumPayoff_doubleSureMixerValue 4⟩
 
 end QuittingLocalMechanismResidueWitness
 end GameTheory
