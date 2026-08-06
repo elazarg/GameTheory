@@ -31,4 +31,4 @@ jobs:
           use-mathlib-cache: true
 
       - name: Compile target-anchored tail module
-        run: lake env lean GameTheory/Concepts/Stochastic/QuittingTargetAnchoredTail.lean
+        run: lake build GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
