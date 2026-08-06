@@ -5,22 +5,26 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
-import GameTheory.Concepts.Stochastic.QuittingFiniteEndpointNashBellmanFactory
 import GameTheory.Concepts.Stochastic.QuittingCertifiedBoundaryReinsertion
 import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchProfile
 import GameTheory.Concepts.Stochastic.QuittingJointComplementarity
-import GameTheory.Concepts.Stochastic.QuittingSurvivalPrefixBridge
 
 /-!
 # Diagonal target-tail reinsertion
 
-For every player choose a suffix that is closed for that player and put the
-player's own suffix payoff in the corresponding coordinate of one diagonal
-endpoint. Build one exact finite Nash--Bellman prefix ending at that endpoint.
-The modules importing this one select the possible exceptional survival clock
-and append its player's suffix.
+This module supplies the semantic and finite-recursion layer of the
+player-indexed tail construction.
 
-No compact-minimizer or continuity claim over varying anchors is used.
+For every player, retain that player's own payoff from its designated suffix
+as one coordinate of a diagonal endpoint.  A finite exact Nash--Bellman prefix
+may then be evaluated against an actual suffix rather than a synthetic zero
+boundary.  The lemmas below identify the phase-switch payoff with the finite
+terminal-boundary recursion, prove exact finite-prefix optimality, and show
+how an endpoint mismatch is weighted by survival.
+
+Target closure, exceptional-coordinate selection, and the game-facing
+compiler are separated into downstream modules.  No compact-minimizer or
+continuity claim over varying anchors is used here.
 -/
 
 noncomputable section
@@ -30,6 +34,8 @@ namespace GameTheory
 open StochasticGame Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
+/-! ## Closed-tail families and their diagonal endpoint -/
 
 /-- The payoff vector retaining, in coordinate `target`, only that target's
 own payoff in its designated suffix. -/
@@ -49,6 +55,8 @@ theorem abs_quittingDiagonalTailEndpoint_le
     (quittingRewardBound_nonneg reward)
     (abs_reward_le_quittingRewardBound reward)
 
+/-! ## Stationary-cap diagonal endpoints -/
+
 /-- Choose one constant opponent row per player and retain each player's exact
 stationary unilateral cap in that player's coordinate. -/
 def quittingStationaryCapDiagonalEndpoint
@@ -66,6 +74,8 @@ theorem abs_quittingStationaryCapDiagonalEndpoint_le
   exact abs_quittingStationaryUnilateralCap_le_of_bound
     reward (rows target) target (quittingRewardBound_nonneg reward)
       (abs_reward_le_quittingRewardBound reward)
+
+/-! ## Finite semantic adapters for a prefix and an actual suffix -/
 
 /-- Replacing a root sequence's own coordinate by a supplied hazard and then
 using that updated coordinate as the finite hazard is semantically invisible:
@@ -92,8 +102,7 @@ theorem quittingFiniteTerminalHazardValue_rootSequenceUpdate_self
       unfold quittingFixedOpponentsQuitValue
         quittingFixedOpponentsContinueReward
         quittingFixedOpponentsContinueMass
-      rw [Function.update_idem, Function.update_idem,
-        Function.update_idem]
+      simp [quittingRootSequenceUpdate]
 
 /-- Inside the plan window, phase-switch roots give the same finite hazard
 value as the plan itself. -/
@@ -115,8 +124,11 @@ theorem quittingFiniteTerminalHazardValue_phaseSwitch_prefix
       have htail : start + 1 + fuel ≤ switch := by omega
       rw [quittingFiniteTerminalHazardValue,
         quittingFiniteTerminalHazardValue,
-        quittingPhaseSwitchRoots_of_lt plan tail hstart,
         ih (start + 1) htail]
+      unfold quittingFixedOpponentsQuitValue
+        quittingFixedOpponentsContinueReward
+        quittingFixedOpponentsContinueMass
+      rw [quittingPhaseSwitchRoots_of_lt plan tail hstart]
 
 /-- Following the phase-switch profile itself through its plan window is the
 same finite recursion as following the plan's own marginals. -/
@@ -141,6 +153,10 @@ theorem quittingFiniteTerminalHazardValue_phaseSwitch_self_prefix
         quittingFiniteTerminalHazardValue,
         quittingPhaseSwitchRoots_of_lt plan tail hstart,
         ih (start + 1) htail]
+      unfold quittingFixedOpponentsQuitValue
+        quittingFixedOpponentsContinueReward
+        quittingFixedOpponentsContinueMass
+      rw [quittingPhaseSwitchRoots_of_lt plan tail hstart]
 
 /-- An arbitrary unilateral hazard against a phase switch is exactly the
 finite plan-prefix hazard recursion with boundary equal to that hazard's
@@ -228,6 +244,8 @@ theorem quittingRootSequenceTerminalValue_phaseSwitch_eq_finite
       rw [show prescribed switch =
           quittingRootSequenceTerminalValue reward phase who switch from rfl,
         hboundary]
+
+/-! ## Exact finite-prefix optimality -/
 
 /-- Exact one-root Nash together with policy evaluation bounds both pure
 unilateral endpoints by the displayed current value. -/
@@ -370,10 +388,12 @@ theorem quittingFiniteTerminalBestResponseValue_mono_terminal
   | succ fuel ih =>
       rw [quittingFiniteTerminalBestResponseValue,
         quittingFiniteTerminalBestResponseValue]
+      have hmass : 0 ≤ quittingFixedOpponentsContinueMass roots who start :=
+        quittingStationaryContinueMass_nonneg
+          (Function.update (roots start) who (PMF.pure false))
       exact max_le_max le_rfl
         (add_le_add_left
-          (mul_le_mul_of_nonneg_left (ih (start + 1))
-            (quittingStationaryContinueMass_nonneg
-              (Function.update (roots start) who (PMF.pure false)))) _)
+          (mul_le_mul_of_nonneg_left (ih (start + 1)) hmass)
+          (quittingFixedOpponentsContinueReward reward roots who start))
 
 end GameTheory
