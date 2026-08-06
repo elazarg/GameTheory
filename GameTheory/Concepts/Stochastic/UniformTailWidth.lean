@@ -221,7 +221,7 @@ theorem exists_uniformEquilibriumPayoff_iff_hasArbitrarilyThinTailIntervals
       G.HasArbitrarilyThinTailIntervals s₀ := by
   constructor
   · rintro ⟨v, hv⟩
-    exact hv.hasArbitrarilyThinTailIntervals
+    exact IsUniformEquilibriumPayoff.hasArbitrarilyThinTailIntervals G hv
   · exact G.exists_uniformEquilibriumPayoff_of_hasArbitrarilyThinTailIntervals s₀
 
 end StochasticGame
