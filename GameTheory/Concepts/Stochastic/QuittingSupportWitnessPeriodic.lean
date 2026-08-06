@@ -168,4 +168,31 @@ theorem
     exists_isThreeEpsilonAsymptoticNash_of_divergentAbsorption_supportRationalPath
       reward plan hδ hε hsupport hdiverges hir hoverhead
 
+/-- **Uniform payoff from finite periodic witness cycles.**
+
+If every positive support tolerance admits a finite witness-retaining cycle
+which is rational to the same tolerance and has one positive-absorption phase,
+then the periodic adapter supplies the divergent paths consumed by the path
+compiler at every accuracy. -/
+theorem
+    quittingGame_exists_uniformEquilibriumPayoff_of_finiteSupportRationalCycles
+    [Nonempty ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (hcycles : ∀ δ : ℝ, 0 < δ →
+      ∃ K : ℕ,
+        ∃ cycle : Fin K → ι → PMF Bool,
+          ∃ value : Fin K → Payoff ι,
+            ∃ absorbingPhase : Fin K,
+              IsQuittingFiniteSupportRationalCycle reward cycle value δ δ ∧
+              0 < quittingRootAbsorptionMass (cycle absorbingPhase)) :
+    ∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff := by
+  apply quittingGame_exists_uniformEquilibriumPayoff_of_supportRationalDivergentPaths
+    reward
+  intro δ hδ
+  obtain ⟨K, cycle, value, absorbingPhase, hcycle, habsorbing⟩ :=
+    hcycles δ hδ
+  exact exists_supportRationalDivergentPath_of_finiteSupportRationalCycle
+    reward cycle value hcycle absorbingPhase habsorbing
+
 end GameTheory
