@@ -79,6 +79,9 @@ theorem quarter_le_badProbability_of_sharedGap_le_three_quarters
 
 /-! ## The cyclic algebra -/
 
+/-- If all three cyclic products are at least `1/4`, every coordinate is
+exactly `1/2`.  Choosing a largest coordinate reduces the proof to the sharp
+one-variable bound `x * (1 - x) ≤ 1/4`. -/
 private theorem cyclic_quarter_forces_half
     {xa xb xc : ℝ}
     (hxa0 : 0 ≤ xa) (hxa1 : xa ≤ 1)
@@ -88,117 +91,63 @@ private theorem cyclic_quarter_forces_half
     (hb : (1 / 4 : ℝ) ≤ xc * (1 - xa))
     (hc : (1 / 4 : ℝ) ≤ xa * (1 - xb)) :
     xa = (1 / 2 : ℝ) ∧ xb = (1 / 2 : ℝ) ∧ xc = (1 / 2 : ℝ) := by
-  let qa := xa * (1 - xa)
-  let qb := xb * (1 - xb)
-  let qc := xc * (1 - xc)
   have hxaC0 : 0 ≤ 1 - xa := by linarith
   have hxbC0 : 0 ≤ 1 - xb := by linarith
   have hxcC0 : 0 ≤ 1 - xc := by linarith
-  have hA0 : 0 ≤ xb * (1 - xc) := mul_nonneg hxb0 hxcC0
-  have hB0 : 0 ≤ xc * (1 - xa) := mul_nonneg hxc0 hxaC0
-  have hC0 : 0 ≤ xa * (1 - xb) := mul_nonneg hxa0 hxbC0
-  have hAB :
-      (1 / 4 : ℝ) * (1 / 4 : ℝ) ≤
-        (xb * (1 - xc)) * (xc * (1 - xa)) := by
-    calc
-      (1 / 4 : ℝ) * (1 / 4 : ℝ) ≤
-          (xb * (1 - xc)) * (1 / 4 : ℝ) :=
-        mul_le_mul_of_nonneg_right ha (by norm_num)
-      _ ≤ (xb * (1 - xc)) * (xc * (1 - xa)) :=
-        mul_le_mul_of_nonneg_left hb hA0
-  have hABC :
-      (1 / 4 : ℝ) * (1 / 4 : ℝ) * (1 / 4 : ℝ) ≤
-        (xb * (1 - xc)) * (xc * (1 - xa)) * (xa * (1 - xb)) := by
-    calc
-      (1 / 4 : ℝ) * (1 / 4 : ℝ) * (1 / 4 : ℝ) ≤
-          ((xb * (1 - xc)) * (xc * (1 - xa))) * (1 / 4 : ℝ) :=
-        mul_le_mul_of_nonneg_right hAB (by norm_num)
-      _ ≤ (xb * (1 - xc)) * (xc * (1 - xa)) * (xa * (1 - xb)) :=
-        mul_le_mul_of_nonneg_left hc (mul_nonneg hA0 hB0)
-  have hprod : (1 / 64 : ℝ) ≤ qa * qb * qc := by
-    calc
-      (1 / 64 : ℝ) =
-          (1 / 4 : ℝ) * (1 / 4 : ℝ) * (1 / 4 : ℝ) := by norm_num
-      _ ≤ (xb * (1 - xc)) * (xc * (1 - xa)) * (xa * (1 - xb)) := hABC
-      _ = qa * qb * qc := by
-        dsimp [qa, qb, qc]
-        ring
-  have hqa0 : 0 ≤ qa := by
-    dsimp [qa]
-    exact mul_nonneg hxa0 hxaC0
-  have hqb0 : 0 ≤ qb := by
-    dsimp [qb]
-    exact mul_nonneg hxb0 hxbC0
-  have hqc0 : 0 ≤ qc := by
-    dsimp [qc]
-    exact mul_nonneg hxc0 hxcC0
-  have hqa1 : qa ≤ (1 / 4 : ℝ) := by
-    dsimp [qa]
-    nlinarith [sq_nonneg (xa - 1 / 2)]
-  have hqb1 : qb ≤ (1 / 4 : ℝ) := by
-    dsimp [qb]
-    nlinarith [sq_nonneg (xb - 1 / 2)]
-  have hqc1 : qc ≤ (1 / 4 : ℝ) := by
-    dsimp [qc]
-    nlinarith [sq_nonneg (xc - 1 / 2)]
-  have hqbqc : qb * qc ≤ (1 / 16 : ℝ) := by
-    calc
-      qb * qc ≤ (1 / 4 : ℝ) * qc :=
-        mul_le_mul_of_nonneg_right hqb1 hqc0
-      _ ≤ (1 / 4 : ℝ) * (1 / 4 : ℝ) :=
-        mul_le_mul_of_nonneg_left hqc1 (by norm_num)
-      _ = (1 / 16 : ℝ) := by norm_num
-  have hqaqc : qa * qc ≤ (1 / 16 : ℝ) := by
-    calc
-      qa * qc ≤ (1 / 4 : ℝ) * qc :=
-        mul_le_mul_of_nonneg_right hqa1 hqc0
-      _ ≤ (1 / 4 : ℝ) * (1 / 4 : ℝ) :=
-        mul_le_mul_of_nonneg_left hqc1 (by norm_num)
-      _ = (1 / 16 : ℝ) := by norm_num
-  have hqaqb : qa * qb ≤ (1 / 16 : ℝ) := by
-    calc
-      qa * qb ≤ (1 / 4 : ℝ) * qb :=
-        mul_le_mul_of_nonneg_right hqa1 hqb0
-      _ ≤ (1 / 4 : ℝ) * (1 / 4 : ℝ) :=
-        mul_le_mul_of_nonneg_left hqb1 (by norm_num)
-      _ = (1 / 16 : ℝ) := by norm_num
-  have hprodA : qa * qb * qc ≤ qa * (1 / 16 : ℝ) := by
-    calc
-      qa * qb * qc = qa * (qb * qc) := by ring
-      _ ≤ qa * (1 / 16 : ℝ) :=
-        mul_le_mul_of_nonneg_left hqbqc hqa0
-  have hprodB : qa * qb * qc ≤ qb * (1 / 16 : ℝ) := by
-    calc
-      qa * qb * qc = qb * (qa * qc) := by ring
-      _ ≤ qb * (1 / 16 : ℝ) :=
-        mul_le_mul_of_nonneg_left hqaqc hqb0
-  have hprodC : qa * qb * qc ≤ qc * (1 / 16 : ℝ) := by
-    calc
-      qa * qb * qc = qc * (qa * qb) := by ring
-      _ ≤ qc * (1 / 16 : ℝ) :=
-        mul_le_mul_of_nonneg_left hqaqb hqc0
-  have hqaLower : (1 / 4 : ℝ) ≤ qa := by
-    nlinarith [hprod, hprodA]
-  have hqbLower : (1 / 4 : ℝ) ≤ qb := by
-    nlinarith [hprod, hprodB]
-  have hqcLower : (1 / 4 : ℝ) ≤ qc := by
-    nlinarith [hprod, hprodC]
-  have hqa : qa = (1 / 4 : ℝ) := le_antisymm hqa1 hqaLower
-  have hqb : qb = (1 / 4 : ℝ) := le_antisymm hqb1 hqbLower
-  have hqc : qc = (1 / 4 : ℝ) := le_antisymm hqc1 hqcLower
-  have hxa : xa = (1 / 2 : ℝ) := by
-    have h := hqa
-    dsimp [qa] at h
-    nlinarith [sq_nonneg (xa - 1 / 2)]
-  have hxb : xb = (1 / 2 : ℝ) := by
-    have h := hqb
-    dsimp [qb] at h
-    nlinarith [sq_nonneg (xb - 1 / 2)]
-  have hxc : xc = (1 / 2 : ℝ) := by
-    have h := hqc
-    dsimp [qc] at h
-    nlinarith [sq_nonneg (xc - 1 / 2)]
-  exact ⟨hxa, hxb, hxc⟩
+  have hquad : ∀ x : ℝ, x * (1 - x) ≤ (1 / 4 : ℝ) := by
+    intro x
+    nlinarith [sq_nonneg (x - 1 / 2)]
+  by_cases hab : xb ≤ xa
+  · by_cases hac : xc ≤ xa
+    · have hupper : xc * (1 - xa) ≤ xa * (1 - xa) :=
+        mul_le_mul_of_nonneg_right hac hxaC0
+      have hq : xa * (1 - xa) = (1 / 4 : ℝ) :=
+        le_antisymm (hquad xa) (hb.trans hupper)
+      have hxa : xa = (1 / 2 : ℝ) := by
+        nlinarith [hq, sq_nonneg (xa - 1 / 2)]
+      have hxc : xc = (1 / 2 : ℝ) := by
+        nlinarith [hb, hac]
+      have hxb : xb = (1 / 2 : ℝ) := by
+        nlinarith [ha, hab]
+      exact ⟨hxa, hxb, hxc⟩
+    · have haxc : xa ≤ xc := le_of_lt (lt_of_not_ge hac)
+      have hbxc : xb ≤ xc := hab.trans haxc
+      have hupper : xb * (1 - xc) ≤ xc * (1 - xc) :=
+        mul_le_mul_of_nonneg_right hbxc hxcC0
+      have hq : xc * (1 - xc) = (1 / 4 : ℝ) :=
+        le_antisymm (hquad xc) (ha.trans hupper)
+      have hxc : xc = (1 / 2 : ℝ) := by
+        nlinarith [hq, sq_nonneg (xc - 1 / 2)]
+      have hxb : xb = (1 / 2 : ℝ) := by
+        nlinarith [ha, hbxc]
+      have hxa : xa = (1 / 2 : ℝ) := by
+        nlinarith [hc, haxc]
+      exact ⟨hxa, hxb, hxc⟩
+  · have haxb : xa ≤ xb := le_of_lt (lt_of_not_ge hab)
+    by_cases hcb : xc ≤ xb
+    · have hupper : xa * (1 - xb) ≤ xb * (1 - xb) :=
+        mul_le_mul_of_nonneg_right haxb hxbC0
+      have hq : xb * (1 - xb) = (1 / 4 : ℝ) :=
+        le_antisymm (hquad xb) (hc.trans hupper)
+      have hxb : xb = (1 / 2 : ℝ) := by
+        nlinarith [hq, sq_nonneg (xb - 1 / 2)]
+      have hxa : xa = (1 / 2 : ℝ) := by
+        nlinarith [hc, haxb]
+      have hxc : xc = (1 / 2 : ℝ) := by
+        nlinarith [hb, hcb]
+      exact ⟨hxa, hxb, hxc⟩
+    · have hbxc : xb ≤ xc := le_of_lt (lt_of_not_ge hcb)
+      have hupper : xb * (1 - xc) ≤ xc * (1 - xc) :=
+        mul_le_mul_of_nonneg_right hbxc hxcC0
+      have hq : xc * (1 - xc) = (1 / 4 : ℝ) :=
+        le_antisymm (hquad xc) (ha.trans hupper)
+      have hxc : xc = (1 / 2 : ℝ) := by
+        nlinarith [hq, sq_nonneg (xc - 1 / 2)]
+      have hxb : xb = (1 / 2 : ℝ) := by
+        nlinarith [ha, hbxc]
+      have hxa : xa = (1 / 2 : ℝ) := by
+        nlinarith [hc, haxb]
+      exact ⟨hxa, hxb, hxc⟩
 
 private theorem rootTrueMass_nonneg
     (root : Player → PMF Bool) (who : Player) :
