@@ -63,7 +63,8 @@ theorem IsUniformEquilibriumPayoff.hasBoundedWorkCertificate
     G.HasBoundedWorkCertificate s₀ v := by
   obtain ⟨C, hC0, hC⟩ := G.exists_stagePayoff_nonneg_abs_bound
   have hvCube :=
-    hUE.mem_payoffCube_of_abs_stagePayoff_le G hC0 hC
+    IsUniformEquilibriumPayoff.mem_payoffCube_of_abs_stagePayoff_le
+      G hC0 hC hUE
   rw [Set.mem_univ_pi] at hvCube
   intro η hη
   have hhalf : 0 < η / 2 := by linarith
