@@ -182,8 +182,7 @@ theorem quittingHazardSurvival_mul_one_add_sum_quit_le_one
   induction cutoff with
   | zero => simp
   | succ cutoff ih =>
-      rw [Nat.succ_eq_add_one, quittingHazardSurvival_succ,
-        Finset.sum_range_succ]
+      rw [quittingHazardSurvival_succ, Finset.sum_range_succ]
       have hsurvival0 := quittingHazardSurvival_nonneg hazard cutoff
       have hquit0 := quittingHazard_quit_nonneg hazard cutoff
       have hcontinue0 := quittingHazard_continue_nonneg hazard cutoff
