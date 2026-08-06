@@ -6,14 +6,14 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.QuittingEssentialAPSCycle
 import GameTheory.Concepts.Stochastic.QuittingEssentialAPSRegression
-import GameTheory.Concepts.Stochastic.QuittingEssentialAPSCircuitProgress
+import GameTheory.Concepts.Stochastic.QuittingEssentialAPSCircuitProgressTotal
 
 /-!
 # Essential APS for the quitting singleton-flow stratum
 
 Umbrella import for the exact successor graph, the owner-indexed essential APS
 operator, its carrier-restricted greatest fixed point, convex-fiber,
-unique-successor, and bounded-window circuit progress extraction, the
+unique-successor, and total bounded-window circuit progress extraction, the
 zero-mass regression, and the supplied finite proper-cycle compiler.
 
 The implementation is deliberately conditional: it certifies the continuous
