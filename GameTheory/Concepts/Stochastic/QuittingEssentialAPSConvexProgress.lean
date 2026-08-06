@@ -54,16 +54,16 @@ theorem quittingEssentialAPSPrefix_subset_segment_of_convex
   have hjoin :
       current ∈ convexJoin ℝ
         ({quittingSoloReward reward owner} : Set (Payoff ι)) E := by
-    have hrewrite :
-        convexHull ℝ
-            (Set.insert (quittingSoloReward reward owner) E) =
-          convexJoin ℝ
-            ({quittingSoloReward reward owner} : Set (Payoff ι)) E := by
-      simpa only [hEconvex.convexHull_eq] using
-        (convexHull_insert (𝕜 := ℝ)
-          (x := quittingSoloReward reward owner) hEnonempty)
-    rw [← hrewrite]
-    exact hconvexHull
+    apply (convexHull_min ?_
+      ((convex_singleton (quittingSoloReward reward owner)).convexJoin
+        hEconvex)) hconvexHull
+    intro value hvalue
+    rcases Set.mem_insert_iff.mp hvalue with hroot | hE
+    · subst value
+      exact subset_convexJoin_left hEnonempty
+        (Set.mem_singleton (quittingSoloReward reward owner))
+    · exact subset_convexJoin_right
+        (Set.singleton_nonempty (quittingSoloReward reward owner)) hE
   rcases (mem_convexJoin.mp hjoin) with
     ⟨root, hroot, next, hnext, p, q, hp, hq, hpq, hcombo⟩
   have hrootEq : root = quittingSoloReward reward owner := by
