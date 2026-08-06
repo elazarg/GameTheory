@@ -31,6 +31,11 @@ The measured repository/CI assessment is
 - [FRONTIER.md](FRONTIER.md) is the curated mathematical state of knowledge.
 - [EssentialAPS.md](EssentialAPS.md) states the exact algebraic/executable
   boundary of the essential-APS singleton-flow formalization.
+- [SupportWitnessCompiler.md](SupportWitnessCompiler.md) records the
+  deterministic support-witness path and periodic-cycle compiler, including
+  its remaining producer obligation.
+- [PayoffPerturbationClosure.md](PayoffPerturbationClosure.md) records
+  fixed-skeleton reward stability and target-free existence closure.
 - [methods/MathResearchMethod.md](methods/MathResearchMethod.md)
 - [methods/LeanFormalizationMethod.md](methods/LeanFormalizationMethod.md)
 - [methods/ParallelResearchMethod.md](methods/ParallelResearchMethod.md)

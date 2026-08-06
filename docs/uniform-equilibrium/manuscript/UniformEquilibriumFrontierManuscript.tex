@@ -32,7 +32,7 @@
 
 \title{Uniform Equilibrium in Finite Stochastic Games\\
 \large Research Atlas, Evidence Ledger, and Current Decision Map}
-\author{Working project document --- committed snapshot \texttt{34fdc11}}
+\author{Working project document --- committed snapshot \texttt{a4f23756}}
 \date{6 August 2026}
 
 \begin{document}
@@ -49,13 +49,18 @@ The central open statement is that every finite stochastic game has a
 uniform-equilibrium payoff.  The repository has a semantic verification waist,
 discounted and analytic source machinery, public-response composition,
 several full special cases, and a detailed finite-quitting reduction.  At
-snapshot \texttt{34fdc11} the quitting front carries, in production Lean: the
+snapshot \texttt{a4f23756} the quitting front carries, in production Lean: the
 exact punishment value as a stationary stopping value (both inequalities, all
 history-dependent plans); an exact characterization of terminal sure-exit
 sets; a total two-blocker branch gate; an exact characterization of the
 one-stage collision-repair mechanism priced against the true punishment
 value; and an abstract duality identifying bounded orbit budgets with bounded
-potentials, calibrated against the repository's own one-stage operator.
+potentials, calibrated against the repository's own one-stage operator.  The
+snapshot additionally contains fixed-skeleton reward perturbation and
+target-free payoff-existence closure, a support-witness compiler from
+divergent paths or finite absorbing cycles, and a coherent essential-APS path
+with opponent block contraction on the compact functional unique-live
+stratum.
 Audited mathematics adds a no-resurrection theorem (vanishing phase
 occupation cannot repair a pointwise-invalid phase), a support-enlarged
 two-owner mechanism, and an exactly characterized semialgebraic residue for
@@ -73,8 +78,8 @@ declarations; every remaining arrow is tagged where it appears.
 \subsection{Snapshot and evidence legend}
 
 This document describes the committed repository state through
-\texttt{34fdc11} (Collision repair characterized exactly against the
-min-max).  It does not promote unstaged notes, local experiments, or an
+\texttt{a4f23756} (support-witness quitting paths and cycles compiled).  It
+does not promote unstaged notes, local experiments, or an
 attractive interface to a landed theorem.  The durable records consulted
 here are under \texttt{docs/uniform-equilibrium/} and \texttt{ideas/};
 attributed external results live in
@@ -272,9 +277,9 @@ The 2026 operator characterizes payoffs supported by a continuous
 one-randomizer-at-a-time absorption-path subclass
 \cite{AshkenaziGolanEtAl2026}. &
 The singleton-flow successor graph, convexified operator, greatest fixed
-family, zero-mass boundary, and supplied finite-cycle compiler are formalized.
-There is no converse from algebraic fixed-family membership to an executable
-path; the subset may be empty and is not a general quitting-game producer.\\
+family, coherent infinite execution, shifted-window mass, and opponent block
+contraction are formalized on the compact functional unique-live stratum.
+Local root-Nash control and coverage of arbitrary quitting games remain open.\\
 Correlated stochastic games &
 Every finite stochastic game has an autonomous correlated equilibrium payoff
 \cite{SolanVieille2002}. &
@@ -309,6 +314,24 @@ terminal-to-uniform bridge.
 delivery-and-deviation-cap constructor is exactly (UE).  A future proof may
 use another construction language, but it must ultimately expose those
 quantifiers.
+
+\subsection{Fixed-skeleton reward closure}
+
+\Status{\Prod} Replacing only the stage-payoff table preserves every finite
+history law.  If the two reward tables differ uniformly by at most \(\rho\),
+then every prescribed or unilaterally deviating finite-horizon payoff differs
+by at most \(\rho\); an \(\varepsilon\)-Nash profile for the nearby table is
+therefore an \((\varepsilon+2\rho)\)-Nash profile for the original table with
+the same horizon threshold.
+
+The target-free closure theorem assumes only that uniformly convergent nearby
+tables each admit some uniform-equilibrium payoff.  Finiteness bounds those
+targets in one payoff cube, a convergent payoff-vector subsequence is selected,
+and the nearby profiles are transferred directly.  No strategy is passed to a
+limit and no common memory bound is assumed.  Consequently, proving existence
+on a dense class of reward tables proves existence for every table on that
+fixed skeleton.  Establishing density of a useful solved class is a separate
+game-specific obligation; transition-kernel perturbations are not covered.
 
 \subsection{Adaptive potential verification}
 
@@ -1028,6 +1051,37 @@ certificate exists: every candidate at that scale must fail exact assembly or
 retain too much joint survival.  This is a quantitative restriction on a
 counterexample, not a proof that counterexamples exist.
 
+\subsection{Support-witness and essential-APS path strata}
+
+\Status{\Prod} If a quitting root path retains the support-local endpoint
+witness, the ledger charge for player \(i\) at stage \(t\) satisfies
+\[
+  \Delta L_i(t)\leq \delta q_i(t).
+\]
+The product--sum survival inequality therefore forces a ledger crossing to
+occur no earlier than an own-survival crossing.  At the first crossing among
+players, the selected player's own survival controls its joint reach and every
+other player's deleted reach.  Player-specific closed tails supplied by
+approximate individual rationality then compile a completely absorbing path
+to terminal Nash error
+\[
+  2\delta+r+\sqrt{\delta}\,(2+7M).
+\]
+Divergence of the total one-stage absorption charge implies complete
+absorption.  A finite support-rational cycle with one positive-absorption
+phase repeats a positive charge once per period and is therefore a complete
+adapter to the same path compiler.  The result does not produce such paths or
+cycles for arbitrary games.
+
+\Status{\Cond} The essential-APS route supplies a different structural
+object.  Under compact convex carriers, a functional unique-live Flesch
+successor, finite-window face avoidance, and terminal-freeness, it constructs
+one coherent infinite executable path with exact Bellman transport.  Uniform
+shifted-window mass and strict cross-gain charging yield a common block factor
+\(\rho<1\) for every player's opponent-survival clock.  Exact or vanishing
+local root-Nash error is still required before the nonperiodic equilibrium
+compiler applies; the structural hypotheses are not a general producer.
+
 \section{Repair languages, alternate routes, and falsifiers}
 
 \subsection{What can be verified now}
@@ -1222,6 +1276,18 @@ literal unbounded-length fence.\\
 Two-ended endpoint extraction &
 \texttt{QuittingTwoEndedDynamicDebtCompactification.lean} &
 \Prod; no middle transport or decoder.\\
+Fixed-skeleton payoff closure &
+\texttt{Uniform.lean}, \texttt{UniformPayoffExistenceClosure.lean} &
+\Prod: target-free existence is closed under uniform reward limits; density of
+the solved mechanism strata is unproved.\\
+Support-witness paths and cycles &
+\texttt{QuittingSupportWitnessUniform.lean} &
+\Prod as a conditional compiler; no all-game support-rational path or cycle
+producer.\\
+Essential-APS infinite path &
+\texttt{QuittingEssentialAPSInfiniteContraction.lean} &
+\Cond: coherent execution and opponent contraction on the compact functional
+unique-live stratum; local root-Nash control remains.\\
 Marked absorption cylinder/path &
 No Lean artifact yet; exact target in the positive-plateau claim files &
 \Open: finite semantic encoding, strategic closed graph, endpoint adapter, and
@@ -1251,6 +1317,12 @@ recorded), simultaneous discharge open at three.\\
 \subsection{Ordered research agenda}
 
 \begin{enumerate}
+\item \textbf{Test density before compactifying strategies.}  Compute the
+closure of the payoff tables covered by the proved stationary, cyclic,
+support-enlarged, and path mechanisms.  If it is dense, fixed-skeleton payoff
+closure proves existence everywhere without a strategy limit.  If its
+complement has an open cell, select a rational interior table for obstruction
+search.
 \item \textbf{Decide the diagonal-survival producer.}  Either construct
 accuracy-indexed exact diagonal-endpoint prefixes with joint survival tending
 to zero, or derive a positive survival floor and classify the resulting

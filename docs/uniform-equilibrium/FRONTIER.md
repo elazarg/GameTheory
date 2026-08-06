@@ -97,21 +97,55 @@ claim that every equilibrium belongs to one finite grammar.
 ## Essential APS on the singleton-flow stratum
 
 The essential-APS layer formalizes a genuine but conditional positive stratum.
-For consecutive proper singleton arcs, singleton genericity forces the exact
-asymmetric Flesch successor relation. The owner-indexed full-convex-hull
-operator is monotone and has a greatest fixed family inside every supplied
-carrier. A supplied finite proper cycle embeds in that family and its selected
-value compiles, through the singleton-flow mesh, to a uniform-equilibrium
-payoff. Positive hazards and owner changes imply the opponent contraction
-needed by the compiler.
+Inside compact convex carriers with a functional unique-live Flesch successor,
+the greatest fibers are convex and compact. Terminal-free fibers admit one
+coherent infinite executable run, rather than unrelated finite paths. Uniform
+finite-window face avoidance forces positive mass in every shifted window;
+strict Flesch cross-gains then charge owner mass to opponent mass and yield a
+single block-contraction factor for every player's deleted survival clock. The
+implemented singleton roots also satisfy exact Bellman transport.
 
-This does not close the quitting-game problem. The full convex hull can mix
-several continuation points, whereas execution selects one continuation at a
-time. Moreover, a nontrivial affine self-loop can enter the algebraic operator
-only at zero absorption mass. Consequently there is no proved converse from
-fixed-family membership to an executable path or finite cycle, and no claim
-that the one-randomizer stratum covers all equilibria. The durable interface
-and exact theorem map are recorded in [EssentialAPS.md](EssentialAPS.md).
+This does not close the quitting-game problem. The structural hypotheses are
+not derived for arbitrary games, and the infinite run still lacks the exact or
+vanishing-error local root-Nash input required by the nonperiodic equilibrium
+compiler. A supplied finite proper cycle remains a separate, complete positive
+stratum. The durable interface and exact theorem map are recorded in
+[EssentialAPS.md](EssentialAPS.md).
+
+## Support-witness quitting paths
+
+Retaining the support-local one-stage witness gives a deterministic alternative
+to the abstract rank-one crossing route. Each ledger increment is bounded by
+`delta` times the player's own Quit probability, so the product--sum survival
+inequality forces every ledger crossing to occur no earlier than an own-survival
+crossing. The first such crossing supplies joint reach for the marked player
+and deleted reach for all other players. Player-specific closed tails obtained
+from approximate individual rationality then compile a completely absorbing
+path to terminal Nash error
+
+```text
+2 delta + r + sqrt(delta) (2 + 7 M).
+```
+
+Divergent total absorption is sufficient, and a finite witness-retaining cycle
+with one positive-absorption phase compiles to such a path. These are genuine
+consumer theorems, but not a producer for arbitrary games: support optimality,
+all-time individual rationality, and divergent absorption (or the corresponding
+finite cycle) remain hypotheses. See
+[SupportWitnessCompiler.md](SupportWitnessCompiler.md).
+
+## Fixed-skeleton payoff closure
+
+Uniform stage-reward perturbations leave all finite-history laws unchanged and
+move every baseline or deviating finite-horizon payoff by at most the reward
+distance. Consequently an `epsilon`-Nash profile in the nearby game is an
+`epsilon + 2 rho`-Nash profile in the original game, with the same horizon
+threshold. Selected-target sequential closure is proved without taking a limit
+of strategies. The target-free existence-set closure uses only compactness of a
+bounded finite-dimensional payoff cube; this turns dense coverage by solved
+payoff tables into full fixed-skeleton coverage. Transition-kernel perturbations
+are outside this result. See
+[PayoffPerturbationClosure.md](PayoffPerturbationClosure.md).
 
 ## Exact open hinge
 

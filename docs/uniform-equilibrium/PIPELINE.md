@@ -1,13 +1,10 @@
 # Uniform-equilibrium project pipeline
 
-**Production-Lean checkpoint:** `14d75ff`; **research-control checkpoint:**
-`cd1db11`, both audited on 2026-08-03. **This file revised 2026-08-05** —
-Session IX capstone wave: the two-player capstone landed and is recorded, the
-published cycle-existence hole is occupied end to end (`MATH-P0-6` `DONE`),
-the status index is rebuilt to cover every row, and its self-contradictions
-(`LEAN-P1-5`, `MATH-P0-6`, `LEAN-P1-1`, `PC-010`) are reconciled. Lean work
-landing after the last audited commit is uncommitted-or-newer and not yet
-reflected in these checkpoints.
+**Production-Lean checkpoint:** `a4f23756`.  The last complete repository
+audit remains the 2026-08-03 pair `14d75ff` / `cd1db11`. **This file revised
+2026-08-06** — fixed-skeleton payoff closure, coherent essential-APS
+contraction, support-witness path/cycle compilation, and generic cyclic
+exposure rigidity are incorporated and reflected below.
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
@@ -16,9 +13,15 @@ route is a selected open design, not production mathematics. New Lean files are
 never counted as landed until committed, built, and reflected in the owning
 claim and [`FRONTIER.md`](FRONTIER.md).
 
-**Handoff validation.** `lake build` succeeds. Local Markdown links under
-`docs/`, `ideas/`, and `REORG.md` resolve. **The repository audit now exits
-zero**, and is a usable gate rather than a permanently red one: zero orphans,
+**Handoff validation.** At the last fully audited checkpoint, `lake build`
+succeeded, local Markdown links resolved, and the repository audit exited
+zero.  For the 2026-08-06 incorporation, targeted builds of
+`UniformPayoffExistenceClosure`, `QuittingEssentialAPSInfiniteContraction`, and
+`QuittingSupportWitnessUniform` completed without warnings; the generic cyclic
+exposure module and its two direct consumers also checked cleanly.  A full root
+build and audit were deliberately not repeated: this lane optimizes fast
+experimentation with dependency-closure confidence rather than a complete
+audit on every mathematical commit.  The previous audit established zero orphans,
 the restored axiom audit reporting only `propext`, `Classical.choice`, and
 `Quot.sound`, and the leaf invariant checked by the script. The `opaque` and
 `native_decide` occurrences survive only inside the quarantined `BlockPairK11`
@@ -31,6 +34,40 @@ and the reduced cap-package leaf in `QuittingReducedCapConjecture.lean`.
 These are owned by the engineering queue below and the [proof-engineering
 audit](../../ephemeral/ProofEngineeringAudit.md), rather than blockers hidden in
 the P0 mathematical status.
+
+## Incorporation checkpoint — 2026-08-06
+
+- **Generic cyclic exposure (`a0ab77aa`, production).**  The sharp
+  `min exposure <= 1/4` theorem and fair-row rigidity now hold for every finite
+  permutation system.  The three-player shared-punishment result is a direct
+  specialization; duplicated three-coordinate case algebra was removed.
+- **Reward perturbation and target-free closure (`eceee7bb`, `b0eee54a`,
+  production).**  A uniform reward perturbation of size `rho` moves every
+  prescribed or deviating finite-horizon payoff by at most `rho` and transfers
+  Nash error by `2 rho`.  Mere existence is closed under uniform reward-table
+  limits on a fixed finite skeleton: nearby targets are bounded in a common
+  payoff cube, and only a target subsequence is compactified.  Therefore dense
+  coverage by solved reward tables would prove full fixed-skeleton coverage.
+  No density theorem for the current mechanism catalog is claimed.
+- **Essential APS (`f641f7a4`, conditional structural result).**  Compact
+  functional unique-live fibers admit coherent infinite execution, uniform
+  shifted-window mass, opponent-mass charging, exact Bellman transport, and a
+  common opponent-survival block contraction.  The theorem does not supply
+  local root-Nash control or prove that its stratum covers arbitrary games.
+- **Support witnesses (`a4f23756`, conditional compiler).**  Retaining the
+  support-local endpoint witness collapses the ledger clock deterministically.
+  Divergent support-rational paths compile with error
+  `2 delta + r + sqrt(delta) (2 + 7 M)`; finite cycles with one absorbing phase
+  adapt to the same compiler.  Existence of such paths/cycles at every
+  tolerance remains the producer obligation.  The abstract rank-one crossing
+  theorem is retained separately and supplies no game-specific process or
+  variation bound.
+
+The resulting priority delta is precise: test density of the positively solved
+payoff-table strata first; independently seek a support-rational
+path/cycle producer; and, on the APS lane, isolate the missing local root-Nash
+adapter.  None of these conditional compilers receives generic existence
+credit before its producer is proved.
 
 ## How to maintain this file
 
