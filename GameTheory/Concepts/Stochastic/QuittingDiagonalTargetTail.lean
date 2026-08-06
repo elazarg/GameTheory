@@ -290,7 +290,7 @@ theorem quittingGame_exists_uniformEquilibriumPayoff_of_diagonalTargetTails
     exists_isεAsymptoticNash_of_finiteDiagonalEndpointFactory
       reward tail cutoff hδ.le hclosed hjoint
   have hscale : 4 * M * δ ≤ ε := by
-  dsimp only [δ]
+    change 4 * M * (ε / (4 * M + 1)) ≤ ε
   have hratio : 4 * M / (4 * M + 1) ≤ 1 := by
     rw [div_le_iff₀ hdenom]
     linarith

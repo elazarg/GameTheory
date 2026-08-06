@@ -615,6 +615,7 @@ import GameTheory.Concepts.Stochastic.UniformNonexistenceCertificate
 import GameTheory.Concepts.Stochastic.QuittingCirculationTwoCoordinateBoundary
 import GameTheory.Concepts.Stochastic.QuittingCirculationChiFloorBoundary
 import GameTheory.Concepts.Stochastic.QuittingStationaryMinMax
+import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail
 import Math.ChargedPathBudget
 import Math.ChargedPathBudgetCounterexamples
 import GameTheory.Concepts.Stochastic.QuittingCollisionRepairCharacterization
