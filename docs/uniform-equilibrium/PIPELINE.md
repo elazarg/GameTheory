@@ -1,9 +1,9 @@
 # Uniform-equilibrium project pipeline
 
-**Production-Lean checkpoint:** `a4f23756`.  The last complete repository
+**Production-Lean checkpoint:** `b702f477`.  The last complete repository
 audit remains the 2026-08-03 pair `14d75ff` / `cd1db11`. **This file revised
-2026-08-06** — fixed-skeleton payoff closure, coherent essential-APS
-contraction, support-witness path/cycle compilation, and generic cyclic
+2026-08-06** — fixed-skeleton payoff closure, essential-APS uniform-payoff
+compilation, support-witness path/cycle compilation, and generic cyclic
 exposure rigidity are incorporated and reflected below.
 
 This is project-control truth: decisions, dependency priorities, gates, and
@@ -18,9 +18,11 @@ succeeded, local Markdown links resolved, and the repository audit exited
 zero.  For the 2026-08-06 incorporation, targeted builds of
 `UniformPayoffExistenceClosure`, `QuittingEssentialAPSInfiniteContraction`, and
 `QuittingSupportWitnessUniform` completed without warnings; the generic cyclic
-exposure module and its two direct consumers also checked cleanly.  A full root
-build and audit were deliberately not repeated: this lane optimizes fast
-experimentation with dependency-closure confidence rather than a complete
+exposure module and its two direct consumers also checked cleanly. The
+subsequent `QuittingEssentialAPSUniformPayoff` and public
+`QuittingEssentialAPSAll` dependency closures likewise built without warnings.
+A full root build and audit were deliberately not repeated: this lane optimizes
+fast experimentation with dependency-closure confidence rather than a complete
 audit on every mathematical commit.  The previous audit established zero orphans,
 the restored axiom audit reporting only `propext`, `Classical.choice`, and
 `Quot.sound`, and the leaf invariant checked by the script. The `opaque` and
@@ -49,11 +51,15 @@ the P0 mathematical status.
   payoff cube, and only a target subsequence is compactified.  Therefore dense
   coverage by solved reward tables would prove full fixed-skeleton coverage.
   No density theorem for the current mechanism catalog is claimed.
-- **Essential APS (`f641f7a4`, conditional structural result).**  Compact
+- **Essential APS (`b702f477`, conditional positive stratum).**  Compact
   functional unique-live fibers admit coherent infinite execution, uniform
   shifted-window mass, opponent-mass charging, exact Bellman transport, and a
-  common opponent-survival block contraction.  The theorem does not supply
-  local root-Nash control or prove that its stratum covers arbitrary games.
+  common opponent-survival block contraction. Compact terminal-freeness also
+  gives a uniform coarse-hazard ceiling. Fixed logarithmic subdivision makes
+  the local Quit error vanish without changing coarse survival, and a
+  nonperiodic Snell supersolution compiles every initial point in the component
+  to a uniform-equilibrium payoff. The theorem does not prove that this
+  component exists or covers the relevant payoff set in arbitrary games.
 - **Support witnesses (`a4f23756`, conditional compiler).**  Retaining the
   support-local endpoint witness collapses the ledger clock deterministically.
   Divergent support-rational paths compile with error
@@ -64,9 +70,10 @@ the P0 mathematical status.
   variation bound.
 
 The resulting priority delta is precise: test density of the positively solved
-payoff-table strata first; independently seek a support-rational
-path/cycle producer; and, on the APS lane, isolate the missing local root-Nash
-adapter.  None of these conditional compilers receives generic existence
+payoff-table strata first; independently seek a support-rational path/cycle
+producer; and, on the APS lane, determine when an arbitrary game supplies a
+nonempty compact terminal-free unique-live component with the required face
+avoidance. None of these conditional compilers receives generic existence
 credit before its producer is proved.
 
 ## How to maintain this file
@@ -259,10 +266,13 @@ result changes it. The order is by decisiveness, not by ease:
 Flesch successor graph, full-convex-hull algebraic operator, executable segment
 subrelation, carrier-restricted greatest fixed family, and zero-mass regression
 are formalized. A supplied finite proper cycle embeds in the algebraic family
-and compiles to a uniform-equilibrium payoff; positive hazards plus owner
-changes now derive, rather than assume, the needed opponent contraction. This
-does not reopen the rejected finite-cycle completeness route: no theorem
-extracts a path or cycle from the convexified fixed family. See
+and compiles to a uniform-equilibrium payoff. More generally, compact
+functional unique-live terminal-free fibers with finite-window face avoidance
+produce a coherent infinite path, uniform opponent contraction, and a hazard
+ceiling below one. Fixed subdivision and the nonperiodic supersolution then
+prove that every initial point in that component is a uniform-equilibrium
+payoff. The remaining APS obligation is structural coverage: no theorem shows
+that every quitting game has such a nonempty component. See
 [`EssentialAPS.md`](EssentialAPS.md).
 
 Standing corrections from the same review acceptance: the negative map's

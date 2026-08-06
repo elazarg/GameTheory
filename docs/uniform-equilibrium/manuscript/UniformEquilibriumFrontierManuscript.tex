@@ -49,7 +49,7 @@ The central open statement is that every finite stochastic game has a
 uniform-equilibrium payoff.  The repository has a semantic verification waist,
 discounted and analytic source machinery, public-response composition,
 several full special cases, and a detailed finite-quitting reduction.  At
-snapshot \texttt{a4f23756} the quitting front carries, in production Lean: the
+snapshot \texttt{b702f477} the quitting front carries, in production Lean: the
 exact punishment value as a stationary stopping value (both inequalities, all
 history-dependent plans); an exact characterization of terminal sure-exit
 sets; a total two-blocker branch gate; an exact characterization of the
@@ -58,9 +58,9 @@ value; and an abstract duality identifying bounded orbit budgets with bounded
 potentials, calibrated against the repository's own one-stage operator.  The
 snapshot additionally contains fixed-skeleton reward perturbation and
 target-free payoff-existence closure, a support-witness compiler from
-divergent paths or finite absorbing cycles, and a coherent essential-APS path
-with opponent block contraction on the compact functional unique-live
-stratum.
+divergent paths or finite absorbing cycles, and a fixed-mesh nonperiodic
+compiler proving uniform payoffs throughout the compact terminal-free
+functional unique-live essential-APS stratum.
 Audited mathematics adds a no-resurrection theorem (vanishing phase
 occupation cannot repair a pointwise-invalid phase), a support-enlarged
 two-owner mechanism, and an exactly characterized semialgebraic residue for
@@ -279,7 +279,9 @@ one-randomizer-at-a-time absorption-path subclass
 The singleton-flow successor graph, convexified operator, greatest fixed
 family, coherent infinite execution, shifted-window mass, and opponent block
 contraction are formalized on the compact functional unique-live stratum.
-Local root-Nash control and coverage of arbitrary quitting games remain open.\\
+Terminal-free compact separation, fixed subdivision, and nonperiodic Snell
+comparison close the uniform-payoff theorem on that stratum; coverage of
+arbitrary quitting games remains open.\\
 Correlated stochastic games &
 Every finite stochastic game has an autonomous correlated equilibrium payoff
 \cite{SolanVieille2002}. &
@@ -1073,14 +1075,20 @@ phase repeats a positive charge once per period and is therefore a complete
 adapter to the same path compiler.  The result does not produce such paths or
 cycles for arbitrary games.
 
-\Status{\Cond} The essential-APS route supplies a different structural
-object.  Under compact convex carriers, a functional unique-live Flesch
-successor, finite-window face avoidance, and terminal-freeness, it constructs
-one coherent infinite executable path with exact Bellman transport.  Uniform
-shifted-window mass and strict cross-gain charging yield a common block factor
-\(\rho<1\) for every player's opponent-survival clock.  Exact or vanishing
-local root-Nash error is still required before the nonperiodic equilibrium
-compiler applies; the structural hypotheses are not a general producer.
+\Status{\Prod} The essential-APS route supplies a different, conditional
+positive stratum.  Under compact convex carriers, a functional unique-live
+Flesch successor, finite-window face avoidance, and terminal-freeness, it
+constructs one coherent infinite executable path with exact Bellman transport.
+Uniform shifted-window mass and strict cross-gain charging yield a common
+block factor \(\rho<1\) for every player's opponent-survival clock.  Compact
+separation from the singleton endpoint also gives one coarse-hazard ceiling
+\(p_*<1\).  At each requested accuracy, a fixed logarithmic subdivision
+preserves the coarse survival clock and exact Continue transport while making
+the immediate-Quit error uniformly small.  Adding that error to every value
+is a nonperiodic Snell supersolution, so no stagewise error accumulates.
+Consequently every initial point in the displayed component is a uniform-
+equilibrium payoff.  The structural hypotheses are not proved for arbitrary
+quitting games.
 
 \section{Repair languages, alternate routes, and falsifiers}
 
@@ -1189,14 +1197,17 @@ The essential-APS operator of \cite{AshkenaziGolanEtAl2026} suggests invariant
 sets and successor rules for continuous absorption paths on which at most one
 player randomizes at a mass time.  Its characterized payoff subset may be
 empty.  It should be mined for the structure of $V$ and $\mathcal O$, not
-reported as coverage of the positive plateau.  The repository now formalizes
-the finite singleton-flow interface: consecutive proper arcs force the Flesch
-successor relation; executable one-continuation segments embed into the larger
-full-convex-hull operator; the restricted operator has a greatest algebraic
-fixed family; and a supplied finite proper cycle compiles to a fixed-target
-uniform payoff.  The zero-mass self-loop regression prevents reading this as a
-converse realization theorem: convexified fixed-family membership alone does
-not produce an executable path or cycle.
+reported as coverage of the positive plateau.  The repository formalizes both
+the finite singleton-flow interface and a conditional infinite positive
+stratum.  Consecutive proper arcs force the Flesch successor relation;
+executable one-continuation segments embed into the larger full-convex-hull
+operator; and the restricted operator has a greatest algebraic fixed family.
+On a compact functional unique-live terminal-free component with finite-window
+face avoidance, coherent execution, opponent contraction, a uniform hazard
+ceiling, and fixed-mesh compilation prove that every initial component value
+is a uniform payoff.  The zero-mass self-loop regression and the structural
+component hypotheses prevent reading this as a converse realization or
+arbitrary-game coverage theorem.
 
 \paragraph{Endogenous correlation.}
 The correlated-existence theorem points to a possible mechanism but also a
@@ -1285,9 +1296,10 @@ Support-witness paths and cycles &
 \Prod as a conditional compiler; no all-game support-rational path or cycle
 producer.\\
 Essential-APS infinite path &
-\texttt{QuittingEssentialAPSInfiniteContraction.lean} &
-\Cond: coherent execution and opponent contraction on the compact functional
-unique-live stratum; local root-Nash control remains.\\
+\texttt{QuittingEssentialAPSUniformPayoff.lean} &
+\Prod as a conditional positive stratum: compact functional unique-live,
+terminal-free components with finite-window face avoidance compile to uniform
+payoffs; arbitrary-game component production remains open.\\
 Marked absorption cylinder/path &
 No Lean artifact yet; exact target in the positive-plateau claim files &
 \Open: finite semantic encoding, strategic closed graph, endpoint adapter, and

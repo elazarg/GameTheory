@@ -1,4 +1,4 @@
-# Essential APS: coherent execution and opponent contraction
+# Essential APS: from coherent execution to uniform payoffs
 
 This module family formalizes the certificate-facing part of the essential APS
 approach of Ashkenazi-Golan, Krasikov, Rainer, and Solan, *The APS approach for

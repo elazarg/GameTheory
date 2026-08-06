@@ -1,10 +1,12 @@
 # Uniform-equilibrium mathematical frontier
 
-**Curated at commit `14d75ff`, 2026-08-03; prose updated through `52aabd3`,
-2026-08-05.** Session IX capstone wave: the punishment-floor/feasible-set
+**Production-Lean checkpoint `b702f477`, 2026-08-06.** Session IX capstone
+wave: the punishment-floor/feasible-set
 paragraph (edited stale before both landed) is corrected, the two-player
 capstone and its no-exact-stationary-equilibrium negative are recorded, and
-the minimality corollary is fixed. Production Lean is machine truth; checked
+the minimality corollary is fixed. Fixed-skeleton payoff closure,
+support-witness compilation, and the essential-APS conditional positive
+stratum are reflected below. Production Lean is machine truth; checked
 experiments and uncommitted files are labelled separately and do not become
 landed by appearing here.
 
@@ -103,12 +105,20 @@ coherent infinite executable run, rather than unrelated finite paths. Uniform
 finite-window face avoidance forces positive mass in every shifted window;
 strict Flesch cross-gains then charge owner mass to opponent mass and yield a
 single block-contraction factor for every player's deleted survival clock. The
-implemented singleton roots also satisfy exact Bellman transport.
+implemented singleton roots also satisfy exact Bellman transport. Compact
+terminal-freeness gives one coarse-hazard ceiling below one. A fixed
+logarithmic subdivision at each requested accuracy preserves the coarse
+survival contraction and exact Continue transport while making the immediate-
+Quit error uniformly small. The nonperiodic Snell supersolution therefore
+proves that every initial point in the component is a uniform-equilibrium
+payoff.
 
 This does not close the quitting-game problem. The structural hypotheses are
-not derived for arbitrary games, and the infinite run still lacks the exact or
-vanishing-error local root-Nash input required by the nonperiodic equilibrium
-compiler. A supplied finite proper cycle remains a separate, complete positive
+not derived for arbitrary games, so no arbitrary game is asserted to contain a
+nonempty component of this kind. But the former local root-Nash gap inside the
+component is closed. The mesh compiler is stated more generally for any
+bounded viable singleton-flow path with a uniform hazard ceiling and opponent
+block contraction; a supplied finite proper cycle remains a separate positive
 stratum. The durable interface and exact theorem map are recorded in
 [EssentialAPS.md](EssentialAPS.md).
 
