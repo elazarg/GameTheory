@@ -37,6 +37,7 @@ jobs:
           lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail
           lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailSplice
           lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCompiler
+          lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTailCertificate
 
       - name: Check proof placeholders
         run: python3 scripts/check_lean_placeholders.py
