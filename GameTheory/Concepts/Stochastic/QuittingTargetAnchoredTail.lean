@@ -186,12 +186,22 @@ theorem quittingRootSequenceHazardTerminalGap_le_finiteExactChain_of_boundary
   have hgap := quittingRootSequenceHazardTerminalGap_le_finiteBudget
     reward roots who hazard 0 cutoff debt
       (by simpa only [Nat.zero_add] using hdebt)
-  rw [hsum, zero_add, ← hvalueZero] at hgap
-  exact hgap
+  have hgap' :
+      quittingRootSequenceHazardTerminalValue reward roots who hazard 0 -
+          quittingRootSequenceTerminalValue reward roots who 0 ≤
+        (∑ time ∈ Finset.range cutoff,
+            quittingOpponentSurvivalWeight roots who 0 time *
+              quittingPrescribedOneStepResidual reward roots who
+                (quittingRootSequenceTerminalValue reward roots who) time) +
+          quittingOpponentSurvivalWeight roots who 0 cutoff * debt := by
+    simpa only [Nat.zero_add] using hgap
+  rw [hsum, zero_add, ← hvalueZero] at hgap'
+  exact hgap'
 
 /-- One target-closed suffix and one small own-survival coordinate control all
-players.  The target's suffix debt is zero; every other suffix debt is at most
-`2*M`, and its opponent reach contains the target's own survival as a factor. -/
+players. The target's suffix debt is zero; every other suffix debt is at
+most `2*M`, and its opponent reach contains the target's own survival as a
+factor. -/
 theorem quittingRootSequenceHazardTerminalGap_le_targetOwnSurvival
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
@@ -225,8 +235,12 @@ theorem quittingRootSequenceHazardTerminalGap_le_targetOwnSurvival
       quittingRootSequenceHazardTerminalGap_le_finiteExactChain_of_boundary
         reward roots value target hazard cutoff 0
           hterminal hpolicy hnash hdebt
+    have hgapZero :
+        quittingRootSequenceHazardTerminalValue reward roots target hazard 0 -
+            value 0 target ≤ 0 := by
+      simpa using hgap
     have hrhs : 0 ≤ 2 * M * δ := by positivity
-    simpa using hgap.trans hrhs
+    exact hgapZero.trans hrhs
   · have hdeviation :
         |quittingRootSequenceHazardTerminalValue reward roots who hazard cutoff| ≤ M := by
       unfold quittingRootSequenceHazardTerminalValue
@@ -253,7 +267,7 @@ theorem quittingRootSequenceHazardTerminalGap_le_targetOwnSurvival
         quittingOpponentSurvivalWeight roots who 0 cutoff ≤ δ := by
       exact
         (quittingOpponentSurvivalWeight_le_quittingHazardSurvival_ownHazard
-          roots hwho.symm cutoff).trans hsurvival
+          roots (Ne.symm hwho) cutoff).trans hsurvival
     have hscaled :
         quittingOpponentSurvivalWeight roots who 0 cutoff * (2 * M) ≤
           δ * (2 * M) :=
@@ -293,7 +307,10 @@ theorem finiteExactChainProfile_isεAsymptoticNash_of_targetClosedTail
   have hselected :=
     eq_quittingRootSequenceTerminalValue_of_finiteBoundary
       reward roots value cutoff hterminal hpolicy
-  rw [← congrFun (hselected 0 (Nat.zero_le cutoff)) who]
+  have hvalueZero : value 0 who =
+      quittingRootSequenceTerminalValue reward roots who 0 :=
+    congrFun (hselected 0 (Nat.zero_le cutoff)) who
+  rw [hvalueZero] at hgap
   linarith
 
 end GameTheory
