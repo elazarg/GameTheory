@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - codex/target-anchored-tail
+      - codex/target-anchored-tail-ci
   pull_request:
     branches:
       - uniform-existence
+      - codex/target-anchored-tail
   workflow_dispatch:
 
 permissions:
