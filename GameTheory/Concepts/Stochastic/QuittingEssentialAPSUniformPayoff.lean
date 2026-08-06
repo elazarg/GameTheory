@@ -167,8 +167,7 @@ theorem
     have hboundNe : bound ≠ 0 := ne_of_gt hbound
     have hidentity : D * delta = epsilon / 4 := by
       dsimp only [D, delta]
-      field_simp [hboundNe]
-      ring
+      field_simp [hboundNe] <;> ring
     rw [hidentity]
     linarith
   let length : ℕ → ℕ := fun block =>
