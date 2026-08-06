@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingSharedPunishmentThreePlayerExtremal
+import Math.CyclicExposure
 import Math.ProbabilityMassFunction.Simplex
 
 /-!
@@ -79,76 +80,6 @@ theorem quarter_le_badProbability_of_sharedGap_le_three_quarters
 
 /-! ## The cyclic algebra -/
 
-/-- If all three cyclic products are at least `1/4`, every coordinate is
-exactly `1/2`.  Choosing a largest coordinate reduces the proof to the sharp
-one-variable bound `x * (1 - x) ≤ 1/4`. -/
-private theorem cyclic_quarter_forces_half
-    {xa xb xc : ℝ}
-    (hxa0 : 0 ≤ xa) (hxa1 : xa ≤ 1)
-    (hxb0 : 0 ≤ xb) (hxb1 : xb ≤ 1)
-    (hxc0 : 0 ≤ xc) (hxc1 : xc ≤ 1)
-    (ha : (1 / 4 : ℝ) ≤ xb * (1 - xc))
-    (hb : (1 / 4 : ℝ) ≤ xc * (1 - xa))
-    (hc : (1 / 4 : ℝ) ≤ xa * (1 - xb)) :
-    xa = (1 / 2 : ℝ) ∧ xb = (1 / 2 : ℝ) ∧ xc = (1 / 2 : ℝ) := by
-  have hxaC0 : 0 ≤ 1 - xa := by linarith
-  have hxbC0 : 0 ≤ 1 - xb := by linarith
-  have hxcC0 : 0 ≤ 1 - xc := by linarith
-  have hquad : ∀ x : ℝ, x * (1 - x) ≤ (1 / 4 : ℝ) := by
-    intro x
-    nlinarith [sq_nonneg (x - 1 / 2)]
-  by_cases hab : xb ≤ xa
-  · by_cases hac : xc ≤ xa
-    · have hupper : xc * (1 - xa) ≤ xa * (1 - xa) :=
-        mul_le_mul_of_nonneg_right hac hxaC0
-      have hq : xa * (1 - xa) = (1 / 4 : ℝ) :=
-        le_antisymm (hquad xa) (hb.trans hupper)
-      have hxa : xa = (1 / 2 : ℝ) := by
-        nlinarith [hq, sq_nonneg (xa - 1 / 2)]
-      have hxc : xc = (1 / 2 : ℝ) := by
-        nlinarith [hb, hac]
-      have hxb : xb = (1 / 2 : ℝ) := by
-        nlinarith [ha, hab]
-      exact ⟨hxa, hxb, hxc⟩
-    · have haxc : xa ≤ xc := le_of_lt (lt_of_not_ge hac)
-      have hbxc : xb ≤ xc := hab.trans haxc
-      have hupper : xb * (1 - xc) ≤ xc * (1 - xc) :=
-        mul_le_mul_of_nonneg_right hbxc hxcC0
-      have hq : xc * (1 - xc) = (1 / 4 : ℝ) :=
-        le_antisymm (hquad xc) (ha.trans hupper)
-      have hxc : xc = (1 / 2 : ℝ) := by
-        nlinarith [hq, sq_nonneg (xc - 1 / 2)]
-      have hxb : xb = (1 / 2 : ℝ) := by
-        nlinarith [ha, hbxc]
-      have hxa : xa = (1 / 2 : ℝ) := by
-        nlinarith [hc, haxc]
-      exact ⟨hxa, hxb, hxc⟩
-  · have haxb : xa ≤ xb := le_of_lt (lt_of_not_ge hab)
-    by_cases hcb : xc ≤ xb
-    · have hupper : xa * (1 - xb) ≤ xb * (1 - xb) :=
-        mul_le_mul_of_nonneg_right haxb hxbC0
-      have hq : xb * (1 - xb) = (1 / 4 : ℝ) :=
-        le_antisymm (hquad xb) (hc.trans hupper)
-      have hxb : xb = (1 / 2 : ℝ) := by
-        nlinarith [hq, sq_nonneg (xb - 1 / 2)]
-      have hxa : xa = (1 / 2 : ℝ) := by
-        nlinarith [hc, haxb]
-      have hxc : xc = (1 / 2 : ℝ) := by
-        nlinarith [hb, hcb]
-      exact ⟨hxa, hxb, hxc⟩
-    · have hbxc : xb ≤ xc := le_of_lt (lt_of_not_ge hcb)
-      have hupper : xb * (1 - xc) ≤ xc * (1 - xc) :=
-        mul_le_mul_of_nonneg_right hbxc hxcC0
-      have hq : xc * (1 - xc) = (1 / 4 : ℝ) :=
-        le_antisymm (hquad xc) (ha.trans hupper)
-      have hxc : xc = (1 / 2 : ℝ) := by
-        nlinarith [hq, sq_nonneg (xc - 1 / 2)]
-      have hxb : xb = (1 / 2 : ℝ) := by
-        nlinarith [ha, hbxc]
-      have hxa : xa = (1 / 2 : ℝ) := by
-        nlinarith [hc, haxb]
-      exact ⟨hxa, hxb, hxc⟩
-
 private theorem rootTrueMass_nonneg
     (root : Player → PMF Bool) (who : Player) :
     0 ≤ (root who true).toReal := ENNReal.toReal_nonneg
@@ -168,31 +99,21 @@ theorem quittingProfileLiveRoot_trueMass_eq_half_of_sharedGap_le_three_quarters
     (quittingProfileLiveRoot reward profile 0 player true).toReal =
       (1 / 2 : ℝ) := by
   let root := quittingProfileLiveRoot reward profile 0
-  let xa := (root Player.a true).toReal
-  let xb := (root Player.b true).toReal
-  let xc := (root Player.c true).toReal
-  have ha := quarter_le_badProbability_of_sharedGap_le_three_quarters
-    profile hgap Player.a
-  have hb := quarter_le_badProbability_of_sharedGap_le_three_quarters
-    profile hgap Player.b
-  have hc := quarter_le_badProbability_of_sharedGap_le_three_quarters
-    profile hgap Player.c
-  rw [pmfBool_false_toReal] at ha hb hc
-  change (1 / 4 : ℝ) ≤ xb * (1 - xc) at ha
-  change (1 / 4 : ℝ) ≤ xc * (1 - xa) at hb
-  change (1 / 4 : ℝ) ≤ xa * (1 - xb) at hc
-  obtain ⟨hxa, hxb, hxc⟩ := cyclic_quarter_forces_half
-    (rootTrueMass_nonneg root Player.a)
-    (rootTrueMass_le_one root Player.a)
-    (rootTrueMass_nonneg root Player.b)
-    (rootTrueMass_le_one root Player.b)
-    (rootTrueMass_nonneg root Player.c)
-    (rootTrueMass_le_one root Player.c)
-    ha hb hc
-  cases player with
-  | a => exact hxa
-  | b => exact hxb
-  | c => exact hxc
+  let x : Player → ℝ := fun who => (root who true).toReal
+  have hunit : ∀ who, 0 ≤ x who ∧ x who ≤ 1 := fun who =>
+    ⟨rootTrueMass_nonneg root who, rootTrueMass_le_one root who⟩
+  have hall : ∀ who,
+      (1 / 4 : ℝ) ≤ cyclicExposureNeighbours.exposure x who := by
+    intro who
+    have h := quarter_le_badProbability_of_sharedGap_le_three_quarters
+      profile hgap who
+    rw [pmfBool_false_toReal] at h
+    simpa [cyclicExposureNeighbours, Math.CyclicExposure.Neighbours.exposure,
+      x, root] using h
+  have hfair :=
+    cyclicExposureNeighbours.eq_fair_of_forall_quarter_le_exposure
+      x hunit hall
+  simpa [x, root] using congrFun hfair player
 
 private theorem eq_fairMarginal_of_true_toReal_eq_half
     (marginal : PMF Bool)

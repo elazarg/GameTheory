@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingSharedPunishment
+import Math.CyclicExposure
 import Math.PMFProduct.Bool
 
 /-!
@@ -49,6 +50,17 @@ def other : Player → Player
   | .a => .c
   | .b => .a
   | .c => .b
+
+/-- The cyclic successor and predecessor maps as a generic exposure system. -/
+def cyclicExposureNeighbours : Math.CyclicExposure.Neighbours Player where
+  next := next
+  prev := other
+  prev_next := by
+    intro who
+    cases who <;> rfl
+  next_prev := by
+    intro who
+    cases who <;> rfl
 
 @[simp] theorem next_ne_self (who : Player) : next who ≠ who := by
   cases who <;> decide
@@ -247,50 +259,21 @@ private theorem trueMass_le_one (root : Player → PMF Bool) (who : Player) :
     simpa using PMF.coe_le_one (root who) true)
 
 /-- Among the three cyclic products `x_next * (1-x_other)`, one is at most
-`1/4`.  The proof chooses a largest marginal. -/
+`1/4`. This is the three-player specialization of the sharp finite cyclic
+exposure theorem. -/
 theorem exists_badProbability_le_quarter
     (root : Player → PMF Bool) :
     ∃ who : Player,
       (root (next who) true).toReal *
         (root (other who) false).toReal ≤ (1 / 4 : ℝ) := by
-  let xa := (root Player.a true).toReal
-  let xb := (root Player.b true).toReal
-  let xc := (root Player.c true).toReal
-  have hxa0 : 0 ≤ xa := trueMass_nonneg root Player.a
-  have hxb0 : 0 ≤ xb := trueMass_nonneg root Player.b
-  have hxc0 : 0 ≤ xc := trueMass_nonneg root Player.c
-  have hxa1 : xa ≤ 1 := trueMass_le_one root Player.a
-  have hxb1 : xb ≤ 1 := trueMass_le_one root Player.b
-  have hxc1 : xc ≤ 1 := trueMass_le_one root Player.c
-  have hquad : ∀ x : ℝ, x * (1 - x) ≤ (1 / 4 : ℝ) := by
-    intro x
-    nlinarith [sq_nonneg (x - 1 / 2)]
-  by_cases hab : xa ≤ xb
-  · by_cases hbc : xb ≤ xc
-    · refine ⟨Player.a, ?_⟩
-      rw [pmfBool_false_toReal]
-      change xb * (1 - xc) ≤ (1 / 4 : ℝ)
-      have hmul := mul_le_mul_of_nonneg_right hbc (by linarith : 0 ≤ 1 - xc)
-      exact hmul.trans (hquad xc)
-    · refine ⟨Player.c, ?_⟩
-      rw [pmfBool_false_toReal]
-      change xa * (1 - xb) ≤ (1 / 4 : ℝ)
-      have hmul := mul_le_mul_of_nonneg_right hab (by linarith : 0 ≤ 1 - xb)
-      exact hmul.trans (hquad xb)
-  · by_cases hac : xa ≤ xc
-    · refine ⟨Player.a, ?_⟩
-      rw [pmfBool_false_toReal]
-      change xb * (1 - xc) ≤ (1 / 4 : ℝ)
-      have hba : xb ≤ xa := le_of_not_ge hab
-      have hbc : xb ≤ xc := hba.trans hac
-      have hmul := mul_le_mul_of_nonneg_right hbc (by linarith : 0 ≤ 1 - xc)
-      exact hmul.trans (hquad xc)
-    · refine ⟨Player.b, ?_⟩
-      rw [pmfBool_false_toReal]
-      change xc * (1 - xa) ≤ (1 / 4 : ℝ)
-      have hle : xc ≤ xa := le_of_not_ge hac
-      have hmul := mul_le_mul_of_nonneg_right hle (by linarith : 0 ≤ 1 - xa)
-      exact hmul.trans (hquad xa)
+  let x : Player → ℝ := fun who => (root who true).toReal
+  obtain ⟨who, hwho⟩ :=
+    cyclicExposureNeighbours.exists_exposure_le_quarter x fun player =>
+      ⟨trueMass_nonneg root player, trueMass_le_one root player⟩
+  refine ⟨who, ?_⟩
+  rw [pmfBool_false_toReal]
+  simpa [cyclicExposureNeighbours, Math.CyclicExposure.Neighbours.exposure,
+    x] using hwho
 
 /-- Against every committed shared plan, some player can secure at least
 `-1/4` simply by quitting at the first stage. -/
