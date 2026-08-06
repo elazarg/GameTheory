@@ -11,10 +11,6 @@ import GameTheory.Concepts.Stochastic.QuittingSingletonStationaryRoot
 /-!
 # Opponent contraction from essential-APS mass
 
-The bounded-drift theorem converts sufficiently large total APS mass into a
-positive lower bound on every player's opponent mass.  This file supplies the
-remaining probability-theoretic bridge.
-
 For nonnegative stage hazards `q_t ≤ 1`,
 
 `(∏ (1 - q_t)) * (1 + ∑ q_t) ≤ 1`.
@@ -49,6 +45,7 @@ def quittingEssentialAPSSingletonRoots
   fun time ↦ quittingSoloStationaryRoot (owner time)
     (quittingHazardCoin (mass time) (hmass0 time) (hmass1 time))
 
+omit [Fintype ι] in
 /-- Opponent stage mass inherits nonnegativity. -/
 theorem quittingEssentialAPSOpponentStageMass_nonneg
     (owner : ℕ → ι) (mass : ℕ → ℝ)
@@ -58,6 +55,7 @@ theorem quittingEssentialAPSOpponentStageMass_nonneg
   unfold quittingEssentialAPSOpponentStageMass
   split <;> simp_all
 
+omit [Fintype ι] in
 /-- Opponent stage mass is at most one. -/
 theorem quittingEssentialAPSOpponentStageMass_le_one
     (owner : ℕ → ι) (mass : ℕ → ℝ)
@@ -67,6 +65,7 @@ theorem quittingEssentialAPSOpponentStageMass_le_one
   unfold quittingEssentialAPSOpponentStageMass
   split <;> simp_all
 
+omit [Fintype ι] in
 /-- The window sum of stagewise opponent mass is the previously defined
 opponent window mass. -/
 theorem sum_quittingEssentialAPSOpponentStageMass
@@ -95,7 +94,8 @@ theorem quittingFixedOpponentsContinueMass_singletonRoots
   · subst who
     simp [quittingEssentialAPSOpponentStageMass]
   · have hne : who ≠ owner time := Ne.symm howner
-    rw [quittingStationaryFixedOpponentsContinueMass_solo_other hne]
+    rw [update_quittingSoloStationaryRoot_other hne,
+      quittingStationaryContinueMass_solo]
     simp [quittingEssentialAPSOpponentStageMass, howner]
 
 /-- Finite opponent survival of singleton roots is the product of one minus
@@ -245,7 +245,7 @@ theorem
     (successor : ι → ι) (owner : ℕ → ι)
     (mass : ℕ → ℝ) (value : ℕ → Payoff ι)
     {gap bound nu : ℝ} {window blocks : ℕ}
-    (hgapPos : 0 < gap) (hbound : 0 ≤ bound) (hnu : 0 < nu)
+    (hgapPos : 0 < gap) (hbound : 0 ≤ bound) (_hnu : 0 < nu)
     (hwindow : ∀ start,
       nu ≤ quittingEssentialAPSWindowMass mass start window)
     (hwindowPos : 0 < window) (hblocksPos : 0 < blocks)
