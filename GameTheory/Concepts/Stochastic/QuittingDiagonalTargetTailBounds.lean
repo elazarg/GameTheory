@@ -64,6 +64,7 @@ theorem quittingPhaseSwitchTargetHazardGap_le_zero
   have hself := quittingFiniteTerminalHazardValue_self_eq_declared
     reward plan value target switch hpolicy 0 switch (by omega)
   simp only [Nat.zero_add, mul_zero, add_zero] at hprefix
+  rw [hmatch] at hprefix
   simp only [Nat.zero_add] at hself
   rw [hmatch] at hself
   rw [hdeviation, hprescribed]
