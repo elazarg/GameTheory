@@ -34,3 +34,4 @@ jobs:
         run: |
           lake build GameTheory.Concepts.Stochastic.QuittingTargetAnchoredTail
           lake build GameTheory.Concepts.Stochastic.QuittingFiniteEndpointNashBellmanFactory
+          lake build GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail
