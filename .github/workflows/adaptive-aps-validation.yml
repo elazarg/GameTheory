@@ -1,0 +1,46 @@
+name: Adaptive essential-APS validation
+
+on:
+  push:
+    branches:
+      - agent/adaptive-essential-aps-mesh-ci
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adaptive-essential-aps-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lean:
+    name: Build adaptive APS compiler
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out validation branch
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Reject proof placeholders
+        run: python3 scripts/check_lean_placeholders.py
+
+      - name: Set up Lean and restore caches
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: false
+          test: false
+          use-mathlib-cache: true
+          use-github-cache: true
+
+      - name: Build adaptive APS compiler modules
+        run: |
+          lake build \
+            GameTheory.Concepts.Stochastic.QuittingInfinitePathSupersolution \
+            GameTheory.Concepts.Stochastic.QuittingVariableMeshSchedule \
+            GameTheory.Concepts.Stochastic.QuittingVariableSingletonMesh \
+            GameTheory.Concepts.Stochastic.QuittingEssentialAPSUniformPayoff \
+            GameTheory.Concepts.Stochastic.QuittingEssentialAPSAll
