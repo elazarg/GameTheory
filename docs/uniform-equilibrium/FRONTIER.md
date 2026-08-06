@@ -1,6 +1,10 @@
 # Uniform-equilibrium mathematical frontier
 
-**Production-Lean checkpoint `b702f477`, 2026-08-06.** Session IX capstone
+**Production-Lean checkpoint `5e7d0e7a`, 2026-08-07.** The conditional
+multi-owner face-circulation producer class, its compact chronological
+selection and uniform-payoff consumer, are now production, with concrete
+scaled-cyclic and four-player stress corollaries. Finite phase-occupation LP
+duality is also production, conditional on occupation nonemptiness. Session IX capstone
 wave: the punishment-floor/feasible-set
 paragraph (edited stale before both landed) is corrected, the two-player
 capstone and its no-exact-stationary-equilibrium negative are recorded, and
@@ -143,6 +147,31 @@ consumer theorems, but not a producer for arbitrary games: support optimality,
 all-time individual rationality, and divergent absorption (or the corresponding
 finite cycle) remain hypotheses. See
 [SupportWitnessCompiler.md](SupportWitnessCompiler.md).
+
+## Multi-owner face-circulation producer stratum
+
+A supplied bounded `FaceCirculationCertificate` is now a genuine conditional
+producer class. If phase support sizes are bounded, every phase ratio is at
+most one common `a < 1`, and its floor dominates formal
+`quittingPunishmentValue`, balanced owner words yield a forward orbit with
+Bellman transport, support-local approximate Nash rows, and a uniform positive
+absorption lower bound. Reversing finite prefixes and compact extraction yield
+a chronological path; joint-survival selection identifies its Bellman values
+with actual terminal tails; the support-witness compiler then yields an
+existential uniform-equilibrium payoff.
+
+The compact reversal does not formally identify that payoff with a named
+circulation vertex. The theorem also does not construct a certificate for an
+arbitrary game, so the arbitrary-game producer remains open. The scaled cyclic
+weight and the repaired four-player stress weight `(x, lambda) = (2, 1)` are
+concrete corollaries. The exact interface is recorded in
+[CirculationUniformPayoff.md](CirculationUniformPayoff.md).
+
+Finite phase-occupation LP/duality is an adjacent verification stratum: given
+a phase occupation, it proves semantic strong duality, an optimal occupation,
+and a phase-bias dual certificate. It does not prove occupation nonemptiness
+and is not a strategic producer. Equal-atom material remains unformalized and
+is only a possible future intake target.
 
 ## Fixed-skeleton payoff closure
 

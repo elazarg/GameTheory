@@ -1,10 +1,10 @@
 # Uniform-equilibrium project pipeline
 
-**Production-Lean checkpoint:** `b702f477`.  The last complete repository
+**Production-Lean checkpoint:** `5e7d0e7a`.  The last complete repository
 audit remains the 2026-08-03 pair `14d75ff` / `cd1db11`. **This file revised
-2026-08-06** — fixed-skeleton payoff closure, essential-APS uniform-payoff
-compilation, support-witness path/cycle compilation, and generic cyclic
-exposure rigidity are incorporated and reflected below.
+2026-08-07** — discrete hazard stopping laws, finite phase-occupation duality,
+target-anchored payoff closure, and conditional multi-owner face-circulation
+uniform-payoff compilation are incorporated and reflected below.
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
@@ -37,7 +37,24 @@ These are owned by the engineering queue below and the [proof-engineering
 audit](../../ephemeral/ProofEngineeringAudit.md), rather than blockers hidden in
 the P0 mathematical status.
 
-## Incorporation checkpoint — 2026-08-06
+## Incorporation checkpoint — 2026-08-07
+
+- **Face circulations (`5e7d0e7a`, production).** A supplied bounded
+  `FaceCirculationCertificate` with a common phase-ratio ceiling below `1` and
+  floor at least `quittingPunishmentValue` is a genuine quitting-game producer:
+  balanced multi-owner circulation, compact reversal to a chronological
+  support path, joint-survival selection, and the uniform-payoff compiler yield
+  an existential payoff. The theorem neither constructs certificates for
+  arbitrary games nor identifies the selected payoff with a named certificate
+  vertex. The scaled cyclic and repaired four-player stress weights are concrete
+  corollaries.
+- **Closure and duality interfaces (`a405f8a6`, `1773ce7e`, `94160ee5`,
+  production).** Generic discrete-hazard stopping laws now underlie the
+  quitting adapters. Target-anchored tails, parametric residue payoffs, and
+  reward-limit closure consolidate the payoff consumer. Finite phase-occupation
+  LP/duality proves semantic strong duality only conditional on a supplied
+  phase occupation; it does not establish occupation nonemptiness or act as a
+  strategic producer.
 
 - **Generic cyclic exposure (`a0ab77aa`, production).**  The sharp
   `min exposure <= 1/4` theorem and fair-row rigidity now hold for every finite
@@ -2268,21 +2285,24 @@ replaces the exact-cycle branch wholesale.
 
 ### `MATH-P0-9` — the lock/unlock dichotomy for orbit variation
 
-- **Status:** ANSWERED IN PART (Q159) — **the open core, reshaped.**
+- **Status:** ANSWERED IN PART — conditional circulation producer LANDED;
+  arbitrary-weight certificate production remains open.
 - **Lane:** P0
 - **Depends:** the label lock (`L`), transported leverage, the
   survival-window landing.
-- **Record:** this file; Q159; the two seals
+- **Record:** this file; [circulation payoff interface](CirculationUniformPayoff.md);
+  Q159; the two seals
   [`WeightedOneStageNashCannotPriceMotion`](../../ideas/UniformEquilibriumLiterature/WeightedOneStageNashCannotPriceMotion.md)
   and
   [`SingletonFaceCirculationsSteerOrbits`](../../ideas/QuittingGameConjecture/SingletonFaceCirculationsSteerOrbits.md).
 
-**Dispatch state (2026-08-05, evening wave).** Agents: the multi-owner
-circulation case, the §2.1 absence proofs (completing the K1-falsity package
-at `L`; `K1` here is Q159's own numbering, distinct from Q148's `K1`–`K2` and
-from `InvertedCounterexampleSearch`'s `K1`/`K4`), the pinned-pure decoupling
-lemma, and certsearch's
-circulation-certificate mode with the `F′(x, ε)` grid. Questions filed:
+**Production update (2026-08-07).** The multi-owner circulation case is now
+landed: a supplied bounded `FaceCirculationCertificate` with ratio ceiling
+below one and punishment-valid floor is a genuine producer through compact
+chronological path selection and the support-witness compiler. It remains
+conditional and does not manufacture certificates for arbitrary weights.
+The §2.1 absence proofs, pinned-pure decoupling lemma, and certificate search
+remain research work. Questions filed:
 **Q162** — the true min-max of a quitting weight (stationarity of the worst
 plan, the finite reduction, the three named tables including `F′`'s
 diagonal-tightness suspicion, and the three consumer shapes) — and **Q163** —
@@ -2299,14 +2319,15 @@ quit mass and variation decouple there, and every future motion argument
 must declare its correspondence — support-perfect (constant plausible,
 membership transfer from global equilibria unproven) or weighted (no motion
 floor). Locks split into motion locks (control only overlap mass) and sealed
-locks (imply an instant branch). The **constructive replacement** is the
-singleton-face circulation theorem: a finite, LP-checkable-at-length-one
-certificate yielding arbitrarily-large-quit-mass rational orbits, uniform in
-`n`, support-perfect, hence — through the compiler — a **new existence
-class**. Next moves: machine-check (in flight); run the certificate check
-over Q160's family; the missing branch (strict local continuation rests with
-diffuse trembles) and the support-purification transfer are the two named
-open steps toward all weights.
+locks (imply an instant branch). The **constructive replacement** is now the
+multi-owner face-circulation theorem: a supplied finite certificate yields
+balanced rational orbit data, compact chronological support paths, and a **new
+conditional existence class**. The machine-checked theorem requires a bounded
+certificate, phase-ratio ceiling strictly below one, and a floor above formal
+punishment values; it does not solve arbitrary weights. Certificate search over
+the remaining families, the missing branch (strict local continuation rests
+with diffuse trembles), and support-purification transfer remain open steps
+toward all weights.
 
 **Objective.** Decide the conjecture: on a weight with no stationary and no
 instant approximate equilibria, either some coordinate's value can lock (and a
@@ -2393,9 +2414,13 @@ the question.
 
 ### `MATH-P0-11` — the minimal open family: the four-player cyclic phase diagram
 
-- **Status:** **SOLVED (followup answer)** — the repaired family contains no
-  counterexample region and no open region. Every `F′(x, λ)` with `x > 0`
-  admits a **rational singleton-face circulation** with explicit payoff
+- **Status:** **SOLVED (followup answer); stress-point cashout LANDED.** The
+  scaled-cyclic calibration and repaired four-player stress weight
+  `(x, λ) = (2, 1)` now have concrete production uniform-payoff corollaries
+  through supplied circulation certificates. The broader followup family
+  analysis remains audited mathematics, not a blanket production theorem.
+  Its reported claim was that every `F′(x, λ)`
+  with `x > 0` admits a **rational singleton-face circulation** with explicit payoff
   `v(x) = (1, 3−2a, 1/a, 1)`, `a` the root of `2a² + (x−1)a − 1 = 0` —
   `λ`-independent payoff, period `O(1/δ)`; `x ≤ 0` has the exact
   opposite-pair equilibrium. Extracted en route, each valuable beyond the
@@ -2406,13 +2431,15 @@ the question.
   a hand-assembled local-defects-to-arbitrary-deviations chain (§5, the
   compiler's shape done directly for this family); and the hardest remaining
   stress point for *exact-cycle classification* (not existence):
-  `(x, λ) = (2, 1)`, circulation payoff `(1, 2, 2, 1)`. Because the
-  circulations are singleton-face, cash-out rides the **already
-  machine-checked** orbit theorem; machine-checking the `(2,1)` certificate
-  dispatched. **Strategic consequence**: the circulation class swallowed the
-  minimal candidate whole, including the diagonal-tight-floor case — the
-  counterexample hunt must target weights *outside* the circulation class,
-  and the class's true boundary is now the sharpest open question.
+  `(x, λ) = (2, 1)`, reported circulation payoff `(1, 2, 2, 1)`. At that
+  stress point the certificate, formal punishment-floor inequality, and
+  uniform-payoff existence are now machine-checked. The compact selector does
+  not identify its existential payoff with `(1, 2, 2, 1)`. **Reported
+  strategic consequence**: the circulation class swallowed the minimal
+  candidate family, including the diagonal-tight-floor case; production Lean
+  currently certifies the stress point, not the whole parameter family. The
+  counterexample hunt should target weights outside the circulation class,
+  whose true boundary remains the sharpest open question.
 
   Previous state, kept for the record: Q160's family **collapsed by an authoring flaw**
   (all triples zeroed made all-quit a period-one exact subgame-perfect
@@ -2801,9 +2828,11 @@ trichotomy's open core (`MATH-P0-9`) is meant to close the general case.
   to blocker designation.
 - `MATH-P0-9`'s open core was answered in part (Q159): the weighted
   one-stage correspondence's motion floor is false by a tremble
-  counterexample, and the constructive replacement -- the singleton-face
-  circulation theorem -- supplies a new existence class through the relaxed
-  compiler (`MATH-P0-8`), still `READY`.
+  counterexample. Production `5e7d0e7a` turns any supplied bounded
+  multi-owner face-circulation certificate with a punishment-valid floor into
+  a uniform-payoff existence result through compact chronological selection
+  and the support-witness compiler. Arbitrary-weight certificate production
+  and the distinct relaxed compiler (`MATH-P0-8`) remain open.
 
 ## Handoff maintenance
 

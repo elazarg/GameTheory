@@ -32,8 +32,8 @@
 
 \title{Uniform Equilibrium in Finite Stochastic Games\\
 \large Research Atlas, Evidence Ledger, and Current Decision Map}
-\author{Working project document --- committed snapshot \texttt{a4f23756}}
-\date{6 August 2026}
+\author{Working project document --- committed snapshot \texttt{5e7d0e7a}}
+\date{7 August 2026}
 
 \begin{document}
 \maketitle
@@ -49,7 +49,7 @@ The central open statement is that every finite stochastic game has a
 uniform-equilibrium payoff.  The repository has a semantic verification waist,
 discounted and analytic source machinery, public-response composition,
 several full special cases, and a detailed finite-quitting reduction.  At
-snapshot \texttt{b702f477} the quitting front carries, in production Lean: the
+snapshot \texttt{5e7d0e7a} the quitting front carries, in production Lean: the
 exact punishment value as a stationary stopping value (both inequalities, all
 history-dependent plans); an exact characterization of terminal sure-exit
 sets; a total two-blocker branch gate; an exact characterization of the
@@ -60,7 +60,13 @@ snapshot additionally contains fixed-skeleton reward perturbation and
 target-free payoff-existence closure, a support-witness compiler from
 divergent paths or finite absorbing cycles, and a fixed-mesh nonperiodic
 compiler proving uniform payoffs throughout the compact terminal-free
-functional unique-live essential-APS stratum.
+functional unique-live essential-APS stratum.  It now also contains a genuine
+conditional producer class: a supplied bounded multi-owner face circulation
+with phase ratios uniformly below one and floor above formal punishment values
+compiles, by compact chronological selection, to an existential uniform payoff;
+the scaled cyclic and repaired four-player stress weights are concrete cases.
+Finite phase-occupation LP duality is production only conditional on an
+existing occupation and is not a strategic producer.
 Audited mathematics adds a no-resurrection theorem (vanishing phase
 occupation cannot repair a pointwise-invalid phase), a support-enlarged
 two-owner mechanism, and an exactly characterized semialgebraic residue for
@@ -78,8 +84,8 @@ declarations; every remaining arrow is tagged where it appears.
 \subsection{Snapshot and evidence legend}
 
 This document describes the committed repository state through
-\texttt{a4f23756} (support-witness quitting paths and cycles compiled).  It
-does not promote unstaged notes, local experiments, or an
+\texttt{5e7d0e7a} (multi-owner face circulations compiled to uniform payoffs).
+It does not promote unstaged notes, local experiments, or an
 attractive interface to a landed theorem.  The durable records consulted
 here are under \texttt{docs/uniform-equilibrium/} and \texttt{ideas/};
 attributed external results live in
@@ -1075,6 +1081,24 @@ phase repeats a positive charge once per period and is therefore a complete
 adapter to the same path compiler.  The result does not produce such paths or
 cycles for arbitrary games.
 
+\Status{\Prod} Multi-owner face circulations now supply a genuine subclass of
+those path producers.  Given a bounded \texttt{FaceCirculationCertificate}, a
+uniform phase-ratio ceiling \(a<1\), bounded phase supports, and a floor above
+each formal \texttt{quittingPunishmentValue}, balanced owner words produce a
+forward support-perfect orbit with a positive absorption lower bound.
+Reversing finite prefixes and compact extraction gives a chronological path;
+joint-survival selection identifies its Bellman values with its actual terminal
+tails; the preceding compiler supplies an existential uniform-equilibrium
+payoff.  This does not construct certificates for arbitrary games, nor does it
+formally identify the selected payoff with a named circulation vertex.  The
+scaled cyclic and repaired four-player stress weights are concrete corollaries.
+
+\Status{\Prod} Finite phase-occupation LP duality is separate: conditional on
+an existing occupation, it supplies an optimum and a phase-bias dual witness
+with equal semantic value.  It proves neither occupation nonemptiness nor a
+strategic producer.  Equal-atom material remains unformalized intake, not a
+production alternative.
+
 \Status{\Prod} The essential-APS route supplies a different, conditional
 positive stratum.  Under compact convex carriers, a functional unique-live
 Flesch successor, finite-window face avoidance, and terminal-freeness, it
@@ -1293,8 +1317,16 @@ Fixed-skeleton payoff closure &
 the solved mechanism strata is unproved.\\
 Support-witness paths and cycles &
 \texttt{QuittingSupportWitnessUniform.lean} &
-\Prod as a conditional compiler; no all-game support-rational path or cycle
-producer.\\
+\Prod as a conditional compiler; multi-owner face circulations are now a
+genuine supplied-certificate producer subclass, but no all-game producer.\\
+Face-circulation uniform payoff &
+\texttt{MultiOwnerFaceCirculationCompactPath.lean} &
+\Prod conditional on a bounded certificate, ratio ceiling \(<1\), and
+punishment-valid floor; compact selection gives an existential payoff only.\\
+Finite phase-occupation duality &
+\texttt{Math/Probability/PhaseOccupationDuality.lean} &
+\Prod conditional on phase-occupation nonemptiness; verification/optimization,
+not a strategic producer.\\
 Essential-APS infinite path &
 \texttt{QuittingEssentialAPSUniformPayoff.lean} &
 \Prod as a conditional positive stratum: compact functional unique-live,

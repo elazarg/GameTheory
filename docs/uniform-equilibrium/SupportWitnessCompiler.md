@@ -77,11 +77,15 @@ accuracy.
 
 ## Scope boundary
 
-These modules are compilers, not general producers.  They do not prove that an
-arbitrary finite quitting game supplies a support-rational divergent path or a
-finite cycle at every tolerance.  Periodicity alone also supplies neither the
-support inequalities nor individual rationality; both remain explicit fields
-of the finite-cycle interface.
+These modules are compilers, not general producers.  Multi-owner face
+circulations now supply a genuine conditional subclass of producers: a supplied
+bounded `FaceCirculationCertificate` with phase-ratio ceiling below one and a
+floor above `quittingPunishmentValue` yields the required paths and hence a
+uniform payoff.  They still do not prove that an arbitrary finite quitting game
+supplies such a certificate, a support-rational divergent path, or a finite
+cycle at every tolerance.  Periodicity alone also supplies neither the support
+inequalities nor individual rationality; both remain explicit fields of the
+finite-cycle interface.  See [CirculationUniformPayoff.md](CirculationUniformPayoff.md).
 
 `QuittingRankOneCrossing.lean` is a separate abstract survival estimate for a
 centered bounded score process with a crossing implication and expected

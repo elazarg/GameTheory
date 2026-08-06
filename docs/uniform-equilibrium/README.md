@@ -34,6 +34,9 @@ The measured repository/CI assessment is
 - [SupportWitnessCompiler.md](SupportWitnessCompiler.md) records the
   deterministic support-witness path and periodic-cycle compiler, including
   its remaining producer obligation.
+- [CirculationUniformPayoff.md](CirculationUniformPayoff.md) records the
+  conditional multi-owner face-circulation producer class, its compact path
+  selection, and its concrete quitting-game corollaries.
 - [PayoffPerturbationClosure.md](PayoffPerturbationClosure.md) records
   fixed-skeleton reward stability and target-free existence closure.
 - [methods/MathResearchMethod.md](methods/MathResearchMethod.md)
