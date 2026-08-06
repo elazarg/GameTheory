@@ -50,7 +50,9 @@ theorem IsQuittingEssentialAPSInfiniteRun.policy_singletonRoots
     (quittingSoloStationaryRoot (owner time)
       (quittingHazardCoin (mass time) (hmass0 time) (hmass1 time)))
   rw [quittingRootSuccessorPayoff_solo]
-  simpa [quittingSingletonArcPayoff] using (hrun.2.2 time).2
+  funext who
+  have harcWho := congrFun (hrun.2.2 time).2 who
+  simpa [quittingSingletonArcPayoff] using harcWho
 
 /-- **Infinite APS path with exact Bellman transport and uniform opponent
 contraction.**  Under terminal-freeness, compact unique-live successor fibers,
