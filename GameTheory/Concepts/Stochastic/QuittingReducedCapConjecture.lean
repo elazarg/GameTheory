@@ -5,6 +5,7 @@ Released under the MIT license as described in the LICENSE file.
 
 import GameTheory.Concepts.Stochastic.QuittingPunishmentFreeReduction
 import GameTheory.Concepts.Stochastic.QuittingRankOneCrossing
+import GameTheory.Concepts.Stochastic.QuittingSupportWitnessSourceCompiler
 
 /-!
 # A truncated-ledger reduction of the finite-quitting conjecture
@@ -27,8 +28,13 @@ cannot satisfy the required small-error estimate.  The formal obstruction is
 particular quantitative reduction, not equilibrium existence in one-player
 games.
 
-The declaration below is intentionally open.  Its main unresolved content is
-the uniform deleted-survival estimate at the ledger stopping index.
+The declaration below remains intentionally open.  The support-witness route
+now provides a separate source-facing reduction:
+`quittingGame_exists_uniformEquilibriumPayoff_of_supportRationalDivergentPaths`
+compiles witness-retaining, individually rational paths with divergent total
+absorption directly to a uniform-equilibrium payoff.  On that stronger path
+interface the ledger clock is dominated deterministically by the own-survival
+clock, so the all-player deleted-survival producer below is not needed.
 -/
 
 noncomputable section
