@@ -73,6 +73,40 @@ theorem abs_quittingFiniteBoundaryHolonomy_bestResponse_tailAnchor_le
   · simpa [summary] using hsurvival
   · simpa [summary] using hweighted
 
+/-- The prescribed conditional anchor is bounded for every realized block.
+At the neutral face Lean's totalized division makes the anchor zero; away from
+that face the weighted-intercept theorem gives the substantive bound. -/
+theorem abs_quittingFiniteBoundaryHolonomy_prescribed_fixedPoint_le_all
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (start extra : ℕ) (who : ι) :
+    |(QuittingBoundaryHolonomy.prescribed
+        (quittingFiniteBoundaryHolonomy reward roots start extra) who).fixedPoint| ≤
+      quittingRewardBound reward := by
+  by_cases hsurvival :
+      (QuittingBoundaryHolonomy.prescribed
+        (quittingFiniteBoundaryHolonomy reward roots start extra) who).survival = 1
+  · simpa [QuittingAffineSummary.fixedPoint, hsurvival] using
+      quittingRewardBound_nonneg reward
+  · exact abs_quittingFiniteBoundaryHolonomy_prescribed_fixedPoint_le
+      reward roots start extra who hsurvival
+
+/-- The unilateral conditional tail anchor is likewise bounded on every
+realized block, with the neutral value canonically zero. -/
+theorem abs_quittingFiniteBoundaryHolonomy_bestResponse_tailAnchor_le_all
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (start extra : ℕ) (who : ι) :
+    |(QuittingBoundaryHolonomy.bestResponse
+        (quittingFiniteBoundaryHolonomy reward roots start extra) who).tailAnchor| ≤
+      quittingRewardBound reward := by
+  by_cases hsurvival :
+      (QuittingBoundaryHolonomy.bestResponse
+        (quittingFiniteBoundaryHolonomy reward roots start extra) who).survival = 1
+  · simpa [QuittingMaxAffineSummary.tailAnchor,
+      QuittingMaxAffineSummary.absorptionMass, hsurvival] using
+        quittingRewardBound_nonneg reward
+  · exact abs_quittingFiniteBoundaryHolonomy_bestResponse_tailAnchor_le
+      reward roots start extra who hsurvival
+
 /-- Every realized prescribed target residual is first-order in the block's
 own absorbed mass. -/
 theorem abs_quittingFiniteBoundaryHolonomy_prescribed_targetResidual_le
