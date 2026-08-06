@@ -3,7 +3,7 @@ name: Lean CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, agent/uniform-equilibrium-consequences]
   workflow_dispatch:
 
 permissions:
