@@ -2,7 +2,14 @@
 
 This file is the declaration-level map for the self-similarity layer. The
 mathematical derivation and open research boundary are in
-[SelfSimilarity.md](SelfSimilarity.md).
+[SelfSimilarity.md](SelfSimilarity.md),
+[SelfSimilarityTangent.md](SelfSimilarityTangent.md), and
+[SelfSimilarityExtendedObstacle.md](SelfSimilarityExtendedObstacle.md).
+
+The status of every declaration in this file is **implemented on the PR
+branch, subject to the PR's recorded focused Lean validation**. This document
+does not turn coefficient compactness into strategic closedness or claim the
+missing producer theorem.
 
 ## Entry point
 
@@ -10,7 +17,7 @@ mathematical derivation and open research boundary are in
 GameTheory/Concepts/Stochastic/QuittingSelfSimilarity.lean
 ```
 
-imports the complete layer.
+imports the complete layer. `GameTheory/Theorems.lean` imports that umbrella.
 
 ---
 
@@ -39,9 +46,8 @@ File:
 - `normalizedTargetResidual_eq_fixedPoint_sub`.
 - `isFixedAt_iff_fixedPoint_eq` away from survival one.
 
-The last three declarations justify dividing by `1-survival`: the quotient is
-not an arbitrary condition number but the exact displacement of the affine
-fixed point from the proposed target.
+The normalized residual is not an arbitrary conditioning device: away from the
+neutral face it is exactly the affine fixed-point displacement from the target.
 
 ---
 
@@ -71,9 +77,9 @@ File:
 ### Idempotents
 
 - `mul_self_eq_self_iff`: an affine coefficient idempotent is either a constant
-  projector (`survival=0`) or the identity (`survival=1`, `intercept=0`).
-- `eval_normalForm_of_mul_self_eq_self`: functional version of the same
-  classification.
+  projector (`survival = 0`) or the identity
+  (`survival = 1`, `intercept = 0`).
+- `eval_normalForm_of_mul_self_eq_self`: functional normal form.
 
 ---
 
@@ -90,8 +96,11 @@ File:
 - `tailAnchor`.
 - `normalizedTailResidual`.
 
-### Target safety
+### Composition and target safety
 
+- `absorptionMass_mul`: tail absorption obeys the same transported mass law.
+- `tailResidual_mul`: exact chronological tail-residual cocycle.
+- `normalizedTailResidual_mul`: transported absorption-mass-weighted averaging.
 - `targetExcess_eq_max`: target excess is the maximum of early and tail
   residuals.
 - `eval_le_target_iff`: exact two-halfspace characterization.
@@ -102,13 +111,32 @@ File:
 ### Idempotents
 
 - `mul_self_eq_self_iff`: a max-affine coefficient idempotent is either
-  constant (`survival=0`, `tail≤early`) or a threshold closure
-  (`survival=1`, `tail=0`).
+  constant (`survival = 0`, `tail ≤ early`) or a threshold closure
+  (`survival = 1`, `tail = 0`).
 - `eval_normalForm_of_mul_self_eq_self`.
 
 ---
 
-## 4. Complete strategic holonomy
+## 4. Nonempty max-affine repetition
+
+File:
+`GameTheory/Concepts/Stochastic/QuittingSelfSimilarityMaxAffineIteration.lean`.
+
+A finite max-affine identity would require an infinite early floor, so this
+module iterates one or more blocks rather than manufacturing a false monoid
+unit.
+
+- `selfComposeNonempty`.
+- `tailResidual_selfComposeNonempty`.
+- `tailResidual_selfComposeNonempty_of_survival_eq_one`.
+- `exists_tailResidual_selfComposeNonempty_gt_of_survival_eq_one`.
+- `eval_selfComposeNonempty_le_target`: target safety survives every nonempty
+  finite repetition.
+- `eval_selfComposeNonempty_le_target_iff_of_idempotent`.
+
+---
+
+## 5. Complete strategic coefficient holonomy
 
 File:
 `GameTheory/Concepts/Stochastic/QuittingSelfSimilarityHolonomy.lean`.
@@ -134,13 +162,30 @@ File:
 
 ### Scope
 
-This definition is a coefficient-level strategic projection. It does not by
-itself assert equality of source paths, controller phases, marked packets,
-Snell obstacles, or splice provenance.
+This is the complete **coefficient projection** of strategic return. It does
+not assert equality of source paths, controller phases, full Snell obstacles,
+conditional marked packets, entry debt, or splice provenance.
 
 ---
 
-## 5. Affine tangent coordinates
+## 6. Complete holonomy repetition
+
+File:
+`GameTheory/Concepts/Stochastic/QuittingSelfSimilarityHolonomyIteration.lean`.
+
+- `QuittingBoundaryHolonomy.selfComposeNonempty`.
+- `prescribed_selfComposeNonempty`.
+- `bestResponse_selfComposeNonempty`.
+- `IsSelfSimilarAt.selfComposeNonempty`.
+- `IsSelfSimilarAt.gap_selfComposeNonempty_nonpos`.
+- `selfComposeNonempty_eq_of_isIdempotent`.
+
+This lifts scalar repetition to the common playerwise holonomy without losing
+cross-player synchronization at the coefficient level.
+
+---
+
+## 7. Affine absorbed-mass tangent coordinates
 
 File:
 `GameTheory/Concepts/Stochastic/QuittingSelfSimilarityAffineTangent.lean`.
@@ -169,12 +214,12 @@ w ↦ mass * anchor + (1 - mass) * w.
 - `abs_fixedPoint_le_of_abs_intercept_le_mul_absorptionMass`.
 - `intercept_eq_zero_of_abs_intercept_le_mul_absorptionMass`.
 
-The first theorem turns a weighted intercept bound into compactness of the
-conditional anchor. The second identifies the neutral face exactly.
+The first theorem converts a weighted intercept estimate into compactness of
+the conditional anchor. The second identifies the neutral face exactly.
 
 ---
 
-## 6. Max-plus tangent coordinates
+## 8. Finite-scale max-plus tangent coordinates
 
 File:
 `GameTheory/Concepts/Stochastic/QuittingSelfSimilarityMaxAffineTangent.lean`.
@@ -199,7 +244,7 @@ w ↦ max (target + mass * earlyDrift)
 - `eval_target_ofScaledObstacles`.
 - `targetExcess_ofScaledObstacles`.
 - `eval_target_ofScaledObstacles_le_iff` at positive mass.
-- `eval_probe_ofScaledObstacles` for a probe `target + mass*x`.
+- `eval_probe_ofScaledObstacles` for a probe `target + mass * x`.
 - `normalized_eval_probe_ofScaledObstacles`.
 
 ### Generic weighted-bound consequences
@@ -207,33 +252,66 @@ w ↦ max (target + mass * earlyDrift)
 - `abs_tailAnchor_le_of_abs_tail_le_mul_absorptionMass`.
 - `tail_eq_zero_of_abs_tail_le_mul_absorptionMass`.
 
-The probe formula retains the exact correction `-mass*x`; the limiting tangent
-map is max-plus, not linear.
+The probe formula retains the exact finite-scale correction `-mass * x`; the
+limiting operator is max-plus, not linear.
 
 ---
 
-## 7. Realized finite-block bounds
+## 9. Max-plus tangent dynamics
+
+File:
+`GameTheory/Concepts/Stochastic/QuittingSelfSimilarityMaxPlusDynamics.lean`.
+
+For
+
+```text
+F x = max early (tail + x)
+```
+
+the module defines `iterateNonempty` and proves:
+
+- `eval_zero_le_zero_iff`: origin safety iff `early ≤ 0 ∧ tail ≤ 0`.
+- `linear_tail_le_iterateNonempty`: every iterate dominates the pure translated
+  tail branch.
+- `iterateNonempty_eq_max_of_tail_nonpos`: exact formula
+  `max early ((k : ℝ) * tail + x)` for nonpositive tail drift.
+- `iterateNonempty_zero_tail`: zero tail drift is the idempotent threshold
+  closure after one step.
+- `exists_iterateNonempty_gt_of_tail_pos`: positive tail drift exceeds every
+  finite budget.
+- `exists_eventually_iterateNonempty_eq_early_of_tail_neg`: negative tail drift
+  reaches the constant early projector after finitely many steps.
+- `dynamics_trichotomy`: exact negative/zero/positive alternative.
+
+This is the formal relevant/marginal/irrelevant classification at the tangent
+operator level.
+
+---
+
+## 10. Realized finite-block first-order bounds
 
 File:
 `GameTheory/Concepts/Stochastic/QuittingSelfSimilarityRealizedBounds.lean`.
 
-This module combines the new tangent algebra with the existing weighted
-holonomy estimates for actual product-root blocks.
+This module combines the tangent algebra with existing weighted holonomy
+estimates for actual product-root blocks.
 
-### Compact anchors
+### Conditional anchors
 
 - `abs_quittingFiniteBoundaryHolonomy_prescribed_fixedPoint_le`.
 - `abs_quittingFiniteBoundaryHolonomy_bestResponse_tailAnchor_le`.
+- `abs_quittingFiniteBoundaryHolonomy_prescribed_fixedPoint_le_all`.
+- `abs_quittingFiniteBoundaryHolonomy_bestResponse_tailAnchor_le_all`.
 
-Both conditional anchors lie in the common terminal reward box whenever their
-survival defect is positive.
+The `_all` versions use Lean's totalized division: the anchor is zero on the
+neutral face and lies in the reward box elsewhere.
 
 ### First-order residual bounds
 
 - `abs_quittingFiniteBoundaryHolonomy_prescribed_targetResidual_le`.
 - `abs_quittingFiniteBoundaryHolonomy_bestResponse_tailResidual_le`.
 
-The raw residuals are bounded by `(rewardBound + |target|)` times their own
+Raw residuals are bounded by `(rewardBound + |target|)` times their own
 absorption mass.
 
 ### Normalized residual bounds
@@ -241,12 +319,12 @@ absorption mass.
 - `abs_quittingFiniteBoundaryHolonomy_prescribed_normalizedTargetResidual_le`.
 - `abs_quittingFiniteBoundaryHolonomy_bestResponse_normalizedTailResidual_le`.
 
-These are the compact first-order coordinates available along an escaping
+These are the bounded first-order coordinates available along an escaping
 sequence.
 
 ---
 
-## 8. Realized neutral faces
+## 11. Realized neutral faces
 
 File:
 `GameTheory/Concepts/Stochastic/QuittingSelfSimilarityRealizedNeutral.lean`.
@@ -255,16 +333,80 @@ File:
 - `quittingFiniteBoundaryHolonomy_prescribed_eval_eq_of_survival_eq_one`.
 - `quittingFiniteBoundaryHolonomy_bestResponse_tail_eq_zero_of_survival_eq_one`.
 - `quittingFiniteBoundaryHolonomy_bestResponse_eval_eq_max_of_survival_eq_one`.
+- `quittingFiniteBoundaryHolonomy_isSelfSimilarAt_iff_of_survival_eq_one`:
+  when all prescribed and unilateral tail slopes are neutral, complete
+  coefficient self-similarity is exactly the early floors lying below target.
 
-An actual neutral prescribed map is the identity. An actual neutral unilateral
-tail map is a threshold closure. No hidden nonzero intercept survives at zero
-absorption mass.
+No hidden nonzero prescribed or tail intercept survives at zero absorption
+mass.
 
 ---
 
-## 9. Existing tools used rather than duplicated
+## 12. Compact bounded tangent core
 
-The new layer deliberately builds on:
+File:
+`GameTheory/Concepts/Stochastic/QuittingSelfSimilarityTangentCompactness.lean`.
+
+### Coordinates
+
+`QuittingBoundaryTangentCoreCoordinates` retain, playerwise:
+
+- prescribed absorption mass;
+- prescribed conditional anchor;
+- raw early stopping floor;
+- unilateral tail absorption mass;
+- unilateral conditional tail anchor.
+
+### Theorems
+
+- `quittingBoundaryTangentCoreBox`.
+- `isCompact_quittingBoundaryTangentCoreBox`.
+- `quittingFiniteBoundaryHolonomy_tangentCoreCoordinates_mem_box`.
+- `exists_tendsto_subseq_quittingFiniteBoundaryTangentCoreCoordinates`.
+
+Every sequence of actual finite blocks has a subsequence whose bounded tangent
+core converges. This theorem does not include full obstacle, marked packet,
+debt, path, or splice data.
+
+---
+
+## 13. Extended positive early-obstacle scale
+
+File:
+`GameTheory/Concepts/Stochastic/QuittingSelfSimilarityEarlyExcess.lean`.
+
+### Definitions
+
+- `positiveEarlyExcess = max 0 (early - target)`.
+- `scaledPositiveEarlyExcess` in `ℝ≥0∞`, divided by tail absorption mass.
+
+### Exact classifications
+
+- `positiveEarlyExcess_eq_zero_iff`.
+- `positiveEarlyExcess_pos_iff`.
+- `scaledPositiveEarlyExcess_eq_zero_iff`: zero exactly means early safety,
+  including at zero mass.
+- `scaledPositiveEarlyExcess_eq_top_iff`: under nonnegative mass, infinity is
+  exactly an unsafe neutral face.
+- `scaledPositiveEarlyExcess_ne_top_of_absorptionMass_pos`.
+
+### Extended compactness
+
+- `QuittingBoundaryExtendedTangentCoordinates`.
+- `QuittingBoundaryHolonomy.extendedTangentCoordinates`.
+- `quittingBoundaryExtendedTangentBox`.
+- `isCompact_quittingBoundaryExtendedTangentBox`.
+- `quittingFiniteBoundaryHolonomy_extendedTangentCoordinates_mem_box`.
+- `exists_tendsto_subseq_quittingFiniteBoundaryExtendedTangentCoordinates`.
+
+A diverging positive early-obstacle ratio converges to `⊤` rather than being
+silently excluded by an unjustified real boundedness assumption.
+
+---
+
+## 14. Existing tools used rather than duplicated
+
+The layer builds on:
 
 - `QuittingBoundaryHolonomy.lean` for exact actual-block extraction and
   associative composition;
@@ -273,6 +415,8 @@ The new layer deliberately builds on:
 - `QuittingBoundaryHolonomyCompactness.lean` for fixed-cutoff resolved
   compactness and the unbounded-length fence;
 - `QuittingPeriodicCompiler.lean` for quantitative cyclic contraction;
+- `GraphDirectedPeriodicLift.lean` for periodic compatible lifts under strict
+  contraction;
 - `BigMatchSelfSimilarity.lean` for the exact physical/target live cycle;
 - `BigMatchDeficitIndexNoGo.lean` for the wrong harmonic hazard scaling;
 - `FinkTangentRate.lean` for rate-sensitive supported tangent equations.
@@ -282,14 +426,12 @@ producer.
 
 ---
 
-## 10. Mathematics documented but not formalized here
+## 15. Mathematics and interfaces not claimed as Lean theorems here
 
-[SelfSimilarity.md](SelfSimilarity.md) and
-[SelfSimilarityResearchProgram.md](SelfSimilarityResearchProgram.md) derive or
-state with explicit status:
+The accompanying notes derive or state with explicit status:
 
 - logarithmic absorption time and its additive composition;
-- Puiseux relevant/marginal/irrelevant classification;
+- Puiseux relevant/marginal/irrelevant classification for realized germs;
 - projective stratification of multiple playerwise scales;
 - the conditional game-level pumping criterion for a complete returning packet;
 - the compact enriched-semigroup/idempotent route under strategic closedness;
@@ -306,5 +448,8 @@ uniform equilibrium or positive-debt plateau
        or executable positive-work escape/descent.
 ```
 
-The present Lean layer proves the algebra and the realized first-order bounds
-needed to state that implication without ambiguity.
+The present Lean layer settles the coefficient algebra, finite repetition,
+idempotent normal forms, max-plus dynamics, realized first-order estimates, and
+compact bounded/extended tangent projections needed to state that implication
+without ambiguity. It does not prove semantic repeatability or the enriched
+compactification and decoders.
