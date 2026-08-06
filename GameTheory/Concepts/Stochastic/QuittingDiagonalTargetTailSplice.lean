@@ -173,8 +173,10 @@ theorem quittingPrefixThenTailHazardGap_le_survival_debt_sub_joint_mismatch
           quittingFiniteTerminalHazardValue reward fullRoots who hazard
             (quittingRootSequenceHazardTerminalValue reward fullRoots who hazard
               cutoff) 0 cutoff :=
-        quittingRootSequenceHazardTerminalValue_eq_finiteTerminalHazardValue
-          reward fullRoots who hazard 0 cutoff
+        by
+        simpa only [Nat.zero_add] using
+          quittingRootSequenceHazardTerminalValue_eq_finiteTerminalHazardValue
+            reward fullRoots who hazard 0 cutoff
       _ = quittingFiniteTerminalHazardValue reward fullRoots who hazard
             tailDeviation 0 cutoff := by
         rw [show quittingRootSequenceHazardTerminalValue reward fullRoots who
@@ -185,7 +187,7 @@ theorem quittingPrefixThenTailHazardGap_le_survival_debt_sub_joint_mismatch
       _ = quittingFiniteTerminalHazardValue reward headRoots who hazard
             tailDeviation 0 cutoff :=
         quittingFiniteTerminalHazardValue_prefixThenTail_of_le
-          reward headRoots tail who hazard tailDeviation cutoff 0 cutoff le_rfl
+          reward headRoots tail who hazard tailDeviation cutoff 0 cutoff (by simp)
   have hdeviationUpper :
       quittingRootSequenceHazardTerminalValue reward fullRoots who hazard 0 ≤
         value 0 who +
@@ -204,8 +206,11 @@ theorem quittingPrefixThenTailHazardGap_le_survival_debt_sub_joint_mismatch
           hazard (value cutoff who + debt) 0 cutoff
       _ ≤ value 0 who +
             quittingOpponentSurvivalWeight headRoots who 0 cutoff * debt :=
-        quittingFiniteTerminalBestResponseValue_le_declared_add_survival
-          reward headRoots value who cutoff hdebt0 hpolicy hnash 0 cutoff le_rfl
+        by
+          simpa only [Nat.zero_add] using
+            quittingFiniteTerminalBestResponseValue_le_declared_add_survival
+              reward headRoots value who cutoff hdebt0 hpolicy hnash
+                0 cutoff (by simp)
   have hprescribedDecomposition :
       quittingRootSequenceTerminalValue reward fullRoots who 0 =
         value 0 who +
@@ -217,8 +222,10 @@ theorem quittingPrefixThenTailHazardGap_le_survival_debt_sub_joint_mismatch
             (fun time => fullRoots time who)
             (quittingRootSequenceTerminalValue reward fullRoots who cutoff)
             0 cutoff :=
-        quittingRootSequenceTerminalValue_eq_finiteTerminalHazardValue_self
-          reward fullRoots who 0 cutoff
+        by
+        simpa only [Nat.zero_add] using
+          quittingRootSequenceTerminalValue_eq_finiteTerminalHazardValue_self
+            reward fullRoots who 0 cutoff
       _ = quittingFiniteTerminalHazardValue reward fullRoots who
             (fun time => fullRoots time who) tailPayoff 0 cutoff := by
         rw [show quittingRootSequenceTerminalValue reward fullRoots who cutoff =
@@ -229,7 +236,7 @@ theorem quittingPrefixThenTailHazardGap_le_survival_debt_sub_joint_mismatch
       _ = quittingFiniteTerminalHazardValue reward headRoots who
             (fun time => headRoots time who) tailPayoff 0 cutoff :=
         quittingFiniteTerminalHazardValue_self_prefixThenTail_of_le
-          reward headRoots tail who tailPayoff cutoff 0 cutoff le_rfl
+          reward headRoots tail who tailPayoff cutoff 0 cutoff (by simp)
       _ = quittingFiniteTerminalHazardValue reward headRoots who
             (fun time => headRoots time who)
             (value cutoff who + (tailPayoff - value cutoff who)) 0 cutoff := by
@@ -246,8 +253,14 @@ theorem quittingPrefixThenTailHazardGap_le_survival_debt_sub_joint_mismatch
             quittingFiniteFullSurvivalWeight headRoots who
               (fun time => headRoots time who) 0 cutoff *
                 (tailPayoff - value cutoff who) := by
-        rw [quittingFiniteTerminalHazardValue_self_eq_declared
-          reward headRoots value who cutoff hpolicy 0 cutoff le_rfl]
+        have hself := quittingFiniteTerminalHazardValue_self_eq_declared
+          reward headRoots value who cutoff hpolicy 0 cutoff (by simp)
+        simpa only [Nat.zero_add] using
+          congrArg
+            (fun x => x +
+              quittingFiniteFullSurvivalWeight headRoots who
+                (fun time => headRoots time who) 0 cutoff *
+                  (tailPayoff - value cutoff who)) hself
       _ = value 0 who +
             quittingJointSurvivalWeight headRoots 0 cutoff *
               (tailPayoff - value cutoff who) := by
@@ -288,6 +301,7 @@ theorem quittingPrefixThenTargetTailHazardGap_le_zero
       quittingRootSequenceTerminalValue reward tail target 0 -
           value cutoff target = 0 := by
     rw [hendpoint]
+    ring
   simpa only [hdebt, hmismatch, mul_zero, sub_zero] using hmain
 
 /-- For any non-target coordinate, bounded rewards and a bounded declared
@@ -326,6 +340,7 @@ theorem quittingPrefixThenTailHazardGap_le_four_mul_bound_mul_survival
         (fun time => hazard (cutoff + time))) who 0 hM hreward
   have htailPayoff : |tailPayoff| ≤ M := by
     exact abs_quittingRootSequenceTerminalValue_le reward tail who 0 hM hreward
+  have hdebt0 : 0 ≤ debt := le_max_right _ _
   have hdebt : debt ≤ 2 * M := by
     rw [abs_le] at htailDeviation hvalue
     dsimp only [debt]
