@@ -19,18 +19,27 @@ The formal interface lives in
   sequential closedness statement for uniformly convergent reward tables and
   convergent uniform-equilibrium targets.
 
+The target-free layer lives in
+`GameTheory/Concepts/Stochastic/UniformPayoffExistenceClosure.lean`:
+
+- `exists_uniformEquilibriumPayoff_of_uniform_stagePayoff_limit` assumes only
+  that every approximating reward table has some uniform-equilibrium payoff;
+- `exists_uniformEquilibriumPayoff_of_arbitrarily_close_stagePayoffs` proves
+  that existence on arbitrarily close fixed-skeleton tables implies existence
+  for the original table.
+
 The proof reuses the nearby game's behavior profile directly. It takes no
-limit of strategies and assumes no common memory bound.
+limit of strategies and assumes no common memory bound. For the target-free
+statement, equilibrium targets lie in a common finite-dimensional payoff cube;
+only a subsequence of those payoff vectors is passed to a limit.
 
 ## Deliberate scope boundary
 
-This result does **not** yet formalize either of the following stronger claims:
+This result does **not** cover either of the following stronger claims:
 
 1. continuity under perturbations of the transition kernel; or
-2. target-free closedness of mere existence, which additionally requires
-   extracting a convergent subsequence from a bounded family of equilibrium
-   payoff vectors.
+2. density of any particular proposed class of solved payoff tables.
 
-The second step is finite-dimensional compactness, but it is kept separate so
-that the Lean theorem records exactly which compactness argument has been
-supplied.
+The second item is now the substantive game-specific obligation: once a class
+is proved dense, the target-free closure theorem promotes its existence result
+to every payoff table on the same finite skeleton.
