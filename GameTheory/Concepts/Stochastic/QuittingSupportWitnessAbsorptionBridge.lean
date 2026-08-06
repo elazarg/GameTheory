@@ -46,30 +46,36 @@ theorem quittingSurvivalPrefix_eq_prod_ownSurvival
   simp_rw [quittingStationaryContinueMass_eq_prod_continueProbability]
   rw [Finset.prod_comm]
 
-/-- If joint survival is at most `threshold ^ |ι|`, then some player's own
-survival is at most `threshold`. -/
-theorem exists_ownSurvival_le_of_survivalPrefix_le_pow
+/-- If joint survival is strictly below `threshold ^ |ι|`, then some player's
+own survival is at most `threshold`.  The strict inequality on the joint
+product lets us use the ordinary monotone product bound; no cancellative
+multiplicative structure on `ℝ` is needed. -/
+theorem exists_ownSurvival_le_of_survivalPrefix_lt_pow
     [Nonempty ι]
     (roots : ℕ → ι → PMF Bool) (cutoff : ℕ)
     {threshold : ℝ} (hthreshold : 0 < threshold)
-    (hjoint : quittingSurvivalPrefix roots cutoff ≤
+    (hjoint : quittingSurvivalPrefix roots cutoff <
       threshold ^ Fintype.card ι) :
     ∃ who,
       quittingHazardSurvival
         (quittingRootSequenceOwnHazard roots who) cutoff ≤ threshold := by
   by_contra hnone
   push_neg at hnone
-  have hstrict :
-      threshold ^ Fintype.card ι <
+  have hproduct :
+      threshold ^ Fintype.card ι ≤
         ∏ who,
           quittingHazardSurvival
             (quittingRootSequenceOwnHazard roots who) cutoff := by
-    have hproduct := Finset.prod_lt_prod_of_nonempty'
-      (Finset.univ_nonempty (α := ι))
-      (fun who _ => hnone who)
-    simpa using hproduct
-  rw [← quittingSurvivalPrefix_eq_prod_ownSurvival roots cutoff] at hstrict
-  exact (not_lt_of_ge hjoint) hstrict
+    have hlower := Finset.pow_card_le_prod
+      (Finset.univ : Finset ι)
+      (fun who =>
+        quittingHazardSurvival
+          (quittingRootSequenceOwnHazard roots who) cutoff)
+      threshold
+      (fun who _ => (hnone who).le)
+    simpa using hlower
+  rw [← quittingSurvivalPrefix_eq_prod_ownSurvival roots cutoff] at hproduct
+  exact (not_lt_of_ge hproduct) hjoint
 
 /-- Complete absorption forces a finite own-survival crossing at every
 positive threshold. -/
@@ -89,8 +95,8 @@ theorem exists_ownSurvival_crossing_of_completelyAbsorbing
     (tendsto_order.1 habsorbing).2 _ hpow
   obtain ⟨cutoff, hcutoff⟩ := heventually.exists
   obtain ⟨who, hwho⟩ :=
-    exists_ownSurvival_le_of_survivalPrefix_le_pow
-      roots cutoff hthreshold hcutoff.le
+    exists_ownSurvival_le_of_survivalPrefix_lt_pow
+      roots cutoff hthreshold hcutoff
   exact ⟨cutoff, who, hwho⟩
 
 /-- Support-local one-stage witnesses, complete absorption, and individual
