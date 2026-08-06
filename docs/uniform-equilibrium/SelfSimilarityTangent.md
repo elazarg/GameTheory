@@ -224,8 +224,9 @@ n_i=1-\chi_i.
 
 Second, existing realized-block bounds control the tail intercept at scale
 `n_i`, but do not by themselves prove that the early obstacle `A_i-v_i` is
-`O(n_i)`. Compactness of the early tangent drift is a separate theorem target,
-not a consequence silently supplied by the current weighted bounds.
+`O(n_i)`. A finite signed early drift is therefore not inserted by assumption.
+The positive early violation is instead compactified in `ℝ≥0∞`: a divergent
+ratio remains visible as `+\infty`.
 
 ---
 
@@ -294,6 +295,9 @@ input for an escaping-middle blow-up.
 
 ---
 
-The rate stratification, Big-Match interpretation, producer theorem,
+The extended positive early-obstacle coordinate and its exact max-plus
+negative/zero/positive dynamics are developed in
+[SelfSimilarityExtendedObstacle.md](SelfSimilarityExtendedObstacle.md). The
+Puiseux rate stratification, Big-Match interpretation, producer theorem,
 compact-semigroup boundary, enriched packet, and computational program continue
 in [SelfSimilarityResearchProgram.md](SelfSimilarityResearchProgram.md).
