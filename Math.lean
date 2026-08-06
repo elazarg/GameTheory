@@ -100,3 +100,4 @@ import Math.InfinitesimalRatFunc
 import Math.GradedConvolution
 import Math.BonferroniProductBounds
 import Math.Topology.WeakDominance
+import Math.Topology.CompactFinitePrefixRelation
