@@ -50,22 +50,6 @@ def HasUniformTailInterval
       G.finiteAveragePayoff s₀ T (Function.update σ who dev) who ≤
         upper who
 
-/-- The prescribed payoff is also below the upper endpoint: following the
-prescribed strategy is one admissible unilateral behavior strategy. -/
-theorem HasUniformTailInterval.onPath_le
-    {G : StochasticGame ι} [Fintype ι] [DecidableEq ι]
-    {s₀ : G.State} {σ : G.BehaviorProfile} {lower upper : Payoff ι}
-    (h : G.HasUniformTailInterval s₀ σ lower upper)
-    {T₀ T : ℕ} (hT₀ : ∀ T, T₀ ≤ T →
-      (∀ who, lower who ≤ G.finiteAveragePayoff s₀ T σ who) ∧
-      ∀ who (dev : G.BehaviorStrategy who),
-        G.finiteAveragePayoff s₀ T (Function.update σ who dev) who ≤
-          upper who)
-    (hT : T₀ ≤ T) (who : ι) :
-    G.finiteAveragePayoff s₀ T σ who ≤ upper who := by
-  have hdev := (hT₀ T hT).2 who (σ who)
-  simpa using hdev
-
 /-- Midpoint of a coordinatewise payoff interval. -/
 def tailIntervalMidpoint (lower upper : Payoff ι) : Payoff ι :=
   fun who => (lower who + upper who) / 2
@@ -144,8 +128,8 @@ theorem exists_uniformEquilibriumPayoff_of_hasArbitrarilyThinTailIntervals
   have hδle_one : ∀ n, δ n ≤ 1 := by
     intro n
     dsimp [δ]
-    have hn : (1 : ℝ) ≤ n + 1 := by norm_num
-    exact (div_le_one (by positivity)).2 hn
+    have hn : (1 : ℝ) ≤ (n : ℝ) + 1 := by positivity
+    exact (div_le_one (by positivity)).2 (by simpa using hn)
   choose σ lower upper hwidth htail using fun n => hthin (δ n) (hδpos n)
   let midpoint : ℕ → Payoff ι := fun n => tailIntervalMidpoint (lower n) (upper n)
   obtain ⟨C, hC0, hC⟩ := G.exists_stagePayoff_nonneg_abs_bound
@@ -172,7 +156,7 @@ theorem exists_uniformEquilibriumPayoff_of_hasArbitrarilyThinTailIntervals
     rw [Set.mem_Icc]
     have havgBounds := abs_le.mp havg
     have hcloseBounds := abs_le.mp hclose
-    constructor <;> dsimp [midpoint] at * <;> linarith [hδle_one n]
+    constructor <;> linarith [hδle_one n]
   obtain ⟨v, -, φ, hφ, hlim⟩ := hKcompact.tendsto_subseq hmidpointK
   refine ⟨v, ?_⟩
   intro ε hε
@@ -182,7 +166,8 @@ theorem exists_uniformEquilibriumPayoff_of_hasArbitrarilyThinTailIntervals
       Tendsto (fun n : ℕ => (1 : ℝ) / (n + 1)) atTop (nhds 0))
   have hδsub : Tendsto (δ ∘ φ) atTop (nhds 0) :=
     hδlim.comp hφ.tendsto_atTop
-  obtain ⟨Nδ, hNδ⟩ := Metric.tendsto_atTop.mp hδsub (ε / 4) hquarter
+  obtain ⟨Nδ, hNδ⟩ := eventually_atTop.mp
+    ((tendsto_order.mp hδsub).2 (ε / 4) hquarter)
   have hEventuallyMidpoint : ∀ᶠ n in atTop,
       ∀ who, |midpoint (φ n) who - v who| ≤ ε / 4 := by
     rw [eventually_all]
@@ -193,8 +178,8 @@ theorem exists_uniformEquilibriumPayoff_of_hasArbitrarilyThinTailIntervals
       simpa [Real.dist_eq] using (hNm n hn).le⟩
   obtain ⟨Nm, hNm⟩ := eventually_atTop.mp hEventuallyMidpoint
   let n := max Nδ Nm
-  have hδsmall : δ (φ n) ≤ ε / 4 := by
-    exact (hNδ n (Nat.le_max_left Nδ Nm)).le
+  have hδsmall : δ (φ n) ≤ ε / 4 :=
+    (hNδ n (Nat.le_max_left Nδ Nm)).le
   have hmidclose : ∀ who, |midpoint (φ n) who - v who| ≤ ε / 4 :=
     hNm n (Nat.le_max_right Nδ Nm)
   obtain ⟨T₀, hT₀⟩ := htail (φ n)
