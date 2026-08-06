@@ -37,3 +37,4 @@ with every finite quitting game.
 -/
 
 -- This umbrella deliberately contains only imports and status documentation.
+-- The CI validation branch checks the complete imported capstone transitively.
