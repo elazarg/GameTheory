@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   lean:
@@ -22,41 +22,6 @@ jobs:
         with:
           ref: agent/quitting-target-tail
           submodules: recursive
-
-      - name: Apply final scaling patch
-        if: github.event_name == 'pull_request'
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path("GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean")
-          text = path.read_text()
-          marker = "  have hscale : 4 * M * δ ≤ ε := by\n"
-          start = text.rfind(marker)
-          if start < 0:
-              raise SystemExit("final scaling theorem was not found")
-          end_marker = "  exact ⟨profile, hprofile.mono hscale⟩\n"
-          end = text.find(end_marker, start)
-          if end < 0:
-              raise SystemExit("final scaling theorem terminator was not found")
-          new = """  have hscale : 4 * M * δ ≤ ε := by
-            dsimp only [δ]
-            have hratio : 4 * M / (4 * M + 1) ≤ 1 := by
-              rw [div_le_iff₀ hdenom]
-              linarith
-            calc
-              4 * M * (ε / (4 * M + 1)) =
-                  ε * (4 * M / (4 * M + 1)) := by ring
-              _ ≤ ε * 1 := mul_le_mul_of_nonneg_left hratio hε.le
-              _ = ε := mul_one ε
-          """
-          path.write_text(text[:start] + new + text[end:])
-          PY
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean
-          git commit -m "Finish diagonal target-tail scaling"
-          git push origin HEAD:agent/quitting-target-tail
 
       - name: Set up Lean and cache dependencies
         uses: leanprover/lean-action@v1
