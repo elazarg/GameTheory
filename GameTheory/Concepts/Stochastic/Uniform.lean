@@ -247,6 +247,7 @@ def withStagePayoff (G : StochasticGame ι)
   | succ T ih =>
       simp only [histDist_succ, ih, stageActionDist_withStagePayoff,
         transition_withStagePayoff]
+      rfl
 
 /-- A pointwise `ρ` perturbation of one player's stage payoff changes that
 player's total payoff along a length-`T` history by at most `T * ρ`. -/
@@ -351,19 +352,34 @@ theorem IsεHorizonNash.of_withStagePayoff
   have hdev :=
     abs_finiteAveragePayoff_withStagePayoff_sub_le G reward hρ0 hρ
       s₀ T (Function.update σ who dev) who
+  have honUpper :
+      (G.withStagePayoff reward).finiteAveragePayoff s₀ T σ who ≤
+        G.finiteAveragePayoff s₀ T σ who + ρ := by
+    apply (sub_le_iff_le_add').mp
+    exact (le_abs_self _).trans hon
+  have hdevSymm :
+      |G.finiteAveragePayoff s₀ T (Function.update σ who dev) who -
+          (G.withStagePayoff reward).finiteAveragePayoff s₀ T
+            (Function.update σ who dev) who| ≤ ρ := by
+    simpa [abs_sub_comm] using hdev
+  have hdevUpper :
+      G.finiteAveragePayoff s₀ T (Function.update σ who dev) who ≤
+        (G.withStagePayoff reward).finiteAveragePayoff s₀ T
+            (Function.update σ who dev) who + ρ := by
+    apply (sub_le_iff_le_add').mp
+    exact (le_abs_self _).trans hdevSymm
   show
     G.finiteAveragePayoff s₀ T (Function.update σ who dev) who ≤
       G.finiteAveragePayoff s₀ T σ who + (ε + 2 * ρ)
   calc
     G.finiteAveragePayoff s₀ T (Function.update σ who dev) who
         ≤ (G.withStagePayoff reward).finiteAveragePayoff s₀ T
-            (Function.update σ who dev) who + ρ := by
-          linarith [(abs_le.mp hdev).1]
+            (Function.update σ who dev) who + ρ := hdevUpper
     _ ≤ (G.withStagePayoff reward).finiteAveragePayoff s₀ T σ who +
           ε + ρ := by
         linarith [hNash]
     _ ≤ G.finiteAveragePayoff s₀ T σ who + (ε + 2 * ρ) := by
-        linarith [(abs_le.mp hon).2]
+        linarith [honUpper]
 
 /-- Uniform approximate equilibrium transfers across the same payoff
 perturbation with the same horizon threshold. -/
