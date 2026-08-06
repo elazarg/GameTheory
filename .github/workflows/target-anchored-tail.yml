@@ -1,19 +1,6 @@
 name: Target-anchored tail proof
 
 on:
-  push:
-    branches:
-      - codex/target-anchored-tail-ci
-    paths:
-      - '.github/workflows/target-anchored-tail.yml'
-      - 'GameTheory/Concepts/Stochastic/QuittingTargetAnchoredTail.lean'
-      - 'GameTheory/Concepts/Stochastic/QuittingFiniteEndpointNashBellmanFactory.lean'
-      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean'
-      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTailSplice.lean'
-      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTailCompiler.lean'
-      - 'GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTailCertificate.lean'
-      - 'lean-toolchain'
-      - 'lake-manifest.json'
   pull_request:
     branches:
       - uniform-existence
