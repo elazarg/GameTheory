@@ -23,39 +23,31 @@ jobs:
           ref: agent/quitting-target-tail
           submodules: recursive
 
-      - name: Finish compiler and expose it from GameTheory
+      - name: Finish the final scaling proof
         if: github.event_name == 'pull_request'
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          compiler = Path("GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean")
-          text = compiler.read_text()
-          scale = text.rfind("  have hscale :")
-          if scale < 0:
-              raise SystemExit("final scaling theorem was not found")
-          first_newline = text.find("\n", scale)
-          second_newline = text.find("\n", first_newline + 1)
-          old_line = text[first_newline + 1:second_newline]
-          if "dsimp only" not in old_line:
-              raise SystemExit(f"unexpected first scaling line: {old_line!r}")
-          replacement = "    change 4 * M * (\u03b5 / (4 * M + 1)) \u2264 \u03b5"
-          compiler.write_text(text[:first_newline + 1] + replacement + text[second_newline:])
-
-          root = Path("GameTheory.lean")
-          root_text = root.read_text()
-          target_import = "import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail\n"
-          if target_import not in root_text:
-              marker = "import GameTheory.Concepts.Stochastic.QuittingStationaryMinMax\n"
-              if marker not in root_text:
-                  raise SystemExit("root import insertion marker was not found")
-              root_text = root_text.replace(marker, marker + target_import, 1)
-              root.write_text(root_text)
+          path = Path("GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean")
+          text = path.read_text()
+          start_marker = "  have hscale : 4 * M * δ ≤ ε := by\n"
+          end_marker = "  exact ⟨profile, hprofile.mono hscale⟩\n"
+          start = text.rfind(start_marker)
+          end = text.find(end_marker, start)
+          if start < 0 or end < 0:
+              raise SystemExit("final scaling block was not found")
+          replacement = """  have hscale : 4 * M * δ ≤ ε := by
+            change 4 * M * (ε / (4 * M + 1)) ≤ ε
+            rw [← mul_div_assoc, div_le_iff₀ hdenom]
+            nlinarith [hε.le]
+          """
+          path.write_text(text[:start] + replacement + text[end:])
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add GameTheory.lean GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean
-          git commit -m "Expose the diagonal target-tail compiler"
+          git add GameTheory/Concepts/Stochastic/QuittingDiagonalTargetTail.lean
+          git commit -m "Finish the diagonal target-tail scaling bound"
           git push origin HEAD:agent/quitting-target-tail
 
       - name: Set up Lean and cache dependencies
