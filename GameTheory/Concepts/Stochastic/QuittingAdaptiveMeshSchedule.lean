@@ -133,12 +133,13 @@ theorem quittingVariableBlockState_add_count
       (block + 1, 0) := by
   obtain ⟨last, hlast⟩ := Nat.exists_eq_succ_of_ne_zero
     (Nat.ne_of_gt (hcount block))
-  rw [hlast]
+  have hlastLt : last < count block := by omega
   have hstate := quittingVariableBlockState_add_offset
-    count start block hstart last (Nat.lt_succ_self last)
-  rw [show start + (last + 1) = start + last + 1 by omega,
+    count start block hstart last hlastLt
+  have hfinished : ¬last + 1 < count block := by omega
+  rw [show start + count block = start + last + 1 by omega,
     quittingVariableBlockState, hstate]
-  simp
+  simp [hfinished]
 
 /-- Every block prefix is visited at offset zero. -/
 @[simp] theorem quittingVariableBlockState_prefix
