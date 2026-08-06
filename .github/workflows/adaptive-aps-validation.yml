@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: adaptive-essential-aps-${{ github.ref }}
@@ -44,3 +45,23 @@ jobs:
             GameTheory.Concepts.Stochastic.QuittingVariableSingletonMesh \
             GameTheory.Concepts.Stochastic.QuittingEssentialAPSUniformPayoff \
             GameTheory.Concepts.Stochastic.QuittingEssentialAPSAll
+
+      - name: Report validation result on PR
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+          HEAD_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          body=$(cat <<EOF
+          <!-- adaptive-essential-aps-ci -->
+          **Adaptive essential-APS Lean validation: ${JOB_STATUS}**
+
+          - commit: \`${HEAD_SHA}\`
+          - workflow run: \`${RUN_ID}\` (attempt ${RUN_ATTEMPT})
+          - placeholder audit and all five changed Lean modules are included in this job
+          EOF
+          )
+          gh api "repos/${GITHUB_REPOSITORY}/issues/26/comments" -f body="$body"
