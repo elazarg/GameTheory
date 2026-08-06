@@ -14,9 +14,8 @@ import GameTheory.Concepts.Stochastic.QuittingSurvivalPrefixBridge
 
 This module assembles finite exact Nash--Bellman prefixes with player-indexed
 closed tails.  Its first layer records the finite semantic identities needed
-for the assembly: decomposition at a finite boundary, monotonicity in the
-boundary value, exact policy evaluation, and propagation of a terminal
-best-response debt through opponent survival.
+for the assembly: exact policy evaluation, propagation of a terminal
+best-response debt through opponent survival, and prefix--tail splicing.
 -/
 
 noncomputable section
@@ -28,26 +27,6 @@ open StochasticGame Math.Probability Math.PMFProduct
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-! ## Finite decomposition of an infinite tail -/
-
-/-- An infinite hazard payoff factors through any finite boundary, with the
-actual suffix payoff used as the terminal value of the finite recursion. -/
-theorem quittingRootSequenceHazardTerminalValue_eq_finiteTerminalHazardValue
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (roots : ℕ → ι → PMF Bool) (who : ι)
-    (hazard : ℕ → PMF Bool) :
-    ∀ start fuel,
-      quittingRootSequenceHazardTerminalValue reward roots who hazard start =
-        quittingFiniteTerminalHazardValue reward roots who hazard
-          (quittingRootSequenceHazardTerminalValue reward roots who hazard
-            (start + fuel)) start fuel := by
-  intro start fuel
-  induction fuel generalizing start with
-  | zero => simp
-  | succ fuel ih =>
-      rw [quittingRootSequenceHazardTerminalValue_eq_hazardBellman,
-        quittingFiniteTerminalHazardValue]
-      have hindex : start + (fuel + 1) = (start + 1) + fuel := by omega
-      rw [hindex, ih (start + 1)]
 
 /-- Replacing a root sequence's own coordinate by itself changes nothing. -/
 theorem quittingRootSequenceHazardTerminalValue_self
@@ -75,30 +54,6 @@ theorem quittingRootSequenceTerminalValue_eq_finiteTerminalHazardValue_self
   simpa only [quittingRootSequenceHazardTerminalValue_self] using
     quittingRootSequenceHazardTerminalValue_eq_finiteTerminalHazardValue
       reward roots who (fun time => roots time who) start fuel
-
-/-- The finite hazard recursion is monotone in its terminal boundary. -/
-theorem quittingFiniteTerminalHazardValue_mono_terminal
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (roots : ℕ → ι → PMF Bool) (who : ι)
-    (hazard : ℕ → PMF Bool) {first second : ℝ}
-    (hterminal : first ≤ second) :
-    ∀ start fuel,
-      quittingFiniteTerminalHazardValue reward roots who hazard first
-          start fuel ≤
-        quittingFiniteTerminalHazardValue reward roots who hazard second
-          start fuel := by
-  intro start fuel
-  induction fuel generalizing start with
-  | zero => simpa using hterminal
-  | succ fuel ih =>
-      rw [quittingFiniteTerminalHazardValue,
-        quittingFiniteTerminalHazardValue]
-      apply add_le_add le_rfl
-      apply mul_le_mul_of_nonneg_left _ ENNReal.toReal_nonneg
-      apply add_le_add_left
-      exact mul_le_mul_of_nonneg_left (ih (start + 1))
-        (quittingStationaryContinueMass_nonneg
-          (Function.update (roots start) who (PMF.pure false)))
 
 /-! ## Exact finite-prefix Bellman bounds -/
 
@@ -172,13 +127,15 @@ theorem quittingFiniteTerminalBestResponseValue_le_declared_add_survival
         rw [show fuel + 1 = 1 + fuel by omega,
           quittingOpponentSurvivalWeight_add]
         simp [quittingOpponentSurvivalWeight, mass, tailWeight]
-      rw [quittingFiniteTerminalBestResponseValue]
+      have hindex : start + (fuel + 1) = start + 1 + fuel := by omega
+      rw [quittingFiniteTerminalBestResponseValue, hindex]
       apply max_le
       · calc
           quittingFixedOpponentsQuitValue reward roots who start ≤
               value start who := hquit
           _ ≤ value start who + mass * tailWeight * terminalDebt := by
-            positivity
+            exact le_add_of_nonneg_right
+              (mul_nonneg (mul_nonneg hmass htailWeight) hterminalDebt)
           _ = value start who +
               quittingOpponentSurvivalWeight roots who start (fuel + 1) *
                 terminalDebt := by rw [hsurvival]
@@ -191,12 +148,12 @@ theorem quittingFiniteTerminalBestResponseValue_le_declared_add_survival
                     (start + 1) fuel ≤
               quittingFixedOpponentsContinueReward reward roots who start +
                 mass * (value (start + 1) who + tailWeight * terminalDebt) := by
-                  exact add_le_add_left hscaled _
+                  linarith
           _ = (quittingFixedOpponentsContinueReward reward roots who start +
                 mass * value (start + 1) who) +
                 mass * tailWeight * terminalDebt := by ring
-          _ ≤ value start who + mass * tailWeight * terminalDebt :=
-            add_le_add_right hcontinue _
+          _ ≤ value start who + mass * tailWeight * terminalDebt := by
+            linarith
           _ = value start who +
               quittingOpponentSurvivalWeight roots who start (fuel + 1) *
                 terminalDebt := by rw [hsurvival]
@@ -221,7 +178,9 @@ theorem quittingFiniteTerminalHazardValue_self_eq_declared
   | succ fuel ih =>
       have hstart : start < cutoff := by omega
       have htailCutoff : (start + 1) + fuel ≤ cutoff := by omega
-      rw [quittingFiniteTerminalHazardValue, ih (start + 1) htailCutoff]
+      have hindex : start + (fuel + 1) = start + 1 + fuel := by omega
+      rw [quittingFiniteTerminalHazardValue, hindex,
+        ih (start + 1) htailCutoff]
       rw [congrFun (hpolicy start hstart) who,
         quittingRootSuccessorPayoff_eq_endpointMix,
         quittingRootQuitPayoff_eq_fixedOpponentsQuitValue,
@@ -229,34 +188,34 @@ theorem quittingFiniteTerminalHazardValue_self_eq_declared
 
 /-! ## Prefix--tail splicing -/
 
-/-- Use `prefix` before `cutoff` and the time-zero-based `tail` afterward. -/
+/-- Use `headRoots` before `cutoff` and the time-zero-based `tail` afterward. -/
 def quittingPrefixThenTailRoots
-    (prefix tail : ℕ → ι → PMF Bool) (cutoff time : ℕ) : ι → PMF Bool :=
-  if time < cutoff then prefix time else tail (time - cutoff)
+    (headRoots tail : ℕ → ι → PMF Bool) (cutoff time : ℕ) : ι → PMF Bool :=
+  if time < cutoff then headRoots time else tail (time - cutoff)
 
 @[simp] theorem quittingPrefixThenTailRoots_of_lt
-    (prefix tail : ℕ → ι → PMF Bool) (cutoff time : ℕ)
+    (headRoots tail : ℕ → ι → PMF Bool) (cutoff time : ℕ)
     (htime : time < cutoff) :
-    quittingPrefixThenTailRoots prefix tail cutoff time = prefix time := by
+    quittingPrefixThenTailRoots headRoots tail cutoff time = headRoots time := by
   simp [quittingPrefixThenTailRoots, htime]
 
 @[simp] theorem quittingPrefixThenTailRoots_cutoff
-    (prefix tail : ℕ → ι → PMF Bool) (cutoff : ℕ) :
-    quittingPrefixThenTailRoots prefix tail cutoff cutoff = tail 0 := by
+    (headRoots tail : ℕ → ι → PMF Bool) (cutoff : ℕ) :
+    quittingPrefixThenTailRoots headRoots tail cutoff cutoff = tail 0 := by
   simp [quittingPrefixThenTailRoots]
 
 @[simp] theorem quittingPrefixThenTailRoots_add_cutoff
-    (prefix tail : ℕ → ι → PMF Bool) (cutoff time : ℕ) :
-    quittingPrefixThenTailRoots prefix tail cutoff (cutoff + time) = tail time := by
+    (headRoots tail : ℕ → ι → PMF Bool) (cutoff time : ℕ) :
+    quittingPrefixThenTailRoots headRoots tail cutoff (cutoff + time) = tail time := by
   simp [quittingPrefixThenTailRoots, Nat.not_lt.mpr (Nat.le_add_right cutoff time)]
 
 /-- At the splice time, the generated history-independent profile is exactly
 the supplied tail profile. -/
 theorem quittingRootSequenceProfile_prefixThenTail_cutoff
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (prefix tail : ℕ → ι → PMF Bool) (cutoff : ℕ) :
+    (headRoots tail : ℕ → ι → PMF Bool) (cutoff : ℕ) :
     quittingRootSequenceProfile reward
-        (quittingPrefixThenTailRoots prefix tail cutoff) cutoff =
+        (quittingPrefixThenTailRoots headRoots tail cutoff) cutoff =
       quittingRootSequenceProfile reward tail 0 := by
   funext player time history
   simp [quittingRootSequenceProfile]
@@ -265,9 +224,9 @@ theorem quittingRootSequenceProfile_prefixThenTail_cutoff
 terminal value. -/
 theorem quittingRootSequenceTerminalValue_prefixThenTail_cutoff
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (prefix tail : ℕ → ι → PMF Bool) (who : ι) (cutoff : ℕ) :
+    (headRoots tail : ℕ → ι → PMF Bool) (who : ι) (cutoff : ℕ) :
     quittingRootSequenceTerminalValue reward
-        (quittingPrefixThenTailRoots prefix tail cutoff) who cutoff =
+        (quittingPrefixThenTailRoots headRoots tail cutoff) who cutoff =
       quittingRootSequenceTerminalValue reward tail who 0 := by
   unfold quittingRootSequenceTerminalValue
   rw [quittingRootSequenceProfile_prefixThenTail_cutoff]
@@ -276,10 +235,10 @@ theorem quittingRootSequenceTerminalValue_prefixThenTail_cutoff
 hazard on the tail. -/
 theorem quittingRootSequenceHazardTerminalValue_prefixThenTail_cutoff
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (prefix tail : ℕ → ι → PMF Bool) (who : ι)
+    (headRoots tail : ℕ → ι → PMF Bool) (who : ι)
     (hazard : ℕ → PMF Bool) (cutoff : ℕ) :
     quittingRootSequenceHazardTerminalValue reward
-        (quittingPrefixThenTailRoots prefix tail cutoff) who hazard cutoff =
+        (quittingPrefixThenTailRoots headRoots tail cutoff) who hazard cutoff =
       quittingRootSequenceHazardTerminalValue reward tail who
         (fun time => hazard (cutoff + time)) 0 := by
   unfold quittingRootSequenceHazardTerminalValue
@@ -295,10 +254,10 @@ theorem quittingRootSequenceHazardTerminalValue_prefixThenTail_cutoff
 /-- Target closure transports from a time-zero tail to the selected splice. -/
 theorem isQuittingTargetClosedAt_prefixThenTail
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (prefix tail : ℕ → ι → PMF Bool) (target : ι) (cutoff : ℕ)
+    (headRoots tail : ℕ → ι → PMF Bool) (target : ι) (cutoff : ℕ)
     (hclosed : IsQuittingTargetClosedAt reward tail target 0) :
     IsQuittingTargetClosedAt reward
-      (quittingPrefixThenTailRoots prefix tail cutoff) target cutoff := by
+      (quittingPrefixThenTailRoots headRoots tail cutoff) target cutoff := by
   intro hazard
   rw [quittingRootSequenceHazardTerminalValue_prefixThenTail_cutoff,
     quittingRootSequenceTerminalValue_prefixThenTail_cutoff]
