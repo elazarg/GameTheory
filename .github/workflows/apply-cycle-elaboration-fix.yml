@@ -1,0 +1,49 @@
+name: Apply cycle elaboration fix
+
+on:
+  pull_request:
+    branches: [uniform-existence]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.head_ref == 'agent/punishment-completed-cycles'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Patch Lean source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('GameTheory/Concepts/Stochastic/QuittingPunishmentCompletedCycle.lean')
+          text = path.read_text()
+          replacements = [
+              (
+                  'omit [Fintype ι] [DecidableEq ι] in\n/-- A strict joint one-turn contraction has an actually absorbing phase. -/',
+                  'omit [DecidableEq ι] in\n/-- A strict joint one-turn contraction has an actually absorbing phase. -/',
+              ),
+              (
+                  'therefore exactly `(1 - survival) * solo`.-/',
+                  'therefore exactly `(1 - survival) * solo`. -/',
+              ),
+          ]
+          for old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'expected one occurrence, found {count}: {old!r}')
+              text = text.replace(old, new, 1)
+          path.write_text(text)
+          PY
+      - name: Commit fixes
+        shell: bash
+        run: |
+          git config user.name "openai-agent"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add GameTheory/Concepts/Stochastic/QuittingPunishmentCompletedCycle.lean
+          git commit -m "Fix cycle compiler elaboration"
+          git push origin HEAD:agent/punishment-completed-cycles
