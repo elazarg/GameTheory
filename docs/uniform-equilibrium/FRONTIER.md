@@ -106,6 +106,27 @@ The finite-quitting front is now sharply reduced.
 The chain is exhaustive up to the positive fully summable plateau. It is not a
 claim that every equilibrium belongs to one finite grammar.
 
+## Truncated-ledger producer boundary
+
+The finite truncation theorem remains a sound compiler: ledger and pre-cutoff
+quit-regret bounds plus a small deleted-survival remainder yield terminal
+approximate Nash profiles.  Its former universal producer conjecture is false,
+even after excluding one-player games.  In the two-player zero-sum table where
+a singleton quitter receives `-1`, the continuing opponent receives `1`, and
+simultaneous quitting pays `0`, all-Continue is an exact uniform equilibrium
+with payoff zero.  Nevertheless a truncated ledger-cap package at tolerance
+`1/2` forces its common reach parameter both `>= 1/2` (by the two
+always-Continue deviations and zero-sum accounting) and `<= 1/10` (by the
+package error budget and reward bound).
+
+Thus common all-player tail extinction is not a universal certificate normal
+form.  The obstruction persists for the richer phase-switch package because it
+projects to the truncated package.  A surviving producer must either retain a
+persistent-live branch — zero-solo is the landed exact instance — or replace
+the common reach requirement by a weaker value-sensitive or active-set
+condition.  `QuittingReducedCapConjecture.lean` now states only the valid
+branch-relative implication; no completeness claim for the repair is made.
+
 ## Essential APS on the singleton-flow stratum
 
 The essential-APS layer formalizes a genuine but conditional positive stratum.

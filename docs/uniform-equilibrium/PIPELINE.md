@@ -30,14 +30,15 @@ the restored axiom audit reporting only `propext`, `Classical.choice`, and
 `Quot.sound`, and the leaf invariant checked by the script. The `opaque` and
 `native_decide` occurrences survive only inside the quarantined `BlockPairK11`
 island, reported as accepted exceptions whose exemption is **earned** by a
-containment check that fails the audit if anything imports the island. The three
+containment check that fails the audit if anything imports the island. The two
 intentional `sorry` declarations are
 `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean` and
-`quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`,
-and the reduced cap-package leaf in `QuittingReducedCapConjecture.lean`.
-These are guarded by the placeholder/leaf audit and documented in the
-[proof-engineering audit](../../ephemeral/ProofEngineeringAudit.md), rather than
-blockers hidden in the P0 mathematical status.
+`quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`.
+The former reduced cap-package leaf is now a proved no-go: its common
+all-player deleted-survival requirement fails on a solved two-player zero-solo
+game. The two remaining leaves are guarded by the placeholder/leaf audit and
+documented in the [proof-engineering audit](../../ephemeral/ProofEngineeringAudit.md),
+rather than blockers hidden in the P0 mathematical status.
 
 ## Incorporation checkpoint — 2026-08-07
 
