@@ -151,16 +151,8 @@ fence: even a solved two-player zero-solo game need not admit a common-cutoff
 truncated-ledger package.  The package compiler is sound, but its hypothesis is
 not a necessary normal form for equilibrium existence.
 
-[`SubgameGlueOrEnlarge.md`](SubgameGlueOrEnlarge.md) records a focused proposed
-producer adapter: a proper-subgame solution should either reinsert outsiders
-with a quantitative terminal-deviation bound or return the entering outsider,
-marked atom, and failed inequality needed for support enlargement.  It is a
-mathematical design target, not a landed theorem or a replacement for the live
-pipeline.
-
-These characterize, organize, or falsify proposed routes.  They are not forward
-construction mechanisms unless a named theorem supplies the missing producer
-or decoder.
+These characterize or falsify proposed routes.  They are not forward
+construction mechanisms.
 
 ## Semantic fences
 
