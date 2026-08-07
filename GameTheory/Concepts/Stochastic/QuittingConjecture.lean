@@ -37,6 +37,13 @@ exhaustive over weights that admit *some* absorbing complementary cycle.  Its
 branches are not mutually exclusive, the third has no sufficiency theorem, and
 weights admitting no absorbing cycle at all lie outside its scope.
 
+The truncated-ledger route is likewise only conditional.  Packages at every
+positive tolerance still compile to a uniform-equilibrium payoff, but the
+former universal producer declaration is false even for `Bool`: a solved
+zero-solo game has no such package at accuracy `1/2`.  The canonical boundary
+module records a persistent-live zero-solo branch versus a supplied package
+producer without claiming that this disjunction is exhaustive.
+
 ## External status of the target
 
 Two-player quitting games are settled, and three-player quitting games follow
@@ -94,13 +101,13 @@ hold, from the general problem to this one, is
 ## Open declarations
 
 This file contains one `sorry`, deliberately, in
-`quittingGame_exists_uniformEquilibriumPayoff`.  The repository's other
-intentional open declarations are `exists_uniformDeviationCapConstructor` in
-`UniformExistenceConjecture.lean` and the truncated-ledger producer target in
-`QuittingReducedCapConjecture.lean`.  The latter is a sound conditional
-reduction for nontrivial player types; the one-player obstruction concerns its
-quantitative interface rather than equilibrium existence.  These are the only
-intentional open declarations.
+`quittingGame_exists_uniformEquilibriumPayoff`.  The repository's only other
+intentional open declaration is `exists_uniformDeviationCapConstructor` in
+`UniformExistenceConjecture.lean`.  The former reduced-cap declaration was
+removed after the two-player counterexample in
+`QuittingTruncatedLedgerCapCounterexample.lean`; the compiler remains valid,
+but its package is not a universal normal form.  These are the only intentional
+open declarations.
 -/
 
 noncomputable section

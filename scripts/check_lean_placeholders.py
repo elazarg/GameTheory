@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fail if tracked Lean sources contain unexpected `sorry` or `admit` tokens.
 
-The repository states three open conjectures as `sorry`-carrying declarations
+The repository states two open conjectures as `sorry`-carrying declarations
 on purpose. They are listed in `INTENTIONAL` below, keyed by path and
 declaration name, so that this check stays *green* while still failing on any
 additional placeholder appearing anywhere.
@@ -38,13 +38,6 @@ INTENTIONAL: dict[tuple[str, str], str] = {
         "GameTheory/Concepts/Stochastic/UniformExistenceConjecture.lean",
         "exists_uniformDeviationCapConstructor",
     ): "The general uniform-equilibrium existence problem, quantitative form.",
-    (
-        "GameTheory/Concepts/Stochastic/QuittingReducedCapConjecture.lean",
-        "quittingGame_hasQuittingTruncatedLedgerCapPackage",
-    ): "The reduced finite-quitting conjecture: existence, at every tolerance, "
-    "of a punishment-free truncated ledger package. It "
-    "implies the finite-quitting conjecture with no gap, by "
-    "`quittingGame_exists_uniformEquilibriumPayoff_of_truncatedLedgerCapPackage`.",
 }
 
 
