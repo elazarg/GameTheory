@@ -198,8 +198,13 @@ theorem abs_quittingCyclicSignedResidual_le_iff_value_close
       simpa [mul_comm] using h
     exact le_of_mul_le_mul_left hmul habsorption
   · intro h
-    simpa [mul_comm] using
-      (mul_le_mul_left h (quittingCyclicWeightedAbsorption cycle))
+    calc
+      quittingCyclicWeightedAbsorption cycle *
+          |value phase who -
+            quittingCyclicTerminalValue reward cycle phase who| ≤
+        quittingCyclicWeightedAbsorption cycle * η :=
+          mul_le_mul_of_nonneg_left h (le_of_lt habsorption)
+      _ = η * quittingCyclicWeightedAbsorption cycle := by ring
 
 omit [DecidableEq ι] in
 /-- The signed monodromy charge is bounded by the survival-weighted absolute
