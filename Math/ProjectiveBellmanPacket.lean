@@ -90,6 +90,7 @@ theorem projectiveCemeteryWeight_add_absorptionWeight
     (projectiveFirstEventDenominator_pos hε hε1 hq).ne'
   unfold projectiveCemeteryWeight projectiveAbsorptionWeight
   field_simp [hD, projectiveFirstEventDenominator]
+  rfl
 
 /-- **Exact Bellman balance after first-event normalization.** -/
 theorem projectiveBellman_balance
@@ -118,6 +119,5 @@ theorem projectiveBellman_value_eq_absorptionWeight_mul_conditional
     _ = projectiveAbsorptionWeight ε q * (a / q) := by
       unfold projectiveAbsorptionWeight
       field_simp [hDpos.ne', hq0.ne']
-      ring
 
 end Math
