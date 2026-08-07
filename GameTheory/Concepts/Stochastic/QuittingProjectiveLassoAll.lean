@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingAnalyticGerm
+import GameTheory.Concepts.Stochastic.QuittingProjectiveAnalyticFirstEvent
 import GameTheory.Concepts.Stochastic.QuittingProjectiveSingletonLCP
 import GameTheory.Concepts.Stochastic.QuittingProjectiveAnchoredSingletonLCP
 import GameTheory.Concepts.Stochastic.QuittingWeightedProjectiveLasso
@@ -18,6 +19,8 @@ import Math.FinitePivotOrbit
 Public entry point for the proved projective layer:
 
 * exact vanishing-discount quitting-germ algebra;
+* matching-order extraction of the normalized cemetery, singleton, and
+  residual nonsingleton first-event masses;
 * zero-anchor and affine-anchor normalized singleton projective-LCP algebra;
 * resolved affine feasibility-or-Farkas duality, together with the explicit
   arc-lifting contract required to turn a feasible tangent into a physical
@@ -31,8 +34,8 @@ Public entry point for the proved projective layer:
 The arbitrary-game producer is not contained here.  It still requires four
 separate ingredients:
 
-1. analytic extraction of a singleton first-event packet from the relevant
-   vanishing-discount branch;
+1. completion of analytic singleton-packet extraction by proving the limiting
+   value-mixture identity and passing endpoint complementarity to the limit;
 2. construction and coverage of resolved quitting Bellman charts, including
    real/Puiseux arc lifting of feasible lexicographic tangents;
 3. semantic decoding of projective Farkas obstructions; and
