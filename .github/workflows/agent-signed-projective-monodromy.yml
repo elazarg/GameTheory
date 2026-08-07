@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/signed-projective-monodromy
+  pull_request:
+    branches:
+      - agent/signed-projective-monodromy
 
 permissions:
   contents: read
