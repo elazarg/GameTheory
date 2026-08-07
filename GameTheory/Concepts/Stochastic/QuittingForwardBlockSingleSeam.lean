@@ -29,10 +29,9 @@ its wrapped continuation, so its policy residual is the single affine seam
 continueMass(root_start) * (V_start - V_(start+n+1)).
 ```
 
-This file packages that arithmetic into
-`QuittingFiniteSingleSeamProjectiveLasso`.  Combined with compact finite
-charged return, it is the game-facing adapter from an arbitrarily charged
-exact forward prefix to the canonical weighted-lasso compiler.
+All hypotheses in this file are local to the displayed finite interval.  A
+producer may extend its arrays arbitrarily outside the prefix; no Bellman,
+support, or rationality statement is requested there.
 -/
 
 noncomputable section
@@ -56,6 +55,38 @@ def quittingReversedForwardValue
   fun phase => forward (start + phase.rev + 1)
 
 omit [DecidableEq ι] in
+/-- The aggregate absorption of the reversed cycle is exactly the survival
+product over the original forward interval.  Reversal changes neither the
+finite product nor its absorption deficit. -/
+theorem quittingCyclicWeightedAbsorption_reversedForwardCycle
+    (roots : ℕ → ι → PMF Bool) (start n : ℕ) :
+    quittingCyclicWeightedAbsorption
+        (quittingReversedForwardCycle roots start n) =
+      1 - ∏ offset ∈ Finset.range (n + 1),
+        (1 - quittingRootAbsorptionMass (roots (start + offset))) := by
+  classical
+  let charge : ℕ → ℝ := fun time =>
+    quittingRootAbsorptionMass (roots time)
+  let factor : Fin (n + 1) → ℝ := fun phase =>
+    1 - charge (start + phase)
+  have hcontinue : ∀ phase : Fin (n + 1),
+      quittingStationaryContinueMass (roots (start + phase.rev)) =
+        factor phase.rev := by
+    intro phase
+    dsimp only [factor, charge]
+    unfold quittingRootAbsorptionMass
+    ring
+  unfold quittingCyclicWeightedAbsorption
+    quittingReversedForwardCycle
+  simp_rw [hcontinue]
+  have hrev :
+      (∏ phase : Fin (n + 1), factor phase.rev) =
+        ∏ phase : Fin (n + 1), factor phase := by
+    simpa using (Equiv.prod_comp Fin.revPerm factor)
+  rw [hrev, Finset.prod_range]
+  rfl
+
+omit [DecidableEq ι] in
 /-- Away from the last phase, rotating forward once and then reversing lowers
 the underlying forward index by one. -/
 theorem finRotate_rev_add_one_eq_rev_of_ne_last
@@ -74,6 +105,7 @@ theorem quittingCyclicPolicyResidual_reversedForward_eq_zero_of_ne_last
     (roots : ℕ → ι → PMF Bool) (forward : ℕ → Payoff ι)
     (start n : ℕ)
     (hpolicy : ∀ time,
+      start ≤ time → time < start + n + 1 →
       forward (time + 1) = quittingRootSuccessorPayoff reward
         (forward time) (roots time))
     (phase : Fin (n + 1)) (who : ι)
@@ -87,7 +119,12 @@ theorem quittingCyclicPolicyResidual_reversedForward_eq_zero_of_ne_last
       start + ((finRotate (n + 1) phase).rev : ℕ) + 1 =
         start + (phase.rev : ℕ) := by
     omega
-  have hcurrent := congrFun (hpolicy (start + (phase.rev : ℕ))) who
+  have htime0 : start ≤ start + (phase.rev : ℕ) := by omega
+  have htime1 : start + (phase.rev : ℕ) < start + n + 1 := by
+    have hlt := phase.rev.isLt
+    omega
+  have hcurrent := congrFun
+    (hpolicy (start + (phase.rev : ℕ)) htime0 htime1) who
   unfold quittingCyclicPolicyResidual
     quittingReversedForwardCycle quittingReversedForwardValue
   rw [htailIndex]
@@ -103,6 +140,7 @@ theorem abs_quittingCyclicPolicyResidual_reversedForward_last_le
     (roots : ℕ → ι → PMF Bool) (forward : ℕ → Payoff ι)
     (start n : ℕ)
     (hpolicy : ∀ time,
+      start ≤ time → time < start + n + 1 →
       forward (time + 1) = quittingRootSuccessorPayoff reward
         (forward time) (roots time))
     (seam : ℝ)
@@ -113,7 +151,8 @@ theorem abs_quittingCyclicPolicyResidual_reversedForward_last_le
         (quittingReversedForwardCycle roots start n)
         (quittingReversedForwardValue forward start n)
         (Fin.last n) who| ≤ seam := by
-  have hstep := congrFun (hpolicy start) who
+  have hstep := congrFun
+    (hpolicy start (by omega) (by omega)) who
   have hresidual :
       quittingCyclicPolicyResidual reward
           (quittingReversedForwardCycle roots start n)
@@ -151,6 +190,7 @@ theorem isQuittingRootSupportApproxNash_reversedForward
     (start n : ℕ) {supportError seamError : ℝ}
     (hseamError : 0 ≤ seamError)
     (hsupport : ∀ time,
+      start ≤ time → time < start + n + 1 →
       IsQuittingRootSupportApproxNash reward
         (forward time) supportError (roots time))
     (hclose : ∀ who,
@@ -166,7 +206,7 @@ theorem isQuittingRootSupportApproxNash_reversedForward
     have htransfer := isQuittingRootSupportApproxNash_of_tail_close
       reward (roots start) (forward start) (forward (start + n + 1))
       (δ := supportError) (η := seamError)
-      (hsupport start) hclose
+      (hsupport start (by omega) (by omega)) hclose
     simpa [quittingReversedForwardCycle,
       quittingReversedForwardValue, Fin.val_rev, finRotate_last] using htransfer
   · have hrev := finRotate_rev_add_one_eq_rev_of_ne_last phase hphase
@@ -174,12 +214,16 @@ theorem isQuittingRootSupportApproxNash_reversedForward
         start + ((finRotate (n + 1) phase).rev : ℕ) + 1 =
           start + (phase.rev : ℕ) := by
       omega
+    have htime0 : start ≤ start + (phase.rev : ℕ) := by omega
+    have htime1 : start + (phase.rev : ℕ) < start + n + 1 := by
+      have hlt := phase.rev.isLt
+      omega
     have htransfer := isQuittingRootSupportApproxNash_of_tail_close
       reward (roots (start + (phase.rev : ℕ)))
         (forward (start + (phase.rev : ℕ)))
         (forward (start + (phase.rev : ℕ)))
       (δ := supportError) (η := seamError)
-      (hsupport (start + (phase.rev : ℕ)))
+      (hsupport (start + (phase.rev : ℕ)) htime0 htime1)
       (fun who => by simp [hseamError])
     unfold quittingReversedForwardCycle quittingReversedForwardValue
     rw [htailIndex]
@@ -188,18 +232,19 @@ theorem isQuittingRootSupportApproxNash_reversedForward
 /-- **Forward block to single-seam lasso.**
 
 The block is read backwards, its nonclosing phases are exact, and endpoint
-closeness pays the sole seam and support-transfer error.  The caller supplies
-the aggregate-absorption comparison and one absorbing phase; compact charged
-return supplies both in the intended application. -/
+closeness pays the sole seam and support-transfer error.  Every assumption is
+restricted to the finite interval consumed by the block. -/
 def quittingFiniteSingleSeamProjectiveLasso_of_reversedForwardBlock
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (roots : ℕ → ι → PMF Bool) (forward : ℕ → Payoff ι)
     (start n : ℕ) {supportError seamError : ℝ}
     (hsupportError : 0 ≤ supportError) (hseamError : 0 ≤ seamError)
     (hpolicy : ∀ time,
+      start ≤ time → time < start + n + 1 →
       forward (time + 1) = quittingRootSuccessorPayoff reward
         (forward time) (roots time))
     (hsupport : ∀ time,
+      start ≤ time → time < start + n + 1 →
       IsQuittingRootSupportApproxNash reward
         (forward time) supportError (roots time))
     (hclose : ∀ who,
@@ -209,6 +254,7 @@ def quittingFiniteSingleSeamProjectiveLasso_of_reversedForwardBlock
         quittingCyclicWeightedAbsorption
           (quittingReversedForwardCycle roots start n))
     (hrational : ∀ target time,
+      start < time → time ≤ start + n + 1 →
       quittingPunishmentValue reward target -
           (supportError + seamError) ≤ forward time target)
     (absorbingPhase : Fin (n + 1))
@@ -238,7 +284,9 @@ def quittingFiniteSingleSeamProjectiveLasso_of_reversedForwardBlock
           exact hclose who) phase
   rational := by
     intro target phase
+    have hlt := phase.rev.isLt
     exact hrational target (start + (phase.rev : ℕ) + 1)
+      (by omega) (by omega)
   absorbingPhase := absorbingPhase
   absorbing := habsorbing
 
