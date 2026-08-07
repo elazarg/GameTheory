@@ -215,7 +215,7 @@ theorem abs_quittingCyclicValue_sub_terminalValue_le_of_chargedResidual
             |quittingStationaryContinueMass (cycle cyclePhase) *
               (value (finRotate K cyclePhase) who -
                 quittingCyclicTerminalValue reward cycle
-                  (finRotate K cyclePhase) who)| := abs_add _ _
+                  (finRotate K cyclePhase) who)| := abs_add_le _ _
       _ = |quittingCyclicPolicyResidual reward cycle value cyclePhase who| +
           quittingStationaryContinueMass (cycle cyclePhase) *
             |value (finRotate K cyclePhase) who -
@@ -322,6 +322,7 @@ theorem toFiniteSupportRationalCycle
       reward (lasso.cycle phase)
         (lasso.value (finRotate K phase))
         (exactValue lasso (finRotate K phase))
+        (δ := error) (η := error)
         (lasso.support phase) (fun who => ?_)
     · simpa [two_mul] using htransfer
     · simpa [exactValue, abs_sub_comm] using
@@ -330,8 +331,9 @@ theorem toFiniteSupportRationalCycle
     have hir := lasso.rational target phase
     have hclose := abs_value_sub_exactValue_le lasso phase target
     rw [abs_le] at hclose
-    dsimp only [exactValue]
-    nlinarith
+    have hupper := hclose.2
+    dsimp only [exactValue] at hupper ⊢
+    linarith
 
 /-- A charged projective lasso produces the exact divergent path consumed by
 the support-witness compiler. -/
