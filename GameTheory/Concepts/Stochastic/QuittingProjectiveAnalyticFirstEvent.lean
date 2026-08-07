@@ -287,7 +287,6 @@ theorem firstEventDenominator_div_discount_tendsto
     pow_ne_zero _ (ne_of_gt ht)
   unfold quittingGermFirstEventDenominator
   field_simp
-  ring
 
 /-- The normalized cemetery mass converges to `1 / (1 + ∑ a)`. -/
 theorem cemeteryFirstEventWeight_tendsto
