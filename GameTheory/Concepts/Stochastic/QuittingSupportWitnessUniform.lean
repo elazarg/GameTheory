@@ -6,28 +6,27 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.QuittingSupportWitnessPathCompiler
 import GameTheory.Concepts.Stochastic.QuittingSupportWitnessPeriodic
-import GameTheory.Concepts.Stochastic.QuittingProjectiveLassoWeighted
+import GameTheory.Concepts.Stochastic.QuittingWeightedProjectiveLasso
 
 /-!
 # Support-witness uniform-equilibrium route
 
-Public umbrella for the witness-retaining quitting-game compilers.
+Public umbrella for the witness-retaining quitting-game compiler.
 
-The route has three certificate entry points.
+The route has three entry points.
 
 * `QuittingSupportWitnessPathCompiler` consumes an infinite path with
   support-local approximate optimality, continuation-by-continuation
   individual rationality, and divergent total absorption.
 * `QuittingSupportWitnessPeriodic` converts a finite periodic witness cycle
   with one positive-absorption phase into precisely such an infinite path.
-* `QuittingProjectiveLasso` and `QuittingProjectiveLassoWeighted` correct a
-  finite cyclic packet whose Bellman seam is small relative to real absorption
-  into an exact periodic witness cycle.  Charged lassos at every positive
-  accuracy therefore imply a uniform-equilibrium payoff.
+* `QuittingWeightedProjectiveLasso` corrects a finite projective cycle whose
+  survival-weighted Bellman seam is small relative to survival-weighted real
+  absorption, uniformly over every cyclic rotation.  The corrected cycle
+  yields a divergent support-rational path and hence a uniform payoff.
 
 The principal quantitative conclusions are the path and cycle versions of the
-`3ε` theorem, the pointwise and weighted projective-lasso correction theorems,
-and
+`3ε` theorem, the weighted projective-lasso correction theorem, and
 `quittingGame_exists_uniformEquilibriumPayoff_of_supportRationalDivergentPaths`.
 
 This umbrella is independent of `QuittingReducedCapConjecture`: the latter is
@@ -36,10 +35,9 @@ a separate, still-open all-player truncated-ledger producer route.
 alternative for situations where support witnesses have been forgotten, but
 is not used by the deterministic support-witness compiler.
 
-The projective-lasso layer is a complete certificate consumer.  It does not
-construct a lasso from an arbitrary vanishing-discount branch.  In particular,
-finite repetition of a projective-cell label does not imply a relative return
-or charged seam.  The producer boundary is documented in
-`docs/uniform-equilibrium/ProjectiveLassoProducer.md`; the broader projective
-entry point is `QuittingProjectiveLassoAll.lean`.
+The projective-lasso layer is a compiler, not the arbitrary-game producer.
+The missing producer still consists of analytic packet extraction,
+resolved-chart construction and arc lifting, semantic Farkas decoding, and a
+rotation-uniform relative-return theorem.  The exact boundary and derivations
+are documented in `docs/uniform-equilibrium/ProjectiveLassoProducer.md`.
 -/
