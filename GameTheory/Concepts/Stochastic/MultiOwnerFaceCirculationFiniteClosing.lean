@@ -170,7 +170,7 @@ theorem isCompact_multiCirculationFiniteValueCarrier
 
 /-- The original `∀ Q, ∃ finite orbit` circulation theorem, with its hidden
 interval data retained, is a finite forward packet in the common carrier. -/
-def finiteForwardPacket_of_multiCirculation [Nonempty ι]
+theorem exists_finiteForwardPacket_of_multiCirculation [Nonempty ι]
     (C : FaceCirculationCertificate r floor L)
     (M : ℝ) (hM0 : 0 ≤ M) (hM : ∀ S j, |r S j| ≤ M)
     (s : ℕ) (hs : ∀ l, (mixSupport (C.mixWeight l)).card ≤ s)
@@ -179,9 +179,9 @@ def finiteForwardPacket_of_multiCirculation [Nonempty ι]
       quittingPunishmentValue (rewardOfWeight r) who ≤ floor who)
     (supportError : ℝ) (hsupportError : 0 < supportError)
     (chargeTarget : ℝ) :
-    QuittingFiniteForwardPacket (rewardOfWeight r)
+    Nonempty (QuittingFiniteForwardPacket (rewardOfWeight r)
       (multiCirculationFiniteValueCarrier C M)
-      supportError chargeTarget := by
+      supportError chargeTarget) := by
   obtain ⟨N, β, word, hN, hβ0, hβ1, hβN,
       hforwardPolicy, hforwardSupport, hforwardFloor, T, hT⟩ :=
     exists_multiCirculation_finiteOrbitData
@@ -207,7 +207,7 @@ def finiteForwardPacket_of_multiCirculation [Nonempty ι]
     simpa [row, multiRow] using hinterval.2
   let roots : ℕ → ι → PMF Bool := fun time =>
     rootOfHazard (row time) (hrow0 time) (hrow1 time)
-  refine {
+  refine ⟨{
     roots := roots
     value := forward
     horizon := T
@@ -216,7 +216,7 @@ def finiteForwardPacket_of_multiCirculation [Nonempty ι]
     support := ?_
     rational := ?_
     chargeTarget_le := ?_
-  }
+  }⟩
   · intro time _
     unfold multiCirculationFiniteValueCarrier
     intro who _
@@ -274,8 +274,8 @@ theorem quittingGame_exists_uniformEquilibriumPayoff_of_multiCirculation_finiteC
     (rewardOfWeight r) (multiCirculationFiniteValueCarrier C M)
       (isCompact_multiCirculationFiniteValueCarrier C M)
   intro supportError hsupportError chargeTarget _
-  exact ⟨finiteForwardPacket_of_multiCirculation
+  exact exists_finiteForwardPacket_of_multiCirculation
     C M hM0 hM s hs a ha ha1 hpunishmentFloor
-      supportError hsupportError chargeTarget⟩
+      supportError hsupportError chargeTarget
 
 end GameTheory
