@@ -73,7 +73,17 @@ import Math.SchauderFixedPoint
 -- Terminal-to-uniform selection and the asymptotic-Nash bridge.
 #print axioms GameTheory.StochasticGame.isUniformεEquilibrium_of_isεAsymptoticNash_of_upperApproximation
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_terminalNash_all_errors
+#print axioms GameTheory.quittingGame_isUniformEquilibriumPayoff_of_terminalNash_all_errors_fixedTarget
+#print axioms GameTheory.quittingGame_isUniformEquilibriumPayoff_of_terminalNash_all_errors_approxTarget
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_iff_terminalNash_all_errors
+
+-- Coupled phase switching, exact instant punishment, and punishment-completed
+-- absorbing cycles.
+#print axioms GameTheory.quittingRootSequenceHazardTerminalValue_quittingPhaseSwitchRoots_le_coupled
+#print axioms GameTheory.quittingInstantPunishmentWorks_iff
+#print axioms GameTheory.isUniformEquilibriumPayoff_soloReward_of_instantPunishment
+#print axioms GameTheory.isUniformEquilibriumPayoff_of_punishmentAdmissibleCycle
+#print axioms GameTheory.isUniformEquilibriumPayoff_terminal_of_punishmentAdmissibleBlock
 
 -- The admissible-cycle compiler and the three-branch trichotomy.
 #print axioms GameTheory.exists_uniformEquilibriumPayoff_of_admissible_quittingCyclicContinuationBlock

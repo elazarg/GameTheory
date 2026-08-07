@@ -585,6 +585,7 @@ import GameTheory.Concepts.Stochastic.QuittingIsolatedPunishmentCeiling
 import GameTheory.Concepts.Stochastic.QuittingPunishmentFloor
 import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchProfile
 import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchDeviationCap
+import GameTheory.Concepts.Stochastic.QuittingCoupledPhaseSwitchCap
 import GameTheory.Concepts.Stochastic.QuittingSurvivalWindowLanding
 import GameTheory.Concepts.Stochastic.QuittingWeightedContinueMassBound
 import GameTheory.Concepts.Stochastic.QuittingLedgerPunishClock
@@ -614,6 +615,8 @@ import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail
 import Math.ChargedPathBudget
 import Math.ChargedPathBudgetCounterexamples
 import GameTheory.Concepts.Stochastic.QuittingCollisionRepairCharacterization
+import GameTheory.Concepts.Stochastic.QuittingInstantPunishment
+import GameTheory.Concepts.Stochastic.QuittingPunishmentCompletedCycle
 import GameTheory.Concepts.Stochastic.QuittingQuitBonusSelfLoopBridge
 
 -- Correlated equilibrium
