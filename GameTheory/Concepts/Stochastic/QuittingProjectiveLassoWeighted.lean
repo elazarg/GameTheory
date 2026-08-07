@@ -51,6 +51,7 @@ def quittingCyclicWeightedAbsorption
   1 - ∏ cyclePhase : Fin K,
     quittingStationaryContinueMass (cycle cyclePhase)
 
+omit [DecidableEq ι] in
 /-- The weighted absorption denominator is the sum of preceding survival times
 one-stage absorption. -/
 theorem quittingCyclicWeightedAbsorption_eq_sum
@@ -63,6 +64,7 @@ theorem quittingCyclicWeightedAbsorption_eq_sum
           phase offset *
         quittingRootAbsorptionMass
           (cycle (quittingCyclicOrbit phase offset)) := by
+  classical
   unfold quittingCyclicWeightedAbsorption
   rw [← quittingCyclicPrefixWeight_card
     (fun cyclePhase => quittingStationaryContinueMass (cycle cyclePhase)) phase]
@@ -71,6 +73,7 @@ theorem quittingCyclicWeightedAbsorption_eq_sum
   intro offset _
   rw [quittingRootAbsorptionMass]
 
+omit [DecidableEq ι] in
 /-- **Weighted projective-lasso correction.**  A cyclewise seam bound against
 the equally weighted absorption charge controls the exact periodic correction
 with the same constant. -/
@@ -86,6 +89,7 @@ theorem abs_quittingCyclicValue_sub_terminalValue_le_of_weightedResidual
     ∀ phase who,
       |value phase who -
         quittingCyclicTerminalValue reward cycle phase who| ≤ η := by
+  classical
   intro phase who
   let coefficient : Fin K → ℝ := fun cyclePhase =>
     quittingStationaryContinueMass (cycle cyclePhase)
@@ -146,6 +150,7 @@ theorem abs_quittingCyclicValue_sub_terminalValue_le_of_weightedResidual
     exact hcharge
   exact hraw.trans hquotient
 
+omit [DecidableEq ι] in
 /-- The stronger pointwise charged-seam condition implies the invariant
 weighted condition. -/
 theorem quittingCyclicWeightedResidual_le_of_pointwise
@@ -158,6 +163,7 @@ theorem quittingCyclicWeightedResidual_le_of_pointwise
     (phase : Fin K) (who : ι) :
     quittingCyclicWeightedResidual reward cycle value phase who ≤
       η * quittingCyclicWeightedAbsorption cycle := by
+  classical
   unfold quittingCyclicWeightedResidual
   calc
     quittingCyclicResidualCharge

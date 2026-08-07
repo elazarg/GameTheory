@@ -50,7 +50,7 @@ Among the first `card Cell + 1` points of a deterministic finite-label orbit,
 either an output label is reached or two ordered times carry the same
 non-output label. -/
 theorem exists_output_or_repeated_finitePivotOrbit
-    {Cell : Type*} [Fintype Cell] [DecidableEq Cell]
+    {Cell : Type*} [Fintype Cell]
     (next : Cell → Cell) (isOutput : Cell → Prop) (start : Cell) :
     (∃ time : Fin (Fintype.card Cell + 1),
       isOutput (finitePivotOrbit next start time)) ∨
@@ -86,12 +86,13 @@ theorem exists_output_or_repeated_finitePivotOrbit
 /-- If the finite label system has no output labels, its first
 `card Cell + 1` iterates contain a repeated label. -/
 theorem exists_repeated_finitePivotOrbit
-    {Cell : Type*} [Fintype Cell] [DecidableEq Cell]
+    {Cell : Type*} [Fintype Cell]
     (next : Cell → Cell) (start : Cell) :
     ∃ first second : Fin (Fintype.card Cell + 1),
       first < second ∧
       finitePivotOrbit next start first =
         finitePivotOrbit next start second := by
+  classical
   rcases exists_output_or_repeated_finitePivotOrbit
       next (fun _ => False) start with hout | hrepeated
   · obtain ⟨time, hfalse⟩ := hout

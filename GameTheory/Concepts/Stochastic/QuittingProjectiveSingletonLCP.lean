@@ -96,6 +96,7 @@ def quittingProjectiveLCPSlack
     (value : Payoff ι) (who : ι) : ℝ :=
   value who - reward (quittingProjectiveSingletonTerminal who) who
 
+omit [DecidableEq ι] in
 /-- Exact affine LCP balance of a normalized singleton packet. -/
 theorem quittingProjectiveSingletonPacket_balance
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -104,6 +105,7 @@ theorem quittingProjectiveSingletonPacket_balance
       packet.cemetery * quittingProjectiveLCPDirection reward who +
         ∑ owner, packet.singleton owner *
           quittingProjectiveLCPMatrix reward who owner := by
+  classical
   unfold quittingProjectiveLCPSlack quittingProjectiveLCPDirection
     quittingProjectiveLCPMatrix
   rw [packet.value_eq_singleton_mix]
@@ -114,19 +116,23 @@ theorem quittingProjectiveSingletonPacket_balance
   rw [hsum]
   ring
 
+omit [DecidableEq ι] in
 /-- Every projective LCP slack is nonnegative. -/
 theorem quittingProjectiveSingletonPacket_slack_nonneg
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (packet : QuittingProjectiveSingletonPacket reward) (who : ι) :
     0 ≤ quittingProjectiveLCPSlack reward packet.value who := by
+  classical
   exact sub_nonneg.mpr (packet.solo_le_value who)
 
+omit [DecidableEq ι] in
 /-- Singleton mass is complementary to its owner's slack. -/
 theorem quittingProjectiveSingletonPacket_complementary
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (packet : QuittingProjectiveSingletonPacket reward) (who : ι) :
     packet.singleton who *
       quittingProjectiveLCPSlack reward packet.value who = 0 := by
+  classical
   by_cases hzero : packet.singleton who = 0
   · simp [hzero]
   · have hpos : 0 < packet.singleton who :=
@@ -134,6 +140,7 @@ theorem quittingProjectiveSingletonPacket_complementary
     rw [quittingProjectiveLCPSlack,
       packet.positive_singleton_pins who hpos, sub_self, mul_zero]
 
+omit [DecidableEq ι] in
 /-- **Projective first-event LCP theorem, algebraic form.**
 A normalized singleton packet satisfies the affine balance, nonnegative
 slack, and complementarity equations simultaneously. -/
@@ -149,16 +156,19 @@ theorem quittingProjectiveSingletonPacket_isLCP
     ∀ who,
       packet.singleton who *
         quittingProjectiveLCPSlack reward packet.value who = 0 := by
+  classical
   exact ⟨quittingProjectiveSingletonPacket_balance reward packet,
     quittingProjectiveSingletonPacket_slack_nonneg reward packet,
     quittingProjectiveSingletonPacket_complementary reward packet⟩
 
+omit [DecidableEq ι] in
 /-- At cemetery mass one, every singleton mass vanishes. -/
 theorem QuittingProjectiveSingletonPacket.singleton_eq_zero_of_cemetery_eq_one
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
     (packet : QuittingProjectiveSingletonPacket reward)
     (hcemetery : packet.cemetery = 1) (who : ι) :
     packet.singleton who = 0 := by
+  classical
   have hsum : ∑ owner, packet.singleton owner = 0 := by
     linarith [packet.total]
   have hsingle : packet.singleton who ≤ ∑ owner, packet.singleton owner :=
@@ -168,6 +178,7 @@ theorem QuittingProjectiveSingletonPacket.singleton_eq_zero_of_cemetery_eq_one
   rw [hsum] at hsingle
   exact le_antisymm hsingle (packet.singleton_nonneg who)
 
+omit [DecidableEq ι] in
 /-- The cemetery-one boundary is the all-Continue/Never payoff: the packet
 value is zero and every solo payoff is nonpositive. -/
 theorem QuittingProjectiveSingletonPacket.cemetery_one_boundary
@@ -176,6 +187,7 @@ theorem QuittingProjectiveSingletonPacket.cemetery_one_boundary
     (hcemetery : packet.cemetery = 1) :
     packet.value = 0 ∧
       ∀ who, reward (quittingProjectiveSingletonTerminal who) who ≤ 0 := by
+  classical
   have hzero : ∀ owner, packet.singleton owner = 0 :=
     packet.singleton_eq_zero_of_cemetery_eq_one hcemetery
   have hvalue : packet.value = 0 := by

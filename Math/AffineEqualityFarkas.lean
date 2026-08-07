@@ -81,6 +81,8 @@ def IsAffineEqualityFarkasCertificate
         ∑ row, lambda row * G row column = 0) ∧
     0 < ∑ row, y row * b row
 
+omit [LinearOrder 𝕜] [IsStrictOrderedRing 𝕜]
+    [Fintype EqRow] [DecidableEq EqRow] in
 /-- Negating every summand negates the finite sum. -/
 private theorem sum_neg_mul
     (A : EqRow → Fin n → 𝕜) (h : Fin n → 𝕜) (row : EqRow) :
@@ -91,6 +93,7 @@ private theorem sum_neg_mul
   intro column _
   ring
 
+omit [DecidableEq EqRow] [DecidableEq IneqRow] in
 /-- The weak-inequality encoding is feasible exactly when the original affine
 system is feasible. -/
 theorem isFeasible_affineEqualityFarkas_iff
@@ -99,6 +102,7 @@ theorem isFeasible_affineEqualityFarkas_iff
     IsFeasible (affineEqualityFarkasMatrix A G)
         (affineEqualityFarkasRhs (IneqRow := IneqRow) b) ↔
       IsAffineEqualityInequalityFeasible A b G := by
+  classical
   constructor
   · rintro ⟨h, hh⟩
     refine ⟨h, ?_, ?_⟩
@@ -139,6 +143,7 @@ def affineEqualityFarkasLambda
     (row : IneqRow) : 𝕜 :=
   u (Sum.inr row)
 
+omit [DecidableEq EqRow] [DecidableEq IneqRow] in
 /-- Infeasibility of the resolved affine system produces the expected decoded
 Farkas row. -/
 theorem exists_affineEqualityFarkasCertificate_of_not_feasible
@@ -147,6 +152,7 @@ theorem exists_affineEqualityFarkasCertificate_of_not_feasible
     (hinfeasible : ¬IsAffineEqualityInequalityFeasible A b G) :
     ∃ y : EqRow → 𝕜, ∃ lambda : IneqRow → 𝕜,
       IsAffineEqualityFarkasCertificate A b G y lambda := by
+  classical
   have hencoded :
       ¬IsFeasible (affineEqualityFarkasMatrix A G)
         (affineEqualityFarkasRhs (IneqRow := IneqRow) b) := by
@@ -202,6 +208,7 @@ theorem exists_affineEqualityFarkasCertificate_of_not_feasible
         ring]
     exact hpositive
 
+omit [DecidableEq EqRow] [DecidableEq IneqRow] in
 /-- **Resolved affine pivot-or-Farkas alternative.**  Either a physical
 candidate tangent satisfies all frozen affine equations and inequalities, or
 a decoded Farkas obstruction exists. -/
@@ -211,6 +218,7 @@ theorem affineEqualityInequality_feasible_or_farkas
     IsAffineEqualityInequalityFeasible A b G ∨
       ∃ y : EqRow → 𝕜, ∃ lambda : IneqRow → 𝕜,
         IsAffineEqualityFarkasCertificate A b G y lambda := by
+  classical
   by_cases h : IsAffineEqualityInequalityFeasible A b G
   · exact Or.inl h
   · exact Or.inr

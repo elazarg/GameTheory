@@ -42,8 +42,7 @@ every quitting game supplies such lassos.  The arbitrary-game producer is not
 one finite pivot statement: it still needs analytic packet extraction,
 resolved-chart construction and real/Puiseux arc lifting, semantic Farkas
 decoding, and rotation-uniform relative return.  The invariant weighted
-interface is in `QuittingWeightedProjectiveLasso.lean`; see also
-`docs/uniform-equilibrium/ProjectiveLassoProducer.md`.
+interface is in `QuittingWeightedProjectiveLasso.lean`.
 -/
 
 noncomputable section
@@ -64,6 +63,7 @@ def quittingCyclicPolicyResidual
       quittingRootSuccessorPayoff reward
         (value (finRotate K phase)) (cycle phase) who
 
+omit [DecidableEq ι] in
 /-- One cyclic difference step with an explicit policy residual. -/
 theorem quittingCyclicValue_sub_terminalValue_step_with_residual
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -76,6 +76,7 @@ theorem quittingCyclicValue_sub_terminalValue_step_with_residual
           (value (finRotate K phase) who -
             quittingCyclicTerminalValue reward cycle
               (finRotate K phase) who) := by
+  classical
   have hterminal := congrFun
     (quittingCyclicTerminalValue_eq_rootSuccessorPayoff
       reward cycle phase) who
@@ -168,6 +169,7 @@ theorem isQuittingRootSupportApproxNash_of_tail_close
     have happrox := (hsupport who).2 hcontinue
     linarith
 
+omit [DecidableEq ι] in
 /-- **Charged residual correction.**  If every cyclic policy residual is at
 most `η` times that stage's real absorption charge, then the displayed values
 are uniformly within `η` of the exact values selected by periodic repetition.
@@ -175,7 +177,7 @@ The bound is independent of the period. -/
 theorem abs_quittingCyclicValue_sub_terminalValue_le_of_chargedResidual
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (cycle : Fin K → ι → PMF Bool) (value : Fin K → Payoff ι)
-    {η : ℝ} (hη : 0 ≤ η)
+    {η : ℝ} (_hη : 0 ≤ η)
     (hresidual : ∀ phase who,
       |quittingCyclicPolicyResidual reward cycle value phase who| ≤
         η * quittingRootAbsorptionMass (cycle phase))
@@ -184,6 +186,7 @@ theorem abs_quittingCyclicValue_sub_terminalValue_le_of_chargedResidual
     ∀ phase who,
       |value phase who -
         quittingCyclicTerminalValue reward cycle phase who| ≤ η := by
+  classical
   intro phase who
   let coefficient : Fin K → ℝ := fun cyclePhase =>
     quittingStationaryContinueMass (cycle cyclePhase)

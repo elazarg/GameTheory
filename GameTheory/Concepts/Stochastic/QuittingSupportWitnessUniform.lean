@@ -39,6 +39,5 @@ is not used by the deterministic support-witness compiler.
 The projective-lasso layer is a compiler, not the arbitrary-game producer.
 Matching analytic germs supply normalized singleton packets, but resolved
 chart construction and arc lifting, semantic Farkas decoding, and a
-rotation-uniform relative-return theorem remain independent obligations.  See
-`docs/uniform-equilibrium/ProjectiveLassoProducer.md`.
+rotation-uniform relative-return theorem remain independent obligations.
 -/

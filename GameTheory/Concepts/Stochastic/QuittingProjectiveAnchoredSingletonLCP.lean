@@ -72,6 +72,7 @@ def quittingAnchoredProjectiveLCPDirection
     (anchor : Payoff ι) (who : ι) : ℝ :=
   anchor who - reward (quittingProjectiveSingletonTerminal who) who
 
+omit [DecidableEq ι] in
 /-- Exact affine LCP balance of an anchored normalized singleton packet. -/
 theorem quittingAnchoredProjectiveSingletonPacket_balance
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -81,6 +82,7 @@ theorem quittingAnchoredProjectiveSingletonPacket_balance
           quittingAnchoredProjectiveLCPDirection reward packet.anchor who +
         ∑ owner, packet.singleton owner *
           quittingProjectiveLCPMatrix reward who owner := by
+  classical
   unfold quittingProjectiveLCPSlack quittingAnchoredProjectiveLCPDirection
     quittingProjectiveLCPMatrix
   rw [packet.value_eq_anchored_mix]
@@ -91,19 +93,23 @@ theorem quittingAnchoredProjectiveSingletonPacket_balance
   rw [hsum]
   ring
 
+omit [DecidableEq ι] in
 /-- Every anchored projective LCP slack is nonnegative. -/
 theorem quittingAnchoredProjectiveSingletonPacket_slack_nonneg
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (packet : QuittingAnchoredProjectiveSingletonPacket reward) (who : ι) :
     0 ≤ quittingProjectiveLCPSlack reward packet.value who := by
+  classical
   exact sub_nonneg.mpr (packet.solo_le_value who)
 
+omit [DecidableEq ι] in
 /-- Singleton mass is complementary to its owner's slack in an anchored packet. -/
 theorem quittingAnchoredProjectiveSingletonPacket_complementary
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (packet : QuittingAnchoredProjectiveSingletonPacket reward) (who : ι) :
     packet.singleton who *
       quittingProjectiveLCPSlack reward packet.value who = 0 := by
+  classical
   by_cases hzero : packet.singleton who = 0
   · simp [hzero]
   · have hpos : 0 < packet.singleton who :=
@@ -111,6 +117,7 @@ theorem quittingAnchoredProjectiveSingletonPacket_complementary
     rw [quittingProjectiveLCPSlack,
       packet.positive_singleton_pins who hpos, sub_self, mul_zero]
 
+omit [DecidableEq ι] in
 /-- **Anchored projective first-event LCP theorem.** -/
 theorem quittingAnchoredProjectiveSingletonPacket_isLCP
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -125,16 +132,19 @@ theorem quittingAnchoredProjectiveSingletonPacket_isLCP
     ∀ who,
       packet.singleton who *
         quittingProjectiveLCPSlack reward packet.value who = 0 := by
+  classical
   exact ⟨quittingAnchoredProjectiveSingletonPacket_balance reward packet,
     quittingAnchoredProjectiveSingletonPacket_slack_nonneg reward packet,
     quittingAnchoredProjectiveSingletonPacket_complementary reward packet⟩
 
+omit [DecidableEq ι] in
 /-- Every singleton mass vanishes at cemetery mass one. -/
 theorem QuittingAnchoredProjectiveSingletonPacket.singleton_eq_zero_of_cemetery_eq_one
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
     (packet : QuittingAnchoredProjectiveSingletonPacket reward)
     (hcemetery : packet.cemetery = 1) (who : ι) :
     packet.singleton who = 0 := by
+  classical
   have hsum : ∑ owner, packet.singleton owner = 0 := by
     linarith [packet.total]
   have hsingle : packet.singleton who ≤ ∑ owner, packet.singleton owner :=
@@ -144,6 +154,7 @@ theorem QuittingAnchoredProjectiveSingletonPacket.singleton_eq_zero_of_cemetery_
   rw [hsum] at hsingle
   exact le_antisymm hsingle (packet.singleton_nonneg who)
 
+omit [DecidableEq ι] in
 /-- At cemetery mass one, the packet reproduces its affine anchor and every
 solo payoff lies below that anchor. -/
 theorem QuittingAnchoredProjectiveSingletonPacket.cemetery_one_boundary
@@ -153,6 +164,7 @@ theorem QuittingAnchoredProjectiveSingletonPacket.cemetery_one_boundary
     packet.value = packet.anchor ∧
       ∀ who,
         reward (quittingProjectiveSingletonTerminal who) who ≤ packet.anchor who := by
+  classical
   have hzero : ∀ owner, packet.singleton owner = 0 :=
     packet.singleton_eq_zero_of_cemetery_eq_one hcemetery
   have hvalue : packet.value = packet.anchor := by
@@ -185,6 +197,7 @@ def QuittingProjectiveSingletonPacket.toAnchored
   solo_le_value := packet.solo_le_value
   positive_singleton_pins := packet.positive_singleton_pins
 
+omit [DecidableEq ι] in
 /-- The anchored LCP theorem specializes definitionally to the original
 zero-anchor packet. -/
 theorem quittingProjectiveSingletonPacket_isAnchoredLCP
@@ -200,6 +213,7 @@ theorem quittingProjectiveSingletonPacket_isAnchoredLCP
     ∀ who,
       packet.singleton who *
         quittingProjectiveLCPSlack reward packet.value who = 0 := by
+  classical
   simpa [QuittingProjectiveSingletonPacket.toAnchored] using
     quittingAnchoredProjectiveSingletonPacket_isLCP reward packet.toAnchored
 
