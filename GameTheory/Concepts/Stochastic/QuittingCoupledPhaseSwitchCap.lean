@@ -65,7 +65,7 @@ theorem quittingRootSequenceHazardTerminalValue_quittingPhaseSwitchRoots_le_coup
   have hscale : survival * tailError ≤ tailError := by
     nlinarith [mul_nonneg (sub_nonneg.mpr hsurvival1) htailError]
   rw [quittingRootSequenceHazardTerminalValue_quittingPhaseSwitchRoots]
-  rw [← hsurvival] at hprefixBound htailScaled
+  rw [← hsurvival]
   nlinarith
 
 /-- **The coupled behavior-level phase-switch cap.**  An arbitrary behavior
