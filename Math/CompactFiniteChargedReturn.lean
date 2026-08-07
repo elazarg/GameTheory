@@ -109,4 +109,36 @@ theorem exists_charge_threshold_for_close_pair_of_compact
     state label radius hsame charge horizon hcharge0 hcharge1
       (by simpa only [threshold] using hlarge)
 
+/-- **Arbitrarily charged finite prefixes already force a returned block.**
+
+This is the quantifier form used by finite-prefix orbit producers.  The orbit
+may depend on the requested charge target.  Compactness first chooses one
+finite target from the metric radius, and the producer is invoked only at that
+target. -/
+theorem exists_close_pair_of_arbitrarily_large_finite_charge
+    (K : Set X) (hK : IsCompact K)
+    (radius : ℝ) (hradius : 0 < radius)
+    (hproducer : ∀ threshold : ℝ, 0 ≤ threshold →
+      ∃ (state : ℕ → X) (charge : ℕ → ℝ) (horizon : ℕ),
+        (∀ time, state time ∈ K) ∧
+        (∀ time, 0 ≤ charge time) ∧
+        (∀ time, charge time ≤ 1) ∧
+        threshold ≤ ∑ time ∈ Finset.range horizon, charge time) :
+    ∃ (state : ℕ → X) (charge : ℕ → ℝ)
+        (horizon first second : ℕ),
+      first < second ∧ second ≤ horizon ∧
+      dist (state first) (state second) < radius ∧
+      1 ≤
+        (∑ time ∈ Finset.range second, charge time) -
+          ∑ time ∈ Finset.range first, charge time := by
+  obtain ⟨threshold, hthreshold0, hthreshold⟩ :=
+    exists_charge_threshold_for_close_pair_of_compact
+      K hK radius hradius
+  obtain ⟨state, charge, horizon, hstate, hcharge0, hcharge1, hlarge⟩ :=
+    hproducer threshold hthreshold0
+  obtain ⟨first, second, hfirst, hsecond, hclose, hgap⟩ :=
+    hthreshold state charge horizon hstate hcharge0 hcharge1 hlarge
+  exact ⟨state, charge, horizon, first, second,
+    hfirst, hsecond, hclose, hgap⟩
+
 end Math
