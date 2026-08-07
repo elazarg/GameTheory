@@ -1,0 +1,23 @@
+name: Export agent source
+
+on:
+  push:
+    branches: [agent/punishment-completed-cycles]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Bundle source
+        run: tar --exclude=.git --exclude=.lake -czf GameTheory-source.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GameTheory-source
+          path: GameTheory-source.tar.gz
+          retention-days: 1
