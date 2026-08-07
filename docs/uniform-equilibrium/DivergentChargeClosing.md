@@ -1,77 +1,131 @@
-# Divergent-charge compact closing
+# Finite charged closing of projective Bellman orbits
 
 ## Result
 
-The rotation-uniform relative-return problem is not independent once the
-physical orbit carries **nonsummable real absorption**.
+The rotation-uniform relative-return obligation is not independent once a
+physical producer can generate arbitrarily large **finite-prefix real
+absorption**.
 
 Let
 
 ```text
-V_(n+1) = F(x_n, V_n)
-q_n     = quittingRootAbsorptionMass(x_n)
+V_(n+1) = F(x_n, V_n),
+q_n     = quittingRootAbsorptionMass(x_n),
 c_n     = 1 - q_n.
 ```
 
-Assume that the values `V_n` remain in a compact finite-dimensional set and
+Assume that all `V_n` lie in one compact set and `0 <= q_n <= 1`.  For every
+`eta > 0` there is a finite number `Q(eta)` with the following property:
+whenever one finite orbit has prefix charge at least `Q(eta)`, it contains
+`a < b` such that
 
 ```text
-sum_n q_n = infinity.
-```
-
-Then, for every `eta > 0`, there are `a < b` such that
-
-```text
-||V_a - V_b||_infinity < eta / 2,
+dist(V_a,V_b) < eta / 2,
 sum_{n=a}^{b-1} q_n >= 1.
 ```
 
-The reversed block `x_(b-1), ..., x_a`, closed periodically, is a
-rotation-uniform weighted projective lasso with error `eta`, provided the
-forward orbit already carries support error and punishment-rationality error
-at most `eta / 2`.
-
-Thus a producer no longer needs a separate recurrent-monodromy theorem.  It is
-enough to produce a bounded exact forward Bellman orbit with nonsummable real
-absorption.
-
-## 1. Compact recurrence with a charge budget
-
-Let `S_N = sum_{n<N} q_n`.  Since `q_n >= 0` and the series is not summable,
-`S_N -> infinity`.
-
-Choose a convergent subsequence
+Reverse that block and close it periodically.  Every interior Bellman seam is
+zero.  The unique closing seam is smaller than `eta / 2`, while the whole
+cycle absorbs with probability at least `1/2`.  Hence every cyclic rotation
+satisfies
 
 ```text
-V_(n_k) -> V_*.
+weightedResidual <= eta * weightedAbsorption.
 ```
 
-Fix a sufficiently late `k`.  Because `S_(n_l) -> infinity` along every
-strictly increasing subsequence, choose `l > k` so late that
+Thus an exact bounded forward Bellman producer with arbitrarily large finite
+prefix absorption already produces the repository's rotation-uniform weighted
+projective lassos.  A single infinite orbit working for all charge targets is
+unnecessary.
+
+## 1. Finite charged-return pigeonhole theorem
+
+Fix a finite labelling with `m` labels and let
 
 ```text
-S_(n_l) - S_(n_k) >= 1.
+S_t = sum_{n<t} q_n.
 ```
 
-Both values are close to `V_*`, hence they are close to each other.  This is
-formalized game-independently by
+Suppose `S_T >= 2m`.  For `j = 0,...,m`, let `t_j` be the first time at which
 
 ```text
-Math.exists_close_pair_with_large_prefix_gap_of_compact
-Math.exists_close_pair_with_large_charge_gap_of_compact
+S_(t_j) >= 2j.
 ```
 
-in `Math/DivergentChargeRecurrence.lean`.
+Because each increment is at most one, minimality gives
 
-This is stronger than ordinary recurrence: the return is selected only after
-a prescribed amount of charge has elapsed.
+```text
+2j <= S_(t_j) < 2j + 1.
+```
 
-## 2. Fixed aggregate absorption
+There are `m+1` sampled times and only `m` labels.  Hence two sampled times,
+with ranks `j < k`, have the same label.  Their clock gap satisfies
+
+```text
+S_(t_k) - S_(t_j)
+  > 2k - (2j+1)
+  >= 1.
+```
+
+This is formalized by
+
+```text
+Math.exists_same_label_with_large_clock_gap
+Math.exists_same_label_with_large_charge_gap
+Math.exists_close_pair_with_large_charge_gap_of_finite_labels
+```
+
+in `Math/FiniteChargedReturn.lean`.
+
+## 2. Compactness computes one sufficient finite target
+
+For a requested radius `r > 0`, choose a finite `r/3`-cover of the compact
+value set.  Let `m` be the number of cover centres and label every value by one
+nearby centre.  Equal labels imply
+
+```text
+dist(V_a,V_b) <= 2r/3 < r.
+```
+
+The finite theorem therefore applies with the explicit target
+
+```text
+Q(r) = 2m.
+```
+
+The compact wrapper is
+
+```text
+Math.exists_charge_threshold_for_close_pair_of_compact
+```
+
+in `Math/CompactFiniteChargedReturn.lean`.
+
+The quantifier pattern is important:
+
+```text
+for every r > 0,
+  there exists Q(r),
+    such that every finite orbit reaching Q(r)
+    contains the required returned block.
+```
+
+Consequently a producer of the form
+
+```text
+for every eta > 0 and Q,
+  there exists one finite orbit with charge >= Q
+```
+
+is already sufficient.  There is no need to strengthen it to one orbit that
+works simultaneously for every `Q`.
+
+## 3. Fixed aggregate absorption
 
 For numbers `0 <= q_k <= 1`,
 
 ```text
-prod_k (1 - q_k) * (1 + sum_k q_k) <= 1.
+prod_k (1-q_k) * (1 + sum_k q_k) <= 1.
 ```
 
 The induction step is
@@ -88,18 +142,20 @@ sum_k q_k >= 1
   => 1 - prod_k (1-q_k) >= 1/2.
 ```
 
-The last quantity is exactly the weighted-absorption denominator of the
-projective-lasso correction theorem.  The corresponding Lean declarations are
+The last term is exactly the weighted-absorption denominator used by the
+projective-lasso correction theorem.  The Lean declarations are
 
 ```text
 Math.prod_one_sub_mul_one_add_sum_range_le_one
 Math.half_le_one_sub_prod_one_sub_of_one_le_sum_range
 ```
 
-The crucial denominator is thus the absorption of the **whole returned
-block**, not the one-step charge at the first visit.
+in `Math/DivergentChargeRecurrence.lean`.
 
-## 3. Reverse the forward block
+The useful denominator is the absorption of the **whole returned block**, not
+the one-step charge at either endpoint.
+
+## 4. Reverse the forward block
 
 Put `K = b-a`.  Index the cyclic word so that phase `p` carries
 
@@ -108,7 +164,7 @@ root(p)  = x_(b-1-p),
 value(p) = V_(b-p).
 ```
 
-For every nonclosing phase, the chronological Bellman equation is just the
+For every nonclosing phase, the chronological Bellman equation is simply the
 forward equation read backwards:
 
 ```text
@@ -116,42 +172,31 @@ value(p) = F(root(p), value(next(p))).
 ```
 
 Only the last phase fails to close exactly.  There the proposed continuation
-is `V_b` instead of `V_a`.  Since the quitting successor map is affine in the
-all-Continue continuation with coefficient `c_a`, the closing residual is
+is `V_b` instead of `V_a`.  Since the successor map is affine in the
+all-Continue continuation with coefficient `c_a`,
 
 ```text
-e = F(x_a, V_a) - F(x_a, V_b)
-  = c_a * (V_a - V_b).
+e = F(x_a,V_a) - F(x_a,V_b)
+  = c_a * (V_a-V_b).
 ```
 
-Consequently
+Thus every coordinate of the seam has magnitude at most
+`dist(V_a,V_b)` in the sup metric.
+
+No chart label has to repeat.  No coefficient point has to recur.  No exact
+monodromy fixed point is used.
+
+## 5. Rotation-uniformity is automatic
+
+Every cyclic entry encounters the same unique nonzero seam exactly once.  Its
+survival prefix is at most one, so for every entry phase and every player,
 
 ```text
-|e_i| <= ||V_a - V_b||_infinity < eta/2
+weightedResidual <= |e_i|.
 ```
 
-for every player `i`.
-
-No chart label needs to repeat.  No exact projective coefficient point needs
-to recur.  No monodromy fixed point is used.
-
-## 4. Rotation-uniformity is automatic
-
-Every cyclic rotation encounters the same unique nonzero seam exactly once.
-Its survival prefix is at most one.  Hence for every entry phase and every
-player,
-
-```text
-weightedResidual <= |e_i| < eta/2.
-```
-
-The block charge selected above gives
-
-```text
-weightedAbsorption >= 1/2.
-```
-
-Therefore
+The returned block has weighted absorption at least `1/2`.  Selecting the
+metric radius below `eta/2` yields
 
 ```text
 weightedResidual
@@ -159,11 +204,21 @@ weightedResidual
   <= eta * weightedAbsorption.
 ```
 
-This is precisely `IsQuittingRotationUniformWeightedResidual`.  The
-rotation-uniform condition is load-bearing at the compiler, but it does not
-require a separate producer theorem in the exact-forward-orbit regime.
+The cyclic bookkeeping is formalized by
 
-## 5. Support and rationality survive closing
+```text
+GameTheory.quittingCyclicWeightedResidual_le_of_single_seam
+GameTheory.QuittingFiniteSingleSeamProjectiveLasso
+toWeighted
+quittingGame_exists_uniformEquilibriumPayoff_of_singleSeamProjectiveLassos
+```
+
+in `QuittingSingleSeamProjectiveLasso.lean`.
+
+This removes rotation-uniform recurrence as a separate producer theorem in the
+exact-forward-orbit regime.
+
+## 6. Support and rationality survive closing
 
 Suppose every forward edge satisfies
 
@@ -177,17 +232,14 @@ and every forward value satisfies
 quittingPunishmentValue reward i - eta/2 <= V_n(i).
 ```
 
-All nonclosing phases inherit these statements unchanged.  At the closing
-phase, the continuation moves from `V_a` to `V_b`.  Endpoint differences are
+All nonclosing phases inherit these conditions unchanged.  At the closing
+phase the continuation changes from `V_a` to `V_b`.  Endpoint differences are
 `1`-Lipschitz in the continuation coordinate, so the existing tail-transfer
-lemma adds at most `eta/2` to support error.  Thus every phase has support
-error at most `eta`.  The displayed cyclic values are forward values, so the
-punishment floor is inherited with room to spare.
+lemma adds at most `eta/2` to the support error.  The displayed cyclic values
+are forward values, so the punishment floor is inherited directly.
 
-Positive aggregate absorption implies that at least one phase has positive
-one-stage absorption.  The resulting object is a
-`QuittingFiniteWeightedProjectiveLasso reward K eta`, and the existing
-compiler gives
+Positive aggregate absorption supplies an absorbing phase.  The existing
+weighted-lasso compiler then performs
 
 ```text
 exact periodic correction
@@ -196,36 +248,36 @@ exact periodic correction
   -> uniform-equilibrium payoff.
 ```
 
-## 6. Correct replacement for the current return obligation
+## 7. Correct producer interface
 
-The useful producer interface is the following.
-
-For every `eta > 0`, produce a bounded forward sequence `(x_n,V_n)` with
+For every `eta > 0` and every finite charge target `Q`, it is enough to
+produce a bounded finite forward sequence `(x_n,V_n)` satisfying
 
 ```text
 V_(n+1) = F(x_n,V_n),
 support error <= eta/2,
 punishment rationality error <= eta/2,
-sum_n quittingRootAbsorptionMass(x_n) = infinity.
+sum_n q_n >= Q.
 ```
 
-Then compact divergent-charge closing produces the weighted lasso at error
-`eta` automatically.
+Compact finite charged closing chooses the needed `Q = Q(eta)` and produces
+the weighted lasso automatically.
 
 This replaces
 
 ```text
 physical orbit
-  -> separate rotation-uniform relative-return theorem
+  -> strengthen finite-prefix quantifiers
+  -> rotation-uniform relative-return theorem
   -> weighted lasso
 ```
 
 by
 
 ```text
-bounded physical orbit + nonsummable real absorption
-  -> compact divergent-charge closing
-  -> weighted lasso.
+one sufficiently charged finite physical orbit
+  -> finite-cover hitting-time pigeonhole
+  -> one-seam weighted lasso.
 ```
 
 The remaining hard work is upstream:
@@ -233,13 +285,13 @@ The remaining hard work is upstream:
 1. accept or strategically retarget the analytic packet value;
 2. construct and cover the resolved physical charts and lift feasible arcs;
 3. decode Farkas outputs strategically; and
-4. on the continuing physical branch, prove nonsummable real absorption or
-   consume the complementary finite-charge boundary.
+4. prove arbitrarily large finite-prefix real absorption on the continuing
+   physical branch, or consume the complementary bounded-charge boundary.
 
-The fourth item is a genuine progress dichotomy rather than a metric return
+The fourth item is now a genuine progress dichotomy, not a topological return
 problem.
 
-## 7. Why the existing recurrence no-go does not apply
+## 8. Why the recurrence no-go does not apply
 
 `QuittingVanishingChargeRecurrenceNoGo.lean` uses
 
@@ -248,17 +300,17 @@ state(n)  = 1/(n+1),
 charge(n) = 1/(n+1)^3.
 ```
 
-Its charge is summable.  It correctly shows that compactness alone cannot make
-an endpoint seam small relative to the **source one-step charge**.  It does not
-address a returned block whose accumulated charge is bounded below.  In the
-nonsummable regime, the compact-return pair can be selected after any fixed
-charge budget, which is exactly the missing ingredient.
+Its total charge is bounded.  It correctly shows that compactness alone cannot
+make a seam small relative to the **source one-step charge**.  It does not
+address a block selected after a fixed amount of accumulated charge.  The
+finite charged-return theorem says precisely that sufficiently large total
+prefix charge forces such a block.
 
-## 8. Approximate and signed extension
+## 9. Approximate and signed extension
 
 For an approximate forward orbit, internal Bellman seams need not vanish.  The
-same closing argument works whenever their survival-weighted signed sum on the
-selected block is `o` of the block absorption.  The cancellation-aware signed
-monodromy interface isolates exactly that weaker hypothesis.  The exact-orbit
-theorem above is the clean base case: all internal signed seams are zero and
-only the compact closing seam remains.
+same finite closing works whenever their survival-weighted signed sum on the
+selected block is small relative to block absorption.  The signed projective
+monodromy interface isolates that extension.  The exact-orbit result above is
+the clean base case: every internal seam is zero and only the compact closing
+seam remains.
