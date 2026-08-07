@@ -32,6 +32,15 @@ certificates at every positive penalty.  One profile and one finite budget then
 control every horizon's deviation excess and prescribed-play deficit.  Its
 negation is exactly the corresponding positive unbounded-work obstruction.
 
+For finite quitting games there is an additional exact negative
+characterization.  Nonexistence of any uniform-equilibrium payoff is equivalent
+to the existence of one fixed `gap > 0` such that every behavioral profile has
+a unilateral deviation improving expected terminal reward by at least `gap`.
+The forward direction negates terminal approximate Nash existence at every
+positive accuracy; the reverse direction is the existing terminal-gap
+nonexistence compiler.  This is an exact semantic target for counterexample
+search, not a finite separator language by itself.
+
 ## Transition warning
 
 Rare transitions give a two-state warning: transition kernels can converge
@@ -50,5 +59,8 @@ perturbations.
   thin-interval characterization and its positive-width contrapositive.
 - `UniformBoundedWork.lean` contains the bounded-work characterization and its
   exact unbounded-work obstruction.
+- `UniformNonexistenceCertificate.lean` contains the late-horizon and terminal
+  exploitability certificates and the exact finite-quitting fixed-gap
+  characterization.
 - `TransitionPerturbationDiscontinuity.lean` contains the finite counterexample;
   `UniformConsequences.lean` is the public entry point for the layer.
