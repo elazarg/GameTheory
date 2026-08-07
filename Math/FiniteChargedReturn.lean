@@ -152,12 +152,12 @@ theorem exists_same_label_with_large_charge_gap
     ∑ time ∈ Finset.range cutoff, charge time
   apply exists_same_label_with_large_clock_gap label clock horizon
   · intro time
-    rw [show time + 1 = Nat.succ time by omega,
-      Finset.sum_range_succ]
+    dsimp only [clock]
+    rw [Finset.sum_range_succ]
     exact le_add_of_nonneg_right (hcharge0 time)
   · intro time
-    rw [show time + 1 = Nat.succ time by omega,
-      Finset.sum_range_succ]
+    dsimp only [clock]
+    rw [Finset.sum_range_succ]
     linarith [hcharge1 time]
   · simpa only [clock, Finset.sum_range_zero, zero_add] using hlarge
 
