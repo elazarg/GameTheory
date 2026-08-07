@@ -57,8 +57,10 @@ theorem exists_charge_threshold_for_close_pair_of_compact
     ⟨radius / 3, by positivity⟩
   have hcoverRadius : coverRadius ≠ 0 := by
     intro hzero
-    have hcoe := congrArg (fun r : NNReal => (r : ℝ)) hzero
-    simp only [coverRadius, NNReal.coe_mk, NNReal.coe_zero] at hcoe
+    have hcoe : (coverRadius : ℝ) = 0 := by
+      rw [hzero]
+      rfl
+    change radius / 3 = 0 at hcoe
     linarith
   obtain ⟨centres, _hcentresK, hcentresFinite, hcover⟩ :=
     Metric.exists_finite_isCover_of_isCompact hcoverRadius hK
@@ -101,7 +103,7 @@ theorem exists_charge_threshold_for_close_pair_of_compact
       _ ≤ (coverRadius : ℝ) + (coverRadius : ℝ) :=
         add_le_add (hlabelClose first) (hlabelClose second)
       _ < radius := by
-        dsimp only [coverRadius]
+        change radius / 3 + radius / 3 < radius
         linarith
   exact exists_close_pair_with_large_charge_gap_of_finite_labels
     state label radius hsame charge horizon hcharge0 hcharge1
