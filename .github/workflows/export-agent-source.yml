@@ -1,8 +1,8 @@
 name: Export agent source
 
 on:
-  push:
-    branches: [agent/punishment-completed-cycles]
+  pull_request:
+    branches: [uniform-existence]
 
 permissions:
   contents: read
