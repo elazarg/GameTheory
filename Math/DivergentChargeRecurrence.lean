@@ -47,12 +47,12 @@ separated by any prescribed clock gap. -/
 theorem exists_close_pair_with_large_prefix_gap_of_compact
     (K : Set X) (hK : IsCompact K)
     (state : ℕ → X) (hstate : ∀ n, state n ∈ K)
-    (prefix : ℕ → ℝ) (hprefix : Tendsto prefix atTop atTop)
+    (clock : ℕ → ℝ) (hclock : Tendsto clock atTop atTop)
     (radius gap : ℝ) (hradius : 0 < radius) :
     ∃ first second : ℕ,
       first < second ∧
       dist (state first) (state second) < radius ∧
-      gap ≤ prefix second - prefix first := by
+      gap ≤ clock second - clock first := by
   obtain ⟨limit, _hlimit, subsequence, hsubsequence, hconverges⟩ :=
     hK.tendsto_subseq hstate
   have hhalf : 0 < radius / 2 := by
@@ -67,14 +67,14 @@ theorem exists_close_pair_with_large_prefix_gap_of_compact
   have hfirstClose :
       dist (state (subsequence firstRank)) limit < radius / 2 :=
     hcloseFrom firstRank le_rfl
-  have hprefixSubsequence :
-      Tendsto (prefix ∘ subsequence) atTop atTop :=
-    hprefix.comp hsubsequence.tendsto_atTop
+  have hclockSubsequence :
+      Tendsto (clock ∘ subsequence) atTop atTop :=
+    hclock.comp hsubsequence.tendsto_atTop
   have hlarge : ∀ᶠ rank : ℕ in atTop,
-      prefix (subsequence firstRank) + gap ≤
-        prefix (subsequence rank) := by
-    have h := hprefixSubsequence
-      (eventually_ge_atTop (prefix (subsequence firstRank) + gap))
+      clock (subsequence firstRank) + gap ≤
+        clock (subsequence rank) := by
+    have h := hclockSubsequence
+      (eventually_ge_atTop (clock (subsequence firstRank) + gap))
     simpa only [Function.comp_apply] using h
   have hlater : ∀ᶠ rank : ℕ in atTop, firstRank + 1 ≤ rank :=
     eventually_ge_atTop (firstRank + 1)
