@@ -4,32 +4,29 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.QuittingProjectiveLassoWeighted
+import GameTheory.Concepts.Stochastic.QuittingSignedProjectiveLasso
 
 /-!
-# Rotation-uniform weighted projective lassos
+# Rotation-uniform absolute-weighted projective lassos
 
-The invariant relative-return condition is not a pointwise estimate at each
-phase.  It is the survival-weighted cyclewise estimate
+The absolute-weighted condition bounds
 
 `weightedResidual phase who ≤ error * weightedAbsorption`
 
-for **every cyclic entry phase** and every player.  Requiring every rotation is
+for every cyclic entry phase and player.  Requiring every rotation remains
 load-bearing: a large seam may be hidden behind a zero-survival prefix in one
-orientation and be exposed when the same word is entered immediately before
-that seam.
+orientation and exposed from another entry phase.
 
-This file makes the weighted condition the canonical compiler interface.
-`QuittingFiniteWeightedProjectiveLasso` carries the rotation-uniform weighted
-seam, support-local approximate optimality, individual rationality, and one
-absorbing phase.  It compiles through exact periodic correction to the
-repository's finite support-rational cycle, divergent path, and uniform-payoff
-consumer.
+This is a strong, convenient compatibility certificate.  The compiler base is
+`QuittingFiniteSignedProjectiveLasso`: the triangle inequality converts every
+absolute-weighted lasso to a signed lasso, and the weighted compiler theorems
+below are wrappers through that conversion.  For a fixed candidate, the
+absolute condition can be strictly stronger because it discards within-turn
+cancellation.  At the all-accuracy existential level, both interfaces remain
+equivalent to exact finite support-rational-cycle production.
 
-The older pointwise structure `QuittingFiniteChargedProjectiveLasso` is a
-strictly stronger certificate.  `QuittingFiniteChargedProjectiveLasso.toWeighted`
-embeds it into the weighted interface using
-`quittingCyclicWeightedResidual_le_of_pointwise`.
+The older pointwise structure `QuittingFiniteChargedProjectiveLasso` is
+stronger again.  Its `toWeighted` adapter is retained unchanged.
 -/
 
 noncomputable section
@@ -38,8 +35,7 @@ namespace GameTheory
 
 variable {K : ℕ} {ι : Type} [Fintype ι] [DecidableEq ι]
 
-/-- The rotation-uniform weighted seam condition consumed by exact periodic
-correction. -/
+/-- The rotation-uniform survival-weighted absolute seam condition. -/
 def IsQuittingRotationUniformWeightedResidual
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (cycle : Fin K → ι → PMF Bool) (value : Fin K → Payoff ι)
@@ -48,8 +44,8 @@ def IsQuittingRotationUniformWeightedResidual
     quittingCyclicWeightedResidual reward cycle value phase who ≤
       error * quittingCyclicWeightedAbsorption cycle
 
-/-- Canonical finite projective-lasso certificate.  Its seam condition is
-cyclewise and uniform over all cyclic rotations. -/
+/-- Finite absolute-weighted projective-lasso certificate.  It is a stronger
+compatibility surface for the signed compiler. -/
 structure QuittingFiniteWeightedProjectiveLasso
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (K : ℕ) (error : ℝ) where
@@ -71,53 +67,54 @@ namespace QuittingFiniteWeightedProjectiveLasso
 variable {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
   {error : ℝ}
 
+/-- Every absolute-weighted lasso is a signed lasso. -/
+def toSigned
+    (lasso : QuittingFiniteWeightedProjectiveLasso reward K error) :
+    QuittingFiniteSignedProjectiveLasso reward K error where
+  cycle := lasso.cycle
+  value := lasso.value
+  error_nonneg := lasso.error_nonneg
+  signedResidual_bound := by
+    intro phase who
+    exact
+      (abs_quittingCyclicSignedResidual_le_weightedResidual
+        reward lasso.cycle lasso.value phase who).trans
+        (lasso.weightedResidual_bound phase who)
+  support := lasso.support
+  rational := lasso.rational
+  absorbingPhase := lasso.absorbingPhase
+  absorbing := lasso.absorbing
+
 /-- Exact periodic continuation selected by the weighted lasso's root word. -/
 def exactValue
     (lasso : QuittingFiniteWeightedProjectiveLasso reward K error) :
     Fin K → Payoff ι :=
   quittingCyclicTerminalValue reward lasso.cycle
 
-/-- The rotation-uniform weighted seam correction costs at most the lasso
-error at every phase and coordinate. -/
+/-- The absolute-weighted correction theorem is the signed correction theorem
+applied after `toSigned`. -/
 theorem abs_value_sub_exactValue_le
     (lasso : QuittingFiniteWeightedProjectiveLasso reward K error)
     (phase : Fin K) (who : ι) :
     |lasso.value phase who - exactValue lasso phase who| ≤ error := by
-  exact abs_quittingCyclicValue_sub_terminalValue_le_of_weightedResidual
-    reward lasso.cycle lasso.value lasso.weightedResidual_bound
-      lasso.absorbingPhase lasso.absorbing phase who
+  simpa only [exactValue, QuittingFiniteSignedProjectiveLasso.exactValue,
+    toSigned] using
+    QuittingFiniteSignedProjectiveLasso.abs_value_sub_exactValue_le
+      lasso.toSigned phase who
 
-/-- **Weighted projective-lasso correction.**  Replacing the displayed values
-by actual periodic values yields an exact finite support-rational cycle at
-twice the weighted-lasso error. -/
+/-- Replacing the displayed values by actual periodic values yields an exact
+finite support-rational cycle at twice the weighted-lasso error. -/
 theorem toFiniteSupportRationalCycle
     (lasso : QuittingFiniteWeightedProjectiveLasso reward K error) :
     IsQuittingFiniteSupportRationalCycle reward lasso.cycle
       (exactValue lasso) (2 * error) (2 * error) := by
-  refine ⟨?_, ?_, ?_⟩
-  · intro phase
-    exact quittingCyclicTerminalValue_eq_rootSuccessorPayoff
-      reward lasso.cycle phase
-  · intro phase
-    have htransfer := isQuittingRootSupportApproxNash_of_tail_close
-      reward (lasso.cycle phase)
-        (lasso.value (finRotate K phase))
-        (exactValue lasso (finRotate K phase))
-        (δ := error) (η := error)
-        (lasso.support phase) (fun who => ?_)
-    · simpa [two_mul] using htransfer
-    · simpa [exactValue, abs_sub_comm] using
-        abs_value_sub_exactValue_le lasso (finRotate K phase) who
-  · intro target phase
-    have hir := lasso.rational target phase
-    have hclose := abs_value_sub_exactValue_le lasso phase target
-    rw [abs_le] at hclose
-    have hupper := hclose.2
-    dsimp only [exactValue] at hupper ⊢
-    linarith
+  simpa only [exactValue, QuittingFiniteSignedProjectiveLasso.exactValue,
+    toSigned] using
+    QuittingFiniteSignedProjectiveLasso.toFiniteSupportRationalCycle
+      lasso.toSigned
 
 /-- A weighted projective lasso produces the divergent support-rational path
-consumed by the support-witness compiler. -/
+through its signed image. -/
 theorem exists_supportRationalDivergentPath
     (lasso : QuittingFiniteWeightedProjectiveLasso reward K error) :
     ∃ plan : ℕ → ι → PMF Bool,
@@ -126,10 +123,9 @@ theorem exists_supportRationalDivergentPath
       ∀ target time,
         quittingPunishmentValue reward target - 2 * error ≤
           quittingRootSequenceTerminalValue reward plan target time := by
-  exact exists_supportRationalDivergentPath_of_finiteSupportRationalCycle
-    reward lasso.cycle (exactValue lasso)
-      (toFiniteSupportRationalCycle lasso)
-      lasso.absorbingPhase lasso.absorbing
+  simpa only [toSigned] using
+    QuittingFiniteSignedProjectiveLasso.exists_supportRationalDivergentPath
+      lasso.toSigned
 
 end QuittingFiniteWeightedProjectiveLasso
 
@@ -138,8 +134,7 @@ namespace QuittingFiniteChargedProjectiveLasso
 variable {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
   {error : ℝ}
 
-/-- A pointwise charged lasso is, in particular, a rotation-uniform weighted
-lasso. -/
+/-- A pointwise charged lasso is, in particular, an absolute-weighted lasso. -/
 def toWeighted
     (lasso : QuittingFiniteChargedProjectiveLasso reward K error) :
     QuittingFiniteWeightedProjectiveLasso reward K error where
@@ -157,9 +152,8 @@ def toWeighted
 
 end QuittingFiniteChargedProjectiveLasso
 
-/-- **Canonical weighted uniform-payoff interface.**  Rotation-uniform
-weighted projective lassos at every positive accuracy imply a
-uniform-equilibrium payoff. -/
+/-- Absolute-weighted lassos at every positive accuracy imply a uniform payoff
+through the signed compiler. -/
 theorem quittingGame_exists_uniformEquilibriumPayoff_of_weightedProjectiveLassos
     [Nonempty ι]
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -168,20 +162,14 @@ theorem quittingGame_exists_uniformEquilibriumPayoff_of_weightedProjectiveLassos
         Nonempty (QuittingFiniteWeightedProjectiveLasso reward K error)) :
     ∃ payoff : Payoff ι,
       (quittingGame reward).IsUniformEquilibriumPayoff none payoff := by
-  apply quittingGame_exists_uniformEquilibriumPayoff_of_supportRationalDivergentPaths
+  apply quittingGame_exists_uniformEquilibriumPayoff_of_signedProjectiveLassos
     reward
-  intro δ hδ
-  have hhalf : 0 < δ / 2 := by linarith
-  obtain ⟨K, ⟨lasso⟩⟩ := hproducer (δ / 2) hhalf
-  obtain ⟨plan, hsupport, hdiverges, hir⟩ :=
-    QuittingFiniteWeightedProjectiveLasso.exists_supportRationalDivergentPath
-      lasso
-  have htwo : (2 : ℝ) * (δ / 2) = δ := by ring
-  rw [htwo] at hsupport hir
-  exact ⟨plan, hsupport, hdiverges, hir⟩
+  intro error herror
+  obtain ⟨K, ⟨lasso⟩⟩ := hproducer error herror
+  exact ⟨K, ⟨lasso.toSigned⟩⟩
 
-/-- The older pointwise producer interface factors through the canonical
-weighted interface. -/
+/-- The pointwise producer interface factors through the absolute-weighted and
+then signed compatibility adapters. -/
 theorem quittingGame_exists_uniformEquilibriumPayoff_of_pointwiseProjectiveLassos_via_weighted
     [Nonempty ι]
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
