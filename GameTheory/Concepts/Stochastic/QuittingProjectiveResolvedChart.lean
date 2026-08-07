@@ -13,24 +13,24 @@ import Math.AffineEqualityFarkas
 
 `A h = b`, `G h ≥ 0`
 
-has been supplied.  A quitting-game producer needs additional geometric data:
+has been supplied. A quitting-game producer needs additional geometric data:
 resolved projective points, finite chart labels, the matrices attached to each
 chart, and—most importantly—a proof that every feasible lexicographic tangent
 lifts to an actual positive analytic or Puiseux successor.
 
 A linear tangent need not integrate to a real arc: the real variety
 `x^2 + y^2 = 0` has the whole plane as its linearized tangent space at the
-origin but no nonconstant real arc.  Arc lifting must therefore be an explicit
+origin but no nonconstant real arc. Arc lifting must therefore be an explicit
 hypothesis or a separately proved theorem; it cannot be inferred from Farkas
 duality.
 
-`QuittingResolvedProjectiveChartInterface` records the exact contract.  The
-field `lift_feasible` is the missing resolution/regularity theorem.  Once an
+`QuittingResolvedProjectiveChartInterface` records the exact contract. The
+field `lift_feasible` is the missing resolution/regularity theorem. Once an
 instance has been constructed, `physicalSuccessor_or_farkas` composes that
 field with the finite affine Farkas alternative.
 
 This module does **not** construct an instance from the quitting Bellman
-variety.  An arbitrary-game producer must still prove chart coverage,
+variety. An arbitrary-game producer must still prove chart coverage,
 regularity or higher-jet lifting, and compatibility of the resulting physical
 successor with the strategic state carried by the chart.
 -/
@@ -38,8 +38,6 @@ successor with the strategic state carried by the chart.
 noncomputable section
 
 namespace GameTheory
-
-open Math.LinearAlgebra
 
 variable {Point Cell EqRow IneqRow : Type*} {n : ℕ}
   [Fintype Cell] [DecidableEq Cell]
@@ -67,26 +65,28 @@ structure QuittingResolvedProjectiveChartInterface
   G : Cell → IneqRow → Fin n → ℝ
   /-- An actual successor relation on resolved projective points. -/
   IsPhysicalSuccessor : Point → Point → Prop
-  /-- **Arc-lifting obligation.**  Every feasible tangent at a non-output
+  /-- **Arc-lifting obligation.** Every feasible tangent at a non-output
   point integrates to an actual positive physical successor. -/
   lift_feasible : ∀ point,
     ¬isOutput point →
-      IsAffineEqualityInequalityFeasible
+      Math.LinearAlgebra.IsAffineEqualityInequalityFeasible
+        (𝕜 := ℝ) (EqRow := EqRow) (IneqRow := IneqRow) (n := n)
         (A (cell point)) (b (cell point)) (G (cell point)) →
       ∃ next, IsPhysicalSuccessor point next
 
-/-- The game-facing Farkas row attached to a resolved point.  This is still
+/-- The game-facing Farkas row attached to a resolved point. This is still
 only an algebraic obstruction; a semantic decoder is a separate theorem. -/
 def IsQuittingResolvedProjectiveFarkasObstruction
     (chart : QuittingResolvedProjectiveChartInterface
       Point Cell EqRow IneqRow n)
     (point : Point) (y : EqRow → ℝ) (lambda : IneqRow → ℝ) : Prop :=
-  IsAffineEqualityFarkasCertificate
+  Math.LinearAlgebra.IsAffineEqualityFarkasCertificate
+    (𝕜 := ℝ) (EqRow := EqRow) (IneqRow := IneqRow) (n := n)
     (chart.A (chart.cell point))
     (chart.b (chart.cell point))
     (chart.G (chart.cell point)) y lambda
 
-/-- **Resolved physical-successor-or-Farkas theorem.**  Once chart realization
+/-- **Resolved physical-successor-or-Farkas theorem.** Once chart realization
 and arc lifting have been supplied, every non-output resolved point either has
 an actual physical successor or carries a normalized/rescalable affine Farkas
 obstruction. -/
@@ -97,7 +97,8 @@ theorem QuittingResolvedProjectiveChartInterface.physicalSuccessor_or_farkas
     (∃ next, chart.IsPhysicalSuccessor point next) ∨
       ∃ y : EqRow → ℝ, ∃ lambda : IneqRow → ℝ,
         IsQuittingResolvedProjectiveFarkasObstruction chart point y lambda := by
-  rcases affineEqualityInequality_feasible_or_farkas
+  rcases Math.LinearAlgebra.affineEqualityInequality_feasible_or_farkas
+      (𝕜 := ℝ) (EqRow := EqRow) (IneqRow := IneqRow) (n := n)
       (chart.A (chart.cell point))
       (chart.b (chart.cell point))
       (chart.G (chart.cell point)) with hfeasible | hobstruction
