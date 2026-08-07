@@ -32,10 +32,6 @@ program.
 - [SupportWitnessCompiler.md](SupportWitnessCompiler.md) records the
   deterministic support-witness path and periodic-cycle compiler, including
   its remaining producer obligation.
-- [SubgameGlueOrEnlarge.md](SubgameGlueOrEnlarge.md) records the focused
-  quantitative adapter proposed between proper-subgame solutions and support
-  enlargement. It is a mathematical design target, not a live priority list or
-  a proved producer.
 - [ProjectiveLassoProducer.md](ProjectiveLassoProducer.md) records the exact
   analytic-packet, resolved-chart, and weighted-lasso dependency boundary.
 - [CirculationUniformPayoff.md](CirculationUniformPayoff.md) records the
@@ -62,6 +58,10 @@ program.
   durable audits without pretending to be the current frontier.
 - [design/RootTargetStratification.md](design/RootTargetStratification.md) is a
   dated design record.
+- [design/SubgameGlueOrEnlarge.md](design/SubgameGlueOrEnlarge.md) is a focused
+  proposed adapter from proper-subgame solutions to full-game reinsertion or
+  explicit support enlargement. It is not a production theorem or live
+  priority record.
 - [case-studies/FTVArchitectureAnalysis.md](case-studies/FTVArchitectureAnalysis.md)
   records the verified FTV architecture analysis.
 - [manuscript/UniformEquilibriumFrontierManuscript.tex](manuscript/UniformEquilibriumFrontierManuscript.tex)
