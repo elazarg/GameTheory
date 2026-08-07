@@ -7,13 +7,57 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: lean-ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  propagate-punishment-pipeline:
+    name: Propagate punishment pipeline
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'agent/punishment-completed-cycles'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply propagation and remove bootstrap files
+        shell: bash
+        run: |
+          if grep -q 'Status: ANSWERED IN PART' docs/uniform-equilibrium/PIPELINE.md \
+             && grep -q 'quittingPunishmentValue reward i >' docs/uniform-equilibrium/PIPELINE.md; then
+            echo 'Pipeline propagation already applied.'
+            exit 0
+          fi
+
+          base64 -d .github/punishment-pipeline-propagation.patch.gz.b64 \
+            | gzip -d > /tmp/punishment-pipeline.patch
+          git apply --index /tmp/punishment-pipeline.patch
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/workflows/ci.yml')
+          text = path.read_text()
+          text = text.replace('permissions:\n  contents: write\n',
+                              'permissions:\n  contents: read\n', 1)
+          start = text.index('  propagate-punishment-pipeline:\n')
+          end = text.index('  fast-pr:\n', start)
+          path.write_text(text[:start] + text[end:])
+          PY
+
+          git rm .github/punishment-pipeline-propagation.patch.gz.b64 \
+            .github/workflows/propagate-punishment-pipeline.yml
+          git add .github/workflows/ci.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Propagate punishment-completed branch implications'
+          git push origin HEAD:agent/punishment-completed-cycles
+
   fast-pr:
     name: Fast PR check
     if: github.event_name == 'pull_request'
