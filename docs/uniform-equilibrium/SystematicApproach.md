@@ -1,184 +1,346 @@
-# A balanced systematic approach to finite quitting games
+# Systematic finite-quitting research architecture
 
-**Status:** stable research guidance, not a theorem, certificate, or live
-priority list.  
-**Scope:** how the finite-quitting program should organize positive production,
-negative search, formalization, and failure information.
+This document defines the stable coordination architecture for the finite-
+quitting front. It preserves the current theorem families and their exact
+scopes. It does **not** replace them with one speculative certificate, assert
+that a strategy trichotomy is proved internally, or promote a conditional
+compiler to a generic producer.
 
-The repository already has a strong back end. Supplied support paths, essential
-APS data, face circulations, finite cycles, target-closed tails, and related
-certificates can reach terminal approximate equilibrium and then a uniform
-payoff. The weak part is the front end: starting from an arbitrary reward table,
-produce suitable strategic data or a genuine nonexistence certificate.
+The organizing asymmetry is unchanged:
 
-This page organizes that front-end work. The classifications below are
-**editorial and mathematical guidance**. They are not authenticated by phantom
-Lean indices, generic wrappers, or a CI manifest. Lean should formalize actual
-mathematical statements and compilers when those are useful; it should not be
-asked to certify the provenance or research role of an arbitrary function.
+- the semantic back end is strong—many supplied certificates compile to
+  terminal approximate Nash profiles and then to a uniform payoff;
+- the front end is incomplete—an arbitrary reward table does not yet enter a
+  proved exhaustive branch producing a positive certificate or a concrete
+  negative separator certificate.
 
-## 1. Keep three distinctions separate
+The architecture separates three classifications:
 
-### Root route
+1. **root route** — stationary/projective, instant/punishment, proper absorption
+   path, or nonexistence;
+2. **artifact role** — producer, adapter, verifier, compiler, closure,
+   diagnostic, or separator; and
+3. **claim level** — semantic waist, verification, bounded synthesis,
+   strategy-class coverage, solved subclass, or diagnostic.
 
-A positive construction normally enters one of three broad routes:
+These are research and API classifications. A generic function wrapper cannot
+prove mathematical provenance. The named certificate definition and theorems
+constructing it remain the evidence that an object is genuinely stationary,
+path-like, a producer, or a separator.
 
-1. **stationary/projective** — stationary roots, LCP or min-max data,
-   analytic/projective packets, target acceptance or retargeting, and
-   finite-dimensional semialgebraic structure;
-2. **instant/punishment** — a sure first-stage quitter backed by a credible
-   continuation punishment, including all outsider no-join inequalities; or
-3. **proper absorption path** — finite or infinite absorbing plans, including
-   support-witness paths, essential APS, face circulations, and cycles.
+The machine-readable mirror is
+[`systematic-routes.json`](systematic-routes.json). The conjecture-directed
+composition order is [`ConjectureDirectedSpine.md`](ConjectureDirectedSpine.md).
+The detailed rationale is
+[`decisions/SystematicFrontEndDecision.md`](decisions/SystematicFrontEndDecision.md).
+Stable methodology is owned by [`Program.md`](Program.md); live priorities
+remain owned by [`PIPELINE.md`](PIPELINE.md).
 
-The **nonexistence lane** runs in parallel and must eventually produce one
-fixed positive all-behavior terminal exploitability gap. The theorem in
-`UniformNonexistenceCertificate.lean` shows that this is the exact negative
-semantic target, not merely a sufficient format.
+## Semantic waists
 
-These routes are broad research categories. They are not asserted exhaustive as
-strategy representations, and a theorem's route is not established by attaching
-a label to its type.
-
-### Artifact role
-
-A result may be a:
-
-- **producer**, constructing strategic data from more primitive game data;
-- **adapter**, translating one data language into another;
-- **verifier/compiler**, consuming supplied data to prove an equilibrium
-  conclusion;
-- **closure/transfer theorem**, moving a proved conclusion between nearby
-  games, targets, or descriptions;
-- **diagnostic**, exposing why a proposed route fails; or
-- **separator**, proving an unrestricted positive exploitability gap.
-
-A result may legitimately serve more than one role, but each claim must be
-stated separately. In particular, a compiler is not a producer merely because
-its input type is easy to name.
-
-### Claim level
-
-Keep distinct:
-
-1. verification of one supplied object;
-2. synthesis inside a bounded or structurally restricted class; and
-3. coverage of arbitrary reward tables or unrestricted strategies.
-
-No lower level receives automatic credit at a higher level.
-
-## 2. The semantic meeting points
-
-For finite quitting games, positive work should reach:
+The positive routes meet at:
 
 ```text
-for every epsilon > 0,
-there exists a terminal epsilon-Nash behavioral profile.
+QuittingTerminalApproximationFamily reward
+  := for every ε > 0, there is a terminal ε-Nash profile
+     against unrestricted behavioral deviations.
 ```
 
-`QuittingTerminalUniformPayoffSelection.lean` proves that this all-accuracy
-terminal statement is equivalent to existence of a uniform-equilibrium payoff.
+`QuittingSystematicApproach.lean` proves this equivalent to existence of a
+uniform-equilibrium payoff by reusing the landed terminal selection theorem.
 
-Negative work should reach:
+The negative semantic waist is the proof-relevant package
+`QuittingTerminalGapCertificate reward`: one `gap > 0` together with a proof
+that every behavioral profile has a terminal unilateral improvement of at least
+that gap. `UniformNonexistenceCertificate.lean` proves both its nonexistence
+consequence and the exact equivalence
 
 ```text
-there exists gap > 0 such that every behavioral profile
-has a terminal unilateral deviation improving by at least gap.
+no uniform-equilibrium payoff
+  <=> some fixed positive terminal exploitability gap exists.
 ```
 
-The fixed-gap theorem in `UniformNonexistenceCertificate.lean` proves that this
-is exactly the negation of the positive terminal waist.
+That exactness does not make the semantic gap a finite separator language.
+Concrete LP potentials, support barriers, automata arguments, or other local
+certificates still need a negative compiler into this waist.
 
-Intermediate constructions should therefore say which of these semantic targets
-they reach, or what concrete datum blocks the next arrow.
+<!-- systematic-family:terminal-selection -->
+The terminal-selection family is the canonical positive consumer. It selects a
+fixed payoff from all-accuracy terminal approximate equilibria and invokes the
+terminal-to-uniform bridge. It is not a construction front end.
 
-## 3. Central producer principle: glue, enlarge, recur, or separate
+## Fixed-schema quantifier order
 
-The most useful common principle is not a new universal certificate grammar. It
-is a disciplined alternative for failed local constructions.
+The formal conjecture-facing shell now fixes one schema before reward tables:
 
-Starting from a strategically meaningful local support or subgame object, aim
-to obtain one of:
+```text
+QuittingSystematicSchema
+  = four reward-indexed certificate families
+    + three positive compilers
+    + one negative compiler.
 
-1. **glue** — reinsert excluded players while retaining unrestricted-deviation
-   control;
-2. **enlarge** — identify the outsider, joiner, or preemptor whose violated
-   inequality determines a richer active support;
-3. **recur** — enter one path-compatible recurrent component carrying positive
-   absorption and controlled signed defect; or
-4. **separate** — produce a normal, potential, or direct behavioral argument
-   that reaches a typed boundary, rank descent, target rejection, or the fixed
-   positive exploitability gap.
+QuittingSystematicDispatcher schema
+  = for every reward table, one resolution under that same schema.
+```
 
-A second time scale, tiny occupation weight, compact projection, or approximate
-cycle is not itself a repair. It matters only after a theorem shows that the
-pointwise strategic inequalities and legal chronological path are preserved.
+A resolution carries one of:
 
-The conjecture-directed dependency program implementing this principle is in
-[`ConjectureDirectedSpine.md`](ConjectureDirectedSpine.md).
+```text
+stationary certificate
+| instant certificate
+| path certificate
+| negative certificate.
+```
 
-## 4. Failure payloads are part of the result
+`QuittingSystematicResolution.semantic` returns a tagged
+`QuittingSemanticResolution`. It retains the selected route, original
+certificate, and either a payoff with its uniformity proof or the compiled
+negative gap certificate. It does not collapse to `P ∨ ¬P`.
 
-A failed attempt should preserve the smallest useful witness, such as:
+No generic schema or dispatcher inhabitant is asserted. In particular, the
+certificate languages and compilers are not existentially chosen separately
+for each reward table after its semantic truth is known.
 
-- the active support and failed owner or outsider inequality;
-- the suffix or terminal atom responsible for failed subgame gluing;
-- the rejected target and the profitable late quit-time family;
-- the recurrent component in which zero-defect flow fails;
-- a real-arc sign type with no physical lift;
-- a dual normal with its exact sign restrictions; or
-- an explicit strategy class that the argument excludes and no larger one.
+Lean cannot prohibit a deliberately circular certificate family from hiding
+`QuittingTerminalApproximationFamily reward` in its definition. A concrete
+schema therefore earns scientific content only when its languages are named
+independently, its producers are explicit, and its compilers are proved. This
+is an unavoidable provenance audit, not something a phantom type index can
+solve.
 
-This turns refutations into inputs for another route. “No object of this grammar
-exists” is not a counterexample to the quitting-game conjecture.
+The generic `QuittingCertificateProducer` and
+`QuittingCertificateAdapter` wrappers distinguish compositional API positions.
+They do not authenticate provenance by themselves. Likewise, the schema field
+names assign route slots; the mathematics of the certificate type establishes
+whether the slot is honest.
 
-## 5. Promotion fences
+## Root routes
 
-The following promotions require named mathematics:
+The routes are broader than any one certificate grammar. They classify existing
+work while leaving room for support pivots and genuinely infinite carriers.
+
+<!-- systematic-route:stationary-projective -->
+### 1. Stationary/projective
+
+This route covers stationary products, LCP and min-max data,
+analytic/projective packets, accepted targets, and bounded semialgebraic
+synthesis.
+
+The decisive gate is strategic, not algebraic. A Bellman or complementarity
+packet must either:
+
+- compile to the terminal semantic waist;
+- identify an owner for the instant/punishment route;
+- expose an activity/support failure producing a proper-path pivot; or
+- yield a concrete negative certificate or a typed obstruction requiring
+  further decoding.
+
+<!-- systematic-family:zero-solo -->
+The zero-solo family is a genuine compiler for its exact sign class. It is not
+a normal form for weights with a positive solo coordinate.
+
+<!-- systematic-family:stationary-minmax -->
+The stationary-minmax family supplies exact stationary punishment values and
+full-history cap semantics. Attainment and the finite-horizon bridge remain
+separate obligations.
+
+<!-- systematic-family:projective-packets -->
+Projective packets are adapter-facing. Matching analytic orders produce
+normalized packet algebra, but a cemetery coordinate does not authenticate the
+endpoint. Acceptance or retargeting, physical realization, and recurrent
+relative return remain producer obligations.
+
+<!-- systematic-route:instant-punishment -->
+### 2. Instant/punishment
+
+This route covers a sure first-stage quitter with an off-path continuation that
+credibly disciplines refusal to quit.
+
+Failure identifies one of two scalar obstructions:
+
+- the owner’s singleton payoff lies below the punishment value; or
+- an outsider gains by joining the sure exit.
+
+Those witnesses should feed support enlargement, a path construction, or a
+separator decoder rather than disappear as a failed special case.
+
+<!-- systematic-family:instant-punishment -->
+`QuittingInstantPunishment.lean` exactly characterizes this strategy class. It
+does not prove that some owner satisfies the conditions in every game.
+
+<!-- systematic-route:proper-absorption-path -->
+### 3. Proper absorption path
+
+This route contains finite and infinite absorbing plans: diagonal tails,
+support-witness paths, exact cycles, essential APS, face circulations, and the
+marked/infinity objects needed when finite length escapes.
+
+A general carrier must retain the strategic state needed by a decoder, not
+literal inert calendar length. At minimum it must account for:
+
+- chronological ordered activity and active quitting faces;
+- continuation values and terminal absorption data;
+- unilateral stopping or Snell caps;
+- continuation after a near-sure or terminal jump; and
+- enough provenance to reconstruct the relevant terminal packet.
+
+A scalar accumulated-mass trace is not presumed sufficient. Conversely, a
+source-retaining finite block with a literal unbounded stage counter is not
+presumed compact.
+
+Path consistency is also load-bearing. A global convex combination of
+circulations from incompatible recurrent components is not a path. The
+conjecture-directed spine therefore asks for a reachable recurrent component
+with its own charged flow, or for componentwise separators; it does not use one
+global circulation polytope.
+
+<!-- systematic-family:diagonal-target-tail -->
+Diagonal target tails are a compiler. Their unresolved input is production of
+exact prefixes, player-indexed closed tails, and a common survival certificate.
+
+<!-- systematic-family:support-witness -->
+Support witnesses are a compiler family. They close the deviation ledger once
+support-wise optimality, continuation-by-continuation individual rationality,
+and divergent absorption are supplied.
+
+<!-- systematic-family:essential-aps -->
+Essential APS is a producer relative to a compact terminal-free unique-live
+component with face avoidance. The generic input is deriving such a component,
+or a principled pivot away from it, from arbitrary reward data.
+
+<!-- systematic-family:face-circulation -->
+Face circulation is a producer relative to a bounded balanced circulation with
+a common phase-ratio ceiling and punishment-valid floor. Any generic extension
+must additionally ensure path consistency inside one reachable recurrent class;
+cross-component cancellation is not realizable by one chronological path.
+
+<!-- systematic-family:punishment-completed-cycle -->
+Punishment-completed cycles are an exact compiler. They enlarge admissibility
+by allowing credible punishment in noncontracting coordinates, but exact cycles
+are not presumed to arise as limits of relaxed cycles.
+
+<!-- systematic-family:boundary-holonomy -->
+Boundary holonomy is finite-block algebra and diagnostics. Fixed-cutoff
+compactness and tangent-coordinate compactness do not themselves supply
+realized-image closedness or a strategic decoder.
+
+<!-- systematic-family:truncated-ledger-boundary -->
+The truncated-ledger package remains a sound sufficient interface and a useful
+negative regression. Its counterexample prevents it from being used as a
+universal normal form.
+
+<!-- systematic-route:nonexistence -->
+### 4. Nonexistence
+
+The negative lane is first-class and runs in parallel with all positive routes.
+Failure of stationary, instant, finite-period, bounded-controller, APS, or one
+marked-path grammar is not a counterexample.
+
+The semantic acceptance condition is one fixed positive terminal gap against
+all behavioral profiles. The systematic front end, however, is symmetric: its
+negative constructor carries a certificate in an independently specified
+negative language, and `QuittingNegativeCompiler` must compile it to
+`QuittingTerminalGapCertificate`.
+
+<!-- systematic-family:nonexistence-certificates -->
+`UniformNonexistenceCertificate.lean` owns the exact negative semantic waist and
+consumer. Search should export finite violated inequalities, LP potentials,
+barriers, or other checkable certificate data—not merely the semantic
+nonexistence proposition.
+
+## Cross-cutting families
+
+<!-- systematic-family:two-player-existence -->
+The two-player theorem is a solved-subclass producer. It is also a diagnostic
+fence: a proposed universal obstruction visible already with two players is
+suspect unless it explains how the known classification escapes it.
+
+<!-- systematic-family:reward-closure -->
+Reward closure transports existence through uniform reward-table limits on a
+fixed skeleton. It turns a proved density theorem into generic coverage, but it
+does not provide density itself.
+
+## Central producer target: support-enlarging face pivots
+
+Starting from a failed local certificate on an active face, the desired pivot
+theorem returns one of:
+
+1. a valid certificate on a richer face or ordered activity pattern;
+2. a sure-exit owner satisfying the instant-punishment gate;
+3. a recurrent path or path-consistent circulation consumable by proper-path
+   compilers; or
+4. a strict local inequality that is either decoded into another boundary or
+   compiled by a concrete negative separator language.
+
+This is a research target, not a landed theorem.
+
+A second time scale or vanishing occupation weight is not by itself a pivot. It
+may dilute accumulated error, but it cannot repair a pointwise failed best-
+response inequality unless support, continuation, or punishment data changes.
+
+## Required route-facing metadata
+
+Every finite-quitting route-facing claim, handoff, or PR records:
+
+1. route;
+2. artifact role;
+3. claim level;
+4. exact remaining obligation; and
+5. next consumer or pivot output.
+
+The manifest mirrors these fields for navigation. The checker validates JSON
+shape, enumerated values, referenced paths, markers, selected declaration names,
+and basic wiring. It does **not** verify that a mathematical classification or
+prose obligation is correct or current.
+
+## Promotion fences
+
+The following promotions require named theorems:
 
 - compiler to producer;
-- local complementarity packet to credible strategic target;
-- formal or Zariski tangent to positive real arc;
-- global convex circulation to one legal recurrent path;
-- bounded-template failure to unrestricted nonexistence;
-- accuracy-indexed objects to one exact finite object; and
-- pathwise or componentwise separators to a fixed all-behavior gap.
+- bounded synthesis to unrestricted strategy-class coverage;
+- compact projection to closed realized strategic image;
+- local Bellman/complementarity data to credible target;
+- global circulation to one path-realizable recurrent component;
+- failure of one route to a negative certificate; and
+- accuracy-indexed family to one exact finite object.
 
-A new certificate language is justified only when an existing language provably
-forgets a strategic variable needed by a downstream theorem, or when the new
-language comes with a producer or decisive no-go result.
+A new certificate grammar is justified only when no existing adapter can carry
+its information, or when a no-go theorem identifies a strategic variable that
+all existing grammars necessarily forget.
 
-## 6. Balanced scheduling
+## Balanced scheduling
 
-Balanced does not mean equal effort. Priority should still follow dependency
-distance, downstream leverage, falsification value, mathematical readiness, and
-the risk of consuming a false premise.
+Balanced does not mean equal staffing. Subject to objective priority:
 
-Maintain, when useful:
+- keep a stationary/projective or support-pivot producer question active;
+- keep the proper-path carrier/decoder front active until completed or
+  decisively refuted;
+- use instant punishment as an exact boundary test and pivot destination;
+- keep one concrete negative-certificate lane active in parallel; and
+- keep one formalization lane assigned to the strongest ready upstream result.
 
-- one upstream support/subgame/pivot question;
-- one proper-path realization question;
-- instant punishment as an exact boundary test rather than a repeated source of
-  weaker criteria;
-- one unrestricted negative lane; and
-- one formalization lane for the strongest ready mathematical result.
+Priority follows distance to the semantic waist, reusable failure output,
+downstream leverage, risk of false premises, and only then implementation cost.
+A new conditional back-end theorem does not displace an upstream front-end
+obligation merely because it is easier to formalize.
 
-Do not let another conditional back-end compiler displace the producer question
-merely because the compiler is easier to formalize.
+## What is enforced in code
 
-## 7. Handoff format
+The architecture has three substantive layers and one modest guardrail:
 
-For route-facing mathematical work, record:
+1. **Lean semantics.** `QuittingSystematicApproach.lean` defines the fixed
+   schema, symmetric compilers, routed resolution, tagged semantic output, and
+   dispatcher target. `UniformNonexistenceCertificate.lean` owns the exact
+   fixed-gap bridge.
+2. **Research method.** `Program.md` records metadata, pivot payloads,
+   promotion fences, and scheduling rules.
+3. **Family inventory.** `systematic-routes.json` records the current declared
+   classification and obligations.
+4. **Structural check.** `scripts/check_systematic_routes.py` validates schema,
+   paths, markers, selected names, and basic wiring. It is neither mathematical
+   evidence nor a semantic audit of the inventory prose.
 
-1. actual input data;
-2. exact success output;
-3. exact failure or pivot output;
-4. strategy and observation class;
-5. whether the claim is verification, restricted synthesis, or arbitrary-table
-   coverage;
-6. the next named consumer; and
-7. dependencies on unmerged or unaudited work.
-
-This is guidance for scientific coordination. It should be enforced by review
-and source-of-truth maintenance, not by pretending that a generic Lean function
-type authenticates its mathematical provenance.
+When a theorem changes a family’s role or coverage, its owning claim, the
+manifest, and this document should be reconciled in the same change. Live queue
+status and project-control identifiers remain in `PIPELINE.md`.
