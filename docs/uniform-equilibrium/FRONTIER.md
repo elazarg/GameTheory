@@ -167,10 +167,22 @@ identity and endpoint complementarity on the physical slice
 identify the endpoint value with the singleton reward mixture and obtain the
 normalized singleton LCP packet.
 
-This closes analytic packet extraction in the matching regime.  It does not
-construct a resolved chart, lift a feasible tangent to a real analytic arc,
-decode a Farkas obstruction strategically, or produce a recurrent segment.
-Those are independent producer obligations.
+Packet extraction does not certify its endpoint as an undiscounted strategic
+target.  `QuittingProjectiveTargetMismatch.lean` gives the sharp regression:
+a genuine order-one analytic equilibrium branch has cemetery and two
+singleton weights all equal to `1/3` and endpoint `(1,1)`, yet terminal
+`epsilon`-Nash and coordinatewise `delta`-closeness imply
+`1 - delta <= 4 (delta + epsilon)`.  In particular equal errors are at least
+`1/9`, so `(1,1)` is not a uniform-equilibrium payoff.  The same game has exact
+uniform payoffs `(1,2)` and `(2,1)`.  The cemetery coordinate therefore needs
+an executable continuation contract; an affine anchor alone does not make the
+packet target credible.
+
+This closes analytic packet extraction in the matching regime and fixes the
+next interface: accept the packet target with strategic continuation data, or
+reject it and retarget through a proved alternative.  On an accepted target,
+resolved-chart construction, physical arc lifting, semantic Farkas decoding,
+and recurrent relative return remain independent producer obligations.
 
 At the consumer end, `QuittingWeightedProjectiveLasso.lean` uses the invariant
 condition that survival-weighted Bellman seam is small relative to weighted

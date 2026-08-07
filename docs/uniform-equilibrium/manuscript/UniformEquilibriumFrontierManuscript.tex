@@ -499,13 +499,38 @@ punctured physical slice \(0<t<\min\{g.\mathrm{radius},1\}\), hence
 \(0<\lambda(t)\leq1\); an algebraic Bellman
 sign variety alone does not supply that domain.
 
+\Status{\Refuted} Packet extraction does not certify the endpoint as an
+undiscounted strategic target.  Consider the two-player quitting table
+\[
+ r(\{1\})=(1,2),\qquad
+ r(\{2\})=(2,1),\qquad
+ r(\{1,2\})=(2,2).
+\]
+At discount factor \(1-t\), both players quitting with probability
+\(t/(1-t)\) is an exact analytic stationary Bellman branch with live value
+\((1,1)\).  It has matching order and normalized first-event weights
+\(z_0=z_1=z_2=1/3\).  Yet if a terminal \(\varepsilon\)-Nash payoff is
+coordinatewise \(\delta\)-close to \((1,1)\), the late deterministic-quit
+deviation and opponent-survival product inequality give
+\[
+  1-\delta \leq 4(\delta+\varepsilon).
+\]
+Thus equal errors satisfy \(\eta\geq1/9\), and \((1,1)\) is not a uniform
+equilibrium payoff.  The same game has exact uniform payoffs \((1,2)\) and
+\((2,1)\) from the two singleton sure-exit profiles.  A positive cemetery
+coordinate is therefore an affine accounting anchor, not an executable
+continuation contract.  Strategic production must first accept the packet
+target with such a contract or reject it and provide a certified retarget.
+
 \Status{\Prod} Zero-anchor and affine-anchor singleton LCP algebra, finite
 label recurrence, and a rotation-uniform weighted-lasso theorem turn a
 supplied sufficiently small projective return into an exact support-rational
 absorbing cycle, hence into a uniform-equilibrium payoff.  The remaining
-producer obligations are chart coverage and arc lifting, semantic decoding of
-Farkas alternatives, and a rotation-uniform relative-return theorem.  Compact
-recurrence or repeated labels alone do not imply the required return estimate.
+accepted-target producer obligations are chart coverage and arc lifting,
+semantic decoding of Farkas alternatives, and a rotation-uniform
+relative-return theorem.  A general accept-or-retarget dispatcher is an
+additional upstream obligation.  Compact recurrence or repeated labels alone
+do not imply the required return estimate.
 
 \section{Special cases and permanent no-go tests}
 
@@ -1392,7 +1417,9 @@ Support-witness paths and cycles &
 \texttt{QuittingSupportWitnessUniform.lean} and
 \texttt{QuittingProjectiveLassoAll.lean} &
 \Prod as conditional compilers; matching analytic packets and weighted lassos
-connect to exact cycles, but chart coverage and recurrent return remain open.\\
+connect to exact cycles, and the packet-target mismatch has a quantitative
+rejection theorem; a general target dispatcher, chart coverage, and recurrent
+return remain open.\\
 Face-circulation uniform payoff &
 \texttt{MultiOwnerFaceCirculationCompactPath.lean} &
 \Prod conditional on a bounded certificate, ratio ceiling \(<1\), and
@@ -1462,10 +1489,12 @@ collision-repair module, and the regression table's exact resolution
 (floors, period-one root, uniform defect) are unblocked formalization
 targets with the mathematics already audited.
 \item \textbf{Complete the projective producer.}  Build and cover the resolved
-Bellman charts, lift feasible lexicographic tangents to physical arcs, decode
-the affine Farkas alternatives semantically, and prove the rotation-uniform
-return estimate consumed by the weighted-lasso compiler.  Matching analytic
-packet extraction and the downstream compiler are already closed.
+Bellman charts, place an explicit accept-or-certified-retarget gate before
+target-preserving realization, lift accepted feasible lexicographic tangents
+to physical arcs, decode the affine Farkas alternatives semantically, and
+prove the rotation-uniform return estimate consumed by the weighted-lasso
+compiler.  Matching analytic packet extraction, the target-mismatch
+regression, and the downstream compiler are already closed.
 \item \textbf{Discharge the remaining borrowed premises.}  The
 Solan--Vieille perfection-to-equilibrium proposition now gates both an
 outer equivalence leg and the repair of the weighted-lemma reading under

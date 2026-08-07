@@ -105,10 +105,13 @@ blockers hidden in the P0 mathematical status.
   producer and compiler layers).** Matching analytic germs canonically supply normalized
   cemetery/singleton masses and vanishing nonsingleton mass.  The game-facing
   packet assembly closes the value-mixture and endpoint-complementarity passage.
-  Rotation-uniform weighted seams compile through exact periodic correction to
-  divergent support paths and uniform payoffs.  Resolved chart coverage and arc
-  lifting, strategic Farkas decoding, and relative-return production remain
-  open.
+  A concrete matching analytic branch also proves the necessary target gate is
+  substantive: its `(1,1)` positive-cemetery endpoint has terminal equal-error
+  gap `1/9` and is not a uniform payoff, while `(1,2)` and `(2,1)` are exact
+  retargets.  Rotation-uniform weighted seams compile through exact periodic
+  correction to divergent support paths and uniform payoffs.  A general
+  accept-or-retarget dispatcher, resolved chart coverage and arc lifting,
+  strategic Farkas decoding, and relative-return production remain open.
 - **Punishment-completed exact cycles (`177a0c03`, conditional compiler).** A
   coordinate may contract in deleted survival or be held by the exact
   punishment-value inequality; this includes credibly punishable negative solo
@@ -1005,7 +1008,7 @@ a small exact sign counterexample closes the general route.
 
 ### `MATH-P2-3` — route an analytic Bellman/value leaf through a strategic gate or obstruction
 
-- **Status:** PENDING
+- **Status:** LANDED
 - **Lane:** P2
 - **Depends:** Selected target, source-aligned analytic leaf, exact
   support/domain.
@@ -1015,14 +1018,18 @@ a small exact sign counterexample closes the general route.
 **Objective.** Route one actual analytic Bellman/value leaf through a named
 strategic gate or a consumed closure/obstruction alternative.
 
-**State.** `PENDING`, with the matching-order packet stage closed.  A matching
-analytic quitting germ yields a canonical normalized singleton LCP packet,
-including the value-mixture and endpoint-complementarity limits.  It still does
-not construct or cover resolved physical charts, lift feasible tangents to real
-arcs, decode Farkas rows strategically, or select a target/router.
+**State.** `LANDED` for a concrete analytic leaf.  A two-player exact analytic
+discounted-equilibrium germ yields the matching normalized singleton packet
+with cemetery and singleton masses `1/3` and endpoint `(1,1)`.  The late-quit
+test proves `1 - delta <= 4 (delta + epsilon)` for every terminal
+`epsilon`-Nash payoff `delta`-close to that endpoint, excludes `(1,1)` as a
+uniform payoff, and supplies exact retargets `(1,2)` and `(2,1)`.  This is a
+fully consumed rejection branch, not a general target dispatcher.  Resolved
+physical chart coverage, feasible-arc lifting, semantic Farkas decoding, and
+accepted-target relative return remain producer problems.
 
-**Acceptance.** A concrete leaf reaches a production credibility/compiler
-interface, or its typed obstruction forces a proved alternative.
+**Acceptance.** Met: the analytic leaf reaches a quantitative target-rejection
+certificate and proved exact strategic alternatives.
 
 ### `MATH-P2-4` — complete fixed public-controller rejection and bounded-template synthesis
 

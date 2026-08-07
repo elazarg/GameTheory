@@ -9,6 +9,7 @@ import GameTheory.Concepts.Stochastic.QuittingExceptionalTailProfileAdapter
 import GameTheory.Concepts.Stochastic.QuittingSureExitSet
 import GameTheory.Concepts.Stochastic.QuittingTerminalUniformPayoffSelection
 import GameTheory.Concepts.Stochastic.QuittingStationaryMinMax
+import GameTheory.Concepts.Stochastic.AnalyticBellmanHierarchy
 import Math.PMFProduct.Bool
 
 /-!
@@ -406,6 +407,12 @@ def packet : QuittingProjectiveSingletonPacket reward :=
 @[simp] theorem packet_value (who : Player) : packet.value who = 1 := by
   rfl
 
+/-- The projective packet carries exactly the active analytic endpoint, not a
+separately chosen target. -/
+theorem packet_value_eq_germ_endpointValue :
+    packet.value = germ.endpointValue none :=
+  rfl
+
 /-! ## The late-quit target obstruction -/
 
 /-- Against one opponent, forcing `who` to Continue leaves exactly the
@@ -669,6 +676,14 @@ theorem packet_value_not_isUniformEquilibriumPayoff :
     constructor <;> linarith
   have hgap := one_ninth_le_of_terminalNash_close profile hnash hclose
   norm_num [η] at hgap
+
+/-- Equivalently, the active value of the analytic germ itself is rejected by
+the semantic uniform-payoff gate. -/
+theorem germ_endpointValue_not_isUniformEquilibriumPayoff :
+    ¬ (quittingGame reward).IsUniformEquilibriumPayoff none
+      (germ.endpointValue none) := by
+  rw [← packet_value_eq_germ_endpointValue]
+  exact packet_value_not_isUniformEquilibriumPayoff
 
 /-! ## Exact attainable retargets -/
 

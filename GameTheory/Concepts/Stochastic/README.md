@@ -314,10 +314,16 @@ paths, produce strategic blocks, or decode a coefficient limit.
 `QuittingProjectiveLassoAll.lean` is the public projective boundary.  Matching
 analytic germs canonically yield cemetery and singleton first-event masses;
 the game-facing packet layer turns their Bellman and endpoint limits into a
-normalized singleton LCP packet.  Resolved affine charts expose a typed
-feasible-tangent-or-Farkas interface, and a rotation-uniform weighted lasso
-compiles to a support-rational divergent path and uniform payoff.  What remains
-is producer work: resolved chart coverage and real arc lifting, strategic
+normalized singleton LCP packet.  The same facade includes the exact
+target-mismatch regression: a matching analytic branch produces the
+positive-cemetery packet `(1/3,1/3,1/3)` at value `(1,1)`, but every terminal
+`eta`-equilibrium `eta`-close to that value has `eta >= 1/9`; exact uniform
+payoffs `(1,2)` and `(2,1)` remain available.  Thus a packet value must first
+be accepted with executable continuation data or rejected and retargeted.
+Resolved affine charts expose a typed feasible-tangent-or-Farkas interface,
+and a rotation-uniform weighted lasso compiles to a support-rational divergent
+path and uniform payoff.  On the accepted-target branch, what remains is
+producer work: resolved chart coverage and real arc lifting, strategic
 decoding of the Farkas row, and rotation-uniform relative return.
 
 `QuittingPunishmentCompletedCycle.lean` strengthens the exact absorbing-cycle

@@ -17,16 +17,22 @@ The Lean-checked layer consists of:
 6. finite output-or-repeated-label recurrence;
 7. pointwise and rotation-uniform weighted lasso correction; and
 8. compilation of a weighted lasso into a divergent support-rational path and
-   then a uniform-equilibrium payoff.
+   then a uniform-equilibrium payoff; together with
+9. a concrete analytic target-rejection theorem showing why packet extraction
+   cannot be connected directly to target-preserving realization.
 
-The arbitrary-game producer requires three separate theorems:
+The arbitrary-game producer first requires a target dispatcher: accept the
+packet value with an executable continuation contract, or reject it and
+retarget through a proved strategic alternative.  Conditional on acceptance,
+it requires three separate theorems:
 
 1. resolved-chart construction, coverage, and arc lifting;
 2. semantic Farkas decoding; and
 3. rotation-uniform relative projective return.
 
 None of these three obligations is silently bundled into “Physical Pivot
-Completeness.”
+Completeness,” and target acceptance is not silently bundled into packet
+normalization.
 
 ## 1. Exact first-event projectivization
 
@@ -75,6 +81,58 @@ Math.projectiveCemeteryWeight_add_absorptionWeight
 Math.projectiveBellman_balance
 Math.projectiveBellman_value_eq_absorptionWeight_mul_conditional
 ```
+
+## The cemetery coordinate is not a strategic continuation
+
+The normalized cemetery mass contributes its anchor to the affine Bellman
+identity.  It does not specify behavior that can implement the same event in
+the undiscounted game.  This distinction is necessary even for a genuine
+matching-order analytic branch of exact discounted equilibria.
+
+The two-player reward table
+
+```text
+r({false})     = (1, 2),
+r({true})      = (2, 1),
+r({false,true}) = (2, 2)
+```
+
+has an analytic branch at discount factor `1 - t` in which both players quit
+with probability `t / (1 - t)` and the live value is `(1,1)`.  Its quit order
+matches the discount order and its extracted packet is
+
+```text
+cemetery = singleton false = singleton true = 1/3,
+value = (1,1).
+```
+
+Nevertheless, if a terminal `epsilon`-Nash profile has payoff `u` with
+`|u_i - 1| <= delta` for both players, then
+
+```text
+1 - delta <= 4 * (delta + epsilon).
+```
+
+The proof tests each player against quitting at a late deterministic date.
+That deviation converges to `2` minus the probability that the opponent never
+quits.  Both opponent exit probabilities are therefore at most
+`delta + epsilon`; survival-product domination then bounds the prescribed
+payoff by twice their sum.  At equal errors, `eta >= 1/9`, and the packet value
+is not a uniform-equilibrium payoff.  The singleton sure-exit profiles still
+give exact uniform payoffs `(1,2)` and `(2,1)`.
+
+Thus the correct producer interface is a disjunction:
+
+```text
+packet
+  -> accepted target plus executable cemetery continuation
+   | rejected target plus certified strategic retarget.
+```
+
+The general analytic target-selection layer already distinguishes endpoint
+acceptance from obstruction and retargeting.  The quitting example is the
+projective regression ensuring that finite packet and lasso code is connected
+through that layer, rather than treating an affine anchor as a strategy.
 
 ## 2. Zero-anchor and affine-anchor singleton packets
 
@@ -422,15 +480,18 @@ The arbitrary-game route has the explicit form
 ```text
 analytic quitting germ
   → matching singleton first-event packet
-  → resolved chart construction and coverage
-  → feasible tangent or Farkas row
-  → arc-lifted physical successor or semantic Farkas output
-  → physical orbit
-  → rotation-uniform relative return
-  → weighted projective lasso
-  → exact periodic support-rational cycle
-  → divergent path
-  → uniform-equilibrium payoff.
+  → target gate
+      rejected → certified strategic retarget
+      accepted → executable cemetery continuation
+               → resolved chart construction and coverage
+               → feasible tangent or Farkas row
+               → arc-lifted physical successor or semantic Farkas output
+               → physical orbit
+               → rotation-uniform relative return
+               → weighted projective lasso
+               → exact periodic support-rational cycle
+               → divergent path
+               → uniform-equilibrium payoff.
 ```
 
 A failure at any producer arrow must be exposed as its own theorem or finite

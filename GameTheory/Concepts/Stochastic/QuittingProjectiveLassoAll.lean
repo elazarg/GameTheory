@@ -24,6 +24,10 @@ Public entry point for the proved projective layer:
 * matching-order extraction of the normalized cemetery and singleton masses,
   vanishing residual nonsingleton mass, the endpoint value mixture, and
   limiting complementarity as a complete singleton packet;
+* the target-mismatch regression: an exact analytic matching branch whose
+  positive-cemetery packet value is quantitatively separated from every
+  nearby terminal approximate equilibrium, while other exact uniform targets
+  remain available;
 * zero-anchor and affine-anchor normalized singleton projective-LCP algebra;
 * resolved affine feasibility-or-Farkas duality, together with the explicit
   arc-lifting contract required to turn a feasible tangent into a physical
@@ -34,8 +38,11 @@ Public entry point for the proved projective layer:
 * pointwise and rotation-uniform weighted charged-lasso correction and
   compilation.
 
-The arbitrary-game producer is not contained here.  It still requires three
-separate ingredients:
+The arbitrary-game producer is not contained here.  Before the three
+accepted-target construction ingredients, it requires an explicit target
+gate: accept the packet value with an executable continuation contract, or
+reject it and retarget through a proved alternative.  On an accepted target
+the remaining ingredients are:
 
 1. construction and coverage of resolved quitting Bellman charts, including
    real/Puiseux arc lifting of feasible lexicographic tangents;
