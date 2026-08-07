@@ -1,0 +1,214 @@
+{
+  "schema_version": 2,
+  "lean_interface": "GameTheory.Concepts.Stochastic.QuittingSystematicApproach",
+  "project_control": {
+    "decision": "docs/uniform-equilibrium/decisions/SystematicFrontEndDecision.md",
+    "method": "docs/uniform-equilibrium/SystematicApproach.md",
+    "spine": "docs/uniform-equilibrium/ConjectureDirectedSpine.md",
+    "audit": "scripts/check_systematic_routes.py"
+  },
+  "semantic_waist": {
+    "predicate": "GameTheory.QuittingTerminalApproximationFamily",
+    "consumer": "GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_terminalApproximationFamily",
+    "interface_module": "GameTheory.Concepts.Stochastic.QuittingSystematicApproach",
+    "underlying_module": "GameTheory.Concepts.Stochastic.QuittingTerminalUniformPayoffSelection"
+  },
+  "negative_semantic_waist": {
+    "certificate": "GameTheory.QuittingTerminalGapCertificate",
+    "exactness": "GameTheory.not_exists_uniformEquilibriumPayoff_iff_exists_terminalExploitabilityGap",
+    "canonical_module": "GameTheory.Concepts.Stochastic.UniformNonexistenceCertificate"
+  },
+  "systematic_schema": {
+    "schema_type": "GameTheory.QuittingSystematicSchema",
+    "resolution_type": "GameTheory.QuittingSystematicResolution",
+    "semantic_resolution_type": "GameTheory.QuittingSemanticResolution",
+    "dispatcher_type": "GameTheory.QuittingSystematicDispatcher",
+    "semantic_function": "GameTheory.QuittingSystematicResolution.semantic",
+    "positive_compiler": "GameTheory.QuittingPositiveCompiler",
+    "negative_compiler": "GameTheory.QuittingNegativeCompiler",
+    "quantifier_order": "Fix one named schema before constructing resolutions for all reward tables. No generic schema inhabitant is asserted."
+  },
+  "positive_routes": [
+    {
+      "id": "stationary-projective",
+      "lean_constructor": "stationaryProjective",
+      "purpose": "Finite-dimensional stationary, LCP, analytic packet, and accepted-target mechanisms.",
+      "entry_obligation": "Produce an unrestricted-deviation terminal approximation family, not merely a local Bellman packet.",
+      "completion_condition": "A generic producer or an exhaustive pivot to another route."
+    },
+    {
+      "id": "instant-punishment",
+      "lean_constructor": "instantPunishment",
+      "purpose": "Sure first-stage exit backed by a credible off-path punishment continuation.",
+      "entry_obligation": "Verify quitter punishment individual rationality and every outsider no-join inequality.",
+      "completion_condition": "An exact applicability test or a pivot identifying the failed scalar condition."
+    },
+    {
+      "id": "proper-absorption-path",
+      "lean_constructor": "properAbsorptionPath",
+      "purpose": "Finite or infinite absorbing plans, including cycles, essential APS, support paths, and face circulations.",
+      "entry_obligation": "Carry chronological activity, strategic stopping caps, and a decoder to terminal approximate profiles.",
+      "completion_condition": "A generic producer, a support-enlarging pivot, or a positive separator."
+    }
+  ],
+  "negative_lane": {
+    "id": "nonexistence",
+    "lean_constructor": "nonexistence",
+    "purpose": "Compile a concrete finite/local separator language to one fixed positive all-behavior terminal exploitability gap.",
+    "completion_condition": "A concrete finite reward table, a checkable separator certificate, and a proved negative compiler."
+  },
+  "roles": [
+    "producer",
+    "adapter",
+    "verifier",
+    "compiler",
+    "closure",
+    "diagnostic",
+    "separator"
+  ],
+  "claim_levels": [
+    "semantic-waist",
+    "verification",
+    "bounded-synthesis",
+    "strategy-class-coverage",
+    "solved-subclass",
+    "diagnostic"
+  ],
+  "families": [
+    {
+      "id": "terminal-selection",
+      "route": "cross-cutting",
+      "role": "compiler",
+      "claim_level": "semantic-waist",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingTerminalUniformPayoffSelection",
+      "generic_producer": false,
+      "remaining_obligation": "Receive terminal approximate Nash profiles at every positive accuracy."
+    },
+    {
+      "id": "zero-solo",
+      "route": "stationary-projective",
+      "role": "compiler",
+      "claim_level": "verification",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingZeroSoloDisjunct",
+      "generic_producer": false,
+      "remaining_obligation": "Does not cover weights with a positive solo coordinate."
+    },
+    {
+      "id": "stationary-minmax",
+      "route": "stationary-projective",
+      "role": "verifier",
+      "claim_level": "verification",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingStationaryMinMax",
+      "generic_producer": false,
+      "remaining_obligation": "Attainment and the finite-horizon punishment-level bridge remain separate."
+    },
+    {
+      "id": "projective-packets",
+      "route": "stationary-projective",
+      "role": "adapter",
+      "claim_level": "bounded-synthesis",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingProjectiveLassoAll",
+      "generic_producer": false,
+      "remaining_obligation": "Accept or retarget the packet endpoint and produce strategically realized recurrent return."
+    },
+    {
+      "id": "instant-punishment",
+      "route": "instant-punishment",
+      "role": "compiler",
+      "claim_level": "strategy-class-coverage",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingInstantPunishment",
+      "generic_producer": false,
+      "remaining_obligation": "An arbitrary reward table need not satisfy either scalar applicability condition for any owner."
+    },
+    {
+      "id": "diagonal-target-tail",
+      "route": "proper-absorption-path",
+      "role": "compiler",
+      "claim_level": "verification",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail",
+      "generic_producer": false,
+      "remaining_obligation": "Construct exact prefixes, target-closed tails, and the required survival certificate."
+    },
+    {
+      "id": "support-witness",
+      "route": "proper-absorption-path",
+      "role": "compiler",
+      "claim_level": "verification",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingSupportWitnessUniform",
+      "generic_producer": false,
+      "remaining_obligation": "Produce support-optimal individually rational paths with divergent absorption at every tolerance."
+    },
+    {
+      "id": "essential-aps",
+      "route": "proper-absorption-path",
+      "role": "producer",
+      "claim_level": "bounded-synthesis",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingEssentialAPSAll",
+      "generic_producer": false,
+      "remaining_obligation": "Derive a nonempty terminal-free unique-live component with face avoidance from arbitrary game data."
+    },
+    {
+      "id": "face-circulation",
+      "route": "proper-absorption-path",
+      "role": "producer",
+      "claim_level": "bounded-synthesis",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingFaceCirculationAll",
+      "generic_producer": false,
+      "remaining_obligation": "Construct a path-consistent balanced circulation above punishment floors for arbitrary weights."
+    },
+    {
+      "id": "punishment-completed-cycle",
+      "route": "proper-absorption-path",
+      "role": "compiler",
+      "claim_level": "verification",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingPunishmentCompletedCycle",
+      "generic_producer": false,
+      "remaining_obligation": "Produce an exact absorbing cycle; relaxed cycles need not converge to one."
+    },
+    {
+      "id": "boundary-holonomy",
+      "route": "proper-absorption-path",
+      "role": "diagnostic",
+      "claim_level": "diagnostic",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingBoundaryHolonomyAll",
+      "generic_producer": false,
+      "remaining_obligation": "Supply a closed realized infinity chart and a strategic decoder rather than only compact coefficient projections."
+    },
+    {
+      "id": "truncated-ledger-boundary",
+      "route": "proper-absorption-path",
+      "role": "diagnostic",
+      "claim_level": "diagnostic",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingTruncatedLedgerCapBoundary",
+      "generic_producer": false,
+      "remaining_obligation": "The sufficient package is not a universal normal form; preserve a persistent-live alternative."
+    },
+    {
+      "id": "two-player-existence",
+      "route": "cross-cutting",
+      "role": "producer",
+      "claim_level": "solved-subclass",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingTwoPlayerExistence",
+      "generic_producer": true,
+      "remaining_obligation": "The pair-repair classification does not extend automatically to three or more players."
+    },
+    {
+      "id": "reward-closure",
+      "route": "cross-cutting",
+      "role": "closure",
+      "claim_level": "verification",
+      "canonical_module": "GameTheory.Concepts.Stochastic.QuittingUniformPayoffExistenceClosure",
+      "generic_producer": false,
+      "remaining_obligation": "Prove density of solved reward tables on the fixed skeleton."
+    },
+    {
+      "id": "nonexistence-certificates",
+      "route": "nonexistence",
+      "role": "separator",
+      "claim_level": "strategy-class-coverage",
+      "canonical_module": "GameTheory.Concepts.Stochastic.UniformNonexistenceCertificate",
+      "generic_producer": false,
+      "remaining_obligation": "Construct a finite or local separator language and compile it to the exact fixed terminal gap."
+    }
+  ]
+}
