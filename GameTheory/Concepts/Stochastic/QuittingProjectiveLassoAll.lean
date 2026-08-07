@@ -12,6 +12,8 @@ import GameTheory.Concepts.Stochastic.QuittingProjectiveSingletonLCP
 import GameTheory.Concepts.Stochastic.QuittingProjectiveAnchoredSingletonLCP
 import GameTheory.Concepts.Stochastic.QuittingWeightedProjectiveLasso
 import GameTheory.Concepts.Stochastic.QuittingSingleSeamProjectiveLasso
+import GameTheory.Concepts.Stochastic.QuittingForwardBlockSingleSeam
+import GameTheory.Concepts.Stochastic.QuittingFiniteForwardProjectiveLasso
 import GameTheory.Concepts.Stochastic.QuittingProjectiveResolvedChart
 import GameTheory.Concepts.Stochastic.QuittingVanishingChargeRecurrenceNoGo
 import Math.FinitePivotOrbit
@@ -35,10 +37,11 @@ Public entry point for the proved projective layer:
   arc-lifting contract required to turn a feasible tangent into a physical
   successor;
 * finite output-or-repeated-label recurrence;
-* finite charged return: a sufficiently charged bounded finite orbit contains
-  a close returned block carrying fixed aggregate absorption;
-* the no-go regression, now correctly scoped to bounded-total-charge paths and
-  to comparison with a source one-step charge; and
+* finite charged return on one fixed compact carrier;
+* payload-preserving finite forward packets and their complete compilation to
+  single-seam projective lassos and uniform-equilibrium payoffs;
+* the no-go regression, correctly scoped to bounded-total-charge paths and to
+  comparison with a source one-step charge; and
 * pointwise, rotation-uniform weighted, and single-seam projective-lasso
   correction and compilation.
 
@@ -51,12 +54,13 @@ the remaining ingredients are:
 1. construction and coverage of resolved quitting Bellman charts, including
    real/Puiseux arc lifting of feasible lexicographic tangents;
 2. semantic decoding of projective Farkas obstructions; and
-3. arbitrarily large finite-prefix real absorption on the continuing physical
-   branch, or a strategic consumer for the complementary bounded-charge
-   boundary.
+3. finite forward packets with arbitrarily large real absorption in a compact
+   carrier fixed independently of the requested charge target, or a strategic
+   consumer for the complementary bounded-charge boundary.
 
 A separate rotation-uniform recurrence theorem is no longer required for an
-exact bounded forward orbit.  Compact finite charged return selects one block
-with a small endpoint seam and fixed aggregate absorption; the single-seam
-compiler supplies rotation-uniformity automatically.
+exact finite forward-packet producer.  Compact finite charged return selects
+one block with a small endpoint seam and fixed aggregate absorption; the
+forward-block and single-seam compilers supply the lasso and its
+rotation-uniformity automatically.
 -/
