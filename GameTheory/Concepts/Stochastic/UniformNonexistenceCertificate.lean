@@ -13,16 +13,18 @@ This module records the proof-facing refutation interfaces used by searches
 for finite stochastic games without a uniform-equilibrium payoff.
 
 The direct certificate asks for one positive exploitability gap at arbitrarily
-late horizons, uniformly over the proposed behavior profile. The player and the
-unilateral deviation may depend on both the profile and the horizon. This is
-enough because a uniform approximate equilibrium must control every deviation
-at every horizon beyond one common threshold.
+late horizons, uniformly over the proposed behavior profile.  The player and
+the unilateral deviation may depend on both the profile and the horizon.  This
+is enough because a uniform approximate equilibrium must control every
+deviation at every horizon beyond one common threshold.
 
-For quitting games, a positive exploitability gap for expected terminal reward
-is sufficient. The final theorem shows that, after existentially choosing the
-gap, this is also necessary: the fixed terminal gap is the exact negative
-semantic waist complementary to terminal approximate equilibria at every
-positive accuracy.
+For quitting games, it is enough instead to prove a positive exploitability
+gap for expected terminal reward.  `QuittingAsymptotic` already proves that
+finite-average payoffs converge pointwise to this terminal functional; the
+second theorem packages the resulting contradiction with the exact half-gap
+needed to turn a weak lower bound into a strict Nash violation.  The final
+theorem proves that, after existentially choosing the gap, this terminal
+certificate is also necessary for nonexistence.
 -/
 
 noncomputable section
@@ -34,7 +36,7 @@ namespace StochasticGame
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-- Every behavior profile is exploitable by at least `gap` at arbitrarily
-late finite horizons. The witness player and deviation may depend on the
+late finite horizons.  The witness player and deviation may depend on the
 horizon. -/
 def HasArbitrarilyLateExploitabilityGap
     (G : StochasticGame ι) (s₀ : G.State) (gap : ℝ) : Prop :=
@@ -46,9 +48,9 @@ def HasArbitrarilyLateExploitabilityGap
             (Function.update σ who dev) who
 
 /-- A uniform positive late-horizon exploitability gap rules out every
-uniform-equilibrium payoff. Applying the purported uniform payoff at accuracy
-`gap / 2` makes the weak gain bound strictly incompatible with its Nash
-inequality. -/
+uniform-equilibrium payoff.  Applying the purported uniform payoff at
+accuracy `gap / 2` makes the weak gain bound strictly incompatible with its
+Nash inequality. -/
 theorem not_exists_uniformEquilibriumPayoff_of_arbitrarilyLateExploitabilityGap
     (G : StochasticGame ι) (s₀ : G.State) {gap : ℝ}
     (hgap : 0 < gap)
@@ -66,8 +68,8 @@ end StochasticGame
 
 variable {iota : Type} [Fintype iota] [DecidableEq iota]
 
-/-- Every behavior profile in a quitting game has a unilateral deviation whose
-expected terminal reward improves by at least `gap`. -/
+/-- Every behavior profile in a quitting game has a unilateral deviation
+whose expected terminal reward improves by at least `gap`. -/
 def HasTerminalExploitabilityGap
     (reward : {S : Finset iota // S.Nonempty} → Payoff iota)
     (gap : ℝ) : Prop :=
@@ -76,9 +78,9 @@ def HasTerminalExploitabilityGap
       quittingTerminalPayoff reward σ who + gap ≤
         quittingTerminalPayoff reward (Function.update σ who dev) who
 
-/-- Quantifier-normalized quitting-game refutation theorem. A uniform positive
-terminal exploitability gap rules out a uniform-equilibrium payoff from the
-active state. -/
+/-- Quantifier-normalized quitting-game refutation theorem.  A uniform
+positive terminal exploitability gap rules out a uniform-equilibrium payoff
+from the active state. -/
 theorem quittingGame_not_exists_uniformEquilibriumPayoff_of_terminalExploitabilityGap
     (reward : {S : Finset iota // S.Nonempty} → Payoff iota)
     {gap : ℝ} (hgap : 0 < gap)
@@ -97,9 +99,9 @@ exactly the existence of one fixed positive terminal exploitability gap against
 every behavioral profile.
 
 The forward implication negates terminal approximate existence at every
-positive accuracy. This produces one positive error at which every profile has
-a strict profitable deviation; weakening the strict inequality yields the
-fixed weak gap above. -/
+positive accuracy.  It produces one positive error at which every profile has
+a strict profitable deviation; weakening the strict inequality gives the
+fixed weak gap consumed by the reverse implication. -/
 theorem not_exists_uniformEquilibriumPayoff_iff_exists_terminalExploitabilityGap
     (reward : {S : Finset iota // S.Nonempty} → Payoff iota) :
     (¬ ∃ payoff : Payoff iota,
