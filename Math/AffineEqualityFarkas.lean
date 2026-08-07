@@ -42,24 +42,24 @@ variable {EqRow IneqRow : Type*}
   [Fintype IneqRow] [DecidableEq IneqRow]
 variable {n : ℕ}
 
-/-- Rows of the weak-inequality encoding.  `false` is the positive equality
-row and `true` is its negation. -/
+/-- Rows of the weak-inequality encoding.  The two copies of `EqRow` are the
+positive equality row and its negation. -/
 abbrev AffineEqualityFarkasRow (EqRow IneqRow : Type*) :=
-  (EqRow × Bool) ⊕ IneqRow
+  (EqRow ⊕ EqRow) ⊕ IneqRow
 
 /-- Matrix of the weak-inequality encoding of `A h = b`, `G h ≥ 0`. -/
 def affineEqualityFarkasMatrix
     (A : EqRow → Fin n → 𝕜) (G : IneqRow → Fin n → 𝕜) :
     AffineEqualityFarkasRow EqRow IneqRow → Fin n → 𝕜
-  | Sum.inl (row, false), column => A row column
-  | Sum.inl (row, true), column => -A row column
+  | Sum.inl (Sum.inl row), column => A row column
+  | Sum.inl (Sum.inr row), column => -A row column
   | Sum.inr row, column => G row column
 
 /-- Right-hand side of the weak-inequality encoding. -/
 def affineEqualityFarkasRhs
     (b : EqRow → 𝕜) : AffineEqualityFarkasRow EqRow IneqRow → 𝕜
-  | Sum.inl (row, false) => b row
-  | Sum.inl (row, true) => -b row
+  | Sum.inl (Sum.inl row) => b row
+  | Sum.inl (Sum.inr row) => -b row
   | Sum.inr _ => 0
 
 /-- Feasibility of the resolved affine tangent system. -/
@@ -81,6 +81,16 @@ def IsAffineEqualityFarkasCertificate
         ∑ row, lambda row * G row column = 0) ∧
     0 < ∑ row, y row * b row
 
+/-- Negating every summand negates the finite sum. -/
+private theorem sum_neg_mul
+    (A : EqRow → Fin n → 𝕜) (h : Fin n → 𝕜) (row : EqRow) :
+    (∑ column, -A row column * h column) =
+      -(∑ column, A row column * h column) := by
+  rw [← Finset.sum_neg_distrib]
+  apply Finset.sum_congr rfl
+  intro column _
+  ring
+
 /-- The weak-inequality encoding is feasible exactly when the original affine
 system is feasible. -/
 theorem isFeasible_affineEqualityFarkas_iff
@@ -93,11 +103,12 @@ theorem isFeasible_affineEqualityFarkas_iff
   · rintro ⟨h, hh⟩
     refine ⟨h, ?_, ?_⟩
     · intro row
-      have hpos := hh (Sum.inl (row, false))
-      have hneg := hh (Sum.inl (row, true))
+      have hpos := hh (Sum.inl (Sum.inl row))
+      have hneg := hh (Sum.inl (Sum.inr row))
       simp only [affineEqualityFarkasRhs, rowEval,
         affineEqualityFarkasMatrix] at hpos hneg
-      linarith
+      rw [sum_neg_mul A h row] at hneg
+      exact le_antisymm ((neg_le_neg_iff.mp hneg)) hpos
     · intro row
       have hineq := hh (Sum.inr row)
       simpa only [affineEqualityFarkasRhs, rowEval,
@@ -105,16 +116,13 @@ theorem isFeasible_affineEqualityFarkas_iff
   · rintro ⟨h, heq, hineq⟩
     refine ⟨h, ?_⟩
     intro row
-    rcases row with ⟨eqRow, sign⟩ | ineqRow
-    · cases sign with
-      | false =>
-          simp only [affineEqualityFarkasRhs, rowEval,
-            affineEqualityFarkasMatrix]
-          exact le_of_eq (heq eqRow).symm
-      | true =>
-          simp only [affineEqualityFarkasRhs, rowEval,
-            affineEqualityFarkasMatrix, Finset.sum_neg_distrib]
-          exact neg_le_neg (le_of_eq (heq eqRow).symm)
+    rcases row with (eqRow | eqRow) | ineqRow
+    · simp only [affineEqualityFarkasRhs, rowEval,
+        affineEqualityFarkasMatrix]
+      exact le_of_eq (heq eqRow).symm
+    · simp only [affineEqualityFarkasRhs, rowEval,
+        affineEqualityFarkasMatrix]
+      rw [sum_neg_mul A h eqRow, heq eqRow]
     · simpa only [affineEqualityFarkasRhs, rowEval,
         affineEqualityFarkasMatrix] using hineq ineqRow
 
@@ -123,7 +131,7 @@ multipliers of the equality row and its negation. -/
 def affineEqualityFarkasY
     (u : AffineEqualityFarkasRow EqRow IneqRow → 𝕜)
     (row : EqRow) : 𝕜 :=
-  u (Sum.inl (row, false)) - u (Sum.inl (row, true))
+  u (Sum.inl (Sum.inl row)) - u (Sum.inl (Sum.inr row))
 
 /-- Decode the nonnegative inequality multiplier. -/
 def affineEqualityFarkasLambda
@@ -154,18 +162,45 @@ theorem exists_affineEqualityFarkasCertificate_of_not_feasible
   · intro row
     exact huNonneg (Sum.inr row)
   · intro column
-    have hcolumn := huColumns column
-    simp only [affineEqualityFarkasMatrix,
-      affineEqualityFarkasY, affineEqualityFarkasLambda,
-      Fintype.sum_sum_type, Fintype.sum_prod_type,
-      Bool.sum_bool] at hcolumn ⊢
-    linear_combination hcolumn
-  · have hpositive := huPositive
-    simp only [affineEqualityFarkasRhs,
-      affineEqualityFarkasY,
-      Fintype.sum_sum_type, Fintype.sum_prod_type,
-      Bool.sum_bool, mul_neg] at hpositive ⊢
-    convert hpositive using 1 <;> ring
+    have hcolumn :
+        ((∑ row, u (Sum.inl (Sum.inl row)) * A row column) +
+          ∑ row, u (Sum.inl (Sum.inr row)) * (-A row column)) +
+          ∑ row, u (Sum.inr row) * G row column = 0 := by
+      simpa only [Fintype.sum_sum_type,
+        affineEqualityFarkasMatrix] using huColumns column
+    unfold affineEqualityFarkasY affineEqualityFarkasLambda
+    calc
+      (∑ row,
+          (u (Sum.inl (Sum.inl row)) -
+            u (Sum.inl (Sum.inr row))) * A row column) +
+          ∑ row, u (Sum.inr row) * G row column =
+        ((∑ row, u (Sum.inl (Sum.inl row)) * A row column) +
+          ∑ row, u (Sum.inl (Sum.inr row)) * (-A row column)) +
+          ∑ row, u (Sum.inr row) * G row column := by
+            congr 1
+            rw [← Finset.sum_add_distrib]
+            apply Finset.sum_congr rfl
+            intro row _
+            ring
+      _ = 0 := hcolumn
+  · have hpositive :
+        0 < (∑ row, u (Sum.inl (Sum.inl row)) * b row) +
+          ∑ row, u (Sum.inl (Sum.inr row)) * (-b row) := by
+      simpa only [Fintype.sum_sum_type,
+        affineEqualityFarkasRhs, mul_zero,
+        Finset.sum_const_zero, add_zero] using huPositive
+    unfold affineEqualityFarkasY
+    rw [show
+      (∑ row,
+        (u (Sum.inl (Sum.inl row)) -
+          u (Sum.inl (Sum.inr row))) * b row) =
+        (∑ row, u (Sum.inl (Sum.inl row)) * b row) +
+          ∑ row, u (Sum.inl (Sum.inr row)) * (-b row) by
+        rw [← Finset.sum_add_distrib]
+        apply Finset.sum_congr rfl
+        intro row _
+        ring]
+    exact hpositive
 
 /-- **Resolved affine pivot-or-Farkas alternative.**  Either a physical
 candidate tangent satisfies all frozen affine equations and inequalities, or
