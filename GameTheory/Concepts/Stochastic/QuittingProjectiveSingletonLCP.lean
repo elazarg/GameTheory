@@ -51,7 +51,12 @@ namespace GameTheory
 
 open Finset
 
-variable {ι : Type*} [Fintype ι] [DecidableEq ι]
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
+/-- The terminal state associated with the singleton quitter set `{who}`. -/
+def quittingProjectiveSingletonTerminal (who : ι) :
+    {S : Finset ι // S.Nonempty} :=
+  ⟨{who}, by simp⟩
 
 /-- Data retained by a normalized singleton first-event packet. -/
 structure QuittingProjectiveSingletonPacket
@@ -64,32 +69,32 @@ structure QuittingProjectiveSingletonPacket
   total : cemetery + ∑ who, singleton who = 1
   value_eq_singleton_mix : ∀ who,
     value who = ∑ owner,
-      singleton owner * reward (quittingSingletonTerminal owner) who
+      singleton owner * reward (quittingProjectiveSingletonTerminal owner) who
   solo_le_value : ∀ who,
-    reward (quittingSingletonTerminal who) who ≤ value who
+    reward (quittingProjectiveSingletonTerminal who) who ≤ value who
   positive_singleton_pins : ∀ who,
     0 < singleton who →
-      value who = reward (quittingSingletonTerminal who) who
+      value who = reward (quittingProjectiveSingletonTerminal who) who
 
 /-- The affine cemetery direction `a_i = -r_i({i})`. -/
 def quittingProjectiveLCPDirection
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (who : ι) : ℝ :=
-  -reward (quittingSingletonTerminal who) who
+  -reward (quittingProjectiveSingletonTerminal who) who
 
 /-- The singleton comparison matrix
 `M_{ij} = r_i({j}) - r_i({i})`. -/
 def quittingProjectiveLCPMatrix
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (who owner : ι) : ℝ :=
-  reward (quittingSingletonTerminal owner) who -
-    reward (quittingSingletonTerminal who) who
+  reward (quittingProjectiveSingletonTerminal owner) who -
+    reward (quittingProjectiveSingletonTerminal who) who
 
 /-- The complementary slack `w_i = value_i - r_i({i})`. -/
 def quittingProjectiveLCPSlack
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (value : Payoff ι) (who : ι) : ℝ :=
-  value who - reward (quittingSingletonTerminal who) who
+  value who - reward (quittingProjectiveSingletonTerminal who) who
 
 /-- Exact affine LCP balance of a normalized singleton packet. -/
 theorem quittingProjectiveSingletonPacket_balance
@@ -104,9 +109,10 @@ theorem quittingProjectiveSingletonPacket_balance
   rw [packet.value_eq_singleton_mix]
   simp_rw [mul_sub]
   rw [Finset.sum_sub_distrib, ← Finset.sum_mul]
-  have htotal := packet.total
-  linear_combination
-    -(reward (quittingSingletonTerminal who) who) * htotal
+  have hsum : ∑ owner, packet.singleton owner = 1 - packet.cemetery := by
+    linarith [packet.total]
+  rw [hsum]
+  ring
 
 /-- Every projective LCP slack is nonnegative. -/
 theorem quittingProjectiveSingletonPacket_slack_nonneg
@@ -169,7 +175,7 @@ theorem QuittingProjectiveSingletonPacket.cemetery_one_boundary
     (packet : QuittingProjectiveSingletonPacket reward)
     (hcemetery : packet.cemetery = 1) :
     packet.value = 0 ∧
-      ∀ who, reward (quittingSingletonTerminal who) who ≤ 0 := by
+      ∀ who, reward (quittingProjectiveSingletonTerminal who) who ≤ 0 := by
   have hzero : ∀ owner, packet.singleton owner = 0 :=
     packet.singleton_eq_zero_of_cemetery_eq_one hcemetery
   have hvalue : packet.value = 0 := by
@@ -178,7 +184,9 @@ theorem QuittingProjectiveSingletonPacket.cemetery_one_boundary
     simp [hzero]
   refine ⟨hvalue, ?_⟩
   intro who
-  rw [← hvalue]
-  exact packet.solo_le_value who
+  calc
+    reward (quittingProjectiveSingletonTerminal who) who ≤ packet.value who :=
+      packet.solo_le_value who
+    _ = 0 := congrFun hvalue who
 
 end GameTheory
