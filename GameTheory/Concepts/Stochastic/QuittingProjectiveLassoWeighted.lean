@@ -15,10 +15,11 @@ and `ρ` is survival around one full turn, then
 
 `(1 - ρ) * (value - exactValue) = ∑ k, s_k * e_k`.
 
-Thus the weakest finite correction certificate controls the absolute value of
-the **signed monodromy charge** against the weighted absorption `1 - ρ`.
-Cancellation within each rotated turn is valid; checking every cyclic entry
-phase remains load-bearing.
+Under positive weighted absorption, controlling the absolute signed monodromy
+is **equivalent** to controlling the distance from the actual periodic value.
+Thus signed monodromy is the exact finite correction coordinate, not a new
+existence theorem.  Cancellation within each rotated turn is valid; checking
+every cyclic entry phase remains load-bearing.
 
 The older absolute certificate
 
@@ -170,6 +171,37 @@ theorem quittingCyclicValue_sub_terminalValue_eq_signedResidual_div
       reward cycle value phase who
 
 omit [DecidableEq ι] in
+/-- **Exact correction characterization at one phase.**  Under positive
+aggregate absorption, the signed monodromy bound is equivalent to two-sided
+closeness to the actual periodic value. -/
+theorem abs_quittingCyclicSignedResidual_le_iff_value_close
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (value : Fin K → Payoff ι)
+    {η : ℝ}
+    (habsorption : 0 < quittingCyclicWeightedAbsorption cycle)
+    (phase : Fin K) (who : ι) :
+    |quittingCyclicSignedResidual reward cycle value phase who| ≤
+        η * quittingCyclicWeightedAbsorption cycle ↔
+      |value phase who -
+        quittingCyclicTerminalValue reward cycle phase who| ≤ η := by
+  rw [←
+    quittingCyclicWeightedAbsorption_mul_value_sub_terminalValue_eq_signedResidual
+      reward cycle value phase who,
+    abs_mul, abs_of_pos habsorption]
+  constructor
+  · intro h
+    have hmul :
+        quittingCyclicWeightedAbsorption cycle *
+            |value phase who -
+              quittingCyclicTerminalValue reward cycle phase who| ≤
+          quittingCyclicWeightedAbsorption cycle * η := by
+      simpa [mul_comm] using h
+    exact le_of_mul_le_mul_left hmul habsorption
+  · intro h
+    simpa [mul_comm] using
+      (mul_le_mul_left h (quittingCyclicWeightedAbsorption cycle))
+
+omit [DecidableEq ι] in
 /-- The signed monodromy charge is bounded by the survival-weighted absolute
 seam. -/
 theorem abs_quittingCyclicSignedResidual_le_weightedResidual
@@ -227,10 +259,9 @@ theorem abs_quittingCyclicValue_sub_terminalValue_le_of_signedResidual
       |value phase who -
         quittingCyclicTerminalValue reward cycle phase who| ≤ η := by
   intro phase who
-  rw [quittingCyclicValue_sub_terminalValue_eq_signedResidual_div
-    reward cycle value habsorption phase who, abs_div,
-    abs_of_pos habsorption]
-  exact (div_le_iff₀ habsorption).2 (hsigned phase who)
+  exact
+    (abs_quittingCyclicSignedResidual_le_iff_value_close
+      reward cycle value habsorption phase who).mp (hsigned phase who)
 
 omit [DecidableEq ι] in
 /-- The absolute weighted certificate implies the signed certificate, so it
