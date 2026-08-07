@@ -7,27 +7,27 @@ Authors: GameTheory contributors
 import Mathlib.Data.Fintype.Pigeonhole
 
 /-!
-# Finite pivot orbits: output or lasso
+# Finite pivot orbits: output or repeated label
 
 Once a projective complementarity construction has been resolved into a
-single physical successor at every non-output cell, the remaining recurrence
+single successor at every non-output **label**, the remaining recurrence
 argument is purely finite.
 
-Starting from one cell, inspect the first `card Cell + 1` points of the
-successor orbit.  Either an output cell occurs, or two distinct times carry
-the same cell.  Ordering those times gives a nonempty lasso.  On the latter
-branch, every inspected cell is certified non-output.
+Starting from one label, inspect the first `card Cell + 1` points of the
+successor orbit.  Either an output label occurs, or two distinct times carry
+the same non-output label.
 
-This theorem is deliberately independent of the intended quitting-game
-semantics.  The game-theoretic work is the local **physical pivot
-completeness** theorem and the decoder from a repeated labelled projective
-cell to a charged projective lasso.  This file discharges the global finite
-pigeonhole step once those local data are available.
+This theorem deliberately proves no metric or projective return.  A labelled
+cell may contain continuously many coefficient points, and repetition of its
+label does not imply equality of those points, a fixed point of the chart
+monodromy, or a seam which is small relative to a vanishing absorption
+charge.  Converting a repeated label into a charged projective lasso therefore
+requires a separate relative-return/decoder theorem.
 -/
 
 namespace Math
 
-/-- Orbit of a deterministic pivot successor. -/
+/-- Orbit of a deterministic pivot successor on a finite label type. -/
 def finitePivotOrbit {Cell : Type*}
     (next : Cell → Cell) (start : Cell) : ℕ → Cell
   | 0 => start
@@ -44,11 +44,11 @@ def finitePivotOrbit {Cell : Type*}
       next (finitePivotOrbit next start time) :=
   rfl
 
-/-- **Finite pivot output-or-lasso alternative.**
+/-- **Finite output-or-repeated-label alternative.**
 
-Among the first `card Cell + 1` points of a deterministic finite-state pivot
-orbit, either an output is reached or two ordered times carry the same
-non-output cell. -/
+Among the first `card Cell + 1` points of a deterministic finite-label orbit,
+either an output label is reached or two ordered times carry the same
+non-output label. -/
 theorem exists_output_or_repeated_finitePivotOrbit
     {Cell : Type*} [Fintype Cell] [DecidableEq Cell]
     (next : Cell → Cell) (isOutput : Cell → Prop) (start : Cell) :
@@ -83,8 +83,8 @@ theorem exists_output_or_repeated_finitePivotOrbit
         by simpa only [orbit] using heq.symm,
         by simpa only [orbit] using hno⟩
 
-/-- If the pivot system has no output cells at all, its first
-`card Cell + 1` iterates contain a nonempty lasso. -/
+/-- If the finite label system has no output labels, its first
+`card Cell + 1` iterates contain a repeated label. -/
 theorem exists_repeated_finitePivotOrbit
     {Cell : Type*} [Fintype Cell] [DecidableEq Cell]
     (next : Cell → Cell) (start : Cell) :
@@ -93,10 +93,10 @@ theorem exists_repeated_finitePivotOrbit
       finitePivotOrbit next start first =
         finitePivotOrbit next start second := by
   rcases exists_output_or_repeated_finitePivotOrbit
-      next (fun _ => False) start with hout | hlasso
+      next (fun _ => False) start with hout | hrepeated
   · obtain ⟨time, hfalse⟩ := hout
     exact False.elim hfalse
-  · obtain ⟨first, second, hlt, heq, _⟩ := hlasso
+  · obtain ⟨first, second, hlt, heq, _⟩ := hrepeated
     exact ⟨first, second, hlt, heq⟩
 
 end Math
