@@ -1,0 +1,34 @@
+name: Validate divergent-charge full audit
+
+on:
+  push:
+    branches:
+      - agent/divergent-charge-closing
+
+permissions:
+  contents: read
+
+jobs:
+  full:
+    name: Full build and audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build Lean libraries
+        uses: leanprover/lean-action@v1
+        with:
+          build: true
+          test: false
+          use-mathlib-cache: true
+          use-github-cache: true
+
+      - name: Check for proof placeholders
+        run: python3 scripts/check_lean_placeholders.py
+
+      - name: Audit repository and theorem axioms
+        run: python3 scripts/audit_repository.py
