@@ -125,7 +125,7 @@ theorem rootAbsorbingContribution_update_pure_false
             quittingRootPayoff reward (0 : Payoff Bool) action who) =
         expect (pmfPi (Function.update root who (PMF.pure false)))
           (quittingSomeOpponentQuitsIndicator who) := by
-    apply expect_congr_on_support
+    apply Math.ProbabilityMassFunction.expect_congr_on_support
     intro action haction
     have hown : action who = false :=
       action_eq_false_of_mem_support_pmfPi_update_pure_false
@@ -221,8 +221,8 @@ theorem alwaysContinueValue_truncatedRoots
       apply Finset.sum_congr rfl
       intro offset hoffset
       rw [quittingJointSurvivalWeight_quittingRootSequenceUpdate_alwaysContinue]
-      simp only [quittingRootSequenceUpdate,
-        quittingPureTimeHazard_none]
+      rw [← quittingPureTimeHazard_none_eq_quittingAlwaysContinueHazard]
+      simp only [quittingRootSequenceUpdate, quittingPureTimeHazard_none]
       rw [rootAbsorbingContribution_update_pure_false]
       rfl
     _ = 1 - quittingOpponentSurvivalWeight plan who 0 cutoff :=
@@ -263,7 +263,7 @@ theorem not_hasQuittingTruncatedLedgerCapPackage_half :
         (abs_reward_le_quittingRewardBound reward)
         (hledger who) (hregret who) (hreach who)
         quittingAlwaysContinueHazard
-    exact h.trans (add_le_add_left (herror who) _)
+    linarith [h, herror who]
   have hfalse :
       1 - reach ≤
         quittingRootSequenceTerminalValue reward
