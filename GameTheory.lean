@@ -553,6 +553,7 @@ import GameTheory.Concepts.Stochastic.QuittingCycleIsolatedCoordinate
 import GameTheory.Concepts.Stochastic.QuittingRelaxedCycleGainIsolatedCoordinate
 import GameTheory.Concepts.Stochastic.QuittingIsolatedAnchorMaxAffine
 import GameTheory.Concepts.Stochastic.QuittingAdmissibleCycleTerminalEquilibrium
+import GameTheory.Concepts.Stochastic.QuittingPunishmentCompletedCycle
 import GameTheory.Concepts.Stochastic.QuittingZeroSoloDisjunct
 import GameTheory.Concepts.Stochastic.QuittingDisjunctionCounterexample
 import GameTheory.Concepts.Stochastic.QuittingDisjunctionCounterexampleRepair
@@ -561,6 +562,7 @@ import GameTheory.Concepts.Stochastic.QuittingTwoPlayerExistence
 import GameTheory.Concepts.Stochastic.QuittingConjecture
 import GameTheory.Concepts.Stochastic.CyclicFourPlayerQuitting
 import GameTheory.Concepts.Stochastic.QuittingAnalyticGerm
+import GameTheory.Concepts.Stochastic.QuittingProjectiveLassoAll
 import GameTheory.Concepts.Stochastic.QuittingGermNondegeneracy
 import GameTheory.Concepts.Stochastic.QuittingRefutedRouteFences
 import GameTheory.Concepts.Stochastic.QuittingUnboundedInverseIterate
@@ -592,7 +594,7 @@ import GameTheory.Concepts.Stochastic.QuittingLiveChainDominationCap
 import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchResiduals
 import GameTheory.Concepts.Stochastic.QuittingBoundedWindowLanding
 import GameTheory.Concepts.Stochastic.QuittingTruncationLedgerFold
-import GameTheory.Concepts.Stochastic.QuittingReducedCapConjecture
+import GameTheory.Concepts.Stochastic.QuittingTruncatedLedgerCapBoundary
 import GameTheory.Concepts.Stochastic.QuittingReducedCapConjectureCounterexample
 import GameTheory.Concepts.Stochastic.QuittingRankOneCrossing
 import GameTheory.Concepts.Stochastic.QuittingResidueResults

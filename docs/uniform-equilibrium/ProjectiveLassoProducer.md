@@ -7,25 +7,25 @@ producer.  The distinction is structural: normalization, compactness,
 linear-algebra alternatives, recurrence on finite labels, and certificate
 compilation do not by themselves construct an executable strategic path.
 
-The Lean-checked layer now consists of:
+The Lean-checked layer consists of:
 
 1. exact first-event normalization;
-2. zero-anchor and affine-anchor singleton LCP algebra;
-3. affine tangent feasibility or a Farkas obstruction;
-4. a typed resolved-chart/arc-lifting interface;
-5. finite output-or-repeated-label recurrence;
-6. pointwise and rotation-uniform weighted lasso correction; and
-7. compilation of a weighted lasso into a divergent support-rational path and
+2. canonical matching-order analytic singleton-packet extraction;
+3. zero-anchor and affine-anchor singleton LCP algebra;
+4. affine tangent feasibility or a Farkas obstruction;
+5. a typed resolved-chart/arc-lifting interface;
+6. finite output-or-repeated-label recurrence;
+7. pointwise and rotation-uniform weighted lasso correction; and
+8. compilation of a weighted lasso into a divergent support-rational path and
    then a uniform-equilibrium payoff.
 
-The arbitrary-game producer still requires four separate theorems:
+The arbitrary-game producer requires three separate theorems:
 
-1. analytic packet extraction;
-2. resolved-chart construction, coverage, and arc lifting;
-3. semantic Farkas decoding; and
-4. rotation-uniform relative projective return.
+1. resolved-chart construction, coverage, and arc lifting;
+2. semantic Farkas decoding; and
+3. rotation-uniform relative projective return.
 
-None of these four obligations is silently bundled into “Physical Pivot
+None of these three obligations is silently bundled into “Physical Pivot
 Completeness.”
 
 ## 1. Exact first-event projectivization
@@ -148,11 +148,11 @@ reward {i} i ≤ anchor i.
 It is Never only when `anchor = 0`.  The original packet embeds into the
 anchored interface through `QuittingProjectiveSingletonPacket.toAnchored`.
 
-## 3. Analytic packet extraction: the next tractable producer theorem
+## 3. Analytic packet extraction in the matching regime
 
-The packet modules are algebraic: they assume the limiting masses and endpoint
-consequences.  A matching analytic quitting germ should construct them
-canonically.
+The packet modules are algebraic, while
+`QuittingProjectiveAnalyticPacket.lean` constructs their assumptions from a
+matching analytic quitting germ.
 
 Let the germ discount complement be
 
@@ -202,14 +202,15 @@ Nonsingleton mass is quadratic.  Bonferroni gives
 ```
 
 so normalized nonsingleton first-event mass tends to zero.  Exact endpoint
-complementarity passes to the limit because every quit rate tends to zero;
+complementarity passes to the limit because the proof works on an explicit
+punctured physical discount slice, every quit rate tends to zero, and a
 positive leading coefficient gives eventual positive support and therefore
-owner pinning.
+owner pinning.  The Bellman balance gives the limiting singleton-mixture
+identity.  Together these facts construct
+`QuittingProjectiveSingletonPacket` directly.
 
-The sharp absorption-order and normalized-direction ingredients already exist
-in `QuittingAnalyticGerm.lean`.  What remains is the game-facing assembly of
-these limits into `QuittingProjectiveSingletonPacket`.  The expected complete
-order trichotomy is
+This theorem closes the matching-order case only.  The complete order
+trichotomy remains
 
 ```text
 m < q  → cemetery mass 0,
@@ -217,7 +218,9 @@ m = q  → cemetery mass 1 / (1 + ∑ α_i),
 q < m  → cemetery mass 1 and Never in the zero-anchor chart.
 ```
 
-This extraction is independent of the later pivot and lasso problems.
+The other two regimes require separate boundary theorems; they are not hidden
+inside the matching packet.  Matching extraction is independent of the later
+pivot and lasso problems.
 
 ## 4. The legitimate local affine alternative
 
@@ -414,11 +417,11 @@ optimality and rationality.
 
 ## 11. Correct dependency graph
 
-The arbitrary-game route now has the explicit form
+The arbitrary-game route has the explicit form
 
 ```text
 analytic quitting germ
-  → singleton first-event packet extraction
+  → matching singleton first-event packet
   → resolved chart construction and coverage
   → feasible tangent or Farkas row
   → arc-lifted physical successor or semantic Farkas output

@@ -31,9 +31,9 @@
 \newcommand{\Status}[1]{#1}
 
 \title{Uniform Equilibrium in Finite Stochastic Games\\
-\large Research Atlas, Evidence Ledger, and Current Decision Map}
-\author{Working project document --- committed snapshot \texttt{5e7d0e7a}}
-\date{7 August 2026}
+\large Verified Research Atlas, Evidence Ledger, and Decision Map}
+\author{Working project document}
+\date{}
 
 \begin{document}
 \maketitle
@@ -48,15 +48,15 @@ problems, and fenced-off proof patterns.
 The central open statement is that every finite stochastic game has a
 uniform-equilibrium payoff.  The repository has a semantic verification waist,
 discounted and analytic source machinery, public-response composition,
-several full special cases, and a detailed finite-quitting reduction.  At
-snapshot \texttt{5e7d0e7a} the quitting front carries, in production Lean: the
+several full special cases, and a detailed finite-quitting reduction.  The
+quitting front carries, in production Lean: the
 exact punishment value as a stationary stopping value (both inequalities, all
 history-dependent plans); an exact characterization of terminal sure-exit
 sets; a total two-blocker branch gate; an exact characterization of the
 one-stage collision-repair mechanism priced against the true punishment
 value; and an abstract duality identifying bounded orbit budgets with bounded
-potentials, calibrated against the repository's own one-stage operator.  The
-snapshot additionally contains fixed-skeleton reward perturbation and
+potentials, calibrated against the repository's own one-stage operator.  It
+additionally contains fixed-skeleton reward perturbation and
 target-free payoff-existence closure, a support-witness compiler from
 divergent paths or finite absorbing cycles, and a fixed-mesh nonperiodic
 compiler proving uniform payoffs throughout the compact terminal-free
@@ -72,31 +72,32 @@ occupation cannot repair a pointwise-invalid phase), a support-enlarged
 two-owner mechanism, and an exactly characterized semialgebraic residue for
 three-coordinate weights.  The earlier holonomy layer stands: exact
 associative boundary holonomy, fixed-cutoff compact closed lifts, and the
-literal-length fence.  The measured residual of the quitting program is a
-six-clause ledger-cap package isolated as one of three intentional open
-declarations; every remaining arrow is tagged where it appears.
+literal-length fence.  Matching-order analytic germs yield normalized
+cemetery/singleton packets; rotation-uniform weighted projective lassos compile
+to exact absorbing cycles and then uniform payoffs.  Punishment-completed
+cycles strictly extend the former nonnegative-solo cycle class.  Conversely,
+an explicit two-player zero-sum game refutes the universal truncated-ledger
+producer while retaining an exact all-Continue uniform equilibrium.  Exactly
+two intentional open declarations remain; every remaining arrow is tagged
+where it appears.
 \end{abstract}
 
 \tableofcontents
 
 \section{Status discipline and the exact question}
 
-\subsection{Snapshot and evidence legend}
+\subsection{Evidence legend}
 
-This document describes the committed repository state through
-\texttt{5e7d0e7a} (multi-owner face circulations compiled to uniform payoffs).
-It does not promote unstaged notes, local experiments, or an
-attractive interface to a landed theorem.  The durable records consulted
-here are under \texttt{docs/uniform-equilibrium/} and \texttt{ideas/};
-attributed external results live in
-\texttt{ideas/UniformEquilibriumLiterature/}.
+This document records the mathematical interfaces in the production import
+graph.  It does not promote local experiments or an attractive interface to a
+landed theorem.  Attributed external results are identified by citations.
 
 \begin{longtable}{@{}p{.10\textwidth}p{.81\textwidth}@{}}
 \toprule
 Tag & Exact meaning and scope\\
 \midrule
 \endhead
-\LTag & Production Lean: in the ordinary import graph at this snapshot.  It
+\LTag & Production Lean: in the ordinary import graph.  It
 proves its stated formal theorem, not an unstated generic witness producer.\\
 \XTag & Checked experiment: a bounded Lean probe with the stated scope; it
 may lack a production adapter or semantic consumer.\\
@@ -113,15 +114,13 @@ is a full negative theorem only with an all-behavior uniform positive gap.\\
 Tags are deliberately neutral and short.  Citations identify external
 published results; an \LTag is reserved for an internal formal result.
 
-The Lean development has exactly three intentional open declarations, each
+The Lean development has exactly two intentional open declarations, each
 isolated in a dedicated conjecture file so that build warnings name the
 conjecture: \texttt{exists\_uniformDeviationCapConstructor} (the
-arbitrary-game capstone), \texttt{quittingGame\_exists\_uniform\-Equilibrium\-Payoff}
-(the finite-quitting conjecture), and the reduced ledger-cap package
-\texttt{quittingGame\_hasQuittingLedgerCapPackage} --- six named arithmetic
-clauses whose implication to the quitting conjecture is proved gap-free, so
-every future weakening of a clause transports for free.  A repository gate
-verifies that no fourth admission exists.  This boundary is intentional: the
+arbitrary-game capstone) and
+\texttt{quittingGame\_exists\_uniform\-Equilibrium\-Payoff}
+(the finite-quitting conjecture).  A repository gate verifies that no third
+admission exists.  This boundary is intentional: the
 results below formalize the route to the conjecture without pretending that
 the last producer already exists.
 
@@ -475,6 +474,38 @@ The repeated obstacle is whole-target custody.  A scalar circulation or
 positive charge might help one player, but it does not specify where the
 remaining coordinates go after a public branch or why every player can
 credibly continue there.
+
+\subsection{Matching projective packets}
+
+\Status{\Prod} In the matching-order regime, let the discount and quitting
+rates have leading data
+\[
+  \lambda(t)=t^m,\qquad
+  q_i(t)=a_i t^m+o(t^m),\qquad a_i\geq0.
+\]
+The exact first-event identities imply that, after normalization by
+\(1+\sum_i a_i\), the cemetery mass tends to
+\(1/(1+\sum_i a_i)\), singleton \(i\) has mass
+\(a_i/(1+\sum_i a_i)\), and all nonsingleton mass vanishes.  The Bellman
+identity and endpoint complementarity then give
+\[
+ V_k(0)=\sum_i\frac{a_i}{1+\sum_j a_j}\,r_k(\{i\}),
+ \qquad r_i(\{i\})\leq V_i(0),
+\]
+with equality in the second relation whenever \(a_i>0\).  Thus an analytic
+matching germ produces the normalized singleton projective-LCP packet needed
+by the finite projective layer.  This passage explicitly restricts to the
+punctured physical slice \(0<t<\min\{g.\mathrm{radius},1\}\), hence
+\(0<\lambda(t)\leq1\); an algebraic Bellman
+sign variety alone does not supply that domain.
+
+\Status{\Prod} Zero-anchor and affine-anchor singleton LCP algebra, finite
+label recurrence, and a rotation-uniform weighted-lasso theorem turn a
+supplied sufficiently small projective return into an exact support-rational
+absorbing cycle, hence into a uniform-equilibrium payoff.  The remaining
+producer obligations are chart coverage and arc lifting, semantic decoding of
+Farkas alternatives, and a rotation-uniform relative-return theorem.  Compact
+recurrence or repeated labels alone do not imply the required return estimate.
 
 \section{Special cases and permanent no-go tests}
 
@@ -927,7 +958,7 @@ punishment attainment moved below the old solo-clipped ceiling
 
 \subsection{Exact mechanism characterizations}
 
-\Status{\Prod} Three one-stage mechanisms now have exact, machine-checked
+\Status{\Prod} Four one-stage mechanisms have exact, machine-checked
 characterizations.
 
 \emph{Sure-exit sets} (\texttt{QuittingSureExitSet.lean}): ``exactly
@@ -958,6 +989,32 @@ the mechanism provably fails at every rate below \(\gamma/(4M)\); at
 A rational regression table escapes every branch of this map
 (\texttt{QuittingSwitchingResidueRegression.lean}), so the fixed-blocker
 branch map is provably not total.
+
+\emph{Instant punishment} (\texttt{QuittingInstantPunishment.lean}): a named
+owner quits surely at stage zero and receives a credible off-path punishment
+after deviating to Continue iff its exact punishment value is at most its solo
+reward and no outsider gains by joining the singleton exit.  These conditions
+also make the singleton reward vector a uniform-equilibrium payoff.
+
+\subsection{Punishment-completed absorbing cycles}
+
+\Status{\Prod} The original exact-cycle compiler required every coordinate
+either to have contracting deleted survival over the period or to have a
+nonnegative solo reward.  The second condition was an artifact of repeating
+the cycle forever: an isolated coordinate could Continue forever without
+punishment.  The punishment-completed compiler instead repeats a long finite
+prefix and, if a noncontracting coordinate exists, switches to a near-optimal
+stationary punishment for that coordinate.  The coupled phase-switch estimate
+retains the solo anchor in the survival term and avoids the false zero-anchor
+bound for negative payoffs.  Consequently an exact absorbing cycle compiles
+whenever every coordinate either contracts or satisfies
+\[
+  \chi_i\leq r_i(\{i\}).
+\]
+At most one coordinate can fail to contract, so the completion is coherent.
+The former nonnegative-solo admissibility theorem is a corollary; the new
+criterion is strictly more general but remains a compiler for supplied cycles,
+not an all-game cycle producer.
 
 \subsection{No resurrection, support enlargement, and the local residue}
 
@@ -1087,6 +1144,15 @@ absorption.  A finite support-rational cycle with one positive-absorption
 phase repeats a positive charge once per period and is therefore a complete
 adapter to the same path compiler.  The result does not produce such paths or
 cycles for arbitrary games.
+
+\Status{\Prod} The weighted projective-lasso adapter supplies such a cycle
+from a stronger finite input.  A finite labeled projective walk, equipped with
+positive correction weights and a return small relative to every cyclic
+rotation's accumulated charge, admits one cyclic correction that closes all
+phases simultaneously.  The corrected rational support rows form an exact
+absorbing cycle, which the support-witness compiler consumes.  Requiring the
+return estimate for every rotation is essential: a pointwise seam at one cut
+does not control the other phase inequalities.
 
 \Status{\Prod} Multi-owner face circulations now supply a genuine subclass of
 those path producers.  Given a bounded \texttt{FaceCirculationCertificate}, a
@@ -1279,11 +1345,11 @@ has stationary exploitability tending to zero but no exact behavioral terminal
 Nash equilibrium.  It refutes closed-attainable-tail and compact-zero-implies-
 root arguments, not finite-quitting existence.
 
-\section{Module map and current agenda}
+\section{Module map and research agenda}
 
 \begin{longtable}{@{}p{.30\textwidth}p{.30\textwidth}p{.30\textwidth}@{}}
 \toprule
-Need & Main artifact & Current boundary\\
+Need & Main artifact & Boundary\\
 \midrule
 \endhead
 Semantic payoff iff cap constructor &
@@ -1323,9 +1389,10 @@ Fixed-skeleton payoff closure &
 \Prod: target-free existence is closed under uniform reward limits; density of
 the solved mechanism strata is unproved.\\
 Support-witness paths and cycles &
-\texttt{QuittingSupportWitnessUniform.lean} &
-\Prod as a conditional compiler; multi-owner face circulations are now a
-genuine supplied-certificate producer subclass, but no all-game producer.\\
+\texttt{QuittingSupportWitnessUniform.lean} and
+\texttt{QuittingProjectiveLassoAll.lean} &
+\Prod as conditional compilers; matching analytic packets and weighted lassos
+connect to exact cycles, but chart coverage and recurrent return remain open.\\
 Face-circulation uniform payoff &
 \texttt{MultiOwnerFaceCirculationCompactPath.lean} &
 \Prod conditional on a bounded certificate, ratio ceiling \(<1\), and
@@ -1350,18 +1417,23 @@ average bridge deliberately unclaimed.\\
 Terminal mechanism layer &
 \texttt{QuittingSureExitSet.lean},
 \texttt{QuittingBlockerIntervalCover.lean},
-\texttt{QuittingCollisionRepairCharacterization.lean} &
-\Prod: exact characterizations; the two-owner root and the residue decision
-are \Audit/\Open.\\
+\texttt{QuittingCollisionRepairCharacterization.lean}, and
+\texttt{QuittingInstantPunishment.lean} &
+\Prod: exact characterizations, including the instant-punishment iff; the
+two-owner root and the residue decision are \Audit/\Open.\\
+Punishment-completed exact cycles &
+\texttt{QuittingPunishmentCompletedCycle.lean} &
+\Prod for supplied absorbing cycles satisfying contraction or
+\(\chi_i\leq r_i(\{i\})\); no generic cycle producer.\\
 Orbit-budget duality and calibration &
 \texttt{Math/ChargedPathBudget...}, \texttt{QuittingQuitBonusSelfLoopBridge.lean} &
 \Prod for the duality, counterexamples, and the operator-level self-loop;
 decidability boundary \Audit.\\
-Reduced ledger-cap package &
-\texttt{QuittingReducedCapConjecture.lean} &
-The measured residual: six clauses, package-to-conjecture gap-free;
-clause (P) dischargeable at exact \(\chi\) for two players (design
-recorded), simultaneous discharge open at three.\\
+Truncated ledger-cap boundary &
+\texttt{QuittingTruncatedLedgerCapBoundary.lean} &
+\Prod as a sound conditional compiler and a formal two-player counterexample
+to universal production; persistent-live or value-sensitive branches are
+required.\\
 \bottomrule
 \end{longtable}
 
@@ -1389,11 +1461,11 @@ characterization, the no-resurrection corollary on the landed
 collision-repair module, and the regression table's exact resolution
 (floors, period-one root, uniform defect) are unblocked formalization
 targets with the mathematics already audited.
-\item \textbf{Land the punishment-attainment module.}  Per-player
-attainment at the exact \(\chi\), the two-player simultaneous clause-(P)
-discharge, and the three-player separation table are designed and
-hand-verified; the simultaneous-stationarity question (the
-Steinhaus--Trybu{\l}a branch) is posed separately.
+\item \textbf{Complete the projective producer.}  Build and cover the resolved
+Bellman charts, lift feasible lexicographic tangents to physical arcs, decode
+the affine Farkas alternatives semantically, and prove the rotation-uniform
+return estimate consumed by the weighted-lasso compiler.  Matching analytic
+packet extraction and the downstream compiler are already closed.
 \item \textbf{Discharge the remaining borrowed premises.}  The
 Solan--Vieille perfection-to-equilibrium proposition now gates both an
 outer equivalence leg and the repair of the weighted-lemma reading under
@@ -1444,8 +1516,9 @@ should converge.  It has a checked semantic waist and several independently
 useful theorem families.  The finite-quitting route has an exhaustive
 zero-versus-positive-debt split, an exhaustive owner-clock split, exact
 finite-middle holonomy with fixed-cutoff closure and a precise literal-length
-obstruction, and --- new at this snapshot --- an exact punishment value and an
-exactly characterized one-stage terminal mechanism layer.
+obstruction, an exact punishment value, an exactly characterized one-stage
+terminal mechanism layer, matching analytic projective packets, and
+punishment-completed exact cycles.
 
 The semantic layer also has compact diagnostic consequences: profile-uniform
 vanishing finite-average payoff gaps preserve each exact target, with bounded
@@ -1465,12 +1538,13 @@ known plateau weights has an exact equilibrium at which the debt vanishes once
 that pin is released.  A positive plateau is therefore evidence that the
 zero-boundary chain grammar has missed the equilibrium, not that none exists.
 
-The carrier that replaces the pinned chain is a \emph{cycle}: finitely many rows
+One carrier that replaces the pinned chain is a \emph{cycle}: finitely many rows
 together with values that the rows reproduce, complementary at every phase, and
 absorbing in the sense that the joint continuation mass over one period is below
-one.  The mechanism layer now says precisely which one-stage cycles exist: the
+one.  The mechanism layer says precisely when several one-stage mechanisms work: the
 sure-exit test for pure coalitions, the collision-repair conditions priced
-against the exact \(\chi\), and the two-owner indifference cell.  It also says
+against the exact \(\chi\), the instant-punishment criterion, and the audited
+two-owner indifference cell.  It also says
 what cannot substitute for them: occupation-scaled rare phases add nothing
 pointwise, and one blocker never suffices where two are needed.
 
@@ -1480,13 +1554,13 @@ after the mechanism layer is empty --- a coverage theorem closing the local
 case --- or a member survives and must be adjudicated against the exact-cycle
 and circulation engines, whose data (continuation values, triple-cell
 interactions) the mechanism scalars provably do not determine.  For the general
-program, the measured residual is the six-clause ledger-cap package: its
-punishment clause is now dischargeable at the exact floor for two players,
-while the three-player shared-punishment cost is quantified by an explicit
-separation and connected, unexpectedly, to non-transitive first-passage
-orderings.  Deciding the residue and the package's remaining clauses would
-close finite quitting games; the general finite-stochastic-game conjecture
-would still require a separate reduction or producer.
+program, the universal truncated-ledger route is formally impossible: even a
+two-player zero-sum game with an exact all-Continue uniform equilibrium need
+not admit its common deleted-survival cap.  The viable frontier therefore
+branches between persistent-live/value-sensitive tails and projective or cyclic
+producers.  Closing one exhaustive finite-quitting producer would settle the
+quitting conjecture; the general finite-stochastic-game conjecture would still
+require a separate reduction or producer.
 
 \begin{thebibliography}{99}
 

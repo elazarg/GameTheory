@@ -90,5 +90,6 @@ finite-cycle interface.  See [CirculationUniformPayoff.md](CirculationUniformPay
 `QuittingRankOneCrossing.lean` is a separate abstract survival estimate for a
 centered bounded score process with a crossing implication and expected
 variation budget.  It does not construct that process and is not used by the
-deterministic support-witness compiler.  `QuittingReducedCapConjecture.lean`
-likewise remains a distinct all-player truncated-ledger producer route.
+deterministic support-witness compiler.  The truncated-ledger package is a
+distinct sufficient certificate route, but its universal producer is formally
+false even for a solved two-player game.

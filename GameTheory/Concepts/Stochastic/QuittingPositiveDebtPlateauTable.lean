@@ -546,8 +546,8 @@ theorem plateauDebt_core (cutoff : ℕ) (who : Bool) :
 /-- **Headline.**  The explicit chain `plateauPath cutoff` is, for every
 positive cutoff, a legal zero-boundary exact Nash--Bellman chain whose
 date-zero exact dynamic debt is literally `(1/8, 0)`, independent of the
-cutoff.  Player one's debt is bounded away from zero: this is a genuine
-positive plateau of the finite-chain exact-debt objective. -/
+cutoff.  This is an explicit-chain plateau, not a lower bound on the optimized
+minimum over all legal chains; no minimizer-optimality claim is made here. -/
 theorem plateauPath_dynamicDebt (cutoff : ℕ) (hcutoff : 0 < cutoff) :
     plateauPath cutoff ∈ quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff ∧
       quittingFiniteNashBellmanPathDynamicDebt reward cutoff (plateauPath cutoff)

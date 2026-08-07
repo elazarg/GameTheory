@@ -30,12 +30,13 @@ Games*, MOR 24(3):669-698, 1999; verified against Solan's own doctoral
 dissertation, the MOR journal PDF itself unread), and various
 structured classes.  The general `n`-player case is open.
 
-The repository's other intentional open declarations are
+The repository's only other intentional open declaration is
 `quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`,
-the *finite-quitting* case, and the truncated-ledger producer target in
-`QuittingReducedCapConjecture.lean`.  Discharging either would **not**
-discharge this file: quitting games are a strict subclass, and no reduction
-from arbitrary finite stochastic games to them is known.
+the *finite-quitting* case.  The former truncated-ledger producer target was
+refuted and removed; its conditional compiler remains valid.  Discharging the
+quitting conjecture would **not** discharge this file: quitting games are a
+strict subclass, and no reduction from arbitrary finite stochastic games to
+them is known.
 
 ## Scope: action sets are state-independent
 

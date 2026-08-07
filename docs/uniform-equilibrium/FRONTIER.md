@@ -1,15 +1,15 @@
 # Uniform-equilibrium mathematical frontier
 
-**Production-Lean checkpoint `1ee8d9c2`, exported through `6391ee01`,
-2026-08-07.** The current production wave includes target-anchored payoff
+The production theorem surface includes target-anchored payoff
 closure, support-witness compilation, finite phase-occupation duality,
 multi-owner face-circulation production, uniform-payoff reverse diagnostics,
-boundary-holonomy tangent coordinates, and the adaptive essential-APS
-compiler. The latter removes a common hazard ceiling and geometric survival
-rate while retaining pointwise proper hazards and the stated component
-hypotheses. Production Lean is machine truth; checked experiments and
-uncommitted files are labelled separately and do not become landed by
-appearing here.
+boundary-holonomy tangent coordinates, the adaptive essential-APS compiler,
+matching analytic projective packets, weighted lassos, punishment-completed
+cycles, and the truncated-ledger boundary theorem. The adaptive compiler
+removes a common hazard ceiling and geometric survival rate while retaining
+pointwise proper hazards and the stated component hypotheses. Production Lean
+is machine truth; checked experiments and uncommitted files are labelled
+separately and do not become landed by appearing here.
 
 ## Conjecture and semantic waist
 
@@ -21,8 +21,9 @@ may depend on `ε`; the target is fixed. Public finite memory, private memory,
 clock dependence, and unrestricted behavior are distinct strategy classes.
 
 Production `Uniform.lean` states the semantic predicate and its equivalent
-quantitative deviation-cap constructor. The general existence theorem remains
-the repository's one intentional open declaration. Verification of a supplied
+quantitative deviation-cap constructor. The general existence theorem is one
+of the repository's two intentional open declarations; the other is its
+finite-quitting specialization. Verification of a supplied
 certificate, synthesis in a bounded class, and coverage of all semantic
 equilibria are separate claims.
 
@@ -152,6 +153,61 @@ consumer theorems, but not a producer for arbitrary games: support optimality,
 all-time individual rationality, and divergent absorption (or the corresponding
 finite cycle) remain hypotheses. See
 [SupportWitnessCompiler.md](SupportWitnessCompiler.md).
+
+## Projective analytic packets and weighted lassos
+
+On the matching vanishing-discount branch, where the quit-family analytic
+order equals the germ ramification, the first-event denominator has leading
+coefficient `1 + L`.  `QuittingProjectiveAnalyticFirstEvent.lean` therefore
+extracts canonical cemetery mass `1 / (1 + L)`, singleton masses
+`a_i / (1 + L)`, and vanishing normalized nonsingleton mass without passing to
+a subsequence.  The game-facing analytic packet theorem uses the exact Bellman
+identity and endpoint complementarity on the physical slice
+`0 < t < min(g.radius, 1)` to
+identify the endpoint value with the singleton reward mixture and obtain the
+normalized singleton LCP packet.
+
+This closes analytic packet extraction in the matching regime.  It does not
+construct a resolved chart, lift a feasible tangent to a real analytic arc,
+decode a Farkas obstruction strategically, or produce a recurrent segment.
+Those are independent producer obligations.
+
+At the consumer end, `QuittingWeightedProjectiveLasso.lean` uses the invariant
+condition that survival-weighted Bellman seam is small relative to weighted
+absorption for every cyclic entry phase and player.  Exact periodic correction
+then gives a finite support-rational cycle, a divergent path, and a uniform
+payoff.  Repetition of a finite chart label alone does not supply this relative
+return condition.
+
+## Punishment-completed exact cycles
+
+The exact-cycle compiler no longer needs every noncontracting coordinate to
+have nonnegative solo payoff.  In
+`QuittingPunishmentCompletedCycle.lean`, each coordinate may instead satisfy
+either strict deleted-survival contraction around the cycle or the inequality
+that its punishment value is at most its selected solo value.  An exact
+absorbing Nash--Bellman cycle with this coordinatewise certificate yields its
+selected phase value as a uniform-equilibrium payoff.  The older admissible
+cycle theorem is recovered because nonnegative solo payoff dominates the
+punishment floor.
+
+For a sure solo exit, `QuittingInstantPunishment.lean` gives the exact
+characterization: the owner's solo payoff must dominate its punishment value,
+and no outsider may gain by joining at the first stage.  This is a genuine
+positive result for isolated negative solo values, but it does not prove that
+every isolated-negative branch supplies the required punishment inequality or
+that every weight produces an exact cycle.
+
+## Truncated-ledger certificate boundary
+
+The all-errors truncated-ledger package remains a sound sufficient route to a
+uniform payoff.  It is not a universal producer target.  The formal two-player
+zero-sum table in `QuittingTruncatedLedgerCapCounterexample.lean` has the exact
+all-Continue uniform payoff zero, yet no package at tolerance `1/2`: deviation
+accounting forces the common reach parameter above `1/2`, while the package
+error budget forces it below `1/10`.  Thus any complete argument must retain a
+persistent-live branch or weaken the common all-player deleted-survival
+condition; the former reduced-cap conjectural leaf is removed.
 
 ## Multi-owner face-circulation producer stratum
 

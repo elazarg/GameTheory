@@ -294,7 +294,7 @@ theorem not_hasQuittingTruncatedLedgerCapPackage_half :
     (quittingTruncatedRoots plan cutoff) 0
   nlinarith
 
-/-- Therefore the repository's current unconditional reduced-cap conjecture
+/-- Therefore the unconditional reduced-cap producer assertion
 is false, even though this game has an exact uniform equilibrium payoff. -/
 theorem not_quittingGame_hasQuittingTruncatedLedgerCapPackage :
     ¬(∀ ε : ℝ, 0 < ε →

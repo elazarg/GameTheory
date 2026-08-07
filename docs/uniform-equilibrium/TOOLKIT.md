@@ -37,8 +37,11 @@ without producing a witness.
 | Adaptive-potential systems | `AdaptivePotentialSystemTools.lean` | The single `AdaptivePotentialSystemAt` structure together with retargeting, profile transport, ledger conversion, finite-time bounds, and owner-separated assembly. |
 | Quitting terminal selection | `QuittingTerminalUniformPayoffSelection.lean` | The equivalence between terminal approximate Nash existence at every accuracy and uniform-payoff existence for finite quitting games. |
 | Diagonal target tails | `QuittingDiagonalTargetTail.lean` | Exact-prefix plus player-indexed closed-tail compilation and its counterexample restriction. |
-| Support-retaining paths | `QuittingSupportWitnessUniform.lean` | Infinite support-rational path and finite periodic-cycle compilers. |
+| Support-retaining paths | `QuittingSupportWitnessUniform.lean` | Infinite support-rational paths, finite periodic witnesses, and rotation-uniform weighted projective-lasso compilation. |
 | Essential APS | `QuittingEssentialAPSAll.lean` | The complete singleton-flow APS layer, including the adaptive-mesh capstone. |
+| Projective packets and lassos | `QuittingProjectiveLassoAll.lean` | Matching-order analytic first-event masses and singleton packets, zero/affine-anchor LCP algebra, resolved-chart contracts, Farkas alternatives, finite-label recurrence, and weighted-lasso compilation. |
+| Punishment-completed cycles | `QuittingPunishmentCompletedCycle.lean` | Coupled phase-switch caps, exact instant-punishment characterization, and exact absorbing cycles completed coordinatewise by contraction or credible punishment. |
+| Truncated-ledger boundary | `QuittingTruncatedLedgerCapBoundary.lean` | The sound package compiler interface together with one- and two-player counterexamples to treating it as a universal normal form. |
 | Face circulations | `QuittingFaceCirculationAll.lean` | Certificate/orbit/path production, concrete payoff examples, and the two-coordinate boundary analyses. Use `MultiOwnerFaceCirculationCompactPath.lean` for the narrow generic compiler. |
 | Boundary holonomy | `QuittingBoundaryHolonomyAll.lean` | Source-retaining fixed-cutoff compactness together with residual, self-similar, tangent, and realized-coordinate analysis. |
 | Reward closure | `QuittingUniformPayoffExistenceClosure.lean` | Fixed-skeleton quitting-game existence under uniform reward limits and dense solved approximants. |
@@ -76,9 +79,10 @@ obligations.
 | --- | --- | --- | --- |
 | Diagonal target tail | Accuracy-indexed exact Nash--Bellman prefixes with small joint survival and player-indexed target-closed tails | Terminal approximate equilibria and hence a uniform payoff | Does not construct the prefixes or prove their survival certificate. |
 | Support witness | At every tolerance, a support-wise approximately optimal root path, divergent absorption, and continuation-by-continuation individual rationality; alternatively a finite periodic witness with one absorbing phase | A terminal `3ε` profile and target-free uniform-payoff existence | Does not produce the paths or cycles for arbitrary games. |
+| Weighted projective lasso | At every tolerance, a finite root word whose survival-weighted Bellman seam is small relative to absorption for every cyclic entry phase, with support optimality and punishment rationality | Exact periodic correction, a divergent support-rational path, and a uniform payoff | Matching analytic packet extraction does not construct resolved physical successors or the required rotation-uniform return. |
 | Essential APS | A compact convex functional unique-live component with finite-window face avoidance, terminal-freeness, and bounds | A coherent executable path, qualitative deleted-player survival, adaptive finite meshes, and a uniform payoff for every initial component value | Does not prove that an arbitrary game has a nonempty component; pointwise full jumps remain outside the adaptive logarithmic mesh. |
 | Multi-owner face circulation | A bounded balanced circulation with a uniform positive phase-ratio floor and a payoff floor above the quitting punishment value | A chronological support-rational path selected by compact finite-prefix reversal, then a uniform payoff | Does not construct such a circulation for every game or identify the selected target with a named certificate vertex. |
-| Finite admissible cycle | A realized admissible absorbing cyclic continuation block | A terminal equilibrium and uniform payoff | The cycle disjunct is not exhaustive for all quitting games. |
+| Punishment-completed finite cycle | An exact absorbing Nash--Bellman cycle where each coordinate either contracts in deleted survival or has punishment value at most its selected solo value | The selected phase value is a uniform-equilibrium payoff; the old nonnegative-solo admissible-cycle compiler is a corollary | Does not produce an exact cycle, and does not cover an isolated coordinate whose punishment value exceeds its negative solo value. |
 | Two-player closure | An arbitrary finite two-player quitting game | Unconditional uniform-payoff existence | Does not extend the pair-repair classification to three or more players. |
 
 The essential-APS and circulation families contain genuine producers relative
@@ -97,6 +101,8 @@ generic quitting-game existence theorems.
 | Nonperiodic Snell supersolution | `QuittingInfinitePathSupersolution.lean` | Turns exact Continue transport, vanishing local Quit error, and survival decay into history-dependent unilateral caps. |
 | Target-anchored stopping tail | `QuittingTargetAnchoredTail.lean` | Constructs one player's stationary-opponent closed tail at a prescribed target. |
 | Joint-survival selection | `QuittingJointSurvivalSelection.lean` | Identifies compactly selected continuation values with actual infinite-path terminal values under joint-survival decay. |
+| Projective first-event algebra | `Math/ProjectiveBellmanPacket.lean` | Exact cemetery/absorption normalization and Bellman balance before any chart or recurrence argument. |
+| Affine equality/Farkas alternative | `Math/AffineEqualityFarkas.lean` | A finite feasible-tangent-or-dual-row alternative; strategic decoding and arc lifting are separate inputs. |
 
 Phase-occupation duality is optimization infrastructure.  Until a concrete
 strategic construction supplies a feasible phase occupation, it is not itself
@@ -138,6 +144,11 @@ The general reverse diagnostics are:
 - convergence of transition kernels alone does not preserve uniform-payoff
   targets.
 
+`QuittingTruncatedLedgerCapCounterexample.lean` adds a certificate-specific
+fence: even a solved two-player zero-solo game need not admit a common-cutoff
+truncated-ledger package.  The package compiler is sound, but its hypothesis is
+not a necessary normal form for equilibrium existence.
+
 These characterize or falsify proposed routes.  They are not forward
 construction mechanisms.
 
@@ -155,14 +166,23 @@ The following distinctions are load-bearing across the toolkit:
    uniform-equilibrium payoff are different notions until a named bridge is
    invoked; and
 6. a fixed-target closure theorem and target-free existence closure solve
-   different problems.
+   different problems;
+7. positive debt on one explicit legal chain is not positivity of the optimized
+   minimum over all chains;
+8. the general polynomial Bellman variety is not the physical
+   vanishing-discount domain until an explicit slice such as `0 < disc ≤ 1` is
+   imposed; and
+9. a neutral or subsingleton promotion socket—including a vacuous `CellFiber`
+   instance—is not realization, compatibility, or an all-accuracy producer.
 
 ## Open leaves
 
-The intentional conjecture leaves remain in
-`UniformExistenceConjecture.lean`, `QuittingConjecture.lean`, and
-`QuittingReducedCapConjecture.lean`.  Existing compilers narrow what those
-leaves must produce; they do not discharge the arbitrary-game producer.
+The two intentional conjecture leaves remain in
+`UniformExistenceConjecture.lean` and `QuittingConjecture.lean`.  The former
+truncated-ledger producer leaf was removed after a two-player counterexample;
+its valid conditional compiler is indexed above.  Existing positive compilers
+narrow what the two genuine leaves must produce, but do not discharge the
+arbitrary-game producer.
 
 For new work, first identify the row above whose required input is closest to
 the available data.  If no row accepts it, record the missing adapter or

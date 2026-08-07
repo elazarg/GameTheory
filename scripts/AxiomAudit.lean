@@ -162,15 +162,16 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.exists_soloQuitterRate_or_universalJoiner_of_card_le_two
 #print axioms GameTheory.QuittingSwitchingBlockerTable.not_exists_universalJoiner
 
--- The bounded survival-window landing, the truncation fold, and the reduced
--- conjecture's gap-free implication.  The truncated-ledger producer itself
--- (`GameTheory.quittingGame_hasQuittingTruncatedLedgerCapPackage`) is
--- deliberately excluded: it is the third intentional open declaration.
+-- The bounded survival-window landing, the truncation fold, and the surviving
+-- gap-free conditional compiler.  The former universal package producer is
+-- refuted by the two-player theorem audited below and no longer exists.
 #print axioms GameTheory.exists_pos_ratio_forall_exists_jointSurvivalWeight_mem_survivalWindow
 #print axioms GameTheory.quittingRootSequenceHazardTerminalValue_quittingTruncatedRoots_le_of_plan_ledger_le
 #print axioms GameTheory.quittingTerminalPayoff_update_quittingPhaseSwitchProfile_le_of_plan_ledger_le
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_hasQuittingLedgerCapPackage
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_truncatedLedgerCapPackage
+#print axioms GameTheory.QuittingTruncatedLedgerCapCounterexample.not_hasQuittingTruncatedLedgerCapPackage_half
+#print axioms GameTheory.exists_uniformEquilibriumPayoff_of_zeroSolo_or_truncatedLedgerCapProducer
 
 -- ============================================================================
 -- The three-player switching-residue regression table (pure arithmetic;
@@ -293,3 +294,17 @@ import Math.SchauderFixedPoint
 -- calibration self-loop exactly; no bounded potential exists for it.
 #print axioms GameTheory.QuittingQuitBonusSelfLoopBridge.oneStageNext_reward_isSelfLoop
 #print axioms GameTheory.QuittingQuitBonusSelfLoopBridge.no_boundedPotential
+
+-- Matching-order projective extraction, affine/Farkas boundary, and the
+-- rotation-uniform weighted-lasso compiler.
+#print axioms GameTheory.QuittingGermMatchingLeadingData.nonsingletonFirstEventWeight_tendsto_zero
+#print axioms GameTheory.QuittingGermMatchingLeadingData.toProjectiveSingletonPacket
+#print axioms Math.LinearAlgebra.affineEqualityInequality_feasible_or_farkas
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_weightedProjectiveLassos
+
+-- Coupled phase-switch accounting and punishment-completed instant/cyclic
+-- mechanisms.
+#print axioms GameTheory.quittingRootSequenceHazardTerminalValue_quittingPhaseSwitchRoots_le_coupled
+#print axioms GameTheory.quittingInstantPunishmentWorks_iff
+#print axioms GameTheory.isUniformEquilibriumPayoff_soloReward_of_instantPunishment
+#print axioms GameTheory.isUniformEquilibriumPayoff_of_punishmentAdmissibleCycle

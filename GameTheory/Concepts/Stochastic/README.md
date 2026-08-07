@@ -5,20 +5,17 @@ existence problem** — the central open problem of stochastic game theory: ever
 stochastic game with finitely many players, states, and actions admits a uniform
 equilibrium payoff from every initial state.
 
-There are **three intentional `sorry`s**, and no others:
+There are **two intentional `sorry`s**, and no others:
 
 - `StochasticGame.exists_uniformDeviationCapConstructor` in
   [`UniformExistenceConjecture.lean`](UniformExistenceConjecture.lean) — the
   general problem above, in its quantitative form;
 - `quittingGame_exists_uniformEquilibriumPayoff` in
   [`QuittingConjecture.lean`](QuittingConjecture.lean) — the finite-quitting
-  case, the program's middle target; and
-- `quittingGame_hasQuittingTruncatedLedgerCapPackage` in
-  [`QuittingReducedCapConjecture.lean`](QuittingReducedCapConjecture.lean) —
-  the reduced finite-quitting certificate producer.
+  case, the program's middle target.
 
-All three are allowlisted by name in `scripts/check_lean_placeholders.py`, which
-fails on any fourth placeholder and equally on an allowlist entry that no longer
+Both are allowlisted by name in `scripts/check_lean_placeholders.py`, which
+fails on any third placeholder and equally on an allowlist entry that no longer
 carries one — so discharging a conjecture forces the list to be updated.
 [`Uniform.lean`](Uniform.lean) holds only the definitions and their proved
 equivalence and is itself sorry-free. Everything else in this directory is
@@ -313,6 +310,29 @@ they provide exact residual cocycles, iteration/idempotents, self-similarity,
 max-plus tangents, realized first-order bounds, and compact coordinate
 subsequences. They do not establish realized-image closedness, retain source
 paths, produce strategic blocks, or decode a coefficient limit.
+
+`QuittingProjectiveLassoAll.lean` is the public projective boundary.  Matching
+analytic germs canonically yield cemetery and singleton first-event masses;
+the game-facing packet layer turns their Bellman and endpoint limits into a
+normalized singleton LCP packet.  Resolved affine charts expose a typed
+feasible-tangent-or-Farkas interface, and a rotation-uniform weighted lasso
+compiles to a support-rational divergent path and uniform payoff.  What remains
+is producer work: resolved chart coverage and real arc lifting, strategic
+decoding of the Farkas row, and rotation-uniform relative return.
+
+`QuittingPunishmentCompletedCycle.lean` strengthens the exact absorbing-cycle
+compiler.  A coordinate may contract in deleted survival or be held to its
+solo value by a punishment-value inequality; negative isolated solo payoffs are
+therefore allowed when credible punishment is strong enough.  The companion
+instant module gives the exact two-condition characterization of a sure-solo
+exit completed by punishment.  Neither theorem produces an exact cycle for an
+arbitrary weight.
+
+The truncated-ledger package remains a sufficient certificate, but
+`QuittingTruncatedLedgerCapBoundary.lean` records that it is not a universal
+normal form.  Its two-player zero-sum counterexample has the exact all-Continue
+uniform payoff zero while admitting no package at accuracy `1/2`; the former
+reduced-cap conjecture and its placeholder have therefore been removed.
 
 ### Proved results (special cases of the conjecture)
 

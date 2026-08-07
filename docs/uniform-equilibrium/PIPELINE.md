@@ -1,12 +1,15 @@
 # Uniform-equilibrium project pipeline
 
-**Production-Lean checkpoint:** `1ee8d9c2`, exported through `6391ee01`;
-documentation is current through `5ea42091`. The last complete repository
+**Production-Lean checkpoint:** adaptive APS `1ee8d9c2`, truncated-ledger
+boundary `10c9f22d`, punishment-completed cycles `177a0c03`, and projective
+packet/lasso tools `3ca078d8` with matching analytic extraction `687ee117`.
+The last complete repository
 audit remains the 2026-08-03 pair `14d75ff` / `cd1db11`. **This file revised
 2026-08-07** — discrete hazard stopping, phase-occupation duality,
 target-anchored closure, face-circulation compilation, uniform-payoff
-diagnostics, adaptive essential-APS meshes, and the boundary-holonomy tangent
-layer are incorporated and reflected below.
+diagnostics, adaptive essential-APS meshes, the boundary-holonomy tangent
+layer, punishment completion, and projective packet/lasso compilation are
+incorporated and reflected below.
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
@@ -30,11 +33,10 @@ the restored axiom audit reporting only `propext`, `Classical.choice`, and
 `Quot.sound`, and the leaf invariant checked by the script. The `opaque` and
 `native_decide` occurrences survive only inside the quarantined `BlockPairK11`
 island, reported as accepted exceptions whose exemption is **earned** by a
-containment check that fails the audit if anything imports the island. The three
+containment check that fails the audit if anything imports the island. The two
 intentional `sorry` declarations are
 `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean` and
-`quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`,
-and the reduced cap-package leaf in `QuittingReducedCapConjecture.lean`.
+`quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`.
 These are guarded by the placeholder/leaf audit and documented in the
 [proof-engineering audit](../../ephemeral/ProofEngineeringAudit.md), rather than
 blockers hidden in the P0 mathematical status.
@@ -99,6 +101,25 @@ blockers hidden in the P0 mathematical status.
   tolerance remains the producer obligation.  The abstract rank-one crossing
   theorem is retained separately and supplies no game-specific process or
   variation bound.
+- **Projective packets and weighted lassos (`3ca078d8`, `687ee117`, conditional
+  producer and compiler layers).** Matching analytic germs canonically supply normalized
+  cemetery/singleton masses and vanishing nonsingleton mass.  The game-facing
+  packet assembly closes the value-mixture and endpoint-complementarity passage.
+  Rotation-uniform weighted seams compile through exact periodic correction to
+  divergent support paths and uniform payoffs.  Resolved chart coverage and arc
+  lifting, strategic Farkas decoding, and relative-return production remain
+  open.
+- **Punishment-completed exact cycles (`177a0c03`, conditional compiler).** A
+  coordinate may contract in deleted survival or be held by the exact
+  punishment-value inequality; this includes credibly punishable negative solo
+  values.  The sure-solo instant case has an exact two-condition
+  characterization.  The theorem does not produce exact cycles for arbitrary
+  weights.
+- **Truncated-ledger boundary (`10c9f22d`, refutation and surviving
+  compiler).** The all-errors package remains sufficient, but a solved
+  two-player zero-solo game has no package at tolerance `1/2`.  The former
+  universal producer and its placeholder are removed; complete routes must
+  retain a persistent-live branch or weaken the common survival requirement.
 
 The resulting priority delta is precise: test density of the positively solved
 payoff-table strata first; independently seek a support-rational path/cycle
@@ -139,13 +160,11 @@ superseded/resolved decision section in
 
 **READY / PLANNED / DESIGN** — pick up now
 - `MATH-P0-5` — is the exact-cycle disjunct complete, or do ε-cycles diverge?
-- `MATH-P0-7` — a sufficiency theorem for the isolated-negative branch
 - `MATH-P0-8` — the relaxed compiler: formalize Proposition 3
 - `MATH-P0-10` — the drift device: uniform threats against moving states
 - `MATH-P1-1` — re-derive Q148's encoding into the isolated-negative branch
 - `MATH-P1-2` — test affine hazard domination on the exact-D families
 - `MATH-P1-4` — formalize the weight whose gap survives faithful unpinning
-- `MATH-P1-5` — audit the decomposition for instant approximate equilibria
 - `NEG-P0-2` — the orbit-side counterexample criterion
 - `LEAN-F0-1` — formalize the state-dependent-to-independent action-set padding
   reduction
@@ -175,6 +194,7 @@ superseded/resolved decision section in
   route
 - `LIT-P2-3` — close the three residues of the borrowed-premise census
 - `ENG-P1-3` — dependency drift, and an over-specific upstream lemma
+- `ENG-P2-2` — pin boundary semantics with small executable regressions
 
 **ACTIVE / IN FLIGHT**
 - `MATH-P0-1` — prove compactness for generalized completed chronological traces
@@ -199,6 +219,8 @@ superseded/resolved decision section in
   current
 
 **PARTIAL / BLOCKED / PENDING / ANSWERED IN PART**
+- `MATH-P0-7` — isolated-negative sufficiency (`ANSWERED IN PART`): punishment
+  completion covers exactly the punishment-IR subclass
 - `MATH-P0-4` — map AGKRS Theorem 3.4 clause by clause against the internal
   trichotomy
 - `MATH-P0-9` — the lock/unlock dichotomy for orbit variation (`ANSWERED IN
@@ -239,6 +261,8 @@ superseded/resolved decision section in
   [archive](PIPELINE-Archive.md)
 - `MATH-P0-11` — the minimal open family: the four-player cyclic phase
   diagram (`SOLVED`) — see [archive](PIPELINE-Archive.md)
+- `MATH-P1-6` — instant approximate equilibria (`SOLVED`) — see
+  [archive](PIPELINE-Archive.md)
 - `ENG-P0-1` — put CI under `.github/workflows/` and make it green — see
   [archive](PIPELINE-Archive.md)
 - `ENG-P0-2` — make the axiom audit exact and add P0 keeper capstones — see
@@ -519,29 +543,6 @@ proof strategy that cannot in principle produce them is dead on arrival.
 **Acceptance.** The criterion stated in repository vocabulary, and a decision on
 whether the search lane should run on it instead of, or alongside, the
 behavioural-gap criterion.
-
-### `MATH-P1-5` — audit the decomposition for instant approximate equilibria
-
-- **Status:** READY
-- **Lane:** P1
-- **Depends:** the stationary repair ladder; the absorbing-cycle carrier; the
-  positive-plateau split.
-- **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §3
-
-**Objective.** Decide where Simon's third equilibrium family lands in this
-program's splits, or record that it does not.
-
-**State.** Simon's trichotomy is stationary / **instant** / orbit. An *instant*
-approximate equilibrium is a first-stage profile with some coordinate quitting
-with certainty, followed by punishing that coordinate down to its min-max value
-plus ε if it failed to quit — a `2ε`-equilibrium. It is neither stationary nor
-periodic-cycling here: a period-one cycle does not capture the off-path
-punishment clause, and the frontier's falsifier list does not name the family.
-It arises exactly when one-stage ε-equilibria have quitting mass tending to one
-— the `q → 1` boundary where compactness arguments degenerate.
-
-**Acceptance.** Either a demonstration that an existing branch absorbs it, or
-its addition as a named case.
 
 ### `LEAN-P0-7` — two-clock punishment for the deviation-cap constructor
 
@@ -1014,8 +1015,11 @@ a small exact sign counterexample closes the general route.
 **Objective.** Route one actual analytic Bellman/value leaf through a named
 strategic gate or a consumed closure/obstruction alternative.
 
-**State.** `PENDING`; analytic germs can fail zero holonomy, and no universal
-router/target selector exists.
+**State.** `PENDING`, with the matching-order packet stage closed.  A matching
+analytic quitting germ yields a canonical normalized singleton LCP packet,
+including the value-mixture and endpoint-complementarity limits.  It still does
+not construct or cover resolved physical charts, lift feasible tangents to real
+arcs, decode Farkas rows strategically, or select a target/router.
 
 **Acceptance.** A concrete leaf reaches a production credibility/compiler
 interface, or its typed obstruction forces a proved alternative.
@@ -1695,7 +1699,7 @@ development.
 
 ### `MATH-P0-7` — a sufficiency theorem for the isolated-negative branch
 
-- **Status:** READY
+- **Status:** ANSWERED IN PART
 - **Lane:** P0
 - **Depends:** the trichotomy.
 - **Record:** [exact-vs-relaxed]
@@ -1703,18 +1707,19 @@ development.
 **Objective.** Show that a weight in the isolated-negative branch has a uniform
 equilibrium payoff, or exhibit one that does not.
 
-**State.** `READY`. This is the trichotomy's other hole and the sharper of the
-two: the branch is reachable — the refutation witness lies in it — but carries
-no sufficiency theorem, so a weight landing there gets nothing. One specific
-two-coordinate weight is repaired by a symmetric contracting perturbation that
-keeps both opponents' continuation mass strictly below one, avoiding the `ε = 0`
-degeneracy of the exact isolated configuration; that construction is explicitly
-stated not to generalize.
+**State.** `ANSWERED IN PART`.  A general compiler handles every exact
+absorbing cycle whose isolated noncontracting coordinate satisfies
+`quittingPunishmentValue ≤ quittingSoloReward`; all other coordinates contract.
+This strictly includes negative solo values when credible punishment is strong
+enough, and the instant sure-solo case has an exact necessity-and-sufficiency
+characterization.  The full branch remains open because its definition does not
+imply that punishment inequality or even produce an exact cycle in every weight.
 
-**Acceptance.** A general theorem, or a counterexample. Since the branch's
-mismatch is exactly `-r_i({i})` at the isolated coordinate, the perturbation
-must trade that fixed mismatch against the continuation mass it frees, and any
-general argument has to control that trade rather than compute it on one table.
+**Acceptance.** Prove that every remaining isolated-negative instance has the
+punishment inequality or admits a contracting/relaxed repair, or exhibit a
+counterexample.  Since the mismatch is exactly `-r_i({i})`, a general repair
+must still control the trade against continuation mass rather than compute it
+on one table.
 
 ### `MATH-P0-8` — the relaxed compiler: formalize Proposition 3
 
@@ -2089,6 +2094,27 @@ current.
 
 **Acceptance.** Cold-handoff check passes; no durable status depends only on
 ignored files.
+
+### `ENG-P2-2` — pin boundary semantics with small executable regressions
+
+- **Status:** READY
+- **Lane:** P2
+
+**Objective.** Turn recurring boundary qualifications into cheap regression
+theorems and self-contained module contracts.
+
+**State.** Three semantic fences are explicit and must stay so: an exhibited
+positive-debt chain is not a positive optimized minimum; a polynomial Bellman
+sign cell needs a physical discount slice such as `0 < disc ≤ 1` before
+vanishing-discount curve selection; and neutral sockets such as `CellFiber`
+may be deliberately vacuous and therefore do not certify realization.  The
+highest-value executable checks are the one-player full-rate verifier with its
+empty opponent product, cyclic conversion at periods `1`, `2`, and `3`, and
+immediate-versus-delayed phase-switch indexing.
+
+**Acceptance.** The stated low-dimensional cases compile against public APIs,
+and module documentation continues to distinguish algebraic/schematic sockets
+from physical-domain and realization claims.
 
 ## Dependency and gate view
 

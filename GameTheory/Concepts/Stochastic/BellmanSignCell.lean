@@ -20,6 +20,12 @@ sign vector.
 Consequently, every closure point of the Bellman solution set is a closure
 point of one complete polynomial sign cell contained in that set.  This is
 the finite reduction immediately preceding analytic curve selection.
+
+The polynomial solution variety deliberately allows an arbitrary real value
+of the discount coordinate.  A vanishing-discount application must intersect
+the selected cell with an explicit physical slice such as `0 < disc ∧ disc ≤ 1`
+before applying curve selection.  This module supplies the algebraic sign cell,
+not that domain restriction.
 -/
 
 noncomputable section

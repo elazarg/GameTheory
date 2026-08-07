@@ -18,12 +18,7 @@ program.
    method, the [research atlas](manuscript/UniformEquilibriumFrontierManuscript.tex)
    for the detailed theorem/idea map, and
    [intuition.tex](manuscript/intuition.tex) for a shorter conceptual account of
-   the current escaping-middle problem.
-
-For a provisional, non-authoritative literature/novelty assessment, see
-[`ephemeral/UniformEquilibriumNoveltyAssessment.md`](../../ephemeral/UniformEquilibriumNoveltyAssessment.md).
-The measured repository/CI assessment is
-[`ephemeral/ProofEngineeringAudit.md`](../../ephemeral/ProofEngineeringAudit.md).
+   the escaping-middle problem.
 
 ## Coordination and methods
 
@@ -37,6 +32,8 @@ The measured repository/CI assessment is
 - [SupportWitnessCompiler.md](SupportWitnessCompiler.md) records the
   deterministic support-witness path and periodic-cycle compiler, including
   its remaining producer obligation.
+- [ProjectiveLassoProducer.md](ProjectiveLassoProducer.md) records the exact
+  analytic-packet, resolved-chart, and weighted-lasso dependency boundary.
 - [CirculationUniformPayoff.md](CirculationUniformPayoff.md) records the
   conditional multi-owner face-circulation producer class, its compact path
   selection, and its concrete quitting-game corollaries.

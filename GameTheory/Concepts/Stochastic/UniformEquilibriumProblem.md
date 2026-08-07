@@ -21,11 +21,11 @@ games (Solan–Vieille, quitting games; Simon, *Adv. Appl. Math.* 38 (2007)).
 Open from four players on, already for **quitting games** — each player
 chooses only quit-or-continue, the game ends at the first quit, payoffs
 depend on the set of simultaneous quitters. This repository attacks the
-quitting core. Three intentional `sorry` declarations mark the targets
-(`UniformExistenceConjecture.lean`, `QuittingConjecture.lean`, and the
-reduced six-clause ledger-cap package `QuittingReducedCapConjecture.lean`,
-whose implication to the quitting conjecture is machine-checked gap-free,
-so the program's progress metric is clause shrinkage); a build-time audit
+quitting core. Two intentional `sorry` declarations mark the targets
+(`UniformExistenceConjecture.lean` and `QuittingConjecture.lean`).  The reduced
+six-clause ledger-cap package still has a machine-checked gap-free compiler,
+but its universal producer was refuted by a solved two-player game and removed;
+it is not a complete progress metric.  A build-time audit
 enforces that they are import-leaves — no landed result depends on them —
 and that the landed corpus reports only the standard classical axioms.
 
@@ -48,8 +48,10 @@ approximate Nash families:
 
 - **Zero-solo weights** (every solo payoff `≤ 0`): payoff `0`
   (`QuittingZeroSoloDisjunct`).
-- **Admissible exact cycles** compile to uniform payoffs
-  (`QuittingAdmissibleCycleTerminalEquilibrium`).
+- **Punishment-completed exact absorbing cycles** compile to uniform payoffs
+  when every coordinate either contracts in deleted survival or has punishment
+  value at most its solo value (`QuittingPunishmentCompletedCycle`); the former
+  nonnegative-solo admissible-cycle theorem is a corollary.
 - **Every two-player quitting game**
   (`quittingGame_exists_uniformEquilibriumPayoff_twoPlayer`) —
   the statement is classical (Vrieze–Thuijsman era); the machine-checked

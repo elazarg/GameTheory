@@ -744,6 +744,25 @@ must sweep `ephemeral/` — noting that `sources/aps-quitting-2026.pdf` there is
 3 KB HTML bot-block page, not a paper.
 
 
+### `MATH-P1-6` — characterize instant approximate equilibria (SOLVED)
+
+- **Status:** SOLVED (2026-08-07)
+- **Lane:** P1
+
+**Objective.** Decide where the instant equilibrium family lands in the
+program's splits and give it a named exact interface.
+
+**Resolution.** `QuittingInstantPunishment.lean` characterizes the family
+exactly.  A sure-solo first-stage exit completed by off-path punishment works
+at every positive accuracy iff the owner's singleton payoff dominates its
+punishment value and no outsider gains by joining the exit.  The same module
+constructs the approximate profiles and promotes the singleton payoff vector
+to a uniform-equilibrium payoff.  This is a separate punishment-completed
+mechanism, not a stationary or bare period-one cycle.
+
+**Acceptance.** Met by `quittingInstantPunishmentWorks_iff` and
+`isUniformEquilibriumPayoff_soloReward_of_instantPunishment`.
+
 ## Link references
 
 [anchored-repair]: ../../ideas/PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md
