@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -15,13 +15,63 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
           submodules: recursive
+      - name: Synchronize no-go documentation
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text(encoding="utf-8")
+              if new in text:
+                  return
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one replacement site, found {count}")
+              file.write_text(text.replace(old, new), encoding="utf-8")
+
+          replace_once(
+              "GameTheory/Concepts/Stochastic/README.md",
+              """There are **three intentional `sorry`s**, and no others:\n\n- `StochasticGame.exists_uniformDeviationCapConstructor` in\n  [`UniformExistenceConjecture.lean`](UniformExistenceConjecture.lean) — the\n  general problem above, in its quantitative form;\n- `quittingGame_exists_uniformEquilibriumPayoff` in\n  [`QuittingConjecture.lean`](QuittingConjecture.lean) — the finite-quitting\n  case, the program's middle target; and\n- `quittingGame_hasQuittingTruncatedLedgerCapPackage` in\n  [`QuittingReducedCapConjecture.lean`](QuittingReducedCapConjecture.lean) —\n  the reduced finite-quitting certificate producer.\n\nAll three are allowlisted by name in `scripts/check_lean_placeholders.py`, which\nfails on any fourth placeholder and equally on an allowlist entry that no longer\ncarries one — so discharging a conjecture forces the list to be updated.\n""",
+              """There are **two intentional `sorry`s**, and no others:\n\n- `StochasticGame.exists_uniformDeviationCapConstructor` in\n  [`UniformExistenceConjecture.lean`](UniformExistenceConjecture.lean) — the\n  general problem above, in its quantitative form; and\n- `quittingGame_exists_uniformEquilibriumPayoff` in\n  [`QuittingConjecture.lean`](QuittingConjecture.lean) — the finite-quitting\n  case, the program's middle target.\n\nBoth are allowlisted by name in `scripts/check_lean_placeholders.py`, which\nfails on any third placeholder and equally on an allowlist entry that no longer\ncarries one — so discharging a conjecture forces the list to be updated.  The\nformer reduced-cap producer leaf was removed after a machine-checked\ntwo-player counterexample showed that its common all-player reach condition is\nnot a universal normal form.\n""",
+          )
+
+          replace_once(
+              "docs/uniform-equilibrium/PIPELINE.md",
+              """containment check that fails the audit if anything imports the island. The three\nintentional `sorry` declarations are\n`exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean` and\n`quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`,\nand the reduced cap-package leaf in `QuittingReducedCapConjecture.lean`.\nThese are guarded by the placeholder/leaf audit and documented in the\n[proof-engineering audit](../../ephemeral/ProofEngineeringAudit.md), rather than\nblockers hidden in the P0 mathematical status.\n""",
+              """containment check that fails the audit if anything imports the island. The two\nintentional `sorry` declarations are\n`exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean` and\n`quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`.\nThe former reduced cap-package leaf is now a proved no-go: its common\nall-player deleted-survival requirement fails on a solved two-player zero-solo\ngame. The two remaining leaves are guarded by the placeholder/leaf audit and\ndocumented in the [proof-engineering audit](../../ephemeral/ProofEngineeringAudit.md),\nrather than blockers hidden in the P0 mathematical status.\n""",
+          )
+
+          replace_once(
+              "docs/uniform-equilibrium/FRONTIER.md",
+              """The chain is exhaustive up to the positive fully summable plateau. It is not a\nclaim that every equilibrium belongs to one finite grammar.\n\n## Essential APS on the singleton-flow stratum\n""",
+              """The chain is exhaustive up to the positive fully summable plateau. It is not a\nclaim that every equilibrium belongs to one finite grammar.\n\n## Truncated-ledger producer boundary\n\nThe finite truncation theorem remains a sound compiler: ledger and pre-cutoff\nquit-regret bounds plus a small deleted-survival remainder yield terminal\napproximate Nash profiles.  Its former universal producer conjecture is false,\neven after excluding one-player games.  In the two-player zero-sum table where\na singleton quitter receives `-1`, the continuing opponent receives `1`, and\nsimultaneous quitting pays `0`, all-Continue is an exact uniform equilibrium\nwith payoff zero.  Nevertheless a truncated ledger-cap package at tolerance\n`1/2` forces its common reach parameter both `>= 1/2` (by the two\nalways-Continue deviations and zero-sum accounting) and `<= 1/10` (by the\npackage error budget and reward bound).\n\nThus common all-player tail extinction is not a universal certificate normal\nform.  The obstruction persists for the richer phase-switch package because it\nprojects to the truncated package.  A surviving producer must either retain a\npersistent-live branch — zero-solo is the landed exact instance — or replace\nthe common reach requirement by a weaker value-sensitive or active-set\ncondition.  `QuittingReducedCapConjecture.lean` now states only the valid\nbranch-relative implication; no completeness claim for the repair is made.\n\n## Essential APS on the singleton-flow stratum\n""",
+          )
+          PY
+
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add GameTheory/Concepts/Stochastic/README.md \
+            docs/uniform-equilibrium/PIPELINE.md \
+            docs/uniform-equilibrium/FRONTIER.md
+          git commit -m "Document the two-player reduced-cap no-go"
+          git push origin HEAD:"$HEAD_REF"
       - uses: leanprover/lean-action@v1
         with:
           build: false
           test: false
           use-mathlib-cache: true
-      - name: Build counterexample
-        run: lake build GameTheory.Concepts.Stochastic.QuittingTruncatedLedgerCapCounterexample
+      - name: Build counterexample and corrected reduction
+        run: |
+          lake build GameTheory.Concepts.Stochastic.QuittingTruncatedLedgerCapCounterexample
+          lake build GameTheory.Concepts.Stochastic.QuittingReducedCapConjecture
       - name: Check placeholders
         run: python3 scripts/check_lean_placeholders.py
