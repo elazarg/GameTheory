@@ -141,6 +141,13 @@ The general reverse diagnostics are:
 These characterize or falsify proposed routes.  They are not forward
 construction mechanisms.
 
+`QuittingTruncatedLedgerCapCounterexample.lean` adds an interface-level no-go:
+the common all-player deleted-survival requirement of the truncated ledger-cap
+package fails even for a solved two-player zero-solo game.  The package remains
+a sound compiler input, but it is not a universal producer normal form.  A
+complete route must preserve a persistent-live branch or replace the common
+reach condition by a weaker value-sensitive condition.
+
 ## Semantic fences
 
 The following distinctions are load-bearing across the toolkit:
@@ -160,9 +167,12 @@ The following distinctions are load-bearing across the toolkit:
 ## Open leaves
 
 The intentional conjecture leaves remain in
-`UniformExistenceConjecture.lean`, `QuittingConjecture.lean`, and
-`QuittingReducedCapConjecture.lean`.  Existing compilers narrow what those
-leaves must produce; they do not discharge the arbitrary-game producer.
+`UniformExistenceConjecture.lean` and `QuittingConjecture.lean`.
+`QuittingReducedCapConjecture.lean` no longer carries an open declaration: it
+records the valid branch-relative reduction and the formal two-player no-go for
+the former universal package producer. Existing compilers narrow what the two
+remaining leaves must produce; they do not discharge the arbitrary-game
+producer.
 
 For new work, first identify the row above whose required input is closest to
 the available data.  If no row accepts it, record the missing adapter or
