@@ -1,0 +1,70 @@
+name: Apply isolated-prefix proof fixes
+
+on:
+  pull_request:
+    branches: [uniform-existence]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.head_ref == 'agent/punishment-completed-cycles'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Patch Lean source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('GameTheory/Concepts/Stochastic/QuittingPunishmentCompletedCycle.lean')
+          text = path.read_text()
+          replacements = [
+              (
+                  '/-- A strict joint one-turn contraction has an actually absorbing phase. -/\ntheorem exists_cycle_phase_continueMass_lt_one',
+                  'omit [Fintype ι] [DecidableEq ι] in\n/-- A strict joint one-turn contraction has an actually absorbing phase. -/\ntheorem exists_cycle_phase_continueMass_lt_one',
+              ),
+              (
+                  '''    have hroot : updated time =\n        quittingSoloStationaryRoot who (hazard time) := by\n      apply eq_quittingSoloStationaryRoot_of_others_continue\n      intro other hother\n      unfold updated quittingRootSequenceUpdate\n      rw [Function.update_of_ne hother]\n      exact hiso time htime other hother\n''',
+                  '''    have hroot : updated time =\n        quittingSoloStationaryRoot who (hazard time) := by\n      have hbase : updated time =\n          quittingSoloStationaryRoot who (updated time who) :=\n        eq_quittingSoloStationaryRoot_of_others_continue (by\n          intro other hother\n          unfold updated quittingRootSequenceUpdate\n          rw [Function.update_of_ne hother]\n          exact hiso time htime other hother)\n      simpa [updated, quittingRootSequenceUpdate] using hbase\n''',
+              ),
+              (
+                  '''    have hmass := quittingSoloHazardMass_add (hazard time)\n    nlinarith\n''',
+                  '''    have hmass := quittingSoloHazardMass_add (hazard time)\n    have hquit : 1 - ((hazard time) false).toReal =\n        ((hazard time) true).toReal := by\n      linarith\n    rw [hquit]\n''',
+              ),
+              (
+                  '''    _ = (1 - quittingJointSurvivalWeight updated 0 cutoff) *\n          reward (quittingSingletonTerminal who) who := by\n      rw [sum_quittingJointSurvivalWeight_mul_one_sub_continueMass]\n''',
+                  '''    _ = (1 - quittingJointSurvivalWeight updated 0 cutoff) *\n          reward (quittingSingletonTerminal who) who := by\n      have htel :=\n        sum_quittingJointSurvivalWeight_mul_one_sub_continueMass updated 0 cutoff\n      simp only [zero_add] at htel\n      rw [htel]\n''',
+              ),
+              (
+                  '/-- The displayed value of an exact isolated absorbing cycle equals the\nisolated player\'s singleton reward at every phase. -/\ntheorem quittingCyclicValue_eq_soloReward_of_isolated',
+                  'omit [DecidableEq ι] in\n/-- The displayed value of an exact isolated absorbing cycle equals the\nisolated player\'s singleton reward at every phase. -/\ntheorem quittingCyclicValue_eq_soloReward_of_isolated',
+              ),
+              (
+                  '  simp only [zero_add, quittingCyclicOrbit_card] at htransport',
+                  '  simp only [zero_add, quittingCyclicOrbit_zero,\n    quittingCyclicOrbit_card] at htransport',
+              ),
+              (
+                  '''    rw [quittingTerminalPayoff_cyclicBehaviorProfile, ← hvalue]\n    simp\n''',
+                  '''    rw [quittingTerminalPayoff_cyclicBehaviorProfile, ← hvalue]\n    simpa using hε.le\n''',
+              ),
+          ]
+          for old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'expected one occurrence, found {count}: {old[:100]!r}')
+              text = text.replace(old, new, 1)
+          path.write_text(text)
+          PY
+      - name: Commit fixes
+        shell: bash
+        run: |
+          git config user.name "openai-agent"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add GameTheory/Concepts/Stochastic/QuittingPunishmentCompletedCycle.lean
+          git commit -m "Close isolated-prefix proof obligations"
+          git push origin HEAD:agent/punishment-completed-cycles
