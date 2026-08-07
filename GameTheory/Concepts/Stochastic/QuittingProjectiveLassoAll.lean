@@ -10,7 +10,7 @@ import GameTheory.Concepts.Stochastic.QuittingProjectiveAnalyticPacket
 import GameTheory.Concepts.Stochastic.QuittingProjectiveTargetMismatch
 import GameTheory.Concepts.Stochastic.QuittingProjectiveSingletonLCP
 import GameTheory.Concepts.Stochastic.QuittingProjectiveAnchoredSingletonLCP
-import GameTheory.Concepts.Stochastic.QuittingWeightedProjectiveLasso
+import GameTheory.Concepts.Stochastic.QuittingSignedProjectiveLasso
 import GameTheory.Concepts.Stochastic.QuittingProjectiveResolvedChart
 import GameTheory.Concepts.Stochastic.QuittingVanishingChargeRecurrenceNoGo
 import Math.FinitePivotOrbit
@@ -35,8 +35,8 @@ Public entry point for the proved projective layer:
 * finite output-or-repeated-label recurrence;
 * the no-go regression showing that repeated labels and compact recurrence do
   not imply a return small relative to vanishing charge; and
-* pointwise and rotation-uniform weighted charged-lasso correction and
-  compilation.
+* pointwise, absolute-weighted, and cancellation-aware signed projective-lasso
+  correction and compilation, uniformly over every cyclic rotation.
 
 The arbitrary-game producer is not contained here.  Before the three
 accepted-target construction ingredients, it requires an explicit target
@@ -47,6 +47,6 @@ the remaining ingredients are:
 1. construction and coverage of resolved quitting Bellman charts, including
    real/Puiseux arc lifting of feasible lexicographic tangents;
 2. semantic decoding of projective Farkas obstructions; and
-3. a rotation-uniform relative-return or recurrent-monodromy theorem producing
-   the weighted lasso seam.
+3. a rotation-uniform recurrent-monodromy theorem producing a signed lasso
+   seam small relative to real absorption.
 -/
