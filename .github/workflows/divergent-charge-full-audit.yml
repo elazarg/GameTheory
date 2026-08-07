@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   full:
@@ -32,3 +33,16 @@ jobs:
 
       - name: Audit repository and theorem axioms
         run: python3 scripts/audit_repository.py
+
+      - name: Report result on PR 41
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATUS: ${{ job.status }}
+        shell: bash
+        run: |
+          gh pr comment 41 --body "<!-- divergent-charge-full-audit -->
+          ### Full build and repository audit: **${STATUS}**
+
+          Commit: \`${GITHUB_SHA}\`
+          Run: \`${GITHUB_RUN_ID}\`"
