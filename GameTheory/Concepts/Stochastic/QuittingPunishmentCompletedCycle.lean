@@ -107,6 +107,7 @@ theorem isQuittingIsolatedRoot_of_not_cycleContracts
   change quittingStationaryFixedOpponentsContinueMass (cycle phase) who = 1
   exact hfactor
 
+omit [Fintype ι] [DecidableEq ι] in
 /-- A strict joint one-turn contraction has an actually absorbing phase. -/
 theorem exists_cycle_phase_continueMass_lt_one
     (cycle : Fin K → ι → PMF Bool)
@@ -176,15 +177,21 @@ theorem quittingRootSequenceHazardTerminalValue_truncated_eq_one_sub_survival_mu
     intro time htime
     have hroot : updated time =
         quittingSoloStationaryRoot who (hazard time) := by
-      apply eq_quittingSoloStationaryRoot_of_others_continue
-      intro other hother
-      unfold updated quittingRootSequenceUpdate
-      rw [Function.update_of_ne hother]
-      exact hiso time htime other hother
+      have hbase : updated time =
+          quittingSoloStationaryRoot who (updated time who) :=
+        eq_quittingSoloStationaryRoot_of_others_continue (by
+          intro other hother
+          unfold updated quittingRootSequenceUpdate
+          rw [Function.update_of_ne hother]
+          exact hiso time htime other hother)
+      simpa [updated, quittingRootSequenceUpdate] using hbase
     rw [hroot, quittingRootAbsorbingContribution_solo,
       quittingStationaryContinueMass_solo, quittingSoloReward_self]
     have hmass := quittingSoloHazardMass_add (hazard time)
-    nlinarith
+    have hquit : 1 - ((hazard time) false).toReal =
+        ((hazard time) true).toReal := by
+      linarith
+    rw [hquit]
   calc
     (∑ offset ∈ Finset.range cutoff,
         quittingJointSurvivalWeight updated 0 offset *
@@ -204,7 +211,10 @@ theorem quittingRootSequenceHazardTerminalValue_truncated_eq_one_sub_survival_mu
       rw [Finset.sum_mul]
     _ = (1 - quittingJointSurvivalWeight updated 0 cutoff) *
           reward (quittingSingletonTerminal who) who := by
-      rw [sum_quittingJointSurvivalWeight_mul_one_sub_continueMass]
+      have htel :=
+        sum_quittingJointSurvivalWeight_mul_one_sub_continueMass updated 0 cutoff
+      simp only [zero_add] at htel
+      rw [htel]
 
 /-! ## Cyclic joint survival and isolated values -/
 
@@ -245,6 +255,7 @@ theorem tendsto_zero_quittingJointSurvivalWeight_cyclicRootSequence
   funext fuel
   exact quittingJointSurvivalWeight_cyclicRootSequence cycle phase fuel
 
+omit [DecidableEq ι] in
 /-- The displayed value of an exact isolated absorbing cycle equals the
 isolated player's singleton reward at every phase. -/
 theorem quittingCyclicValue_eq_soloReward_of_isolated
@@ -284,7 +295,8 @@ theorem quittingCyclicValue_eq_soloReward_of_isolated
         (fun cyclePhase =>
           quittingStationaryContinueMass (cycle cyclePhase)) phase)
   dsimp only [pathValue] at htransport
-  simp only [zero_add, quittingCyclicOrbit_card] at htransport
+  simp only [zero_add, quittingCyclicOrbit_zero,
+    quittingCyclicOrbit_card] at htransport
   rw [hprod] at htransport
   have hfactor :
       (value phase who - reward (quittingSingletonTerminal who) who) *
@@ -568,7 +580,7 @@ theorem exists_isεAsymptoticNash_close_of_punishmentAdmissibleCycle
     intro who
     dsimp only [profile]
     rw [quittingTerminalPayoff_cyclicBehaviorProfile, ← hvalue]
-    simp
+    simpa using hε.le
   · obtain ⟨owner, howner⟩ := not_forall.mp hall
     have hownerIR : quittingPunishmentValue reward owner ≤
         reward (quittingSingletonTerminal owner) owner :=
