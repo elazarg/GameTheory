@@ -59,16 +59,16 @@ theorem isQuittingRotationUniformSignedResidual_iff_value_close
         |value phase who -
           quittingCyclicTerminalValue reward cycle phase who| ≤ error := by
   constructor
-  · intro hsigned
-    exact abs_quittingCyclicValue_sub_terminalValue_le_of_signedResidual
-      reward cycle value hsigned habsorption
+  · intro hsigned phase who
+    exact
+      (abs_quittingCyclicSignedResidual_le_iff_value_close
+        reward cycle value habsorption phase who).mp
+        (hsigned phase who)
   · intro hclose phase who
-    rw [←
-      quittingCyclicWeightedAbsorption_mul_value_sub_terminalValue_eq_signedResidual
-        reward cycle value phase who,
-      abs_mul, abs_of_pos habsorption]
-    simpa [mul_comm] using
-      (mul_le_mul_left habsorption).2 (hclose phase who)
+    exact
+      (abs_quittingCyclicSignedResidual_le_iff_value_close
+        reward cycle value habsorption phase who).mpr
+        (hclose phase who)
 
 /-- Finite cancellation-aware projective-lasso certificate.  Its strategic
 fields match the older weighted certificate; its seam field uses the exact
