@@ -87,6 +87,46 @@ not provide a strategic circulation or any other producer for a quitting
 game.  It is therefore an optimization/verification interface, not an
 extension of the circulation existence theorem.
 
+## Path-consistency fence for future flow synthesis
+
+The landed face-circulation theorem is already path-producing: its finite
+certificate is discretized to one forward orbit, reversed, and compactly
+selected into one chronological path.  The following warning does not weaken
+that theorem.  It constrains a possible future attempt to *produce* such data
+from a global occupation LP on a finite atlas of legal transitions.
+
+A global zero-defect circulation may cancel signed defects across recurrent
+strongly connected components that no single legal path can visit recurrently.
+For example, take two isolated vertices, each carrying only its own loop.  Give
+both loops charge `1`, and signed defects `+1` and `-1`.  The global circulation
+placing mass `1/2` on each loop has zero average defect and unit charge, but
+every legal infinite path stays on one loop and accumulates defect with one
+sign.  The global feasible point is not a bounded-discrepancy path.
+
+The corresponding single global dual can also fail: the vertex-potential terms
+vanish on both loops, so a strict inequality would require both
+`lambda >= c` and `-lambda >= c` for `c > 0`.
+
+The correct prospective positive alternative is therefore componentwise:
+choose one reachable recurrent SCC `C` and a nonnegative circulation supported
+on its internal edges satisfying
+
+```text
+B_C * mu = 0,
+sum_e mu_e * signedDefect_e = 0,
+sum_e mu_e * charge_e = 1.
+```
+
+Path-realizable recurrent occupations form a finite union of component
+circulation polytopes, not one global convex polytope.  If no reachable
+component works, the natural Farkas output is one separator per reachable
+recurrent component; one common global separator need not exist.
+
+Even inside one SCC, a circulation supported on several cycles is not yet one
+strategic word.  Connector paths, signed seam accumulation, and their charge
+cost must be controlled by a separate realization theorem.  Strong
+connectivity guarantees reachability, not negligible strategic error.
+
 ## Boundaries
 
 The circulation theorem does not solve arbitrary quitting games.  It neither
