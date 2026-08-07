@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Concepts.Stochastic.QuittingAnalyticGerm
 import GameTheory.Concepts.Stochastic.QuittingProjectiveAnalyticFirstEvent
 import GameTheory.Concepts.Stochastic.QuittingProjectiveAnalyticPacket
+import GameTheory.Concepts.Stochastic.QuittingProjectiveTargetMismatch
 import GameTheory.Concepts.Stochastic.QuittingProjectiveSingletonLCP
 import GameTheory.Concepts.Stochastic.QuittingProjectiveAnchoredSingletonLCP
 import GameTheory.Concepts.Stochastic.QuittingWeightedProjectiveLasso
