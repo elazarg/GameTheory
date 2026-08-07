@@ -36,6 +36,7 @@ noncomputable section
 namespace GameTheory
 
 open StochasticGame Filter Math.Probability Math.PMFProduct
+open QuittingSureSetOwnerRepair
 
 variable {K : ℕ} {ι : Type} [Fintype ι] [DecidableEq ι]
 
@@ -113,7 +114,7 @@ theorem exists_cycle_phase_continueMass_lt_one
       quittingStationaryContinueMass (cycle phase)) < 1) :
     ∃ phase : Fin K, quittingStationaryContinueMass (cycle phase) < 1 := by
   by_contra hnone
-  push_neg at hnone
+  push Not at hnone
   have hall : ∀ phase : Fin K,
       quittingStationaryContinueMass (cycle phase) = 1 := by
     intro phase
@@ -168,7 +169,7 @@ theorem quittingRootSequenceHazardTerminalValue_truncated_eq_one_sub_survival_mu
   rw [quittingRootSequenceUpdate_quittingTruncatedRoots,
     quittingRootSequenceTerminalValue_quittingTruncatedRoots_eq_sum]
   let updated := quittingRootSequenceUpdate roots who hazard
-  have hstage : ∀ time, time < cutoff,
+  have hstage : ∀ time, time < cutoff →
       quittingRootAbsorbingContribution reward (updated time) who =
         (1 - quittingStationaryContinueMass (updated time)) *
           reward (quittingSingletonTerminal who) who := by
@@ -217,7 +218,8 @@ theorem quittingJointSurvivalWeight_cyclicRootSequence
       quittingCyclicPrefixWeight
         (fun cyclePhase =>
           quittingStationaryContinueMass (cycle cyclePhase)) phase fuel := by
-  unfold quittingJointSurvivalWeight quittingCyclicPrefixWeight
+  rw [quittingJointSurvivalWeight_eq_prod]
+  unfold quittingCyclicPrefixWeight
   apply Finset.prod_congr rfl
   intro offset _
   simp [quittingCyclicRootSequence]
@@ -282,7 +284,8 @@ theorem quittingCyclicValue_eq_soloReward_of_isolated
         (fun cyclePhase =>
           quittingStationaryContinueMass (cycle cyclePhase)) phase)
   dsimp only [pathValue] at htransport
-  rw [quittingCyclicOrbit_zero, quittingCyclicOrbit_card, hprod] at htransport
+  simp only [zero_add, quittingCyclicOrbit_card] at htransport
+  rw [hprod] at htransport
   have hfactor :
       (value phase who - reward (quittingSingletonTerminal who) who) *
         (1 - ∏ cyclePhase : Fin K,
@@ -297,6 +300,7 @@ end GameTheory
 namespace GameTheory
 
 open StochasticGame Filter Math.Probability Math.PMFProduct
+open QuittingSureSetOwnerRepair
 
 variable {K : ℕ} {ι : Type} [Fintype ι] [DecidableEq ι]
 
@@ -368,7 +372,8 @@ theorem abs_quittingRootSequenceTerminalValue_quittingPhaseSwitchRoots_sub_plan_
           (quittingRootSequenceTerminalValue reward punish who 0 -
             quittingRootSequenceTerminalValue reward shiftedPlan who 0) by ring,
     abs_mul, abs_of_nonneg hsurvival0]
-  exact mul_le_mul_of_nonneg_left htail hsurvival0
+  simpa [mul_comm, mul_left_comm, mul_assoc] using
+    (mul_le_mul_of_nonneg_left htail hsurvival0)
 
 /-- Hazard-level suffix replacement.  If the unswitched plan already caps one
 hazard deviation, replacing its suffix changes the resulting gain by at most
@@ -559,7 +564,7 @@ theorem exists_isεAsymptoticNash_close_of_punishmentAdmissibleCycle
         (quittingTerminalPayoff reward) 0 profile :=
       isZeroAsymptoticNash_quittingCyclicBehaviorProfile_of_certificate_finite
         reward cycle value phase hpolicy hnash hall
-    refine ⟨profile, hzero.mono hε.le, ?_⟩
+    refine ⟨profile, hzero.mono (by simpa using hε.le), ?_⟩
     intro who
     dsimp only [profile]
     rw [quittingTerminalPayoff_cyclicBehaviorProfile, ← hvalue]
@@ -717,7 +722,8 @@ theorem exists_isεAsymptoticNash_close_of_punishmentAdmissibleCycle
               (quittingBehaviorLiveHazard reward deviation)
               hbound (abs_reward_le_quittingRewardBound reward) (by
                 dsimp only [plan]
-                simpa using hbase)
+                simpa only [quittingRootSequenceTerminalValue_cyclic_eq,
+                  quittingCyclicOrbit_zero] using hbase)
         have hreach : 4 * bound *
             quittingOpponentSurvivalWeight plan who 0 switch ≤
               4 * bound * survivalCap := by
