@@ -24,10 +24,11 @@ origin but no nonconstant real arc. Arc lifting must therefore be an explicit
 hypothesis or a separately proved theorem; it cannot be inferred from Farkas
 duality.
 
-`QuittingResolvedProjectiveChartInterface` records the exact contract. The
-field `lift_feasible` is the missing resolution/regularity theorem. Once an
-instance has been constructed, `physicalSuccessor_or_farkas` composes that
-field with the finite affine Farkas alternative.
+`QuittingResolvedProjectiveChartInterface` records the exact contract over an
+arbitrary ordered field. The field `lift_feasible` is the missing
+resolution/regularity theorem. Once an instance has been constructed,
+`physicalSuccessor_or_farkas` composes that field with the finite affine
+Farkas alternative.
 
 This module does **not** construct an instance from the quitting Bellman
 variety. An arbitrary-game producer must still prove chart coverage,
@@ -39,7 +40,8 @@ noncomputable section
 
 namespace GameTheory
 
-variable {Point Cell EqRow IneqRow : Type*} {n : ℕ}
+variable {𝕜 Point Cell EqRow IneqRow : Type*} {n : ℕ}
+  [Field 𝕜] [LinearOrder 𝕜] [IsStrictOrderedRing 𝕜]
   [Fintype Cell] [DecidableEq Cell]
   [Fintype EqRow] [DecidableEq EqRow]
   [Fintype IneqRow] [DecidableEq IneqRow]
@@ -48,7 +50,8 @@ variable {Point Cell EqRow IneqRow : Type*} {n : ℕ}
 The ambient tangent dimension and row types are fixed; varying chart dimensions
 may be padded by zero rows and columns. -/
 structure QuittingResolvedProjectiveChartInterface
-    (Point Cell EqRow IneqRow : Type*)
+    (𝕜 Point Cell EqRow IneqRow : Type*)
+    [Field 𝕜] [LinearOrder 𝕜] [IsStrictOrderedRing 𝕜]
     [Fintype Cell] [DecidableEq Cell]
     [Fintype EqRow] [DecidableEq EqRow]
     [Fintype IneqRow] [DecidableEq IneqRow]
@@ -58,11 +61,11 @@ structure QuittingResolvedProjectiveChartInterface
   /-- Strategic or geometric output points at which pivoting stops. -/
   isOutput : Point → Prop
   /-- Frozen equality matrix in a resolved chart. -/
-  A : Cell → EqRow → Fin n → ℝ
+  A : Cell → EqRow → Fin n → 𝕜
   /-- Frozen affine equality right-hand side. -/
-  b : Cell → EqRow → ℝ
+  b : Cell → EqRow → 𝕜
   /-- Frozen physical-orientation and slack inequalities. -/
-  G : Cell → IneqRow → Fin n → ℝ
+  G : Cell → IneqRow → Fin n → 𝕜
   /-- An actual successor relation on resolved projective points. -/
   IsPhysicalSuccessor : Point → Point → Prop
   /-- **Arc-lifting obligation.** Every feasible tangent at a non-output
@@ -70,7 +73,7 @@ structure QuittingResolvedProjectiveChartInterface
   lift_feasible : ∀ point,
     ¬isOutput point →
       Math.LinearAlgebra.IsAffineEqualityInequalityFeasible
-        (𝕜 := ℝ) (EqRow := EqRow) (IneqRow := IneqRow) (n := n)
+        (𝕜 := 𝕜) (EqRow := EqRow) (IneqRow := IneqRow) (n := n)
         (A (cell point)) (b (cell point)) (G (cell point)) →
       ∃ next, IsPhysicalSuccessor point next
 
@@ -78,10 +81,10 @@ structure QuittingResolvedProjectiveChartInterface
 only an algebraic obstruction; a semantic decoder is a separate theorem. -/
 def IsQuittingResolvedProjectiveFarkasObstruction
     (chart : QuittingResolvedProjectiveChartInterface
-      Point Cell EqRow IneqRow n)
-    (point : Point) (y : EqRow → ℝ) (lambda : IneqRow → ℝ) : Prop :=
+      𝕜 Point Cell EqRow IneqRow n)
+    (point : Point) (y : EqRow → 𝕜) (lambda : IneqRow → 𝕜) : Prop :=
   Math.LinearAlgebra.IsAffineEqualityFarkasCertificate
-    (𝕜 := ℝ) (EqRow := EqRow) (IneqRow := IneqRow) (n := n)
+    (𝕜 := 𝕜) (EqRow := EqRow) (IneqRow := IneqRow) (n := n)
     (chart.A (chart.cell point))
     (chart.b (chart.cell point))
     (chart.G (chart.cell point)) y lambda
@@ -92,13 +95,13 @@ an actual physical successor or carries a normalized/rescalable affine Farkas
 obstruction. -/
 theorem QuittingResolvedProjectiveChartInterface.physicalSuccessor_or_farkas
     (chart : QuittingResolvedProjectiveChartInterface
-      Point Cell EqRow IneqRow n)
+      𝕜 Point Cell EqRow IneqRow n)
     (point : Point) (hnotOutput : ¬chart.isOutput point) :
     (∃ next, chart.IsPhysicalSuccessor point next) ∨
-      ∃ y : EqRow → ℝ, ∃ lambda : IneqRow → ℝ,
+      ∃ y : EqRow → 𝕜, ∃ lambda : IneqRow → 𝕜,
         IsQuittingResolvedProjectiveFarkasObstruction chart point y lambda := by
   rcases Math.LinearAlgebra.affineEqualityInequality_feasible_or_farkas
-      (𝕜 := ℝ) (EqRow := EqRow) (IneqRow := IneqRow) (n := n)
+      (𝕜 := 𝕜) (EqRow := EqRow) (IneqRow := IneqRow) (n := n)
       (chart.A (chart.cell point))
       (chart.b (chart.cell point))
       (chart.G (chart.cell point)) with hfeasible | hobstruction
