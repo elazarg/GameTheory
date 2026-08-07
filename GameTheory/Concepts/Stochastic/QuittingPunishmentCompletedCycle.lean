@@ -107,7 +107,7 @@ theorem isQuittingIsolatedRoot_of_not_cycleContracts
   change quittingStationaryFixedOpponentsContinueMass (cycle phase) who = 1
   exact hfactor
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [DecidableEq ι] in
 /-- A strict joint one-turn contraction has an actually absorbing phase. -/
 theorem exists_cycle_phase_continueMass_lt_one
     (cycle : Fin K → ι → PMF Bool)
@@ -154,7 +154,7 @@ theorem eq_of_not_cycleContracts
 
 /-- Along a finite prefix where all opponents of `who` continue surely, every
 absorption pays the same singleton reward.  The truncated deviated payoff is
-therefore exactly `(1 - survival) * solo`.-/
+therefore exactly `(1 - survival) * solo`. -/
 theorem quittingRootSequenceHazardTerminalValue_truncated_eq_one_sub_survival_mul_of_isolated
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (roots : ℕ → ι → PMF Bool) (who : ι)
