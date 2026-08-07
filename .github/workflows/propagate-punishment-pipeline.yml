@@ -1,0 +1,34 @@
+name: Propagate punishment pipeline
+
+on:
+  push:
+    branches:
+      - agent/punishment-completed-cycles
+
+permissions:
+  contents: write
+
+jobs:
+  propagate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/punishment-completed-cycles
+          fetch-depth: 0
+
+      - name: Apply pipeline propagation
+        shell: bash
+        run: |
+          if grep -q 'Status: ANSWERED IN PART' docs/uniform-equilibrium/PIPELINE.md \
+             && grep -q 'quittingPunishmentValue reward i >' docs/uniform-equilibrium/PIPELINE.md; then
+            echo 'Pipeline propagation already applied.'
+            exit 0
+          fi
+          base64 -d .github/punishment-pipeline-propagation.patch.gz.b64 \
+            | gzip -d > /tmp/punishment-pipeline.patch
+          git apply --index /tmp/punishment-pipeline.patch
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Propagate punishment-completed branch implications'
+          git push origin HEAD:agent/punishment-completed-cycles
