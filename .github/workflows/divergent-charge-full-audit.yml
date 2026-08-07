@@ -1,9 +1,9 @@
 name: Validate divergent-charge full audit
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/divergent-charge-closing
+      - uniform-existence
 
 permissions:
   contents: read
