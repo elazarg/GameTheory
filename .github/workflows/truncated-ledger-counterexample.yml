@@ -1,9 +1,9 @@
 name: Truncated ledger-cap counterexample check
 
 on:
-  push:
+  pull_request:
     branches:
-      - codex/truncated-ledger-cap-counterexample
+      - uniform-existence
   workflow_dispatch:
 
 permissions:
