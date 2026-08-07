@@ -15,9 +15,9 @@ jobs:
         with:
           submodules: recursive
       - name: Bundle source
-        run: tar --exclude=.git --exclude=.lake -czf GameTheory-source.tar.gz .
+        run: tar --exclude=.git --exclude=.lake -czf "$RUNNER_TEMP/GameTheory-source.tar.gz" .
       - uses: actions/upload-artifact@v4
         with:
           name: GameTheory-source
-          path: GameTheory-source.tar.gz
+          path: ${{ runner.temp }}/GameTheory-source.tar.gz
           retention-days: 1
