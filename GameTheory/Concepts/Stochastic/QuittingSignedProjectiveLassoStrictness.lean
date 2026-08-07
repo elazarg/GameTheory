@@ -81,7 +81,6 @@ def value (phase : Fin 2) : Payoff Player :=
     quittingStationaryContinueMass (cycle phase) = (1 / 2 : ℝ) := by
   simp [quittingStationaryContinueMass, cycle, halfCoin,
     quittingAllContinueAction, pmfPi_apply, PMF.uniformOfFintype_apply]
-  norm_num
 
 /-- The displayed alternating displacement forces residual `3/2` times that
 displacement at each phase. -/
