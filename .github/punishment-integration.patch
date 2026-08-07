@@ -1,0 +1,195 @@
+diff --git a/GameTheory.lean b/GameTheory.lean
+index 8721941..0aea0c5 100644
+--- a/GameTheory.lean
++++ b/GameTheory.lean
+@@ -585,6 +585,7 @@ import GameTheory.Concepts.Stochastic.QuittingIsolatedPunishmentCeiling
+ import GameTheory.Concepts.Stochastic.QuittingPunishmentFloor
+ import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchProfile
+ import GameTheory.Concepts.Stochastic.QuittingPhaseSwitchDeviationCap
++import GameTheory.Concepts.Stochastic.QuittingCoupledPhaseSwitchCap
+ import GameTheory.Concepts.Stochastic.QuittingSurvivalWindowLanding
+ import GameTheory.Concepts.Stochastic.QuittingWeightedContinueMassBound
+ import GameTheory.Concepts.Stochastic.QuittingLedgerPunishClock
+@@ -614,6 +615,8 @@ import GameTheory.Concepts.Stochastic.QuittingDiagonalTargetTail
+ import Math.ChargedPathBudget
+ import Math.ChargedPathBudgetCounterexamples
+ import GameTheory.Concepts.Stochastic.QuittingCollisionRepairCharacterization
++import GameTheory.Concepts.Stochastic.QuittingInstantPunishment
++import GameTheory.Concepts.Stochastic.QuittingPunishmentCompletedCycle
+ import GameTheory.Concepts.Stochastic.QuittingQuitBonusSelfLoopBridge
+ 
+ -- Correlated equilibrium
+diff --git a/docs/uniform-equilibrium/FRONTIER.md b/docs/uniform-equilibrium/FRONTIER.md
+index f72e903..5ad7d0b 100644
+--- a/docs/uniform-equilibrium/FRONTIER.md
++++ b/docs/uniform-equilibrium/FRONTIER.md
+@@ -324,25 +324,40 @@ third *isolated-negative* branch — a genuine absorbing cycle in which some
+ coordinate is isolated with negative solo weight, so its mismatch is exactly
+ `-r_i({i})` and admissibility fails without absorption degenerating.
+ 
+-The trichotomy leaves **two holes**, and these are the open content:
+-
+-1. It is exhaustive only under the hypothesis that the weight admits an
+-   absorbing complementary cycle **at all**. Weights admitting none of any
+-   period are outside it entirely. **This hole is occupied, and the occupancy
+-   is machine-checked end to end (`L`)**: for every `ε ∈ (0, 2]`,
+-   `¬∃ terminal, IsQuittingCyclicContinuation (ftvRewardEps ε) terminal` —
+-   the trichotomy's own predicate — via the label lock in the real encoding
+-   (all periods, with the `ε = 0` rotation as the in-file boundary witness)
+-   and the cycle-level transport with entry-for-entry weight alignment
+-   (`PerturbedCyclicWeightNoExactCycle.lean`,
+-   `PerturbedCyclicWeightCycleExistenceHoleOccupied.lean`). The leading hard
+-   candidate provably lies *outside the trichotomy*; the cycle route's
+-   incompleteness is an internal theorem, and the published Theorem 2.1 is
+-   independent confirmation only.
+-2. The isolated-negative branch has **no sufficiency theorem**. One specific
+-   two-coordinate weight in it does have a uniform equilibrium payoff, by an
+-   explicit symmetric contracting perturbation, but that construction is stated
+-   not to generalize.
++The trichotomy's **isolated-negative compiler hole is closed**.  The passive
++periodic profile was the wrong object: it implicitly assigns continuation value
++`0` when the isolated player refuses to quit.  `QuittingInstantPunishment.lean`
++proves the exact replacement for a sure first-stage quitter,
++
++```text
++quittingPunishmentValue reward i ≤ r_i({i})
++```
++
++together with the outsider no-join inequalities.  The continuation may be a
++near-optimal constant punishment row because
++`quittingPunishmentValue_eq_stationaryPunishmentValue` identifies the full
++behavioral min-max with the infimum of stationary stopping caps.
++`QuittingPunishmentCompletedCycle.lean` then extends this to every exact
++absorbing cycle: each coordinate must either have deleted survival product
++below one, or have punishment value at most its singleton payoff.  Absorption
++allows at most one noncontracting coordinate; a long cyclic prefix followed by
++its punishment gives terminal approximate equilibria converging to the named
++cycle value.  The older nonnegative-solo admissibility predicate is a strict
++special case.
++
++One cycle-carrier hole remains.  The trichotomy is exhaustive only under the
++hypothesis that the weight admits an absorbing complementary cycle **at all**.
++Weights admitting none of any period are outside it entirely. **This hole is
++occupied, and the occupancy is machine-checked end to end (`L`)**: for every
++`ε ∈ (0, 2]`, `¬∃ terminal, IsQuittingCyclicContinuation (ftvRewardEps ε)
++terminal` — the trichotomy's own predicate — via the label lock in the real
++encoding (all periods, with the `ε = 0` rotation as the in-file boundary
++witness) and the cycle-level transport with entry-for-entry weight alignment
++(`PerturbedCyclicWeightNoExactCycle.lean`,
++`PerturbedCyclicWeightCycleExistenceHoleOccupied.lean`). The leading hard
++candidate provably lies *outside the trichotomy*; the cycle route's
++incompleteness is an internal theorem, and the published Theorem 2.1 is
++independent confirmation only.
+ 
+ No bound on the length is required: the formalized conditional quantifies over
+ the period with no bound, so earlier statements asking for `L(n)` were stronger
+@@ -460,22 +475,20 @@ class — zero-boundary exact-`D` chains — and its own claim file says so: it
+ "not an exhaustive grammar of the repair" and "can omit a valid stationary
+ repair". It is not exhaustive over equilibrium-profile **shapes**.
+ 
+-A concrete family falls through every split the program has. An *instant*
+-approximate equilibrium — Simon 2007's notion (his "instant equilibria", one of
+-the three clauses of his Theorem 3): some coordinate quits with certainty at
+-the first stage, and is punished to its min-max value plus `ε` if it reneges — is
+-excluded by the stationary ladder (which forbids history-dependence outright),
+-excluded by the absorbing-cycle carrier (whose admissibility discriminator is a
+-no-join condition on opponents, not a threat aimed at the quitter, so the
+-period-one solo-quitter row is verified only against a *passive* continuation),
+-and untouched by the plateau and optimized-debt splits, which are on-path
+-finite-chain algebra.
+-
+-The gap is structural, not a missing case, and it has now narrowed to a single
+-item: **no file in the quitting apparatus has a predicate for behaviour that
+-differs at stage two depending on stage-one history.** Stationary rows, cyclic
+-row-sequences, and zero-pinned finite chains have no off-path branch anywhere.
+-That trigger shape is the remaining obstruction.
++The formerly missing *instant* profile shape is now represented and
++characterized exactly.  `quittingOneStagePunishedProfile` plays a supplied row
++at stage zero and, after unexpected survival, restarts a punishment row;
++`QuittingCoupledPhaseSwitchCap.lean` keeps the survival coefficient attached to
++the negative continuation anchor instead of first replacing it by `0`.
++`QuittingInstantPunishment.lean` proves that a sure solo quitter `i` works at
++all accuracies iff its singleton payoff dominates its exact punishment value
++and every outsider weakly prefers not to join the exit.  Negative singleton
++payoffs are therefore no longer excluded merely because the passive
++continuation value is `0`.
++
++This closes a profile-grammar blind spot, but not the arbitrary-game producer.
++The optimized-debt and exact-cycle splits still do not prove that every game
++supplies either an instant certificate or a punishment-admissible exact cycle.
+ 
+ **The punishment target is no longer inexpressible (`L`).** An earlier sweep
+ found no min-max or punishment construction anywhere, and that verdict is now
+@@ -495,15 +508,19 @@ payoff of the quit-bonus table, margin `1/4` from horizon `4`. **The
+ feasible set landed** (`Feasible.lean`): finite-horizon and asymptotic,
+ composed with IR into the full necessary direction, with the non-convexity
+ fence (`(p−q)² = −1`) proving the classical folk hypothesis shape false for
+-this model at horizon one. What remains of the bill: the sufficiency
+-direction is not even conjectured in Lean, and its three named blockers are
+-punishment attainment below the ceiling (Q162), hull attainability (the
+-model lacks public randomization — and note the padding separation proves
+-padding *smuggles it in*: the XOR lottery attains a non-product point, so
+-padding strictly enlarges the feasible set, not merely the equilibrium set),
+-and feeding an all-errors family from the compiler into the landed selection
+-theorem. The capping theorem for the planned-survival stopping index arrived
+-with the phase-switch engine, its caps as named hypotheses.
++this model at horizon one. What remains of the general folk bill is narrower.  Single-player
++punishment attainment is settled in the form actually needed here: every
++positive tolerance has a constant product row whose stopping cap is within
++that tolerance of the exact behavioral punishment value.  Instant profiles
++and the unique isolated coordinate of an absorbing cycle now feed explicit
++all-errors families into target-identified terminal selection.  Still open are
++simultaneous/shared punishment requirements, hull attainability (the model
++lacks public randomization — and note the padding separation proves padding
++*smuggles it in*: the XOR lottery attains a non-product point, so padding
++strictly enlarges the feasible set, not merely the equilibrium set), and a
++generic producer showing that arbitrary games reach one of the accepted
++certificate classes. The capping theorem for the planned-survival stopping
++index remains a separate conditional engine.
+ 
+ **And the first capstone exists**: every two-player quitting game has a
+ uniform equilibrium payoff — `quittingGame_exists_uniformEquilibriumPayoff_twoPlayer`,
+diff --git a/docs/uniform-equilibrium/TOOLKIT.md b/docs/uniform-equilibrium/TOOLKIT.md
+index cf4f223..694be4e 100644
+--- a/docs/uniform-equilibrium/TOOLKIT.md
++++ b/docs/uniform-equilibrium/TOOLKIT.md
+@@ -36,6 +36,7 @@ without producing a witness.
+ | Uniform-payoff consequences | `UniformConsequences.lean` | Semantic waist dependencies, target equivalence under vanishing payoff gaps, potential shaping, tail-width and bounded-work characterizations, and transition discontinuity. |
+ | Adaptive-potential systems | `AdaptivePotentialSystemTools.lean` | The single `AdaptivePotentialSystemAt` structure together with retargeting, profile transport, ledger conversion, finite-time bounds, and owner-separated assembly. |
+ | Quitting terminal selection | `QuittingTerminalUniformPayoffSelection.lean` | The equivalence between terminal approximate Nash existence at every accuracy and uniform-payoff existence for finite quitting games. |
++| Instant and cycle punishment | `QuittingInstantPunishment.lean`, `QuittingPunishmentCompletedCycle.lean` | The exact instant-equilibrium criterion, coupled negative-anchor phase switching, and punishment completion of the isolated coordinate of an absorbing cycle. |
+ | Diagonal target tails | `QuittingDiagonalTargetTail.lean` | Exact-prefix plus player-indexed closed-tail compilation and its counterexample restriction. |
+ | Support-retaining paths | `QuittingSupportWitnessUniform.lean` | Infinite support-rational path and finite periodic-cycle compilers. |
+ | Essential APS | `QuittingEssentialAPSAll.lean` | The complete singleton-flow APS layer, including the adaptive-mesh capstone. |
+@@ -78,7 +79,7 @@ obligations.
+ | Support witness | At every tolerance, a support-wise approximately optimal root path, divergent absorption, and continuation-by-continuation individual rationality; alternatively a finite periodic witness with one absorbing phase | A terminal `3ε` profile and target-free uniform-payoff existence | Does not produce the paths or cycles for arbitrary games. |
+ | Essential APS | A compact convex functional unique-live component with finite-window face avoidance, terminal-freeness, and bounds | A coherent executable path, qualitative deleted-player survival, adaptive finite meshes, and a uniform payoff for every initial component value | Does not prove that an arbitrary game has a nonempty component; pointwise full jumps remain outside the adaptive logarithmic mesh. |
+ | Multi-owner face circulation | A bounded balanced circulation with a uniform positive phase-ratio floor and a payoff floor above the quitting punishment value | A chronological support-rational path selected by compact finite-prefix reversal, then a uniform payoff | Does not construct such a circulation for every game or identify the selected target with a named certificate vertex. |
+-| Finite admissible cycle | A realized admissible absorbing cyclic continuation block | A terminal equilibrium and uniform payoff | The cycle disjunct is not exhaustive for all quitting games. |
++| Punishment-completed finite cycle | An exact absorbing cyclic continuation block such that every coordinate either has contracting deleted survival or has punishment value at most its singleton payoff | Accuracy-indexed terminal equilibria converging to the named cycle value, hence that value is a uniform-equilibrium payoff | Does not produce an exact cycle; weights with no exact complementary cycle remain outside this carrier. |
+ | Two-player closure | An arbitrary finite two-player quitting game | Unconditional uniform-payoff existence | Does not extend the pair-repair classification to three or more players. |
+ 
+ The essential-APS and circulation families contain genuine producers relative
+diff --git a/scripts/AxiomAudit.lean b/scripts/AxiomAudit.lean
+index 5822464..626b995 100644
+--- a/scripts/AxiomAudit.lean
++++ b/scripts/AxiomAudit.lean
+@@ -73,8 +73,18 @@ import Math.SchauderFixedPoint
+ -- Terminal-to-uniform selection and the asymptotic-Nash bridge.
+ #print axioms GameTheory.StochasticGame.isUniformεEquilibrium_of_isεAsymptoticNash_of_upperApproximation
+ #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_terminalNash_all_errors
++#print axioms GameTheory.quittingGame_isUniformEquilibriumPayoff_of_terminalNash_all_errors_fixedTarget
++#print axioms GameTheory.quittingGame_isUniformEquilibriumPayoff_of_terminalNash_all_errors_approxTarget
+ #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_iff_terminalNash_all_errors
+ 
++-- Coupled phase switching, exact instant punishment, and punishment-completed
++-- absorbing cycles.
++#print axioms GameTheory.quittingRootSequenceHazardTerminalValue_quittingPhaseSwitchRoots_le_coupled
++#print axioms GameTheory.quittingInstantPunishmentWorks_iff
++#print axioms GameTheory.isUniformEquilibriumPayoff_soloReward_of_instantPunishment
++#print axioms GameTheory.isUniformEquilibriumPayoff_of_punishmentAdmissibleCycle
++#print axioms GameTheory.isUniformEquilibriumPayoff_terminal_of_punishmentAdmissibleBlock
++
+ -- The admissible-cycle compiler and the three-branch trichotomy.
+ #print axioms GameTheory.exists_uniformEquilibriumPayoff_of_admissible_quittingCyclicContinuationBlock
+ #print axioms GameTheory.exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle
