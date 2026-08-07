@@ -1,0 +1,27 @@
+name: Truncated ledger-cap counterexample check
+
+on:
+  push:
+    branches:
+      - codex/truncated-ledger-cap-counterexample
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: leanprover/lean-action@v1
+        with:
+          build: false
+          test: false
+          use-mathlib-cache: true
+      - name: Build counterexample
+        run: lake build GameTheory.Concepts.Stochastic.QuittingTruncatedLedgerCapCounterexample
+      - name: Check placeholders
+        run: python3 scripts/check_lean_placeholders.py
