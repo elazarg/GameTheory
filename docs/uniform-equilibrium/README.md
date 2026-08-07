@@ -41,6 +41,9 @@ program.
   a legal support atlas, reachable-SCC flow or componentwise separators,
   physical closing, and generic-to-all closure. It is a research architecture,
   not theorem or live priority truth.
+- [decisions/SystematicApproachDecision.md](decisions/SystematicApproachDecision.md)
+  records why the classification remains methodological rather than a generic
+  Lean or CI framework.
 - [EssentialAPS.md](EssentialAPS.md) states the exact algebraic/executable
   boundary of the essential-APS singleton-flow formalization.
 - [SupportWitnessCompiler.md](SupportWitnessCompiler.md) records the
