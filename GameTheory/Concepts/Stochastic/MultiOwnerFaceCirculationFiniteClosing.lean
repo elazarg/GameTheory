@@ -254,7 +254,6 @@ theorem exists_finiteForwardPacket_of_multiCirculation [Nonempty ι]
         intro time _
         dsimp only [roots]
         rw [quittingRootAbsorptionMass_rootOfHazard]
-        rfl
 
 /-- **Circulation regression for finite charged closing.**  The motivating
 multi-owner circulation producer compiles through the new finite packet
