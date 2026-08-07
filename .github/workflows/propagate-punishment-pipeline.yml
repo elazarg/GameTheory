@@ -20,6 +20,7 @@ jobs:
       - name: Apply pipeline propagation
         shell: bash
         run: |
+          # The guard makes subsequent pushes from this temporary workflow no-ops.
           if grep -q 'Status: ANSWERED IN PART' docs/uniform-equilibrium/PIPELINE.md \
              && grep -q 'quittingPunishmentValue reward i >' docs/uniform-equilibrium/PIPELINE.md; then
             echo 'Pipeline propagation already applied.'
