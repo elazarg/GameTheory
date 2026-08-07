@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   build:
@@ -21,12 +22,43 @@ jobs:
           build: false
           test: false
           use-mathlib-cache: true
-      - name: Build changed projective modules
+      - name: Build and collect diagnostics
         shell: bash
         run: |
+          set +e
+          : > /tmp/signed-monodromy.log
+          overall=0
           lake build \
             GameTheory.Concepts.Stochastic.QuittingProjectiveLassoWeighted \
             GameTheory.Concepts.Stochastic.QuittingSignedProjectiveLasso \
             GameTheory.Concepts.Stochastic.QuittingSupportWitnessUniform \
-            GameTheory.Concepts.Stochastic.QuittingProjectiveLassoAll
-          python3 scripts/check_lean_placeholders.py
+            GameTheory.Concepts.Stochastic.QuittingProjectiveLassoAll \
+            >> /tmp/signed-monodromy.log 2>&1 || overall=1
+          python3 scripts/check_lean_placeholders.py \
+            >> /tmp/signed-monodromy.log 2>&1 || overall=1
+          if [[ $overall -eq 0 ]]; then
+            echo success > /tmp/signed-monodromy-status
+          else
+            echo failure > /tmp/signed-monodromy-status
+          fi
+          exit 0
+      - name: Report result on PR 39
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          status=$(cat /tmp/signed-monodromy-status 2>/dev/null || echo failure)
+          {
+            echo '<!-- signed-monodromy-ci -->'
+            echo "### Lean validation: **${status}**"
+            echo
+            echo "Checked commit \`$(git rev-parse HEAD)\`."
+            echo
+            echo '```text'
+            tail -c 50000 /tmp/signed-monodromy.log 2>/dev/null || true
+            echo
+            echo '```'
+          } > /tmp/signed-monodromy-comment.md
+          gh pr comment 39 --body-file /tmp/signed-monodromy-comment.md
+          test "$status" = success
