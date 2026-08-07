@@ -32,3 +32,5 @@ jobs:
           fi
           git commit -m "Add punishment-completed cycle compiler"
           git push origin HEAD:agent/punishment-completed-cycles
+
+# Lean CI trigger after generated source landed.
