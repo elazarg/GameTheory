@@ -25,28 +25,18 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Apply propagation and remove bootstrap files
+      - name: Apply documentation propagation
         shell: bash
         run: |
+          if [ ! -f .github/propagate_punishment.py ]; then
+            echo 'Propagation payload already consumed.'
+            exit 0
+          fi
+
           python3 .github/propagate_punishment.py
-
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path('.github/workflows/ci.yml')
-          text = path.read_text()
-          text = text.replace('permissions:\n  contents: write\n',
-                              'permissions:\n  contents: read\n', 1)
-          start = text.index('  propagate-punishment-pipeline:\n')
-          end = text.index('  fast-pr:\n', start)
-          path.write_text(text[:start] + text[end:])
-          PY
-
           git rm .github/propagate_punishment.py \
-            .github/punishment-pipeline-propagation.patch.gz.b64 \
-            .github/workflows/propagate-punishment-pipeline.yml
-          git add .github/workflows/ci.yml \
-            docs/uniform-equilibrium/FRONTIER.md \
+            .github/punishment-pipeline-propagation.patch.gz.b64
+          git add docs/uniform-equilibrium/FRONTIER.md \
             docs/uniform-equilibrium/TOOLKIT.md \
             docs/uniform-equilibrium/PIPELINE.md \
             docs/uniform-equilibrium/PIPELINE-Archive.md
