@@ -28,15 +28,7 @@ jobs:
       - name: Apply propagation and remove bootstrap files
         shell: bash
         run: |
-          if grep -q 'Status: ANSWERED IN PART' docs/uniform-equilibrium/PIPELINE.md \
-             && grep -q 'quittingPunishmentValue reward i >' docs/uniform-equilibrium/PIPELINE.md; then
-            echo 'Pipeline propagation already applied.'
-            exit 0
-          fi
-
-          base64 -d .github/punishment-pipeline-propagation.patch.gz.b64 \
-            | gzip -d > /tmp/punishment-pipeline.patch
-          git apply --index /tmp/punishment-pipeline.patch
+          python3 .github/propagate_punishment.py
 
           python3 - <<'PY'
           from pathlib import Path
@@ -50,9 +42,14 @@ jobs:
           path.write_text(text[:start] + text[end:])
           PY
 
-          git rm .github/punishment-pipeline-propagation.patch.gz.b64 \
+          git rm .github/propagate_punishment.py \
+            .github/punishment-pipeline-propagation.patch.gz.b64 \
             .github/workflows/propagate-punishment-pipeline.yml
-          git add .github/workflows/ci.yml
+          git add .github/workflows/ci.yml \
+            docs/uniform-equilibrium/FRONTIER.md \
+            docs/uniform-equilibrium/TOOLKIT.md \
+            docs/uniform-equilibrium/PIPELINE.md \
+            docs/uniform-equilibrium/PIPELINE-Archive.md
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Propagate punishment-completed branch implications'
