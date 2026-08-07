@@ -84,7 +84,6 @@ theorem quittingCyclicWeightedAbsorption_reversedForwardCycle
         ∏ phase : Fin (n + 1), factor phase := by
     simpa using (Equiv.prod_comp Fin.revPerm factor)
   rw [hrev, Finset.prod_range]
-  rfl
 
 omit [DecidableEq ι] in
 /-- Away from the last phase, rotating forward once and then reversing lowers
