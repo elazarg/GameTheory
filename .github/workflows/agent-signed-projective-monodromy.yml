@@ -1,0 +1,32 @@
+name: Validate signed projective monodromy
+
+on:
+  push:
+    branches:
+      - agent/signed-projective-monodromy
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: leanprover/lean-action@v1
+        with:
+          build: false
+          test: false
+          use-mathlib-cache: true
+      - name: Build changed projective modules
+        shell: bash
+        run: |
+          lake build \
+            GameTheory.Concepts.Stochastic.QuittingProjectiveLassoWeighted \
+            GameTheory.Concepts.Stochastic.QuittingSignedProjectiveLasso \
+            GameTheory.Concepts.Stochastic.QuittingSupportWitnessUniform \
+            GameTheory.Concepts.Stochastic.QuittingProjectiveLassoAll
+          python3 scripts/check_lean_placeholders.py
