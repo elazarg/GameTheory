@@ -73,9 +73,9 @@ theorem exists_close_pair_with_large_prefix_gap_of_compact
   have hlarge : ∀ᶠ rank : ℕ in atTop,
       clock (subsequence firstRank) + gap ≤
         clock (subsequence rank) := by
-    have h := hclockSubsequence
-      (eventually_ge_atTop (clock (subsequence firstRank) + gap))
-    simpa only [Function.comp_apply] using h
+    simpa only [Function.comp_apply] using
+      hclockSubsequence.eventually
+        (eventually_ge_atTop (clock (subsequence firstRank) + gap))
   have hlater : ∀ᶠ rank : ℕ in atTop, firstRank + 1 ≤ rank :=
     eventually_ge_atTop (firstRank + 1)
   obtain ⟨secondRank, hsecondClose, hsecondLarge, hsecondLater⟩ :=
