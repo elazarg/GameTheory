@@ -155,7 +155,7 @@ variable {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
 
 /-- The discount-complement power tends to zero on the matching branch. -/
 theorem discountComplement_tendsto_zero
-    (data : QuittingGermMatchingLeadingData reward g) :
+    (_data : QuittingGermMatchingLeadingData reward g) :
     Tendsto (fun t : ℝ => t ^ g.ramification)
       (𝓝[>] (0 : ℝ)) (𝓝 0) := by
   have hfull :
@@ -229,7 +229,8 @@ theorem excludedContinueProduct_tendsto_one
         (𝓝[>] (0 : ℝ))
         (𝓝 (∏ _other ∈ Finset.univ.erase owner, (1 : ℝ))) :=
     tendsto_finsetProd (Finset.univ.erase owner)
-      (fun other _ => hone.sub (data.quitRate_tendsto_zero other))
+      (fun other _ => by
+        simpa using hone.sub (data.quitRate_tendsto_zero other))
   simpa using hprod
 
 /-- A singleton quitting event has leading coefficient `a_owner`. -/
@@ -240,9 +241,17 @@ theorem singletonProbability_div_discount_tendsto
         t ^ g.ramification)
       (𝓝[>] (0 : ℝ))
       (𝓝 (data.leading owner)) := by
-  have h := (data.quitRate_div_discount_tendsto owner).mul
+  have hmul := (data.quitRate_div_discount_tendsto owner).mul
     (data.excludedContinueProduct_tendsto_one owner)
-  refine h.congr' ?_
+  have hmul' :
+      Tendsto
+        (fun t : ℝ =>
+          (quittingGermQuitRate g owner t / t ^ g.ramification) *
+            ∏ other ∈ Finset.univ.erase owner,
+              (1 - quittingGermQuitRate g other t))
+        (𝓝[>] (0 : ℝ)) (𝓝 (data.leading owner)) := by
+    simpa using hmul
+  refine hmul'.congr' ?_
   filter_upwards [self_mem_nhdsWithin] with t ht
   change 0 < t at ht
   have htne : t ^ g.ramification ≠ 0 :=
@@ -263,7 +272,15 @@ theorem firstEventDenominator_div_discount_tendsto
   have hfactor := hone.sub data.discountComplement_tendsto_zero
   have hraw := hone.add
     (hfactor.mul data.absorption_div_discount_tendsto)
-  refine hraw.congr' ?_
+  have hraw' :
+      Tendsto
+        (fun t : ℝ =>
+          1 + (1 - t ^ g.ramification) *
+            (quittingGermAbsorption g t / t ^ g.ramification))
+        (𝓝[>] (0 : ℝ))
+        (𝓝 (1 + ∑ owner, data.leading owner)) := by
+    simpa using hraw
+  refine hraw'.congr' ?_
   filter_upwards [self_mem_nhdsWithin] with t ht
   change 0 < t at ht
   have htne : t ^ g.ramification ≠ 0 :=
@@ -303,14 +320,22 @@ theorem singletonFirstEventWeight_tendsto
       (𝓝[>] (0 : ℝ)) (𝓝 1) := tendsto_const_nhds
   have hnum := (hone.sub data.discountComplement_tendsto_zero).mul
     (data.singletonProbability_div_discount_tendsto owner)
+  have hnum' :
+      Tendsto
+        (fun t : ℝ =>
+          (1 - t ^ g.ramification) *
+            (quittingGermSingletonProbability g owner t /
+              t ^ g.ramification))
+        (𝓝[>] (0 : ℝ)) (𝓝 (data.leading owner)) := by
+    simpa using hnum
   have hinv := data.firstEventDenominator_div_discount_tendsto.inv₀
     hdenomPos.ne'
-  have h := hnum.mul hinv
+  have h := hnum'.mul hinv
   have hlimit :
-      (1 - 0) * data.leading owner *
+      data.leading owner *
           (1 + ∑ other, data.leading other)⁻¹ =
         data.leading owner / (1 + ∑ other, data.leading other) := by
-    rw [one_sub_zero, one_mul, div_eq_mul_inv]
+    rw [div_eq_mul_inv]
   rw [hlimit] at h
   change Tendsto
     (fun t : ℝ =>
@@ -340,15 +365,23 @@ theorem realAbsorptionFirstEventWeight_tendsto
       (𝓝[>] (0 : ℝ)) (𝓝 1) := tendsto_const_nhds
   have hnum := (hone.sub data.discountComplement_tendsto_zero).mul
     data.absorption_div_discount_tendsto
+  have hnum' :
+      Tendsto
+        (fun t : ℝ =>
+          (1 - t ^ g.ramification) *
+            (quittingGermAbsorption g t / t ^ g.ramification))
+        (𝓝[>] (0 : ℝ))
+        (𝓝 (∑ owner, data.leading owner)) := by
+    simpa using hnum
   have hinv := data.firstEventDenominator_div_discount_tendsto.inv₀
     hdenomPos.ne'
-  have h := hnum.mul hinv
+  have h := hnum'.mul hinv
   have hlimit :
-      (1 - 0) * (∑ owner, data.leading owner) *
+      (∑ owner, data.leading owner) *
           (1 + ∑ owner, data.leading owner)⁻¹ =
         (∑ owner, data.leading owner) /
           (1 + ∑ owner, data.leading owner) := by
-    rw [one_sub_zero, one_mul, div_eq_mul_inv]
+    rw [div_eq_mul_inv]
   rw [hlimit] at h
   change Tendsto
     (fun t : ℝ =>
