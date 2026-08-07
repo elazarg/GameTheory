@@ -11,16 +11,10 @@ program.
    hinge, known boundaries, alternatives, and falsifiers.
 3. [TOOLKIT.md](TOOLKIT.md) — the production tool collection organized by
    inputs, outputs, role, canonical import, and nonclaim.
-4. [SystematicApproach.md](SystematicApproach.md) — stable guidance for
-   classifying finite-quitting producer, compiler, diagnostic, and separator
-   work; then [ConjectureDirectedSpine.md](ConjectureDirectedSpine.md) for the
-   proposed path-consistent dependency spine joining subgame induction,
-   support enlargement, recurrent-component flow, physical realization, and
-   closure.
-5. When the local ignored `ideas/` corpus is present, follow optional links to
+4. When the local ignored `ideas/` corpus is present, follow optional links to
    its exact claim cards or attributed literature records. The tracked
    `FRONTIER.md` and route pages remain sufficient for a clean-clone handoff.
-6. Read [Program.md](Program.md) when changing the research/formalization
+5. Read [Program.md](Program.md) when changing the research/formalization
    method, the [research atlas](manuscript/UniformEquilibriumFrontierManuscript.tex)
    for the detailed theorem/idea map, and
    [intuition.tex](manuscript/intuition.tex) for a shorter conceptual account of
@@ -33,33 +27,28 @@ program.
 - [FRONTIER.md](FRONTIER.md) is the curated mathematical state of knowledge.
 - [TOOLKIT.md](TOOLKIT.md) is the stable map of production interfaces and
   their semantic roles.
-- [SystematicApproach.md](SystematicApproach.md) records the documentation-level
-  route, role, and claim distinctions. These are research guidance, not
-  proof-relevant Lean provenance.
-- [ConjectureDirectedSpine.md](ConjectureDirectedSpine.md) records the proposed
-  dependency order from principal-support preprocessing through glue-or-enlarge,
-  a legal support atlas, reachable-SCC flow or componentwise separators,
-  physical closing, and generic-to-all closure. It is a research architecture,
-  not theorem or live priority truth.
-- [decisions/SystematicApproachDecision.md](decisions/SystematicApproachDecision.md)
-  records why the classification remains methodological rather than a generic
-  Lean or CI framework.
 - [EssentialAPS.md](EssentialAPS.md) states the exact algebraic/executable
   boundary of the essential-APS singleton-flow formalization.
 - [SupportWitnessCompiler.md](SupportWitnessCompiler.md) records the
   deterministic support-witness path and periodic-cycle compiler, including
   its remaining producer obligation.
+- [SubgameGlueOrEnlarge.md](SubgameGlueOrEnlarge.md) records the focused
+  quantitative adapter proposed between proper-subgame solutions and support
+  enlargement. It is a mathematical design target, not a live priority list or
+  a proved producer.
 - [ProjectiveLassoProducer.md](ProjectiveLassoProducer.md) records the exact
   analytic-packet, resolved-chart, and weighted-lasso dependency boundary.
 - [CirculationUniformPayoff.md](CirculationUniformPayoff.md) records the
   conditional multi-owner face-circulation producer class, its compact path
-  selection, and its concrete quitting-game corollaries.
+  selection, its concrete quitting-game corollaries, and the recurrent-SCC
+  path-consistency fence on future occupation-level certificate production.
 - [PayoffPerturbationClosure.md](PayoffPerturbationClosure.md) records
   fixed-skeleton reward stability and target-free existence closure.
 - [BoundaryHolonomyTangent.md](BoundaryHolonomyTangent.md) records the
   residual, tangent, and projected-coordinate layer for finite holonomy.
 - [UniformConsequences.md](UniformConsequences.md) records the compact
-  invariance, reverse-characterization, and transition-discontinuity layer.
+  invariance, reverse-characterization, fixed terminal-gap, and
+  transition-discontinuity layer.
 - [methods/MathResearchMethod.md](methods/MathResearchMethod.md)
 - [methods/LeanFormalizationMethod.md](methods/LeanFormalizationMethod.md)
 - [methods/ParallelResearchMethod.md](methods/ParallelResearchMethod.md)
