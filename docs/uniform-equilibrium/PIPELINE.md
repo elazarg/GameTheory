@@ -5,8 +5,9 @@ documentation is current through `5ea42091`. The last complete repository
 audit remains the 2026-08-03 pair `14d75ff` / `cd1db11`. **This file revised
 2026-08-07** — discrete hazard stopping, phase-occupation duality,
 target-anchored closure, face-circulation compilation, uniform-payoff
-diagnostics, adaptive essential-APS meshes, and the boundary-holonomy tangent
-layer are incorporated and reflected below.
+diagnostics, adaptive essential-APS meshes, boundary-holonomy tangent
+coordinates, and punishment-completed instant/cyclic profiles are incorporated
+and reflected below.
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
@@ -99,13 +100,23 @@ blockers hidden in the P0 mathematical status.
   tolerance remains the producer obligation.  The abstract rank-one crossing
   theorem is retained separately and supplies no game-specific process or
   variation bound.
+- **Instant and punishment-completed cycles (this branch, conditional
+  compiler).**  Coupled phase switching preserves a shared negative continuation
+  anchor.  A sure solo quitter is enforceable iff its singleton payoff dominates
+  its exact behavioral punishment value and outsiders do not gain by joining.
+  An exact absorbing cycle compiles its named phase value whenever each
+  coordinate either contracts in deleted survival or satisfies the same
+  punishment inequality.  This resolves the instant-profile audit and the
+  punishable isolated-negative subbranch, but not weights with no exact cycle or
+  an isolated coordinate whose punishment value exceeds its singleton payoff.
 
-The resulting priority delta is precise: test density of the positively solved
-payoff-table strata first; independently seek a support-rational path/cycle
-producer; and, on the APS lane, determine when an arbitrary game supplies a
-nonempty compact terminal-free unique-live component with the required face
-avoidance. None of these conditional compilers receives generic existence
-credit before its producer is proved.
+The resulting priority delta is precise: isolate the strict
+`quittingPunishmentValue > singleton` residue inside the isolated-negative
+branch; test density of the positively solved payoff-table strata; independently
+seek a support-rational path/cycle producer; and, on the APS lane, determine
+when an arbitrary game supplies a nonempty compact terminal-free unique-live
+component with the required face avoidance. None of these conditional compilers
+receives generic existence credit before its producer is proved.
 
 ## How to maintain this file
 
@@ -139,13 +150,11 @@ superseded/resolved decision section in
 
 **READY / PLANNED / DESIGN** — pick up now
 - `MATH-P0-5` — is the exact-cycle disjunct complete, or do ε-cycles diverge?
-- `MATH-P0-7` — a sufficiency theorem for the isolated-negative branch
 - `MATH-P0-8` — the relaxed compiler: formalize Proposition 3
 - `MATH-P0-10` — the drift device: uniform threats against moving states
 - `MATH-P1-1` — re-derive Q148's encoding into the isolated-negative branch
 - `MATH-P1-2` — test affine hazard domination on the exact-D families
 - `MATH-P1-4` — formalize the weight whose gap survives faithful unpinning
-- `MATH-P1-5` — audit the decomposition for instant approximate equilibria
 - `NEG-P0-2` — the orbit-side counterexample criterion
 - `LEAN-F0-1` — formalize the state-dependent-to-independent action-set padding
   reduction
@@ -199,6 +208,8 @@ superseded/resolved decision section in
   current
 
 **PARTIAL / BLOCKED / PENDING / ANSWERED IN PART**
+- `MATH-P0-7` — punishment-completed isolated-negative branch (`ANSWERED IN
+  PART`)
 - `MATH-P0-4` — map AGKRS Theorem 3.4 clause by clause against the internal
   trichotomy
 - `MATH-P0-9` — the lock/unlock dichotomy for orbit variation (`ANSWERED IN
@@ -219,6 +230,8 @@ superseded/resolved decision section in
   preprocessor
 
 **DONE / SOLVED / RESOLVED**
+- `MATH-P1-5` — instant approximate equilibria characterized exactly — see
+  [archive](PIPELINE-Archive.md)
 - `LEAN-P0-1` — landed debt-transport, cycle-mismatch, FTV, and germ-bridge
   results this cycle — see [archive](PIPELINE-Archive.md)
 - `LEAN-P0-3` — pin the matching scaling case in the germ bridge — see
@@ -519,29 +532,6 @@ proof strategy that cannot in principle produce them is dead on arrival.
 **Acceptance.** The criterion stated in repository vocabulary, and a decision on
 whether the search lane should run on it instead of, or alongside, the
 behavioural-gap criterion.
-
-### `MATH-P1-5` — audit the decomposition for instant approximate equilibria
-
-- **Status:** READY
-- **Lane:** P1
-- **Depends:** the stationary repair ladder; the absorbing-cycle carrier; the
-  positive-plateau split.
-- **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §3
-
-**Objective.** Decide where Simon's third equilibrium family lands in this
-program's splits, or record that it does not.
-
-**State.** Simon's trichotomy is stationary / **instant** / orbit. An *instant*
-approximate equilibrium is a first-stage profile with some coordinate quitting
-with certainty, followed by punishing that coordinate down to its min-max value
-plus ε if it failed to quit — a `2ε`-equilibrium. It is neither stationary nor
-periodic-cycling here: a period-one cycle does not capture the off-path
-punishment clause, and the frontier's falsifier list does not name the family.
-It arises exactly when one-stage ε-equilibria have quitting mass tending to one
-— the `q → 1` boundary where compactness arguments degenerate.
-
-**Acceptance.** Either a demonstration that an existing branch absorbs it, or
-its addition as a named case.
 
 ### `LEAN-P0-7` — two-clock punishment for the deviation-cap constructor
 
@@ -1695,26 +1685,41 @@ development.
 
 ### `MATH-P0-7` — a sufficiency theorem for the isolated-negative branch
 
-- **Status:** READY
+- **Status:** ANSWERED IN PART
 - **Lane:** P0
-- **Depends:** the trichotomy.
+- **Depends:** the trichotomy; `QuittingStationaryMinMax`;
+  `QuittingInstantPunishment`; `QuittingPunishmentCompletedCycle`.
 - **Record:** [exact-vs-relaxed]
 
 **Objective.** Show that a weight in the isolated-negative branch has a uniform
 equilibrium payoff, or exhibit one that does not.
 
-**State.** `READY`. This is the trichotomy's other hole and the sharper of the
-two: the branch is reachable — the refutation witness lies in it — but carries
-no sufficiency theorem, so a weight landing there gets nothing. One specific
-two-coordinate weight is repaired by a symmetric contracting perturbation that
-keeps both opponents' continuation mass strictly below one, avoiding the `ε = 0`
-degeneracy of the exact isolated configuration; that construction is explicitly
-stated not to generalize.
+**State.** `ANSWERED IN PART`, 2026-08-07.  The branch now has an exact
+compiler discriminator.  For an isolated coordinate `i`, the passive periodic
+mismatch `[-r_i({i})]₊` is replaced by an off-path punishment.  If
 
-**Acceptance.** A general theorem, or a counterexample. Since the branch's
-mismatch is exactly `-r_i({i})` at the isolated coordinate, the perturbation
-must trade that fixed mismatch against the continuation mass it frees, and any
-general argument has to control that trade rather than compute it on one table.
+```text
+quittingPunishmentValue reward i ≤ r_i({i}),
+```
+
+then a near-optimal constant punishment row, attached after a long cyclic
+prefix, gives terminal approximate equilibria converging to the named cyclic
+value; that value is therefore a uniform-equilibrium payoff.  The instant
+period-one shape is characterized iff by the same punishment inequality plus
+the outsider no-join inequalities.  The old nonnegative-solo admissibility
+compiler is recovered as a corollary.
+
+The strict reverse inequality remains.  There the named isolated cyclic value
+fails individual rationality, and the instant characterization proves that no
+sure-first-stage-quitter punishment can implement it.  This does not refute
+uniform equilibrium existence: another cycle, another target, or a genuinely
+nonperiodic profile may still work.
+
+**Acceptance.** Resolve the residual `quittingPunishmentValue reward i >
+r_i({i})` subbranch by producing another equilibrium carrier, proving it cannot
+occur in the relevant selected cycle, or certifying a positive all-behavior
+exploitability gap.  The punishment-completed theorem is the complete answer
+for the complementary subbranch.
 
 ### `MATH-P0-8` — the relaxed compiler: formalize Proposition 3
 

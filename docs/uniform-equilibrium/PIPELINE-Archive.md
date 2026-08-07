@@ -289,6 +289,37 @@ must **fail at `ε = 0`** — a cycle exists there — and the point of failure 
 be the predecessor-value strict inequality, which is where `ε` enters. The
 published theorem remains as independent confirmation only.
 
+### `MATH-P1-5` — audit the decomposition for instant approximate equilibria
+
+- **Status:** DONE (2026-08-07)
+- **Lane:** P1
+- **Depends:** the stationary repair ladder; the absorbing-cycle carrier; the
+  positive-plateau split; `QuittingStationaryMinMax`.
+- **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §3
+
+**Objective.** Decide where Simon's third equilibrium family lands in this
+program's splits, or record that it does not.
+
+**State.** `DONE`.  The family was genuinely absent from the old stationary and
+periodic grammars, but no new general behavior datatype was needed.  In a
+quitting game, unexpected survival after a sure stage-zero exit is the public
+trigger; `quittingOneStagePunishedProfile` already represents it.
+`QuittingCoupledPhaseSwitchCap.lean` supplies the missing algebra by retaining
+the survival coefficient on a shared continuation anchor instead of first
+replacing the tail by passive value `0`.
+
+`QuittingInstantPunishment.lean` gives the exact characterization.  A sure solo
+quitter `i` admits terminal approximate equilibria at every accuracy iff its
+singleton payoff dominates `quittingPunishmentValue reward i` and every
+outsider weakly prefers not to join.  The punishment value is the full
+behavioral min-max but equals the infimum of constant-row stopping caps, so a
+stationary near-minimizer supplies every requested error.  The resulting
+singleton terminal vector is a named uniform-equilibrium payoff.
+
+**Acceptance.** Fulfilled: the instant family is named, represented, proved
+sufficient and necessary, connected to the exact punishment value, and fed
+through fixed-target terminal-to-uniform selection.
+
 ### `MATH-P0-11` — the minimal open family: the four-player cyclic phase diagram
 
 - **Status:** **SOLVED (followup answer); stress-point cashout LANDED.** The

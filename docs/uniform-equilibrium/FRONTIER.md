@@ -324,40 +324,51 @@ third *isolated-negative* branch — a genuine absorbing cycle in which some
 coordinate is isolated with negative solo weight, so its mismatch is exactly
 `-r_i({i})` and admissibility fails without absorption degenerating.
 
-The trichotomy's **isolated-negative compiler hole is closed**.  The passive
-periodic profile was the wrong object: it implicitly assigns continuation value
-`0` when the isolated player refuses to quit.  `QuittingInstantPunishment.lean`
-proves the exact replacement for a sure first-stage quitter,
+The isolated-negative compiler now has an **exact punishment
+discriminator (`M+L`)**.  The passive periodic profile was the wrong object: it
+implicitly assigns continuation value `0` when the isolated player refuses to
+quit.  `QuittingInstantPunishment.lean` proves that a sure first-stage quitter
+`i` can instead be enforced exactly when
 
 ```text
 quittingPunishmentValue reward i ≤ r_i({i})
 ```
 
-together with the outsider no-join inequalities.  The continuation may be a
-near-optimal constant punishment row because
+and every outsider weakly prefers not to join the exit.  The continuation may
+be a near-optimal constant punishment row because
 `quittingPunishmentValue_eq_stationaryPunishmentValue` identifies the full
 behavioral min-max with the infimum of stationary stopping caps.
-`QuittingPunishmentCompletedCycle.lean` then extends this to every exact
-absorbing cycle: each coordinate must either have deleted survival product
-below one, or have punishment value at most its singleton payoff.  Absorption
-allows at most one noncontracting coordinate; a long cyclic prefix followed by
-its punishment gives terminal approximate equilibria converging to the named
-cycle value.  The older nonnegative-solo admissibility predicate is a strict
-special case.
+`QuittingPunishmentCompletedCycle.lean` extends the same correction to an exact
+absorbing cycle: every coordinate must either have deleted survival product
+below one, or satisfy the displayed punishment inequality.  Absorption allows
+at most one noncontracting coordinate; a long cyclic prefix followed by its
+punishment gives terminal approximate equilibria converging to the named cycle
+value.  The older nonnegative-solo admissibility predicate is a strict special
+case.
 
-One cycle-carrier hole remains.  The trichotomy is exhaustive only under the
-hypothesis that the weight admits an absorbing complementary cycle **at all**.
-Weights admitting none of any period are outside it entirely. **This hole is
-occupied, and the occupancy is machine-checked end to end (`L`)**: for every
-`ε ∈ (0, 2]`, `¬∃ terminal, IsQuittingCyclicContinuation (ftvRewardEps ε)
-terminal` — the trichotomy's own predicate — via the label lock in the real
-encoding (all periods, with the `ε = 0` rotation as the in-file boundary
-witness) and the cycle-level transport with entry-for-entry weight alignment
+This splits rather than erases the isolated-negative branch.  If the isolated
+coordinate has punishment value at most its negative singleton payoff, the
+named cycle value is now compiled.  If its punishment value is strictly larger,
+that named value violates individual rationality and the exact instant theorem
+rules out this sure-quitter enforcement shape; a different equilibrium carrier
+or a counterexample is still needed.
+
+The cycle route therefore retains two distinct holes.  First, its trichotomy is
+exhaustive only under the hypothesis that the weight admits an absorbing
+complementary cycle **at all**.  Weights admitting none of any period are
+outside it entirely. **This hole is occupied, and the occupancy is
+machine-checked end to end (`L`)**: for every `ε ∈ (0, 2]`,
+`¬∃ terminal, IsQuittingCyclicContinuation (ftvRewardEps ε) terminal` — the
+trichotomy's own predicate — via the label lock in the real encoding (all
+periods, with the `ε = 0` rotation as the in-file boundary witness) and the
+cycle-level transport with entry-for-entry weight alignment
 (`PerturbedCyclicWeightNoExactCycle.lean`,
 `PerturbedCyclicWeightCycleExistenceHoleOccupied.lean`). The leading hard
 candidate provably lies *outside the trichotomy*; the cycle route's
 incompleteness is an internal theorem, and the published Theorem 2.1 is
-independent confirmation only.
+independent confirmation only.  Second, an existing isolated-negative cycle
+whose isolated coordinate fails the punishment inequality is not compiled by
+this theorem.
 
 No bound on the length is required: the formalized conditional quantifies over
 the period with no bound, so earlier statements asking for `L(n)` were stronger
@@ -382,14 +393,15 @@ and `S₋ = {i : r_i({i}) < 0}`:
    obstruction is absorption degenerating. **This is where the published cyclic
    three-player table lives** — all its solo weights are positive — so for the
    leading hard candidate only existence is at issue.
-3. **`S₊ ≠ ∅`, `S₋ ≠ ∅`** — a second failure mode. An absorbing discounted
-   limit that isolates a coordinate of `S₋` is necessarily the solo row `p·e_i`
-   with value `r_i({i}) < 0`: a genuine absorbing cycle that is not admissible.
-   The dichotomy then supplies nothing even though absorption did not
-   degenerate, and one must argue about the whole supply of cycles rather than
-   the selected limit.
+3. **`S₊ ≠ ∅`, `S₋ ≠ ∅`** — an absorbing discounted limit may isolate a
+   coordinate `i ∈ S₋`, necessarily on the solo row `p·e_i` with value
+   `r_i({i}) < 0`.  Punishment completion settles exactly the subbranch
+   `quittingPunishmentValue reward i ≤ r_i({i})`.  In the strict reverse
+   inequality the named cyclic value is not individually rational and the
+   instant mechanism is impossible; another cycle/profile or a genuine
+   nonexistence argument is required.
 
-Cases 2 and 3 are the remaining content. See
+Cases 2 and the unpunishable part of 3 are the remaining content. See
 [the carrier group](../../ideas/AbsorbingCycleCarrier/README.md).
 
 **Vanishing absorption is now a finite check (`M [reported]`).** Case 2 reduces
@@ -508,12 +520,14 @@ payoff of the quit-bonus table, margin `1/4` from horizon `4`. **The
 feasible set landed** (`Feasible.lean`): finite-horizon and asymptotic,
 composed with IR into the full necessary direction, with the non-convexity
 fence (`(p−q)² = −1`) proving the classical folk hypothesis shape false for
-this model at horizon one. What remains of the general folk bill is narrower.  Single-player
-punishment attainment is settled in the form actually needed here: every
+this model at horizon one. What remains of the general folk bill is narrower.
+Single-player punishment attainment is settled in the form actually needed
+here: every
 positive tolerance has a constant product row whose stopping cap is within
-that tolerance of the exact behavioral punishment value.  Instant profiles
-and the unique isolated coordinate of an absorbing cycle now feed explicit
-all-errors families into target-identified terminal selection.  Still open are
+that tolerance of the exact behavioral punishment value.  Instant profiles and the unique isolated coordinate of an absorbing
+cycle now feed explicit all-errors families into target-identified terminal
+selection whenever the punishment value lies below the prescribed singleton
+payoff.  Still open are the strict reverse-inequality branch,
 simultaneous/shared punishment requirements, hull attainability (the model
 lacks public randomization — and note the padding separation proves padding
 *smuggles it in*: the XOR lottery attains a non-product point, so padding
