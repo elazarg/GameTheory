@@ -1,14 +1,22 @@
 # Uniform-equilibrium toolkit
 
-This page organizes the production library by mathematical job.  It is a
-stable entry map, not a progress report: current priorities and open work live
-in [`PIPELINE.md`](PIPELINE.md), while [`FRONTIER.md`](FRONTIER.md) states the
+This page organizes the production library by mathematical job. It is a stable
+entry map, not a progress report: current priorities and open work live in
+[`PIPELINE.md`](PIPELINE.md), while [`FRONTIER.md`](FRONTIER.md) states the
 current mathematical boundary.
 
 The central distinction is between a **compiler**, which turns a supplied
 certificate into a uniform payoff, and a **producer**, which constructs that
-certificate from more primitive game data.  A verifier, compactness theorem,
-or counterexample restriction is not silently counted as either one.
+certificate from more primitive game data. A verifier, compactness theorem, or
+counterexample restriction is not silently counted as either one.
+
+The finite-quitting research categories and fixed-schema composition target are
+summarized in [`SystematicApproach.md`](SystematicApproach.md). The
+machine-readable inventory in
+[`systematic-routes.json`](systematic-routes.json) is navigation metadata;
+`scripts/check_systematic_routes.py` validates its shape, referenced paths,
+markers, selected declaration names, and basic wiring. It does not certify that
+a mathematical route, role, or prose obligation is correct.
 
 ## Dependency shape
 
@@ -33,6 +41,7 @@ without producing a witness.
 
 | Family | Canonical import | What it exports |
 | --- | --- | --- |
+| Systematic finite-quitting composition | `QuittingSystematicApproach.lean` | The positive and negative semantic waists, producer/adapter API wrappers, symmetric positive and negative compilers, `QuittingSystematicSchema`, routed resolutions, tagged semantic resolutions, and the fixed-schema dispatcher target. |
 | Uniform-payoff consequences | `UniformConsequences.lean` | Semantic waist dependencies, target equivalence under vanishing payoff gaps, potential shaping, tail-width and bounded-work characterizations, and transition discontinuity. |
 | Adaptive-potential systems | `AdaptivePotentialSystemTools.lean` | The single `AdaptivePotentialSystemAt` structure together with retargeting, profile transport, ledger conversion, finite-time bounds, and owner-separated assembly. |
 | Quitting terminal selection | `QuittingTerminalUniformPayoffSelection.lean` | The equivalence between terminal approximate Nash existence at every accuracy and uniform-payoff existence for finite quitting games. |
@@ -45,26 +54,84 @@ without producing a witness.
 | Face circulations | `QuittingFaceCirculationAll.lean` | Certificate/orbit/path production, concrete payoff examples, and the two-coordinate boundary analyses. Use `MultiOwnerFaceCirculationCompactPath.lean` for the narrow generic compiler. |
 | Boundary holonomy | `QuittingBoundaryHolonomyAll.lean` | Source-retaining fixed-cutoff compactness together with residual, self-similar, tangent, and realized-coordinate analysis. |
 | Reward closure | `QuittingUniformPayoffExistenceClosure.lean` | Fixed-skeleton quitting-game existence under uniform reward limits and dense solved approximants. |
-| Nonexistence certificates | `UniformNonexistenceCertificate.lean` | Late-horizon exploitability and quitting-terminal gaps that rule out every uniform payoff. |
+| Nonexistence certificates | `UniformNonexistenceCertificate.lean` | Late-horizon gaps, `QuittingTerminalGapCertificate`, the exact fixed-terminal-gap characterization, and the negative semantic consumer. |
 
 Import an internal file directly when its narrower interface is the point of
-the proof.  The umbrellas are navigation and downstream entry points, not a
-ban on precise dependencies.
+the proof. The umbrellas are navigation and downstream entry points, not a ban
+on precise dependencies.
+
+## Systematic finite-quitting composition
+
+The research taxonomy has three broad positive routes—stationary/projective,
+instant/punishment, and proper absorption path—and a parallel nonexistence lane.
+Those are editorial and mathematical categories. A type label or generic
+function wrapper does not authenticate provenance.
+
+The formal composition target fixes one schema before reward tables:
+
+```text
+QuittingSystematicSchema
+  = reward-indexed stationary, instant, path, and negative certificate families
+    + three QuittingPositiveCompiler fields
+    + one QuittingNegativeCompiler field.
+
+QuittingSystematicDispatcher schema
+  = for every reward table, one routed certificate under that same schema.
+```
+
+This quantifier order prevents the formal target from existentially selecting a
+new certificate language after learning the semantic truth of each individual
+game. Lean still cannot prohibit a deliberately circular certificate definition;
+concrete schemas need independently named languages, explicit producers, and
+proved compilers.
+
+`QuittingSystematicResolution` carries a source certificate. Its `semantic`
+function returns a tagged `QuittingSemanticResolution`, retaining the selected
+route and source certificate together with either a payoff and its uniformity
+proof or the compiled terminal gap certificate. It does not erase the evidence
+to the classically trivial proposition `P ∨ ¬ P`.
+
+Positive and negative routes are symmetric at the certificate level:
+
+- `QuittingPositiveCompiler` compiles a concrete positive certificate to
+  `QuittingTerminalApproximationFamily`;
+- `QuittingNegativeCompiler` compiles a concrete separator certificate to
+  `QuittingTerminalGapCertificate`.
+
+The fixed positive gap is the exact negative **semantic waist**, not by itself a
+finite or local separator language. LP potentials, support barriers, automata,
+or direct finite inequalities receive negative-route credit only through a
+proved negative compiler.
+
+The conjecture-directed mathematical spine is
+[`ConjectureDirectedSpine.md`](ConjectureDirectedSpine.md). Its charged-flow
+stage is componentwise: path-realizable recurrent occupations form a finite
+union over reachable recurrent SCCs. A global convex mixture of incompatible
+components is not one chronological path, and absence of a feasible component
+naturally yields one separator per component rather than necessarily one global
+dual potential.
 
 ## Semantic waist and terminal bridge
 
 `Uniform.lean` owns `StochasticGame.IsUniformEquilibriumPayoff` and
-`HasUniformDeviationCapConstructor`.  Their exact equivalence is the
-construction waist: a candidate mechanism is complete only after it supplies
-the uniform finite-horizon delivery and unilateral-deviation bounds encoded by
-that constructor.
+`HasUniformDeviationCapConstructor`. Their exact equivalence is the construction
+waist: a candidate mechanism is complete only after it supplies the uniform
+finite-horizon delivery and unilateral-deviation bounds encoded by that
+constructor.
 
-For finite quitting games, the preferred higher-level waist is
-`QuittingTerminalUniformPayoffSelection.lean`.  It selects one bounded target
-from terminal approximate equilibria available at every positive accuracy and
-then invokes the terminal-to-uniform bridge.  Terminal verification,
-target selection, and uniformization remain separate steps in lower-level
-proofs.
+For finite quitting games, the preferred positive waist is
+`QuittingTerminalApproximationFamily`, backed by
+`QuittingTerminalUniformPayoffSelection.lean`. The selection theorem chooses one
+bounded target from terminal approximate equilibria available at every positive
+accuracy and invokes the terminal-to-uniform bridge. Terminal verification,
+target selection, and uniformization remain separate in lower-level proofs.
+
+The negative waist lives in `UniformNonexistenceCertificate.lean`:
+`QuittingTerminalGapCertificate` packages one fixed positive all-behavior
+terminal exploitability gap, and
+`not_exists_uniformEquilibriumPayoff_iff_exists_terminalExploitabilityGap`
+proves that existence of such a gap is exactly failure of uniform-payoff
+existence.
 
 `AdaptivePotentialSystemTools.lean` is the transformation facade for the
 proof-facing adaptive-potential waist. It deliberately reuses the one
@@ -81,12 +148,12 @@ obligations.
 | Support witness | At every tolerance, a support-wise approximately optimal root path, divergent absorption, and continuation-by-continuation individual rationality; alternatively a finite periodic witness with one absorbing phase | A terminal `3ε` profile and target-free uniform-payoff existence | Does not produce the paths or cycles for arbitrary games. |
 | Weighted projective lasso | An accepted target and, at every tolerance, a finite root word whose survival-weighted Bellman seam is small relative to absorption for every cyclic entry phase, with support optimality and punishment rationality | Exact periodic correction, a divergent support-rational path, and a uniform payoff | Matching analytic packet extraction neither accepts its endpoint as a strategic target nor constructs resolved physical successors or the required rotation-uniform return. |
 | Essential APS | A compact convex functional unique-live component with finite-window face avoidance, terminal-freeness, and bounds | A coherent executable path, qualitative deleted-player survival, adaptive finite meshes, and a uniform payoff for every initial component value | Does not prove that an arbitrary game has a nonempty component; pointwise full jumps remain outside the adaptive logarithmic mesh. |
-| Multi-owner face circulation | A bounded balanced circulation with a uniform positive phase-ratio floor and a payoff floor above the quitting punishment value | A chronological support-rational path selected by compact finite-prefix reversal, then a uniform payoff | Does not construct such a circulation for every game or identify the selected target with a named certificate vertex. |
+| Multi-owner face circulation | A bounded balanced circulation with a uniform positive phase-ratio floor and a payoff floor above the quitting punishment value | A chronological support-rational path selected by compact finite-prefix reversal, then a uniform payoff | Does not construct such a circulation for every game. A future atlas-level circulation theorem must also remain inside one path-compatible reachable recurrent component. |
 | Punishment-completed finite cycle | An exact absorbing Nash--Bellman cycle where each coordinate either contracts in deleted survival or has punishment value at most its selected solo value | The selected phase value is a uniform-equilibrium payoff; the old nonnegative-solo admissible-cycle compiler is a corollary | Does not produce an exact cycle, and does not cover an isolated coordinate whose punishment value exceeds its negative solo value. |
 | Two-player closure | An arbitrary finite two-player quitting game | Unconditional uniform-payoff existence | Does not extend the pair-repair classification to three or more players. |
 
 The essential-APS and circulation families contain genuine producers relative
-to their stated structured inputs.  They are conditional positive strata, not
+to their stated structured inputs. They are conditional positive strata, not
 generic quitting-game existence theorems.
 
 ## Reusable infrastructure
@@ -104,9 +171,9 @@ generic quitting-game existence theorems.
 | Projective first-event algebra | `Math/ProjectiveBellmanPacket.lean` | Exact cemetery/absorption normalization and Bellman balance before any chart or recurrence argument. |
 | Affine equality/Farkas alternative | `Math/AffineEqualityFarkas.lean` | A finite feasible-tangent-or-dual-row alternative; strategic decoding and arc lifting are separate inputs. |
 
-Phase-occupation duality is optimization infrastructure.  Until a concrete
-strategic construction supplies a feasible phase occupation, it is not itself
-a game or strategy producer.
+Phase-occupation duality is optimization infrastructure. Until a concrete
+strategic construction supplies a feasible occupation inside one path-compatible
+recurrent component, it is not itself a game or strategy producer.
 
 ## Closure and transfer
 
@@ -121,17 +188,17 @@ a game or strategy producer.
 - `QuittingRootPerturbation.lean` gives local one-coordinate payoff and regret
   bounds; it should not be confused with target-free closure.
 
-These tools transport an existing mechanism or existence result.  They do not
+These tools transport an existing mechanism or existence result. They do not
 supply density of solved games or construct a missing certificate.
 
 ## Boundary analysis and diagnostics
 
 `QuittingBoundaryHolonomyAll.lean` has two complementary compactness modes.
 Fixed-cutoff and fixed-last lifts retain the actual root block, endpoints, and
-provenance.  Tangent compactness retains only bounded coefficient coordinates
-and normalized safety obstructions.  Neither mode closes the escaping-length
-problem: the first cannot compactify unbounded literal length, and the second
-does not prove realized-image closedness or provide a decoder.
+provenance. Tangent compactness retains only bounded coefficient coordinates and
+normalized safety obstructions. Neither mode closes the escaping-length problem:
+the first cannot compactify unbounded literal length, and the second does not
+prove realized-image closedness or provide a decoder.
 
 The general reverse diagnostics are:
 
@@ -146,10 +213,10 @@ The general reverse diagnostics are:
 
 `QuittingTruncatedLedgerCapCounterexample.lean` adds a certificate-specific
 fence: even a solved two-player zero-solo game need not admit a common-cutoff
-truncated-ledger package.  The package compiler is sound, but its hypothesis is
+truncated-ledger package. The package compiler is sound, but its hypothesis is
 not a necessary normal form for equilibrium existence.
 
-These characterize or falsify proposed routes.  They are not forward
+These characterize or falsify proposed routes. They are not forward
 construction mechanisms.
 
 ## Semantic fences
@@ -160,30 +227,38 @@ The following distinctions are load-bearing across the toolkit:
 2. a public response or detector is not a credible punishment certificate;
 3. positive occupation circulation does not transport a continuation target
    without a separate harmonicity or target-identification theorem;
-4. compact coefficient projections do not imply closedness of the set of
+4. a global circulation mixing incompatible recurrent components is not one
+   path-realizable recurrent occupation;
+5. compact coefficient projections do not imply closedness of the set of
    realized strategic blocks;
-5. terminal approximate Nash, fixed-profile uniform approximation, and a
+6. terminal approximate Nash, fixed-profile uniform approximation, and a
    uniform-equilibrium payoff are different notions until a named bridge is
-   invoked; and
-6. a fixed-target closure theorem and target-free existence closure solve
+   invoked;
+7. a fixed-target closure theorem and target-free existence closure solve
    different problems;
-7. positive debt on one explicit legal chain is not positivity of the optimized
+8. positive debt on one explicit legal chain is not positivity of the optimized
    minimum over all chains;
-8. the general polynomial Bellman variety is not the physical
+9. the general polynomial Bellman variety is not the physical
    vanishing-discount domain until an explicit slice such as `0 < disc ≤ 1` is
-   imposed; and
-9. a neutral or subsingleton promotion socket—including a vacuous `CellFiber`
-   instance—is not realization, compatibility, or an all-accuracy producer.
+   imposed;
+10. a neutral or subsingleton promotion socket—including a vacuous `CellFiber`
+    instance—is not realization, compatibility, or an all-accuracy producer;
+11. a certificate family chosen after the reward table can hide the semantic
+    conclusion; the conjecture-facing target fixes one schema before all
+    rewards; and
+12. producer/adapter wrappers and route slots distinguish composition positions
+    but do not prove mathematical provenance.
 
 ## Open leaves
 
 The two intentional conjecture leaves remain in
-`UniformExistenceConjecture.lean` and `QuittingConjecture.lean`.  The former
+`UniformExistenceConjecture.lean` and `QuittingConjecture.lean`. The former
 truncated-ledger producer leaf was removed after a two-player counterexample;
-its valid conditional compiler is indexed above.  Existing positive compilers
+its valid conditional compiler is indexed above. Existing positive compilers
 narrow what the two genuine leaves must produce, but do not discharge the
 arbitrary-game producer.
 
-For new work, first identify the row above whose required input is closest to
-the available data.  If no row accepts it, record the missing adapter or
-producer explicitly rather than creating another parallel compiler surface.
+For new work, first identify the closest existing certificate consumer and the
+actual missing producer, adapter, pivot, path-consistency, or separator theorem.
+A new generic wrapper or another parallel compiler surface is not progress on
+that missing arrow by itself.
