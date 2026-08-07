@@ -126,8 +126,10 @@ theorem abs_quittingCyclicPolicyResidual_reversedForward_last_le
     simp only [Fin.val_rev, Fin.val_last, finRotate_last, Fin.val_zero]
     rw [show start + (n + 1 - (n + 1)) + 1 = start + 1 by omega,
       show start + (n + 1 - (0 + 1)) + 1 = start + n + 1 by omega,
-      show start + 1 = start + 1 by rfl, hstep,
-      quittingRootSuccessorPayoff_sub_eq_continueMass_mul]
+      show start + 1 = start + 1 by rfl, hstep]
+    have hrootIndex : start + (n + 1 - (n + 1)) = start := by
+      omega
+    rw [hrootIndex, quittingRootSuccessorPayoff_sub_eq_continueMass_mul]
   rw [hresidual, abs_mul,
     abs_of_nonneg (quittingStationaryContinueMass_nonneg (roots start))]
   calc
@@ -139,7 +141,6 @@ theorem abs_quittingCyclicPolicyResidual_reversedForward_last_le
           (abs_nonneg _)
     _ ≤ seam := by simpa using hclose who
 
-omit [DecidableEq ι] in
 /-- Support-local optimality transfers to the reversed cycle.  Only the
 closing phase pays the endpoint-closeness error; all other phases are exact
 reindexings and are weakened from `supportError` to
@@ -232,7 +233,9 @@ def quittingFiniteSingleSeamProjectiveLasso_of_reversedForwardBlock
     intro phase
     exact isQuittingRootSupportApproxNash_reversedForward
       reward roots forward start n hseamError hsupport
-        (fun who => by simpa [abs_sub_comm] using hclose who) phase
+        (fun who => by
+          rw [abs_sub_comm]
+          exact hclose who) phase
   rational := by
     intro target phase
     exact hrational target (start + (phase.rev : ℕ) + 1)
