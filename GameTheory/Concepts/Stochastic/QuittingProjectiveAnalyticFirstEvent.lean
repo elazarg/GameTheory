@@ -128,7 +128,8 @@ theorem exists_quittingGermMatchingLeadingData
     Nonempty (QuittingGermMatchingLeadingData reward g) := by
   obtain ⟨m, a, horder, hnonneg, hapos, -, htotal, hshare, -, hmatch, -⟩ :=
     exists_quittingGermQuitRate_leadingOrder_normalization g hne
-  have hqm : g.ramification = m := hmatching.symm.trans horder
+  have hqm : g.ramification = m := by
+    exact_mod_cast hmatching.symm.trans horder
   have hm : 1 ≤ m := by
     rw [← hqm]
     exact g.ramification_pos
@@ -157,9 +158,13 @@ theorem discountComplement_tendsto_zero
     (data : QuittingGermMatchingLeadingData reward g) :
     Tendsto (fun t : ℝ => t ^ g.ramification)
       (𝓝[>] (0 : ℝ)) (𝓝 0) := by
-  have h := (continuousAt_id.pow g.ramification).tendsto.mono_left
+  have hfull :
+      Tendsto (fun t : ℝ => t ^ g.ramification)
+        (𝓝 (0 : ℝ)) (𝓝 ((0 : ℝ) ^ g.ramification)) :=
+    (continuousAt_id.pow g.ramification).tendsto
+  have hright := hfull.mono_left
     (nhdsWithin_le_nhds (s := Set.Ioi (0 : ℝ)))
-  simpa [zero_pow g.ramification_pos.ne'] using h
+  simpa [zero_pow g.ramification_pos.ne'] using hright
 
 /-- The total quit mass divided by the matching discount scale converges to
 the total leading coefficient. -/
@@ -215,9 +220,16 @@ theorem excludedContinueProduct_tendsto_one
       (fun t : ℝ => ∏ other ∈ Finset.univ.erase owner,
         (1 - quittingGermQuitRate g other t))
       (𝓝[>] (0 : ℝ)) (𝓝 1) := by
-  have hprod := tendsto_finsetProd (Finset.univ.erase owner)
-    (fun other _ =>
-      tendsto_const_nhds.sub (data.quitRate_tendsto_zero other))
+  have hone : Tendsto (fun _ : ℝ => (1 : ℝ))
+      (𝓝[>] (0 : ℝ)) (𝓝 1) := tendsto_const_nhds
+  have hprod :
+      Tendsto
+        (fun t : ℝ => ∏ other ∈ Finset.univ.erase owner,
+          (1 - quittingGermQuitRate g other t))
+        (𝓝[>] (0 : ℝ))
+        (𝓝 (∏ _other ∈ Finset.univ.erase owner, (1 : ℝ))) :=
+    tendsto_finsetProd (Finset.univ.erase owner)
+      (fun other _ => hone.sub (data.quitRate_tendsto_zero other))
   simpa using hprod
 
 /-- A singleton quitting event has leading coefficient `a_owner`. -/
@@ -230,7 +242,13 @@ theorem singletonProbability_div_discount_tendsto
       (𝓝 (data.leading owner)) := by
   have h := (data.quitRate_div_discount_tendsto owner).mul
     (data.excludedContinueProduct_tendsto_one owner)
-  simpa [quittingGermSingletonProbability] using h
+  refine h.congr' ?_
+  filter_upwards [self_mem_nhdsWithin] with t ht
+  change 0 < t at ht
+  have htne : t ^ g.ramification ≠ 0 :=
+    pow_ne_zero _ (ne_of_gt ht)
+  unfold quittingGermSingletonProbability
+  field_simp
 
 /-- The first-event denominator has leading coefficient `1 + ∑ a`. -/
 theorem firstEventDenominator_div_discount_tendsto
@@ -240,9 +258,11 @@ theorem firstEventDenominator_div_discount_tendsto
         t ^ g.ramification)
       (𝓝[>] (0 : ℝ))
       (𝓝 (1 + ∑ owner, data.leading owner)) := by
-  have hraw := tendsto_const_nhds.add
-    ((tendsto_const_nhds.sub data.discountComplement_tendsto_zero).mul
-      data.absorption_div_discount_tendsto)
+  have hone : Tendsto (fun _ : ℝ => (1 : ℝ))
+      (𝓝[>] (0 : ℝ)) (𝓝 1) := tendsto_const_nhds
+  have hfactor := hone.sub data.discountComplement_tendsto_zero
+  have hraw := hone.add
+    (hfactor.mul data.absorption_div_discount_tendsto)
   refine hraw.congr' ?_
   filter_upwards [self_mem_nhdsWithin] with t ht
   change 0 < t at ht
@@ -262,7 +282,12 @@ theorem cemeteryFirstEventWeight_tendsto
     linarith [data.leading_sum_pos]
   have h := data.firstEventDenominator_div_discount_tendsto.inv₀
     hdenomPos.ne'
-  simpa [quittingGermCemeteryFirstEventWeight, inv_div, one_div] using h
+  change Tendsto
+    (fun t : ℝ => t ^ g.ramification /
+      quittingGermFirstEventDenominator g t)
+    (𝓝[>] (0 : ℝ))
+    (𝓝 (1 / (1 + ∑ owner, data.leading owner)))
+  simpa [inv_div] using h
 
 /-- The normalized singleton first-event mass converges to
 `a_owner / (1 + ∑ a)`. -/
@@ -274,9 +299,10 @@ theorem singletonFirstEventWeight_tendsto
         (1 + ∑ other, data.leading other))) := by
   have hdenomPos : 0 < 1 + ∑ other, data.leading other := by
     linarith [data.leading_sum_pos]
-  have hnum :=
-    (tendsto_const_nhds.sub data.discountComplement_tendsto_zero).mul
-      (data.singletonProbability_div_discount_tendsto owner)
+  have hone : Tendsto (fun _ : ℝ => (1 : ℝ))
+      (𝓝[>] (0 : ℝ)) (𝓝 1) := tendsto_const_nhds
+  have hnum := (hone.sub data.discountComplement_tendsto_zero).mul
+    (data.singletonProbability_div_discount_tendsto owner)
   have hinv := data.firstEventDenominator_div_discount_tendsto.inv₀
     hdenomPos.ne'
   have h := hnum.mul hinv
@@ -286,22 +312,19 @@ theorem singletonFirstEventWeight_tendsto
         data.leading owner / (1 + ∑ other, data.leading other) := by
     rw [one_sub_zero, one_mul, div_eq_mul_inv]
   rw [hlimit] at h
+  change Tendsto
+    (fun t : ℝ =>
+      (1 - t ^ g.ramification) * quittingGermSingletonProbability g owner t /
+        quittingGermFirstEventDenominator g t)
+    (𝓝[>] (0 : ℝ))
+    (𝓝 (data.leading owner /
+      (1 + ∑ other, data.leading other)))
   refine h.congr' ?_
   filter_upwards [self_mem_nhdsWithin] with t ht
   change 0 < t at ht
   have htne : t ^ g.ramification ≠ 0 :=
     pow_ne_zero _ (ne_of_gt ht)
-  unfold quittingGermSingletonFirstEventWeight
-  rw [show
-    (1 - t ^ g.ramification) *
-          (quittingGermSingletonProbability g owner t /
-            t ^ g.ramification) *
-          (quittingGermFirstEventDenominator g t /
-            t ^ g.ramification)⁻¹ =
-      (1 - t ^ g.ramification) *
-          quittingGermSingletonProbability g owner t /
-        quittingGermFirstEventDenominator g t by
-      field_simp]
+  field_simp
 
 /-- The total normalized real-absorption mass converges to
 `L / (1 + L)`. -/
@@ -313,9 +336,10 @@ theorem realAbsorptionFirstEventWeight_tendsto
         (1 + ∑ owner, data.leading owner))) := by
   have hdenomPos : 0 < 1 + ∑ owner, data.leading owner := by
     linarith [data.leading_sum_pos]
-  have hnum :=
-    (tendsto_const_nhds.sub data.discountComplement_tendsto_zero).mul
-      data.absorption_div_discount_tendsto
+  have hone : Tendsto (fun _ : ℝ => (1 : ℝ))
+      (𝓝[>] (0 : ℝ)) (𝓝 1) := tendsto_const_nhds
+  have hnum := (hone.sub data.discountComplement_tendsto_zero).mul
+    data.absorption_div_discount_tendsto
   have hinv := data.firstEventDenominator_div_discount_tendsto.inv₀
     hdenomPos.ne'
   have h := hnum.mul hinv
@@ -326,20 +350,19 @@ theorem realAbsorptionFirstEventWeight_tendsto
           (1 + ∑ owner, data.leading owner) := by
     rw [one_sub_zero, one_mul, div_eq_mul_inv]
   rw [hlimit] at h
+  change Tendsto
+    (fun t : ℝ =>
+      (1 - t ^ g.ramification) * quittingGermAbsorption g t /
+        quittingGermFirstEventDenominator g t)
+    (𝓝[>] (0 : ℝ))
+    (𝓝 ((∑ owner, data.leading owner) /
+      (1 + ∑ owner, data.leading owner)))
   refine h.congr' ?_
   filter_upwards [self_mem_nhdsWithin] with t ht
   change 0 < t at ht
   have htne : t ^ g.ramification ≠ 0 :=
     pow_ne_zero _ (ne_of_gt ht)
-  unfold quittingGermRealAbsorptionFirstEventWeight
-  rw [show
-    (1 - t ^ g.ramification) *
-          (quittingGermAbsorption g t / t ^ g.ramification) *
-          (quittingGermFirstEventDenominator g t /
-            t ^ g.ramification)⁻¹ =
-      (1 - t ^ g.ramification) * quittingGermAbsorption g t /
-        quittingGermFirstEventDenominator g t by
-      field_simp]
+  field_simp
 
 /-- After removing all singleton packets, normalized real-absorption mass tends
 to zero. -/
@@ -347,8 +370,16 @@ theorem nonsingletonFirstEventWeight_tendsto_zero
     (data : QuittingGermMatchingLeadingData reward g) :
     Tendsto (quittingGermNonsingletonFirstEventWeight g)
       (𝓝[>] (0 : ℝ)) (𝓝 0) := by
-  have hsingle := tendsto_finsetSum Finset.univ
-    (fun owner _ => data.singletonFirstEventWeight_tendsto owner)
+  have hsingle :
+      Tendsto
+        (fun t : ℝ => ∑ owner,
+          quittingGermSingletonFirstEventWeight g owner t)
+        (𝓝[>] (0 : ℝ))
+        (𝓝 (∑ owner,
+          data.leading owner /
+            (1 + ∑ other, data.leading other))) :=
+    tendsto_finsetSum Finset.univ
+      (fun owner _ => data.singletonFirstEventWeight_tendsto owner)
   have h := data.realAbsorptionFirstEventWeight_tendsto.sub hsingle
   have hsum :
       (∑ owner, data.leading owner /
@@ -357,7 +388,11 @@ theorem nonsingletonFirstEventWeight_tendsto_zero
         (1 + ∑ other, data.leading other) := by
     rw [Finset.sum_div]
   rw [hsum, sub_self] at h
-  simpa [quittingGermNonsingletonFirstEventWeight] using h
+  change Tendsto
+    (fun t : ℝ => quittingGermRealAbsorptionFirstEventWeight g t -
+      ∑ owner, quittingGermSingletonFirstEventWeight g owner t)
+    (𝓝[>] (0 : ℝ)) (𝓝 0)
+  exact h
 
 end QuittingGermMatchingLeadingData
 
