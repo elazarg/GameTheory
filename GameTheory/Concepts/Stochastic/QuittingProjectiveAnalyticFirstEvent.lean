@@ -11,22 +11,22 @@ import Math.ProjectiveBellmanPacket
 # Matching-order analytic first-event masses
 
 This module extracts the projective *mass packet* of a matching-order analytic
-quitting germ.  Suppose the quit family has the same leading order as the
+quitting germ. Suppose the quit family has the same leading order as the
 discount complement `t ^ g.ramification`, with nonnegative leading vector `a`
-and `L = ∑ i, a i > 0`.  Then the exact first-event denominator
+and `L = ∑ i, a i > 0`. Then the exact first-event denominator
 
 `D(t) = t^q + (1 - t^q) * quittingGermAbsorption g t`
 
-has leading coefficient `1 + L`.  The normalized cemetery and singleton
-masses therefore converge, without taking a subsequence, to
+has leading coefficient `1 + L`. The normalized cemetery and singleton masses
+therefore converge, without taking a subsequence, to
 
 `z₀ = 1 / (1 + L)`,
 
 `z_i = a i / (1 + L)`.
 
 The residual normalized real-absorption mass after removing all singleton
-packets tends to zero.  This is the analytic mass-extraction part of the
-projective singleton packet.  It does not yet identify the limiting value as
+packets tends to zero. This is the analytic mass-extraction part of the
+projective singleton packet. It does not yet identify the limiting value as
 the singleton reward mixture or pass endpoint complementarity to the limit;
 those are separate game-facing steps needed to construct
 `QuittingProjectiveSingletonPacket`.
@@ -36,7 +36,7 @@ noncomputable section
 
 namespace GameTheory
 
-open Filter
+open Filter Set Topology
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
