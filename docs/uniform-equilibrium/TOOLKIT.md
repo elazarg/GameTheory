@@ -33,7 +33,7 @@ without producing a witness.
 
 | Family | Canonical import | What it exports |
 | --- | --- | --- |
-| Uniform-payoff consequences | `UniformConsequences.lean` | Semantic waist dependencies, target equivalence under vanishing payoff gaps, potential shaping, tail-width and bounded-work characterizations, and transition discontinuity. |
+| Uniform-payoff consequences | `UniformConsequences.lean` | Semantic waist dependencies, target equivalence under vanishing payoff gaps, potential shaping, tail-width and bounded-work characterizations, transition discontinuity, and the exact finite-quitting terminal-gap nonexistence criterion. |
 | Adaptive-potential systems | `AdaptivePotentialSystemTools.lean` | The single `AdaptivePotentialSystemAt` structure together with retargeting, profile transport, ledger conversion, finite-time bounds, and owner-separated assembly. |
 | Quitting terminal selection | `QuittingTerminalUniformPayoffSelection.lean` | The equivalence between terminal approximate Nash existence at every accuracy and uniform-payoff existence for finite quitting games. |
 | Diagonal target tails | `QuittingDiagonalTargetTail.lean` | Exact-prefix plus player-indexed closed-tail compilation and its counterexample restriction. |
@@ -45,7 +45,7 @@ without producing a witness.
 | Face circulations | `QuittingFaceCirculationAll.lean` | Certificate/orbit/path production, concrete payoff examples, and the two-coordinate boundary analyses. Use `MultiOwnerFaceCirculationCompactPath.lean` for the narrow generic compiler. |
 | Boundary holonomy | `QuittingBoundaryHolonomyAll.lean` | Source-retaining fixed-cutoff compactness together with residual, self-similar, tangent, and realized-coordinate analysis. |
 | Reward closure | `QuittingUniformPayoffExistenceClosure.lean` | Fixed-skeleton quitting-game existence under uniform reward limits and dense solved approximants. |
-| Nonexistence certificates | `UniformNonexistenceCertificate.lean` | Late-horizon exploitability and quitting-terminal gaps that rule out every uniform payoff. |
+| Nonexistence certificates | `UniformNonexistenceCertificate.lean` | Late-horizon exploitability, quitting-terminal gaps, and the equivalence between finite-quitting nonexistence and some fixed positive terminal gap. |
 
 Import an internal file directly when its narrower interface is the point of
 the proof.  The umbrellas are navigation and downstream entry points, not a
@@ -140,7 +140,9 @@ The general reverse diagnostics are:
 - a fixed target is uniform exactly when it has a bounded excess-work
   certificate;
 - positive tail width and late exploitability gaps give exact nonexistence
-  witnesses; and
+  witnesses;
+- for finite quitting games, existence of some fixed positive terminal
+  exploitability gap is exactly equivalent to nonexistence; and
 - convergence of transition kernels alone does not preserve uniform-payoff
   targets.
 
@@ -149,8 +151,16 @@ fence: even a solved two-player zero-solo game need not admit a common-cutoff
 truncated-ledger package.  The package compiler is sound, but its hypothesis is
 not a necessary normal form for equilibrium existence.
 
-These characterize or falsify proposed routes.  They are not forward
-construction mechanisms.
+[`SubgameGlueOrEnlarge.md`](SubgameGlueOrEnlarge.md) records a focused proposed
+producer adapter: a proper-subgame solution should either reinsert outsiders
+with a quantitative terminal-deviation bound or return the entering outsider,
+marked atom, and failed inequality needed for support enlargement.  It is a
+mathematical design target, not a landed theorem or a replacement for the live
+pipeline.
+
+These characterize, organize, or falsify proposed routes.  They are not forward
+construction mechanisms unless a named theorem supplies the missing producer
+or decoder.
 
 ## Semantic fences
 
@@ -164,16 +174,21 @@ The following distinctions are load-bearing across the toolkit:
    realized strategic blocks;
 5. terminal approximate Nash, fixed-profile uniform approximation, and a
    uniform-equilibrium payoff are different notions until a named bridge is
-   invoked; and
+   invoked;
 6. a fixed-target closure theorem and target-free existence closure solve
    different problems;
 7. positive debt on one explicit legal chain is not positivity of the optimized
    minimum over all chains;
 8. the general polynomial Bellman variety is not the physical
    vanishing-discount domain until an explicit slice such as `0 < disc ≤ 1` is
-   imposed; and
+   imposed;
 9. a neutral or subsingleton promotion socket—including a vacuous `CellFiber`
-   instance—is not realization, compatibility, or an all-accuracy producer.
+   instance—is not realization, compatibility, or an all-accuracy producer;
+   and
+10. a global occupation that cancels signed defects across different recurrent
+    SCCs is not one legal path.  Future flow synthesis must choose one reachable
+    recurrent component or prove a separate strategic common-randomization
+    theorem.
 
 ## Open leaves
 
@@ -186,4 +201,7 @@ arbitrary-game producer.
 
 For new work, first identify the row above whose required input is closest to
 the available data.  If no row accepts it, record the missing adapter or
-producer explicitly rather than creating another parallel compiler surface.
+producer explicitly.  In particular, failed subgame reinsertion should preserve
+the entering player or marked join inequality, and failed flow synthesis should
+preserve the recurrent component and componentwise separator rather than
+creating another parallel compiler surface.
