@@ -37,10 +37,13 @@ exact periodically realized cycle has total error `2η`.  The existing
 periodic support-witness compiler then produces a divergently absorbing path
 and a uniform-equilibrium payoff.
 
-This file proves the complete lasso consumer.  It does **not** assert that
-every quitting game supplies such lassos.  The remaining global theorem is a
-finite projective pivot-or-output statement for the resolved complementary
-Bellman complex; see `docs/uniform-equilibrium/ProjectiveLassoProducer.md`.
+This file proves the pointwise lasso consumer.  It does **not** assert that
+every quitting game supplies such lassos.  The arbitrary-game producer is not
+one finite pivot statement: it still needs analytic packet extraction,
+resolved-chart construction and real/Puiseux arc lifting, semantic Farkas
+decoding, and rotation-uniform relative return.  The invariant weighted
+interface is in `QuittingWeightedProjectiveLasso.lean`; see also
+`docs/uniform-equilibrium/ProjectiveLassoProducer.md`.
 -/
 
 noncomputable section
@@ -267,8 +270,8 @@ theorem abs_quittingCyclicValue_sub_terminalValue_le_of_chargedResidual
     exact hcharge
   exact hraw.trans hquotient
 
-/-- Finite certificate delivered by the projective pivot/recurrence layer.
-The Bellman seam is charged relative to *real* one-stage absorption. -/
+/-- Finite pointwise certificate.  The canonical invariant interface is the
+rotation-uniform weighted certificate in `QuittingWeightedProjectiveLasso`. -/
 structure QuittingFiniteChargedProjectiveLasso
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (K : ℕ) (error : ℝ) where
@@ -352,10 +355,10 @@ theorem exists_supportRationalDivergentPath
 
 end QuittingFiniteChargedProjectiveLasso
 
-/-- **Uniform-payoff producer interface.**  Charged projective lassos at every
-positive accuracy imply a uniform-equilibrium payoff.  The theorem deliberately
-leaves the finite projective pivot-or-output construction as an explicit
-producer hypothesis. -/
+/-- Pointwise lassos at every positive accuracy imply a uniform payoff.  The
+producer hypothesis here is intentionally only a certificate input; it does
+not stand for resolved-chart realization, semantic Farkas decoding, or
+relative-return construction. -/
 theorem quittingGame_exists_uniformEquilibriumPayoff_of_chargedProjectiveLassos
     [Nonempty ι]
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
