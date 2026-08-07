@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.QuittingWeightedProjectiveLasso
+import Mathlib.Probability.Distributions.Uniform
 import Mathlib.Tactic.FinCases
 
 /-!
@@ -41,8 +42,7 @@ abbrev Terminal := {S : Finset Player // S.Nonempty}
 def reward (_ : Terminal) : Payoff Player := 0
 
 /-- A marginal which quits and continues with probability `1/2`. -/
-def halfCoin : PMF Bool :=
-  quittingHazardCoin (1 / 2 : ℝ) (by norm_num) (by norm_num)
+def halfCoin : PMF Bool := PMF.uniformOfFintype Bool
 
 /-- The same half-continuation root at both phases. -/
 def cycle (_ : Fin 2) (_ : Player) : PMF Bool := halfCoin
@@ -60,9 +60,17 @@ def value (phase : Fin 2) : Payoff Player :=
     |displacement phase| = 1 := by
   fin_cases phase <;> norm_num [displacement]
 
+@[simp] private theorem finRotate_zero_two :
+    finRotate 2 (0 : Fin 2) = 1 := by
+  decide
+
+@[simp] private theorem finRotate_one_two :
+    finRotate 2 (1 : Fin 2) = 0 := by
+  decide
+
 @[simp] theorem displacement_finRotate (phase : Fin 2) :
     displacement (finRotate 2 phase) = -displacement phase := by
-  fin_cases phase <;> norm_num [displacement, finRotate_apply]
+  fin_cases phase <;> simp [displacement]
 
 @[simp] theorem value_sub_terminalValue (phase : Fin 2) (who : Player) :
     value phase who - quittingCyclicTerminalValue reward cycle phase who =
@@ -71,7 +79,9 @@ def value (phase : Fin 2) : Payoff Player :=
 
 @[simp] theorem continueMass_cycle (phase : Fin 2) :
     quittingStationaryContinueMass (cycle phase) = (1 / 2 : ℝ) := by
-  simp [quittingStationaryContinueMass, cycle, halfCoin, pmfPi_apply]
+  simp [quittingStationaryContinueMass, cycle, halfCoin,
+    quittingAllContinueAction, pmfPi_apply, PMF.uniformOfFintype_apply]
+  norm_num
 
 /-- The displayed alternating displacement forces residual `3/2` times that
 displacement at each phase. -/
@@ -106,10 +116,9 @@ theorem weightedResidual_eq (phase : Fin 2) (who : Player) :
     quittingCyclicWeightedResidual reward cycle value phase who =
       (9 / 4 : ℝ) := by
   classical
-  simp [quittingCyclicWeightedResidual, quittingCyclicResidualCharge,
-    quittingCyclicPrefixWeight_succ, quittingCyclicOrbit_succ,
+  norm_num [quittingCyclicWeightedResidual, quittingCyclicResidualCharge,
+    Finset.sum_range_succ, quittingCyclicPrefixWeight_succ,
     policyResidual_eq, continueMass_cycle, abs_displacement]
-  norm_num
 
 /-- The stronger absolute-weighted predicate rejects the same candidate at
 error `1`. -/
