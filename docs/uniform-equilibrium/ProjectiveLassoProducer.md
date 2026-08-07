@@ -1,30 +1,35 @@
-# Charged projective lassos: the producer interface
+# Projective packets and charged lassos: compiler and producer boundary
 
 ## Status
 
-This note separates three statements that should not be conflated.
+This note separates five statements which must not be conflated.
 
-1. **Exact first-event normalization** is elementary and Lean-checked in
+1. **Exact first-event normalization** is Lean-checked in
    `Math.ProjectiveBellmanPacket`.
-2. **A charged projective lasso can be corrected and compiled** is
-   Lean-checked in `QuittingProjectiveLasso`.
-3. **Every finite quitting game produces such lassos, or reaches a simpler
-   output boundary**, is the remaining projective pivot-or-output theorem.
-   It is stated here as the next theorem target; no proof of it is claimed by
-   this PR.
+2. **The normalized singleton packet satisfies an affine LCP** is
+   Lean-checked in `QuittingProjectiveSingletonLCP` once the limiting packet
+   hypotheses have been supplied.
+3. **A resolved affine tangent is feasible or has a decoded Farkas row** is
+   Lean-checked in `Math.AffineEqualityFarkas`.
+4. **A charged projective lasso can be corrected and compiled** is
+   Lean-checked in `QuittingProjectiveLasso` and
+   `QuittingProjectiveLassoWeighted`.
+5. **Every finite quitting game supplies a strategic output or such a lasso**
+   is not proved.  It requires two separate new theorems: semantic Farkas
+   decoding and relative projective return.
 
-The purpose of the new layer is to replace the vague request for a prefix with
-small joint survival by a finite recurrent certificate whose downstream
-compiler is complete.
+The last item is the producer.  The preceding items are normalization,
+linear-algebra alternatives, recurrence bookkeeping, and certificate
+compilers.  None of them is silently counted as the arbitrary-game producer.
 
 ## 1. First-event projectivization
 
-Let `ε > 0` be the discount-complement and write `β = 1 - ε`.  At a stationary
+Let `ε > 0` be the discount complement and write `β = 1 - ε`.  At a stationary
 root, let
 
 - `c` be the probability that everybody continues;
-- `q = 1 - c` be the real absorption probability; and
-- `a` be the unconditional absorbing payoff contribution in one stage.
+- `q = 1 - c` be real absorption; and
+- `a` be the unconditional one-stage absorbing payoff contribution.
 
 The discounted Bellman equation in one coordinate is
 
@@ -43,12 +48,7 @@ D  = ε + β * q = 1 - β * c,
 Then
 
 ```text
-ω₀ + ω₁ = 1
-```
-
-and the Bellman equation is exactly
-
-```text
+ω₀ + ω₁ = 1,
 D * v = β * a.
 ```
 
@@ -58,13 +58,11 @@ When `q > 0`,
 v = ω₁ * (a / q).
 ```
 
-Thus `ω₀` is the normalized mass of the artificial discount or cemetery event,
-while `ω₁` is the normalized mass of a genuine absorption event.  The matching
-regime is not a pathology: it is the interior face `0 < ω₀ < 1`.  Discarding
-`ω₀` before compactification loses the continuation datum needed to pass
-through that face.
+Thus `ω₀` is the normalized cemetery mass and `ω₁` is the normalized real
+absorption mass.  The matching regime is the interior face `0 < ω₀ < 1`;
+discarding `ω₀` loses part of the first-event packet.
 
-The exact algebra is formalized by:
+The exact scalar algebra is formalized by:
 
 ```text
 Math.projectiveCemeteryWeight_add_absorptionWeight
@@ -72,182 +70,246 @@ Math.projectiveBellman_balance
 Math.projectiveBellman_value_eq_absorptionWeight_mul_conditional
 ```
 
-## 2. Finite charged projective lasso
+## 2. The normalized singleton LCP
 
-Fix a finite root word
-
-```text
-cycle : Fin K → ι → PMF Bool
-```
-
-and proposed cyclic values
+Suppose a limiting first-event packet has cemetery mass `z₀`, singleton masses
+`z i`, and value `value`, with
 
 ```text
-value : Fin K → Payoff ι.
+z₀ + ∑ i, z i = 1,
+value who = ∑ i, z i * reward {i} who.
 ```
 
-At phase `p`, define the policy seam
+Assume also the endpoint consequences
 
 ```text
-e_p = value p -
-  quittingRootSuccessorPayoff reward
-    (value (finRotate K p)) (cycle p).
+reward {i} i ≤ value i,
+z i > 0 → value i = reward {i} i.
 ```
 
-Let
+Set
 
 ```text
-c_p = quittingStationaryContinueMass (cycle p),
-q_p = 1 - c_p.
+d i   = reward {i} i,
+a i   = -d i,
+M i j = reward {j} i - d i,
+w i   = value i - d i.
 ```
 
-A charged lasso at error `η` requires
+Then
 
 ```text
-|e_p(i)| ≤ η * q_p
+w i = z₀ * a i + ∑ j, z j * M i j,
+w i ≥ 0,
+z i * w i = 0.
 ```
 
-for every phase and player.  It additionally retains:
-
-- support-local `η`-optimality at the displayed next value;
-- punishment rationality to error `η`; and
-- one phase with `q_p > 0`.
-
-This is the structure
+This exact algebra is the theorem
 
 ```text
-QuittingFiniteChargedProjectiveLasso reward K η.
+quittingProjectiveSingletonPacket_isLCP.
 ```
 
-The adjective *projective* refers to the ratio `e_p / q_p`.  Raw seam error is
-not the stable quantity near a neutral block; residual divided by real
-absorption is.
+At `z₀ = 1`, the same module proves that every singleton mass vanishes, the
+packet value is zero, and every solo payoff is nonpositive: the Never
+boundary.
 
-## 3. Exact correction theorem
+The module does not claim the analytic extraction of the packet from every
+prescribed discounted sequence.  That extraction must establish vanishing of
+nonsingleton first-event mass and pass endpoint complementarity to the limit.
 
-Let `u_p` be the actual terminal value selected by periodically repeating the
-root word.  The one-step difference satisfies
+## 3. The legitimate local pivot theorem
+
+Once a resolved chart, complementary basis, valuation cone, and active jet
+order are fixed, a candidate physical tangent has the finite affine form
 
 ```text
-value p - u_p = e_p + c_p * (value (next p) - u_(next p)).
+A h = b,
+G h ≥ 0.
 ```
 
-For a chosen starting phase, write
+`Math.AffineEqualityFarkas` encodes each equality by two weak inequalities and
+applies the repository's Fourier--Motzkin theorem of the alternative.  It
+proves
 
 ```text
-W_k = product of c along the first k phases.
+affineEqualityInequality_feasible_or_farkas
 ```
 
-After one turn,
+whose second branch supplies `y` and `lambda` with
 
 ```text
-(1 - C) * (value p - u_p)
-  = sum_{k < K} W_k * e_k,
+lambda ≥ 0,
+Aᵀ y + Gᵀ lambda = 0,
+bᵀ y > 0.
 ```
 
-where `C = product_p c_p`.  Independently,
+This is the correct local statement:
 
 ```text
-1 - C = sum_{k < K} W_k * (1 - c_k).
+physical candidate tangent  OR  normalized/rescalable Farkas obstruction.
 ```
 
-Therefore
+It is only linear algebra.  The Farkas row does not itself contain an
+executable profile, chronology, target-selection proof, arbitrary-behavior
+deviation cap, credible punishment, or reconstruction map.
+
+## 4. The invariant charged-lasso condition
+
+Fix a finite root word `cycle`, proposed cyclic values `value`, and a starting
+phase.  Write
 
 ```text
-|value p - u_p|
-  ≤ η * (1 - C) / (1 - C)
-  = η.
+e_k = value k - F(cycle k, value (next k)),
+c_k = quittingStationaryContinueMass (cycle k),
+q_k = 1 - c_k,
+s_k = product of c before phase k.
 ```
 
-One absorbing phase gives `C < 1`, so division is legitimate.  No period
-factor appears.  This is the theorem
+The invariant finite condition is the weighted cyclewise estimate
 
 ```text
-abs_quittingCyclicValue_sub_terminalValue_le_of_chargedResidual.
+∑ k, s_k * |e_k| ≤ η * ∑ k, s_k * q_k.
 ```
 
-The proof is entirely finite.  It does not invoke compactness, a minimizer, or
-continuity at saturated hazards.
-
-## 4. Support and rationality survive correction
-
-For fixed root and player, the endpoint difference is affine in the player's
-continuation coordinate with coefficient equal to the opponents' continue
-mass.  That coefficient lies in `[0,1]`, hence
+The denominator is exactly
 
 ```text
-|D_i(w) - D_i(w')| ≤ |w_i - w'_i|.
+∑ k, s_k * q_k = 1 - ∏ k, c_k.
 ```
 
-This is
+Therefore, if `u` is the actual value selected by periodic repetition,
+
+```text
+|value - u|
+  ≤ (∑ k, s_k * |e_k|) / (∑ k, s_k * q_k)
+  ≤ η.
+```
+
+This is formalized by
+
+```text
+abs_quittingCyclicValue_sub_terminalValue_le_of_weightedResidual.
+```
+
+It handles zero-charge phases without dropping their seams.
+
+The original structure
+
+```text
+QuittingFiniteChargedProjectiveLasso reward K η
+```
+
+uses the stronger pointwise hypothesis
+
+```text
+|e_k(i)| ≤ η * q_k.
+```
+
+That condition is sound and implies the weighted criterion; in particular,
+`q_k = 0` forces `e_k(i) = 0`.  The implication is
+
+```text
+quittingCyclicWeightedResidual_le_of_pointwise.
+```
+
+## 5. Exact correction and compilation
+
+Endpoint differences are `1`-Lipschitz in the relevant continuation
+coordinate:
 
 ```text
 abs_quittingRootEndpointDifference_sub_le_tail.
 ```
 
-Consequently replacing `value` by `u` costs at most another `η` in both the
-support inequalities and the punishment floor.  The corrected exact cycle is
-therefore support-rational at error `2η`:
+Consequently replacing the proposed values by the exact periodic values costs
+at most one additional lasso error in support optimality and punishment
+rationality.  The pointwise certificate compiles through
 
 ```text
-QuittingFiniteChargedProjectiveLasso.toFiniteSupportRationalCycle.
-```
-
-The existing periodic support-witness adapter then gives:
-
-- an infinite PMF-root path;
-- support-local error `2η`;
-- punishment rationality error `2η`; and
-- nonsummable absorption.
-
-The all-accuracy conclusion is
-
-```text
+QuittingFiniteChargedProjectiveLasso.toFiniteSupportRationalCycle
+QuittingFiniteChargedProjectiveLasso.exists_supportRationalDivergentPath
 quittingGame_exists_uniformEquilibriumPayoff_of_chargedProjectiveLassos.
 ```
 
-## 5. Why this is the correct recurrent producer
+This is a complete **consumer** of charged lassos.  It does not construct them
+for arbitrary games.
 
-The diagonal-prefix compiler asks for small joint survival at a chosen
-endpoint.  That is a useful output face, but it is not the general object
-supplied by a matching-scale vanishing-discount branch.  In the matching
-regime a nonzero fraction of the normalized first-event mass is cemetery mass.
-The correct procedure is:
+## 6. What finite recurrence does and does not prove
 
-1. retain the cemetery coordinate;
-2. rebase it as a continuation anchor;
-3. follow the resolved complementary/valuation pivot;
-4. stop at a simple output boundary, or close a repeated projective state.
+`Math.FinitePivotOrbit` proves only a finite-label pigeonhole statement:
+within the first `card Cell + 1` iterates, either an output label appears or a
+non-output label repeats.
 
-A repeated labelled state need not close the raw Bellman equations exactly.
-It closes their leading projective data.  Therefore the seam has strictly
-higher valuation than the real absorption charge, which is precisely the
-charged-lasso condition consumed above.
+A projective or tropical cell generally contains continuously many coefficient
+points.  Repetition of a label does not imply:
 
-## 6. Remaining theorem: physical pivot completeness
+- equality of the underlying projective states;
+- a fixed point of the chart monodromy;
+- small absolute return seam; or
+- a seam small relative to a vanishing absorption charge.
 
-The unresolved global theorem can now be stated locally.
+The scalar regression in
+`QuittingVanishingChargeRecurrenceNoGo.lean` makes the last failure explicit:
 
-> **Physical Pivot Completeness.** At every nonterminal resolved projective
-> Nash--Bellman node with positive cemetery mass, either the lexicographic
-> complementary pivot has a physically admissible continuation orientation,
-> or the dual row is one of the following finite output certificates:
+```text
+state n  = 1 / (n + 1),
+charge n = 1 / (n + 1)^3,
+```
+
+and every strict return has seam at least half the source charge.  Compact
+recurrence alone therefore cannot create the relative return needed by the
+lasso compiler.
+
+## 7. Missing theorem A: semantic Farkas decoding
+
+The local Farkas alternative must be followed by a genuinely strategic
+classification:
+
+> Every normalized obstruction arising from the projective quitting Bellman
+> system yields one of:
 >
-> 1. a stationary or pure terminal equilibrium;
-> 2. a Never certificate;
-> 3. a target-closed-tail boundary;
-> 4. a strict support/valuation-rank descent.
+> 1. a stationary or pure terminal certificate;
+> 2. Never;
+> 3. an executable target-closed tail together with its required prefix and
+>    deviation interface;
+> 4. zero-cemetery positive real absorption; or
+> 5. a strict well-founded rank descent whose child certificate can be
+>    reconstructed at the parent target.
 
-There may be no fifth unclassified barrier.
+The reconstruction and credibility clauses are part of the theorem.  Farkas'
+lemma alone does not provide them.
 
-After generic perturbation there are finitely many complementary bases and
-finitely many valuation cones.  Physical Pivot Completeness would therefore
-imply that pivot iteration either reaches one of the four outputs or repeats a
-labelled projective state.  The repeated state yields the charged lasso
-compiled by this PR.  Perturbation closure can then return the conclusion to
-the original rational table.
+## 8. Missing theorem B: relative projective return
 
-This PR does **not** formalize or assume that theorem.  Its contribution is to
-make the recurrent output exact, finite, and fully executable, so future work
-is concentrated on the local pivot classification rather than another global
-compact-minimizer problem.
+Every infinite non-output pivot trajectory must supply recurrent segments
+whose weighted seam is negligible relative to weighted real absorption, for
+example
+
+```text
+weightedResidual(segment) /
+  weightedAbsorption(segment) → 0.
+```
+
+Equivalently, one may prove a contraction or fixed-point theorem for every
+recurrent chart monodromy.  Finite label recurrence is not a substitute.
+
+## 9. Correct producer statement
+
+Only after both missing theorems are established does the projective route
+become an arbitrary-game producer:
+
+```text
+positive-cemetery branch
+  → resolved tangent or Farkas row
+  → strategic output or infinite physical pivot path
+  → relative return segment
+  → weighted charged lasso
+  → exact periodic support-rational cycle
+  → uniform-equilibrium payoff.
+```
+
+The current PR formalizes the exact normalization, singleton-LCP algebra,
+local affine Farkas alternative, finite repeated-label lemma, and the complete
+weighted lasso consumer.  It deliberately leaves the two strategic producer
+theorems explicit.
