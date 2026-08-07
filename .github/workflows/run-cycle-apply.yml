@@ -18,7 +18,7 @@ jobs:
       - name: Decode generated Lean source
         shell: bash
         run: |
-          sed -n '/^H4sI/,/^PAYLOAD$/p' .github/workflows/export-agent-source.yml | sed '$d' > "$RUNNER_TEMP/cycle.b64"
+          sed -n '/H4sI/,/PAYLOAD/p' .github/workflows/export-agent-source.yml | sed '$d' | sed 's/^[[:space:]]*//' > "$RUNNER_TEMP/cycle.b64"
           mkdir -p GameTheory/Concepts/Stochastic
           base64 -d "$RUNNER_TEMP/cycle.b64" | gzip -d > GameTheory/Concepts/Stochastic/QuittingPunishmentCompletedCycle.lean
       - name: Commit generated source
@@ -30,7 +30,5 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "Add punishment-completed cycle compiler"
+          git commit -m "Fix punishment-completed cycle compiler"
           git push origin HEAD:agent/punishment-completed-cycles
-
-# Lean CI trigger after generated source landed.
