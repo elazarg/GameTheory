@@ -28,7 +28,7 @@ jobs:
               (
                   'open StochasticGame Filter Math.Probability Math.PMFProduct\n\nvariable {K : ℕ}',
                   'open StochasticGame Filter Math.Probability Math.PMFProduct\nopen QuittingSureSetOwnerRepair\n\nvariable {K : ℕ}',
-                  1,
+                  2,
               ),
               ('  push_neg at hnone', '  push Not at hnone', 1),
               (
