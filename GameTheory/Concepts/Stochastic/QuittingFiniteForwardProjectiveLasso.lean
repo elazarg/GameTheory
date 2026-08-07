@@ -130,8 +130,9 @@ theorem exists_singleSeamProjectiveLasso_of_finiteForwardPackets
   obtain ⟨first, second, hfirst, hsecond, hdist, hgap⟩ :=
     hthreshold state charge packet.horizon
       hstate hcharge0 hcharge1 hlarge
+  have hfirstSecond : first ≤ second := hfirst.le
   have hfirstLe : first ≤ packet.horizon :=
-    le_trans hfirst.le hsecond
+    le_trans hfirstSecond hsecond
   have hfirstState : state first = packet.value first := by
     simp [state, Nat.min_eq_left hfirstLe]
   have hsecondState : state second = packet.value second := by
@@ -156,7 +157,7 @@ theorem exists_singleSeamProjectiveLasso_of_finiteForwardPackets
         (∑ time ∈ Finset.range first, q time) +
           ∑ offset ∈ Finset.range (second - first),
             q (first + offset) := by
-    simpa [Nat.add_sub_of_le hfirstLe] using
+    simpa [Nat.add_sub_of_le hfirstSecond] using
       (Finset.sum_range_add q first (second - first))
   have hblock :
       1 ≤ ∑ offset ∈ Finset.range (second - first),
@@ -195,7 +196,7 @@ theorem exists_singleSeamProjectiveLasso_of_finiteForwardPackets
   have hexists : ∃ offset ∈ Finset.range (n + 1),
       0 < q (first + offset) := by
     by_contra hno
-    push_neg at hno
+    push Not at hno
     have hsumNonpos :
         (∑ offset ∈ Finset.range (n + 1),
           q (first + offset)) ≤ 0 := by
