@@ -11,10 +11,16 @@ program.
    hinge, known boundaries, alternatives, and falsifiers.
 3. [TOOLKIT.md](TOOLKIT.md) — the production tool collection organized by
    inputs, outputs, role, canonical import, and nonclaim.
-4. When the local ignored `ideas/` corpus is present, follow optional links to
+4. [SystematicApproach.md](SystematicApproach.md) — stable guidance for
+   classifying finite-quitting producer, compiler, diagnostic, and separator
+   work; then [ConjectureDirectedSpine.md](ConjectureDirectedSpine.md) for the
+   proposed path-consistent dependency spine joining subgame induction,
+   support enlargement, recurrent-component flow, physical realization, and
+   closure.
+5. When the local ignored `ideas/` corpus is present, follow optional links to
    its exact claim cards or attributed literature records. The tracked
    `FRONTIER.md` and route pages remain sufficient for a clean-clone handoff.
-5. Read [Program.md](Program.md) when changing the research/formalization
+6. Read [Program.md](Program.md) when changing the research/formalization
    method, the [research atlas](manuscript/UniformEquilibriumFrontierManuscript.tex)
    for the detailed theorem/idea map, and
    [intuition.tex](manuscript/intuition.tex) for a shorter conceptual account of
@@ -27,6 +33,14 @@ program.
 - [FRONTIER.md](FRONTIER.md) is the curated mathematical state of knowledge.
 - [TOOLKIT.md](TOOLKIT.md) is the stable map of production interfaces and
   their semantic roles.
+- [SystematicApproach.md](SystematicApproach.md) records the documentation-level
+  route, role, and claim distinctions. These are research guidance, not
+  proof-relevant Lean provenance.
+- [ConjectureDirectedSpine.md](ConjectureDirectedSpine.md) records the proposed
+  dependency order from principal-support preprocessing through glue-or-enlarge,
+  a legal support atlas, reachable-SCC flow or componentwise separators,
+  physical closing, and generic-to-all closure. It is a research architecture,
+  not theorem or live priority truth.
 - [EssentialAPS.md](EssentialAPS.md) states the exact algebraic/executable
   boundary of the essential-APS singleton-flow formalization.
 - [SupportWitnessCompiler.md](SupportWitnessCompiler.md) records the
