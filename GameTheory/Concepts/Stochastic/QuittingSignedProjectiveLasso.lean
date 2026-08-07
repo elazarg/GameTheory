@@ -4,29 +4,30 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.QuittingWeightedProjectiveLasso
+import GameTheory.Concepts.Stochastic.QuittingProjectiveLassoWeighted
 
 /-!
 # Cancellation-aware signed projective lassos
 
 Exact cyclic policy evaluation only sees the **signed monodromy** of the local
-Bellman seams.  For every entry phase and player, the exact identity proved in
-`QuittingProjectiveLassoWeighted` is
+Bellman seams.  For every entry phase and player,
 
 `weightedAbsorption * (value - exactValue) = signedResidual`.
 
-Consequently, the rotation-uniform condition
+Under positive weighted absorption, the rotation-uniform signed condition is
+therefore exactly equivalent to uniform closeness of the displayed values to
+the true periodic values.  For a fixed candidate `(cycle, value)` it is a
+strictly weaker acceptance test than bounding the survival-weighted sum of the
+absolute seams, because local errors may cancel within a turn.  Rotation
+uniformity remains essential: cancellation is allowed inside each rotated
+turn, not across entry phases.
 
-`|signedResidual phase who| ≤ error * weightedAbsorption`
-
-is sufficient for periodic correction.  It is strictly weaker than bounding
-the survival-weighted sum of the absolute seams: oscillating local errors may
-cancel over one turn.  Rotation-uniformity remains essential; cancellation is
-allowed within each rotated turn, not across different entry phases.
-
-This file exposes that weakest exact finite compiler interface.  The existing
-`QuittingFiniteWeightedProjectiveLasso` remains available and embeds into the
-signed interface by the triangle inequality.
+This does **not** weaken the all-accuracy existential producer problem.  Exact
+finite support-rational cycles package back into signed lassos with zero seam,
+while signed lassos correct to exact cycles after rescaling the tolerance.  The
+all-accuracy producer hypotheses are therefore equivalent; the signed API is a
+sharper intermediate certificate for an upstream analytic or geometric
+construction.
 -/
 
 noncomputable section
@@ -45,9 +46,33 @@ def IsQuittingRotationUniformSignedResidual
     |quittingCyclicSignedResidual reward cycle value phase who| ≤
       error * quittingCyclicWeightedAbsorption cycle
 
+/-- **Exact signed-correction characterization.**  Under positive aggregate
+absorption, the rotation-uniform signed predicate is equivalent to uniform
+coordinatewise closeness to the true periodic values. -/
+theorem isQuittingRotationUniformSignedResidual_iff_value_close
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cycle : Fin K → ι → PMF Bool) (value : Fin K → Payoff ι)
+    (error : ℝ)
+    (habsorption : 0 < quittingCyclicWeightedAbsorption cycle) :
+    IsQuittingRotationUniformSignedResidual reward cycle value error ↔
+      ∀ phase who,
+        |value phase who -
+          quittingCyclicTerminalValue reward cycle phase who| ≤ error := by
+  constructor
+  · intro hsigned
+    exact abs_quittingCyclicValue_sub_terminalValue_le_of_signedResidual
+      reward cycle value hsigned habsorption
+  · intro hclose phase who
+    rw [←
+      quittingCyclicWeightedAbsorption_mul_value_sub_terminalValue_eq_signedResidual
+        reward cycle value phase who,
+      abs_mul, abs_of_pos habsorption]
+    simpa [mul_comm] using
+      (mul_le_mul_left habsorption).2 (hclose phase who)
+
 /-- Finite cancellation-aware projective-lasso certificate.  Its strategic
-fields coincide with the absolute weighted certificate; only the seam
-hypothesis is weakened from total variation to signed monodromy. -/
+fields match the older weighted certificate; its seam field uses the exact
+signed correction coordinate. -/
 structure QuittingFiniteSignedProjectiveLasso
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (K : ℕ) (error : ℝ) where
@@ -81,11 +106,12 @@ theorem abs_value_sub_exactValue_le
     (lasso : QuittingFiniteSignedProjectiveLasso reward K error)
     (phase : Fin K) (who : ι) :
     |lasso.value phase who - exactValue lasso phase who| ≤ error := by
-  exact abs_quittingCyclicValue_sub_terminalValue_le_of_signedResidual
-    reward lasso.cycle lasso.value lasso.signedResidual_bound
+  exact
+    (isQuittingRotationUniformSignedResidual_iff_value_close
+      reward lasso.cycle lasso.value error
       (quittingCyclicWeightedAbsorption_pos_of_absorbingPhase
-        lasso.cycle lasso.absorbingPhase lasso.absorbing)
-      phase who
+        lasso.cycle lasso.absorbingPhase lasso.absorbing)).mp
+      lasso.signedResidual_bound phase who
 
 /-- **Signed projective-lasso correction.**  Replacing the displayed values by
 actual periodic values yields an exact finite support-rational cycle at twice
@@ -131,38 +157,84 @@ theorem exists_supportRationalDivergentPath
       (toFiniteSupportRationalCycle lasso)
       lasso.absorbingPhase lasso.absorbing
 
+/-- An exact finite support-rational cycle is a signed lasso with zero Bellman
+seam.  This is the reverse adapter showing that the signed certificate does not
+weaken the existential all-accuracy producer problem. -/
+def ofFiniteSupportRationalCycle
+    (cycle : Fin K → ι → PMF Bool) (value : Fin K → Payoff ι)
+    (herror : 0 ≤ error)
+    (hcycle : IsQuittingFiniteSupportRationalCycle
+      reward cycle value error error)
+    (absorbingPhase : Fin K)
+    (habsorbing : 0 < quittingRootAbsorptionMass (cycle absorbingPhase)) :
+    QuittingFiniteSignedProjectiveLasso reward K error where
+  cycle := cycle
+  value := value
+  error_nonneg := herror
+  signedResidual_bound := by
+    have hcontract :
+        (∏ phase : Fin K,
+          quittingStationaryContinueMass (cycle phase)) < 1 :=
+      prod_quittingStationaryContinueMass_univ_lt_one_of_absorbing
+        cycle absorbingPhase habsorbing
+    have hselected :
+        value = quittingCyclicTerminalValue reward cycle :=
+      eq_quittingCyclicTerminalValue_of_rootSuccessorPayoff_of_absorbing
+        reward cycle value hcycle.1 hcontract
+    apply
+      (isQuittingRotationUniformSignedResidual_iff_value_close
+        reward cycle value error
+        (quittingCyclicWeightedAbsorption_pos_of_absorbingPhase
+          cycle absorbingPhase habsorbing)).mpr
+    intro phase who
+    rw [hselected, sub_self, abs_zero]
+    exact herror
+  support := hcycle.2.1
+  rational := hcycle.2.2
+  absorbingPhase := absorbingPhase
+  absorbing := habsorbing
+
 end QuittingFiniteSignedProjectiveLasso
 
-namespace QuittingFiniteWeightedProjectiveLasso
+/-- **All-accuracy equivalence.**  Signed lassos exist at every positive
+accuracy iff exact finite support-rational cycles do.  The forward direction
+uses signed correction at half the requested error; the reverse direction is
+the zero-seam adapter above. -/
+theorem
+    quittingSignedProjectiveLassos_all_errors_iff_finiteSupportRationalCycles
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    (∀ error : ℝ, 0 < error →
+      ∃ K : ℕ,
+        Nonempty (QuittingFiniteSignedProjectiveLasso reward K error)) ↔
+    (∀ error : ℝ, 0 < error →
+      ∃ K : ℕ,
+        ∃ cycle : Fin K → ι → PMF Bool,
+          ∃ value : Fin K → Payoff ι,
+            ∃ absorbingPhase : Fin K,
+              IsQuittingFiniteSupportRationalCycle
+                  reward cycle value error error ∧
+                0 < quittingRootAbsorptionMass
+                  (cycle absorbingPhase)) := by
+  constructor
+  · intro hsigned error herror
+    have hhalf : 0 < error / 2 := by linarith
+    obtain ⟨K, ⟨lasso⟩⟩ := hsigned (error / 2) hhalf
+    refine ⟨K, lasso.cycle, lasso.exactValue, lasso.absorbingPhase, ?_,
+      lasso.absorbing⟩
+    have hcycle := lasso.toFiniteSupportRationalCycle
+    have htwo : (2 : ℝ) * (error / 2) = error := by ring
+    simpa only [htwo] using hcycle
+  · intro hcycles error herror
+    obtain ⟨K, cycle, value, absorbingPhase, hcycle, habsorbing⟩ :=
+      hcycles error herror
+    exact ⟨K, ⟨
+      QuittingFiniteSignedProjectiveLasso.ofFiniteSupportRationalCycle
+        cycle value (le_of_lt herror) hcycle absorbingPhase habsorbing⟩⟩
 
-variable {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-  {error : ℝ}
-
-/-- Every absolute weighted lasso is a signed lasso.  This is the compatibility
-embedding from the previous compiler interface into the cancellation-aware
-one. -/
-def toSigned
-    (lasso : QuittingFiniteWeightedProjectiveLasso reward K error) :
-    QuittingFiniteSignedProjectiveLasso reward K error where
-  cycle := lasso.cycle
-  value := lasso.value
-  error_nonneg := lasso.error_nonneg
-  signedResidual_bound := by
-    intro phase who
-    exact
-      (abs_quittingCyclicSignedResidual_le_weightedResidual
-        reward lasso.cycle lasso.value phase who).trans
-        (lasso.weightedResidual_bound phase who)
-  support := lasso.support
-  rational := lasso.rational
-  absorbingPhase := lasso.absorbingPhase
-  absorbing := lasso.absorbing
-
-end QuittingFiniteWeightedProjectiveLasso
-
-/-- **Cancellation-aware uniform-payoff interface.**  Rotation-uniform signed
-projective lassos at every positive accuracy imply a uniform-equilibrium
-payoff. -/
+/-- Signed projective lassos at every positive accuracy imply a
+uniform-equilibrium payoff.  By the preceding theorem, this is the established
+finite-cycle producer theorem expressed through the sharper fixed-candidate
+certificate. -/
 theorem quittingGame_exists_uniformEquilibriumPayoff_of_signedProjectiveLassos
     [Nonempty ι]
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -171,16 +243,10 @@ theorem quittingGame_exists_uniformEquilibriumPayoff_of_signedProjectiveLassos
         Nonempty (QuittingFiniteSignedProjectiveLasso reward K error)) :
     ∃ payoff : Payoff ι,
       (quittingGame reward).IsUniformEquilibriumPayoff none payoff := by
-  apply quittingGame_exists_uniformEquilibriumPayoff_of_supportRationalDivergentPaths
+  apply quittingGame_exists_uniformEquilibriumPayoff_of_finiteSupportRationalCycles
     reward
-  intro δ hδ
-  have hhalf : 0 < δ / 2 := by linarith
-  obtain ⟨K, ⟨lasso⟩⟩ := hproducer (δ / 2) hhalf
-  obtain ⟨plan, hsupport, hdiverges, hir⟩ :=
-    QuittingFiniteSignedProjectiveLasso.exists_supportRationalDivergentPath
-      lasso
-  have htwo : (2 : ℝ) * (δ / 2) = δ := by ring
-  rw [htwo] at hsupport hir
-  exact ⟨plan, hsupport, hdiverges, hir⟩
+  exact
+    (quittingSignedProjectiveLassos_all_errors_iff_finiteSupportRationalCycles
+      reward).mp hproducer
 
 end GameTheory
