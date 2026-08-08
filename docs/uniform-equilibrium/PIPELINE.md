@@ -276,6 +276,8 @@ superseded/resolved decision section in
   re-closing — see [archive](PIPELINE-Archive.md)
 - `LEAN-P0-11` — bridge the two encodings of complementarity — see
   [archive](PIPELINE-Archive.md)
+- `LEAN-P0-12` — elementary behavioral-tail density and fixed-prefix repair
+  value — see [archive](PIPELINE-Archive.md)
 - `LEAN-P1-5` — linear complementarity infrastructure — see
   [archive](PIPELINE-Archive.md)
 - `MATH-P0-6` — port the all-periods non-existence theorem — see
@@ -512,9 +514,9 @@ closed mathematically for a fixed prefix.  At fixed accuracy, a near-minimizing
 tail at one holonomy gives one finite elementary tail stable on a holonomy
 neighborhood; a positive all-tail value gives a neighborhood-stable gain floor
 against every tail, without a length bound.  Same-tail semantic density in the
-three-cap grammar and literal infinite-tail evaluation are production; the
-final boundary-pair-to-gain/infimum specialization is active.  The remaining
-strategic gate is **prefix consumption**: a positive
+three-cap grammar, literal infinite-tail evaluation, boundary-pair gain
+transport, and equality of the elementary/all-tail infima are production.  The
+remaining strategic gate is **prefix consumption**: a positive
 floor excludes every tail after the calibrated prefix but does not yet exclude
 profiles that replace the prefix.
 
@@ -1758,58 +1760,6 @@ around the source wrapper.
 
 **Acceptance.** Every production finite block embeds without changing its
 strategic meaning; basis for P0 compactness and endpoint adapters.
-
-### `LEAN-P0-12` — formalize elementary tail density and the all-tail holonomy modulus
-
-- **Status:** ACTIVE (PARTIAL)
-- **Lane:** P0
-- **Depends:** `PC-013`, boundary holonomy, behavioral pure-time extremality,
-  full/deleted survival limits.
-- **Record:** fixed-prefix behavioral-tail decoder.
-
-**Objective.** Prove that arbitrary quitting behavior tails are simultaneously
-dense, in prescribed value and every all-behavior best-response envelope, in
-finite words capped by sure joint exit, sure solo exit, or Never.  Combine this
-with the common affine/max-affine holonomy modulus to obtain the Lipschitz
-all-tail repair value and buffered stable alternative.
-
-**State.** `ACTIVE`, with the fixed-prefix semantic layer in production.  The
-module proves the uniform scalar and finite-player gain estimates, a generic
-fixed-family infimum estimate, and buffered repair/obstruction transfer.  Its
-behavioral specialization keeps each tail's prescribed value and literal
-best-response envelope co-realized, defines the actual all-tail repair value,
-and proves its Lipschitz and buffered transfer laws.  The finite/infinite
-phase-switch adapters prove exact prescribed evaluation and finite behavioral
-envelope evaluation.  The infinite adapter additionally identifies the
-same-tail holonomy gain with literal maximum-positive terminal exploitability
-of the attached phase-switch profile, and identifies the repair-value infimum
-with the corresponding infimum over actual profiles.  No absorption hypothesis
-or finite tail proxy is used.
-The
-tail-compression module defines the three caps and exact prefix laws, proves
-the arbitrary-root full/deleted-survival trichotomy, computes the exact Never
-boundary pair, and proves the positive-joint-survival prescribed estimate
-`M * (S_N - S_∞)` and convergence.  Generic prefix estimates bound prescribed
-replacement by `2 M S_N` and every literal behavioral envelope by
-`2 M χ_i(N)`; these give the complete all-deleted-zero sure-joint branch with
-one simultaneous cutoff for all players.  The sure-solo module proves that the
-owner's deviation envelope is exactly the Never envelope and records the
-ordinary prefix bounds for every other coordinate.  The sharp Never coupling
-now proves the centered estimate `2 M (χ_i(N) - χ_i(∞))` uniformly over pure
-quit times and lifts it to the literal behavioral supremum.  This closes the
-positive-joint and unique-positive-deleted branches and yields one cap/cutoff
-simultaneously approximating every prescribed and envelope coordinate.
-
-The prefix-consumption source now also has an aggregate-calibrated marked
-terminal anchor whose stored path is provably the canonical aggregate
-minimizer, together with positive separated packet mass.  A one-player
-production regression proves that a locally complementary sure-quit prefix
-can have unit physical exploitability while Never is an exact terminal
-equilibrium, permanently fencing off prefix-to-global inference.
-
-**Acceptance.** The simultaneous three-case selector is landed.  Complete the
-fixed-prefix boundary-pair gain estimate and use it to identify the all-tail
-repair infimum with the elementary capped-tail infimum.
 
 ### `LEAN-P0-2` — formalize the two carrier refutations that exist only as prose
 

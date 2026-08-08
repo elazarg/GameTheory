@@ -378,9 +378,10 @@ deviation envelope.  The sharp Never coupling bounds every pure quit time, and
 then the literal behavioral supremum, by
 `2 M (χ_i(N) - χ_i(∞))`.  The combined three-case capstone now selects one
 finite cap and cutoff which simultaneously approximate all prescribed and
-best-response coordinates.  Only the fixed-prefix boundary-pair gain estimate
-and elementary/all-tail infimum identification remain to make this density
-operational at the named repair value.
+best-response coordinates.  The fixed-prefix boundary-pair modulus transports
+that approximation to maximum positive gain, and elementary capped tails have
+exactly the same repair-value infimum as all behavioral tails.  This completes
+the fixed-prefix tail decoder; code length may still diverge with accuracy.
 
 The prefix-consumption inputs now preserve the relevant optimizer provenance.
 An aggregate-calibrated marked anchor retains the canonical aggregate

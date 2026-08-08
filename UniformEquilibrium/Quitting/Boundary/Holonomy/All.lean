@@ -9,6 +9,7 @@ import UniformEquilibrium.Quitting.Boundary.Holonomy.RealizedTangent
 import UniformEquilibrium.Quitting.Boundary.Holonomy.AllTailRepairValue
 import UniformEquilibrium.Quitting.Boundary.Holonomy.BehavioralTailEvaluation
 import UniformEquilibrium.Quitting.Boundary.Holonomy.BehavioralTailRepairValue
+import UniformEquilibrium.Quitting.Boundary.Holonomy.BehavioralTailGainDensity
 import UniformEquilibrium.Quitting.Boundary.Holonomy.InfiniteBehavioralTailEvaluation
 import UniformEquilibrium.Quitting.Boundary.Holonomy.AggregateTerminalAnchor
 
@@ -40,6 +41,12 @@ separate theorem: the infinite adapter proves it by realizing the early
 Bellman branch and approximating the attached tail's behavioral supremum.  It
 identifies same-tail holonomy gain, and hence its infimum over tails, with
 literal terminal exploitability of the phase-switch profile.
+
+The boundary-pair modulus transports the three-cap semantic density theorem
+through every actual finite prefix.  Consequently finite elementary capped
+tails and arbitrary behavioral tails have exactly the same repair-value
+infimum; neither infimum is assumed attained and elementary code length may
+depend on the requested accuracy.
 
 The behavioral-tail repair value specializes the abstract fixed family to the
 prescribed/envelope pair co-realized by each actual tail and inherits the same

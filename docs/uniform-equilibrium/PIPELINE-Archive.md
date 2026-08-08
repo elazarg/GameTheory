@@ -793,6 +793,35 @@ must sweep `ephemeral/` — noting that `sources/aps-quitting-2026.pdf` there is
 3 KB HTML bot-block page, not a paper.
 
 
+### `LEAN-P0-12` — elementary tail density and the all-tail holonomy modulus (DONE)
+
+- **Status:** DONE
+- **Lane:** P0
+- **Depends:** `PC-013`, boundary holonomy, behavioral pure-time extremality,
+  full/deleted survival limits.
+
+**Objective.** Prove that arbitrary quitting behavior tails are simultaneously
+dense, in prescribed value and every all-behavior best-response envelope, in
+finite words capped by sure joint exit, sure solo exit, or Never.  Combine this
+with the common affine/max-affine holonomy modulus to obtain the Lipschitz
+all-tail repair value and buffered stable alternative.
+
+**Resolution.** The fixed-prefix layer now keeps each tail's prescribed value
+and literal best-response envelope co-realized, identifies its holonomy gain
+with literal terminal exploitability of the actual infinite phase-switch
+profile, and proves the repair value Lipschitz in prefix holonomy.  The sharp
+Never coupling is `2 M (χ_i(N) - χ_i(∞))`; behavioral pure-time extremality
+lifts it to the all-behavior envelope.  The full survival trichotomy selects
+one sure-joint, sure-solo, or Never cap and one cutoff simultaneously for all
+coordinates.  A survival-weighted boundary-pair modulus transports that
+semantic approximation through every actual finite prefix.
+
+**Acceptance.** Met by `exists_elementaryTailCap_terminalPair_close`,
+`quittingPhaseSwitch_behavioralTailGain_eq_terminalExploitability`, and
+`elementaryTailRepairValue_eq_behavioralTailRepairValue`.  The elementary and
+all-behavior tail infima are equal without attainment or a uniform length
+bound.  Prefix consumption is a separate strategic theorem (`PC-014`).
+
 ### `MATH-P1-6` — characterize instant approximate equilibria (SOLVED)
 
 - **Status:** SOLVED (2026-08-07)
