@@ -68,7 +68,7 @@ theorem surplus_shrink_eq_of_value_eq (v : ι → Valuation A) (γ : Allocation 
     have hji : j ≠ i := by simpa using (Finset.mem_erase.mp hj).1
     simp [Allocation.shrink_bundle_ne γ hji B hB]
 
-omit [Fintype A] in
+omit [Fintype A] [DecidableEq A] in
 theorem allocationSize_shrink_lt (γ : Allocation ι A) (i : ι) {B : Finset A}
     (hB : B ⊂ γ.bundle i) : allocationSize (γ.shrink i B hB.1) < allocationSize γ := by
   classical
@@ -143,6 +143,7 @@ theorem frugalSurplusMaximizingAllocation_isFrugal :
 
 end FrugalSelection
 
+omit [DecidableEq ι] in
 /-- A frugal allocation assigns a `Q`-based bidder a bundle in `Q`. -/
 theorem IsFrugal.allocated_bundle_mem_of_based {d : (ι → Valuation A) → Allocation ι A}
     (hfrugal : IsFrugal d) {Q : Finset (Finset A)} {hQempty : ∅ ∈ Q}

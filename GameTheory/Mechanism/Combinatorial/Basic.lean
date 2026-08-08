@@ -174,16 +174,20 @@ theorem bundling_isBasedOn (Q : Finset (Finset A)) (hQempty : ∅ ∈ Q)
 
 end Valuation
 
-/-- An allocation gives each buyer a bundle, with distinct bundles disjoint. -/
-structure Allocation (ι A : Type) [DecidableEq ι] [DecidableEq A] where
+/-- An allocation gives each buyer a bundle, with distinct bundles disjoint.
+The semantic object stores no finiteness or decidable-equality capability. -/
+structure Allocation (ι A : Type) where
   /-- Bundle assigned to each buyer. -/
   bundle : ι → Finset A
   /-- Distinct buyers receive disjoint bundles. -/
   pairwise_disjoint : ∀ ⦃i j : ι⦄, i ≠ j → Disjoint (bundle i) (bundle j)
 
+instance : CoeFun (Allocation ι A) (fun _ => ι → Finset A) :=
+  ⟨Allocation.bundle⟩
+
 namespace Allocation
 
-variable [DecidableEq ι] [DecidableEq A]
+variable [DecidableEq ι]
 variable (γ : Allocation ι A)
 
 /-- Shrink one buyer's allocated bundle to a sub-bundle. -/
@@ -215,7 +219,7 @@ theorem shrink_bundle_ne {i j : ι} (hji : j ≠ i) (B : Finset A)
 
 section Residual
 
-variable [Fintype ι] [Fintype A]
+variable [DecidableEq A] [Fintype ι] [Fintype A]
 
 /-- Goods remaining after the buyers other than `i` keep their bundles. -/
 noncomputable def residualAfterOpponents (i : ι) : Finset A :=
@@ -275,13 +279,13 @@ end Residual
 end Allocation
 
 /-- Empty allocation: every buyer receives no goods. -/
-def emptyAllocation (ι A : Type) [DecidableEq ι] [DecidableEq A] : Allocation ι A where
+def emptyAllocation (ι A : Type) : Allocation ι A where
   bundle := fun _ => ∅
   pairwise_disjoint := by
     intro _ _ _
     simp
 
-instance allocationInhabited [DecidableEq ι] [DecidableEq A] : Inhabited (Allocation ι A) :=
+instance allocationInhabited : Inhabited (Allocation ι A) :=
   ⟨emptyAllocation ι A⟩
 
 instance allocationFintype [Fintype ι] [DecidableEq ι] [Fintype A] [DecidableEq A] :
