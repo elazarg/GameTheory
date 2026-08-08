@@ -1707,6 +1707,37 @@ around the source wrapper.
 **Acceptance.** Every production finite block embeds without changing its
 strategic meaning; basis for P0 compactness and endpoint adapters.
 
+### `LEAN-P0-12` — formalize elementary tail density and the all-tail holonomy modulus
+
+- **Status:** ACTIVE (PARTIAL)
+- **Lane:** P0
+- **Depends:** `PC-013`, boundary holonomy, behavioral pure-time extremality,
+  full/deleted survival limits.
+- **Record:** fixed-prefix behavioral-tail decoder.
+
+**Objective.** Prove that arbitrary quitting behavior tails are simultaneously
+dense, in prescribed value and every all-behavior best-response envelope, in
+finite words capped by sure joint exit, sure solo exit, or Never.  Combine this
+with the common affine/max-affine holonomy modulus to obtain the Lipschitz
+all-tail repair value and buffered stable alternative.
+
+**State.** `ACTIVE`, with two production slices landed.  The fixed-prefix
+module proves the uniform scalar and finite-player gain estimates, a generic
+fixed-family infimum estimate, and buffered repair/obstruction transfer.  The
+tail-compression module defines the three caps and exact prefix laws, proves
+the arbitrary-root full/deleted-survival trichotomy, computes the exact Never
+boundary pair, and proves the positive-joint-survival prescribed estimate
+`M * (S_N - S_∞)` and convergence.  Generic prefix estimates bound prescribed
+replacement by `2 M S_N` and every literal behavioral envelope by
+`2 M χ_i(N)`; these give the complete all-deleted-zero sure-joint branch with
+one simultaneous cutoff for all players.  Missing are the positive-survival
+best-response estimate and the unique-deleted-clock sure-solo branch.
+
+**Acceptance.** One theorem selecting an elementary finite cap for every tail
+and tolerance, with one cap simultaneously approximating the prescribed vector
+and every player's literal behavioral best-response envelope; then instantiate
+the generic fixed-family infimum theorem with those co-realized pairs.
+
 ### `LEAN-P0-2` — formalize the two carrier refutations that exist only as prose
 
 - **Status:** ACTIVE

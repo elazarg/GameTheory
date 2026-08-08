@@ -329,6 +329,7 @@ import UniformEquilibrium.Quitting.Stationary.RegretDichotomy
 import UniformEquilibrium.Quitting.Debt.Dynamic.PositiveDynamicDebtProvenance
 import UniformEquilibrium.Quitting.Root.SeparatedTerminalAnchor
 import UniformEquilibrium.Quitting.Boundary.Holonomy.All
+import UniformEquilibrium.Quitting.Terminal.TailCompression.All
 import UniformEquilibrium.Quitting.Debt.Dynamic.TwoEndedDynamicDebtCompactification
 import UniformEquilibrium.Quitting.Boundary.Holonomy.TwoEndedAnchorPersistenceCounterexample
 import UniformEquilibrium.Quitting.Cycles.JoinMonotoneUniform

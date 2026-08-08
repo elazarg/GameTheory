@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import UniformEquilibrium.Quitting.Boundary.Holonomy.Compactness
 import UniformEquilibrium.Quitting.Boundary.Holonomy.RealizedTangent
+import UniformEquilibrium.Quitting.Boundary.Holonomy.AllTailRepairValue
 
 /-!
 # Boundary holonomy for finite quitting blocks
@@ -23,4 +24,10 @@ strategic source but does not cover escaping block length.  Tangent-coordinate
 compactness covers coefficient projections but does not prove that the
 limiting coordinates are realized by a strategic block, retain a source path,
 or admit a strategic decoder.
+
+The fixed-prefix repair interface evaluates a bounded prescribed/best-response
+boundary pair through the affine/max-affine holonomy.  Its gain modulus is
+uniform over every pair in the boundary box and therefore survives an infimum
+over any one source-independent tail family.  It does not construct or certify
+the pairs as tails.
 -/

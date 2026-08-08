@@ -344,6 +344,16 @@ better calibrated prefix, become a plateau-null separator, or lift to a global
 terminal exploitability gap.  Compactness is needed only to uniformize the
 resulting local prefix charts.
 
+Production formalization is partial and follows this mathematical split.  The
+fixed-prefix holonomy module proves the common playerwise/aggregate gain
+modulus and its fixed-family infimum consequence.  The tail-compression module
+provides the elementary caps, full/deleted-survival trichotomy, exact Never
+boundary pair, positive-survival prescribed convergence, and the complete
+all-deleted-zero sure-joint branch in both prescribed and literal behavioral
+best-response coordinates.  Best-response convergence in the positive-
+survival branch and the exceptional sure-solo branch remain before the full
+semantic-density theorem can be invoked in production.
+
 **The bounded root-debt descent decoder is closed negatively (`M`)** — see the
 capstone claim.  No bounded-length exact-`D` modification achieves a cutoff-
 independent decrement, and accumulation does not rescue it.  This does not rule
