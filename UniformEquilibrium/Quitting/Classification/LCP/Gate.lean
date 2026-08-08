@@ -9,26 +9,29 @@ import UniformEquilibrium.Quitting.Classification.LCP.SourceInterfaces
 /-!
 # Faithful Q/non-Q LCP classification gate
 
-The gate is ordered by strategic strength and by the exact source scopes:
+The gate is ordered by strategic strength and by the audited source scopes:
 
 1. the proved Never branch;
-2. an ordinary sure-first-stage branch;
-3. the simple stationary source branches (all players abnormal, or a
-   homogeneous normalized LCP solution);
-4. the ordinary standard-non-Q branch on the recursively normal matrix;
+2. an ordinary branch terminating almost surely in the first stage;
+3. the simple stationary source branches (all corrected-normal players
+   deleted, or a homogeneous normalized LCP solution);
+4. the ordinary standard-non-Q branch on the corrected normal-player matrix;
 5. the continuous-path branch, using projective Q-bar on the full normalized
    matrix; and
 6. the residual hard class.
 
-The residual is not abbreviated as "Q but not Q-bar" without qualification.
-It records that the *normal-player matrix* is standard Q, while the *full
-matrix* fails AGKRS's weaker projective Q-bar condition, after all preceding
-simple cases have been excluded.
+Every branch after the first explicitly records failure of the preceding
+simple cases.  The residual is not abbreviated as "Q but not Q-bar" without
+qualification: its normal-player matrix is standard Q, its full normalized
+matrix is not projective Q-bar, and the Never, instant, all-abnormal, and
+homogeneous cases have all been removed.
 
-A second theorem maps the algebraic gate through audited source interfaces.
-Its ordinary and continuous conclusions remain different disjuncts.  The
-standard-Q sunspot conclusion is exported only by separate theorems and is
-never retyped as an ordinary equilibrium.
+The corrected normal-player recursion is not silently attributed to the
+printed Solan--Solan statement.  Strategic conclusions using it require the
+explicit `SolanSolanDistinctWitnessRepairInterface`.
+
+Ordinary behavior profiles, continuous absorption paths, and
+sunspot/public-correlation equilibria remain different conclusion types.
 -/
 
 noncomputable section
@@ -38,51 +41,66 @@ namespace QuittingLCPClassification
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
-/-- The already proved all-continue/Never case. -/
+/-- The already proved all-Continue/Never case. -/
 def NeverBranch
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
   IsQuittingZeroSolo reward
 
-/-- An ordinary approximate-equilibrium family terminating surely at the first
-stage through at least one player. -/
-def InstantBranch
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
-  HasOrdinaryInstantApproximateEquilibria reward
+/-- The ordered instant branch: Never has failed, and ordinary approximate
+equilibria terminate almost surely in the first stage. -/
+structure InstantBranch
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop where
+  not_never : ¬NeverBranch reward
+  instant : HasOrdinaryInstantApproximateEquilibria reward
 
-/-- The two simple stationary reasons preceding Theorem 2.11's matrix split. -/
-def SimpleStationaryBranch
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
-  AllPlayersAbnormal (normalizedSoloMatrix reward) ∨
-    (HasNormalPlayers (normalizedSoloMatrix reward) ∧
-      HasHomogeneousSimplexSolution
-        (normalizedNormalPlayerMatrix reward))
+/-- The ordered simple stationary branch.  It records failure of Never and of
+the instant branch before exposing the corrected all-abnormal or homogeneous
+LCP reason. -/
+structure SimpleStationaryBranch
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop where
+  not_never : ¬NeverBranch reward
+  no_instant : ¬HasOrdinaryInstantApproximateEquilibria reward
+  reason :
+    AllPlayersAbnormal (normalizedSoloMatrix reward) ∨
+      (HasNormalPlayers (normalizedSoloMatrix reward) ∧
+        HasHomogeneousSimplexSolution
+          (normalizedNormalPlayerMatrix reward))
 
-/-- The ordinary Solan--Solan branch: standard non-Q on the recursively normal
-matrix, under the literal Theorem 2.11 side conditions. -/
-def OrdinaryNonQBranch
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
-  HasNormalPlayers (normalizedSoloMatrix reward) ∧
-    ¬HasHomogeneousSimplexSolution
-      (normalizedNormalPlayerMatrix reward) ∧
-    ¬IsStandardQMatrix (normalizedNormalPlayerMatrix reward)
+/-- The ordered ordinary branch: after all simple cases fail, the corrected
+normal-player matrix is not standard Q.  Under absence of the homogeneous
+branch this is equivalent to failure of the source's projective Q convention. -/
+structure OrdinaryNonQBranch
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop where
+  not_never : ¬NeverBranch reward
+  no_instant : ¬HasOrdinaryInstantApproximateEquilibria reward
+  normal_nonempty : HasNormalPlayers (normalizedSoloMatrix reward)
+  no_homogeneous : ¬HasHomogeneousSimplexSolution
+    (normalizedNormalPlayerMatrix reward)
+  normal_not_standardQ : ¬IsStandardQMatrix
+    (normalizedNormalPlayerMatrix reward)
 
-/-- The continuous-path branch: after the ordinary standard-Q split, the full
-normalized matrix satisfies AGKRS's projective Q-bar condition. -/
-def ContinuousPathBranch
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
-  HasNormalPlayers (normalizedSoloMatrix reward) ∧
-    ¬HasHomogeneousSimplexSolution
-      (normalizedNormalPlayerMatrix reward) ∧
-    IsStandardQMatrix (normalizedNormalPlayerMatrix reward) ∧
-    IsProjectiveQBarMatrix (normalizedSoloMatrix reward)
+/-- The ordered continuous-path branch: the corrected normal-player matrix is
+on its standard-Q side and the full normalized matrix satisfies AGKRS's
+projective Q-bar condition. -/
+structure ContinuousPathBranch
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop where
+  not_never : ¬NeverBranch reward
+  no_instant : ¬HasOrdinaryInstantApproximateEquilibria reward
+  normal_nonempty : HasNormalPlayers (normalizedSoloMatrix reward)
+  no_homogeneous : ¬HasHomogeneousSimplexSolution
+    (normalizedNormalPlayerMatrix reward)
+  normal_standardQ : IsStandardQMatrix
+    (normalizedNormalPlayerMatrix reward)
+  full_projectiveQBar : IsProjectiveQBarMatrix
+    (normalizedSoloMatrix reward)
 
-/-- **Precise residual hard class.**  The simple ordinary cases are absent,
-the recursively normal matrix is standard Q, and the full normalized matrix
-is not projective Q-bar. -/
+/-- **Precise residual hard class.**  Every preceding simple or ordinary
+branch has failed, the corrected normal-player matrix is standard Q, and the
+full normalized matrix is not projective Q-bar. -/
 structure ResidualHardClass
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop where
   not_never : ¬NeverBranch reward
-  not_instant : ¬InstantBranch reward
+  no_instant : ¬HasOrdinaryInstantApproximateEquilibria reward
   normal_nonempty : HasNormalPlayers (normalizedSoloMatrix reward)
   no_homogeneous : ¬HasHomogeneousSimplexSolution
     (normalizedNormalPlayerMatrix reward)
@@ -91,18 +109,35 @@ structure ResidualHardClass
   not_full_projectiveQBar : ¬IsProjectiveQBarMatrix
     (normalizedSoloMatrix reward)
 
-/-- The standard-Q side after all simple stationary source branches have been
-removed. -/
-def StandardQSide
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
-  HasNormalPlayers (normalizedSoloMatrix reward) ∧
-    ¬HasHomogeneousSimplexSolution
-      (normalizedNormalPlayerMatrix reward) ∧
-    IsStandardQMatrix (normalizedNormalPlayerMatrix reward)
+/-- The standard-Q side of the corrected normal-player split, without a claim
+about ordinary, continuous, or sunspot strategies. -/
+structure StandardQSide
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop where
+  normal_nonempty : HasNormalPlayers (normalizedSoloMatrix reward)
+  no_homogeneous : ¬HasHomogeneousSimplexSolution
+    (normalizedNormalPlayerMatrix reward)
+  normal_standardQ : IsStandardQMatrix
+    (normalizedNormalPlayerMatrix reward)
 
-/-- **Faithful algebraic gate.**  Every finite quitting reward table lies in
-one explicitly scoped branch.  This theorem is pure classification: it does
-not import either external strategic theorem. -/
+/-- Forget the full-matrix Q-bar fact and retain the normal-core Q side. -/
+def ContinuousPathBranch.toStandardQSide
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    (h : ContinuousPathBranch reward) : StandardQSide reward where
+  normal_nonempty := h.normal_nonempty
+  no_homogeneous := h.no_homogeneous
+  normal_standardQ := h.normal_standardQ
+
+/-- Forget the full-matrix Q-bar failure and retain the normal-core Q side. -/
+def ResidualHardClass.toStandardQSide
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    (h : ResidualHardClass reward) : StandardQSide reward where
+  normal_nonempty := h.normal_nonempty
+  no_homogeneous := h.no_homogeneous
+  normal_standardQ := h.normal_standardQ
+
+/-- **Faithful ordered algebraic gate.**  Every finite quitting reward table
+lies in one explicitly scoped branch.  This theorem is pure classification:
+it does not instantiate either external strategic source interface. -/
 theorem faithful_q_nonQ_lcp_gate
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
     NeverBranch reward ∨
@@ -115,42 +150,64 @@ theorem faithful_q_nonQ_lcp_gate
   by_cases hnever : NeverBranch reward
   · exact Or.inl hnever
   · right
-    by_cases hinstant : InstantBranch reward
-    · exact Or.inl hinstant
+    by_cases hinstant : HasOrdinaryInstantApproximateEquilibria reward
+    · exact Or.inl
+        { not_never := hnever
+          instant := hinstant }
     · right
       by_cases hnormal : HasNormalPlayers (normalizedSoloMatrix reward)
       · by_cases hhomogeneous : HasHomogeneousSimplexSolution
           (normalizedNormalPlayerMatrix reward)
-        · exact Or.inl (Or.inr ⟨hnormal, hhomogeneous⟩)
+        · exact Or.inl
+            { not_never := hnever
+              no_instant := hinstant
+              reason := Or.inr ⟨hnormal, hhomogeneous⟩ }
         · right
           by_cases hstandard : IsStandardQMatrix
               (normalizedNormalPlayerMatrix reward)
           · right
             by_cases hqbar : IsProjectiveQBarMatrix
                 (normalizedSoloMatrix reward)
-            · exact Or.inl ⟨hnormal, hhomogeneous, hstandard, hqbar⟩
+            · exact Or.inl
+                { not_never := hnever
+                  no_instant := hinstant
+                  normal_nonempty := hnormal
+                  no_homogeneous := hhomogeneous
+                  normal_standardQ := hstandard
+                  full_projectiveQBar := hqbar }
             · exact Or.inr
                 { not_never := hnever
-                  not_instant := hinstant
+                  no_instant := hinstant
                   normal_nonempty := hnormal
                   no_homogeneous := hhomogeneous
                   normal_standardQ := hstandard
                   not_full_projectiveQBar := hqbar }
-          · exact Or.inl ⟨hnormal, hhomogeneous, hstandard⟩
+          · exact Or.inl
+              { not_never := hnever
+                no_instant := hinstant
+                normal_nonempty := hnormal
+                no_homogeneous := hhomogeneous
+                normal_not_standardQ := hstandard }
       · have habnormal :
           AllPlayersAbnormal (normalizedSoloMatrix reward) :=
           (allPlayersAbnormal_iff_not_hasNormalPlayers
             (normalizedSoloMatrix reward)).2 hnormal
-        exact Or.inl (Or.inl habnormal)
+        exact Or.inl
+          { not_never := hnever
+            no_instant := hinstant
+            reason := Or.inl habnormal }
 
-/-- Strategic version of the gate after supplying the two audited source
-interfaces.  Ordinary profiles and continuous paths remain separate. -/
+/-- Strategic version of the ordered gate after supplying the two narrowly
+scoped source interfaces.  Ordinary profiles and continuous paths remain
+separate conclusions. -/
 theorem faithful_q_nonQ_lcp_gate_with_source_conclusions
     (SunspotApproximateEquilibria :
       ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop)
     (ContinuousEquilibrium :
       ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop)
-    (solanSolan : SolanSolanSourceInterface SunspotApproximateEquilibria)
+    (solanSolan :
+      SolanSolanDistinctWitnessRepairInterface
+        SunspotApproximateEquilibria)
     (agkrs : AGKRSContinuousSourceInterface ContinuousEquilibrium)
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
     (NeverBranch reward ∧ HasOrdinaryApproximateEquilibria reward) ∨
@@ -166,56 +223,64 @@ theorem faithful_q_nonQ_lcp_gate_with_source_conclusions
   · exact Or.inl ⟨hnever,
       hasOrdinaryApproximateEquilibria_of_zeroSolo hnever⟩
   · exact Or.inr (Or.inl ⟨hinstant,
-      hasOrdinaryApproximateEquilibria_of_instant hinstant⟩)
+      hasOrdinaryApproximateEquilibria_of_instant hinstant.instant⟩)
   · right; right; left
     refine ⟨hsimple, ?_⟩
-    rcases hsimple with habnormal | ⟨hnormal, hhomogeneous⟩
+    rcases hsimple.reason with habnormal | ⟨hnormal, hhomogeneous⟩
     · exact solanSolan.allAbnormal_stationary reward habnormal
     · exact solanSolan.homogeneous_stationary reward hnormal hhomogeneous
   · right; right; right; left
     exact ⟨hnonQ,
-      solanSolan.nonQ_stationary reward hnonQ.1 hnonQ.2.1 hnonQ.2.2⟩
+      solanSolan.nonQ_stationary reward hnonQ.normal_nonempty
+        hnonQ.no_homogeneous hnonQ.normal_not_standardQ⟩
   · right; right; right; right; left
     exact ⟨hcontinuous,
-      agkrs.continuous_of_projectiveQBar reward hcontinuous.2.2.2⟩
+      agkrs.continuous_of_projectiveQBar reward
+        hcontinuous.full_projectiveQBar⟩
   · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hresidual))))
 
-/-- The standard-Q side has the source's **sunspot/public-correlation**
-conclusion.  It is intentionally separate from
+/-- The corrected standard-Q side has the source's
+**sunspot/public-correlation** conclusion.  It is intentionally separate from
 `faithful_q_nonQ_lcp_gate_with_source_conclusions`. -/
 theorem sunspot_of_standardQSide
     (SunspotApproximateEquilibria :
       ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop)
-    (solanSolan : SolanSolanSourceInterface SunspotApproximateEquilibria)
+    (solanSolan :
+      SolanSolanDistinctWitnessRepairInterface
+        SunspotApproximateEquilibria)
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
     (hQ : StandardQSide reward) :
     SunspotApproximateEquilibria reward :=
-  solanSolan.q_sunspot reward hQ.1 hQ.2.1 hQ.2.2
+  solanSolan.q_sunspot reward hQ.normal_nonempty hQ.no_homogeneous
+    hQ.normal_standardQ
 
-/-- In particular, the continuous-path branch also lies on the standard-Q
-sunspot side, but the two conclusions are not identified. -/
+/-- The continuous-path branch also lies on the corrected standard-Q sunspot
+side, but the two conclusions are not identified. -/
 theorem sunspot_of_continuousPathBranch
     (SunspotApproximateEquilibria :
       ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop)
-    (solanSolan : SolanSolanSourceInterface SunspotApproximateEquilibria)
+    (solanSolan :
+      SolanSolanDistinctWitnessRepairInterface
+        SunspotApproximateEquilibria)
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
     (hcontinuous : ContinuousPathBranch reward) :
     SunspotApproximateEquilibria reward :=
   sunspot_of_standardQSide SunspotApproximateEquilibria solanSolan
-    ⟨hcontinuous.1, hcontinuous.2.1, hcontinuous.2.2.1⟩
+    hcontinuous.toStandardQSide
 
 /-- The residual hard class likewise has only the separately typed source
 sunspot conclusion; this does not solve it in ordinary strategies. -/
 theorem sunspot_of_residualHardClass
     (SunspotApproximateEquilibria :
       ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop)
-    (solanSolan : SolanSolanSourceInterface SunspotApproximateEquilibria)
+    (solanSolan :
+      SolanSolanDistinctWitnessRepairInterface
+        SunspotApproximateEquilibria)
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
     (hresidual : ResidualHardClass reward) :
     SunspotApproximateEquilibria reward :=
   sunspot_of_standardQSide SunspotApproximateEquilibria solanSolan
-    ⟨hresidual.normal_nonempty, hresidual.no_homogeneous,
-      hresidual.normal_standardQ⟩
+    hresidual.toStandardQSide
 
 end QuittingLCPClassification
 end GameTheory
