@@ -26,6 +26,25 @@ namespace GameTheory
 
 open StochasticGame
 
+/-- Solan's target bounds also pin the prescribed terminal payoff within the
+same error of the fixed target.  The upper bound is obtained by taking the
+player's prescribed strategy itself as the unilateral deviation. -/
+theorem SolanTerminalTargetBounds.abs_terminalPayoff_sub_le
+    {reward : {S : Finset (Fin 3) // S.Nonempty} → Payoff (Fin 3)}
+    {target : Payoff (Fin 3)} {δ : ℝ}
+    {profile : (quittingGame reward).BehaviorProfile}
+    (h : SolanTerminalTargetBounds reward target δ profile)
+    (who : Fin 3) :
+    |quittingTerminalPayoff reward profile who - target who| ≤ δ := by
+  rw [abs_le]
+  constructor
+  · have hon := h.1 who
+    linarith
+  · have hupper :
+        quittingTerminalPayoff reward profile who ≤ target who + δ := by
+      simpa using h.2 who (profile who)
+    linarith
+
 /-- Solan's two target inequalities imply terminal approximate Nash, with the
 sharp elementary loss of a factor two. -/
 theorem SolanTerminalTargetBounds.isεAsymptoticNash
