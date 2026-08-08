@@ -9,19 +9,22 @@ import UniformEquilibrium.Quitting.Classification.LCP.Normalization
 /-!
 # Standard, projective, and completely projective Q-matrices
 
-Two inequivalent conventions are called `Q-matrix` in the relevant papers.
-Solan--Solan use the standard nonhomogeneous LCP, with coefficient of `q`
-fixed to one.  Ashkenazi-Golan--Krasikov--Rainer--Solan use a normalized
-simplex LCP in which the coefficient of `q` may vanish.
+The relevant quitting-game papers define `Q-matrix` using a normalized
+simplex/projective LCP, while also comparing it with the textbook
+nonhomogeneous LCP whose coefficient of `q` is fixed to one.  The conventions
+are not equivalent in general.
 
-This file defines both conventions and proves their exact split:
+This file defines both and proves the exact split recorded in AGKRS Remark
+5.5(3):
 
 `projective Q M ↔ standard Q M ∨ homogeneous simplex solution M`.
 
-Thus the conventions coincide only after the homogeneous/simple stationary
-branch has been removed.  `IsProjectiveQBarMatrix` then applies the projective
-notion to every nonempty principal submatrix, exactly as in AGKRS Definition
-5.2.  No strategic conclusion is attached to any matrix predicate here.
+It also proves that Solan--Solan's "nontrivial solution of LCP(M, 0)" branch is
+exactly the homogeneous simplex branch.  Thus the two Q conventions coincide
+precisely after the simple stationary branch has been removed.
+`IsProjectiveQBarMatrix` applies the projective notion to every nonempty
+principal submatrix, exactly as in AGKRS Definition 5.2.  No strategic
+conclusion is attached to any matrix predicate here.
 -/
 
 noncomputable section
@@ -117,7 +120,7 @@ def singletonPacketToNormalizedProjectiveLCPSolution
 def HasProjectiveLCPSolution (M : ι → ι → ℝ) (q : ι → ℝ) : Prop :=
   Nonempty (ProjectiveLCPSolution M q)
 
-/-- AGKRS Definition 5.1's simplex/projective `Q` convention. -/
+/-- The quitting-game papers' simplex/projective `Q` convention. -/
 def IsProjectiveQMatrix (M : ι → ι → ℝ) : Prop :=
   ∀ q : ι → ℝ, HasProjectiveLCPSolution M q
 
@@ -125,6 +128,13 @@ def IsProjectiveQMatrix (M : ι → ι → ℝ) : Prop :=
 This is exactly the repository's existing normalized singleton LCP. -/
 abbrev HasHomogeneousSimplexSolution (M : ι → ι → ℝ) : Prop :=
   SingletonLCPFeasible M
+
+/-- Solan--Solan's nontrivial zero-right-hand-side projective LCP branch:
+not all normalized mass is assigned to the artificial `q` coordinate. -/
+def HasNontrivialZeroProjectiveLCPSolution
+    (M : ι → ι → ℝ) : Prop :=
+  ∃ solution : ProjectiveLCPSolution M (0 : ι → ℝ),
+    solution.cemetery < 1
 
 private theorem sum_weight_nonneg
     (weight : ι → ℝ) (hweight : ∀ i, 0 ≤ weight i) :
@@ -210,6 +220,69 @@ def projectiveLCPSolutionOfHomogeneous
     simpa [singletonLCPResidual, wsum, dotProduct] using hresidual i
   · intro i
     simpa [singletonLCPResidual, wsum, dotProduct] using hcomplementary i
+
+/-- **Exact zero-right-hand-side split.**  A projective solution of `LCP(M,0)`
+with `z₀ < 1` exists exactly when the homogeneous simplex LCP is feasible. -/
+theorem hasNontrivialZeroProjectiveLCPSolution_iff_homogeneous
+    (M : ι → ι → ℝ) :
+    HasNontrivialZeroProjectiveLCPSolution M ↔
+      HasHomogeneousSimplexSolution M := by
+  constructor
+  · rintro ⟨solution, hnontrivial⟩
+    classical
+    let mass : ℝ := ∑ i, solution.singleton i
+    have hmass : 0 < mass := by
+      dsimp [mass]
+      linarith [solution.total]
+    have hmass0 : mass ≠ 0 := ne_of_gt hmass
+    let weight : stdSimplex ℝ ι :=
+      ⟨fun i => solution.singleton i * mass⁻¹,
+        fun i => mul_nonneg (solution.singleton_nonneg i)
+          (inv_nonneg.mpr hmass.le), by
+        rw [← Finset.sum_mul]
+        exact mul_inv_cancel₀ hmass0⟩
+    refine ⟨weight, ?_, ?_⟩
+    · intro i
+      have horiginal : 0 ≤ ∑ j, solution.singleton j * M i j := by
+        simpa using solution.residual_nonneg i
+      have heq :
+          singletonLCPResidual M weight i =
+            mass⁻¹ * (∑ j, solution.singleton j * M i j) := by
+        change (∑ j, (solution.singleton j * mass⁻¹) * M i j) = _
+        rw [Finset.mul_sum]
+        apply Finset.sum_congr rfl
+        intro j hj
+        ring
+      rw [heq]
+      exact mul_nonneg (inv_nonneg.mpr hmass.le) horiginal
+    · intro i
+      have horiginal :
+          solution.singleton i *
+            (∑ j, solution.singleton j * M i j) = 0 := by
+        simpa using solution.complementary i
+      have heq :
+          singletonLCPResidual M weight i =
+            mass⁻¹ * (∑ j, solution.singleton j * M i j) := by
+        change (∑ j, (solution.singleton j * mass⁻¹) * M i j) = _
+        rw [Finset.mul_sum]
+        apply Finset.sum_congr rfl
+        intro j hj
+        ring
+      rw [heq]
+      change (solution.singleton i * mass⁻¹) *
+        (mass⁻¹ * ∑ j, solution.singleton j * M i j) = 0
+      calc
+        (solution.singleton i * mass⁻¹) *
+            (mass⁻¹ * ∑ j, solution.singleton j * M i j) =
+            mass⁻¹ ^ 2 *
+              (solution.singleton i *
+                ∑ j, solution.singleton j * M i j) := by ring
+        _ = 0 := by rw [horiginal, mul_zero]
+  · intro homogeneous
+    refine ⟨projectiveLCPSolutionOfHomogeneous homogeneous
+      (0 : ι → ℝ), ?_⟩
+    change (0 : ℝ) < 1
+    norm_num
 
 /-- Every projective solution either has positive cemetery coefficient and
 rescales to a standard solution, or has zero cemetery coefficient and is the
