@@ -13,7 +13,7 @@ A finite SCC does not determine a chronological orbit by occupation balance.
 The relation used here contains only witnessed exact singleton segments.  From
 one reached SCC node, classical dependent choice gives a sharp alternative:
 
-* a finite charged execution reaches a viable absorbing endpoint;
+* an ordinary finite execution reaches a viable absorbing endpoint;
 * a single infinite internal execution carries the requested charge on every
   edge; or
 * a finite charged execution reaches a typed local obstruction.
@@ -21,7 +21,8 @@ one reached SCC node, classical dependent choice gives a sharp alternative:
 The obstruction distinguishes absence of any executable segment from the
 presence of physical segments whose masses all miss the requested charge
 floor.  Thus failure does not get hidden inside the full convex-hull APS
-operator.
+operator.  The absorbing branch deliberately uses ordinary executable edges:
+a low-charge segment may still be part of a valid finite route to absorption.
 -/
 
 noncomputable section
@@ -32,31 +33,23 @@ open StochasticGame
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
-private theorem reachable_target_or_infinite_path_or_stuck
-    {α : Type*} (step : α → α → Prop) (target : α → Prop) (initial : α) :
-    (∃ finish, Relation.ReflTransGen step initial finish ∧ target finish) ∨
-      (∃ path : ℕ → α, path 0 = initial ∧
-        ∀ time, step (path time) (path (time + 1))) ∨
+private theorem infinite_path_or_reachable_stuck
+    {α : Type*} (step : α → α → Prop) (initial : α) :
+    (∃ path : ℕ → α, path 0 = initial ∧
+      ∀ time, step (path time) (path (time + 1))) ∨
       ∃ stuck, Relation.ReflTransGen step initial stuck ∧
-        ¬ target stuck ∧ ¬ ∃ next, step stuck next := by
+        ¬ ∃ next, step stuck next := by
   classical
-  by_cases hexit :
-      ∃ finish, Relation.ReflTransGen step initial finish ∧ target finish
-  · exact Or.inl hexit
-  right
   by_cases hstuck :
       ∃ stuck, Relation.ReflTransGen step initial stuck ∧
-        ¬ target stuck ∧ ¬ ∃ next, step stuck next
+        ¬ ∃ next, step stuck next
   · exact Or.inr hstuck
   left
   let Reachable := {state : α // Relation.ReflTransGen step initial state}
   have hnext : ∀ state : Reachable, ∃ next, step state.1 next := by
     intro state
     by_contra hnone
-    have hnotTarget : ¬ target state.1 := by
-      intro htarget
-      exact hexit ⟨state.1, state.2, htarget⟩
-    exact hstuck ⟨state.1, state.2, hnotTarget, hnone⟩
+    exact hstuck ⟨state.1, state.2, hnone⟩
   let chooseNext : Reachable → α :=
     fun state => Classical.choose (hnext state)
   have chooseNext_spec : ∀ state : Reachable,
@@ -70,7 +63,9 @@ private theorem reachable_target_or_infinite_path_or_stuck
   refine ⟨fun time => (orbit time).1, ?_, ?_⟩
   · rfl
   · intro time
-    simpa [orbit, advance] using chooseNext_spec (orbit time)
+    have hnextOrbit : orbit (time + 1) = advance (orbit time) := rfl
+    rw [hnextOrbit]
+    exact chooseNext_spec (orbit time)
 
 /-- **Multivalued essential-APS SCC execution.**
 
@@ -78,7 +73,12 @@ Starting at an actually reached continuation node of a finite successor SCC,
 one obtains an executable absorbing exit, one infinite chronological charged
 path inside that same SCC, or a reached typed obstruction.  No occupation
 measure, convex mixture of successor fibers, or cancellation across components
-is used. -/
+is used.
+
+The exit search uses all witnessed exact segments.  Only after finite
+absorption has been excluded does the theorem follow the charged subrelation.
+Consequently a low-charge finite route to a terminal endpoint is not
+misclassified as a charge obstruction. -/
 theorem quittingEssentialAPSSCC_executionOutcome
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (family : ι → Set (Payoff ι))
@@ -88,17 +88,19 @@ theorem quittingEssentialAPSSCC_executionOutcome
     QuittingEssentialAPSSCCExecutionOutcome reward family component
       chargeFloor initial := by
   classical
-  let step := QuittingEssentialAPSChargedSCCStepRel reward family component
-    chargeFloor
-  let target : QuittingEssentialAPSSCCNode reward family component → Prop :=
-    fun node => node.IsTerminal
-  rcases reachable_target_or_infinite_path_or_stuck step target initial with
-    hexit | hinfinite | hstuck
+  by_cases hexit :
+      ∃ terminal,
+        QuittingEssentialAPSSCCFiniteExecution reward family component
+          initial terminal ∧
+        terminal.IsTerminal
   · rcases hexit with ⟨terminal, hexecution, hterminal⟩
     exact .absorbingExit {
       terminal := terminal
       execution := hexecution
       terminal_mem := hterminal }
+  rcases infinite_path_or_reachable_stuck
+      (QuittingEssentialAPSChargedSCCStepRel reward family component chargeFloor)
+      initial with hinfinite | hstuck
   · rcases hinfinite with ⟨node, hinitial, hstep⟩
     let witnessedStep : ∀ time,
         QuittingEssentialAPSSCCStep reward family component
@@ -112,8 +114,12 @@ theorem quittingEssentialAPSSCC_executionOutcome
       initial_eq := hinitial
       step := witnessedStep
       charged := hcharged }
-  · rcases hstuck with
-      ⟨state, hexecution, hnonterminal, hnoChargedStep⟩
+  · rcases hstuck with ⟨state, hexecution, hnoChargedStep⟩
+    have hnonterminal : ¬ state.IsTerminal := by
+      intro hterminal
+      exact hexit ⟨state,
+        QuittingEssentialAPSChargedSCCFiniteExecution.toFiniteExecution
+          hexecution, hterminal⟩
     by_cases hstep : ∃ target,
         QuittingEssentialAPSSCCStepRel reward family component state target
     · exact .obstructed {
@@ -124,6 +130,72 @@ theorem quittingEssentialAPSSCC_executionOutcome
         state := state
         execution := hexecution
         obstruction := .noExecutableSegment hnonterminal hstep }
+
+/-- If every nonterminal SCC node has a charged executable continuation, the
+obstruction branch disappears: one gets either a finite absorbing execution or
+one infinite charged chronological path. -/
+theorem quittingEssentialAPSSCC_absorbingExit_or_recurrentPath_of_progress
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (family : ι → Set (Payoff ι))
+    (component : QuittingEssentialAPSSCC reward)
+    (chargeFloor : ℝ)
+    (initial : QuittingEssentialAPSSCCNode reward family component)
+    (hprogress : ∀ state : QuittingEssentialAPSSCCNode reward family component,
+      state.IsTerminal ∨
+        ∃ target,
+          QuittingEssentialAPSChargedSCCStepRel reward family component
+            chargeFloor state target) :
+    Nonempty (QuittingEssentialAPSSCCAbsorbingExit reward family component
+      initial) ∨
+      Nonempty (QuittingEssentialAPSSCCInfiniteExecution reward family
+        component chargeFloor initial) := by
+  cases quittingEssentialAPSSCC_executionOutcome reward family component
+      chargeFloor initial with
+  | absorbingExit exit =>
+      exact Or.inl ⟨exit⟩
+  | recurrentPath execution =>
+      exact Or.inr ⟨execution⟩
+  | obstructed reached =>
+      rcases hprogress reached.state with hterminal | hcharged
+      · cases reached.obstruction with
+        | noExecutableSegment hnonterminal _ =>
+            exact False.elim (hnonterminal hterminal)
+        | chargeGap hnonterminal _ _ =>
+            exact False.elim (hnonterminal hterminal)
+      · rcases hcharged with ⟨target, hcharged⟩
+        cases reached.obstruction with
+        | noExecutableSegment _ hnoStep =>
+            exact False.elim (hnoStep ⟨target,
+              QuittingEssentialAPSChargedSCCStepRel.toStepRel hcharged⟩)
+        | chargeGap _ _ hnoChargedStep =>
+            exact False.elim (hnoChargedStep ⟨target, hcharged⟩)
+
+/-- Terminal-freeness plus charged seriality produces one infinite executable
+path in the selected SCC.  This is the direct multivalued counterpart of the
+existing unique-live dependent-choice theorem, with local segment production
+left as an explicit hypothesis. -/
+theorem exists_quittingEssentialAPSSCCInfiniteExecution_of_terminalFree_of_chargedSerial
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (family : ι → Set (Payoff ι))
+    (component : QuittingEssentialAPSSCC reward)
+    (chargeFloor : ℝ)
+    (initial : QuittingEssentialAPSSCCNode reward family component)
+    (hterminalFree :
+      ∀ state : QuittingEssentialAPSSCCNode reward family component,
+        ¬ state.IsTerminal)
+    (hserial :
+      ∀ state : QuittingEssentialAPSSCCNode reward family component,
+        ∃ target,
+          QuittingEssentialAPSChargedSCCStepRel reward family component
+            chargeFloor state target) :
+    Nonempty (QuittingEssentialAPSSCCInfiniteExecution reward family component
+      chargeFloor initial) := by
+  rcases quittingEssentialAPSSCC_absorbingExit_or_recurrentPath_of_progress
+      reward family component chargeFloor initial
+      (fun state => Or.inr (hserial state)) with hexit | hexecution
+  · rcases hexit with ⟨exit⟩
+    exact False.elim (hterminalFree exit.terminal exit.terminal_mem)
+  · exact hexecution
 
 /-- An infinite multivalued SCC execution is directly an instance of the
 existing executable essential-APS infinite-run API.  The owner path is no
