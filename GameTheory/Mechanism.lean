@@ -9,6 +9,7 @@ umbrella.
 import GameTheory.Languages.Mechanism
 import GameTheory.Mechanism.Auction
 import GameTheory.Mechanism.AllPay
+import GameTheory.Mechanism.BayesianWelfare
 import GameTheory.Mechanism.Combinatorial
 import GameTheory.Mechanism.InformationDesign
 import GameTheory.Mechanism.Knapsack

@@ -10,8 +10,8 @@ Successor baseline: `dd20631`
 Canonical destination: `GameTheory.Languages.BayesianMechanism`
 Domain contract / decision: D4, D5, D8; post-architecture gate W1-E
 Owner: Wave 1 / Bayesian mechanisms
-Status: complete for the frozen F6 theorem; welfare, participation, revelation,
-and information-design declarations remain M-BAYES
+Status: complete for the frozen F6 theorem; the separate M-BAYES ledgers now
+cover welfare/participation, revelation, and information design
 Last verified: 2026-07-30
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
@@ -29,9 +29,11 @@ Last verified: 2026-07-30
 | same | `isBIC_of_truthful_bayesNash` | theorem | retired | public target is already `IsNash` | D4 single-concept rule | There is no wrapper to unfold back into. |
 
 This bounded F6 inventory covers the IC/compiler/equilibrium cluster, including
-its duplicate synonyms and converse wrapper. The later social-welfare,
-individual-rationality, revelation, and information-design declarations are
-not silently credited; they remain in the broader M-BAYES inventory.
+its duplicate synonyms and converse wrapper. The later social-welfare and
+individual-rationality declarations are accounted in
+[`M-BAYES-mechanism-welfare.md`](M-BAYES-mechanism-welfare.md), so the two
+ledgers now review all 15 declarations in the pinned mechanism-design file.
+Revelation and information design retain their own M-BAYES ledgers.
 
 The predecessor's mechanism payoff depends only on the reported profile, so a
 misreport can accidentally change the type used to evaluate the deviator. The
