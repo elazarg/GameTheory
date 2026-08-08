@@ -11,7 +11,7 @@ N/A with a reason. No blank cells, and "standard" is not an answer.
 
 **Scope, stated honestly.** This is a complete inventory *relative to an
 explicitly declared universe of notions* — the ones enumerated in §1, found
-by reading `GameTheory/Concepts/Stochastic/UniformEquilibrium/README.md`, `Uniform.lean`,
+by reading `UniformEquilibrium/README.md`, `Uniform.lean`,
 `GameTheory/Languages/MultiRound/StochasticGame.lean`, the quitting-specific
 files, and the modules they import or are imported by. It does **not**
 establish that this universe is exhaustive, nor does it certify the global
@@ -103,7 +103,7 @@ from the uniform-equilibrium tower; nothing in the tree uses it at all.
 | U2 | `StochasticGame.IsUniformεEquilibrium` | `Concepts/Stochastic/Equilibrium/Uniform.lean:85` | `finiteAveragePayoff` | full `BehaviorProfile` | uniform-in-horizon (`∃T₀∀T≥T₀`) | ε | any `StochasticGame` |
 | U3 | `StochasticGame.IsUniformEquilibriumPayoff` | `Concepts/Stochastic/Equilibrium/Uniform.lean:94` | `finiteAveragePayoff`, target `v : Payoff ι` | full `BehaviorProfile`, may depend on ε | uniform-in-horizon, ∀ε∃σ | vanishing-ε family | any `StochasticGame` — **the central notion** (Solan–Vieille Def. 2.1 / Mertens–Neyman) |
 | U4 | `StochasticGame.HasUniformDeviationCapConstructor` | `Concepts/Stochastic/Equilibrium/Uniform.lean:172` | `finiteAveragePayoff`, target `v` | full `BehaviorProfile` | as U3, split into on-path + deviation-cap clauses | vanishing-ε family | any `StochasticGame` |
-| U5 | `StochasticGame.IsUniformScheduledMarkovEquilibriumPayoff` | `Concepts/Stochastic/UniformEquilibrium/VanishingDiscount/Fink/MarkovEndpoint.lean:27` | `finiteAveragePayoff`, target `v` | **scheduled-Markov** (`ℕ → StationaryMixedProfile`) only | as U3 | vanishing-ε family | any `StochasticGame` |
+| U5 | `StochasticGame.IsUniformScheduledMarkovEquilibriumPayoff` | `UniformEquilibrium/VanishingDiscount/Fink/MarkovEndpoint.lean:27` | `finiteAveragePayoff`, target `v` | **scheduled-Markov** (`ℕ → StationaryMixedProfile`) only | as U3 | vanishing-ε family | any `StochasticGame` |
 | U6 | `StochasticGame.IsεAsymptoticNash` | `Concepts/Stochastic/Equilibrium/Asymptotic.lean:40` | **arbitrary** `u : BehaviorProfile → ι → ℝ` | full `BehaviorProfile` | asymptotic (whatever `u` encodes) | ε | any `StochasticGame`; a family of nodes, one per `u` |
 
 U6 is not one node but a schema: every instantiation of `u` (limiting
@@ -153,7 +153,7 @@ to Cluster 3 only through the one-state adapter `realizedActionStochasticGame`.
 |---|---|---|---|---|---|---|---|
 | Z1 | `StochasticGame.IsZeroSum` | `Concepts/Stochastic/ZeroSum/Basic.lean:329` | game-class predicate, not an equilibrium notion | — | — | — | two-player, `Payoff (Fin 2)` |
 | Z2 | `discountedShapleyValue` / `shapleyBehaviorProfile` + `shapleyBehaviorProfile_isDiscountedNash` | `Concepts/Stochastic/ZeroSum/Basic.lean:607` | `discountedPayoff β` | `stationaryBehaviorProfile` of the Shapley optimal pair | fixed `β` | exact (ε=0) | zero-sum two-player |
-| Z3 | `StochasticGame.IsRowTrackingCertificate` / `SecuresCol` | `Concepts/Stochastic/UniformEquilibrium/SpecialCases/ZeroSum/MertensNeyman/Criterion.lean:909` | finite-horizon securing guarantee | history-adaptive strategy | uniform-in-horizon | ε | zero-sum two-player |
+| Z3 | `StochasticGame.IsRowTrackingCertificate` / `SecuresCol` | `UniformEquilibrium/SpecialCases/ZeroSum/MertensNeyman/Criterion.lean:909` | finite-horizon securing guarantee | history-adaptive strategy | uniform-in-horizon | ε | zero-sum two-player |
 
 ### Cluster 7 — quitting-specific
 
@@ -165,12 +165,12 @@ is defined anywhere in the tree.
 
 | ID | Lean name | File:line | Payoff functional | Strategy class | Quantifier order | Approximation | Game scope |
 |---|---|---|---|---|---|---|---|
-| Q1 | `IsεQuittingRootNash` | `Concepts/Stochastic/UniformEquilibrium/Quitting/Root/FirstBranch.lean:197` | `quittingRootExpectedPayoff` (root mixture + free continuation vector) | one-shot `ι → PMF Bool` at the root | none | ε | quitting only |
-| Q2 | `IsεQuittingRootEndpointNash` | `Concepts/Stochastic/UniformEquilibrium/Quitting/Root/SuccessorCertificate.lean:119` | as Q1, tested at the two pure endpoints | as Q1 | none | ε | quitting only |
-| Q3 | `HasUniformDeviationUpperApproximation` | `Concepts/Stochastic/UniformEquilibrium/Quitting/Terminal/ToUniformDeviationApproximation.lean:44` | any limiting functional `u` vs. `finiteAveragePayoff` | full `BehaviorProfile` | uniform-in-horizon, one-sided | ε | stated generally; used only for quitting |
+| Q1 | `IsεQuittingRootNash` | `UniformEquilibrium/Quitting/Root/FirstBranch.lean:197` | `quittingRootExpectedPayoff` (root mixture + free continuation vector) | one-shot `ι → PMF Bool` at the root | none | ε | quitting only |
+| Q2 | `IsεQuittingRootEndpointNash` | `UniformEquilibrium/Quitting/Root/SuccessorCertificate.lean:119` | as Q1, tested at the two pure endpoints | as Q1 | none | ε | quitting only |
+| Q3 | `HasUniformDeviationUpperApproximation` | `UniformEquilibrium/Quitting/Terminal/ToUniformDeviationApproximation.lean:44` | any limiting functional `u` vs. `finiteAveragePayoff` | full `BehaviorProfile` | uniform-in-horizon, one-sided | ε | stated generally; used only for quitting |
 | Q4 | `quittingTerminalPayoff` | `Concepts/Stochastic/Models/Quitting/Asymptotic.lean:201` | expected absorption-weighted terminal reward | full `BehaviorProfile` | — (a payoff functional, not an equilibrium notion) | exact | quitting only |
-| Q5 | `IsQuittingZeroSolo` | `Concepts/Stochastic/UniformEquilibrium/Quitting/Punishment/ZeroSoloDisjunct.lean:57` | reward-table admissibility class, not an equilibrium notion | — | — | — | quitting only |
-| Q6 | `HasAdmissibleAbsorbingQuittingCycle` | `Concepts/Stochastic/UniformEquilibrium/Quitting/Punishment/ZeroSoloDisjunct.lean:156` | as Q5 | — | — | — | quitting only |
+| Q5 | `IsQuittingZeroSolo` | `UniformEquilibrium/Quitting/Punishment/ZeroSoloDisjunct.lean:57` | reward-table admissibility class, not an equilibrium notion | — | — | — | quitting only |
+| Q6 | `HasAdmissibleAbsorbingQuittingCycle` | `UniformEquilibrium/Quitting/Punishment/ZeroSoloDisjunct.lean:156` | as Q5 | — | — | — | quitting only |
 
 `IsUniformEquilibriumPayoff` (U3) itself applies verbatim to quitting games
 (instantiated at `quittingGame reward`); it is not a separate node, but every

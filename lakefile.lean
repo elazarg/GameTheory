@@ -51,6 +51,11 @@ lean_lib GameTheory where
   leanOptions := gameTheoryLeanOptions
 
 @[default_target]
+lean_lib UniformEquilibrium where
+  srcDir := "."
+  leanOptions := gameTheoryLeanOptions
+
+@[default_target]
 lean_lib Math where
   srcDir := "."
   leanOptions := gameTheoryLeanOptions

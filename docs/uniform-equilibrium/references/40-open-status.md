@@ -1,7 +1,7 @@
 # What is actually open
 
 The precise status of the problem stated in
-`GameTheory/Concepts/Stochastic/UniformEquilibrium/Conjecture/UniformExistenceConjecture.lean` (`exists_uniformDeviationCapConstructor`), as of 2026-08-02.
+`UniformEquilibrium/Conjecture/UniformExistenceConjecture.lean` (`exists_uniformDeviationCapConstructor`), as of 2026-08-02.
 
 ---
 

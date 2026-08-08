@@ -38,7 +38,7 @@ exploitability gap against every behavioral profile.  This is an exact
 counterexample target, not a finite certificate language by itself.
 
 Payoff terminology is fixed in
-[`UniformEquilibrium/README.md`](../../GameTheory/Concepts/Stochastic/UniformEquilibrium/README.md):
+[`UniformEquilibrium/README.md`](../../UniformEquilibrium/README.md):
 limiting-average, undiscounted-limit, and uniform finite-horizon notions are
 not interchangeable without a named upgrade theorem.
 

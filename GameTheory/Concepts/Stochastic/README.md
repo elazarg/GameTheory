@@ -14,14 +14,14 @@ mathematical role:
 - `Models/`: model definitions and their basic semantics, currently including
   quitting games.
 
-The uniform-equilibrium existence research program lives entirely under
-[`UniformEquilibrium/`](UniformEquilibrium/README.md). It imports this generic
-library; generic modules must never import the research subtree. This one-way
-dependency is the extraction boundary for moving that program to a repository
-which uses GameTheory as a submodule.
+The uniform-equilibrium existence research program lives in the repository-root
+[`UniformEquilibrium/`](../../../UniformEquilibrium/README.md) library. It
+imports this generic library; generic modules must never import the research
+tree. This one-way dependency mirrors the intended separate repository, which
+will use GameTheory as a submodule.
 
 Import `GameTheory.Concepts.Stochastic` for the generic API. Import
-`GameTheory.Concepts.Stochastic.UniformEquilibrium` explicitly for the research
+`UniformEquilibrium` explicitly for the research
 program's aggregate surface.
 
 Directory names own their mathematical context, so module basenames do not

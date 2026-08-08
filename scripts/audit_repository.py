@@ -28,7 +28,7 @@ FORBIDDEN_PATTERNS = [
 AXIOM_LINE_RE = re.compile(r"^'([^']+)' depends on axioms: \[(.*)\]$")
 DEFAULT_ROOTS = {
     "GameTheory",
-    "GameTheory.Concepts.Stochastic.UniformEquilibrium",
+    "UniformEquilibrium",
     "Math",
     "Semantics",
     "GameTheoryTest",
@@ -45,7 +45,7 @@ STANDALONE_LEAN_MODULES = {"lakefile", "scripts.AxiomAudit"}
 # fail for a different reason, so it is allowlisted here instead of left to
 # show up as orphan noise that could hide a real orphan.
 BLOCK_PAIR_K11_ISLAND = {
-    f"GameTheory.Concepts.Stochastic.UniformEquilibrium.Quitting.Examples.BlockPair.{name}"
+    f"UniformEquilibrium.Quitting.Examples.BlockPair.{name}"
     for name in (
         "K11System",
         "K11LocalInterval",
@@ -66,7 +66,7 @@ STANDALONE_LEAN_MODULES |= BLOCK_PAIR_K11_ISLAND
 RAW_SEMANTIC_MODULES = {"GameTheory.Core.GameForm"}
 ROOT_AGGREGATORS = {
     "GameTheory",
-    "GameTheory.Concepts.Stochastic.UniformEquilibrium",
+    "UniformEquilibrium",
 }
 
 

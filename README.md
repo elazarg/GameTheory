@@ -58,9 +58,9 @@ theory results.
   (modulo one named hypothesis), and the Big Match (Blackwell-Ferguson,
   machine-checked with its history-dependence no-go).
 - See `GameTheory/Concepts/Stochastic/README.md` for the reusable library,
-  `GameTheory/Concepts/Stochastic/UniformEquilibrium/README.md` for the research
+  `UniformEquilibrium/README.md` for the research
   program, and
-  `GameTheory/Concepts/Stochastic/UniformEquilibrium/UniformEquilibriumProblem.md`
+  `UniformEquilibrium/UniformEquilibriumProblem.md`
   for the mathematical statement and current formal boundary.
 
 **Mechanism design, auctions, and social choice**

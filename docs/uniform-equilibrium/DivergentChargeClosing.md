@@ -53,7 +53,7 @@ quittingGame_exists_uniformEquilibriumPayoff_of_finiteForwardPackets
 ```
 
 in
-`GameTheory/Concepts/Stochastic/UniformEquilibrium/Quitting/Projective/FiniteForwardProjectiveLasso.lean`.
+`UniformEquilibrium/Quitting/Projective/FiniteForwardProjectiveLasso.lean`.
 
 ## 1. Finite charged-return pigeonhole theorem
 
@@ -189,7 +189,7 @@ quittingFiniteSingleSeamProjectiveLasso_of_reversedForwardBlock
 ```
 
 in
-`GameTheory/Concepts/Stochastic/UniformEquilibrium/Quitting/Projective/ForwardBlockSingleSeam.lean`.
+`UniformEquilibrium/Quitting/Projective/ForwardBlockSingleSeam.lean`.
 
 Its Bellman, support, and rationality hypotheses are restricted to the
 selected interval.  It does not require an infinite extension satisfying

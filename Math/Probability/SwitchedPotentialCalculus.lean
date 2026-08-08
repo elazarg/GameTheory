@@ -86,7 +86,7 @@ existing instances, each of which is a special case of one row above:
   potentials (`expected_epochCost_le_supportedBill_of_expectedDrift`) are the
   piecewise-constant predictable potential path `H t = potential (epoch t)`,
   whose charge is exactly the epoch-boundary oscillation bill.
-* `GameTheory.Concepts.Stochastic.UniformEquilibrium.VanishingDiscount.Fink.Limit`'s
+* `UniformEquilibrium.VanishingDiscount.Fink.Limit`'s
   time-dependent state-potential telescopes are the uncontrolled (`A = Unit`) special case of
   `sum_expect_stageSlack_eq`.
 

@@ -128,7 +128,7 @@ DOI `10.1287/moor.2013.0642` (elementary tools).
 homegrown semi-algebraic and Puiseux apparatus built for this purpose
 (`Math/CurveSelection/` — 45 files including `Puiseux.lean`,
 `Math/AlgebraicSelection.lean`, `Math/PolynomialSignCell.lean`,
-`GameTheory/Concepts/Stochastic/UniformEquilibrium/VanishingDiscount/Bellman/Variety.lean`,
+`UniformEquilibrium/VanishingDiscount/Bellman/Variety.lean`,
 `DiscountedShapleyAlgebraic.lean`), but the Bewley–Kohlberg theorem itself is
 not stated or proved.
 

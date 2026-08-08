@@ -136,4 +136,4 @@ its strict-margin equilibrium transfer, `00c6c73` formalizes the unique
 live history and live mass of a quitting profile, and the quitting-specific
 proof that Proposition 2.13 satisfies that interface has landed as
 `quittingGame_hasUniformDeviationUpperApproximation` in
-`GameTheory/Concepts/Stochastic/UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformization.lean`.
+`UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformization.lean`.

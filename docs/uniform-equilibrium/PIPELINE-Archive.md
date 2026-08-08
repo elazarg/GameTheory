@@ -634,7 +634,7 @@ completeness claim is scoped (proofs factoring through our interfaces; the
 correlated/de-correlation route and the topological route are unfenced);
 "sound end to end" means locally machine-checked joints, not one assembled
 theorem, until 1 closes; the public statement of the position lives at
-`GameTheory/Concepts/Stochastic/UniformEquilibrium/UniformEquilibriumProblem.md` and is the
+`UniformEquilibrium/UniformEquilibriumProblem.md` and is the
 external attack surface.
 
 

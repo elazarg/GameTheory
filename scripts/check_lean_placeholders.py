@@ -31,11 +31,11 @@ DECL_RE = re.compile(
 # (path as posix, declaration name) -> why it is allowed to carry a placeholder.
 INTENTIONAL: dict[tuple[str, str], str] = {
     (
-        "GameTheory/Concepts/Stochastic/UniformEquilibrium/Quitting/Conjecture/Basic.lean",
+        "UniformEquilibrium/Quitting/Conjecture/Basic.lean",
         "quittingGame_exists_uniformEquilibriumPayoff",
     ): "The finite-quitting uniform-equilibrium conjecture.",
     (
-        "GameTheory/Concepts/Stochastic/UniformEquilibrium/Conjecture/UniformExistenceConjecture.lean",
+        "UniformEquilibrium/Conjecture/UniformExistenceConjecture.lean",
         "exists_uniformDeviationCapConstructor",
     ): "The general uniform-equilibrium existence problem, quantitative form.",
 }

@@ -621,7 +621,7 @@ absorbing strategy profile `x` such that all players `i ∈ I` are sequentially
 continuation payoff.)
 
 The repository's disjunction (`quittingCycle_zeroSolo_or_admissible_or_isolatedNegative`,
-`GameTheory/Concepts/Stochastic/UniformEquilibrium/Quitting/Cycles/ThreeBranchDisjunction.lean`) is a
+`UniformEquilibrium/Quitting/Cycles/ThreeBranchDisjunction.lean`) is a
 **different, weight-algebraic** trichotomy: `IsQuittingZeroSolo reward`
 (every solo-quit reward `r_i({i}) ≤ 0`) `∨ HasAdmissibleAbsorbingQuittingCycle
 reward` (some finite cyclic block has, at every coordinate, either a

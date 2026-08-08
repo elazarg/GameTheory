@@ -1,7 +1,7 @@
 import FixedPointTheorems.brouwer
 import FixedPointTheorems.kakutani
 import GameTheory
-import GameTheory.Concepts.Stochastic.UniformEquilibrium
+import UniformEquilibrium
 import Math.Probability.PhaseOccupationDuality
 import Math.SchauderFixedPoint
 
