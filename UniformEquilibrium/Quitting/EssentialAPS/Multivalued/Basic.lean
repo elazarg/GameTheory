@@ -28,7 +28,7 @@ namespace GameTheory
 
 open StochasticGame
 
-variable {ι : Type*} [Fintype ι] [DecidableEq ι]
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-- The Flesch successor relation restricted to a displayed finite owner set. -/
 def QuittingEssentialAPSInternalSuccessor
