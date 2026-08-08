@@ -353,13 +353,22 @@ be complementary relative to a stored negative endpoint and still have a unit
 physical all-tail floor.  The selected minimizer and calibrated replacement
 structure, not the local prefix semantics, must provide the consuming force.
 
-The optimizer interface also matters.  The existing marked terminal anchor is
+The optimizer interface also matters.  The original marked terminal anchor is
 selected from the min--max debt optimizer, whereas the strongest landed
 prepend calibration controls the aggregate optimizer.  A decrease in one
-marked coordinate need not reduce a tied maximum.  The direct replacement
-route therefore requires an aggregate-calibrated marked anchor or a new
-min--max theorem controlling all active maximizers; optimizer provenance may
-not be erased at this seam.
+marked coordinate need not reduce a tied maximum.  A distinct
+aggregate-calibrated marked anchor now retains the canonical aggregate path;
+the direct route uses it unless a new min--max theorem controls all active
+maximizers.  Optimizer provenance may not be erased at this seam.
+
+The normalization across that seam is now exact.  For the complete canonical
+aggregate prefix, Never evaluates to the exact dynamic-debt vector, so its
+all-tail repair value `E(H_n)` is at most the aggregate optimum `d_n`.
+Quantitative owner and terminal-atom selection then gives
+`d_n ≤ 2 M |I| |I → Bool| packetMass`.  Thus a positive floor cannot lose its
+marked scale.  What remains is a mark-aware Nash-compatible retargeting theorem
+which reselects the entire exact prefix with controlled aggregate decrease, or
+turns failure into a genuinely global terminal deviation certificate.
 
 Production formalization is partial and follows this mathematical split.  The
 fixed-prefix holonomy module proves the common playerwise/aggregate gain

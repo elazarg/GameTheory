@@ -558,13 +558,26 @@ calibration and vanishing successive optimum drops can consume the first
 branch on a positive-mass plateau.  Compactness enters only afterward, to
 uniformize strategically proved local replacement charts.
 
-The currently landed prepend-loss theorem calibrates the **aggregate** debt
-minimizer.  The marked terminal-anchor interface currently selects the min--max
-minimizer.  These are not interchangeable here: decreasing the marked owner's
-coordinate need not lower a tied maximum.  The direct route must therefore add
-an aggregate-calibrated marked anchor, or prove a separate min--max replacement
-theorem with enough active-coordinate control, before invoking the packet
-charge.
+The prepend-loss theorem calibrates the **aggregate** debt minimizer, while the
+original marked terminal anchor selects the min--max minimizer.  These are not
+interchangeable here: decreasing the marked owner's coordinate need not lower
+a tied maximum.  A distinct aggregate-calibrated marked anchor is now landed
+and retains canonical optimizer provenance; the replacement route uses that
+interface unless a future min--max theorem controls every active maximizer.
+
+The aggregate normalization half is now production.  For the complete
+canonical aggregate-minimizing prefix `H_n` and aggregate optimum `d_n`,
+physical Never reads the exact debt vector, and quantitative marked-owner
+selection gives
+
+`E(H_n) ≤ d_n ≤ 2 M |I| |I → Bool| packetMass`.
+
+Consequently a positive canonical prefix floor forces a packet of the required
+scale.  This does not construct the competitor.  The exact remaining interface
+is marked Nash-compatible terminal retargeting/reselection: consume the
+physical elementary tail and marked advantage, reselect the entire exact-`D`
+prefix at uniformly controlled cutoff, and compare its aggregate objective; or
+return a deviation certificate valid against every profile.
 
 **Revisit trigger.** A different globally covering prefix family, or a direct
 terminal-profile producer bypassing calibrated prefixes, may replace the
@@ -1020,14 +1033,22 @@ semantically approximable by a finite word with sure-joint, sure-solo, or Never
 cap, simultaneously in prescribed value and all-behavior best-response
 envelope.  Prefix holonomy gives one gain modulus uniform over all such tails,
 so the infimum over arbitrary lengths is Lipschitz and yields a stable finite
-repair or an all-tail local floor.  Production formalization of the density and
-modulus is active.  The decisive remaining implication is the mass-charged
+repair or an all-tail local floor.  The density, modulus, literal infinite-tail
+semantics, and elementary/all-tail infimum equality are production.  The
+decisive remaining implication is the mass-charged
 prefix-consumption theorem of `PC-014`: a positive floor for a marked calibrated
 prefix must construct a controlled exact-`D` competitor with objective decrease
 proportional to `floor * packetMass`, or yield a literal global terminal
 exploitability gap.  A separator formulation must prove the equivalent
 occupation-balance/null-integral statement.  Failure after one fixed prefix
 does not exclude profiles that change the prefix.
+
+The canonical normalization needed by that implication is also landed:
+`E(H_n) ≤ d_n`, and any positive floor `eta ≤ E(H_n)` selects a same-cutoff
+aggregate marked anchor with
+`eta ≤ 2 M |I| |I → Bool| packetMass`.  The missing theorem is not packet
+selection or tail approximation; it is a quantitative Nash-compatible
+retargeting/reselection constructor for the whole prefix.
 
 **Acceptance.** For fixed accuracy, positive debt, and positive packet mass,
 every ported enriched state has either a stable terminal repair chart with

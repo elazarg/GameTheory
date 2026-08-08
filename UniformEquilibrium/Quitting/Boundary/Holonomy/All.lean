@@ -12,6 +12,7 @@ import UniformEquilibrium.Quitting.Boundary.Holonomy.BehavioralTailRepairValue
 import UniformEquilibrium.Quitting.Boundary.Holonomy.BehavioralTailGainDensity
 import UniformEquilibrium.Quitting.Boundary.Holonomy.InfiniteBehavioralTailEvaluation
 import UniformEquilibrium.Quitting.Boundary.Holonomy.AggregateTerminalAnchor
+import UniformEquilibrium.Quitting.Boundary.Holonomy.QuantitativeAggregateTerminalAnchor
 
 /-!
 # Boundary holonomy for finite quitting blocks
@@ -47,6 +48,13 @@ through every actual finite prefix.  Consequently finite elementary capped
 tails and arbitrary behavioral tails have exactly the same repair-value
 infimum; neither infimum is assumed attained and elementary code length may
 depend on the requested accuracy.
+
+For the complete canonical aggregate-minimizing prefix, physical Never reads
+the exact dynamic-debt vector.  Hence its all-tail repair value is at most the
+aggregate optimum, while quantitative marked-owner selection charges that
+optimum to a separated terminal packet.  A positive canonical prefix floor
+therefore forces an explicit positive packet scale; this is normalization for,
+not construction of, a calibrated replacement.
 
 The behavioral-tail repair value specializes the abstract fixed family to the
 prescribed/envelope pair co-realized by each actual tail and inherits the same
