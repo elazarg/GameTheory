@@ -30,7 +30,7 @@ namespace GameTheory
 
 open StochasticGame
 
-variable {ι : Type*} [Fintype ι] [DecidableEq ι]
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 private theorem reachable_target_or_infinite_path_or_stuck
     {α : Type*} (step : α → α → Prop) (target : α → Prop) (initial : α) :
