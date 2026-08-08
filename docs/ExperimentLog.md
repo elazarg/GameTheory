@@ -76,7 +76,7 @@ becomes difficult to scan.
 | EXP-063 | 2026-08-03 | D12 / dependency maintenance | Do Lean and Mathlib 4.32.2 preserve the fixed-point dependency, trust profile, and enforced architecture boundaries? | Supports; toolchain-aligned maintained fork repinned without theorem-source change | `lean-toolchain`; `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
 | EXP-064 | 2026-08-03 | D5/D11 / repeated public monitoring | Can finite-prefix signal laws support canonical PPE and the bounded one-shot-deviation principle without an infinite-path law? | Supports; closes the public-monitoring equilibrium waist | `GameTheory/Repeated/Monitoring*.lean`; `GameTheory/Tests/MonitoringEquilibrium.lean`; [`coverage/D-REPEAT-monitoring-equilibrium.md`](coverage/D-REPEAT-monitoring-equilibrium.md) |
 | EXP-065 | 2026-08-03 | D0/D2/D4/D9 / finite contracts | Does hidden-action contract theory earn a native finite-support principal-agent branch, with an explicit outside option, rather than a one-player `GameForm` or an auction specialization? | Supports native ownership; decides D32 | [`decisions/D32-principal-agent-contract-ownership.md`](decisions/D32-principal-agent-contract-ownership.md); `GameTheory/Experimental/PostArchitecture/ContractOwnership.lean` |
-| EXP-066 | 2026-08-08 | D4/D5/D8/D9 / quasilinear mechanisms | Does weak monotonicity and its affine/Myerson consumers need a capability-free native quasilinear direct-mechanism owner, rather than overloading Groves-specific `VCGSetup` or outcome-generic `BayesianMechanism`? | Reserved; hostile DSIC-to-weak-monotonicity slice next | `GameTheory/Experimental/PostArchitecture/QuasiLinearMechanismOwnership.lean` |
+| EXP-066 | 2026-08-08 | D4/D5/D8/D9 / quasilinear mechanisms | Does weak monotonicity and its affine/Myerson consumers need a capability-free native quasilinear direct-mechanism owner, rather than overloading Groves-specific `VCGSetup` or outcome-generic `BayesianMechanism`? | Supports native ownership with canonical-IC compilation; decides D33 | [`decisions/D33-quasilinear-direct-mechanism-ownership.md`](decisions/D33-quasilinear-direct-mechanism-ownership.md); `GameTheory/Experimental/PostArchitecture/QuasiLinearMechanismOwnership.lean` |
 
 ## Entry template
 
@@ -4233,7 +4233,7 @@ memory.
 ### EXP-066: quasilinear direct-mechanism ownership
 
 - **Date / revision:** 2026-08-08, reserved on `b0ed24b`
-- **Status:** reserved; implementation not yet measured
+- **Status:** complete; supports native ownership and decides D33
 - **Decision / question:** whether the shared owner for the pinned weak
   monotonicity, affine-maximizer, and Myerson families should be a native
   capability-free quasilinear direct mechanism, the existing Groves-specific
@@ -4266,3 +4266,31 @@ memory.
   focused build, source-hazard scan, axiom sampling, and comparison against
   `GameTheory/Mechanism/VCG.lean` and
   `GameTheory/Languages/BayesianMechanism.lean` before any stable promotion.
+- **Observations / measurements:** the 169-nonblank-line candidate stores only
+  report types, valuations, allocation, and payments.  It retains independent
+  player, type, and alternative universes and stores no finiteness, prior,
+  probability law, equilibrium, or Groves offset.  Its `IsDSIC` is an
+  abbreviation of the compiled `BayesianMechanism.IsIncentiveCompatible`, so
+  the shared owner adds no second incentive predicate.  Adding the two
+  opposite canonical IC inequalities and cancelling their report-sensitive
+  payments proves weak monotonicity.  `VCGSetup` embeds definitionally at true
+  utility.  The hostile Boolean mechanism has two players, types, and
+  alternatives; both allocation and payment respond to the first player's
+  report; truthful utility falls strictly from `2` to `-1` under deviation;
+  the weak-monotonicity inequality is strict; and reversing allocation while
+  retaining the nonconstant payment refutes DSIC.
+- **Boundary / trust:** the artifact imports only the canonical Bayesian
+  mechanism and existing VCG leaves.  Source scans find no raw
+  `Function.update`, user-visible transport, `Fintype.ofFinite`, probability
+  projection, placeholder, custom axiom, or native reduction.  Finiteness
+  appears only on the VCG consumer bridge.  `lake build
+  GameTheory.Experimental.PostArchitecture.QuasiLinearMechanismOwnership`
+  completes warning-free in 1,726 jobs.  The monotonicity theorem, canonical
+  IC bridge, strict witness, and negative control each print exactly
+  `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome:** no kill condition fired.  D33 adopts a capability-free native
+  quasilinear direct-mechanism owner under the opt-in Mechanism branch.  Its
+  DSIC surface is canonical IC by transparent specialization; weak
+  monotonicity is the first owned allocation certificate; VCG is a consumer,
+  not the foundation.  Stable promotion and the five-row pinned monotonicity
+  ledger are the next action before affine maximizers or Myerson are mined.

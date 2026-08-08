@@ -117,6 +117,14 @@ branch.  D32 represents each action by its own finite-support outcome law and
 states agent optimality and explicit participation directly; it does not add
 dummy strategic players merely to reuse `GameForm`.
 
+Quasilinear direct mechanisms also have a capability-free native owner in the
+opt-in mechanism branch.  D33 stores only report types, valuations, allocation,
+and payments; it compiles to the canonical Bayesian direct-mechanism language,
+defines DSIC transparently through that language's incentive-compatibility
+predicate, and derives weak monotonicity by cancelling payments.  Groves/VCG,
+affine-maximizer, and Myerson structures are consumers of this owner rather
+than fields forced into its foundation.
+
 ## 4. Decision summary
 
 | ID | Current/default decision | Status | Fastest serious test |
