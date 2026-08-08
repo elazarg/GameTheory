@@ -8,6 +8,8 @@ import UniformEquilibrium.Quitting.Boundary.Holonomy.Compactness
 import UniformEquilibrium.Quitting.Boundary.Holonomy.RealizedTangent
 import UniformEquilibrium.Quitting.Boundary.Holonomy.AllTailRepairValue
 import UniformEquilibrium.Quitting.Boundary.Holonomy.BehavioralTailEvaluation
+import UniformEquilibrium.Quitting.Boundary.Holonomy.BehavioralTailRepairValue
+import UniformEquilibrium.Quitting.Boundary.Holonomy.AggregateTerminalAnchor
 
 /-!
 # Boundary holonomy for finite quitting blocks
@@ -34,4 +36,10 @@ the pairs as tails.  The behavioral-tail adapter identifies prescribed payoff
 through an actual phase switch and the finite all-behavior envelope through the
 same holonomy.  The corresponding infinite-tail envelope identity remains a
 separate supremum-interchange theorem.
+
+The behavioral-tail repair value specializes the abstract fixed family to the
+prescribed/envelope pair co-realized by each actual tail and inherits the same
+Lipschitz and buffered repair/obstruction laws.  The aggregate terminal anchor
+keeps the marked packet on the optimizer controlled by the calibrated
+prepend-loss theorem; it is intentionally distinct from the min--max anchor.
 -/

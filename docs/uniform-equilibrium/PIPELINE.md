@@ -554,6 +554,14 @@ calibration and vanishing successive optimum drops can consume the first
 branch on a positive-mass plateau.  Compactness enters only afterward, to
 uniformize strategically proved local replacement charts.
 
+The currently landed prepend-loss theorem calibrates the **aggregate** debt
+minimizer.  The marked terminal-anchor interface currently selects the min--max
+minimizer.  These are not interchangeable here: decreasing the marked owner's
+coordinate need not lower a tied maximum.  The direct route must therefore add
+an aggregate-calibrated marked anchor, or prove a separate min--max replacement
+theorem with enough active-coordinate control, before invoking the packet
+charge.
+
 **Revisit trigger.** A different globally covering prefix family, or a direct
 terminal-profile producer bypassing calibrated prefixes, may replace the
 charged-replacement interface.
@@ -1022,7 +1030,8 @@ every ported enriched state has either a stable terminal repair chart with
 literal all-behavior gain control, or an all-length, neighborhood-stable floor
 together with the `PC-014` calibrated competitor/global-gap output.  Only then
 may compactness produce a finite cover and uniform repair bounds or a
-contradiction to the plateau.
+contradiction to the plateau.  Optimizer provenance must match the objective
+whose successive drops and prepend calibration are used.
 
 ### `MATH-P0-3` — exhaust the inexpensive repair ladder
 
@@ -1762,9 +1771,15 @@ finite words capped by sure joint exit, sure solo exit, or Never.  Combine this
 with the common affine/max-affine holonomy modulus to obtain the Lipschitz
 all-tail repair value and buffered stable alternative.
 
-**State.** `ACTIVE`, with three production slices landed.  The fixed-prefix
+**State.** `ACTIVE`, with the fixed-prefix semantic layer in production.  The
 module proves the uniform scalar and finite-player gain estimates, a generic
-fixed-family infimum estimate, and buffered repair/obstruction transfer.  The
+fixed-family infimum estimate, and buffered repair/obstruction transfer.  Its
+behavioral specialization keeps each tail's prescribed value and literal
+best-response envelope co-realized, defines the actual all-tail repair value,
+and proves its Lipschitz and buffered transfer laws.  The finite/infinite
+phase-switch adapters prove exact prescribed evaluation and finite behavioral
+envelope evaluation; literal infinite-tail envelope evaluation remains active.
+The
 tail-compression module defines the three caps and exact prefix laws, proves
 the arbitrary-root full/deleted-survival trichotomy, computes the exact Never
 boundary pair, and proves the positive-joint-survival prescribed estimate
@@ -1777,6 +1792,13 @@ ordinary prefix bounds for every other coordinate.  Both remaining branches
 are thereby reduced to the sharp Never-envelope estimate
 `2 M (χ_i(N) - χ_i(∞))`; the uncentered generic prefix estimate is insufficient
 when deleted survival has a positive limit.
+
+The prefix-consumption source now also has an aggregate-calibrated marked
+terminal anchor whose stored path is provably the canonical aggregate
+minimizer, together with positive separated packet mass.  A one-player
+production regression proves that a locally complementary sure-quit prefix
+can have unit physical exploitability while Never is an exact terminal
+equilibrium, permanently fencing off prefix-to-global inference.
 
 **Acceptance.** One theorem selecting an elementary finite cap for every tail
 and tolerance, with one cap simultaneously approximating the prescribed vector

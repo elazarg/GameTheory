@@ -353,9 +353,20 @@ be complementary relative to a stored negative endpoint and still have a unit
 physical all-tail floor.  The selected minimizer and calibrated replacement
 structure, not the local prefix semantics, must provide the consuming force.
 
+The optimizer interface also matters.  The existing marked terminal anchor is
+selected from the min--max debt optimizer, whereas the strongest landed
+prepend calibration controls the aggregate optimizer.  A decrease in one
+marked coordinate need not reduce a tied maximum.  The direct replacement
+route therefore requires an aggregate-calibrated marked anchor or a new
+min--max theorem controlling all active maximizers; optimizer provenance may
+not be erased at this seam.
+
 Production formalization is partial and follows this mathematical split.  The
 fixed-prefix holonomy module proves the common playerwise/aggregate gain
-modulus and its fixed-family infimum consequence.  The tail-compression module
+modulus and its fixed-family infimum consequence.  The behavioral
+specialization defines the actual all-tail infimum from same-tail prescribed
+and literal best-response coordinates and proves its Lipschitz and buffered
+repair/floor consequences.  The tail-compression module
 provides the elementary caps, full/deleted-survival trichotomy, exact Never
 boundary pair, positive-survival prescribed convergence, and the complete
 all-deleted-zero sure-joint branch in both prescribed and literal behavioral
@@ -364,6 +375,14 @@ deviation envelope, reducing both nonzero-survival cases to the sharp bound by
 the deleted-survival loss `χ_i(N) - χ_i(∞)`.  That estimate and the combined
 three-case capstone remain before the full semantic-density theorem can be
 invoked in production.
+
+The prefix-consumption inputs now preserve the relevant optimizer provenance.
+An aggregate-calibrated marked anchor retains the canonical aggregate
+minimizer and its positive separated packet, matching the landed prepend-loss
+theorem.  The negative one-player prefix fence is also machine-checked: a
+sure-quit row is locally complementary at stored endpoint `-1` and physically
+has unit gain against Never, although Never is an exact terminal equilibrium
+of the game.
 
 **The bounded root-debt descent decoder is closed negatively (`M`)** — see the
 capstone claim.  No bounded-length exact-`D` modification achieves a cutoff-
