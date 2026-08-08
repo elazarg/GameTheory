@@ -882,11 +882,3 @@ theorem exists_optimal_phaseOccupation_and_phaseBias_of_feasible
 end PhaseOccupationDuality
 end Probability
 end Math
-
-/-! ## Axiom audit -/
-
-#print axioms
-  Math.Probability.PhaseOccupationDuality.hasPointwisePhaseShiftFlow_iff_hasPhaseShiftFlow
-#print axioms Math.Probability.PhaseOccupationDuality.phaseAverageReward_le_phaseSlack
-#print axioms Math.Probability.PhaseOccupationDuality.minPrimalFeasible_of_isPhaseOccupation
-#print axioms Math.Probability.PhaseOccupationDuality.compiled_lp_attains_and_has_dual

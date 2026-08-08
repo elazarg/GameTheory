@@ -1,6 +1,7 @@
 import FixedPointTheorems.brouwer
 import FixedPointTheorems.kakutani
 import GameTheory
+import Math.Probability.PhaseOccupationDuality
 import Math.SchauderFixedPoint
 
 -- Fixed-point infrastructure used by existence theorems.
@@ -307,6 +308,20 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.QuittingProjectiveTargetMismatch.secondExitValue_isUniformEquilibriumPayoff
 #print axioms Math.LinearAlgebra.affineEqualityInequality_feasible_or_farkas
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_weightedProjectiveLassos
+
+-- Stopping-law accounting, cyclic exposure, and phase-occupation duality.
+-- These checks live here rather than in production modules so ordinary builds
+-- remain quiet while the repository audit retains the same proof-hygiene
+-- coverage.
+#print axioms GameTheory.quittingHazardStoppingLaw_expect
+#print axioms Math.Probability.DiscreteHazard.ScalarHazard.stoppingLaw_expect
+#print axioms Math.Probability.DiscreteHazard.ScalarHazard.neverMass_eq_zero_of_tendsto_sum_atTop
+#print axioms Math.CyclicExposure.Neighbours.exists_exposure_le_quarter
+#print axioms Math.CyclicExposure.Neighbours.forall_quarter_le_exposure_iff_eq_fair
+#print axioms Math.Probability.PhaseOccupationDuality.hasPointwisePhaseShiftFlow_iff_hasPhaseShiftFlow
+#print axioms Math.Probability.PhaseOccupationDuality.phaseAverageReward_le_phaseSlack
+#print axioms Math.Probability.PhaseOccupationDuality.minPrimalFeasible_of_isPhaseOccupation
+#print axioms Math.Probability.PhaseOccupationDuality.compiled_lp_attains_and_has_dual
 
 -- Coupled phase-switch accounting and punishment-completed instant/cyclic
 -- mechanisms.

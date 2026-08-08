@@ -172,6 +172,3 @@ theorem forall_quarter_le_exposure_iff_eq_fair [Finite ι] [Nonempty ι]
 end Neighbours
 
 end Math.CyclicExposure
-
-#print axioms Math.CyclicExposure.Neighbours.exists_exposure_le_quarter
-#print axioms Math.CyclicExposure.Neighbours.forall_quarter_le_exposure_iff_eq_fair

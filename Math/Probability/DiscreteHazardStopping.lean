@@ -270,6 +270,3 @@ theorem markedStoppingLaw_expect {Mark : Type} (hazard : ScalarHazard)
   rw [markedStoppingLaw, expect_map]
 
 end Math.Probability.DiscreteHazard
-
-#print axioms Math.Probability.DiscreteHazard.ScalarHazard.stoppingLaw_expect
-#print axioms Math.Probability.DiscreteHazard.ScalarHazard.neverMass_eq_zero_of_tendsto_sum_atTop

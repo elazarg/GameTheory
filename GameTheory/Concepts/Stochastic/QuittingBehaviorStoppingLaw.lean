@@ -172,5 +172,3 @@ omit [DecidableEq ι] in
   simp [quittingBehaviorStoppingLaw]
 
 end GameTheory
-
-#print axioms GameTheory.quittingHazardStoppingLaw_expect
