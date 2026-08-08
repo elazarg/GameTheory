@@ -346,7 +346,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
-| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, repaired executable approximation, and finite hidden-action contracts | **M-CONTRACT complete (EXP-065/D32) with explicit participation; returned-allocation half approximation complete (EXP-056/D27);** exact Myerson payment remains behind M-BAYES/D11 | coordinated mechanism root with native principal-agent semantics and separately audited auction semantic, executable, and correctness leaves |
+| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, repaired executable approximation, finite hidden-action contracts, and revelation | **M-CONTRACT complete (EXP-065/D32), canonical finite-support revelation complete, and returned-allocation half approximation complete (EXP-056/D27);** finite persuasion is next, while exact Myerson payment remains behind M-BAYES/D11 | coordinated mechanism root with native principal-agent semantics, canonical Bayesian forms, and separately audited auction semantic, executable, and correctness leaves |
 | social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
 
 Each lane first inventories its entire pinned family. Once the hostile result
@@ -612,10 +612,11 @@ provisioned in CI.
    principal-agent model, stochastic welfare identity, incentivized-action
    existence, explicit participation, a premise-erasing negative control, and
    a complete 23/23 pinned declaration ledger;
-5. run the remaining 81-row L-FOSG classification, D-REPEAT
-   rank/self-generation/uniform harvesting, and already-validated static,
-   Bayesian, and language leaf recovery as parallel BFS work, not as a reason
-   to postpone critical capability gaps;
+5. **in progress:** canonical finite-support revelation is recovered without a
+   duplicate mechanism or BNE predicate; next select one finite persuasion
+   theorem while continuing the remaining 81-row L-FOSG classification,
+   D-REPEAT rank/self-generation/uniform harvesting, and validated static and
+   language leaf recovery as BFS work;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    discharges L-ROUND or repeated-game parity.

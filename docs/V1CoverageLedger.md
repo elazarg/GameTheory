@@ -149,7 +149,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| M-BAYES | `Mechanism/Bayesian.lean`, `Mechanism/Bayesian/**` | 12 | Bayesian data/equilibrium plus coordinated mechanism modules | validated split; F5/F6 complete | partial | revelation, welfare/participation, and information-design inventory |
+| M-BAYES | `Mechanism/Bayesian.lean`, `Mechanism/Bayesian/**` | 12 | Bayesian data/equilibrium plus coordinated mechanism modules | validated split; F5/F6 and canonical revelation principle complete | partial; revelation file 6/6 reviewed | [revelation ledger](coverage/M-BAYES-revelation.md); next persuasion/information design, welfare/participation, and remaining mechanism inventory |
 | M-CONTRACT | `Mechanism/Contracts/**` | 1 | `Mechanism.PrincipalAgent` | native ownership and explicit participation validated by EXP-065/D32 | complete; 23/23 declarations reviewed and recovered | [finite hidden-action contract ledger](coverage/M-CONTRACT-principal-agent.md); any strategic principal choice, private types, or executable search requires its own consumer gate |
 | M-FAIR | `Mechanism/FairDivision.lean`, finite indivisible files | 6 | finite mechanism/fair-division branch | assigned | not started | round-robin EF1 and one algorithmic allocation theorem |
 | M-CAKE | divisible fair-division files | 6 | D11/`Analysis` or Frontier | deferred | out of scope | measurable/continuous probability decision |

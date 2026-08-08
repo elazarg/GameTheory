@@ -12,6 +12,7 @@ import GameTheory.Mechanism.AllPay
 import GameTheory.Mechanism.Combinatorial
 import GameTheory.Mechanism.Knapsack
 import GameTheory.Mechanism.PrincipalAgent
+import GameTheory.Mechanism.Revelation
 import GameTheory.Mechanism.ReserveVickrey
 import GameTheory.Mechanism.VCG
 
