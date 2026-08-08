@@ -341,7 +341,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | foundations and VNM | utility invariance, strategic equivalence, expected-utility representation, axiom independence | expected-utility representation without merging probability-free ranks back into lottery preference | `Core.Preference`, finite laws, and independent mathematics only where earned |
 | static response | dominance, rationalizability, approximate and secure equilibrium | dominance solvability and one approximation theorem without duplicate Nash predicates | `GameTheory.Core` |
 | correlation | correlation regimes, regret, signal timing, value of correlation | **CE/CCE existence complete through mixed Nash;** next one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
-| learning | regret, multiplicative weights, fictitious play, approachability | **F2, finite MW self-play, and the 9/9 fictitious-play trajectory inventory complete (EXP-049/D21);** next the base limit-to-Nash bridge and potential-game convergence | stable finite identities in Core, law-free MW algebra in `GameTheoryMath`, canonical-law adapter in Probability, and quantitative composition in `Analysis.Learning` |
+| learning | regret, multiplicative weights, fictitious play, approachability | **F2, finite MW self-play, and base fictitious play 9/9 complete, including limit-to-Nash (EXP-049/D21);** next potential-game convergence | stable finite identities in Core, law-free MW algebra in `GameTheoryMath`, canonical-law adapter in Probability, and quantitative composition in `Analysis.Learning` |
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | **pinned congestion family complete, including robust affine CCE PoA (EXP-052/053, D24)** | `Core.Potential` plus the opt-in congestion domain |
 | welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
@@ -577,7 +577,7 @@ capability status is not renegotiated during that review.
 
 ### Current release-coverage checkpoint
 
-Last integrated checkpoint: 2026-08-08, after the fictitious-play trajectory core.
+Last integrated checkpoint: 2026-08-09, after the base fictitious-play convergence bridge.
 These counts are milestones, not declaration-port percentages.
 
 | Release dimension | Current evidence | Release condition |
@@ -585,8 +585,8 @@ These counts are milestones, not declaration-port percentages.
 | mature workflows | 22 better, 5 comparable, 9 partial, 6 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
 | exact accounting | 1,978 of 8,324 pinned declarations have reviewed dispositions | report the exact remainder; complete every ledger supporting a parity claim |
-| current DFS seam | D-LEARN fictitious-play base 9/9 classified: seven topology-free rows recovered and two limit rows deferred to Analysis | close the convergence bridge without moving topology into Core or duplicating `FinDist`/`IsNash` |
-| next capability rotation | learning dynamics | base limit-to-Nash theorem, finite potential-game fictitious play, then the approachability bridge |
+| current DFS seam | D-LEARN base fictitious play 9/9 recovered across Core and the one-way Analysis consumer | keep shared finite-law convergence below Protocol/learning consumers; do not back-import topology into Core |
+| next capability rotation | learning dynamics | finite exact-potential fictitious-play convergence, then the approachability bridge |
 | release engineering | incremental full build and structural/coverage audits green | final cold build, flagship axiom sweep, examples, and generated release report |
 
 ## 15. Immediate queue

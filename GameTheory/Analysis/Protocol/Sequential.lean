@@ -8,34 +8,14 @@ remain in stable Protocol; only convergence and the resulting specialization
 live behind this one-way bridge.
 -/
 
-import Mathlib.Topology.Instances.Real.Lemmas
+import GameTheory.Analysis.FiniteLaw
 import GameTheory.Protocol.BehavioralAssessment
 
 noncomputable section
 
-namespace GameTheory.Analysis.Protocol
-
-open Filter GameTheory Probability
-open GameTheory.Protocol
-
-/-- Pointwise convergence of finite-support laws through their real-valued
-probability weights. -/
-def FinDistConvergesPointwise {α : Type*}
-    (sequence : ℕ → FinDist α) (target : FinDist α) : Prop :=
-  ∀ value : α,
-    Tendsto (fun n => (sequence n).prob value) atTop
-      (nhds (target.prob value))
-
-/-- A constant sequence of finite laws converges pointwise to that law. -/
-theorem finDistConvergesPointwise_const {α : Type*} (law : FinDist α) :
-    FinDistConvergesPointwise (fun _ => law) law :=
-  fun _ => tendsto_const_nhds
-
-end GameTheory.Analysis.Protocol
-
 namespace GameTheory.Protocol
 
-open GameTheory Analysis.Protocol Probability
+open GameTheory GameTheory.Analysis Probability
 
 universe uι
 

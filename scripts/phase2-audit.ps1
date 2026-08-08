@@ -636,11 +636,42 @@ if (-not $SkipReachability) {
   Report 'CORE_LEARNING_MW_PROBES_REJECTED' `
     $coreLearningBoundaryRejected
 
+  # The fictitious-play trajectory remains a topology-free Core leaf.  Its
+  # successor law and canonical best-response recurrence must be positively
+  # reachable there, while the shared convergence vocabulary and Protocol
+  # stay above or beside it.
+  $coreFictitiousInputs = @(
+    'GameTheory.UtilityGame.empiricalMarginal_succ_expect',
+    'GameTheory.UtilityGame.IsFictitiousPlay.isBestResponse')
+  $coreFictitiousBoundary = @(
+    'GameTheory.Analysis.FinDistConvergesPointwise',
+    'GameTheory.Protocol.ExecutionProtocol')
+  $coreFictitiousOutput = Run-Probe 'GameTheory.Core.FictitiousPlay' `
+    ($coreFictitiousInputs + $coreFictitiousBoundary)
+  $coreFictitiousInputsReached = 0
+  foreach ($constant in $coreFictitiousInputs) {
+    if (-not (Is-Unreachable $coreFictitiousOutput $constant)) {
+      $coreFictitiousInputsReached++
+    }
+  }
+  Report 'CORE_FICTITIOUS_INPUT_PROBES_REACHED' `
+    $coreFictitiousInputsReached
+  $coreFictitiousBoundaryRejected = 0
+  foreach ($constant in $coreFictitiousBoundary) {
+    if (Is-Unreachable $coreFictitiousOutput $constant) {
+      $coreFictitiousBoundaryRejected++
+    }
+  }
+  Report 'CORE_FICTITIOUS_BOUNDARY_PROBES_REJECTED' `
+    $coreFictitiousBoundaryRejected
+
   $learningBridgeInputs = @(
     'GameTheory.UtilityGame.selfPlay_timeAverage_isεCoarseCorrelatedEq',
     'GameTheoryMath.OnlineLearning.externalRegret_le',
     'GameTheory.Probability.OnlineLearning.multiplicativeWeights',
-    'GameTheory.UtilityGame.mwSelfPlay_timeAverage_isεCoarseCorrelatedEq')
+    'GameTheory.UtilityGame.mwSelfPlay_timeAverage_isεCoarseCorrelatedEq',
+    'GameTheory.Analysis.FinDistConvergesPointwise.expect',
+    'GameTheory.UtilityGame.IsFictitiousPlay.limit_isNash')
   $learningBridgeBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
     'kakutani_fixed_point')
@@ -662,6 +693,33 @@ if (-not $SkipReachability) {
   }
   Report 'LEARNING_BRIDGE_BOUNDARY_PROBES_REJECTED' `
     $learningBridgeBoundaryRejected
+
+  # Protocol's analytic consumer must use the same generic finite-law
+  # convergence leaf without acquiring the learning theorem family.
+  $protocolFiniteLawInputs = @(
+    'GameTheory.Analysis.FinDistConvergesPointwise',
+    'GameTheory.Protocol.InformationModel.BehavioralAssessmentConvergesPointwise')
+  $protocolFiniteLawBoundary = @(
+    'GameTheory.UtilityGame.IsFictitiousPlay.limit_isNash')
+  $protocolFiniteLawOutput =
+    Run-Probe 'GameTheory.Analysis.Protocol.Sequential' `
+      ($protocolFiniteLawInputs + $protocolFiniteLawBoundary)
+  $protocolFiniteLawInputsReached = 0
+  foreach ($constant in $protocolFiniteLawInputs) {
+    if (-not (Is-Unreachable $protocolFiniteLawOutput $constant)) {
+      $protocolFiniteLawInputsReached++
+    }
+  }
+  Report 'PROTOCOL_FINITE_LAW_INPUT_PROBES_REACHED' `
+    $protocolFiniteLawInputsReached
+  $protocolFiniteLawBoundaryRejected = 0
+  foreach ($constant in $protocolFiniteLawBoundary) {
+    if (Is-Unreachable $protocolFiniteLawOutput $constant) {
+      $protocolFiniteLawBoundaryRejected++
+    }
+  }
+  Report 'PROTOCOL_FINITE_LAW_BOUNDARY_PROBES_REJECTED' `
+    $protocolFiniteLawBoundaryRejected
 
   # D16's epistemic branch consumes the canonical finite law but remains
   # independent of static, sequential, and analytic game semantics.
@@ -1045,8 +1103,12 @@ if ($VerifyExpected) {
     $Expected['GAMETHEORYMATH_GAME_REJECTED'] = 1
     $Expected['MATH_LEARNING_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['CORE_LEARNING_MW_PROBES_REJECTED'] = 2
-    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 4
+    $Expected['CORE_FICTITIOUS_INPUT_PROBES_REACHED'] = 2
+    $Expected['CORE_FICTITIOUS_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 6
     $Expected['LEARNING_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['PROTOCOL_FINITE_LAW_INPUT_PROBES_REACHED'] = 2
+    $Expected['PROTOCOL_FINITE_LAW_BOUNDARY_PROBES_REJECTED'] = 1
     $Expected['EPISTEMIC_INPUT_PROBES_REACHED'] = 6
     $Expected['EPISTEMIC_BOUNDARY_PROBES_REJECTED'] = 5
     $Expected['ELECTRONIC_MAIL_INPUT_PROBES_REACHED'] = 4

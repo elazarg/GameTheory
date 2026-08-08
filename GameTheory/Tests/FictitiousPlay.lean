@@ -83,8 +83,9 @@ canonical pure embedding of the coordinated profile. -/
 theorem constant_empiricalBelief (t : ℕ) :
     game.empiricalBelief constantHistory (t + 1) = game.form.purify coordinated := by
   funext who
-  change (FinDist.uniformFin (t + 1)).map (fun _ => false) = FinDist.pure false
-  rw [FinDist.map_const]
+  simpa only [UtilityGame.empiricalBelief, UtilityGame.empiricalMarginal,
+    constantHistory, coordinated, GameForm.purify] using
+      FinDist.map_const (FinDist.uniformFin (t + 1)) false
 
 /-- The constant coordination path is genuine fictitious play.  The proof does
 not unfold a second payoff comparison: it consumes the canonical mixed Nash
@@ -94,10 +95,9 @@ theorem constant_isFictitiousPlay : game.IsFictitiousPlay constantHistory := by
   have hmixed := coordinated_isNash.purify
   rw [isNash_iff_isBestResponse] at hmixed
   rw [constant_empiricalBelief]
-  change IsBestResponse game.form.mixed (euPreference game.utility) who
-    (game.form.purify coordinated) (FinDist.pure false)
-  convert hmixed who using 1
-  change FinDist.pure false = FinDist.pure false
-  rfl
+  have hplayed : FinDist.pure (constantHistory (t + 1) who) =
+      game.form.purify coordinated who := rfl
+  rw [hplayed]
+  exact hmixed who
 
 end GameTheory.Tests.FictitiousPlay
