@@ -11,6 +11,7 @@ import json
 from .model import (
     RationalQuittingGame,
     fraction_text,
+    max_regret,
     parse_fraction,
 )
 from .profiles import (
@@ -114,6 +115,15 @@ def make_filter_report(
 ) -> dict[str, Any]:
     if fixed_gap <= 0:
         raise ValueError("a fixed-gap filter needs a positive gap")
+    if tested <= 0:
+        raise ValueError("a finite filter must record at least one tested profile")
+    if minimum_regret is None:
+        raise ValueError("a finite filter must record its exact minimum regret")
+    if minimum_regret < fixed_gap:
+        raise ValueError(
+            "a tested profile refutes the proposed fixed gap; emit a "
+            "gap_counterexample report instead"
+        )
     return {
         "schema": REPORT_SCHEMA,
         "table": game.name,
@@ -123,9 +133,7 @@ def make_filter_report(
         "proves_nonexistence": False,
         "fixed_gap": fraction_text(fixed_gap),
         "tested": tested,
-        "minimum_regret": (
-            fraction_text(minimum_regret) if minimum_regret is not None else None
-        ),
+        "minimum_regret": fraction_text(minimum_regret),
         "scope": dict(scope),
         "reason": reason,
         "required_for_nonexistence": (
@@ -150,12 +158,32 @@ def make_gap_counterexample_report(
         "table_fingerprint": table_fingerprint(game),
         "classification": "gap_counterexample",
         "claim": "counterexample_to_fixed_gap_candidate",
-        "is_repair": regret == 0,
+        # A low-regret profile is not a repair unless it separately satisfies a
+        # stable Lean certificate type.  Exact repairs are emitted by
+        # ``make_repair_report`` instead, never through this narrow class.
+        "is_repair": False,
         "fixed_gap": fraction_text(fixed_gap),
         "exact_terminal_exploitability": fraction_text(regret),
         "source": source,
         "certificate": certificate,
     }
+
+
+def _require_filter_fields(report: Mapping[str, Any]) -> None:
+    try:
+        fixed_gap = parse_fraction(report["fixed_gap"])
+        minimum_regret = parse_fraction(report["minimum_regret"])
+        tested = int(report["tested"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(
+            "finite filters must record fixed_gap, tested, and minimum_regret"
+        ) from exc
+    if fixed_gap <= 0:
+        raise ValueError("finite filters need a positive fixed gap")
+    if tested <= 0:
+        raise ValueError("finite filters must test at least one profile")
+    if minimum_regret < fixed_gap:
+        raise ValueError("a tested profile refutes the reported fixed gap")
 
 
 def validate_claim_discipline(report: Mapping[str, Any]) -> None:
@@ -167,6 +195,7 @@ def validate_claim_discipline(report: Mapping[str, Any]) -> None:
             raise ValueError("finite filters must explicitly deny a nonexistence claim")
         if report.get("claim") != "bounded_search_filter_only":
             raise ValueError("finite negative reports must be labelled as filters")
+        _require_filter_fields(report)
         return
     if classification == "repair":
         if report.get("claim") != "exact_terminal_nash_and_uniform_payoff":
@@ -175,20 +204,30 @@ def validate_claim_discipline(report: Mapping[str, Any]) -> None:
     if classification == "gap_counterexample":
         if report.get("claim") != "counterexample_to_fixed_gap_candidate":
             raise ValueError("gap counterexamples need their narrow claim")
+        if report.get("is_repair") is not False:
+            raise ValueError(
+                "gap-counterexample reports cannot claim a repair; use a "
+                "machine-checkable repair report"
+            )
+        try:
+            fixed_gap = parse_fraction(report["fixed_gap"])
+            exploitability = parse_fraction(report["exact_terminal_exploitability"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(
+                "gap counterexamples must record their positive gap and exact regret"
+            ) from exc
+        if fixed_gap <= 0 or not 0 <= exploitability < fixed_gap:
+            raise ValueError("gap-counterexample arithmetic is inconsistent")
         return
     if classification == "nonexistence":
-        certificate = report.get("certificate", {})
-        if certificate.get("kind") != "all_behavior_terminal_gap":
-            raise ValueError(
-                "nonexistence requires an all-behavior terminal-gap certificate"
-            )
-        if certificate.get("lean_predicate") != "GameTheory.HasTerminalExploitabilityGap":
-            raise ValueError("nonexistence must target HasTerminalExploitabilityGap")
-        if not certificate.get("lean_declaration"):
-            raise ValueError("nonexistence requires a named Lean proof declaration")
-        if parse_fraction(certificate.get("gap")) <= 0:
-            raise ValueError("nonexistence gap must be positive")
-        return
+        # A declaration name in JSON is not kernel evidence.  This Python
+        # verifier therefore rejects the class unconditionally.  Genuine
+        # all-behavior refutations are represented directly in Lean by
+        # ``QuittingAllBehaviorTerminalGapCertificate`` and its theorem.
+        raise ValueError(
+            "Python cannot authenticate a Lean all-behavior proof declaration; "
+            "construct and check QuittingAllBehaviorTerminalGapCertificate in Lean"
+        )
     raise ValueError(f"unknown report classification {classification!r}")
 
 
@@ -212,6 +251,23 @@ def _expected_certificate(
             raise ValueError("reported cyclic word misses the exact compiler hypotheses")
         return evaluation.to_certificate_dict()
     raise ValueError(f"cannot verify certificate kind {kind!r}")
+
+
+def _expected_cyclic_profile_certificate(
+    game: RationalQuittingGame, certificate: Mapping[str, Any]
+) -> tuple[dict[str, Any], Fraction]:
+    evaluation = evaluate_cyclic_word(game, certificate["word"])
+    try:
+        entry_phase = int(certificate["entry_phase"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("cyclic profiles must name an entry_phase") from exc
+    if not 0 <= entry_phase < evaluation.period:
+        raise ValueError("cyclic profile entry_phase is outside the word")
+    expected = evaluation.to_certificate_dict()
+    expected["kind"] = "cyclic_profile"
+    expected["entry_phase"] = entry_phase
+    regret = max_regret(evaluation.behavioral_regrets[entry_phase])
+    return expected, regret
 
 
 def verify_report(game: RationalQuittingGame, report: Mapping[str, Any]) -> None:
@@ -238,10 +294,8 @@ def verify_report(game: RationalQuittingGame, report: Mapping[str, Any]) -> None
             evaluation = evaluate_stationary(game, certificate["hazards"])
             regret = max(evaluation.regrets)
             expected = evaluation.to_certificate_dict(kind=kind)
-        elif kind == "accepted_holonomy_word":
-            evaluation = evaluate_cyclic_word(game, certificate["word"])
-            regret = evaluation.initial_max_regret()
-            expected = evaluation.to_certificate_dict()
+        elif kind == "cyclic_profile":
+            expected, regret = _expected_cyclic_profile_certificate(game, certificate)
         else:
             raise ValueError(f"unknown gap-counterexample certificate {kind!r}")
         if dict(certificate) != expected:
@@ -250,9 +304,10 @@ def verify_report(game: RationalQuittingGame, report: Mapping[str, Any]) -> None
             raise ValueError("gap-counterexample regret does not recompute")
         if not regret < parse_fraction(report["fixed_gap"]):
             raise ValueError("profile does not refute the reported fixed gap")
-    # Filters and Lean-backed all-behavior nonexistence reports are schema-
-    # checked here.  Their respective finite trace or external Lean theorem is
-    # the evidence; a finite Python runner never upgrades the former to the latter.
+    # Filters are exact-arithmetic summaries of an explicitly bounded run.  The
+    # committed regressions rerun that search; this verifier checks their schema,
+    # fingerprint, and arithmetic claim boundary.  Nonexistence JSON reports are
+    # rejected above because a declaration string is not kernel evidence.
 
 
 def dump_report(report: Mapping[str, Any], path: str | Path | None = None) -> str:
