@@ -350,6 +350,432 @@ theorem mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le
   · exact G.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le_of_ne
       potential hbound history mixedProfile action hsame t hcoordinate
 
+/-- Advance the listed empirical marginals from horizon `t+1` to `t+2`. -/
+def advanceMarginals (history : ℕ → Profile G.form.sig) (t : ℕ)
+    (players : List ι) (mixedProfile : Profile G.form.sig.mixed) :
+    Profile G.form.sig.mixed :=
+  players.foldl (fun current changed =>
+    Profile.update current changed
+      (G.empiricalMarginal history changed (t + 2))) mixedProfile
+
+/-- Sweeping a duplicate-free list of empirical updates changes any fixed
+pure potential gain by at most the list length times the one-step bound. -/
+theorem mixedPotentialGain_advanceMarginals_abs_sub_le
+    (potential : Profile G.form.sig → ℝ) {C : ℝ}
+    (hbound : ∀ profile, |potential profile| ≤ C)
+    (history : ℕ → Profile G.form.sig) (t : ℕ) :
+    ∀ (players : List ι) (mixedProfile : Profile G.form.sig.mixed),
+      players.Nodup →
+      (∀ changed, changed ∈ players → mixedProfile changed =
+        G.empiricalMarginal history changed (t + 1)) →
+      ∀ (who : ι) (action : G.form.sig.Strategy who),
+        |G.mixedPotentialGain potential
+            (G.advanceMarginals history t players mixedProfile) who action -
+          G.mixedPotentialGain potential mixedProfile who action| ≤
+          (players.length : ℝ) *
+            ((1 / (t + 2 : ℝ)) * (4 * C)) := by
+  intro players
+  induction players with
+  | nil =>
+      intro mixedProfile _ _ who action
+      simp [advanceMarginals]
+  | cons first rest ih =>
+      intro mixedProfile hnodup hcoordinates who action
+      have hrest : rest.Nodup := List.Nodup.of_cons hnodup
+      have hfirst : first ∉ rest := (List.nodup_cons.mp hnodup).1
+      let stepError : ℝ := (1 / (t + 2 : ℝ)) * (4 * C)
+      let nextProfile : Profile G.form.sig.mixed :=
+        Profile.update mixedProfile first
+          (G.empiricalMarginal history first (t + 2))
+      have hfirstCoordinate : mixedProfile first =
+          G.empiricalMarginal history first (t + 1) :=
+        hcoordinates first (by simp)
+      have hrestCoordinates :
+          ∀ changed, changed ∈ rest → nextProfile changed =
+            G.empiricalMarginal history changed (t + 1) := by
+        intro changed hchanged
+        have hne : changed ≠ first := by
+          intro heq
+          subst changed
+          exact hfirst hchanged
+        dsimp [nextProfile]
+        rw [Profile.update_of_ne _ _ hne]
+        exact hcoordinates changed (by simp [hchanged])
+      have htail := ih nextProfile hrest hrestCoordinates who action
+      have hone :=
+        G.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le
+          potential hbound history mixedProfile action t hfirstCoordinate
+      have htriangle := abs_sub_le
+        (G.mixedPotentialGain potential
+          (G.advanceMarginals history t rest nextProfile) who action)
+        (G.mixedPotentialGain potential nextProfile who action)
+        (G.mixedPotentialGain potential mixedProfile who action)
+      calc
+        |G.mixedPotentialGain potential
+              (G.advanceMarginals history t (first :: rest) mixedProfile)
+              who action -
+            G.mixedPotentialGain potential mixedProfile who action| =
+            |G.mixedPotentialGain potential
+                (G.advanceMarginals history t rest nextProfile) who action -
+              G.mixedPotentialGain potential mixedProfile who action| := by
+          rfl
+        _ ≤ |G.mixedPotentialGain potential
+                (G.advanceMarginals history t rest nextProfile) who action -
+              G.mixedPotentialGain potential nextProfile who action| +
+            |G.mixedPotentialGain potential nextProfile who action -
+              G.mixedPotentialGain potential mixedProfile who action| :=
+          htriangle
+        _ ≤ (rest.length : ℝ) * stepError + stepError :=
+          add_le_add htail hone
+        _ = ((first :: rest).length : ℝ) * stepError := by
+          simp [stepError]
+          ring
+
+/-- Sweeping a duplicate-free list of players increases mixed potential by
+the first-order sum of their pure gains, up to a quadratic Cesàro error. -/
+theorem mixedPotential_advanceMarginals_sub_ge
+    (potential : Profile G.form.sig → ℝ) {C : ℝ}
+    (hbound : ∀ profile, |potential profile| ≤ C)
+    (history : ℕ → Profile G.form.sig) (t : ℕ) :
+    ∀ (players : List ι) (mixedProfile : Profile G.form.sig.mixed),
+      players.Nodup →
+      (∀ who, who ∈ players → mixedProfile who =
+        G.empiricalMarginal history who (t + 1)) →
+      (1 / (t + 2 : ℝ)) *
+          (∑ who ∈ players.toFinset,
+            G.mixedPotentialGain potential mixedProfile who
+              (history (t + 1) who)) -
+        ((players.length : ℝ) * (players.length : ℝ)) *
+          ((1 / (t + 2 : ℝ)) ^ 2 * (4 * C)) ≤
+        G.mixedPotential potential
+            (G.advanceMarginals history t players mixedProfile) -
+          G.mixedPotential potential mixedProfile := by
+  intro players
+  induction players with
+  | nil =>
+      intro mixedProfile _ _
+      simp [advanceMarginals]
+  | cons first rest ih =>
+      intro mixedProfile hnodup hcoordinates
+      have hrest : rest.Nodup := List.Nodup.of_cons hnodup
+      have hfirst : first ∉ rest := (List.nodup_cons.mp hnodup).1
+      let step : ℝ := 1 / (t + 2 : ℝ)
+      let error : ℝ := step ^ 2 * (4 * C)
+      let nextProfile : Profile G.form.sig.mixed :=
+        Profile.update mixedProfile first
+          (G.empiricalMarginal history first (t + 2))
+      have hfirstCoordinate : mixedProfile first =
+          G.empiricalMarginal history first (t + 1) :=
+        hcoordinates first (by simp)
+      have hrestCoordinates :
+          ∀ who, who ∈ rest → nextProfile who =
+            G.empiricalMarginal history who (t + 1) := by
+        intro who hwho
+        have hne : who ≠ first := by
+          intro heq
+          subst who
+          exact hfirst hwho
+        dsimp [nextProfile]
+        rw [Profile.update_of_ne _ _ hne]
+        exact hcoordinates who (by simp [hwho])
+      have hinductionRaw := ih nextProfile hrest hrestCoordinates
+      have hinduction :
+          step * (∑ who ∈ rest.toFinset,
+              G.mixedPotentialGain potential nextProfile who
+                (history (t + 1) who)) -
+            ((rest.length : ℝ) * (rest.length : ℝ)) * error ≤
+          G.mixedPotential potential
+              (G.advanceMarginals history t rest nextProfile) -
+            G.mixedPotential potential nextProfile := by
+        simpa [step, error] using hinductionRaw
+      have hstep : 0 ≤ step := by positivity
+      have hC : 0 ≤ C := by
+        have hprofile := hbound (history 0)
+        exact (abs_nonneg _).trans hprofile
+      have herror : 0 ≤ error := by
+        dsimp [error]
+        positivity
+      have hgainPoint : ∀ who ∈ rest.toFinset,
+          G.mixedPotentialGain potential mixedProfile who
+              (history (t + 1) who) ≤
+            G.mixedPotentialGain potential nextProfile who
+                (history (t + 1) who) + step * (4 * C) := by
+        intro who hwhoFinset
+        have hwho : who ∈ rest := by simpa using hwhoFinset
+        have hboundStep :=
+          G.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le
+            potential hbound history mixedProfile (history (t + 1) who) t
+            hfirstCoordinate
+        have hlower := (abs_le.mp hboundStep).1
+        dsimp [nextProfile, step]
+        linarith
+      have hsum :
+          (∑ who ∈ rest.toFinset,
+              G.mixedPotentialGain potential mixedProfile who
+                (history (t + 1) who)) ≤
+            (∑ who ∈ rest.toFinset,
+              G.mixedPotentialGain potential nextProfile who
+                (history (t + 1) who)) +
+              (rest.length : ℝ) * (step * (4 * C)) := by
+        calc
+          (∑ who ∈ rest.toFinset,
+              G.mixedPotentialGain potential mixedProfile who
+                (history (t + 1) who)) ≤
+              ∑ who ∈ rest.toFinset,
+                (G.mixedPotentialGain potential nextProfile who
+                    (history (t + 1) who) + step * (4 * C)) :=
+            Finset.sum_le_sum fun who hwho => hgainPoint who hwho
+          _ = (∑ who ∈ rest.toFinset,
+                G.mixedPotentialGain potential nextProfile who
+                  (history (t + 1) who)) +
+              (rest.toFinset.card : ℝ) * (step * (4 * C)) := by
+            rw [Finset.sum_add_distrib]
+            simp [Finset.sum_const, nsmul_eq_mul]
+          _ = (∑ who ∈ rest.toFinset,
+                G.mixedPotentialGain potential nextProfile who
+                  (history (t + 1) who)) +
+              (rest.length : ℝ) * (step * (4 * C)) := by
+            rw [List.toFinset_card_of_nodup hrest]
+      have hgainComparison :
+          step * (∑ who ∈ rest.toFinset,
+              G.mixedPotentialGain potential mixedProfile who
+                (history (t + 1) who)) -
+            (rest.length : ℝ) * error ≤
+          step * (∑ who ∈ rest.toFinset,
+              G.mixedPotentialGain potential nextProfile who
+                (history (t + 1) who)) := by
+        dsimp [error]
+        nlinarith [mul_le_mul_of_nonneg_left hsum hstep]
+      have hincrement :
+          G.mixedPotential potential nextProfile -
+              G.mixedPotential potential mixedProfile =
+            step * G.mixedPotentialGain potential mixedProfile first
+              (history (t + 1) first) := by
+        simpa [nextProfile, step] using
+          (G.mixedPotential_update_empiricalMarginal_succ_sub_of_eq
+            potential history mixedProfile first t hfirstCoordinate)
+      have hsumCons :
+          (∑ who ∈ (first :: rest).toFinset,
+              G.mixedPotentialGain potential mixedProfile who
+                (history (t + 1) who)) =
+            G.mixedPotentialGain potential mixedProfile first
+                (history (t + 1) first) +
+              ∑ who ∈ rest.toFinset,
+                G.mixedPotentialGain potential mixedProfile who
+                  (history (t + 1) who) := by
+        simp [hfirst]
+      rw [hsumCons]
+      have htail :
+          step * (∑ who ∈ rest.toFinset,
+              G.mixedPotentialGain potential mixedProfile who
+                (history (t + 1) who)) -
+            (((rest.length : ℝ) * (rest.length : ℝ)) * error +
+              (rest.length : ℝ) * error) ≤
+          G.mixedPotential potential
+              (G.advanceMarginals history t rest nextProfile) -
+            G.mixedPotential potential nextProfile := by
+        nlinarith [hgainComparison, hinduction]
+      have hlengthError :
+          (((rest.length : ℝ) * (rest.length : ℝ)) * error +
+              (rest.length : ℝ) * error) ≤
+            (((first :: rest).length : ℝ) *
+              ((first :: rest).length : ℝ)) * error := by
+        have hlength : (0 : ℝ) ≤ rest.length := by positivity
+        simp only [List.length_cons]
+        push_cast
+        nlinarith
+      calc
+        step * (G.mixedPotentialGain potential mixedProfile first
+              (history (t + 1) first) +
+            ∑ who ∈ rest.toFinset,
+              G.mixedPotentialGain potential mixedProfile who
+                (history (t + 1) who)) -
+          (((first :: rest).length : ℝ) *
+            ((first :: rest).length : ℝ)) * error ≤
+            (G.mixedPotential potential nextProfile -
+                G.mixedPotential potential mixedProfile) +
+              (G.mixedPotential potential
+                  (G.advanceMarginals history t rest nextProfile) -
+                G.mixedPotential potential nextProfile) := by
+          nlinarith [hincrement, htail, hlengthError]
+        _ = G.mixedPotential potential
+              (G.advanceMarginals history t (first :: rest) mixedProfile) -
+            G.mixedPotential potential mixedProfile := by
+          show G.mixedPotential potential nextProfile -
+                G.mixedPotential potential mixedProfile +
+              (G.mixedPotential potential
+                  (G.advanceMarginals history t rest nextProfile) -
+                G.mixedPotential potential nextProfile) =
+            G.mixedPotential potential
+                (G.advanceMarginals history t rest nextProfile) -
+              G.mixedPotential potential mixedProfile
+          ring
+
+/-- Advancing every player's coordinate turns the empirical belief at `t+1`
+into the empirical belief at `t+2`. -/
+theorem advanceMarginals_univ_eq_empiricalBelief_succ
+    (history : ℕ → Profile G.form.sig) (t : ℕ) :
+    G.advanceMarginals history t Finset.univ.toList
+        (G.empiricalBelief history (t + 1)) =
+      G.empiricalBelief history (t + 2) := by
+  unfold advanceMarginals
+  rw [Profile.foldl_update_eq _ _ _ Finset.univ.nodup_toList]
+  funext who
+  simp [empiricalBelief]
+
+/-- Consecutive empirical beliefs change every fixed pure potential gain by at
+most the player count times the one-coordinate bound. -/
+theorem mixedPotentialGain_empiricalBelief_succ_abs_sub_le
+    (potential : Profile G.form.sig → ℝ) {C : ℝ}
+    (hbound : ∀ profile, |potential profile| ≤ C)
+    (history : ℕ → Profile G.form.sig) (who : ι)
+    (action : G.form.sig.Strategy who) (t : ℕ) :
+    |G.mixedPotentialGain potential (G.empiricalBelief history (t + 2))
+          who action -
+        G.mixedPotentialGain potential (G.empiricalBelief history (t + 1))
+          who action| ≤
+      (Fintype.card ι : ℝ) * ((1 / (t + 2 : ℝ)) * (4 * C)) := by
+  have hsweep := G.mixedPotentialGain_advanceMarginals_abs_sub_le
+    potential hbound history t Finset.univ.toList
+    (G.empiricalBelief history (t + 1)) Finset.univ.nodup_toList
+    (by intro changed _; rfl) who action
+  rw [G.advanceMarginals_univ_eq_empiricalBelief_succ history t] at hsweep
+  simpa using hsweep
+
+/-- Exact potential transfers the consecutive-belief stability estimate to
+canonical mixed expected-utility gains. -/
+theorem IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le
+    {potential : Profile G.form.sig → ℝ}
+    (hpotential : IsExactPotential G.form G.utility potential)
+    {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
+    (history : ℕ → Profile G.form.sig) (who : ι)
+    (action : G.form.sig.Strategy who) (t : ℕ) :
+    |G.mixedGain (G.empiricalBelief history (t + 2)) who action -
+        G.mixedGain (G.empiricalBelief history (t + 1)) who action| ≤
+      (Fintype.card ι : ℝ) * ((1 / (t + 2 : ℝ)) * (4 * C)) := by
+  have hboundGain := G.mixedPotentialGain_empiricalBelief_succ_abs_sub_le
+    potential hbound history who action t
+  rw [UtilityGame.IsExactPotential.mixedPotentialGain_eq_mixedGain
+      (G := G) hpotential,
+    UtilityGame.IsExactPotential.mixedPotentialGain_eq_mixedGain
+      (G := G) hpotential] at hboundGain
+  exact hboundGain
+
+/-- Consecutive aggregate played gains along fictitious play differ by
+`O(1/t)` in a bounded exact-potential game. -/
+theorem IsExactPotential.aggregatePlayedGain_succ_abs_sub_le
+    {potential : Profile G.form.sig → ℝ}
+    (hpotential : IsExactPotential G.form G.utility potential)
+    {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
+    {history : ℕ → Profile G.form.sig}
+    (hplay : G.IsFictitiousPlay history) (t : ℕ) :
+    |G.aggregatePlayedGain history (t + 1) -
+        G.aggregatePlayedGain history t| ≤
+      ((Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) *
+        ((1 / (t + 2 : ℝ)) * (4 * C)) := by
+  let coordinateBound : ℝ :=
+    (Fintype.card ι : ℝ) * ((1 / (t + 2 : ℝ)) * (4 * C))
+  have hpoint : ∀ who : ι,
+      |G.mixedGain (G.empiricalBelief history (t + 2)) who
+            (history (t + 2) who) -
+          G.mixedGain (G.empiricalBelief history (t + 1)) who
+            (history (t + 1) who)| ≤ coordinateBound := by
+    intro who
+    have hnewBound :=
+      UtilityGame.IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le
+        (G := G) hpotential hbound history who (history (t + 2) who) t
+    have holdBound :=
+      UtilityGame.IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le
+        (G := G) hpotential hbound history who (history (t + 1) who) t
+    have hbestOld :=
+      UtilityGame.IsFictitiousPlay.isBestResponse (G := G) hplay t who
+        (FinDist.pure (history (t + 2) who))
+    have hbestNew :=
+      UtilityGame.IsFictitiousPlay.isBestResponse (G := G) hplay (t + 1) who
+        (FinDist.pure (history (t + 1) who))
+    rw [euPreference_apply] at hbestOld hbestNew
+    have holdComparison :
+        G.mixedGain (G.empiricalBelief history (t + 1)) who
+            (history (t + 2) who) ≤
+          G.mixedGain (G.empiricalBelief history (t + 1)) who
+            (history (t + 1) who) := by
+      unfold mixedGain
+      linarith
+    have hnewComparison :
+        G.mixedGain (G.empiricalBelief history (t + 2)) who
+            (history (t + 1) who) ≤
+          G.mixedGain (G.empiricalBelief history (t + 2)) who
+            (history (t + 2) who) := by
+      unfold mixedGain
+      linarith
+    apply abs_le.mpr
+    constructor
+    · have hlower := (abs_le.mp holdBound).1
+      linarith
+    · have hupper := (abs_le.mp hnewBound).2
+      linarith
+  rw [aggregatePlayedGain, aggregatePlayedGain]
+  have hsumSub :
+      (∑ who : ι, G.playedGain history (t + 1) who) -
+          (∑ who : ι, G.playedGain history t who) =
+        ∑ who : ι,
+          (G.playedGain history (t + 1) who -
+            G.playedGain history t who) := by
+    rw [Finset.sum_sub_distrib]
+  rw [hsumSub]
+  calc
+    |∑ who : ι,
+        (G.playedGain history (t + 1) who -
+          G.playedGain history t who)| ≤
+        ∑ who : ι,
+          |G.playedGain history (t + 1) who -
+            G.playedGain history t who| :=
+      Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ _who : ι, coordinateBound :=
+      Finset.sum_le_sum fun who _ => hpoint who
+    _ = (Fintype.card ι : ℝ) * coordinateBound := by
+      simp [Finset.sum_const, nsmul_eq_mul]
+    _ = ((Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) *
+        ((1 / (t + 2 : ℝ)) * (4 * C)) := by
+      dsimp [coordinateBound]
+      ring
+
+/-- The all-player empirical update increases mixed potential by the played
+gain's first-order term, up to the quadratic Cesàro error. -/
+theorem IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge
+    {potential : Profile G.form.sig → ℝ}
+    (hpotential : IsExactPotential G.form G.utility potential)
+    {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
+    (history : ℕ → Profile G.form.sig) (t : ℕ) :
+    (1 / (t + 2 : ℝ)) * G.aggregatePlayedGain history t -
+        ((Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) *
+          ((1 / (t + 2 : ℝ)) ^ 2 * (4 * C)) ≤
+      G.mixedPotential potential (G.empiricalBelief history (t + 2)) -
+        G.mixedPotential potential (G.empiricalBelief history (t + 1)) := by
+  have hsweep := G.mixedPotential_advanceMarginals_sub_ge
+    potential hbound history t Finset.univ.toList
+    (G.empiricalBelief history (t + 1)) Finset.univ.nodup_toList
+    (by intro who _; rfl)
+  rw [G.advanceMarginals_univ_eq_empiricalBelief_succ history t] at hsweep
+  have hsum :
+      (∑ who ∈ (Finset.univ.toList : List ι).toFinset,
+        G.mixedPotentialGain potential (G.empiricalBelief history (t + 1))
+          who (history (t + 1) who)) =
+        G.aggregatePlayedGain history t := by
+    rw [aggregatePlayedGain]
+    apply Finset.sum_congr
+    · simp
+    · intro who _
+      simpa [playedGain] using
+        (UtilityGame.IsExactPotential.mixedPotentialGain_eq_mixedGain
+          (G := G) hpotential (G.empiricalBelief history (t + 1)) who
+          (history (t + 1) who))
+  have hlength :
+      ((Finset.univ.toList : List ι).length : ℝ) =
+        (Fintype.card ι : ℝ) := by simp
+  rw [hsum, hlength] at hsweep
+  exact hsweep
+
 end UtilityGame
 
 end GameTheory

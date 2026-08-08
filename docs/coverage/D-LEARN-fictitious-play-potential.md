@@ -8,7 +8,7 @@ Successor baseline: `f2dbd5c`
 Canonical destinations: `GameTheory.Core.FictitiousPlay`, `GameTheory.Core.FictitiousPlayPotential`, future `GameTheory.Analysis.FictitiousPlayPotential`
 Domain contract / decision: D4-D5, D10, D21
 Owner: Wave 2 / learning dynamics
-Status: partial; 45/45 declarations classified, finite recurrence and one-step estimate spine recovered
+Status: partial; 45/45 declarations classified, complete topology-free Lyapunov spine recovered
 Last verified: 2026-08-09
 
 The successor takes the direct route from canonical mixed expected utility and
@@ -41,13 +41,13 @@ identifies utility and potential increments on the canonical mixed form.
 | same | `mixedPotential_pureGain_update_empiricalMarginal_succ_abs_sub_le` | theorem | adapt | `GameTheory.UtilityGame.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le_of_ne` | focused Core build | Cross-coordinate `4C/(t+2)` estimate. |
 | same | `mixedPotentialPureGain_update_empiricalMarginal_succ_self_abs_sub_le` | theorem | adapt | `GameTheory.UtilityGame.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le_self` | focused Core build | Stronger `2C/(t+2)` self-coordinate estimate. |
 | same | `mixedPotentialPureGain_update_empiricalMarginal_succ_abs_sub_le` | theorem | adapt | `GameTheory.UtilityGame.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le` | hostile self-coordinate specialization | Uniform coordinate estimate. |
-| same | `mixedPotentialPureGain_foldl_update_empiricalMarginal_succ_abs_sub_le` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Finite sweep estimate. |
-| same | `mixedPotential_foldl_update_empiricalMarginal_succ_sub_ge` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Lyapunov sweep lower bound. |
-| same | `foldl_update_empiricalMarginal_succ_eq_belief_succ` | theorem | deferred | exact-potential Analysis continuation | dependency gate | All-player update identity. |
-| same | `mixedPotentialPureGain_belief_succ_abs_sub_le` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Consecutive-belief stability. |
-| same | `IsExactPotential.mixedGain_belief_succ_abs_sub_le` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Transfers potential stability to utility gain. |
-| same | `IsExactPotential.fictitiousPlayPlayedGain_succ_abs_sub_le` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Aggregate-gain regularity. |
-| same | `IsExactPotential.mixedPotential_belief_succ_sub_ge` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Main Lyapunov lower bound. |
+| same | `mixedPotentialPureGain_foldl_update_empiricalMarginal_succ_abs_sub_le` | theorem | adapt | `GameTheory.UtilityGame.mixedPotentialGain_advanceMarginals_abs_sub_le` | focused Core build | Duplicate-free finite sweep over a named `advanceMarginals`. |
+| same | `mixedPotential_foldl_update_empiricalMarginal_succ_sub_ge` | theorem | adapt | `GameTheory.UtilityGame.mixedPotential_advanceMarginals_sub_ge` | focused Core build | First-order sum minus quadratic error. |
+| same | `foldl_update_empiricalMarginal_succ_eq_belief_succ` | theorem | adapt | `GameTheory.UtilityGame.advanceMarginals_univ_eq_empiricalBelief_succ` | hostile first sweep | Uses general `Profile.foldl_update_eq`, not a PMF-product helper. |
+| same | `mixedPotentialPureGain_belief_succ_abs_sub_le` | theorem | adapt | `GameTheory.UtilityGame.mixedPotentialGain_empiricalBelief_succ_abs_sub_le` | focused Core build | Whole-belief stability. |
+| same | `IsExactPotential.mixedGain_belief_succ_abs_sub_le` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le` | focused Core build | Transfers potential stability to canonical utility gain. |
+| same | `IsExactPotential.fictitiousPlayPlayedGain_succ_abs_sub_le` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.aggregatePlayedGain_succ_abs_sub_le` | focused Core build | Uses consecutive best-response comparisons. |
+| same | `IsExactPotential.mixedPotential_belief_succ_sub_ge` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge` | nonzero first-gain witness | Complete topology-free Lyapunov lower bound. |
 | same | `IsExactPotential.summable_one_div_mul_fictitiousPlayPlayedGain` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Summability conclusion. |
 | same | `frequently_lt_of_summable_one_div_mul` | theorem | deferred | `GameTheoryMath` candidate | upstreamability review | General sequence lemma must remain game-independent. |
 | same | `tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le` | theorem | deferred | `GameTheoryMath` candidate | upstreamability review | General Tauberian-style sequence lemma. |
@@ -68,8 +68,9 @@ identifies utility and potential increments on the canonical mixed form.
 
 Attribution: the pinned file supplies the played-gain Lyapunov strategy, the
 one-coordinate recurrence, the finite sweep/error estimates, and the
-summability-to-approximate-Nash chain.  The successor has recovered the finite
-recurrence and one-step estimate spine over canonical `FinDist` and exact
+summability-to-approximate-Nash chain.  The successor has recovered the full
+topology-free recurrence, estimate, and Lyapunov spine over canonical `FinDist`
+and exact
 potential without
 the predecessor's PMF products, synthetic team game, or stored outcome
 finiteness.  The remaining direct path is intentionally concentrated in the

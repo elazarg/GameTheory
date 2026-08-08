@@ -153,4 +153,28 @@ theorem firstGainStep_abs_bound :
       potential potential_abs_bound history
       (game.empiricalBelief history 1) true 0 rfl)
 
+theorem firstAggregatePlayedGain : game.aggregatePlayedGain history 0 = 1 := by
+  rw [UtilityGame.aggregatePlayedGain]
+  simpa using firstPlayedGain
+
+/-- The all-player sweep is concrete even in the minimal hostile fixture: its
+single update produces the next empirical belief. -/
+theorem firstAdvanceAll :
+    game.advanceMarginals history 0 Finset.univ.toList
+        (game.empiricalBelief history 1) =
+      game.empiricalBelief history 2 := by
+  simpa using game.advanceMarginals_univ_eq_empiricalBelief_succ history 0
+
+/-- The Lyapunov lower bound is exercised on the same path whose first-order
+played-gain term is nonzero. -/
+theorem firstLyapunovBound :
+    (1 / (0 + 2 : ℝ)) * game.aggregatePlayedGain history 0 -
+        ((Fintype.card (Fin 1) : ℝ) * (Fintype.card (Fin 1) : ℝ)) *
+          ((1 / (0 + 2 : ℝ)) ^ 2 * (4 * 1)) ≤
+      game.mixedPotential potential (game.empiricalBelief history 2) -
+        game.mixedPotential potential (game.empiricalBelief history 1) := by
+  simpa using
+    (UtilityGame.IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge
+      (G := game) exactPotential potential_abs_bound history 0)
+
 end GameTheory.Tests.FictitiousPlayPotential

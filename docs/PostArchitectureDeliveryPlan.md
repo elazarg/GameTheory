@@ -585,7 +585,7 @@ These counts are milestones, not declaration-port percentages.
 | mature workflows | 22 better, 5 comparable, 9 partial, 6 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
 | exact accounting | 2,056 of 8,324 pinned declarations have reviewed dispositions | report the exact remainder; complete every ledger supporting a parity claim |
-| current DFS seam | D-LEARN potential fictitious play 45/45 classified; its 21-row topology-free gain/recurrence/one-step-estimate spine and S-MIX improvement 11/11 are recovered | finish the finite player-sweep estimates, then cross into the summability Analysis chain without reviving the retired team-game transport |
+| current DFS seam | D-LEARN potential fictitious play 45/45 classified; its complete 28-row topology-free gain/recurrence/Lyapunov spine and S-MIX improvement 11/11 are recovered | cross into the summability and convergence Analysis chain without reviving the retired team-game transport |
 | next capability rotation | learning dynamics | finite exact-potential fictitious-play convergence, then the approachability bridge |
 | release engineering | incremental full build and structural/coverage audits green | final cold build, flagship axiom sweep, examples, and generated release report |
 

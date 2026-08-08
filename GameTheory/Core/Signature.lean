@@ -114,6 +114,28 @@ theorem update_comm [DecidableEq ι] (profile : Profile sig) {i j : ι}
     update (update profile i s) j t = update (update profile j t) i s :=
   Function.update_comm h s t profile
 
+/-- Sweeping a duplicate-free list of coordinates installs exactly the listed
+replacement family and leaves every other coordinate unchanged. -/
+theorem foldl_update_eq [DecidableEq ι] (profile : Profile sig)
+    (replacement : ∀ i, sig.Strategy i) (players : List ι)
+    (hnodup : players.Nodup) :
+    players.foldl (fun current i => update current i (replacement i)) profile =
+      fun i => if i ∈ players then replacement i else profile i := by
+  induction players generalizing profile with
+  | nil => rfl
+  | cons first rest ih =>
+      rw [List.foldl_cons,
+        ih (update profile first (replacement first))
+          (List.Nodup.of_cons hnodup)]
+      funext i
+      have hfirst : first ∉ rest := (List.nodup_cons.mp hnodup).1
+      by_cases hi : i = first
+      · subst i
+        simp [hfirst]
+      · by_cases hrest : i ∈ rest
+        · simp [hrest, hi]
+        · simp [hrest, hi, Profile.update_of_ne]
+
 @[simp]
 theorem override_mem [DecidableEq ι] (members : Finset ι) (members' : Subprofile sig members)
     (profile : Profile sig) (i : { i // i ∈ members }) :

@@ -719,7 +719,8 @@ if (-not $SkipReachability) {
     'GameTheory.UtilityGame.expectedUtility_belief_update_empiricalMarginal_succ_sub',
     'GameTheory.UtilityGame.IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain',
     'GameTheory.UtilityGame.IsExactPotential.mixedPotential_belief_update_empiricalMarginal_succ_sub',
-    'GameTheory.UtilityGame.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le')
+    'GameTheory.UtilityGame.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le',
+    'GameTheory.UtilityGame.IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge')
   $coreFictitiousPotentialBoundary = @(
     'GameTheory.UtilityGame.eventually_isεNash_of_mixedImprovement_tendsto_zero',
     'GameTheory.Protocol.ExecutionProtocol')
@@ -1188,7 +1189,7 @@ if ($VerifyExpected) {
     $Expected['CORE_MIXED_POTENTIAL_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['CORE_MIXED_IMPROVEMENT_INPUT_PROBES_REACHED'] = 2
     $Expected['CORE_MIXED_IMPROVEMENT_BOUNDARY_PROBES_REJECTED'] = 2
-    $Expected['CORE_FICTITIOUS_POTENTIAL_INPUT_PROBES_REACHED'] = 4
+    $Expected['CORE_FICTITIOUS_POTENTIAL_INPUT_PROBES_REACHED'] = 5
     $Expected['CORE_FICTITIOUS_POTENTIAL_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 7
     $Expected['LEARNING_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 2
