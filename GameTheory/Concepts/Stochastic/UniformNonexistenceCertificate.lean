@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Stochastic.QuittingAsymptotic
+import GameTheory.Concepts.Stochastic.QuittingTerminalUniformPayoffSelection
 
 /-!
 # Quantitative certificates for failure of uniform-equilibrium existence
@@ -21,7 +22,9 @@ For quitting games, it is enough instead to prove a positive exploitability
 gap for expected terminal reward.  `QuittingAsymptotic` already proves that
 finite-average payoffs converge pointwise to this terminal functional; the
 second theorem packages the resulting contradiction with the exact half-gap
-needed to turn a weak lower bound into a strict Nash violation.
+needed to turn a weak lower bound into a strict Nash violation.  The final
+theorem proves that, after existentially choosing the gap, this terminal
+certificate is also necessary for nonexistence.
 -/
 
 noncomputable section
@@ -90,5 +93,43 @@ theorem quittingGame_not_exists_uniformEquilibriumPayoff_of_terminalExploitabili
   obtain ⟨who, dev, hexploit'⟩ := hexploit σ
   have hdev := hnash who dev
   linarith
+
+/-- For finite quitting games, nonexistence of a uniform-equilibrium payoff is
+exactly the existence of one fixed positive terminal exploitability gap against
+every behavioral profile.
+
+The forward implication negates terminal approximate existence at every
+positive accuracy.  It produces one positive error at which every profile has
+a strict profitable deviation; weakening the strict inequality gives the
+fixed weak gap consumed by the reverse implication. -/
+theorem not_exists_uniformEquilibriumPayoff_iff_exists_terminalExploitabilityGap
+    (reward : {S : Finset iota // S.Nonempty} → Payoff iota) :
+    (¬ ∃ payoff : Payoff iota,
+        (quittingGame reward).IsUniformEquilibriumPayoff none payoff) ↔
+      ∃ gap : ℝ, 0 < gap ∧ HasTerminalExploitabilityGap reward gap := by
+  classical
+  constructor
+  · intro hno
+    have hnotFamily : ¬ ∀ ε : ℝ, 0 < ε →
+        ∃ profile : (quittingGame reward).BehaviorProfile,
+          (quittingGame reward).IsεAsymptoticNash
+            (quittingTerminalPayoff reward) ε profile := by
+      intro hfamily
+      exact hno
+        ((quittingGame_exists_uniformEquilibriumPayoff_iff_terminalNash_all_errors
+          reward).mpr hfamily)
+    push Not at hnotFamily
+    obtain ⟨gap, gap_pos, hnoNash⟩ := hnotFamily
+    refine ⟨gap, gap_pos, ?_⟩
+    intro profile
+    have hprofile := hnoNash profile
+    unfold StochasticGame.IsεAsymptoticNash at hprofile
+    push Not at hprofile
+    obtain ⟨who, deviation, hgain⟩ := hprofile
+    exact ⟨who, deviation, hgain.le⟩
+  · rintro ⟨gap, gap_pos, exploit⟩
+    exact
+      quittingGame_not_exists_uniformEquilibriumPayoff_of_terminalExploitabilityGap
+        reward gap_pos exploit
 
 end GameTheory

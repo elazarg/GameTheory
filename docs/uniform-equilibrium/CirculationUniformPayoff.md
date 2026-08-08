@@ -36,21 +36,31 @@ floor with a min--max construction.
    transport, support-local approximate Nash inequalities, the floor bound,
    and a positive absorption lower bound.  The same discretization reaches
    every requested finite quit-mass target.
-2. Each finite forward prefix is reversed.  The reversed prefixes obey the
-   chronological root equations.  Compact finite-prefix extraction selects an
-   infinite chronological support path.  The per-step absorption lower bound
-   makes total absorption nonsummable and joint all-continue survival
-   geometric.
-3. Joint-survival selection identifies the selected bounded Bellman values
+2. Retaining the phase interval data places every finite orbit in one compact
+   value carrier independent of the requested charge target.  Compact finite
+   charged return selects two close values separated by raw absorption charge
+   at least one.  Reversing only that block makes every internal Bellman seam
+   zero and leaves one small closing seam; the block's aggregate absorption is
+   at least one half.
+3. The resulting single-seam projective lasso corrects to an exact periodic
+   support-rational cycle, hence to a divergent path and an existential
+   uniform-equilibrium payoff.  This consumes the original quantifiers
+   `for every charge target, some finite orbit`; it does not require one orbit
+   that works for all targets.
+4. Independently, reversing whole finite prefixes and compactly extracting an
+   infinite chronological support path remains a compatible route.  On that
+   route joint-survival selection identifies the selected bounded Bellman values
    with the actual terminal tails of that infinite root path.  This selection
    is existential: the produced uniform-equilibrium payoff is not formally
    identified with a named vertex of the input circulation.
-4. The floor bound and the punishment inequality give approximate individual
+5. The floor bound and the punishment inequality give approximate individual
    rationality of every selected tail.  The support-witness path compiler then
    turns the support-rational divergent path, at every accuracy, into an
    existential uniform-equilibrium payoff.
 
-The terminal theorem is
+The finite terminal theorem is
+`quittingGame_exists_uniformEquilibriumPayoff_of_multiCirculation_finiteClosing`.
+The earlier path theorem is
 `quittingGame_exists_uniformEquilibriumPayoff_of_multiCirculation`; its
 singleton-support specialization is
 `quittingGame_exists_uniformEquilibriumPayoff_of_singletonCirculation`.
@@ -86,6 +96,46 @@ occupation.  It does **not** prove that a phase occupation exists, and it does
 not provide a strategic circulation or any other producer for a quitting
 game.  It is therefore an optimization/verification interface, not an
 extension of the circulation existence theorem.
+
+## Path-consistency fence for future flow synthesis
+
+The landed face-circulation theorem already produces finite charged forward
+packets and, independently, an infinite chronological path.  The following
+warning does not weaken either theorem.  It constrains a possible future
+attempt to *produce* such data from a global occupation LP on a finite atlas of
+legal transitions.
+
+A global zero-defect circulation may cancel signed defects across recurrent
+strongly connected components that no single legal path can visit recurrently.
+For example, take two isolated vertices, each carrying only its own loop.  Give
+both loops charge `1`, and signed defects `+1` and `-1`.  The global circulation
+placing mass `1/2` on each loop has zero average defect and unit charge, but
+every legal infinite path stays on one loop and accumulates defect with one
+sign.  The global feasible point is not a bounded-discrepancy path.
+
+The corresponding single global dual can also fail: the vertex-potential terms
+vanish on both loops, so a strict inequality would require both
+`lambda >= c` and `-lambda >= c` for `c > 0`.
+
+The correct prospective positive alternative is therefore componentwise:
+choose one reachable recurrent SCC `C` and a nonnegative circulation supported
+on its internal edges satisfying
+
+```text
+B_C * mu = 0,
+sum_e mu_e * signedDefect_e = 0,
+sum_e mu_e * charge_e = 1.
+```
+
+Path-realizable recurrent occupations form a finite union of component
+circulation polytopes, not one global convex polytope.  If no reachable
+component works, the natural Farkas output is one separator per reachable
+recurrent component; one common global separator need not exist.
+
+Even inside one SCC, a circulation supported on several cycles is not yet one
+strategic word.  Connector paths, signed seam accumulation, and their charge
+cost must be controlled by a separate realization theorem.  Strong
+connectivity guarantees reachability, not negligible strategic error.
 
 ## Boundaries
 

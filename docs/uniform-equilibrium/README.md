@@ -33,16 +33,19 @@ program.
   deterministic support-witness path and periodic-cycle compiler, including
   its remaining producer obligation.
 - [ProjectiveLassoProducer.md](ProjectiveLassoProducer.md) records the exact
-  analytic-packet, resolved-chart, and weighted-lasso dependency boundary.
+  analytic-packet, resolved-chart, signed-monodromy, and finite charged-closing
+  dependency boundary.
 - [CirculationUniformPayoff.md](CirculationUniformPayoff.md) records the
   conditional multi-owner face-circulation producer class, its compact path
-  selection, and its concrete quitting-game corollaries.
+  selection, its concrete quitting-game corollaries, and the recurrent-SCC
+  path-consistency fence on future occupation-level certificate production.
 - [PayoffPerturbationClosure.md](PayoffPerturbationClosure.md) records
   fixed-skeleton reward stability and target-free existence closure.
 - [BoundaryHolonomyTangent.md](BoundaryHolonomyTangent.md) records the
   residual, tangent, and projected-coordinate layer for finite holonomy.
 - [UniformConsequences.md](UniformConsequences.md) records the compact
-  invariance, reverse-characterization, and transition-discontinuity layer.
+  invariance, reverse-characterization, fixed terminal-gap, and
+  transition-discontinuity layer.
 - [methods/MathResearchMethod.md](methods/MathResearchMethod.md)
 - [methods/LeanFormalizationMethod.md](methods/LeanFormalizationMethod.md)
 - [methods/ParallelResearchMethod.md](methods/ParallelResearchMethod.md)
