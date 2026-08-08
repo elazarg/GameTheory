@@ -11,6 +11,7 @@ predicate is introduced here.
 
 import GameTheory.Core.Learning
 import GameTheory.Core.FictitiousPlay
+import GameTheory.Analysis.Approachability
 import GameTheory.Analysis.FictitiousPlayPotential
 import GameTheory.Analysis.FiniteLaw
 import GameTheory.Probability.OnlineLearning

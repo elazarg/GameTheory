@@ -341,7 +341,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | foundations and VNM | utility invariance, strategic equivalence, expected-utility representation, axiom independence | expected-utility representation without merging probability-free ranks back into lottery preference | `Core.Preference`, finite laws, and independent mathematics only where earned |
 | static response | dominance, rationalizability, approximate and secure equilibrium | dominance solvability and one approximation theorem without duplicate Nash predicates | `GameTheory.Core` |
 | correlation | correlation regimes, regret, signal timing, value of correlation | **CE/CCE existence complete through mixed Nash;** next one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
-| learning | regret, multiplicative weights, fictitious play, approachability | **F2, finite MW self-play, and base fictitious play 9/9 complete, including limit-to-Nash (EXP-049/D21);** next potential-game convergence | stable finite identities in Core, law-free MW algebra in `GameTheoryMath`, canonical-law adapter in Probability, and quantitative composition in `Analysis.Learning` |
+| learning | regret, multiplicative weights, fictitious play, approachability | **F2, finite MW self-play, base fictitious play 9/9, exact-potential convergence, and approachability/regret matching 23/23 complete;** only weighted-potential generalization remains gated | stable finite identities in Core, law-free MW and approachability mathematics in `GameTheoryMath`, canonical-law adapters in Probability or opt-in Analysis, and quantitative composition in `Analysis.Learning` |
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | **pinned congestion family complete, including robust affine CCE PoA (EXP-052/053, D24)** | `Core.Potential` plus the opt-in congestion domain |
 | welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
@@ -577,16 +577,16 @@ capability status is not renegotiated during that review.
 
 ### Current release-coverage checkpoint
 
-Last integrated checkpoint: 2026-08-09, after the exact-potential empirical-recurrence spine.
+Last integrated checkpoint: 2026-08-09, after the approachability/regret-matching gate.
 These counts are milestones, not declaration-port percentages.
 
 | Release dimension | Current evidence | Release condition |
 |---|---|---|
-| mature workflows | 23 better, 5 comparable, 9 partial, 6 critical gaps | zero critical gaps; each partial audited for loss of mature use |
+| mature workflows | 24 better, 5 comparable, 9 partial, 5 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,056 of 8,324 pinned declarations have reviewed dispositions | report the exact remainder; complete every ledger supporting a parity claim |
-| current DFS seam | D-LEARN potential fictitious play 45/45 classified; the exact-potential path is complete across Core, GameTheoryMath, and Analysis, with three weighted-potential rows gated | keep the direct theorem chain green; do not revive the retired team-game transport |
-| next capability rotation | learning dynamics | approachability bridge over canonical regret and finite-law semantics |
+| exact accounting | 2,079 of 8,324 pinned declarations are claimed by exact ledgers; 1,898 have reviewed dispositions and 181 are seeded `unreviewed` | report the exact remainder; complete every ledger supporting a parity claim |
+| current DFS seam | D-LEARN approachability 23/23 classified; game-free B-set/orthant mathematics and the canonical `FinDist` regret-matching convergence bridge are complete | keep topology out of Core and Probability; retain no PMF compatibility layer |
+| next capability rotation | finite fair division | hostile finite round-robin EF1 slice without importing measurable cake theory |
 | release engineering | incremental full build and structural/coverage audits green | final cold build, flagship axiom sweep, examples, and generated release report |
 
 ## 15. Immediate queue
@@ -626,7 +626,7 @@ provisioned in CI.
    principal-agent model, stochastic welfare identity, incentivized-action
    existence, explicit participation, a premise-erasing negative control, and
    a complete 23/23 pinned declaration ledger;
-5. **in progress:** canonical finite-support revelation, all 21 declarations in
+5. **complete at the current learning gate:** canonical finite-support revelation, all 21 declarations in
    the pinned information-design file, and the four remaining truthful
    welfare/participation declarations are recovered without duplicate
    probability, plausibility, mechanism, or equilibrium layers; all 19
@@ -634,8 +634,11 @@ provisioned in CI.
    validates quasilinear ownership; the pinned monotonicity and affine-
    maximizer files are now 5/5 and 13/13 recovered, and all 38 Myerson rows are
    classified with its 19 topology-free declarations promoted and 19 analytic
-   declarations kept behind D11.  The lead queue now rotates to the learning
-   critical gap, while the remaining 81-row L-FOSG classification and D-REPEAT
+   declarations kept behind D11.  The subsequent learning rotation recovered
+   all 23 approachability/regret-matching declarations, with game-free geometry
+   in `GameTheoryMath` and the canonical `FinDist` bridge in Analysis.  The
+   lead queue now rotates to finite fair division, while the remaining 81-row
+   L-FOSG classification and D-REPEAT
    rank/self-generation/uniform harvesting, and validated static and language
    leaf recovery remain BFS work;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the

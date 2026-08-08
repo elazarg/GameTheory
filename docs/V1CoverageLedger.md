@@ -5,7 +5,7 @@ Status: active family-level ledger.
 Pinned source: `reference/GameTheory-v1/` at
 `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 
-Last reconciled: 2026-08-03.
+Last reconciled: 2026-08-09.
 
 This ledger answers four different questions separately:
 
@@ -22,8 +22,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Thirty-eight work-package ledgers claim 1,840 declarations: 1,659
-have reviewed dispositions and 181 remain seeded `unreviewed`; a further 6,484 are
+declarations. Fifty-two work-package ledgers claim 2,079 declarations: 1,898
+have reviewed dispositions and 181 remain seeded `unreviewed`; a further 6,245 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -124,7 +124,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| D-LEARN | `Concepts/Learning/**` | 8 | stable finite identities in Core; quantitative composition in `Analysis.Learning` and `Analysis.FictitiousPlayPotential` | validated by F2 and EXP-049/D21 | partial; finite/MW self-play 15/15, base fictitious play 9/9, and potential fictitious play 45/45 reviewed; exact-potential convergence complete, three weighted rows gated | [self-play ledger](coverage/D-LEARN-self-play.md), [fictitious-play ledger](coverage/D-LEARN-fictitious-play.md), [potential-game ledger](coverage/D-LEARN-fictitious-play-potential.md); next approachability |
+| D-LEARN | `Concepts/Learning/**` | 8 | stable finite identities in Core; game-free mathematics in `GameTheoryMath`; canonical-law convergence bridges in `Analysis.Learning`, `Analysis.FictitiousPlayPotential`, and `Analysis.Approachability` | validated by F2 and EXP-049/D21 | partial only at the weighted-potential gate; all 97 declarations reviewed, including finite/MW self-play 15/15, F2 5/5, base fictitious play 9/9, potential fictitious play 45/45, and approachability 23/23; exact-potential and regret-matching convergence complete, three weighted rows gated | [self-play ledger](coverage/D-LEARN-self-play.md), [F2 ledger](coverage/F2-no-regret-cce.md), [fictitious-play ledger](coverage/D-LEARN-fictitious-play.md), [potential-game ledger](coverage/D-LEARN-fictitious-play-potential.md), [approachability ledger](coverage/D-LEARN-approachability.md); no unclassified remainder |
 | D-COMM | `Concepts/Communication/**`, `Core/Babbling.lean`, `Languages/ElectronicMailGame.lean` | 5 | static core or Protocol according to timing | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20 | partial; 87/87 declarations reviewed, 19 cross-family rows deferred | [exact declaration ledger](coverage/D-COMM-communication.md); pure babbling, exact Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail recovered; conditional public-signal and zero-sum value results remain gated |
 | D-KNOW | `Concepts/Knowledge/**` | 2 | stable `Epistemic` branch; a Protocol bridge only with an explicit state-view premise | validated by EXP-043/D16 | complete; 62/62 declarations accounted | [finite and approximate common-knowledge ledger](coverage/D-KNOW-aumann.md); private mass machinery and the public quantitative bound build |
 | D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | deterministic play, finite public-signal laws, and canonical public-monitoring equilibrium waist validated by EXP-064 | partial; PPE/one-shot principle recovered without an infinite-path law | [monitoring-equilibrium ledger](coverage/D-REPEAT-monitoring-equilibrium.md); next rank/self-generation and uniform results |

@@ -769,6 +769,65 @@ if (-not $SkipReachability) {
   Report 'HARMONIC_SEQUENCE_BOUNDARY_PROBES_REJECTED' `
     $harmonicSequenceBoundaryRejected
 
+  # Approachability's reusable B-set and orthant geometry must remain
+  # independent of both game semantics and the canonical law adapter.
+  $mathApproachabilityInputs = @(
+    'GameTheoryMath.Approachability.sq_infDist_avg_le',
+    'GameTheoryMath.Approachability.orthantProj',
+    'GameTheoryMath.Approachability.infDist_eq_norm_sub_orthantProj')
+  $mathApproachabilityBoundary = @(
+    'GameTheory.UtilityGame',
+    'GameTheory.Probability.FinDist')
+  $mathApproachabilityOutput =
+    Run-Probe 'GameTheoryMath.ApproachabilityRegret' `
+      ($mathApproachabilityInputs + $mathApproachabilityBoundary)
+  $mathApproachabilityInputsReached = 0
+  foreach ($constant in $mathApproachabilityInputs) {
+    if (-not (Is-Unreachable $mathApproachabilityOutput $constant)) {
+      $mathApproachabilityInputsReached++
+    }
+  }
+  Report 'MATH_APPROACHABILITY_INPUT_PROBES_REACHED' `
+    $mathApproachabilityInputsReached
+  $mathApproachabilityBoundaryRejected = 0
+  foreach ($constant in $mathApproachabilityBoundary) {
+    if (Is-Unreachable $mathApproachabilityOutput $constant) {
+      $mathApproachabilityBoundaryRejected++
+    }
+  }
+  Report 'MATH_APPROACHABILITY_BOUNDARY_PROBES_REJECTED' `
+    $mathApproachabilityBoundaryRejected
+
+  # The opt-in analytic leaf is the first layer allowed to combine the
+  # canonical finite law with the geometric steering theorem.
+  $approachabilityAnalysisInputs = @(
+    'GameTheory.Analysis.Approachability.regretPayoff',
+    'GameTheory.Analysis.Approachability.regretMatch',
+    'GameTheory.Analysis.Approachability.regretMatch_steering',
+    'GameTheory.Analysis.Approachability.regretMatch_approaches')
+  $approachabilityAnalysisBoundary = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'kakutani_fixed_point')
+  $approachabilityAnalysisOutput =
+    Run-Probe 'GameTheory.Analysis.Approachability' `
+      ($approachabilityAnalysisInputs + $approachabilityAnalysisBoundary)
+  $approachabilityAnalysisInputsReached = 0
+  foreach ($constant in $approachabilityAnalysisInputs) {
+    if (-not (Is-Unreachable $approachabilityAnalysisOutput $constant)) {
+      $approachabilityAnalysisInputsReached++
+    }
+  }
+  Report 'APPROACHABILITY_ANALYSIS_INPUT_PROBES_REACHED' `
+    $approachabilityAnalysisInputsReached
+  $approachabilityAnalysisBoundaryRejected = 0
+  foreach ($constant in $approachabilityAnalysisBoundary) {
+    if (Is-Unreachable $approachabilityAnalysisOutput $constant) {
+      $approachabilityAnalysisBoundaryRejected++
+    }
+  }
+  Report 'APPROACHABILITY_ANALYSIS_BOUNDARY_PROBES_REJECTED' `
+    $approachabilityAnalysisBoundaryRejected
+
   $fictitiousPotentialAnalysisInputs = @(
     'GameTheoryMath.tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le',
     'GameTheory.UtilityGame.IsExactPotential.summable_harmonic_aggregatePlayedGain',
@@ -805,7 +864,8 @@ if (-not $SkipReachability) {
     'GameTheory.Analysis.FinDistConvergesPointwise.expect',
     'GameTheory.UtilityGame.IsFictitiousPlay.limit_isNash',
     'GameTheory.UtilityGame.eventually_isεNash_of_mixedImprovement_tendsto_zero',
-    'GameTheory.UtilityGame.IsExactPotential.eventually_isεNash_of_isFictitiousPlay')
+    'GameTheory.UtilityGame.IsExactPotential.eventually_isεNash_of_isFictitiousPlay',
+    'GameTheory.Analysis.Approachability.regretMatch_approaches')
   $learningBridgeBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
     'kakutani_fixed_point')
@@ -1247,9 +1307,13 @@ if ($VerifyExpected) {
     $Expected['CORE_FICTITIOUS_POTENTIAL_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['HARMONIC_SEQUENCE_INPUT_PROBES_REACHED'] = 2
     $Expected['HARMONIC_SEQUENCE_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['MATH_APPROACHABILITY_INPUT_PROBES_REACHED'] = 3
+    $Expected['MATH_APPROACHABILITY_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['APPROACHABILITY_ANALYSIS_INPUT_PROBES_REACHED'] = 4
+    $Expected['APPROACHABILITY_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['FICTITIOUS_POTENTIAL_ANALYSIS_INPUT_PROBES_REACHED'] = 4
     $Expected['FICTITIOUS_POTENTIAL_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
-    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 8
+    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 9
     $Expected['LEARNING_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['PROTOCOL_FINITE_LAW_INPUT_PROBES_REACHED'] = 2
     $Expected['PROTOCOL_FINITE_LAW_BOUNDARY_PROBES_REJECTED'] = 1

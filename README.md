@@ -30,7 +30,8 @@ GameTheory/Epistemic     finite information partitions, posteriors, exact and
                          approximate common knowledge, and agreement
 GameTheory/Evolutionary  static ESS/NSS and the canonical symmetric-Nash bridge
 GameTheory/Finite        executable rational frontend and its correctness layer
-GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theory
+GameTheory/Analysis      stable, opt-in fixed-point, minimax, existence,
+                         approachability, and learning-convergence theory
   /Protocol              analytic behavioral-assessment consistency bridge
   /Repeated              analytic repeated-game bridge and discounted folk theorem
   /Stochastic            normalized Shapley values and stationary statewise saddles
@@ -71,7 +72,8 @@ GameTheory/Languages     scoped language encodings and truthful Bayesian
 GameTheory/Examples      reader-facing examples with #eval and #guard tests
 GameTheory/Tests         architecture and locality tests
 GameTheory/Experimental  architecture spikes, never re-exported
-GameTheoryMath           independently reusable, game-free mathematics
+GameTheoryMath           independently reusable, game-free mathematics,
+                         including online-learning and approachability engines
 ```
 
 The root `GameTheory` import re-exports Core, Protocol, Epistemic,
