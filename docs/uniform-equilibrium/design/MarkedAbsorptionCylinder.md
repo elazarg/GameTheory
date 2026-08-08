@@ -16,6 +16,15 @@ source block, literal length, and chronology.  It is the finite semantic
 adapter used to validate formulas, **not** the source-forgetting cylinder
 specified below.
 
+`L` The first genuinely source-forgetting primitive is
+`UniformEquilibrium/Quitting/AbsorptionPath/MarkedObstacleRecord.lean`.  Its
+encoder discards the source word, horizon, and literal offset after one stage,
+while retaining the current product root, pre/post vector factors, full and
+player-deleted survival, local Bellman data, continuation, and obstacle
+ordinate.  The encoder image satisfies the vector, full-product,
+deleted-product, survival-update, and Bellman recurrences.  This is one marked
+chronological record, not yet the completed graph or a block cylinder.
+
 ## 1. Notation for a finite block
 
 Let `ι` be the finite player set and `𝒥` the nonempty subsets of `ι`, with
@@ -230,8 +239,10 @@ independently of any topology.
 The realized source adapter proves the row-level coalition-mass telescope,
 arbitrary-terminal prescribed and unilateral evaluation, endpoint clocks, and
 the existing holonomy/clock laws for adjacent cuts of one calibrated source.
-It does **not** discharge the list above: it has no block-forgetting path or
-marked obstacle graph, and its concatenation theorem is not a composition law
+The source-forgetting obstacle-record encoder proves the corresponding
+one-stage factor, clock, Bellman, and obstacle equations.  Together they still
+do **not** discharge the list above: there is no source-forgetting block path or
+marked obstacle graph, and same-source concatenation is not a composition law
 for semantic cylinders.  The distinction is enforced by the exported type name
 `RealizedMarkedAbsorptionCylinder`; the name `MarkedAbsorptionCylinder` remains
 available for the eventual target type.

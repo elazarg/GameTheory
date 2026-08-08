@@ -456,10 +456,12 @@ and cap under the straight-chord and stored-terminal conventions.  It also
 finds two genuine gaps: a mass hypograph keeps only the obstacle envelope on a
 repeated-mass fibre, not chronology; and continuous ambient splice does not
 give exactly composable finite approximants or self-seam pullback.  Separately,
-the repair audit proves fixed-cost buffered charts only conditionally.  Passing
-to an obstruction against all finite repair costs requires bounded compression
-or lower semicontinuity of the all-length repair value, plus a strategic
-consumption theorem.  Compactness supplies neither.
+the generic repair audit proves fixed-cost buffered charts only conditionally:
+an arbitrary source-dependent grammar would require bounded compression or
+lower semicontinuity of its all-length value.  Compactness supplies neither.
+`PC-013` supplies the missing theorem specifically for quitting behavior tails
+by using a source-independent physical seam and a common holonomy modulus; the
+separate strategic consumption problem remains.
 
 **Rejected.** Treat `Γ` plus a mass hypograph as a settled decoder carrier;
 infer exact seam pullback from density; infer an all-length obstruction from
@@ -467,14 +469,56 @@ one fixed-cost chart; or require a successful repair to remain in the
 zero-pinned grammar.  The last requirement is already refuted by a two-player
 debt plateau repaired by an unpinned stationary tail.
 
-**Consequence.** P0 has three explicit mathematical gates: the joint marked
-semantic graph and exact finite adapter; exact-seam/self-seam finite pullback;
-and local bounded compression/equicoercivity with grammar-complete or
-plateau-null obstruction consumption.  Compactness may uniformize already-open
-repair charts only after those gates are stated at actual all-behavior gain.
+**Consequence.** The joint marked semantic graph and exact finite adapter remain
+the safe carrier target.  `PC-013` removes exact-anchor seam pullback and generic
+bounded compression from the behavioral-tail repair branch: actual gain is
+recomputed across the physical seam.  Exact-seam/self-seam pullback remains a
+separate requirement only for decoders that insist on complementary-cylinder
+surgery.  The common remaining P0 gate is strategic prefix consumption.
 
 **Revisit trigger.** A smaller carrier is justified by a fibre-constancy
 theorem, or an alternative producer bypasses finite repair charts entirely.
+
+### `PC-013` — close all-length tail compression at the behavioral seam
+
+**Decision.** Measure repair over every behavioral tail that can be attached
+after the fixed quitting prefix, and recompute prescribed payoff and literal
+all-behavior gain through the prefix holonomy.  In this physical grammar the
+all-tail repair value is Lipschitz in the affine/max-affine holonomy
+coordinates.  Arbitrary tails are semantically dense in finite words followed
+by one of three caps: sure joint exit, sure solo exit, or Never.
+
+**Rationale.** A finite quitting prefix acts on a tail only through its
+prescribed affine coordinates `(B,P)` and unilateral max-affine coordinates
+`(A,T,χ)`.  Tail prescribed values and best-response envelopes are uniformly
+reward-bounded, so the resulting gain has one coordinate Lipschitz modulus
+independent of tail length.  Infimizing over all tails preserves that modulus.
+For semantic density, let the playerwise nonquit products tend to `p_j`.  If
+full survival is positive, truncate into Never.  If full survival is zero and
+all deleted products vanish, truncate into sure joint exit.  Otherwise exactly
+one deleted product survives, forcing every other `p_j` positive and that
+player's `p_j` zero; truncate into that player's sure solo exit.  Full and
+deleted survival bound the prescribed and unilateral errors in the three
+cases.
+
+**Rejected.** Make tail legality depend on exact equality with the source's old
+Bellman exit anchor; restrict repair tails to zero-pinned exact-`D` words; infer
+all-tail lower semicontinuity from a generic infimum-of-continuous-functions
+principle; or omit Never from the dense grammar.  These restrictions either
+restore the refuted pinning bias or exclude genuine terminal behavior.
+
+**Consequence.** The bounded-compression/equicoercivity gate in `PC-012` is
+closed mathematically for a fixed prefix.  At fixed accuracy, a near-minimizing
+tail at one holonomy gives one finite elementary tail stable on a holonomy
+neighborhood; a positive all-tail value gives a neighborhood-stable gain floor
+against every tail, without a length bound.  Production formalization is
+active.  The remaining strategic gate is **prefix consumption**: a positive
+floor excludes every tail after the calibrated prefix but does not yet exclude
+profiles that replace the prefix.
+
+**Revisit trigger.** A counterexample to the three-cap semantic density
+estimate, to behavioral pure-time extremality, or to the exact prefix-holonomy
+evaluation invalidates the decision.
 
 ### `PC-011` — decline result-graph; extend audit_repository.py instead
 
@@ -764,8 +808,10 @@ remain active even while P0 mathematics is open.
 **Objective.** Prove a compactness theorem for **generalized completed
 chronological traces** with finite calibrated blocks dense in them, carrying
 exit-or-Never mass, anchors, the conditional packet, payoff, the completed
-marked stopping-obstacle graph, deleted-clock graphs, and debt.  Prove the
-exact-seam and self-seam finite pullbacks needed by a repair decoder.
+marked stopping-obstacle graph, deleted-clock graphs, debt, and a continuous
+projection to boundary holonomy.  Treat exact-seam and self-seam finite
+pullbacks separately for complementary-cylinder surgery; they are not needed
+to attach an arbitrary behavior tail at the unique physical live seam.
 
 **State.** `ACTIVE` at **P0**: `PC-009` restored this lane, superseding
 `PC-008`'s demotion. Finite semantics and fixed-cutoff closure are landed.
@@ -788,9 +834,19 @@ debt, packet, and compact chronological provenance.  See `PC-012` and
 [`CompletedVectorFactorTraceIsCompactAndDetermining.md`](../../ideas/PositivePlateauBoundaryClosure/CompletedVectorFactorTraceIsCompactAndDetermining.md)
 for the original claim and its load-bearing conventions.
 
+`PC-013` changes the decoder dependency.  Because every behavioral tail is
+physically attachable and its actual gain is evaluated through the stored
+holonomy, the repair branch needs only finite pullback of the source encoding
+and continuity of the holonomy projection.  It does not need to perturb an
+approximate anchor match into an exact complementary seam.  Chronology,
+packet, and debt remain available for the unresolved prefix-consumption branch.
+
 **Acceptance.** Build the joint semantic graph and exact finite adapter, define
-continuous mark transport, and prove joint exact-seam/self-seam finite
-pullback.  Coordinates may be removed only after a fibre-constancy theorem.
+the continuous holonomy/packet/debt projections, and prove the compactness and
+finite-density statements actually used by prefix consumption.  Record
+continuous mark transport and exact-seam/self-seam pullback as additional
+surgery obligations rather than silently deriving them from compactness.
+Coordinates may be removed only after a fibre-constancy theorem.
 Do **not** pursue a missing-compact-coordinate closure of the finite set; that
 shape is impossible. Do **not** fall back on the aggregated carrier: its fibres
 can carry *different origin values* at the same obstacle trace (`M [reported]`; see
@@ -897,26 +953,29 @@ envelope.  The bounded-finite-surgery cutoff-independent-debt-descent
 alternative at the original root is closed (see
 [`AnchoredRepairOrUniformDebtDescent.md`][anchored-repair]).
 
-**The limit-object route to this is closed as posed (`M`).** The reported
-witness has been independently re-derived: the relaxed package is **not** a
-local certificate of approximate solutions.  Value approximation and gain
-approximation come apart, and an explicit finite complementary witness has an
-all-behavior gain floor `1/4` on a trace neighborhood.  The witness is itself
-repaired exactly by appending one row, so the repaired whole trace must not be
-required to remain near the source trace. See
-[`RelaxedLimitPackageDoesNotCertifySmallGain.md`](../../ideas/PositivePlateauBoundaryClosure/RelaxedLimitPackageDoesNotCertifySmallGain.md)
-for the witness. This does **not** refute existence; it refutes transport of
-small gain from trace nearness and grammar-local readings of an obstruction.
+**The limit-object route to this is closed as posed.** The relaxed package is
+**not** a local certificate of approximate solutions: value approximation and
+gain approximation come apart.  The finite core is machine-checked in
+`UniformEquilibrium/Quitting/Boundary/Repair/RelaxedTraceStressTest.lean`:
+the three-player source row has singleton-capped finite debt exactly `1/2`,
+while appending the single row `(1,0,0)` makes that debt zero for every player.
+The stronger `1/4` trace-neighborhood floor is audited mathematics (`M`).  Thus
+the repaired whole trace must not be required to remain near the source trace.
+This does **not** refute existence; it refutes transport of small gain from
+trace nearness and grammar-local readings of an obstruction.
 
-**State.** `ACTIVE`, sharpened by `PC-012`.  At each fixed repair cost `L`, a
-compact legal-code correspondence, anchor lifting, and continuity of literal
-all-behavior gain give a standard buffered repair-or-`L`-bounded-obstruction
-chart by Berge's theorem.  The decisive gap is the all-length quantifier:
-prove local bounded compression/equicoercivity, or lower semicontinuity plus
-finite approximation for `e∞ = inf_L e_L`.  Compactness alone cannot exchange
-these quantifiers.  A positive all-length floor must then be consumed by
-grammar completeness or by a named plateau-null inequality; failure of the
-chosen repair grammar has no strategic consequence by itself.
+**State.** `ACTIVE`, sharpened by `PC-012` and `PC-013`.  The all-length
+quantifier is closed mathematically at the behavioral seam.  Every tail is
+semantically approximable by a finite word with sure-joint, sure-solo, or Never
+cap, simultaneously in prescribed value and all-behavior best-response
+envelope.  Prefix holonomy gives one gain modulus uniform over all such tails,
+so the infimum over arbitrary lengths is Lipschitz and yields a stable finite
+repair or an all-tail local floor.  Production formalization of the density and
+modulus is active.  The decisive remaining implication is prefix consumption:
+prove that the positive all-tail floor for a calibrated plateau prefix is a
+named plateau-null inequality, forces a better calibrated prefix, or yields a
+global terminal exploitability gap.  Failure after one fixed prefix does not
+exclude profiles that change the prefix.
 
 **Acceptance.** For fixed accuracy, positive debt, and positive packet mass,
 every ported enriched state has either a stable terminal repair chart with
@@ -1635,9 +1694,15 @@ bounded chronological prefixes, exact coalition-mass accounting, endpoint
 clock/holonomy pins, arbitrary terminal-continuation evaluation, and adjacent
 same-source concatenation.  Its type name is intentionally `Realized...`: it
 retains the block and literal chronology and therefore is not the compact
-source-forgetting cylinder.  The remaining implementation must build the joint
-marked semantic graph specified by `PC-012`; do not scaffold an infinite
-topology around the source wrapper.
+source-forgetting cylinder.  A source-forgetting one-stage semantic record is
+also landed in
+`UniformEquilibrium/Quitting/AbsorptionPath/MarkedObstacleRecord.lean`: the
+encoder retains the current root, vector factors, full/deleted survival,
+Bellman continuation data, and obstacle ordinate, with exact recurrence and
+product identities.  It deliberately stops before building a list or topology.
+The remaining implementation must assemble these records into the joint marked
+semantic graph specified by `PC-012`; do not scaffold an infinite topology
+around the source wrapper.
 
 **Acceptance.** Every production finite block embeds without changing its
 strategic meaning; basis for P0 compactness and endpoint adapters.
@@ -2178,18 +2243,22 @@ fixed-cutoff resolved lift compact/closed; literal length fence -------- [L]
        finite realized semantic adapter; source-forgetting joint graph
                 |
        MATH-P0-1: compact completed trace + marked chronology
-                    + exact-seam/self-seam finite pullback
+                    + continuous holonomy/packet/debt projection
                 |
-       MATH-P0-2: fixed-cost actual-gain repair charts
+       PC-013: elementary-tail density + uniform holonomy gain modulus
                 |
-       bounded compression / l.s.c. of all-length repair value
-                    + strategic obstruction consumption
+       MATH-P0-2: stable all-tail repair or floor
+                    + strategic prefix consumption
                 |
        repair may leave the zero-pinned source grammar;
                     fixed root-debt descent is refuted
                 |
 terminal approximate existence
 ```
+
+Exact-seam/self-seam finite pullback remains a side obligation for
+complementary-cylinder surgery, not for the behavioral-tail branch displayed
+above.
 
 `MATH-P0-3` can bypass part of the bridge by finding a short repair. The
 refutation lane is logically independent after the terminal/nonexistence waist.

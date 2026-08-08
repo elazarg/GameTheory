@@ -392,6 +392,7 @@ import UniformEquilibrium.Quitting.Debt.Dynamic.DebtClockDischarge
 import UniformEquilibrium.Quitting.Boundary.Repair.ObstacleMassDescentCounterexample
 import UniformEquilibrium.Quitting.Debt.Dynamic.PositiveDebtPlateauTable
 import UniformEquilibrium.Quitting.Boundary.Repair.BoundedSurgeryDescentCounterexample
+import UniformEquilibrium.Quitting.Boundary.Repair.RelaxedTraceStressTest
 import UniformEquilibrium.Quitting.Punishment.SoloQuitterEquilibrium
 import UniformEquilibrium.Quitting.Punishment.BlockerIntervalCover
 import UniformEquilibrium.Quitting.Examples.FTV.EpsilonPerturbedCycleExclusion

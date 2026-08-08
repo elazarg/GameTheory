@@ -110,7 +110,10 @@ The finite-quitting front is now sharply reduced.
    is the joint semantic-graph closure of trace, coalition path, marked obstacle
    graph, holonomy, anchors, debt, packet, and compact provenance. See
    [`CompletedVectorFactorTraceIsCompactAndDetermining.md`](../../ideas/PositivePlateauBoundaryClosure/CompletedVectorFactorTraceIsCompactAndDetermining.md)
-   and `PC-012` for the audited scope and open gates. The claimed
+   and `PC-012` for the audited scope and open gates.  Exact seam pullback is a
+   separate obligation for complementary-cylinder surgery; the behavioral-tail
+   decoder of `PC-013` instead recomputes actual gain across the physical seam.
+   The claimed
    aggregated-carrier fallback failure (fibres carrying different origin
    values at the same obstacle trace) is likewise `M [reported]`; see
    [`AggregatedCarrierConflatesOriginValues.md`](../../ideas/PositivePlateauBoundaryClosure/AggregatedCarrierConflatesOriginValues.md).
@@ -321,18 +324,25 @@ uniformly tight.  The leading candidate is therefore the
 [marked absorption-path route](../../ideas/PositivePlateauBoundaryClosure/EnrichedAbsorptionPathsMayCompactifyTheEscapingMiddle.md), with the
 [escaping-middle problem](../../ideas/PositivePlateauBoundaryClosure/RealizedAnchoredHolonomyClosedness.md)
 retained as its acceptance/falsification test.  The first theorem must encode
-actual finite blocks into the joint semantic graph exactly; the next must prove
-mark transport and exact-seam/self-seam finite pullback.  Compactness and
-density alone do not supply either theorem.
+actual finite blocks into the joint semantic graph exactly and expose
+continuous holonomy, packet, and debt projections.  Mark transport and
+exact-seam/self-seam finite pullback remain additional surgery obligations;
+compactness and density alone do not supply them, but physical behavioral-tail
+attachment does not require them.
 
-The strategic decoder has a fixed-cost and an all-length layer.  At fixed
-repair cost `L`, compact legal-code fibres, anchor lifting, and continuity of
-literal all-behavior gain would give a buffered repair-or-`L`-bounded-
-obstruction chart.  Passing to an obstruction against repairs of arbitrary
-finite complexity requires a new bounded-compression/equicoercivity theorem,
-or lower semicontinuity with finite approximation of `inf_L e_L`.  Such an
-obstruction must then be grammar-complete or a proved plateau-null inequality.
-Compactness only uniformizes repair charts already shown to be open.
+The strategic decoder's all-length tail layer has a quitting-specific positive
+resolution at the behavioral seam (`M`, formalization active).  A fixed prefix
+acts on every tail through affine/max-affine holonomy with one Lipschitz modulus
+independent of tail length.  Every behavioral tail is semantically approximable
+by a finite word followed by sure joint exit, sure solo exit, or Never, using
+the trichotomy of full and deleted survival limits.  Hence the all-tail repair
+value is Lipschitz: it yields either one finite elementary tail stable near the
+prefix holonomy or a neighborhood-stable floor against every tail.  The open
+gate is now prefix consumption.  A positive floor after one calibrated prefix
+does not itself exclude a profile that replaces that prefix; it must force a
+better calibrated prefix, become a plateau-null separator, or lift to a global
+terminal exploitability gap.  Compactness is needed only to uniformize the
+resulting local prefix charts.
 
 **The bounded root-debt descent decoder is closed negatively (`M`)** — see the
 capstone claim.  No bounded-length exact-`D` modification achieves a cutoff-
