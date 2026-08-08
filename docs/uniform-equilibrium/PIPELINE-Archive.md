@@ -9,6 +9,55 @@ applies here exactly as it does in the main pipeline file.
 
 ## Lean formalization lane
 
+### `LEAN-P0-5` — signed phasewise accumulation is the relaxed-cycle gain
+
+- **Status:** DONE
+- **Lane:** P0
+- **Depends:** the companion-map machinery.
+- **Record:** [signed
+  accumulation](../../ideas/AbsorbingCycleCarrier/TheSignedAccumulationIsTheGain.md)
+
+**Objective.** Formalize the identity that the **signed** phasewise accumulation
+equals the gain of a relaxed cycle, and hence that its vanishing is necessary
+and sufficient.
+
+**State.** Landed in
+`UniformEquilibrium/Quitting/Cycles/RelaxedCycleGain.lean`.  The one-step and
+finite-window max-affine identities require only prescribed-value consistency.
+With wraparound and strict opponent-survival contraction, the prescribed value
+plus `quittingRelaxedCycleGain` is the unique cyclic companion fixed point, and
+the gain vanishes exactly when the prescribed value is already fixed.
+
+**Acceptance.** The necessary-and-sufficient gain statement is theorem-level
+and citable; no complementarity hypothesis is needed for the algebraic
+identity.
+
+### `LEAN-P0-6` — pure quit-time and behavioral suprema equal the companion fixed point
+
+- **Status:** DONE
+- **Lane:** P0
+- **Depends:** `QuittingRelaxedCycleGain`, behavioral pure-time extremality,
+  and the companion-map contraction.
+- **Record:** [signed
+  accumulation](../../ideas/AbsorbingCycleCarrier/TheSignedAccumulationIsTheGain.md)
+
+**Objective.** Prove that the supremum over pure quit-time deviations of a
+periodic root sequence equals the companion map's cyclic fixed point, and
+identify it with the supremum over all behavioral deviations.
+
+**State.** Landed in
+`UniformEquilibrium/Quitting/Cycles/PeriodicPureTimeBellman.lean`.  Under root
+periodicity, prescribed-value consistency, wraparound, strict deleted-survival
+contraction, and a uniform reward bound,
+`sSup_range_quittingTerminalPayoff_update_eq_prescribed_add_gain` identifies
+the literal behavioral-deviation supremum with the prescribed value plus the
+signed relaxed-cycle gain.
+
+**Acceptance.** The former fixed-point-versus-deviations caveat is closed.  The
+remaining P0 obligation is an adapter exposing these hypotheses from a finite
+marked cylinder, or a direct nonperiodic obstacle/cap theorem; it is not a
+second optimal-stopping proof.
+
 ### `LEAN-P0-1` — landed debt-transport, cycle-mismatch, FTV, and germ-bridge results this cycle
 
 - **Status:** DONE

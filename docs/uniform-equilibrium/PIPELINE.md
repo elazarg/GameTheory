@@ -195,10 +195,6 @@ superseded/resolved decision section in
 - `LEAN-F0-4` — construct the infinite-play measure by Kolmogorov extension
 - `LEAN-F0-6` — package three implications used as self-evident
 - `LEAN-F0-8` — the bounded-transversality lemma behind the case-2 repair
-- `LEAN-P0-5` — formalize that signed phasewise accumulation equals
-  relaxed-cycle gain
-- `LEAN-P0-6` — prove the pure quit-time supremum equals the companion map's
-  fixed point
 - `LEAN-P0-7` — two-clock punishment for the deviation-cap constructor
 - `LEAN-P1-1` — the n≥3 blocker-designation lemma (retargeted; n=2 closed
   separately by the capstone)
@@ -268,6 +264,10 @@ superseded/resolved decision section in
   [archive](PIPELINE-Archive.md)
 - `LEAN-P0-4` — discharge nondegeneracy of the germ quit family — see
   [archive](PIPELINE-Archive.md)
+- `LEAN-P0-5` — signed phasewise accumulation is the relaxed-cycle gain — see
+  [archive](PIPELINE-Archive.md)
+- `LEAN-P0-6` — pure quit-time and behavioral suprema equal the companion
+  fixed point — see [archive](PIPELINE-Archive.md)
 - `LEAN-F0-7` — the tail-average transfer is mirrored, not doubled — see
   [archive](PIPELINE-Archive.md)
 - `LEAN-P0-8` — joint complementarity, and absorption derived rather than
@@ -430,12 +430,17 @@ located and holds at the bounded form the deduction uses (`PC-010`), and the
 same paper's Theorem 2.2 independently attests the diverging period**. The
 conversion half of this trigger has since **fired favourably**: the signed
 phasewise accumulation equals the gain exactly, so the conversion is available,
-and it vanishes on the period-`3m` family, whose computation does *not* consume
-the attribution. Two further constraints on the path follow: a scalar mass
+and the periodic pure-time Bellman theorem identifies that gain with the
+literal supremum over all unilateral behavioral deviations under prescribed
+recursion, wraparound, periodicity, strict deleted-survival contraction, and
+bounded rewards. It vanishes on the period-`3m` family, whose computation does
+*not* consume the attribution. The remaining conversion work is the marked-
+cylinder adapter exposing those hypotheses, or its direct nonperiodic obstacle/
+cap analogue. Two further constraints on the path follow: a scalar mass
 parametrization is provably insufficient — it cannot distinguish a phase where
 only the deviator is active from one where an opponent is — so the carrier must
-retain the **ordered activity increments**, and the limit is stable only under a
-uniform deleted-contraction margin.
+retain the **ordered activity increments**, and the limit is stable only under
+a uniform deleted-contraction margin.
 
 ### `PC-011` — decline result-graph; extend audit_repository.py instead
 
@@ -1594,49 +1599,6 @@ blocking-digraph construction and against one-row convexity.
 
 **Acceptance.** Permanent regressions; without them a future worker can restate
 a refuted route.
-
-### `LEAN-P0-5` — formalize that signed phasewise accumulation equals relaxed-cycle gain
-
-- **Status:** READY
-- **Lane:** P0
-- **Depends:** `Math/CyclicMaxAffineBound.lean`, the companion-map machinery.
-- **Record:** [signed
-  accumulation](../../ideas/AbsorbingCycleCarrier/TheSignedAccumulationIsTheGain.md)
-
-**Objective.** Formalize the identity that the **signed** phasewise accumulation
-equals the gain of a relaxed cycle, and hence that its vanishing is necessary
-and sufficient.
-
-**State.** `READY`. The result is `M [reported]` and is the answer to the
-conversion question, so it is the highest-value thing currently
-believed-true-but-unformalized.
-
-**Acceptance.** Makes the necessary-and-sufficient statement citable; the
-envelope side is already landed.
-
-### `LEAN-P0-6` — prove the pure quit-time supremum equals the companion map's fixed point
-
-- **Status:** READY
-- **Lane:** P0
-- **Depends:** `QuittingRelaxedCycleGain`,
-  `QuittingBehaviorPureTimeExtremality`'s pure-time reduction, the landed
-  companion-map contraction.
-- **Record:** [signed
-  accumulation](../../ideas/AbsorbingCycleCarrier/TheSignedAccumulationIsTheGain.md)
-
-**Objective.** Prove that the supremum over pure quit-time deviations of a
-periodic root sequence equals the companion map's cyclic fixed point.
-
-**State.** `READY`. The signed-accumulation identity is landed and is necessary
-and sufficient **for the companion fixed point**. Identifying it with the
-literal supremum over all behavioural deviations needs the pure-time reduction
-(landed) composed with this optimal-stopping-equals-Bellman-fixed-point fact,
-which is standard mathematics but appears nowhere in the tree. Until it lands,
-`PC-009`'s ``the conversion is available'' is a statement about the fixed point,
-not about deviations.
-
-**Acceptance.** The gain identity becomes a statement about actual deviations,
-closing the last step of the conversion.
 
 ### `LEAN-P2-1` — source-aligned FTV stationary-impossibility theorem
 
