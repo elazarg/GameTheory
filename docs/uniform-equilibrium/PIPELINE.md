@@ -520,6 +520,44 @@ profiles that replace the prefix.
 estimate, to behavioral pure-time extremality, or to the exact prefix-holonomy
 evaluation invalidates the decision.
 
+### `PC-014` — consume prefix floors by charged replacement, not continuity
+
+**Decision.** The strategic output of a positive fixed-prefix all-tail value
+must be a quantitative calibrated replacement or a literal global terminal
+exploitability gap.  The replacement decrease is charged by the same retained
+marked-packet mass (or equivalent dynamic-debt scale) used in plateau
+extraction.  A plateau-null separator is acceptable only as the variational
+dual of this statement, with an occupation-balance identity that forces its
+nonnegative integral to vanish.
+
+**Rationale.** A fixed-prefix floor quantifies over every tail after that
+prefix, not over profiles which replace it.  This distinction persists even
+under exact local Bellman complementarity.  In a one-player game with quit
+reward `-1`, Never is an exact equilibrium, whereas a sure-quit prefix tied to
+a stored continuation value `-1` has an unrepairable unit floor when its
+physical continuation is Never.  Thus local complementarity, holonomy
+continuity, and a closed bad cylinder cannot turn a prefix floor into a global
+gap.  The missing force must come from the selected minimizer and its calibrated
+variational structure.
+
+**Rejected.** Infer global nonexistence from one bad prefix; call the continuous
+all-tail value a plateau-null separator without a balance theorem; or compare
+physical tail gain directly with zero-pinned dynamic debt without a
+mass-charged competitor construction.  Repaired positive-debt plateaus already
+rule out the last shortcut.
+
+**Consequence.** The direct P0 target is a `ConsumesPrefixFloor` theorem: for a
+marked calibrated prefix, a floor `eta` either constructs an exact-`D`
+competitor at controlled cutoff whose objective drops by a fixed multiple of
+`eta * packetMass`, or supplies `HasTerminalExploitabilityGap`.  Prepend
+calibration and vanishing successive optimum drops can consume the first
+branch on a positive-mass plateau.  Compactness enters only afterward, to
+uniformize strategically proved local replacement charts.
+
+**Revisit trigger.** A different globally covering prefix family, or a direct
+terminal-profile producer bypassing calibrated prefixes, may replace the
+charged-replacement interface.
+
 ### `PC-011` — decline result-graph; extend audit_repository.py instead
 
 **Decision.** **Decline `result-graph` and any external declaration-graph tool
@@ -964,24 +1002,27 @@ the repaired whole trace must not be required to remain near the source trace.
 This does **not** refute existence; it refutes transport of small gain from
 trace nearness and grammar-local readings of an obstruction.
 
-**State.** `ACTIVE`, sharpened by `PC-012` and `PC-013`.  The all-length
+**State.** `ACTIVE`, sharpened by `PC-012`--`PC-014`.  The all-length
 quantifier is closed mathematically at the behavioral seam.  Every tail is
 semantically approximable by a finite word with sure-joint, sure-solo, or Never
 cap, simultaneously in prescribed value and all-behavior best-response
 envelope.  Prefix holonomy gives one gain modulus uniform over all such tails,
 so the infimum over arbitrary lengths is Lipschitz and yields a stable finite
 repair or an all-tail local floor.  Production formalization of the density and
-modulus is active.  The decisive remaining implication is prefix consumption:
-prove that the positive all-tail floor for a calibrated plateau prefix is a
-named plateau-null inequality, forces a better calibrated prefix, or yields a
-global terminal exploitability gap.  Failure after one fixed prefix does not
-exclude profiles that change the prefix.
+modulus is active.  The decisive remaining implication is the mass-charged
+prefix-consumption theorem of `PC-014`: a positive floor for a marked calibrated
+prefix must construct a controlled exact-`D` competitor with objective decrease
+proportional to `floor * packetMass`, or yield a literal global terminal
+exploitability gap.  A separator formulation must prove the equivalent
+occupation-balance/null-integral statement.  Failure after one fixed prefix
+does not exclude profiles that change the prefix.
 
 **Acceptance.** For fixed accuracy, positive debt, and positive packet mass,
 every ported enriched state has either a stable terminal repair chart with
-literal all-behavior gain control, or an all-length, neighborhood-stable,
-strategically consumed obstruction.  Only then may compactness produce a finite
-cover and uniform repair bounds or a contradiction to the plateau.
+literal all-behavior gain control, or an all-length, neighborhood-stable floor
+together with the `PC-014` calibrated competitor/global-gap output.  Only then
+may compactness produce a finite cover and uniform repair bounds or a
+contradiction to the plateau.
 
 ### `MATH-P0-3` — exhaust the inexpensive repair ladder
 
@@ -1721,7 +1762,7 @@ finite words capped by sure joint exit, sure solo exit, or Never.  Combine this
 with the common affine/max-affine holonomy modulus to obtain the Lipschitz
 all-tail repair value and buffered stable alternative.
 
-**State.** `ACTIVE`, with two production slices landed.  The fixed-prefix
+**State.** `ACTIVE`, with three production slices landed.  The fixed-prefix
 module proves the uniform scalar and finite-player gain estimates, a generic
 fixed-family infimum estimate, and buffered repair/obstruction transfer.  The
 tail-compression module defines the three caps and exact prefix laws, proves
@@ -1730,8 +1771,12 @@ boundary pair, and proves the positive-joint-survival prescribed estimate
 `M * (S_N - S_∞)` and convergence.  Generic prefix estimates bound prescribed
 replacement by `2 M S_N` and every literal behavioral envelope by
 `2 M χ_i(N)`; these give the complete all-deleted-zero sure-joint branch with
-one simultaneous cutoff for all players.  Missing are the positive-survival
-best-response estimate and the unique-deleted-clock sure-solo branch.
+one simultaneous cutoff for all players.  The sure-solo module proves that the
+owner's deviation envelope is exactly the Never envelope and records the
+ordinary prefix bounds for every other coordinate.  Both remaining branches
+are thereby reduced to the sharp Never-envelope estimate
+`2 M (χ_i(N) - χ_i(∞))`; the uncentered generic prefix estimate is insufficient
+when deleted survival has a positive limit.
 
 **Acceptance.** One theorem selecting an elementary finite cap for every tail
 and tolerance, with one cap simultaneously approximating the prescribed vector

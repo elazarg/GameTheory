@@ -339,10 +339,19 @@ the trichotomy of full and deleted survival limits.  Hence the all-tail repair
 value is Lipschitz: it yields either one finite elementary tail stable near the
 prefix holonomy or a neighborhood-stable floor against every tail.  The open
 gate is now prefix consumption.  A positive floor after one calibrated prefix
-does not itself exclude a profile that replaces that prefix; it must force a
-better calibrated prefix, become a plateau-null separator, or lift to a global
-terminal exploitability gap.  Compactness is needed only to uniformize the
-resulting local prefix charts.
+does not itself exclude a profile that replaces that prefix.  The required
+variational theorem must either construct a controlled exact-`D` competitor
+whose calibrated objective drops in proportion to the floor times retained
+packet mass, or lift the obstruction to a literal global terminal
+exploitability gap.  A plateau-null separator is useful only with the dual
+occupation-balance theorem forcing its nonnegative integral to vanish.
+Compactness is needed only to uniformize the resulting local prefix charts.
+
+Local Bellman complementarity cannot replace this theorem.  A one-player
+negative-quit game has an exact Never equilibrium, yet a sure-quit prefix can
+be complementary relative to a stored negative endpoint and still have a unit
+physical all-tail floor.  The selected minimizer and calibrated replacement
+structure, not the local prefix semantics, must provide the consuming force.
 
 Production formalization is partial and follows this mathematical split.  The
 fixed-prefix holonomy module proves the common playerwise/aggregate gain
@@ -350,9 +359,11 @@ modulus and its fixed-family infimum consequence.  The tail-compression module
 provides the elementary caps, full/deleted-survival trichotomy, exact Never
 boundary pair, positive-survival prescribed convergence, and the complete
 all-deleted-zero sure-joint branch in both prescribed and literal behavioral
-best-response coordinates.  Best-response convergence in the positive-
-survival branch and the exceptional sure-solo branch remain before the full
-semantic-density theorem can be invoked in production.
+best-response coordinates.  The sure-solo owner has exactly the Never
+deviation envelope, reducing both nonzero-survival cases to the sharp bound by
+the deleted-survival loss `χ_i(N) - χ_i(∞)`.  That estimate and the combined
+three-case capstone remain before the full semantic-density theorem can be
+invoked in production.
 
 **The bounded root-debt descent decoder is closed negatively (`M`)** — see the
 capstone claim.  No bounded-length exact-`D` modification achieves a cutoff-
