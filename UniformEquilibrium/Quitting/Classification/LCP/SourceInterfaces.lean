@@ -30,10 +30,13 @@ therefore bears the name `DistinctWitnessRepair`: it states the theorem under
 the corrected recursion demanded by the adjacent prose and later proof, rather
 than silently presenting the printed statement as sound.
 
-Playerwise payoff translation is proved in `StrategicTransport.lean`.  The
-source's projective Q convention and the standard Q convention used in the
-ordinary split are related by the exact homogeneous-branch theorem in
-`MatrixClasses.lean`.
+Source conclusions are stated for `normalizedQuittingPayoffTable reward`.
+Ordinary terminal-Nash transport back to the repository payoff is proved below
+from `StrategicTransport.lean`.  For continuous and sunspot notions not yet
+represented by repository strategy types, translation invariance is a separate
+explicit hypothesis supplied through
+`IsQuittingPayoffTranslationInvariant`; it is not bundled into either source
+interface.
 -/
 
 noncomputable section
@@ -54,6 +57,15 @@ def HasOrdinaryApproximateEquilibria
       (quittingGame reward).IsεAsymptoticNash
         (quittingTerminalPayoff reward) ε profile
 
+/-- Ordinary approximate equilibria evaluated with the fully translated
+source payoff, including its nonzero nontermination reward. -/
+def HasNormalizedOrdinaryApproximateEquilibria
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
+  ∀ ε : ℝ, 0 < ε →
+    ∃ profile : (quittingGame reward).BehaviorProfile,
+      (quittingGame reward).IsεAsymptoticNash
+        (normalizedQuittingTerminalPayoff reward) ε profile
+
 /-- The stronger ordinary conclusion of the stationary source branches. -/
 def HasOrdinaryStationaryApproximateEquilibria
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
@@ -62,6 +74,48 @@ def HasOrdinaryStationaryApproximateEquilibria
       (quittingGame reward).IsεAsymptoticNash
         (quittingTerminalPayoff reward) ε
         (quittingStationaryProfile reward root)
+
+/-- Stationary approximate equilibria in the translated source payoff. -/
+def HasNormalizedOrdinaryStationaryApproximateEquilibria
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
+  ∀ ε : ℝ, 0 < ε →
+    ∃ root : ι → PMF Bool,
+      (quittingGame reward).IsεAsymptoticNash
+        (normalizedQuittingTerminalPayoff reward) ε
+        (quittingStationaryProfile reward root)
+
+/-- Exact ordinary transport across the playerwise source normalization. -/
+theorem hasNormalizedOrdinaryApproximateEquilibria_iff_original
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    HasNormalizedOrdinaryApproximateEquilibria reward ↔
+      HasOrdinaryApproximateEquilibria reward := by
+  constructor
+  · intro hnormalized ε hε
+    obtain ⟨profile, hnash⟩ := hnormalized ε hε
+    exact ⟨profile,
+      (isεAsymptoticNash_normalized_iff reward ε profile).mp hnash⟩
+  · intro horiginal ε hε
+    obtain ⟨profile, hnash⟩ := horiginal ε hε
+    exact ⟨profile,
+      (isεAsymptoticNash_normalized_iff reward ε profile).mpr hnash⟩
+
+/-- Exact stationary ordinary transport across the playerwise source
+normalization. -/
+theorem hasNormalizedOrdinaryStationaryApproximateEquilibria_iff_original
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    HasNormalizedOrdinaryStationaryApproximateEquilibria reward ↔
+      HasOrdinaryStationaryApproximateEquilibria reward := by
+  constructor
+  · intro hnormalized ε hε
+    obtain ⟨root, hnash⟩ := hnormalized ε hε
+    exact ⟨root,
+      (isεAsymptoticNash_normalized_iff reward ε
+        (quittingStationaryProfile reward root)).mp hnash⟩
+  · intro horiginal ε hε
+    obtain ⟨root, hnash⟩ := horiginal ε hε
+    exact ⟨root,
+      (isεAsymptoticNash_normalized_iff reward ε
+        (quittingStationaryProfile reward root)).mpr hnash⟩
 
 /-- The product mixed action played by a behavior profile at the first stage. -/
 def quittingFirstStageRoot
@@ -129,54 +183,54 @@ The first two fields correspond to Lemmas 2.6 and 2.10.  The last two fields
 correspond to the two parts of Theorem 2.11, under the corrected recursive
 normal core and absence of the nontrivial zero-right-hand-side projective LCP
 branch.  Part (1) is ordinary and stationary; part (2) is deliberately typed
-by the independent `SunspotApproximateEquilibria` predicate.
+by the independent normalized-table `SunspotApproximateEquilibria` predicate.
 
 Because the displayed normality recursion is defective, constructing this
 interface is an explicit remaining source-repair obligation, not a hidden
 axiom asserting the literal printed theorem. -/
 structure SolanSolanDistinctWitnessRepairInterface
-    (SunspotApproximateEquilibria :
-      ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop) where
+    (SunspotApproximateEquilibria : QuittingPayoffTable ι → Prop) where
   allAbnormal_stationary :
     ∀ reward : {S : Finset ι // S.Nonempty} → Payoff ι,
       AllPlayersAbnormal (normalizedSoloMatrix reward) →
-        HasOrdinaryStationaryApproximateEquilibria reward
+        HasNormalizedOrdinaryStationaryApproximateEquilibria reward
   homogeneous_stationary :
     ∀ reward : {S : Finset ι // S.Nonempty} → Payoff ι,
       HasNormalPlayers (normalizedSoloMatrix reward) →
       HasHomogeneousSimplexSolution
         (normalizedNormalPlayerMatrix reward) →
-        HasOrdinaryStationaryApproximateEquilibria reward
+        HasNormalizedOrdinaryStationaryApproximateEquilibria reward
   nonQ_stationary :
     ∀ reward : {S : Finset ι // S.Nonempty} → Payoff ι,
       HasNormalPlayers (normalizedSoloMatrix reward) →
       ¬HasHomogeneousSimplexSolution
         (normalizedNormalPlayerMatrix reward) →
       ¬IsStandardQMatrix (normalizedNormalPlayerMatrix reward) →
-        HasOrdinaryStationaryApproximateEquilibria reward
+        HasNormalizedOrdinaryStationaryApproximateEquilibria reward
   q_sunspot :
     ∀ reward : {S : Finset ι // S.Nonempty} → Payoff ι,
       HasNormalPlayers (normalizedSoloMatrix reward) →
       ¬HasHomogeneousSimplexSolution
         (normalizedNormalPlayerMatrix reward) →
       IsStandardQMatrix (normalizedNormalPlayerMatrix reward) →
-        SunspotApproximateEquilibria reward
+        SunspotApproximateEquilibria
+          (normalizedQuittingPayoffTable reward)
 
-/-- **Audited transported AGKRS Theorem 5.4 interface.**
+/-- **Audited AGKRS Theorem 5.4 interface on the normalized table.**
 
 `ContinuousEquilibrium` is intentionally abstract because the repository does
 not identify a continuous absorption path with an ordinary behavior profile.
 The sole matrix hypothesis is projective Q-bar of the fully normalized
-singleton matrix.  Instantiating this interface includes transport back across
-`normalizedQuittingPayoffTable`; it does not include Theorem 4.15 or any
-terminal-to-uniform compiler. -/
+singleton matrix.  Translation back to the repository table is not hidden in
+this source interface; it requires an explicit
+`IsQuittingPayoffTranslationInvariant ContinuousEquilibrium` hypothesis.  The
+interface also does not include Theorem 4.15 or a terminal-to-uniform compiler. -/
 structure AGKRSContinuousSourceInterface
-    (ContinuousEquilibrium :
-      ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop) where
+    (ContinuousEquilibrium : QuittingPayoffTable ι → Prop) where
   continuous_of_projectiveQBar :
     ∀ reward : {S : Finset ι // S.Nonempty} → Payoff ι,
       IsProjectiveQBarMatrix (normalizedSoloMatrix reward) →
-        ContinuousEquilibrium reward
+        ContinuousEquilibrium (normalizedQuittingPayoffTable reward)
 
 end QuittingLCPClassification
 end GameTheory
