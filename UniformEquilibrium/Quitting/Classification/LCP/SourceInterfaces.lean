@@ -5,27 +5,35 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Quitting.Classification.LCP.NormalCore
-import UniformEquilibrium.Quitting.Stationary.Root
+import UniformEquilibrium.Quitting.Classification.LCP.StrategicTransport
+import UniformEquilibrium.Quitting.Stationary.LiveMass
 import UniformEquilibrium.Quitting.Punishment.ZeroSoloDisjunct
 
 /-!
 # Audited source interfaces for the quitting-game LCP gate
 
-This file does not hide literature theorems in a broad existence axiom.  It
-states narrow interfaces matching the audited conclusions.
+This file does not hide literature results in a broad existence axiom.  It
+states narrow interfaces with separately typed strategic conclusions.
 
 * Solan--Solan's ordinary branches conclude **stationary undiscounted**
-  approximate equilibria.  The Q side concludes a separate caller-supplied
+  approximate equilibria.  Their Q side concludes a separate
   sunspot/public-correlation predicate.
 * AGKRS Theorem 5.4 concludes a caller-supplied **continuous absorption-path
   equilibrium** predicate.  It is not identified here with an ordinary
-  strategy profile, an approximate Nash equilibrium, or a uniform payoff.
+  behavior profile, an approximate Nash equilibrium, or a uniform payoff.
 
-The interfaces are stated after the exact playerwise translation and positive
-rescaling adapters used in the papers.  Their matrix arguments are the proved
-objects from `Normalization.lean` and `NormalCore.lean`.  A downstream import
-may instantiate an interface only after separately auditing the corresponding
-strategic semantics.
+There is one source defect that must remain visible.  Solan--Solan's displayed
+recursive normality formula omits `j ≠ i`; after their zero-diagonal
+normalization its literal reading never deletes a player.  `NormalCore.lean`
+formalizes that printed recursion and proves its collapse.  The interface below
+therefore bears the name `DistinctWitnessRepair`: it states the theorem under
+the corrected recursion demanded by the adjacent prose and later proof, rather
+than silently presenting the printed statement as sound.
+
+Playerwise payoff translation is proved in `StrategicTransport.lean`.  The
+source's projective Q convention and the standard Q convention used in the
+ordinary split are related by the exact homogeneous-branch theorem in
+`MatrixClasses.lean`.
 -/
 
 noncomputable section
@@ -46,8 +54,7 @@ def HasOrdinaryApproximateEquilibria
       (quittingGame reward).IsεAsymptoticNash
         (quittingTerminalPayoff reward) ε profile
 
-/-- The stronger conclusion actually delivered by the ordinary
-Solan--Solan branches: the witnesses are stationary. -/
+/-- The stronger ordinary conclusion of the stationary source branches. -/
 def HasOrdinaryStationaryApproximateEquilibria
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
   ∀ ε : ℝ, 0 < ε →
@@ -56,23 +63,32 @@ def HasOrdinaryStationaryApproximateEquilibria
         (quittingTerminalPayoff reward) ε
         (quittingStationaryProfile reward root)
 
-/-- A profile has a player who quits surely at the first stage. -/
-def QuitsSurelyAtFirstStage
+/-- The product mixed action played by a behavior profile at the first stage. -/
+def quittingFirstStageRoot
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile) : ι → PMF Bool :=
+  fun who => profile who 0 ((quittingGame reward).emptyHist none)
+
+/-- The source's exact instant condition: the probability of the all-Continue
+joint action at the first stage is zero, hence the game terminates there with
+probability one. -/
+def TerminatesAlmostSurelyAtFirstStage
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (profile : (quittingGame reward).BehaviorProfile) : Prop :=
-  ∃ owner : ι,
-    profile owner 0 ((quittingGame reward).emptyHist none) = PMF.pure true
+  quittingStationaryContinueMass
+      (quittingFirstStageRoot reward profile) = 0
 
-/-- The literature's simple instant branch, kept in the ordinary strategy
-model.  No continuous or public-correlation witness satisfies this predicate
-merely by being such a witness. -/
+/-- Ordinary approximate equilibria under which the game terminates almost
+surely in the first stage.  This is the simple branch excluded in AGKRS
+Theorem 4.15; no continuous or public-correlation witness satisfies it merely
+by being such a witness. -/
 def HasOrdinaryInstantApproximateEquilibria
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : Prop :=
   ∀ ε : ℝ, 0 < ε →
     ∃ profile : (quittingGame reward).BehaviorProfile,
       (quittingGame reward).IsεAsymptoticNash
           (quittingTerminalPayoff reward) ε profile ∧
-        QuitsSurelyAtFirstStage reward profile
+        TerminatesAlmostSurelyAtFirstStage reward profile
 
 /-- Stationary ordinary witnesses are ordinary witnesses. -/
 theorem hasOrdinaryApproximateEquilibria_of_stationary
@@ -83,8 +99,8 @@ theorem hasOrdinaryApproximateEquilibria_of_stationary
   obtain ⟨root, hnash⟩ := hstationary ε hε
   exact ⟨quittingStationaryProfile reward root, hnash⟩
 
-/-- Instant ordinary witnesses are ordinary witnesses after forgetting the
-first-stage support condition. -/
+/-- Instant ordinary witnesses are ordinary witnesses after forgetting their
+first-stage absorption condition. -/
 theorem hasOrdinaryApproximateEquilibria_of_instant
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
     (hinstant : HasOrdinaryInstantApproximateEquilibria reward) :
@@ -107,14 +123,18 @@ theorem hasOrdinaryApproximateEquilibria_of_zeroSolo
       who deviation
   linarith
 
-/-- **Audited Solan--Solan interface.**
+/-- **Solan--Solan distinct-witness repair interface.**
 
-The first two fields are Lemmas 2.6 and 2.10.  The last two fields are the two
-parts of Theorem 2.11, whose stated hypotheses are a nonempty recursive normal
-core and absence of a nontrivial homogeneous LCP solution.  Part (1) is
-ordinary and stationary; part (2) is deliberately typed by the independent
-`SunspotApproximateEquilibria` predicate. -/
-structure SolanSolanSourceInterface
+The first two fields correspond to Lemmas 2.6 and 2.10.  The last two fields
+correspond to the two parts of Theorem 2.11, under the corrected recursive
+normal core and absence of the nontrivial zero-right-hand-side projective LCP
+branch.  Part (1) is ordinary and stationary; part (2) is deliberately typed
+by the independent `SunspotApproximateEquilibria` predicate.
+
+Because the displayed normality recursion is defective, constructing this
+interface is an explicit remaining source-repair obligation, not a hidden
+axiom asserting the literal printed theorem. -/
+structure SolanSolanDistinctWitnessRepairInterface
     (SunspotApproximateEquilibria :
       ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop) where
   allAbnormal_stationary :
@@ -145,11 +165,11 @@ structure SolanSolanSourceInterface
 /-- **Audited transported AGKRS Theorem 5.4 interface.**
 
 `ContinuousEquilibrium` is intentionally abstract because the repository does
-not yet identify a continuous absorption path with an ordinary behavior
-profile.  The sole hypothesis is projective Q-bar of the fully normalized
-singleton matrix.  Instantiating this interface includes the playerwise
-translation back from `normalizedQuittingPayoffTable reward`; it does not
-include Theorem 4.15 or any terminal-to-uniform compiler. -/
+not identify a continuous absorption path with an ordinary behavior profile.
+The sole matrix hypothesis is projective Q-bar of the fully normalized
+singleton matrix.  Instantiating this interface includes transport back across
+`normalizedQuittingPayoffTable`; it does not include Theorem 4.15 or any
+terminal-to-uniform compiler. -/
 structure AGKRSContinuousSourceInterface
     (ContinuousEquilibrium :
       ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop) where
