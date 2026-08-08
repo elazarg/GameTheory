@@ -13,9 +13,13 @@ import GameTheory.Concepts.Stochastic.QuittingProjectiveAnchoredSingletonLCP
 import GameTheory.Concepts.Stochastic.QuittingSignedProjectiveLasso
 import GameTheory.Concepts.Stochastic.QuittingWeightedProjectiveLasso
 import GameTheory.Concepts.Stochastic.QuittingSignedProjectiveLassoStrictness
+import GameTheory.Concepts.Stochastic.QuittingSingleSeamProjectiveLasso
+import GameTheory.Concepts.Stochastic.QuittingForwardBlockSingleSeam
+import GameTheory.Concepts.Stochastic.QuittingFiniteForwardProjectiveLasso
 import GameTheory.Concepts.Stochastic.QuittingProjectiveResolvedChart
 import GameTheory.Concepts.Stochastic.QuittingVanishingChargeRecurrenceNoGo
 import Math.FinitePivotOrbit
+import Math.CompactFiniteChargedReturn
 
 /-!
 # Projective quitting packets and charged-lasso boundary
@@ -35,10 +39,15 @@ Public entry point for the proved projective layer:
   arc-lifting contract required to turn a feasible tangent into a physical
   successor;
 * finite output-or-repeated-label recurrence;
+* finite charged return on one fixed compact carrier;
+* payload-preserving finite forward packets and their complete compilation to
+  single-seam projective lassos and uniform-equilibrium payoffs;
 * the no-go regression showing that repeated labels and compact recurrence do
-  not imply a return small relative to vanishing charge; and
+  not imply a return small relative to a vanishing one-step charge;
 * exact characterization of signed monodromy as cyclic-value correction,
   together with pointwise, absolute-weighted, and signed lasso compilation;
+* automatic rotation-uniformity for a cycle whose defect is concentrated at
+  one closing seam;
 * the one-player two-phase regression proving that signed acceptance is
   strictly weaker than absolute-weighted acceptance for a fixed candidate; and
 * the converse exact-cycle adapter proving that the corresponding all-accuracy
@@ -53,10 +62,16 @@ the remaining ingredients are:
 1. construction and coverage of resolved quitting Bellman charts, including
    real/Puiseux arc lifting of feasible lexicographic tangents;
 2. semantic decoding of projective Farkas obstructions; and
-3. a rotation-uniform recurrent-monodromy construction producing a particular
-   candidate whose signed seam is small relative to real absorption.
+3. production of arbitrarily charged finite forward packets in one compact
+   carrier, or another candidate whose signed monodromy is small relative to
+   real absorption, together with a strategic consumer for the complementary
+   bounded-charge boundary.
 
-The signed interface sharpens that last candidate-level acceptance test; it
-does not by itself weaken the existential obligation to produce exact finite
-support-rational cycles at every accuracy.
+A separate rotation-uniform recurrence theorem is no longer required for an
+exact finite forward-packet producer.  Compact finite charged return selects
+one block with a small endpoint seam and fixed aggregate absorption; the
+forward-block and single-seam compilers supply the lasso and its
+rotation-uniformity automatically.  For other upstream candidates, the signed
+interface remains the exact acceptance test; it does not by itself produce a
+candidate or weaken the all-accuracy exact-cycle obligation.
 -/

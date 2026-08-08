@@ -46,6 +46,7 @@ def IsQuittingRotationUniformSignedResidual
     |quittingCyclicSignedResidual reward cycle value phase who| ≤
       error * quittingCyclicWeightedAbsorption cycle
 
+omit [DecidableEq ι] in
 /-- **Exact signed-correction characterization.**  Under positive aggregate
 absorption, the rotation-uniform signed predicate is equivalent to uniform
 coordinatewise closeness to the true periodic values. -/
