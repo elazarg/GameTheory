@@ -439,6 +439,19 @@ theorem expect_mono {μ : FinDist α} {u v : α → ℝ}
   refine Finset.sum_le_sum fun a ha => ?_
   exact mul_le_mul_of_nonneg_left (h a (mem_supportFinset.1 ha)) (prob_nonneg μ a)
 
+/-- A pointwise absolute bound on the support bounds finite-support
+expectation by the same constant. -/
+theorem abs_expect_le_of_abs_bound (μ : FinDist α) (u : α → ℝ) {C : ℝ}
+    (h : ∀ a ∈ μ.support, |u a| ≤ C) : |μ.expect u| ≤ C := by
+  rw [abs_le]
+  constructor
+  · have hlower : μ.expect (fun _ => -C) ≤ μ.expect u :=
+      expect_mono fun a ha => (abs_le.mp (h a ha)).1
+    simpa [expect_const] using hlower
+  · have hupper : μ.expect u ≤ μ.expect (fun _ => C) :=
+      expect_mono fun a ha => (abs_le.mp (h a ha)).2
+    simpa [expect_const] using hupper
+
 /-- Expectation distributes over finite-support `bind`. Adapted from the v1
 finite-support expectation development. -/
 theorem expect_bind (μ : FinDist α) (f : α → FinDist β) (u : β → ℝ) :

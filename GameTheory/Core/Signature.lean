@@ -109,6 +109,11 @@ theorem update_idem [DecidableEq ι] (profile : Profile sig) (i : ι)
     (s t : sig.Strategy i) : update (update profile i s) i t = update profile i t :=
   Function.update_idem ..
 
+theorem update_comm [DecidableEq ι] (profile : Profile sig) {i j : ι}
+    (h : i ≠ j) (s : sig.Strategy i) (t : sig.Strategy j) :
+    update (update profile i s) j t = update (update profile j t) i s :=
+  Function.update_comm h s t profile
+
 @[simp]
 theorem override_mem [DecidableEq ι] (members : Finset ι) (members' : Subprofile sig members)
     (profile : Profile sig) (i : { i // i ∈ members }) :

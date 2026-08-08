@@ -121,4 +121,36 @@ theorem firstImprovementBound :
   UtilityGame.IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
     (G := game) isFictitiousPlay 0
 
+theorem potential_abs_bound (profile : Profile signature) :
+    |potential profile| ≤ 1 := by
+  simp only [potential, reward]
+  split <;> norm_num
+
+/-- The quantitative one-coordinate estimate applies to the same nonzero first
+step; it is not proved only for constant trajectories. -/
+theorem firstPotentialStep_abs_bound :
+    |game.mixedPotential potential
+          (Profile.update (game.empiricalBelief history 1) 0
+            (game.empiricalMarginal history 0 2)) -
+        game.mixedPotential potential (game.empiricalBelief history 1)| ≤
+      (1 / (0 + 2 : ℝ)) * (2 * 1) := by
+  simpa using
+    (game.mixedPotential_update_empiricalMarginal_succ_abs_sub_le
+      potential potential_abs_bound history
+      (game.empiricalBelief history 1) 0 0 rfl)
+
+/-- The uniform `4C/(t+2)` gain-stability estimate includes the changed
+player's own coordinate. -/
+theorem firstGainStep_abs_bound :
+    |game.mixedPotentialGain potential
+          (Profile.update (game.empiricalBelief history 1) 0
+            (game.empiricalMarginal history 0 2)) 0 true -
+        game.mixedPotentialGain potential
+          (game.empiricalBelief history 1) 0 true| ≤
+      (1 / (0 + 2 : ℝ)) * (4 * 1) := by
+  simpa using
+    (game.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le
+      potential potential_abs_bound history
+      (game.empiricalBelief history 1) true 0 rfl)
+
 end GameTheory.Tests.FictitiousPlayPotential
