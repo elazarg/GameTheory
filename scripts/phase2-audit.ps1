@@ -744,6 +744,59 @@ if (-not $SkipReachability) {
   Report 'CORE_FICTITIOUS_POTENTIAL_BOUNDARY_PROBES_REJECTED' `
     $coreFictitiousPotentialBoundaryRejected
 
+  $harmonicSequenceInputs = @(
+    'GameTheoryMath.frequently_lt_of_summable_one_div_mul',
+    'GameTheoryMath.tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le')
+  $harmonicSequenceBoundary = @(
+    'GameTheory.UtilityGame',
+    'GameTheory.Probability.FinDist')
+  $harmonicSequenceOutput = Run-Probe 'GameTheoryMath.HarmonicSequence' `
+    ($harmonicSequenceInputs + $harmonicSequenceBoundary)
+  $harmonicSequenceInputsReached = 0
+  foreach ($constant in $harmonicSequenceInputs) {
+    if (-not (Is-Unreachable $harmonicSequenceOutput $constant)) {
+      $harmonicSequenceInputsReached++
+    }
+  }
+  Report 'HARMONIC_SEQUENCE_INPUT_PROBES_REACHED' `
+    $harmonicSequenceInputsReached
+  $harmonicSequenceBoundaryRejected = 0
+  foreach ($constant in $harmonicSequenceBoundary) {
+    if (Is-Unreachable $harmonicSequenceOutput $constant) {
+      $harmonicSequenceBoundaryRejected++
+    }
+  }
+  Report 'HARMONIC_SEQUENCE_BOUNDARY_PROBES_REJECTED' `
+    $harmonicSequenceBoundaryRejected
+
+  $fictitiousPotentialAnalysisInputs = @(
+    'GameTheoryMath.tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le',
+    'GameTheory.UtilityGame.IsExactPotential.summable_harmonic_aggregatePlayedGain',
+    'GameTheory.UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero',
+    'GameTheory.UtilityGame.IsExactPotential.eventually_isεNash_of_isFictitiousPlay')
+  $fictitiousPotentialAnalysisBoundary = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'kakutani_fixed_point')
+  $fictitiousPotentialAnalysisOutput =
+    Run-Probe 'GameTheory.Analysis.FictitiousPlayPotential' `
+      ($fictitiousPotentialAnalysisInputs + $fictitiousPotentialAnalysisBoundary)
+  $fictitiousPotentialAnalysisInputsReached = 0
+  foreach ($constant in $fictitiousPotentialAnalysisInputs) {
+    if (-not (Is-Unreachable $fictitiousPotentialAnalysisOutput $constant)) {
+      $fictitiousPotentialAnalysisInputsReached++
+    }
+  }
+  Report 'FICTITIOUS_POTENTIAL_ANALYSIS_INPUT_PROBES_REACHED' `
+    $fictitiousPotentialAnalysisInputsReached
+  $fictitiousPotentialAnalysisBoundaryRejected = 0
+  foreach ($constant in $fictitiousPotentialAnalysisBoundary) {
+    if (Is-Unreachable $fictitiousPotentialAnalysisOutput $constant) {
+      $fictitiousPotentialAnalysisBoundaryRejected++
+    }
+  }
+  Report 'FICTITIOUS_POTENTIAL_ANALYSIS_BOUNDARY_PROBES_REJECTED' `
+    $fictitiousPotentialAnalysisBoundaryRejected
+
   $learningBridgeInputs = @(
     'GameTheory.UtilityGame.selfPlay_timeAverage_isεCoarseCorrelatedEq',
     'GameTheoryMath.OnlineLearning.externalRegret_le',
@@ -751,7 +804,8 @@ if (-not $SkipReachability) {
     'GameTheory.UtilityGame.mwSelfPlay_timeAverage_isεCoarseCorrelatedEq',
     'GameTheory.Analysis.FinDistConvergesPointwise.expect',
     'GameTheory.UtilityGame.IsFictitiousPlay.limit_isNash',
-    'GameTheory.UtilityGame.eventually_isεNash_of_mixedImprovement_tendsto_zero')
+    'GameTheory.UtilityGame.eventually_isεNash_of_mixedImprovement_tendsto_zero',
+    'GameTheory.UtilityGame.IsExactPotential.eventually_isεNash_of_isFictitiousPlay')
   $learningBridgeBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
     'kakutani_fixed_point')
@@ -1191,7 +1245,11 @@ if ($VerifyExpected) {
     $Expected['CORE_MIXED_IMPROVEMENT_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['CORE_FICTITIOUS_POTENTIAL_INPUT_PROBES_REACHED'] = 5
     $Expected['CORE_FICTITIOUS_POTENTIAL_BOUNDARY_PROBES_REJECTED'] = 2
-    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 7
+    $Expected['HARMONIC_SEQUENCE_INPUT_PROBES_REACHED'] = 2
+    $Expected['HARMONIC_SEQUENCE_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['FICTITIOUS_POTENTIAL_ANALYSIS_INPUT_PROBES_REACHED'] = 4
+    $Expected['FICTITIOUS_POTENTIAL_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 8
     $Expected['LEARNING_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['PROTOCOL_FINITE_LAW_INPUT_PROBES_REACHED'] = 2
     $Expected['PROTOCOL_FINITE_LAW_BOUNDARY_PROBES_REJECTED'] = 1

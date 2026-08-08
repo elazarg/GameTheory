@@ -5,7 +5,7 @@ Family ID: S-MIX
 Pinned root: `GameTheory/Concepts/Mixed/MixedImprovement.lean`
 Pinned commit: `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`
 Successor baseline: `f2dbd5c`
-Canonical destinations: `GameTheory.Core.MixedImprovement`, `GameTheory.Analysis.Learning`
+Canonical destinations: `GameTheory.Core.MixedImprovement`, `GameTheory.Analysis.FictitiousPlayPotential`
 Domain contract / decision: D4-D5, D10, D21
 Owner: Wave 2 / mixed equilibrium and learning
 Status: complete; 11/11 declarations classified, no deferred rows
@@ -43,4 +43,3 @@ Validation:
 lake build GameTheory.Core.MixedImprovement GameTheory.Analysis.Learning
 git diff --check
 ```
-

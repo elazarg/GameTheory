@@ -8,7 +8,7 @@ Successor baseline: `f2dbd5c`
 Canonical destinations: `GameTheory.Core.FictitiousPlay`, `GameTheory.Core.FictitiousPlayPotential`, future `GameTheory.Analysis.FictitiousPlayPotential`
 Domain contract / decision: D4-D5, D10, D21
 Owner: Wave 2 / learning dynamics
-Status: partial; 45/45 declarations classified, complete topology-free Lyapunov spine recovered
+Status: partial only at the weighted-potential gate; exact-potential convergence recovered
 Last verified: 2026-08-09
 
 The successor takes the direct route from canonical mixed expected utility and
@@ -48,19 +48,19 @@ identifies utility and potential increments on the canonical mixed form.
 | same | `IsExactPotential.mixedGain_belief_succ_abs_sub_le` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le` | focused Core build | Transfers potential stability to canonical utility gain. |
 | same | `IsExactPotential.fictitiousPlayPlayedGain_succ_abs_sub_le` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.aggregatePlayedGain_succ_abs_sub_le` | focused Core build | Uses consecutive best-response comparisons. |
 | same | `IsExactPotential.mixedPotential_belief_succ_sub_ge` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge` | nonzero first-gain witness | Complete topology-free Lyapunov lower bound. |
-| same | `IsExactPotential.summable_one_div_mul_fictitiousPlayPlayedGain` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Summability conclusion. |
-| same | `frequently_lt_of_summable_one_div_mul` | theorem | deferred | `GameTheoryMath` candidate | upstreamability review | General sequence lemma must remain game-independent. |
-| same | `tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le` | theorem | deferred | `GameTheoryMath` candidate | upstreamability review | General Tauberian-style sequence lemma. |
-| same | `IsExactPotential.frequently_fictitiousPlayPlayedGain_lt` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Consequence of summability. |
-| same | `IsExactPotential.fictitiousPlayPlayedGain_tendsto_zero` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Central convergence lemma. |
-| same | `IsFictitiousPlay.fictitiousPlayWeightedPlayedGain_nonneg` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Weighted finite-sum order. |
-| same | `IsFictitiousPlay.fictitiousPlayWeightedPlayedGain_le_cardSum_mul_playedGain` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Cardinality comparison. |
-| same | `IsExactPotential.fictitiousPlayWeightedPlayedGain_tendsto_zero` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Weighted convergence. |
-| same | `IsExactPotential.mixedImprovement_belief_tendsto_zero_of_abs_bound` | theorem | deferred | exact-potential Analysis continuation | flagship chain | Direct predecessor of approximate Nash. |
-| same | `IsExactPotential.mixedImprovement_belief_tendsto_zero` | theorem | deferred | exact-potential Analysis continuation | flagship chain | Finite-profile boundedness specialization. |
-| same | `IsExactPotential.eventually_isεNash_of_isFictitiousPlay_of_abs_bound` | theorem | deferred | exact-potential Analysis continuation | flagship chain | Explicit-bound flagship. |
-| same | `IsExactPotential.eventually_isεNash_of_isFictitiousPlay` | theorem | deferred | exact-potential Analysis continuation | flagship chain | Release capability target. |
-| same | `IsFictitiousPlay.eventually_isεNash_of_weightedPlayedGain_tendsto_zero` | theorem | deferred | exact-potential Analysis continuation | dependency gate | Generic final bridge from the weighted gain. |
+| same | `IsExactPotential.summable_one_div_mul_fictitiousPlayPlayedGain` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.summable_harmonic_aggregatePlayedGain` | focused Analysis build | Telescoping Lyapunov sum plus square-summable error. |
+| same | `frequently_lt_of_summable_one_div_mul` | theorem | adapt | `GameTheoryMath.frequently_lt_of_summable_one_div_mul` | focused GameTheoryMath build | General sequence lemma is game-independent. |
+| same | `tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le` | theorem | adapt | `GameTheoryMath.tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le` | focused GameTheoryMath build | General harmonic-energy Tauberian estimate. |
+| same | `IsExactPotential.frequently_fictitiousPlayPlayedGain_lt` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.frequently_aggregatePlayedGain_lt` | focused Analysis build | Consequence of summability. |
+| same | `IsExactPotential.fictitiousPlayPlayedGain_tendsto_zero` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.aggregatePlayedGain_tendsto_zero` | focused Analysis build | Central convergence lemma. |
+| same | `IsFictitiousPlay.fictitiousPlayWeightedPlayedGain_nonneg` | theorem | adapt | `GameTheory.UtilityGame.IsFictitiousPlay.weightedPlayedGain_nonneg` | focused Analysis build | Weighted finite-sum order. |
+| same | `IsFictitiousPlay.fictitiousPlayWeightedPlayedGain_le_cardSum_mul_playedGain` | theorem | adapt | `GameTheory.UtilityGame.IsFictitiousPlay.weightedPlayedGain_le_cardSum_mul_aggregate` | focused Analysis build | Cardinality comparison. |
+| same | `IsExactPotential.fictitiousPlayWeightedPlayedGain_tendsto_zero` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.weightedPlayedGain_tendsto_zero` | focused Analysis build | Squeeze from aggregate convergence. |
+| same | `IsExactPotential.mixedImprovement_belief_tendsto_zero_of_abs_bound` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero_of_abs_bound` | focused Analysis build | Direct predecessor of approximate Nash. |
+| same | `IsExactPotential.mixedImprovement_belief_tendsto_zero` | theorem | adapt | `GameTheory.UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero` | hostile analytic consumer | Finite-profile boundedness specialization. |
+| same | `IsExactPotential.eventually_isεNash_of_isFictitiousPlay_of_abs_bound` | theorem | adapt | same name under `GameTheory.UtilityGame.IsExactPotential` | focused Analysis build | Explicit-bound flagship. |
+| same | `IsExactPotential.eventually_isεNash_of_isFictitiousPlay` | theorem | adapt | same name under `GameTheory.UtilityGame.IsExactPotential` | nonstationary hostile consumer | Release capability target. |
+| same | `IsFictitiousPlay.eventually_isεNash_of_weightedPlayedGain_tendsto_zero` | theorem | adapt | same name under `GameTheory.UtilityGame.IsFictitiousPlay` | focused Analysis build | Generic final bridge from weighted gain. |
 | same | `IsWeightedExactPotential.isFictitiousPlay_iff_finitePotentialTeamGame` | theorem | deferred | S-POT weighted-potential gate | ownership classification | Weighted potential has not earned a native owner. |
 | same | `IsExactPotential.isFictitiousPlay_iff_finitePotentialTeamGame` | theorem | subsumed | direct canonical exact-potential recurrence | design comparison | The synthetic team game is retired. |
 | same | `IsWeightedExactPotential.isεNash_of_finitePotentialTeamGame_isεNash` | theorem | deferred | S-POT weighted-potential gate | ownership classification | No surrogate-game transfer will be introduced. |
@@ -71,15 +71,16 @@ one-coordinate recurrence, the finite sweep/error estimates, and the
 summability-to-approximate-Nash chain.  The successor has recovered the full
 topology-free recurrence, estimate, and Lyapunov spine over canonical `FinDist`
 and exact
-potential without
-the predecessor's PMF products, synthetic team game, or stored outcome
-finiteness.  The remaining direct path is intentionally concentrated in the
-Analysis continuation rather than scattered through Core.
+potential without the predecessor's PMF products, synthetic team game, or
+stored outcome finiteness.  The exact-potential convergence path is complete;
+only the three declarations that genuinely require weighted-potential semantics
+remain behind the named S-POT gate.
 
 Validation:
 
 ```text
 lake build GameTheory.Core.FictitiousPlay GameTheory.Core.FictitiousPlayPotential GameTheory.Tests.FictitiousPlayPotential
+lake build GameTheoryMath.HarmonicSequence GameTheory.Analysis.FictitiousPlayPotential GameTheory.Analysis.FictitiousPlayPotentialTest
 git diff --check
 ```
 
