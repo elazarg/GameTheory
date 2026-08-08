@@ -584,8 +584,8 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 22 better, 5 comparable, 9 partial, 6 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 1,978 of 8,324 pinned declarations have reviewed dispositions | report the exact remainder; complete every ledger supporting a parity claim |
-| current DFS seam | D-LEARN base fictitious play 9/9 recovered across Core and the one-way Analysis consumer | keep shared finite-law convergence below Protocol/learning consumers; do not back-import topology into Core |
+| exact accounting | 2,000 of 8,324 pinned declarations have reviewed dispositions | report the exact remainder; complete every ledger supporting a parity claim |
+| current DFS seam | S-POT mixed extension 22/22 classified after D-LEARN base fictitious play 9/9; exact mixed-potential algebra is native, four weighted rows remain gated | build potential-game convergence directly over canonical mixed potential, without reviving the retired team-game transport |
 | next capability rotation | learning dynamics | finite exact-potential fictitious-play convergence, then the approachability bridge |
 | release engineering | incremental full build and structural/coverage audits green | final cold build, flagship axiom sweep, examples, and generated release report |
 

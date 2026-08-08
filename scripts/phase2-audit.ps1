@@ -665,6 +665,31 @@ if (-not $SkipReachability) {
   Report 'CORE_FICTITIOUS_BOUNDARY_PROBES_REJECTED' `
     $coreFictitiousBoundaryRejected
 
+  $coreMixedPotentialInputs = @(
+    'GameTheory.UtilityGame.mixedPotential_update',
+    'GameTheory.UtilityGame.IsExactPotential.mixed')
+  $coreMixedPotentialBoundary = @(
+    'GameTheory.Analysis.FinDistConvergesPointwise',
+    'GameTheory.Protocol.ExecutionProtocol')
+  $coreMixedPotentialOutput = Run-Probe 'GameTheory.Core.MixedPotential' `
+    ($coreMixedPotentialInputs + $coreMixedPotentialBoundary)
+  $coreMixedPotentialInputsReached = 0
+  foreach ($constant in $coreMixedPotentialInputs) {
+    if (-not (Is-Unreachable $coreMixedPotentialOutput $constant)) {
+      $coreMixedPotentialInputsReached++
+    }
+  }
+  Report 'CORE_MIXED_POTENTIAL_INPUT_PROBES_REACHED' `
+    $coreMixedPotentialInputsReached
+  $coreMixedPotentialBoundaryRejected = 0
+  foreach ($constant in $coreMixedPotentialBoundary) {
+    if (Is-Unreachable $coreMixedPotentialOutput $constant) {
+      $coreMixedPotentialBoundaryRejected++
+    }
+  }
+  Report 'CORE_MIXED_POTENTIAL_BOUNDARY_PROBES_REJECTED' `
+    $coreMixedPotentialBoundaryRejected
+
   $learningBridgeInputs = @(
     'GameTheory.UtilityGame.selfPlay_timeAverage_isεCoarseCorrelatedEq',
     'GameTheoryMath.OnlineLearning.externalRegret_le',
@@ -1105,6 +1130,8 @@ if ($VerifyExpected) {
     $Expected['CORE_LEARNING_MW_PROBES_REJECTED'] = 2
     $Expected['CORE_FICTITIOUS_INPUT_PROBES_REACHED'] = 2
     $Expected['CORE_FICTITIOUS_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['CORE_MIXED_POTENTIAL_INPUT_PROBES_REACHED'] = 2
+    $Expected['CORE_MIXED_POTENTIAL_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 6
     $Expected['LEARNING_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['PROTOCOL_FINITE_LAW_INPUT_PROBES_REACHED'] = 2

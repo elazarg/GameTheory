@@ -34,6 +34,7 @@ import GameTheory.Core.Response
 import GameTheory.Core.Approximate
 import GameTheory.Core.Potential
 import GameTheory.Core.Mixed
+import GameTheory.Core.MixedPotential
 import GameTheory.Core.BinaryMixed
 import GameTheory.Core.BinaryCorrelated
 import GameTheory.Core.Transform
