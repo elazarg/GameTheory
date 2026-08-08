@@ -61,7 +61,17 @@ FORBIDDEN_PATTERNS = [
     (re.compile(r"\bnative_decide\b"), "native_decide proof"),
 ]
 AXIOM_DECL_RE = re.compile(r"^\s*axiom\s+([^\s({\[]+)")
-AXIOM_LINE_RE = re.compile(r"^'([^']+)' depends on axioms: \[(.*)\]$")
+AXIOM_REPORT_RE = re.compile(
+    r"'([^']+)' depends on axioms:\s*\[(.*?)\]", re.DOTALL
+)
+NO_AXIOM_REPORT_RE = re.compile(
+    r"'([^']+)' does not depend on any axioms"
+)
+# `scripts/AxiomAudit.lean` deliberately imports one theorem module from the
+# fixed-point submodule which is not in the default root build.  Build that
+# precise standalone module before invoking Lean on the audit scripts, so the
+# audit is self-contained both on pull requests and on push CI.
+AXIOM_AUDIT_PREBUILD_TARGETS = ["FixedPointTheorems.kakutani"]
 DEFAULT_ROOTS = {
     "GameTheory",
     "UniformEquilibrium",
@@ -176,6 +186,29 @@ def island_containment_audit(
     return failures
 
 
+def parse_axiom_reports(output: str) -> list[tuple[str, set[str]]]:
+    """Parse Lean `#print axioms` output, including pretty-printed line wraps."""
+    reports: list[tuple[str, set[str]]] = []
+    seen: set[str] = set()
+
+    for match in AXIOM_REPORT_RE.finditer(output):
+        decl, raw_axioms = match.groups()
+        axioms = {
+            part.strip()
+            for part in raw_axioms.split(",")
+            if part.strip()
+        }
+        reports.append((decl, axioms))
+        seen.add(decl)
+
+    for match in NO_AXIOM_REPORT_RE.finditer(output):
+        decl = match.group(1)
+        if decl not in seen:
+            reports.append((decl, set()))
+
+    return reports
+
+
 def run_axiom_audit() -> tuple[list[str], str]:
     audit_scripts = [
         "scripts/AxiomAudit.lean",
@@ -183,6 +216,20 @@ def run_axiom_audit() -> tuple[list[str], str]:
     ]
     outputs: list[str] = []
     failures: list[str] = []
+
+    prebuild = subprocess.run(
+        ["lake", "build", *AXIOM_AUDIT_PREBUILD_TARGETS],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    outputs.append(prebuild.stdout)
+    if prebuild.returncode != 0:
+        failures.append(
+            "axiom-audit dependency prebuild failed with exit code "
+            f"{prebuild.returncode}"
+        )
+        return failures, "\n".join(outputs)
 
     for script in audit_scripts:
         result = subprocess.run(
@@ -199,16 +246,9 @@ def run_axiom_audit() -> tuple[list[str], str]:
     if failures:
         return failures, combined_output
 
-    audited = 0
+    reports = parse_axiom_reports(combined_output)
     seen_expected: set[str] = set()
-    for line in combined_output.splitlines():
-        match = AXIOM_LINE_RE.match(line.strip())
-        if not match:
-            continue
-        audited += 1
-        decl, raw_axioms = match.groups()
-        axioms = {part.strip() for part in raw_axioms.split(",") if part.strip()}
-
+    for decl, axioms in reports:
         allowed = ALLOWED_AXIOMS | ALLOWED_AXIOMS_BY_DECL.get(decl, set())
         unexpected = sorted(axioms - allowed)
         if unexpected:
@@ -220,7 +260,7 @@ def run_axiom_audit() -> tuple[list[str], str]:
             if missing:
                 failures.append(f"{decl}: missing expected source axioms {missing}")
 
-    if audited == 0:
+    if not reports:
         failures.append("Lean axiom audits produced no parsable axiom reports")
 
     for decl in EXPECTED_AXIOMS_BY_DECL:
