@@ -366,7 +366,10 @@ fixed-prefix holonomy module proves the common playerwise/aggregate gain
 modulus and its fixed-family infimum consequence.  The behavioral
 specialization defines the actual all-tail infimum from same-tail prescribed
 and literal best-response coordinates and proves its Lipschitz and buffered
-repair/floor consequences.  The tail-compression module
+repair/floor consequences.  Exact infinite phase-switch evaluation identifies
+each such holonomy gain with literal terminal exploitability of the attached
+profile and therefore identifies the two infima; it needs bounded rewards but
+no absorption or survival hypothesis.  The tail-compression module
 provides the elementary caps, full/deleted-survival trichotomy, exact Never
 boundary pair, positive-survival prescribed convergence, and the complete
 all-deleted-zero sure-joint branch in both prescribed and literal behavioral

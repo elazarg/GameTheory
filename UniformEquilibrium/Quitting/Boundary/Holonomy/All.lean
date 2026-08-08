@@ -9,6 +9,7 @@ import UniformEquilibrium.Quitting.Boundary.Holonomy.RealizedTangent
 import UniformEquilibrium.Quitting.Boundary.Holonomy.AllTailRepairValue
 import UniformEquilibrium.Quitting.Boundary.Holonomy.BehavioralTailEvaluation
 import UniformEquilibrium.Quitting.Boundary.Holonomy.BehavioralTailRepairValue
+import UniformEquilibrium.Quitting.Boundary.Holonomy.InfiniteBehavioralTailEvaluation
 import UniformEquilibrium.Quitting.Boundary.Holonomy.AggregateTerminalAnchor
 
 /-!
@@ -35,7 +36,10 @@ over any one source-independent tail family.  It does not construct or certify
 the pairs as tails.  The behavioral-tail adapter identifies prescribed payoff
 through an actual phase switch and the finite all-behavior envelope through the
 same holonomy.  The corresponding infinite-tail envelope identity remains a
-separate supremum-interchange theorem.
+separate theorem: the infinite adapter proves it by realizing the early
+Bellman branch and approximating the attached tail's behavioral supremum.  It
+identifies same-tail holonomy gain, and hence its infimum over tails, with
+literal terminal exploitability of the phase-switch profile.
 
 The behavioral-tail repair value specializes the abstract fixed family to the
 prescribed/envelope pair co-realized by each actual tail and inherits the same

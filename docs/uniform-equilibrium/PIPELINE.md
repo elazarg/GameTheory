@@ -1778,7 +1778,11 @@ behavioral specialization keeps each tail's prescribed value and literal
 best-response envelope co-realized, defines the actual all-tail repair value,
 and proves its Lipschitz and buffered transfer laws.  The finite/infinite
 phase-switch adapters prove exact prescribed evaluation and finite behavioral
-envelope evaluation; literal infinite-tail envelope evaluation remains active.
+envelope evaluation.  The infinite adapter additionally identifies the
+same-tail holonomy gain with literal maximum-positive terminal exploitability
+of the attached phase-switch profile, and identifies the repair-value infimum
+with the corresponding infimum over actual profiles.  No absorption hypothesis
+or finite tail proxy is used.
 The
 tail-compression module defines the three caps and exact prefix laws, proves
 the arbitrary-root full/deleted-survival trichotomy, computes the exact Never
