@@ -511,8 +511,10 @@ restore the refuted pinning bias or exclude genuine terminal behavior.
 closed mathematically for a fixed prefix.  At fixed accuracy, a near-minimizing
 tail at one holonomy gives one finite elementary tail stable on a holonomy
 neighborhood; a positive all-tail value gives a neighborhood-stable gain floor
-against every tail, without a length bound.  Production formalization is
-active.  The remaining strategic gate is **prefix consumption**: a positive
+against every tail, without a length bound.  Same-tail semantic density in the
+three-cap grammar and literal infinite-tail evaluation are production; the
+final boundary-pair-to-gain/infimum specialization is active.  The remaining
+strategic gate is **prefix consumption**: a positive
 floor excludes every tail after the calibrated prefix but does not yet exclude
 profiles that replace the prefix.
 
@@ -1792,10 +1794,11 @@ replacement by `2 M S_N` and every literal behavioral envelope by
 `2 M χ_i(N)`; these give the complete all-deleted-zero sure-joint branch with
 one simultaneous cutoff for all players.  The sure-solo module proves that the
 owner's deviation envelope is exactly the Never envelope and records the
-ordinary prefix bounds for every other coordinate.  Both remaining branches
-are thereby reduced to the sharp Never-envelope estimate
-`2 M (χ_i(N) - χ_i(∞))`; the uncentered generic prefix estimate is insufficient
-when deleted survival has a positive limit.
+ordinary prefix bounds for every other coordinate.  The sharp Never coupling
+now proves the centered estimate `2 M (χ_i(N) - χ_i(∞))` uniformly over pure
+quit times and lifts it to the literal behavioral supremum.  This closes the
+positive-joint and unique-positive-deleted branches and yields one cap/cutoff
+simultaneously approximating every prescribed and envelope coordinate.
 
 The prefix-consumption source now also has an aggregate-calibrated marked
 terminal anchor whose stored path is provably the canonical aggregate
@@ -1804,10 +1807,9 @@ production regression proves that a locally complementary sure-quit prefix
 can have unit physical exploitability while Never is an exact terminal
 equilibrium, permanently fencing off prefix-to-global inference.
 
-**Acceptance.** One theorem selecting an elementary finite cap for every tail
-and tolerance, with one cap simultaneously approximating the prescribed vector
-and every player's literal behavioral best-response envelope; then instantiate
-the generic fixed-family infimum theorem with those co-realized pairs.
+**Acceptance.** The simultaneous three-case selector is landed.  Complete the
+fixed-prefix boundary-pair gain estimate and use it to identify the all-tail
+repair infimum with the elementary capped-tail infimum.
 
 ### `LEAN-P0-2` — formalize the two carrier refutations that exist only as prose
 

@@ -374,10 +374,13 @@ provides the elementary caps, full/deleted-survival trichotomy, exact Never
 boundary pair, positive-survival prescribed convergence, and the complete
 all-deleted-zero sure-joint branch in both prescribed and literal behavioral
 best-response coordinates.  The sure-solo owner has exactly the Never
-deviation envelope, reducing both nonzero-survival cases to the sharp bound by
-the deleted-survival loss `χ_i(N) - χ_i(∞)`.  That estimate and the combined
-three-case capstone remain before the full semantic-density theorem can be
-invoked in production.
+deviation envelope.  The sharp Never coupling bounds every pure quit time, and
+then the literal behavioral supremum, by
+`2 M (χ_i(N) - χ_i(∞))`.  The combined three-case capstone now selects one
+finite cap and cutoff which simultaneously approximate all prescribed and
+best-response coordinates.  Only the fixed-prefix boundary-pair gain estimate
+and elementary/all-tail infimum identification remain to make this density
+operational at the named repair value.
 
 The prefix-consumption inputs now preserve the relevant optimizer provenance.
 An aggregate-calibrated marked anchor retains the canonical aggregate
