@@ -32,6 +32,9 @@ explicit `SolanSolanDistinctWitnessRepairInterface`.
 
 Ordinary behavior profiles, continuous absorption paths, and
 sunspot/public-correlation equilibria remain different conclusion types.
+Ordinary normalization transport is proved concretely; transport of abstract
+continuous and sunspot predicates requires an explicit translation-invariance
+hypothesis.
 -/
 
 noncomputable section
@@ -197,14 +200,39 @@ theorem faithful_q_nonQ_lcp_gate
             no_instant := hinstant
             reason := Or.inl habnormal }
 
+/-- AGKRS's normalized-table conclusion for the continuous branch. -/
+theorem normalizedContinuous_of_continuousPathBranch
+    (ContinuousEquilibrium : QuittingPayoffTable ι → Prop)
+    (agkrs : AGKRSContinuousSourceInterface ContinuousEquilibrium)
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    (hcontinuous : ContinuousPathBranch reward) :
+    ContinuousEquilibrium (normalizedQuittingPayoffTable reward) :=
+  agkrs.continuous_of_projectiveQBar reward
+    hcontinuous.full_projectiveQBar
+
+/-- Transport AGKRS's normalized continuous conclusion back to the repository
+payoff table, under a separately supplied semantic translation theorem. -/
+theorem continuous_of_continuousPathBranch
+    (ContinuousEquilibrium : QuittingPayoffTable ι → Prop)
+    (continuousTranslation :
+      IsQuittingPayoffTranslationInvariant ContinuousEquilibrium)
+    (agkrs : AGKRSContinuousSourceInterface ContinuousEquilibrium)
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    (hcontinuous : ContinuousPathBranch reward) :
+    ContinuousEquilibrium (repositoryQuittingPayoffTable reward) :=
+  (translationInvariant_normalized_iff_repository
+    ContinuousEquilibrium continuousTranslation reward).mp
+      (normalizedContinuous_of_continuousPathBranch
+        ContinuousEquilibrium agkrs hcontinuous)
+
 /-- Strategic version of the ordered gate after supplying the two narrowly
-scoped source interfaces.  Ordinary profiles and continuous paths remain
-separate conclusions. -/
+scoped source interfaces and the continuous predicate's translation theorem.
+Ordinary profiles and continuous paths remain separate conclusions. -/
 theorem faithful_q_nonQ_lcp_gate_with_source_conclusions
-    (SunspotApproximateEquilibria :
-      ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop)
-    (ContinuousEquilibrium :
-      ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop)
+    (SunspotApproximateEquilibria : QuittingPayoffTable ι → Prop)
+    (ContinuousEquilibrium : QuittingPayoffTable ι → Prop)
+    (continuousTranslation :
+      IsQuittingPayoffTranslationInvariant ContinuousEquilibrium)
     (solanSolan :
       SolanSolanDistinctWitnessRepairInterface
         SunspotApproximateEquilibria)
@@ -216,7 +244,8 @@ theorem faithful_q_nonQ_lcp_gate_with_source_conclusions
         HasOrdinaryStationaryApproximateEquilibria reward) ∨
       (OrdinaryNonQBranch reward ∧
         HasOrdinaryStationaryApproximateEquilibria reward) ∨
-      (ContinuousPathBranch reward ∧ ContinuousEquilibrium reward) ∨
+      (ContinuousPathBranch reward ∧
+        ContinuousEquilibrium (repositoryQuittingPayoffTable reward)) ∨
       ResidualHardClass reward := by
   rcases faithful_q_nonQ_lcp_gate reward with
       hnever | hinstant | hsimple | hnonQ | hcontinuous | hresidual
@@ -227,60 +256,87 @@ theorem faithful_q_nonQ_lcp_gate_with_source_conclusions
   · right; right; left
     refine ⟨hsimple, ?_⟩
     rcases hsimple.reason with habnormal | ⟨hnormal, hhomogeneous⟩
-    · exact solanSolan.allAbnormal_stationary reward habnormal
-    · exact solanSolan.homogeneous_stationary reward hnormal hhomogeneous
+    · exact
+        (hasNormalizedOrdinaryStationaryApproximateEquilibria_iff_original
+          reward).mp
+            (solanSolan.allAbnormal_stationary reward habnormal)
+    · exact
+        (hasNormalizedOrdinaryStationaryApproximateEquilibria_iff_original
+          reward).mp
+            (solanSolan.homogeneous_stationary reward hnormal hhomogeneous)
   · right; right; right; left
-    exact ⟨hnonQ,
-      solanSolan.nonQ_stationary reward hnonQ.normal_nonempty
-        hnonQ.no_homogeneous hnonQ.normal_not_standardQ⟩
+    refine ⟨hnonQ, ?_⟩
+    exact
+      (hasNormalizedOrdinaryStationaryApproximateEquilibria_iff_original
+        reward).mp
+          (solanSolan.nonQ_stationary reward hnonQ.normal_nonempty
+            hnonQ.no_homogeneous hnonQ.normal_not_standardQ)
   · right; right; right; right; left
     exact ⟨hcontinuous,
-      agkrs.continuous_of_projectiveQBar reward
-        hcontinuous.full_projectiveQBar⟩
+      continuous_of_continuousPathBranch ContinuousEquilibrium
+        continuousTranslation agkrs hcontinuous⟩
   · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hresidual))))
 
-/-- The corrected standard-Q side has the source's
-**sunspot/public-correlation** conclusion.  It is intentionally separate from
-`faithful_q_nonQ_lcp_gate_with_source_conclusions`. -/
-theorem sunspot_of_standardQSide
-    (SunspotApproximateEquilibria :
-      ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop)
+/-- The source's normalized-table sunspot conclusion on the corrected
+standard-Q side. -/
+theorem normalizedSunspot_of_standardQSide
+    (SunspotApproximateEquilibria : QuittingPayoffTable ι → Prop)
     (solanSolan :
       SolanSolanDistinctWitnessRepairInterface
         SunspotApproximateEquilibria)
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
     (hQ : StandardQSide reward) :
-    SunspotApproximateEquilibria reward :=
+    SunspotApproximateEquilibria (normalizedQuittingPayoffTable reward) :=
   solanSolan.q_sunspot reward hQ.normal_nonempty hQ.no_homogeneous
     hQ.normal_standardQ
+
+/-- Transport the source's sunspot/public-correlation conclusion back to the
+repository payoff table.  This remains separate from every ordinary strategy
+conclusion. -/
+theorem sunspot_of_standardQSide
+    (SunspotApproximateEquilibria : QuittingPayoffTable ι → Prop)
+    (sunspotTranslation :
+      IsQuittingPayoffTranslationInvariant SunspotApproximateEquilibria)
+    (solanSolan :
+      SolanSolanDistinctWitnessRepairInterface
+        SunspotApproximateEquilibria)
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    (hQ : StandardQSide reward) :
+    SunspotApproximateEquilibria (repositoryQuittingPayoffTable reward) :=
+  (translationInvariant_normalized_iff_repository
+    SunspotApproximateEquilibria sunspotTranslation reward).mp
+      (normalizedSunspot_of_standardQSide
+        SunspotApproximateEquilibria solanSolan hQ)
 
 /-- The continuous-path branch also lies on the corrected standard-Q sunspot
 side, but the two conclusions are not identified. -/
 theorem sunspot_of_continuousPathBranch
-    (SunspotApproximateEquilibria :
-      ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop)
+    (SunspotApproximateEquilibria : QuittingPayoffTable ι → Prop)
+    (sunspotTranslation :
+      IsQuittingPayoffTranslationInvariant SunspotApproximateEquilibria)
     (solanSolan :
       SolanSolanDistinctWitnessRepairInterface
         SunspotApproximateEquilibria)
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
     (hcontinuous : ContinuousPathBranch reward) :
-    SunspotApproximateEquilibria reward :=
-  sunspot_of_standardQSide SunspotApproximateEquilibria solanSolan
-    hcontinuous.toStandardQSide
+    SunspotApproximateEquilibria (repositoryQuittingPayoffTable reward) :=
+  sunspot_of_standardQSide SunspotApproximateEquilibria sunspotTranslation
+    solanSolan hcontinuous.toStandardQSide
 
 /-- The residual hard class likewise has only the separately typed source
 sunspot conclusion; this does not solve it in ordinary strategies. -/
 theorem sunspot_of_residualHardClass
-    (SunspotApproximateEquilibria :
-      ({S : Finset ι // S.Nonempty} → Payoff ι) → Prop)
+    (SunspotApproximateEquilibria : QuittingPayoffTable ι → Prop)
+    (sunspotTranslation :
+      IsQuittingPayoffTranslationInvariant SunspotApproximateEquilibria)
     (solanSolan :
       SolanSolanDistinctWitnessRepairInterface
         SunspotApproximateEquilibria)
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
     (hresidual : ResidualHardClass reward) :
-    SunspotApproximateEquilibria reward :=
-  sunspot_of_standardQSide SunspotApproximateEquilibria solanSolan
-    hresidual.toStandardQSide
+    SunspotApproximateEquilibria (repositoryQuittingPayoffTable reward) :=
+  sunspot_of_standardQSide SunspotApproximateEquilibria sunspotTranslation
+    solanSolan hresidual.toStandardQSide
 
 end QuittingLCPClassification
 end GameTheory
