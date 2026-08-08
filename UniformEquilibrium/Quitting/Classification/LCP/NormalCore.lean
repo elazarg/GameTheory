@@ -52,8 +52,10 @@ theorem printedNormalLayer_eq_univ_of_diagonal_nonpos
   induction n with
   | zero => rfl
   | succ n ih =>
-      ext i
-      simp [printedNormalLayer, ih, hdiag i]
+      rw [printedNormalLayer, ih]
+      apply Finset.filter_eq_self.mpr
+      intro i hi
+      exact ⟨i, hi, hdiag i⟩
 
 /-- The literal intersection of the printed layers. -/
 def printedNormalCore (M : ι → ι → ℝ) : Finset ι := by
