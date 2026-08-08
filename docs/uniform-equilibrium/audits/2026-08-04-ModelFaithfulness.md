@@ -44,7 +44,7 @@ internal notion; the sibling `HasUniformDeviationCapConstructor`
 Two harmless caveats: `StochasticGame.discount` is vestigial and unused
 (`Basic.lean:22`; `quittingGame` sets it to `0`), and in `quittingGame` the
 stage on which a set quits pays `0`, with `r S` arriving the next stage
-(`QuittingGame.lean:53-57`). Under Cesàro averaging the one-stage delay is
+(`Models/Quitting/Game.lean:53-57`). Under Cesàro averaging the one-stage delay is
 invisible, and the repository *proves* the limit object matches
 (`tendsto_finiteAveragePayoff_quittingGame`) rather than assuming it.
 
@@ -56,11 +56,11 @@ state. Arbitrary, history-dependent, perfect monitoring. Every link quantifies
 over that full class with no restriction — `IsεHorizonNash` (`Uniform.lean:76`),
 `IsεAsymptoticNash` (`Asymptotic.lean:43`), and critically
 `HasUniformDeviationUpperApproximation`
-(`TerminalToUniformDeviationApproximation.lean:48`). The one-shot `PMF Bool`
+(`UniformEquilibrium/Quitting/Terminal/ToUniformDeviationApproximation.lean:48`). The one-shot `PMF Bool`
 deviations of `IsεQuittingRootNash` live purely at the Bellman layer; the
 passage to full behavior strategies is *exact* via
 `quittingTerminalPayoff_update_eq_rootSequenceHazardTerminalValue`
-(`QuittingBehaviorPureTimeExtremality.lean:224`), legitimate because before
+(`UniformEquilibrium/Quitting/Cycles/BehaviorPureTimeExtremality.lean:224`), legitimate because before
 absorption a quitting game has exactly one public history.
 
 ## 3. The never-terminate payoff — `FAITHFUL WITH CAVEAT`
@@ -69,12 +69,12 @@ absorption a quitting game has exactly one public history.
 raised by an external auditor earlier the same day and left open there.
 
 - `quittingGame.stagePayoff` at the live state is `| none => 0`
-  (`QuittingGame.lean:55`), hard-coded for every action.
-- `quittingTerminalPayoff` (`QuittingAsymptotic.lean:198`) sums over absorbed
+  (`Models/Quitting/Game.lean:55`), hard-coded for every action.
+- `quittingTerminalPayoff` (`Models/Quitting/Asymptotic.lean:198`) sums over absorbed
   mass; non-absorption contributes nothing, and
   `tendsto_finiteAveragePayoff_quittingGame` *proves* it is the Cesàro limit.
 - `FTVCyclicMinimality.terminalReward allContinue = ![0,0,0]`
-  (`FTVCyclicMinimality.lean:216`), and the docstring's claim that the value
+  (`UniformEquilibrium/Quitting/Examples/FTV/CyclicMinimality.lean:216`), and the docstring's claim that the value
   "is ignored by terminal sums" is **true, not merely asserted**:
   `terminalProfiles := Finset.univ.erase allContinue` (`:302`), so the sums at
   `:339` and `:344` literally exclude it. Independently, `ftvReward` reads it
@@ -82,15 +82,15 @@ raised by an external auditor earlier the same day and left open there.
 
 The caveat is that a third object also exists: the Bellman layer genuinely
 carries a **free continuation vector**, giving `F_y(z)_i` with `z` a free
-parameter (`QuittingRootContinuation.lean:242`,
-`QuittingStationaryPayoff.lean:41`). What pins it to semantics is *absorption*,
+parameter (`Models/Quitting/RootContinuation.lean:242`,
+`UniformEquilibrium/Quitting/Stationary/Payoff.lean:41`). What pins it to semantics is *absorption*,
 not a terminal condition — see §6. No module sets a nonzero all-continue value
 and then claims a semantic conclusion.
 
 ## 4. The complementarity predicates — `FAITHFUL`
 
 `quittingRootSuccessorPayoff_eq_endpointMix`
-(`QuittingRootSuccessorCertificate.lean:104`) proves the payoff *is*
+(`UniformEquilibrium/Quitting/Root/SuccessorCertificate.lean:104`) proves the payoff *is*
 `y_i·Quit_i + (1−y_i)·Continue_i`, the map `s ↦ s·Σ_i + (1−s)·Γ_i`. The `ε` in
 `IsεQuittingRootEndpointNash` (`:119`) is on the correct side: pure-Quit regret
 is `(1−y)·D`, pure-Continue regret is `−y·D`, so the two clauses say exactly
@@ -103,12 +103,12 @@ equivalence with the full mixed-deviation condition for arbitrary `ε`.
 None stops at a certificate about arrays of reals.
 
 - `quittingGame_isUniformEquilibriumPayoff_zero_of_zeroSolo`
-  (`QuittingZeroSoloDisjunct.lean:125`) constructs a real `BehaviorProfile` and
+  (`UniformEquilibrium/Quitting/Punishment/ZeroSoloDisjunct.lean:125`) constructs a real `BehaviorProfile` and
   proves it exactly terminal-Nash against all behavior deviations via an
-  **iff** (`QuittingSimpleBranches.lean:326`), so the hypothesis is exactly the
+  **iff** (`Models/Quitting/SimpleBranches.lean:326`), so the hypothesis is exactly the
   class where it works.
 - `exists_uniformEquilibriumPayoff_of_admissible_quittingCyclicContinuationBlock`
-  (`QuittingAdmissibleCycleTerminalEquilibrium.lean:558`): the combinatorial
+  (`UniformEquilibrium/Quitting/Cycles/AdmissibleCycleTerminalEquilibrium.lean:558`): the combinatorial
   object becomes a strategy at `quittingCyclicContinuationBlockProfile` (`:474`).
   Two things are assumed there and **both are flagged in the module docstring**
   (`:53-64`), including that admissibility is not derivable from the block and
@@ -116,19 +116,19 @@ None stops at a certificate about arrays of reals.
   here". Honest.
 - The real load-bearer under all three is
   `quittingGame_hasUniformDeviationUpperApproximation`
-  (`QuittingTerminalUniformization.lean:75-198`) — a genuine proof of the
+  (`UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformization.lean:75-198`) — a genuine proof of the
   one-sided uniform approximation, the quitting-specific content of
   Solan–Vieille Prop. 2.13, split on the sign of `r_i({i})`. Together with the
-  full **iff** at `QuittingTerminalUniformPayoffSelection.lean:167`, the
+  full **iff** at `UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformPayoffSelection.lean:167`, the
   auditor calls this the strongest single asset in the repository.
 
-Non-vacuity is demonstrated, not argued: `FTVCyclicAdmissibleCycle.lean:487`
+Non-vacuity is demonstrated, not argued: `UniformEquilibrium/Quitting/Examples/FTV/CyclicAdmissibleCycle.lean:487`
 derives axiom-clean that the FTV table has uniform equilibrium payoff `(1,2,1)`.
 
 ## 6. Vacuity — `FAITHFUL`; the fence exists and its necessity is machine-checked
 
 - **The absorption fence is present.** `IsQuittingCyclicContinuationBlock`
-  (`QuittingCyclePinnedDebt.lean:152`) carries `∃ stage, 0 < absorptionMass` as
+  (`UniformEquilibrium/Quitting/Debt/Dynamic/CyclePinnedDebt.lean:152`) carries `∃ stage, 0 < absorptionMass` as
   its third clause. Its necessity is *proved*, not asserted:
   `quittingAllContinueBlock_forced` (`:392`) shows that for every terminal
   inside the reward cube dominating the solo rewards, the all-Continue block
@@ -138,10 +138,10 @@ derives axiom-clean that the FTV table has uniform equilibrium payoff `(1,2,1)`.
   **This is exactly the "all-continue rows at `z = Λ` satisfy everything" trap,
   and it is fenced.**
 - `IsQuittingZeroSolo`: not vacuously true, not vacuously false
-  (`FTVCyclicAdmissibleCycle.lean:438`, `QuittingZeroSoloDisjunct.lean:216`).
+  (`UniformEquilibrium/Quitting/Examples/FTV/CyclicAdmissibleCycle.lean:438`, `UniformEquilibrium/Quitting/Punishment/ZeroSoloDisjunct.lean:216`).
 - `HasAdmissibleAbsorbingQuittingCycle`: not vacuously false
   (`:445`), and provably not vacuously true
-  (`QuittingDisjunctionCounterexample.lean:635`).
+  (`UniformEquilibrium/Quitting/Boundary/Repair/DisjunctionCounterexample.lean:635`).
 - Exactly two `sorry`s in project source, both intentional. Nothing in the
   verified chain touches `sorryAx`. `native_decide` appears only in
   `BlockPairK11Dyadic*`, confirmed outside the quitting chain.
@@ -150,7 +150,7 @@ derives axiom-clean that the FTV table has uniform equilibrium payoff `(1,2,1)`.
 
 **1. The only landed carrier is refuted, and the conjecture files documented an
 architecture that does not exist.** `not_forall_isQuittingZeroSolo_or_...`
-(`QuittingDisjunctionCounterexample.lean:676`) proves the disjunction is not
+(`UniformEquilibrium/Quitting/Boundary/Repair/DisjunctionCounterexample.lean:676`) proves the disjunction is not
 exhaustive, so `exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle`
 can never be upgraded to unconditional existence, and the large
 `Quitting*Cycle*` / `Quitting*Debt*` mass built on that carrier cannot close
@@ -174,7 +174,7 @@ unaffected (`Act = Bool` everywhere).
 is a per-theorem side condition, not structural.** Every
 `IsεQuittingRootSuccessorCertificate` is a statement about arrays of reals with
 `tail` free, and `quittingRootSuccessorPayoff reward z allContinueRoot = z`
-(`QuittingNashBellmanClockReduction.lean:132`) means the all-continue row
+(`UniformEquilibrium/Quitting/Bellman/Finite/NashBellmanClockReduction.lean:132`) means the all-continue row
 satisfies the successor equation against *every* `z`. Only two things stop the
 trap — the absorption clause and zero-anchoring at a cutoff — and both are
 hypotheses carried theorem-by-theorem across the tree, so a new certificate
@@ -186,7 +186,7 @@ independently five or more times.
 ## Additions from the second, independent pass
 
 **A soundness argument by import graph, verified.** Exactly two `sorry`s exist
-in `GameTheory/`, in `QuittingConjecture.lean` and
+in `GameTheory/`, in `UniformEquilibrium/Quitting/Conjecture/Basic.lean` and
 `UniformExistenceConjecture.lean`. Those two modules are imported by **nothing
 except each other and the root `GameTheory.lean` aggregator** — checked
 directly: `QuittingConjecture` has one importer (`GameTheory.lean`),
@@ -204,9 +204,9 @@ landed theorem false, it makes a statement *about* the theorems unchecked.
 
 **Two load-bearing non-redundancy claims are prose, not theorems.** That (H2)
 admissibility cannot be dropped from the cycle bridge
-(`QuittingAdmissibleCycleTerminalEquilibrium.lean:54-65`, "hand check, not
+(`UniformEquilibrium/Quitting/Cycles/AdmissibleCycleTerminalEquilibrium.lean:54-65`, "hand check, not
 formalized here") and that the `carrierReward` table admits no admissible cycle
-(`QuittingZeroSoloDisjunct.lean:186-194`). Both are two-player concrete tables,
+(`UniformEquilibrium/Quitting/Punishment/ZeroSoloDisjunct.lean:186-194`). Both are two-player concrete tables,
 so both are promotable to `¬`-theorems in a few hours each, which removes prose
 from the load path.
 

@@ -154,7 +154,7 @@ bites is a guess.
 
 ## Actions taken
 
-- `UniformExistenceConjecture.lean` and `QuittingConjecture.lean` rewritten to
+- `UniformExistenceConjecture.lean` and `UniformEquilibrium/Quitting/Conjecture/Basic.lean` rewritten to
   record the retraction as the reason the statement is safe, and to stop
   offering hypothesis-mismatch as a defence.
 - `LEAN-F0-3` queued for the finite-horizon/liminf bridging lemma.

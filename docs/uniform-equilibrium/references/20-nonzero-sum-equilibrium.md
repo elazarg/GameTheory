@@ -312,9 +312,9 @@ confirms *Mathematics of Operations Research*, Vol. 26, No. 2 (May 2001),
 pp. 265–285, DOI `10.1287/moor.26.2.265.10549`, matching the citation above
 exactly. Both versions were read in full for this record.
 
-**Repo status.** `L~` for the *model*: `QuittingGame.lean` builds quitting
+**Repo status.** `L~` for the *model*: `Models/Quitting/Game.lean` builds quitting
 games as stochastic games, general in the player type and terminal reward, and
-`QuittingAsymptotic.lean` formalizes the translation from expected-terminal
+`Models/Quitting/Asymptotic.lean` formalizes the translation from expected-terminal
 equilibria to our finite-horizon-average `IsUniformEquilibriumPayoff`. The
 Solan–Vieille **theorem** is `—`.
 
@@ -621,7 +621,7 @@ absorbing strategy profile `x` such that all players `i ∈ I` are sequentially
 continuation payoff.)
 
 The repository's disjunction (`quittingCycle_zeroSolo_or_admissible_or_isolatedNegative`,
-`GameTheory/Concepts/Stochastic/QuittingThreeBranchDisjunction.lean`) is a
+`GameTheory/Concepts/Stochastic/UniformEquilibrium/Quitting/Cycles/ThreeBranchDisjunction.lean`) is a
 **different, weight-algebraic** trichotomy: `IsQuittingZeroSolo reward`
 (every solo-quit reward `r_i({i}) ≤ 0`) `∨ HasAdmissibleAbsorbingQuittingCycle
 reward` (some finite cyclic block has, at every coordinate, either a
@@ -630,7 +630,7 @@ weight) `∨ HasIsolatedNegativeAbsorbingQuittingCycle reward` (some absorbing
 cyclic block isolates a coordinate — every opponent silent at every phase —
 whose solo weight is negative). It is exhaustive **only over weights that
 admit some absorbing cyclic continuation block at all**; that residual
-hypothesis is itself open (`QuittingThreeBranchDisjunction.lean`, module
+hypothesis is itself open (`UniformEquilibrium/Quitting/Cycles/ThreeBranchDisjunction.lean`, module
 docstring: "this repository does not prove that every weight admits an
 absorbing complementary cycle").
 

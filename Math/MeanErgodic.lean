@@ -28,7 +28,7 @@ yields Cesàro convergence of expected values along the iterated kernel
 (`Math.PMFIter.iter`) — the mean ergodic theorem for finite Markov chains.
 This is the analytic input for uniform equilibrium payoffs in stochastic
 games whose state process is autonomous (see
-`GameTheory.Concepts.Stochastic.TransitionIndependent`).
+`GameTheory.Concepts.Stochastic.Classes.TransitionIndependent`).
 
 ## Main results
 

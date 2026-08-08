@@ -11,7 +11,7 @@ N/A with a reason. No blank cells, and "standard" is not an answer.
 
 **Scope, stated honestly.** This is a complete inventory *relative to an
 explicitly declared universe of notions* — the ones enumerated in §1, found
-by reading `GameTheory/Concepts/Stochastic/README.md`, `Uniform.lean`,
+by reading `GameTheory/Concepts/Stochastic/UniformEquilibrium/README.md`, `Uniform.lean`,
 `GameTheory/Languages/MultiRound/StochasticGame.lean`, the quitting-specific
 files, and the modules they import or are imported by. It does **not**
 establish that this universe is exhaustive, nor does it certify the global
@@ -61,9 +61,9 @@ horizon-level notion below reduces to (`isεHorizonNash_iff_horizonGame`,
 | ID | Lean name | File:line | Payoff functional | Strategy class | Quantifier order | Approximation | Game scope |
 |---|---|---|---|---|---|---|---|
 | M1 | `StochasticGame.IsMarkovNash` | `Languages/MultiRound/StochasticGame.lean:74` | raw `stagePayoff` at one state | pure `MarkovProfile` (state → action, no randomization) | none — single-state, single-stage deviation | exact | any `StochasticGame` |
-| M2 | `StochasticGame.IsMixedStageNash` | `Concepts/Stochastic/StageGame.lean:100` | `mixedStageEU` at one state | mixed Markov (`State → ∀ i, PMF (Act i)`) | none — single-state, single-stage deviation | exact | any `StochasticGame` |
-| M3 | `StochasticGame.IsεLegalMarkovNash` | `Concepts/Stochastic/ActionLegalityNormalization.lean:121` | raw `stagePayoff`, deviations restricted to `Legal` | pure `MarkovProfile`, legal actions only | none | ε | state-dependent legal action sets |
-| M4 | `StochasticGame.IsεNormalizedMarkovNash` | `Concepts/Stochastic/ActionLegalityNormalization.lean:131` | `normStagePayoff` (illegal actions padded) | pure `MarkovProfile` | none | ε | as M3, padded presentation |
+| M2 | `StochasticGame.IsMixedStageNash` | `Concepts/Stochastic/Core/StageGame.lean:100` | `mixedStageEU` at one state | mixed Markov (`State → ∀ i, PMF (Act i)`) | none — single-state, single-stage deviation | exact | any `StochasticGame` |
+| M3 | `StochasticGame.IsεLegalMarkovNash` | `Concepts/Stochastic/Transform/ActionLegality/Normalization.lean:121` | raw `stagePayoff`, deviations restricted to `Legal` | pure `MarkovProfile`, legal actions only | none | ε | state-dependent legal action sets |
+| M4 | `StochasticGame.IsεNormalizedMarkovNash` | `Concepts/Stochastic/Transform/ActionLegality/Normalization.lean:131` | `normStagePayoff` (illegal actions padded) | pure `MarkovProfile` | none | ε | as M3, padded presentation |
 
 **M1 is misnamed relative to the literature and its own docstring says so.**
 "Markov Nash equilibrium" in the stochastic-game literature means a
@@ -92,19 +92,19 @@ from the uniform-equilibrium tower; nothing in the tree uses it at all.
 
 | ID | Lean name | File:line | Payoff functional | Strategy class | Quantifier order | Approximation | Game scope |
 |---|---|---|---|---|---|---|---|
-| D1 | `StochasticGame.IsDiscountedεNash` | `Concepts/Stochastic/Discounted.lean:974` | `discountedPayoff β` | full `BehaviorProfile` | fixed `β`, single-shot deviation test | ε | any `StochasticGame` |
-| D2 | `StochasticGame.IsDiscountedStationaryBellmanEq` | `Concepts/Stochastic/Fink.lean:1007` | `discountedAuxEU β` (Bellman value `V`) | stationary mixed `StationaryMixedProfile` | fixed `β`, Bellman fixed point | exact | any `StochasticGame` (Fink 1964) |
+| D1 | `StochasticGame.IsDiscountedεNash` | `Concepts/Stochastic/Equilibrium/Discounted.lean:974` | `discountedPayoff β` | full `BehaviorProfile` | fixed `β`, single-shot deviation test | ε | any `StochasticGame` |
+| D2 | `StochasticGame.IsDiscountedStationaryBellmanEq` | `Concepts/Stochastic/Equilibrium/Discounted/Fink.lean:1007` | `discountedAuxEU β` (Bellman value `V`) | stationary mixed `StationaryMixedProfile` | fixed `β`, Bellman fixed point | exact | any `StochasticGame` (Fink 1964) |
 
 ### Cluster 3 — finite-horizon and uniform (behavior strategies)
 
 | ID | Lean name | File:line | Payoff functional | Strategy class | Quantifier order | Approximation | Game scope |
 |---|---|---|---|---|---|---|---|
-| U1 | `StochasticGame.IsεHorizonNash` | `Concepts/Stochastic/Uniform.lean:77` | `finiteAveragePayoff` at fixed `T` | full `BehaviorProfile` | per-horizon (one `T`) | ε | any `StochasticGame` |
-| U2 | `StochasticGame.IsUniformεEquilibrium` | `Concepts/Stochastic/Uniform.lean:85` | `finiteAveragePayoff` | full `BehaviorProfile` | uniform-in-horizon (`∃T₀∀T≥T₀`) | ε | any `StochasticGame` |
-| U3 | `StochasticGame.IsUniformEquilibriumPayoff` | `Concepts/Stochastic/Uniform.lean:94` | `finiteAveragePayoff`, target `v : Payoff ι` | full `BehaviorProfile`, may depend on ε | uniform-in-horizon, ∀ε∃σ | vanishing-ε family | any `StochasticGame` — **the central notion** (Solan–Vieille Def. 2.1 / Mertens–Neyman) |
-| U4 | `StochasticGame.HasUniformDeviationCapConstructor` | `Concepts/Stochastic/Uniform.lean:172` | `finiteAveragePayoff`, target `v` | full `BehaviorProfile` | as U3, split into on-path + deviation-cap clauses | vanishing-ε family | any `StochasticGame` |
-| U5 | `StochasticGame.IsUniformScheduledMarkovEquilibriumPayoff` | `Concepts/Stochastic/FinkMarkovEndpoint.lean:27` | `finiteAveragePayoff`, target `v` | **scheduled-Markov** (`ℕ → StationaryMixedProfile`) only | as U3 | vanishing-ε family | any `StochasticGame` |
-| U6 | `StochasticGame.IsεAsymptoticNash` | `Concepts/Stochastic/Asymptotic.lean:40` | **arbitrary** `u : BehaviorProfile → ι → ℝ` | full `BehaviorProfile` | asymptotic (whatever `u` encodes) | ε | any `StochasticGame`; a family of nodes, one per `u` |
+| U1 | `StochasticGame.IsεHorizonNash` | `Concepts/Stochastic/Equilibrium/Uniform.lean:77` | `finiteAveragePayoff` at fixed `T` | full `BehaviorProfile` | per-horizon (one `T`) | ε | any `StochasticGame` |
+| U2 | `StochasticGame.IsUniformεEquilibrium` | `Concepts/Stochastic/Equilibrium/Uniform.lean:85` | `finiteAveragePayoff` | full `BehaviorProfile` | uniform-in-horizon (`∃T₀∀T≥T₀`) | ε | any `StochasticGame` |
+| U3 | `StochasticGame.IsUniformEquilibriumPayoff` | `Concepts/Stochastic/Equilibrium/Uniform.lean:94` | `finiteAveragePayoff`, target `v : Payoff ι` | full `BehaviorProfile`, may depend on ε | uniform-in-horizon, ∀ε∃σ | vanishing-ε family | any `StochasticGame` — **the central notion** (Solan–Vieille Def. 2.1 / Mertens–Neyman) |
+| U4 | `StochasticGame.HasUniformDeviationCapConstructor` | `Concepts/Stochastic/Equilibrium/Uniform.lean:172` | `finiteAveragePayoff`, target `v` | full `BehaviorProfile` | as U3, split into on-path + deviation-cap clauses | vanishing-ε family | any `StochasticGame` |
+| U5 | `StochasticGame.IsUniformScheduledMarkovEquilibriumPayoff` | `Concepts/Stochastic/UniformEquilibrium/VanishingDiscount/Fink/MarkovEndpoint.lean:27` | `finiteAveragePayoff`, target `v` | **scheduled-Markov** (`ℕ → StationaryMixedProfile`) only | as U3 | vanishing-ε family | any `StochasticGame` |
+| U6 | `StochasticGame.IsεAsymptoticNash` | `Concepts/Stochastic/Equilibrium/Asymptotic.lean:40` | **arbitrary** `u : BehaviorProfile → ι → ℝ` | full `BehaviorProfile` | asymptotic (whatever `u` encodes) | ε | any `StochasticGame`; a family of nodes, one per `u` |
 
 U6 is not one node but a schema: every instantiation of `u` (limiting
 functional) is a distinct payoff notion. Two instantiations matter below:
@@ -119,7 +119,7 @@ anywhere in the tree (`grep -rn "def.*LiminfAverage\|LiminfAverageEquilibrium\|
 def.*LimsupAverage\|LimsupAverageEquilibrium" GameTheory/` returns no
 matches). The infinite-play measure itself **is** built —
 `StochasticGame.infinitePlayMeasure`
-(`Concepts/Stochastic/InfinitePlayMeasure.lean:160`), by the Ionescu-Tulcea
+(`Concepts/Stochastic/Core/Probability/InfinitePlayMeasure.lean:160`), by the Ionescu-Tulcea
 theorem from the game's transition kernel and a fixed behavior profile — and
 `LiminfAverageBridge.lean` uses it directly, with no representation
 hypothesis, via `StochasticGame.pathwiseAveragePayoff`
@@ -145,15 +145,15 @@ to Cluster 3 only through the one-state adapter `realizedActionStochasticGame`.
 | R2 | `KernelGame.IsUniformεEquilibrium` | `Concepts/Repeated/Uniform.lean:55` | as R1 | `RepeatedProfile` | uniform-in-horizon | ε | any `KernelGame` |
 | R3 | `KernelGame.IsUniformEquilibrium` | `Concepts/Repeated/Uniform.lean:61` | as R1, plus `HasLongRunAveragePayoff` | `RepeatedProfile`, one fixed profile | fixed profile, ∀ε | exact convergence + ε-family | any `KernelGame` |
 | P1 | `PublicMonitoring.IsUniformEquilibrium` | `Concepts/Repeated/Monitoring.lean:636` | monitored `finiteAveragePayoff` | `MonitoredProfile`, one fixed profile | as R3 | as R3 | monitored `KernelGame` |
-| P2 | `PublicMonitoring.IsUniformEquilibriumPayoff` | `Concepts/Stochastic/RealizedActionRepeatedAdapter.lean:86` | monitored `finiteAveragePayoff`, target `v` | `MonitoredProfile`, may depend on ε | as U3 | vanishing-ε family | monitored `KernelGame` |
+| P2 | `PublicMonitoring.IsUniformEquilibriumPayoff` | `Concepts/Stochastic/Transform/Repeated/RealizedActionRepeatedAdapter.lean:86` | monitored `finiteAveragePayoff`, target `v` | `MonitoredProfile`, may depend on ε | as U3 | vanishing-ε family | monitored `KernelGame` |
 
 ### Cluster 6 — zero-sum discounted / Mertens–Neyman
 
 | ID | Lean name | File:line | Payoff functional | Strategy class | Quantifier order | Approximation | Game scope |
 |---|---|---|---|---|---|---|---|
-| Z1 | `StochasticGame.IsZeroSum` | `Concepts/Stochastic/ZeroSum.lean:329` | game-class predicate, not an equilibrium notion | — | — | — | two-player, `Payoff (Fin 2)` |
-| Z2 | `discountedShapleyValue` / `shapleyBehaviorProfile` + `shapleyBehaviorProfile_isDiscountedNash` | `Concepts/Stochastic/ZeroSum.lean:607` | `discountedPayoff β` | `stationaryBehaviorProfile` of the Shapley optimal pair | fixed `β` | exact (ε=0) | zero-sum two-player |
-| Z3 | `StochasticGame.IsRowTrackingCertificate` / `SecuresCol` | `Concepts/Stochastic/MertensNeymanCriterion.lean:909` | finite-horizon securing guarantee | history-adaptive strategy | uniform-in-horizon | ε | zero-sum two-player |
+| Z1 | `StochasticGame.IsZeroSum` | `Concepts/Stochastic/ZeroSum/Basic.lean:329` | game-class predicate, not an equilibrium notion | — | — | — | two-player, `Payoff (Fin 2)` |
+| Z2 | `discountedShapleyValue` / `shapleyBehaviorProfile` + `shapleyBehaviorProfile_isDiscountedNash` | `Concepts/Stochastic/ZeroSum/Basic.lean:607` | `discountedPayoff β` | `stationaryBehaviorProfile` of the Shapley optimal pair | fixed `β` | exact (ε=0) | zero-sum two-player |
+| Z3 | `StochasticGame.IsRowTrackingCertificate` / `SecuresCol` | `Concepts/Stochastic/UniformEquilibrium/SpecialCases/ZeroSum/MertensNeyman/Criterion.lean:909` | finite-horizon securing guarantee | history-adaptive strategy | uniform-in-horizon | ε | zero-sum two-player |
 
 ### Cluster 7 — quitting-specific
 
@@ -165,12 +165,12 @@ is defined anywhere in the tree.
 
 | ID | Lean name | File:line | Payoff functional | Strategy class | Quantifier order | Approximation | Game scope |
 |---|---|---|---|---|---|---|---|
-| Q1 | `IsεQuittingRootNash` | `Concepts/Stochastic/QuittingFirstBranch.lean:197` | `quittingRootExpectedPayoff` (root mixture + free continuation vector) | one-shot `ι → PMF Bool` at the root | none | ε | quitting only |
-| Q2 | `IsεQuittingRootEndpointNash` | `Concepts/Stochastic/QuittingRootSuccessorCertificate.lean:119` | as Q1, tested at the two pure endpoints | as Q1 | none | ε | quitting only |
-| Q3 | `HasUniformDeviationUpperApproximation` | `Concepts/Stochastic/TerminalToUniformDeviationApproximation.lean:44` | any limiting functional `u` vs. `finiteAveragePayoff` | full `BehaviorProfile` | uniform-in-horizon, one-sided | ε | stated generally; used only for quitting |
-| Q4 | `quittingTerminalPayoff` | `Concepts/Stochastic/QuittingAsymptotic.lean:201` | expected absorption-weighted terminal reward | full `BehaviorProfile` | — (a payoff functional, not an equilibrium notion) | exact | quitting only |
-| Q5 | `IsQuittingZeroSolo` | `Concepts/Stochastic/QuittingZeroSoloDisjunct.lean:57` | reward-table admissibility class, not an equilibrium notion | — | — | — | quitting only |
-| Q6 | `HasAdmissibleAbsorbingQuittingCycle` | `Concepts/Stochastic/QuittingZeroSoloDisjunct.lean:156` | as Q5 | — | — | — | quitting only |
+| Q1 | `IsεQuittingRootNash` | `Concepts/Stochastic/UniformEquilibrium/Quitting/Root/FirstBranch.lean:197` | `quittingRootExpectedPayoff` (root mixture + free continuation vector) | one-shot `ι → PMF Bool` at the root | none | ε | quitting only |
+| Q2 | `IsεQuittingRootEndpointNash` | `Concepts/Stochastic/UniformEquilibrium/Quitting/Root/SuccessorCertificate.lean:119` | as Q1, tested at the two pure endpoints | as Q1 | none | ε | quitting only |
+| Q3 | `HasUniformDeviationUpperApproximation` | `Concepts/Stochastic/UniformEquilibrium/Quitting/Terminal/ToUniformDeviationApproximation.lean:44` | any limiting functional `u` vs. `finiteAveragePayoff` | full `BehaviorProfile` | uniform-in-horizon, one-sided | ε | stated generally; used only for quitting |
+| Q4 | `quittingTerminalPayoff` | `Concepts/Stochastic/Models/Quitting/Asymptotic.lean:201` | expected absorption-weighted terminal reward | full `BehaviorProfile` | — (a payoff functional, not an equilibrium notion) | exact | quitting only |
+| Q5 | `IsQuittingZeroSolo` | `Concepts/Stochastic/UniformEquilibrium/Quitting/Punishment/ZeroSoloDisjunct.lean:57` | reward-table admissibility class, not an equilibrium notion | — | — | — | quitting only |
+| Q6 | `HasAdmissibleAbsorbingQuittingCycle` | `Concepts/Stochastic/UniformEquilibrium/Quitting/Punishment/ZeroSoloDisjunct.lean:156` | as Q5 | — | — | — | quitting only |
 
 `IsUniformEquilibriumPayoff` (U3) itself applies verbatim to quitting games
 (instantiated at `quittingGame reward`); it is not a separate node, but every
@@ -193,23 +193,23 @@ design — the two clusters share nothing to compare.
 | M2 (viewed at a Dirac/pure profile) → M1 | **N/A** | Different carrier types (`State → ∀i, PMF(Act i)` vs. `State → ∀i, Act i`); no coercion or specialization theorem exists. Not fabricated as OPEN because no meaningful statement is even stated in-tree at either type. |
 | M1 → M2 (pure stage-Nash, viewed as degenerate mixed, is stage-Nash against mixed deviations) | **OPEN** | Mathematically the standard "pure Nash ⇒ Nash against mixed deviations in a one-shot game" fact, but no Lean theorem connects M1 and M2 (M1 has zero importers, confirmed §1). No pipeline row found. |
 | M1 → U1/U2/U3 (stagewise pure Nash ⇒ any uniform notion) | **OPEN** | Tracked by `LEAN-F0-1` (`PIPELINE.md:69`), whose acceptance text names this exact gap: *"the transfer is proved against a locally-defined Markov epsilon-Nash notion, not against the behaviour-strategy notion `IsUniformEquilibriumPayoff` actually uses."* This is the task's orientation instance #1. |
-| M2 → U1, **restricted to `IsActionIndependent` games** | **LANDED (restricted)** | `isεHorizonNash_markovBehaviorProfile` (`Concepts/Stochastic/TransitionIndependent.lean:148`), for every `ε ≥ 0` and every horizon. Requires the extra game-class hypothesis `∀ s a, G.transition s a = κ s` (transitions independent of actions); **not** proved for general transitions. |
+| M2 → U1, **restricted to `IsActionIndependent` games** | **LANDED (restricted)** | `isεHorizonNash_markovBehaviorProfile` (`Concepts/Stochastic/Classes/TransitionIndependent.lean:148`), for every `ε ≥ 0` and every horizon. Requires the extra game-class hypothesis `∀ s a, G.transition s a = κ s` (transitions independent of actions); **not** proved for general transitions. |
 | M2 → U1, general transitions | **OPEN** | No theorem and no pipeline row; expected false by any reader who knows why Bellman equations exist (a stage-optimal action can lead to a permanently worse continuation), but no in-tree counterexample witnesses it either, so it is recorded OPEN rather than FALSE per the no-fabrication rule. |
 | M2 (action-independent) → U3 | **LANDED (restricted)** | `exists_uniformEquilibriumPayoff_of_isActionIndependent` (`TransitionIndependent.lean:213`). |
-| M4 → M3 | **LANDED** | `isεLegalMarkovNash_of_normalized` (`ActionLegalityNormalization.lean:144`) — a legal, normalized-Nash Markov profile is Nash for the legality-constrained game. |
-| M3 → M4 | **OPEN** | Module docstring, `ActionLegalityNormalization.lean:24`: *"The converse direction is not addressed here."* Tracked under `LEAN-F0-1`. |
+| M4 → M3 | **LANDED** | `isεLegalMarkovNash_of_normalized` (`Transform/ActionLegality/Normalization.lean:144`) — a legal, normalized-Nash Markov profile is Nash for the legality-constrained game. |
+| M3 → M4 | **OPEN** | Module docstring, `Transform/ActionLegality/Normalization.lean:24`: *"The converse direction is not addressed here."* Tracked under `LEAN-F0-1`. |
 | M3/M4 → U1/U3 | **OPEN** | Same `LEAN-F0-1` row: the padding-reduction transfer stops at the Markov level and is never lifted to the behavior-strategy notions. |
 
 ### 2.2 Discounted ↔ Uniform (Clusters 2–3)
 
 | Edge | Verdict | Evidence |
 |---|---|---|
-| D2 → D1 (a Bellman equilibrium's stationary play is an exact discounted Nash) | **LANDED** | `IsDiscountedStationaryBellmanEq.isDiscountedεNash` (`Fink.lean:1301`), in full generality — any `StochasticGame`, any player count, `ε = 0` exactly, no zero-sum assumption. Two hypotheses are explicit and were implicit before: `β < 1` **strictly** (Fink's own existence theorem assumes only `β ≤ 1`, so it must be specialized), and a uniform stage-payoff bound `|stagePayoff s a who| ≤ U`; both are needed for series summability. Only `.onProfile_bellman_eq` and `.deviation_bellman_ge` were reusable; the deviation side additionally required a general dual that **did not exist** — an upper bound on `discountedPayoff` from a Bellman upper inequality — now `discountedPayoff_le_of_bellman_ge` (`Discounted.lean:381`), mirroring `le_discountedPayoff_of_bellman_le`. That the zero-sum file obtains the same step via antisymmetry (`ZeroSum.lean:607`) confirms the general dual was genuinely absent. |
-| Z2 (D1 specialized to zero-sum + Shapley profile) | **LANDED** | `shapleyBehaviorProfile_isDiscountedNash` (`ZeroSum.lean:607`), exact (`ε = 0`). |
+| D2 → D1 (a Bellman equilibrium's stationary play is an exact discounted Nash) | **LANDED** | `IsDiscountedStationaryBellmanEq.isDiscountedεNash` (`Fink.lean:1301`), in full generality — any `StochasticGame`, any player count, `ε = 0` exactly, no zero-sum assumption. Two hypotheses are explicit and were implicit before: `β < 1` **strictly** (Fink's own existence theorem assumes only `β ≤ 1`, so it must be specialized), and a uniform stage-payoff bound `|stagePayoff s a who| ≤ U`; both are needed for series summability. Only `.onProfile_bellman_eq` and `.deviation_bellman_ge` were reusable; the deviation side additionally required a general dual that **did not exist** — an upper bound on `discountedPayoff` from a Bellman upper inequality — now `discountedPayoff_le_of_bellman_ge` (`Discounted.lean:381`), mirroring `le_discountedPayoff_of_bellman_le`. That the zero-sum file obtains the same step via antisymmetry (`ZeroSum/Basic.lean:607`) confirms the general dual was genuinely absent. |
+| Z2 (D1 specialized to zero-sum + Shapley profile) | **LANDED** | `shapleyBehaviorProfile_isDiscountedNash` (`ZeroSum/Basic.lean:607`), exact (`ε = 0`). |
 | D2-family (a family of certificates, one per accuracy, with state-uniformly convergent values) → U3 | **LANDED, conditional on the certificate family's convergence** | `isUniformEquilibriumPayoff_of_fink_certificates` (`Fink.lean:1353`). The premise is an explicit hypothesis package (`hcert`), not derived from a single D2 instance — Fink's theorem alone does not discharge it. |
-| D1 (single fixed β) → U3 | **OPEN** | This is exactly the residual `isUniformEquilibriumPayoff_of_fink_certificates` isolates as "the remaining substantive issue after Fink's theorem" (its own docstring). The natural discharge mechanisms are shown obstructed, not proved impossible in general: `FinkTangentCounterexample.lean` and `FinkSelectionCounterexample.lean` show the supported-harmonic-adjustment selection route fails, and `DiscountBiasNoGo.lean` shows unscaled tail variation cannot control the scaled discount-bias drift. None of these is a counterexample game refuting D1 → U3 itself; they refute specific *mechanisms* for discharging `hcert`. Recorded OPEN, not FALSE. |
-| Z3-pair (`IsRowTrackingCertificate` + `SecuresCol`) → U3, zero-sum | **LANDED, conditional on both certificates** | `uniformValue_of_rowColumnTrackingCertificates` (`MertensNeymanCriterion.lean`, assembly layer, `:60-68` docstring). The certificates themselves are supplied by two conditional constructors (`trackingCertificate_of_discountBiasControl`, `trackingCertificate_of_runningDeficit`), **not** proved to exist for every zero-sum game. |
-| "linear running-deficit index" mechanism → Z3's `IsRowTrackingCertificate` | **FALSE** | `BigMatchDeficitIndexNoGo.lean` (README: *"the linear running-deficit index is not a universal Mertens–Neyman constructor"*) — refutes that specific constructor, not Z3 → U3 itself. |
+| D1 (single fixed β) → U3 | **OPEN** | This is exactly the residual `isUniformEquilibriumPayoff_of_fink_certificates` isolates as "the remaining substantive issue after Fink's theorem" (its own docstring). The natural discharge mechanisms are shown obstructed, not proved impossible in general: `UniformEquilibrium/VanishingDiscount/Fink/TangentCounterexample.lean` and `UniformEquilibrium/VanishingDiscount/Fink/SelectionCounterexample.lean` show the supported-harmonic-adjustment selection route fails, and `DiscountBiasNoGo.lean` shows unscaled tail variation cannot control the scaled discount-bias drift. None of these is a counterexample game refuting D1 → U3 itself; they refute specific *mechanisms* for discharging `hcert`. Recorded OPEN, not FALSE. |
+| Z3-pair (`IsRowTrackingCertificate` + `SecuresCol`) → U3, zero-sum | **LANDED, conditional on both certificates** | `uniformValue_of_rowColumnTrackingCertificates` (`UniformEquilibrium/SpecialCases/ZeroSum/MertensNeyman/Criterion.lean`, assembly layer, `:60-68` docstring). The certificates themselves are supplied by two conditional constructors (`trackingCertificate_of_discountBiasControl`, `trackingCertificate_of_runningDeficit`), **not** proved to exist for every zero-sum game. |
+| "linear running-deficit index" mechanism → Z3's `IsRowTrackingCertificate` | **FALSE** | `UniformEquilibrium/Examples/BigMatch/DeficitIndexNoGo.lean` (README: *"the linear running-deficit index is not a universal Mertens–Neyman constructor"*) — refutes that specific constructor, not Z3 → U3 itself. |
 
 ### 2.3 Within Cluster 3 (the uniform ladder)
 
@@ -220,8 +220,8 @@ design — the two clusters share nothing to compare.
 | U3 ⇒ `∀ε>0 ∃σ, U2` | **LANDED** | `exists_isUniformεEquilibrium` (`UniformExistenceConjecture.lean:129`), derived from U3 by dropping the payoff-proximity clause already present in U3's own definition. |
 | U3 → U6 (arbitrary pointwise-convergent `u`) | **LANDED, conditional on `hlim`** | `exists_isεAsymptoticNash_of_isUniformEquilibriumPayoff` (`Asymptotic.lean:71`). `hlim : ∀ τ who, Tendsto (finiteAveragePayoff · τ who) atTop (𝓝 (u τ who))` is a genuine extra hypothesis about `u`, supplied per instantiation. |
 | ¬∃(U6 witness) → ¬∃U3 | **LANDED** | `not_exists_uniformEquilibriumPayoff_of_no_asymptoticNash` (`Asymptotic.lean:87`) — the contrapositive, used by counterexample arguments. |
-| U3 → U5 (scheduled-Markov witness exists) | **FALSE** | Big Match: `exists_uniformEquilibriumPayoff_live` (`BigMatchUniform.lean:1894`) gives U3 at `v = (1/2, -1/2)` from `.live`; `not_isUniformScheduledMarkovEquilibriumPayoff_half` (`BigMatchNoMarkov.lean:58`) refutes U5 at the same state and the same value `1/2`. Same game, same target, U3 holds and U5 fails. |
-| U5 → U3 | **LANDED** | `IsUniformScheduledMarkovEquilibriumPayoff.isUniformEquilibriumPayoff` (`FinkMarkovEndpoint.lean:39`) — forgetting the scheduled-Markov form of the witness. |
+| U3 → U5 (scheduled-Markov witness exists) | **FALSE** | Big Match: `exists_uniformEquilibriumPayoff_live` (`UniformEquilibrium/Examples/BigMatch/Uniform.lean:1894`) gives U3 at `v = (1/2, -1/2)` from `.live`; `not_isUniformScheduledMarkovEquilibriumPayoff_half` (`UniformEquilibrium/Examples/BigMatch/NoMarkov.lean:58`) refutes U5 at the same state and the same value `1/2`. Same game, same target, U3 holds and U5 fails. |
+| U5 → U3 | **LANDED** | `IsUniformScheduledMarkovEquilibriumPayoff.isUniformEquilibriumPayoff` (`UniformEquilibrium/VanishingDiscount/Fink/MarkovEndpoint.lean:39`) — forgetting the scheduled-Markov form of the witness. |
 | U1 ↔ K1 of `horizonGame` | **LANDED** | `isεHorizonNash_iff_horizonGame` (`Uniform.lean:123`) — full iff; "per horizon, a stochastic game *is* a kernel game." |
 
 ### 2.4 Liminf/limsup-average (Cluster 4) — mirrored, not doubled
@@ -270,14 +270,14 @@ document does not claim one does.
 
 | Edge | Verdict | Evidence |
 |---|---|---|
-| Q1 ↔ Q2 | **LANDED** | `isεQuittingRootEndpointNash_iff_isεQuittingRootNash` (`QuittingRootSuccessorCertificate.lean:130-233`), full iff. |
-| Q1 (root Bellman-layer, one-shot `PMF Bool`) → exact full-behavior-strategy terminal Nash | **LANDED** | `quittingTerminalPayoff_update_eq_rootSequenceHazardTerminalValue` (`QuittingBehaviorPureTimeExtremality.lean:224`) — exact, "legitimate because before absorption a quitting game has exactly one public history" (audit, `2026-08-04-ModelFaithfulness.md:63`). |
-| `∀ε>0, U6 instantiated at u = quittingTerminalPayoff` ↔ `∃v, U3` for `quittingGame reward` | **LANDED** | `quittingGame_exists_uniformEquilibriumPayoff_iff_terminalNash_all_errors` (`QuittingTerminalUniformPayoffSelection.lean:167`) — full iff. This is the sharp contrast with §2.4: the general liminf-average bridge is one-directional and needs an unbuilt measure; the quitting-specific terminal bridge is a full iff with **no** measure needed, because `quittingTerminalPayoff` is a finite absorption-weighted sum, not a liminf, and its Cesàro-limit identity is itself proved (`tendsto_finiteAveragePayoff_quittingGame`, audit §1). |
-| Q3 (`HasUniformDeviationUpperApproximation`, deviation direction only) + Q1/Q2 → U3, quitting | **LANDED** | `quittingGame_hasUniformDeviationUpperApproximation` (`QuittingTerminalUniformization.lean:75-198`) — "the quitting-specific content of Solan–Vieille Prop. 2.13," one-sided (deviation-cap direction only; audit §5). |
-| Q5 ∨ Q6 (zero-solo or admissible-cycle) → ∃v, U3 for that reward table | **LANDED (conditional on the disjunction, per table)** | `exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle` (`QuittingZeroSoloDisjunct.lean`, `HEADLINE`). |
-| "every reward table satisfies Q5 ∨ Q6" (the disjunction is exhaustive) | **FALSE** | `not_forall_isQuittingZeroSolo_or_hasAdmissibleAbsorbingQuittingCycle` (`QuittingDisjunctionCounterexample.lean:676`) — proves the disjunction is not exhaustive, so the theorem above can never be upgraded to unconditional existence for quitting games (audit, weakness #1). |
-| M1 (stagewise pure Nash) instantiated at `quittingGame reward` → any of Q1–Q4, U3-for-quitting | **N/A** | Verified zero occurrences: `grep -n quittingGame Languages/MultiRound/StochasticGame.lean` and `grep -rn IsMarkovNash Concepts/Stochastic/*.lean` both return nothing. M1 is never instantiated at `quittingGame` anywhere in the tree; the boundary notion simply is not connected to anything, general or quitting-specific. |
-| `quittingGame_exists_uniformEquilibriumPayoff` (the open conjecture, quitting case) | **OPEN — the module's own intentional `sorry`** | `QuittingConjecture.lean:148`. Not a relation between two notions but the existence statement itself; listed for completeness since it is the terminus every quitting edge above points toward. |
+| Q1 ↔ Q2 | **LANDED** | `isεQuittingRootEndpointNash_iff_isεQuittingRootNash` (`UniformEquilibrium/Quitting/Root/SuccessorCertificate.lean:130-233`), full iff. |
+| Q1 (root Bellman-layer, one-shot `PMF Bool`) → exact full-behavior-strategy terminal Nash | **LANDED** | `quittingTerminalPayoff_update_eq_rootSequenceHazardTerminalValue` (`UniformEquilibrium/Quitting/Cycles/BehaviorPureTimeExtremality.lean:224`) — exact, "legitimate because before absorption a quitting game has exactly one public history" (audit, `2026-08-04-ModelFaithfulness.md:63`). |
+| `∀ε>0, U6 instantiated at u = quittingTerminalPayoff` ↔ `∃v, U3` for `quittingGame reward` | **LANDED** | `quittingGame_exists_uniformEquilibriumPayoff_iff_terminalNash_all_errors` (`UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformPayoffSelection.lean:167`) — full iff. This is the sharp contrast with §2.4: the general liminf-average bridge is one-directional and needs an unbuilt measure; the quitting-specific terminal bridge is a full iff with **no** measure needed, because `quittingTerminalPayoff` is a finite absorption-weighted sum, not a liminf, and its Cesàro-limit identity is itself proved (`tendsto_finiteAveragePayoff_quittingGame`, audit §1). |
+| Q3 (`HasUniformDeviationUpperApproximation`, deviation direction only) + Q1/Q2 → U3, quitting | **LANDED** | `quittingGame_hasUniformDeviationUpperApproximation` (`UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformization.lean:75-198`) — "the quitting-specific content of Solan–Vieille Prop. 2.13," one-sided (deviation-cap direction only; audit §5). |
+| Q5 ∨ Q6 (zero-solo or admissible-cycle) → ∃v, U3 for that reward table | **LANDED (conditional on the disjunction, per table)** | `exists_uniformEquilibriumPayoff_of_zeroSolo_or_admissibleCycle` (`UniformEquilibrium/Quitting/Punishment/ZeroSoloDisjunct.lean`, `HEADLINE`). |
+| "every reward table satisfies Q5 ∨ Q6" (the disjunction is exhaustive) | **FALSE** | `not_forall_isQuittingZeroSolo_or_hasAdmissibleAbsorbingQuittingCycle` (`UniformEquilibrium/Quitting/Boundary/Repair/DisjunctionCounterexample.lean:676`) — proves the disjunction is not exhaustive, so the theorem above can never be upgraded to unconditional existence for quitting games (audit, weakness #1). |
+| M1 (stagewise pure Nash) instantiated at `quittingGame reward` → any of Q1–Q4, U3-for-quitting | **N/A** | Verified zero occurrences: `grep -n quittingGame Languages/MultiRound/StochasticGame.lean` and `rg -n IsMarkovNash GameTheory/Concepts/Stochastic -g '*.lean'` both return nothing. M1 is never instantiated at `quittingGame` anywhere in the tree; the boundary notion simply is not connected to anything, general or quitting-specific. |
+| `quittingGame_exists_uniformEquilibriumPayoff` (the open conjecture, quitting case) | **OPEN — the module's own intentional `sorry`** | `UniformEquilibrium/Quitting/Conjecture/Basic.lean:148`. Not a relation between two notions but the existence statement itself; listed for completeness since it is the terminus every quitting edge above points toward. |
 
 ## 3. General/quitting boundary, stated explicitly
 
@@ -335,7 +335,7 @@ importers. `grep -rn "def IsLiminfAverage\|LiminfAverageEquilibrium"
 GameTheory/` — no matches; confirmed no such `Prop` exists (§1, Cluster 4).
 `grep -rn "def.*StochasticGame" GameTheory/` — exactly one `structure
 StochasticGame`, in `Languages/MultiRound/StochasticGame.lean`;
-`Concepts/Stochastic/Basic.lean` reopens its namespace rather than defining a
+`Concepts/Stochastic/Core/Basic.lean` reopens its namespace rather than defining a
 second, unrelated structure of the same name — so every notion in Clusters
 1–7 quantifies over the *same* underlying game object, which is why the
 gaps recorded above are gaps in missing theorems, not gaps in incompatible

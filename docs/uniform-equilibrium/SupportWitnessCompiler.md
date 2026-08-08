@@ -32,18 +32,18 @@ this proves that a ledger cannot cross its cap before the player's own planned
 survival crosses a corresponding threshold.  At the first crossing among all
 players, the selected player's own survival bounds its joint reach and every
 other player's deleted reach.  The relevant definitions and estimates are in
-`QuittingSupportWitnessClockCollapse.lean`.
+`UniformEquilibrium/Quitting/Paths/SupportWitnessClockCollapse.lean`.
 
 ## Path compiler
 
-`QuittingSupportWitnessReduction.lean` combines that switch package with a
+`UniformEquilibrium/Quitting/Paths/SupportWitnessReduction.lean` combines that switch package with a
 target-specific closed tail.  The marked player is controlled by the prefix
 ledger and its closed continuation; every other player is controlled by the
 marked player's deleted-reach bound.  A common punishment tail is not assumed.
 
-`QuittingSupportWitnessIndividualRational.lean` obtains the required closed
+`UniformEquilibrium/Quitting/Paths/SupportWitnessIndividualRational.lean` obtains the required closed
 tail from approximate individual rationality against
-`quittingPunishmentValue`.  `QuittingSupportWitnessPathCompiler.lean` then
+`quittingPunishmentValue`.  `UniformEquilibrium/Quitting/Paths/SupportWitnessPathCompiler.lean` then
 proves the quantitative theorem
 
 ```text
@@ -70,7 +70,7 @@ equilibrium error yields the uniform-payoff theorem
 
 If one phase has positive absorption, periodic repetition uniquely selects the
 cyclic terminal values and repeats a positive absorption charge once per
-period.  `QuittingSupportWitnessPeriodic.lean` therefore converts the finite
+period.  `UniformEquilibrium/Quitting/Paths/SupportWitnessPeriodic.lean` therefore converts the finite
 cycle to the divergent path consumed above and derives both the quantitative
 `3 epsilon` theorem and a uniform-payoff theorem for cycles available at every
 accuracy.
@@ -87,7 +87,7 @@ cycle at every tolerance.  Periodicity alone also supplies neither the support
 inequalities nor individual rationality; both remain explicit fields of the
 finite-cycle interface.  See [CirculationUniformPayoff.md](CirculationUniformPayoff.md).
 
-`QuittingRankOneCrossing.lean` is a separate abstract survival estimate for a
+`UniformEquilibrium/Quitting/Boundary/Analytic/RankOneCrossing.lean` is a separate abstract survival estimate for a
 centered bounded score process with a crossing implication and expected
 variation budget.  It does not construct that process and is not used by the
 deterministic support-witness compiler.  The truncated-ledger package is a

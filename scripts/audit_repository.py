@@ -28,6 +28,7 @@ FORBIDDEN_PATTERNS = [
 AXIOM_LINE_RE = re.compile(r"^'([^']+)' depends on axioms: \[(.*)\]$")
 DEFAULT_ROOTS = {
     "GameTheory",
+    "GameTheory.Concepts.Stochastic.UniformEquilibrium",
     "Math",
     "Semantics",
     "GameTheoryTest",
@@ -44,26 +45,29 @@ STANDALONE_LEAN_MODULES = {"lakefile", "scripts.AxiomAudit"}
 # fail for a different reason, so it is allowlisted here instead of left to
 # show up as orphan noise that could hide a real orphan.
 BLOCK_PAIR_K11_ISLAND = {
-    f"GameTheory.Concepts.Stochastic.{name}"
+    f"GameTheory.Concepts.Stochastic.UniformEquilibrium.Quitting.Examples.BlockPair.{name}"
     for name in (
-        "BlockPairK11System",
-        "BlockPairK11LocalInterval",
-        "BlockPairK11LocalValue",
-        "BlockPairK11DyadicData",
-        "BlockPairK11DyadicPhaseGroupZeroTwo",
-        "BlockPairK11DyadicPhaseGroupThreeFive",
-        "BlockPairK11DyadicPhaseGroupSixEight",
-        "BlockPairK11DyadicPhaseNine",
-        "BlockPairK11DyadicPhaseTenRootZero",
-        "BlockPairK11DyadicPhaseTenRootOne",
-        "BlockPairPredecessorCharts",
-        "BlockPairPredecessorComposition",
-        "BlockPairQuadraticRootSelection",
+        "K11System",
+        "K11LocalInterval",
+        "K11LocalValue",
+        "K11DyadicData",
+        "K11DyadicPhaseGroupZeroTwo",
+        "K11DyadicPhaseGroupThreeFive",
+        "K11DyadicPhaseGroupSixEight",
+        "K11DyadicPhaseNine",
+        "K11DyadicPhaseTenRootZero",
+        "K11DyadicPhaseTenRootOne",
+        "PredecessorCharts",
+        "PredecessorComposition",
+        "QuadraticRootSelection",
     )
 }
 STANDALONE_LEAN_MODULES |= BLOCK_PAIR_K11_ISLAND
 RAW_SEMANTIC_MODULES = {"GameTheory.Core.GameForm"}
-ROOT_AGGREGATOR = "GameTheory"
+ROOT_AGGREGATORS = {
+    "GameTheory",
+    "GameTheory.Concepts.Stochastic.UniformEquilibrium",
+}
 
 
 def module_name_of(path: pathlib.Path) -> str:
@@ -201,10 +205,11 @@ def leaf_invariant_audit(
             if dep in importers:
                 importers[dep].append(mod)
 
-    if ROOT_AGGREGATOR not in tracked_modules:
-        failures.append(f"root aggregator module {ROOT_AGGREGATOR} is not tracked")
-    else:
-        root_path = tracked_modules[ROOT_AGGREGATOR]
+    for root_aggregator in sorted(ROOT_AGGREGATORS):
+        if root_aggregator not in tracked_modules:
+            failures.append(f"root aggregator module {root_aggregator} is not tracked")
+            continue
+        root_path = tracked_modules[root_aggregator]
         for line_no in root_aggregator_non_import_lines(root_path):
             failures.append(
                 f"{root_path}:{line_no}: root aggregator must be a pure import "
@@ -213,12 +218,12 @@ def leaf_invariant_audit(
 
     sorry_modules = sorry_carrying_modules(tracked_modules)
     for mod in sorted(sorry_modules):
-        allowed = {ROOT_AGGREGATOR} | (sorry_modules - {mod})
+        allowed = ROOT_AGGREGATORS | (sorry_modules - {mod})
         for importer in sorted(importers.get(mod, [])):
             if importer not in allowed:
                 failures.append(
                     f"{tracked_modules[mod]}: sorry-carrying module is imported "
-                    f"by {importer}, outside {{{ROOT_AGGREGATOR}}} ∪ other "
+                    f"by {importer}, outside the root aggregators and other "
                     f"sorry-carrying modules"
                 )
 

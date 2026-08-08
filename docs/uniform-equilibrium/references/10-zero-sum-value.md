@@ -17,7 +17,7 @@ Markers: see [README](README.md). Evidence from the 2026-08-02 research pass.
 > value** if both players can uniformly guarantee it.
 
 This is the zero-sum shadow of our `HasUniformDeviationCapConstructor`
-(`GameTheory/Concepts/Stochastic/Uniform.lean:169`): one strategy per accuracy,
+(`GameTheory/Concepts/Stochastic/Equilibrium/Uniform.lean:169`): one strategy per accuracy,
 one horizon threshold, and the guarantee holds at **every** horizon past it.
 Note the quantifier order — the threshold may depend on `ε` but not on the
 opponent. Getting this order wrong is the standard way to accidentally prove
@@ -70,11 +70,11 @@ imports the Bewley–Kohlberg bounded-variation estimate as given and leaves
 Lemma 1.12 and parts of Lemma 1.14 to the reader. Anyone formalizing from the
 tutorial inherits those gaps.
 
-**Repo status.** `L~` — `MertensNeymanCriterion.lean:1619`
+**Repo status.** `L~` — `UniformEquilibrium/SpecialCases/ZeroSum/MertensNeyman/Criterion.lean:1619`
 (`uniformValue_of_rowColumnTrackingCertificates`) is a **conditional**
 Mertens–Neyman theorem: it reduces the zero-sum uniform value to two named
-hypotheses. The account machinery is in `MertensNeymanAccount.lean` and
-`MertensNeymanAccountStrategy.lean`; `BigMatchDeficitIndexNoGo.lean` proves the
+hypotheses. The account machinery is in `UniformEquilibrium/SpecialCases/ZeroSum/MertensNeyman/Account.lean` and
+`UniformEquilibrium/SpecialCases/ZeroSum/MertensNeyman/AccountStrategy.lean`; `UniformEquilibrium/Examples/BigMatch/DeficitIndexNoGo.lean` proves the
 linear running-deficit index is *not* a universal MN constructor. The
 unconditional theorem is not formalized here or anywhere (see
 [`50-formalization-status.md`](50-formalization-status.md)).
@@ -128,7 +128,7 @@ DOI `10.1287/moor.2013.0642` (elementary tools).
 homegrown semi-algebraic and Puiseux apparatus built for this purpose
 (`Math/CurveSelection/` — 45 files including `Puiseux.lean`,
 `Math/AlgebraicSelection.lean`, `Math/PolynomialSignCell.lean`,
-`GameTheory/Concepts/Stochastic/BellmanVariety.lean`,
+`GameTheory/Concepts/Stochastic/UniformEquilibrium/VanishingDiscount/Bellman/Variety.lean`,
 `DiscountedShapleyAlgebraic.lean`), but the Bewley–Kohlberg theorem itself is
 not stated or proved.
 

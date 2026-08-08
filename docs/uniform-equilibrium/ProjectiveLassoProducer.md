@@ -176,7 +176,7 @@ z i * w i = 0.
 ```
 
 This is `quittingProjectiveSingletonPacket_isLCP` in
-`QuittingProjectiveSingletonLCP.lean`.  At `z₀ = 1`, the module proves
+`UniformEquilibrium/Quitting/Projective/SingletonLCP.lean`.  At `z₀ = 1`, the module proves
 `value = 0` and every solo payoff is nonpositive, the Never boundary.
 
 ### 2.2 Cemetery rebasing
@@ -198,7 +198,7 @@ a i = anchor i - reward {i} i,
 
 the same LCP balance and complementarity hold.  This is formalized by
 `QuittingAnchoredProjectiveSingletonPacket` in
-`QuittingProjectiveAnchoredSingletonLCP.lean`.
+`UniformEquilibrium/Quitting/Projective/AnchoredSingletonLCP.lean`.
 
 At cemetery mass one the correct conclusion is
 
@@ -213,7 +213,7 @@ anchored interface through `QuittingProjectiveSingletonPacket.toAnchored`.
 ## 3. Analytic packet extraction in the matching regime
 
 The packet modules are algebraic, while
-`QuittingProjectiveAnalyticPacket.lean` constructs their assumptions from a
+`UniformEquilibrium/Quitting/Projective/AnalyticPacket.lean` constructs their assumptions from a
 matching analytic quitting germ.
 
 Let the germ discount complement be
@@ -329,7 +329,7 @@ x^2 + y^2 = 0
 has the entire plane as its linear tangent space at the origin but has no
 nonconstant real arc through the origin.
 
-`QuittingProjectiveResolvedChart.lean` records the exact contract:
+`UniformEquilibrium/Quitting/Projective/ResolvedChart.lean` records the exact contract:
 
 ```text
 QuittingResolvedProjectiveChartInterface
@@ -377,7 +377,7 @@ points.  Repetition of its label does not imply:
 - a small return seam; or
 - a seam small relative to vanishing real absorption.
 
-`QuittingVanishingChargeRecurrenceNoGo.lean` records the scalar regression
+`UniformEquilibrium/Quitting/Debt/Ledger/VanishingChargeRecurrenceNoGo.lean` records the scalar regression
 
 ```text
 state n  = 1 / (n + 1),

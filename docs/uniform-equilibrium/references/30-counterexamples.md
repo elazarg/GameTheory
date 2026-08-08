@@ -59,14 +59,14 @@ show a clock plus **two memory states** suffice for ε-optimality. Kohlberg
 `ε²(1−ε)^{kₙ}` otherwise).
 
 **Repo status.** `L`, and this is the repository's deepest worked instance.
-`BigMatchUniform.lean:1913` proves `exists_uniformEquilibriumPayoff_live`
+`UniformEquilibrium/Examples/BigMatch/Uniform.lean:1913` proves `exists_uniformEquilibriumPayoff_live`
 (sorry-free, axiom-audited), with the BF potential `φ(D) = (D−1)/(2D)` and its
-submartingale step formalized. `BigMatchNoMarkov.lean` independently
+submartingale step formalized. `UniformEquilibrium/Examples/BigMatch/NoMarkov.lean` independently
 reproduces, in checked form, the Markov-insufficiency content that Thuijsman's
 *The Big Match and the Paris Match*
 (DOI [`10.1007/978-94-010-0189-2_12`](https://doi.org/10.1007/978-94-010-0189-2_12))
 records as Lemmas 1–2 (stationary `max min = 0 < 1/2 = min max`; Markov
-`sup inf = 0`). `BigMatchDeficitIndexNoGo.lean` and `BigMatchFinkEndpoint.lean`
+`sup inf = 0`). `UniformEquilibrium/Examples/BigMatch/DeficitIndexNoGo.lean` and `UniformEquilibrium/Examples/BigMatch/FinkEndpoint.lean`
 are the permanent falsifiers built on it.
 
 **The Hansen–Ibsen-Jensen–Neyman result is already cited in the manuscript** —
@@ -167,9 +167,9 @@ level*. What remains is the Lean actual-data adapter.
 **Repo status.** `L~`. The concrete FTV architecture and credibility checks,
 the exact finite-horizon delivery constants `16/7`, `22/7`, `18/7` and common
 modulus `22/(7T)`, the all-start semantic credibility bridge, and the exact
-cyclic packet adapter are formalized in `FTVCyclicCredibility.lean`,
-`FTVCyclicFiniteHorizon.lean`, `FTVCyclicSemanticBridge.lean`, and
-`FTVCyclicMinimality.lean`. The remaining source-aligned target is the
+cyclic packet adapter are formalized in `UniformEquilibrium/Quitting/Examples/FTV/CyclicCredibility.lean`,
+`UniformEquilibrium/Quitting/Examples/FTV/CyclicFiniteHorizon.lean`, `UniformEquilibrium/Quitting/Examples/FTV/CyclicSemanticBridge.lean`, and
+`UniformEquilibrium/Quitting/Examples/FTV/CyclicMinimality.lean`. The remaining source-aligned target is the
 published stationary-impossibility/approximate-boundary theorem; do not
 describe the game or finite-horizon delivery as absent.
 
@@ -303,7 +303,7 @@ at all.
 
 ### Cross-check against this repository — the transcription is CORRECT
 
-`SorinAbsorbingGame.lean` states the game as
+`UniformEquilibrium/Examples/Sorin/AbsorbingGame.lean` states the game as
 
 ```text
               Left           Right
@@ -323,7 +323,7 @@ columns gives exactly the repo's table. Everything else matches:
 | Uniform payoff set | `2w₁ + w₂ = 2` | docstring states `2w₁ + w₂ = 2` |
 | Separation | `5/3 ≠ 2` | docstring states `5/3 ≠ 2` |
 
-**Repo status: `L~` as of 2026-08-02.** `SorinUniformSeparation.lean`
+**Repo status: `L~` as of 2026-08-02.** `UniformEquilibrium/Examples/Sorin/UniformSeparation.lean`
 (untracked in the worktree, not yet in `GameTheory.lean`) machine-checks the
 accounting identity `2·avg₁ + avg₂ = 2 − bottomRightOccupation`, the limit
 passage to `2w₁ + w₂ = 2`, and the endpoint exclusion — all conditional on one

@@ -33,19 +33,19 @@ without producing a witness.
 
 | Family | Canonical import | What it exports |
 | --- | --- | --- |
-| Uniform-payoff consequences | `UniformConsequences.lean` | Semantic waist dependencies, target equivalence under vanishing payoff gaps, potential shaping, tail-width and bounded-work characterizations, and transition discontinuity. |
-| Adaptive-potential systems | `AdaptivePotentialSystemTools.lean` | The single `AdaptivePotentialSystemAt` structure together with retargeting, profile transport, ledger conversion, finite-time bounds, and owner-separated assembly. |
-| Quitting terminal selection | `QuittingTerminalUniformPayoffSelection.lean` | The equivalence between terminal approximate Nash existence at every accuracy and uniform-payoff existence for finite quitting games. |
-| Diagonal target tails | `QuittingDiagonalTargetTail.lean` | Exact-prefix plus player-indexed closed-tail compilation and its counterexample restriction. |
-| Support-retaining paths | `QuittingSupportWitnessUniform.lean` | Infinite support-rational paths, finite periodic witnesses, and signed, absolute-weighted, and single-seam projective-lasso compilation. |
-| Essential APS | `QuittingEssentialAPSAll.lean` | The complete singleton-flow APS layer, including the adaptive-mesh capstone. |
-| Projective packets and lassos | `QuittingProjectiveLassoAll.lean` | Matching-order analytic packets, packet-target mismatch, resolved-chart/Farkas contracts, exact signed monodromy, finite charged return, forward-block single-seam closing, and lasso compilation. |
-| Punishment-completed cycles | `QuittingPunishmentCompletedCycle.lean` | Coupled phase-switch caps, exact instant-punishment characterization, and exact absorbing cycles completed coordinatewise by contraction or credible punishment. |
-| Truncated-ledger boundary | `QuittingTruncatedLedgerCapBoundary.lean` | The sound package compiler interface together with one- and two-player counterexamples to treating it as a universal normal form. |
-| Face circulations | `QuittingFaceCirculationAll.lean` | Certificate/orbit production, finite charged closing, the compatible compact-path route, concrete payoff examples, and boundary analyses. Use `MultiOwnerFaceCirculationFiniteClosing.lean` for the finite compiler. |
-| Boundary holonomy | `QuittingBoundaryHolonomyAll.lean` | Source-retaining fixed-cutoff compactness together with residual, self-similar, tangent, and realized-coordinate analysis. |
-| Reward closure | `QuittingUniformPayoffExistenceClosure.lean` | Fixed-skeleton quitting-game existence under uniform reward limits and dense solved approximants. |
-| Nonexistence certificates | `UniformNonexistenceCertificate.lean` | Late-horizon exploitability, quitting-terminal gaps, and the equivalence between finite-quitting nonexistence and some fixed positive terminal gap. |
+| Uniform-payoff consequences | `UniformEquilibrium/Diagnostics/Uniform/Consequences.lean` | Semantic waist dependencies, target equivalence under vanishing payoff gaps, potential shaping, tail-width and bounded-work characterizations, and transition discontinuity. |
+| Adaptive-potential systems | `UniformEquilibrium/Certificates/Adaptive/PotentialSystemTools.lean` | The single `AdaptivePotentialSystemAt` structure together with retargeting, profile transport, ledger conversion, finite-time bounds, and owner-separated assembly. |
+| Quitting terminal selection | `UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformPayoffSelection.lean` | The equivalence between terminal approximate Nash existence at every accuracy and uniform-payoff existence for finite quitting games. |
+| Diagonal target tails | `UniformEquilibrium/Quitting/Terminal/TargetTail/DiagonalTargetTail.lean` | Exact-prefix plus player-indexed closed-tail compilation and its counterexample restriction. |
+| Support-retaining paths | `UniformEquilibrium/Quitting/Paths/SupportWitnessUniform.lean` | Infinite support-rational paths, finite periodic witnesses, and signed, absolute-weighted, and single-seam projective-lasso compilation. |
+| Essential APS | `UniformEquilibrium/Quitting/EssentialAPS/All.lean` | The complete singleton-flow APS layer, including the adaptive-mesh capstone. |
+| Projective packets and lassos | `UniformEquilibrium/Quitting/Projective/LassoAll.lean` | Matching-order analytic packets, packet-target mismatch, resolved-chart/Farkas contracts, exact signed monodromy, finite charged return, forward-block single-seam closing, and lasso compilation. |
+| Punishment-completed cycles | `UniformEquilibrium/Quitting/Punishment/CompletedCycle.lean` | Coupled phase-switch caps, exact instant-punishment characterization, and exact absorbing cycles completed coordinatewise by contraction or credible punishment. |
+| Truncated-ledger boundary | `UniformEquilibrium/Quitting/Debt/Ledger/TruncatedLedgerCapBoundary.lean` | The sound package compiler interface together with one- and two-player counterexamples to treating it as a universal normal form. |
+| Face circulations | `UniformEquilibrium/Quitting/Circulation/FaceCirculationAll.lean` | Certificate/orbit production, finite charged closing, the compatible compact-path route, concrete payoff examples, and boundary analyses. Use `MultiOwnerFaceCirculationFiniteClosing.lean` for the finite compiler. |
+| Boundary holonomy | `UniformEquilibrium/Quitting/Boundary/Holonomy/All.lean` | Source-retaining fixed-cutoff compactness together with residual, self-similar, tangent, and realized-coordinate analysis. |
+| Reward closure | `Models/Quitting/UniformPayoffExistenceClosure.lean` | Fixed-skeleton quitting-game existence under uniform reward limits and dense solved approximants. |
+| Nonexistence certificates | `UniformEquilibrium/Diagnostics/Uniform/NonexistenceCertificate.lean` | Late-horizon exploitability, quitting-terminal gaps, and the equivalence between finite-quitting nonexistence and some fixed positive terminal gap. |
 
 Import an internal file directly when its narrower interface is the point of
 the proof.  The umbrellas are navigation and downstream entry points, not a
@@ -60,13 +60,13 @@ the uniform finite-horizon delivery and unilateral-deviation bounds encoded by
 that constructor.
 
 For finite quitting games, the preferred higher-level waist is
-`QuittingTerminalUniformPayoffSelection.lean`.  It selects one bounded target
+`UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformPayoffSelection.lean`.  It selects one bounded target
 from terminal approximate equilibria available at every positive accuracy and
 then invokes the terminal-to-uniform bridge.  Terminal verification,
 target selection, and uniformization remain separate steps in lower-level
 proofs.
 
-`AdaptivePotentialSystemTools.lean` is the transformation facade for the
+`UniformEquilibrium/Certificates/Adaptive/PotentialSystemTools.lean` is the transformation facade for the
 proof-facing adaptive-potential waist. It deliberately reuses the one
 `AdaptivePotentialSystemAt` definition: consolidation here means a canonical
 API surface, not a second structure. Public stopping and response compilers
@@ -100,9 +100,9 @@ generic quitting-game existence theorems.
 | Finite charged return | `Math/FiniteChargedReturn.lean`, `Math/CompactFiniteChargedReturn.lean` | Converts sufficiently charged finite prefixes in one compact carrier into a close ordered block with fixed charge, without one orbit uniform in the target. |
 | Finite phase occupation duality | `Math/Probability/PhaseOccupationDuality.lean` | Semantic/LP primal equivalence, bounded attainment, phase-bias decoding, and strong duality conditional on occupation feasibility. |
 | Cyclic exposure | `Math/CyclicExposure.lean` | Sharp exposure bounds for finite permutation systems; the shared-punishment calculation is an application. |
-| Nonperiodic Snell supersolution | `QuittingInfinitePathSupersolution.lean` | Turns exact Continue transport, vanishing local Quit error, and survival decay into history-dependent unilateral caps. |
-| Target-anchored stopping tail | `QuittingTargetAnchoredTail.lean` | Constructs one player's stationary-opponent closed tail at a prescribed target. |
-| Joint-survival selection | `QuittingJointSurvivalSelection.lean` | Identifies compactly selected continuation values with actual infinite-path terminal values under joint-survival decay. |
+| Nonperiodic Snell supersolution | `UniformEquilibrium/Quitting/Paths/InfinitePathSupersolution.lean` | Turns exact Continue transport, vanishing local Quit error, and survival decay into history-dependent unilateral caps. |
+| Target-anchored stopping tail | `UniformEquilibrium/Quitting/Terminal/TargetTail/TargetAnchoredTail.lean` | Constructs one player's stationary-opponent closed tail at a prescribed target. |
+| Joint-survival selection | `UniformEquilibrium/Quitting/Paths/JointSurvivalSelection.lean` | Identifies compactly selected continuation values with actual infinite-path terminal values under joint-survival decay. |
 | Projective first-event algebra | `Math/ProjectiveBellmanPacket.lean` | Exact cemetery/absorption normalization and Bellman balance before any chart or recurrence argument. |
 | Affine equality/Farkas alternative | `Math/AffineEqualityFarkas.lean` | A finite feasible-tangent-or-dual-row alternative; strategic decoding and arc lifting are separate inputs. |
 
@@ -112,15 +112,15 @@ a game or strategy producer.
 
 ## Closure and transfer
 
-- `UniformAsymptoticPayoffEquivalence.lean` transfers an exact target across
+- `Equilibrium/Uniform/AsymptoticPayoffEquivalence.lean` transfers an exact target across
   profile-uniform finite-average payoff gaps tending to zero.
-- `UniformExpectedPotentialShaping.lean` applies that transfer to bounded
+- `Equilibrium/Uniform/ExpectedPotentialShaping.lean` applies that transfer to bounded
   expected-potential coboundaries with an `O(1/T)` endpoint telescope.
-- `UniformPayoffExistenceClosure.lean` proves target-free existence closure
+- `Equilibrium/Uniform/PayoffExistenceClosure.lean` proves target-free existence closure
   under uniform stage-payoff limits on a fixed finite skeleton.
-- `QuittingUniformPayoffExistenceClosure.lean` specializes the closure theorem
+- `Models/Quitting/UniformPayoffExistenceClosure.lean` specializes the closure theorem
   to uniformly convergent quitting reward tables.
-- `QuittingRootPerturbation.lean` gives local one-coordinate payoff and regret
+- `Models/Quitting/RootPerturbation.lean` gives local one-coordinate payoff and regret
   bounds; it should not be confused with target-free closure.
 
 These tools transport an existing mechanism or existence result.  They do not
@@ -128,7 +128,7 @@ supply density of solved games or construct a missing certificate.
 
 ## Boundary analysis and diagnostics
 
-`QuittingBoundaryHolonomyAll.lean` has two complementary compactness modes.
+`UniformEquilibrium/Quitting/Boundary/Holonomy/All.lean` has two complementary compactness modes.
 Fixed-cutoff and fixed-last lifts retain the actual root block, endpoints, and
 provenance.  Tangent compactness retains only bounded coefficient coordinates
 and normalized safety obstructions.  Neither mode closes the escaping-length
@@ -148,7 +148,7 @@ The general reverse diagnostics are:
 - convergence of transition kernels alone does not preserve uniform-payoff
   targets.
 
-`QuittingTruncatedLedgerCapCounterexample.lean` adds a certificate-specific
+`UniformEquilibrium/Quitting/Debt/Ledger/TruncatedLedgerCapCounterexample.lean` adds a certificate-specific
 fence: even a solved two-player zero-solo game need not admit a common-cutoff
 truncated-ledger package.  The package compiler is sound, but its hypothesis is
 not a necessary normal form for equilibrium existence.
@@ -187,7 +187,7 @@ The following distinctions are load-bearing across the toolkit:
 ## Open leaves
 
 The two intentional conjecture leaves remain in
-`UniformExistenceConjecture.lean` and `QuittingConjecture.lean`.  The former
+`UniformExistenceConjecture.lean` and `UniformEquilibrium/Quitting/Conjecture/Basic.lean`.  The former
 truncated-ledger producer leaf was removed after a two-player counterexample;
 its valid conditional compiler is indexed above.  Existing positive compilers
 narrow what the two genuine leaves must produce, but do not discharge the

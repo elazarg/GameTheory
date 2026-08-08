@@ -89,7 +89,7 @@ The capstone is
 isCompact_quittingEssentialAPSGreatestFamily_of_compact_convex_unique_live
 ```
 
-in `QuittingEssentialAPSCompactFixedPointLive.lean`.
+in `UniformEquilibrium/Quitting/EssentialAPS/CompactFixedPointLive.lean`.
 
 ## 3. Coherent executable runs
 
@@ -189,7 +189,7 @@ gap_mul_quittingEssentialAPSOwnerWindowMass_le_bound_add_opponentMass
 div_le_quittingEssentialAPSOpponentWindowMass_of_windowMass_le
 ```
 
-in `QuittingEssentialAPSOpponentMass.lean`.
+in `UniformEquilibrium/Quitting/EssentialAPS/OpponentMass.lean`.
 
 ## 5. One positive mass constant at every shift
 
@@ -213,7 +213,7 @@ for all `start`.  The theorem is
 exists_uniform_quittingEssentialAPSWindowMass_along_successor_path_unique_live
 ```
 
-in `QuittingEssentialAPSPathContraction.lean`.
+in `UniformEquilibrium/Quitting/EssentialAPS/PathContraction.lean`.
 
 After concatenating `q` such windows, total mass is at least `q * nu`.  Choose
 `q` so that
@@ -268,8 +268,8 @@ isQuittingOpponentBlockContraction_singletonRoots_of_windowMass
 exists_quittingEssentialAPSPath_opponentBlockContraction_unique_live
 ```
 
-in `QuittingEssentialAPSOpponentContraction.lean` and
-`QuittingEssentialAPSPathContraction.lean`.
+in `UniformEquilibrium/Quitting/EssentialAPS/OpponentContraction.lean` and
+`UniformEquilibrium/Quitting/EssentialAPS/PathContraction.lean`.
 
 ## 7. Infinite contracted APS path
 
@@ -279,7 +279,7 @@ The final composition is
 exists_quittingEssentialAPSInfiniteRun_with_opponentBlockContraction_unique_live
 ```
 
-in `QuittingEssentialAPSInfiniteContraction.lean`.
+in `UniformEquilibrium/Quitting/EssentialAPS/InfiniteContraction.lean`.
 
 Under compact convex carriers, a finite unique-live successor map, finite-window
 face avoidance, terminal-freeness, and uniform boundedness, every initial
@@ -320,8 +320,8 @@ and the component capstone is
 quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live_adaptiveMesh
 ```
 
-in `QuittingInfiniteVariableSingletonMeshCertificate.lean` and
-`QuittingEssentialAPSAdaptiveMeshUniformPayoff.lean`, respectively.
+in `UniformEquilibrium/Quitting/Terminal/TargetTail/InfiniteVariableSingletonMeshCertificate.lean` and
+`UniformEquilibrium/Quitting/EssentialAPS/AdaptiveMeshUniformPayoff.lean`, respectively.
 
 ### Optional common hazard ceiling
 
@@ -365,7 +365,7 @@ The carrier-level theorem is
 exists_uniform_quittingEssentialAPSHazardCeiling_unique_live
 ```
 
-in `QuittingEssentialAPSUniformHazard.lean`.
+in `UniformEquilibrium/Quitting/EssentialAPS/UniformHazard.lean`.
 
 ## 9. Quantitative fixed-mesh specializations
 
@@ -406,7 +406,7 @@ The source-agnostic capstone is
 isUniformEquilibriumPayoff_of_singletonFlow_uniformHazard
 ```
 
-in `QuittingInfiniteSingletonMeshCertificate.lean`. It assumes only a bounded
+in `UniformEquilibrium/Quitting/Terminal/TargetTail/InfiniteSingletonMeshCertificate.lean`. It assumes only a bounded
 viable singleton-flow path, a common hazard ceiling below one, a collision-
 surplus bound, and opponent block contraction. The essential-APS specialization
 is
@@ -415,55 +415,55 @@ is
 quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live
 ```
 
-in `QuittingEssentialAPSUniformPayoff.lean`.
+in `UniformEquilibrium/Quitting/EssentialAPS/UniformPayoff.lean`.
 
 ## Module map
 
-1. `QuittingFleschSuccessor.lean`: exact asymmetric successor graph.
-2. `QuittingEssentialAPS.lean`: algebraic, segment, and proper APS prefixes.
-3. `QuittingEssentialAPSFixedPoint.lean`: greatest restricted fixed family.
-4. `QuittingEssentialAPSConvexProgress.lean`: convex join and proper progress.
-5. `QuittingEssentialAPSConvexFixedPoint.lean`: convex greatest fibers and
+1. `UniformEquilibrium/Quitting/Root/FleschSuccessor.lean`: exact asymmetric successor graph.
+2. `UniformEquilibrium/Quitting/EssentialAPS/Basic.lean`: algebraic, segment, and proper APS prefixes.
+3. `UniformEquilibrium/Quitting/EssentialAPS/FixedPoint.lean`: greatest restricted fixed family.
+4. `UniformEquilibrium/Quitting/EssentialAPS/ConvexProgress.lean`: convex join and proper progress.
+5. `UniformEquilibrium/Quitting/EssentialAPS/ConvexFixedPoint.lean`: convex greatest fibers and
    unique-live local progress.
-6. `QuittingEssentialAPSCircuitProgress.lean` and
-   `QuittingEssentialAPSCircuitProgressTotal.lean`: zero-mass propagation and
+6. `UniformEquilibrium/Quitting/EssentialAPS/CircuitProgress.lean` and
+   `UniformEquilibrium/Quitting/EssentialAPS/CircuitProgressTotal.lean`: zero-mass propagation and
    active-face exclusion.
-7. `QuittingEssentialAPSCompactFixedPoint.lean` and
-   `QuittingEssentialAPSCompactFixedPointLive.lean`: closure bootstrap and
+7. `UniformEquilibrium/Quitting/EssentialAPS/CompactFixedPoint.lean` and
+   `UniformEquilibrium/Quitting/EssentialAPS/CompactFixedPointLive.lean`: closure bootstrap and
    compact greatest fibers.
-8. `QuittingEssentialAPSFiniteRun.lean`: finite executable runs.
-9. `QuittingEssentialAPSInfiniteRun.lean`: coherent terminal-free infinite
+8. `UniformEquilibrium/Quitting/EssentialAPS/FiniteRun.lean`: finite executable runs.
+9. `UniformEquilibrium/Quitting/EssentialAPS/InfiniteRun.lean`: coherent terminal-free infinite
    runs.
-10. `QuittingEssentialAPSUniformWindowMass.lean` and
-    `QuittingEssentialAPSUniformWindowMassLive.lean`: compact separation and
+10. `UniformEquilibrium/Quitting/EssentialAPS/UniformWindowMass.lean` and
+    `UniformEquilibrium/Quitting/EssentialAPS/UniformWindowMassLive.lean`: compact separation and
     positive total mass.
-11. `QuittingEssentialAPSOpponentMass.lean`: successor-coordinate charging.
-12. `QuittingEssentialAPSOpponentContraction.lean`: product-sum contraction.
-13. `QuittingEssentialAPSPathContraction.lean`: shifted-window and block
+11. `UniformEquilibrium/Quitting/EssentialAPS/OpponentMass.lean`: successor-coordinate charging.
+12. `UniformEquilibrium/Quitting/EssentialAPS/OpponentContraction.lean`: product-sum contraction.
+13. `UniformEquilibrium/Quitting/EssentialAPS/PathContraction.lean`: shifted-window and block
     composition.
-14. `QuittingEssentialAPSInfiniteContraction.lean`: infinite contracted path.
-15. `QuittingEssentialAPSRegression.lean`: zero-mass self-loop regression.
-16. `QuittingEssentialAPSCycle.lean`: compilation of a supplied finite proper
+14. `UniformEquilibrium/Quitting/EssentialAPS/InfiniteContraction.lean`: infinite contracted path.
+15. `UniformEquilibrium/Quitting/EssentialAPS/Regression.lean`: zero-mass self-loop regression.
+16. `UniformEquilibrium/Quitting/EssentialAPS/Cycle.lean`: compilation of a supplied finite proper
     cycle.
-17. `QuittingInfinitePathSupersolution.lean`: source-agnostic nonperiodic
+17. `UniformEquilibrium/Quitting/Paths/InfinitePathSupersolution.lean`: source-agnostic nonperiodic
     quit-error comparison and accuracy-indexed compiler.
-18. `QuittingEssentialAPSUniformHazard.lean`: compact terminal-free separation
+18. `UniformEquilibrium/Quitting/EssentialAPS/UniformHazard.lean`: compact terminal-free separation
     and the uniform coarse-hazard ceiling.
-19. `QuittingInfiniteSingletonMesh.lean`: fixed logarithmic subdivision and
+19. `UniformEquilibrium/Quitting/Terminal/TargetTail/InfiniteSingletonMesh.lean`: fixed logarithmic subdivision and
     exact interpolated Bellman transport.
-20. `QuittingInfiniteSingletonMeshSurvival.lean`: exact survival transport and
+20. `UniformEquilibrium/Quitting/Terminal/TargetTail/InfiniteSingletonMeshSurvival.lean`: exact survival transport and
     preservation of opponent block contraction.
-21. `QuittingInfiniteSingletonMeshCertificate.lean`: local collision control,
+21. `UniformEquilibrium/Quitting/Terminal/TargetTail/InfiniteSingletonMeshCertificate.lean`: local collision control,
     nonperiodic certificates, and the generic singleton-flow payoff theorem.
-22. `QuittingEssentialAPSUniformPayoff.lean`: essential-APS uniform-payoff
+22. `UniformEquilibrium/Quitting/EssentialAPS/UniformPayoff.lean`: essential-APS uniform-payoff
     capstone.
-23. `QuittingInfiniteVariableSingletonMesh.lean`,
-    `QuittingInfiniteVariableSingletonMeshSurvival.lean`, and
-    `QuittingInfiniteVariableSingletonMeshCertificate.lean`: adaptive
+23. `UniformEquilibrium/Quitting/Terminal/TargetTail/InfiniteVariableSingletonMesh.lean`,
+    `UniformEquilibrium/Quitting/Terminal/TargetTail/InfiniteVariableSingletonMeshSurvival.lean`, and
+    `UniformEquilibrium/Quitting/Terminal/TargetTail/InfiniteVariableSingletonMeshCertificate.lean`: adaptive
     finite per-coarse-stage subdivision, survival transport, and certificates.
-24. `QuittingEssentialAPSAdaptiveMeshUniformPayoff.lean`: adaptive capstone.
+24. `UniformEquilibrium/Quitting/EssentialAPS/AdaptiveMeshUniformPayoff.lean`: adaptive capstone.
 
-`QuittingEssentialAPSAll.lean` exports the complete layer.
+`UniformEquilibrium/Quitting/EssentialAPS/All.lean` exports the complete layer.
 
 ## Scope boundary
 

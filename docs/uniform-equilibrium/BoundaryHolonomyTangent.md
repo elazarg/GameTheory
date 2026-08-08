@@ -126,15 +126,15 @@ and a decoder from tangent data remain separate obligations.
 
 ## Lean surface
 
-- `QuittingBoundaryHolonomyAll.lean` is the public umbrella for both the
+- `UniformEquilibrium/Quitting/Boundary/Holonomy/All.lean` is the public umbrella for both the
   source-retaining fixed-cutoff and coefficient/tangent branches.
-- `QuittingBoundaryHolonomyAffineResidual.lean` contains affine residual,
+- `UniformEquilibrium/Quitting/Boundary/Holonomy/AffineResidual.lean` contains affine residual,
   repetition, pumping, and idempotent algebra.
-- `QuittingBoundaryHolonomyMaxAffineResidual.lean` contains the max-affine
+- `UniformEquilibrium/Quitting/Boundary/Holonomy/MaxAffineResidual.lean` contains the max-affine
   residual, target-safety, repetition, and idempotent layer.
-- `QuittingBoundaryHolonomySelfSimilarity.lean` contains playerwise
+- `UniformEquilibrium/Quitting/Boundary/Holonomy/SelfSimilarity.lean` contains playerwise
   self-similarity and synchronized repetition.
-- `QuittingBoundaryHolonomyTangent.lean` contains absorbed-mass normal forms
+- `UniformEquilibrium/Quitting/Boundary/Holonomy/Tangent.lean` contains absorbed-mass normal forms
   and max-plus dynamics.
-- `QuittingBoundaryHolonomyRealizedTangent.lean` contains actual-block bounds,
+- `UniformEquilibrium/Quitting/Boundary/Holonomy/RealizedTangent.lean` contains actual-block bounds,
   neutral forms, and compact coordinate subsequences.

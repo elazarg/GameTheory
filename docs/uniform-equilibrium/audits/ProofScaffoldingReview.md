@@ -50,9 +50,9 @@ tip and are corrected here rather than rewritten in place:
 
 - The claim that no declaration outside `AnalyticBellmanExistence.lean`
   consumes `analyticBellmanGermExistence`, and none outside
-  `AnalyticEndpointAtlas.lean` consumes `AnalyticEndpointAtlasLeaf`, was
+  `UniformEquilibrium/VanishingDiscount/Analytic/Endpoint/Atlas.lean` consumes `AnalyticEndpointAtlasLeaf`, was
   true at `98cc266` and was closed by the very next commit (`6763c94`):
-  `AnalyticEndpointExistence.lean` derives a typed endpoint leaf for every
+  `UniformEquilibrium/VanishingDiscount/Analytic/Endpoint/Existence.lean` derives a typed endpoint leaf for every
   finite game from germ existence, and
   `AttainableEndpointCorrespondence.lean` (`d5434c7`) consumes the germ as
   well. The "easy missing wiring" is done. The leaf-resolution difficulty
@@ -75,11 +75,11 @@ on 2026-07-31. The worktree was active during the review. Five untracked
 stochastic-game modules were excluded from the stable score:
 
 ```text
-AdaptivePotentialFiniteTimeTargetBounds.lean
+UniformEquilibrium/Certificates/Adaptive/PotentialFiniteTimeTargetBounds.lean
 FiniteHorizonProfileLawTransfer.lean
 FiniteRankedTerminalChildNashClosure.lean
-PublicFirstHitStoppingRule.lean
-PublicHistoryFirstHitStoppingAcceptance.lean
+UniformEquilibrium/Certificates/Public/FirstHitStoppingRule.lean
+UniformEquilibrium/Certificates/Public/HistoryFirstHitStoppingAcceptance.lean
 ```
 
 The purpose of this review is not to discount the large body of checked
@@ -198,7 +198,7 @@ The relevant declarations are:
 - `AnalyticBellmanExistence.lean:65` — `analyticBellmanGermExistence`;
 - `AnalyticBellmanHierarchy.lean:1615` —
   `exists_firstHierarchyResponse`;
-- `AnalyticEndpointAtlas.lean:606` — classification of a first hierarchy
+- `UniformEquilibrium/VanishingDiscount/Analytic/Endpoint/Atlas.lean:606` — classification of a first hierarchy
   response into an honest endpoint leaf;
 - `Uniform.lean:207` — the unproved global constructor, with the `sorry` at
   line 211.
@@ -206,7 +206,7 @@ The relevant declarations are:
 At this snapshot:
 
 - no declaration outside `AnalyticBellmanExistence.lean` consumes `analyticBellmanGermExistence`;
-- no declaration outside `AnalyticEndpointAtlas.lean` consumes
+- no declaration outside `UniformEquilibrium/VanishingDiscount/Analytic/Endpoint/Atlas.lean` consumes
   `AnalyticEndpointAtlasLeaf`.
 
 The missing wiring from germ existence to the classifier is easy. Resolving the
@@ -275,7 +275,7 @@ Scaffolding is useful when it exposes a precise quantifier or interface
 error. It is not itself progress on the conjecture when its premise already
 contains the desired strategic output.
 
-The clearest example is `AnalyticEndpointAtlas.lean`. It has one semantic
+The clearest example is `UniformEquilibrium/VanishingDiscount/Analytic/Endpoint/Atlas.lean`. It has one semantic
 leaf and thirteen nonsemantic leaves. Its reconstruction structures
 ultimately contain fields returning an
 `IsAdaptivePotentialCertificateAt`. The eliminator
@@ -283,7 +283,7 @@ ultimately contain fields returning an
 once a certificate-producing reconstruction is supplied, the leaf closes.
 It does not construct that reconstruction.
 
-Likewise, `PublicLocalResponseRecursion.lean` assumes:
+Likewise, `UniformEquilibrium/Certificates/Public/LocalResponseRecursion.lean` assumes:
 
 - mixed-player continuation compatibility;
 - a legal core-history entry interface;

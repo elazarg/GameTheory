@@ -68,7 +68,7 @@
 > corrected `(RC)`/fifth-obstruction exhaustion,
 > rational rejection packets, both horizon-order identities, and sharp span
 > constants remain unformalized. Q97's exact cyclic packet minimum and
-> normalized three-phase rigidity are landed in `FTVCyclicMinimality.lean`
+> normalized three-phase rigidity are landed in `UniformEquilibrium/Quitting/Examples/FTV/CyclicMinimality.lean`
 > (`408bf3b`); its equilibrium-theoretic `(Q1)--(Q5)` bridge, sharp modulus,
 > and weighted-regret boundary remain outside Lean.
 >
@@ -78,7 +78,7 @@
 > formalizes both security adapters, deterministic cone resets, live-tail
 > accounting, the target-free `14ε` survival/occupation bound, and the
 > unconditional exclusion of `(1/2,2/3)`. The capstone is
-> `SorinOccupationVanishing.lean` (`c1161dc`), importing the separation
+> `UniformEquilibrium/Examples/Sorin/OccupationVanishing.lean` (`c1161dc`), importing the separation
 > interface landed at `6b0fc81`. This closes the endpoint-separation fence, not
 > the converse realization of every point on Sorin's uniform segment.
 >
@@ -394,8 +394,8 @@ finished until its focused `lake build` passes.
 - **DONE (b3fd1bb, 15d49dc).** Q71's two-state pure-externality game: game,
   exact deviation invariance, every-profile-is-an-equilibrium, direct
   `IsUniformEquilibriumPayoff` at (0,0) and (1,1)
-  (`PureExternalityCycle.lean`), and the machine-checked Route-0 acceptance
-  pair `routeZero_acceptance` (`PureExternalityCycleHolonomy.lean`).
+  (`UniformEquilibrium/Examples/PureExternality/Cycle.lean`), and the machine-checked Route-0 acceptance
+  pair `routeZero_acceptance` (`UniformEquilibrium/Examples/PureExternality/CycleHolonomy.lean`).
   Remaining honest gap: no germ-level Bellman tagging of the example.
 - **Covered at the abstract level (d9b741b).** Q77's self-child discipline
   keeper landed as the rule-system falsifier

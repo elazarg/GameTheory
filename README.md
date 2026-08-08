@@ -57,10 +57,11 @@ theory results.
   transitions, one-step-absorbing games, single-controller zero-sum games
   (modulo one named hypothesis), and the Big Match (Blackwell-Ferguson,
   machine-checked with its history-dependence no-go).
-- See `GameTheory/Concepts/Stochastic/README.md` for a map of the program, and
-  `GameTheory/Concepts/Stochastic/UniformEquilibriumProblem.md` for the
-  mathematical statement of the open uniform-equilibrium existence problem,
-  what this development has established toward it, and what remains open.
+- See `GameTheory/Concepts/Stochastic/README.md` for the reusable library,
+  `GameTheory/Concepts/Stochastic/UniformEquilibrium/README.md` for the research
+  program, and
+  `GameTheory/Concepts/Stochastic/UniformEquilibrium/UniformEquilibriumProblem.md`
+  for the mathematical statement and current formal boundary.
 
 **Mechanism design, auctions, and social choice**
 

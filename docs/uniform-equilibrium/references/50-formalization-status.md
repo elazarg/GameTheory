@@ -15,7 +15,7 @@ Inspected 2026-08-02; the fixed-public credibility checkpoints are commits
 checked directly in the tree.
 
 **Credibility addendum, 2026-08-02.**
-`PublicResponseCredibilityCriterion.lean` and
+`UniformEquilibrium/Architectures/PublicResponse/CredibilityCriterion.lean` and
 `ReachablePublicResponseCredibilityCriterion.lean` are committed,
 build-checked, and imported by `GameTheory.lean`. They prove the supplied
 finite-public-architecture implication from (T0)/(Ti)/(N)/(P) to uniform
@@ -88,7 +88,7 @@ formalized in Lean, and the citations do not certify those bridge steps.
 
 ### The conjecture itself
 
-`GameTheory/Concepts/Stochastic/UniformExistenceConjecture.lean` (`exists_uniformDeviationCapConstructor`) —
+`GameTheory/Concepts/Stochastic/UniformEquilibrium/Conjecture/UniformExistenceConjecture.lean` (`exists_uniformDeviationCapConstructor`) —
 `StochasticGame.exists_uniformDeviationCapConstructor`, whose body is the
 repository's **only** intentional `sorry` (line 211, enforced by
 `scripts/check_lean_placeholders.py`). Verified: `rg sorry` over `GameTheory/`
@@ -102,18 +102,18 @@ The two waists:
   uniform-equilibrium-payoff property by `hasUniformDeviationCapConstructor_iff`
   (`Uniform.lean:181`).
 - **Verification waist** — the adaptive certificates in
-  `AdaptiveCertificate.lean`.
+  `UniformEquilibrium/Certificates/Adaptive/Certificate.lean`.
 
 ### Classical results that ARE formalized here
 
 | Literature result | Lean declaration | File:line |
 |---|---|---|
-| Shapley 1953, discounted zero-sum value + exact discounted Nash | `shapleyBehaviorProfile_isDiscountedNash` | `ZeroSum.lean:607` |
+| Shapley 1953, discounted zero-sum value + exact discounted Nash | `shapleyBehaviorProfile_isDiscountedNash` | `ZeroSum/Basic.lean:607` |
 | Fink 1964, discounted stationary equilibria, `n` players | `exists_isDiscountedStationaryBellmanEq` | `Fink.lean:1238` |
-| Blackwell–Ferguson 1968, **the Big Match**, uniform value | `exists_uniformEquilibriumPayoff_live` | `BigMatchUniform.lean:1913` |
-| Sorin 1986 absorbing game, discount-constant behavioral Nash at `(1/2, 2/3)` | `SorinAbsorbingGame.isDiscountedNash` | `SorinAbsorbingGame.lean` |
-| Mertens–Neyman 1981 — **conditional** reduction to two named hypotheses | `uniformValue_of_rowColumnTrackingCertificates` | `MertensNeymanCriterion.lean:1619` |
-| Sorin 1986 separation direction and discounted-endpoint exclusion | `uniformEquilibriumPayoff_weighted_eq_two`; `discountedEndpoint_not_isUniformEquilibriumPayoff` | `SorinOccupationVanishing.lean` (umbrella-imported, `c1161dc`) |
+| Blackwell–Ferguson 1968, **the Big Match**, uniform value | `exists_uniformEquilibriumPayoff_live` | `UniformEquilibrium/Examples/BigMatch/Uniform.lean:1913` |
+| Sorin 1986 absorbing game, discount-constant behavioral Nash at `(1/2, 2/3)` | `SorinAbsorbingGame.isDiscountedNash` | `UniformEquilibrium/Examples/Sorin/AbsorbingGame.lean` |
+| Mertens–Neyman 1981 — **conditional** reduction to two named hypotheses | `uniformValue_of_rowColumnTrackingCertificates` | `UniformEquilibrium/SpecialCases/ZeroSum/MertensNeyman/Criterion.lean:1619` |
+| Sorin 1986 separation direction and discounted-endpoint exclusion | `uniformEquilibriumPayoff_weighted_eq_two`; `discountedEndpoint_not_isUniformEquilibriumPayoff` | `UniformEquilibrium/Examples/Sorin/OccupationVanishing.lean` (umbrella-imported, `c1161dc`) |
 
 Special cases of the conjecture proved here (these are *our* results, not
 transcriptions of published theorems):
@@ -124,7 +124,7 @@ transcriptions of published theorems):
 | Single-state games | `exists_uniformEquilibriumPayoff_of_subsingleton_state` | `Absorbing.lean:225` |
 | Action-independent transitions | `exists_uniformEquilibriumPayoff_of_isActionIndependent` | `TransitionIndependent.lean:227` |
 | All children absorbing after one step | `exists_uniformEquilibriumPayoff_of_absorbingChildren` | `OneStepAbsorbingChildUniform.lean:96` |
-| Zero-sum single-controller (modulo one named LP hypothesis) | `exists_uniformEquilibriumPayoff_of_singleController` | `SingleController.lean:451` |
+| Zero-sum single-controller (modulo one named LP hypothesis) | `exists_uniformEquilibriumPayoff_of_singleController` | `UniformEquilibrium/SpecialCases/SingleController/Basic.lean:451` |
 
 ### Classical results NOT formalized here
 
@@ -133,7 +133,7 @@ The load-bearing absences recorded by this audit are:
 - **Mertens–Neyman unconditional.** Only the conditional criterion exists.
 - **Bewley–Kohlberg.** The whole semi-algebraic/Puiseux apparatus was built
   (`Math/CurveSelection/`, 45 files; `Math/AlgebraicSelection.lean`;
-  `Math/PolynomialSignCell.lean`; `BellmanVariety.lean`;
+  `Math/PolynomialSignCell.lean`; `UniformEquilibrium/VanishingDiscount/Bellman/Variety.lean`;
   `DiscountedShapleyAlgebraic.lean`) but the theorem — bounded variation of
   `λ ↦ v_λ`, convergence of `v_λ`, `lim vₙ = lim v_λ` — is not stated.
 - **Kohlberg 1974**, zero-sum absorbing games with a live state.
@@ -158,11 +158,11 @@ The load-bearing absences recorded by this audit are:
 These have no direct counterpart in the literature — they are falsifiers
 generated by this program and kept permanently:
 
-`BigMatchNoMarkov.lean` (uniform witnesses must be history-dependent),
-`BigMatchFinkEndpoint.lean`, `BigMatchDeficitIndexNoGo.lean` (the linear
+`UniformEquilibrium/Examples/BigMatch/NoMarkov.lean` (uniform witnesses must be history-dependent),
+`UniformEquilibrium/Examples/BigMatch/FinkEndpoint.lean`, `UniformEquilibrium/Examples/BigMatch/DeficitIndexNoGo.lean` (the linear
 running-deficit index is not a universal Mertens–Neyman constructor),
-`DiscountBiasNoGo.lean`, `FinkTangentCounterexample.lean`,
-`FinkSelectionCounterexample.lean`, `PureExternalityCycle.lean`.
+`DiscountBiasNoGo.lean`, `UniformEquilibrium/VanishingDiscount/Fink/TangentCounterexample.lean`,
+`UniformEquilibrium/VanishingDiscount/Fink/SelectionCounterexample.lean`, `UniformEquilibrium/Examples/PureExternality/Cycle.lean`.
 
 Note that `BigMatchNoMarkov` independently reproduces, in a checked form, the
 Markov-insufficiency content that Thuijsman's *Big Match and the Paris Match*

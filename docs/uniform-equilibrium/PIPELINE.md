@@ -36,7 +36,7 @@ island, reported as accepted exceptions whose exemption is **earned** by a
 containment check that fails the audit if anything imports the island. The two
 intentional `sorry` declarations are
 `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean` and
-`quittingGame_exists_uniformEquilibriumPayoff` in `QuittingConjecture.lean`.
+`quittingGame_exists_uniformEquilibriumPayoff` in `UniformEquilibrium/Quitting/Conjecture/Basic.lean`.
 These are guarded by the placeholder/leaf audit and documented in the
 [proof-engineering audit](../../ephemeral/ProofEngineeringAudit.md), rather than
 blockers hidden in the P0 mathematical status.
@@ -918,7 +918,7 @@ of generality**, since a counterexample anywhere yields one in the branch.
 program's only weight provably in the third branch **alone** — not zero-solo, no
 admissible cycle of any period, isolated-negative present — **is repairable**,
 and the repair delivers the real `IsUniformEquilibriumPayoff`, machine-checked
-(`QuittingDisjunctionCounterexampleRepair.lean`). Its isolated mismatch is
+(`UniformEquilibrium/Quitting/Boundary/Repair/DisjunctionCounterexampleRepair.lean`). Its isolated mismatch is
 exactly `1 = -r_2({2})`, and `δ = 0`: no positive floor exists against all
 behaviour on this weight.
 
@@ -1163,7 +1163,7 @@ preserves `ε`-equilibria in both directions. Quitting games are unaffected
 (`Act = Bool` everywhere).
 
 **Acceptance.** **PARTIAL, 2026-08-04.** The reduction's mathematical content is
-landed in `ActionLegalityNormalization.lean`: a legality predicate with nonempty
+landed in `Transform/ActionLegality/Normalization.lean`: a legality predicate with nonempty
 legal sets, the normalization replacing illegal components, agreement with the
 original stage payoff and transition on jointly-legal profiles, and the transfer
 of an epsilon-Nash profile from the normalized game to the legality-constrained
@@ -1175,7 +1175,7 @@ built on the heavier `BehaviorProfile`/`Hist` machinery in `Uniform.lean`.
 **The converse splits by level, and the split is now settled at the lower one.**
 
 *Markov level: PROVED.* `isεNormalizedMarkovNash_of_legal`
-(`ActionLegalityMarkovConverse.lean`) closes it. The observability worry cannot
+(`Transform/ActionLegality/MarkovConverse.lean`) closes it. The observability worry cannot
 arise here for two independent reasons. `MarkovProfile` has no history
 argument, and both notions are single-stage payoff comparisons with no
 continuation, so a signal received earlier has no channel to a later decision.
@@ -1196,7 +1196,7 @@ normalized `StochasticGame` presentation, and a legality-constrained analogue
 of `IsUniformEquilibriumPayoff` over legal behaviour profiles.
 
 **Both objects now exist (`L`), and the projection repair is refuted.**
-`ActionLegalityBehaviorTransfer.lean` assembles the padded game as an actual
+`Transform/ActionLegality/BehaviorTransfer.lean` assembles the padded game as an actual
 `StochasticGame`, lifts agreement from a single stage to whole trajectories --
 equal history distributions and payoffs at every horizon for any profile that
 plays only legal actions -- and closes the legality-restricted transfer in both
@@ -1214,7 +1214,7 @@ failure of information recovery, and it lands precisely where the row already
 said it would: normalized-action histories.
 
 **Normalized histories are built, additively (`L`), and the obstruction is now
-localized.** `ActionLegalityNormalizedHistory.lean` gets them as a *subtype*
+localized.** `Transform/ActionLegality/NormalizedHistory.lean` gets them as a *subtype*
 rather than a quotient — stagewise normalization is idempotent, so each class
 already has a canonical representative inside `Hist`, and everything stays
 within the existing `histDist`/`totalPayoff` machinery. No core type changed.
@@ -1239,7 +1239,7 @@ depend on opponent behaviour**, which is a strictly stronger localization than
 the signalling reading.
 
 **Disintegration works (`L`), and the row now reduces to one question.**
-`ActionLegalityDisintegration.lean` conditions an arbitrary deviator's realized
+`Transform/ActionLegality/Disintegration.lean` conditions an arbitrary deviator's realized
 action on the normalized history instead of projecting pointwise, which defeats
 the non-injective inversion outright. Against a background profile that is both
 label-blind and legal, the disintegrated deviator's raw trajectory equals the
@@ -1339,7 +1339,7 @@ a realizable-continuation wrapper accepted by every semantic consumer, which no
 `tail`-parameterized theorem can bypass. Do **not** bundle absorption into each
 local successor certificate: individual non-absorbing successor rows are
 legitimate, and the positive-absorption condition is global over a cyclic block,
-already expressed there (`QuittingCyclePinnedDebt.lean:143`). Bundling it
+already expressed there (`UniformEquilibrium/Quitting/Debt/Dynamic/CyclePinnedDebt.lean:143`). Bundling it
 locally would distort the mathematics, and the type-error guarantee holds only
 if weaker raw predicates cannot bypass the consumer interface. A wrapper that no
 `tail`-parameterized theorem can bypass.
@@ -1357,7 +1357,7 @@ existing test.
 **Acceptance.** Vacuity becomes a type error instead of a missing hypothesis.
 This trap has been rediscovered independently five or more times.
 
-**PARTIAL.** `QuittingRealizedContinuation` (in `QuittingCyclePinnedDebt.lean`)
+**PARTIAL.** `QuittingRealizedContinuation` (in `UniformEquilibrium/Quitting/Debt/Dynamic/CyclePinnedDebt.lean`)
 bundles the absorption obligation as a field, with `ofBlock` as the
 cheap-migration constructor, unbundling companions, and the regression that the
 all-continue block does not inhabit it — reusing the existing forced-block
@@ -1490,7 +1490,7 @@ left implicit in the member lemmas that happen to discharge it.
 - **Status:** READY
 - **Lane:** P1
 - **Depends:** `le_of_lt_affine_on_unitInterval` (landed,
-  `QuittingTwoPlayerExistence.lean`); the general sure-exit-set theorem.
+  `UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean`); the general sure-exit-set theorem.
 - **Record:** [Two-player is
   closed](../../ideas/TwoPlayerBaseCaseExhaustion/TwoPlayerQuittingIsClosed.md)
 
@@ -1504,7 +1504,7 @@ on the rate square (hand-checked over all four corners and the interior), so
 genuinely non-stationary approximate equilibria are mandatory for some
 weights. `n = 2` itself is independently and unconditionally closed by
 `quittingGame_exists_uniformEquilibriumPayoff_twoPlayer`
-(`QuittingTwoPlayerExistence.lean`), via branch classification (zero-solo,
+(`UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean`), via branch classification (zero-solo,
 solo-quitter rate, pair-repair, joint-exit) rather than the six-scalar route,
 and needs no further work under this row. What survives here is the forward
 direction mined from that proof: generalize blocker designation to `n ≥ 3` —
@@ -1550,7 +1550,7 @@ API.
 
 **State.** `PARTIAL`. Scope corrected 2026-08-04: the table, the stationary
 no-go, and the vanishing-error family are already production in
-`QuittingTerminalPacketSimpleFallbackCounterexample.lean`; the actual gap is the
+`UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalPacketSimpleFallbackCounterexample.lean`; the actual gap is the
 stationary-to-behavioral upgrade. Route settled — the stopping-law identity plus
 a support-argmax lemma, **not** a non-stationary generalization of the
 constant-root complementarity algebra. Draft in `experiments/` has the
@@ -1708,7 +1708,7 @@ while forcing the predecessor's strictly positive; the coordinate sum is `1/2`
 at every phase, which the block-endpoint vertices cannot meet. The row
 dichotomy alone is purely algebraic and is the first landing target.
 
-**Acceptance.** **PARTIAL, 2026-08-05**, `QuittingCyclicWeightRowDichotomy.lean`.
+**Acceptance.** **PARTIAL, 2026-08-05**, `UniformEquilibrium/Quitting/Cycles/CyclicWeightRowDichotomy.lean`.
 The row dichotomy is proved: every exactly complementary row of this weight has
 at most one positive coordinate. The gain identity was **proved against the
 table, not assumed** — an independent hand re-derivation mis-copied an entry and
@@ -1765,7 +1765,7 @@ pricing in the deleted deficit, and no compactness/budget/projection shortcut.
 Component inventory: phase-switch wrapper landed; stopping index `i♯` landed;
 punishment floor landed; ε-bridge landed; reached-stage transfer in flight.
 **Missing**: ~~the cumulative-advantage ledger `W` and its index `i*`~~
-(**landed**, `QuittingLedgerPunishClock.lean` — summand pinned to the deleted
+(**landed**, `UniformEquilibrium/Quitting/Debt/Ledger/PunishClock.lean` — summand pinned to the deleted
 normalization, clocks and combinator, Abel cash-out, the assembled cap
 consuming a ledger condition); the rank-one decision-discrepancy argument and
 the "only repetitive continuing matters" deviation reduction — **both now
@@ -1774,7 +1774,7 @@ bound, the rank-one corollary, and the domination consequence with the
 unrestricted deviation quantifier made explicit — the step the architecture
 guard warns about is Part D, and the question says so); plus the small
 residuals: **ceiling-IR punishment attainment and Case-2 wiring landed**
-(`QuittingPhaseSwitchResiduals.lean`); the truncated-ledger transfer's
+(`UniformEquilibrium/Quitting/Cycles/PhaseSwitchResiduals.lean`); the truncated-ledger transfer's
 premise is **false** — the seed discrepancy at the truncation back-propagates
 geometrically, leaving a survival-weighted correction at every prefix index —
 and its honest form is a folding lemma riding the assembly's own
@@ -2193,7 +2193,7 @@ QuittingThreeBranchDisjunction (the trichotomy), machine-checked -------- [L]
                      families into terminal ε-Nash objects -------------- READY
                        |
         n = 2 capstone: quittingGame_exists_uniformEquilibriumPayoff_twoPlayer
-                     (QuittingTwoPlayerExistence.lean) -- branch
+                     (UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean) -- branch
                      classification directly, not via the compiler -------- [L]
                        |
         n >= 3: LEAN-P1-1, retargeted -- blocker designation generalizes;

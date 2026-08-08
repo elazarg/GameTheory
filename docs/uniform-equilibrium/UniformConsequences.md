@@ -51,17 +51,17 @@ perturbations.
 
 ## Lean surface
 
-- `UniformAsymptoticPayoffEquivalence.lean` contains the two transfer directions
+- `Equilibrium/Uniform/AsymptoticPayoffEquivalence.lean` contains the two transfer directions
   and their fixed-target equivalence.
-- `UniformExpectedPotentialShaping.lean` proves the expectation telescope,
+- `Equilibrium/Uniform/ExpectedPotentialShaping.lean` proves the expectation telescope,
   finite-average bound, and exact shaping invariance.
-- `UniformTailWidth.lean` and `UniformTailWidthObstruction.lean` contain the
+- `UniformEquilibrium/Diagnostics/Uniform/TailWidth.lean` and `UniformEquilibrium/Diagnostics/Uniform/TailWidthObstruction.lean` contain the
   thin-interval characterization and its positive-width contrapositive.
-- `UniformBoundedWork.lean` contains the bounded-work characterization and its
+- `UniformEquilibrium/Diagnostics/Uniform/BoundedWork.lean` contains the bounded-work characterization and its
   exact unbounded-work obstruction.
-- `UniformNonexistenceCertificate.lean` separately contains the late-horizon
+- `UniformEquilibrium/Diagnostics/Uniform/NonexistenceCertificate.lean` separately contains the late-horizon
   and terminal exploitability certificates and the exact finite-quitting
   fixed-gap characterization.
 - `TransitionPerturbationDiscontinuity.lean` contains the finite counterexample;
-  `UniformConsequences.lean` is the public entry point for the generic
+  `UniformEquilibrium/Diagnostics/Uniform/Consequences.lean` is the public entry point for the generic
   reverse-consequence layer above.

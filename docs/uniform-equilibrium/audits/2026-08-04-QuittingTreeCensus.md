@@ -8,7 +8,7 @@
 ## Placeholders
 
 Two `sorry`s, both deliberate: `quittingGame_exists_uniformEquilibriumPayoff`
-(`QuittingConjecture.lean`) and `exists_uniformDeviationCapConstructor`
+(`UniformEquilibrium/Quitting/Conjecture/Basic.lean`) and `exists_uniformDeviationCapConstructor`
 (`UniformExistenceConjecture.lean`). **Zero** occurrences of `sorryAx`,
 `native_decide`, `axiom`, `opaque`, `@[implemented_by]`, or `partial` in scope.
 
@@ -30,9 +30,9 @@ group: it contains no `IsUniformEquilibriumPayoff` term at all.
 
 **Two base bridges** carry everything:
 `quittingGame_exists_uniformEquilibriumPayoff_of_terminalNash_all_errors`
-(`QuittingTerminalUniformPayoffSelection.lean:53`) and
+(`UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformPayoffSelection.lean:53`) and
 `quittingGame_isUniformEquilibriumPayoff_of_terminalNash_exact`
-(`QuittingOwnerSoloCertification.lean:161`).
+(`UniformEquilibrium/Quitting/Punishment/OwnerSoloCertification.lean:161`).
 
 Above them sit roughly **twenty-five sufficient-condition theorems** whose
 conclusion is `IsUniformEquilibriumPayoff`: the zero-solo/admissible-cycle
@@ -43,7 +43,7 @@ absorbing or subsingleton states; and concrete-table capstones.
 
 **Exactly one theorem has `IsUniformEquilibriumPayoff` only in a hypothesis**:
 `uniformEquilibriumPayoff_weighted_eq_two_of_bottomRightOccupation_vanishing`
-(`SorinUniformSeparation.lean:153`).
+(`UniformEquilibrium/Examples/Sorin/UniformSeparation.lean:153`).
 
 ### The gap, stated plainly
 
@@ -51,11 +51,11 @@ absorbing or subsingleton states; and concrete-table capstones.
 one by one:
 
 - `IsQuittingZeroSolo ∨ HasAdmissibleAbsorbingQuittingCycle` — **actively
-  refuted** (`QuittingDisjunctionCounterexample.lean:676`).
+  refuted** (`UniformEquilibrium/Quitting/Boundary/Repair/DisjunctionCounterexample.lean:676`).
 - `QuittingOwnJoinMonotone` / `QuittingPositiveSoloOwnJoinMonotone` — defined
-  and consumed only inside `QuittingJoinMonotoneUniform.lean`; nothing proves
+  and consumed only inside `UniformEquilibrium/Quitting/Cycles/JoinMonotoneUniform.lean`; nothing proves
   either holds generally.
-- The debt-vanishing infima — `QuittingExactDynamicDebtVanishingCounterexample.lean`
+- The debt-vanishing infima — `UniformEquilibrium/Quitting/Debt/Dynamic/ExactDynamicDebtVanishingCounterexample.lean`
   exhibits a table where the exact-debt infimum is **positive** yet the game
   still has a uniform equilibrium payoff by an unrelated argument. So the
   criterion is **neither necessary** nor known to hold generally.
@@ -70,10 +70,10 @@ an arbitrary weight.
 Three modules in scope are imported by **nothing**, including `GameTheory.lean`,
 so the full-tree build does not compile them and they can rot silently:
 
-- `QuittingDynamicDebtClockDischarge.lean` — divergent-clock debt discharge.
-- `QuittingMarkedStrictTimeClosing.lean` — finite scalar contraction for
+- `UniformEquilibrium/Quitting/Debt/Dynamic/DebtClockDischarge.lean` — divergent-clock debt discharge.
+- `UniformEquilibrium/Quitting/Debt/Marked/StrictTimeClosing.lean` — finite scalar contraction for
   closing a marked cycle.
-- `QuittingVanishingChargeRecurrenceNoGo.lean` — `no_quarter_relativeReturn`:
+- `UniformEquilibrium/Quitting/Debt/Ledger/VanishingChargeRecurrenceNoGo.lean` — `no_quarter_relativeReturn`:
   compact recurrence need not beat a vanishing contraction charge.
 
 No `private` declaration looks like an accidentally-hidden export; all are
@@ -82,7 +82,7 @@ ordinary internal helpers.
 ## The one unused `Prop` placeholder
 
 `NoBoundedCompletelyAbsorbingInverseIterate`
-(`QuittingUnboundedInverseIterate.lean:213`) — never established, never
+(`UniformEquilibrium/Quitting/Boundary/Analytic/UnboundedInverseIterate.lean:213`) — never established, never
 consumed as a hypothesis, exactly as its docstring says. Its antecedent in
 `noBounded_of_noCompletelyAbsorbingInverseIterate` is itself proved false in
 the same file. Every other `Has…`/`Is…` Prop in scope has a genuine use.
@@ -120,15 +120,15 @@ demonstrate a positive construction outside a template's hypothesis
 - **Exact-debt versus dynamic-debt infrastructures.** Two parallel families
   with identical theorem shapes — chain compiler, infimum criterion — differing
   only in which debt functional bounds the terminal solo reward
-  (`QuittingFiniteChainTerminalCompiler.lean:453` ↔
-  `QuittingFiniteDynamicDebtCompiler.lean:167`;
-  `QuittingFiniteNashBellmanMinimizer.lean:654` ↔
-  `QuittingFiniteDynamicDebtOptimizer.lean:454`). The largest duplication in
+  (`UniformEquilibrium/Quitting/Terminal/TargetTail/FiniteChainTerminalCompiler.lean:453` ↔
+  `UniformEquilibrium/Quitting/Debt/Dynamic/FiniteDynamicDebtCompiler.lean:167`;
+  `UniformEquilibrium/Quitting/Bellman/Finite/NashBellmanMinimizer.lean:654` ↔
+  `UniformEquilibrium/Quitting/Debt/Dynamic/FiniteDynamicDebtOptimizer.lean:454`). The largest duplication in
   the tree.
-- Pair-repair versus mirror-pair-repair (`QuittingTwoPlayerPairRepair.lean:367`
+- Pair-repair versus mirror-pair-repair (`UniformEquilibrium/Quitting/Classification/TwoPlayer/PairRepair.lean:367`
   ↔ `:675`), with ~14 `mirror_*` helpers duplicating the primary computation.
   By design, role-reversal; acknowledged.
-- `isUniformEquilibriumPayoff_zero` ↔ `_one` (`PureExternalityCycle.lean:376`,
+- `isUniformEquilibriumPayoff_zero` ↔ `_one` (`UniformEquilibrium/Examples/PureExternality/Cycle.lean:376`,
   `:430`) — one proof template, two constants.
 - Periodic-compiler certificate versus singleton-arc-cycle certificate:
   **unsure, likely not duplication** — different contraction notions, and the

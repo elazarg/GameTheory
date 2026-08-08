@@ -1,6 +1,6 @@
 # Uniform payoffs from face circulations
 
-`QuittingFaceCirculationAll.lean` is the public umbrella for the production
+`UniformEquilibrium/Quitting/Circulation/FaceCirculationAll.lean` is the public umbrella for the production
 certificate/orbit/path chain, its concrete payoff examples, and the sharp
 two-coordinate boundary analyses. Downstream proofs that need only the generic
 compiler should import `MultiOwnerFaceCirculationCompactPath.lean` directly.

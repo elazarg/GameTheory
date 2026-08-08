@@ -1025,7 +1025,8 @@ by the nonzero bivariate polynomial `P` on `Set.Ioo 0 ρ`, eventually squarefree
 non-degenerate-in-`λ` (`hRv`, `hRlam`), and bounded, the tail variation modulus vanishes: for
 every `ε > 0` there is `δ > 0` with `eVariationOn w (Set.Ioo 0 δ) ≤ ENNReal.ofReal ε`. This is
 exactly the per-coordinate content of `MertensNeymanCriterion.StochasticGame.
-IsTailVariationBounded` (`GameTheory/Concepts/Stochastic/MertensNeymanCriterion.lean`), which
+IsTailVariationBounded` in the UE zero-sum `MertensNeymanCriterion.lean` module,
+which
 demands this ε–δ bound for a `ℝ → G.State → Payoff ι`-valued family `v`; the game-level assembly
 (finitely many `(state, player)` coordinates, each of the form `fun lam => v lam s who`, feeding
 this lemma and reassembled via `Pi`/`sup`-norm control) is left to the Stochastic layer. -/

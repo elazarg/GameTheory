@@ -11,7 +11,7 @@ import Math.UnivariatePolynomialCurveSelection
 import Math.WeierstrassCurve
 import Math.RamifiedWeierstrass
 import Mathlib.Data.Complex.Basic
-import GameTheory.Concepts.Stochastic.BellmanCurveGate
+import Math.PolynomialSignCell
 
 noncomputable section
 

@@ -53,7 +53,7 @@ quittingGame_exists_uniformEquilibriumPayoff_of_finiteForwardPackets
 ```
 
 in
-`GameTheory/Concepts/Stochastic/QuittingFiniteForwardProjectiveLasso.lean`.
+`GameTheory/Concepts/Stochastic/UniformEquilibrium/Quitting/Projective/FiniteForwardProjectiveLasso.lean`.
 
 ## 1. Finite charged-return pigeonhole theorem
 
@@ -189,7 +189,7 @@ quittingFiniteSingleSeamProjectiveLasso_of_reversedForwardBlock
 ```
 
 in
-`GameTheory/Concepts/Stochastic/QuittingForwardBlockSingleSeam.lean`.
+`GameTheory/Concepts/Stochastic/UniformEquilibrium/Quitting/Projective/ForwardBlockSingleSeam.lean`.
 
 Its Bellman, support, and rationality hypotheses are restricted to the
 selected interval.  It does not require an infinite extension satisfying
@@ -224,7 +224,7 @@ QuittingFiniteSingleSeamProjectiveLasso.toWeighted
 quittingGame_exists_uniformEquilibriumPayoff_of_singleSeamProjectiveLassos
 ```
 
-in `QuittingSingleSeamProjectiveLasso.lean`.
+in `UniformEquilibrium/Quitting/Projective/SingleSeamProjectiveLasso.lean`.
 
 ## 6. Support and rationality survive closing
 
@@ -278,7 +278,7 @@ targets theorem is unnecessary for projective closing.
 
 ## 8. Why the old recurrence no-go does not apply
 
-`QuittingVanishingChargeRecurrenceNoGo.lean` uses
+`UniformEquilibrium/Quitting/Debt/Ledger/VanishingChargeRecurrenceNoGo.lean` uses
 
 ```text
 state(n)  = 1/(n+1),

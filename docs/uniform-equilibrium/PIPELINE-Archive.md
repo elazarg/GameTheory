@@ -114,7 +114,7 @@ into FALSE-by-machine.
 sequence is complementary in every coordinate", and decide whether absorption
 follows from optimality.
 
-**State.** Both landed in `QuittingJointComplementarity.lean`, `sorry`-free.
+**State.** Both landed in `UniformEquilibrium/Quitting/Boundary/Repair/JointComplementarity.lean`, `sorry`-free.
 
 The predicate closes a **structural absence**: the tree had only a
 single-coordinate live-value notion and a periodic-only cyclic-block notion, so
@@ -165,7 +165,7 @@ multiplicative transport factor, never a denominator.
 middle deliverable was the transport split, not a bound on rowwise
 complementarity loss. Do not cite the three legs under one seal.
 
-**Acceptance.** **DONE, 2026-08-05**, `QuittingSeamPriceResidual.lean`. All four
+**Acceptance.** **DONE, 2026-08-05**, `UniformEquilibrium/Quitting/Boundary/Analytic/SeamPriceResidual.lean`. All four
 parts landed. The exact form needed no hypothesis beyond the definitions — the
 successor payoff is affine in the tail value with slope the full joint continue
 mass, unconditionally. The failure witness is an isolated coordinate at hazard
@@ -178,7 +178,7 @@ vanishing absorption gives no pole.
 
 - **Status:** DONE
 - **Lane:** P0
-- **Depends:** `QuittingCyclicWeightRowDichotomy.lean`, the Bool-valued spine.
+- **Depends:** `UniformEquilibrium/Quitting/Cycles/CyclicWeightRowDichotomy.lean`, the Bool-valued spine.
 - **Record:** this file
 
 **Objective.** Prove that the real-valued hazard encoding of the gain and
@@ -196,7 +196,7 @@ Until the bridge exists, a theorem proved in one encoding says nothing about the
 other, and a reader may reasonably assume otherwise. That is exactly the shape
 that rots.
 
-**Acceptance.** **DONE, 2026-08-05**, `QuittingHazardRowBridge.lean`. The
+**Acceptance.** **DONE, 2026-08-05**, `UniformEquilibrium/Quitting/Bellman/Finite/HazardRowBridge.lean`. The
 encodings are **equivalent**, not merely analogous: quit payoff, continue
 payoff, and endpoint difference agree exactly with the real-valued `Σ`, `Γ`, `g`
 for every reward and continuation value, with no sign or scope mismatch and no
@@ -372,19 +372,19 @@ literature verification is owed before any public claim.
 - **Depends:** nothing
 - **Record:** this file
 
-**Objective.** `QuittingSureSetRepairFullIntervalCounterexample.lean` carries six
+**Objective.** `UniformEquilibrium/Quitting/Boundary/Repair/SureSetRepairFullIntervalCounterexample.lean` carries six
 file-local `pureSetRoot` lemmas (definitions around lines 370–452) that are
-subsumed by the general versions in `QuittingSureExitSet.lean`. They cannot be
-rewired today: `QuittingSureExitSet.lean` imports the counterexample file for
+subsumed by the general versions in `UniformEquilibrium/Quitting/Paths/SureExitSet.lean`. They cannot be
+rewired today: `UniformEquilibrium/Quitting/Paths/SureExitSet.lean` imports the counterexample file for
 its own cross-check section, so the reverse import is a direct two-module cycle
 (verified by attempting it — `lake` reports the cycle). All 18 references to
 the six names are internal to the counterexample file, so once the cycle is
 broken the deletion is mechanical.
 
-**Plan.** Move the cross-check section of `QuittingSureExitSet.lean` (the part
+**Plan.** Move the cross-check section of `UniformEquilibrium/Quitting/Paths/SureExitSet.lean` (the part
 consuming `not_isεAsymptoticNash_directPureSet`) into the counterexample file
 or a third module that imports both; drop the import at
-`QuittingSureExitSet.lean:10`; then delete the six lemmas and rewire their
+`UniformEquilibrium/Quitting/Paths/SureExitSet.lean:10`; then delete the six lemmas and rewire their
 in-file uses to the general versions.
 
 **Acceptance.** The six lemmas gone, no duplicate statements across the two
@@ -463,7 +463,7 @@ result changes it. The order is by decisiveness, not by ease:
    below the solo-clipped ceiling (punishment attainment — Q162's band);
    package *production* (the engines). **Of the two paper IOUs the
    equivalence's outer legs lean on, the stationary min-max formula LANDED
-   2026-08-05** (production `0829959`, `QuittingStationaryMinMax.lean`):
+   2026-08-05** (production `0829959`, `UniformEquilibrium/Quitting/Stationary/MinMax.lean`):
    `χ = inf_y Φ(y)` with BOTH legs machine-checked in full
    history-dependent generality, no attainment asserted;
    `quittingRootSequenceHazardTerminalValue_const_le_cap` supplies the
@@ -508,7 +508,7 @@ result changes it. The order is by decisiveness, not by ease:
    leg and this repair). Next session: full read of the 819-line
    answer, seal in ideas/, then formalize the WCM inequality.
 1a. **The χ-floored certificate re-measurement — DONE, verdict split and
-   decisive** (`QuittingCirculationChiFloorBoundary.lean`). Solo-rate and
+   decisive** (`UniformEquilibrium/Quitting/Circulation/ChiFloorBoundary.lean`). Solo-rate and
    pair-repair **fall** to the χ-floored free-hazard variant (the previous
    boundary's own witnesses are inside it; the sub-solo blind spot was a
    floor artifact — and the premise correction: multi-owner phases supply
@@ -543,7 +543,7 @@ result changes it. The order is by decisiveness, not by ease:
    `QuittingSureExitSet`, `QuittingSwitchingResidueRegression`; root
    build green, axiom audit clean; bonus: "exactly one" refuted, n = 2
    threshold corollary); (b) Theorem C equivalence **LANDED 2026-08-05**
-   (production `34fdc11`, `QuittingCollisionRepairCharacterization.lean`:
+   (production `34fdc11`, `UniformEquilibrium/Quitting/Boundary/Repair/CollisionRepairCharacterization.lean`:
    full iff against the exact χ, both legs, general `n`, forced-rate and
    sub-floor-failure corollaries, rate-1 collapse to the sure-exit test);
    (c) `SwitchRepair` — **Q166 ANSWERED 2026-08-05, verdict: REFUTED as
@@ -603,7 +603,7 @@ result changes it. The order is by decisiveness, not by ease:
    the continuous-incompleteness counterexample FULLY proved, and the
    quit-bonus q = 1/2 self-loop calibration; the wiring to the repo's
    `oneStageNext` operator TAKEN same day, production `34fdc11`,
-   `QuittingQuitBonusSelfLoopBridge.lean` — the canonical operator on the
+   `UniformEquilibrium/Quitting/Punishment/QuitBonusSelfLoopBridge.lean` — the canonical operator on the
    repo's own table fixes the calibrating value exactly, no bounded
    potential); (c) the QE/CAD search instrument itself is
    experiments-lane work, gated on nothing.
@@ -634,7 +634,7 @@ completeness claim is scoped (proofs factoring through our interfaces; the
 correlated/de-correlation route and the topological route are unfenced);
 "sound end to end" means locally machine-checked joints, not one assembled
 theorem, until 1 closes; the public statement of the position lives at
-`GameTheory/Concepts/Stochastic/UniformEquilibriumProblem.md` and is the
+`GameTheory/Concepts/Stochastic/UniformEquilibrium/UniformEquilibriumProblem.md` and is the
 external attack surface.
 
 
@@ -705,7 +705,7 @@ weight admits no completely absorbing inverse iterate". That statement,
 has rows `(p,0,0)` and values `(1/3, 1, K·q^{-t})`, whose third coordinate grows
 exactly like the inverse of the survival product, leaving an unconsumed
 homogeneous boundary term. **Machine-checked** in
-`QuittingUnboundedInverseIterate.lean`
+`UniformEquilibrium/Quitting/Boundary/Analytic/UnboundedInverseIterate.lean`
 (`not_noCompletelyAbsorbingInverseIterate`, for every `η ≥ 0`), with the
 mechanism isolated as `survivalPrefix_mul_value_two`: the survival prefix times
 the third value is a positive constant at every stage. Repetition of a finite
@@ -752,7 +752,7 @@ must sweep `ephemeral/` — noting that `sources/aps-quitting-2026.pdf` there is
 **Objective.** Decide where the instant equilibrium family lands in the
 program's splits and give it a named exact interface.
 
-**Resolution.** `QuittingInstantPunishment.lean` characterizes the family
+**Resolution.** `UniformEquilibrium/Quitting/Punishment/InstantPunishment.lean` characterizes the family
 exactly.  A sure-solo first-stage exit completed by off-path punishment works
 at every positive accuracy iff the owner's singleton payoff dominates its
 punishment value and no outsider gains by joining the exit.  The same module

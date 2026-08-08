@@ -3,7 +3,7 @@
 This directory is the proof of a single semialgebraic curve-selection lemma,
 exported by `PolynomialSignCellArc.lean` as
 `hasPositiveCoordinateAnalyticArcAt_signCell`. That lemma is consumed only by
-`GameTheory/Concepts/Stochastic/AnalyticBellmanExistence.lean`.
+`GameTheory/Concepts/Stochastic/UniformEquilibrium/VanishingDiscount/Analytic/Accounting/AnalyticBellmanExistence.lean`.
 
 The 45 files here are organized as **proof chapters**, not as a reusable
 library: most have no module docstring, several use `Scratch` namespaces, and

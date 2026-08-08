@@ -147,8 +147,8 @@ none attempted here:
   statement about `β`-discounted quantities holds for all `β` sufficiently close to `1⁻`". This is
   a Łojasiewicz/Puiseux-expansion argument specific to the semi-algebraic functions
   `β ↦ v_β` arising from the Shapley/Fink fixed-point equations (see
-  `GameTheory/Concepts/Stochastic/ZeroSum.lean`, `Fink.lean`), and has no counterpart in this file
-  at all.
+  `GameTheory/Concepts/Stochastic/ZeroSum/Basic.lean`, `Fink.lean`), and has no
+  counterpart in this file at all.
 -/
 
 namespace Math

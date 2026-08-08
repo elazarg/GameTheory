@@ -16,8 +16,8 @@ Never/credible-First/standard-proper-path bridge at the mathematical level,
 while Solan--Vieille Proposition 2.13 separately identifies terminal
 approximate existence with common-horizon uniform existence and compact target
 selection. The quitting-specific terminal-to-uniform bridge and fixed-payoff
-selection are now formalized in `QuittingTerminalUniformization.lean` and
-`QuittingTerminalUniformPayoffSelection.lean`. The remaining gap is terminal
+selection are now formalized in `UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformization.lean` and
+`UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformPayoffSelection.lean`. The remaining gap is terminal
 approximate-equilibrium production, not uniformization. The current
 cross-layer interpretation and theorem status live in
 [`FRONTIER.md`](../FRONTIER.md); project decisions and priorities live in

@@ -14,14 +14,14 @@ StageRecord t = Fin t → State × JointAct
 Hist t        = StageRecord t × State
 ```
 
-Appending (`PublicSuffixHistory.lean`) is
+Appending (`UniformEquilibrium/Certificates/Public/SuffixHistory.lean`) is
 
 ```lean
 appendHist base suffix = (Fin.append base.1 suffix.1, suffix.2)
 ```
 
 which **discards `base.2`**, the base's current state. `Hist.StartsAt`
-(`PublicTerminalChildDispatcher.lean`) supplies exactly that missing state,
+(`UniformEquilibrium/Certificates/Public/TerminalChildDispatcher.lean`) supplies exactly that missing state,
 and `suffix.StartsAt base.2` is threaded through the dispatcher lemmas.
 
 ## What is really being chosen
@@ -41,7 +41,7 @@ So candidate A does not eliminate the boundary predicate. It **relocates**
 it from the prefix side to the suffix side.
 
 The suffix side is not idle: `appendHist_injective`
-(`PublicCausalStoppingEventRatio.lean:395`) is unconditional and drives the
+(`UniformEquilibrium/Certificates/Public/CausalStoppingEventRatio.lean:395`) is unconditional and drives the
 `PMF.map` argument in `histDistAfter_apply_appendHist`. Losing it is a real
 cost, and the first version of this record did not price it.
 

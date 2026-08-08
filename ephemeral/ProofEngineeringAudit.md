@@ -93,7 +93,7 @@ it on a branch before relying on its badge or policy.
 ### 2. The advertised CI commands are red by policy mismatch
 
 `python scripts/check_lean_placeholders.py` exits 1 on
-`GameTheory/Concepts/Stochastic/Uniform.lean:211`, the intentionally open
+`GameTheory/Concepts/Stochastic/Equilibrium/Uniform.lean:211`, the intentionally open
 `exists_uniformDeviationCapConstructor`. The checker has no allowlist or
 declaration-level exception, although project prose treats this as the single
 intentional open theorem.

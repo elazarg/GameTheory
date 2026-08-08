@@ -91,7 +91,7 @@ certainly Solan 1999; pinning it costs one edit and collapses it into row 1.
 - FTV 1997's no-stationary-`ε`-equilibrium is asserted with no citation at
   `AbsorbingCycleCarrier/VanishingAbsorptionIsTheOnlyRemainingCase.md:71`,
   `SoloQuitterCycleExistsWithoutJoinIncentive.md:84`, and
-  `FTVCyclicAdmissibleCycle.lean:43-45`. The reference doc handles it
+  `UniformEquilibrium/Quitting/Examples/FTV/CyclicAdmissibleCycle.lean:43-45`. The reference doc handles it
   exemplarily — it caught that the abstract's universal "(ε > 0)" reading is
   false, since payoffs lie in `[0,3]` so every stationary profile is trivially a
   `3`-equilibrium, and `LEAN-P2-1` is `BLOCKED` pending the exact quantifier.
@@ -119,16 +119,16 @@ footnotes the Solan–Solan **sunspot** claim to the **LCP** paper.
 
 Four, only the first a genuine defect.
 
-- `FTVCyclicAdmissibleCycle.lean:43-45` — "it has no stationary `ε`-equilibrium
+- `UniformEquilibrium/Quitting/Examples/FTV/CyclicAdmissibleCycle.lean:43-45` — "it has no stationary `ε`-equilibrium
   for small `ε`", stated flatly, unformalized FTV 1997. Mitigated by the
   headline theorem's own docstring at `:479-481`, which disclaims it. Fix: move
   the disclaimer up or attribute in place.
-- `QuittingConjecture.lean` — "a uniform-equilibrium payoff does exist for it
+- `UniformEquilibrium/Quitting/Conjecture/Basic.lean` — "a uniform-equilibrium payoff does exist for it
   externally". Labelled "externally"; premise primary-verified; low damage.
-- `QuittingUnboundedInverseIterate.lean` — a literature-audit judgement about
+- `UniformEquilibrium/Quitting/Boundary/Analytic/UnboundedInverseIterate.lean` — a literature-audit judgement about
   Solan 2003's proof, strongly mitigated by the paragraph that draws the
   boundary explicitly.
-- `SingleControllerPrimalExistence.lean:197-204` — a "more generally" remark
+- `UniformEquilibrium/SpecialCases/SingleController/PrimalExistence.lean:197-204` — a "more generally" remark
   that the same docstring says the formal proof does not use.
 
 ## Same hazard, internal source

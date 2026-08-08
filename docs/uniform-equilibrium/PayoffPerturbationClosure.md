@@ -5,7 +5,7 @@ kernel, and discount field—uniform-equilibrium payoffs are stable under unifor
 perturbations of the stage-payoff table.
 
 The formal interface lives in
-`GameTheory/Concepts/Stochastic/Uniform.lean`:
+`GameTheory/Concepts/Stochastic/Equilibrium/Uniform.lean`:
 
 - `StochasticGame.withStagePayoff` replaces only the stage-payoff table;
 - `abs_finiteAveragePayoff_withStagePayoff_sub_le` proves that a pointwise
@@ -20,7 +20,7 @@ The formal interface lives in
   convergent uniform-equilibrium targets.
 
 The target-free layer lives in
-`GameTheory/Concepts/Stochastic/UniformPayoffExistenceClosure.lean`:
+`GameTheory/Concepts/Stochastic/Equilibrium/Uniform/PayoffExistenceClosure.lean`:
 
 - `exists_uniformEquilibriumPayoff_of_uniform_stagePayoff_limit` assumes only
   that every approximating reward table has some uniform-equilibrium payoff;

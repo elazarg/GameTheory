@@ -38,7 +38,7 @@ exploitability gap against every behavioral profile.  This is an exact
 counterexample target, not a finite certificate language by itself.
 
 Payoff terminology is fixed in
-[`Stochastic/README.md`](../../GameTheory/Concepts/Stochastic/README.md):
+[`UniformEquilibrium/README.md`](../../GameTheory/Concepts/Stochastic/UniformEquilibrium/README.md):
 limiting-average, undiscounted-limit, and uniform finite-horizon notions are
 not interchangeable without a named upgrade theorem.
 
@@ -49,8 +49,8 @@ The finite-quitting front is now sharply reduced.
 1. **Terminal waist (`M+L+C`).** Terminal approximate Nash profiles for every
    accuracy exist iff a uniform-equilibrium payoff exists. See
    [the exact claim](../../ideas/QuittingGameConjecture/TerminalApproximateExistenceIffUniformPayoff.md),
-   `QuittingTerminalUniformization.lean`, and
-   `QuittingTerminalUniformPayoffSelection.lean`.
+   `UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformization.lean`, and
+   `UniformEquilibrium/Quitting/Terminal/TargetTail/TerminalUniformPayoffSelection.lean`.
 2. **All behavioral deviations (`M+L`).** Against fixed opponents, a quitting
    deviation is exactly a mixture of deterministic quit times and Never. The
    live-history hazard sequence preserves terminal payoff and unilateral
@@ -162,7 +162,7 @@ finite cycle) remain hypotheses. See
 
 On the matching vanishing-discount branch, where the quit-family analytic
 order equals the germ ramification, the first-event denominator has leading
-coefficient `1 + L`.  `QuittingProjectiveAnalyticFirstEvent.lean` therefore
+coefficient `1 + L`.  `UniformEquilibrium/Quitting/Projective/AnalyticFirstEvent.lean` therefore
 extracts canonical cemetery mass `1 / (1 + L)`, singleton masses
 `a_i / (1 + L)`, and vanishing normalized nonsingleton mass without passing to
 a subsequence.  The game-facing analytic packet theorem uses the exact Bellman
@@ -172,7 +172,7 @@ identify the endpoint value with the singleton reward mixture and obtain the
 normalized singleton LCP packet.
 
 Packet extraction does not certify its endpoint as an undiscounted strategic
-target.  `QuittingProjectiveTargetMismatch.lean` gives the sharp regression:
+target.  `UniformEquilibrium/Quitting/Projective/TargetMismatch.lean` gives the sharp regression:
 a genuine order-one analytic equilibrium branch has cemetery and two
 singleton weights all equal to `1/3` and endpoint `(1,1)`, yet terminal
 `epsilon`-Nash and coordinatewise `delta`-closeness imply
@@ -188,7 +188,7 @@ reject it and retarget through a proved alternative.  On an accepted target,
 resolved-chart construction, physical arc lifting, semantic Farkas decoding,
 and production of sufficient real absorption remain independent obligations.
 
-At the consumer end, `QuittingSignedProjectiveLasso.lean` records the exact
+At the consumer end, `UniformEquilibrium/Quitting/Projective/SignedProjectiveLasso.lean` records the exact
 invariant: survival-weighted signed Bellman monodromy equals aggregate
 absorption times the difference from the actual periodic value.  Thus the
 rotation-uniform signed bound is equivalent to periodic-value closeness.
@@ -197,7 +197,7 @@ formal two-phase example separates the two acceptance tests for one fixed
 candidate, although their all-accuracy existential producer hypotheses are
 equivalent through exact-cycle correction.
 
-`QuittingFiniteForwardProjectiveLasso.lean` gives a second, sharper upstream
+`UniformEquilibrium/Quitting/Projective/FiniteForwardProjectiveLasso.lean` gives a second, sharper upstream
 adapter.  For every tolerance, compactness first selects one finite charge
 threshold.  Any exact forward packet reaching it contains a close returned
 block with raw charge at least one; reversing the block leaves one closing
@@ -211,7 +211,7 @@ such conclusion.
 
 The exact-cycle compiler no longer needs every noncontracting coordinate to
 have nonnegative solo payoff.  In
-`QuittingPunishmentCompletedCycle.lean`, each coordinate may instead satisfy
+`UniformEquilibrium/Quitting/Punishment/CompletedCycle.lean`, each coordinate may instead satisfy
 either strict deleted-survival contraction around the cycle or the inequality
 that its punishment value is at most its selected solo value.  An exact
 absorbing Nash--Bellman cycle with this coordinatewise certificate yields its
@@ -219,7 +219,7 @@ selected phase value as a uniform-equilibrium payoff.  The older admissible
 cycle theorem is recovered because nonnegative solo payoff dominates the
 punishment floor.
 
-For a sure solo exit, `QuittingInstantPunishment.lean` gives the exact
+For a sure solo exit, `UniformEquilibrium/Quitting/Punishment/InstantPunishment.lean` gives the exact
 characterization: the owner's solo payoff must dominate its punishment value,
 and no outsider may gain by joining at the first stage.  This is a genuine
 positive result for isolated negative solo values, but it does not prove that
@@ -230,7 +230,7 @@ that every weight produces an exact cycle.
 
 The all-errors truncated-ledger package remains a sound sufficient route to a
 uniform payoff.  It is not a universal producer target.  The formal two-player
-zero-sum table in `QuittingTruncatedLedgerCapCounterexample.lean` has the exact
+zero-sum table in `UniformEquilibrium/Quitting/Debt/Ledger/TruncatedLedgerCapCounterexample.lean` has the exact
 all-Continue uniform payoff zero, yet no package at tolerance `1/2`: deviation
 accounting forces the common reach parameter above `1/2`, while the package
 error budget forces it below `1/10`.  Thus any complete argument must retain a
@@ -575,7 +575,7 @@ individually rational. The `χ` in the older quitting files remains an unrelated
 best-response-summary coefficient — a name collision, not a punishment notion.
 
 The folk bill is now two-thirds closed, superseding the previous paragraph
-here. **The floor landed** (`QuittingPunishmentFloor.lean`): the naive floor
+here. **The floor landed** (`UniformEquilibrium/Quitting/Punishment/Floor.lean`): the naive floor
 refuted first, the unconditional floor `max{(T−1)/T·mIn, mOut}`, the
 sandwich converging to `max 0 (solo)` under two finitely-checkable table
 conditions, exactness on the hostile witness — and **the no-go generator
@@ -656,7 +656,7 @@ These facts calibrate theorem scope; they do not reorder the P0 queue.
 
 - FTV's landed architecture has the exact coordinate delivery constants
   `16/7`, `22/7`, `18/7` and common finite-horizon modulus `22/(7T)`.
-- `QuittingPeriodicFiniteHorizonRate.lean` proves a conditional mesh compiler:
+- `UniformEquilibrium/Quitting/Cycles/PeriodicFiniteHorizonRate.lean` proves a conditional mesh compiler:
   terminal charge `A/m` plus boundary charge `B m/N`, with
   `sqrt N <= m <= 2 sqrt N`, gives an explicit `O(N^{-1/2})` Nash bound. It is
   not a universal producer of the required certificate family.
@@ -713,13 +713,13 @@ Key boundaries are:
 | Exact-D optimizer and zero/positive split | `M+L+A+C` on zero branch | Landed. |
 | Owner clock/packet and two-ended core | `M+L+A` | Landed; stronger preselected-mark bridge products remain mathematical/experimental. |
 | Finite-block boundary holonomy | `M+L` | Landed at `e1fe7dc`. |
-| Fixed-cutoff resolved holonomy graph | `M+L` | Compact/closed with full source path; fixed-last calibrated lift finite, in `QuittingBoundaryHolonomyCompactness.lean` at `14d75ff`. |
+| Fixed-cutoff resolved holonomy graph | `M+L` | Compact/closed with full source path; fixed-last calibrated lift finite, in `UniformEquilibrium/Quitting/Boundary/Holonomy/Compactness.lean` at `14d75ff`. |
 | Boundary-holonomy tangent coordinates | `M+L` | Residual cocycles, self-similarity, max-plus tangent dynamics, realized bounds, and compact coordinate subsequences landed; realized-image closedness, source retention, producer, and decoder are not included. |
 | Greedy return/exit/dead-end | `M+X` | Checked experiment, natural abstract stopping point; not production/decoder. |
 | Realized arbitrary-length holonomy/decoder | `M+L/I` | Fixed-cutoff case landed; literal unbounded-length compact lift ruled out. Tightness or an infinity/stopping-law chart plus bounded decoder remains open. |
 | Anchored seam/exit strategic decoder | `I` | Open. |
 | Full-rate stationary cap | `M+L+C` | Landed verifier for supplied profiles. |
-| Two-player all-table uniform-payoff existence | `M+L+C` | Unconditional capstone landed in `QuittingTwoPlayerExistence.lean`; it does not claim stationary exact equilibrium or generalize the pair-repair classification to `n ≥ 3`. |
+| Two-player all-table uniform-payoff existence | `M+L+C` | Unconditional capstone landed in `UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean`; it does not claim stationary exact equilibrium or generalize the pair-repair classification to `n ≥ 3`. |
 | Sure-exit-set exact characterization (all `n`) | `M+L` | Landed (`QuittingSureExitSet`, `97b77b6`); coalition-face per-phase criterion is now a theorem; two-player joint exit recovered as instance. |
 | Two-blocker interval-cover gate | `M+L` | Landed (`QuittingBlockerIntervalCover`, `97b77b6`); single-blocker designation refuted by table witness; with ≤ 2 opponents the switching branch is vacuous, so `n = 3` is the exact threshold. |
 | Switching-residue regression and scalar obstructions | `M+L` | Landed (`QuittingSwitchingResidueRegression`, `97b77b6`); the fixed-blocker weight-level branch map is provably not total. |
