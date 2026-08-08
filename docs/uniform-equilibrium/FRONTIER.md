@@ -4,8 +4,9 @@ The production theorem surface includes target-anchored payoff
 closure, support-witness compilation, finite phase-occupation duality,
 multi-owner face-circulation production, uniform-payoff reverse diagnostics,
 boundary-holonomy tangent coordinates, the adaptive essential-APS compiler,
-matching analytic projective packets, weighted lassos, punishment-completed
-cycles, and the truncated-ledger boundary theorem. The adaptive compiler
+matching analytic projective packets, exact signed monodromy, finite charged
+closing, punishment-completed cycles, and the truncated-ledger boundary
+theorem. The adaptive compiler
 removes a common hazard ceiling and geometric survival rate while retaining
 pointwise proper hazards and the stated component hypotheses. Production Lean
 is machine truth; checked experiments and uncommitted files are labelled
@@ -31,7 +32,10 @@ The established consequence layer is diagnostic rather than productive:
 profile-uniform vanishing payoff gaps preserve exact targets, bounded expected
 potentials give the telescoping instance, tail width and excess work give exact
 reverse characterizations, and rare transitions falsify unrestricted
-transition-kernel continuity.
+transition-kernel continuity.  In finite quitting games, failure of every
+uniform-equilibrium payoff is equivalent to one fixed positive terminal
+exploitability gap against every behavioral profile.  This is an exact
+counterexample target, not a finite certificate language by itself.
 
 Payoff terminology is fixed in
 [`Stochastic/README.md`](../../GameTheory/Concepts/Stochastic/README.md):
@@ -154,7 +158,7 @@ all-time individual rationality, and divergent absorption (or the corresponding
 finite cycle) remain hypotheses. See
 [SupportWitnessCompiler.md](SupportWitnessCompiler.md).
 
-## Projective analytic packets and weighted lassos
+## Projective analytic packets, signed monodromy, and finite charged closing
 
 On the matching vanishing-discount branch, where the quit-family analytic
 order equals the germ ramification, the first-event denominator has leading
@@ -182,14 +186,26 @@ This closes analytic packet extraction in the matching regime and fixes the
 next interface: accept the packet target with strategic continuation data, or
 reject it and retarget through a proved alternative.  On an accepted target,
 resolved-chart construction, physical arc lifting, semantic Farkas decoding,
-and recurrent relative return remain independent producer obligations.
+and production of sufficient real absorption remain independent obligations.
 
-At the consumer end, `QuittingWeightedProjectiveLasso.lean` uses the invariant
-condition that survival-weighted Bellman seam is small relative to weighted
-absorption for every cyclic entry phase and player.  Exact periodic correction
-then gives a finite support-rational cycle, a divergent path, and a uniform
-payoff.  Repetition of a finite chart label alone does not supply this relative
-return condition.
+At the consumer end, `QuittingSignedProjectiveLasso.lean` records the exact
+invariant: survival-weighted signed Bellman monodromy equals aggregate
+absorption times the difference from the actual periodic value.  Thus the
+rotation-uniform signed bound is equivalent to periodic-value closeness.
+Absolute-weighted variation remains a stronger compatibility interface; a
+formal two-phase example separates the two acceptance tests for one fixed
+candidate, although their all-accuracy existential producer hypotheses are
+equivalent through exact-cycle correction.
+
+`QuittingFiniteForwardProjectiveLasso.lean` gives a second, sharper upstream
+adapter.  For every tolerance, compactness first selects one finite charge
+threshold.  Any exact forward packet reaching it contains a close returned
+block with raw charge at least one; reversing the block leaves one closing
+seam, and its aggregate absorption is at least one half.  Hence the producer
+may have quantifiers `for every charge target, some finite packet`: one orbit
+working for every target and a separate rotation-recurrence theorem are not
+required.  Repetition of a label without large total charge still gives no
+such conclusion.
 
 ## Punishment-completed exact cycles
 
@@ -228,10 +244,12 @@ producer class. If phase support sizes are bounded, every phase ratio is at
 most one common `a < 1`, and its floor dominates formal
 `quittingPunishmentValue`, balanced owner words yield a forward orbit with
 Bellman transport, support-local approximate Nash rows, and a uniform positive
-absorption lower bound. Reversing finite prefixes and compact extraction yield
-a chronological path; joint-survival selection identifies its Bellman values
-with actual terminal tails; the support-witness compiler then yields an
-existential uniform-equilibrium payoff.
+absorption lower bound.  The finite-quantifier theorem now closes directly:
+arbitrarily charged finite forward packets in a common compact carrier contain
+a returned one-seam block and therefore produce a uniform-equilibrium payoff.
+The earlier infinite compact-reversal path remains a compatible route, but is
+not needed to strengthen `for every charge target, some packet` into one orbit
+uniform in that target.
 
 The compact reversal does not formally identify that payoff with a named
 circulation vertex. The theorem also does not construct a certificate for an
@@ -243,8 +261,11 @@ concrete corollaries. The exact interface is recorded in
 Finite phase-occupation LP/duality is an adjacent verification stratum: given
 a phase occupation, it proves semantic strong duality, an optimal occupation,
 and a phase-bias dual certificate. It does not prove occupation nonemptiness
-and is not a strategic producer. Equal-atom material remains unformalized and
-is only a possible future intake target.
+and is not a strategic producer.  A future occupation synthesis must be
+componentwise: global cancellation across recurrent SCCs need not be realized
+by any legal path, and even a circulation inside one SCC needs a connector and
+signed-discrepancy theorem. Equal-atom material remains unformalized and is
+only a possible future intake target.
 
 ## Fixed-skeleton payoff closure
 
@@ -684,8 +705,10 @@ Key boundaries are:
 | Uniform-payoff closure and reverse diagnostics | `M+L` | Fixed-skeleton reward closure, target equivalence under vanishing payoff gaps, tail-width and bounded-work characterizations, and transition-discontinuity counterexample landed; no forward producer. |
 | Support-retaining path/cycle compiler | `M+L+C` conditional | Landed; path or finite periodic witness production at every tolerance remains open. |
 | Essential-APS adaptive compiler | `M+L+A+C` on the stated component | Landed for compact functional unique-live terminal-free components with finite-window face avoidance; no common hazard ceiling or geometric rate, but arbitrary-game component production and the full-jump boundary remain open. |
-| Multi-owner face-circulation producer | `M+L+A+C` conditional | A supplied bounded circulation above punishment value produces a compactly selected support path and uniform payoff; generic certificate existence remains open. |
-| Finite phase-occupation duality | `M+L` conditional | Semantic/LP equivalence, attainment, bias decoding, and strong duality landed conditional on feasible occupation; strategic occupation production is not included. |
+| Multi-owner face-circulation producer | `M+L+A+C` conditional | A supplied bounded circulation above punishment value produces arbitrarily charged finite packets and a uniform payoff by finite charged closing; generic certificate existence remains open. |
+| Signed projective monodromy | `M+L+C` conditional | Exact cyclic correction coordinate; strictly weaker than absolute seam variation for a fixed candidate, but not a weaker all-accuracy producer hypothesis. |
+| Finite charged closing | `M+L+A+C` conditional | Arbitrarily charged exact finite forward packets in one compact carrier yield a returned single-seam lasso and uniform payoff; no orbit uniform in the charge target is required. |
+| Finite phase-occupation duality | `M+L` conditional | Semantic/LP equivalence, attainment, bias decoding, and strong duality landed conditional on feasible occupation; strategic occupation production is not included, and global cross-SCC cancellation is not path-realizable. |
 | Quit-time/Never extremality for behavioral deviations | `M+L` | Landed. |
 | Exact-D optimizer and zero/positive split | `M+L+A+C` on zero branch | Landed. |
 | Owner clock/packet and two-ended core | `M+L+A` | Landed; stronger preselected-mark bridge products remain mathematical/experimental. |
@@ -702,11 +725,12 @@ Key boundaries are:
 | Switching-residue regression and scalar obstructions | `M+L` | Landed (`QuittingSwitchingResidueRegression`, `97b77b6`); the fixed-blocker weight-level branch map is provably not total. |
 | Collision-repair exact characterization (owner indifference, spectator no-join, blocker-floor balance) | `M+L` | Landed (`QuittingCollisionRepairCharacterization`, `34fdc11`): full iff, both legs, arbitrary `n` with every non-owner non-blocker a spectator; forced rate δ ≥ γ/(γ+p); sub-floor mechanism failure below γ/(4M); at rate 1 collapses to the sure-exit test. |
 | Stationary min-max: `χ = inf_y Φ(y)`, both legs, full history-dependent generality | `M+L` | Landed (`QuittingStationaryMinMax`, `0829959`); constant-row cap supplies phase-switch hypothesis (P) at `punishCap = Φ(y)`; solo-clipped ceiling proved STRICTLY loose (`χ = 0` vs ceiling `2` witness); attainment and the finite-horizon `punishmentLevel` bridge deliberately unclaimed. |
+| Shared-punishment price | `M+L` | Two-player shared excess is zero.  A cyclic three-player table has exact behavioral and stationary shared excess `3/4`, with all minimizers classified by a fair first row; on the full-exposure dice table Never is an exact best reply against every committed plan. |
 | Budget-to-go / bounded-potential exact duality (abstract charged relations) | `M+L` | Landed (`Math/ChargedPathBudget` + counterexamples, `0829959`); strong duality attained, Bellman least-supersolution, positive-cycle filter; towers (uniform bound essential — pointwise finiteness insufficient), continuous incompleteness fully proved, quit-bonus `q = 1/2` self-loop calibration machine-checked. |
 | `SwitchRepair` two-scale producer (switching cover → relaxed orbit) | `M [reported]`, REFUTED | Q166 answer: the no-resurrection theorem — occupation charge enters no pointwise packet clause, so vanishing-error packet families (rates bounded below) reduce to exact one-stage repairs or sure-pair sets; the producer cannot exist in the sure-blocker grammar. |
-| Two-owner root (support-enlarged one-stage mechanism: sure blocker, both others mix) | `M [reported]` | Q166 Theorem C.1: explicit rational indifference rates + blocker quit-now inequality + floors ⟺ exact stationary terminal equilibrium on the cell; the replacement for `SwitchRepair`; formalization unblocked, not yet dispatched. |
-| K4 regression exact resolution (`χ = (2/3, 0, 2/7)`, period-one orbit `(1, 2/7, 1)`) | `M [reported]` | Q166 Part A: the table was never residual — exact rational Nash–Bellman self-loop with quit mass 1, no sub-floor gaps, uniform packet defect 2/5; machine-check targets recorded in the seal. |
-| `ℜ₃^local` residue (packet residues ∩ no two-owner root) | `I` | Exactly characterized, finite semialgebraic membership after adjoining exact χ; whether longer cycles/circulation absorb it is the next `n = 3` question (successor c2). |
+| Two-owner root (support-enlarged one-stage mechanism: sure blocker, both others mix) | `M+L` on the regression; `M [reported]` in general | The explicit enlarged root `(1/2, 1, 1/3)` is a machine-checked exact stationary uniform certificate.  The fully general iff with floors remains mathematical rather than production Lean. |
+| K4 regression exact resolution (`χ = (2/3, 0, 2/7)`, period-one orbit `(1, 2/7, 1)`) | `M+L+C` | The two-sure-quitter root and the support-enlarged root are exact stationary uniform certificates with distinct payoffs; the table was never an engine obstruction. |
+| Local three-player mechanism residue | `M+L+C` | The locally blocked class is nonempty: a rational parametric family defeats every owner-rate, sure-exit, collision-repair, and interior two-owner/one-sure-blocker cell.  Every member is nevertheless absorbed by an exact omitted double-sure-quitter/mixer root, locating the defect in the local branch grammar. |
 
 ## Decisive falsifiers and prohibited claims
 

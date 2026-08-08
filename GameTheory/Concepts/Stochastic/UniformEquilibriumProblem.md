@@ -282,21 +282,24 @@ repairing a failed one-stage mechanism — cannot exist: the occupation
 charge occurs in none of the pointwise phase inequalities, so a
 vanishing-error family of such phases exists only where an exact one-stage
 repair or sure-exit set already does, and rotating owners against a fixed
-blocker does not average failure away. The escaping regression table was
-in fact never residual: it carries an exact rational period-one orbit
-(row `(1, 2/7, 1)`, value `(5/7, 0, 2/7)`), absorbed by the exact-cycle
-engine, with exact floors `(2/3, 0, 2/7)` and no sub-floor gap — the
-obstruction lives at the branch interface, not in the orbit relation. The
-genuinely missing operation is **support enlargement**: with a sure
-blocker, let *both* remaining players mix; the two interior indifference
-equations have explicit rational solutions, and together with the
-blocker's quit-now inequality and the min-max floors they are necessary
-and sufficient for an exact stationary terminal equilibrium on that cell
-*(paper)*. After the full catalogue — sure-exit sets, the blocker gate,
-collision repair, two-owner roots — the residue at three players is a
-finite semialgebraic class; whether it is empty, or which of its members
-the cycle and circulation engines absorb, is the current three-player
-closing question.
+blocker does not average failure away. The escaping regression table is
+formally resolved in `QuittingSwitchingResidueExactRoot`: it carries exact
+rational stationary certificates at rows `(1, 2/7, 1)` and
+`(1/2, 1, 1/3)`, with distinct uniform payoffs.  The obstruction is at the
+branch interface, not in the orbit relation.
+
+Support enlargement remains the general local operation: with a sure blocker,
+let both remaining players mix.  The two interior indifference equations have
+explicit rational solutions, and together with the blocker's quit-now
+inequality and the min-max floors they give the proposed general
+characterization of that cell *(paper)*.  But even this grammar is incomplete.
+`QuittingLocalMechanismResidueWitness` constructs a rational parametric family
+that defeats every owner-rate, sure-exit, collision-repair, and interior
+two-owner/one-sure-blocker cell.  The same module then supplies an exact
+double-sure-quitter/mixer terminal equilibrium for every member.  Thus the
+locally blocked class is nonempty and already adjudicated positively; it is a
+regression against incomplete support enumeration, not an unresolved demand
+for longer cycles or circulation.
 
 ## References
 

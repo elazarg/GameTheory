@@ -53,16 +53,21 @@ blockers hidden in the P0 mathematical status.
   finite-average payoff gaps preserve each exact target; bounded expected
   potential shaping supplies the endpoint-telescope instance. Tail width and
   excess work are exact reverse diagnostics, while rare transitions rule out
-  unrestricted kernel-continuity transfer. None is a general-game producer.
+  unrestricted kernel-continuity transfer.  For finite quitting games,
+  nonexistence is now exactly equivalent to one fixed positive terminal
+  exploitability gap against every behavioral profile. None is a general-game
+  producer.
 - **Face circulations (`5e7d0e7a`, production).** A supplied bounded
   `FaceCirculationCertificate` with a common phase-ratio ceiling below `1` and
   floor at least `quittingPunishmentValue` is a genuine quitting-game producer:
   balanced multi-owner circulation, compact reversal to a chronological
   support path, joint-survival selection, and the uniform-payoff compiler yield
-  an existential payoff. The theorem neither constructs certificates for
-  arbitrary games nor identifies the selected payoff with a named certificate
-  vertex. The scaled cyclic and repaired four-player stress weights are concrete
-  corollaries.
+  an existential payoff.  Its original finite quantifiers already suffice:
+  arbitrarily charged finite packets in one compact carrier close through a
+  returned single-seam block, without one orbit uniform in the charge target.
+  The theorem neither constructs certificates for arbitrary games nor
+  identifies the selected payoff with a named certificate vertex. The scaled
+  cyclic and repaired four-player stress weights are concrete corollaries.
 - **Closure and duality interfaces (`a405f8a6`, `1773ce7e`, `94160ee5`,
   production).** Generic discrete-hazard stopping laws now underlie the
   quitting adapters. Target-anchored tails, parametric residue payoffs, and
@@ -74,7 +79,11 @@ blockers hidden in the P0 mathematical status.
 - **Generic cyclic exposure (`a0ab77aa`, production).**  The sharp
   `min exposure <= 1/4` theorem and fair-row rigidity now hold for every finite
   permutation system.  The three-player shared-punishment result is a direct
-  specialization; duplicated three-coordinate case algebra was removed.
+  specialization; duplicated three-coordinate case algebra was removed.  The
+  associated quitting development proves an exact shared price `3/4` over all
+  behavioral plans, classifies the fair-first-row minimizers, and proves
+  stationarity is optimal.  On the related full-exposure dice table, Never is
+  an exact best reply against every committed history-dependent plan.
 - **Reward perturbation and target-free closure (`eceee7bb`, `b0eee54a`,
   production).**  A uniform reward perturbation of size `rho` moves every
   prescribed or deviating finite-horizon payoff by at most `rho` and transfers
@@ -101,17 +110,23 @@ blockers hidden in the P0 mathematical status.
   tolerance remains the producer obligation.  The abstract rank-one crossing
   theorem is retained separately and supplies no game-specific process or
   variation bound.
-- **Projective packets and weighted lassos (`3ca078d8`, `687ee117`, conditional
+- **Projective packets, signed monodromy, and finite charged closing (conditional
   producer and compiler layers).** Matching analytic germs canonically supply normalized
   cemetery/singleton masses and vanishing nonsingleton mass.  The game-facing
   packet assembly closes the value-mixture and endpoint-complementarity passage.
   A concrete matching analytic branch also proves the necessary target gate is
   substantive: its `(1,1)` positive-cemetery endpoint has terminal equal-error
   gap `1/9` and is not a uniform payoff, while `(1,2)` and `(2,1)` are exact
-  retargets.  Rotation-uniform weighted seams compile through exact periodic
-  correction to divergent support paths and uniform payoffs.  A general
-  accept-or-retarget dispatcher, resolved chart coverage and arc lifting,
-  strategic Farkas decoding, and relative-return production remain open.
+  retargets.  Signed survival-weighted monodromy is exactly aggregate
+  absorption times cyclic-value correction; absolute-weighted variation is a
+  stronger compatibility condition, and the two differ for a fixed candidate.
+  Exact forward packets with arbitrarily large finite charge in a fixed compact
+  carrier close to one-seam lassos by finite pigeonhole recurrence, so this
+  route needs neither one orbit uniform in the charge target nor a separate
+  rotation-recurrence theorem.  A general accept-or-retarget dispatcher,
+  resolved chart coverage and arc lifting, strategic Farkas decoding, finite
+  charged-packet production, and a consumer for the complementary
+  bounded-charge boundary remain open.
 - **Punishment-completed exact cycles (`177a0c03`, conditional compiler).** A
   coordinate may contract in deleted survival or be held by the exact
   punishment-value inequality; this includes credibly punishable negative solo
@@ -124,12 +139,15 @@ blockers hidden in the P0 mathematical status.
   universal producer and its placeholder are removed; complete routes must
   retain a persistent-live branch or weaken the common survival requirement.
 
-The resulting priority delta is precise: test density of the positively solved
-payoff-table strata first; independently seek a support-rational path/cycle
-producer; and, on the APS lane, determine when an arbitrary game supplies a
-nonempty compact terminal-free unique-live component with the required face
-avoidance. None of these conditional compilers receives generic existence
-credit before its producer is proved.
+The resulting priority delta is precise.  The shortest new spine is to build a
+finite strategically legal support atlas, apply a recurrent-component charged
+flow-or-separator alternative, realize a feasible flow with bounded cyclic
+signed discrepancy, and decode every separator as support enlargement,
+subgame/rank descent, target rejection, or a genuine barrier.  In parallel,
+quantitative subgame gluing should either reinsert outsiders or retain the
+entering player and marked joining coalition.  The direct finite-packet and APS
+lanes remain valid alternatives. None of these conditional compilers receives
+generic existence credit before its producer is proved.
 
 ## How to maintain this file
 

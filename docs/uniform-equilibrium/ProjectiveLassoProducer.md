@@ -15,10 +15,12 @@ The Lean-checked layer consists of:
 4. affine tangent feasibility or a Farkas obstruction;
 5. a typed resolved-chart/arc-lifting interface;
 6. finite output-or-repeated-label recurrence;
-7. pointwise and rotation-uniform weighted lasso correction; and
-8. compilation of a weighted lasso into a divergent support-rational path and
-   then a uniform-equilibrium payoff; together with
-9. a concrete analytic target-rejection theorem showing why packet extraction
+7. exact signed-monodromy correction, with absolute-weighted and pointwise
+   compatibility interfaces;
+8. finite charged return and single-seam closing for exact forward packets;
+9. compilation of either lasso interface into a divergent support-rational
+   path and then a uniform-equilibrium payoff; together with
+10. a concrete analytic target-rejection theorem showing why packet extraction
    cannot be connected directly to target-preserving realization.
 
 The arbitrary-game producer first requires a target dispatcher: accept the
@@ -28,7 +30,9 @@ it requires three separate theorems:
 
 1. resolved-chart construction, coverage, and arc lifting;
 2. semantic Farkas decoding; and
-3. rotation-uniform relative projective return.
+3. arbitrarily charged finite forward packets in one compact carrier, or
+   another rotation-uniform signed-monodromy producer, together with a
+   strategic consumer for the complementary bounded-charge boundary.
 
 None of these three obligations is silently bundled into “Physical Pivot
 Completeness,” and target acceptance is not silently bundled into packet
@@ -383,7 +387,7 @@ charge n = 1 / (n + 1)^3,
 for which compact recurrence does not give a return negligible relative to
 charge.
 
-## 8. The invariant weighted lasso condition
+## 8. Signed monodromy is the exact correction coordinate
 
 Fix a cyclic root word `cycle`, proposed cyclic values `value`, and an entry
 phase.  Write
@@ -395,33 +399,43 @@ q_k = 1 - c_k,
 s_k = product of c before phase k.
 ```
 
-The invariant finite condition is
+The exact one-turn affine identity is
 
 ```text
-∑ k, s_k * |e_k| ≤ η * ∑ k, s_k * q_k.
+(1 - ∏ k, c_k) * (value phase - periodicValue phase)
+  = ∑ k, s_k * e_k.
 ```
 
-The denominator is exactly
+Thus, under positive aggregate absorption, the rotation-uniform signed bound
 
 ```text
-∑ k, s_k * q_k = 1 - ∏ k, c_k.
+∀ phase who,
+  |∑ k, s_k * e_k(who)| ≤ η * (1 - ∏ k, c_k)
 ```
 
-Consequently, if `u` is the actual periodic value,
+is equivalent to coordinatewise `η`-closeness to the actual periodic values.
+Cancellation inside one turn is legitimate; checking every cyclic entry is
+still load-bearing.
+
+The older absolute condition
 
 ```text
-|value - u|
-  ≤ (∑ k, s_k * |e_k|) / (∑ k, s_k * q_k)
-  ≤ η.
+∑ k, s_k * |e_k| ≤ η * (1 - ∏ k, c_k)
 ```
 
-This is
+is stronger by the triangle inequality.  A formal two-phase example satisfies
+the signed bound and violates the absolute bound for the same candidate.
+Nevertheless, at every positive accuracy, signed-lasso production is
+equivalent to exact finite support-rational-cycle production after correction;
+this sharpens candidate acceptance without proving a broader existence class.
+
+The principal declarations are
 
 ```text
-abs_quittingCyclicValue_sub_terminalValue_le_of_weightedResidual.
+one_sub_prod_mul_quittingCyclicDifference_eq_residualCharge
+isQuittingRotationUniformSignedResidual_iff_value_close
+QuittingFiniteSignedProjectiveLasso.
 ```
-
-It handles zero-charge phases and unequal scales without dropping seams.
 
 ## 9. Relative return must be uniform over cyclic rotations
 
@@ -431,49 +445,71 @@ phase later.  The required target is therefore
 
 ```text
 ∀ phase who,
-  weightedResidual phase who ≤ η * weightedAbsorption,
+  |signedResidual phase who| ≤ η * weightedAbsorption,
 ```
 
 or an equivalent bound on the maximum ratio over all phases and players.
 
-`IsQuittingRotationUniformWeightedResidual` formalizes this requirement, and
-`QuittingFiniteWeightedProjectiveLasso` uses it as its canonical seam field.
-The pointwise certificate
+`IsQuittingRotationUniformSignedResidual` is the canonical exact predicate.
+`QuittingFiniteWeightedProjectiveLasso` remains a stronger compatibility
+certificate and delegates through its `.toSigned` adapter.  The pointwise
+certificate
 
 ```text
 |e_k(i)| ≤ η * q_k
 ```
 
-is stronger and maps into the weighted interface through
+is stronger still and maps through the same compiler chain.
+
+## 10. Finite charged closing
+
+Repeated labels are insufficient, but compactness becomes decisive once the
+returned block carries a fixed amount of real charge.  For a requested endpoint
+radius, cover one compact carrier by finitely many small balls.  A finite path
+whose nonnegative unit-bounded charge reaches twice the number of labels has
+two ordered points in one ball with intervening charge at least one.  The path
+may depend on this finite threshold.
+
+For `0 ≤ q_k ≤ 1`,
 
 ```text
-QuittingFiniteChargedProjectiveLasso.toWeighted.
+product_k (1-q_k) * (1 + sum_k q_k) ≤ 1.
 ```
 
-## 10. Canonical weighted compilation
-
-`QuittingWeightedProjectiveLasso.lean` carries the weighted certificate through
-all downstream stages:
+Hence a returned block of raw charge at least one has aggregate absorption at
+least one half.  Reversing an exact forward Bellman block makes every internal
+cyclic seam zero; only the endpoint closure remains.  Every rotation encounters
+that seam exactly once with survival prefix at most one.  Therefore
 
 ```text
-QuittingFiniteWeightedProjectiveLasso
+∀ chargeTarget ≥ 0, ∃ one finite exact forward packet
+```
+
+in a carrier independent of `chargeTarget` already implies single-seam lassos
+at every accuracy.  It does not require one orbit that works for all charge
+targets or a separate rotation-recurrence theorem.
+
+## 11. Canonical compilation
+
+The signed certificate is the compiler base; the absolute-weighted and
+single-seam certificates are adapters:
+
+```text
+QuittingFiniteSingleSeamProjectiveLasso
+  → QuittingFiniteWeightedProjectiveLasso
+  → QuittingFiniteSignedProjectiveLasso
   → exact periodic value
   → IsQuittingFiniteSupportRationalCycle
   → divergent support-rational path
   → IsUniformEquilibriumPayoff.
 ```
 
-The public terminal theorem is
+The corresponding terminal theorems consume signed, absolute-weighted,
+single-seam, or finite-forward packet producers.  Endpoint differences are
+`1`-Lipschitz in the continuation coordinate, so exact periodic correction
+costs one additional lasso error in support optimality and rationality.
 
-```text
-quittingGame_exists_uniformEquilibriumPayoff_of_weightedProjectiveLassos.
-```
-
-Endpoint differences are `1`-Lipschitz in the continuation coordinate, so
-exact periodic correction costs one additional lasso error in support
-optimality and rationality.
-
-## 11. Correct dependency graph
+## 12. Correct dependency graph
 
 The arbitrary-game route has the explicit form
 
@@ -486,9 +522,12 @@ analytic quitting germ
                → resolved chart construction and coverage
                → feasible tangent or Farkas row
                → arc-lifted physical successor or semantic Farkas output
-               → physical orbit
-               → rotation-uniform relative return
-               → weighted projective lasso
+               → arbitrarily charged finite forward packets
+                    → compact finite charged return
+                    → single-seam lasso
+                  or
+                  another rotation-uniform signed-monodromy candidate
+                    → signed projective lasso
                → exact periodic support-rational cycle
                → divergent path
                → uniform-equilibrium payoff.
