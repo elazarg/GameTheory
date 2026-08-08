@@ -3,7 +3,8 @@
 The loop searches a finite family of rational reward tables for a fixed
 positive terminal exploitability gap.  A root or cyclic word with exact regret
 below the proposed gap is a counterexample profile and is reused against later
-tables.  A surviving table is reported only as a finite-grammar filter.
+tables.  Every cyclic entry phase is represented separately.  A surviving
+table is reported only as a finite-grammar filter.
 """
 
 from __future__ import annotations
@@ -78,12 +79,18 @@ class ProfileWitness:
                 evaluation,
                 evaluation.to_certificate_dict(),
             )
-        if self.kind == "accepted_holonomy_word":
+        if self.kind == "cyclic_profile":
+            # ``data`` is already rotated so the selected executable entry is
+            # phase zero.  The report records that phase explicitly and does
+            # not call the word accepted unless every compiler hypothesis holds.
             evaluation = evaluate_cyclic_word(game, self.data)
+            certificate = evaluation.to_certificate_dict()
+            certificate["kind"] = "cyclic_profile"
+            certificate["entry_phase"] = 0
             return (
                 evaluation.initial_max_regret(),
                 evaluation,
-                evaluation.to_certificate_dict(),
+                certificate,
             )
         raise ValueError(f"unknown witness kind {self.kind!r}")
 
@@ -173,19 +180,43 @@ def _template_games(
         )
 
 
-def _witness_from_finding(finding: RepairFinding) -> ProfileWitness:
+def _word_rotations(word: Sequence[Root]) -> tuple[tuple[Root, ...], ...]:
+    checked = tuple(word)
+    if not checked:
+        raise ValueError("empty cyclic word")
+    return tuple(
+        checked[offset:] + checked[:offset] for offset in range(len(checked))
+    )
+
+
+def _witnesses_from_finding(finding: RepairFinding) -> tuple[ProfileWitness, ...]:
     if finding.rung == "cutoff_one":
         assert isinstance(finding.certificate, CutoffOneEvaluation)
-        return ProfileWitness("cutoff_one", (finding.certificate.root,), finding.source)
+        return (
+            ProfileWitness(
+                "cutoff_one", (finding.certificate.root,), finding.source
+            ),
+        )
     if finding.rung in {"stationary", "quitter_subset", "quitter_pair"}:
         assert isinstance(finding.certificate, StationaryEvaluation)
-        return ProfileWitness(
-            "stationary_full_rate", (finding.certificate.root,), finding.source
+        return (
+            ProfileWitness(
+                "stationary_full_rate",
+                (finding.certificate.root,),
+                finding.source,
+            ),
         )
     if finding.rung == "holonomy_word":
         assert isinstance(finding.certificate, CyclicEvaluation)
-        return ProfileWitness(
-            "accepted_holonomy_word", finding.certificate.word, finding.source
+        return tuple(
+            ProfileWitness(
+                "cyclic_profile",
+                rotation,
+                f"{finding.source}; cyclic entry phase {phase}",
+            )
+            for phase, rotation in enumerate(
+                _word_rotations(finding.certificate.word)
+            )
         )
     raise ValueError(f"unknown repair rung {finding.rung!r}")
 
@@ -227,12 +258,15 @@ def _hint_witnesses(game: RationalQuittingGame) -> Iterator[ProfileWitness]:
                 f"table {key} hint",
             )
     for raw_word in game.hints.get("holonomy_words", []):
-        word = tuple(game.validate_root(root) for root in raw_word)
-        yield ProfileWitness(
-            "accepted_holonomy_word",
-            canonical_rotation(word),
-            "table cyclic-word hint",
+        word = canonical_rotation(
+            tuple(game.validate_root(root) for root in raw_word)
         )
+        for phase, rotation in enumerate(_word_rotations(word)):
+            yield ProfileWitness(
+                "cyclic_profile",
+                rotation,
+                f"table cyclic-word hint; entry phase {phase}",
+            )
 
 
 def _bounded_profile_witnesses(
@@ -274,13 +308,14 @@ def _bounded_profile_witnesses(
             if tuple(raw_word) != canonical:
                 continue
             tested_words += 1
-            yield from emit(
-                ProfileWitness(
-                    "accepted_holonomy_word",
-                    canonical,
-                    "bounded pure-root cyclic grammar",
+            for phase, rotation in enumerate(_word_rotations(canonical)):
+                yield from emit(
+                    ProfileWitness(
+                        "cyclic_profile",
+                        rotation,
+                        f"bounded pure-root cyclic grammar; entry phase {phase}",
+                    )
                 )
-            )
 
 
 def _find_gap_counterexample(
@@ -352,10 +387,10 @@ def run_cegis_manifest(path: str | Path) -> CegisRun:
         ladder = run_repair_ladder(game, config.search)
         if ladder.finding is not None:
             reports.append(make_repair_report(game, ladder, config.search))
-            witness = _witness_from_finding(ladder.finding)
-            if witness.key() not in witness_keys:
-                witness_keys.add(witness.key())
-                witness_pool.append(witness)
+            for witness in _witnesses_from_finding(ladder.finding):
+                if witness.key() not in witness_keys:
+                    witness_keys.add(witness.key())
+                    witness_pool.append(witness)
             continue
 
         witness, regret, evaluation, certificate, tested = _find_gap_counterexample(
@@ -399,6 +434,7 @@ def run_cegis_manifest(path: str | Path) -> CegisRun:
                         "stationary_grid": config.search.max_stationary_roots,
                         "pure_root_cyclic_period": config.search.max_period,
                         "cyclic_word_budget": config.search.max_words,
+                        "all_cyclic_entry_phases": True,
                     },
                 },
                 tested=tested,
