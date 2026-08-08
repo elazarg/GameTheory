@@ -20,6 +20,7 @@ import GameTheory.Mechanism.PrincipalAgent
 import GameTheory.Mechanism.QuasiLinear
 import GameTheory.Mechanism.Revelation
 import GameTheory.Mechanism.ReserveVickrey
+import GameTheory.Mechanism.SingleParameter
 import GameTheory.Mechanism.VCG
 
 namespace GameTheory

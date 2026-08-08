@@ -346,7 +346,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
-| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, repaired executable approximation, finite hidden-action contracts, revelation, finite persuasion, quasilinear weak monotonicity, and affine maximizers | **M-CONTRACT complete (EXP-065/D32), canonical finite-support revelation, information design, truthful Bayesian welfare/participation, feasible posterior laws, and D33's monotonicity/affine consumer complete, and returned-allocation half approximation complete (EXP-056/D27);** finite Myerson payment bounds are the next separable consumer, while integral identities remain behind M-BAYES/D11 | coordinated mechanism root with native principal-agent semantics, canonical Bayesian forms, and separately audited auction semantic, executable, and correctness leaves |
+| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, repaired executable approximation, finite hidden-action contracts, revelation, finite persuasion, quasilinear weak monotonicity, affine maximizers, and topology-free single-parameter payment bounds | **M-CONTRACT complete (EXP-065/D32), canonical finite-support revelation, information design, truthful Bayesian welfare/participation, feasible posterior laws, D33's monotonicity/affine consumers, topology-free Myerson algebra, and returned-allocation half approximation complete (EXP-056/D27);** envelope integrals and uniqueness remain behind M-BAYES/D11 | coordinated mechanism root with native principal-agent semantics, canonical Bayesian forms, and separately audited auction semantic, executable, and correctness leaves |
 | social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
 
 Each lane first inventories its entire pinned family. Once the hostile result
@@ -584,8 +584,8 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 22 better, 5 comparable, 9 partial, 6 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 1,931 of 8,324 pinned declarations have reviewed dispositions | report the exact remainder; complete every ledger supporting a parity claim |
-| current DFS seam | D33 monotonicity 5/5 and affine maximizers 13/13 complete | separate finite Myerson algebra from the D11 integral boundary |
+| exact accounting | 1,969 of 8,324 pinned declarations have reviewed dispositions | report the exact remainder; complete every ledger supporting a parity claim |
+| current DFS seam | D33 monotonicity 5/5, affine maximizers 13/13, and Myerson 38/38 classified with 19 analytic deferrals | retain the envelope/uniqueness half behind the D11 Analysis gate |
 | next capability rotation | learning dynamics | finite potential-game fictitious play, then the approachability bridge |
 | release engineering | incremental full build and structural/coverage audits green | final cold build, flagship axiom sweep, examples, and generated release report |
 
@@ -632,9 +632,10 @@ provisioned in CI.
    probability, plausibility, mechanism, or equilibrium layers; all 19
    single/joint feasible-posterior declarations are also complete; EXP-066/D33
    validates quasilinear ownership; the pinned monotonicity and affine-
-   maximizer files are now 5/5 and 13/13 recovered.  Finite Myerson algebra is
-   the last immediate M-BAYES consumer before rotating to the learning critical
-   gap, while the remaining 81-row L-FOSG classification and D-REPEAT
+   maximizer files are now 5/5 and 13/13 recovered, and all 38 Myerson rows are
+   classified with its 19 topology-free declarations promoted and 19 analytic
+   declarations kept behind D11.  The lead queue now rotates to the learning
+   critical gap, while the remaining 81-row L-FOSG classification and D-REPEAT
    rank/self-generation/uniform harvesting, and validated static and language
    leaf recovery remain BFS work;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
