@@ -11,7 +11,9 @@ import GameTheory.Mechanism.Auction
 import GameTheory.Mechanism.AllPay
 import GameTheory.Mechanism.BayesianWelfare
 import GameTheory.Mechanism.Combinatorial
+import GameTheory.Mechanism.FeasiblePosteriors
 import GameTheory.Mechanism.InformationDesign
+import GameTheory.Mechanism.JointFeasiblePosteriors
 import GameTheory.Mechanism.Knapsack
 import GameTheory.Mechanism.PrincipalAgent
 import GameTheory.Mechanism.Revelation
