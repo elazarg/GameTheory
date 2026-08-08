@@ -83,7 +83,7 @@ The finite-quitting front is now sharply reduced.
    exact-D endpoints, survival, atom, and common holonomy. Conversely, every
    compact subset of `ℕ × X` has bounded length, so no compact lift retaining
    literal unbounded game-stage cost can cover the escaping middles.
-9. **Infinity chart: generalized completed traces (`M [reported]`).** Published
+9. **Infinity chart: generalized completed traces (`M`, partial).** Published
    absorption paths compactify quitting behavior by accumulated absorption
    mass rather than calendar time. For the stricter marked object, closure of
    the *finite* realized set fails, and fails structurally. The unilateral
@@ -96,13 +96,21 @@ The finite-quitting front is now sharply reduced.
    the finite realized set with continuous projection**, so a
    missing-coordinate repair of that shape does not exist.
 
-   A candidate repair — completed chronological graphs, closing on the joint
-   vector-factor trace plus obstacle hypographs — is claimed compact and
-   determining, with finite complementary arrays dense and pulling back in
-   trace, cap, and origin value simultaneously. **This is an unaudited,
-   unformalized solver's answer, not a landed result**; see
+   The compact numerical core has now been audited.  Anchored straight-chord
+   vector-factor chains form a compact Hausdorff hyperspace and continuously
+   determine full/deleted survival and, with the terminal vector fixed or
+   stored, the prescribed origin value.  A compact marked obstacle set
+   determines its cap continuously.  Finite density in the jointly defined
+   closure is definitional.
+
+   The proposed bare carrier is not decoder-complete.  A hypograph over mass
+   retains only the fibrewise obstacle envelope, not repeated-mass chronology;
+   ambient splice continuity and closed anchor equality do not give exactly
+   composable finite approximants or self-seam pullback.  The defensible target
+   is the joint semantic-graph closure of trace, coalition path, marked obstacle
+   graph, holonomy, anchors, debt, packet, and compact provenance. See
    [`CompletedVectorFactorTraceIsCompactAndDetermining.md`](../../ideas/PositivePlateauBoundaryClosure/CompletedVectorFactorTraceIsCompactAndDetermining.md)
-   for the exact statement, scope, and what would raise its seal. The claimed
+   and `PC-012` for the audited scope and open gates. The claimed
    aggregated-carrier fallback failure (fibres carrying different origin
    values at the same obstacle trace) is likewise `M [reported]`; see
    [`AggregatedCarrierConflatesOriginValues.md`](../../ideas/PositivePlateauBoundaryClosure/AggregatedCarrierConflatesOriginValues.md).
@@ -313,19 +321,23 @@ uniformly tight.  The leading candidate is therefore the
 [marked absorption-path route](../../ideas/PositivePlateauBoundaryClosure/EnrichedAbsorptionPathsMayCompactifyTheEscapingMiddle.md), with the
 [escaping-middle problem](../../ideas/PositivePlateauBoundaryClosure/RealizedAnchoredHolonomyClosedness.md)
 retained as its acceptance/falsification test.  The first theorem must encode
-actual finite blocks exactly; the next must prove the enriched strategic graph
-closed or exhibit two identical ordinary path limits with incompatible caps,
-marks, or splice semantics.
+actual finite blocks into the joint semantic graph exactly; the next must prove
+mark transport and exact-seam/self-seam finite pullback.  Compactness and
+density alone do not supply either theorem.
 
-The second question is strategic and splits into two decoders. One compiles a
-globally valid corrected path into terminal approximate profiles. The other
-extracts a bounded finite surgery from a strict local failure and decreases
-optimized debt at the original root.
+The strategic decoder has a fixed-cost and an all-length layer.  At fixed
+repair cost `L`, compact legal-code fibres, anchor lifting, and continuity of
+literal all-behavior gain would give a buffered repair-or-`L`-bounded-
+obstruction chart.  Passing to an obstruction against repairs of arbitrary
+finite complexity requires a new bounded-compression/equicoercivity theorem,
+or lower semicontinuity with finite approximation of `inf_L e_L`.  Such an
+obstruction must then be grammar-complete or a proved plateau-null inequality.
+Compactness only uniformizes repair charts already shown to be open.
 
-**The surgery decoder is closed negatively (`M`)** — see the capstone claim.
-No bounded-length modification achieves a cutoff-independent decrement, and
-accumulation does not rescue it. Within this grammar, repair is the only
-surviving branch.
+**The bounded root-debt descent decoder is closed negatively (`M`)** — see the
+capstone claim.  No bounded-length exact-`D` modification achieves a cutoff-
+independent decrement, and accumulation does not rescue it.  This does not rule
+out attached repairs outside the source grammar.
 
 **But the plateau driving that closure is manufactured by the zero pin (`M`).**
 Both known plateau witnesses are two-player tables that have exact equilibria
@@ -336,12 +348,13 @@ indifferent and absorption rate `1/2`. The pin forces a strictly positive gap
 at every finite horizon, which forces the opponent survival product below one,
 which creates the debt; let the gap go to zero and the plateau vanishes.
 
-So "repair is the only surviving branch" is a fact about the exact-`D`
-zero-boundary grammar, **not** a demonstrated requirement of the program. A
-positive plateau in that grammar is evidence the grammar missed the
-equilibrium. Do not read the descent closure as urgency to find a repair for
-the games; read it as a reason to fix the carrier. `PC-008` accordingly
-deprioritizes escaping-middle compactification pending the free-terminal test.
+So zero-boundary exact-`D` is a calibrated **source** grammar, not a restriction
+on the repair output. A positive plateau in that grammar is evidence it may
+have missed the equilibrium.  A free terminal continuation is valid only when
+one admissible tail co-realizes both the prescribed boundary value and the
+best-response boundary envelope; matching two scalars by fiat is not a
+strategy. `PC-009` and `PC-012` retain the enriched absorption-path route with
+this corrected decoder scope.
 
 **The replacement carrier (`M`, partial).** Instead of a finite chain with an
 inert zero tail, take a **cycle**: rows `y_1,…,y_L` and values `z_1,…,z_L` with

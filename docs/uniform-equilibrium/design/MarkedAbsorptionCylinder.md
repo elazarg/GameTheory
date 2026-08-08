@@ -5,7 +5,16 @@ encoding of a calibrated exact-`D` block, and the limit space it sits densely
 inside.
 
 Evidence discipline: `L` is production Lean; `M` is audited mathematics, not
-formalized; `O` is an open obligation. Nothing here is landed Lean.
+formalized; `O` is an open obligation.
+
+`L` The source-retaining finite realization layer is
+`UniformEquilibrium/Quitting/AbsorptionPath/RealizedMarkedAbsorptionCylinder.lean`.
+It bounds every prefix by the realized block exit and proves exact coalition-
+mass accounting, survival and holonomy pins, free terminal-continuation
+evaluation, and same-source concatenation.  It deliberately retains the
+source block, literal length, and chronology.  It is the finite semantic
+adapter used to validate formulas, **not** the source-forgetting cylinder
+specified below.
 
 ## 1. Notation for a finite block
 
@@ -112,19 +121,33 @@ under uniform convergence the family of deleted clocks is not compact — it can
 converge pointwise to a terminal jump.
 
 **Consequence.** The obstacle and clock coordinates are completed graphs, not
-functions:
+functions.  The clock graph may live over the vector-factor chronology, but a
+mass-only obstacle hypograph is insufficient:
 
 ```
 G_i = completed chronological graph of  t ↦ (τ(t), S_{-i}(t))
-H_i = closed completed hypograph of the stage obstacle trace,
-      including values at zero-mass stages
+O_i = joint completed graph of the stage obstacle record, carrying
+      its pre/post cumulative points, current root/continuation mark,
+      and obstacle ordinate
+H_i^cap = optional hypograph/envelope derived from O_i for cap evaluation
 ```
 
-`H_i` must retain zero-mass stages, since that is where the counterexample
-lives. In this topology the results are favourable: the graph-completed ambient
-space is compact, the cap `sup H_i` is **continuous** (not merely
-semicontinuous), a maximizing witness is retained, and concatenation is
-continuous. The uniform-clock topology delivers none of these.
+A hypograph over `τ` alone collapses all records on a repeated-mass fibre to
+their upper envelope.  It retains the cap but loses lower obstacle values,
+multiplicity, order, and the stage/profile mark.  Thus it cannot satisfy the
+requirement to retain zero-mass chronology.  `O_i` must instead live over a
+compact **marked chronological base**; the exact smallest base remains part of
+the decoder design.
+
+For a nonempty compact obstacle set in a fixed compact marked base, the cap is
+the maximum of a continuous ordinate and is therefore continuous in Hausdorff
+distance.  A maximizing sequence retains a convergent maximizing subsequence,
+but no continuous choice of maximizer is automatic.  The argmax correspondence
+has a closed graph; a selected witness must be carried explicitly if the
+decoder needs one continuously.  Ambient graph concatenation is continuous
+once mark transport is defined, but closure of the realized complementary
+carrier under concatenation—and exact finite seam pullback—remain separate
+theorems.  The uniform-clock topology delivers none of these conclusions.
 
 ## 4. Exit port and Never are different types
 
@@ -186,9 +209,11 @@ still determines all semantics is the content of P0-A.
 
 1. **Payoff.** The cylinder's prescribed value equals the block's literal
    finite policy value, slope `P = s_exit`.
-2. **Obstacle.** `H_i` equals the completed hypograph of the block's literal
-   quit-at-`t` trace, and `sup H_i` equals the landed max-affine cap
-   coordinate, slope `χ_i = S_{-i}(m)`.
+2. **Obstacle.** `O_i` equals the joint marked completed graph of the block's
+   literal quit-at-`t` records, including repeated-mass stages; its derived cap
+   equals the landed max-affine cap coordinate, slope `χ_i = S_{-i}(m)`.
+   If a pointed cap hypograph is also stored, prove its incidence and maximizing
+   equations rather than assuming a continuous argmax selection.
 3. **Clocks.** `G_i` and the absorption path agree with `S(·)`, `S_{-i}(·)`.
 4. **Packet.** `preterminalSurvival`, `terminalMass`, `κ_*`, `T_*`, advantage
    agree with the calibrated anchor, the two mass factors kept separate.
@@ -201,6 +226,15 @@ still determines all semantics is the content of P0-A.
 Item 7 subsumes the test that matters most: the forgetful map to holonomy
 coordinates must be a homomorphism. If it is not, the encoding is wrong
 independently of any topology.
+
+The realized source adapter proves the row-level coalition-mass telescope,
+arbitrary-terminal prescribed and unilateral evaluation, endpoint clocks, and
+the existing holonomy/clock laws for adjacent cuts of one calibrated source.
+It does **not** discharge the list above: it has no block-forgetting path or
+marked obstacle graph, and its concatenation theorem is not a composition law
+for semantic cylinders.  The distinction is enforced by the exported type name
+`RealizedMarkedAbsorptionCylinder`; the name `MarkedAbsorptionCylinder` remains
+available for the eventual target type.
 
 ## 9. The limit space
 
@@ -216,20 +250,36 @@ So there is no "smallest compact coordinate that closes it". The alternatives
 are a noncompact complexity coordinate, or admitting infinite/diffuse
 generalized objects.
 
-`O` The target is therefore a compactness theorem for **generalized completed
-chronological traces**, in which finite blocks are dense, value and cap extend
-continuously, and concatenation extends continuously once anchors are retained
-and a mark-transport convention is fixed. Two facts make this route viable
-rather than merely available: a uniform cap bound survives to the limit, and a
-limit self-splice pulls back to a nearby finite self-splice under boundary-row
-flexibility — the pullback that a surgery decoder needs.
+`M` The anchored completed vector-factor chain ambient space is compact in the
+Hausdorff topology.  Under the straight-chord convention and with the terminal
+vector fixed or stored, it continuously determines full/deleted survival and
+the prescribed origin value.  Compact marked obstacle sets determine their
+caps continuously.  These are the audited numerical core, not the full carrier.
+
+`O` The target is the **joint semantic-graph closure** of generalized completed
+chronological traces: vector-factor trace, coalition path, marked obstacle
+graph, holonomy, anchors, debt, packet, and compact chronological provenance.
+Finite blocks are dense by construction and continuous finite identities pass
+to the closure.  Coordinates may be removed only after a theorem proves every
+decoder observable and splice operation constant on their fibres.
+
+Ambient concatenation extends continuously once anchors and a mark-transport
+convention are retained.  Two additional facts do **not** follow from that:
+the realized complementary closure must be proved stable under splice, and a
+limit exact seam/self-seam must pull back to exactly composable finite
+approximants under boundary-row flexibility.  The latter is the pullback a
+surgery decoder needs and remains open.
 
 ## 10. Standing fences
 
 - Do not pursue a compact added coordinate closing the finite realizable set.
   That shape is proved impossible.
 - Do not state the obstacle or the deleted clocks as functions of `τ`.
+- Do not claim a mass-only obstacle hypograph retains chronology; it retains
+  only the fibrewise envelope and cap.
 - A cylinder is a semantic encoding, not a repair. It supplies neither decoder.
+- Do not infer exact finite seam or self-seam pullback from compactness,
+  density, closed anchor equality, or ambient splice continuity.
 - The published sure-terminal-jump endpoint defect is unrepaired; the
   restricted and augmented adapters remain the two options.
 - Exact identities for attainable data do not make the attainable set closed.

@@ -199,8 +199,6 @@ superseded/resolved decision section in
 - `LEAN-P1-1` — the n≥3 blocker-designation lemma (retargeted; n=2 closed
   separately by the capstone)
 - `LEAN-P1-2` — define stationary regret and its zero/positive gap dichotomy
-- `LEAN-P1-4` — define the finite marked absorption-cylinder encoding and its
-  identities (`DESIGN`)
 - `LEAN-P2-2` — discharge three prose-only items the model-faithfulness audit
   found
 - `GEN-P1-1` — the positive-recursive program (V5), scoped (`PLANNED`)
@@ -229,6 +227,8 @@ superseded/resolved decision section in
 - `LEAN-P0-2` — formalize the two carrier refutations that exist only as prose
 - `LEAN-P0-9` — machine-check the weight with relaxed cycles at every tolerance
   and no exact one (`IN FLIGHT`)
+- `LEAN-P1-4` — define the finite marked absorption-cylinder encoding and its
+  identities (`ACTIVE`, realized source adapter landed)
 - `LIT-P1-4` — second round of reference-chain closure and flagged-item intake
 - `ENG-P0-3` — run integration-sweep after every parallel-work wave, before
   committing
@@ -441,6 +441,40 @@ parametrization is provably insufficient — it cannot distinguish a phase where
 only the deviator is active from one where an opponent is — so the carrier must
 retain the **ordered activity increments**, and the limit is stable only under
 a uniform deleted-contraction margin.
+
+### `PC-012` — separate compact numerical traces from the decoder carrier
+
+**Decision.** Count the completed vector-factor trace plus obstacle envelope as
+a compact **numerical** carrier only.  The P0 decoder carrier is the joint
+semantic-graph closure of finite calibrated blocks, retaining every coordinate
+whose decoder fibre-constancy has not been proved.  Zero-pinned exact-`D`
+chains are calibrated source objects, not a restriction on the repair output.
+
+**Rationale.** The vector-factor hyperspace audit proves compactness and
+continuous determination of full/deleted survival, prescribed origin value,
+and cap under the straight-chord and stored-terminal conventions.  It also
+finds two genuine gaps: a mass hypograph keeps only the obstacle envelope on a
+repeated-mass fibre, not chronology; and continuous ambient splice does not
+give exactly composable finite approximants or self-seam pullback.  Separately,
+the repair audit proves fixed-cost buffered charts only conditionally.  Passing
+to an obstruction against all finite repair costs requires bounded compression
+or lower semicontinuity of the all-length repair value, plus a strategic
+consumption theorem.  Compactness supplies neither.
+
+**Rejected.** Treat `Γ` plus a mass hypograph as a settled decoder carrier;
+infer exact seam pullback from density; infer an all-length obstruction from
+one fixed-cost chart; or require a successful repair to remain in the
+zero-pinned grammar.  The last requirement is already refuted by a two-player
+debt plateau repaired by an unpinned stationary tail.
+
+**Consequence.** P0 has three explicit mathematical gates: the joint marked
+semantic graph and exact finite adapter; exact-seam/self-seam finite pullback;
+and local bounded compression/equicoercivity with grammar-complete or
+plateau-null obstruction consumption.  Compactness may uniformize already-open
+repair charts only after those gates are stated at actual all-behavior gain.
+
+**Revisit trigger.** A smaller carrier is justified by a fibre-constancy
+theorem, or an alternative producer bypasses finite repair charts entirely.
 
 ### `PC-011` — decline result-graph; extend audit_repository.py instead
 
@@ -730,28 +764,36 @@ remain active even while P0 mathematics is open.
 **Objective.** Prove a compactness theorem for **generalized completed
 chronological traces** with finite calibrated blocks dense in them, carrying
 exit-or-Never mass, anchors, the conditional packet, payoff, the completed
-stopping-obstacle hypograph, deleted-clock graphs, and debt.
+marked stopping-obstacle graph, deleted-clock graphs, and debt.  Prove the
+exact-seam and self-seam finite pullbacks needed by a repair decoder.
 
 **State.** `ACTIVE` at **P0**: `PC-009` restored this lane, superseding
 `PC-008`'s demotion. Finite semantics and fixed-cutoff closure are landed.
 Closure of the finite realized set is refuted, and no sequentially compact added
-coordinate can close it with continuous projection. Completed chronological
-graphs supply ambient compactness, a continuous cap with retained witness,
-closed anchored splice, and continuous concatenation. **A carrier construction
-is claimed settled (`M [reported]`, 2026-08-04) — unaudited, unformalized.**
-Take `𝔗_r` = the closure of the joint completed **vector-factor** trace
-`t ↦ (τ(t), (P_j(t))_j)` together with the joint obstacle hypographs; the
-claim is that it is compact and determining with no compactness-versus-
-determination trade-off, finite complementary arrays dense, and every object
-pulling back simultaneously in trace, cap, and origin value. See
-[`CompletedVectorFactorTraceIsCompactAndDetermining.md`](../../ideas/PositivePlateauBoundaryClosure/CompletedVectorFactorTraceIsCompactAndDetermining.md)
-for the exact statement, the two load-bearing conventions (piecewise-affine
-completion; fixed terminal vector), and what would raise the seal.
+coordinate can close it with continuous projection.  The compact numerical
+core is now audited (`M`): anchored completed vector-factor chains are compact
+in the Hausdorff topology and, under straight-chord completion with the terminal
+vector fixed or stored, continuously determine full/deleted survival and the
+prescribed origin value.  A compact marked obstacle set determines its cap
+continuously; a maximizing witness survives subsequentially, but no continuous
+argmax selection follows.
 
-**Acceptance.** Build `𝔗_r` and the exact finite adapter against it. Do **not**
-pursue a missing-compact-coordinate closure of the finite set; that shape is
-impossible. Do **not** fall back on the aggregated carrier: its fibres can carry
-*different origin values* at the same obstacle trace (`M [reported]`; see
+The reported full-carrier claim is too strong.  A hypograph over mass retains
+only the fibrewise obstacle envelope, not repeated-mass chronology.  Continuous
+ambient splice and closed anchor equality do not supply exactly composable
+finite approximants or a finite self-seam pullback.  The defensible target is
+therefore the **joint semantic-graph closure** of finite calibrated encodings:
+vector-factor trace, coalition path, marked obstacle graph, holonomy, anchors,
+debt, packet, and compact chronological provenance.  See `PC-012` and
+[`CompletedVectorFactorTraceIsCompactAndDetermining.md`](../../ideas/PositivePlateauBoundaryClosure/CompletedVectorFactorTraceIsCompactAndDetermining.md)
+for the original claim and its load-bearing conventions.
+
+**Acceptance.** Build the joint semantic graph and exact finite adapter, define
+continuous mark transport, and prove joint exact-seam/self-seam finite
+pullback.  Coordinates may be removed only after a fibre-constancy theorem.
+Do **not** pursue a missing-compact-coordinate closure of the finite set; that
+shape is impossible. Do **not** fall back on the aggregated carrier: its fibres
+can carry *different origin values* at the same obstacle trace (`M [reported]`; see
 [`AggregatedCarrierConflatesOriginValues.md`](../../ideas/PositivePlateauBoundaryClosure/AggregatedCarrierConflatesOriginValues.md)),
 so aggregation is not harmless.
 
@@ -846,32 +888,41 @@ weight.
   absorption paths][ep], [the relaxed-limit
   fence](../../ideas/PositivePlateauBoundaryClosure/RelaxedLimitPackageDoesNotCertifySmallGain.md)
 
-**Objective.** Prove the robust pointwise alternative: a corrected
-augmented-AP-to-terminal-profile compiler, within the zero-pinned exact-`D`
-grammar. The bounded-finite-surgery cutoff-independent-debt-descent alternative
-at the original root is closed (see
-[`AnchoredRepairOrUniformDebtDescent.md`][anchored-repair]); uniformize the
-surviving repair branch by sequential compactness.
+**Objective.** Prove a corrected augmented-AP-to-terminal-profile compiler.
+The zero-pinned exact-`D` cylinders are calibrated source objects; a repair may
+leave that grammar through a free admissible terminal continuation, support
+enlargement, stationary tail, lasso, or another accepted compiler.  The chosen
+tail must co-realize its prescribed continuation and its best-response boundary
+envelope.  The bounded-finite-surgery cutoff-independent-debt-descent
+alternative at the original root is closed (see
+[`AnchoredRepairOrUniformDebtDescent.md`][anchored-repair]).
 
-**The limit-object route to this is closed as posed (`M [reported]`).** An
-unaudited, unformalized solver's answer claims: the carrier of
-`MATH-P0-1` is a valid closed *description* of relaxed limits, but the relaxed
-package is **not a local certificate of approximate solutions** — value-
-approximation and gain-approximation come apart, with an explicit finite
-complementary witness carrying a robust gain floor that the chronological-
-profile mark does not repair. See
+**The limit-object route to this is closed as posed (`M`).** The reported
+witness has been independently re-derived: the relaxed package is **not** a
+local certificate of approximate solutions.  Value approximation and gain
+approximation come apart, and an explicit finite complementary witness has an
+all-behavior gain floor `1/4` on a trace neighborhood.  The witness is itself
+repaired exactly by appending one row, so the repaired whole trace must not be
+required to remain near the source trace. See
 [`RelaxedLimitPackageDoesNotCertifySmallGain.md`](../../ideas/PositivePlateauBoundaryClosure/RelaxedLimitPackageDoesNotCertifySmallGain.md)
-for the exact witness, scope, and what would raise the seal. This does
-**not** refute existence — a finite array with positive gain is unremarkable;
-what it refutes is that trace-nearness transports low gain.
+for the witness. This does **not** refute existence; it refutes transport of
+small gain from trace nearness and grammar-local readings of an obstruction.
 
-**State.** `ACTIVE`; the abstract buffered-path trichotomy is complete, but
-neither game-facing decoder nor its local stability theorem is proved.
+**State.** `ACTIVE`, sharpened by `PC-012`.  At each fixed repair cost `L`, a
+compact legal-code correspondence, anchor lifting, and continuity of literal
+all-behavior gain give a standard buffered repair-or-`L`-bounded-obstruction
+chart by Berge's theorem.  The decisive gap is the all-length quantifier:
+prove local bounded compression/equicoercivity, or lower semicontinuity plus
+finite approximation for `e∞ = inf_L e_L`.  Compactness alone cannot exchange
+these quantifiers.  A positive all-length floor must then be consumed by
+grammar completeness or by a named plateau-null inequality; failure of the
+chosen repair grammar has no strategic consequence by itself.
 
-**Acceptance.** For fixed accuracy and positive debt threshold, every limit
-state has one stable finite repair certificate or fixed local `L_z,c_z>0`;
-sequential contradiction produces uniform `L,c`, terminal approximate profiles,
-or contradicts the plateau.
+**Acceptance.** For fixed accuracy, positive debt, and positive packet mass,
+every ported enriched state has either a stable terminal repair chart with
+literal all-behavior gain control, or an all-length, neighborhood-stable,
+strategically consumed obstruction.  Only then may compactness produce a finite
+cover and uniform repair bounds or a contradiction to the plateau.
 
 ### `MATH-P0-3` — exhaust the inexpensive repair ladder
 
@@ -1567,7 +1618,7 @@ claims.
 
 ### `LEAN-P1-4` — define the finite marked absorption-cylinder encoding and its identities
 
-- **Status:** DESIGN
+- **Status:** ACTIVE (PARTIAL)
 - **Lane:** P1
 - **Depends:** Stable mathematical type from `MATH-P0-1`; existing finite
   exact-D and holonomy APIs.
@@ -1577,9 +1628,16 @@ claims.
 its exact payoff, obstacle/cap, debt, packet, anchor, and concatenation
 identities.
 
-**State.** `DESIGN` at **P0**: `PC-009` restored this lane, superseding
-`PC-008`'s demotion; do not scaffold the infinite topology before the finite
-semantic map is fixed.
+**State.** `ACTIVE` at **P0**: `PC-009` restored this lane, superseding
+`PC-008`'s demotion.  The source-retaining realization adapter is landed in
+`UniformEquilibrium/Quitting/AbsorptionPath/RealizedMarkedAbsorptionCylinder.lean`:
+bounded chronological prefixes, exact coalition-mass accounting, endpoint
+clock/holonomy pins, arbitrary terminal-continuation evaluation, and adjacent
+same-source concatenation.  Its type name is intentionally `Realized...`: it
+retains the block and literal chronology and therefore is not the compact
+source-forgetting cylinder.  The remaining implementation must build the joint
+marked semantic graph specified by `PC-012`; do not scaffold an infinite
+topology around the source wrapper.
 
 **Acceptance.** Every production finite block embeds without changing its
 strategic meaning; basis for P0 compactness and endpoint adapters.
@@ -2117,13 +2175,18 @@ actual finite middle -> compositional boundary holonomy ---------------- [L]
                 |
 fixed-cutoff resolved lift compact/closed; literal length fence -------- [L]
                 |
-       MATH-P0-1: tightness OR infinity chart + bounded decoder
-                     OR calibrated incompatibility
+       finite realized semantic adapter; source-forgetting joint graph
                 |
-       MATH-P0-2: anchored repair (zero-pinned grammar); fixed root-debt
-                    descent is closed -- see
-                    ideas/PositivePlateauBoundaryClosure/
-                    AnchoredRepairOrUniformDebtDescent.md
+       MATH-P0-1: compact completed trace + marked chronology
+                    + exact-seam/self-seam finite pullback
+                |
+       MATH-P0-2: fixed-cost actual-gain repair charts
+                |
+       bounded compression / l.s.c. of all-length repair value
+                    + strategic obstruction consumption
+                |
+       repair may leave the zero-pinned source grammar;
+                    fixed root-debt descent is refuted
                 |
 terminal approximate existence
 ```

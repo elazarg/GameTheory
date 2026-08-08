@@ -380,6 +380,7 @@ import UniformEquilibrium.Quitting.Circulation.SingletonFlowMesh
 import UniformEquilibrium.Quitting.Stationary.SingletonStationaryRoot
 import UniformEquilibrium.Quitting.Cycles.SingletonArcCycle
 import UniformEquilibrium.Quitting.EssentialAPS.All
+import UniformEquilibrium.Quitting.AbsorptionPath.All
 import UniformEquilibrium.Quitting.Examples.Cyclic.RotatingFourPlayer
 import UniformEquilibrium.Quitting.Terminal.ToUniformDeviationApproximation
 import UniformEquilibrium.Quitting.Paths.AlmostSureOpponentUniformization
