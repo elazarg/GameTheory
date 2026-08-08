@@ -1,0 +1,10 @@
+{
+  "schema": "quitting-rational-table/v1",
+  "name": "two-player-fixed-gap-template",
+  "players": 2,
+  "rewards": [
+    {"quitters": [0], "payoff": ["1", "-1"]},
+    {"quitters": [1], "payoff": ["-1", "-1"]},
+    {"quitters": [0, 1], "payoff": ["-2", "0"]}
+  ]
+}

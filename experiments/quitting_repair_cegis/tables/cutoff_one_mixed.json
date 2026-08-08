@@ -1,0 +1,13 @@
+{
+  "schema": "quitting-rational-table/v1",
+  "name": "cutoff-one-mixed-zero-tail",
+  "players": 2,
+  "rewards": [
+    {"quitters": [0], "payoff": ["-1", "0"]},
+    {"quitters": [1], "payoff": ["0", "-1"]},
+    {"quitters": [0, 1], "payoff": ["1", "1"]}
+  ],
+  "hints": {
+    "cutoff_one_roots": [["1/2", "1/2"]]
+  }
+}

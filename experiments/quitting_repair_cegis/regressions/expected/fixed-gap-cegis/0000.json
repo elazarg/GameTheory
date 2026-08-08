@@ -1,0 +1,36 @@
+{
+  "claim": "bounded_search_filter_only",
+  "classification": "filter",
+  "fixed_gap": "1/20",
+  "minimum_regret": "1/10",
+  "proves_nonexistence": false,
+  "reason": "No tested profile refuted the fixed gap.  This does not quantify over arbitrary behavioral profiles and therefore is not a HasTerminalExploitabilityGap certificate.",
+  "required_for_nonexistence": "GameTheory.HasTerminalExploitabilityGap against every behavioral profile",
+  "schema": "quitting-repair-report/v1",
+  "scope": {
+    "approximate_profile_grammar": {
+      "cutoff_one_grid": 100,
+      "cyclic_word_budget": 100,
+      "pure_root_cyclic_period": 2,
+      "stationary_grid": 100
+    },
+    "repair_ladder": {
+      "include_hints": true,
+      "max_cutoff_roots": 100,
+      "max_pair_roots": 100,
+      "max_period": 2,
+      "max_stationary_roots": 100,
+      "max_word_roots": 4,
+      "max_words": 100,
+      "probabilities": [
+        "0",
+        "1/2",
+        "2/3",
+        "1"
+      ]
+    }
+  },
+  "table": "two-player-fixed-gap-template[m3p0=-2]",
+  "table_fingerprint": "sha256:a283565b29b065c82b7b0cda73f15974a386152a36a83be49329a1b413cf8993",
+  "tested": 38
+}

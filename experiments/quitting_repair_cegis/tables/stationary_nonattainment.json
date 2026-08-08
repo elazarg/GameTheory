@@ -1,0 +1,13 @@
+{
+  "schema": "quitting-rational-table/v1",
+  "name": "stationary-nonattainment-filter",
+  "players": 2,
+  "rewards": [
+    {"quitters": [0], "payoff": ["1", "-1"]},
+    {"quitters": [1], "payoff": ["-1", "-1"]},
+    {"quitters": [0, 1], "payoff": ["-2", "0"]}
+  ],
+  "hints": {
+    "stationary_roots": [["1/4", "2/3"], ["1/8", "2/3"]]
+  }
+}

@@ -1,0 +1,63 @@
+name: Quitting repair CEGIS
+
+on:
+  pull_request:
+    paths:
+      - "experiments/quitting_repair_cegis/**"
+      - "experiments/README.md"
+      - "UniformEquilibrium/Diagnostics/Quitting/ExactRepairCertificate.lean"
+      - ".github/workflows/quitting-repair-cegis.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quitting-repair-cegis-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  exact-rational-regressions:
+    name: Exact rational regressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run exact Python tests
+        run: >-
+          python3 -m unittest discover
+          -s experiments/quitting_repair_cegis/tests -v
+
+      - name: Regenerate committed reports
+        run: python3 -m experiments.quitting_repair_cegis.regressions.generate_expected
+
+      - name: Check reproducibility
+        run: >-
+          git diff --exit-code --
+          experiments/quitting_repair_cegis/regressions/expected
+
+  lean-certificate-types:
+    name: Lean certificate types
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Lean and restore caches
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: false
+          test: false
+          use-mathlib-cache: true
+          use-github-cache: true
+
+      - name: Build exact repair certificate module
+        run: >-
+          lake build
+          +UniformEquilibrium.Diagnostics.Quitting.ExactRepairCertificate
