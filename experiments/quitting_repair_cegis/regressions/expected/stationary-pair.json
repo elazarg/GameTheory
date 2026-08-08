@@ -1,0 +1,81 @@
+{
+  "certificate": {
+    "behavioral_caps": [
+      "1",
+      "3/4",
+      "1/2"
+    ],
+    "continue_mass": "0",
+    "hazards": [
+      "1/2",
+      "1",
+      "1/4"
+    ],
+    "kind": "quitter_pair",
+    "never_values": [
+      "1",
+      "2/5",
+      "1/2"
+    ],
+    "opponent_continue_masses": [
+      "0",
+      "3/8",
+      "0"
+    ],
+    "quit_values": [
+      "1",
+      "3/4",
+      "1/2"
+    ],
+    "regrets": [
+      "0",
+      "0",
+      "0"
+    ],
+    "value": [
+      "1",
+      "3/4",
+      "1/2"
+    ]
+  },
+  "claim": "exact_terminal_nash_and_uniform_payoff",
+  "classification": "repair",
+  "machine_check": {
+    "exact_arithmetic": "fractions.Fraction",
+    "lean": {
+      "certificate_type": "GameTheory.QuittingStationaryRepairCertificate",
+      "conclusion": "GameTheory.QuittingStationaryRepairCertificate.isUniformEquilibriumPayoff"
+    },
+    "python_command": "python3 -m experiments.quitting_repair_cegis verify-report"
+  },
+  "rung": "quitter_pair",
+  "schema": "quitting-repair-report/v1",
+  "search": {
+    "include_hints": true,
+    "max_cutoff_roots": 50000,
+    "max_pair_roots": 50000,
+    "max_period": 2,
+    "max_stationary_roots": 50000,
+    "max_word_roots": 6,
+    "max_words": 1000,
+    "probabilities": [
+      "0",
+      "1/4",
+      "1/2",
+      "2/3",
+      "1"
+    ]
+  },
+  "source": "known exact two-mixer/sure-quitter regression",
+  "table": "full-interval-stationary-repair",
+  "table_fingerprint": "sha256:f73c98b30ca01fadf5920e52aed2d91ce8c3d9e251a2d72a3f64b88808ce6774",
+  "trace": [
+    {
+      "best_regret": "0",
+      "exhausted": false,
+      "note": "committed exact rational regression",
+      "rung": "quitter_pair",
+      "tested": 1
+    }
+  ]
+}

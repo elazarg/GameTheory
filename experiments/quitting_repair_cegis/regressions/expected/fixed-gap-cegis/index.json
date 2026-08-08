@@ -1,0 +1,17 @@
+{
+  "candidates": 2,
+  "reports": [
+    {
+      "classification": "filter",
+      "file": "0000.json",
+      "table": "two-player-fixed-gap-template[m3p0=-2]"
+    },
+    {
+      "classification": "repair",
+      "file": "0001.json",
+      "table": "two-player-fixed-gap-template[m3p0=1]"
+    }
+  ],
+  "reused_witnesses": 1,
+  "schema": "quitting-table-cegis-summary/v1"
+}
