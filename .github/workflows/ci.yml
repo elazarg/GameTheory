@@ -18,7 +18,7 @@ jobs:
     name: Fast PR check
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -70,6 +70,10 @@ jobs:
       - name: Build all Lean libraries after structural changes
         if: steps.scope.outputs.mode == 'full'
         run: lake build
+
+      - name: Audit repository and theorem axioms after structural changes
+        if: steps.scope.outputs.mode == 'full'
+        run: python3 scripts/audit_repository.py
 
   full:
     name: Full build and audit
