@@ -174,7 +174,7 @@ def StandardLCPSolution.toProjective
         mass⁻¹ * q i +
             ∑ j, (solution.weight j * mass⁻¹) * M i j =
           mass⁻¹ * (q i + ∑ j, solution.weight j * M i j) := by
-      rw [Finset.mul_sum]
+      rw [mul_add, Finset.mul_sum]
       apply congrArg (fun x => mass⁻¹ * q i + x)
       apply Finset.sum_congr rfl
       intro j hj
@@ -187,7 +187,7 @@ def StandardLCPSolution.toProjective
         mass⁻¹ * q i +
             ∑ j, (solution.weight j * mass⁻¹) * M i j =
           mass⁻¹ * (q i + ∑ j, solution.weight j * M i j) := by
-      rw [Finset.mul_sum]
+      rw [mul_add, Finset.mul_sum]
       apply congrArg (fun x => mass⁻¹ * q i + x)
       apply Finset.sum_congr rfl
       intro j hj
