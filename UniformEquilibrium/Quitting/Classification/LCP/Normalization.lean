@@ -23,8 +23,9 @@ the already existing projective comparison matrix
 `M i j = r_i({j}) - r_i({i})`,
 
 and that its translated never payoff is the zero-anchor affine LCP direction.
-No equilibrium conclusion is made here; translation invariance belongs to the
-named source interfaces in `SourceInterfaces.lean`.
+It also provides a generic transport theorem for any semantic predicate whose
+playerwise-translation invariance has been supplied explicitly.  Ordinary
+terminal-Nash invariance is proved concretely in `StrategicTransport.lean`.
 -/
 
 noncomputable section
@@ -58,6 +59,15 @@ def QuittingPayoffTable.translate
   terminal := fun S who => table.terminal S who + shift who
   never := fun who => table.never who + shift who
 
+/-- A semantic property of payoff tables is invariant under playerwise
+translation when adding arbitrary player constants preserves it in both
+directions.  This is the exact abstract adapter needed for source notions that
+are not yet represented by repository strategy types. -/
+def IsQuittingPayoffTranslationInvariant
+    (property : QuittingPayoffTable ι → Prop) : Prop :=
+  ∀ (table : QuittingPayoffTable ι) (shift : Payoff ι),
+    property (table.translate shift) ↔ property table
+
 /-- Player `who`'s baseline payoff from quitting alone. -/
 def quittingSoloBaseline
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -71,6 +81,18 @@ def normalizedQuittingPayoffTable
     QuittingPayoffTable ι :=
   (repositoryQuittingPayoffTable reward).translate
     (fun who => -quittingSoloBaseline reward who)
+
+/-- Any explicitly translation-invariant semantic property holds for the
+normalized table exactly when it holds for the original repository table. -/
+theorem translationInvariant_normalized_iff_repository
+    (property : QuittingPayoffTable ι → Prop)
+    (hinvariant : IsQuittingPayoffTranslationInvariant property)
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    property (normalizedQuittingPayoffTable reward) ↔
+      property (repositoryQuittingPayoffTable reward) := by
+  simpa [normalizedQuittingPayoffTable] using
+    hinvariant (repositoryQuittingPayoffTable reward)
+      (fun who => -quittingSoloBaseline reward who)
 
 /-- Row `who`, column `owner` of the literature singleton matrix. -/
 def QuittingPayoffTable.singletonMatrix
