@@ -1,6 +1,6 @@
 # D33: quasilinear direct mechanisms have a capability-free native owner
 
-- **Status:** adopted; stable promotion pending
+- **Status:** adopted and promoted
 - **Date:** 2026-08-08
 - **Experiment ID:** EXP-066
 
@@ -58,6 +58,8 @@ true utility.
 | source hazards | zero raw updates, transports, `Fintype.ofFinite`, probability projections, placeholders, or custom axioms |
 | axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
 | focused gate | warning-free 1,726-job build |
+| promoted leaf / fixture | 106 / 67 nonblank lines; pinned monotonicity file 5/5 |
+| integration gate | warning-free 1,750-job focused root build and 3,453-job full build; structural and coverage audits `VERIFIED=1`; Mechanism root reaches the owner and the main umbrella rejects it |
 
 ## Kill condition
 
@@ -73,11 +75,12 @@ the chosen outcome precisely because payments may depend on every report.
 
 ## Consequences for the public API
 
-The stable owner belongs under the opt-in `GameTheory.Mechanism` branch.  Its
-base data remains capability-free and its DSIC surface remains definitionally
-canonical.  Weak monotonicity is the first owned allocation certificate.
-Groves/VCG conversion is a named downstream bridge, while affine maximizers and
-Myerson add only their own extra fields and assumptions after promotion.
+The stable owner is `GameTheory.Mechanism.QuasiLinearMechanism` under the
+opt-in `GameTheory.Mechanism` branch.  Its base data remains capability-free
+and its DSIC surface remains definitionally canonical.  Weak monotonicity is
+the first owned allocation certificate.  Groves/VCG conversion is a named
+downstream bridge, while affine maximizers and Myerson add only their own extra
+fields and assumptions after promotion.
 
 Executable finite mechanism search, priors and expected utility, continuous
 type spaces, and measurable payment identities remain separate consumers; none

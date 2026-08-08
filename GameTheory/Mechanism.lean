@@ -16,6 +16,7 @@ import GameTheory.Mechanism.InformationDesign
 import GameTheory.Mechanism.JointFeasiblePosteriors
 import GameTheory.Mechanism.Knapsack
 import GameTheory.Mechanism.PrincipalAgent
+import GameTheory.Mechanism.QuasiLinear
 import GameTheory.Mechanism.Revelation
 import GameTheory.Mechanism.ReserveVickrey
 import GameTheory.Mechanism.VCG

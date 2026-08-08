@@ -4292,5 +4292,12 @@ memory.
   quasilinear direct-mechanism owner under the opt-in Mechanism branch.  Its
   DSIC surface is canonical IC by transparent specialization; weak
   monotonicity is the first owned allocation certificate; VCG is a consumer,
-  not the foundation.  Stable promotion and the five-row pinned monotonicity
-  ledger are the next action before affine maximizers or Myerson are mined.
+  not the foundation.
+- **Promotion:** `GameTheory.Mechanism.QuasiLinearMechanism` is available
+  through the opt-in Mechanism root, and `VCGSetup.toQuasiLinearMechanism` is
+  the downstream Groves bridge.  The 106-nonblank-line leaf and
+  67-nonblank-line hostile test close the pinned monotonicity file 5/5.  The
+  focused four-target build completes warning-free in 1,750 jobs; the full
+  build completes warning-free in 3,453 jobs; Phase 2 structural and exact
+  coverage audits both report `VERIFIED=1`, with 1,918 pinned declarations now
+  accounted for.  Affine maximizers are the next consumer before Myerson.

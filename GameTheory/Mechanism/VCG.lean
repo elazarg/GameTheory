@@ -9,6 +9,7 @@ profile; ex-post equilibrium is ordinary Nash at every such profile.
 -/
 
 import GameTheory.Mechanism.Auction
+import GameTheory.Mechanism.QuasiLinear
 
 noncomputable section
 
@@ -147,6 +148,22 @@ theorem truthfulStrategy_isExPostNash [Fintype ι] [DecidableEq ι]
   rw [Profile.update_eq_self] at htruth
   unfold trueUtility at htruth
   exact htruth
+
+/-- Forget the Groves-specific offset presentation and expose the shared
+quasilinear direct-mechanism data. -/
+def toQuasiLinearMechanism [Fintype ι] [DecidableEq ι] :
+    Mechanism.QuasiLinearMechanism ι V.Outcome where
+  Ty := V.Θ
+  value := V.val
+  choose := V.alloc
+  payment := V.vcgPayment
+
+@[simp]
+theorem toQuasiLinearMechanism_trueUtility [Fintype ι] [DecidableEq ι]
+    (report : V.ReportProfile) (who : ι) (trueType : V.Θ who) :
+    V.toQuasiLinearMechanism.trueUtility report who trueType =
+      V.trueUtility who trueType report :=
+  rfl
 
 end VCGSetup
 
