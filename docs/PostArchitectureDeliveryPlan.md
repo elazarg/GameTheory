@@ -346,7 +346,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
-| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, repaired executable approximation, finite hidden-action contracts, revelation, and finite persuasion | **M-CONTRACT complete (EXP-065/D32), canonical finite-support revelation, information design, truthful Bayesian welfare/participation, and feasible posterior laws complete, and returned-allocation half approximation complete (EXP-056/D27);** monotonicity is next, while exact Myerson payment remains behind M-BAYES/D11 | coordinated mechanism root with native principal-agent semantics, canonical Bayesian forms, and separately audited auction semantic, executable, and correctness leaves |
+| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, repaired executable approximation, finite hidden-action contracts, revelation, and finite persuasion | **M-CONTRACT complete (EXP-065/D32), canonical finite-support revelation, information design, truthful Bayesian welfare/participation, and feasible posterior laws complete, and returned-allocation half approximation complete (EXP-056/D27);** EXP-066 now gates the shared quasilinear owner for monotonicity/affine/Myerson, while exact Myerson payment remains behind M-BAYES/D11 | coordinated mechanism root with native principal-agent semantics, canonical Bayesian forms, and separately audited auction semantic, executable, and correctness leaves |
 | social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
 
 Each lane first inventories its entire pinned family. Once the hostile result
@@ -616,8 +616,8 @@ provisioned in CI.
    the pinned information-design file, and the four remaining truthful
    welfare/participation declarations are recovered without duplicate
    probability, plausibility, mechanism, or equilibrium layers; all 19
-   single/joint feasible-posterior declarations are also complete, so next
-   inventory monotonicity while continuing the remaining 81-row
+   single/joint feasible-posterior declarations are also complete; EXP-066 now
+   tests quasilinear ownership before monotonicity, while the remaining 81-row
    L-FOSG classification, D-REPEAT rank/self-generation/uniform harvesting,
    and validated static and language leaf recovery as BFS work;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the

@@ -76,6 +76,7 @@ becomes difficult to scan.
 | EXP-063 | 2026-08-03 | D12 / dependency maintenance | Do Lean and Mathlib 4.32.2 preserve the fixed-point dependency, trust profile, and enforced architecture boundaries? | Supports; toolchain-aligned maintained fork repinned without theorem-source change | `lean-toolchain`; `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
 | EXP-064 | 2026-08-03 | D5/D11 / repeated public monitoring | Can finite-prefix signal laws support canonical PPE and the bounded one-shot-deviation principle without an infinite-path law? | Supports; closes the public-monitoring equilibrium waist | `GameTheory/Repeated/Monitoring*.lean`; `GameTheory/Tests/MonitoringEquilibrium.lean`; [`coverage/D-REPEAT-monitoring-equilibrium.md`](coverage/D-REPEAT-monitoring-equilibrium.md) |
 | EXP-065 | 2026-08-03 | D0/D2/D4/D9 / finite contracts | Does hidden-action contract theory earn a native finite-support principal-agent branch, with an explicit outside option, rather than a one-player `GameForm` or an auction specialization? | Supports native ownership; decides D32 | [`decisions/D32-principal-agent-contract-ownership.md`](decisions/D32-principal-agent-contract-ownership.md); `GameTheory/Experimental/PostArchitecture/ContractOwnership.lean` |
+| EXP-066 | 2026-08-08 | D4/D5/D8/D9 / quasilinear mechanisms | Does weak monotonicity and its affine/Myerson consumers need a capability-free native quasilinear direct-mechanism owner, rather than overloading Groves-specific `VCGSetup` or outcome-generic `BayesianMechanism`? | Reserved; hostile DSIC-to-weak-monotonicity slice next | `GameTheory/Experimental/PostArchitecture/QuasiLinearMechanismOwnership.lean` |
 
 ## Entry template
 
@@ -4228,3 +4229,40 @@ memory.
   coverage both return `VERIFIED=1`, and the M-CONTRACT ledger is complete
   23/23.  The integration audit caught and repaired missing reducibility
   annotations and their resulting unused-simp warnings before promotion.
+
+### EXP-066: quasilinear direct-mechanism ownership
+
+- **Date / revision:** 2026-08-08, reserved on `b0ed24b`
+- **Status:** reserved; implementation not yet measured
+- **Decision / question:** whether the shared owner for the pinned weak
+  monotonicity, affine-maximizer, and Myerson families should be a native
+  capability-free quasilinear direct mechanism, the existing Groves-specific
+  `Mechanism.Auction.VCGSetup`, or the outcome-generic
+  `Languages.BayesianMechanism`.
+- **Prediction:** independent report types, an alternative carrier,
+  type-dependent valuations, an allocation rule, and payments suffice to
+  state true utility, dominant-strategy incentive compatibility, and weak
+  monotonicity.  Adding the two opposite IC inequalities should prove the
+  allocation rule weakly monotone using only `Profile.update`, without a prior,
+  stored finiteness, a new Nash predicate, or a Groves-offset field.
+- **Representative slice:** at least two agents, two types, and two
+  alternatives; the allocation must respond to one agent's report, truthful
+  utility and one deviation must be unequal, and the generic DSIC-to-weak-
+  monotonicity theorem must specialize to the fixture.  A negative control
+  should refute DSIC after reversing the report-sensitive allocation or
+  payments while leaving the data nonconstant.
+- **Competing designs:** a native `Mechanism` quasilinear direct-mechanism
+  owner; extending `VCGSetup` beyond Groves mechanisms; or specializing
+  `BayesianMechanism` and recovering allocation/payment projections through
+  extra certificates.
+- **Kill conditions:** the thin slice needs a prior, expected utility, stored
+  `Finite`/`Fintype`, a dummy strategic game, direct `Function.update`, public
+  transports, or a duplicate equilibrium predicate; the native object cannot
+  transparently express `VCGSetup` and the pinned affine/Myerson inputs; or the
+  hostile theorem becomes vacuous because allocation, valuations, payments,
+  or deviation payoffs are constant.
+- **Artifacts / commands:** reserved destination
+  `GameTheory/Experimental/PostArchitecture/QuasiLinearMechanismOwnership.lean`;
+  focused build, source-hazard scan, axiom sampling, and comparison against
+  `GameTheory/Mechanism/VCG.lean` and
+  `GameTheory/Languages/BayesianMechanism.lean` before any stable promotion.
