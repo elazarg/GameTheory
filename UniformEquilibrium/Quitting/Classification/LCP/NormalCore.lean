@@ -11,8 +11,8 @@ import UniformEquilibrium.Quitting.Classification.LCP.MatrixClasses
 
 Solan--Solan do not apply their standard Q-matrix theorem to the full player
 set.  Starting with all players, they repeatedly delete a receiver `i` unless
-some currently retained sole quitter `j` gives `i` a nonpositive normalized
-payoff.  The normal core is the intersection of all finite layers.
+some currently retained *different* sole quitter `j` gives `i` a nonpositive
+normalized payoff.  The normal core is the intersection of all finite layers.
 
 This file formalizes that recursion directly and defines the exact principal
 matrix used by the non-Q theorem.  It is deliberately separate from the full
@@ -29,12 +29,12 @@ open Finset
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-- Recursive normality layers `I₀ = I` and
-`Iₙ₊₁ = {i ∈ Iₙ | ∃ j ∈ Iₙ, M i j ≤ 0}`. -/
+`Iₙ₊₁ = {i ∈ Iₙ | ∃ j ∈ Iₙ, j ≠ i ∧ M i j ≤ 0}`. -/
 def normalLayer (M : ι → ι → ℝ) : ℕ → Finset ι
   | 0 => Finset.univ
   | n + 1 =>
       (normalLayer M n).filter fun i =>
-        ∃ j ∈ normalLayer M n, M i j ≤ 0
+        ∃ j ∈ normalLayer M n, j ≠ i ∧ M i j ≤ 0
 
 @[simp] theorem normalLayer_zero (M : ι → ι → ℝ) :
     normalLayer M 0 = Finset.univ := rfl
@@ -43,7 +43,7 @@ def normalLayer (M : ι → ι → ℝ) : ℕ → Finset ι
     (M : ι → ι → ℝ) (n : ℕ) (i : ι) :
     i ∈ normalLayer M (n + 1) ↔
       i ∈ normalLayer M n ∧
-        ∃ j ∈ normalLayer M n, M i j ≤ 0 := by
+        ∃ j ∈ normalLayer M n, j ≠ i ∧ M i j ≤ 0 := by
   simp [normalLayer]
 
 /-- The normality layers form a decreasing sequence. -/
