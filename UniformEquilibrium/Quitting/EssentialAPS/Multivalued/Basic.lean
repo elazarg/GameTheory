@@ -152,7 +152,7 @@ theorem quittingEssentialAPSSCCStepRel_zero_of_successor_mem
     mass_mem := ⟨le_rfl, zero_lt_one⟩
     arc := ?_ }⟩⟩
   funext who
-  simp [quittingSingletonArcPayoff]
+  simpa [quittingSingletonArcPayoff, target]
 
 /-- A finite chronological execution is the reflexive-transitive closure of
 witnessed charged SCC edges. -/
