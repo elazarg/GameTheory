@@ -9,6 +9,7 @@ import UniformEquilibrium.Quitting.EssentialAPS.Regression
 import UniformEquilibrium.Quitting.EssentialAPS.InfiniteContraction
 import UniformEquilibrium.Quitting.EssentialAPS.UniformPayoff
 import UniformEquilibrium.Quitting.EssentialAPS.AdaptiveMeshUniformPayoff
+import UniformEquilibrium.Quitting.EssentialAPS.Multivalued.All
 
 /-!
 # Essential APS for the quitting singleton-flow stratum
@@ -25,6 +26,12 @@ nonperiodic Snell supersolution, and uniform-payoff compiler.  The fixed-width
 and geometric-contraction APIs remain available as quantitative
 specializations.
 
+The multivalued subdirectory is a separate execution layer.  Given a reached
+node in a finite Flesch-successor SCC, it distinguishes a finite executable
+absorbing exit, one charged chronological recurrent path inside that SCC, and
+a reached typed obstruction.  It does not infer a segment from full convex-hull
+APS membership or combine occupations from different recurrent components.
+
 The capstone is
 `quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live_adaptiveMesh`.
 It proves that every initial point of the displayed compact terminal-free
@@ -35,7 +42,9 @@ any bounded viable singleton-flow path with pointwise proper hazards and
 vanishing deleted-player survival from its initial time has the same
 conclusion.
 
-The implementation remains conditional.  It treats the compact functional
-unique-live-successor singleton-flow stratum and does not identify this
-stratum with all quitting games.
+The implementation remains conditional.  The uniform-payoff capstone treats
+the compact functional unique-live-successor singleton-flow stratum.  The
+multivalued SCC theorem constructs an executable path or a typed obstruction
+from witnessed segment data, but does not by itself supply the tail-contraction
+or punishment hypotheses needed by the uniform-payoff compiler.
 -/
