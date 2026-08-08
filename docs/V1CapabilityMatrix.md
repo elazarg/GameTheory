@@ -41,14 +41,13 @@ Verdicts are intentionally qualitative:
 
 ## Dashboard
 
-The 44 workflow rows below contain 21 better, 5 comparable, and 9 partial
-verdicts; 7 are critical gaps and 2 are deliberately retired or out of
+The 44 workflow rows below contain 22 better, 5 comparable, and 9 partial
+verdicts; 6 are critical gaps and 2 are deliberately retired or out of
 scope.  The strongest evidence is the canonical static/protocol spine, NFG,
 the frozen EFG/Kuhn/SPE transfers, finite learning, finite auctions, congestion,
-and the executable rational frontend.  The release blockers are broader
-multi-round theory, learning dynamics, equilibrium refinements,
-revelation/information design,
-finite fair division, matching, and bargaining.  The many partial
+finite information design, and the executable rational frontend.  The release
+blockers are broader multi-round theory, learning dynamics, equilibrium
+refinements, finite fair division, matching, and bargaining.  The many partial
 rows are not treated as
 release-ready merely because their declaration review is advanced; in
 particular, the live FOSG queue still has 81 rows to classify
@@ -104,8 +103,8 @@ particular, the live FOSG queue still has 81 rows to classify
 
 | Capability / user workflow | Pinned v1 evidence (paths / families) | v2 successor evidence | Verdict | Parity condition / next proof |
 |---|---|---|---|---|
-| Relate Bayesian recommendation/obedience, incentive compatibility, and truthful Bayesian Nash | `Mechanism/Bayesian/**` (M-BAYES); frozen F5/F6 | [`GameTheory/Core/Bayesian.lean`](../GameTheory/Core/Bayesian.lean), [`GameTheory/Languages/BayesianMechanism.lean`](../GameTheory/Languages/BayesianMechanism.lean); complete F5/F6 ledgers | comparable | Recover revelation, welfare, participation, and information-design inventory. |
-| Apply revelation principles and reason about information design | revelation, Bayes-correlated, and mechanism-design files in `Mechanism/Bayesian/**` (M-BAYES) | [`GameTheory/Mechanism/Revelation.lean`](../GameTheory/Mechanism/Revelation.lean) now gives the canonical finite-support revelation theorem; no persuasion/information-design theorem is exposed | critical gap | Select and recover one finite persuasion/information-design workflow without adding a second probability or equilibrium layer. |
+| Relate Bayesian recommendation/obedience, incentive compatibility, and truthful Bayesian Nash | `Mechanism/Bayesian/**` (M-BAYES); frozen F5/F6 | [`GameTheory/Core/Bayesian.lean`](../GameTheory/Core/Bayesian.lean), [`GameTheory/Languages/BayesianMechanism.lean`](../GameTheory/Languages/BayesianMechanism.lean), and canonical revelation; complete F5/F6 and revelation ledgers | comparable | Recover the remaining Bayesian welfare and participation inventory. |
+| Apply revelation principles and reason about information design | revelation, Bayes-correlated, and mechanism-design files in `Mechanism/Bayesian/**` (M-BAYES) | [`GameTheory/Mechanism/Revelation.lean`](../GameTheory/Mechanism/Revelation.lean) gives canonical finite-support revelation; [`GameTheory/Mechanism/InformationDesign.lean`](../GameTheory/Mechanism/InformationDesign.lean) recovers all 21 pinned declarations plus finite optimizer existence and a strict partial-revelation witness | better | Keep public signaling on canonical `FinDist`; richer dynamic or measurable information design remains behind its own gate. |
 | Specify and verify finite sealed-bid, reserve, VCG, combinatorial, all-pay, and knapsack mechanisms | `Auctions/**` (M-AUCT) | [`GameTheory/Mechanism.lean`](../GameTheory/Mechanism.lean), `Auction`, `ReserveVickrey`, `VCG`, `Combinatorial`, `AllPay`, and `Knapsack` modules | better | Exact Myerson payment remains behind M-BAYES/D11; broad auction family stays partial. |
 | Formalize contracts with an explicit participation/outside-option theorem | `Mechanism/Contracts/**` (M-CONTRACT) | [`GameTheory/Mechanism/PrincipalAgent.lean`](../GameTheory/Mechanism/PrincipalAgent.lean), stochastic hostile fixture, and complete 23/23 ledger | better | Maintain explicit outside options and theorem-local action finiteness; richer adverse-selection or executable contract search is a separate consumer. |
 | Formalize finite fair division, including indivisible EF1 | `Mechanism/FairDivision.lean`, finite files (M-FAIR) | No finite fair-division successor | critical gap | Build finite round-robin EF1 plus one allocation theorem without importing measurable cake assumptions. |

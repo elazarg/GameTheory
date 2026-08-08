@@ -10,6 +10,7 @@ import GameTheory.Languages.Mechanism
 import GameTheory.Mechanism.Auction
 import GameTheory.Mechanism.AllPay
 import GameTheory.Mechanism.Combinatorial
+import GameTheory.Mechanism.InformationDesign
 import GameTheory.Mechanism.Knapsack
 import GameTheory.Mechanism.PrincipalAgent
 import GameTheory.Mechanism.Revelation
