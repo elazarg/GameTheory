@@ -7,6 +7,7 @@ umbrella.
 -/
 
 import GameTheory.Languages.Mechanism
+import GameTheory.Mechanism.AffineMaximizer
 import GameTheory.Mechanism.Auction
 import GameTheory.Mechanism.AllPay
 import GameTheory.Mechanism.BayesianWelfare

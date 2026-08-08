@@ -80,7 +80,9 @@ opt-in `GameTheory.Mechanism` branch.  Its base data remains capability-free
 and its DSIC surface remains definitionally canonical.  Weak monotonicity is
 the first owned allocation certificate.  Groves/VCG conversion is a named
 downstream bridge, while affine maximizers and Myerson add only their own extra
-fields and assumptions after promotion.
+fields and assumptions after promotion.  `Mechanism.AffineMaximizer` is now the
+first such consumer: it stores only types, values, weights, and bias, requests
+finiteness at maximization operations, and produces the canonical owner.
 
 Executable finite mechanism search, priors and expected utility, continuous
 type spaces, and measurable payment identities remain separate consumers; none
