@@ -75,6 +75,18 @@ structure QuittingEssentialAPSSCCStep
   arc : source.value = quittingSingletonArcPayoff mass
     (quittingSoloReward reward source.owner) target.value
 
+/-- Every witnessed SCC step is an edge of the finite internal successor
+relation. -/
+theorem QuittingEssentialAPSSCCStep.internalSuccessor
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    {family : ι → Set (Payoff ι)}
+    {component : QuittingEssentialAPSSCC reward}
+    {source target : QuittingEssentialAPSSCCNode reward family component}
+    (step : QuittingEssentialAPSSCCStep reward family component source target) :
+    QuittingEssentialAPSInternalSuccessor reward component.vertices
+      source.owner target.owner :=
+  ⟨source.owner_mem, target.owner_mem, step.edge⟩
+
 /-- The ordinary executable-edge relation. -/
 def QuittingEssentialAPSSCCStepRel
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -92,6 +104,19 @@ def QuittingEssentialAPSChargedSCCStepRel
     (source target : QuittingEssentialAPSSCCNode reward family component) : Prop :=
   ∃ step : QuittingEssentialAPSSCCStep reward family component source target,
     chargeFloor ≤ step.mass
+
+/-- Forgetting the charge lower bound retains an executable segment. -/
+theorem QuittingEssentialAPSChargedSCCStepRel.toStepRel
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    {family : ι → Set (Payoff ι)}
+    {component : QuittingEssentialAPSSCC reward}
+    {chargeFloor : ℝ}
+    {source target : QuittingEssentialAPSSCCNode reward family component}
+    (step : QuittingEssentialAPSChargedSCCStepRel reward family component
+      chargeFloor source target) :
+    QuittingEssentialAPSSCCStepRel reward family component source target := by
+  rcases step with ⟨witness, _⟩
+  exact ⟨witness⟩
 
 /-- A component node is terminal when its value is the viable solo endpoint of
 its current owner.  Executing that owner with probability one is then the
@@ -154,9 +179,18 @@ theorem quittingEssentialAPSSCCStepRel_zero_of_successor_mem
   funext who
   simpa [quittingSingletonArcPayoff, target]
 
-/-- A finite chronological execution is the reflexive-transitive closure of
-witnessed charged SCC edges. -/
+/-- A finite chronological execution may use any witnessed SCC segment. -/
 def QuittingEssentialAPSSCCFiniteExecution
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (family : ι → Set (Payoff ι))
+    (component : QuittingEssentialAPSSCC reward)
+    (start finish : QuittingEssentialAPSSCCNode reward family component) : Prop :=
+  Relation.ReflTransGen
+    (QuittingEssentialAPSSCCStepRel reward family component)
+    start finish
+
+/-- A finite chronological prefix all of whose segments meet one charge floor. -/
+def QuittingEssentialAPSChargedSCCFiniteExecution
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (family : ι → Set (Payoff ι))
     (component : QuittingEssentialAPSSCC reward)
@@ -166,16 +200,33 @@ def QuittingEssentialAPSSCCFiniteExecution
     (QuittingEssentialAPSChargedSCCStepRel reward family component chargeFloor)
     start finish
 
+/-- A charged prefix is, after forgetting its lower bounds, an ordinary
+chronological execution. -/
+theorem QuittingEssentialAPSChargedSCCFiniteExecution.toFiniteExecution
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    {family : ι → Set (Payoff ι)}
+    {component : QuittingEssentialAPSSCC reward}
+    {chargeFloor : ℝ}
+    {start finish : QuittingEssentialAPSSCCNode reward family component}
+    (execution : QuittingEssentialAPSChargedSCCFiniteExecution reward family
+      component chargeFloor start finish) :
+    QuittingEssentialAPSSCCFiniteExecution reward family component
+      start finish := by
+  induction execution with
+  | refl => exact .refl
+  | tail hab hbc ih =>
+      exact Relation.ReflTransGen.tail ih
+        (QuittingEssentialAPSChargedSCCStepRel.toStepRel hbc)
+
 /-- A finite executable path ending at a viable absorbing solo endpoint. -/
 structure QuittingEssentialAPSSCCAbsorbingExit
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (family : ι → Set (Payoff ι))
     (component : QuittingEssentialAPSSCC reward)
-    (chargeFloor : ℝ)
     (initial : QuittingEssentialAPSSCCNode reward family component) where
   terminal : QuittingEssentialAPSSCCNode reward family component
   execution : QuittingEssentialAPSSCCFiniteExecution reward family component
-    chargeFloor initial terminal
+    initial terminal
   terminal_mem : terminal.IsTerminal
 
 /-- An infinite chronological path with one explicit exact APS segment per
@@ -220,8 +271,8 @@ structure QuittingEssentialAPSReachableSCCObstruction
     (chargeFloor : ℝ)
     (initial : QuittingEssentialAPSSCCNode reward family component) where
   state : QuittingEssentialAPSSCCNode reward family component
-  execution : QuittingEssentialAPSSCCFiniteExecution reward family component
-    chargeFloor initial state
+  execution : QuittingEssentialAPSChargedSCCFiniteExecution reward family
+    component chargeFloor initial state
   obstruction : QuittingEssentialAPSSCCObstruction reward family component
     chargeFloor state
 
@@ -234,7 +285,7 @@ inductive QuittingEssentialAPSSCCExecutionOutcome
     (initial : QuittingEssentialAPSSCCNode reward family component) : Type
   | absorbingExit
       (exit : QuittingEssentialAPSSCCAbsorbingExit reward family component
-        chargeFloor initial)
+        initial)
   | recurrentPath
       (execution : QuittingEssentialAPSSCCInfiniteExecution reward family
         component chargeFloor initial)
