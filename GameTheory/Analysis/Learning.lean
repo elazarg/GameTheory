@@ -315,6 +315,18 @@ theorem frequently_play_eq_of_empiricalMarginal_converges
       (Eventually.of_forall hbound)
   linarith
 
+/-- A vanishing aggregate positive pure-deviation gap eventually certifies
+every positive-error approximate mixed Nash condition. -/
+theorem eventually_isεNash_of_mixedImprovement_tendsto_zero
+    {mixedProfiles : ℕ → Profile G.form.sig.mixed}
+    (hconverges : Tendsto (fun t => G.mixedImprovement (mixedProfiles t))
+      atTop (nhds 0)) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ t in atTop, IsεNash G.form.mixed G.utility ε (mixedProfiles t) := by
+  have hsmall : ∀ᶠ t in atTop, G.mixedImprovement (mixedProfiles t) < ε :=
+    hconverges.eventually (eventually_lt_nhds hε)
+  filter_upwards [hsmall] with t ht
+  exact G.isεNash_of_mixedImprovement_le (le_of_lt ht)
+
 /-- **Every pointwise limit of fictitious-play empirical beliefs is a mixed
 Nash equilibrium.** Positive limiting mass forces an action to occur
 infinitely often; the roundwise best-response inequalities then pass to the

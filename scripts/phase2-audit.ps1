@@ -690,13 +690,66 @@ if (-not $SkipReachability) {
   Report 'CORE_MIXED_POTENTIAL_BOUNDARY_PROBES_REJECTED' `
     $coreMixedPotentialBoundaryRejected
 
+  $coreMixedImprovementInputs = @(
+    'GameTheory.UtilityGame.mixedImprovement',
+    'GameTheory.UtilityGame.isεNash_of_mixedImprovement_le')
+  $coreMixedImprovementBoundary = @(
+    'GameTheory.UtilityGame.eventually_isεNash_of_mixedImprovement_tendsto_zero',
+    'GameTheory.Protocol.ExecutionProtocol')
+  $coreMixedImprovementOutput = Run-Probe 'GameTheory.Core.MixedImprovement' `
+    ($coreMixedImprovementInputs + $coreMixedImprovementBoundary)
+  $coreMixedImprovementInputsReached = 0
+  foreach ($constant in $coreMixedImprovementInputs) {
+    if (-not (Is-Unreachable $coreMixedImprovementOutput $constant)) {
+      $coreMixedImprovementInputsReached++
+    }
+  }
+  Report 'CORE_MIXED_IMPROVEMENT_INPUT_PROBES_REACHED' `
+    $coreMixedImprovementInputsReached
+  $coreMixedImprovementBoundaryRejected = 0
+  foreach ($constant in $coreMixedImprovementBoundary) {
+    if (Is-Unreachable $coreMixedImprovementOutput $constant) {
+      $coreMixedImprovementBoundaryRejected++
+    }
+  }
+  Report 'CORE_MIXED_IMPROVEMENT_BOUNDARY_PROBES_REJECTED' `
+    $coreMixedImprovementBoundaryRejected
+
+  $coreFictitiousPotentialInputs = @(
+    'GameTheory.UtilityGame.expectedUtility_belief_update_empiricalMarginal_succ_sub',
+    'GameTheory.UtilityGame.IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain',
+    'GameTheory.UtilityGame.IsExactPotential.mixedPotential_belief_update_empiricalMarginal_succ_sub')
+  $coreFictitiousPotentialBoundary = @(
+    'GameTheory.UtilityGame.eventually_isεNash_of_mixedImprovement_tendsto_zero',
+    'GameTheory.Protocol.ExecutionProtocol')
+  $coreFictitiousPotentialOutput =
+    Run-Probe 'GameTheory.Core.FictitiousPlayPotential' `
+      ($coreFictitiousPotentialInputs + $coreFictitiousPotentialBoundary)
+  $coreFictitiousPotentialInputsReached = 0
+  foreach ($constant in $coreFictitiousPotentialInputs) {
+    if (-not (Is-Unreachable $coreFictitiousPotentialOutput $constant)) {
+      $coreFictitiousPotentialInputsReached++
+    }
+  }
+  Report 'CORE_FICTITIOUS_POTENTIAL_INPUT_PROBES_REACHED' `
+    $coreFictitiousPotentialInputsReached
+  $coreFictitiousPotentialBoundaryRejected = 0
+  foreach ($constant in $coreFictitiousPotentialBoundary) {
+    if (Is-Unreachable $coreFictitiousPotentialOutput $constant) {
+      $coreFictitiousPotentialBoundaryRejected++
+    }
+  }
+  Report 'CORE_FICTITIOUS_POTENTIAL_BOUNDARY_PROBES_REJECTED' `
+    $coreFictitiousPotentialBoundaryRejected
+
   $learningBridgeInputs = @(
     'GameTheory.UtilityGame.selfPlay_timeAverage_isεCoarseCorrelatedEq',
     'GameTheoryMath.OnlineLearning.externalRegret_le',
     'GameTheory.Probability.OnlineLearning.multiplicativeWeights',
     'GameTheory.UtilityGame.mwSelfPlay_timeAverage_isεCoarseCorrelatedEq',
     'GameTheory.Analysis.FinDistConvergesPointwise.expect',
-    'GameTheory.UtilityGame.IsFictitiousPlay.limit_isNash')
+    'GameTheory.UtilityGame.IsFictitiousPlay.limit_isNash',
+    'GameTheory.UtilityGame.eventually_isεNash_of_mixedImprovement_tendsto_zero')
   $learningBridgeBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
     'kakutani_fixed_point')
@@ -1132,7 +1185,11 @@ if ($VerifyExpected) {
     $Expected['CORE_FICTITIOUS_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['CORE_MIXED_POTENTIAL_INPUT_PROBES_REACHED'] = 2
     $Expected['CORE_MIXED_POTENTIAL_BOUNDARY_PROBES_REJECTED'] = 2
-    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 6
+    $Expected['CORE_MIXED_IMPROVEMENT_INPUT_PROBES_REACHED'] = 2
+    $Expected['CORE_MIXED_IMPROVEMENT_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['CORE_FICTITIOUS_POTENTIAL_INPUT_PROBES_REACHED'] = 3
+    $Expected['CORE_FICTITIOUS_POTENTIAL_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 7
     $Expected['LEARNING_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['PROTOCOL_FINITE_LAW_INPUT_PROBES_REACHED'] = 2
     $Expected['PROTOCOL_FINITE_LAW_BOUNDARY_PROBES_REJECTED'] = 1
