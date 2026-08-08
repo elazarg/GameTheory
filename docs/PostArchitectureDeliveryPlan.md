@@ -394,7 +394,7 @@ theory.
 | coalitional games | Bondareva-Shapley or convex-game core nonemptiness after the existing Shapley/core base | larger theory moves to `GameTheory.Cooperative`; no artificial action profile |
 | matching and market design | Gale-Shapley stability and perfect matching, then strategyproofness or rural hospitals | native preferences and matchings; share order/list mathematics only |
 | bargaining | Nash solution affine invariance on an honest feasible utility set | native convex feasible-set branch under `Analysis` when topology is used |
-| finite fair division | round-robin EF1 and one envy-cycle or maximin-share result | coordinated mechanism branch; no measurable cake assumptions |
+| finite fair division | **round-robin completeness and EF1 passed (EXP-067);** next two-agent EFX, envy-cycle elimination, or maximin-share breadth | `Mechanism.FairDivision` over canonical `Combinatorial.Allocation`; no measurable cake assumptions |
 | knowledge and epistemic games | **complete for pinned v1:** exact/approximate common knowledge and both agreement theorems | any future Protocol bridge must state the extra state-view premise; broader epistemic work is a new consumer, not recovery debt |
 | evolutionary stability | **passed (EXP-044/D17):** ESS implies canonical symmetric Nash | recover static ESS/NSS in `Evolutionary`; dynamics do not enter until a named theorem measures scalar/topology needs |
 | contracts | **passed and recovered (EXP-065/D32):** stochastic welfare accounting, finite-action maximizer existence, and participation against an explicit outside option, with all 23 pinned declarations classified | native `Mechanism.PrincipalAgent` branch over `FinDist`; no artificial strategic players, and richer contract-selection/adverse-selection models remain separate consumers |
@@ -582,11 +582,11 @@ These counts are milestones, not declaration-port percentages.
 
 | Release dimension | Current evidence | Release condition |
 |---|---|---|
-| mature workflows | 24 better, 5 comparable, 9 partial, 5 critical gaps | zero critical gaps; each partial audited for loss of mature use |
+| mature workflows | 25 better, 5 comparable, 9 partial, 4 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,079 of 8,324 pinned declarations are claimed by exact ledgers; 1,898 have reviewed dispositions and 181 are seeded `unreviewed` | report the exact remainder; complete every ledger supporting a parity claim |
-| current DFS seam | D-LEARN approachability 23/23 classified; game-free B-set/orthant mathematics and the canonical `FinDist` regret-matching convergence bridge are complete | keep topology out of Core and Probability; retain no PMF compatibility layer |
-| next capability rotation | finite fair division | hostile finite round-robin EF1 slice without importing measurable cake theory |
+| exact accounting | 2,146 of 8,324 pinned declarations are claimed by exact ledgers; 1,965 have reviewed dispositions and 181 are seeded `unreviewed` | report the exact remainder; complete every ledger supporting a parity claim |
+| current DFS seam | M-FAIR round-robin 27/27 classified and complete; 67/91 finite fair-division declarations reviewed | keep one canonical allocation; no raw update, game wrapper, or measurable cake import |
+| next capability rotation | matching and market design | Gale-Shapley stability and a perfect-matching hostile instance |
 | release engineering | incremental full build and structural/coverage audits green | final cold build, flagship axiom sweep, examples, and generated release report |
 
 ## 15. Immediate queue
@@ -637,8 +637,11 @@ provisioned in CI.
    declarations kept behind D11.  The subsequent learning rotation recovered
    all 23 approachability/regret-matching declarations, with game-free geometry
    in `GameTheoryMath` and the canonical `FinDist` bridge in Analysis.  The
-   lead queue now rotates to finite fair division, while the remaining 81-row
-   L-FOSG classification and D-REPEAT
+   finite fair-division rotation then recovered the general canonical
+   round-robin completeness and EF1 theorems, closing its critical capability
+   gap with 67/91 declarations reviewed under EXP-067.  The lead queue now
+   rotates to matching and market design, while the remaining 81-row L-FOSG
+   classification and D-REPEAT
    rank/self-generation/uniform harvesting, and validated static and language
    leaf recovery remain BFS work;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the

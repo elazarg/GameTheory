@@ -560,6 +560,36 @@ if (-not $SkipReachability) {
   Report 'KNAPSACK_MECHANISM_INPUT_PROBES_REACHED' `
     $knapsackMechanismInputsReached
 
+  # Finite fair division consumes the sole combinatorial allocation and stays
+  # independent of games, probability, Protocol, and measurable theory.
+  $fairDivisionInputs = @(
+    'GameTheory.Mechanism.Combinatorial.Allocation',
+    'GameTheory.Mechanism.FairDivision.IsComplete',
+    'GameTheory.Mechanism.FairDivision.roundRobinAllocation',
+    'GameTheory.Mechanism.FairDivision.roundRobinAllocation_isEF1')
+  $fairDivisionBoundary = @(
+    'GameTheory.Probability.FinDist',
+    'GameTheory.IsNash',
+    'GameTheory.Protocol.ExecutionProtocol',
+    'MeasureTheory.Measure')
+  $fairDivisionOutput = Run-Probe 'GameTheory.Mechanism.FairDivision' `
+    ($fairDivisionInputs + $fairDivisionBoundary)
+  $fairDivisionInputsReached = 0
+  foreach ($constant in $fairDivisionInputs) {
+    if (-not (Is-Unreachable $fairDivisionOutput $constant)) {
+      $fairDivisionInputsReached++
+    }
+  }
+  Report 'FAIR_DIVISION_INPUT_PROBES_REACHED' $fairDivisionInputsReached
+  $fairDivisionBoundaryRejected = 0
+  foreach ($constant in $fairDivisionBoundary) {
+    if (Is-Unreachable $fairDivisionOutput $constant) {
+      $fairDivisionBoundaryRejected++
+    }
+  }
+  Report 'FAIR_DIVISION_BOUNDARY_PROBES_REJECTED' `
+    $fairDivisionBoundaryRejected
+
   # The analytic root is the one place the budget is spent, and a probe that
   # only ever asserts absence would not notice if it stopped being spent there.
   $reached = 0
@@ -1290,6 +1320,8 @@ if ($VerifyExpected) {
     $Expected['KNAPSACK_BASIC_BOUNDARY_PROBES_REJECTED'] = 7
     $Expected['KNAPSACK_ROOT_INPUT_PROBES_REACHED'] = 5
     $Expected['KNAPSACK_MECHANISM_INPUT_PROBES_REACHED'] = 6
+    $Expected['FAIR_DIVISION_INPUT_PROBES_REACHED'] = 4
+    $Expected['FAIR_DIVISION_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['ANALYSIS_PROBES_REACHED'] = 2
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3

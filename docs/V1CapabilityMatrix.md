@@ -41,13 +41,13 @@ Verdicts are intentionally qualitative:
 
 ## Dashboard
 
-The 45 workflow rows below contain 24 better, 5 comparable, and 9 partial
-verdicts; 5 are critical gaps and 2 are deliberately retired or out of
+The 45 workflow rows below contain 25 better, 5 comparable, and 9 partial
+verdicts; 4 are critical gaps and 2 are deliberately retired or out of
 scope.  The strongest evidence is the canonical static/protocol spine, NFG,
 the frozen EFG/Kuhn/SPE transfers, finite learning, finite auctions, congestion,
 finite information design, and the executable rational frontend.  The release
-blockers are broader multi-round theory, equilibrium refinements, finite fair
-division, matching, and bargaining.  The many partial
+blockers are broader multi-round theory, equilibrium refinements, matching,
+and bargaining.  The many partial
 rows are not treated as
 release-ready merely because their declaration review is advanced; in
 particular, the live FOSG queue still has 81 rows to classify
@@ -108,7 +108,7 @@ particular, the live FOSG queue still has 81 rows to classify
 | Apply revelation principles and reason about information design | revelation, Bayes-correlated, feasible-posterior, and mechanism-design files in `Mechanism/Bayesian/**` (M-BAYES) | [`GameTheory/Mechanism/Revelation.lean`](../GameTheory/Mechanism/Revelation.lean) gives canonical finite-support revelation; [`GameTheory/Mechanism/InformationDesign.lean`](../GameTheory/Mechanism/InformationDesign.lean) recovers public persuasion; `FeasiblePosteriors` and `JointFeasiblePosteriors` recover all 19 posterior-law declarations and add joint full revelation | better | Keep public signaling and posterior laws on canonical `FinDist`; richer dynamic or measurable information design remains behind its own gate. |
 | Specify and verify finite sealed-bid, reserve, VCG, combinatorial, all-pay, and knapsack mechanisms | `Auctions/**` (M-AUCT) | [`GameTheory/Mechanism.lean`](../GameTheory/Mechanism.lean), `Auction`, `ReserveVickrey`, `VCG`, `Combinatorial`, `AllPay`, and `Knapsack` modules | better | The Myerson envelope payment identity remains behind M-BAYES/D11; broad auction family stays partial. |
 | Formalize contracts with an explicit participation/outside-option theorem | `Mechanism/Contracts/**` (M-CONTRACT) | [`GameTheory/Mechanism/PrincipalAgent.lean`](../GameTheory/Mechanism/PrincipalAgent.lean), stochastic hostile fixture, and complete 23/23 ledger | better | Maintain explicit outside options and theorem-local action finiteness; richer adverse-selection or executable contract search is a separate consumer. |
-| Formalize finite fair division, including indivisible EF1 | `Mechanism/FairDivision.lean`, finite files (M-FAIR) | No finite fair-division successor | critical gap | Build finite round-robin EF1 plus one allocation theorem without importing measurable cake assumptions. |
+| Formalize finite fair division, including indivisible EF1 | `Mechanism/FairDivision.lean`, finite files (M-FAIR) | [`GameTheory/Mechanism/FairDivision.lean`](../GameTheory/Mechanism/FairDivision.lean) reuses the canonical combinatorial allocation, separates completeness, and proves general finite choice round-robin EF1; the three-good fixture has conflicting rankings, strict envy, and a positive removal witness; [27/27 round-robin ledger](coverage/M-FAIR-round-robin.md) | better | Recover two-agent EFX, envy-cycle elimination, and maximin-share breadth without importing measurable cake assumptions. |
 | Formalize divisible cake cutting | divisible fair-division files (M-CAKE) | No continuous/measurable successor by D11 | deliberately retired or out of scope | Cake theory remains outside the finite release; reconsider only through the D11 measurable program. |
 | Prove voting, majority, delegation, and power-index results | `Voting/**` (M-VOTE) | [`GameTheory/Examples/Voting.lean`](../GameTheory/Examples/Voting.lean) supplies examples but not the mature theorem families | partial | Recover median/majority, delegation, liquid-democracy, and power-index results against the ranking foundations. |
 | Find and reason about stable matchings | matching and `GaleShapley/**` (P-MATCH) | `Cooperative` root is reserved; no successor domain is present | critical gap | Prove Gale--Shapley/perfect matching, then strategyproofness or rural hospitals. |

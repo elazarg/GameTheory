@@ -13,6 +13,7 @@ import GameTheory.Mechanism.AllPay
 import GameTheory.Mechanism.BayesianWelfare
 import GameTheory.Mechanism.Combinatorial
 import GameTheory.Mechanism.FeasiblePosteriors
+import GameTheory.Mechanism.FairDivision
 import GameTheory.Mechanism.InformationDesign
 import GameTheory.Mechanism.JointFeasiblePosteriors
 import GameTheory.Mechanism.Knapsack

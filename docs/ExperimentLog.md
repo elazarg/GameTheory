@@ -4301,3 +4301,60 @@ memory.
   build completes warning-free in 3,453 jobs; Phase 2 structural and exact
   coverage audits both report `VERIFIED=1`, with 1,918 pinned declarations now
   accounted for.  Affine maximizers are the next consumer before Myerson.
+
+### EXP-067: canonical finite fair-division ownership
+
+- **Date / revision:** 2026-08-09, reserved on `e1e5052`
+- **Status:** complete; supports D34 and closes the finite-EF1 critical gap
+- **Decision / question:** whether finite indivisible fair division should
+  consume `Mechanism.Combinatorial.Allocation`, define a parallel raw bundle
+  profile as v1 did, or compile allocations into a strategic game.
+- **Prediction:** the capability-free combinatorial allocation plus an
+  additive item-valuation specialization and a separate completeness
+  certificate suffice for a general finite round-robin EF1 theorem.  Raw
+  bundle profiles are needed only as private recursive algorithm state; no
+  second public allocation type, Nash predicate, probability law, or
+  measurable cake assumption is needed.
+- **Representative slice:** arbitrary nonempty `Fin n` agents and finite goods
+  with nonnegative additive values, culminating in a complete canonical
+  round-robin allocation and EF1.  A two-agent, three-good fixture must have
+  conflicting rankings, allocate a non-singleton bundle, exhibit genuine
+  envy, and discharge EF1 only after removing a positively valued good.
+- **Competing designs:** reuse the existing canonical disjoint allocation and
+  add fair-division predicates; reproduce v1's public function-valued
+  allocation and feasibility predicate; or model allocation as a strategic
+  mechanism outcome before fairness can be stated.
+- **Kill conditions:** the general proof essentially needs a second public
+  allocation carrier; canonical allocation forces stored `Fintype` or
+  `DecidableEq`; the recursive algorithm needs raw `Function.update`; EF1 can
+  only be shown for two agents or vacuous valuations; the fixture cannot
+  distinguish envy from EF1; or finite indivisible results import measure,
+  topology, probability, Protocol, or equilibrium semantics.
+- **Reserved artifacts / commands:**
+  `GameTheory/Mechanism/FairDivision/Basic.lean`,
+  `GameTheory/Mechanism/FairDivision/RoundRobin.lean`, and
+  `GameTheory/Tests/FairDivision.lean`; focused builds, source-hazard and
+  reachability probes, axiom sampling, exact M-FAIR accounting, and a full
+  clean build before promotion through the opt-in Mechanism root.
+- **Observations / measurements:** the combinatorial allocation first shed its
+  stored `DecidableEq` capabilities and retained a clean 3,500-job build.  The
+  promoted fair-division leaves have 173 and 713 nonblank lines; the 71-line
+  fixture has conflicting strict rankings, a complete disjoint allocation, a
+  two-good envied bundle, strict envy `8 < 7 + 3`, and a positive removal
+  witness.  The general theorem works for arbitrary nonempty `Fin n` agents
+  and finite goods.  Private recursion uses a local `if`-based bundle update;
+  the public result is the canonical allocation plus completeness.
+- **Boundary / trust:** source scans initially found nineteen `▸` transports
+  and one `change` inherited from v1; all were rewritten rather than waived.
+  Phase 2 reports zero mechanism transports, zero raw updates, four reached
+  fair-division inputs, and four rejected boundaries: `FinDist`, `IsNash`,
+  Protocol execution, and measurable theory.  The completeness theorem, EF1
+  flagship, strict-envy negative control, and removal witness print exactly
+  `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome / promotion:** no kill condition fired.  D34 adopts
+  `Mechanism.FairDivision` over `Combinatorial.Allocation`; raw recursive state
+  remains private and v1's public `roundRobinAux` is retired.  The focused
+  root/test build is warning-free, the full build completes 3,504 jobs, and
+  Phase 2 plus exact coverage both return `VERIFIED=1`.  The ledgers account
+  for 67/91 M-FAIR declarations, with RoundRobin complete 27/27 and the next
+  breadth gates named explicitly.

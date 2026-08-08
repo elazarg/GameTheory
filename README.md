@@ -43,8 +43,9 @@ GameTheory/Congestion    opt-in load calculus, Rosenthal potential, pure and
                          coarse-correlated affine PoA, and canonical
                          Pigou/Braess examples
 GameTheory/Mechanism     opt-in coordinated mechanisms, finite auctions,
-                         combinatorial allocations, all-pay arithmetic, and
-                         exact/VCG and checked half-approximate finite knapsack
+                         combinatorial allocations, finite round-robin EF1,
+                         all-pay arithmetic, and exact/VCG and checked
+                         half-approximate finite knapsack
 GameTheory/Languages     scoped language encodings and truthful Bayesian
                          mechanism compilation with recorded limitations
   /NFG                   deterministic normal-form syntax compiling directly
