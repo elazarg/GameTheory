@@ -3,7 +3,10 @@
 
 This script is intentionally conservative: it rejects Lean escape-hatch
 declarations in tracked source files and fails if audited headline theorems
-depend on axioms outside the allowed classical kernel set.
+depend on axioms outside the allowed classical kernel set.  One precisely
+identified external theorem may be admitted only through the Solan
+three-player quitting-game source boundary; its downstream dependency is
+checked declaration by declaration.
 """
 
 from __future__ import annotations
@@ -17,6 +20,38 @@ from check_lean_placeholders import TOKEN_RE, strip_comments_and_strings, tracke
 
 
 ALLOWED_AXIOMS = {"propext", "Classical.choice", "Quot.sound"}
+
+SOLAN_SOURCE_PATH = (
+    "UniformEquilibrium/Quitting/Classification/ThreePlayer/"
+    "SolanSourceStatement.lean"
+)
+SOLAN_SOURCE_DECL = "solan1999_threePlayerQuitting_terminalTargetBounds"
+SOLAN_SOURCE_AXIOM = (
+    "GameTheory.solan1999_threePlayerQuitting_terminalTargetBounds"
+)
+
+# External mathematical inputs are allowed only at the exact declaration
+# sites listed here.  This is deliberately a path-and-name allowlist rather
+# than a global relaxation of the axiom ban.
+EXTERNAL_SOURCE_AXIOMS: dict[tuple[str, str], str] = {
+    (SOLAN_SOURCE_PATH, SOLAN_SOURCE_DECL): (
+        "Solan 1999, Three-Player Absorbing Games, exact quitting specialization"
+    ),
+}
+
+# Only these audited declarations may transitively depend on the external
+# source axiom.  Their conditional counterparts are audited under the ordinary
+# classical-kernel allowance and must remain source-independent.
+ALLOWED_AXIOMS_BY_DECL: dict[str, set[str]] = {
+    "GameTheory.threePlayerQuittingGame_exists_terminalNash_all_errors": {
+        SOLAN_SOURCE_AXIOM
+    },
+    "GameTheory.quittingGame_exists_uniformEquilibriumPayoff_threePlayer": {
+        SOLAN_SOURCE_AXIOM
+    },
+}
+EXPECTED_AXIOMS_BY_DECL = ALLOWED_AXIOMS_BY_DECL
+
 FORBIDDEN_PATTERNS = [
     (re.compile(r"^\s*axiom\s+\w"), "axiom declaration"),
     (re.compile(r"^\s*opaque\s+\w"), "opaque declaration"),
@@ -25,6 +60,7 @@ FORBIDDEN_PATTERNS = [
     (re.compile(r"@\[\s*implemented_by\s*\]"), "implemented_by escape hatch"),
     (re.compile(r"\bnative_decide\b"), "native_decide proof"),
 ]
+AXIOM_DECL_RE = re.compile(r"^\s*axiom\s+([^\s({\[]+)")
 AXIOM_LINE_RE = re.compile(r"^'([^']+)' depends on axioms: \[(.*)\]$")
 DEFAULT_ROOTS = {
     "GameTheory",
@@ -34,7 +70,11 @@ DEFAULT_ROOTS = {
     "GameTheoryTest",
     "GameTheoryExamples",
 }
-STANDALONE_LEAN_MODULES = {"lakefile", "scripts.AxiomAudit"}
+STANDALONE_LEAN_MODULES = {
+    "lakefile",
+    "scripts.AxiomAudit",
+    "scripts.ThreePlayerSolanAxiomAudit",
+}
 # The `BlockPairK11` research island: a self-contained, mutually-importing
 # cluster (see docs/uniform-equilibrium/audits/2026-08-04-QuittingTreeCensus.md
 # and .../2026-08-04-ModelFaithfulness.md) whose `native_decide`/`opaque`
@@ -79,22 +119,43 @@ def static_escape_hatch_audit() -> tuple[list[str], list[str]]:
 
     The `BlockPairK11` island is exempt *only* because it is unreachable from
     the default targets, so its `Lean.ofReduceBool` axiom cannot reach any
-    landed theorem.  That containment is not assumed here: it is checked by
-    `island_containment_audit`, and if it ever breaks these become failures
-    again.  Reporting them as notices rather than failures is what lets the
-    audit exit zero, so a genuinely new escape hatch fails loudly instead of
-    hiding behind a permanently red run.
+    landed theorem.  The Solan source boundary is exempt only for one exact
+    path-and-declaration pair, and downstream use is checked separately by the
+    Lean axiom audit.
     """
     failures: list[str] = []
     notices: list[str] = []
+    seen_external: set[tuple[str, str]] = set()
+
     for path in tracked_lean_files():
-        exempt = module_name_of(path) in BLOCK_PAIR_K11_ISLAND
+        exempt_island = module_name_of(path) in BLOCK_PAIR_K11_ISLAND
         stripped = strip_comments_and_strings(path.read_text(encoding="utf-8"))
         for line_no, line in enumerate(stripped.splitlines(), start=1):
             for pattern, label in FORBIDDEN_PATTERNS:
-                if pattern.search(line):
-                    bucket = notices if exempt else failures
-                    bucket.append(f"{path}:{line_no}: forbidden {label}")
+                if not pattern.search(line):
+                    continue
+
+                if label == "axiom declaration":
+                    match = AXIOM_DECL_RE.match(line)
+                    key = (path.as_posix(), match.group(1) if match else "")
+                    if key in EXTERNAL_SOURCE_AXIOMS:
+                        seen_external.add(key)
+                        notices.append(
+                            f"{path}:{line_no}: accepted external source axiom "
+                            f"{key[1]} ({EXTERNAL_SOURCE_AXIOMS[key]})"
+                        )
+                        continue
+
+                bucket = notices if exempt_island else failures
+                bucket.append(f"{path}:{line_no}: forbidden {label}")
+
+    for key, reason in EXTERNAL_SOURCE_AXIOMS.items():
+        if key not in seen_external:
+            failures.append(
+                f"{key[0]}: allowlisted external source declaration {key[1]} "
+                f"was not found ({reason})"
+            )
+
     return failures, notices
 
 
@@ -116,31 +177,60 @@ def island_containment_audit(
 
 
 def run_axiom_audit() -> tuple[list[str], str]:
-    result = subprocess.run(
-        ["lake", "env", "lean", "scripts/AxiomAudit.lean"],
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    if result.returncode != 0:
-        return [f"scripts/AxiomAudit.lean failed with exit code {result.returncode}"], result.stdout
-
+    audit_scripts = [
+        "scripts/AxiomAudit.lean",
+        "scripts/ThreePlayerSolanAxiomAudit.lean",
+    ]
+    outputs: list[str] = []
     failures: list[str] = []
+
+    for script in audit_scripts:
+        result = subprocess.run(
+            ["lake", "env", "lean", script],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        outputs.append(result.stdout)
+        if result.returncode != 0:
+            failures.append(f"{script} failed with exit code {result.returncode}")
+
+    combined_output = "\n".join(outputs)
+    if failures:
+        return failures, combined_output
+
     audited = 0
-    for line in result.stdout.splitlines():
+    seen_expected: set[str] = set()
+    for line in combined_output.splitlines():
         match = AXIOM_LINE_RE.match(line.strip())
         if not match:
             continue
         audited += 1
         decl, raw_axioms = match.groups()
         axioms = {part.strip() for part in raw_axioms.split(",") if part.strip()}
-        unexpected = sorted(axioms - ALLOWED_AXIOMS)
+
+        allowed = ALLOWED_AXIOMS | ALLOWED_AXIOMS_BY_DECL.get(decl, set())
+        unexpected = sorted(axioms - allowed)
         if unexpected:
             failures.append(f"{decl}: unexpected axioms {unexpected}")
 
+        if decl in EXPECTED_AXIOMS_BY_DECL:
+            seen_expected.add(decl)
+            missing = sorted(EXPECTED_AXIOMS_BY_DECL[decl] - axioms)
+            if missing:
+                failures.append(f"{decl}: missing expected source axioms {missing}")
+
     if audited == 0:
-        failures.append("scripts/AxiomAudit.lean produced no parsable axiom reports")
-    return failures, result.stdout
+        failures.append("Lean axiom audits produced no parsable axiom reports")
+
+    for decl in EXPECTED_AXIOMS_BY_DECL:
+        if decl not in seen_expected:
+            failures.append(
+                f"{decl}: no parsable axiom report; external-source dependency "
+                "boundary was not checked"
+            )
+
+    return failures, combined_output
 
 
 def module_name(path: pathlib.Path) -> str:
@@ -164,8 +254,7 @@ def tracked_import_graph() -> tuple[dict[str, pathlib.Path], dict[str, list[str]
 
 
 def sorry_carrying_modules(tracked_modules: dict[str, pathlib.Path]) -> set[str]:
-    """Modules with a live `sorry`/`admit`, discovered by scanning rather than
-    hard-coded, so this stays correct if the set of open conjectures changes."""
+    """Modules with a live `sorry`/`admit`, discovered rather than hard-coded."""
     modules: set[str] = set()
     for mod, path in tracked_modules.items():
         stripped = strip_comments_and_strings(path.read_text(encoding="utf-8"))
@@ -189,14 +278,7 @@ def root_aggregator_non_import_lines(path: pathlib.Path) -> list[int]:
 def leaf_invariant_audit(
     tracked_modules: dict[str, pathlib.Path], imports: dict[str, list[str]]
 ) -> list[str]:
-    """Make the repository's soundness argument build-checkable.
-
-    No landed theorem can transitively depend on `sorryAx` only if (a) every
-    `sorry`-carrying module is imported by nothing but the root aggregator and
-    the other `sorry`-carrying module, and (b) the root aggregator itself
-    declares nothing -- otherwise a declaration added directly to the root
-    could depend on `sorryAx` while (a) still held.
-    """
+    """Make the repository's `sorryAx` containment argument build-checkable."""
     failures: list[str] = []
 
     importers: dict[str, list[str]] = {mod: [] for mod in tracked_modules}
@@ -280,8 +362,10 @@ def import_reachability_audit(
         mod for mod in tracked_modules
         if mod not in reachable and mod not in STANDALONE_LEAN_MODULES
     )
-    failures.extend(f"{tracked_modules[mod]}: tracked Lean module is not reachable from default targets"
-                    for mod in orphaned)
+    failures.extend(
+        f"{tracked_modules[mod]}: tracked Lean module is not reachable from default targets"
+        for mod in orphaned
+    )
     return failures
 
 
@@ -305,8 +389,7 @@ def main() -> int:
         return 1
 
     if escape_hatch_notices:
-        print("Accepted escape hatches in the quarantined island "
-              "(contained; not reachable from default targets):")
+        print("Accepted narrowly scoped proof-boundary declarations:")
         for notice in escape_hatch_notices:
             print(f"  {notice}")
     print("Repository audit passed.")
