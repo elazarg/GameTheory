@@ -747,6 +747,38 @@ if (-not $SkipReachability) {
   Report 'MATRIX_ANALYSIS_BOUNDARY_PROBES_REJECTED' `
     $matrixAnalysisBoundaryRejected
 
+  # Utility invariance is a Core consequence of finite-law preference and
+  # response semantics.  It must expose both Nash and dominance results while
+  # remaining unable to see analytic existence, Protocol, or stochastic-game
+  # domain data.
+  $utilityInvarianceInputs = @(
+    'GameTheory.isNash_affine',
+    'GameTheory.isDominant_affine',
+    'GameTheory.isNash_shift',
+    'GameTheory.isNash_scale')
+  $utilityInvarianceBoundary = @(
+    'GameTheory.exists_isNash',
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.Stochastic.Game')
+  $utilityInvarianceOutput = Run-Probe 'GameTheory.Core.UtilityInvariance' `
+    ($utilityInvarianceInputs + $utilityInvarianceBoundary)
+  $utilityInvarianceInputsReached = 0
+  foreach ($constant in $utilityInvarianceInputs) {
+    if (-not (Is-Unreachable $utilityInvarianceOutput $constant)) {
+      $utilityInvarianceInputsReached++
+    }
+  }
+  Report 'UTILITY_INVARIANCE_INPUT_PROBES_REACHED' `
+    $utilityInvarianceInputsReached
+  $utilityInvarianceBoundaryRejected = 0
+  foreach ($constant in $utilityInvarianceBoundary) {
+    if (Is-Unreachable $utilityInvarianceOutput $constant) {
+      $utilityInvarianceBoundaryRejected++
+    }
+  }
+  Report 'UTILITY_INVARIANCE_BOUNDARY_PROBES_REJECTED' `
+    $utilityInvarianceBoundaryRejected
+
   $repeatedAnalysisRejected = 0
   foreach ($root in @(
       'GameTheory.Repeated.Basic',
@@ -1546,6 +1578,8 @@ if ($VerifyExpected) {
     $Expected['MATRIX_CORE_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['MATRIX_ANALYSIS_INPUT_PROBES_REACHED'] = 5
     $Expected['MATRIX_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['UTILITY_INVARIANCE_INPUT_PROBES_REACHED'] = 4
+    $Expected['UTILITY_INVARIANCE_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
     $Expected['REPEATED_BRIDGE_PROTOCOL_REJECTED'] = 1

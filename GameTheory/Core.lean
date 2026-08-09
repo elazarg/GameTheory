@@ -31,6 +31,7 @@ import GameTheory.Core.Learning
 import GameTheory.Core.FictitiousPlay
 import GameTheory.Core.RobustWelfare
 import GameTheory.Core.Response
+import GameTheory.Core.UtilityInvariance
 import GameTheory.Core.Approximate
 import GameTheory.Core.Potential
 import GameTheory.Core.Mixed

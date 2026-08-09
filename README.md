@@ -22,8 +22,9 @@ GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          game theory, strict-dominance solvability, approximate
                          Nash, Bayesian recommendation/obedience,
                          finite no-regret learning, concrete reindexing and
-                         relabeling laws, social welfare, robust CCE smoothness,
-                         zero-sum matrix security, May's majority
+                         relabeling laws, utility-scale invariance, social
+                         welfare, robust CCE smoothness, zero-sum matrix
+                         security, May's majority
                          characterization, and foundational social/coalitional
                          theory
 GameTheory/Protocol      execution, histories, information, assessment,

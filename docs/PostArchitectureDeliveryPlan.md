@@ -585,10 +585,10 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,598 of 8,324 pinned declarations are claimed by exact ledgers; 2,498 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,726-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | finite matrix security/value batch complete: static guarantees and caps live in Core, selected values and nonempty optimal sets live in Analysis, and a nonconstant 2x2 fixture forces value one; 40/40 selected rows reviewed | keep support complementarity, antisymmetric geometry, and general security as distinct later turns |
-| next capability rotation | foundations/VNM: select a bounded utility-invariance, strategic-equivalence, or expected-utility representation batch | keep probability-free ranks separate from lottery preference and search Mathlib before adding representation mathematics |
-| release engineering | warning-clean 3,527-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
+| exact accounting | 2,602 of 8,324 pinned declarations are claimed by exact ledgers; 2,502 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,722-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | positive-affine utility invariance complete: the canonical finite-law preference preserves Nash and dominance for every game form, and a negative scale reverses the hostile binary incentive; 4/4 pinned rows reviewed | keep VNM representation and strategic equivalence as distinct DFS gates rather than inferring them from utility rescaling |
+| next capability rotation | mixed rationalizability/dominance: select a bounded mature response batch | preserve the canonical response predicates and the executable/proof boundary |
+| release engineering | warning-clean 3,529-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -691,8 +691,14 @@ provisioned in CI.
    guarantees, caps, and saddle/Nash equivalence into Core, leaves value
    selection in Analysis, and classifies 40 pinned rows. A nonconstant 2x2
    witness supplies strict pure security choices and forces the selected value
-   to one. The queue now rotates to foundations/VNM rather than immediately
-   deepening into complementarity or antisymmetric geometry;
+   to one. The queue then rotates to foundations/VNM rather than immediately
+   deepening into complementarity or antisymmetric geometry.  The bounded
+   utility-invariance file closes 4/4 rows at the existing finite-law
+   preference layer: positive affine changes preserve Nash and dominance for
+   arbitrary game forms, while a negative scale reverses the hostile binary
+   incentive.  The queue now rotates to mixed rationalizability/dominance
+   rather than freezing a VNM representation or strategic-equivalence API
+   without its own hostile slice;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.
