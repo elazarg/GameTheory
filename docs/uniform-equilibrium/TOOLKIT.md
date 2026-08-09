@@ -44,6 +44,7 @@ without producing a witness.
 | Truncated-ledger boundary | `UniformEquilibrium/Quitting/Debt/Ledger/TruncatedLedgerCapBoundary.lean` | The sound package compiler interface together with one- and two-player counterexamples to treating it as a universal normal form. |
 | Face circulations | `UniformEquilibrium/Quitting/Circulation/FaceCirculationAll.lean` | Certificate/orbit production, finite charged closing, the compatible compact-path route, concrete payoff examples, and boundary analyses. Use `MultiOwnerFaceCirculationFiniteClosing.lean` for the finite compiler. |
 | Boundary holonomy | `UniformEquilibrium/Quitting/Boundary/Holonomy/All.lean` | Source-retaining fixed-cutoff compactness together with residual, self-similar, tangent, and realized-coordinate analysis. |
+| Marked absorption paths | `UniformEquilibrium/Quitting/AbsorptionPath/All.lean` | Finite source-retaining and source-free cylinders, the compact metrizable joint-semantic completion with `Never`, and correlated closed exact-seam relations and coherent associativity diagrams. |
 | Reward closure | `Models/Quitting/UniformPayoffExistenceClosure.lean` | Fixed-skeleton quitting-game existence under uniform reward limits and dense solved approximants. |
 | Nonexistence certificates | `UniformEquilibrium/Diagnostics/Uniform/NonexistenceCertificate.lean` | Late-horizon exploitability, quitting-terminal gaps, and the equivalence between finite-quitting nonexistence and some fixed positive terminal gap. |
 
@@ -128,12 +129,18 @@ supply density of solved games or construct a missing certificate.
 
 ## Boundary analysis and diagnostics
 
-`UniformEquilibrium/Quitting/Boundary/Holonomy/All.lean` has two complementary compactness modes.
-Fixed-cutoff and fixed-last lifts retain the actual root block, endpoints, and
-provenance.  Tangent compactness retains only bounded coefficient coordinates
-and normalized safety obstructions.  Neither mode closes the escaping-length
-problem: the first cannot compactify unbounded literal length, and the second
-does not prove realized-image closedness or provide a decoder.
+`UniformEquilibrium/Quitting/Boundary/Holonomy/All.lean` has two complementary
+local compactness modes.  Fixed-cutoff and fixed-last lifts retain the actual
+root block, endpoints, and provenance.  Tangent compactness retains only
+bounded coefficient coordinates and normalized safety obstructions.
+`UniformEquilibrium/Quitting/AbsorptionPath/All.lean` supplies the separate
+escaping-length carrier: a compact metrizable closure of one joint semantic
+encoding, with finite sequential density, `Never`, decoder-facing continuous
+projections, and a correlated closed exact-seam relation.  Its marked-stage
+hyperspace is an extensional graph rather than an ordered history, and its
+coherent six-coordinate diagrams do not imply total seam lifting or
+amalgamation of arbitrary independently selected splice witnesses.  The
+strategic repair decoder therefore remains separate.
 
 The general reverse diagnostics are:
 

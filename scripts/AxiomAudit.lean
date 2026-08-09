@@ -102,6 +102,13 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.quitting_sub_blockFixedPoint_eq_div
 #print axioms GameTheory.QuittingSeamPriceDeviationFalsity.seamPriceLaw_fails_for_deviation_via_fullDeficit
 
+-- The sequential marked-path completion and its correlated closed splice
+-- relations.
+#print axioms GameTheory.MetrizableMarkedAbsorptionCompletion.exists_finite_sequence_tendsto
+#print axioms GameTheory.MetrizableMarkedAbsorptionCompletion.surjective_maximalToMetrizable
+#print axioms GameTheory.MetrizableMarkedAbsorptionCompletion.exists_exactSeam_sequence_tendsto
+#print axioms GameTheory.MetrizableMarkedAbsorptionCompletion.associativityWitness_common_result
+
 -- Punishment level and individual rationality.
 #print axioms GameTheory.StochasticGame.punishmentLevel_le_add_of_isUniformEquilibriumPayoff
 #print axioms GameTheory.StochasticGame.not_isUniformEquilibriumPayoff_of_punishmentLevel_gt
