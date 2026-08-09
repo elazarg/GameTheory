@@ -401,8 +401,10 @@ abbrev CompactMarkedSemanticTarget
 
 /- Urysohn metrization of the already-assembled joint topology avoids an
 instance diamond between the Vietoris topology and a prematurely selected
-Hausdorff metric on the stage hyperspace. -/
-local instance : MetricSpace (CompactMarkedSemanticTarget reward) :=
+Hausdorff metric on the stage hyperspace.  The instance is exported because
+decoder modules must retain the same topology when stating continuity and
+sequential-limit theorems. -/
+instance : MetricSpace (CompactMarkedSemanticTarget reward) :=
   TopologicalSpace.metrizableSpaceMetric _
 
 /-- Joint finite semantic encoding. -/
