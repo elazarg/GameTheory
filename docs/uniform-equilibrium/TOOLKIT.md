@@ -47,7 +47,7 @@ without producing a witness.
 | Marked absorption paths | `UniformEquilibrium/Quitting/AbsorptionPath/All.lean` | Finite source-retaining and source-free cylinders; the compact metrizable joint-semantic completion with `Never`; bounded real holonomy, obstacle-cap, and continuous all-tail repair decoders; and correlated closed exact-seam relations and coherent associativity diagrams. |
 | Reward closure | `Models/Quitting/UniformPayoffExistenceClosure.lean` | Fixed-skeleton quitting-game existence under uniform reward limits and dense solved approximants. |
 | Nonexistence certificates | `UniformEquilibrium/Diagnostics/Uniform/NonexistenceCertificate.lean` | Late-horizon exploitability, quitting-terminal gaps, and the equivalence between finite-quitting nonexistence and some fixed positive terminal gap. |
-| Combined quitting counterexample regime | `UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegime.lean` | An exact normal form combining a positive terminal gap, a positive all-cutoff optimized exact-D floor, and a finite common punishment-floor prefix budget; it also exports the positive-debt tail, bounded potential, and zero-charge-cycle consequences. |
+| Combined quitting counterexample regime | `UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeAll.lean` | An exact normal form combining a positive terminal gap with finite canonical punishment-floor prefix capacity. It derives `η ≤ inf_N D_N ≤ D_N ≤ K ≤ M`, a quantitative positive-debt tail, all-orbit convergence to all-Continue, zero-charge recurrence, and the exact conditional debt-tail/floor-prefix bridge. |
 
 Import an internal file directly when its narrower interface is the point of
 the proof.  The umbrellas are navigation and downstream entry points, not a

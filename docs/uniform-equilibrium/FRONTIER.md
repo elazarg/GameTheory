@@ -37,15 +37,23 @@ uniform-equilibrium payoff is equivalent to one fixed positive terminal
 exploitability gap against every behavioral profile.  This is an exact
 counterexample target, not a finite certificate language by itself.
 
-The counterexample restrictions now also have one combined production
-interface.  Nonexistence is equivalent to a nonempty certificate carrying a
-positive terminal gap, a positive lower bound on all attained finite-cutoff
-min-max exact dynamic debts, and a common finite charge bound on every exact
-punishment-floor prefix.  The last field induces the canonical bounded
-potential and rules out positive-charge cycles in the floor-reachable
-predecessor relation; the debt field produces a positive exact-D limit tail
-with a summable opponent clock.  No theorem currently identifies that limit
-tail with a path in the floor-reachable relation.
+The counterexample restrictions now have one combined production interface.
+Nonexistence is equivalent to a positive terminal gap `η` together with
+finiteness of the canonical extended-real charge capacity of all exact
+punishment-floor prefixes.  Dynamic debt is derived rather than independently
+assumed:
+
+`0 < η ≤ inf_N D_N ≤ D_N ≤ max_i max(0,r_i({i})) ≤ M`.
+
+The optimized projective tail retains debt at least `η` for one owner and a
+summable opponent clock.  Every infinite exact punishment-floor orbit has
+summable joint absorption and converges coordinatewise to all-Continue; every
+recurrent reachable edge has zero charge.  Reversing a floor-dominating exact-D
+segment preserves charge, so the optimized tail either has summable joint
+absorption or eventually violates the punishment floor at every date.  The
+summable branch is automatic when the punishment vector is nonpositive.  No
+unconditional theorem identifies the optimized tail with a floor-reachable
+orbit.
 
 Payoff terminology is fixed in
 [`UniformEquilibrium/README.md`](../../UniformEquilibrium/README.md):

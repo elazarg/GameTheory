@@ -11,41 +11,55 @@ Fix a finite quitting reward table `reward`.  Let:
 
 - `D_N` be the attained minimum, over zero-boundary exact-D chains of cutoff
   `N`, of the maximum playerwise dynamic debt;
+- `Δ = inf_N D_N`;
+- `K = max_i max(0, r_i({i}))` and `M` be the canonical bound on the whole
+  reward table;
 - `P_floor` be the family of finite exact Nash--Bellman prefixes in the
   canonical reward box whose initial value dominates the behavioral punishment
   floor; and
+- `C* = sup { charge(P) | P ∈ P_floor }` in the extended nonnegative reals;
 - `q(x) = 1 - ∏ i, x_i(Continue)` be the absorption mass of a product root.
 
-The production counterexample regime consists of three numerical margins
+The production counterexample regime consists of two independent conditions:
 
 ```text
 terminal gap η > 0
-dynamic-debt floor δ > 0
-prefix-charge budget C ≥ 0
+canonical prefix-charge capacity C* < ∞
 ```
 
 satisfying:
 
 1. Every behavioral profile has a unilateral terminal-payoff improvement of at
    least `η`.
-2. `δ ≤ D_N` at every cutoff `N`.
-3. Every `P ∈ P_floor` satisfies `∑ t < |P|, q(P.root t) ≤ C`.
+2. `C*` is finite; equivalently every `P ∈ P_floor` satisfies
+   `∑ t < |P|, q(P.root t) ≤ C*`.
 
 This package is equivalent to nonexistence of a uniform-equilibrium payoff.
-The terminal gap supplies the reverse implication by itself; the debt floor and
-charge budget are additional restrictions forced on every counterexample.
+The terminal gap supplies the reverse implication by itself; finite charge
+capacity is additional structure forced on every counterexample.
 
-The Lean interface is `QuittingCounterexampleRegime`.  Its exact
-characterization is
-`not_exists_uniformEquilibriumPayoff_iff_nonempty_counterexampleRegime`.
+Dynamic debt is not an independent field.  The terminal compiler gives the
+sharp cross-lane chain
+
+```text
+0 < η ≤ Δ ≤ D_N ≤ K ≤ M.
+```
+
+Thus every counterexample has a positive optimized exact-D floor, and some own
+singleton reward is positive.  The former free parameter `δ` was redundant.
+The capacity `C*` is canonical: its real value is the least valid prefix bound,
+not a user-chosen larger constant.
+
+The Lean umbrella is `CounterexampleRegimeAll`.  The direct characterization
+is `not_exists_uniformEquilibriumPayoff_iff_exists_gap_and_finiteChargeCapacity`.
 
 ## Derived geometry
 
 The debt and charge fields have stronger derived forms.
 
-The positive debt floor produces a subsequential limit of attained finite
-minimizers.  The limit is an infinite exact-D path with a positive initial debt
-coordinate for some player and a summable opponent clock for that player.
+The terminal gap produces a subsequential limit of attained finite minimizers.
+The limit is an infinite exact-D path with an owner whose initial debt is at
+least `η` and whose opponent clock is summable.
 
 The charge budget extends from anchored prefixes to every path in the
 punishment-floor reachable exact-predecessor relation.  Its canonical
@@ -56,13 +70,32 @@ potential(current) + absorptionCharge(edge) ≤ potential(tail).
 ```
 
 Every closed reachable exact-predecessor path therefore has zero total charge.
-In particular, a reachable positive-charge cycle is a decisive certificate
-that the table is not a counterexample.
+More locally, every edge lying in a reachable strongly connected component has
+zero absorption.  A positive-charge return, cycle, or self-loop is therefore a
+decisive finite certificate that the table is not a counterexample.
 
-The positive-debt path and the floor-reachable predecessor relation are not yet
-identified.  The first comes from zero-boundary optimized exact-D chains; the
-second starts at the behavioral punishment-floor anchor.  Search output must
-not silently treat them as one orbit.
+The prefix result is genuinely all-orbits.  Every infinite exact Nash--Bellman
+orbit in the canonical box whose initial value dominates the punishment floor
+has total absorption at most `C*`.  Each player's quit probabilities are
+summable and tend to zero, so every such root sequence converges coordinatewise
+to all-Continue.  Nevertheless, the actual behavior profile starting at every
+sufficiently late date remains terminally exploitable by at least `η`.
+
+The optimized exact-D path and the floor-prefix family are connected exactly
+at floor-dominating endpoints: reversing such a finite exact-D segment gives a
+floor prefix with the same total absorption.  Consequently the extracted tail
+has the alternative
+
+```text
+joint absorption is summable
+or eventually every endpoint violates the punishment floor in some coordinate.
+```
+
+If every punishment value is nonpositive, the zero-boundary approximants and
+their projective limit dominate the floor, so the first branch holds and the
+extracted tail has summable full joint absorption.  Without that sign condition
+the two carriers are still not identified; search output must not silently
+treat them as one orbit.
 
 ## Search lanes
 
@@ -74,9 +107,12 @@ tables with symmetry are useful seed families, but symmetry should be a search
 parameter rather than an assumed property of a counterexample.
 
 For each proposed normalization, record the original reward table and the
-exact affine transformation.  Numerical normalization is useful, but a solver
-must not compare margins obtained under different payoff scales as if they
-were absolute.
+exact affine transformation.  Positive scaling preserves root feasibility and
+absorption charge while scaling `η`, `Δ`, `D_N`, `K`, and `M`.  Normalizing
+`M = 1` puts fixed-player reward tables on a compact unit sphere and forces
+`0 < η ≤ Δ ≤ K ≤ 1`.  Normalizing `K = 1` is sharper for the debt lane but does
+not compactify the other reward coordinates.  A solver must not compare
+payoff-scaled margins across different normalizations.
 
 ### Exact-D optimization
 
@@ -89,30 +125,36 @@ For increasing cutoffs, solve the compact attained optimization defining
 - the successive optimum drop;
 - joint and deleted-player survival along the minimizer.
 
-The values are nonincreasing and nonnegative.  Decay toward zero is evidence
-for the existing uniform-payoff compiler, while a plausible counterexample
-must display a persistent positive floor.  A positive value at one or several
-cutoffs is not a proof of a positive infimum.
+The values are nonincreasing and nonnegative.  A certified terminal gap `η`
+requires `η ≤ D_N` at every tested cutoff and, mathematically, at every cutoff.
+Thus `D_N < η` rejects a proposed joint certificate immediately.  Decay toward
+zero is evidence for the existing uniform-payoff compiler, while a plausible
+counterexample must display a persistent positive floor.  A positive value at
+one or several cutoffs is not a proof of a positive infimum.
 
 ### Punishment-floor charge optimization
 
 For increasing horizons, maximize total absorption charge over exact
-punishment-floor prefixes.  The fixed-horizon constraints consist of simplex,
-reward-box, exact Bellman, exact root-Nash, and floor inequalities, so they are
-suited to nonlinear, semialgebraic, or interval-certified optimization.
+punishment-floor prefixes.  These maxima approximate the canonical capacity
+`C*`; unboundedness is exactly `C* = ∞`.  The fixed-horizon constraints consist
+of simplex, reward-box, exact Bellman, exact root-Nash, and floor inequalities,
+so they are suited to nonlinear, semialgebraic, or interval-certified
+optimization.
 
-Search separately for a prefix followed by an exact positive-charge cycle.
-That finite witness is decisive: repetition gives arbitrarily charged prefixes
-and hence a uniform payoff.  In its absence, attempt to synthesize a bounded
-potential on the explored predecessor graph.  On a finite abstraction this is
-a system of difference inequalities; on a continuous cell decomposition it
-can be approached with piecewise-affine, polynomial, or sum-of-squares barrier
-templates.
+Search separately for a positive-charge edge with an exact return path.  That
+finite witness is decisive: every recurrent edge in a counterexample must have
+zero charge.  Also fix thresholds `ρ > 0` and maximize the number of stages
+with `q(root) ≥ ρ`.  Arbitrarily large counts at one fixed `ρ` prove existence
+without knowing `C*`.  In the bounded branch, synthesize the canonical
+budget-to-go potential on the explored predecessor graph.  On a finite
+abstraction this is a system of difference inequalities; on a continuous cell
+decomposition it can be approached with piecewise-affine, polynomial, or
+sum-of-squares barrier templates.
 
 Apparent saturation of the horizon maxima is only candidate evidence.  The
-current generic attained finite-horizon API assumes a finite edge type and does
-not by itself prove compact continuum-edge attainment for the quitting
-relation.
+capacity is a supremum and need not be attained.  The current generic attained
+finite-horizon API assumes a finite edge type and does not by itself prove
+compact continuum-edge attainment for the quitting relation.
 
 ### Terminal exploitability
 
@@ -135,28 +177,38 @@ three lanes:
 ```text
 reward table and normalization
 player count and declared symmetries
+M and positive-singleton cap K
+candidate terminal gap η
 cutoff N
-certified D_N interval and minimizing exact-D chain
+certified D_N interval, check η ≤ D_N ≤ K, and minimizing exact-D chain
 optimized prefix-charge interval and maximizing exact prefix
 best terminal exploitability interval and profile grammar
-positive-cycle search result
+positive-return/SCC search and fixed-threshold stage counts
+punishment-floor sign pattern
 solver residuals and exact rational reconstruction, when available
 ```
 
-Do not promote a floating-point candidate solely because all three finite
-trends look favorable.  Promotion requires either exact Lean witnesses or
-certified inequalities with enough data for reconstruction.
+Do not promote a floating-point candidate solely because all finite trends
+look favorable.  Promotion requires either exact Lean witnesses or certified
+inequalities with enough data for reconstruction.
 
 ## The cross-lane question
 
-The most useful consistency test is not another independent optimizer.  It is
-an adapter or inequality relating the positive optimized exact-D tail to the
-floor-reachable bounded-potential relation.
+The terminal/debt inequality is now complete: `η ≤ Δ`, quantitatively, and the
+projective tail retains debt at least `η` in one coordinate.  The remaining
+consistency problem is the debt/charge adapter.
 
-A successful anchoring theorem would put bounded total absorption, positive
-dynamic debt, and a summable opponent clock on one compatible path.  The
-resulting asymptotic root would be forced toward a narrow all-Continue or
-single-owner face.  The next question would then be whether that face can still
-support a uniform positive terminal exploitability gap.  Proving that it
-cannot would rule out the combined regime and close the remaining
-counterexample branch.
+There are two precise branches to test.
+
+1. The optimized tail has cofinally many floor-dominating endpoints.  Its full
+   joint absorption is then summable, so every root approaches all-Continue.
+   This branch is automatic when the punishment vector is nonpositive.
+2. From some date onward every optimized-tail endpoint lies below the
+   punishment floor in at least one coordinate.  The offending coordinate may
+   vary with time.
+
+In either branch the tail still carries an owner with debt at least `η` and a
+summable opponent clock.  The decisive next theorem should show that neither
+an all-Continue positive-debt tail nor perpetual rotating floor violation can
+coexist with a uniform terminal exploitability gap.  A weaker bridge that only
+compares unrelated selected paths will not close the regime.
