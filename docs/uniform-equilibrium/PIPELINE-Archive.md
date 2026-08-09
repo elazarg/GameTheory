@@ -262,6 +262,43 @@ meaningful outside it but no mixture realizes such a row. Harmless where used,
 and it means results proved over unrestricted real rows do **not** automatically
 transport.
 
+### `LEAN-P1-4` — define the finite marked absorption-cylinder encoding and its identities
+
+- **Status:** COMPLETE
+- **Lane:** P1
+- **Depends:** Stable mathematical type from `MATH-P0-1`; existing finite
+  exact-D and holonomy APIs.
+- **Record:** [Enriched absorption paths][ep]
+
+**Objective.** Define the finite marked absorption-cylinder encoding and prove
+its exact payoff, obstacle/cap, debt, packet, anchor, and concatenation
+identities.
+
+**State.** The source-retaining realization adapter is landed in
+`UniformEquilibrium/Quitting/AbsorptionPath/RealizedMarkedAbsorptionCylinder.lean`:
+bounded chronological prefixes, exact coalition-mass accounting, endpoint
+clock/holonomy pins, arbitrary terminal-continuation evaluation, and adjacent
+same-source concatenation.  Its type name is intentionally `Realized...`: it
+retains the block and literal chronology and therefore is not the compact
+source-forgetting cylinder.  A source-forgetting one-stage semantic record is
+also landed in
+`UniformEquilibrium/Quitting/AbsorptionPath/MarkedObstacleRecord.lean`: the
+encoder retains the current root, vector factors, full/deleted survival,
+Bellman continuation data, and obstacle ordinate, with exact recurrence and
+product identities.
+
+`UniformEquilibrium/Quitting/AbsorptionPath/MarkedAbsorptionCylinder.lean`
+completes the finite source-forgetting layer.  It assembles joint stage records
+with affine prefix/suffix marks, defines associative chronological composition,
+proves the full realized-encoder homomorphism including the transported stage
+set, and packages semantic coherence with exact obstacle attainment, endpoint,
+root-row, debt, anchor, and packet laws.  Realized encoders are coherent and
+coherence is stable under exact-anchor splicing.  The generalized compact trace
+and repair decoder remain separate `MATH-P0-1` obligations.
+
+**Acceptance.** Every production finite block embeds without changing its
+strategic meaning; basis for P0 compactness and endpoint adapters.
+
 ### `LEAN-P1-5` — linear complementarity infrastructure
 
 - **Status:** DONE — `Math/LinearProgramming/SingletonLCP.lean`. Predicate,
@@ -844,4 +881,5 @@ mechanism, not a stationary or bare period-one cycle.
 ## Link references
 
 [anchored-repair]: ../../ideas/PositivePlateauBoundaryClosure/AnchoredRepairOrUniformDebtDescent.md
+[ep]: ../../ideas/PositivePlateauBoundaryClosure/EnrichedAbsorptionPathsMayCompactifyTheEscapingMiddle.md
 [exact-vs-relaxed]: ../../ideas/AbsorbingCycleCarrier/ExactCyclesAreNotLimitsOfRelaxedOnes.md

@@ -23,7 +23,17 @@ while retaining the current product root, pre/post vector factors, full and
 player-deleted survival, local Bellman data, continuation, and obstacle
 ordinate.  The encoder image satisfies the vector, full-product,
 deleted-product, survival-update, and Bellman recurrences.  This is one marked
-chronological record, not yet the completed graph or a block cylinder.
+chronological record.
+
+`L` The finite source-forgetting block graph is
+`UniformEquilibrium/Quitting/AbsorptionPath/MarkedAbsorptionCylinder.lean`.
+It stores a finite extensional set of joint stage records, independent packet,
+debt, anchors, survival and absorption endpoints, and boundary holonomy.  Its
+composition transports outer suffix marks and inner prefix coordinates,
+is associative on the full carrier, and agrees exactly with adjacent
+concatenation of realized blocks.  The strong semantic-coherence predicate is
+closed under exact-anchor splicing.  This is the finite semantic algebra, not
+its generalized compact completion.
 
 ## 1. Notation for a finite block
 
@@ -236,16 +246,19 @@ Item 7 subsumes the test that matters most: the forgetful map to holonomy
 coordinates must be a homomorphism. If it is not, the encoding is wrong
 independently of any topology.
 
-The realized source adapter proves the row-level coalition-mass telescope,
-arbitrary-terminal prescribed and unilateral evaluation, endpoint clocks, and
-the existing holonomy/clock laws for adjacent cuts of one calibrated source.
-The source-forgetting obstacle-record encoder proves the corresponding
-one-stage factor, clock, Bellman, and obstacle equations.  Together they still
-do **not** discharge the list above: there is no source-forgetting block path or
-marked obstacle graph, and same-source concatenation is not a composition law
-for semantic cylinders.  The distinction is enforced by the exported type name
-`RealizedMarkedAbsorptionCylinder`; the name `MarkedAbsorptionCylinder` remains
-available for the eventual target type.
+`L` The finite exactness boundary is discharged.  The realized source adapter
+proves the row-level coalition-mass telescope and source concatenation; the
+one-stage obstacle encoder supplies the local recurrence laws; and
+`MarkedAbsorptionCylinder` assembles them into the joint graph described above.
+The complete encoder, including its transported stage set, absorption endpoint,
+packet, debt, and anchors, is a homomorphism from adjacent realized block
+concatenation to source-free composition.  Exact obstacle caps are attained,
+and the finite semantic-coherence predicate records generation, incidence,
+bounds, and packet laws without retaining the source in the carrier data.
+
+This does **not** discharge the compact-completion obligations below.  In
+particular, finite chronological generation is an existential correctness
+certificate, not an intrinsic closed characterization of generalized limits.
 
 ## 9. The limit space
 

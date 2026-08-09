@@ -353,17 +353,25 @@ geometry, and for two players one is guaranteed externally.
 Fixed-cutoff closedness is settled; arbitrary-length executability is not.
 Projection to scalar coefficients forgets splice admissibility, while a state
 retaining literal finite length cannot remain a complete finite-realizability
-certificate after compact closure.  Boundary objects representing an escaped
-infinite or continuous middle are unavoidable unless plateau middles are
-uniformly tight.  The leading candidate is therefore the
+certificate after compact closure.  The finite representation layer is now
+exact: every realized block maps to a source-forgetting joint stage graph, its
+chronological composition is associative, the encoder commutes with adjacent
+block concatenation on every coordinate, and strong semantic coherence is
+closed under exact-anchor splicing.  Affine prefix and suffix marks make these
+laws division-free even at zero survival.
+
+Boundary objects representing an escaped infinite or continuous middle are
+still unavoidable unless plateau middles are uniformly tight.  The leading
+candidate for that compact completion is the
 [marked absorption-path route](../../ideas/PositivePlateauBoundaryClosure/EnrichedAbsorptionPathsMayCompactifyTheEscapingMiddle.md), with the
 [escaping-middle problem](../../ideas/PositivePlateauBoundaryClosure/RealizedAnchoredHolonomyClosedness.md)
-retained as its acceptance/falsification test.  The first theorem must encode
-actual finite blocks into the joint semantic graph exactly and expose
-continuous holonomy, packet, and debt projections.  Mark transport and
-exact-seam/self-seam finite pullback remain additional surgery obligations;
-compactness and density alone do not supply them, but physical behavioral-tail
-attachment does not require them.
+retained as its acceptance/falsification test.  The next theorem must construct
+the generalized closure and expose continuous holonomy, packet, and debt
+projections.  Compact provenance for identical zero-mass stages, completed
+`Never` semantics, generalized mark transport, and exact-seam/self-seam finite
+pullback remain additional obligations; compactness and density alone do not
+supply them, but physical behavioral-tail attachment does not require the seam
+pullback.
 
 The strategic decoder's all-length tail layer has a quitting-specific positive
 resolution at the behavioral seam (`M`, formalization active).  A fixed prefix

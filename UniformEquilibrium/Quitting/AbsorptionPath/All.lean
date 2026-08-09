@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import UniformEquilibrium.Quitting.AbsorptionPath.RealizedMarkedAbsorptionCylinder
 import UniformEquilibrium.Quitting.AbsorptionPath.MarkedObstacleRecord
+import UniformEquilibrium.Quitting.AbsorptionPath.MarkedAbsorptionCylinder
 
 /-!
 # Finite absorption-path semantic layer
@@ -16,10 +17,14 @@ exports exact coalition-mass accounting, bounded chronological samples, free
 terminal-continuation evaluation, and same-source concatenation laws.
 `MarkedObstacleRecord` forgets that source after encoding one stage while
 retaining the factor, survival, Bellman, and obstacle coordinates needed by a
-future completed chronological graph.
+completed chronological graph.  `MarkedAbsorptionCylinder` is the finite
+source-free graph: its complete carrier is associative, the realized encoder
+commutes exactly with adjacent block concatenation, and semantic coherence is
+preserved by exact-anchor splicing.
 
-This layer is not the source-forgetting block cylinder, generalized completed
-trace carrier, or repair decoder.  Those objects still require a compact marked
-chronological obstacle graph, independent packet/provenance coordinates, exact
-finite seam pullback, and an all-length repair theorem.
+This layer is not the generalized completed-trace carrier or repair decoder.
+Those objects still require compact completion of the marked chronological
+graph, a provenance convention for extensionally identical stages, continuous
+projection laws, completed `Never` semantics, and any finite seam pullback
+needed by surgery.
 -/

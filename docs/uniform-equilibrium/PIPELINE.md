@@ -13,10 +13,10 @@ incorporated and reflected below.
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
-holonomy compactness work is committed and counted; the marked absorption-path
-route is a selected open design, not production mathematics. New Lean files are
-never counted as landed until committed, built, and reflected in the owning
-claim and [`FRONTIER.md`](FRONTIER.md).
+holonomy compactness work and finite source-forgetting marked-cylinder algebra
+are committed and counted; the generalized compact completion remains an open
+design. New Lean files are never counted as landed until committed, built, and
+reflected in the owning claim and [`FRONTIER.md`](FRONTIER.md).
 
 **Handoff validation.** At the last fully audited checkpoint, `lake build`
 succeeded, local Markdown links resolved, and the repository audit exited
@@ -227,8 +227,6 @@ superseded/resolved decision section in
 - `LEAN-P0-2` — formalize the two carrier refutations that exist only as prose
 - `LEAN-P0-9` — machine-check the weight with relaxed cycles at every tolerance
   and no exact one (`IN FLIGHT`)
-- `LEAN-P1-4` — define the finite marked absorption-cylinder encoding and its
-  identities (`ACTIVE`, realized source adapter landed)
 - `LIT-P1-4` — second round of reference-chain closure and flagged-item intake
 - `ENG-P0-3` — run integration-sweep after every parallel-work wave, before
   committing
@@ -278,6 +276,8 @@ superseded/resolved decision section in
   [archive](PIPELINE-Archive.md)
 - `LEAN-P0-12` — elementary behavioral-tail density and fixed-prefix repair
   value — see [archive](PIPELINE-Archive.md)
+- `LEAN-P1-4` — finite source-forgetting marked-cylinder semantic algebra — see
+  [archive](PIPELINE-Archive.md)
 - `LEAN-P1-5` — linear complementarity infrastructure — see
   [archive](PIPELINE-Archive.md)
 - `MATH-P0-6` — port the all-periods non-existence theorem — see
@@ -878,6 +878,11 @@ to attach an arbitrary behavior tail at the unique physical live seam.
 
 **State.** `ACTIVE` at **P0**: `PC-009` restored this lane, superseding
 `PC-008`'s demotion. Finite semantics and fixed-cutoff closure are landed.
+The source-free finite cylinder is also landed: its joint stage graph carries
+all player clocks, coalition absorption, affine prefix/suffix marks, holonomy,
+anchors, debt, and the marked packet.  Composition is associative, the complete
+realized encoder is a homomorphism for adjacent block concatenation, and strong
+finite semantic coherence is closed under exact-anchor splicing.
 Closure of the finite realized set is refuted, and no sequentially compact added
 coordinate can close it with continuous projection.  The compact numerical
 core is now audited (`M`): anchored completed vector-factor chains are compact
@@ -904,10 +909,10 @@ and continuity of the holonomy projection.  It does not need to perturb an
 approximate anchor match into an exact complementary seam.  Chronology,
 packet, and debt remain available for the unresolved prefix-consumption branch.
 
-**Acceptance.** Build the joint semantic graph and exact finite adapter, define
-the continuous holonomy/packet/debt projections, and prove the compactness and
-finite-density statements actually used by prefix consumption.  Record
-continuous mark transport and exact-seam/self-seam pullback as additional
+**Acceptance.** Starting from the landed joint semantic graph and exact finite
+adapter, define the continuous holonomy/packet/debt projections and prove the
+compactness and finite-density statements actually used by prefix consumption.
+Record continuous mark transport and exact-seam/self-seam pullback as additional
 surgery obligations rather than silently deriving them from compactness.
 Coordinates may be removed only after a fibre-constancy theorem.
 Do **not** pursue a missing-compact-coordinate closure of the finite set; that
@@ -1750,38 +1755,6 @@ for reachability positivity and the finite per-atom case analysis.
 **Acceptance.** Permanent regression for compactified cap/attainable-tail
 claims.
 
-### `LEAN-P1-4` — define the finite marked absorption-cylinder encoding and its identities
-
-- **Status:** ACTIVE (PARTIAL)
-- **Lane:** P1
-- **Depends:** Stable mathematical type from `MATH-P0-1`; existing finite
-  exact-D and holonomy APIs.
-- **Record:** [Enriched absorption paths][ep]
-
-**Objective.** Define the finite marked absorption-cylinder encoding and prove
-its exact payoff, obstacle/cap, debt, packet, anchor, and concatenation
-identities.
-
-**State.** `ACTIVE` at **P0**: `PC-009` restored this lane, superseding
-`PC-008`'s demotion.  The source-retaining realization adapter is landed in
-`UniformEquilibrium/Quitting/AbsorptionPath/RealizedMarkedAbsorptionCylinder.lean`:
-bounded chronological prefixes, exact coalition-mass accounting, endpoint
-clock/holonomy pins, arbitrary terminal-continuation evaluation, and adjacent
-same-source concatenation.  Its type name is intentionally `Realized...`: it
-retains the block and literal chronology and therefore is not the compact
-source-forgetting cylinder.  A source-forgetting one-stage semantic record is
-also landed in
-`UniformEquilibrium/Quitting/AbsorptionPath/MarkedObstacleRecord.lean`: the
-encoder retains the current root, vector factors, full/deleted survival,
-Bellman continuation data, and obstacle ordinate, with exact recurrence and
-product identities.  It deliberately stops before building a list or topology.
-The remaining implementation must assemble these records into the joint marked
-semantic graph specified by `PC-012`; do not scaffold an infinite topology
-around the source wrapper.
-
-**Acceptance.** Every production finite block embeds without changing its
-strategic meaning; basis for P0 compactness and endpoint adapters.
-
 ### `LEAN-P0-2` — formalize the two carrier refutations that exist only as prose
 
 - **Status:** ACTIVE
@@ -2326,7 +2299,7 @@ actual finite middle -> compositional boundary holonomy ---------------- [L]
                 |
 fixed-cutoff resolved lift compact/closed; literal length fence -------- [L]
                 |
-       finite realized semantic adapter; source-forgetting joint graph
+       finite realized adapter + source-forgetting joint graph ------------- [L]
                 |
        MATH-P0-1: compact completed trace + marked chronology
                     + continuous holonomy/packet/debt projection
