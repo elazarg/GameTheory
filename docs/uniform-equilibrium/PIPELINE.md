@@ -123,16 +123,17 @@ blockers hidden in the P0 mathematical status.
   Exact forward packets with arbitrarily large finite charge in a fixed compact
   carrier close to one-seam lassos by finite pigeonhole recurrence, so this
   route needs neither one orbit uniform in the charge target nor a separate
-  rotation-recurrence theorem.  The punishment-floor construction now supplies
-  one exact product-root predecessor orbit in every finite quitting game and
-  keeps every value above the behavioral punishment floor.  If its cumulative
-  absorption is unbounded, its finite prefixes feed this compiler and produce a
-  uniform payoff.  The complementary theorem bounds only this classically
-  selected orbit; it neither gives a common bound over all legal predecessor
-  orbits nor an optimal charge selector.  A general accept-or-retarget
-  dispatcher, resolved chart coverage and arc lifting, strategic Farkas
-  decoding, and a consumer for the selected bounded-charge boundary remain
-  open.
+  rotation-recurrence theorem.  The punishment-floor construction supplies
+  exact product-root predecessors above the behavioral punishment floor.  More
+  strongly, the finite-prefix interface ranges over every exact Bellman prefix
+  in the canonical box whose anchor is above that floor.  If their charges are
+  not uniformly bounded, target-dependent prefixes feed this compiler and
+  produce a uniform payoff; no single orbit or quantifier exchange is needed.
+  Hence the complementary branch has one common finite charge bound for every
+  such prefix, with the classically selected orbit only a special case.  A
+  general accept-or-retarget dispatcher, resolved chart coverage and arc
+  lifting, strategic Farkas decoding, and a consumer for this game-intrinsic
+  bounded-charge boundary remain open.
 - **Punishment-completed exact cycles (`177a0c03`, conditional compiler).** A
   coordinate may contract in deleted survival or be held by the exact
   punishment-value inequality; this includes credibly punishable negative solo

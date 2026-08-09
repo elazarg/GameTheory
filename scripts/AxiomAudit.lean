@@ -327,6 +327,9 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.quittingPunishmentValue_le_rootSuccessorPayoff_of_tail_ge
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_punishmentFloorForwardCharge
 #print axioms GameTheory.quittingGame_uniformPayoff_or_punishmentFloorForwardChargeBound
+#print axioms GameTheory.quittingPunishmentValue_le_finitePrefixValue
+#print axioms GameTheory.quittingGame_exists_uniformPayoff_of_arbitrarilyCharged_floorPrefixes
+#print axioms GameTheory.quittingGame_uniformPayoff_or_bounded_floorPrefixCharge
 
 -- Stopping-law accounting, cyclic exposure, and phase-occupation duality.
 -- These checks live here rather than in production modules so ordinary builds
