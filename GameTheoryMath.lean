@@ -6,6 +6,7 @@ root deliberately imports no game semantics.
 -/
 
 import GameTheoryMath.DAG
+import GameTheoryMath.AffineUtility
 import GameTheoryMath.OnlineLearning
 import GameTheoryMath.SimplexApproximation
 

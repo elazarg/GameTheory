@@ -78,6 +78,7 @@ becomes difficult to scan.
 | EXP-065 | 2026-08-03 | D0/D2/D4/D9 / finite contracts | Does hidden-action contract theory earn a native finite-support principal-agent branch, with an explicit outside option, rather than a one-player `GameForm` or an auction specialization? | Supports native ownership; decides D32 | [`decisions/D32-principal-agent-contract-ownership.md`](decisions/D32-principal-agent-contract-ownership.md); `GameTheory/Experimental/PostArchitecture/ContractOwnership.lean` |
 | EXP-066 | 2026-08-08 | D4/D5/D8/D9 / quasilinear mechanisms | Does weak monotonicity and its affine/Myerson consumers need a capability-free native quasilinear direct-mechanism owner, rather than overloading Groves-specific `VCGSetup` or outcome-generic `BayesianMechanism`? | Supports native ownership with canonical-IC compilation; decides D33 | [`decisions/D33-quasilinear-direct-mechanism-ownership.md`](decisions/D33-quasilinear-direct-mechanism-ownership.md); `GameTheory/Experimental/PostArchitecture/QuasiLinearMechanismOwnership.lean` |
 | EXP-072 | 2026-08-09 | D12/D22/D23 / general-sum discounted stochastic games | Can finite Fink existence use the canonical stochastic, probability, equilibrium, and fixed-point owners without the sibling's legacy closure? | Supports one-way Analysis bridge; decides D39 | [`decisions/D39-general-sum-discounted-stochastic-equilibrium.md`](decisions/D39-general-sum-discounted-stochastic-equilibrium.md); `GameTheory/Analysis/Stochastic/Fink.lean`; `GameTheoryMath/PositivePartFixedPoint.lean` |
+| EXP-074 | 2026-08-09 | D2/D4 / finite-law VNM | Can binary mixture independence yield the finite-outcome representation theorem through public `FinDist` alone? | Supports after rejecting zero-weight independence; decides D41 | [`decisions/D41-finite-law-vnm.md`](decisions/D41-finite-law-vnm.md); `GameTheory/Experimental/PostArchitecture/VNMFiniteSupport.lean`; `GameTheory/Core/VNM.lean`; `GameTheory/Tests/VNM.lean` |
 
 ## Entry template
 
@@ -4705,3 +4706,51 @@ memory.
   the standard mixed notion, retain the explicitly named pure semantics and
   executable checker, and require a separate algorithm/certificate gate before
   adding executable mixed elimination.
+
+### EXP-074: finite-law VNM representation waist
+
+- **Date / revision:** 2026-08-09, reserved on `b223ee7`
+- **Status:** complete; supports D41
+- **Decision / question:** D2/D4 and the S-FOUND breadth-first gate; whether
+  finite-outcome von Neumann--Morgenstern representation can be recovered over
+  the public `FinDist` API without exposing its PMF representation, adding a
+  second lottery/preference carrier, or crossing into Analysis.
+- **Prediction:** expected-utility soundness, mixture independence, and
+  continuity should be direct finite-expectation algebra.  The converse should
+  remain topology-free if binary independence can be lifted to arbitrary
+  finite compound-lottery substitution by a support-decreasing `FinDist`
+  argument.  Outcome finiteness stays theorem-local.
+- **Representative slice:** prove or refute the compound-substitution step for
+  arbitrary finite-support outer laws, including zero-mass branches.  A
+  three-outcome expected-utility order must satisfy the axioms with a genuine
+  half/half certainty equivalent, while a lexicographic three-outcome order
+  must exhibit the missing-continuity obstruction.
+- **Competing designs:** public-`FinDist` support induction and binary
+  decomposition; promote only the one-way representation-implies-axioms
+  package; expose a reusable finite-law decomposition theorem only if another
+  consumer justifies it; or use PMF/simplex/Analysis internals.
+- **Kill conditions:** any proof needs `toPMF`, `PMF`, `ENNReal`, measurable or
+  topological probability, `stdSimplex`, stored finiteness, `Fintype.ofFinite`,
+  a second law/preference abstraction, or public decomposition machinery with
+  no independent consumer.  Failure to handle zero branch mass or to decrease
+  support honestly also kills the full-converse promotion.
+- **Artifacts / observations:** the first draft allowed `0 ≤ t`; at `t = 0`
+  both mixtures collapse to the common law, so reflexivity would force every
+  comparison.  The experiment rejects that formulation and uses the pinned
+  strict-positive condition.  The corrected spike proves an exact mixture of
+  one supported point and the law conditioned on its complement, strict
+  support decrease, and arbitrary finite compound substitution.  It uses no
+  authored `PMF`, `toPMF`, `ENNReal`, `toReal`, `Fintype.ofFinite`, or Analysis.
+  `GameTheory.Core.VNM` then completes the finite-outcome converse, including
+  the degenerate and empty-outcome cases.  The hostile tests cover three
+  distinct EU levels, an interior certainty equivalent, two agents, empty
+  outcomes, the zero-weight regression, and a total/transitive/independent but
+  noncontinuous lexicographic order.  Focused builds and the 3,542-job default
+  build are warning-free.  Exact coverage returns `VERIFIED=1` at 70 ledgers
+  and 2,747/8,324 claimed rows; the full structural audit returns `VERIFIED=1`
+  with VNM 8/8 reached and 6/6 rejected, affine mathematics 4/4 and 2/2.
+- **Outcome / next action:** adopt D41 and keep compound substitution,
+  standard lotteries, and certainty equivalents private.  The complete
+  66-row Basic ledger advances S-FOUND but does not complete the broader
+  family; axiom independence, convergence, and selected strategic-equivalence
+  results remain later breadth-first packages.

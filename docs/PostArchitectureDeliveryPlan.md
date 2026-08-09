@@ -338,7 +338,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 
 | Lane | Pinned scope | Hostile lead result | Intended home |
 |---|---|---|---|
-| foundations and VNM | utility invariance, strategic equivalence, expected-utility representation, axiom independence | expected-utility representation without merging probability-free ranks back into lottery preference | `Core.Preference`, finite laws, and independent mathematics only where earned |
+| foundations and VNM | utility invariance, strategic equivalence, expected-utility representation, axiom independence | **finite-outcome vNM representation complete under EXP-074/D41;** next axiom independence and the non-obsolete strategic-equivalence inventory | `Core.Preference`, finite laws, and game-independent affine mathematics only where earned |
 | static response | dominance, rationalizability, approximate and secure equilibrium | **strict solvability and mixed/pure rationalizability complete;** next IESDS/correlation or undominated existence | `GameTheory.Core`; explicitly pure execution in `Finite` |
 | correlation | correlation regimes, regret, signal timing, value of correlation | **CE/CCE existence, conditional obedience, relative dominated-support exclusion, and strict-dominant CE/CCE uniqueness complete;** next approximation/regret or one strict timing separation | `Core` and opt-in `Analysis` |
 | learning | regret, multiplicative weights, fictitious play, approachability | **F2, finite MW self-play, base fictitious play 9/9, exact-potential convergence, and approachability/regret matching 23/23 complete;** only weighted-potential generalization remains gated | stable finite identities in Core, law-free MW and approachability mathematics in `GameTheoryMath`, canonical-law adapters in Probability or opt-in Analysis, and quantitative composition in `Analysis.Learning` |
@@ -577,18 +577,18 @@ capability status is not renegotiated during that review.
 
 ### Current release-coverage checkpoint
 
-Last integrated checkpoint: 2026-08-09, after the bounded cooperative
-balancedness batch completed the current breadth-first seam.
+Last integrated checkpoint: 2026-08-09, after the finite-law VNM
+characterization completed the current breadth-first seam.
 These counts are milestones, not declaration-port percentages.
 
 | Release dimension | Current evidence | Release condition |
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,681 of 8,324 pinned declarations are claimed by exact ledgers; 2,581 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,643-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | cooperative balancedness complete: named core projections and the finite core-to-balancedness theorem use the canonical coalitional carrier; pair-half majority weights refute probability normalization and inequality reversal | keep the hard balanced-to-core converse behind a Farkas/duality experiment; convex-game Shapley-in-core remains the topology-free cooperative gate |
-| next capability rotation | foundations/VNM: audit a bounded expected-utility representation spine and its finite-law preference owner | preserve the probability-free ranking split and do not introduce a second lottery or preference abstraction |
-| release engineering | warning-clean 3,538-job default build; structural and coverage audits green; sampled kernel trust profile unchanged | final cold build, exhaustive trust sweep, examples, and generated release report |
+| exact accounting | 2,747 of 8,324 pinned declarations are claimed by exact ledgers; 2,647 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,577-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | finite-law vNM complete: strict-positive mixture independence lifts through arbitrary finite compounds and yields the full finite-outcome characterization over canonical `FinDist`; lexicographic preferences isolate continuity | keep standard-lottery and compound machinery private; preserve the probability-free rank split |
+| next capability rotation | S-FOUND axiom independence or another mature-field breadth package, selected after the clean gate | do not deepen into obsolete strategic-equivalence wrappers or Analysis merely because the VNM proof is now available |
+| release engineering | warning-clean 3,542-job default build; structural audit `VERIFIED=1` with VNM 8/8 and 6/6 plus affine math 4/4 and 2/2; exact coverage `VERIFIED=1`; sampled trust profile unchanged | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -730,8 +730,16 @@ provisioned in CI.
    weights make the three-player majority game explicitly non-balanced.  The
    pinned source itself leaves balancedness-to-core to LP/Farkas duality, so
    the plan does too; convex-game Shapley-in-core remains the preferred
-   topology-free cooperative gate.  The breadth-first queue now rotates to a
-   bounded foundations/VNM representation audit;
+   topology-free cooperative gate.  EXP-074/D41 then completes the 66-row
+   finite-law VNM file.  The first nonnegative-weight independence draft is
+   machine-rejected at weight zero; strict-positive independence supports an
+   exact public-`FinDist` decomposition, arbitrary finite compound
+   substitution, and the full family-wide representation theorem without a
+   second lottery carrier or Analysis.  A three-outcome expected-utility
+   fixture supplies an interior certainty equivalent, while a lexicographic
+   order keeps totality, transitivity, and independence but refutes continuity.
+   The next breadth-first rotation is selected after this clean gate rather
+   than immediately publicizing the proof's standard-lottery machinery;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.

@@ -61,6 +61,10 @@ def strict (ranks : α → α → Prop) : α → α → Prop :=
   fun preferred alternative =>
     ranks preferred alternative ∧ ¬ ranks alternative preferred
 
+/-- The symmetric part of a weak ranking. -/
+def Indifferent (ranks : α → α → Prop) (first second : α) : Prop :=
+  ranks first second ∧ ranks second first
+
 theorem strict_le
     {ranks : α → α → Prop} {preferred alternative : α}
     (h : strict ranks preferred alternative) :

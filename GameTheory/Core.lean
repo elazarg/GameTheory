@@ -21,6 +21,7 @@ import GameTheory.Core.BayesianEquilibrium
 import GameTheory.Core.BayesCorrelated
 import GameTheory.Core.Rank
 import GameTheory.Core.Preference
+import GameTheory.Core.VNM
 import GameTheory.Core.Deviation
 import GameTheory.Core.Equilibrium
 import GameTheory.Core.CheapTalk

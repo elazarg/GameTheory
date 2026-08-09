@@ -189,6 +189,9 @@ Report 'REPRESENTATION_TOKENS_OUTSIDE_FINDIST' `
 # broadening of the aggregate token check must not silently permit it.
 Report 'TOPMF_OUTSIDE_FINDIST' `
   (Count-Pattern $NonRepresentation '(?<![A-Za-z0-9_])toPMF(?![A-Za-z0-9_])')
+Report 'VNM_REPRESENTATION_TOKENS' `
+  (Count-Pattern @('GameTheory/Core/VNM.lean') `
+    '(?<![A-Za-z0-9_])(ENNReal|toReal|toPMF|PMF|Fintype\.ofFinite)(?![A-Za-z0-9_])')
 
 Report 'FINTYPE_OF_FINITE' (Count-Pattern $TrustedFiles 'Fintype\.ofFinite')
 $AlgorithmFiles = @(
@@ -922,6 +925,42 @@ if (-not $SkipReachability) {
   }
   Report 'GIBBARD_BOUNDARY_PROBES_REJECTED' $gibbardBoundaryRejected
 
+  # D41's finite-law representation theorem stays in the probability and
+  # preference waist.  The Core root exposes the characterization, while the
+  # focused leaf must not acquire games, protocols, or analytic geometry.
+  $vnmInputs = @(
+    'GameTheory.Rank.Indifferent',
+    'GameTheory.Probability.FinDist.mix_swap',
+    'GameTheory.Preference.MixtureIndependent',
+    'GameTheory.Preference.MixtureContinuous',
+    'GameTheory.Preference.RepresentsExpectedUtility',
+    'GameTheory.Preference.exists_representsExpectedUtility',
+    'GameTheory.Preference.vnmAxioms_iff_exists_representsExpectedUtility',
+    'GameTheory.Preference.MixtureIndependent.strict_mix_common_iff')
+  $vnmBoundary = @(
+    'GameTheory.GameForm',
+    'GameTheory.IsNash',
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.Analysis.nash_exists',
+    'stdSimplex',
+    'Polynomial')
+  $vnmCoreOutput = Run-Probe 'GameTheory.Core' $vnmInputs
+  $vnmInputsReached = 0
+  foreach ($constant in $vnmInputs) {
+    if (-not (Is-Unreachable $vnmCoreOutput $constant)) {
+      $vnmInputsReached++
+    }
+  }
+  Report 'VNM_INPUT_PROBES_REACHED' $vnmInputsReached
+  $vnmLeafOutput = Run-Probe 'GameTheory.Core.VNM' $vnmBoundary
+  $vnmBoundaryRejected = 0
+  foreach ($constant in $vnmBoundary) {
+    if (Is-Unreachable $vnmLeafOutput $constant) {
+      $vnmBoundaryRejected++
+    }
+  }
+  Report 'VNM_BOUNDARY_PROBES_REJECTED' $vnmBoundaryRejected
+
   # D40 keeps standard mixed rationalizability in Core while the executable
   # frontend remains an explicitly pure checker.  Positive probes require the
   # mixed and pure semantics to coexist; negative probes keep algorithms and
@@ -990,6 +1029,33 @@ if (-not $SkipReachability) {
     @('GameTheory.UtilityGame')
   $mathGameRejected = Is-Unreachable $mathOutput 'GameTheory.UtilityGame'
   Report 'GAMETHEORYMATH_GAME_REJECTED' ([int] $mathGameRejected)
+
+  $affineUtilityInputs = @(
+    'GameTheoryMath.IsAffineUtility',
+    'GameTheoryMath.IsRiskNeutral',
+    'GameTheoryMath.IsAffineUtility.isRiskNeutral',
+    'GameTheoryMath.IsRiskNeutral.isAffine')
+  $affineUtilityBoundary = @(
+    'GameTheory.Probability.FinDist',
+    'GameTheory.UtilityGame')
+  $affineUtilityRootOutput = Run-Probe 'GameTheoryMath' $affineUtilityInputs
+  $affineUtilityInputsReached = 0
+  foreach ($constant in $affineUtilityInputs) {
+    if (-not (Is-Unreachable $affineUtilityRootOutput $constant)) {
+      $affineUtilityInputsReached++
+    }
+  }
+  Report 'AFFINE_UTILITY_INPUT_PROBES_REACHED' $affineUtilityInputsReached
+  $affineUtilityLeafOutput = Run-Probe `
+    'GameTheoryMath.AffineUtility' $affineUtilityBoundary
+  $affineUtilityBoundaryRejected = 0
+  foreach ($constant in $affineUtilityBoundary) {
+    if (Is-Unreachable $affineUtilityLeafOutput $constant) {
+      $affineUtilityBoundaryRejected++
+    }
+  }
+  Report 'AFFINE_UTILITY_BOUNDARY_PROBES_REJECTED' `
+    $affineUtilityBoundaryRejected
 
   # EXP-049/D21 keeps the exponential-potential proof independent of both
   # game semantics and the canonical law representation. Core owns only the
@@ -1730,6 +1796,7 @@ if ($VerifyExpected) {
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
     REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
     TOPMF_OUTSIDE_FINDIST = 0
+    VNM_REPRESENTATION_TOKENS = 0
   }
   # RFC 7.3 states a budget, not a target, so this one is a bound.
   if ($Results['PRISONERS_DILEMMA_DEF_LINES'] -ge 25) {
@@ -1766,12 +1833,16 @@ if ($VerifyExpected) {
     $Expected['CORRELATED_DOMINANCE_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['GIBBARD_INPUT_PROBES_REACHED'] = 4
     $Expected['GIBBARD_BOUNDARY_PROBES_REJECTED'] = 5
+    $Expected['VNM_INPUT_PROBES_REACHED'] = 8
+    $Expected['VNM_BOUNDARY_PROBES_REJECTED'] = 6
     $Expected['RATIONALIZABILITY_INPUT_PROBES_REACHED'] = 6
     $Expected['RATIONALIZABILITY_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
     $Expected['REPEATED_BRIDGE_PROTOCOL_REJECTED'] = 1
     $Expected['GAMETHEORYMATH_GAME_REJECTED'] = 1
+    $Expected['AFFINE_UTILITY_INPUT_PROBES_REACHED'] = 4
+    $Expected['AFFINE_UTILITY_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['MATH_LEARNING_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['CORE_LEARNING_MW_PROBES_REJECTED'] = 2
     $Expected['CORE_FICTITIOUS_INPUT_PROBES_REACHED'] = 2

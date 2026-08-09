@@ -1035,6 +1035,36 @@ theorem prob_mix (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ ν : FinDist α) (a
     ENNReal.toReal_ofReal h0, ENNReal.toReal_ofReal (by linarith : (0:ℝ) ≤ 1 - t)]
   rfl
 
+@[simp]
+theorem mix_self (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ : FinDist α) :
+    mix t h0 h1 μ μ = μ := by
+  apply ext_of_prob
+  intro a
+  rw [prob_mix]
+  ring
+
+@[simp]
+theorem mix_zero (μ ν : FinDist α) : mix 0 le_rfl (by norm_num) μ ν = ν := by
+  apply ext_of_prob
+  intro a
+  rw [prob_mix]
+  ring
+
+@[simp]
+theorem mix_one (μ ν : FinDist α) : mix 1 (by norm_num) le_rfl μ ν = μ := by
+  apply ext_of_prob
+  intro a
+  rw [prob_mix]
+  ring
+
+/-- Swapping mixture branches replaces the weight by its complement. -/
+theorem mix_swap (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ ν : FinDist α) :
+    mix t h0 h1 μ ν = mix (1 - t) (by linarith) (by linarith) ν μ := by
+  apply ext_of_prob
+  intro a
+  simp only [prob_mix]
+  ring
+
 /-- A point in the first law's support remains supported by a mixture with
 positive first weight. -/
 theorem mem_support_mix_left (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)

@@ -22,8 +22,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Sixty-nine work-package ledgers claim 2,681 declarations: 2,581
-have reviewed dispositions and 100 remain seeded `unreviewed`; a further 5,643 are
+declarations. Seventy work-package ledgers claim 2,747 declarations: 2,647
+have reviewed dispositions and 100 remain seeded `unreviewed`; a further 5,577 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -109,7 +109,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| S-FOUND | static `Core/**` except `Babbling`/`Coalition`; `Concepts/Foundations/**`; symmetric/team classes | 28 | `Core`, with independent mathematics below it | validated | partial; 9 response/team/welfare rows and the complete 4/4 utility-invariance file reviewed | [response dynamics, team, welfare, and IR seed](coverage/S-FOUND-dynamics-team.md); [positive-affine utility invariance](coverage/S-FOUND-utility-invariance.md); next VNM, convergence, strategic equivalence, and duplicate hub machinery |
+| S-FOUND | static `Core/**` except `Babbling`/`Coalition`; `Concepts/Foundations/**`; symmetric/team classes | 28 | `Core`, with independent mathematics below it | validated | partial; 79 rows reviewed, including the complete 66/66 finite-law VNM and 4/4 utility-invariance files | [finite-law VNM representation](coverage/S-FOUND-vnm.md); [response dynamics, team, welfare, and IR seed](coverage/S-FOUND-dynamics-team.md); [positive-affine utility invariance](coverage/S-FOUND-utility-invariance.md); next axiom independence, convergence, strategic equivalence, and duplicate hub machinery |
 | S-EQ | `Concepts/Equilibrium/**` | 12 | `Core.Equilibrium`, `Core.Response`, `Core.Approximate` | validated | partial; strict-Nash seed plus approximate Nash 8/8 reviewed | [strict-Nash seed](coverage/S-EQ-strict-nash.md), [approximate-Nash ledger](coverage/S-EQ-approximate.md); next secure and remaining strict theorem families against one Nash surface |
 | S-DOM | `Concepts/Dominance/**` | 9 | `Core.Response`, `Core.Rationalizability`, and finite correctness | validated by EXP-073/D40 | partial; strict-solvability spine 15/15 and mixed/pure rationalizability package 21/21 reviewed | [strict-solvability ledger](coverage/S-DOM-strict-solvability.md); [mixed/pure rationalizability ledger](coverage/S-DOM-rationalizability.md); next IESDS/correlation, undominated existence/counterexamples, and transform laws |
 | S-CORR | `Concepts/Correlation/**` | 10 | `Core.Equilibrium` and `Core.CorrelatedDominance`; existence in `Analysis` | validated | partial; mixed-Nash bridge 12/12 and strict-dominance saturation file 10/10 reviewed; 8 public-signal rows deferred | [mixed Nash and correlated-equilibrium ledger](coverage/S-CORR-mixed-nash.md); [dominated-support ledger](coverage/S-CORR-dominated-support.md); next approximation, regret, timing separation, value of correlation, and a consumer-selected public-signal regime |
