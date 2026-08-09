@@ -116,9 +116,11 @@ Integration follow-up:
 - `GameTheory.lean` imports `GameTheory.Concepts.Stochastic`.
 - `lake build +GameTheory.Concepts.Stochastic` passed on the target's existing
   Lean 4.32.0 toolchain (3627 jobs).
-- The 44 copied Lean files were verified against source HEAD `62d09e3a`; the
-  only target-side normalization removes one extra blank line at EOF. No
-  generic Stochastic or dependency module changed after the copy commit.
+- At import time, all 44 copied Lean files were verified against source HEAD
+  `62d09e3a`, followed by one blank-line-at-EOF normalization.
+- The target subsequently corrected the Stochastic documentation contract:
+  GameTheory defines the semantic predicates and certificate equivalence but
+  does not assert the open general existence conjecture.
 - The placeholder scan and its four unit tests passed.
 - The 52 untracked `Math/GateG*.lean` files were removed before the port; no
   matching path or status entry remains.

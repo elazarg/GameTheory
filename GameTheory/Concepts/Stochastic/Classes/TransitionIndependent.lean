@@ -11,9 +11,9 @@ import Math.MeanErgodic
 /-!
 # Uniform Equilibria under Action-Independent Transitions
 
-Proved special case of the uniform equilibrium existence problem
-(`StochasticGame.exists_uniformEquilibriumPayoff`): if the transition kernel
-does not depend on the chosen actions — a "no control" game — then no player
+Proved special case of the uniform equilibrium existence problem: if the
+transition kernel does not depend on the chosen actions — a "no control" game
+— then no player
 can influence the state process, so the Markov profile that plays a mixed
 Nash equilibrium of the current stage game at every state is an *exact* Nash
 equilibrium of the `T`-stage game for every horizon `T`.  A single profile
@@ -222,8 +222,8 @@ theorem exists_forall_isUniformεEquilibrium_of_isActionIndependent
 autonomous state process, Markov stage-Nash play is an exact equilibrium of
 every horizon, and its average payoffs converge by the mean ergodic theorem
 for finite Markov chains (`Math.MeanErgodic.tendsto_cesaro_expect_iter`).
-This settles the action-independent special case of
-`exists_uniformEquilibriumPayoff`. -/
+This settles the action-independent special case of the general existence
+problem. -/
 theorem exists_uniformEquilibriumPayoff_of_isActionIndependent
     (G : StochasticGame ι) [Fintype ι] [DecidableEq ι] [Finite G.State]
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)]

@@ -92,7 +92,7 @@ direction's extra hypothesis:
   refute `IsUniformEquilibriumPayoff` — the deviation direction alone only
   shows our notion's deviation payoffs cannot *exceed* the liminf-average
   deviation cap, which is the wrong direction for a refutation to bite; and
-* `exists_uniformEquilibriumPayoff` does **not** formally deliver a
+* existence of a uniform equilibrium payoff does **not** formally deliver a
   liminf-average equilibrium payoff — the on-path lower bound is exactly the
   missing half, and it costs a genuine extra hypothesis (a.s. convergence)
   that a bare uniform equilibrium payoff does not supply.

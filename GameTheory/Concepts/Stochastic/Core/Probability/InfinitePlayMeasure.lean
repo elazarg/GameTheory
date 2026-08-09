@@ -21,9 +21,9 @@ together with the projection property identifying its finite-horizon marginals w
 ## Measurable-space choice
 
 `StochasticGame.State` and `StochasticGame.Act` are bare `Type`s with no `MeasurableSpace`
-instance. The uniform-equilibrium program only ever needs this construction for games with
-finitely many states and actions (`StochasticGame.exists_uniformDeviationCapConstructor`'s
-hypotheses), so this file equips both with the **discrete** (`⊤`) measurable-space structure
+instance. The uniform-equilibrium program only needs this construction for games with
+finitely many states and actions, so this file equips both with the **discrete** (`⊤`)
+measurable-space structure
 under `[Fintype G.State]` / `[∀ i, Fintype (G.Act i)]` hypotheses, added here rather than as
 fields of `StochasticGame` itself. Every set is measurable in this structure, so every
 function out of a finite power of these spaces is automatically measurable

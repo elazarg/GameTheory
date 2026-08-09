@@ -49,10 +49,9 @@ behaviour-strategy machinery (`BehaviorProfile`/`Hist`/`histDist`) of
 ## What does not close, and exactly why
 
 The consequence the padding reduction is supposed to deliver is stronger:
-take the **unrestricted** witness that the general conjecture
-(`exists_uniformDeviationCapConstructor`, stated for arbitrary
-state-independent games and hence applicable to `G.normalizedGame` once
-proved) would hand back, and produce a *legal* equilibrium of `G`.  That
+take the **unrestricted** witness contemplated by the general conjecture for
+an arbitrary state-independent game, hence for `G.normalizedGame`, and produce
+a *legal* equilibrium of `G`. That
 witness `σ` is an arbitrary `BehaviorProfile` with no legality guarantee at
 all, on-path or under deviation, so this needs the converse of
 `isεLegalHorizonNash_normalizedGame_iff`'s restricted statement: from an

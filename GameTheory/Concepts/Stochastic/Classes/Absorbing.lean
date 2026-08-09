@@ -9,9 +9,8 @@ import GameTheory.Concepts.Stochastic.Equilibrium.Discounted
 /-!
 # Uniform and Discounted Equilibria at Absorbing States
 
-Proved special case of the uniform equilibrium existence problem
-(`StochasticGame.exists_uniformEquilibriumPayoff`): if the initial state is
-absorbing — every joint action surely stays — then play from it is a
+Proved special case of the uniform equilibrium existence problem: if the
+initial state is absorbing — every joint action surely stays — then play is a
 repeated game, and stationary repetition of a mixed Nash equilibrium of the
 stage game has the stage-Nash payoff as its per-stage expected payoff at
 every stage, against every unilateral deviation earning at most that.
@@ -130,8 +129,8 @@ theorem expectedStagePayoff_update_stationaryBehaviorProfile_le_of_isAbsorbingSt
 If the initial state is absorbing, the stationary behavior profile that
 repeats a mixed Nash equilibrium of the stage game is an exact Nash
 equilibrium of every finite-horizon game, and its average payoff at every
-positive horizon is the stage-Nash payoff.  This settles the absorbing-state
-special case of `exists_uniformEquilibriumPayoff`. -/
+positive horizon is the stage-Nash payoff. This settles the absorbing-state
+special case of the general existence problem. -/
 theorem exists_uniformEquilibriumPayoff_of_isAbsorbingState
     (G : StochasticGame ι) [Fintype ι] [DecidableEq ι] [Finite G.State]
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)]

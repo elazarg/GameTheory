@@ -10,9 +10,9 @@ import GameTheory.Concepts.Equilibrium.ApproximateNash
 # Uniform Equilibrium in Stochastic Games
 
 Uniform solution concepts for stochastic games under finite-horizon average
-payoffs, and the statement of the **uniform equilibrium existence problem**:
-every stochastic game with finitely many players, finitely many states, and
-finitely many actions admits a uniform equilibrium payoff from every initial
+payoffs, together with proof interfaces around the **uniform equilibrium
+existence problem**: whether every stochastic game with finitely many players,
+states, and actions admits a uniform equilibrium payoff from every initial
 state.
 
 A behavior profile is a *uniform ε-equilibrium* if a single horizon threshold
@@ -35,11 +35,14 @@ to exist even in two-player zero-sum games — the Big Match
 * The general n-player case is **open**; it is the central open problem of
   the field (Mertens 1986; Solan–Vieille 2010).
 
-The open construction is isolated here as
-`StochasticGame.exists_uniformDeviationCapConstructor`.  Its exact
-equivalence with the semantic uniform-payoff property is proved, so
-`StochasticGame.exists_uniformEquilibriumPayoff` is a checked corollary.
-Special cases live in `GameTheory.Concepts.Stochastic.Classes.Absorbing`.
+This module deliberately does not declare or assume the general existence
+conjecture. It defines `StochasticGame.HasUniformDeviationCapConstructor` for
+a fixed game, initial state, and target payoff, and proves its equivalence with
+the semantic uniform-payoff property. The separate `UniformEquilibrium`
+research project may package the open quantification as a proposition
+definition. Proved special cases live in
+`GameTheory.Concepts.Stochastic.Classes.Absorbing` and
+`GameTheory.Concepts.Stochastic.Classes.TransitionIndependent`.
 
 ## Main definitions
 
@@ -48,15 +51,13 @@ Special cases live in `GameTheory.Concepts.Stochastic.Classes.Absorbing`.
 * `StochasticGame.IsUniformεEquilibrium` — ε-Nash of every sufficiently long
   finite-horizon game, with one horizon threshold
 * `StochasticGame.IsUniformEquilibriumPayoff` — uniform equilibrium payoff
+* `StochasticGame.HasUniformDeviationCapConstructor` — a quantitative
+  certificate for one fixed target payoff
 
 ## Main statements
 
-* `StochasticGame.exists_uniformDeviationCapConstructor` — the quantitative
-  form of the open conjecture
-* `StochasticGame.exists_uniformEquilibriumPayoff` — its equivalent semantic
-  formulation
-* `StochasticGame.exists_isUniformεEquilibrium` — for every `ε > 0` some
-  profile is a uniform ε-equilibrium (derived from the conjecture)
+* `StochasticGame.hasUniformDeviationCapConstructor_iff` — exact equivalence
+  between the quantitative certificate and the semantic payoff property
 * `StochasticGame.isUniformEquilibriumPayoff_of_deviation_caps` — a direct
   proof interface reducing the uniform-payoff goal to asymptotic on-path
   payoff estimates and unilateral deviation caps
@@ -139,8 +140,8 @@ within `δ` of `v` and under which every unilateral deviation is capped by
 `v + δ`.  Applying the certificate with `δ = ε / 2` gives the required
 `ε`-Nash inequality and `ε` payoff approximation.
 
-This theorem isolates exactly the quantitative estimates that a direct proof
-of `exists_uniformEquilibriumPayoff` must supply. -/
+This theorem isolates exactly the quantitative estimates needed to prove
+`G.IsUniformEquilibriumPayoff s₀ v` for a fixed game, state, and target. -/
 theorem isUniformEquilibriumPayoff_of_deviation_caps
     (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
     (s₀ : G.State) (v : Payoff ι)
