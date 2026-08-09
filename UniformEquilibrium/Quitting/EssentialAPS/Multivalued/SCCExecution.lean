@@ -8,21 +8,27 @@ import UniformEquilibrium.Quitting.EssentialAPS.Multivalued.Execution
 import UniformEquilibrium.Quitting.EssentialAPS.InfiniteRun
 
 /-!
-# Executable multivalued essential-APS SCCs
+# Segment-level execution in a multivalued essential-APS component
 
-A finite Flesch-successor SCC is graph data.  An executable APS edge is stronger:
-it records one continuation value, one mass in `[0,1)`, and the exact singleton-
-arc equation.  This module never derives the second object from convex-hull APS
-membership alone.
+A finite Flesch strongly connected component is graph data. An executable APS
+edge is stronger: it records one continuation value, one mass, and the exact
+singleton-arc equation. This module never derives the second object from graph
+connectivity or full convex-hull APS membership.
 
-Starting at a labelled value in a reachable SCC, the capstone returns one of:
+There are two deliberately separate layers.
 
-* a finite component-internal execution ending at an absorbing APS terminal;
-* one coherent infinite component-internal execution with a positive lower
-  bound on every local absorption charge; or
-* a reached typed obstruction saying either that no exact segment exists, or
-  that exact segments exist but none carries the requested component-local
-  charge.
+1. `IsQuittingEssentialAPSSegmentSubinvariantOnSCC` is a genuine segment-level
+   APS hypothesis. From it, every displayed state is terminal or has one exact
+   internal segment, and
+   `quittingEssentialAPSSCC_execution_of_segmentSubinvariant` produces a single
+   finite absorbing execution or one coherent infinite execution.
+2. Fixing a charge threshold `eta` gives the narrower diagnostic theorem
+   `quittingEssentialAPSChargedSegment_executionOutcome`. It either executes
+   using segments above that threshold or reaches a typed `noExecutableSegment`
+   / `chargeGap` obstruction. It does not manufacture a positive threshold.
+
+A source-to-component graph path is retained as graph metadata only. It is not
+called an executable route unless a separate segment lift is supplied.
 -/
 
 noncomputable section
@@ -34,45 +40,63 @@ open StochasticGame
 
 universe u
 
-/-- A finite reachable strongly connected component of a supplied relation.
-Strong connectivity is witnessed by paths whose vertices remain in `carrier`. -/
-structure FiniteReachableSCC
+/-- A finite strongly connected component of a supplied relation. Strong
+connectivity is witnessed by paths whose vertices remain in `carrier`. -/
+structure FiniteStronglyConnectedComponent
     {state : Type u} [DecidableEq state]
-    (edge : state → state → Prop) (source : state) where
+    (edge : state → state → Prop) where
   carrier : Finset state
   entry : state
   entry_mem : entry ∈ carrier
-  source_reaches_entry : FiniteSuccessorPath edge source entry
   stronglyConnected : ∀ {first second : state},
     first ∈ carrier → second ∈ carrier →
       FiniteSuccessorPathWithin carrier edge first second
+
+/-- A graph-reachable SCC. The source path is intentionally graph-level data;
+no strategic theorem below silently promotes it to an executable APS path. -/
+structure FiniteReachableSCC
+    {state : Type u} [DecidableEq state]
+    (edge : state → state → Prop) (source : state)
+    extends FiniteStronglyConnectedComponent edge where
+  source_reaches_entry : FiniteSuccessorPath edge source entry
 
 section EssentialAPS
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
-/-- A reachable SCC of the exact Flesch successor relation. -/
+/-- A finite SCC of the exact Flesch successor relation. -/
+abbrev QuittingEssentialAPSSCC
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :=
+  FiniteStronglyConnectedComponent (QuittingFleschSuccessor reward)
+
+/-- A graph-reachable SCC of the exact Flesch successor relation. -/
 abbrev QuittingEssentialAPSReachableSCC
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (source : ι) :=
   FiniteReachableSCC (QuittingFleschSuccessor reward) source
 
+/-- Forget graph reachability while retaining the displayed SCC. -/
+def FiniteReachableSCC.toStronglyConnectedComponent
+    {state : Type u} [DecidableEq state]
+    {edge : state → state → Prop} {source : state}
+    (component : FiniteReachableSCC edge source) :
+    FiniteStronglyConnectedComponent edge :=
+  component.toFiniteStronglyConnectedComponent
+
 /-- A payoff-labelled state inside the selected SCC. -/
 structure QuittingEssentialAPSSCCState
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    (component : QuittingEssentialAPSReachableSCC reward source)
+    (component : QuittingEssentialAPSSCC reward)
     (family : ι → Set (Payoff ι)) where
   owner : ι
   owner_mem : owner ∈ component.carrier
   value : Payoff ι
   value_mem : value ∈ family owner
 
-/-- The displayed initial state at the reachable SCC entry. -/
+/-- The displayed initial state at the SCC entry. -/
 def quittingEssentialAPSSCCInitialState
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    (component : QuittingEssentialAPSReachableSCC reward source)
+    (component : QuittingEssentialAPSSCC reward)
     (family : ι → Set (Payoff ι))
     (initialValue : Payoff ι)
     (hinitial : initialValue ∈ family component.entry) :
@@ -85,8 +109,7 @@ def quittingEssentialAPSSCCInitialState
 /-- One exact executable singleton-flow segment internal to the chosen SCC. -/
 structure IsQuittingEssentialAPSInternalSCCStep
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    {component : QuittingEssentialAPSReachableSCC reward source}
+    {component : QuittingEssentialAPSSCC reward}
     {family : ι → Set (Payoff ι)}
     (current next : QuittingEssentialAPSSCCState component family)
     (mass : ℝ) : Prop where
@@ -95,33 +118,162 @@ structure IsQuittingEssentialAPSInternalSCCStep
   arc : current.value = quittingSingletonArcPayoff mass
     (quittingSoloReward reward current.owner) next.value
 
-/-- An internal segment carrying at least `eta` absorption charge.  The charge
-is component-local: it is measured only along the selected SCC path, so it
-cannot be cancelled by an occupation in another recurrent component. -/
+/-- The finite branch ends at an essential-APS terminal point. -/
+def IsQuittingEssentialAPSSCCAbsorbing
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    {component : QuittingEssentialAPSSCC reward}
+    {family : ι → Set (Payoff ι)}
+    (current : QuittingEssentialAPSSCCState component family) : Prop :=
+  current.value ∈ quittingEssentialAPSTerminal reward current.owner
+
+/-- Restrict an owner-indexed payoff family to the displayed SCC carrier. -/
+def quittingEssentialAPSSCCRestrictedFamily
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    (component : QuittingEssentialAPSSCC reward)
+    (family : ι → Set (Payoff ι)) : ι → Set (Payoff ι) :=
+  fun owner => {value | owner ∈ component.carrier ∧ value ∈ family owner}
+
+@[simp] theorem mem_quittingEssentialAPSSCCRestrictedFamily_iff
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    (component : QuittingEssentialAPSSCC reward)
+    (family : ι → Set (Payoff ι))
+    (owner : ι) (value : Payoff ι) :
+    value ∈ quittingEssentialAPSSCCRestrictedFamily component family owner ↔
+      owner ∈ component.carrier ∧ value ∈ family owner :=
+  Iff.rfl
+
+/-- A named segment-level APS hypothesis on the displayed SCC.
+
+Every family point at an SCC owner belongs to the existing segment owner step,
+with continuations restricted to the same SCC. Unlike the full essential-APS
+operator, this hypothesis already selects one exact continuation rather than a
+convex combination of several continuation values. -/
+def IsQuittingEssentialAPSSegmentSubinvariantOnSCC
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    (component : QuittingEssentialAPSSCC reward)
+    (family : ι → Set (Payoff ι)) : Prop :=
+  ∀ owner, owner ∈ component.carrier →
+    family owner ⊆
+      quittingSegmentEssentialAPSOwnerStep reward
+        (quittingEssentialAPSSCCRestrictedFamily component family) owner
+
+/-- Segment subinvariance gives actual local progress: terminal absorption or
+one exact internal singleton-flow segment. The apparent `mass = 1` segment is
+converted to the terminal branch, leaving masses in `[0,1)` on execution
+edges. -/
+theorem
+    quittingEssentialAPSSCC_terminal_or_internalStep_of_segmentSubinvariant
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    {component : QuittingEssentialAPSSCC reward}
+    {family : ι → Set (Payoff ι)}
+    (hsegment :
+      IsQuittingEssentialAPSSegmentSubinvariantOnSCC component family)
+    (current : QuittingEssentialAPSSCCState component family) :
+    IsQuittingEssentialAPSSCCAbsorbing current ∨
+      ∃ (mass : ℝ) (next : QuittingEssentialAPSSCCState component family),
+        IsQuittingEssentialAPSInternalSCCStep current next mass := by
+  have hdecomposition :=
+    hsegment current.owner current.owner_mem current.value_mem
+  rcases hdecomposition with hterminal | hsegmentStep
+  · exact Or.inl hterminal
+  · rcases hsegmentStep with
+      ⟨hviable, mass, hmass, nextValue, hnext,
+        harc, _hactive⟩
+    rcases hnext with
+      ⟨successor, hsuccessor, hnextRestricted⟩
+    change successor ∈ component.carrier ∧
+      nextValue ∈ family successor at hnextRestricted
+    rcases hnextRestricted with ⟨hsuccessorMem, hnextMem⟩
+    by_cases hmassOne : mass = 1
+    · left
+      have hroot :
+          current.value = quittingSoloReward reward current.owner := by
+        rw [harc, hmassOne]
+        funext who
+        simp [quittingSingletonArcPayoff]
+      exact ⟨hroot, hviable⟩
+    · right
+      have hmassLt : mass < 1 := lt_of_le_of_ne hmass.2 hmassOne
+      let next : QuittingEssentialAPSSCCState component family := {
+        owner := successor
+        owner_mem := hsuccessorMem
+        value := nextValue
+        value_mem := hnextMem }
+      refine ⟨mass, next, ?_⟩
+      exact {
+        mass_mem := ⟨hmass.1, hmassLt⟩
+        successor := hsuccessor
+        arc := harc }
+
+/-- **Genuine segment-level multivalued execution theorem.**
+
+A segment-subinvariant family restricted to the displayed SCC produces one
+single chronological object from every initial entry value: either a finite
+execution ending at an essential-APS terminal, or one coherent infinite exact
+singleton-flow execution inside the SCC. Graph connectivity alone is not the
+producer; `hsegment` is the consumed segment-level progress hypothesis. -/
+theorem quittingEssentialAPSSCC_execution_of_segmentSubinvariant
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    (component : QuittingEssentialAPSSCC reward)
+    (family : ι → Set (Payoff ι))
+    (hsegment :
+      IsQuittingEssentialAPSSegmentSubinvariantOnSCC component family)
+    (initialValue : Payoff ι)
+    (hinitial : initialValue ∈ family component.entry) :
+    ChronologicalExecution
+      (fun current : QuittingEssentialAPSSCCState component family =>
+        IsQuittingEssentialAPSSCCAbsorbing current)
+      (fun current mass next =>
+        IsQuittingEssentialAPSInternalSCCStep current next mass)
+      (quittingEssentialAPSSCCInitialState
+        component family initialValue hinitial) := by
+  apply chronologicalExecution_of_reachable_progress
+  intro current _hreach
+  exact
+    quittingEssentialAPSSCC_terminal_or_internalStep_of_segmentSubinvariant
+      hsegment current
+
+/-- Forgetting SCC membership turns the recurrent branch of the positive
+segment theorem into the existing essential-APS infinite-run object. -/
+theorem ChronologicalInfinitePath.toQuittingEssentialAPSInfiniteRun_of_internal
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    {component : QuittingEssentialAPSSCC reward}
+    {family : ι → Set (Payoff ι)}
+    {initial : QuittingEssentialAPSSCCState component family}
+    (path : ChronologicalInfinitePath
+      (fun current mass next =>
+        IsQuittingEssentialAPSInternalSCCStep current next mass)
+      initial) :
+    IsQuittingEssentialAPSInfiniteRun reward family
+      (fun time => (path.vertex time).owner)
+      initial.value
+      path.charge
+      (fun time => (path.vertex time).value) := by
+  refine ⟨?_, ?_, ?_⟩
+  · simpa using congrArg (fun current => current.value) path.initial
+  · intro time
+    exact (path.vertex time).value_mem
+  · intro time
+    exact ⟨(path.step time).mass_mem, (path.step time).arc⟩
+
+/-! ## Optional quantitative charge layer -/
+
+/-- An internal segment carrying at least `eta` absorption charge. The charge
+is measured only along the selected chronological path, so it cannot be
+cancelled by an occupation in another recurrent component. -/
 def IsQuittingEssentialAPSChargedSCCStep
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    {component : QuittingEssentialAPSReachableSCC reward source}
+    {component : QuittingEssentialAPSSCC reward}
     {family : ι → Set (Payoff ι)}
     (eta : ℝ)
     (current next : QuittingEssentialAPSSCCState component family)
     (mass : ℝ) : Prop :=
   IsQuittingEssentialAPSInternalSCCStep current next mass ∧ eta ≤ mass
 
-/-- The finite branch ends at an essential-APS terminal point. -/
-def IsQuittingEssentialAPSSCCAbsorbing
-    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    {component : QuittingEssentialAPSReachableSCC reward source}
-    {family : ι → Set (Payoff ι)}
-    (current : QuittingEssentialAPSSCCState component family) : Prop :=
-  current.value ∈ quittingEssentialAPSTerminal reward current.owner
-
-/-- Exact obstruction data at a reached SCC state. -/
+/-- Exact obstruction data at a reached SCC-labelled state. -/
 inductive QuittingEssentialAPSSCCObstruction
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    {component : QuittingEssentialAPSReachableSCC reward source}
+    {component : QuittingEssentialAPSSCC reward}
     {family : ι → Set (Payoff ι)}
     (eta : ℝ)
     (current : QuittingEssentialAPSSCCState component family) : Prop
@@ -141,8 +293,7 @@ inductive QuittingEssentialAPSSCCObstruction
 membership to an executable segment. -/
 theorem quittingEssentialAPSSCC_classifyObstruction
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    {component : QuittingEssentialAPSReachableSCC reward source}
+    {component : QuittingEssentialAPSSCC reward}
     {family : ι → Set (Payoff ι)}
     (eta : ℝ)
     (current : QuittingEssentialAPSSCCState component family)
@@ -157,16 +308,16 @@ theorem quittingEssentialAPSSCC_classifyObstruction
   · exact .chargeGap hsegment failure
   · exact .noExecutableSegment hsegment
 
-/-- **Multivalued essential-APS SCC execution.**
+/-- **Charged-segment execution-or-obstruction trichotomy.**
 
-The conclusion contains one chronological object: a finite absorbing execution,
-an infinite component-charged execution, or a finite execution reaching a typed
-obstruction.  A globally balanced circulation is not an input and cannot
-satisfy any edge of the returned path. -/
-theorem quittingEssentialAPSSCC_executionOutcome
+This theorem classifies the supplied relation “there is an exact internal
+segment of mass at least `eta`.” It does not infer segment existence, exclude
+its obstruction branch, or derive a positive `eta` from finiteness of the
+owner SCC. Its positive branches are nevertheless single chronological paths,
+never globally cancelled occupations. -/
+theorem quittingEssentialAPSChargedSegment_executionOutcome
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    (component : QuittingEssentialAPSReachableSCC reward source)
+    (component : QuittingEssentialAPSSCC reward)
     (family : ι → Set (Payoff ι))
     (eta : ℝ)
     (initialValue : Payoff ι)
@@ -189,12 +340,11 @@ theorem quittingEssentialAPSSCC_executionOutcome
       component family initialValue hinitial)
     (quittingEssentialAPSSCC_classifyObstruction eta)
 
-/-- Forgetting SCC membership and the charge lower bound turns the recurrent
-branch into the existing essential-APS infinite-run object. -/
+/-- Forgetting SCC membership and the charge lower bound turns a charged
+recurrent branch into the existing essential-APS infinite-run object. -/
 theorem ChronologicalInfinitePath.toQuittingEssentialAPSInfiniteRun
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    {component : QuittingEssentialAPSReachableSCC reward source}
+    {component : QuittingEssentialAPSSCC reward}
     {family : ι → Set (Payoff ι)}
     {eta : ℝ}
     {initial : QuittingEssentialAPSSCCState component family}
@@ -214,11 +364,10 @@ theorem ChronologicalInfinitePath.toQuittingEssentialAPSInfiniteRun
   · intro time
     exact ⟨(path.step time).1.mass_mem, (path.step time).1.arc⟩
 
-/-- Component-local charge gives a linear lower bound on every prefix. -/
+/-- A pointwise component-local charge floor gives a linear prefix bound. -/
 theorem ChronologicalInfinitePath.prefixCharge_lowerBound
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    {component : QuittingEssentialAPSReachableSCC reward source}
+    {component : QuittingEssentialAPSSCC reward}
     {family : ι → Set (Payoff ι)}
     {eta : ℝ}
     {initial : QuittingEssentialAPSSCCState component family}
@@ -243,12 +392,11 @@ theorem ChronologicalInfinitePath.prefixCharge_lowerBound
         _ = ∑ time ∈ Finset.range (horizon + 1), path.charge time := by
             rw [Finset.sum_range_succ]
 
-/-- If the component-local charge floor is positive, the same chronological
-recurrent path reaches every finite charge target. -/
+/-- If a positive pointwise charge floor is separately supplied, the same
+chronological recurrent path reaches every finite charge target. -/
 theorem ChronologicalInfinitePath.exists_prefixCharge_ge
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
-    {source : ι}
-    {component : QuittingEssentialAPSReachableSCC reward source}
+    {component : QuittingEssentialAPSSCC reward}
     {family : ι → Set (Payoff ι)}
     {eta : ℝ}
     {initial : QuittingEssentialAPSSCCState component family}
