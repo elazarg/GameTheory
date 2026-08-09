@@ -344,7 +344,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | learning | regret, multiplicative weights, fictitious play, approachability | **F2, finite MW self-play, base fictitious play 9/9, exact-potential convergence, and approachability/regret matching 23/23 complete;** only weighted-potential generalization remains gated | stable finite identities in Core, law-free MW and approachability mathematics in `GameTheoryMath`, canonical-law adapters in Probability or opt-in Analysis, and quantitative composition in `Analysis.Learning` |
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | **pinned congestion family complete, including robust affine CCE PoA (EXP-052/053, D24)** | `Core.Potential` plus the opt-in congestion domain |
 | welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
-| zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
+| zero/constant sum | security, matrix games, complementarity, correlation | **canonical saddle/Nash equivalence and the 40-row matrix security/value waist complete;** next general security, support complementarity, or antisymmetric geometry | `Core.ZeroSum` and `Core.MatrixGame`; existence/value selection in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
 | mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, repaired executable approximation, finite hidden-action contracts, revelation, finite persuasion, quasilinear weak monotonicity, affine maximizers, and topology-free single-parameter payment bounds | **M-CONTRACT complete (EXP-065/D32), canonical finite-support revelation, information design, truthful Bayesian welfare/participation, feasible posterior laws, D33's monotonicity/affine consumers, topology-free Myerson algebra, and returned-allocation half approximation complete (EXP-056/D27);** envelope integrals and uniqueness remain behind M-BAYES/D11 | coordinated mechanism root with native principal-agent semantics, canonical Bayesian forms, and separately audited auction semantic, executable, and correctness leaves |
 | social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
@@ -585,10 +585,10 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,558 of 8,324 pinned declarations are claimed by exact ledgers; 2,458 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,766-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | finite fair-division batch complete: canonical two-agent cut-and-choose gives EFX, the explicit hostile allocation is EFX but not envy-free, and the 40/40 foundations plus 27/27 round-robin ledgers are complete | keep maximin-share and the predecessor's relabeled round-robin selector as distinct later turns |
-| next capability rotation | finite zero-sum theory: select a bounded security, matrix-geometry, or complementarity batch against the canonical saddle/minimax owners | preserve the Core/Analysis split and avoid a parallel matrix-game or equilibrium surface |
-| release engineering | warning-clean 3,526-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
+| exact accounting | 2,598 of 8,324 pinned declarations are claimed by exact ledgers; 2,498 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,726-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | finite matrix security/value batch complete: static guarantees and caps live in Core, selected values and nonempty optimal sets live in Analysis, and a nonconstant 2x2 fixture forces value one; 40/40 selected rows reviewed | keep support complementarity, antisymmetric geometry, and general security as distinct later turns |
+| next capability rotation | foundations/VNM: select a bounded utility-invariance, strategic-equivalence, or expected-utility representation batch | keep probability-free ranks separate from lottery preference and search Mathlib before adding representation mathematics |
+| release engineering | warning-clean 3,527-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -686,7 +686,13 @@ provisioned in CI.
    three-good allocation is EFX despite strict envy.  With both bounded
    fair-division ledgers complete at 67/67 reviewed rows, the queue rotates to
    finite zero-sum security/minimax breadth rather than immediately deepening
-   into maximin-share or the predecessor's relabeled round-robin selector;
+   into maximin-share or the predecessor's relabeled round-robin selector.
+   The matrix-security batch then factors topology-free matrix semantics,
+   guarantees, caps, and saddle/Nash equivalence into Core, leaves value
+   selection in Analysis, and classifies 40 pinned rows. A nonconstant 2x2
+   witness supplies strict pure security choices and forces the selected value
+   to one. The queue now rotates to foundations/VNM rather than immediately
+   deepening into complementarity or antisymmetric geometry;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.

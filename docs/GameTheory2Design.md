@@ -1294,9 +1294,12 @@ infinite-path law or general uniform-equilibrium existence claim.
 
 EXP-051/D23 closes the mature discounted-value gate without reversing that
 dependency. `GameTheory.Stochastic.ZeroSum` adds only pointwise zero-sum data
-and a proof-free row/column action presentation. `Analysis.MatrixValue`
-derives a nonexpansive finite matrix value from the existing mixed
-`GameForm`/saddle theorem, and the one-way `Analysis.Stochastic` bridge proves
+and a proof-free row/column action presentation. `Core.MatrixGame` owns the
+topology-free finite matrix compiler, canonical mixed profiles and expected
+payoff, the saddle/Nash identification, and row-guarantee/column-cap
+characterization. `Analysis.MatrixValue` adds only selected minimax values,
+nonempty optimal-strategy sets, and the value consequences of those Core
+certificates. The one-way `Analysis.Stochastic` bridge then proves
 the normalized Shapley contraction, unique discounted Bellman value, and
 stationary statewise saddle selectors. A positive probe reaches the theorem
 identifying the constructed column utility with the native player-one return;

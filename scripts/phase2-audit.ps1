@@ -689,6 +689,64 @@ if (-not $SkipReachability) {
   }
   Report 'ANALYSIS_PROBES_REACHED' $reached
 
+  # Matrix syntax, mixed profiles, saddle/Nash equivalence, guarantees, and
+  # caps are topology-free Core. Value selection alone crosses the analytic
+  # boundary. Positive probes on both roots distinguish that split from an
+  # accidental orphan, while the negative probes prevent back-imports.
+  $matrixCoreInputs = @(
+    'GameTheory.MatrixGame.mixedProfile',
+    'GameTheory.MatrixGame.RowGuarantees',
+    'GameTheory.MatrixGame.ColumnCaps',
+    'GameTheory.MatrixGame.isSaddlePoint_iff_guarantees_caps',
+    'GameTheory.isNash_iff_isSaddlePoint')
+  $matrixCoreBoundary = @(
+    'GameTheory.MatrixGame.value',
+    'GameTheory.exists_isSaddlePoint',
+    'kakutani_fixed_point')
+  $matrixCoreOutput = Run-Probe 'GameTheory.Core.MatrixGame' `
+    ($matrixCoreInputs + $matrixCoreBoundary)
+  $matrixCoreInputsReached = 0
+  foreach ($constant in $matrixCoreInputs) {
+    if (-not (Is-Unreachable $matrixCoreOutput $constant)) {
+      $matrixCoreInputsReached++
+    }
+  }
+  Report 'MATRIX_CORE_INPUT_PROBES_REACHED' $matrixCoreInputsReached
+  $matrixCoreBoundaryRejected = 0
+  foreach ($constant in $matrixCoreBoundary) {
+    if (Is-Unreachable $matrixCoreOutput $constant) {
+      $matrixCoreBoundaryRejected++
+    }
+  }
+  Report 'MATRIX_CORE_BOUNDARY_PROBES_REJECTED' $matrixCoreBoundaryRejected
+
+  $matrixAnalysisInputs = @(
+    'GameTheory.MatrixGame.RowGuarantees',
+    'GameTheory.MatrixGame.value',
+    'GameTheory.MatrixGame.common_guarantee_eq_value',
+    'GameTheory.MatrixGame.optimal_pairs_iff_isNash',
+    'GameTheory.MatrixGame.optimalRowStrategies_nonempty')
+  $matrixAnalysisBoundary = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.UtilityGame.repeatedForm')
+  $matrixAnalysisOutput = Run-Probe 'GameTheory.Analysis.MatrixValue' `
+    ($matrixAnalysisInputs + $matrixAnalysisBoundary)
+  $matrixAnalysisInputsReached = 0
+  foreach ($constant in $matrixAnalysisInputs) {
+    if (-not (Is-Unreachable $matrixAnalysisOutput $constant)) {
+      $matrixAnalysisInputsReached++
+    }
+  }
+  Report 'MATRIX_ANALYSIS_INPUT_PROBES_REACHED' $matrixAnalysisInputsReached
+  $matrixAnalysisBoundaryRejected = 0
+  foreach ($constant in $matrixAnalysisBoundary) {
+    if (Is-Unreachable $matrixAnalysisOutput $constant) {
+      $matrixAnalysisBoundaryRejected++
+    }
+  }
+  Report 'MATRIX_ANALYSIS_BOUNDARY_PROBES_REJECTED' `
+    $matrixAnalysisBoundaryRejected
+
   $repeatedAnalysisRejected = 0
   foreach ($root in @(
       'GameTheory.Repeated.Basic',
@@ -1484,6 +1542,10 @@ if ($VerifyExpected) {
     $Expected['BARGAINING_INPUT_PROBES_REACHED'] = 3
     $Expected['BARGAINING_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['ANALYSIS_PROBES_REACHED'] = 2
+    $Expected['MATRIX_CORE_INPUT_PROBES_REACHED'] = 5
+    $Expected['MATRIX_CORE_BOUNDARY_PROBES_REJECTED'] = 3
+    $Expected['MATRIX_ANALYSIS_INPUT_PROBES_REACHED'] = 5
+    $Expected['MATRIX_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
     $Expected['REPEATED_BRIDGE_PROTOCOL_REJECTED'] = 1

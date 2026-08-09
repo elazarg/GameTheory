@@ -23,8 +23,9 @@ GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          Nash, Bayesian recommendation/obedience,
                          finite no-regret learning, concrete reindexing and
                          relabeling laws, social welfare, robust CCE smoothness,
-                         May's majority characterization, and foundational
-                         social/coalitional theory
+                         zero-sum matrix security, May's majority
+                         characterization, and foundational social/coalitional
+                         theory
 GameTheory/Protocol      execution, histories, information, assessment,
                          randomization, well-founded subgame perfection, and
                          static-form compilation
@@ -32,9 +33,9 @@ GameTheory/Epistemic     finite information partitions, posteriors, exact and
                          approximate common knowledge, and agreement
 GameTheory/Evolutionary  static ESS/NSS and the canonical symmetric-Nash bridge
 GameTheory/Finite        executable rational frontend and its correctness layer
-GameTheory/Analysis      stable, opt-in fixed-point, minimax, existence,
-                         trembling-hand refinement, approachability, and
-                         learning-convergence theory
+GameTheory/Analysis      stable, opt-in fixed-point, minimax and matrix values,
+                         existence, trembling-hand refinement,
+                         approachability, and learning-convergence theory
   /Protocol              analytic behavioral-assessment consistency bridge
   /Repeated              analytic repeated-game bridge and discounted folk theorem
   /Stochastic            normalized Shapley values and stationary statewise saddles

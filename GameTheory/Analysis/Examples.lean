@@ -14,6 +14,7 @@ its cost.
 -/
 
 import GameTheory.Analysis.Minimax
+import GameTheory.Analysis.MatrixValue
 import GameTheory.Analysis.Correlated
 import GameTheory.Examples.Classic
 
@@ -75,5 +76,72 @@ theorem matchingPennies_value_eq_uniform (σ : Profile matchingPennies.toForm.si
       expectedUtility matchingPennies.utility 0 (matchingPennies.toForm.mixed.play
         (matchingPennies.toMixed uniformPennies uniformPennies_isMixed)) :=
   hσ.value_eq matchingPennies_uniform_isSaddlePoint
+
+/-! ## A nontrivial pure security certificate -/
+
+/-- A matrix with a strict row maximin choice and a strict column minimax
+choice.  Its saddle entry is `1`, while all three other entries differ. -/
+def securityMatrix (row col : Fin 2) : ℝ :=
+  if row = 0 then
+    if col = 0 then 2 else 0
+  else if col = 0 then 3 else 1
+
+/-- The bottom-right pure profile is Nash in the canonical matrix form. -/
+theorem securityMatrix_pure_isNash :
+    IsNash (MatrixGame.form (Fin 2) (Fin 2))
+      (euPreference (MatrixGame.utility securityMatrix))
+      (MatrixGame.pureProfile 1 1) := by
+  rw [isNash_iff]
+  intro who alternative
+  rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) who with rfl | rfl
+  · fin_cases alternative <;>
+      simp [euPreference_apply, MatrixGame.form, MatrixGame.pureProfile,
+        MatrixGame.utility, securityMatrix, expectedUtility]
+  · fin_cases alternative <;>
+      simp [euPreference_apply, MatrixGame.form, MatrixGame.pureProfile,
+        MatrixGame.utility, securityMatrix, expectedUtility]
+
+/-- The corresponding point-mass mixed profile is a saddle point. -/
+theorem securityMatrix_pure_isSaddlePoint :
+    IsSaddlePoint (F := MatrixGame.form (Fin 2) (Fin 2))
+      (MatrixGame.utility securityMatrix)
+      (MatrixGame.mixedProfile (Probability.FinDist.pure 1)
+        (Probability.FinDist.pure 1)) := by
+  rw [MatrixGame.mixedProfile_pure]
+  exact securityMatrix_pure_isNash.purify.isSaddlePoint
+    (MatrixGame.utility_isZeroSum securityMatrix)
+
+@[simp]
+theorem securityMatrix_pure_expectedPayoff :
+    MatrixGame.expectedPayoff securityMatrix
+      (Probability.FinDist.pure 1) (Probability.FinDist.pure 1) = 1 := by
+  rw [MatrixGame.expectedPayoff, MatrixGame.mixedProfile_pure,
+    GameForm.mixed_play_purify]
+  simp [MatrixGame.form, MatrixGame.pureProfile, MatrixGame.utility,
+    securityMatrix, expectedUtility]
+
+/-- The bottom row guarantees the nonzero value against every mixed column. -/
+theorem securityMatrix_row_guarantees :
+    MatrixGame.RowGuarantees securityMatrix (Probability.FinDist.pure 1) 1 := by
+  have h := (MatrixGame.isSaddlePoint_iff_guarantees_caps securityMatrix
+    (Probability.FinDist.pure 1) (Probability.FinDist.pure 1)).1
+    securityMatrix_pure_isSaddlePoint
+  simpa only [securityMatrix_pure_expectedPayoff] using h.1
+
+/-- The right column caps the row payoff at the same nonzero value. -/
+theorem securityMatrix_column_caps :
+    MatrixGame.ColumnCaps securityMatrix (Probability.FinDist.pure 1) 1 := by
+  have h := (MatrixGame.isSaddlePoint_iff_guarantees_caps securityMatrix
+    (Probability.FinDist.pure 1) (Probability.FinDist.pure 1)).1
+    securityMatrix_pure_isSaddlePoint
+  simpa only [securityMatrix_pure_expectedPayoff] using h.2
+
+/-- The abstract selected matrix value is forced to equal the explicit common
+security certificate. -/
+theorem securityMatrix_value_eq_one : MatrixGame.value securityMatrix = 1 := by
+  symm
+  exact MatrixGame.common_guarantee_eq_value securityMatrix
+    ⟨Probability.FinDist.pure 1, securityMatrix_row_guarantees⟩
+    ⟨Probability.FinDist.pure 1, securityMatrix_column_caps⟩
 
 end GameTheory.Examples

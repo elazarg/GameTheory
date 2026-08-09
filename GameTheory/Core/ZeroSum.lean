@@ -105,6 +105,27 @@ theorem IsNash.isSaddlePoint (hzero : IsZeroSum utility)
   rw [euPreference_apply, hzero.expectedUtility_one, hzero.expectedUtility_one] at hone
   linarith
 
+/-- **A saddle point of a zero-sum game is a mixed Nash equilibrium.**  The
+row inequality is player zero's Nash condition; negating the column inequality
+gives player one's condition. -/
+theorem IsSaddlePoint.isNash (hσ : IsSaddlePoint utility σ)
+    (hzero : IsZeroSum utility) :
+    IsNash F.mixed (euPreference utility) σ := by
+  rw [isNash_iff]
+  intro who deviation
+  rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) who with rfl | rfl
+  · exact hσ.1 deviation
+  · rw [euPreference_apply, hzero.expectedUtility_one,
+      hzero.expectedUtility_one]
+    exact neg_le_neg (hσ.2 deviation)
+
+/-- In a two-player zero-sum game, mixed Nash and saddle points are exactly
+the same canonical predicate. -/
+theorem isNash_iff_isSaddlePoint (hzero : IsZeroSum utility) :
+    IsNash F.mixed (euPreference utility) σ ↔ IsSaddlePoint utility σ :=
+  ⟨fun hnash => hnash.isSaddlePoint hzero,
+    fun hsaddle => hsaddle.isNash hzero⟩
+
 /-- **Every saddle point of a game is worth the same.** Play one player's half
 of one against the other player's half of the other and the two values are
 squeezed together. -/
