@@ -11,6 +11,7 @@ the semantics drift apart.
 -/
 
 import GameTheory.Finite.Correctness
+import GameTheory.Core.CorrelatedDominance
 import Mathlib.Tactic.DeriveFintype
 import Mathlib.Tactic.Ring
 
@@ -128,6 +129,27 @@ theorem prisonersDilemma_existsUniqueNash_of_strictDominance :
       IsNash prisonersDilemma.toForm (euPreference prisonersDilemma.utility) profile :=
   prisonersDilemma_isDominantStrategySolvable.existsUniqueNash
     (euPreference_reflexive prisonersDilemma.utility)
+
+/-- Strict dominance pins every coarse correlated equilibrium, not only every
+pure Nash profile: arbitrary correlation still concentrates on mutual
+defection. -/
+theorem prisonersDilemma_isCoarseCorrelatedEq_iff
+    (law : FinDist (Profile prisonersDilemma.sig)) :
+    IsCoarseCorrelatedEq prisonersDilemma.toForm
+        (euPreference prisonersDilemma.utility) law ↔
+      law = FinDist.pure bothDefect :=
+  strictDominant_isCoarseCorrelatedEq_iff
+    (fun who => prisonersDilemma_defect_isStrictDominant who)
+
+/-- The same point mass is therefore the unique correlated equilibrium of the
+Prisoner's Dilemma. -/
+theorem prisonersDilemma_isCorrelatedEq_iff
+    (law : FinDist (Profile prisonersDilemma.sig)) :
+    IsCorrelatedEq prisonersDilemma.toForm
+        (euPreference prisonersDilemma.utility) law ↔
+      law = FinDist.pure bothDefect :=
+  strictDominant_isCorrelatedEq_iff
+    (fun who => prisonersDilemma_defect_isStrictDominant who)
 
 /-- Hence cooperation survives no round of elimination — from the abstract
 theorem, not from a second computation. -/

@@ -340,7 +340,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 |---|---|---|---|
 | foundations and VNM | utility invariance, strategic equivalence, expected-utility representation, axiom independence | expected-utility representation without merging probability-free ranks back into lottery preference | `Core.Preference`, finite laws, and independent mathematics only where earned |
 | static response | dominance, rationalizability, approximate and secure equilibrium | **strict solvability and mixed/pure rationalizability complete;** next IESDS/correlation or undominated existence | `GameTheory.Core`; explicitly pure execution in `Finite` |
-| correlation | correlation regimes, regret, signal timing, value of correlation | **CE/CCE existence complete through mixed Nash;** next one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
+| correlation | correlation regimes, regret, signal timing, value of correlation | **CE/CCE existence, conditional obedience, relative dominated-support exclusion, and strict-dominant CE/CCE uniqueness complete;** next approximation/regret or one strict timing separation | `Core` and opt-in `Analysis` |
 | learning | regret, multiplicative weights, fictitious play, approachability | **F2, finite MW self-play, base fictitious play 9/9, exact-potential convergence, and approachability/regret matching 23/23 complete;** only weighted-potential generalization remains gated | stable finite identities in Core, law-free MW and approachability mathematics in `GameTheoryMath`, canonical-law adapters in Probability or opt-in Analysis, and quantitative composition in `Analysis.Learning` |
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | **pinned congestion family complete, including robust affine CCE PoA (EXP-052/053, D24)** | `Core.Potential` plus the opt-in congestion domain |
 | welfare | individual rationality, smoothness, price of anarchy | **pure/robust CCE smoothness and fixed-profile IR complete;** next the six finite welfare consequences after an explicit Pareto-dependency disposition | whole-profile IR in `Core.Response`; aggregates in light `Core.Welfare`; theorem-only `Core.RobustWelfare` above |
@@ -577,18 +577,18 @@ capability status is not renegotiated during that review.
 
 ### Current release-coverage checkpoint
 
-Last integrated checkpoint: 2026-08-09, after the trembling-hand refinement
-gate closed the last critical capability gap.
+Last integrated checkpoint: 2026-08-09, after the bounded correlation and
+relative-dominance batch completed the current breadth-first seam.
 These counts are milestones, not declaration-port percentages.
 
 | Release dimension | Current evidence | Release condition |
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,627 of 8,324 pinned declarations are claimed by exact ledgers; 2,527 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,697-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | individual rationality complete: the base predicate plus 3/3 closure theorems use canonical expected utility and Pareto comparison; a stochastic fixture separates weak Pareto improvement and nonzero reservation thresholds | keep ex-post mechanism participation, contracts, bargaining, matching, and strict repeated-game IR semantically distinct |
-| next capability rotation | correlation hierarchy: select one strict CE/CCE/mixed-Nash separation or dominated-support batch | preserve the single equilibrium predicate and canonical finite-law waist |
-| release engineering | warning-clean 3,532-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
+| exact accounting | 2,637 of 8,324 pinned declarations are claimed by exact ledgers; 2,537 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,687-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | correlation/dominance complete: conditional obedience has no carrier finiteness, relative support exclusion uses canonical `StrictlyDominatesOn`, and strict-dominant profiles uniquely pin arbitrary CE/CCE laws | keep public-signal saturation deferred until a communication or correlation-regime consumer selects it |
+| next capability rotation | social choice: audit a bounded Gibbard--Satterthwaite theorem spine and its ranking/strategyproofness ownership | preserve the canonical ranking and equilibrium layers; do not grow a parallel social-choice preference engine |
+| release engineering | warning-clean 3,534-job default build; structural and coverage audits green; sampled kernel trust profile unchanged | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -711,7 +711,14 @@ provisioned in CI.
    mistakes.  The six finite welfare consequences stay queued until their
    Pareto dependency can be added without making D24's light aggregate leaf
    import the full response stack.  The breadth-first rotation now moves to a
-   strict correlation-hierarchy or dominated-support batch;
+   strict correlation-hierarchy or dominated-support batch.  That batch now
+   recovers conditional obedience without finite carriers, excludes support on
+   actions dominated relative to the current product set, and proves strict-
+   dominant CE/CCE uniqueness.  A hostile law distinguishes relative from
+   global dominance, while Prisoner's Dilemma pins arbitrary laws.  The eight
+   public-signal saturation wrappers remain behind a selected consumer rather
+   than forcing a premature correlation-regime API.  The breadth-first queue
+   now rotates to a bounded Gibbard--Satterthwaite/social-choice audit;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.

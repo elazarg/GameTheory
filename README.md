@@ -21,7 +21,8 @@ GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          deviations, equilibrium and response concepts, static
                          game theory, strict-dominance solvability, approximate
                          Nash, mixed and pure rationalizability, Bayesian
-                         recommendation/obedience,
+                         recommendation/obedience, correlated conditional
+                         obedience and relative dominated-support exclusion,
                          finite no-regret learning, concrete reindexing and
                          relabeling laws, utility-scale invariance, profile
                          individual rationality, social

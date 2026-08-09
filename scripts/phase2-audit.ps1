@@ -810,6 +810,38 @@ if (-not $SkipReachability) {
   Report 'INDIVIDUAL_RATIONALITY_BOUNDARY_PROBES_REJECTED' `
     $individualRationalityBoundaryRejected
 
+  # Conditional obedience and support exclusion are a focused theorem leaf
+  # over the canonical CE/CCE and relative-dominance APIs.  Mixed-product,
+  # analytic-existence, and protocol semantics must stay outside its closure.
+  $correlatedDominanceInputs = @(
+    'GameTheory.IsCorrelatedEq.conditional_obedience',
+    'GameTheory.IsCorrelatedEq.support_avoids_strictlyDominatedOn',
+    'GameTheory.strictDominant_isCoarseCorrelatedEq_iff',
+    'GameTheory.strictDominant_isCorrelatedEq_iff')
+  $correlatedDominanceBoundary = @(
+    'GameTheory.IsNash.isCorrelatedEq_pi',
+    'GameTheory.exists_isCorrelatedEq',
+    'GameTheory.Protocol.ExecutionProtocol')
+  $correlatedDominanceOutput = Run-Probe `
+    'GameTheory.Core.CorrelatedDominance' `
+    ($correlatedDominanceInputs + $correlatedDominanceBoundary)
+  $correlatedDominanceInputsReached = 0
+  foreach ($constant in $correlatedDominanceInputs) {
+    if (-not (Is-Unreachable $correlatedDominanceOutput $constant)) {
+      $correlatedDominanceInputsReached++
+    }
+  }
+  Report 'CORRELATED_DOMINANCE_INPUT_PROBES_REACHED' `
+    $correlatedDominanceInputsReached
+  $correlatedDominanceBoundaryRejected = 0
+  foreach ($constant in $correlatedDominanceBoundary) {
+    if (Is-Unreachable $correlatedDominanceOutput $constant) {
+      $correlatedDominanceBoundaryRejected++
+    }
+  }
+  Report 'CORRELATED_DOMINANCE_BOUNDARY_PROBES_REJECTED' `
+    $correlatedDominanceBoundaryRejected
+
   # D40 keeps standard mixed rationalizability in Core while the executable
   # frontend remains an explicitly pure checker.  Positive probes require the
   # mixed and pure semantics to coexist; negative probes keep algorithms and
@@ -1647,6 +1679,8 @@ if ($VerifyExpected) {
     $Expected['UTILITY_INVARIANCE_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['INDIVIDUAL_RATIONALITY_INPUT_PROBES_REACHED'] = 4
     $Expected['INDIVIDUAL_RATIONALITY_BOUNDARY_PROBES_REJECTED'] = 3
+    $Expected['CORRELATED_DOMINANCE_INPUT_PROBES_REACHED'] = 4
+    $Expected['CORRELATED_DOMINANCE_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['RATIONALIZABILITY_INPUT_PROBES_REACHED'] = 6
     $Expected['RATIONALIZABILITY_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6

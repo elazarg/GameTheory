@@ -580,6 +580,23 @@ theorem eq_pure_of_subsingleton [Subsingleton α] (μ : FinDist α) (a : α) : �
   have htotal := tsum_prob μ
   rwa [tsum_eq_single a fun c hc => absurd (Subsingleton.elim c a) hc] at htotal
 
+/-- A law supported at one point is that point mass. -/
+theorem eq_pure_of_support_subset_singleton (μ : FinDist α) (a : α)
+    (hsub : μ.support ⊆ {a}) : μ = pure a := by
+  classical
+  refine ext_of_prob fun b => ?_
+  by_cases hba : b = a
+  · subst hba
+    rw [prob_pure_self]
+    have htotal := tsum_prob μ
+    rwa [tsum_eq_single b fun c hca => by
+      rw [prob_eq_zero_iff]
+      intro hc
+      exact hca (Set.mem_singleton_iff.mp (hsub hc))] at htotal
+  · rw [prob_pure_of_ne hba, prob_eq_zero_iff]
+    intro hb
+    exact hba (Set.mem_singleton_iff.mp (hsub hb))
+
 /-- Branches agreeing on the support give the same `bind`. -/
 theorem bind_congr {μ : FinDist α} {f g : α → FinDist β}
     (h : ∀ a ∈ μ.support, f a = g a) : μ.bind f = μ.bind g := by
@@ -876,6 +893,45 @@ theorem expect_indicator_eq_probOf (μ : FinDist α) (S : Set α) [DecidablePred
       exact PMF.apply_ne_top _ _
     · rw [Set.indicator_of_notMem haS]
       exact ENNReal.zero_ne_top
+
+/-- Conditioning rescales the expectation of an observable that vanishes off
+the conditioning event. -/
+theorem expect_condOn_eq_div_of_eq_zero_off (μ : FinDist α) (S : Set α)
+    (hmeet : ∃ a ∈ S, a ∈ μ.support) (u : α → ℝ)
+    (hzero : ∀ a ∈ μ.support, a ∉ S → u a = 0) :
+    (μ.condOn S hmeet).expect u = μ.expect u / μ.probOf S := by
+  classical
+  rw [expect_eq_sum_of_subset (μ.condOn S hmeet) u μ.supportFinset, expect_eq_sum_support,
+    div_eq_mul_inv, Finset.sum_mul]
+  · refine Finset.sum_congr rfl fun a ha => ?_
+    rw [prob_condOn]
+    by_cases haS : a ∈ S
+    · rw [if_pos haS]
+      ring
+    · rw [if_neg haS, zero_mul, hzero a (mem_supportFinset.mp ha) haS, mul_zero]
+      simp
+  · intro a ha
+    apply mem_supportFinset.mpr
+    exact (support_condOn μ S hmeet ha).2
+
+/-- If two observables have ordered global expectations and agree away from a
+positive-mass event, their conditional expectations on that event are ordered.
+
+This is the finite-support form of the cancellation used by conditional
+obedience: all mass outside the observed event contributes equally to both
+global expectations. -/
+theorem expect_condOn_le_of_expect_le_of_eq_off (μ : FinDist α) (S : Set α)
+    (hmeet : ∃ a ∈ S, a ∈ μ.support) {f g : α → ℝ}
+    (hle : μ.expect f ≤ μ.expect g)
+    (heq : ∀ a ∈ μ.support, a ∉ S → f a = g a) :
+    (μ.condOn S hmeet).expect f ≤ (μ.condOn S hmeet).expect g := by
+  apply sub_nonpos.mp
+  rw [← expect_sub]
+  rw [expect_condOn_eq_div_of_eq_zero_off]
+  · exact div_nonpos_of_nonpos_of_nonneg (by simpa [expect_sub] using sub_nonpos.mpr hle)
+      (le_of_lt (probOf_pos hmeet))
+  · intro a ha haS
+    exact sub_eq_zero.mpr (heq a ha haS)
 
 open Classical in
 /-- The law restricted to the fibre of `f` over `b`, or the law itself where
