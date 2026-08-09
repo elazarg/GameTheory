@@ -8,9 +8,17 @@ import UniformEquilibrium.Quitting.EssentialAPS.Multivalued.SCCExecution
 import UniformEquilibrium.Quitting.EssentialAPS.Multivalued.OccupationRegression
 
 /-!
-# Multivalued essential-APS SCC execution
+# Multivalued essential-APS execution
 
-Public surface for the finite-relation execution trichotomy, the Flesch-SCC
-adapter, component-local charge bounds, and the regression separating global
-occupation balance from a single chronological recurrent path.
+Public surface for:
+
+* generic finite-terminal / coherent-infinite / typed-obstruction execution;
+* exact SCC-internal execution from the named segment-subinvariance hypothesis;
+* the separate charged-segment obstruction trichotomy and its conditional
+  prefix-charge bounds; and
+* the regression separating global occupation cancellation from one
+  chronological recurrent path.
+
+Graph strong connectivity and graph reachability are never promoted to exact
+singleton-flow segments without an explicit segment-level hypothesis.
 -/
