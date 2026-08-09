@@ -10,8 +10,8 @@ import UniformEquilibrium.Quitting.Projective.FiniteForwardProjectiveLasso
 # A game-level charge alternative for punishment-floor forward orbits
 
 A punishment-floor exact forward orbit retains every predecessor choice rather
-than fixing one classical selector.  Its roots satisfy the support-local exact
-one-stage Nash condition, its values follow the exact Bellman update, and every
+than fixing one classical selector.  Its roots satisfy the full exact one-stage
+Nash condition, its values follow the exact Bellman update, and every
 continuation remains above the coordinatewise behavioral punishment vector.
 
 The raw compactness statement
@@ -52,8 +52,8 @@ structure QuittingPunishmentFloorForwardOrbit
   policy : ∀ time,
     value (time + 1) = quittingRootSuccessorPayoff reward
       (value time) (roots time)
-  support : ∀ time,
-    IsQuittingRootSupportApproxNash reward (value time) 0 (roots time)
+  nash : ∀ time,
+    IsεQuittingRootNash reward (value time) 0 (roots time)
   rational : ∀ target time,
     quittingPunishmentValue reward target ≤ value time target
 
@@ -68,6 +68,25 @@ def prefixCharge
     (horizon : ℕ) : ℝ :=
   ∑ time ∈ Finset.range horizon,
     quittingRootAbsorptionMass (orbit.roots time)
+
+/-- Full exact root Nash implies zero-error support optimality. -/
+theorem supportApproxNash_zero_of_isZeroNash
+    (tail : Payoff ι) (root : ι → PMF Bool)
+    (hnash : IsεQuittingRootNash reward tail 0 root) :
+    IsQuittingRootSupportApproxNash reward tail 0 root := by
+  have hendpoint :=
+    (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+      reward tail root).2 hnash
+  intro who
+  constructor
+  · intro hquit
+    have hweighted := (hendpoint who).2
+    have hquit0 : 0 ≤ (root who true).toReal := ENNReal.toReal_nonneg
+    nlinarith
+  · intro hcontinue
+    have hweighted := (hendpoint who).1
+    have hcontinue0 : 0 ≤ (root who false).toReal := ENNReal.toReal_nonneg
+    nlinarith
 
 /-- Increasing the tolerance preserves the support-local approximate Nash
 condition. -/
@@ -101,7 +120,10 @@ def toFiniteForwardPacket
   policy := fun time _ => orbit.policy time
   support := fun time _ =>
     supportApproxNash_mono (reward := reward)
-      (orbit.value time) (orbit.roots time) hsupportError (orbit.support time)
+      (orbit.value time) (orbit.roots time) hsupportError
+      (supportApproxNash_zero_of_isZeroNash
+        (reward := reward) (orbit.value time) (orbit.roots time)
+        (orbit.nash time))
   rational := by
     intro target time _
     have hir := orbit.rational target time
@@ -123,8 +145,8 @@ def HasUniformPunishmentFloorOrbitChargeBound
 /-- **All-orbit punishment-floor charge alternative.**
 
 Failure of one common prefix bound gives, for every requested nonnegative
-charge target, a finite exact orbit prefix above that target.  Exact support
-optimality and exact punishment rationality weaken to the positive tolerance
+charge target, a finite exact orbit prefix above that target.  Exact one-stage
+Nash and exact punishment rationality weaken to the positive tolerances
 requested by the finite-forward compiler, so those target-dependent prefixes
 produce a uniform-equilibrium payoff. -/
 theorem
@@ -168,5 +190,45 @@ theorem
     HasUniformPunishmentFloorOrbitChargeBound reward carrier :=
   (quittingGame_uniformPayoff_or_hasUniformPunishmentFloorOrbitChargeBound
     reward carrier hcarrier).resolve_left hnoPayoff
+
+/-- The canonical compact payoff box used by exact Nash--Bellman predecessor
+construction. -/
+def quittingPunishmentFloorOrbitCarrier
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    Set (Payoff ι) :=
+  Set.Icc (fun _ : ι => -quittingRewardBound reward)
+    (fun _ : ι => quittingRewardBound reward)
+
+/-- The canonical payoff box is compact. -/
+theorem quittingPunishmentFloorOrbitCarrier_isCompact
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    IsCompact (quittingPunishmentFloorOrbitCarrier reward) :=
+  isCompact_Icc
+
+/-- Canonical-box specialization of the all-orbits charge alternative. -/
+theorem
+    quittingGame_uniformPayoff_or_hasCanonicalPunishmentFloorOrbitChargeBound
+    [Nonempty ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    (∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff) ∨
+      HasUniformPunishmentFloorOrbitChargeBound reward
+        (quittingPunishmentFloorOrbitCarrier reward) :=
+  quittingGame_uniformPayoff_or_hasUniformPunishmentFloorOrbitChargeBound
+    reward (quittingPunishmentFloorOrbitCarrier reward)
+      (quittingPunishmentFloorOrbitCarrier_isCompact reward)
+
+/-- If the game has no uniform-equilibrium payoff, one constant bounds every
+exact punishment-floor orbit in the canonical payoff box. -/
+theorem
+    hasCanonicalPunishmentFloorOrbitChargeBound_of_not_uniformPayoff
+    [Nonempty ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (hnoPayoff : ¬ ∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff) :
+    HasUniformPunishmentFloorOrbitChargeBound reward
+      (quittingPunishmentFloorOrbitCarrier reward) :=
+  (quittingGame_uniformPayoff_or_hasCanonicalPunishmentFloorOrbitChargeBound
+    reward).resolve_left hnoPayoff
 
 end GameTheory
