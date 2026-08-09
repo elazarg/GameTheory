@@ -4,18 +4,18 @@ Title: Broad factored-observation stochastic-game recovery
 Family ID: L-FOSG
 Pinned roots: `GameTheory/Languages/FOSG/Basic.lean`; `GameTheory/Languages/FOSG/Compile.lean`; `GameTheory/Languages/FOSG/Examples.lean`; `GameTheory/Languages/FOSG/Execution.lean`; `GameTheory/Languages/FOSG/History.lean`; `GameTheory/Languages/FOSG/Information.lean`; `GameTheory/Languages/FOSG/Native/History.lean`; `GameTheory/Languages/FOSG/Native/HistoryMarginal.lean`; `GameTheory/Languages/FOSG/Native/Reachable.lean`; `GameTheory/Languages/FOSG/Native/StepIndependence.lean`; `GameTheory/Languages/FOSG/Native/TerminalLaw.lean`; `GameTheory/Languages/FOSG/OutcomeClosure.lean`; `GameTheory/Languages/FOSG/ReachableHistory/Law.lean`; `GameTheory/Languages/FOSG/ReachableHistory/Native.lean`; `GameTheory/Languages/FOSG/ReachableHistory/ObsModelFacts.lean`; `GameTheory/Languages/FOSG/Serial.lean`; `GameTheory/Languages/FOSG/Strategy.lean`; `GameTheory/Languages/FOSG/Values.lean`
 Pinned commit: `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`
-Successor baseline: `01f790a`
+Successor baseline: `3717bce`
 Canonical destination: GameTheory.Languages.FOSG; GameTheory.Protocol; named EFG/FOSG bridges
 Domain contract / decision: D6, D7, D11, D12, D15, EXP-042, EXP-057/D28, EXP-058/D29, EXP-059/060/061/D30
 Owner: Wave 3 / sequential and language recovery
-Status: in progress; 695/776 reviewed, 81 unreviewed
-Last verified: 2026-08-03
+Status: complete review; 776/776 declarations classified
+Last verified: 2026-08-09
 
-This ledger is an exact generated review queue for the L-FOSG family.
+This ledger is the complete exact review of the L-FOSG family.
 0 declarations are already accounted for in earlier bounded ledgers and are
-not duplicated here. Rows not yet classified remain deliberately
-`unreviewed`: the generated index supplies spelling, location, kind, and
-visibility only. It does not infer a mathematical disposition. Reviewed batches
+not duplicated here. The generated index supplied spelling, location, kind,
+and visibility only; every disposition below was reviewed against the
+canonical successor. Reviewed batches
 cover the complete `Basic.lean` legality substrate, `History.lean` canonical
 history migration, `Information.lean` canonical information-model migration,
 `Strategy.lean` canonical policy migration, `Execution.lean` canonical
@@ -25,6 +25,16 @@ attributes the latter to those exact pinned paths: `Protocol.Information`
 owns the canonical policy and law machinery, while `Languages.FOSG.Kuhn`
 supplies the named FOSG-facing correspondence.  It does not revive the native scalar
 marginal calculus.
+
+The final 81-row `ReachableHistory/{Native,Law}.lean` batch contains 17
+adaptations, 11 subsumptions, 44 retirements, and 9 deferrals.
+Its direct mixed/behavioral history-law payload is adapted or subsumed by
+`InformationModel.runMixed_toBehavioral`, the compiled-form equality, and the
+named FOSG Kuhn theorem.  The reachable `ObsModelCore`, PMF lift, fallback,
+erasure, finite-instance, and restriction/extension layers retire with the
+adapter rejected by D29.  Nine unilateral-deviation and Nash/CCE/CE transport
+rows remain deferred behind one explicit FOSG Kuhn strategic-transfer gate;
+they are not credited by equality of on-path laws alone.
 
 The `Native/Reachable.lean`, `Native/StepIndependence.lean`,
 `Native/TerminalLaw.lean`, and `OutcomeClosure.lean` batch is now classified.
@@ -533,87 +543,87 @@ module they require rather than a FOSG-wide umbrella.
 | same | `runDistFrom_eq_run` | theorem | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | Runner/process comparison awaits the canonical outcome-value process. |
 | same | `map_observe_runDistFrom_eq_value` | theorem | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | Prefix outcome closure awaits the canonical outcome-value process. |
 | same | `map_observe_runDist_eq_value` | theorem | deferred | ordinary-continuation/outcome-value-process gate | EXP-057/D28 | Initial outcome closure awaits the canonical outcome-value process. |
-| `GameTheory/Languages/FOSG/ReachableHistory/Law.lean` | `reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores` | theorem | unreviewed | review required | generated index seed only | public, pinned line 36 |
-| same | `reachableHistoryBehavioralToMixedStrategy_factorAt` | theorem | unreviewed | review required | generated index seed only | public, pinned line 100 |
-| same | `liftReachableHistoryPureProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 127 |
-| same | `reachableHistoryOutcomeDistPureProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 134 |
-| same | `liftReachableHistoryMixedProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 144 |
-| same | `liftReachableHistoryMixedProfile_joint` | theorem | unreviewed | review required | generated index seed only | public, pinned line 152 |
-| same | `reachableHistoryOutcomeDistPure_liftReachableHistoryPureProfile` | theorem | unreviewed | review required | generated index seed only | public, pinned line 170 |
-| same | `reachableHistoryPureStepDist_eq_runDistFrom_one` | theorem | unreviewed | review required | generated index seed only | public, pinned line 179 |
-| same | `reachableHistoryOutcomeDistPureProfile_eq_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 272 |
-| same | `reachableLegalFallbackBehavioral` | def | unreviewed | review required | generated index seed only | public, pinned line 316 |
-| same | `eraseReachableHistoryBehavioral` | def | unreviewed | review required | generated index seed only | public, pinned line 324 |
-| same | `reachableHistoryBehavioralJointActionDist_map_val` | theorem | unreviewed | review required | generated index seed only | public, pinned line 330 |
-| same | `reachableHistoryBehavioralStepDist_eq_runDistFrom_one` | theorem | unreviewed | review required | generated index seed only | public, pinned line 380 |
-| same | `reachableHistoryOutcomeDist_eq_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 487 |
-| same | `eraseReachableHistoryBehavioral_isLegal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 526 |
-| same | `reachableLegalHistoryMixedToBehavioral` | def | unreviewed | review required | generated index seed only | public, pinned line 545 |
-| same | `reachableMixedToLegalBehavioral` | def | unreviewed | review required | generated index seed only | public, pinned line 562 |
-| same | `reachableMixedToLegalBehavioral_toProfile` | theorem | unreviewed | review required | generated index seed only | public, pinned line 574 |
-| same | `reachableLegalHistoryMixedToBehavioral_historyOutcomeDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 584 |
-| same | `reachable_mixed_to_behavioral` | theorem | unreviewed | review required | generated index seed only | public, pinned line 631 |
-| same | `reachable_mixed_to_legal_behavioral` | theorem | unreviewed | review required | generated index seed only | public, pinned line 656 |
-| same | `reachable_mixed_to_legal_behavioral_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 688 |
-| same | `reachableMixedToLegalBehavioral_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 711 |
-| same | `reachable_mixed_to_canonical_behavioral_unilateral_deviation_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 742 |
-| same | `reachableLegalHistoryMixedToBehavioral_unilateral_deviation_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 767 |
-| same | `reachable_unilateral_target_toProfile` | theorem | unreviewed | review required | generated index seed only | public, pinned line 904 |
-| same | `reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 951 |
-| same | `reachable_mixed_to_behavioral_unilateral_deviation_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1022 |
-| same | `reachableLegalPureStrategyDefault` | def | unreviewed | review required | generated index seed only | public, pinned line 1042 |
-| same | `reachableDefaultMixedProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 1056 |
-| same | `reachableMixedToLegalBehavioralStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 1063 |
-| same | `reachableMixedToLegalBehavioralStrategy_eq_component` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1071 |
-| same | `reachableMixedPureGameFormAtHorizon` | def | unreviewed | review required | generated index seed only | public, pinned line 1086 |
-| same | `reachableBehavioralGameFormAtHorizon` | def | unreviewed | review required | generated index seed only | public, pinned line 1096 |
-| same | `reachableKuhnNashDeviationSimulation` | def | unreviewed | review required | generated index seed only | public, pinned line 1107 |
-| same | `reachableKuhn_target_nashFor_of_source_nashFor` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1137 |
-| same | `reachableKuhnCoarseCorrelatedDeviationSimulation` | def | unreviewed | review required | generated index seed only | public, pinned line 1158 |
-| same | `reachableKuhnCorrelatedDeviationSimulation` | def | unreviewed | review required | generated index seed only | public, pinned line 1192 |
-| same | `reachable_mixed_to_legal_behavioral_mapped_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1238 |
-| same | `legalPureMixedProfileRestrictReachable` | def | unreviewed | review required | generated index seed only | public, pinned line 1262 |
-| same | `legalPureProfileRestrictReachable` | def | unreviewed | review required | generated index seed only | public, pinned line 1268 |
-| same | `legalBehavioralProfileRestrictReachable` | def | unreviewed | review required | generated index seed only | public, pinned line 1273 |
-| same | `legalPureMixedProfileRestrictReachable_joint` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1277 |
-| same | `legalPureProfileRestrictReachable_extend_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1297 |
-| same | `legalBehavioralProfileRestrictReachable_extend_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1317 |
-| same | `mixed_legalPure_to_legalBehavioral_runDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 1338 |
-| `GameTheory/Languages/FOSG/ReachableHistory/Native.lean` | `HistoryPureProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 32 |
-| same | `HistoryBehavioralProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 36 |
-| same | `liftHistoryPureStrategy` | def | unreviewed | review required | generated index seed only | public, pinned line 40 |
-| same | `liftHistoryPureProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 47 |
-| same | `liftHistoryMixedProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 53 |
-| same | `liftHistoryMixedProfile_joint` | theorem | unreviewed | review required | generated index seed only | public, pinned line 58 |
-| same | `historyTraceLast` | def | unreviewed | review required | generated index seed only | public, pinned line 75 |
-| same | `historyOutcomeDist` | def | unreviewed | review required | generated index seed only | public, pinned line 80 |
-| same | `historyOutcomeDistPure` | def | unreviewed | review required | generated index seed only | public, pinned line 88 |
-| same | `HistoryStepMassInvariant` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 95 |
-| same | `HistoryStepSupportFactorization` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 100 |
-| same | `HistoryActionPosteriorLocal` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 105 |
-| same | `mixed_to_behavioral_native_history` | theorem | unreviewed | review required | generated index seed only | public, pinned line 116 |
-| same | `historyOutcomeDistPure_liftHistoryPureProfile` | theorem | unreviewed | review required | generated index seed only | public, pinned line 145 |
-| same | `mixed_to_behavioral` | theorem | unreviewed | review required | generated index seed only | public, pinned line 159 |
-| same | `mixed_to_behavioral_historyProb` | theorem | unreviewed | review required | generated index seed only | public, pinned line 179 |
-| same | `mixed_to_behavioral_historyMassOn` | theorem | unreviewed | review required | generated index seed only | public, pinned line 199 |
-| same | `IsLegalMixedProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 224 |
-| same | `legalFallbackBehavioral` | def | unreviewed | review required | generated index seed only | public, pinned line 231 |
-| same | `legalFallbackBehavioral_isLegal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 240 |
-| same | `legalHistoryMixedToBehavioral` | def | unreviewed | review required | generated index seed only | public, pinned line 263 |
-| same | `legalHistoryMixedToBehavioral_historyOutcomeDist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 276 |
-| same | `legalHistoryMixedToBehavioral_isLegal` | theorem | unreviewed | review required | generated index seed only | public, pinned line 307 |
-| same | `mixed_to_legal_behavioral` | theorem | unreviewed | review required | generated index seed only | public, pinned line 372 |
-| same | `ReachableInfoLegalMove` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 403 |
-| same | `reachable_availableMoves_nonempty` | theorem | unreviewed | review required | generated index seed only | public, pinned line 408 |
-| same | `reachableInfoLegalMoveDefault` | def | unreviewed | review required | generated index seed only | public, pinned line 415 |
-| same | `ReachableMixedProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 435 |
-| same | `reachableLegalPureStrategyFintype` | instance | unreviewed | review required | generated index seed only | public, pinned line 438 |
-| same | `reachableInfoStateDecidableEq` | instance | unreviewed | review required | generated index seed only | public, pinned line 446 |
-| same | `reachableMixedProfileJoint` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 451 |
-| same | `toReachableHistoryObsModelCore` | def | unreviewed | review required | generated index seed only | public, pinned line 464 |
-| same | `reachableHistoryInfoStateFintype` | instance | unreviewed | review required | generated index seed only | public, pinned line 495 |
-| same | `reachableInfoLegalMoveFintype` | instance | unreviewed | review required | generated index seed only | public, pinned line 502 |
-| same | `reachableHistoryLocalStrategyFintype` | instance | unreviewed | review required | generated index seed only | public, pinned line 510 |
+| `GameTheory/Languages/FOSG/ReachableHistory/Law.lean` | `reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores` | theorem | retired | no successor; old scalar posterior proof helper | D28/D29 | The public behavioral-to-mixed theorem is stated at complete-law equality. |
+| same | `reachableHistoryBehavioralToMixedStrategy_factorAt` | theorem | retired | no successor; old scalar posterior proof helper | D28/D29 | Removed with reweighted PMF and `ObsModelCore` internals. |
+| same | `liftReachableHistoryPureProfile` | def | retired | no successor; removed reachable-history adapter | D29 | Canonical policies need no lift. |
+| same | `reachableHistoryOutcomeDistPureProfile` | def | adapt | `InformationModel.run` | `Protocol/Information.lean` | Pure policy execution already returns the complete history law. |
+| same | `liftReachableHistoryMixedProfile` | def | retired | no successor; removed PMF lift | D28/D29 | Canonical mixed policies use `FinDist` directly. |
+| same | `liftReachableHistoryMixedProfile_joint` | theorem | retired | no successor; removed PMF product bridge | D28/D29 | Complete-law equality replaces lift bookkeeping. |
+| same | `reachableHistoryOutcomeDistPure_liftReachableHistoryPureProfile` | theorem | retired | no successor; definitional adapter identity | D29 | Both sides belonged to the removed machine. |
+| same | `reachableHistoryPureStepDist_eq_runDistFrom_one` | theorem | retired | no successor; alternate-runner comparison | D29 | Canonical Protocol has one runner and no bridge obligation to itself. |
+| same | `reachableHistoryOutcomeDistPureProfile_eq_runDist` | theorem | subsumed | `InformationModel.toBehavioralGameForm_play_toBehavioral` | `Protocol/Strategic.lean` | Canonical pure and behavioral readings have the same complete law. |
+| same | `reachableLegalFallbackBehavioral` | def | retired | no successor; removed fallback construction | D29 | Alternate-machine totalization is not public semantics. |
+| same | `eraseReachableHistoryBehavioral` | def | retired | no successor; removed legal-subtype erasure | D29 | Canonical dependent choices require no erasure bridge. |
+| same | `reachableHistoryBehavioralJointActionDist_map_val` | theorem | retired | no successor; removed joint-law bridge | D29 | Canonical `behavioralJoint` already consumes typed legal choices. |
+| same | `reachableHistoryBehavioralStepDist_eq_runDistFrom_one` | theorem | retired | no successor; alternate-runner comparison | D29 | No second step distribution is retained. |
+| same | `reachableHistoryOutcomeDist_eq_runDist` | theorem | retired | no successor; alternate-runner comparison | D29 | No second outcome distribution is retained. |
+| same | `eraseReachableHistoryBehavioral_isLegal` | theorem | retired | no successor; removed erasure bridge | D6/D29 | Legality is in `InformationModel.Choice`. |
+| same | `reachableLegalHistoryMixedToBehavioral` | def | retired | no successor; removed adapter witness | D28/D29 | Canonical `MixedPolicy.toBehavioral` is the direct conversion. |
+| same | `reachableMixedToLegalBehavioral` | def | adapt | pointwise `InformationModel.MixedPolicy.toBehavioral` | `Protocol/Information.lean` | Canonical behavior is constructed per player without a reachable wrapper. |
+| same | `reachableMixedToLegalBehavioral_toProfile` | theorem | retired | no successor; removed erasure identity | D29 | The canonical conversion is already pointwise. |
+| same | `reachableLegalHistoryMixedToBehavioral_historyOutcomeDist` | theorem | subsumed | `InformationModel.toGameForm_mixed_play_toBehavioral` | `Protocol/Strategic.lean` | The compiled canonical forms state the conversion law directly. |
+| same | `reachable_mixed_to_behavioral` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | `Languages/FOSG/Kuhn.lean` | Explicit perfect recall replaces automatic properties of the old raw-history adapter. |
+| same | `reachable_mixed_to_legal_behavioral` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | `Languages/FOSG/Kuhn.lean` | Canonical behavioral choices are legal by type. |
+| same | `reachable_mixed_to_legal_behavioral_runDist` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | `Languages/FOSG/Kuhn.lean` | Complete canonical FOSG history-law correspondence. |
+| same | `reachableMixedToLegalBehavioral_runDist` | theorem | subsumed | `InformationModel.toGameForm_mixed_play_toBehavioral` | `Protocol/Strategic.lean` | Exact law for the canonical pointwise conversion. |
+| same | `reachable_mixed_to_canonical_behavioral_unilateral_deviation_runDist` | theorem | deferred | FOSG Kuhn strategic-transfer gate | D28/D29 BFS continuation | On-path law equality alone does not prove componentwise deviation simulation. |
+| same | `reachableLegalHistoryMixedToBehavioral_unilateral_deviation_runDist` | theorem | deferred | FOSG Kuhn strategic-transfer gate | D28/D29 BFS continuation | Recover on canonical profiles without the reachable adapter. |
+| same | `reachable_unilateral_target_toProfile` | theorem | deferred | FOSG Kuhn strategic-transfer gate | D28/D29 BFS continuation | Needed component-locality statement for canonical mixed-to-behavioral conversion. |
+| same | `reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq` | theorem | deferred | FOSG Kuhn strategic-transfer gate | D28/D29 BFS continuation | This is the central deviation-commutation obligation. |
+| same | `reachable_mixed_to_behavioral_unilateral_deviation_runDist` | theorem | deferred | FOSG Kuhn strategic-transfer gate | D28/D29 BFS continuation | Existential deviation simulation follows from the central obligation. |
+| same | `reachableLegalPureStrategyDefault` | def | retired | no successor; old component-isolation helper | D29 | Canonical proofs must not fabricate global default profiles. |
+| same | `reachableDefaultMixedProfile` | def | retired | no successor; old component-isolation helper | D29 | Canonical componentwise conversion is directly player-local. |
+| same | `reachableMixedToLegalBehavioralStrategy` | def | adapt | `InformationModel.MixedPolicy.toBehavioral` | `Protocol/Information.lean` | The canonical conversion already depends only on that player's mixed policy. |
+| same | `reachableMixedToLegalBehavioralStrategy_eq_component` | theorem | subsumed | pointwise definition of `MixedPolicy.toBehavioral` | `Protocol/Information.lean` | No default opponent profile is needed to expose component locality. |
+| same | `reachableMixedPureGameFormAtHorizon` | def | subsumed | `(G.information.toGameForm horizon).mixed` | `Protocol/Strategic.lean` | Static mixing is the canonical once-drawn policy form. |
+| same | `reachableBehavioralGameFormAtHorizon` | def | adapt | `G.toBehavioralGameForm horizon` | `Languages/FOSG/Kuhn.lean` | Canonical behavioral compiler. |
+| same | `reachableKuhnNashDeviationSimulation` | def | deferred | FOSG Kuhn strategic-transfer gate | D28/D29 BFS continuation | Rebuild, if needed, from canonical componentwise conversion and deviation schemes. |
+| same | `reachableKuhn_target_nashFor_of_source_nashFor` | theorem | deferred | FOSG Kuhn strategic-transfer gate | D28/D29 BFS continuation | Mature Nash-transfer theorem remains genuine coverage work. |
+| same | `reachableKuhnCoarseCorrelatedDeviationSimulation` | def | deferred | FOSG Kuhn strategic-transfer gate | D28/D29 BFS continuation | CCE transport needs its own canonical deviation proof. |
+| same | `reachableKuhnCorrelatedDeviationSimulation` | def | deferred | FOSG Kuhn strategic-transfer gate | D28/D29 BFS continuation | Recommendation-dependent CE transport is not implied by Nash transfer. |
+| same | `reachable_mixed_to_legal_behavioral_mapped_runDist` | theorem | subsumed | `Game.kuhn_mixed_to_behavioral_outcomeLaw` | `Languages/FOSG/Kuhn.lean` | Arbitrary outcome pushforward is already public. |
+| same | `legalPureMixedProfileRestrictReachable` | def | retired | no successor; removed reachable restriction layer | D29 | Canonical policies are defined on the accepted information carrier. |
+| same | `legalPureProfileRestrictReachable` | def | retired | no successor; removed reachable restriction layer | D29 | No total/reachable duplicate policy carriers. |
+| same | `legalBehavioralProfileRestrictReachable` | def | retired | no successor; removed reachable restriction layer | D29 | No total/reachable duplicate policy carriers. |
+| same | `legalPureMixedProfileRestrictReachable_joint` | theorem | retired | no successor; removed restriction/product bridge | D29 | Product-law bookkeeping belonged to the duplicate carrier. |
+| same | `legalPureProfileRestrictReachable_extend_runDist` | theorem | retired | no successor; removed restriction/extension bridge | D29 | Canonical execution uses one policy carrier. |
+| same | `legalBehavioralProfileRestrictReachable_extend_runDist` | theorem | retired | no successor; removed restriction/extension bridge | D29 | Canonical execution uses one behavioral carrier. |
+| same | `mixed_legalPure_to_legalBehavioral_runDist` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | `Languages/FOSG/Kuhn.lean` | Canonical policies are legal by type and need no reachable restriction. |
+| `GameTheory/Languages/FOSG/ReachableHistory/Native.lean` | `HistoryPureProfile` | abbrev | adapt | `Profile G.information.strategicSignature` | D28; `Protocol.Strategic` | Canonical information-local policy profile; no native-history carrier. |
+| same | `HistoryBehavioralProfile` | abbrev | adapt | `Profile G.behavioralSignature` | D28; `Languages/FOSG/Kuhn.lean` | Canonical behavioral signature. |
+| same | `liftHistoryPureStrategy` | def | retired | no successor; removed observation-model adapter | D29 | Canonical policies already act on the accepted information state. |
+| same | `liftHistoryPureProfile` | def | retired | no successor; removed observation-model adapter | D29 | No profile lift between duplicate strategy carriers. |
+| same | `liftHistoryMixedProfile` | def | retired | no successor; removed PMF lift | D28/D29 | `MixedPolicy` is directly `FinDist Policy`. |
+| same | `liftHistoryMixedProfile_joint` | theorem | retired | no successor; removed PMF product bridge | D28/D29 | Complete canonical law equality replaces product-lift bookkeeping. |
+| same | `historyTraceLast` | def | retired | no successor; removed list-of-histories machine | D29 | Protocol outcomes already are complete histories. |
+| same | `historyOutcomeDist` | def | adapt | `InformationModel.runBehavioral` | D28; `Game.kuhn_mixed_to_behavioral` | Canonical behavioral runner returns the complete history law. |
+| same | `historyOutcomeDistPure` | def | adapt | `InformationModel.run` | `Protocol/Information.lean` | Canonical deterministic-policy runner. |
+| same | `HistoryStepMassInvariant` | abbrev | retired | no successor; removed scalar invariant | D28/D29 | Not an assumption of canonical Kuhn correspondence. |
+| same | `HistoryStepSupportFactorization` | abbrev | retired | no successor; removed scalar invariant | D28/D29 | Not an assumption of canonical Kuhn correspondence. |
+| same | `HistoryActionPosteriorLocal` | abbrev | retired | no successor; removed posterior adapter | D28/D29 | Perfect recall supplies the named mixed-to-behavioral premise. |
+| same | `mixed_to_behavioral_native_history` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | `Languages/FOSG/Kuhn.lean` | Stronger complete canonical history-law statement with explicit perfect recall. |
+| same | `historyOutcomeDistPure_liftHistoryPureProfile` | theorem | subsumed | `InformationModel.toBehavioralGameForm_play_toBehavioral` | `Protocol/Strategic.lean` | Pure policies have the same law under canonical behavioral reading. |
+| same | `mixed_to_behavioral` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | `Languages/FOSG/Kuhn.lean` | Named FOSG-facing complete-law theorem. |
+| same | `mixed_to_behavioral_historyProb` | theorem | subsumed | `Game.kuhn_mixed_to_behavioral` | complete-law equality plus point evaluation | Pointwise probability follows from equality of `FinDist History`. |
+| same | `mixed_to_behavioral_historyMassOn` | theorem | subsumed | `Game.kuhn_mixed_to_behavioral` | complete-law equality plus finite summation | Event mass follows from equality of the complete law. |
+| same | `IsLegalMixedProfile` | def | retired | no successor; legality lives in `InformationModel.Choice` | D6/D28 | Illegal choices are unrepresentable in canonical policies. |
+| same | `legalFallbackBehavioral` | def | retired | no successor; removed fallback construction | D28/D29 | Canonical mixed-to-behavioral conversion needs no language-local fallback. |
+| same | `legalFallbackBehavioral_isLegal` | theorem | retired | no successor; removed fallback construction | D28/D29 | Legality is carried by the dependent choice type. |
+| same | `legalHistoryMixedToBehavioral` | def | retired | no successor; removed adapter witness | D28/D29 | Canonical `MixedPolicy.toBehavioral` owns the conversion. |
+| same | `legalHistoryMixedToBehavioral_historyOutcomeDist` | theorem | subsumed | `InformationModel.toGameForm_mixed_play_toBehavioral` | `Protocol/Strategic.lean` | Canonical compiled forms state the constructed-witness law directly. |
+| same | `legalHistoryMixedToBehavioral_isLegal` | theorem | retired | no successor; legality by construction | D6/D28 | Every canonical behavioral choice carries its menu certificate. |
+| same | `mixed_to_legal_behavioral` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | `Languages/FOSG/Kuhn.lean` | Canonical behavioral policies are legal by type. |
+| same | `ReachableInfoLegalMove` | abbrev | adapt | `InformationModel.Choice` | D6/D29 | Accepted menus already give the dependent legal action carrier. |
+| same | `reachable_availableMoves_nonempty` | theorem | retired | no successor; adapter fallback helper | D29 | Used only to totalize the removed reachable-history construction. |
+| same | `reachableInfoLegalMoveDefault` | def | retired | no successor; adapter fallback helper | D29 | No default policy is exposed merely to support an alternate runner. |
+| same | `ReachableMixedProfile` | abbrev | adapt | `Profile G.information.strategicSignature.mixed` | D28; `Languages/FOSG/Kuhn.lean` | Canonical once-drawn mixed policy profile. |
+| same | `reachableLegalPureStrategyFintype` | instance | retired | no successor; language-local global instance | D28/D29 | Capabilities remain theorem-local. |
+| same | `reachableInfoStateDecidableEq` | instance | retired | no successor; language-local classical instance | D28/D29 | Decidable equality is requested only by the theorem that needs it. |
+| same | `reachableMixedProfileJoint` | abbrev | subsumed | `FinDist.pi` inside `InformationModel.runMixed` | `Protocol/Information.lean` | Product sampling is internal to the canonical mixed runner. |
+| same | `toReachableHistoryObsModelCore` | def | retired | no successor; duplicate execution/information machine | D29 | The accepted `InformationModel` is already the semantic owner. |
+| same | `reachableHistoryInfoStateFintype` | instance | retired | no successor; adapter-local finite instance | D29 | Removed with the alternate observation model. |
+| same | `reachableInfoLegalMoveFintype` | instance | retired | no successor; adapter-local finite instance | D29 | Removed with the alternate observation model. |
+| same | `reachableHistoryLocalStrategyFintype` | instance | retired | no successor; adapter-local finite instance | D29 | Removed with the alternate observation model. |
 | `GameTheory/Languages/FOSG/ReachableHistory/ObsModelFacts.lean` | `reachableHistoryOutcomeDist` | def | adapt | `InformationModel.runBehavioral` | EXP-058/D29 hostile witness | Canonical behavioral history law replaces the native reachable-history outcome PMF. |
 | same | `reachableHistoryOutcomeDistPure` | def | adapt | `InformationModel.run` | EXP-058/D29 hostile witness | Canonical initial deterministic-policy history law replaces the native outcome PMF. |
 | same | `ReachableHistoryStepMassInvariant` | abbrev | retired | no successor; removed scalar invariant | EXP-058/D29 | Native step-mass factorization is not a stable law interface. |
@@ -882,7 +892,7 @@ the integrated Phase 2/3 gates, and the coverage audit pass; `#print axioms`
 for both canonical extension laws reports only `propext`, `Classical.choice`,
 and `Quot.sound`.
 
-Before this ledger can become complete, each row must be reviewed against
-the canonical successor API and assigned an allowed non-`unreviewed`
-disposition with concrete build, theorem, decision, or counterexample
-evidence. Generated name similarity is never sufficient.
+This ledger is declaration-complete.  The deferred rows remain named theorem
+gates rather than silently counted as recovered.  In particular, the nine
+canonical unilateral-deviation and Nash/CCE/CE transport rows form one FOSG
+Kuhn strategic-transfer gate; on-path law equality does not discharge it.

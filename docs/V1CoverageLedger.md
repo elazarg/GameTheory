@@ -22,8 +22,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Fifty-eight work-package ledgers claim 2,509 declarations: 2,328
-have reviewed dispositions and 181 remain seeded `unreviewed`; a further 5,815 are
+declarations. Fifty-eight work-package ledgers claim 2,509 declarations: 2,409
+have reviewed dispositions and 100 remain seeded `unreviewed`; a further 5,815 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -139,7 +139,7 @@ declaration-based.
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
 | L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | validated by EXP-041/T3 | partial | broader refinement, recall, and Kuhn-facing declaration recovery |
-| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4; generic explicit-order FOSG-to-EFG serialization, full policy inversion, source-signal replay, all-round exact history laws, and order transport validated by EXP-059/060/061, D30 | partial; 695/776 reviewed, 81 queued | [exact declaration ledger](coverage/L-FOSG-broad.md); native reachable, step-independence, terminal-law, and outcome-closure rows are classified; complete-history equality is adapted with its explicit no-revisit premise, four pure-mixture marginal laws retain a checked-theorem gate, and ordinary continuation/terminal-support, outcome-value-process, and strategic transfer remain separate |
+| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4; generic explicit-order FOSG-to-EFG serialization, full policy inversion, source-signal replay, all-round exact history laws, and order transport validated by EXP-059/060/061, D30 | partial; all 776 declarations reviewed: 115 adapted, 144 subsumed, 429 retired, 87 deferred, and 1 refuted | [exact declaration ledger](coverage/L-FOSG-broad.md); complete-history equality retains its explicit no-revisit/recall premises, while four pure-mixture marginal laws, ordinary continuation/terminal support, outcome-value processes, and nine canonical strategic-transfer rows remain separate gates |
 | L-ROUND | `Languages/MultiRound.lean`, `Languages/MultiRound/**` | 15 | thin monitoring constructor compiling to canonical Protocol/FOSG | validated by EXP-070/D37 with generic perfect recall and hostile coarse monitoring | partial; 233/233 declarations reviewed, with 27 adapted, 6 subsumed, 163 retired, and 37 deferred | [exact declaration ledger](coverage/L-ROUND-broad.md); absent-minded values, finite-information Kuhn, and generic stagewise-Nash convenience are named BFS gates |
 | L-INTR | `Languages/Intrinsic.lean`, `Languages/Intrinsic/**` | 8 | capability-light native product/closed-loop root before any named Protocol compiler | D31-native root, native Examples/Tests, and solution-selection theorem leaf validated and promoted | partial; 58/158 reviewed, 100 queued | [exact declaration ledger](coverage/L-INTR-broad.md); the ungated native waist is recovered; player ownership/outcome preferences, temporal compilation, perfect recall, mixed/behavioral, PMF/utility, equilibrium, and Kuhn retain separate gates |
 | L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1, T3, T4 complete; stable generic FOSG-to-EFG full policy equivalence, exact all-round history laws, and order transport pass EXP-059/060/061, D30 | partial; bounded FOSG chain 104/104 reviewed, 19 deferred | [exact FOSG bridge ledger](coverage/L-BRIDGE-fosg.md); next L-BRIDGE family after its own gate; FOSG strategic/utility, terminal-support, augmentation, and expressiveness rows remain explicitly deferred |
@@ -206,8 +206,9 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Continue the remaining 81-row exact FOSG queue through observation-model batches and named
-   comparisons; generated rows remain `unreviewed` until manually classified.
+1. Rotate breadth-first to the bounded S-DOM dominance/undominated/
+   rationalizability inventory; FOSG's nine strategic-transfer rows remain a
+   named later batch rather than extending the sequential turn indefinitely.
 2. Keep exact family recovery separate from the qualitative verdict in
    `V1CapabilityMatrix.md`; neither may silently stand in for the other.
 3. Update this file in the same commit as each exact status change.

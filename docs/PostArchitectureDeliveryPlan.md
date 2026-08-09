@@ -367,7 +367,7 @@ surface syntax.
 | NFG | **passed and recovered:** EXP-042/T4 validates compilation; all 126 pinned declarations are classified with no deferred rows | broad examples, observable cheap talk, exact half/half mixed Nash, and the complete Matching Pennies correlated-equilibrium characterization are recovered through their canonical shared layers |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
 | MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
-| FOSG | **generic bridge gate passed (EXP-042/T4; EXP-059/060/061, D30):** the stable explicit-order FOSG-to-EFG bridge retains exact source histories while hiding within-round choices; policy projection/translation are full inverses, resolver-only public/private/own-action replay, inactive slots, literal all-round history laws, and order transport pass | **Native history/Kuhn, reachable observation-model, reachable/step-independence/terminal-law/outcome-closure, Compile, Examples, Serial, and the 104-declaration live bridge chain are classified;** the utility-free simultaneous example now exercises the canonical NFG-to-FOSG-to-EFG path, and the non-semantics-preserving serial machine is retired; continue the remaining 81-row exact L-FOSG queue while counterfactual reach, CFR, ordinary continuation coefficients, augmentation, strategic/utility transfer, and expressiveness retain separate gates |
+| FOSG | **generic bridge gate passed (EXP-042/T4; EXP-059/060/061, D30):** the stable explicit-order FOSG-to-EFG bridge retains exact source histories while hiding within-round choices; policy projection/translation are full inverses, resolver-only public/private/own-action replay, inactive slots, literal all-round history laws, and order transport pass | **All 776 L-FOSG declarations and the 104-declaration live bridge chain are classified;** the utility-free simultaneous example exercises the canonical NFG-to-FOSG-to-EFG path, the non-semantics-preserving serial/reachable-history machines are retired, and counterfactual reach, CFR, ordinary continuation coefficients, augmentation, nine strategic-transfer rows, and expressiveness retain separate gates |
 | multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
 | intrinsic games | **D31-native layer recovered (EXP-062, D31):** `Languages.Intrinsic` owns capability-light configurations, information-local pure rules, closed-loop solvability, explicit-slot configuration-dependent causality, stable native examples, and an opt-in solution-selection theorem leaf derived only from `IsSolvable` | choose the next gate explicitly: player ownership/outcome preferences, temporal compilation, perfect recall, mixed/behavioral strategy, PMF/utility, and Kuhn remain separate |
 | bridges and expressiveness | two real transfers compose more cheaply than direct named proofs | only the earned relation or composition API; otherwise classify v1 transport as retired |
@@ -585,9 +585,9 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,509 of 8,324 pinned declarations are claimed by exact ledgers; 2,328 have reviewed dispositions and 181 are seeded `unreviewed` | report the exact 5,815-row remainder; complete every ledger supporting a parity claim |
-| current DFS seam | complete: topology-free perturbations reuse canonical deviations in Core; convergence/perfection live in Analysis; all 26 trembling-hand declarations are classified | preserve the split and do not conflate the six deferred alternative-limit predicates with perfection |
-| next capability rotation | breadth-first release audit across the nine partial workflows, beginning with the bounded 81-row L-FOSG queue | classify loss before adding breadth, then recover capped batches across sequential, static, mechanism, and cooperative fields |
+| exact accounting | 2,509 of 8,324 pinned declarations are claimed by exact ledgers; 2,409 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,815-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | first batch complete: all 776 L-FOSG declarations are classified; the final 81 rows split into 17 adapted, 11 subsumed, 44 retired, and 9 deferred strategic-transfer obligations | keep the nine deviation/transport rows explicit; do not revive the rejected reachable-history adapter |
+| next capability rotation | static response: bounded S-DOM dominance, undominated, solvability, and rationalizability inventory | identify the smallest theorem spine missing from `Core.Response` and finite correctness before implementing it |
 | release engineering | warning-clean 3,517-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
@@ -657,10 +657,15 @@ provisioned in CI.
    perfection, and fair Matching Pennies witnesses genuine refinement without
    pure Nash.  All 26 pinned trembling-hand declarations are classified, with
    six distinct alternative-limit rows retained.  This closes the final
-   critical capability gap and ends the depth-first risk queue.  Breadth-first
-   release audit now starts with the remaining 81-row L-FOSG classification,
-   then rotates through D-REPEAT rank/self-generation/uniform harvesting and
-   validated static, mechanism, cooperative, and language leaf recovery;
+   critical capability gap and ends the depth-first risk queue.  The first
+   breadth-first batch completes the remaining 81-row L-FOSG classification:
+   44 obsolete reachable-history adapter rows retire, 28 rows are adapted or
+   subsumed by canonical law results, and nine unilateral-deviation and
+   Nash/CCE/CE transport rows remain a named strategic-transfer gate.  With all
+   776 L-FOSG declarations reviewed, the queue rotates to static S-DOM rather
+   than deepening the same subfield; D-REPEAT rank/self-generation/uniform and
+   validated mechanism, cooperative, and language leaf recovery remain later
+   BFS turns;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.
