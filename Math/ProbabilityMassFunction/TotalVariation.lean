@@ -168,6 +168,21 @@ theorem pmfTV_bind_le {α β : Type*} [Fintype α] [Fintype β]
         simpa using hle
     _ = pmfPositiveVariation μ ν := one_mul _
 
+/-- On `Bool`, the distance to the point mass at `true` is the mass at
+`false`. -/
+@[simp] theorem pmfTV_pure_true (marginal : PMF Bool) :
+    pmfTV marginal (PMF.pure true) = (marginal false).toReal := by
+  have htrue : (marginal true).toReal ≤ 1 := by
+    simpa using
+      ENNReal.toReal_mono ENNReal.one_ne_top (PMF.coe_le_one marginal true)
+  change (∑ action : Bool,
+      max ((marginal action).toReal -
+        ((PMF.pure true : PMF Bool) action).toReal) 0) = _
+  rw [Fintype.sum_bool]
+  simp only [PMF.pure_apply, Bool.false_eq_true, ↓reduceIte]
+  norm_num
+  exact htrue
+
 /-- Sum of total-variation distances through a finite list of intermediate
 laws. The empty list is the direct distance between the endpoints. -/
 noncomputable def pmfTVChain {Ω : Type*} [Fintype Ω] :

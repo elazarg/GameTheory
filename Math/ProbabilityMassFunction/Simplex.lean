@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Math.Probability
+import Math.Simplex
 import Mathlib.Analysis.Convex.StdSimplex
 
 /-!
@@ -114,6 +115,17 @@ theorem coe_stdSimplexEquiv_apply [Fintype α] (μ : PMF α) :
 @[simp]
 theorem stdSimplexEquiv_symm_apply [Fintype α] (x : stdSimplex ℝ α) :
     (stdSimplexEquiv (α := α)).symm x = ofVector x x.property :=
+  rfl
+
+/-- Expectation under the PMF represented by a simplex point is the simplex
+weighted sum.  This is the basic dictionary between the probabilistic and
+finite-dimensional presentations of mixed strategies. -/
+theorem expect_stdSimplexEquiv_symm_eq_wsum [Fintype α]
+    (x : stdSimplex ℝ α) (f : α → ℝ) :
+    Math.Probability.expect ((stdSimplexEquiv (α := α)).symm x) f =
+      wsum x f := by
+  rw [Math.Probability.expect_eq_sum]
+  simp only [stdSimplexEquiv_symm_apply, ofVector_toReal]
   rfl
 
 /-- A simplex point represents a given finite `PMF` exactly when its coordinate

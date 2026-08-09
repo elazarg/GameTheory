@@ -106,6 +106,9 @@ import GameTheory.Concepts.Repeated.MonitoringPureDeviations
 import GameTheory.Concepts.Repeated.MonitoringIncentives
 import GameTheory.Concepts.Repeated.MonitoringHyperplanes
 
+-- Stochastic games
+import GameTheory.Concepts.Stochastic
+
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
 import GameTheory.Concepts.Correlation.Regret

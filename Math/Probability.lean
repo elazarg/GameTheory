@@ -490,6 +490,16 @@ theorem expect_add_of_summable {Ω : Type*} (d : PMF Ω) (f g : Ω → ℝ)
   rw [← hf.tsum_add hg]
   exact tsum_congr fun ω => by ring
 
+/-- Finite expectations commute with sums of pointwise-summable series. -/
+theorem tsum_expect_comm {Ω : Type*} [Finite Ω] (μ : PMF Ω) (f : ℕ → Ω → ℝ)
+    (hf : ∀ ω, Summable fun t => f t ω) :
+    ∑' t : ℕ, expect μ (f t) = expect μ fun ω => ∑' t : ℕ, f t ω := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [tsum_congr fun t => expect_eq_sum μ (f t),
+    Summable.tsum_finsetSum fun ω _ => (hf ω).mul_left ((μ ω).toReal),
+    expect_eq_sum]
+  exact Finset.sum_congr rfl fun ω _ => tsum_mul_left
+
 /-- `expect` commutes with subtraction. -/
 theorem expect_sub {Ω : Type*} [Finite Ω] (d : PMF Ω) (f g : Ω → ℝ) :
     expect d (fun ω => f ω - g ω) = expect d f - expect d g := by
