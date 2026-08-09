@@ -26,15 +26,25 @@ nonperiodic Snell supersolution, and uniform-payoff compiler.  The fixed-width
 and geometric-contraction APIs remain available as quantitative
 specializations.
 
-The multivalued layer adds a separate finite-SCC execution surface.  It keeps
-graph connectivity distinct from exact singleton-arc witnesses and returns a
-finite absorbing execution, a component-charged recurrent execution, or a
-reached typed obstruction.  Its occupation regression prevents cancellation
-between distinct recurrent SCCs from being used as a chronological path.
-
-The capstone for the functional unique-live stratum remains
+The capstone is
 `quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live_adaptiveMesh`.
-The multivalued layer is an execution producer only: it does not claim the
-survival-contraction or punishment hypotheses needed by that uniform-payoff
-compiler.
+It proves that every initial point of the displayed compact terminal-free
+unique-live component is a uniform-equilibrium payoff.  Its source-agnostic
+compiler is
+`isUniformEquilibriumPayoff_of_proper_infiniteSingletonPath_of_initialSurvival`:
+any bounded viable singleton-flow path with pointwise proper hazards and
+vanishing deleted-player survival from its initial time has the same
+conclusion.
+
+The implementation remains conditional.  It treats the compact functional
+unique-live-successor singleton-flow stratum and does not identify this
+stratum with all quitting games.
+
+The multivalued subdirectory adds relation-theoretic execution infrastructure,
+a segment-subinvariant SCC theorem producing one exact finite or infinite path,
+and a separate charged-segment obstruction trichotomy.  Its graph SCC and
+source-reachability fields are not themselves strategic progress hypotheses,
+and the multivalued layer makes no new uniform-payoff claim.  The occupation
+regression is exported only as a semantic fence against cancelling defects
+across distinct recurrent components.
 -/
