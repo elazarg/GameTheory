@@ -53,6 +53,38 @@ not a user-chosen larger constant.
 The Lean umbrella is `CounterexampleRegimeAll`.  The direct characterization
 is `not_exists_uniformEquilibriumPayoff_iff_exists_gap_and_finiteChargeCapacity`.
 
+### Landed narrowing (2026-08-09)
+
+The regime is machine-checked EMPTY below four players
+(`QuittingCounterexampleRegime.three_lt_card`): fewer than two players is
+refuted by the toggle consequences below, and two or three players by a new
+player-reindex transport (`Classification/PlayerReindex.lean`) of the
+unconditional `Bool` and `Fin 3` existence theorems.  A one-player existence
+theorem for arbitrary `Unique` player types
+(`quittingGame_exists_uniformEquilibriumPayoff_onePlayer`) fills the
+previously unformalized base case.
+
+Further machine-checked necessary conditions
+(`CounterexampleRegimeToggles.lean`, `CounterexampleRegimePacket.lean`):
+
+- no profile is terminally `ε`-Nash for any `ε < η`
+  (`not_isεAsymptoticNash_of_lt_terminalGap`);
+- every coalition's sure-exit profile is exploitable by a membership toggle
+  at margin `η` (`exists_toggle_gain`), splitting into a leave-or-join
+  disjunction (`exists_leave_or_join_gain`); hence no sure exit set exists
+  (`not_isQuittingSureExitSet`);
+- some player has solo reward at least `η`
+  (`exists_terminalGap_le_soloReward`, which also derives `Nonempty` of the
+  player type from the regime alone), and every player whose solo reward
+  exceeds `-η` has a distinct opponent whose collision reward beats its
+  bystander reward by `η` (`exists_collision_gain`);
+- every stationary profile is exploitable through its unilateral Snell cap,
+  with no contraction hypothesis (`exists_stationaryCap_gain`);
+- the analytic waist (`Classification/AnalyticWaist.lean`, general player
+  type) forces a normalized singleton source packet on every counterexample
+  table (`nonempty_normalizedSingletonSourcePacket`) — a finite
+  semialgebraic system search code can refute directly.
+
 ## Derived geometry
 
 The debt and charge fields have stronger derived forms.
@@ -192,23 +224,40 @@ Do not promote a floating-point candidate solely because all finite trends
 look favorable.  Promotion requires either exact Lean witnesses or certified
 inequalities with enough data for reconstruction.
 
-## The cross-lane question
+## The cross-lane question — collapsed to one branch (2026-08-09)
 
-The terminal/debt inequality is now complete: `η ≤ Δ`, quantitatively, and the
-projective tail retains debt at least `η` in one coordinate.  The remaining
-consistency problem is the debt/charge adapter.
+The former two-branch alternative is now a theorem with a single surviving
+branch (`CounterexampleRegimeViolationCollapse.lean`).  At every exact
+Nash--Bellman edge, a value below the punishment floor amplifies through the
+opponents-continue mass — `χ - v ≤ c · (χ - w)` — so the violating
+coordinate set is monotone along any exact tail: *rotating* violation never
+existed.  A perpetually violating tail with any positive debt coordinate has
+summable joint absorption (the violator's own value would otherwise sink to
+a sub-punishment solo reward, zeroing its debt cap and contradicting the
+other players' summable clocks).  Consequently the optimized tail extracted
+from a counterexample regime has summable joint absorption UNCONDITIONALLY
+(`exists_terminalGapDynamicDebtTail_summableAbsorption`), and its roots
+converge coordinatewise to all-Continue.
 
-There are two precise branches to test.
+The surviving object is rigid.  Along every infinite exact punishment-floor
+orbit the annotations converge with total coordinatewise variation at most
+`2·M·C*` (`infiniteOrbit_tsum_abs_value_succ_sub_le`), and the limit is an
+exact all-Continue Nash--Bellman self-loop in the canonical box, dominating
+the punishment floor and every player's solo reward
+(`infiniteOrbit_exists_selfLoop_limit`).  The values are Bellman
+annotations, not realized payoffs; the two-player positive-debt plateau
+table realizes this entire package inside a game that HAS a uniform payoff,
+so no contradiction can come from the tail data alone.
 
-1. The optimized tail has cofinally many floor-dominating endpoints.  Its full
-   joint absorption is then summable, so every root approaches all-Continue.
-   This branch is automatic when the punishment vector is nonpositive.
-2. From some date onward every optimized-tail endpoint lies below the
-   punishment floor in at least one coordinate.  The offending coordinate may
-   vary with time.
-
-In either branch the tail still carries an owner with debt at least `η` and a
-summable opponent clock.  The decisive next theorem should show that neither
-an all-Continue positive-debt tail nor perpetual rotating floor violation can
-coexist with a uniform terminal exploitability gap.  A weaker bridge that only
-compares unrelated selected paths will not close the regime.
+The decisive remaining theorem is therefore a delivery mechanism that
+constructs profiles and consumes the gap field.  The candidate is periodic
+restart of late windows: replay a positive-mass window's roots forever; the
+restarted profile absorbs surely and pays exactly the window's normalized
+delivery.  The deviator's optimal stopping against the periodic profile
+reduces exactly to two window statistics (best phase stop and refusal
+value), so late-window exploitability is controlled by three payoff escapes
+only — delivery below a solo stop, profitable refusal, and profitable Never
+against a sole absorber — while drift-to-mass bias is provably
+non-strategic.  Closing the regime on this branch means ruling out
+perpetual payoff-escape blocking compatibly with the finite capacity `C*`,
+the blocker digraph, and the forced packet.

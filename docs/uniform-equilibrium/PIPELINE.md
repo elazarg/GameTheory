@@ -153,9 +153,24 @@ blockers hidden in the P0 mathematical status.
   endpoint reverses the exact-D tail into this prefix family without changing
   charge; hence the optimized tail either has summable joint absorption or
   eventually violates the punishment floor at every date.  Nonpositive
-  punishment values force the summable branch.  The remaining unconditional
-  adapter between the optimized tail and the floor carrier is still open.  The
-  computational falsification and candidate protocol is recorded in
+  punishment values force the summable branch.  **2026-08-09: the violation
+  branch is closed unconditionally.**  Floor violation amplifies through
+  every exact edge (`χ - v ≤ c·(χ - w)`), so violators never rotate, and a
+  perpetually violating tail with any positive debt coordinate is summably
+  absorbing; the extracted optimized tail therefore has summable joint
+  absorption with no side condition, and the former two-branch cross-lane
+  question has one branch.  The same wave narrowed the regime itself: it is
+  EMPTY below four players (player-reindex transport of the `Bool`/`Fin 3`
+  capstones plus a new arbitrary-`Unique` one-player existence theorem);
+  every coalition's sure-exit profile is toggle-exploitable at the terminal
+  margin (no sure exit set exists), every stationary profile is exploitable
+  through its unconditional Snell cap, some player's solo reward reaches the
+  margin and some opponent gains the margin by joining that exit; every exact
+  punishment-floor orbit's annotations converge with total variation at most
+  `2·M·C*` to an exact all-Continue Nash--Bellman self-loop dominating floor
+  and solo rewards; and the general-player analytic waist forces a normalized
+  singleton source packet on every counterexample table.  The computational
+  falsification and candidate protocol is recorded in
   [`design/CounterexampleSearchRegime.md`](design/CounterexampleSearchRegime.md).
 - **Punishment-completed exact cycles (`177a0c03`, conditional compiler).** A
   coordinate may contract in deleted survival or be held by the exact

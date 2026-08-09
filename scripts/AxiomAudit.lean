@@ -353,6 +353,35 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.QuittingCounterexampleRegime.exists_terminalGapDynamicDebtTail_with_summableAbsorption_of_nonpos
 #print axioms GameTheory.quittingGame_exists_uniformPayoff_of_positive_reachable_return
 
+-- Regime narrowing: toggle/stationary instability, small-player emptiness,
+-- orbit value limits, the floor-violation collapse, and the analytic waist
+-- with its forced packet.
+#print axioms GameTheory.QuittingCounterexampleRegime.exists_toggle_gain
+#print axioms GameTheory.QuittingCounterexampleRegime.exists_leave_or_join_gain
+#print axioms GameTheory.QuittingCounterexampleRegime.not_isQuittingSureExitSet
+#print axioms GameTheory.QuittingCounterexampleRegime.exists_terminalGap_le_soloReward
+#print axioms GameTheory.QuittingCounterexampleRegime.exists_collision_gain
+#print axioms GameTheory.QuittingCounterexampleRegime.one_lt_card
+#print axioms GameTheory.QuittingCounterexampleRegime.exists_stationaryCap_gain
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_onePlayer
+#print axioms GameTheory.QuittingCounterexampleRegime.elim_isEmpty
+#print axioms GameTheory.QuittingCounterexampleRegime.elim_unique
+#print axioms GameTheory.QuittingCounterexampleRegime.elim_twoPlayer
+#print axioms GameTheory.QuittingCounterexampleRegime.elim_threePlayer
+#print axioms GameTheory.QuittingCounterexampleRegime.infiniteOrbit_exists_value_limit
+#print axioms GameTheory.quittingPunishmentValue_sub_le_continueMass_mul_of_nashBellmanEdge
+#print axioms GameTheory.quittingDynamicDebtTail_floorViolation_mono
+#print axioms GameTheory.summable_dynamicDebtTailAbsorptionCharge_of_floorViolation_of_positiveDebt
+#print axioms GameTheory.QuittingCounterexampleRegime.exists_terminalGapDynamicDebtTail_summableAbsorption
+#print axioms GameTheory.quittingGame_uniformPayoff_or_normalizedSingletonSourcePacket
+#print axioms GameTheory.QuittingCounterexampleRegime.nonempty_normalizedSingletonSourcePacket
+#print axioms GameTheory.QuittingCounterexampleRegime.infiniteOrbit_tsum_abs_value_succ_sub_le
+#print axioms GameTheory.QuittingCounterexampleRegime.infiniteOrbit_exists_selfLoop_limit
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_reindex
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_card_eq_two
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_card_eq_three
+#print axioms GameTheory.QuittingCounterexampleRegime.three_lt_card
+
 -- Stopping-law accounting, cyclic exposure, and phase-occupation duality.
 -- These checks live here rather than in production modules so ordinary builds
 -- remain quiet while the repository audit retains the same proof-hygiene
