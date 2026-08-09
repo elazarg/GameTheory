@@ -585,9 +585,9 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,509 of 8,324 pinned declarations are claimed by exact ledgers; 2,409 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,815-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | first batch complete: all 776 L-FOSG declarations are classified; the final 81 rows split into 17 adapted, 11 subsumed, 44 retired, and 9 deferred strategic-transfer obligations | keep the nine deviation/transport rows explicit; do not revive the rejected reachable-history adapter |
-| next capability rotation | static response: bounded S-DOM dominance, undominated, solvability, and rationalizability inventory | identify the smallest theorem spine missing from `Core.Response` and finite correctness before implementing it |
+| exact accounting | 2,524 of 8,324 pinned declarations are claimed by exact ledgers; 2,424 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,800-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | static-response batch complete: strict dominance, unique best response, dominant-strategy solvability, and unique Nash are generic Core results; 15/15 pinned rows reviewed | keep mixed domination/rationalizability, IESDS/correlation, undominated existence/counterexamples, and transform laws as distinct bounded turns |
+| next capability rotation | mature social choice: select a bounded May, Gibbard--Satterthwaite, or Sen theorem spine against `Core.SocialChoice`/`Core.Arrow` | preserve the ranking/lottery preference split and refuse a second social-choice carrier |
 | release engineering | warning-clean 3,517-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
@@ -663,9 +663,12 @@ provisioned in CI.
    subsumed by canonical law results, and nine unilateral-deviation and
    Nash/CCE/CE transport rows remain a named strategic-transfer gate.  With all
    776 L-FOSG declarations reviewed, the queue rotates to static S-DOM rather
-   than deepening the same subfield; D-REPEAT rank/self-generation/uniform and
-   validated mechanism, cooperative, and language leaf recovery remain later
-   BFS turns;
+   than deepening the same subfield.  The first static batch then recovers the
+   15-row strict-dominance/dominant-solvability spine in generic Core, with
+   Prisoner's Dilemma witnessing unique Nash without enumeration.  The next
+   rotation is mature social choice; D-REPEAT rank/self-generation/uniform,
+   mixed rationalizability, and validated mechanism, cooperative, and language
+   leaf recovery remain later BFS turns;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.

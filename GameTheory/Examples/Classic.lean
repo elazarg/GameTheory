@@ -106,6 +106,29 @@ theorem prisonersDilemma_defect_strictlyDominates (who : Fin 2) :
   (TableGame.strictlyDominates_eq_true_iff prisonersDilemma who .defect .cooperate).1
     (by revert who; decide)
 
+/-- Defection is strictly dominant, not merely weakly dominant. -/
+theorem prisonersDilemma_defect_isStrictDominant (who : Fin 2) :
+    IsStrictDominant prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
+      who .defect := by
+  intro alternative hne
+  cases alternative with
+  | cooperate => exact prisonersDilemma_defect_strictlyDominates who
+  | defect => exact (hne rfl).elim
+
+/-- The game is solvable by strict dominance at the canonical generic layer. -/
+theorem prisonersDilemma_isDominantStrategySolvable :
+    IsDominantStrategySolvable prisonersDilemma.toForm
+      (euPreference prisonersDilemma.utility) :=
+  fun who => ⟨.defect, prisonersDilemma_defect_isStrictDominant who⟩
+
+/-- Strict dominance supplies existence and uniqueness of Nash without
+enumerating profiles. -/
+theorem prisonersDilemma_existsUniqueNash_of_strictDominance :
+    ∃! profile : Profile prisonersDilemma.sig,
+      IsNash prisonersDilemma.toForm (euPreference prisonersDilemma.utility) profile :=
+  prisonersDilemma_isDominantStrategySolvable.existsUniqueNash
+    (euPreference_reflexive prisonersDilemma.utility)
+
 /-- Hence cooperation survives no round of elimination — from the abstract
 theorem, not from a second computation. -/
 theorem prisonersDilemma_cooperate_not_isRationalizable (who : Fin 2) :

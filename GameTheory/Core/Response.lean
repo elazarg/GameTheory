@@ -69,9 +69,23 @@ def StrictlyDominates (who : ι) (preferred alternative : F.sig.Strategy who) : 
 def IsDominant (who : ι) (s : F.sig.Strategy who) : Prop :=
   ∀ alternative, WeaklyDominates F weaklyPrefers who s alternative
 
+/-- `s` is strictly dominant for `who`: it strictly dominates every distinct
+alternative.  Reflexivity of the weak preference is intentionally not stored;
+it is requested only when strict dominance is weakened to ordinary
+dominance. -/
+def IsStrictDominant (who : ι) (s : F.sig.Strategy who) : Prop :=
+  ∀ alternative, alternative ≠ s →
+    StrictlyDominates F weaklyPrefers who s alternative
+
 /-- Every player plays a dominant strategy. -/
 def IsDominantProfile (profile : Profile F.sig) : Prop :=
   ∀ who, IsDominant F weaklyPrefers who (profile who)
+
+/-- A game is dominant-strategy solvable when every player has a strictly
+dominant strategy.  This is the strong, one-round notion; iterated dominance
+solvability remains a separate property of the survivor sequence. -/
+def IsDominantStrategySolvable : Prop :=
+  ∀ who, ∃ strategy, IsStrictDominant F weaklyPrefers who strategy
 
 /-- The strategy sets surviving `n` rounds of elimination of strictly dominated
 strategies. Round zero allows everything. -/
@@ -146,6 +160,63 @@ theorem isNash_iff_isBestResponse (profile : Profile F.sig) :
   exact forall_congr' fun who => forall_congr' fun alternative => by
     simp
 
+/-- A strategy that is never a best response cannot occur in a Nash
+equilibrium. -/
+theorem not_in_nash_of_not_isBestResponse {who : ι}
+    (strategy : F.sig.Strategy who)
+    (hnever : ∀ opponents : Profile F.sig,
+      ¬ IsBestResponse F weaklyPrefers who opponents strategy)
+    {profile : Profile F.sig} (hnash : IsNash F weaklyPrefers profile) :
+    profile who ≠ strategy := by
+  intro heq
+  apply hnever profile
+  simpa [heq] using (isNash_iff_isBestResponse profile).1 hnash who
+
+/-- A strategy strictly dominating the current choice refutes Nash. -/
+theorem StrictlyDominates.not_isNash {who : ι}
+    {preferred : F.sig.Strategy who} {profile : Profile F.sig}
+    (hdom : StrictlyDominates F weaklyPrefers who preferred (profile who)) :
+    ¬ IsNash F weaklyPrefers profile := by
+  intro hnash
+  exact (hdom profile (fun _ => Set.mem_univ _)).2
+    (by simpa using (isNash_iff profile).1 hnash who preferred)
+
+/-- A strictly dominant strategy is the unique best response at every
+opponents' profile. -/
+theorem IsStrictDominant.eq_of_isBestResponse {who : ι}
+    {strict : F.sig.Strategy who}
+    (hstrict : IsStrictDominant F weaklyPrefers who strict)
+    (opponents : Profile F.sig) {candidate : F.sig.Strategy who}
+    (hbest : IsBestResponse F weaklyPrefers who opponents candidate) :
+    candidate = strict := by
+  by_contra hne
+  exact (hstrict candidate hne opponents (fun _ => Set.mem_univ _)).2
+    (hbest strict)
+
+/-- With reflexive preferences, strict dominance implies weak dominance. -/
+theorem IsStrictDominant.toDominant
+    (hrefl : Preference.Reflexive weaklyPrefers) {who : ι}
+    {strategy : F.sig.Strategy who}
+    (hstrict : IsStrictDominant F weaklyPrefers who strategy) :
+    IsDominant F weaklyPrefers who strategy := by
+  intro alternative profile
+  by_cases heq : alternative = strategy
+  · subst alternative
+    exact hrefl who _
+  · exact (hstrict alternative heq profile (fun _ => Set.mem_univ _)).1
+
+/-- A weakly dominating strategy inherits best-response status when the
+preference is transitive. -/
+theorem WeaklyDominates.isBestResponse_of_isBestResponse
+    (htrans : Preference.Transitive weaklyPrefers) {who : ι}
+    {preferred alternative : F.sig.Strategy who}
+    (hdom : WeaklyDominates F weaklyPrefers who preferred alternative)
+    (opponents : Profile F.sig)
+    (hbest : IsBestResponse F weaklyPrefers who opponents alternative) :
+    IsBestResponse F weaklyPrefers who opponents preferred := by
+  intro candidate
+  exact htrans who _ _ _ (hdom opponents) (hbest candidate)
+
 /-- A dominant strategy is a best response to every opponents' profile. -/
 theorem IsDominant.isBestResponse {who : ι} {s : F.sig.Strategy who}
     (hdom : IsDominant F weaklyPrefers who s) (opponents : Profile F.sig) :
@@ -158,6 +229,72 @@ theorem IsDominantProfile.isNash {profile : Profile F.sig}
   rw [isNash_iff]
   intro who replacement
   simpa using hdom who replacement profile
+
+/-- A profile of strictly dominant strategies is Nash. -/
+theorem isNash_of_forall_isStrictDominant
+    (hrefl : Preference.Reflexive weaklyPrefers) {profile : Profile F.sig}
+    (hstrict : ∀ who,
+      IsStrictDominant F weaklyPrefers who (profile who)) :
+    IsNash F weaklyPrefers profile :=
+  IsDominantProfile.isNash (fun who => (hstrict who).toDominant hrefl)
+
+/-- Any Nash profile equals a supplied profile of strictly dominant
+strategies. -/
+theorem IsNash.eq_of_forall_isStrictDominant
+    {profile strictProfile : Profile F.sig}
+    (hnash : IsNash F weaklyPrefers profile)
+    (hstrict : ∀ who,
+      IsStrictDominant F weaklyPrefers who (strictProfile who)) :
+    profile = strictProfile := by
+  funext who
+  exact (hstrict who).eq_of_isBestResponse profile
+    ((isNash_iff_isBestResponse profile).1 hnash who)
+
+/-- Select the strictly dominant strategy of every player.  The selector is
+proof-only; executable finite search remains in `GameTheory.Finite`. -/
+noncomputable def IsDominantStrategySolvable.dominantProfile
+    (hsolvable : IsDominantStrategySolvable F weaklyPrefers) : Profile F.sig :=
+  fun who => Classical.choose (hsolvable who)
+
+theorem IsDominantStrategySolvable.dominantProfile_isStrictDominant
+    (hsolvable : IsDominantStrategySolvable F weaklyPrefers) (who : ι) :
+    IsStrictDominant F weaklyPrefers who
+      (hsolvable.dominantProfile who) :=
+  Classical.choose_spec (hsolvable who)
+
+/-- The selected profile is pointwise dominant when preferences are
+reflexive. -/
+theorem IsDominantStrategySolvable.dominantProfile_isDominant
+    (hsolvable : IsDominantStrategySolvable F weaklyPrefers)
+    (hrefl : Preference.Reflexive weaklyPrefers) :
+    IsDominantProfile F weaklyPrefers
+      hsolvable.dominantProfile :=
+  fun who => (hsolvable.dominantProfile_isStrictDominant who).toDominant hrefl
+
+/-- A dominant-strategy-solvable game has the selected Nash profile. -/
+theorem IsDominantStrategySolvable.isNash
+    (hsolvable : IsDominantStrategySolvable F weaklyPrefers)
+    (hrefl : Preference.Reflexive weaklyPrefers) :
+    IsNash F weaklyPrefers hsolvable.dominantProfile :=
+  (hsolvable.dominantProfile_isDominant hrefl).isNash
+
+/-- Every Nash profile equals the selected strictly dominant profile. -/
+theorem IsDominantStrategySolvable.nash_eq_dominantProfile
+    (hsolvable : IsDominantStrategySolvable F weaklyPrefers)
+    {profile : Profile F.sig} (hnash : IsNash F weaklyPrefers profile) :
+    profile = hsolvable.dominantProfile := by
+  funext who
+  exact (hsolvable.dominantProfile_isStrictDominant who).eq_of_isBestResponse
+    profile ((isNash_iff_isBestResponse profile).1 hnash who)
+
+/-- Dominant-strategy solvability gives existence and uniqueness of Nash. -/
+theorem IsDominantStrategySolvable.existsUniqueNash
+    (hsolvable : IsDominantStrategySolvable F weaklyPrefers)
+    (hrefl : Preference.Reflexive weaklyPrefers) :
+    ∃! profile : Profile F.sig, IsNash F weaklyPrefers profile :=
+  ⟨hsolvable.dominantProfile,
+    hsolvable.isNash hrefl,
+    fun _ hnash => hsolvable.nash_eq_dominantProfile hnash⟩
 
 /-- Strict dominance is dominance against every profile, so it restricts to any
 allowed set. -/

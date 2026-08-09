@@ -19,7 +19,8 @@ mature workflows and cannot be bought with unrelated beyond-v1 breadth.
 GameTheory/Probability   finite-support probability laws (FinDist)
 GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          deviations, equilibrium and response concepts, static
-                         game theory, approximate Nash, Bayesian recommendation/obedience,
+                         game theory, strict-dominance solvability, approximate
+                         Nash, Bayesian recommendation/obedience,
                          finite no-regret learning, concrete reindexing and
                          relabeling laws, social welfare, robust CCE smoothness,
                          and foundational social/coalitional theory
