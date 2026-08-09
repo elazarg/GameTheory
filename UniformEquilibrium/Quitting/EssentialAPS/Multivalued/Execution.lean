@@ -156,11 +156,10 @@ theorem chronologicalExecutionOutcome_of_classifier
       initial := rfl
       step := ?_ }
     intro time
-    change Step (orbit time).1 (chosen (orbit time)).1 (orbit (time + 1)).1
     have horbit : orbit (time + 1) = advance (orbit time) := rfl
     rw [horbit]
     exact chosen_spec (orbit time)
-  · push_neg at hclosed
+  · push Not at hclosed
     obtain ⟨endpoint, hreach, hfailure⟩ := hclosed
     have hnone : ¬ ∃ charge next, Step endpoint charge next := by
       intro hstep
@@ -225,7 +224,6 @@ theorem chronologicalExecution_of_reachable_progress
       initial := rfl
       step := ?_ }
     intro time
-    change Step (orbit time).1 (chosen (orbit time)).1 (orbit (time + 1)).1
     have horbit : orbit (time + 1) = advance (orbit time) := rfl
     rw [horbit]
     exact chosen_spec (orbit time)
