@@ -521,18 +521,6 @@ theorem quittingCompanionComposite_succ
         (quittingCompanionComposite reward roots who (start + 1) fuel
           continuation) := rfl
 
-/-- Peeling the first factor off a survival weight. -/
-theorem quittingOpponentSurvivalWeight_succ_left
-    (roots : ℕ → ι → PMF Bool) (who : ι) (start fuel : ℕ) :
-    quittingOpponentSurvivalWeight roots who start (fuel + 1) =
-      quittingFixedOpponentsContinueMass roots who start *
-        quittingOpponentSurvivalWeight roots who (start + 1) fuel := by
-  rw [show fuel + 1 = 1 + fuel by omega, quittingOpponentSurvivalWeight_add]
-  have hone : quittingOpponentSurvivalWeight roots who start 1 =
-      quittingFixedOpponentsContinueMass roots who start := by
-    simp [quittingOpponentSurvivalWeight]
-  rw [hone]
-
 /-- **Step 1 around the cycle.**  The composite is `P`-Lipschitz, where `P`
 is the deleted survival product over the traversed window. -/
 theorem abs_quittingCompanionComposite_sub_le

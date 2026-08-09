@@ -24,7 +24,7 @@ noncomputable section
 
 namespace GameTheory
 
-open StochasticGame Math.PMFProduct
+open StochasticGame Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
@@ -32,6 +32,17 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
 product root action. -/
 def quittingStationaryContinueMass (root : ι → PMF Bool) : ℝ :=
   ((pmfPi root) (quittingAllContinueAction : ι → Bool)).toReal
+
+omit [DecidableEq ι] in
+/-- The all-continue mass is the product of the displayed Continue
+probabilities. -/
+theorem quittingStationaryContinueMass_eq_prod_continueProbability
+    (root : ι → PMF Bool) :
+    quittingStationaryContinueMass root =
+      ∏ player, (root player false).toReal := by
+  unfold quittingStationaryContinueMass
+  rw [pmfPi_apply, ENNReal.toReal_prod]
+  rfl
 
 omit [DecidableEq ι] in
 theorem quittingStationaryContinueMass_nonneg
@@ -47,6 +58,76 @@ theorem quittingStationaryContinueMass_le_one
   rw [← ENNReal.toReal_one,
     ENNReal.toReal_le_toReal (PMF.apply_ne_top _ _) (by simp)]
   exact PMF.coe_le_one _ _
+
+/-- Forcing one coordinate to Continue can only increase the all-continue
+mass. -/
+theorem quittingStationaryContinueMass_le_update_pure_false
+    (root : ι → PMF Bool) (who : ι) :
+    quittingStationaryContinueMass root ≤
+      quittingStationaryContinueMass
+        (Function.update root who (PMF.pure false)) := by
+  rw [quittingStationaryContinueMass_eq_prod_continueProbability,
+    quittingStationaryContinueMass_eq_prod_continueProbability]
+  apply Finset.prod_le_prod
+  · intro player _
+    exact ENNReal.toReal_nonneg
+  · intro player _
+    by_cases hplayer : player = who
+    · subst player
+      simp only [Function.update_self, PMF.pure_apply]
+      exact ENNReal.toReal_mono ENNReal.one_ne_top
+        ((root who).coe_le_one false)
+    · simp [Function.update_of_ne hplayer]
+
+/-- One-stage probability that the product root action absorbs. -/
+def quittingRootAbsorptionMass (root : ι → PMF Bool) : ℝ :=
+  1 - quittingStationaryContinueMass root
+
+/-- One-stage absorption probability after forcing `who` to Continue.  This
+is the opponent-absorption hazard faced by `who`. -/
+def quittingRootOpponentAbsorptionMass
+    (root : ι → PMF Bool) (who : ι) : ℝ :=
+  quittingRootAbsorptionMass
+    (Function.update root who (PMF.pure false))
+
+/-- Forcing one player to Continue only removes absorption events. -/
+theorem quittingRootOpponentAbsorptionMass_le_absorptionMass
+    (root : ι → PMF Bool) (who : ι) :
+    quittingRootOpponentAbsorptionMass root who ≤
+      quittingRootAbsorptionMass root := by
+  have hcontinue :=
+    quittingStationaryContinueMass_le_update_pure_false root who
+  unfold quittingRootOpponentAbsorptionMass quittingRootAbsorptionMass
+  linarith
+
+omit [DecidableEq ι] in
+/-- The expectation of the indicator of a nonempty quitter set is exactly
+the one-stage absorption mass. -/
+theorem expect_quittingNonemptyIndicator_eq_absorptionMass
+    (root : ι → PMF Bool) :
+    expect (pmfPi root) (fun action ↦
+        if (quittingQuitters action).Nonempty then (1 : ℝ) else 0) =
+      quittingRootAbsorptionMass root := by
+  let allContinue : ι → Bool := quittingAllContinueAction
+  have hindicator :
+      (fun action : ι → Bool ↦
+          if (quittingQuitters action).Nonempty then (1 : ℝ) else 0) =
+        fun action ↦ 1 - if action = allContinue then (1 : ℝ) else 0 := by
+    funext action
+    by_cases hquit : (quittingQuitters action).Nonempty
+    · have hne : action ≠ allContinue := by
+        intro heq
+        subst action
+        simp [allContinue] at hquit
+      simp [hquit, hne]
+    · have heq : action = allContinue :=
+        eq_quittingAllContinueAction_of_quittingQuitters_not_nonempty
+          action hquit
+      subst action
+      simp [allContinue]
+  rw [hindicator, expect_sub, expect_const,
+    ← Math.Probability.apply_toReal_eq_expect_indicator]
+  rfl
 
 omit [DecidableEq ι] in
 /-- Stationarity makes the conditional all-continue probability independent

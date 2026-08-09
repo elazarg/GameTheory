@@ -22,6 +22,12 @@ failure of the augmented cap to form an exact Bellman edge is neither an
 unspecified error nor a full-vector perturbation.  It is a nonnegative
 diagonal seam, supported exactly where a player both Quits and carries debt.
 
+Consequently, vanishing of that seam is exactly the local criterion for the
+displayed root to transport the augmented cap.  In that case the same root is
+also exact Nash at the augmented successor cap, so the two cap states form an
+exact Nash--Bellman edge.  This is a one-edge criterion only; no suffix
+realization or global attachment conclusion is asserted.
+
 This module proves only the local algebra.  It does not assert that the seam
 can always be converted into absorption charge at the same cap.
 -/
@@ -52,6 +58,70 @@ theorem quittingDynamicDebtCap_apply
     (state : QuittingDebtPoint ι) (who : ι) :
     quittingDynamicDebtCap state who = state.1.1 who + state.2 who := by
   rfl
+
+/-- The coordinatewise obstruction to exact augmented-cap transport: a
+player's prescribed Quit probability times its current dynamic debt. -/
+def quittingDynamicDebtCapSeam (state : QuittingDebtPoint ι) : Payoff ι :=
+  fun who =>
+    (quittingRootOfSimplex state.1.2 who true).toReal * state.2 who
+
+omit [DecidableEq ι] in
+@[simp]
+theorem quittingDynamicDebtCapSeam_apply
+    (state : QuittingDebtPoint ι) (who : ι) :
+    quittingDynamicDebtCapSeam state who =
+      (quittingRootOfSimplex state.1.2 who true).toReal * state.2 who := by
+  rfl
+
+/-- Replace a debt state's prescribed value by its augmented cap while
+retaining the displayed root. -/
+def quittingDynamicDebtCapPoint
+    (state : QuittingDebtPoint ι) : QuittingNashBellmanPoint ι :=
+  (quittingDynamicDebtCap state, state.1.2)
+
+omit [DecidableEq ι] in
+@[simp]
+theorem quittingDynamicDebtCapPoint_value
+    (state : QuittingDebtPoint ι) :
+    (quittingDynamicDebtCapPoint state).1 = quittingDynamicDebtCap state := by
+  rfl
+
+omit [DecidableEq ι] in
+@[simp]
+theorem quittingDynamicDebtCapPoint_root
+    (state : QuittingDebtPoint ι) :
+    (quittingDynamicDebtCapPoint state).2 = state.1.2 := by
+  rfl
+
+/-- Augmenting a continuation by dynamic debt does not change the pure-Quit
+endpoint, because that endpoint absorbs before the continuation is reached. -/
+theorem quittingRootQuitPayoff_dynamicDebtCap
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (state : QuittingDebtPoint ι) (root : ι → PMF Bool) (who : ι) :
+    quittingRootQuitPayoff reward (quittingDynamicDebtCap state) root who =
+      quittingRootQuitPayoff reward state.1.1 root who := by
+  unfold quittingRootQuitPayoff quittingDynamicDebtCap
+  rw [quittingRootExpectedPayoff_eq_absorbingContribution_add,
+    quittingRootExpectedPayoff_eq_absorbingContribution_add,
+    quittingStationaryContinueMass_update_pure_true_eq_zero]
+  simp
+
+/-- Augmenting a continuation by dynamic debt raises the pure-Continue
+endpoint by the opponents' Continue mass times the successor debt. -/
+theorem quittingRootContinuePayoff_dynamicDebtCap
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (current successor : QuittingDebtPoint ι) (who : ι) :
+    quittingRootContinuePayoff reward (quittingDynamicDebtCap successor)
+        (quittingRootOfSimplex current.1.2) who =
+      quittingRootContinuePayoff reward successor.1.1
+          (quittingRootOfSimplex current.1.2) who +
+        quittingDebtOpponentContinueMass current who * successor.2 who := by
+  unfold quittingRootContinuePayoff quittingDynamicDebtCap
+  rw [quittingRootExpectedPayoff_eq_absorbingContribution_add,
+    quittingRootExpectedPayoff_eq_absorbingContribution_add,
+    ← quittingDebtOpponentContinueMass_eq_stationary current who]
+  simp only [Pi.add_apply]
+  ring
 
 /-- The augmented current cap is the maximum of quitting now and continuing
 to the augmented successor cap, with only the opponents' survival retained
@@ -243,9 +313,7 @@ theorem quittingDynamicDebtCap_eq_rootSuccessorPayoff_add_seam
       (quittingRootSuccessorPayoff reward
           (quittingDynamicDebtCap successor)
           (quittingRootOfSimplex current.1.2) : Payoff ι) +
-        (fun who : ι ↦
-          (quittingRootOfSimplex current.1.2 who true).toReal *
-            current.2 who) := by
+        quittingDynamicDebtCapSeam current := by
   funext who
   have hseam := quittingDynamicDebtCap_sub_rootSuccessorPayoff_eq
     reward current successor hedge hsuccessorDebt who
@@ -255,5 +323,136 @@ theorem quittingDynamicDebtCap_eq_rootSuccessorPayoff_add_seam
         (quittingRootOfSimplex current.1.2) who +
       (quittingRootOfSimplex current.1.2 who true).toReal * current.2 who
   linarith
+
+/-- On an exact dynamic-debt edge with nonnegative successor debt, exact
+augmented-cap transport is equivalent to coordinatewise vanishing of the
+diagonal debt seam. -/
+theorem quittingDynamicDebtCap_transport_iff_capSeam_eq_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (current successor : QuittingDebtPoint ι)
+    (hedge : IsQuittingDynamicDebtEdge reward current successor)
+    (hsuccessorDebt : 0 ≤ successor.2) :
+    quittingDynamicDebtCap current =
+        quittingRootSuccessorPayoff reward
+          (quittingDynamicDebtCap successor)
+          (quittingRootOfSimplex current.1.2) ↔
+      quittingDynamicDebtCapSeam current = 0 := by
+  constructor
+  · intro htransport
+    funext who
+    have htransportWho := congrFun htransport who
+    have hseam := quittingDynamicDebtCap_sub_rootSuccessorPayoff_eq
+      reward current successor hedge hsuccessorDebt who
+    simp only [quittingDynamicDebtCapSeam_apply, Pi.zero_apply]
+    linarith
+  · intro hseam
+    rw [quittingDynamicDebtCap_eq_rootSuccessorPayoff_add_seam
+      reward current successor hedge hsuccessorDebt, hseam, add_zero]
+
+/-- A vanishing cap seam makes the displayed root exact Nash at the augmented
+successor cap.  This is the strategic half of the local cap-edge criterion. -/
+theorem isZeroQuittingRootNash_dynamicDebtCap_of_capSeam_eq_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (current successor : QuittingDebtPoint ι)
+    (hedge : IsQuittingDynamicDebtEdge reward current successor)
+    (hsuccessorDebt : 0 ≤ successor.2)
+    (hseam : quittingDynamicDebtCapSeam current = 0) :
+    IsεQuittingRootNash reward (quittingDynamicDebtCap successor) 0
+      (quittingRootOfSimplex current.1.2) := by
+  let root := quittingRootOfSimplex current.1.2
+  have htransport :=
+    (quittingDynamicDebtCap_transport_iff_capSeam_eq_zero
+      reward current successor hedge hsuccessorDebt).2 hseam
+  rw [← isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash]
+  intro who
+  have hmax := quittingDynamicDebtCap_eq_max_endpoints
+    reward current successor hedge who
+  have hsuccessorEqMax :
+      quittingRootSuccessorPayoff reward
+          (quittingDynamicDebtCap successor) root who =
+        max
+          (quittingRootQuitPayoff reward
+            (quittingDynamicDebtCap successor) root who)
+          (quittingRootContinuePayoff reward
+            (quittingDynamicDebtCap successor) root who) := by
+    calc
+      quittingRootSuccessorPayoff reward
+          (quittingDynamicDebtCap successor) root who =
+          quittingDynamicDebtCap current who := by
+        exact (congrFun htransport who).symm
+      _ = max
+          (quittingRootQuitPayoff reward
+            (quittingDynamicDebtCap successor) root who)
+          (quittingRootContinuePayoff reward
+            (quittingDynamicDebtCap successor) root who) := by
+        rw [quittingRootQuitPayoff_dynamicDebtCap,
+          quittingRootContinuePayoff_dynamicDebtCap]
+        exact hmax
+  have hquitLe :
+      quittingRootQuitPayoff reward
+          (quittingDynamicDebtCap successor) root who ≤
+        quittingRootSuccessorPayoff reward
+          (quittingDynamicDebtCap successor) root who := by
+    rw [hsuccessorEqMax]
+    exact le_max_left _ _
+  have hcontinueLe :
+      quittingRootContinuePayoff reward
+          (quittingDynamicDebtCap successor) root who ≤
+        quittingRootSuccessorPayoff reward
+          (quittingDynamicDebtCap successor) root who := by
+    rw [hsuccessorEqMax]
+    exact le_max_right _ _
+  have hmix := quittingRootSuccessorPayoff_eq_endpointMix reward
+    (quittingDynamicDebtCap successor) root who
+  have hsum := quittingRoot_continueProbability_add_quitProbability root who
+  have hcontinueProbability :
+      (root who false).toReal = 1 - (root who true).toReal := by
+    linarith
+  have hquitRegret :
+      (root who false).toReal *
+          quittingRootEndpointDifference reward
+            (quittingDynamicDebtCap successor) root who =
+        quittingRootQuitPayoff reward
+            (quittingDynamicDebtCap successor) root who -
+          quittingRootSuccessorPayoff reward
+            (quittingDynamicDebtCap successor) root who := by
+    rw [quittingRootEndpointDifference, hmix, hcontinueProbability]
+    ring
+  have hcontinueRegret :
+      (root who true).toReal *
+          quittingRootEndpointDifference reward
+            (quittingDynamicDebtCap successor) root who =
+        quittingRootSuccessorPayoff reward
+            (quittingDynamicDebtCap successor) root who -
+          quittingRootContinuePayoff reward
+            (quittingDynamicDebtCap successor) root who := by
+    rw [quittingRootEndpointDifference, hmix, hcontinueProbability]
+    ring
+  constructor
+  · rw [hquitRegret]
+    linarith
+  · rw [hcontinueRegret]
+    linarith
+
+/-- **Zero-seam cap-edge criterion.**  A clean exact dynamic-debt edge lifts
+to an exact Nash--Bellman edge between its two augmented cap states. -/
+theorem isQuittingNashBellmanEdge_dynamicDebtCapPoint_of_capSeam_eq_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (current successor : QuittingDebtPoint ι)
+    (hedge : IsQuittingDynamicDebtEdge reward current successor)
+    (hsuccessorDebt : 0 ≤ successor.2)
+    (hseam : quittingDynamicDebtCapSeam current = 0) :
+    IsQuittingNashBellmanEdge reward
+      (quittingDynamicDebtCapPoint current)
+      (quittingDynamicDebtCapPoint successor) := by
+  constructor
+  · exact (quittingDynamicDebtCap_transport_iff_capSeam_eq_zero
+      reward current successor hedge hsuccessorDebt).2 hseam
+  · exact
+      (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+        reward (quittingDynamicDebtCap successor)
+          (quittingRootOfSimplex current.1.2)).2
+        (isZeroQuittingRootNash_dynamicDebtCap_of_capSeam_eq_zero
+          reward current successor hedge hsuccessorDebt hseam)
 
 end GameTheory

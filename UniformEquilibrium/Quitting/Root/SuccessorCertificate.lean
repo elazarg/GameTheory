@@ -64,10 +64,6 @@ def quittingRootEndpointDifference
   quittingRootQuitPayoff reward tail root who -
     quittingRootContinuePayoff reward tail root who
 
-/-- One-stage absorption probability of the product root action. -/
-def quittingRootAbsorptionMass (root : ι → PMF Bool) : ℝ :=
-  1 - quittingStationaryContinueMass root
-
 /-- The pure product root at which every player continues. -/
 def quittingAllContinueRoot : ι → PMF Bool :=
   fun _ => PMF.pure false

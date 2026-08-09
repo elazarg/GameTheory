@@ -10,6 +10,9 @@ import UniformEquilibrium.Quitting.AbsorptionPath.MarkedAbsorptionCylinder
 import UniformEquilibrium.Quitting.AbsorptionPath.MetrizableMarkedAbsorptionPath
 import UniformEquilibrium.Quitting.AbsorptionPath.MetrizableMarkedAbsorptionDecoder
 import UniformEquilibrium.Quitting.AbsorptionPath.MetrizableMarkedAbsorptionComposition
+import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
+import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupation
+import UniformEquilibrium.Quitting.AbsorptionPath.FiniteWindowRefusalReweighting
 
 /-!
 # Marked absorption-path semantic layer
@@ -42,4 +45,12 @@ for every equal-anchor pair, uniqueness of result fibres, or amalgamation of
 independently selected splice witnesses.  The stage hyperspace is an
 extensional semantic graph rather than an ordered history, and the strategic
 charged-replacement constructor remains a separate layer.
+
+The source-retaining finite-window layer separately records exact singleton,
+collision, and total absorption occupation before normalization.  Product-law
+collision concentration controls its conditional singleton-mixture error, and
+positive owner occupation supplies a literal active source phase.  Forcing one
+player to Continue changes chronology from joint to opponent-only survival;
+the resulting refusal reweighting has a division-free raw bound and a
+normalized bound conditional on a positive deleted-absorption denominator.
 -/

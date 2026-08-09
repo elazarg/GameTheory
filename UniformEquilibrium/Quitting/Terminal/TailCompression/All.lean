@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import UniformEquilibrium.Quitting.Terminal.TailCompression.ElementaryCaps
 import UniformEquilibrium.Quitting.Terminal.TailCompression.ElementaryCapEnvelopeIdentities
 import UniformEquilibrium.Quitting.Terminal.TailCompression.ElementaryNeverCoupling
+import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResponse
 
 /-!
 # Finite semantic compression of quitting tails
@@ -27,4 +28,9 @@ literal behavioral supremum.  It closes the positive-joint and unique-positive-
 deleted branches.  The resulting capstone selects one cap and cutoff which
 simultaneously approximate every prescribed coordinate and every player's
 all-behavior best-response envelope.
+
+Independently of finite cap selection, every suffix whose remaining joint
+absorption charge is below one has literal all-behavior best-response value
+within `2*M` times that charge of its best positive singleton reward.  Every
+summable tail therefore enters this regime at all sufficiently late dates.
 -/

@@ -114,6 +114,11 @@ Further machine-checked necessary conditions
   active owner has refusal advantage at least `δ`.  This is
   `exists_pos_uniform_normalizedSingletonPacketRefusal`.  It is robust packet
   data, not an identification with late-tail occupation;
+- its weighted surplus is a quadratic form depending only on reciprocal
+  singleton effects.  The skew component is pure circulation, and some two
+  supported owners satisfy a positive reciprocal-effect inequality.  Tables
+  whose every reciprocal pair sum is nonpositive are solved by the existing
+  complementary-mixture compiler;
 - the forced packet has nonempty normalized support.  Its target is at least
   `η` in some coordinate, and one supported singleton atom pays that coordinate
   at least `η` (`exists_terminalGap_le_packetTarget` and
@@ -335,6 +340,71 @@ limiting boundary annotation.  Favorable signed drift can overdeliver while a
 restart remains behaviorally unexploitable, so drift magnitude alone is not a
 strategic obstruction.
 
+The literal behavioral best-response value of a suffix is nevertheless
+searchable without optimizing an infinite hazard sequence.  If `R` is its
+remaining joint-absorption charge and `R < 1`, then for every player
+
+```text
+|BR_i - max(0,r_i({i}))| <= 2 M R.
+```
+
+Together with the `M R` prescribed-payoff bound, suffix exploitability is
+within `3 M R` of the largest positive solo reward.  Annotation geometry is
+equally rigid: the values have a common coordinatewise boundary with a
+`2 M R` modulus, every singleton reward lies below that boundary, and every
+player active along a cofinal subsequence is pinned to its singleton reward.
+These are certified pruning tests.  They still do not identify a normalized
+late occupation with the independently forced packet.
+
+Proper-face candidates have a separate original-coordinate test.  Prescribing
+an outsider to literal `Never`, a solo-continuation deficit at most `eta` and
+deleted insider absorption at most `delta` imply that every outsider behavior
+gains at most `eta + 2 M delta`.  The estimate is exact at deterministic quit
+times and uses pure-time extremality for arbitrary behavior.  Search code must
+certify both premises; face equilibrium alone is not such a certificate.
+
+Nonsingleton noise is quantitatively negligible in a late window.  If `alpha`
+is one-stage absorption and `kappa` is the probability of at least two
+quitters, product independence gives
+
+```text
+kappa <= choose(|I|,2) * alpha^2.
+```
+
+Hence the concentration theorem branches explicitly when a survival-weighted
+window has zero absorption.  When absorption and singleton mass are positive,
+maximum stage absorption `rho` bounds conditional collision fraction by
+`choose(|I|,2) * rho`, and conditional delivery is within
+`2 M choose(|I|,2) rho` of its normalized singleton mixture.  This supplies
+singleton concentration, not funding, punishment rationality, or the
+survival-reweighting needed to identify a refusal law with the original owner
+occupation conditioned off one player.
+
+That reweighting now has an exact search-facing bound.  If the refusing
+player's hazard is at most `rho` throughout a finite window, then the raw
+joint-versus-opponent chronology discrepancy is at most the window's
+triangular time factor times `rho`.  With a certified positive lower bound
+`lower` on joint-weighted deleted absorption, normalized owner occupation
+differs by at most
+
+```text
+2 * triangularFactor * rho / lower.
+```
+
+This ratio, not hazard decay alone, is the relevant rejection or acceptance
+test for the refusal branch.
+
+The canonical finite-window record retains exactly the source roots,
+survival-weighted singleton mass by owner, collision mass, total absorption,
+normalized owner occupation, and conditional absorbing delivery.  It proves
+`absorption = singleton + collision = 1-survival` and branches before every
+normalization.  A positive limiting owner coordinate produces an actual
+positive-hazard source phase beyond the same cutoff and therefore pins the
+annotation boundary to that owner's singleton reward.  This closes the
+support-pinning part of the occupation bridge; funding, the punishment floor,
+and vanishing of the normalized refusal-reweighting ratio remain independent
+tests.
+
 ## Candidate record
 
 A search result should retain enough information to reproduce and compare all
@@ -352,8 +422,12 @@ best terminal exploitability interval and profile grammar
 positive-return/SCC search and fixed-threshold stage counts
 pure-toggle and stationary-cap ceilings
 normalized packet support, weak-successor graph, and supported η-atom
+packet quadratic energy and a certified supported positive reciprocal pair
 uniform packet-defect/refusal lower bound for the fixed reward table
 canonical periodic-window obstructing player and refusal/phase branch
+raw/normalized singleton occupation, collision share, and denominator branch
+remaining suffix charge and the certified `2 M R` best-response interval
+active-owner subsequences and singleton-pinning checks
 punishment-floor sign pattern
 floor-violation gap and division-free opponent-clock budget, when applicable
 solver residuals and exact rational reconstruction, when available
@@ -405,6 +479,13 @@ positive-debt all-Continue tail limit, and the exact pure-time/`Never` gap on
 every periodic tail window.  No theorem identifies the packet weights with
 late-window owner occupation or the packet target with realized window
 delivery.  Those are genuinely different objects.
+
+When a singleton occupation bridge is available, the two evaluator branches
+must be handled differently.  A phase stop at a pinned owner forces
+underfunding.  A positive refusal defect at a proper positive owner mass
+instead forces strict funding and a quantitative lower bound on that mass; if
+the packet clauses still fail, the missing clause is the punishment floor.
+Thus “the packet lacks funding” is not a branch-independent diagnosis.
 
 The distinction matters.  Noncomplementary singleton matrices exist already
 with four players for which every singleton-owner distribution has a positive

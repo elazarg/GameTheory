@@ -13,6 +13,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFiniteInstabi
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFloorViolationBudget
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacket
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketDefect
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSurplus
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeQuantitative
@@ -25,8 +26,16 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
 import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
 import UniformEquilibrium.Diagnostics.Quitting.MinimalFinCounterexample
+import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
+import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupation
+import UniformEquilibrium.Quitting.AbsorptionPath.FiniteWindowRefusalReweighting
+import UniformEquilibrium.Quitting.Classification.SingletonPacketDefectAlgebra
+import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryLimitGeometry
 import UniformEquilibrium.Quitting.Debt.Dynamic.DynamicDebtCapChargedAnchorCounterexample
+import UniformEquilibrium.Quitting.Debt.Dynamic.PeriodicDebtHolonomy
 import UniformEquilibrium.Quitting.Debt.Dynamic.PunishmentFloorCapSplice
+import UniformEquilibrium.Quitting.Paths.OutsiderNeverGluing
+import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResponse
 
 /-!
 # Quitting counterexample regime
@@ -51,4 +60,43 @@ generate unbounded canonical prefix charge, linking the sure-exit and capacity
 screens.  The umbrella also exports the augmented-cap splice
 interface and the finite regressions delimiting singleton complementarity and
 cap-only arguments.
+
+For proper-face arguments, the umbrella exports an original-coordinate
+outsider-`Never` estimate.  If the outsider's live continuation is at most
+`eta` below its solo reward and insider absorption is at most `delta` at every
+date, every behavioral deviation gains at most `eta + 2*M*delta` over literal
+`Never`.  The theorem does not derive either quantitative premise from a
+restricted equilibrium.
+
+The umbrella also exports the general summable-tail boundary geometry used by
+the regime: an explicit remaining-charge bound on literal behavioral best
+responses, simultaneous annotation convergence with an active-owner pinning
+criterion, and the scalar phase/refusal algebra that separates underfunding
+from punishment-floor failure.  None of these results identifies the forced
+packet with a tail occupation or realizes an augmented cap as a suffix.
+At the local dynamic-debt level, vanishing of the named diagonal seam is
+exactly the criterion for the displayed root to lift to a Nash--Bellman edge
+between augmented caps; the umbrella does not assert that this criterion holds
+along the optimized tail.
+Product-root collision mass is at most `choose (card ι) 2` times squared
+one-stage absorption.  The exported weighted-window concentration theorem has
+a separate zero-absorption branch; its conditional singleton-mixture payoff
+comparison applies when both absorption and singleton mass are positive.
+On a supplied finite exact-debt window, a positive debt coordinate that returns
+to its initial value forces every opponent to Continue throughout.  Two
+distinct returning positive coordinates make the entire window all-Continue,
+so an absorbing return can carry at most one such coordinate.
+The forced packet's weighted surplus is a quadratic form depending only on the
+symmetric reciprocal part of the singleton solo-effect matrix.  Consequently
+every counterexample packet supports a pair with positive reciprocal solo
+effect; if all reciprocal pair sums are nonpositive, the complementary-mixture
+compiler supplies a uniform payoff.
+Canonical source-typed finite windows now retain normalized singleton owner
+occupation, collision mass, and full absorbing delivery.  Late collision
+vanishes at the product-law rate, and positive limiting owner occupation pins
+the annotation boundary directly.  Refusal conditioning uses a different
+deleted-player survival law; its normalized discrepancy is explicitly bounded
+by the chronological reweighting error divided by a positive deleted-absorption
+denominator.  No theorem here makes that ratio vanish for the canonical
+windows.
 -/

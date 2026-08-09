@@ -2459,7 +2459,12 @@ tends to a limit at least `eta`.  Dynamic debt has an exact finite and infinite
 conservation law; after the owner's Continue probability becomes positive,
 deleted survival is its exact debt ratio and the remaining opponent clock is
 at most `log(K_owner / eta)`.  Positive-debt coordinates are floor-safe at
-every date.  The exact augmented-cap
+every date.  On a supplied finite return window, a returning positive debt
+coordinate forces all opponents silent, and two distinct returning positive
+coordinates force every phase to all-Continue.  Thus an absorbing return can
+carry at most one coordinate satisfying the positive-debt, positive-own-
+Continue, exact-return predicate; failure of one of those hypotheses is a
+separate possibility.  The exact augmented-cap
 transport law is
 
 ```text
@@ -2469,7 +2474,10 @@ v_t + d_t = T(x_t, v_(t+1) + d_(t+1)) + p_t ⊙ d_t
 coordinatewise.  Closed projective passage puts every optimized-tail augmented
 cap in the global boxed floor-admissible carrier, and its limit is a zero-charge
 all-Continue self-loop there; the finite seam prevents treating the tail itself
-as an exact path in that relation.  Finite cap-seeded prefixes transport
+as an exact path in that relation.  Vanishing of the seam is exactly the local
+criterion for the displayed root to lift to an exact Nash--Bellman cap edge;
+this criterion supplies no return or suffix realization by itself.  Finite
+cap-seeded prefixes transport
 cap-minus-value exactly by joint survival.  Conditional on realizing the terminal cap as the actual
 suffix's complete behavioral envelope, this yields
 `eta ≤ survival * capBound` and a logarithmic prefix-charge bound.  That
@@ -2487,6 +2495,53 @@ rational four-player singleton table has a positive compact escape separation
 for every owner distribution.  More generally, every fixed counterexample
 table has one positive compact refusal margin uniform over all of its normalized
 source packets.  These are grammar restrictions, not game counterexamples.
+The packet's mass-weighted surplus and aggregate refusal gain are the same
+quadratic energy.  Only the symmetric reciprocal part of the normalized
+singleton matrix contributes; the skew part is circulation.  Thus every
+counterexample packet contains a supported positive reciprocal-synergy pair,
+while pairwise nonpositive reciprocal solo effects are a solved subclass.
+For every sufficiently late suffix of an arbitrary summable tail, so that its
+remaining joint charge is below one, the literal behavioral best response is
+within `2 M` times that charge of `max(0,solo)`, while the prescribed terminal
+payoff is within `M` times the charge of zero.  The annotations have
+a simultaneous boundary with a `2 M` charge modulus, dominate singleton
+rewards, and pin every cofinally active owner to its singleton reward.  Hence
+late-tail search has a certified scalar target; the unresolved issue is the
+occupation/funding/floor bridge, not the value of the suffix best response.
+Product-root collision is quadratically small in one-stage absorption.  The
+concentration theorem separates the zero-absorption branch; when absorption
+and singleton mass are positive, the conditional collision share is at most
+`choose(|I|,2)` times the maximum stage absorption and conditional delivery is
+within `2 M` times that share of the normalized singleton mixture.  Under these
+denominator conditions collision concentration removes higher-order terminal
+noise from the limit.  The canonical source-typed
+window record additionally turns positive limiting owner occupation into a
+literal active source phase and pins the annotation boundary to the solo
+reward.  It does not identify the refusal-conditioned occupation, establish
+packet funding or the floor, or supply an exact charged lift.
+The refusal chronology comparison is now explicit.  For a length-`L` window,
+forcing player `i` to Continue changes raw deleted mass by at most the
+triangular chronology factor times the maximum hazard of `i`.  Normalized
+occupation differs by at most twice this error divided by a positive
+joint-weighted deleted-absorption lower bound.  Thus the remaining analytic
+condition is a concrete scale ratio; pointwise hazard decay without denominator
+control does not close it.
+The stabilized phase and refusal branches have opposite geometry: phase
+pinning forces underfunding, whereas refusal forces strict funding and leaves
+the floor as the possible failed packet clause.
+Original-coordinate face gluing is also quantitative: if an outsider's live
+continuation stays within `eta` below its solo reward and the insiders' deleted
+absorption is at most `delta` at every date, then every behavioral deviation
+gains at most `eta + 2 M delta` over literal `Never`.  Pure-time extremality
+makes this an all-behavior statement.  A restricted equilibrium does not by
+itself establish either hypothesis, so the theorem is an exact consumer for a
+future face-induction producer rather than such a producer.
+At one stage, the full quitter-coalition payoff cube now has exact Boolean
+Möbius coordinates.  Product-root expectation is its multilinear evaluation,
+and unilateral Quit-minus-Continue gain is the corresponding coordinate
+derivative.  This gives a canonical language for singleton, collision, and
+higher-order support pivots, but no sign condition currently turns the first
+positive higher-order coefficient into a floor-admissible renewable return.
 Every stable nonempty pure quitting coalition is independently excluded by
 the charge lane: repeating its exact floor self-loop emits one unit of charge
 per stage and makes canonical prefix capacity infinite.  The terminal-gap

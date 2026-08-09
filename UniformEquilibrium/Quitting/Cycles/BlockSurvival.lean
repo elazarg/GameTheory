@@ -32,22 +32,6 @@ def IsQuittingOpponentBlockContraction
   ∀ block who,
     quittingOpponentSurvivalWeight roots who (block * K) K ≤ rho
 
-/-- Every finite opponent-survival product is at most one. -/
-theorem quittingOpponentSurvivalWeight_le_one
-    (roots : ℕ → ι → PMF Bool) (who : ι)
-    (start fuel : ℕ) :
-    quittingOpponentSurvivalWeight roots who start fuel ≤ 1 := by
-  induction fuel with
-  | zero => simp [quittingOpponentSurvivalWeight]
-  | succ fuel ih =>
-      rw [show fuel + 1 = fuel.succ by omega,
-        quittingOpponentSurvivalWeight_succ]
-      exact mul_le_one₀ ih
-        (quittingStationaryContinueMass_nonneg
-          (Function.update (roots (start + fuel)) who (PMF.pure false)))
-        (quittingStationaryContinueMass_le_one
-          (Function.update (roots (start + fuel)) who (PMF.pure false)))
-
 /-- Starting at any aligned boundary, survival through `turns` whole blocks
 is at most `rho^turns`. -/
 theorem quittingOpponentSurvivalWeight_aligned_mul_le_pow

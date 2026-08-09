@@ -241,6 +241,34 @@ theorem quittingOpponentSurvivalWeight_succ
         quittingFixedOpponentsContinueMass roots who (start + fuel) := by
   simp [quittingOpponentSurvivalWeight, Finset.prod_range_succ]
 
+/-- Peeling the first stage off an opponent-survival weight. -/
+theorem quittingOpponentSurvivalWeight_succ_left
+    (roots : ℕ → ι → PMF Bool) (who : ι) (start fuel : ℕ) :
+    quittingOpponentSurvivalWeight roots who start (fuel + 1) =
+      quittingFixedOpponentsContinueMass roots who start *
+        quittingOpponentSurvivalWeight roots who (start + 1) fuel := by
+  rw [quittingOpponentSurvivalWeight_eq_survivalProduct,
+    quittingOpponentSurvivalWeight_eq_survivalProduct,
+    show fuel + 1 = 1 + fuel by omega,
+    Math.survivalProduct_add]
+  simp [Math.survivalProduct]
+
+/-- Every finite opponent-survival weight is at most one. -/
+theorem quittingOpponentSurvivalWeight_le_one
+    (roots : ℕ → ι → PMF Bool) (who : ι)
+    (start fuel : ℕ) :
+    quittingOpponentSurvivalWeight roots who start fuel ≤ 1 := by
+  induction fuel with
+  | zero => simp [quittingOpponentSurvivalWeight]
+  | succ fuel ih =>
+      rw [show fuel + 1 = fuel.succ by omega,
+        quittingOpponentSurvivalWeight_succ]
+      exact mul_le_one₀ ih
+        (quittingStationaryContinueMass_nonneg
+          (Function.update (roots (start + fuel)) who (PMF.pure false)))
+        (quittingStationaryContinueMass_le_one
+          (Function.update (roots (start + fuel)) who (PMF.pure false)))
+
 /-- Finite Bellman iteration with the exact opponent-survival weights.  The
 last term is retained, so this theorem requires no asymptotic or
 zero-factor hypothesis. -/

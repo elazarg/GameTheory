@@ -68,6 +68,14 @@ unit-charge exact floor self-loop and therefore makes canonical prefix capacity
 infinite.  This recovers the qualitative sure-exit exclusion independently of
 the quantitatively stronger terminal-gap toggle theorem.
 
+The forced packet also has a canonical scalar energy.  Its mass-weighted
+delivery surplus is the quadratic form of the singleton solo-effect matrix;
+the skew part contributes zero and the same energy is read by aggregate
+refusal gains.  Every counterexample packet therefore supports two distinct
+owners with positive reciprocal solo effect.  Conversely, if every reciprocal
+pair sum is nonpositive, the packet is complementary and the existing
+singleton-circulation compiler gives a uniform payoff.
+
 Payoff terminology is fixed in
 [`UniformEquilibrium/README.md`](../../UniformEquilibrium/README.md):
 limiting-average, undiscounted-limit, and uniform finite-horizon notions are
@@ -102,9 +110,37 @@ The finite-quitting front is now sharply reduced.
    an exact survival-weighted conservation law, the selected owner's opponent
    clock has a logarithmic ceiling, actual late-tail payoff tends to zero, and
    the prescribed owner value stays at least `η`: the obstruction is a positive
-   phantom continuation plateau, not hidden terminal delivery. Every optimized
+   phantom continuation plateau, not hidden terminal delivery. A suffix's
+   literal behavioral best-response value is within `2 M` times its remaining
+   absorption charge of the best positive solo reward once that charge is
+   below one; every summable tail has such sufficiently late suffixes. More generally,
+   summable Bellman paths have a simultaneous annotation boundary with the
+   same charge modulus, and every cofinally active player is pinned there to
+   its singleton reward. Product independence also makes conditional
+   multi-quitter mass at most `choose(|I|,2)` times the maximum stage
+   absorption, with a matching singleton-mixture payoff approximation. A
+   canonical source-typed window occupation retains all denominator cases and
+   turns positive limiting owner mass into a literal active phase, hence into
+   boundary pinning. These
+   facts constrain a tail-derived occupation but
+   do not supply funding or the punishment floor. On a supplied finite
+   exact-debt return window, positive returning debt forces all opponents
+   silent; two distinct returning coordinates force an all-Continue word.
+   Every optimized
    debt cap belongs to the boxed punishment-floor carrier, while the underlying
-   tail transitions remain separate from that carrier's charged relation. The
+   tail transitions remain separate from that carrier's charged relation. A
+   displayed transition lifts exactly to an augmented-cap Nash--Bellman edge
+   iff its diagonal seam vanishes; this is a local criterion, not a return or
+   suffix producer. The
+   original-coordinate outsider-`Never` calculation is now exact and extends
+   through pure-time extremality to all behavioral deviations: its error is
+   `eta + 2 M delta`. It remains conditional on a solo-continuation bound and
+   small deleted insider absorption, neither of which follows merely by
+   solving the restricted face. The
+   refusal-conditioned occupation is compared to the original chronology by
+   an explicit triangular-factor estimate. After normalization the error is
+   divided by a positive joint-weighted deleted-absorption denominator; the
+   canonical windows are not yet known to make this ratio vanish. The
    canonical compatible periodic windows are all terminally blocked and admit
    fixed-player/fixed-branch subsequences. This closes the compatible
    ultimately-periodic evaluator; it does not attach those suffixes to an

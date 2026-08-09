@@ -39,35 +39,6 @@ open StochasticGame Math.Probability Math.PMFProduct
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 omit [DecidableEq ι] in
-/-- The expectation of the indicator of a nonempty quitter set is exactly
-the one-stage absorption mass. -/
-theorem expect_quittingNonemptyIndicator_eq_absorptionMass
-    (root : ι → PMF Bool) :
-    expect (pmfPi root) (fun action ↦
-        if (quittingQuitters action).Nonempty then (1 : ℝ) else 0) =
-      quittingRootAbsorptionMass root := by
-  let allContinue : ι → Bool := quittingAllContinueAction
-  have hindicator :
-      (fun action : ι → Bool ↦
-          if (quittingQuitters action).Nonempty then (1 : ℝ) else 0) =
-        fun action ↦ 1 - if action = allContinue then (1 : ℝ) else 0 := by
-    funext action
-    by_cases hquit : (quittingQuitters action).Nonempty
-    · have hne : action ≠ allContinue := by
-        intro heq
-        subst action
-        simp [allContinue] at hquit
-      simp [hquit, hne]
-    · have heq : action = allContinue :=
-        eq_quittingAllContinueAction_of_quittingQuitters_not_nonempty
-          action hquit
-      subst action
-      simp [allContinue]
-  rw [hindicator, expect_sub, expect_const,
-    ← Math.Probability.apply_toReal_eq_expect_indicator]
-  rfl
-
-omit [DecidableEq ι] in
 /-- The one-stage absorbing contribution is bounded by the reward bound times
 the probability of absorption. -/
 theorem abs_quittingRootAbsorbingContribution_le
@@ -238,24 +209,6 @@ theorem markedNegative_advance_or_absorptionMass_ge
     linarith
 
 /-! ## A successor escape makes the product jump playerwise charged -/
-
-/-- One-stage absorption probability after forcing `who` to Continue.  This
-is the opponent-absorption hazard for `who` at the root. -/
-def quittingRootOpponentAbsorptionMass
-    (root : ι → PMF Bool) (who : ι) : ℝ :=
-  quittingRootAbsorptionMass
-    (Function.update root who (PMF.pure false))
-
-omit [DecidableEq ι] in
-/-- The all-continue mass is the product of the displayed Continue
-probabilities. -/
-theorem quittingStationaryContinueMass_eq_prod_continueProbability
-    (root : ι → PMF Bool) :
-    quittingStationaryContinueMass root =
-      ∏ player, (root player false).toReal := by
-  unfold quittingStationaryContinueMass
-  rw [pmfPi_apply, ENNReal.toReal_prod]
-  rfl
 
 /-- A marked player's Quit hazard is part of every other player's opponent
 absorption hazard. -/

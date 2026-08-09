@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import UniformEquilibrium.Quitting.Debt.Dynamic.FiniteDynamicDebtCalibration
 import UniformEquilibrium.Quitting.Debt.Marked.FenceFirstOpponentAdapter
+import UniformEquilibrium.Quitting.Root.TerminalOpponentAdvantage
 import GameTheory.Concepts.Potential.MixedPotential
 
 /-!
@@ -419,50 +420,6 @@ theorem quittingFiniteNashBellmanPath_neverHazardValue_eq_value_add_dynamicDebt
   exact hexact
 
 /-! ## A one-stage full-set terminal advantage -/
-
-/-- Against an opponent action, compare continuing with the singleton
-terminal option to joining the same simultaneous quitter set.  The action is
-sampled with the owner forced to Continue. -/
-def quittingTerminalOpponentAdvantage
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (owner : ι) (action : ι → Bool) : ℝ :=
-  quittingRootPayoff reward
-      (fun _ ↦ reward (quittingSingletonTerminal owner) owner)
-      action owner -
-    quittingRootPayoff reward (0 : Payoff ι)
-      (Function.update action owner true) owner
-
-/-- The expectation of the full-set advantage is exactly the augmented
-Continue endpoint minus the Quit endpoint. -/
-theorem expect_terminalOpponentAdvantage
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (root : ι → PMF Bool) (owner : ι) :
-    expect (pmfPi (Function.update root owner (PMF.pure false)))
-        (quittingTerminalOpponentAdvantage reward owner) =
-      quittingRootContinuePayoff reward
-          (fun _ ↦ reward (quittingSingletonTerminal owner) owner)
-          root owner -
-        quittingRootQuitPayoff reward (0 : Payoff ι) root owner := by
-  unfold quittingTerminalOpponentAdvantage quittingRootContinuePayoff
-    quittingRootQuitPayoff quittingRootExpectedPayoff
-  rw [expect_sub]
-  congr 1
-  have hpure := KernelGame.expect_pmfPi_update_pure
-    (Function.update root owner (PMF.pure false)) owner true
-    (fun action ↦ quittingRootPayoff reward (0 : Payoff ι) action owner)
-  simpa using hpure.symm
-
-/-- Updating a forced-continuing owner's action to Quit inserts exactly that
-owner into the full simultaneous quitter set. -/
-theorem quittingQuitters_update_true_of_apply_false
-    (action : ι → Bool) (owner : ι) :
-    quittingQuitters (Function.update action owner true) =
-      insert owner (quittingQuitters action) := by
-  ext player
-  by_cases hplayer : player = owner
-  · subst player
-    simp [quittingQuitters]
-  · simp [quittingQuitters, hplayer]
 
 /-- A positive expected full-set advantage contains a genuine positive-mass
 action with positive advantage. -/

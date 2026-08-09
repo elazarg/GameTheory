@@ -442,6 +442,7 @@ import UniformEquilibrium.Quitting.Cycles.WeightedRowMotionSeparation
 import UniformEquilibrium.Quitting.Cycles.ScaledCyclicWeightNoApproximateEquilibria
 import UniformEquilibrium.Quitting.Circulation.FaceCirculationAll
 import UniformEquilibrium.Quitting.Bellman.Finite.HazardRowBridge
+import UniformEquilibrium.Quitting.Bellman.Finite.BooleanMobiusAdapter
 import UniformEquilibrium.Quitting.Bellman.Finite.RelaxedHazardRowBridge
 import UniformEquilibrium.Quitting.Root.EndpointBackwardStability
 import UniformEquilibrium.Quitting.Boundary.Analytic.BackwardStabilityConditionNumber

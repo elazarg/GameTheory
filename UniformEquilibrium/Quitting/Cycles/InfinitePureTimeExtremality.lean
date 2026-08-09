@@ -76,6 +76,32 @@ theorem quittingRootSequenceHazardTerminalValue_eq_hazardBellman
     quittingRootQuitPayoff_eq_fixedOpponentsQuitValue,
     quittingRootContinuePayoff_eq_fixedOpponents]
 
+/-- Quitting at the current date gives the immediate fixed-opponent Quit
+value.  No periodicity is involved. -/
+theorem quittingRootSequencePureTimeTerminalValue_some_self_eq_fixedOpponents
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι) (start : ℕ) :
+    quittingRootSequencePureTimeTerminalValue reward roots who
+        (some start) start =
+      quittingFixedOpponentsQuitValue reward roots who start := by
+  unfold quittingRootSequencePureTimeTerminalValue
+  rw [quittingRootSequenceHazardTerminalValue_eq_hazardBellman]
+  simp
+
+/-- Literal `Never` satisfies the exact fixed-opponent Continue recursion at
+every date.  No periodicity is involved. -/
+theorem quittingRootSequencePureTimeTerminalValue_none_succ_eq_fixedOpponents
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι) (start : ℕ) :
+    quittingRootSequencePureTimeTerminalValue reward roots who none start =
+      quittingFixedOpponentsContinueReward reward roots who start +
+        quittingFixedOpponentsContinueMass roots who start *
+          quittingRootSequencePureTimeTerminalValue reward roots who none
+            (start + 1) := by
+  unfold quittingRootSequencePureTimeTerminalValue
+  rw [quittingRootSequenceHazardTerminalValue_eq_hazardBellman]
+  simp
+
 /-- A finite deterministic quit atom is already its infinite terminal payoff:
 the player surely quits before the finite boundary is reached. -/
 theorem quittingFinitePureTimePayoff_castSucc_eq_terminal

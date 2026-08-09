@@ -46,20 +46,6 @@ open Filter
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 variable {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
 
-/-- Forcing one player to pure Continue only removes absorption events: a
-player's one-stage opponent-absorption hazard is at most the root's joint
-absorption mass. -/
-theorem quittingRootOpponentAbsorptionMass_le_absorptionMass
-    (root : ι → PMF Bool) (who : ι) :
-    quittingRootOpponentAbsorptionMass root who ≤
-      quittingRootAbsorptionMass root := by
-  have hcontinue : quittingStationaryContinueMass root ≤
-      quittingStationaryContinueMass
-        (Function.update root who (PMF.pure false)) :=
-    quittingStationaryContinueMass_le_fixedOpponentsContinueMass root who
-  unfold quittingRootOpponentAbsorptionMass quittingRootAbsorptionMass
-  linarith
-
 namespace QuittingPunishmentFloorInfiniteOrbit
 
 variable (orbit : QuittingPunishmentFloorInfiniteOrbit reward)
