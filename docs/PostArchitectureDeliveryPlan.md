@@ -394,7 +394,7 @@ theory.
 | coalitional games | Bondareva-Shapley or convex-game core nonemptiness after the existing Shapley/core base | larger theory moves to `GameTheory.Cooperative`; no artificial action profile |
 | matching and market design | **Gale--Shapley stability and balanced perfectness passed (EXP-068/D35); all 74 bounded declarations classified;** next proposer optimality, strategyproofness, or rural hospitals | native ordinal preferences and matchings; share order/list mathematics only |
 | bargaining | **Nash solution affine invariance passed (EXP-069/D36); all 30 declarations classified, with 16 egalitarian/Kalai--Smorodinsky rows retained as BFS** | native capability-free feasible-utility branch in `Cooperative`; use `Analysis` only for later topology-dependent existence |
-| finite fair division | **round-robin completeness and EF1 passed (EXP-067);** next two-agent EFX, envy-cycle elimination, or maximin-share breadth | `Mechanism.FairDivision` over canonical `Combinatorial.Allocation`; no measurable cake assumptions |
+| finite fair division | **round-robin completeness/EF1 and two-agent cut-and-choose EFX passed; both bounded ledgers complete;** next envy-cycle or maximin-share breadth | `Mechanism.FairDivision` over canonical `Combinatorial.Allocation`; no measurable cake assumptions |
 | knowledge and epistemic games | **complete for pinned v1:** exact/approximate common knowledge and both agreement theorems | any future Protocol bridge must state the extra state-view premise; broader epistemic work is a new consumer, not recovery debt |
 | evolutionary stability | **passed (EXP-044/D17):** ESS implies canonical symmetric Nash | recover static ESS/NSS in `Evolutionary`; dynamics do not enter until a named theorem measures scalar/topology needs |
 | contracts | **passed and recovered (EXP-065/D32):** stochastic welfare accounting, finite-action maximizer existence, and participation against an explicit outside option, with all 23 pinned declarations classified | native `Mechanism.PrincipalAgent` branch over `FinDist`; no artificial strategic players, and richer contract-selection/adverse-selection models remain separate consumers |
@@ -586,9 +586,9 @@ These counts are milestones, not declaration-port percentages.
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
 | exact accounting | 2,558 of 8,324 pinned declarations are claimed by exact ledgers; 2,458 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,766-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | deterministic uniform-equilibrium batch complete: coordinatewise long-run averages and finite-horizon approximate Nash factor through the stable repeated path and canonical `IsεNash`; 8/8 pinned rows reviewed | keep monitoring rank, APS decomposition/self-generation, public randomization, and monitored uniform results as distinct bounded turns |
-| next capability rotation | finite fair division: select the two-agent EFX, envy-cycle-elimination, or maximin-share batch against the canonical allocation owner | preserve the finite indivisible-goods boundary and avoid any measurable cake-cutting assumptions |
-| release engineering | warning-clean 3,517-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
+| current BFS seam | finite fair-division batch complete: canonical two-agent cut-and-choose gives EFX, the explicit hostile allocation is EFX but not envy-free, and the 40/40 foundations plus 27/27 round-robin ledgers are complete | keep maximin-share and the predecessor's relabeled round-robin selector as distinct later turns |
+| next capability rotation | finite zero-sum theory: select a bounded security, matrix-geometry, or complementarity batch against the canonical saddle/minimax owners | preserve the Core/Analysis split and avoid a parallel matrix-game or equilibrium surface |
+| release engineering | warning-clean 3,526-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -680,7 +680,13 @@ provisioned in CI.
    fair division rather than deepening immediately into monitoring rank, APS
    self-generation, convex core, or social-choice impossibilities; mixed
    rationalizability and validated language leaf recovery remain later BFS
-   turns;
+   turns.  The next fair-division batch then recovers all 13 deferred
+   two-agent EFX rows: the canonical constructor carries disjointness, the
+   cut-and-choose theorem returns completeness separately, and a hostile
+   three-good allocation is EFX despite strict envy.  With both bounded
+   fair-division ledgers complete at 67/67 reviewed rows, the queue rotates to
+   finite zero-sum security/minimax breadth rather than immediately deepening
+   into maximin-share or the predecessor's relabeled round-robin selector;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.

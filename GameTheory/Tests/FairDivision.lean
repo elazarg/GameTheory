@@ -35,18 +35,13 @@ theorem rankings_conflict :
   constructor <;> simp [values] <;> linarith
 
 /-- Agent zero receives goods zero and two; agent one receives good one. -/
-def allocation : Allocation (Fin 2) (Fin 3) where
-  bundle agent := if agent = 0 then {0, 2} else {1}
-  pairwise_disjoint := by
-    intro i j hij
-    fin_cases i <;> fin_cases j <;> simp_all
+def allocation : Allocation (Fin 2) (Fin 3) :=
+  twoAgentAllocation {0, 2} {1} (by simp)
 
 theorem allocation_complete : IsComplete allocation := by
-  intro good
-  fin_cases good
-  · exact ⟨0, by simp [allocation]⟩
-  · exact ⟨1, by simp [allocation]⟩
-  · exact ⟨0, by simp [allocation]⟩
+  apply twoAgentAllocation_isComplete
+  ext good
+  fin_cases good <;> simp
 
 theorem agent_one_strictly_envies :
     value values 1 (allocation 1) < value values 1 (allocation 0) := by
@@ -76,6 +71,27 @@ theorem allocation_isEF1 : IsEF1 values allocation := by
       simp [value, allocation, values, two_ne_zero]
       linarith⟩
   · exact Or.inl le_rfl
+
+/-- The same strictly non-envy-free allocation is EFX: removing either
+positively valued good from the envied bundle eliminates the envy. -/
+theorem allocation_isEFX : IsEFX values allocation := by
+  intro i j good hgood hpositive
+  fin_cases i <;> fin_cases j <;> fin_cases good <;>
+    simp [value, allocation, values, two_ne_zero] at hgood hpositive ⊢ <;>
+    linarith
+
+/-- The general cut-and-choose theorem applies to the hostile three-good
+instance, not only to the two-good textbook specialization. -/
+theorem values_admit_complete_efx :
+    ∃ A : Allocation (Fin 2) (Fin 3), IsComplete A ∧ IsEFX values A :=
+  exists_efx_two_agents values values_nonnegative
+
+/-- EFX is the appropriate finite target: with one positively valued good,
+two agents can fail to admit any complete envy-free allocation. -/
+theorem positive_one_good_has_no_envyFree_allocation :
+    ∃ v : AdditiveValuation (Fin 2) (Fin 1), Nonnegative v ∧
+      ¬ ∃ A : Allocation (Fin 2) (Fin 1), IsComplete A ∧ IsEnvyFree v A :=
+  ef_impossible_two_agents_one_good
 
 /-- The generic algorithm produces a complete canonical allocation on the
 same conflicting-value instance. -/

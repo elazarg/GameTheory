@@ -593,7 +593,9 @@ if (-not $SkipReachability) {
     'GameTheory.Mechanism.Combinatorial.Allocation',
     'GameTheory.Mechanism.FairDivision.IsComplete',
     'GameTheory.Mechanism.FairDivision.roundRobinAllocation',
-    'GameTheory.Mechanism.FairDivision.roundRobinAllocation_isEF1')
+    'GameTheory.Mechanism.FairDivision.roundRobinAllocation_isEF1',
+    'GameTheory.Mechanism.FairDivision.exists_efx_two_agents',
+    'GameTheory.Mechanism.FairDivision.ef_impossible_two_agents_one_good')
   $fairDivisionBoundary = @(
     'GameTheory.Probability.FinDist',
     'GameTheory.IsNash',
@@ -1475,7 +1477,7 @@ if ($VerifyExpected) {
     $Expected['KNAPSACK_BASIC_BOUNDARY_PROBES_REJECTED'] = 7
     $Expected['KNAPSACK_ROOT_INPUT_PROBES_REACHED'] = 5
     $Expected['KNAPSACK_MECHANISM_INPUT_PROBES_REACHED'] = 6
-    $Expected['FAIR_DIVISION_INPUT_PROBES_REACHED'] = 4
+    $Expected['FAIR_DIVISION_INPUT_PROBES_REACHED'] = 6
     $Expected['FAIR_DIVISION_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['MATCHING_INPUT_PROBES_REACHED'] = 5
     $Expected['MATCHING_BOUNDARY_PROBES_REJECTED'] = 4

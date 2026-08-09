@@ -52,8 +52,8 @@ GameTheory/Cooperative   opt-in bargaining, ordinal matching, and voting power,
                          matchings, and Banzhaf/Shapley--Shubik indices
 GameTheory/Mechanism     opt-in coordinated mechanisms, finite auctions,
                          combinatorial allocations, finite round-robin EF1,
-                         all-pay arithmetic, and exact/VCG and checked
-                         half-approximate finite knapsack
+                         two-agent EFX existence, all-pay arithmetic, and
+                         exact/VCG and checked half-approximate finite knapsack
 GameTheory/Languages     scoped language encodings and truthful Bayesian
                          mechanism compilation with recorded limitations
   /NFG                   deterministic normal-form syntax compiling directly

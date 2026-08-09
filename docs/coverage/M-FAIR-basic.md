@@ -8,7 +8,7 @@ Successor baseline: `e1e5052`
 Canonical destination: `GameTheory.Mechanism.FairDivision.Basic`
 Domain contract / decision: D9, D11, EXP-067
 Owner: Wave 4 / finite fair division
-Status: partial; all 40 declarations classified, 27 recovered or subsumed and 13 deferred to the two-agent EFX gate
+Status: complete; 40/40 declarations recovered or subsumed, with no deferred rows
 Last verified: 2026-08-09
 
 The successor reuses `Mechanism.Combinatorial.Allocation`, where pairwise
@@ -45,22 +45,33 @@ fairness is finite and probability-free; divisible cake theory remains M-CAKE.
 | same | `IsEFX.isEF1_of_nonnegative` | theorem | adapt | same name under `GameTheory.Mechanism.FairDivision` | focused Basic build | Positive-good witness. |
 | same | `value_univ_eq_sum_allocation` | theorem | adapt | same name under `GameTheory.Mechanism.FairDivision` | focused Basic build | Uses typed disjointness plus explicit completeness. |
 | same | `IsEnvyFree.isProportional` | theorem | adapt | same name under `GameTheory.Mechanism.FairDivision` | focused Basic build | Complete additive decomposition. |
-| same | `twoAgentAllocation` | def | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Canonical constructor must expose disjointness rather than accept arbitrary bundles. |
-| same | `twoAgentAllocation_zero` | theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Follows the redesigned constructor. |
-| same | `twoAgentAllocation_one` | theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Follows the redesigned constructor. |
-| same | `twoAgentAllocation_isAllocation` | theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Will state completeness; disjointness is typed. |
-| same | `ef_impossible_two_agents_one_good` | theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Useful separation result, not required by the round-robin gate. |
-| same | `cutScore` | private def | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Private cut-and-choose machinery. |
-| same | `cutScore_compl` | private theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Private cut-and-choose machinery. |
-| same | `maximin_cut_no_envy_after_erase_right` | private theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Private cut-and-choose machinery. |
-| same | `maximin_cut_no_envy_after_erase_left` | private theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Private cut-and-choose machinery. |
-| same | `maximin_cut_partition_efx_for_zero` | private theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Private cut-and-choose machinery. |
-| same | `maximin_cut_partition_efx_for_zero_swapped` | private theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Private cut-and-choose machinery. |
-| same | `exists_efx_two_agents` | theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Next finite-existence consumer after release parity. |
-| same | `efx_two_agents_two_goods` | theorem | deferred | M-FAIR two-agent EFX recovery gate | inventory classification | Finite specialization follows the general theorem. |
+| same | `twoAgentAllocation` | def | adapt | `GameTheory.Mechanism.FairDivision.twoAgentAllocation` | canonical constructor fixture | Disjointness is an explicit constructor premise and enters the canonical allocation type. |
+| same | `twoAgentAllocation_zero` | theorem | adapt | same name under `GameTheory.Mechanism.FairDivision` | focused build | Exact first-bundle projection. |
+| same | `twoAgentAllocation_one` | theorem | adapt | same name under `GameTheory.Mechanism.FairDivision` | focused build | Exact second-bundle projection. |
+| same | `twoAgentAllocation_isAllocation` | theorem | adapt | `GameTheory.Mechanism.FairDivision.twoAgentAllocation_isComplete` | hostile completeness fixture | Only coverage remains propositional because disjointness is already typed. |
+| same | `ef_impossible_two_agents_one_good` | theorem | adapt | same name under `GameTheory.Mechanism.FairDivision` | strict separation fixture; axiom audit | A single positively valued good refutes envy-free existence while the EFX theorem remains available. |
+| same | `cutScore` | private def | adapt | private `cutScore` | focused build | Cut-and-choose proof machinery remains private. |
+| same | `cutScore_compl` | private theorem | adapt | private `cutScore_compl` | focused build | Complement symmetry for the private cut score. |
+| same | `maximin_cut_no_envy_after_erase_right` | private theorem | adapt | private same name | focused build | Positive-good transfer contradiction for the right side. |
+| same | `maximin_cut_no_envy_after_erase_left` | private theorem | adapt | private same name | focused build | Derived by complement symmetry. |
+| same | `maximin_cut_partition_efx_for_zero` | private theorem | adapt | private same name | hostile EFX fixture | First orientation over the canonical allocation constructor. |
+| same | `maximin_cut_partition_efx_for_zero_swapped` | private theorem | adapt | private same name | hostile EFX fixture | Swapped orientation over the canonical allocation constructor. |
+| same | `exists_efx_two_agents` | theorem | adapt | `GameTheory.Mechanism.FairDivision.exists_efx_two_agents` | focused root/test build; axiom audit | General finite two-agent EFX existence with theorem-local finiteness and nonnegativity. |
+| same | `efx_two_agents_two_goods` | theorem | adapt | same name under `GameTheory.Mechanism.FairDivision` | focused build | Transparent textbook specialization of the general theorem. |
 
 Attribution: v1 supplies the additive fairness hierarchy and finite-sum proofs.
 EXP-067 changes ownership, not the mathematics: disjointness is now carried by
 the existing combinatorial allocation, and completeness is the only additional
-certificate.
+certificate.  The cut-and-choose recovery completes the ledger at 39 adapted
+rows and one subsumed carrier row.
 
+Validation: the focused `TwoAgentEFX`, fair-division root, hostile test, and
+mechanism-root build completed 1,756 jobs warning-free.  The hostile
+three-good allocation is strictly not envy-free but is EFX, while the
+one-good theorem supplies the negative control.  The existence theorem,
+negative control, and explicit EFX fixture depend only on `propext`,
+`Classical.choice`, and `Quot.sound`.
+The full Phase 2 audit returned `VERIFIED=1`, with all six intended
+fair-division inputs reached and all four game/probability/Protocol/measure
+boundaries rejected.  Exact coverage returned `VERIFIED=1`, and the
+warning-clean default build completed all 3,526 jobs.
