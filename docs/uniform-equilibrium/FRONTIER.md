@@ -122,6 +122,41 @@ The finite-quitting front is now sharply reduced.
 The chain is exhaustive up to the positive fully summable plateau. It is not a
 claim that every equilibrium belongs to one finite grammar.
 
+## LCP normalization and the strict abnormal base case
+
+The quitting LCP layer retains the literature's playerwise solo normalization
+without pretending that the translated game still has zero payoff on
+nontermination. Its explicit payoff table assigns the negative solo baseline
+to Never and proves, for every behavioral profile, that normalized terminal
+payoff is original terminal payoff minus that baseline. Terminal
+approximate-Nash inequalities therefore transport in both directions at the
+same error.
+
+The normalized singleton matrix is the existing projective comparison matrix.
+For an arbitrary matrix, the simplex/projective `Q` convention is exactly the
+disjunction of textbook standard `Q` and a homogeneous simplex solution.
+Projective `Q-bar` is imposed separately on every nonempty principal
+submatrix. These are algebraic facts; no stationary, public-correlation, or
+continuous-path conclusion is bundled into their definitions.
+
+The literal published recursive normal-player formula collapses after
+zero-diagonal normalization because a player can witness itself. Production
+Lean proves that collapse and defines the distinct-witness recursion separately
+without attributing unproved source consequences to it. The resulting
+five-way theorem is an exhaustive matrix-regime gate, not a strategic
+classification.
+
+One strict strategic base case is closed. If the first corrected normal layer
+is empty, every player strictly prefers every other player's solo absorption
+to its own. Either all solo rewards are nonpositive and Never is exact, or a
+positive-solo owner admits a positive stationary hazard satisfying every
+inactive joining inequality. In both cases one exact stationary terminal Nash
+profile exists, and its terminal payoff is a uniform-equilibrium payoff.
+
+The later-layer all-abnormal construction, homogeneous and non-`Q` stationary
+producers, concrete sunspot semantics, projective-`Q-bar` continuous paths, and
+the absorption-path-to-ordinary compiler remain open.
+
 ## Essential APS on the singleton-flow stratum
 
 The essential-APS layer formalizes a genuine but conditional positive stratum.

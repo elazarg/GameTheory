@@ -2139,21 +2139,32 @@ constants.
 
 ### `LIT-P1-3` — audit the Solan-Solan Q-matrix normalization for a quitting preprocessor
 
-- **Status:** PARTIAL (inferred; source has no explicit status tag here)
+- **Status:** ACTIVE
 - **Lane:** P1
 - **Record:** [Non-Q quitting games][nq]
 
-**Objective.** Audit the Solan--Solan Q-matrix normalization and import the
-non-Q ordinary-uniform theorem as a quitting preprocessor.
+**Objective.** Complete the concrete strategic producers behind the audited
+Solan--Solan and absorption-path LCP matrix regimes.
 
-**State.** Preprint full text audited 2026-08-03: matrix/LCP/`Q` conventions
-resolved. Two scope corrections landed — the non-`Q` conclusion is a synthesis
-of Lemma 2.6, Lemma 2.10, and Theorem 2.11(1), and is stated
-stationary/undiscounted, not uniform. Residual blocker is the Solan--Vieille
-uniform upgrade.
+**State.** Production Lean carries the playerwise solo normalization with the
+translated nontermination payoff, exact terminal-payoff and Nash transport,
+the standard/projective `Q` split, projective `Q-bar`, and the defect in the
+printed recursive normal-player definition. The corrected distinct-witness
+recursion is kept separate from source attribution. The strict first-layer
+case is constructive: if the first corrected layer is empty, an exact
+stationary terminal Nash profile exists and its terminal payoff is uniform.
+The exhaustive five-way theorem is only a matrix-regime partition.
 
-**Acceptance.** Classify tables and test whether the positive-debt residual
-necessarily lies on the still-hard Q side.
+The later-layer all-abnormal construction, homogeneous and non-`Q` stationary
+producers, public-correlation semantics, the projective-`Q-bar` continuous-path
+producer, and the simple-case-qualified absorption-path-to-ordinary compiler
+remain open Lean obligations.
+
+**Acceptance.** Extend the first-layer result through the full corrected
+all-abnormal recursion, then attach concrete strategy or path constructors to
+the remaining matrix branches. Test whether the positive-debt residual is
+forced onto the still-hard standard-`Q`, non-projective-`Q-bar` side only after
+those implications are theorem-bearing.
 
 ### `LIT-P2-1` — define the positive-recursive nonrectangular theorem's repository adapter
 
