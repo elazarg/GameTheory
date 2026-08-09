@@ -41,13 +41,12 @@ Verdicts are intentionally qualitative:
 
 ## Dashboard
 
-The 45 workflow rows below contain 26 better, 5 comparable, and 9 partial
-verdicts; 3 are critical gaps and 2 are deliberately retired or out of
+The 45 workflow rows below contain 27 better, 5 comparable, and 9 partial
+verdicts; 2 are critical gaps and 2 are deliberately retired or out of
 scope.  The strongest evidence is the canonical static/protocol spine, NFG,
 the frozen EFG/Kuhn/SPE transfers, finite learning, finite auctions, congestion,
 finite information design, and the executable rational frontend.  The release
-blockers are broader multi-round theory, equilibrium refinements, and
-bargaining.  The many partial
+blockers are broader multi-round theory and equilibrium refinements.  The many partial
 rows are not treated as
 release-ready merely because their declaration review is advanced; in
 particular, the live FOSG queue still has 81 rows to classify
@@ -112,7 +111,7 @@ particular, the live FOSG queue still has 81 rows to classify
 | Formalize divisible cake cutting | divisible fair-division files (M-CAKE) | No continuous/measurable successor by D11 | deliberately retired or out of scope | Cake theory remains outside the finite release; reconsider only through the D11 measurable program. |
 | Prove voting, majority, delegation, and power-index results | `Voting/**` (M-VOTE) | [`GameTheory/Examples/Voting.lean`](../GameTheory/Examples/Voting.lean) supplies examples but not the mature theorem families | partial | Recover median/majority, delegation, liquid-democracy, and power-index results against the ranking foundations. |
 | Find and reason about stable matchings | matching and `GaleShapley/**` (P-MATCH) | [`GameTheory/Cooperative.lean`](../GameTheory/Cooperative.lean) exposes ordinal preferences over optional partners, general finite deferred-acceptance stability, and balanced completely-acceptable perfectness; the 3-by-3 fixture proves an exact rejection round, holder replacement, and a concrete blocking-pair negative control; [74/74 bounded ledger](coverage/P-MATCH-stable-perfect.md) | better | Recover proposer optimality and one strategyproofness or rural-hospitals extension without reintroducing cardinal scores. |
-| Characterize bargaining solutions | `Cooperative/Bargaining.lean` (P-BARG) | No native feasible-utility successor is present | critical gap | Prove Nash-solution affine invariance on an honest feasible utility set. |
+| Characterize bargaining solutions | `Cooperative/Bargaining.lean` (P-BARG) | [`GameTheory/Cooperative/Bargaining.lean`](../GameTheory/Cooperative/Bargaining.lean) gives a capability-free feasible-utility problem, Nash-product solution, weak Pareto consequence, symmetry law, and componentwise positive-affine invariance; the hostile finite fixture distinguishes the maximizer from feasible IR alternatives under unequal scales and nonzero shifts; [30/30 ledger](coverage/P-BARG-affine.md) | better | Recover the egalitarian and Kalai--Smorodinsky breadth without storing convexity, compactness, or finiteness in the semantic problem. |
 
 ## Infrastructure and execution
 

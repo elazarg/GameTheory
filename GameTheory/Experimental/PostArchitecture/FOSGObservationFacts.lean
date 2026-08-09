@@ -91,6 +91,5 @@ cancellation lemmas without a separately stated recall hypothesis. -/
 example : ¬Randomized.singleSignals.PerfectRecall :=
   Randomized.single_not_perfectRecall
 
-#print axioms terminal_choice_not_subsingleton
 
 end GameTheory.Experimental.FOSGObservationFacts

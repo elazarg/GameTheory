@@ -135,8 +135,5 @@ theorem recalling_outcomeLaw
   recallingGame.kuhn_behavioral_to_mixed_outcomeLaw
     recallingActsOnce behavioral horizon outcome
 
-#print axioms GameTheory.Languages.FOSG.Game.kuhn_behavioral_to_mixed
-#print axioms GameTheory.Languages.FOSG.Game.kuhn_mixed_to_behavioral
-#print axioms GameTheory.Languages.FOSG.Game.kuhn_historyLaws
 
 end GameTheory.Experimental.FOSGKuhn

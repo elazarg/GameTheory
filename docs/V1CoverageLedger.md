@@ -22,8 +22,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Fifty-five work-package ledgers claim 2,220 declarations: 2,039
-have reviewed dispositions and 181 remain seeded `unreviewed`; a further 6,104 are
+declarations. Fifty-six work-package ledgers claim 2,250 declarations: 2,069
+have reviewed dispositions and 181 remain seeded `unreviewed`; a further 6,074 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -164,7 +164,7 @@ declaration-based.
 | P-CONG | `Congestion/**` | 4 | thin domain over `Core.Potential` and `Core.RobustWelfare` | validated through Rosenthal and EXP-052/053/D24 | complete recovery; Basic/Rosenthal/AffinePoA/Examples 50/50 reviewed, no deferred rows | [Rosenthal ledger](coverage/P-CONG-rosenthal.md); [affine PoA ledger](coverage/P-CONG-affine-poa.md); [Pigou/Braess ledger](coverage/P-CONG-examples.md) |
 | P-COAL | `Core/Coalition.lean`, `Cooperative/CoalitionalGame.lean`, `Cooperative/CoalitionalGame/**` | 10 | foundational Core objects, larger `Cooperative` root | validated foundation | partial | convex core, Bondareva, Banzhaf, cost of stability |
 | P-MATCH | matching and `GaleShapley/**` files | 8 | native ordinal `Cooperative`/market-design branch | validated by EXP-068/D35 | partial; all 74 Matching/GaleShapley/Perfect declarations reviewed, general stable existence and balanced perfectness complete, 11 optimality/symmetry rows deferred | [stable/perfect ledger](coverage/P-MATCH-stable-perfect.md); next proposer optimality, rural hospitals, or strategyproofness |
-| P-BARG | `Cooperative/Bargaining.lean` | 1 | native feasible-utility branch, Analysis as needed | assigned | not started | Nash solution affine invariance |
+| P-BARG | `Cooperative/Bargaining.lean` | 1 | native feasible-utility branch, Analysis only for later existence theorems | validated by EXP-069/D36 | partial; all 30 declarations reviewed, Nash affine invariance complete and 16 egalitarian/Kalai--Smorodinsky rows deferred | [affine-invariance ledger](coverage/P-BARG-affine.md); next egalitarian and Kalai--Smorodinsky BFS gate |
 
 ### Standalone theorem and mathematics support
 

@@ -47,7 +47,7 @@ P-COAL	partial	^GameTheory/Cooperative\.lean$
 P-COAL	partial	^GameTheory/Cooperative/CoalitionalGame(?:/.*)?\.lean$
 P-MATCH	partial	^GameTheory/Cooperative/(?:Matching|MatchingSymmetry|GaleShapley)(?:/.*)?\.lean$
 P-MATCH	partial	^GameTheory/Cooperative/Tests\.lean$
-P-BARG	not-started	^GameTheory/Cooperative/Bargaining\.lean$
+P-BARG	partial	^GameTheory/Cooperative/Bargaining\.lean$
 T-CE	complete	^GameTheory/Theorems/CorrelatedEqExistence\.lean$
 T-MIN	partial	^GameTheory/Theorems/Minimax\.lean$
 T-ZER	partial	^GameTheory/Theorems/Zermelo\.lean$

@@ -35,8 +35,6 @@ private def exampleValue : ℕ → ℕ
   | 1 => 4
   | _ => 5
 
-#eval (solveList exampleWeight exampleValue [0, 1, 2] 5).card
-
 private example : (solveList exampleWeight exampleValue [0, 1, 2] 5).card = 2 := by
   decide
 

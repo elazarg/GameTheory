@@ -55,9 +55,6 @@ def bothCooperate : Profile prisonersDilemma.sig := fun _ => .cooperate
 #guard prisonersDilemma.isDominantProfile bothDefect
 #guard !prisonersDilemma.isParetoEfficient bothDefect
 
-#eval prisonersDilemma.enumerateNash.card
-#eval prisonersDilemma.isNash bothDefect
-
 /-- Mutual defection is the unique pure equilibrium, stated against the
 semantic predicate rather than the checker. -/
 theorem prisonersDilemma_isNash_iff (profile : Profile prisonersDilemma.sig) :
@@ -246,8 +243,7 @@ def uniformPennies : Profile matchingPennies.mixedSig := fun _ _ => 1 / 2
 #guard matchingPennies.isMixed uniformPennies
 #guard matchingPennies.verifyMixedNash uniformPennies
 
-#eval matchingPennies.verifyMixedNash uniformPennies
-#eval matchingPennies.expectedPayoff uniformPennies 0
+#guard matchingPennies.expectedPayoff uniformPennies 0 = 0
 
 /-- One penny profile. -/
 def pennyProfile (first second : Side) : Profile matchingPennies.sig := ![first, second]
@@ -497,8 +493,6 @@ def bothFootball : Profile battleOfTheSexes.sig := fun _ => .football
 #guard battleOfTheSexes.isNash bothFootball
 #guard !battleOfTheSexes.isDominantProfile bothOpera
 
-#eval battleOfTheSexes.enumerateNash.card
-
 /-- Coordinating on opera is a Nash equilibrium. -/
 theorem battleOfTheSexes_bothOpera_isNash :
     IsNash battleOfTheSexes.toForm (euPreference battleOfTheSexes.utility)
@@ -525,8 +519,6 @@ def unanimity : TableGame (Fin 3) where
 #guard unanimity.enumerateNash.card = 2
 #guard unanimity.isNash (fun _ => true)
 #guard !unanimity.isNash (fun i => i == 0)
-
-#eval unanimity.enumerateNash.card
 
 theorem unanimity_allTrue_isNash :
     IsNash unanimity.toForm (euPreference unanimity.utility) (fun _ => true) := by

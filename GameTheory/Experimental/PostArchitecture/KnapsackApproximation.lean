@@ -83,7 +83,5 @@ example (result : Finset (Fin 5))
       2 * welfare hostileValue result :=
   solveList_welfare_le_two_mul_approximate? hostileWeight hostileValue hostileItems 10 hresult
 
-#print axioms GameTheory.Mechanism.Knapsack.approximate?_supported_feasible
-#print axioms GameTheory.Mechanism.Knapsack.solveList_welfare_le_two_mul_approximate?
 
 end GameTheory.Experimental.KnapsackApproximation

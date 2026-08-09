@@ -4422,3 +4422,55 @@ memory.
   and symmetry declarations remain explicit BFS work.  The capability matrix
   moves stable matching from critical gap to better; bargaining is the next
   critical-gap rotation.
+
+### EXP-069: topology-free bargaining ownership
+
+- **Date / revision:** 2026-08-09, reserved on `d2156f3`
+- **Status:** complete; supports capability-free native ownership (D36)
+- **Decision / question:** whether finite-player bargaining primitives and
+  positive-affine invariance belong directly in the native `Cooperative`
+  branch, require an `Analysis` feasible-set owner, or should be phrased as a
+  specialization of strategic equilibrium.
+- **Prediction:** an arbitrary feasible predicate on utility profiles and an
+  explicit feasible disagreement point suffice for individual rationality,
+  Pareto notions, Nash-product maximality, positive-affine images, and the
+  flagship invariance theorem.  Convexity, compactness, logarithms, existence,
+  probability, and game structure should be absent until a theorem needs them.
+- **Representative slice:** two players with disagreement zero and a genuinely
+  nonconstant finite feasible set containing gain profiles `(2,2)`, `(3,1)`,
+  and `(1,3)`.  Prove `(2,2)` is the Nash solution, then apply unequal positive
+  scales and nonzero shifts and verify the transformed maximizer.  Include a
+  feasible non-solution whose Nash product is strictly smaller.
+- **Competing designs:** a capability-free `Cooperative.BargainingProblem`;
+  an analytic structure storing convexity/compactness; or a utility game plus
+  equilibrium wrapper.
+- **Kill conditions:** affine invariance needs topology, logarithms, a stored
+  finite player carrier, probability, or strategic profiles; the feasible set
+  must be bundled with avoidable convexity/compactness; the transformation
+  duplicates an existing general affine API; public proofs require raw updates
+  or transports; or the fixture is singleton/constant and cannot distinguish
+  a maximizer from a feasible non-solution.
+- **Reserved artifacts / commands:**
+  `GameTheory/Cooperative/Bargaining.lean` and
+  `GameTheory/Tests/Bargaining.lean`; focused root/test builds, Cooperative
+  source and reachability audits, exact 30-row P-BARG accounting, axiom
+  sampling, and a full clean build before promotion.
+- **Observations / measurements:** the general weak-Pareto, symmetry, and
+  affine-invariance proofs use finite-product ordered-field algebra only.  The
+  semantic record stores no capability; `[Fintype Player]` occurs only on the
+  Nash-product predicate and its consumers.  The fixture proves products four
+  versus three, refutes an asymmetric feasible IR point as a solution, and
+  maps the balanced solution to `(9,5)` with disagreement `(5,-1)`.  All 30
+  pinned declarations are reviewed: the 14-row Nash slice is promoted and 16
+  egalitarian/Kalai--Smorodinsky rows are explicit BFS.  Phase 2 reports
+  `TRANSPORT_COOPERATIVE_SOURCE=0`, `BARGAINING_INPUT_PROBES_REACHED=3`,
+  `BARGAINING_BOUNDARY_PROBES_REJECTED=4`, and
+  `BUILD_OUTPUT_COMMANDS=0`; the cached, fail-fast audit completes in 405 s
+  with `VERIFIED=1`.  Exact coverage reports 56 ledgers, 2,250 accounted rows,
+  6,074 unaccounted, and `VERIFIED=1`.  The full warning-clean 3,511-job build
+  emits no declaration-generated output.  Sampled generic and fixture
+  flagships depend only on `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome / next action:** adopt the native `Cooperative.BargainingProblem`
+  owner in D36 and close bargaining as a critical capability gap.  Preserve
+  topology-dependent existence for a later one-way Analysis bridge and rotate
+  DFS to L-ROUND; recover egalitarian and Kalai--Smorodinsky as bounded BFS.

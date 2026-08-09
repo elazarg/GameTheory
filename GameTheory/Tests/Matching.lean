@@ -294,9 +294,4 @@ theorem fixture_exists_perfect_stable :
       fixture.IsStable matching ∧ IsPerfect matching :=
   fixture.exists_perfect_stable fixtureLinear (by decide) fixtureAcceptable
 
-#print axioms Rank.exists_best_finset
-#print axioms MatchingMarket.exists_stable
-#print axioms MatchingMarket.stable_matching_perfect
-#print axioms fixture_exists_perfect_stable
-
 end GameTheory.Tests.Matching

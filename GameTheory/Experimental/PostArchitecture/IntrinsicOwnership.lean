@@ -399,10 +399,5 @@ theorem branchingModel_isCausal :
     · rw [branchingOrder_two_of_not _ hleft]
       exact (branchingInfo_two left right).2 ⟨hzero, hbranch⟩
 
-#print axioms trivialModel_isSolvable
-#print axioms futureLookingModel_not_causal
-#print axioms Model.samePrefixThrough_iff_prefixCell
-#print axioms branchingPremises_independent
-#print axioms branchingModel_isCausal
 
 end GameTheory.Experimental.IntrinsicOwnership

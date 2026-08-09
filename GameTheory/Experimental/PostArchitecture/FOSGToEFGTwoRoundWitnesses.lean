@@ -260,11 +260,5 @@ theorem false_signal_policy_reads_own_action :
   simpa [falseSignalOptionLaw, falseSignalPolicy, falseSignalChoice,
     falseSignalAction] using pure_some_false_ne_true
 
-#print axioms Source.not_treeShaped
-#print axioms Serial.treeShaped
-#print axioms Serial.map_erase_runBehavioral_eq_source
-#print axioms Serial.map_erase_runBehavioral_arbitrary_order_transport
-#print axioms false_policy_view_hides_true_activity
-#print axioms false_signal_policy_reads_own_action
 
 end GameTheory.Experimental.FOSGToEFGTwoRound.Witnesses

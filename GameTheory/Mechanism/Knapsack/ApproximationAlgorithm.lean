@@ -128,7 +128,10 @@ private def exampleValue : ℕ → ℕ
   | 4 => 35
   | _ => 0
 
-#eval (approximate? exampleWeight exampleValue [0, 1, 2, 3, 4] 10).map fun result =>
-  (decide (0 ∈ result), decide (3 ∈ result), welfare exampleValue result, result.card)
+#guard (approximate? exampleWeight exampleValue [0, 1, 2, 3, 4] 10).map
+    (fun result =>
+      (decide (0 ∈ result), decide (3 ∈ result),
+        welfare exampleValue result, result.card)) =
+  some (false, true, 95, 1)
 
 end GameTheory.Mechanism.Knapsack

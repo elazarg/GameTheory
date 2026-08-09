@@ -50,10 +50,16 @@ $MathFiles = @(Get-ChildItem -Path (Join-Path $RepoRoot 'GameTheoryMath') -Filte
   ForEach-Object { $_.FullName.Substring($RepoRoot.Length + 1).Replace('\', '/') })
 $MathFiles += 'GameTheoryMath.lean'
 $TrustedFiles = @($AllFiles + $MathFiles)
+$CodeCache = @{}
 
 function Get-Code([string] $Relative) {
+  if ($CodeCache.ContainsKey($Relative)) {
+    return $CodeCache[$Relative]
+  }
   $text = [IO.File]::ReadAllText((Join-Path $RepoRoot $Relative)).Replace("`r", '')
-  return Remove-LeanCommentsAndStrings $text
+  $code = Remove-LeanCommentsAndStrings $text
+  $CodeCache[$Relative] = $code
+  return $code
 }
 
 function Get-Imports([string] $Relative) {
@@ -195,6 +201,12 @@ Report 'ALGORITHM_OPEN_CLASSICAL' `
 Report 'SORRY_OR_ADMIT' `
   (Count-Pattern $TrustedFiles '(?<![A-Za-z0-9_])(sorry|admit|native_decide)(?![A-Za-z0-9_])')
 Report 'CUSTOM_AXIOM' (Count-Pattern $TrustedFiles '(?m)^\s*axiom\s')
+# The default build is a gate, not a transcript.  Compile-time inspection and
+# evaluation commands make successful incremental builds noisy and hide real
+# diagnostics; executable examples use silent `#guard` assertions instead.
+Report 'BUILD_OUTPUT_COMMANDS' `
+  (Count-Pattern @($AllFiles + $MathFiles) `
+    '(?m)^\s*#(eval|print|check|reduce)\b')
 
 # --------------------------------------------------------------------------
 # 2. Authored-import audit (RFC 7.1, D12)
@@ -412,7 +424,17 @@ if (-not $SkipReachability) {
   function Run-Probe([string] $Root, [string[]] $Constants) {
     $checks = $Constants | ForEach-Object { "#check @$_" }
     Set-Content -Path $probeFile -Value (@("import $Root") + $checks) -Encoding utf8
-    return (& lake env lean $probeFile 2>&1 | Out-String)
+    $lines = @(& lake env lean $probeFile 2>&1)
+    $text = (($lines | ForEach-Object { $_.ToString() }) -join "`n")
+    if ($text.Trim().Length -eq 0) {
+      throw "Reachability probe for $Root produced no compiler output"
+    }
+    foreach ($constant in $Constants) {
+      if ($text -notmatch [regex]::Escape($constant)) {
+        throw "Reachability probe for $Root did not inspect $constant`n$text"
+      }
+    }
+    return $text
   }
   function Is-Unreachable([string] $Output, [string] $Constant) {
     $escaped = [regex]::Escape($Constant)
@@ -625,6 +647,36 @@ if (-not $SkipReachability) {
     }
   }
   Report 'MATCHING_BOUNDARY_PROBES_REJECTED' $matchingBoundaryRejected
+
+  # Bargaining is a native feasible-utility branch.  The opt-in Cooperative
+  # root must expose its Nash-product spine while remaining independent of
+  # strategic equilibrium, finite probability, Protocol, and Analysis.
+  $bargainingInputs = @(
+    'GameTheory.BargainingProblem',
+    'GameTheory.BargainingProblem.IsNashSolution',
+    'GameTheory.BargainingProblem.IsNashSolution.positiveAffineMap')
+  $bargainingBoundary = @(
+    'GameTheory.IsNash',
+    'GameTheory.Probability.FinDist',
+    'GameTheory.Protocol.ExecutionProtocol',
+    'MeasureTheory.Measure')
+  $bargainingOutput = Run-Probe 'GameTheory.Cooperative' `
+    ($bargainingInputs + $bargainingBoundary)
+  $bargainingInputsReached = 0
+  foreach ($constant in $bargainingInputs) {
+    if (-not (Is-Unreachable $bargainingOutput $constant)) {
+      $bargainingInputsReached++
+    }
+  }
+  Report 'BARGAINING_INPUT_PROBES_REACHED' $bargainingInputsReached
+  $bargainingBoundaryRejected = 0
+  foreach ($constant in $bargainingBoundary) {
+    if (Is-Unreachable $bargainingOutput $constant) {
+      $bargainingBoundaryRejected++
+    }
+  }
+  Report 'BARGAINING_BOUNDARY_PROBES_REJECTED' `
+    $bargainingBoundaryRejected
 
   # The analytic root is the one place the budget is spent, and a probe that
   # only ever asserts absence would not notice if it stopped being spent there.
@@ -1330,6 +1382,7 @@ if ($VerifyExpected) {
     ALGORITHM_OPEN_CLASSICAL = 0
     SORRY_OR_ADMIT = 0
     CUSTOM_AXIOM = 0
+    BUILD_OUTPUT_COMMANDS = 0
     CORE_FORBIDDEN_IMPORTS = 0
     ALGORITHM_FORBIDDEN_IMPORTS = 0
     KNAPSACK_AGGREGATE_GAMETHEORY_IMPORTS = 0
@@ -1361,6 +1414,8 @@ if ($VerifyExpected) {
     $Expected['FAIR_DIVISION_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['MATCHING_INPUT_PROBES_REACHED'] = 5
     $Expected['MATCHING_BOUNDARY_PROBES_REJECTED'] = 4
+    $Expected['BARGAINING_INPUT_PROBES_REACHED'] = 3
+    $Expected['BARGAINING_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['ANALYSIS_PROBES_REACHED'] = 2
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3

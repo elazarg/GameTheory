@@ -211,8 +211,3 @@ theorem negative_not_participating :
 end Hostile
 
 end GameTheory.Experimental.PostArchitecture.ContractOwnership
-
-#print axioms GameTheory.Experimental.PostArchitecture.ContractOwnership.PrincipalAgentCandidate.principalUtility_add_agentUtility
-#print axioms GameTheory.Experimental.PostArchitecture.ContractOwnership.PrincipalAgentCandidate.exists_incentivized
-#print axioms GameTheory.Experimental.PostArchitecture.ContractOwnership.PrincipalAgentCandidate.participates_of_isIncentivized
-#print axioms GameTheory.Experimental.PostArchitecture.ContractOwnership.Hostile.negative_not_participating

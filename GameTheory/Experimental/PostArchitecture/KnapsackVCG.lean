@@ -105,8 +105,5 @@ example :
         trueTypes :=
   vcgSetup_truthful_isExPostNash unitCapacityData unitCapacity_nonnegative
 
-#print axioms GameTheory.Mechanism.Knapsack.allocationRule_monotone
-#print axioms GameTheory.Mechanism.Knapsack.vcgPayment_update_zero
-#print axioms GameTheory.Mechanism.Knapsack.vcgSetup_truthful_isExPostNash
 
 end GameTheory.Experimental.KnapsackVCG

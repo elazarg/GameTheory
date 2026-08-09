@@ -203,12 +203,8 @@ private def exampleValue : ℕ → ℕ
   | 1 => 4
   | _ => 5
 
-#eval (solveList exampleWeight exampleValue [0, 1, 2] 5).card
-
 example : solveList exampleWeight exampleValue [0, 1, 2] 5 = {0, 1} := by
   decide
 
-#print axioms solveList_feasible
-#print axioms solveList_optimal
 
 end GameTheory.Experimental.KnapsackBoundary

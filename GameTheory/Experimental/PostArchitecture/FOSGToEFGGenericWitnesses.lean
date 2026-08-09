@@ -247,12 +247,5 @@ theorem arbitrary_order_transport
     FOSGToEFG.map_erase_runBehavioral_order_transport Source.game
       falseFirst trueFirst target 2
 
-#print axioms FinDist.runDependent_eq_pi
-#print axioms FOSGToEFG.treeShaped
-#print axioms FOSGToEFG.translate_project_profile
-#print axioms FOSGToEFG.map_erase_runBehavioral_eq_source
-#print axioms falseFirst_full_profile_round_trip
-#print axioms falseFirst_exact
-#print axioms arbitrary_order_transport
 
 end GameTheory.Experimental.FOSGToEFGGenericWitnesses

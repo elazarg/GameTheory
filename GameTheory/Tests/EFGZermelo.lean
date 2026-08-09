@@ -281,6 +281,4 @@ theorem exists_subgamePerfect : ∃ p : Profile game.strategicSignature,
     game.IsSubgamePerfect wellFoundedPlay p utility :=
   game.exists_isSubgamePerfect wellFoundedPlay perfect utility
 
-#print axioms exists_subgamePerfect
-
 end GameTheory.Tests.EFGZermelo

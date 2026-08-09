@@ -42,8 +42,9 @@ GameTheory/Stochastic    opt-in finite-support stochastic games, perfect-public
 GameTheory/Congestion    opt-in load calculus, Rosenthal potential, pure and
                          coarse-correlated affine PoA, and canonical
                          Pigou/Braess examples
-GameTheory/Cooperative   opt-in ordinal matching, finite deferred-acceptance
-                         stability, and balanced perfect matchings
+GameTheory/Cooperative   opt-in bargaining and ordinal matching, including
+                         Nash-product affine invariance, finite deferred-
+                         acceptance stability, and balanced perfect matchings
 GameTheory/Mechanism     opt-in coordinated mechanisms, finite auctions,
                          combinatorial allocations, finite round-robin EF1,
                          all-pay arithmetic, and exact/VCG and checked
