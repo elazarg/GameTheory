@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacket
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSurplus
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 
 /-!
@@ -214,17 +215,14 @@ theorem target_le_weakPreferenceSuccessor_reward
   exact (Classical.choose_spec
     (packet.exists_nonnegative_offDiagonal_on_support hsupport howner)).2.2
 
-/-- A nonsingleton packet support contains a finite closed orbit of weak
-singleton preferences.  The returned interval is a closed directed walk;
-one may erase repetitions to obtain a simple directed cycle.  Keeping the
-orbit form avoids adding a separate finite-graph representation merely for
-this consequence. -/
-theorem exists_weakPreferenceClosedOrbit
+/-- A closed weak-preference orbit can be extracted from any supported seed,
+not only from an arbitrary canonical support point. -/
+theorem exists_weakPreferenceClosedOrbit_from
     (packet : QuittingNormalizedSingletonSourcePacket reward)
-    (hsupport : packet.support.Nontrivial) :
+    (hsupport : packet.support.Nontrivial)
+    (seed : ι) (hseed : seed ∈ packet.support) :
     ∃ start stop : ℕ, start < stop ∧
       let successor := packet.weakPreferenceSuccessor hsupport
-      let seed := packet.support_nonempty.choose
       (successor^[start]) seed = (successor^[stop]) seed ∧
       (∀ time,
         (successor^[time]) seed ∈ packet.support ∧
@@ -234,11 +232,10 @@ theorem exists_weakPreferenceClosedOrbit
             (successor ((successor^[time]) seed)))
             ((successor^[time]) seed)) := by
   let successor := packet.weakPreferenceSuccessor hsupport
-  let seed := packet.support_nonempty.choose
   have horbitMem : ∀ time, (successor^[time]) seed ∈ packet.support := by
     intro time
     induction time with
-    | zero => exact packet.support_nonempty.choose_spec
+    | zero => exact hseed
     | succ time ih =>
         rw [Function.iterate_succ_apply']
         exact packet.weakPreferenceSuccessor_mem hsupport _
@@ -263,9 +260,183 @@ theorem exists_weakPreferenceClosedOrbit
     intro time
     exact ⟨horbitMem time, hedge time⟩
 
+/-- A nonsingleton packet support contains a finite closed orbit of weak
+singleton preferences.  The returned interval is a closed directed walk;
+one may erase repetitions to obtain a simple directed cycle.  Keeping the
+orbit form avoids adding a separate finite-graph representation merely for
+this consequence. -/
+theorem exists_weakPreferenceClosedOrbit
+    (packet : QuittingNormalizedSingletonSourcePacket reward)
+    (hsupport : packet.support.Nontrivial) :
+    ∃ start stop : ℕ, start < stop ∧
+      let successor := packet.weakPreferenceSuccessor hsupport
+      let seed := packet.support_nonempty.choose
+      (successor^[start]) seed = (successor^[stop]) seed ∧
+      (∀ time,
+        (successor^[time]) seed ∈ packet.support ∧
+        successor ((successor^[time]) seed) ≠ (successor^[time]) seed ∧
+        packet.target ((successor^[time]) seed) ≤
+          reward (quittingSingletonTerminal
+            (successor ((successor^[time]) seed)))
+            ((successor^[time]) seed)) := by
+  let seed := packet.support_nonempty.choose
+  exact packet.exists_weakPreferenceClosedOrbit_from hsupport seed
+    packet.support_nonempty.choose_spec
+
+/-- The conditional refusal value is bounded above by one literal singleton
+reward at a distinct positive-mass atom. -/
+theorem exists_supported_refusal_le_singletonReward
+    (packet : QuittingNormalizedSingletonSourcePacket reward)
+    {owner : ι} (howner : owner ∈ packet.support)
+    (hmass : packet.mass owner < 1) :
+    ∃ other ∈ packet.support, other ≠ owner ∧
+      quittingSingletonRefusalValue reward packet.mass owner owner ≤
+        reward (quittingSingletonTerminal other) owner := by
+  have hsumMass :
+      ∑ other ∈ packet.support.erase owner, packet.mass other =
+        1 - packet.mass owner := by
+    have hsplit := Finset.sum_erase_add
+      (s := packet.support) (f := packet.mass) howner
+    rw [packet.sum_support_mass] at hsplit
+    linarith
+  have heraseNonempty : (packet.support.erase owner).Nonempty := by
+    by_contra hempty
+    rw [Finset.not_nonempty_iff_eq_empty.mp hempty] at hsumMass
+    simp at hsumMass
+    linarith
+  have hsumReward :
+      ∑ other ∈ packet.support.erase owner,
+          packet.mass other * reward (quittingSingletonTerminal other) owner =
+        ∑ other ∈ (Finset.univ.erase owner : Finset ι),
+          packet.mass other * reward (quittingSingletonTerminal other) owner := by
+    apply Finset.sum_subset
+    · intro other hother
+      simp only [Finset.mem_erase] at hother ⊢
+      exact ⟨hother.1, Finset.mem_univ other⟩
+    · intro other _ hother
+      have hnotSupport : other ∉ packet.support := by
+        intro hsupport
+        exact hother (Finset.mem_erase.mpr
+          ⟨(Finset.mem_erase.mp ‹other ∈ Finset.univ.erase owner›).1,
+            hsupport⟩)
+      rw [packet.mass_eq_zero_of_notMem_support hnotSupport, zero_mul]
+  have haverage :
+      ∑ other ∈ packet.support.erase owner,
+          packet.mass other *
+            quittingSingletonRefusalValue reward packet.mass owner owner =
+        ∑ other ∈ packet.support.erase owner,
+          packet.mass other * reward (quittingSingletonTerminal other) owner := by
+    have hdenom : 1 - packet.mass owner ≠ 0 :=
+      ne_of_gt (sub_pos.mpr hmass)
+    rw [← Finset.sum_mul, hsumMass, hsumReward]
+    unfold quittingSingletonRefusalValue
+    field_simp [hdenom]
+  obtain ⟨other, hother, hle⟩ :=
+    Finset.exists_le_of_sum_le heraseNonempty haverage.le
+  have hotherSupport : other ∈ packet.support :=
+    Finset.mem_of_mem_erase hother
+  have hotherNe : other ≠ owner := Finset.ne_of_mem_erase hother
+  have hotherMass : 0 < packet.mass other :=
+    (packet.mem_support_iff other).mp hotherSupport
+  refine ⟨other, hotherSupport, hotherNe, ?_⟩
+  exact le_of_mul_le_mul_left hle hotherMass
+
 end QuittingNormalizedSingletonSourcePacket
 
+/-- A strict supported singleton edge feeding a recurrent weak-preference
+class.  The strict entrance need not itself lie on the recurrent cycle. -/
+structure QuittingStrictSupportedPreferenceLasso
+    (packet : QuittingNormalizedSingletonSourcePacket reward) where
+  entrance : ι
+  first : ι
+  entrance_mem : entrance ∈ packet.support
+  first_mem : first ∈ packet.support
+  first_ne : first ≠ entrance
+  target_lt_mixture :
+    packet.target entrance <
+      quittingSingletonMixture reward packet.mass entrance
+  mixture_lt_refusal :
+    quittingSingletonMixture reward packet.mass entrance <
+      quittingSingletonRefusalValue reward packet.mass entrance entrance
+  refusal_le_first :
+    quittingSingletonRefusalValue reward packet.mass entrance entrance ≤
+      reward (quittingSingletonTerminal first) entrance
+  support_nontrivial : packet.support.Nontrivial
+  cycleStart : ℕ
+  cycleStop : ℕ
+  cycleStart_lt_cycleStop : cycleStart < cycleStop
+  recurrent_closed :
+    let successor := packet.weakPreferenceSuccessor support_nontrivial
+    (successor^[cycleStart]) first = (successor^[cycleStop]) first
+  recurrent_weak :
+    let successor := packet.weakPreferenceSuccessor support_nontrivial
+    ∀ time,
+      (successor^[time]) first ∈ packet.support ∧
+      successor ((successor^[time]) first) ≠ (successor^[time]) first ∧
+      packet.target ((successor^[time]) first) ≤
+        reward (quittingSingletonTerminal
+          (successor ((successor^[time]) first)))
+          ((successor^[time]) first)
+
 namespace QuittingCounterexampleRegime
+
+/-- Strict conditional refusal contains one literal strict supported edge. -/
+theorem exists_strictSupportedPreferenceEdge
+    (regime : QuittingCounterexampleRegime reward)
+    (packet : QuittingNormalizedSingletonSourcePacket reward) :
+    ∃ owner other,
+      0 < packet.mass owner ∧
+      0 < packet.mass other ∧
+      owner ≠ other ∧
+      packet.target owner <
+        quittingSingletonMixture reward packet.mass owner ∧
+      quittingSingletonMixture reward packet.mass owner <
+        quittingSingletonRefusalValue reward packet.mass owner owner ∧
+      quittingSingletonRefusalValue reward packet.mass owner owner ≤
+        reward (quittingSingletonTerminal other) owner := by
+  letI : Nonempty ι := regime.nonempty_players
+  obtain ⟨owner, hownerMass, hownerLt, htarget, hrefusal⟩ :=
+    regime.exists_active_strictSingletonRefusal packet
+  have howner : owner ∈ packet.support :=
+    (packet.mem_support_iff owner).2 hownerMass
+  obtain ⟨other, hother, hne, hreward⟩ :=
+    packet.exists_supported_refusal_le_singletonReward howner hownerLt
+  exact ⟨owner, other, hownerMass,
+    (packet.mem_support_iff other).1 hother, hne.symm,
+    htarget, hrefusal, hreward⟩
+
+/-- Every counterexample packet has a strict supported entrance edge feeding
+a finite recurrent weak-preference support class. -/
+theorem nonempty_strictSupportedPreferenceLasso
+    (regime : QuittingCounterexampleRegime reward)
+    (packet : QuittingNormalizedSingletonSourcePacket reward) :
+    Nonempty (QuittingStrictSupportedPreferenceLasso packet) := by
+  obtain ⟨entrance, first, hentranceMass, hfirstMass, hne,
+      htarget, hrefusal, hfirst⟩ :=
+    regime.exists_strictSupportedPreferenceEdge packet
+  have hentrance : entrance ∈ packet.support :=
+    (packet.mem_support_iff entrance).2 hentranceMass
+  have hfirstMem : first ∈ packet.support :=
+    (packet.mem_support_iff first).2 hfirstMass
+  have hsupport : packet.support.Nontrivial :=
+    ⟨entrance, hentrance, first, hfirstMem, hne⟩
+  obtain ⟨cycleStart, cycleStop, hcycle, hclosed, hweak⟩ :=
+    packet.exists_weakPreferenceClosedOrbit_from hsupport first hfirstMem
+  exact ⟨{
+    entrance := entrance
+    first := first
+    entrance_mem := hentrance
+    first_mem := hfirstMem
+    first_ne := hne.symm
+    target_lt_mixture := htarget
+    mixture_lt_refusal := hrefusal
+    refusal_le_first := hfirst
+    support_nontrivial := hsupport
+    cycleStart := cycleStart
+    cycleStop := cycleStop
+    cycleStart_lt_cycleStop := hcycle
+    recurrent_closed := hclosed
+    recurrent_weak := hweak }⟩
 
 /-- The terminal margin is visible in a coordinate of every forced packet's
 target. -/
