@@ -475,5 +475,7 @@ import UniformEquilibrium.Quitting.Stationary.MinMax
 import UniformEquilibrium.Quitting.Terminal.TargetTail.DiagonalTargetTail
 import Math.ChargedPathBudget
 import Math.ChargedPathBudgetCounterexamples
+import Math.ChargedPathFiniteHorizon
+import Math.ChargedPathSelectionCounterexamples
 import UniformEquilibrium.Quitting.Boundary.Repair.CollisionRepairCharacterization
 import UniformEquilibrium.Quitting.Punishment.QuitBonusSelfLoopBridge
