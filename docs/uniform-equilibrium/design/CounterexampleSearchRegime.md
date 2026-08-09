@@ -81,7 +81,12 @@ Further machine-checked necessary conditions
 - every coalition's sure-exit profile is exploitable by a membership toggle
   at margin `η` (`exists_toggle_gain`), splitting into a leave-or-join
   disjunction (`exists_leave_or_join_gain`); hence no sure exit set exists
-  (`not_isQuittingSureExitSet`);
+  (`not_isQuittingSureExitSet`).  Independently, any stable nonempty pure
+  coalition repeats as a unit-charge exact punishment-floor prefix, forcing
+  canonical prefix capacity to be infinite
+  (`punishmentFloorPrefixChargeCapacity_eq_top_of_coalitionLock`).  This is the
+  charge-side connection to the same screen; the terminal-gap theorem remains
+  quantitatively stronger;
 - some player has solo reward at least `η`
   (`exists_terminalGap_le_soloReward`, which also derives `Nonempty` of the
   player type from the regime alone), and every player whose solo reward

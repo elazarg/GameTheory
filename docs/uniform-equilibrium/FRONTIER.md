@@ -63,6 +63,10 @@ automatic extension across excluded-player joining deviations.  Exact toggle
 and stationary-cap ceilings, packet-support dynamics, and the division-free
 floor budget
 `(χ_i-v_s(i)) * opponentClock_i[s,∞) ≤ χ_i+M` give finite search filters.
+On the charge side, every stable nonempty pure quitting coalition is a
+unit-charge exact floor self-loop and therefore makes canonical prefix capacity
+infinite.  This recovers the qualitative sure-exit exclusion independently of
+the quantitatively stronger terminal-gap toggle theorem.
 
 Payoff terminology is fixed in
 [`UniformEquilibrium/README.md`](../../UniformEquilibrium/README.md):

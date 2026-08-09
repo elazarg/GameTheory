@@ -2487,6 +2487,10 @@ rational four-player singleton table has a positive compact escape separation
 for every owner distribution.  More generally, every fixed counterexample
 table has one positive compact refusal margin uniform over all of its normalized
 source packets.  These are grammar restrictions, not game counterexamples.
+Every stable nonempty pure quitting coalition is independently excluded by
+the charge lane: repeating its exact floor self-loop emits one unit of charge
+per stage and makes canonical prefix capacity infinite.  The terminal-gap
+toggle lane gives a stronger quantitative exclusion of the same coalitions.
 The ultimately-periodic evaluator closes only a compatible prefix/suffix word;
 it neither realizes a general cap-splice premise nor automatically attaches a
 periodic suffix to an existing exact-D prefix.  The open producer must therefore use exact product-root

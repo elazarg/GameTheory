@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitLimit
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitSelfLoop
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFiniteInstability
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFloorViolationBudget
@@ -45,7 +46,9 @@ the positive phantom-plateau theorem, closed augmented-cap membership in the
 global floor carrier, and a canonical periodic-window family whose player and
 refusal/phase obstruction stabilize on an infinite set.  The forced packet's
 noncomplementarity has one uniform compact refusal margin across all normalized
-packets of the fixed table.  The umbrella also exports the augmented-cap splice
+packets of the fixed table.  Stable pure quitting coalitions independently
+generate unbounded canonical prefix charge, linking the sure-exit and capacity
+screens.  The umbrella also exports the augmented-cap splice
 interface and the finite regressions delimiting singleton complementarity and
 cap-only arguments.
 -/
