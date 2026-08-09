@@ -4,17 +4,18 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import UniformEquilibrium.Quitting.EssentialAPS.Multivalued.SCCExecution
+import UniformEquilibrium.Quitting.EssentialAPS.Multivalued.Execution
 import Math.Probability.PhaseOccupationDuality
 
 /-!
-# Global occupation balance does not supply a chronological SCC path
+# Global occupation balance does not supply a chronological path
 
-The example has two disjoint closed recurrent classes.  A half-half invariant
-occupation has zero signed charge because the classes carry opposite charges.
-Every legal path from the selected positive class, however, remains there and
-has prefix charge equal to its length.  Thus the global cancellation cannot be
-used as an execution witness for either component.
+This is a semantic-fence regression, not an execution producer. The example has
+two disjoint closed recurrent classes. A half-half invariant occupation has zero
+signed charge because the classes carry opposite charges. Every legal path from
+the selected positive class, however, remains there and has prefix charge equal
+to its length. Thus global cancellation cannot be used as an execution witness
+for either component.
 -/
 
 noncomputable section
@@ -52,12 +53,12 @@ theorem occupation_feasible :
     norm_num [occupation]
   · norm_num [phaseSum, occupation]
 
-/-- Opposite component charges.  `false` is the selected positive class. -/
+/-- Opposite component charges. `false` is the selected positive class. -/
 def charge : Bool → ℝ
   | false => 1
   | true => -1
 
-/-- The global occupation cancels the charges of the two SCCs. -/
+/-- The global occupation cancels the charges of the two components. -/
 theorem global_occupation_charge_zero :
     phaseSum (fun phase current action =>
       occupation phase current action * charge current) = 0 := by
@@ -66,7 +67,7 @@ theorem global_occupation_charge_zero :
 /-- Chronological identity edges. -/
 def executableEdge (current next : Bool) : Prop := next = current
 
-/-- A path selected in the positive SCC stays there. -/
+/-- A path selected in the positive component stays there. -/
 theorem path_started_positive_stays_positive
     (state : ℕ → Bool)
     (hinitial : state 0 = false)
