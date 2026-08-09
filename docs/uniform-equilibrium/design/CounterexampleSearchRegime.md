@@ -103,8 +103,12 @@ Further machine-checked necessary conditions
   ```
 
   Otherwise the complementary-singleton circulation compiler would already
-  produce a uniform-equilibrium payoff.  This strict refusal defect is
-  `exists_active_strictSingletonRefusal`;
+  produce a uniform-equilibrium payoff.  Moreover, for each fixed
+  counterexample reward table, compactness of the closed mass/target packet
+  space supplies one `δ > 0` that works for every normalized packet: some
+  active owner has refusal advantage at least `δ`.  This is
+  `exists_pos_uniform_normalizedSingletonPacketRefusal`.  It is robust packet
+  data, not an identification with late-tail occupation;
 - the forced packet has nonempty normalized support.  Its target is at least
   `η` in some coordinate, and one supported singleton atom pays that coordinate
   at least `η` (`exists_terminalGap_le_packetTarget` and
@@ -144,8 +148,36 @@ where `p_t(i)` is player `i`'s own Quit probability.  The mismatch is diagonal
 and nonnegative.  Positive debt therefore does not by itself supply a charged
 exact predecessor at the same cap; repair or a support pivot is essential.
 
+Subtracting the prescribed policy equation exposes exact debt conservation:
+
+```text
+d_t(i) = jointContinue_t * d_(t+1)(i) + ownQuit_t(i) * d_t(i).
+```
+
+Finite iteration and passage to the summable tail give
+
+```text
+d_s(i) = jointSurvival_(s,∞) * D_i
+       + sum_k jointSurvival_(s,k) * ownQuit_(s+k)(i) * d_(s+k)(i).
+```
+
+Every seam series is summable.  For the selected owner, Continue is eventually
+positive, deleted survival is exactly the endpoint debt ratio, and one late
+start satisfies the dimensionless bound
+
+```text
+sum opponentClock_owner ≤ log(K_owner / η).
+```
+
+Positive debt is also floor-safe at every finite date: any positive-debt
+coordinate already dominates its behavioral punishment value.
+
 Finite exact-D caps nevertheless lie in a common reward-bounded,
-punishment-floor-admissible carrier.  For a cap-seeded prefix, the difference
+punishment-floor-admissible carrier.  Closed projective passage now places every
+augmented cap of the optimized infinite tail in that same carrier.  Its limit
+is a literal zero-charge all-Continue exact self-loop there.  This does not make
+the finite dynamic-debt transitions exact edges of the carrier relation; the
+diagonal seam remains.  For a cap-seeded prefix, the difference
 between cap evaluation and honest suffix-value evaluation is transported
 exactly by joint survival.  If the terminal cap is separately realized as the
 actual suffix's complete behavioral best-response envelope, then
@@ -281,12 +313,22 @@ exceeds the restarted payoff by at least `η` for some player
 over arbitrary behavioral deviations for these profiles.  It must record which
 finite branch is active: an in-window stop or refusal/`Never`.
 
+There is a canonical family with window `n` equal to the `n+1` tail roots
+starting at date `n`.  It is blocked from its first member at margin `η/2`.
+On an infinite set of windows the obstructing player is fixed, and so is the
+evaluator branch (refusal throughout, or a concrete window-dependent phase
+stop throughout).  This is the search-facing stabilized form.  It does not
+attach those periodic suffixes to arbitrary earlier exact-D prefixes.
+
 The prescribed Bellman annotation and realized infinite terminal payoff remain
-different quantities.  Their discrepancy is exactly terminal joint survival
-times the limiting boundary annotation.  Tail-charge estimates make both the
-annotation error and realized-payoff tail explicit, but favorable signed drift
-can overdeliver while the restart remains behaviorally unexploitable.  Drift
-magnitude alone is therefore not a strategic obstruction.
+different quantities.  On the optimized tail, honest terminal payoff from a
+late start tends to zero, while the selected prescribed coordinate tends to a
+limit at least `η`; their difference converges to that positive limit.  Thus
+the obstruction is a positive phantom plateau living on the Never boundary.
+More generally, the discrepancy is exactly terminal joint survival times the
+limiting boundary annotation.  Favorable signed drift can overdeliver while a
+restart remains behaviorally unexploitable, so drift magnitude alone is not a
+strategic obstruction.
 
 ## Candidate record
 
@@ -305,6 +347,8 @@ best terminal exploitability interval and profile grammar
 positive-return/SCC search and fixed-threshold stage counts
 pure-toggle and stationary-cap ceilings
 normalized packet support, weak-successor graph, and supported η-atom
+uniform packet-defect/refusal lower bound for the fixed reward table
+canonical periodic-window obstructing player and refusal/phase branch
 punishment-floor sign pattern
 floor-violation gap and division-free opponent-clock budget, when applicable
 solver residuals and exact rational reconstruction, when available

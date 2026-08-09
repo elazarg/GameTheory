@@ -93,6 +93,19 @@ The finite-quitting front is now sharply reduced.
    action packet. The owner-own-hazard split is exhaustive; its divergent branch
    closes, leaving only the fully summable boundary. See
    [the packet claim](../../ideas/PositivePlateauBoundaryClosure/PositiveDebtProducesAnchoredTerminalPacket.md).
+
+   The remaining boundary is now quantitatively rigid. Dynamic debt satisfies
+   an exact survival-weighted conservation law, the selected owner's opponent
+   clock has a logarithmic ceiling, actual late-tail payoff tends to zero, and
+   the prescribed owner value stays at least `η`: the obstruction is a positive
+   phantom continuation plateau, not hidden terminal delivery. Every optimized
+   debt cap belongs to the boxed punishment-floor carrier, while the underlying
+   tail transitions remain separate from that carrier's charged relation. The
+   canonical compatible periodic windows are all terminally blocked and admit
+   fixed-player/fixed-branch subsequences. This closes the compatible
+   ultimately-periodic evaluator; it does not attach those suffixes to an
+   arbitrary exact-D prefix or establish the general cap-splice realization
+   premise.
 6. **Two endpoint charts (`M+L`).** Reading the same minimizers from both ends
    gives a forward positive-debt ray and a reverse ray ending on the terminal
    face with a quantitative depth-one packet. The middle length still diverges.

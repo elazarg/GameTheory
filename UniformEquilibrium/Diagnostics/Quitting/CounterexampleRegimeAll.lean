@@ -6,12 +6,16 @@ Authors: GameTheory contributors
 
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitLimit
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitSelfLoop
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFiniteInstability
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFloorViolationBudget
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacket
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketDefect
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSurplus
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeQuantitative
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodicWindows
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSearchConsequences
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSeam
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSmallPlayers
@@ -35,7 +39,13 @@ canonical minimal finite counterexamples, emptiness at small player types,
 orbit value limits, quantitative floor-violation budgets, the collapse that
 makes the extracted optimized tail's absorption unconditionally summable,
 its positive-debt all-Continue self-loop limit, and exact evaluation of
-periodically restarted tail windows.  It also exports the augmented-cap
-splice interface and the finite regressions delimiting singleton
-complementarity and cap-only arguments.
+periodically restarted tail windows.  The optimized tail additionally carries
+exact finite and infinite debt conservation, a logarithmic owner-clock bound,
+the positive phantom-plateau theorem, closed augmented-cap membership in the
+global floor carrier, and a canonical periodic-window family whose player and
+refusal/phase obstruction stabilize on an infinite set.  The forced packet's
+noncomplementarity has one uniform compact refusal margin across all normalized
+packets of the fixed table.  The umbrella also exports the augmented-cap splice
+interface and the finite regressions delimiting singleton complementarity and
+cap-only arguments.
 -/

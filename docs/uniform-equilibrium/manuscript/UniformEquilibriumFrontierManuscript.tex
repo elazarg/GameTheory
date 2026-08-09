@@ -1398,7 +1398,16 @@ of all boxed exact punishment-floor prefixes.  Dynamic debt is derived:
  \leq \max_i\max\{0,r_i(\{i\})\}\leq M.
 \]
 The optimized exact-$D$ tail is summably absorbing and converges toward an
-all-Continue positive-debt self-loop annotation.  If a coordinate lies below
+all-Continue positive-debt self-loop annotation.  Dynamic debt is an exact
+survival-conservation coordinate:
+\[
+ d_s(i)=\beta_{s,\infty}D_i+
+ \sum_{k\geq0}\beta_{s,k}p_{s+k}(i)d_{s+k}(i).
+\]
+For the selected owner, eventual deleted survival is exactly the endpoint
+debt ratio and the remaining opponent clock is at most
+\(\log(K_i/\eta)\).  Every positive-debt coordinate is above its punishment
+floor at every finite date.  If a coordinate lies below
 its punishment value by \(\delta>0\) at date \(s\), the division-free estimate
 \[
  \delta\sum_{t\geq s}\text{opponent-clock}_i(t)\leq \chi_i+M
@@ -1412,7 +1421,10 @@ counterexample can therefore be reindexed to a cardinal-minimal table on
 restrictions are solved as restricted games.  This does not control excluded
 players' joining deviations.  Exact toggle and stationary-cap ceilings,
 supported packet atoms, and closed weak-preference walks provide finite search
-filters, but packet support is not itself a chronological Bellman orbit.
+filters, but packet support is not itself a chronological Bellman orbit.  The
+closed normalized packet space has a table-dependent uniform positive defect:
+every packet contains an active atom with refusal advantage bounded below by
+one common constant.
 
 Against periodically repeated opponents, the complete behavioral best reply is
 exactly the maximum of finitely many first-pass stop values and the
@@ -1420,7 +1432,13 @@ refusal/Never value; no contraction premise is needed.  The discrepancy between
 a convergent Bellman annotation and the actual terminal payoff is exactly the
 limiting joint survival times the limiting boundary annotation, with explicit
 tail-charge moduli.  In particular, favorable signed drift can overdeliver
-while the restart is behaviorally unexploitable.  A bounded rational
+while the restart is behaviorally unexploitable.  On the optimized tail,
+honest payoff from late starts tends to zero while one prescribed coordinate
+tends to a limit at least \(\eta\): the obstruction is a positive phantom
+plateau on the Never boundary.  The canonical length-\(n+1\) restarted tail
+windows are blocked from the first window, and an infinite subfamily has one
+fixed obstructing player and one fixed refusal-versus-phase branch.  This does
+not attach such a suffix to an arbitrary earlier exact-$D$ prefix.  A bounded rational
 four-player singleton table has a positive compact escape separation for every
 owner distribution, so singleton complementarity cannot be assumed; this is a
 grammar regression, not a quitting-game counterexample.
@@ -1432,6 +1450,10 @@ bound and a logarithmic upper bound on prefix absorption charge.  The
 co-realization premise is the remaining strategic seam.  An exact two-player
 regression shows that positive augmented cap data may coexist with a unique
 all-Continue cap root of zero absorption in a solved game.
+Closed projective passage nevertheless places every optimized-tail augmented
+cap in the global floor-admissible carrier, and its limiting cap is a literal
+zero-charge all-Continue self-loop there.  The finite diagonal seam prevents
+promoting the chronological exact-$D$ tail itself to a path in that relation.
 
 For an actual stationary product profile \(x\), let \(u_i(x)\) be terminal
 payoff and \(c_i(x)\) its exact full-rate behavior cap.  The honest stationary
@@ -1490,14 +1512,17 @@ Combined counterexample normal form &
 \texttt{Diagnostics/Quitting/CounterexampleRegimeAll.lean} &
 \Prod: positive terminal gap plus finite canonical floor-prefix capacity;
 empty below four players, canonical minimal \texttt{Fin n} form, finite
-toggle/stationary and packet-support screens, quantitative floor-clock budget,
-and unconditional summable absorption of the optimized exact-$D$ tail.\\
+toggle/stationary and packet-support screens, a uniform compact packet defect,
+exact finite/infinite debt conservation, a logarithmic owner-clock bound,
+positive phantom plateau, augmented-cap carrier membership, and a stabilized
+periodic-window obstruction.\\
 Periodic and augmented-cap semantics &
 \texttt{PeriodicWindowEvaluation.lean},
 \texttt{PunishmentFloorCapSplice.lean} &
-\Prod for exact periodic behavioral evaluation, phantom-boundary accounting,
-and conditional logarithmic charge bounds.  Co-realization of the cap as one
-actual suffix's full deviation envelope remains an explicit premise.\\
+\Prod for exact periodic behavioral evaluation and compatible
+ultimately-periodic words, phantom-boundary accounting, and conditional
+logarithmic charge bounds.  General cap-splice realization and attachment of a
+periodic suffix to an arbitrary exact-$D$ prefix remain explicit premises.\\
 Finite anchored middle &
 \texttt{QuittingBoundaryHolonomy.lean} and
 \texttt{QuittingBoundaryHolonomyCompactness.lean} &

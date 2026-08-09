@@ -2438,13 +2438,13 @@ terminal gap eta > 0 + finite canonical floor-prefix capacity C* ------- [L]
         |                                  |
 forced normalized singleton packet        optimized exact-D tail
         |                                  |
-active strict source surplus               summable absorption; roots -> Continue
+uniform strict refusal margin              summable absorption; roots -> Continue
         |                                  |
-strict conditional-refusal defect          positive-debt dynamic self-loop limit
+strict supported entrance/lasso            positive phantom plateau and debt conservation
         +-------------------+--------------+
                             |
-every periodic tail window has an exactly finite-evaluated behavioral
-best-response gain at least eta ---------------------------------------- [L]
+canonical periodic tail windows have a finite-evaluated gain at least eta;
+player and refusal/phase branch stabilize infinitely often ------------- [L]
                             |
 arbitrary-player support dispatch:
   complementary mixture OR positive-charge exact return OR unblocked restart
@@ -2453,15 +2453,24 @@ arbitrary-player support dispatch:
 
 The two upper branches are simultaneous but not identified.  In particular,
 the packet distribution is not known to be a late-window occupation law, and
-the phantom limit is not a realized terminal payoff.  The exact augmented-cap
+the phantom limit is not a realized terminal payoff.  Indeed, honest payoff
+from later tail starts tends to zero while the selected prescribed coordinate
+tends to a limit at least `eta`.  Dynamic debt has an exact finite and infinite
+conservation law; after the owner's Continue probability becomes positive,
+deleted survival is its exact debt ratio and the remaining opponent clock is
+at most `log(K_owner / eta)`.  Positive-debt coordinates are floor-safe at
+every date.  The exact augmented-cap
 transport law is
 
 ```text
 v_t + d_t = T(x_t, v_(t+1) + d_(t+1)) + p_t ⊙ d_t
 ```
 
-coordinatewise.  Finite cap-seeded prefixes transport cap-minus-value exactly
-by joint survival.  Conditional on realizing the terminal cap as the actual
+coordinatewise.  Closed projective passage puts every optimized-tail augmented
+cap in the global boxed floor-admissible carrier, and its limit is a zero-charge
+all-Continue self-loop there; the finite seam prevents treating the tail itself
+as an exact path in that relation.  Finite cap-seeded prefixes transport
+cap-minus-value exactly by joint survival.  Conditional on realizing the terminal cap as the actual
 suffix's complete behavioral envelope, this yields
 `eta ≤ survival * capBound` and a logarithmic prefix-charge bound.  That
 realization is not automatic: the diagonal seam cannot in general be converted
@@ -2475,8 +2484,12 @@ boundary discrepancy is exactly limiting joint survival times the limiting
 annotation, with tail-charge moduli; favorable signed drift can nevertheless
 overdeliver without creating exploitability.  Likewise, an exact bounded
 rational four-player singleton table has a positive compact escape separation
-for every owner distribution.  It is a grammar regression, not a game
-counterexample.  The open producer must therefore use exact product-root
+for every owner distribution.  More generally, every fixed counterexample
+table has one positive compact refusal margin uniform over all of its normalized
+source packets.  These are grammar restrictions, not game counterexamples.
+The ultimately-periodic evaluator closes only a compatible prefix/suffix word;
+it neither realizes a general cap-splice premise nor automatically attaches a
+periodic suffix to an existing exact-D prefix.  The open producer must therefore use exact product-root
 dynamics and nonsingleton collision rewards, not compactness, drift, or the
 three boundary objects in isolation.
 
