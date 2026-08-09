@@ -779,6 +779,37 @@ if (-not $SkipReachability) {
   Report 'UTILITY_INVARIANCE_BOUNDARY_PROBES_REJECTED' `
     $utilityInvarianceBoundaryRejected
 
+  # Fixed-profile individual rationality is the canonical expected-utility
+  # comparison in Core.Response.  Mechanism and cooperative participation
+  # surfaces are intentionally not aliases and must remain unreachable.
+  $individualRationalityInputs = @(
+    'GameTheory.IsIndividuallyRational',
+    'GameTheory.IsIndividuallyRational.mono',
+    'GameTheory.IsIndividuallyRational.of_paretoDominates',
+    'GameTheory.ParetoDominates')
+  $individualRationalityBoundary = @(
+    'GameTheory.Mechanism.PrincipalAgent.Participates',
+    'GameTheory.Languages.BayesianMechanism.IsExPostIndividuallyRational',
+    'GameTheory.BargainingProblem.IsIndividuallyRational')
+  $individualRationalityOutput = Run-Probe 'GameTheory.Core.Response' `
+    ($individualRationalityInputs + $individualRationalityBoundary)
+  $individualRationalityInputsReached = 0
+  foreach ($constant in $individualRationalityInputs) {
+    if (-not (Is-Unreachable $individualRationalityOutput $constant)) {
+      $individualRationalityInputsReached++
+    }
+  }
+  Report 'INDIVIDUAL_RATIONALITY_INPUT_PROBES_REACHED' `
+    $individualRationalityInputsReached
+  $individualRationalityBoundaryRejected = 0
+  foreach ($constant in $individualRationalityBoundary) {
+    if (Is-Unreachable $individualRationalityOutput $constant) {
+      $individualRationalityBoundaryRejected++
+    }
+  }
+  Report 'INDIVIDUAL_RATIONALITY_BOUNDARY_PROBES_REJECTED' `
+    $individualRationalityBoundaryRejected
+
   # D40 keeps standard mixed rationalizability in Core while the executable
   # frontend remains an explicitly pure checker.  Positive probes require the
   # mixed and pure semantics to coexist; negative probes keep algorithms and
@@ -1614,6 +1645,8 @@ if ($VerifyExpected) {
     $Expected['MATRIX_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['UTILITY_INVARIANCE_INPUT_PROBES_REACHED'] = 4
     $Expected['UTILITY_INVARIANCE_BOUNDARY_PROBES_REJECTED'] = 3
+    $Expected['INDIVIDUAL_RATIONALITY_INPUT_PROBES_REACHED'] = 4
+    $Expected['INDIVIDUAL_RATIONALITY_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['RATIONALIZABILITY_INPUT_PROBES_REACHED'] = 6
     $Expected['RATIONALIZABILITY_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6

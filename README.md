@@ -23,7 +23,8 @@ GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          Nash, mixed and pure rationalizability, Bayesian
                          recommendation/obedience,
                          finite no-regret learning, concrete reindexing and
-                         relabeling laws, utility-scale invariance, social
+                         relabeling laws, utility-scale invariance, profile
+                         individual rationality, social
                          welfare, robust CCE smoothness, zero-sum matrix
                          security, May's majority
                          characterization, and foundational social/coalitional

@@ -11,7 +11,11 @@ They share `GameForm.play`, the preference, and `Profile.update` with the
 equilibrium family, which is what makes the cross-family theorems below short.
 
 Pareto dominance and efficiency close the file: they compare whole profiles
-across all players rather than deviations of one unit.
+across all players rather than deviations of one unit.  Profile individual
+rationality compares those same canonical expected utilities with an explicit
+reservation vector.  Its closure results are adapted from
+`reference/GameTheory-v1/GameTheory/Concepts/Welfare/IndividualRationality.lean`
+at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
 import GameTheory.Core.Utility
@@ -464,6 +468,14 @@ theorem IsDominant.not_strictlyDominated {who : ι} {s preferred : F.sig.Strateg
 
 /-! ## Pareto comparisons -/
 
+variable (F) in
+/-- A profile is individually rational relative to an explicit reservation
+utility when every player's canonical expected utility reaches that player's
+reservation level. -/
+def IsIndividuallyRational (utility : F.sig.Outcome → ι → ℝ)
+    (reservation : ι → ℝ) (profile : Profile F.sig) : Prop :=
+  ∀ player, reservation player ≤ expectedUtility utility player (F.play profile)
+
 variable (F weaklyPrefers) in
 /-- `better` Pareto-dominates `worse`: nobody is worse off and somebody is
 strictly better off. -/
@@ -475,6 +487,35 @@ variable (F weaklyPrefers) in
 /-- No profile Pareto-dominates `profile`. -/
 def IsParetoEfficient (profile : Profile F.sig) : Prop :=
   ¬ ∃ other, ParetoDominates F weaklyPrefers other profile
+
+omit [DecidableEq ι] in
+/-- Weakening every reservation level preserves individual rationality. -/
+theorem IsIndividuallyRational.mono {utility : F.sig.Outcome → ι → ℝ}
+    {reservation reservation' : ι → ℝ} {profile : Profile F.sig}
+    (hir : IsIndividuallyRational F utility reservation profile)
+    (hle : ∀ player, reservation' player ≤ reservation player) :
+    IsIndividuallyRational F utility reservation' profile :=
+  fun player => (hle player).trans (hir player)
+
+omit [DecidableEq ι] in
+/-- A Pareto improvement preserves individual rationality. -/
+theorem IsIndividuallyRational.of_paretoDominates
+    {utility : F.sig.Outcome → ι → ℝ} {reservation : ι → ℝ}
+    {better worse : Profile F.sig}
+    (hdom : ParetoDominates F (euPreference utility) better worse)
+    (hir : IsIndividuallyRational F utility reservation worse) :
+    IsIndividuallyRational F utility reservation better :=
+  fun player => (hir player).trans (hdom.1 player)
+
+omit [DecidableEq ι] in
+/-- Meeting two reservation vectors implies meeting their pointwise maximum. -/
+theorem IsIndividuallyRational.sup {utility : F.sig.Outcome → ι → ℝ}
+    {first second : ι → ℝ} {profile : Profile F.sig}
+    (hfirst : IsIndividuallyRational F utility first profile)
+    (hsecond : IsIndividuallyRational F utility second profile) :
+    IsIndividuallyRational F utility
+      (fun player => max (first player) (second player)) profile :=
+  fun player => max_le (hfirst player) (hsecond player)
 
 omit [DecidableEq ι] in
 theorem ParetoDominates.irrefl (profile : Profile F.sig) :

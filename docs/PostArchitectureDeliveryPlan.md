@@ -343,7 +343,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | correlation | correlation regimes, regret, signal timing, value of correlation | **CE/CCE existence complete through mixed Nash;** next one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
 | learning | regret, multiplicative weights, fictitious play, approachability | **F2, finite MW self-play, base fictitious play 9/9, exact-potential convergence, and approachability/regret matching 23/23 complete;** only weighted-potential generalization remains gated | stable finite identities in Core, law-free MW and approachability mathematics in `GameTheoryMath`, canonical-law adapters in Probability or opt-in Analysis, and quantitative composition in `Analysis.Learning` |
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | **pinned congestion family complete, including robust affine CCE PoA (EXP-052/053, D24)** | `Core.Potential` plus the opt-in congestion domain |
-| welfare | individual rationality, smoothness, price of anarchy | **pure and robust CCE smoothness complete in Core (EXP-052/053, D24);** next individual rationality | `Core.Welfare` plus the theorem-only `Core.RobustWelfare` bridge |
+| welfare | individual rationality, smoothness, price of anarchy | **pure/robust CCE smoothness and fixed-profile IR complete;** next the six finite welfare consequences after an explicit Pareto-dependency disposition | whole-profile IR in `Core.Response`; aggregates in light `Core.Welfare`; theorem-only `Core.RobustWelfare` above |
 | zero/constant sum | security, matrix games, complementarity, correlation | **canonical saddle/Nash equivalence and the 40-row matrix security/value waist complete;** next general security, support complementarity, or antisymmetric geometry | `Core.ZeroSum` and `Core.MatrixGame`; existence/value selection in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
 | mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, repaired executable approximation, finite hidden-action contracts, revelation, finite persuasion, quasilinear weak monotonicity, affine maximizers, and topology-free single-parameter payment bounds | **M-CONTRACT complete (EXP-065/D32), canonical finite-support revelation, information design, truthful Bayesian welfare/participation, feasible posterior laws, D33's monotonicity/affine consumers, topology-free Myerson algebra, and returned-allocation half approximation complete (EXP-056/D27);** envelope integrals and uniqueness remain behind M-BAYES/D11 | coordinated mechanism root with native principal-agent semantics, canonical Bayesian forms, and separately audited auction semantic, executable, and correctness leaves |
@@ -585,10 +585,10 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,623 of 8,324 pinned declarations are claimed by exact ledgers; 2,523 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,701-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | mixed/pure rationalizability complete under EXP-073/D40: a half/half hedge eliminates an action retained by every pure dominator and by the executable pure checker; 21/21 selected rows reviewed | keep executable mixed elimination behind a separate exact-certificate gate |
-| next capability rotation | welfare/individual rationality: select a bounded mature theorem batch | reuse canonical expected utility and social welfare without a second payoff or participation predicate |
-| release engineering | warning-clean 3,531-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
+| exact accounting | 2,627 of 8,324 pinned declarations are claimed by exact ledgers; 2,527 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,697-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | individual rationality complete: the base predicate plus 3/3 closure theorems use canonical expected utility and Pareto comparison; a stochastic fixture separates weak Pareto improvement and nonzero reservation thresholds | keep ex-post mechanism participation, contracts, bargaining, matching, and strict repeated-game IR semantically distinct |
+| next capability rotation | correlation hierarchy: select one strict CE/CCE/mixed-Nash separation or dominated-support batch | preserve the single equilibrium predicate and canonical finite-law waist |
+| release engineering | warning-clean 3,532-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -702,9 +702,16 @@ provisioned in CI.
    standard mixed elimination owns `IsRationalizable`, pure elimination is
    explicit in both Core and the D10 checker, and a three-action hedge fixture
    proves the two notions differ.  All 21 selected rows are classified.  The
-   queue now rotates to welfare/individual rationality rather than immediately
+   queue then rotates to welfare/individual rationality rather than immediately
    adding an executable mixed-elimination certificate or deepening into
-   undominated counterexamples;
+   undominated counterexamples.  The bounded IR batch places the canonical
+   predicate beside whole-profile Pareto comparison, closes all 3/3 pinned
+   closure theorems, and uses a fair non-point-mass outcome law with nonzero
+   reservation vectors to catch zero-normalization and all-strict Pareto
+   mistakes.  The six finite welfare consequences stay queued until their
+   Pareto dependency can be added without making D24's light aggregate leaf
+   import the full response stack.  The breadth-first rotation now moves to a
+   strict correlation-hierarchy or dominated-support batch;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.

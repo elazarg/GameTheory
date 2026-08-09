@@ -658,7 +658,11 @@ be disguised as degenerate instances of `IsEquilibrium`:
   profile-quantified predicates;
 - EXP-073/D40 distinguishes standard mixed rationalizability (`survivors`,
   `IsRationalizable`) from the weaker pure-dominator iteration
-  (`pureSurvivors`, `IsPureRationalizable`).
+  (`pureSurvivors`, `IsPureRationalizable`);
+- `IsIndividuallyRational F utility reservation profile` compares an explicit
+  reservation vector with the same canonical expected utilities and consumes
+  Pareto improvement directly.  Mechanism participation and cooperative or
+  repeated-game acceptability remain separate, timing-specific concepts.
 
 These predicates share `GameForm.outcomeLaw`, preferences, and the profile
 operations with equilibrium, but they are a separate concept family. D10's
