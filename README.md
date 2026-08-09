@@ -39,7 +39,8 @@ GameTheory/Analysis      stable, opt-in fixed-point, minimax, existence,
   /Repeated              analytic repeated-game bridge and discounted folk theorem
   /Stochastic            normalized Shapley values and stationary statewise saddles
 GameTheory/Repeated      stable public histories, finite public monitoring,
-                         discounting, cycles, and triggers
+                         finite-average uniform equilibrium, discounting,
+                         cycles, and triggers
 GameTheory/Stochastic    opt-in finite-support stochastic games, perfect-public
                          Protocol play, finite-horizon payoff, and uniformity
 GameTheory/Congestion    opt-in load calculus, Rosenthal potential, pure and

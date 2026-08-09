@@ -13,6 +13,7 @@ payoff aggregations build on the generated `ℕ`-indexed path in `Discounted`.
 -/
 
 import GameTheory.Core.Utility
+import Mathlib.Topology.Instances.Nat
 
 noncomputable section
 
@@ -118,6 +119,13 @@ def finiteAveragePayoff (G : UtilityGame ι) (T : ℕ)
   (T : ℝ)⁻¹ *
     ∑ t ∈ Finset.range T, G.stagePayoff (G.repeatedPlay profile t) who
 
+@[simp]
+theorem finiteAveragePayoff_one (G : UtilityGame ι)
+    (profile : G.RepeatedProfile) (who : ι) :
+    G.finiteAveragePayoff 1 profile who =
+      G.stagePayoff (G.repeatedPlay profile 0) who := by
+  simp [finiteAveragePayoff]
+
 /-- A nonempty finite average of stationary play is its stage payoff. -/
 theorem finiteAveragePayoff_stationaryRepeatedProfile
     (G : UtilityGame ι) {T : ℕ} (hT : T ≠ 0)
@@ -145,6 +153,29 @@ theorem finiteAveragePayoff_le_of_forall_stagePayoff_le
     _ = bound := by
       rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, ← mul_assoc,
         inv_mul_cancel₀ hT', one_mul]
+
+/-- A repeated profile has long-run average payoff `value` when its finite
+averages converge coordinatewise. -/
+def HasLongRunAveragePayoff (G : UtilityGame ι)
+    (profile : G.RepeatedProfile) (value : ι → ℝ) : Prop :=
+  ∀ who, Filter.Tendsto (fun horizon =>
+    G.finiteAveragePayoff horizon profile who)
+      Filter.atTop (nhds (value who))
+
+/-- Stationary repetition converges to its stage payoff. -/
+theorem hasLongRunAveragePayoff_stationaryRepeatedProfile
+    (G : UtilityGame ι) (profile : Profile G.form.sig) :
+    G.HasLongRunAveragePayoff (G.stationaryRepeatedProfile profile)
+      (fun who => G.stagePayoff profile who) := by
+  intro who
+  have heventually :
+      (fun _ : ℕ => G.stagePayoff profile who) =ᶠ[Filter.atTop]
+        fun horizon => G.finiteAveragePayoff horizon
+          (G.stationaryRepeatedProfile profile) who := by
+    filter_upwards [Filter.eventually_ge_atTop 1] with horizon hhorizon
+    exact (G.finiteAveragePayoff_stationaryRepeatedProfile
+      (by omega) profile who).symm
+  exact Filter.Tendsto.congr' heventually tendsto_const_nhds
 
 end UtilityGame
 

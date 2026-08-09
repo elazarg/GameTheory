@@ -20,6 +20,7 @@ import GameTheory.Repeated.MonitoringPayoff
 import GameTheory.Repeated.MonitoringDiscounted
 import GameTheory.Repeated.MonitoringOneShot
 import GameTheory.Repeated.Discounted
+import GameTheory.Repeated.Uniform
 import GameTheory.Repeated.Periodic
 import GameTheory.Repeated.Trigger
 import GameTheory.Repeated.Protocol

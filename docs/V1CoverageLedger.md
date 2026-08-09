@@ -22,8 +22,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Sixty-one work-package ledgers claim 2,550 declarations: 2,450
-have reviewed dispositions and 100 remain seeded `unreviewed`; a further 5,774 are
+declarations. Sixty-two work-package ledgers claim 2,558 declarations: 2,458
+have reviewed dispositions and 100 remain seeded `unreviewed`; a further 5,766 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -127,7 +127,7 @@ declaration-based.
 | D-LEARN | `Concepts/Learning/**` | 8 | stable finite identities in Core; game-free mathematics in `GameTheoryMath`; canonical-law convergence bridges in `Analysis.Learning`, `Analysis.FictitiousPlayPotential`, and `Analysis.Approachability` | validated by F2 and EXP-049/D21 | partial only at the weighted-potential gate; all 97 declarations reviewed, including finite/MW self-play 15/15, F2 5/5, base fictitious play 9/9, potential fictitious play 45/45, and approachability 23/23; exact-potential and regret-matching convergence complete, three weighted rows gated | [self-play ledger](coverage/D-LEARN-self-play.md), [F2 ledger](coverage/F2-no-regret-cce.md), [fictitious-play ledger](coverage/D-LEARN-fictitious-play.md), [potential-game ledger](coverage/D-LEARN-fictitious-play-potential.md), [approachability ledger](coverage/D-LEARN-approachability.md); no unclassified remainder |
 | D-COMM | `Concepts/Communication/**`, `Core/Babbling.lean`, `Languages/ElectronicMailGame.lean` | 5 | static core or Protocol according to timing | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20 | partial; 87/87 declarations reviewed, 19 cross-family rows deferred | [exact declaration ledger](coverage/D-COMM-communication.md); pure babbling, exact Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail recovered; conditional public-signal and zero-sum value results remain gated |
 | D-KNOW | `Concepts/Knowledge/**` | 2 | stable `Epistemic` branch; a Protocol bridge only with an explicit state-view premise | validated by EXP-043/D16 | complete; 62/62 declarations accounted | [finite and approximate common-knowledge ledger](coverage/D-KNOW-aumann.md); private mass machinery and the public quantitative bound build |
-| D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | deterministic play, finite public-signal laws, and canonical public-monitoring equilibrium waist validated by EXP-064 | partial; PPE/one-shot principle recovered without an infinite-path law | [monitoring-equilibrium ledger](coverage/D-REPEAT-monitoring-equilibrium.md); next rank/self-generation and uniform results |
+| D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | deterministic play, finite public-signal laws, canonical public-monitoring equilibrium waist, and deterministic uniform specialization validated | partial; PPE/one-shot principle and long-run/uniform 8/8 recovered without an infinite-path law | [monitoring-equilibrium ledger](coverage/D-REPEAT-monitoring-equilibrium.md); [uniform ledger](coverage/D-REPEAT-uniform.md); next rank, APS decomposition/self-generation, and monitored uniform results |
 | D-EVOL | `Concepts/Classes/EvolutionaryStability.lean` | 1 | stable `Evolutionary`; dynamics only in future opt-in Analysis | validated by EXP-044/D17 | complete | [nine-declaration ledger](coverage/D-EVOL-static.md); no pinned population dynamics to recover |
 
 ### Languages and sequential theory
@@ -206,11 +206,11 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Rotate breadth-first from the completed 11-row Banzhaf/Shapley--Shubik
-   batch to a bounded sequential/repeated-game batch; convex core,
-   Gibbard--Satterthwaite, Sen, FOSG strategic transfer, and mixed
-   rationalizability remain named later turns rather than extending one
-   subfield indefinitely.
+1. Rotate breadth-first from the completed 8-row deterministic uniform-
+   equilibrium batch to a bounded finite fair-division batch; repeated rank,
+   APS self-generation, convex core, Gibbard--Satterthwaite, FOSG strategic
+   transfer, and mixed rationalizability remain named later turns rather than
+   extending one subfield indefinitely.
 2. Keep exact family recovery separate from the qualitative verdict in
    `V1CapabilityMatrix.md`; neither may silently stand in for the other.
 3. Update this file in the same commit as each exact status change.

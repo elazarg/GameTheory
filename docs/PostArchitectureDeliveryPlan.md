@@ -585,9 +585,9 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,550 of 8,324 pinned declarations are claimed by exact ledgers; 2,450 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,774-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | cooperative power-index batch complete: raw Banzhaf and simple-game Shapley--Shubik reuse the canonical characteristic function and Shapley value; 11/11 pinned rows reviewed | keep convex core, Bondareva, additive/weighted examples, and cost of stability as distinct bounded turns |
-| next capability rotation | sequential/repeated games: select a bounded rank, self-generation, or uniform theorem spine against the validated public-monitoring waist | preserve the finite public-law boundary and refuse an unneeded infinite realized-path probability layer |
+| exact accounting | 2,558 of 8,324 pinned declarations are claimed by exact ledgers; 2,458 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,766-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | deterministic uniform-equilibrium batch complete: coordinatewise long-run averages and finite-horizon approximate Nash factor through the stable repeated path and canonical `IsεNash`; 8/8 pinned rows reviewed | keep monitoring rank, APS decomposition/self-generation, public randomization, and monitored uniform results as distinct bounded turns |
+| next capability rotation | finite fair division: select the two-agent EFX, envy-cycle-elimination, or maximin-share batch against the canonical allocation owner | preserve the finite indivisible-goods boundary and avoid any measurable cake-cutting assumptions |
 | release engineering | warning-clean 3,517-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
@@ -673,10 +673,14 @@ provisioned in CI.
    canonical coalitional game: direct finite averaging yields the raw power
    index, simple games reuse the Shapley value, and the three-agent majority
    fixture distinguishes one-half Banzhaf from one-third Shapley--Shubik power.
-   The queue now rotates to bounded sequential/repeated theory rather than
-   deepening immediately into convex core or social-choice impossibilities;
-   mixed rationalizability and validated mechanism and language leaf recovery
-   remain later BFS turns;
+   The repeated rotation then recovers the eight long-run/uniform declarations:
+   finite truncations are canonical approximate Nash problems, stationary
+   stage Nash is uniform, and stationary cooperation in Prisoner's Dilemma is
+   a strict negative control at slack one.  The queue now rotates to finite
+   fair division rather than deepening immediately into monitoring rank, APS
+   self-generation, convex core, or social-choice impossibilities; mixed
+   rationalizability and validated language leaf recovery remain later BFS
+   turns;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.
