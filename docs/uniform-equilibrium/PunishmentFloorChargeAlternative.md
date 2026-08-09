@@ -39,18 +39,22 @@ of exact roots and values:
 ```text
 value 0 = coordinatewise punishment value,
 value (t+1) = quittingRootSuccessorPayoff reward (value t) (roots t),
-roots t is support-locally exact Nash against value t,
+roots t is a full exact one-stage Nash root against value t,
 punishmentValue_i <= value t i,
 value t belongs to one fixed compact carrier.
 ```
 
-It does not use the repository's selected predecessor function.
+It does not use the repository's selected predecessor function.  In
+particular, it is a relation-level orbit interface rather than a wrapper around
+one classically chosen orbit.
 
 Its prefix through `N` converts to a `QuittingFiniteForwardPacket` at every
-nonnegative support tolerance.  Consequently, failure of a common bound gives,
-for every nonnegative charge target, one packet whose accumulated charge
-reaches that target.  The landed finite charged-closing theorem then produces a
-single-seam projective lasso and a uniform-equilibrium payoff.
+nonnegative support tolerance.  Full exact root Nash first implies zero-error
+support optimality; this is then weakened to the tolerance requested by the
+compiler.  Consequently, failure of a common bound gives, for every
+nonnegative charge target, one packet whose accumulated charge reaches that
+target.  The landed finite charged-closing theorem then produces a single-seam
+projective lasso and a uniform-equilibrium payoff.
 
 The proof is therefore the direct classical alternative:
 
@@ -63,6 +67,18 @@ by_cases there is a common all-orbits prefix bound
 
 No infinite high-charge orbit, diagonal extraction, or compactness of the full
 orbit space is used.
+
+The generic theorem accepts any fixed compact payoff carrier.  Its canonical
+specialization uses the reward box
+
+```text
+Icc (-quittingRewardBound reward) (quittingRewardBound reward)
+```
+
+and concludes the same disjunction for every punishment-floor exact orbit in
+that box.  The separately developed selected-predecessor producer supplies one
+particular inhabitant of this orbit class; it is not used to define or quantify
+over the class.
 
 ## Compact serial delayed-charge regression
 
@@ -180,6 +196,21 @@ most one common `L`, then `B` is a finite union of compact finite-horizon
 projections and is closed.  Proving such a bound, or another condition implying
 closed block regeneration, is the genuine game-specific no-delay problem.
 
+## Compactness of the actual orbit spaces
+
+For a fixed compact payoff carrier, the root space is the finite product of
+binary simplices and is compact.  The exact Bellman graph is closed because
+`quittingRootSuccessorPayoff` is a finite multilinear expression.  Full exact
+root Nash is a finite family of closed continuous inequalities, and the
+punishment-floor inequalities are closed.  Therefore every finite-prefix
+space is a closed subset of a finite compact product, while the infinite orbit
+space is a closed subset of the corresponding countable product.
+
+These compactness facts justify the path-space model and the continuity of
+every fixed-prefix charge `S_N`; they do not imply the raw quantifier exchange,
+as the regression demonstrates.  The strategic theorem deliberately avoids
+formal dependence on them.
+
 ## Potential form of the bounded branch
 
 `Math/ChargedPathBudget.lean` already proves the exact abstract duality
@@ -203,11 +234,12 @@ an exact bounded potential need not be continuous.
 
 Formalized in `PunishmentFloorForwardBudget.lean`:
 
-* arbitrary exact punishment-floor forward orbits;
+* arbitrary full exact-Nash punishment-floor forward orbits;
 * cumulative prefix charge;
 * conversion of every exact prefix to the landed finite-forward packet;
-* uniform payoff versus one all-orbits prefix bound;
-* the no-uniform-payoff contrapositive.
+* the generic compact-carrier uniform-payoff/common-bound alternative;
+* its canonical reward-box specialization;
+* the no-uniform-payoff contrapositives.
 
 Already formalized elsewhere:
 
@@ -217,5 +249,6 @@ Already formalized elsewhere:
 * compact inverse limits for closed finite-prefix relations.
 
 This note records, but the current Lean module does not yet formalize, the
-compact semialgebraic delayed-charge regression and the closed unit-charge
-block hypothesis.  Neither is used in the strategic theorem.
+compact semialgebraic delayed-charge regression, the game-specific orbit-space
+compactness instantiation, and the closed unit-charge block hypothesis.  None
+is used in the strategic theorem.
