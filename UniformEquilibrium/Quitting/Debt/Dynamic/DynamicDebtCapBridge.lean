@@ -39,6 +39,14 @@ def quittingDynamicDebtCap (state : QuittingDebtPoint ι) : Payoff ι :=
   state.1.1 + state.2
 
 omit [DecidableEq ι] in
+/-- The augmented-cap projection is continuous on the ambient debt state
+space. -/
+theorem continuous_quittingDynamicDebtCap :
+    Continuous (quittingDynamicDebtCap : QuittingDebtPoint ι → Payoff ι) := by
+  unfold quittingDynamicDebtCap
+  fun_prop
+
+omit [DecidableEq ι] in
 @[simp]
 theorem quittingDynamicDebtCap_apply
     (state : QuittingDebtPoint ι) (who : ι) :

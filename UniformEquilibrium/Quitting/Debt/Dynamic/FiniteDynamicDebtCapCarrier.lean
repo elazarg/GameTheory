@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Quitting.Debt.Dynamic.FiniteDynamicDebtCompiler
+import UniformEquilibrium.Quitting.Debt.Dynamic.DynamicDebtCapBridge
 import UniformEquilibrium.Quitting.Bellman.Finite.PunishmentFloorAdmissibleChargedRelation
 
 /-!
@@ -319,5 +320,69 @@ def finiteDynamicDebtCapAdmissibleState
   have hcarrier := finiteDynamicDebtCap_mem_and_punishmentFloor_le
     reward roots value start fuel htail hterminal
   exact ⟨⟨(cap, quittingAllContinueSimplexRoot), hcarrier.1⟩, hcarrier.2⟩
+
+/-! ## Canonical finite-chain annotations -/
+
+/-- The augmented cap stored by the canonical exact-D annotation of any
+finite zero-boundary chain lies in the reward box and dominates the complete
+behavioral punishment floor.  This is the finite statement whose closed
+limit is consumed by the optimized projective tail. -/
+theorem quittingFiniteNashBellmanPathDynamicDebtCap_mem_and_floor
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (cutoff : ℕ) (path : QuittingFiniteNashBellmanPath ι cutoff)
+    (hpath : path ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet reward cutoff)
+    (time : ℕ) (htime : time ≤ cutoff) :
+    quittingDynamicDebtCap
+        (quittingFiniteNashBellmanPathDynamicDebtPoint
+          reward cutoff path time) ∈
+        quittingPunishmentFloorForwardCarrier reward ∧
+      ∀ who, quittingPunishmentValue reward who ≤
+        quittingDynamicDebtCap
+          (quittingFiniteNashBellmanPathDynamicDebtPoint
+            reward cutoff path time) who := by
+  let roots := quittingFiniteNashBellmanPathRoots cutoff path
+  let value := quittingFiniteNashBellmanPathValue cutoff path
+  have htail : ∀ liveTime, time + (cutoff - time) ≤ liveTime →
+      roots liveTime = (quittingAllContinueRoot : ι → PMF Bool) := by
+    intro liveTime hlive
+    apply quittingFiniteNashBellmanPathRoots_eq_allContinue_of_cutoff_le
+    omega
+  have hterminal : value (time + (cutoff - time)) = 0 := by
+    have hindex : time + (cutoff - time) = cutoff := Nat.add_sub_of_le htime
+    rw [hindex]
+    exact quittingFiniteNashBellmanPathValue_eq_zero_of_cutoff_le
+      reward cutoff path hpath cutoff le_rfl
+  have hcarrier := finiteDynamicDebtCap_mem_and_punishmentFloor_le
+    reward roots value time (cutoff - time) htail hterminal
+  have hvalueAt : value time =
+      (path ⟨time, Nat.lt_succ_of_le htime⟩).1 := by
+    simp [value, quittingFiniteNashBellmanPathValue,
+      Nat.lt_succ_of_le htime]
+  rw [hvalueAt] at hcarrier
+  have hcapApply : ∀ who,
+      quittingDynamicDebtCap
+          (quittingFiniteNashBellmanPathDynamicDebtPoint
+            reward cutoff path time) who =
+        (path ⟨time, Nat.lt_succ_of_le htime⟩).1 who +
+          quittingFiniteDynamicDebt reward roots who
+            (fun liveTime ↦ value liveTime who)
+            (quittingPositiveSingletonDebtCap reward who)
+            time (cutoff - time) := by
+    intro who
+    simp [quittingDynamicDebtCap,
+      quittingFiniteNashBellmanPathDynamicDebtPoint, htime,
+      quittingFiniteNashBellmanPathDynamicDebt, roots, value]
+  constructor
+  · constructor
+    · intro who
+      rw [hcapApply who]
+      exact hcarrier.1.1 who
+    · intro who
+      rw [hcapApply who]
+      exact hcarrier.1.2 who
+  · intro who
+    rw [hcapApply who]
+    exact hcarrier.2 who
 
 end GameTheory
