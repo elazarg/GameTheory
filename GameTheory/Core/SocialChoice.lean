@@ -40,4 +40,89 @@ nothing. -/
 theorem total_majority (ranks : Ranking Agent α) [∀ agent a b, Decidable (ranks agent a b)] :
     Rank.Total (majority ranks) := fun _ _ => le_total _ _
 
+/-! ## Social choice functions
+
+An aggregator returns a social ranking.  A social choice function instead
+selects one alternative.  Both consume the same canonical `Ranking` profiles;
+there is no second preference or profile type.
+-/
+
+/-- A social choice function selects one alternative from each ranking
+profile.  Its laws below restrict attention to profiles of linear rankings;
+the function remains total on malformed inputs so no capability is stored in
+its data. -/
+abbrev SocialChoiceFunction (Voter : Type ua) (Alternative : Type uα) :=
+  Ranking Voter Alternative → Alternative
+
+namespace SocialChoiceFunction
+
+variable {Voter : Type ua} {Alternative : Type uα}
+
+/-- Replace one voter's reported ranking.  Classical decidable equality is an
+implementation detail of this proof-facing operation, not a stored capability
+of a social choice function. -/
+noncomputable def replaceRanking (ranks : Ranking Voter Alternative)
+    (voter : Voter) (report : Alternative → Alternative → Prop) :
+    Ranking Voter Alternative := by
+  classical
+  exact fun current => if current = voter then report else ranks current
+
+@[simp]
+theorem replaceRanking_self (ranks : Ranking Voter Alternative)
+    (voter : Voter) (report : Alternative → Alternative → Prop) :
+    replaceRanking ranks voter report voter = report := by
+  classical
+  simp [replaceRanking]
+
+theorem replaceRanking_of_ne (ranks : Ranking Voter Alternative)
+    {voter current : Voter} (hne : current ≠ voter)
+    (report : Alternative → Alternative → Prop) :
+    replaceRanking ranks voter report current = ranks current := by
+  classical
+  simp [replaceRanking, hne]
+
+@[simp]
+theorem replaceRanking_restore (ranks : Ranking Voter Alternative)
+    (voter : Voter) (report : Alternative → Alternative → Prop) :
+    replaceRanking (replaceRanking ranks voter report) voter (ranks voter) = ranks := by
+  classical
+  funext current
+  by_cases hcurrent : current = voter
+  · subst current
+    simp
+  · rw [replaceRanking_of_ne _ hcurrent, replaceRanking_of_ne _ hcurrent]
+
+/-- Strategyproofness on the unrestricted domain of linear rankings: under
+the true ranking, no voter strictly prefers the outcome reached by a linear
+misreport to the truthful outcome. -/
+def IsStrategyProof (choice : SocialChoiceFunction Voter Alternative) : Prop :=
+  ∀ ranks, Preference.Linear ranks → ∀ voter report, Rank.Linear report →
+    ¬ Rank.strict (ranks voter)
+      (choice (replaceRanking ranks voter report)) (choice ranks)
+
+/-- Full range on admissible ranking profiles. -/
+def IsOnto (choice : SocialChoiceFunction Voter Alternative) : Prop :=
+  ∀ alternative, ∃ ranks, Preference.Linear ranks ∧ choice ranks = alternative
+
+/-- A dictator's reported ranking always places the selected alternative
+weakly above every alternative.  On a linear ranking this is the unique top
+alternative. -/
+def IsDictator (choice : SocialChoiceFunction Voter Alternative)
+    (dictator : Voter) : Prop :=
+  ∀ ranks, Preference.Linear ranks → ∀ alternative,
+    ranks dictator (choice ranks) alternative
+
+/-- A dictator's selected alternative equals any supplied top alternative. -/
+theorem IsDictator.eq_of_forall_ranks
+    {choice : SocialChoiceFunction Voter Alternative} {dictator : Voter}
+    (hdictator : choice.IsDictator dictator)
+    {ranks : Ranking Voter Alternative} (hlinear : Preference.Linear ranks)
+    {alternative : Alternative}
+    (htop : ∀ other, ranks dictator alternative other) :
+    choice ranks = alternative :=
+  (hlinear dictator).2.2.2 _ _
+    (hdictator ranks hlinear alternative) (htop (choice ranks))
+
+end SocialChoiceFunction
+
 end GameTheory

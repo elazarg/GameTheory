@@ -22,8 +22,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Sixty-seven work-package ledgers claim 2,637 declarations: 2,537
-have reviewed dispositions and 100 remain seeded `unreviewed`; a further 5,687 are
+declarations. Sixty-eight work-package ledgers claim 2,676 declarations: 2,576
+have reviewed dispositions and 100 remain seeded `unreviewed`; a further 5,648 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -153,7 +153,7 @@ declaration-based.
 | M-CONTRACT | `Mechanism/Contracts/**` | 1 | `Mechanism.PrincipalAgent` | native ownership and explicit participation validated by EXP-065/D32 | complete; 23/23 declarations reviewed and recovered | [finite hidden-action contract ledger](coverage/M-CONTRACT-principal-agent.md); any strategic principal choice, private types, or executable search requires its own consumer gate |
 | M-FAIR | `Mechanism/FairDivision.lean`, finite indivisible files | 6 | `Mechanism.FairDivision` over canonical `Combinatorial.Allocation` | validated by EXP-067 | partial; 67/91 declarations reviewed, with both the 40/40 foundations/two-agent EFX family and 27/27 round-robin family complete | [basic ledger](coverage/M-FAIR-basic.md), [round-robin ledger](coverage/M-FAIR-round-robin.md); next envy-cycle and maximin-share breadth |
 | M-CAKE | divisible fair-division files | 6 | D11/`Analysis` or Frontier | deferred | out of scope | measurable/continuous probability decision |
-| M-SOCIAL | `Mechanism/SocialChoice.lean`, `Mechanism/SocialChoice/**` | 9 | ranking/preference foundations plus coordinated domain | validated by Arrow and the ranking-free May characterization | partial; May 15/15 reviewed and recovered | [May ledger](coverage/M-SOCIAL-may.md); next Gibbard--Satterthwaite, Sen, ranking foundations, and median strategic compilation |
+| M-SOCIAL | `Mechanism/SocialChoice.lean`, `Mechanism/SocialChoice/**` | 9 | ranking/preference foundations plus coordinated domain | validated by Arrow, May, and the strategyproof-choice reduction | partial; May 15/15 and Gibbard--Satterthwaite 39/39 reviewed and recovered | [May ledger](coverage/M-SOCIAL-may.md); [Gibbard--Satterthwaite ledger](coverage/M-SOCIAL-gibbard-satterthwaite.md); next Sen, ranking foundations, and median strategic compilation |
 | M-AUCT | `Auctions/**` | 10 | finite auction/mechanism branch; continuous work behind D11 | sealed-bid, reserve, VCG, combinatorial, all-pay, exact natural knapsack search, real pivot-VCG knapsack, and repaired executable knapsack approximation validated | partial; accounted leaves 194/194 reviewed; knapsack is 33 adapted / 35 retired / 2 subsumed / 1 deferred | [basic auction ledger](coverage/M-AUCT-basic.md); [reserve Vickrey ledger](coverage/M-AUCT-reserve-vickrey.md); [VCG ledger](coverage/M-AUCT-vcg.md); [combinatorial ledger](coverage/M-AUCT-combinatorial.md); [all-pay ledger](coverage/M-AUCT-all-pay.md); [knapsack ledger](coverage/M-AUCT-knapsack.md); EXP-056/D27 closes the returned-allocation approximation gate, with exact Myerson payment behind M-BAYES/D11 |
 | M-VOTE | `Voting/**` | 7 | coordinated voting branch | validated foundations | partial | delegation, liquid democracy, median, majority, power inventory |
 

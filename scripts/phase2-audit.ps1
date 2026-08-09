@@ -842,6 +842,39 @@ if (-not $SkipReachability) {
   Report 'CORRELATED_DOMINANCE_BOUNDARY_PROBES_REJECTED' `
     $correlatedDominanceBoundaryRejected
 
+  # Gibbard--Satterthwaite is a theorem-only extension of the canonical
+  # probability-free ranking and Arrow surfaces.  The Core umbrella must
+  # expose the workflow, while the focused leaf must not acquire strategic,
+  # probabilistic, protocol, or analytic semantics.
+  $gibbardInputs = @(
+    'GameTheory.Ranking',
+    'GameTheory.SocialChoiceFunction',
+    'GameTheory.Aggregator',
+    'GameTheory.GibbardSatterthwaite.impossibility')
+  $gibbardBoundary = @(
+    'GameTheory.Probability.FinDist',
+    'GameTheory.GameForm',
+    'GameTheory.IsNash',
+    'GameTheory.Protocol.ExecutionProtocol',
+    'stdSimplex')
+  $gibbardCoreOutput = Run-Probe 'GameTheory.Core' $gibbardInputs
+  $gibbardInputsReached = 0
+  foreach ($constant in $gibbardInputs) {
+    if (-not (Is-Unreachable $gibbardCoreOutput $constant)) {
+      $gibbardInputsReached++
+    }
+  }
+  Report 'GIBBARD_INPUT_PROBES_REACHED' $gibbardInputsReached
+  $gibbardLeafOutput = Run-Probe `
+    'GameTheory.Core.GibbardSatterthwaite' $gibbardBoundary
+  $gibbardBoundaryRejected = 0
+  foreach ($constant in $gibbardBoundary) {
+    if (Is-Unreachable $gibbardLeafOutput $constant) {
+      $gibbardBoundaryRejected++
+    }
+  }
+  Report 'GIBBARD_BOUNDARY_PROBES_REJECTED' $gibbardBoundaryRejected
+
   # D40 keeps standard mixed rationalizability in Core while the executable
   # frontend remains an explicitly pure checker.  Positive probes require the
   # mixed and pure semantics to coexist; negative probes keep algorithms and
@@ -1681,6 +1714,8 @@ if ($VerifyExpected) {
     $Expected['INDIVIDUAL_RATIONALITY_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['CORRELATED_DOMINANCE_INPUT_PROBES_REACHED'] = 4
     $Expected['CORRELATED_DOMINANCE_BOUNDARY_PROBES_REJECTED'] = 3
+    $Expected['GIBBARD_INPUT_PROBES_REACHED'] = 4
+    $Expected['GIBBARD_BOUNDARY_PROBES_REJECTED'] = 5
     $Expected['RATIONALIZABILITY_INPUT_PROBES_REACHED'] = 6
     $Expected['RATIONALIZABILITY_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6

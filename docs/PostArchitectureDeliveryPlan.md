@@ -347,7 +347,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | zero/constant sum | security, matrix games, complementarity, correlation | **canonical saddle/Nash equivalence and the 40-row matrix security/value waist complete;** next general security, support complementarity, or antisymmetric geometry | `Core.ZeroSum` and `Core.MatrixGame`; existence/value selection in `Analysis` |
 | communication | observable babbling, exact pure-Nash outcome laws, mixed-Nash-to-CE, and finite Electronic Mail delivered; conditional public-signal disintegration and staged cheap talk remain | babbling plus induced correlation through the ordinary equilibrium predicates | static ownership validated by EXP-046/D18, EXP-047/D19, and EXP-048/D20; Protocol only when theorem-observable timing matters |
 | mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial, all-pay, exact knapsack search, real pivot-VCG knapsack, repaired executable approximation, finite hidden-action contracts, revelation, finite persuasion, quasilinear weak monotonicity, affine maximizers, and topology-free single-parameter payment bounds | **M-CONTRACT complete (EXP-065/D32), canonical finite-support revelation, information design, truthful Bayesian welfare/participation, feasible posterior laws, D33's monotonicity/affine consumers, topology-free Myerson algebra, and returned-allocation half approximation complete (EXP-056/D27);** envelope integrals and uniqueness remain behind M-BAYES/D11 | coordinated mechanism root with native principal-agent semantics, canonical Bayesian forms, and separately audited auction semantic, executable, and correctness leaves |
-| social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
+| social choice and voting | **May and Gibbard--Satterthwaite complete over the canonical ranking layer;** median voter, Sen, delegation, and liquid democracy remain | Arrow and strategyproof-choice impossibility plus one rule characterization without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
 
 Each lane first inventories its entire pinned family. Once the hostile result
 passes, routine leaf recovery should be broad and parallel. A lane closes when
@@ -577,18 +577,18 @@ capability status is not renegotiated during that review.
 
 ### Current release-coverage checkpoint
 
-Last integrated checkpoint: 2026-08-09, after the bounded correlation and
-relative-dominance batch completed the current breadth-first seam.
+Last integrated checkpoint: 2026-08-09, after the bounded
+Gibbard--Satterthwaite batch completed the current breadth-first seam.
 These counts are milestones, not declaration-port percentages.
 
 | Release dimension | Current evidence | Release condition |
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,637 of 8,324 pinned declarations are claimed by exact ledgers; 2,537 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,687-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | correlation/dominance complete: conditional obedience has no carrier finiteness, relative support exclusion uses canonical `StrictlyDominatesOn`, and strict-dominant profiles uniquely pin arbitrary CE/CCE laws | keep public-signal saturation deferred until a communication or correlation-regime consumer selects it |
-| next capability rotation | social choice: audit a bounded Gibbard--Satterthwaite theorem spine and its ranking/strategyproofness ownership | preserve the canonical ranking and equilibrium layers; do not grow a parallel social-choice preference engine |
-| release engineering | warning-clean 3,534-job default build; structural and coverage audits green; sampled kernel trust profile unchanged | final cold build, exhaustive trust sweep, examples, and generated release report |
+| exact accounting | 2,676 of 8,324 pinned declarations are claimed by exact ledgers; 2,576 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,648-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | Gibbard--Satterthwaite complete: public strategyproofness and onto choice reuse weak linear rankings, the induced Arrow reduction stays private, and the main theorem does not require finite alternatives | retain one canonical ranking and aggregator surface; Sen remains a separate bounded social-choice gate |
+| next capability rotation | cooperative games: audit a bounded convex-core or Bondareva--Shapley theorem spine against the canonical coalitional game | do not reconstruct a second coalitional-game wrapper or hide balancedness assumptions in the carrier |
+| release engineering | warning-clean 3,536-job default build; structural and coverage audits green; sampled kernel trust profile unchanged | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -717,8 +717,14 @@ provisioned in CI.
    dominant CE/CCE uniqueness.  A hostile law distinguishes relative from
    global dominance, while Prisoner's Dilemma pins arbitrary laws.  The eight
    public-signal saturation wrappers remain behind a selected consumer rather
-   than forcing a premature correlation-regime API.  The breadth-first queue
-   now rotates to a bounded Gibbard--Satterthwaite/social-choice audit;
+   than forcing a premature correlation-regime API.  The next social-choice
+   rotation recovers all 39 Gibbard--Satterthwaite declarations: the public
+   SCF, strategyproofness, onto, monotonicity, Pareto, and impossibility surface
+   uses canonical weak rankings, while raised rankings and the induced Arrow
+   reduction remain private.  An onto one-voter selector with a strict
+   profitable misreport is the hostile negative control.  The breadth-first
+   queue now rotates to a bounded cooperative convex-core or
+   Bondareva--Shapley audit;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.

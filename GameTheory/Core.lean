@@ -49,5 +49,6 @@ import GameTheory.Core.MatrixGame
 import GameTheory.Core.SocialChoice
 import GameTheory.Core.May
 import GameTheory.Core.Arrow
+import GameTheory.Core.GibbardSatterthwaite
 import GameTheory.Core.Coalitional
 import GameTheory.Core.Shapley

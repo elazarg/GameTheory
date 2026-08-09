@@ -27,9 +27,9 @@ GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          relabeling laws, utility-scale invariance, profile
                          individual rationality, social
                          welfare, robust CCE smoothness, zero-sum matrix
-                         security, May's majority
-                         characterization, and foundational social/coalitional
-                         theory
+                         security, May's majority characterization,
+                         Arrow and Gibbard--Satterthwaite impossibility, and
+                         foundational social/coalitional theory
 GameTheory/Protocol      execution, histories, information, assessment,
                          randomization, well-founded subgame perfection, and
                          static-form compilation
