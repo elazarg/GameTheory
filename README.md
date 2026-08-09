@@ -31,7 +31,8 @@ GameTheory/Epistemic     finite information partitions, posteriors, exact and
 GameTheory/Evolutionary  static ESS/NSS and the canonical symmetric-Nash bridge
 GameTheory/Finite        executable rational frontend and its correctness layer
 GameTheory/Analysis      stable, opt-in fixed-point, minimax, existence,
-                         approachability, and learning-convergence theory
+                         trembling-hand refinement, approachability, and
+                         learning-convergence theory
   /Protocol              analytic behavioral-assessment consistency bridge
   /Repeated              analytic repeated-game bridge and discounted folk theorem
   /Stochastic            normalized Shapley values and stationary statewise saddles

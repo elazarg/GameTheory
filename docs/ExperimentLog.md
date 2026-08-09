@@ -4541,3 +4541,66 @@ memory.
   one real public surface.  Close the last critical capability gap by rotating
   DFS to equilibrium refinements; retain the three named L-ROUND queues for
   BFS after the release-blocking gate.
+
+### EXP-071: trembling-hand refinement boundary
+
+- **Date / revision:** 2026-08-09, reserved on `c201670`
+- **Status:** complete; supports D38 and closes the last critical capability
+  gap
+- **Decision / question:** whether normal-form perturbation semantics belong in
+  stable Core with only pointwise convergence in Analysis, or whether the whole
+  trembling-hand surface must live behind the analytic boundary.
+- **Prediction:** lower-bound perturbations and restricted unilateral
+  equilibrium need no topology and can reuse the sole `IsEquilibrium`
+  predicate through a constrained deviation scheme.  Vanishing perturbations,
+  pointwise profile convergence, and trembling-hand perfection belong in a
+  one-way `Analysis.TremblingHand` leaf.  A full-support mixed Nash profile
+  should be perfect by scaling its own positive masses with a vanishing real
+  weight and using the same profile at every perturbed game.
+- **Representative slice:** prove the general full-support-Nash-to-perfect
+  theorem, then specialize it to the fair Matching Pennies equilibrium.  The
+  fixture is nondegenerate: both actions have positive probability and the
+  underlying game has no pure Nash equilibrium.
+- **Competing designs:** put every definition in Core; put every definition in
+  Analysis; or split topology-free perturbation/restricted equilibrium from
+  analytic convergence/perfection while reusing canonical deviations.
+- **Kill conditions:** the stable layer imports topology; perturbation defines
+  a parallel Nash logical shape rather than `IsEquilibrium`; representation
+  details such as PMF/ENNReal leak out of `FinDist`; the proof needs raw
+  `Function.update` or source transports; full-support Nash does not provide a
+  valid positive vanishing perturbation certificate; or the fixture is pure,
+  singleton, or otherwise fails to exercise genuine mixing.
+- **Reserved artifacts / commands:** `GameTheory/Core/TremblingHand.lean`,
+  `GameTheory/Analysis/TremblingHand.lean`, and an Analysis-local focused
+  Matching Pennies test;
+  26-row pinned ledger, Core/Analysis reachability checks, trust sample, exact
+  coverage, and warning-clean default build before promotion.
+- **Observations / measurements:** Core needs only real lower bounds on
+  canonical `FinDist` masses and a constrained deviation scheme mapping into
+  `unilateralConstant`; `IsPerturbedEq` is therefore one specialization of
+  `IsEquilibrium`, not a new Nash predicate.  Analysis alone imports
+  convergence, defines vanishing perturbations, and proves that every
+  full-support mixed Nash profile is trembling-hand perfect by scaling its own
+  masses with `1 / (n + 2)`.  Fair Matching Pennies supplies the hostile
+  witness: its two actions both have positive probability, the fair profile is
+  perfect, and the underlying game has no pure Nash equilibrium.  An initial
+  test location under `GameTheory/Tests` correctly failed the one-way Analysis
+  source check; moving the fixture under `GameTheory/Analysis` restored zero
+  outside-root importers without an exemption.  All 26 pinned declarations are
+  classified: the 20-row perturbation/perfection spine is promoted and six
+  distinct alternative-limit predicates remain a named BFS gate.  Focused
+  Core/Analysis/test builds are warning-clean.  Phase 2 source checks report
+  zero forbidden imports, representation leaks, raw updates, source
+  transports, placeholders, custom axioms, and build-output commands.  The
+  perturbation characterization, general perfection theorem, and hostile
+  Matching Pennies result depend only on `propext`, `Classical.choice`, and
+  `Quot.sound`.  The full Phase 2 gate returns `VERIFIED=1`: Core reaches its
+  three intended inputs and rejects both analytic names; Analysis reaches all
+  five intended inputs and rejects four unrelated domain boundaries.  Exact
+  coverage returns `VERIFIED=1` at 58 ledgers and 2,509/8,324 claimed rows.
+  The warning-clean default build completes all 3,517 jobs.
+- **Outcome / next action:** adopt D38 and promote the split Core/Analysis
+  surface.  The capability matrix now has no critical gaps, so leave DFS and
+  begin breadth-first release audit and recovery across the nine partial
+  mature workflows; do not treat the six deferred limit predicates as already
+  recovered.

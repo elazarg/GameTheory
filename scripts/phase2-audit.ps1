@@ -1279,6 +1279,66 @@ if (-not $SkipReachability) {
   Report 'PROBABILITY_REINDEX_BOUNDARY_PROBES_REJECTED' `
     $probabilityReindexBoundaryRejected
 
+  # EXP-071/D38 splits topology-free perturbation semantics from analytic
+  # perfection. Core must expose the constrained-deviation specialization but
+  # not its limit predicate; the Analysis leaf must positively join both halves
+  # without pulling in Protocol, Repeated, Stochastic, or fixed-point machinery.
+  $tremblingCoreInputs = @(
+    'GameTheory.GameForm.Perturbation',
+    'GameTheory.GameForm.IsPerturbedEq',
+    'GameTheory.IsNash.isPerturbedEq')
+  $tremblingCoreBoundary = @(
+    'GameTheory.Analysis.MixedProfileConvergesPointwise',
+    'GameTheory.GameForm.IsTremblingHandPerfect')
+  $tremblingCoreOutput = Run-Probe 'GameTheory.Core' `
+    ($tremblingCoreInputs + $tremblingCoreBoundary)
+  $tremblingCoreInputsReached = 0
+  foreach ($constant in $tremblingCoreInputs) {
+    if (-not (Is-Unreachable $tremblingCoreOutput $constant)) {
+      $tremblingCoreInputsReached++
+    }
+  }
+  Report 'TREMBLING_CORE_INPUT_PROBES_REACHED' $tremblingCoreInputsReached
+  $tremblingCoreBoundaryRejected = 0
+  foreach ($constant in $tremblingCoreBoundary) {
+    if (Is-Unreachable $tremblingCoreOutput $constant) {
+      $tremblingCoreBoundaryRejected++
+    }
+  }
+  Report 'TREMBLING_CORE_BOUNDARY_PROBES_REJECTED' `
+    $tremblingCoreBoundaryRejected
+
+  $tremblingAnalysisInputs = @(
+    'GameTheory.GameForm.Perturbation',
+    'GameTheory.GameForm.IsPerturbedEq',
+    'GameTheory.Analysis.MixedProfileConvergesPointwise',
+    'GameTheory.GameForm.IsTremblingHandPerfect',
+    'GameTheory.IsNash.isTremblingHandPerfect_of_fullSupport')
+  $tremblingAnalysisBoundary = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.UtilityGame.repeatedForm',
+    'GameTheory.Stochastic.Game',
+    'kakutani_fixed_point')
+  $tremblingAnalysisOutput = Run-Probe `
+    'GameTheory.Analysis.TremblingHand' `
+    ($tremblingAnalysisInputs + $tremblingAnalysisBoundary)
+  $tremblingAnalysisInputsReached = 0
+  foreach ($constant in $tremblingAnalysisInputs) {
+    if (-not (Is-Unreachable $tremblingAnalysisOutput $constant)) {
+      $tremblingAnalysisInputsReached++
+    }
+  }
+  Report 'TREMBLING_ANALYSIS_INPUT_PROBES_REACHED' `
+    $tremblingAnalysisInputsReached
+  $tremblingAnalysisBoundaryRejected = 0
+  foreach ($constant in $tremblingAnalysisBoundary) {
+    if (Is-Unreachable $tremblingAnalysisOutput $constant) {
+      $tremblingAnalysisBoundaryRejected++
+    }
+  }
+  Report 'TREMBLING_ANALYSIS_BOUNDARY_PROBES_REJECTED' `
+    $tremblingAnalysisBoundaryRejected
+
   # EXP-050/D22 and EXP-051/D23 keep the stable stochastic root
   # analysis-light. It must positively reach the four semantic layers,
   # canonical approximate Nash, and the structural zero-sum surface, while
@@ -1461,6 +1521,10 @@ if ($VerifyExpected) {
     $Expected['TRANSFORM_INPUT_PROBES_REACHED'] = 6
     $Expected['PROBABILITY_REINDEX_INPUT_PROBES_REACHED'] = 2
     $Expected['PROBABILITY_REINDEX_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['TREMBLING_CORE_INPUT_PROBES_REACHED'] = 3
+    $Expected['TREMBLING_CORE_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['TREMBLING_ANALYSIS_INPUT_PROBES_REACHED'] = 5
+    $Expected['TREMBLING_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 7
     $Expected['STOCHASTIC_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['STOCHASTIC_ANALYSIS_INPUT_PROBES_REACHED'] = 8

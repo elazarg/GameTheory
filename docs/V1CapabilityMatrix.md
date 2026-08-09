@@ -41,14 +41,13 @@ Verdicts are intentionally qualitative:
 
 ## Dashboard
 
-The 45 workflow rows below contain 28 better, 5 comparable, and 9 partial
-verdicts; 1 is a critical gap and 2 are deliberately retired or out of
+The 45 workflow rows below contain 28 better, 6 comparable, and 9 partial
+verdicts; there are 0 critical gaps and 2 are deliberately retired or out of
 scope.  The strongest evidence is the canonical static/protocol spine, NFG,
 the frozen EFG/Kuhn/SPE transfers, finite learning, finite auctions, congestion,
 finite information design, multi-round monitoring, and the executable rational
-frontend.  The remaining release blocker is equilibrium refinement.  The many partial
-rows are not treated as
-release-ready merely because their declaration review is advanced; in
+frontend.  The critical-gap DFS is complete.  The many partial rows are not
+treated as release-ready merely because their declaration review is advanced; in
 particular, the live FOSG queue still has 81 rows to classify
 ([`docs/V1CoverageLedger.md`](V1CoverageLedger.md)).
 
@@ -83,7 +82,7 @@ particular, the live FOSG queue still has 81 rows to classify
 | Prove sequential rationality / one-shot deviation iff subgame perfection, including off-path histories | EFG refinement material; frozen F4 | [`GameTheory/Protocol/SubgamePerfect.lean`](../GameTheory/Protocol/SubgamePerfect.lean), EFG specialization, complete F4 ledger | better | Recover remaining EFG refinement declarations without weakening well-founded hypotheses. |
 | Construct a pure SPE in a finite perfect-information game by backward induction | `Theorems/Zermelo.lean` (T-ZER) | [`GameTheory/Protocol/Zermelo.lean`](../GameTheory/Protocol/Zermelo.lean) constructs one information-local Bellman profile and proves SPE after every history; [`GameTheory/Languages/EFG/Zermelo.lean`](../GameTheory/Languages/EFG/Zermelo.lean) is the transparent EFG specialization; the chance/off-path witness is build evidence | better | Keep well-foundedness and finite local choices explicit; do not reintroduce subtree evaluators, bounded-utility wrappers, or global `Fintype.ofFinite`. |
 | Move between behavioral and mixed strategies under sharp recall/no-revisit conditions | `Languages/Kuhn/**`, `Theorems/Kuhn/**` (L-KUHN); frozen F3/T2 | [`GameTheory/Protocol/Information.lean`](../GameTheory/Protocol/Information.lean), [`GameTheory/Languages/EFG/Kuhn.lean`](../GameTheory/Languages/EFG/Kuhn.lean); complete T2 ledger | better | Classify non-flagship generic/language-specific Kuhn material. |
-| Use trembling-hand and assessment refinements beyond ordinary mixed Nash | refinement and sequential-assessment files in `Concepts/Mixed/**` (S-MIX) | Pointwise assessment consistency exists in the opt-in Analysis/Protocol bridge, but the mature refinement workflow is not recovered | critical gap | Recover one nondegenerate trembling-hand or perfect-equilibrium theorem with the topology boundary explicit. |
+| Use trembling-hand and assessment refinements beyond ordinary mixed Nash | refinement and sequential-assessment files in `Concepts/Mixed/**` (S-MIX) | [`GameTheory/Core/TremblingHand.lean`](../GameTheory/Core/TremblingHand.lean) owns perturbations through canonical deviations; [`GameTheory/Analysis/TremblingHand.lean`](../GameTheory/Analysis/TremblingHand.lean) proves full-support mixed Nash is perfect; the Analysis/Protocol bridge owns pointwise assessment consistency; [26/26 trembling-hand ledger](coverage/S-MIX-trembling-hand.md) | comparable | Recover the six distinct alternative-limit rows and audit the remaining sequential-assessment inventory during BFS. |
 | Model simultaneous stochastic play with observation-local policies and serialize FOSG to EFG | `Languages/FOSG/**` (L-FOSG); `Languages/Bridges/**` (L-BRIDGE) | [`GameTheory/Languages/FOSG.lean`](../GameTheory/Languages/FOSG.lean), [`GameTheory/Languages/Bridges/FOSGToEFG.lean`](../GameTheory/Languages/Bridges/FOSGToEFG.lean) | partial | Finish the remaining L-FOSG and bridge queues; counterfactual reach, CFR, continuation coefficients, and strategic/utility transfer keep separate gates. |
 | Compile a typed MAID while preserving native owner, policy, outcome law, and Nash transfer | `Languages/MAID.lean`, `Languages/MAID/**` (L-MAID); frozen T3 | [`GameTheory/Languages/MAID.lean`](../GameTheory/Languages/MAID.lean), [`GameTheory/Languages/MAID/ToEFG.lean`](../GameTheory/Languages/MAID/ToEFG.lean), complete T3 ledger | better | Recover broader MAID refinement, recall, and Kuhn-facing results. |
 | Model multi-round games with previous-action information and imperfect monitoring | `Languages/MultiRound.lean`, `Languages/MultiRound/**` (L-ROUND) | [`GameTheory/Languages/MultiRound.lean`](../GameTheory/Languages/MultiRound.lean), generic perfect recall, hostile coarse-monitoring fixture, and [233-row inventory](coverage/L-ROUND-broad.md) | better | Keep one Protocol/FOSG runner; absent-minded, finite-information Kuhn, and generic stagewise-Nash breadth remain explicit BFS. |

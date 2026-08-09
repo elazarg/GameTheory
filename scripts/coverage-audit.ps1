@@ -450,7 +450,8 @@ foreach ($verdict in $allowedCapabilityVerdicts) {
 $dashboardPattern =
   'The (?<rows>\d+) workflow rows below contain (?<better>\d+) better, ' +
   '(?<comparable>\d+) comparable, and (?<partial>\d+) partial\s+' +
-  'verdicts; (?<critical>\d+) (?:are critical gaps|is a critical gap) and ' +
+  'verdicts; (?:there (?:are|is) )?(?<critical>\d+) ' +
+  '(?:critical gaps|are critical gaps|is a critical gap) and ' +
   '(?<retired>\d+) are deliberately'
 $dashboard = [regex]::Match($capabilityText, $dashboardPattern)
 $capabilityDashboardMismatch = if (-not $dashboard.Success) { 1 } elseif (

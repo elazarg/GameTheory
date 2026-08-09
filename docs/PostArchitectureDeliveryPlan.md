@@ -577,18 +577,18 @@ capability status is not renegotiated during that review.
 
 ### Current release-coverage checkpoint
 
-Last integrated checkpoint: 2026-08-09, after the canonical multi-round
-imperfect-monitoring gate.
+Last integrated checkpoint: 2026-08-09, after the trembling-hand refinement
+gate closed the last critical capability gap.
 These counts are milestones, not declaration-port percentages.
 
 | Release dimension | Current evidence | Release condition |
 |---|---|---|
-| mature workflows | 28 better, 5 comparable, 9 partial, 1 critical gap | zero critical gaps; each partial audited for loss of mature use |
+| mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,483 of 8,324 pinned declarations are claimed by exact ledgers; 2,302 have reviewed dispositions and 181 are seeded `unreviewed` | report the exact 5,841-row remainder; complete every ledger supporting a parity claim |
-| current DFS seam | L-ROUND monitoring owner complete; all 233 declarations classified, with one canonical runner, generic perfect recall, and 37 substantive BFS rows deferred | preserve the Protocol/FOSG boundary and keep the old serialization stack retired |
-| next capability rotation | equilibrium refinements | one nondegenerate trembling-hand or perfect-equilibrium theorem across the explicit Analysis boundary |
-| release engineering | warning-clean 3,514-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
+| exact accounting | 2,509 of 8,324 pinned declarations are claimed by exact ledgers; 2,328 have reviewed dispositions and 181 are seeded `unreviewed` | report the exact 5,815-row remainder; complete every ledger supporting a parity claim |
+| current DFS seam | complete: topology-free perturbations reuse canonical deviations in Core; convergence/perfection live in Analysis; all 26 trembling-hand declarations are classified | preserve the split and do not conflate the six deferred alternative-limit predicates with perfection |
+| next capability rotation | breadth-first release audit across the nine partial workflows, beginning with the bounded 81-row L-FOSG queue | classify loss before adding breadth, then recover capped batches across sequential, static, mechanism, and cooperative fields |
+| release engineering | warning-clean 3,517-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -651,11 +651,16 @@ provisioned in CI.
    owner, proves generic perfect recall, and closes the previous-action/coarse-
    monitoring workflow with all 233 L-ROUND declarations classified; 163
    obsolete evaluator/serialization rows are retired and 37 substantive rows
-   remain named BFS.  The lead queue now rotates to the final critical gap,
-   equilibrium refinements, while the remaining 81-row L-FOSG
-   classification and D-REPEAT
-   rank/self-generation/uniform harvesting, and validated static and language
-   leaf recovery remain BFS work;
+   remain named BFS.  EXP-071/D38 then validates the normal-form refinement
+   split: Core owns perturbations and restricted canonical deviations,
+   Analysis owns convergence and perfection, full-support mixed Nash implies
+   perfection, and fair Matching Pennies witnesses genuine refinement without
+   pure Nash.  All 26 pinned trembling-hand declarations are classified, with
+   six distinct alternative-limit rows retained.  This closes the final
+   critical capability gap and ends the depth-first risk queue.  Breadth-first
+   release audit now starts with the remaining 81-row L-FOSG classification,
+   then rotates through D-REPEAT rank/self-generation/uniform harvesting and
+   validated static, mechanism, cooperative, and language leaf recovery;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.

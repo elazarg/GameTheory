@@ -22,8 +22,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Fifty-seven work-package ledgers claim 2,483 declarations: 2,302
-have reviewed dispositions and 181 remain seeded `unreviewed`; a further 5,841 are
+declarations. Fifty-eight work-package ledgers claim 2,509 declarations: 2,328
+have reviewed dispositions and 181 remain seeded `unreviewed`; a further 5,815 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -113,7 +113,7 @@ declaration-based.
 | S-EQ | `Concepts/Equilibrium/**` | 12 | `Core.Equilibrium`, `Core.Response`, `Core.Approximate` | validated | partial; strict-Nash seed plus approximate Nash 8/8 reviewed | [strict-Nash seed](coverage/S-EQ-strict-nash.md), [approximate-Nash ledger](coverage/S-EQ-approximate.md); next secure and remaining strict theorem families against one Nash surface |
 | S-DOM | `Concepts/Dominance/**` | 9 | `Core.Response` and finite correctness | validated | partial | solvability, undominated, and rationalizability inventory |
 | S-CORR | `Concepts/Correlation/**` | 10 | `Core.Equilibrium`; existence in `Analysis` | validated | partial; mixed-Nash bridge module 12/12 reviewed, 2 later-slice rows deferred | [mixed Nash and correlated-equilibrium ledger](coverage/S-CORR-mixed-nash.md); next conditional obedience, dominated support, existence, approximation, timing, regret, and hierarchy separations |
-| S-MIX | `Concepts/Mixed/**` | 9 | `Core.Mixed`; assessment material in Protocol/Analysis | validated | partial; binary proof spine 15 declarations and mixed-improvement package 11/11 reviewed | [binary mixed-equilibrium ledger](coverage/S-MIX-binary.md), [mixed-improvement ledger](coverage/S-MIX-mixed-improvement.md); next dominance, trembling-hand, uniform/balanced wrappers, and remaining language-facing results |
+| S-MIX | `Concepts/Mixed/**` | 9 | `Core.Mixed`; perturbations in Core; limit and assessment material in Analysis/Protocol | validated by EXP-071/D38 | partial; binary proof spine 15 declarations, mixed-improvement package 11/11, and trembling-hand package 26/26 reviewed | [binary mixed-equilibrium ledger](coverage/S-MIX-binary.md), [mixed-improvement ledger](coverage/S-MIX-mixed-improvement.md), [trembling-hand ledger](coverage/S-MIX-trembling-hand.md); next dominance, six alternative-limit rows, sequential assessment, uniform/balanced wrappers, and remaining language-facing results |
 | S-POT | `Concepts/Potential/**` | 9 | `Core.Potential` | validated | partial; basic package 22/22 and mixed-potential package 22/22 reviewed | [basic potential ledger](coverage/S-POT-basic.md), [mixed-potential ledger](coverage/S-POT-mixed.md); exact mixed extension recovered without finite carriers, four weighted rows deferred; next decomposition and harmonic inventory |
 | S-ZERO | `Concepts/ZeroSum/**` | 15 | `Core.ZeroSum`; existence in `Analysis` | validated | partial; binary constant-sum correlation proof spine 11 declarations reviewed | [constant-sum correlation ledger](coverage/S-ZERO-constant-sum-correlation.md); next security, general value/correlation, matrix geometry, and complementarity |
 | S-WEL | `Concepts/Welfare/**` | 13 | `Core.Welfare`, `Core.RobustWelfare`, domain consumers, plus `Analysis.Repeated` | pure and robust smoothness validated by EXP-052/053 and D24 | partial; Smoothness 4/4 reviewed, no deferred rows | [smoothness ledger](coverage/S-WEL-smoothness.md); next individual rationality and remaining welfare results |
