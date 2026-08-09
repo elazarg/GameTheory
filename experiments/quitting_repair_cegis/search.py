@@ -46,6 +46,20 @@ class SearchConfig:
     max_words: int = 50_000
     include_hints: bool = True
 
+    def __post_init__(self) -> None:
+        limits = {
+            "max_cutoff_roots": self.max_cutoff_roots,
+            "max_stationary_roots": self.max_stationary_roots,
+            "max_pair_roots": self.max_pair_roots,
+            "max_word_roots": self.max_word_roots,
+            "max_words": self.max_words,
+        }
+        for name, value in limits.items():
+            if value < 0:
+                raise ValueError(f"{name} must be nonnegative")
+        if self.max_period < 1:
+            raise ValueError("max_period must be positive")
+
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> "SearchConfig":
         data = data or {}
@@ -162,7 +176,7 @@ def search_cutoff_one(
         tested,
         True,
         best,
-        "finite zero-tail root grid exhausted; this is only a filter",
+        "configured zero-tail root budget exhausted; this is only a filter",
     )
 
 
@@ -214,7 +228,7 @@ def search_stationary(
         tested,
         True,
         best,
-        "general stationary grid stratum exhausted; this is only a filter",
+        "configured general stationary budget exhausted; this is only a filter",
     )
 
 
@@ -336,7 +350,7 @@ def search_quitter_pairs(
         tested,
         True,
         best,
-        "finite one/two-mixer boundary charts exhausted; this is only a filter",
+        "configured one/two-mixer boundary budget exhausted; this is only a filter",
     )
 
 

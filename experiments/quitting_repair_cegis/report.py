@@ -47,6 +47,7 @@ def trace_dict(trace: RungTrace) -> dict[str, Any]:
 def _lean_checker_for(kind: str) -> dict[str, str]:
     if kind == "cutoff_one":
         return {
+            "status": "theorem_schema_only",
             "certificate_type": "GameTheory.QuittingCutoffOneRepairCertificate",
             "conclusion": "GameTheory.QuittingCutoffOneRepairCertificate.isUniformEquilibriumPayoff",
         }
@@ -56,11 +57,13 @@ def _lean_checker_for(kind: str) -> dict[str, str]:
         "quitter_pair",
     }:
         return {
+            "status": "theorem_schema_only",
             "certificate_type": "GameTheory.QuittingStationaryRepairCertificate",
             "conclusion": "GameTheory.QuittingStationaryRepairCertificate.isUniformEquilibriumPayoff",
         }
     if kind == "accepted_holonomy_word":
         return {
+            "status": "theorem_schema_only",
             "certificate_type": "GameTheory.QuittingCyclicRepairCertificate",
             "conclusion": "GameTheory.QuittingCyclicRepairCertificate.isUniformEquilibriumPayoff",
         }
@@ -97,6 +100,9 @@ def make_repair_report(
         "machine_check": {
             "exact_arithmetic": "fractions.Fraction",
             "python_command": "python3 -m experiments.quitting_repair_cegis verify-report",
+            # The JSON payload is exact external evidence, not a Lean term.
+            # This identifies the theorem schema that a promoted certificate
+            # must instantiate; it never claims that Python authenticated one.
             "lean": _lean_checker_for(certificate["kind"]),
         },
         "search": config.to_dict(),
@@ -282,7 +288,11 @@ def verify_report(game: RationalQuittingGame, report: Mapping[str, Any]) -> None
             raise ValueError(
                 "repair certificate payload does not match exact recomputation"
             )
-        _lean_checker_for(expected["kind"])
+        expected_lean = _lean_checker_for(expected["kind"])
+        if report.get("machine_check", {}).get("lean") != expected_lean:
+            raise ValueError(
+                "repair report misstates its Lean theorem-schema status"
+            )
     elif classification == "gap_counterexample":
         certificate = report["certificate"]
         kind = certificate.get("kind")

@@ -12,8 +12,9 @@ import UniformEquilibrium.Quitting.Cycles.PeriodicCompiler
 # Kernel-checked certificate types for the finite quitting repair ladder
 
 The search code in `experiments/quitting_repair_cegis/` works with exact
-rational tables, but its positive output is deliberately phrased in terms of
-three existing semantic compilers:
+rational tables. Its JSON output is external candidate data, not a Lean proof;
+promotion consists of constructing one of the following certificate types,
+whose fields are exactly the hypotheses of three existing semantic compilers:
 
 * a safe cutoff-one zero-tail root;
 * an arbitrary stationary product root verified by the exact full-rate

@@ -9,6 +9,7 @@
   "schema": "quitting-repair-report/v1",
   "scope": {
     "approximate_profile_grammar": {
+      "all_cyclic_entry_phases": true,
       "cutoff_one_grid": 100,
       "cyclic_word_budget": 100,
       "pure_root_cyclic_period": 2,
@@ -32,5 +33,5 @@
   },
   "table": "two-player-fixed-gap-template[m3p0=-2]",
   "table_fingerprint": "sha256:a283565b29b065c82b7b0cda73f15974a386152a36a83be49329a1b413cf8993",
-  "tested": 38
+  "tested": 44
 }

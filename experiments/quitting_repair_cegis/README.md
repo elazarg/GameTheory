@@ -36,8 +36,12 @@ The corresponding kernel-facing types are in
 - `QuittingCyclicRepairCertificate`.
 
 Each type exposes an exact terminal-Nash theorem and a uniform-payoff theorem
-through the existing production compilers.  The diagnostic module contains no
-search procedure and no failure-to-nonexistence theorem.
+through the existing production compilers. The JSON search output is exact
+external arithmetic evidence, not an instantiated Lean proof: reports identify
+the applicable theorem schema with `status: theorem_schema_only`. Promotion to
+a library theorem requires constructing that certificate in Lean. The
+diagnostic module contains no search procedure and no
+failure-to-nonexistence theorem.
 
 ## Exact semantics checked by Python
 
@@ -81,8 +85,9 @@ accepted word.
 
 Reports use `quitting-repair-report/v1`.
 
-- `classification: repair` contains a complete exact certificate and names its
-  Lean checker.
+- `classification: repair` contains complete exact finite data and names the
+  Lean certificate schema it can instantiate; the JSON itself is not a Lean
+  proof term.
 - `classification: gap_counterexample` contains a profile whose exact terminal
   exploitability is below the proposed positive gap.  It refutes that fixed-gap
   candidate but need not be an equilibrium.
@@ -106,7 +111,7 @@ python3 -m experiments.quitting_repair_cegis ladder \
   experiments/quitting_repair_cegis/tables/cutoff_one_mixed.json
 ```
 
-Save and independently recheck a report:
+Save and independently recompute a report's exact Python arithmetic:
 
 ```bash
 python3 -m experiments.quitting_repair_cegis ladder TABLE.json \
@@ -139,8 +144,9 @@ python3 -m experiments.quitting_repair_cegis cegis \
   --output-dir /tmp/quitting-fixed-gap
 ```
 
-One candidate has a kernel-typable cutoff-one repair; the other survives only
-the deliberately coarse finite grammar and is reported as a filter.
+One candidate has an exact cutoff-one repair matching a stable Lean certificate
+schema; the other survives only the deliberately coarse finite grammar and is
+reported as a filter.
 
 ## Regressions
 

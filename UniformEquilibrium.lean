@@ -1,5 +1,6 @@
 import GameTheory.Concepts.Stochastic
 import UniformEquilibrium.Diagnostics.Uniform.Consequences
+import UniformEquilibrium.Diagnostics.Quitting.ExactRepairCertificate
 import UniformEquilibrium.Quitting.Paths.SupportWitnessUniform
 import UniformEquilibrium.Quitting.Boundary.Repair.LocalMechanismResidueWitness
 import UniformEquilibrium.Diagnostics.Uniform.PaddedDuplicateLotterySeparation

@@ -43,11 +43,20 @@ class SearchAndReportTests(unittest.TestCase):
         self.assertIsNotNone(result.finding)
         report = make_repair_report(game, result, self.config)
         verify_report(game, report)
+        self.assertEqual(
+            report["machine_check"]["lean"]["status"],
+            "theorem_schema_only",
+        )
 
         corrupted = deepcopy(report)
         corrupted["certificate"]["value"][0] = "1"
         with self.assertRaises(ValueError):
             verify_report(game, corrupted)
+
+        false_kernel_status = deepcopy(report)
+        false_kernel_status["machine_check"]["lean"]["status"] = "kernel_checked"
+        with self.assertRaises(ValueError):
+            verify_report(game, false_kernel_status)
 
     def test_negative_claim_discipline(self) -> None:
         invalid = {
@@ -63,6 +72,9 @@ class SearchAndReportTests(unittest.TestCase):
             "classification": "filter",
             "claim": "bounded_search_filter_only",
             "proves_nonexistence": False,
+            "fixed_gap": "1/10",
+            "tested": 1,
+            "minimum_regret": "1/10",
         }
         validate_claim_discipline(valid_filter)
 

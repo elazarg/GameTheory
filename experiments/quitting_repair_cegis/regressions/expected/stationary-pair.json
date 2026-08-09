@@ -44,7 +44,8 @@
     "exact_arithmetic": "fractions.Fraction",
     "lean": {
       "certificate_type": "GameTheory.QuittingStationaryRepairCertificate",
-      "conclusion": "GameTheory.QuittingStationaryRepairCertificate.isUniformEquilibriumPayoff"
+      "conclusion": "GameTheory.QuittingStationaryRepairCertificate.isUniformEquilibriumPayoff",
+      "status": "theorem_schema_only"
     },
     "python_command": "python3 -m experiments.quitting_repair_cegis verify-report"
   },

@@ -66,7 +66,13 @@ def command_verify_report(args: argparse.Namespace) -> int:
     with Path(args.report).open("r", encoding="utf-8") as handle:
         report = json.load(handle)
     verify_report(game, report)
-    print(f"verified {args.report}")
+    suffix = (
+        "; exact Python recomputation only—the named Lean theorem schema "
+        "is not an instantiated proof"
+        if report.get("classification") == "repair"
+        else ""
+    )
+    print(f"verified {args.report}{suffix}")
     return 0
 
 
