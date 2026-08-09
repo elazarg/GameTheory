@@ -53,10 +53,12 @@ theorem QuittingProjectiveSingletonPacket.value_uniform_or_terminalRejected
         reward packet.value).1 haccept)
   · exact Or.inr hrejection
 
+namespace QuittingProjectiveSingletonPacket
+
 /-- Conditional packet-facing retarget adapter.  Its premise is separately
 produced target-free uniform-payoff existence; it does not construct a
 retarget from packet or rejection data. -/
-theorem QuittingProjectiveSingletonPacket.terminalTargetAcceptance_or_retarget_of_exists_uniformPayoff
+theorem terminalTargetAcceptance_or_retarget_of_exists_uniformPayoff
     {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
     (packet : QuittingProjectiveSingletonPacket reward)
     (hexists : ∃ target : Payoff ι,
@@ -67,5 +69,7 @@ theorem QuittingProjectiveSingletonPacket.terminalTargetAcceptance_or_retarget_o
         (QuittingTerminalTargetRetargetingWitness reward packet.value) :=
   quittingTerminalTarget_acceptance_or_retarget_of_exists_uniformPayoff
     reward packet.value hexists
+
+end QuittingProjectiveSingletonPacket
 
 end GameTheory

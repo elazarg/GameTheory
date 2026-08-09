@@ -6,7 +6,7 @@ Authors: GameTheory contributors
 
 import UniformEquilibrium.Quitting.Boundary.Repair.CollisionRepairCharacterization
 import UniformEquilibrium.Quitting.Boundary.Repair.CoupledPhaseSwitchCap
-import UniformEquilibrium.Quitting.Terminal.TargetTail.TerminalUniformPayoffSelection
+import UniformEquilibrium.Quitting.Terminal.TargetTail.TerminalTargetSemantics
 
 /-!
 # Instant quitting equilibria completed by punishment
@@ -221,48 +221,6 @@ theorem quittingInstantPunishmentWorks_iff
       isQuittingInstantNoJoin_of_works reward owner hworks⟩
   · rintro ⟨hIR, hnoJoin⟩
     exact quittingInstantPunishmentWorks_of_conditions reward owner hIR hnoJoin
-
-/-- A fixed terminal target delivered by terminal approximate equilibria at all
-errors is a uniform-equilibrium payoff. -/
-theorem quittingGame_isUniformEquilibriumPayoff_of_terminalNash_all_errors_fixedTarget
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (target : Payoff ι)
-    (hterminal : ∀ ε : ℝ, 0 < ε →
-      ∃ profile : (quittingGame reward).BehaviorProfile,
-        (quittingGame reward).IsεAsymptoticNash
-          (quittingTerminalPayoff reward) ε profile ∧
-        quittingTerminalPayoff reward profile = target) :
-    (quittingGame reward).IsUniformEquilibriumPayoff none target := by
-  intro ε hε
-  let error := ε / 2
-  have herror : 0 < error := by
-    dsimp only [error]
-    linarith
-  obtain ⟨profile, hnash, htarget⟩ := hterminal error herror
-  have huniform : (quittingGame reward).IsUniformεEquilibrium none ε profile :=
-    quittingGame_isUniformεEquilibrium_of_terminalNash_finite reward profile
-      (by dsimp only [error]; linarith) hnash
-  obtain ⟨nashThreshold, hnashThreshold⟩ := huniform
-  have heventuallyDelivery : ∀ᶠ horizon : ℕ in atTop, ∀ who,
-      |(quittingGame reward).finiteAveragePayoff none horizon profile who -
-          target who| ≤ ε := by
-    apply Filter.eventually_all.mpr
-    intro who
-    have hball :=
-      (tendsto_finiteAveragePayoff_quittingGame reward profile who).eventually
-        (Metric.ball_mem_nhds
-          (quittingTerminalPayoff reward profile who) hε)
-    filter_upwards [hball] with horizon hhorizon
-    have htargetWho := congrFun htarget who
-    rw [htargetWho] at hhorizon
-    simpa [Metric.mem_ball, Real.dist_eq] using hhorizon.le
-  obtain ⟨deliveryThreshold, hdeliveryThreshold⟩ :=
-    Filter.eventually_atTop.1 heventuallyDelivery
-  refine ⟨profile, max nashThreshold deliveryThreshold,
-    fun horizon hhorizon => ⟨?_, ?_⟩⟩
-  · exact hnashThreshold horizon
-      (le_trans (Nat.le_max_left _ _) hhorizon)
-  · exact hdeliveryThreshold horizon
-      (le_trans (Nat.le_max_right _ _) hhorizon)
 
 /-- **Named-payoff consequence.**  The exact instant criterion makes the
 singleton terminal vector a uniform-equilibrium payoff. -/

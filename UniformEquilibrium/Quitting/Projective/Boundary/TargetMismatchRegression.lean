@@ -37,7 +37,7 @@ def packetTargetRejectionWitness :
     classical
     intro profile hnash
     by_contra hseparated
-    push_neg at hseparated
+    push Not at hseparated
     have hclose : ∀ who,
         |quittingTerminalPayoff reward profile who - 1| ≤ (1 / 10 : ℝ) := by
       intro who

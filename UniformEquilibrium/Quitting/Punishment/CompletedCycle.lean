@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import UniformEquilibrium.Quitting.Cycles.AdmissibleCycleTerminalEquilibrium
 import UniformEquilibrium.Quitting.Cycles.CycleIsolatedCoordinate
 import UniformEquilibrium.Quitting.Punishment.InstantPunishment
+import UniformEquilibrium.Quitting.Terminal.TargetTail.TerminalTargetSemantics
 
 /-!
 # Punishment-completed absorbing cycles
@@ -471,70 +472,6 @@ theorem quittingRootSequenceHazardTerminalValue_quittingPhaseSwitchRoots_le_of_p
     dsimp only [prescribedSurvival] at hjointError
     linarith
   linarith
-
-/-! ## Target-identified terminal selection -/
-
-/-- Terminal approximate equilibria whose terminal payoffs converge uniformly
-to one prescribed target make that target a uniform-equilibrium payoff. -/
-theorem quittingGame_isUniformEquilibriumPayoff_of_terminalNash_all_errors_approxTarget
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (target : Payoff ι)
-    (hterminal : ∀ ε : ℝ, 0 < ε →
-      ∃ profile : (quittingGame reward).BehaviorProfile,
-        (quittingGame reward).IsεAsymptoticNash
-          (quittingTerminalPayoff reward) ε profile ∧
-        ∀ who, |quittingTerminalPayoff reward profile who - target who| ≤ ε) :
-    (quittingGame reward).IsUniformEquilibriumPayoff none target := by
-  intro ε hε
-  let terminalError := ε / 4
-  have hterminalError : 0 < terminalError := by
-    dsimp only [terminalError]
-    linarith
-  obtain ⟨profile, hnash, htarget⟩ :=
-    hterminal terminalError hterminalError
-  have huniform : (quittingGame reward).IsUniformεEquilibrium none ε profile :=
-    quittingGame_isUniformεEquilibrium_of_terminalNash_finite reward profile
-      (by dsimp only [terminalError]; linarith) hnash
-  obtain ⟨nashThreshold, hnashThreshold⟩ := huniform
-  have hhalf : 0 < ε / 2 := by linarith
-  have heventuallyDelivery : ∀ᶠ horizon : ℕ in atTop, ∀ who,
-      |(quittingGame reward).finiteAveragePayoff none horizon profile who -
-          target who| ≤ ε := by
-    apply Filter.eventually_all.mpr
-    intro who
-    have hball :=
-      (tendsto_finiteAveragePayoff_quittingGame reward profile who).eventually
-        (Metric.ball_mem_nhds
-          (quittingTerminalPayoff reward profile who) hhalf)
-    filter_upwards [hball] with horizon hhorizon
-    have hclose := htarget who
-    have htriangle :
-        |(quittingGame reward).finiteAveragePayoff none horizon profile who -
-            target who| ≤
-          |(quittingGame reward).finiteAveragePayoff none horizon profile who -
-              quittingTerminalPayoff reward profile who| +
-            |quittingTerminalPayoff reward profile who - target who| := by
-      calc
-        |(quittingGame reward).finiteAveragePayoff none horizon profile who -
-            target who| =
-          |((quittingGame reward).finiteAveragePayoff none horizon profile who -
-              quittingTerminalPayoff reward profile who) +
-            (quittingTerminalPayoff reward profile who - target who)| := by
-              ring_nf
-        _ ≤ _ := abs_add_le _ _
-    have hdelivery :
-        |(quittingGame reward).finiteAveragePayoff none horizon profile who -
-          quittingTerminalPayoff reward profile who| < ε / 2 := by
-      simpa only [Metric.mem_ball, Real.dist_eq] using hhorizon
-    dsimp only [terminalError] at hclose
-    linarith
-  obtain ⟨deliveryThreshold, hdeliveryThreshold⟩ :=
-    Filter.eventually_atTop.1 heventuallyDelivery
-  refine ⟨profile, max nashThreshold deliveryThreshold,
-    fun horizon hhorizon => ⟨?_, ?_⟩⟩
-  · exact hnashThreshold horizon
-      (le_trans (Nat.le_max_left _ _) hhorizon)
-  · exact hdeliveryThreshold horizon
-      (le_trans (Nat.le_max_right _ _) hhorizon)
 
 /-- **Terminal compiler for a punishment-admissible absorbing cycle.**  At
 every positive error it produces a terminal approximate equilibrium whose

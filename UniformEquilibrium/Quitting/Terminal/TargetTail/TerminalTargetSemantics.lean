@@ -21,6 +21,12 @@ payoff.  Negating the quantified terminal statement yields a positive scale at
 which every terminal approximate equilibrium is separated from the target in
 some coordinate.
 
+The target-free existence equivalence in `TerminalUniformPayoffSelection`
+asserts only that terminal approximate equilibria at every accuracy select
+some uniform payoff, possibly after compact subsequence extraction.  The extra
+payoff-delivery clause here identifies one prescribed target and therefore
+supports rejection of a proposed target without denying equilibrium elsewhere.
+
 The resulting acceptance-or-rejection theorem is a classical semantic
 alternative, not a computable decision procedure and not a producer from more
 primitive game data.  The optional retargeting adapter below assumes
@@ -100,6 +106,42 @@ theorem QuittingTerminalTargetAcceptanceCertificate.isUniformEquilibriumPayoff
         abs_add_le _ _
       _ ≤ ε := by
         linarith [htarget who]
+
+/-- Terminal approximate equilibria whose terminal payoffs converge uniformly
+to one prescribed target make that target a uniform-equilibrium payoff.  This
+is the direct fixed-target form of terminal-to-uniform selection. -/
+theorem quittingGame_isUniformEquilibriumPayoff_of_terminalNash_all_errors_approxTarget
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (target : Payoff ι)
+    (hterminal : ∀ ε : ℝ, 0 < ε →
+      ∃ profile : (quittingGame reward).BehaviorProfile,
+        (quittingGame reward).IsεAsymptoticNash
+          (quittingTerminalPayoff reward) ε profile ∧
+        ∀ who, |quittingTerminalPayoff reward profile who - target who| ≤ ε) :
+    (quittingGame reward).IsUniformEquilibriumPayoff none target := by
+  apply QuittingTerminalTargetAcceptanceCertificate.isUniformEquilibriumPayoff
+  refine { terminalProfile := ?_ }
+  intro ε hε
+  obtain ⟨profile, hnash, hclose⟩ := hterminal (ε / 2) (by linarith)
+  exact ⟨profile, hnash.mono (by linarith), fun who => by
+    have := hclose who
+    linarith⟩
+
+/-- Terminal approximate equilibria which deliver one exact terminal target at
+every error make that target a uniform-equilibrium payoff. -/
+theorem quittingGame_isUniformEquilibriumPayoff_of_terminalNash_all_errors_fixedTarget
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (target : Payoff ι)
+    (hterminal : ∀ ε : ℝ, 0 < ε →
+      ∃ profile : (quittingGame reward).BehaviorProfile,
+        (quittingGame reward).IsεAsymptoticNash
+          (quittingTerminalPayoff reward) ε profile ∧
+        quittingTerminalPayoff reward profile = target) :
+    (quittingGame reward).IsUniformEquilibriumPayoff none target := by
+  apply quittingGame_isUniformEquilibriumPayoff_of_terminalNash_all_errors_approxTarget
+  intro ε hε
+  obtain ⟨profile, hnash, htarget⟩ := hterminal ε hε
+  refine ⟨profile, hnash, fun who => ?_⟩
+  rw [congrFun htarget who, sub_self, abs_zero]
+  exact hε.le
 
 /-- Every exact uniform-equilibrium target supplies a fixed-target terminal
 acceptance certificate. -/
@@ -205,7 +247,7 @@ theorem quittingTerminalTarget_semanticAlternative
         ∀ who,
           |quittingTerminalPayoff reward profile who - target who| < ε
   · exact Or.inl ⟨⟨hcertificate⟩⟩
-  · push_neg at hcertificate
+  · push Not at hcertificate
     obtain ⟨error, herror, hseparates⟩ := hcertificate
     exact Or.inr ⟨{
       error := error

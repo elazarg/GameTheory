@@ -388,6 +388,7 @@ import UniformEquilibrium.Quitting.Terminal.ToUniformDeviationApproximation
 import UniformEquilibrium.Quitting.Paths.AlmostSureOpponentUniformization
 import UniformEquilibrium.Quitting.Terminal.TargetTail.TerminalUniformization
 import UniformEquilibrium.Quitting.Terminal.TargetTail.TerminalUniformPayoffSelection
+import UniformEquilibrium.Quitting.Terminal.TargetTail.TerminalTargetSemantics
 import UniformEquilibrium.Quitting.Debt.Dynamic.DebtTransportLaw
 import UniformEquilibrium.Quitting.Debt.Dynamic.DebtSurvivalBoundNotTight
 import UniformEquilibrium.Quitting.Debt.Dynamic.DebtClockDischarge
