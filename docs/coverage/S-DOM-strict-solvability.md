@@ -44,9 +44,11 @@ kernel game to the canonical preference-parametric static form and keeps
 assumptions local.
 
 Remaining S-DOM work is not hidden by this ledger: mixed-strategy domination
-and Bernheim--Pearce rationalizability, IESDS-to-correlated-equilibrium
-support, the undominated existence/counterexample family, and transform laws
-remain separate bounded BFS batches.
+and Bernheim--Pearce rationalizability are now closed by
+[`S-DOM-rationalizability.md`](S-DOM-rationalizability.md).
+IESDS-to-correlated-equilibrium support, the undominated
+existence/counterexample family, and transform laws remain separate bounded BFS
+batches.
 
 The unique-best-response theorem, generic existence/uniqueness theorem, and
 Prisoner's Dilemma flagship depend only on `propext`, `Classical.choice`, and

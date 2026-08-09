@@ -95,23 +95,23 @@ def isDominantProfile (G : TableGame ι) (profile : Profile G.sig) : Bool :=
 
 /-! ## Iterated strict dominance -/
 
-/-- One round of elimination of strictly dominated actions, where domination is
-tested only against opponents' actions that are still allowed. -/
-def eliminateRound (G : TableGame ι) (allowed : ∀ i, Finset (G.Action i)) :
+/-- One round of elimination by pure strictly dominating actions, where
+domination is tested only against opponents' actions that are still allowed. -/
+def eliminatePureRound (G : TableGame ι) (allowed : ∀ i, Finset (G.Action i)) :
     ∀ i, Finset (G.Action i) :=
   fun i => (allowed i).filter fun s =>
     ∀ t ∈ allowed i, ¬ ∀ profile : Profile G.sig, (∀ j, profile j ∈ allowed j) →
       G.payoff (Profile.update profile i s) i < G.payoff (Profile.update profile i t) i
 
-/-- The actions surviving `round` rounds of iterated strict dominance. -/
-def survivors (G : TableGame ι) : ℕ → ∀ i, Finset (G.Action i)
+/-- The actions surviving `round` rounds of iterated pure strict dominance. -/
+def pureSurvivors (G : TableGame ι) : ℕ → ∀ i, Finset (G.Action i)
   | 0 => fun _ => Finset.univ
-  | round + 1 => G.eliminateRound (G.survivors round)
+  | round + 1 => G.eliminatePureRound (G.pureSurvivors round)
 
-/-- `survivors` has stabilized at `round`. Once this is `true`, no later round
-removes anything. -/
-def survivorsStable (G : TableGame ι) (round : ℕ) : Bool :=
-  decide (∀ i, G.survivors (round + 1) i = G.survivors round i)
+/-- `pureSurvivors` has stabilized at `round`. Once this is `true`, no later
+pure-elimination round removes anything. -/
+def pureSurvivorsStable (G : TableGame ι) (round : ℕ) : Bool :=
+  decide (∀ i, G.pureSurvivors (round + 1) i = G.pureSurvivors round i)
 
 /-! ## Pareto efficiency -/
 

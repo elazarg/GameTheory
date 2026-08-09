@@ -36,8 +36,9 @@ means `DecidableEq ι`.
 | `isNash_mixed_iff` | yes | no | no | yes |
 | `IsBestResponse`, `WeaklyDominates`, `IsDominant` | no | no | no | yes |
 | `IsRationalizable`, `IsNash.isRationalizable` | no | no | no | yes |
+| `IsPureRationalizable`, `IsNash.isPureRationalizable` | no | no | no | yes |
 | `TableGame` and every boolean procedure | yes | yes | outcome = profile | yes |
-| `mem_enumerateNash_iff`, `mem_survivors_iff` | yes | yes | — | yes |
+| `mem_enumerateNash_iff`, `mem_pureSurvivors_iff` | yes | yes | — | yes |
 | `verifyMixedNash_eq_true_iff` | yes | yes | — | yes |
 | Bayesian `isNash_iff_interim` | yes | no (finite types) | no | yes |
 

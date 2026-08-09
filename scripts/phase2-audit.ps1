@@ -350,7 +350,7 @@ Report 'FIXED_POINT_IMPORTERS' $fixedPointNamers
 
 $Concepts = @('IsEquilibrium', 'IsNash', 'IsCoarseCorrelatedEq', 'IsCorrelatedEq',
   'IsStrongNash', 'IsBestResponse', 'WeaklyDominates', 'StrictlyDominatesOn',
-  'IsDominant', 'IsRationalizable', 'IsParetoEfficient')
+  'IsDominant', 'IsRationalizable', 'IsPureRationalizable', 'IsParetoEfficient')
 $duplicates = 0
 foreach ($concept in $Concepts) {
   $pattern = '(?m)^\s*(?:@\[[^]]*\]\s*)?(?:noncomputable\s+)?def\s+' +
@@ -778,6 +778,40 @@ if (-not $SkipReachability) {
   }
   Report 'UTILITY_INVARIANCE_BOUNDARY_PROBES_REJECTED' `
     $utilityInvarianceBoundaryRejected
+
+  # D40 keeps standard mixed rationalizability in Core while the executable
+  # frontend remains an explicitly pure checker.  Positive probes require the
+  # mixed and pure semantics to coexist; negative probes keep algorithms and
+  # higher semantic layers out of the Core leaf.
+  $rationalizabilityInputs = @(
+    'GameTheory.StrictlyDominatedByMixed',
+    'GameTheory.survivors',
+    'GameTheory.IsRationalizable',
+    'GameTheory.pureSurvivors',
+    'GameTheory.IsPureRationalizable',
+    'GameTheory.IsNash.isRationalizable')
+  $rationalizabilityBoundary = @(
+    'GameTheory.Finite.TableGame',
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.exists_isNash')
+  $rationalizabilityOutput = Run-Probe 'GameTheory.Core.Rationalizability' `
+    ($rationalizabilityInputs + $rationalizabilityBoundary)
+  $rationalizabilityInputsReached = 0
+  foreach ($constant in $rationalizabilityInputs) {
+    if (-not (Is-Unreachable $rationalizabilityOutput $constant)) {
+      $rationalizabilityInputsReached++
+    }
+  }
+  Report 'RATIONALIZABILITY_INPUT_PROBES_REACHED' `
+    $rationalizabilityInputsReached
+  $rationalizabilityBoundaryRejected = 0
+  foreach ($constant in $rationalizabilityBoundary) {
+    if (Is-Unreachable $rationalizabilityOutput $constant) {
+      $rationalizabilityBoundaryRejected++
+    }
+  }
+  Report 'RATIONALIZABILITY_BOUNDARY_PROBES_REJECTED' `
+    $rationalizabilityBoundaryRejected
 
   $repeatedAnalysisRejected = 0
   foreach ($root in @(
@@ -1580,6 +1614,8 @@ if ($VerifyExpected) {
     $Expected['MATRIX_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['UTILITY_INVARIANCE_INPUT_PROBES_REACHED'] = 4
     $Expected['UTILITY_INVARIANCE_BOUNDARY_PROBES_REJECTED'] = 3
+    $Expected['RATIONALIZABILITY_INPUT_PROBES_REACHED'] = 6
+    $Expected['RATIONALIZABILITY_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
     $Expected['REPEATED_BRIDGE_PROTOCOL_REJECTED'] = 1

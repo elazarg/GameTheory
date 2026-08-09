@@ -654,14 +654,17 @@ be disguised as degenerate instances of `IsEquilibrium`:
   with every unilateral alternative while `opponents` remains fixed;
 - `WeaklyDominates F weaklyPrefers i candidate alternative` compares the two
   strategies at every opponents' profile;
-- strict dominance, dominant strategies/profiles, and the selected finite
-  rationalizability notion are built once from those profile-quantified
-  predicates.
+- strict dominance and dominant strategies/profiles are built once from those
+  profile-quantified predicates;
+- EXP-073/D40 distinguishes standard mixed rationalizability (`survivors`,
+  `IsRationalizable`) from the weaker pure-dominator iteration
+  (`pureSurvivors`, `IsPureRationalizable`).
 
 These predicates share `GameForm.outcomeLaw`, preferences, and the profile
 operations with equilibrium, but they are a separate concept family. D10's
-boolean dominance and rationalizability algorithms prove correctness against
-these definitions; they do not introduce executable-only semantic predicates.
+boolean dominance and pure-elimination algorithms prove correctness against
+the explicitly named pure definitions; standard mixed rationalizability stays
+proof-semantic until a separate executable certificate gate passes.
 
 #### Validation spike
 

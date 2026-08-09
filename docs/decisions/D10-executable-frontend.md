@@ -2,7 +2,7 @@
 
 - **Status:** accepted
 - **Date:** 2026-07-26
-- **Experiment IDs:** EXP-007
+- **Experiment IDs:** EXP-007, EXP-073
 
 **Decision:** Keep a `TableGame` frontend over finite carriers and exact
 rational payoffs, in its own dependency root, and prove every boolean procedure
@@ -31,7 +31,7 @@ implementation" holds across both layers.
 | `strictlyDominates` | `strictlyDominates_eq_true_iff` |
 | `isDominant`, `isDominantProfile` | `isDominantProfile_eq_true_iff` |
 | `paretoDominates`, `isParetoEfficient` | `paretoDominates_eq_true_iff`, `isParetoEfficient_eq_true_iff` |
-| `eliminateRound`, `survivors`, `survivorsStable` | `mem_survivors_iff`, `survivorsStable_eq_true_iff`, `semantic_survivors_add_eq_of_survivorsStable` |
+| `eliminatePureRound`, `pureSurvivors`, `pureSurvivorsStable` | `mem_pureSurvivors_iff`, `pureSurvivorsStable_eq_true_iff`, `semantic_pureSurvivors_add_eq_of_pureSurvivorsStable` |
 | `expectedPayoff`, `verifyMixedNash` | `expectedUtility_toMixed`, `verifyMixedNash_eq_true_iff` |
 
 `verifyMixedNash_eq_true_iff` is the D2 kill test "NFG mixed extension using the
@@ -39,6 +39,11 @@ final signature API". It needs `isNash_mixed_iff` — a randomized deviation in
 the mixed extension is a mixture of pure ones — and `FinDist.ofWeights` to
 compile a rational weight vector into the semantic law. No second mixed-game
 API appears.
+
+EXP-073/D40 clarifies that this frontend checks the weaker pure-dominator
+iteration.  Standard Bernheim--Pearce rationalizability lives in Core and uses
+`FinDist` mixed dominators; an executable mixed-elimination procedure would
+need its own exact certificate design and is not inferred from this frontend.
 
 ## Dependency budget, measured
 

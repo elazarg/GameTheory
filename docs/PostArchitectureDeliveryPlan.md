@@ -339,7 +339,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | Lane | Pinned scope | Hostile lead result | Intended home |
 |---|---|---|---|
 | foundations and VNM | utility invariance, strategic equivalence, expected-utility representation, axiom independence | expected-utility representation without merging probability-free ranks back into lottery preference | `Core.Preference`, finite laws, and independent mathematics only where earned |
-| static response | dominance, rationalizability, approximate and secure equilibrium | dominance solvability and one approximation theorem without duplicate Nash predicates | `GameTheory.Core` |
+| static response | dominance, rationalizability, approximate and secure equilibrium | **strict solvability and mixed/pure rationalizability complete;** next IESDS/correlation or undominated existence | `GameTheory.Core`; explicitly pure execution in `Finite` |
 | correlation | correlation regimes, regret, signal timing, value of correlation | **CE/CCE existence complete through mixed Nash;** next one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
 | learning | regret, multiplicative weights, fictitious play, approachability | **F2, finite MW self-play, base fictitious play 9/9, exact-potential convergence, and approachability/regret matching 23/23 complete;** only weighted-potential generalization remains gated | stable finite identities in Core, law-free MW and approachability mathematics in `GameTheoryMath`, canonical-law adapters in Probability or opt-in Analysis, and quantitative composition in `Analysis.Learning` |
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | **pinned congestion family complete, including robust affine CCE PoA (EXP-052/053, D24)** | `Core.Potential` plus the opt-in congestion domain |
@@ -585,10 +585,10 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,602 of 8,324 pinned declarations are claimed by exact ledgers; 2,502 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,722-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | positive-affine utility invariance complete: the canonical finite-law preference preserves Nash and dominance for every game form, and a negative scale reverses the hostile binary incentive; 4/4 pinned rows reviewed | keep VNM representation and strategic equivalence as distinct DFS gates rather than inferring them from utility rescaling |
-| next capability rotation | mixed rationalizability/dominance: select a bounded mature response batch | preserve the canonical response predicates and the executable/proof boundary |
-| release engineering | warning-clean 3,529-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
+| exact accounting | 2,623 of 8,324 pinned declarations are claimed by exact ledgers; 2,523 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,701-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | mixed/pure rationalizability complete under EXP-073/D40: a half/half hedge eliminates an action retained by every pure dominator and by the executable pure checker; 21/21 selected rows reviewed | keep executable mixed elimination behind a separate exact-certificate gate |
+| next capability rotation | welfare/individual rationality: select a bounded mature theorem batch | reuse canonical expected utility and social welfare without a second payoff or participation predicate |
+| release engineering | warning-clean 3,531-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -696,9 +696,15 @@ provisioned in CI.
    utility-invariance file closes 4/4 rows at the existing finite-law
    preference layer: positive affine changes preserve Nash and dominance for
    arbitrary game forms, while a negative scale reverses the hostile binary
-   incentive.  The queue now rotates to mixed rationalizability/dominance
+   incentive.  The queue then rotates to mixed rationalizability/dominance
    rather than freezing a VNM representation or strategic-equivalence API
-   without its own hostile slice;
+   without its own hostile slice.  EXP-073/D40 repairs the provisional naming:
+   standard mixed elimination owns `IsRationalizable`, pure elimination is
+   explicit in both Core and the D10 checker, and a three-action hedge fixture
+   proves the two notions differ.  All 21 selected rows are classified.  The
+   queue now rotates to welfare/individual rationality rather than immediately
+   adding an executable mixed-elimination certificate or deepening into
+   undominated counterexamples;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.

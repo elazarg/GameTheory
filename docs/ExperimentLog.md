@@ -4659,3 +4659,49 @@ memory.
   history-dependent optimality and uniform-equilibrium existence behind their
   separate infinite-play and vanishing-discount gates; resume breadth-first
   mature-field recovery after this stable milestone.
+
+### EXP-073: mixed versus pure rationalizability ownership
+
+- **Date / revision:** 2026-08-09, reserved on `18e947b`
+- **Status:** complete; supports D40
+- **Decision / question:** whether standard Bernheim--Pearce rationalizability
+  (iterated elimination by mixed dominators) can use canonical `FinDist`,
+  randomized unilateral deviations, and `GameForm` directly while the D10
+  executable frontend remains an explicitly pure-elimination checker.
+- **Prediction:** Core can own both notions without another response,
+  equilibrium, or probability layer: unqualified `IsRationalizable` denotes
+  mixed elimination, the weaker notion is named `IsPureRationalizable`, and
+  D10's algorithm/correctness names say `pure`.  No stored finiteness is needed
+  in proof semantics.
+- **Representative slice:** rename the existing pure survivor semantics and
+  executable certificate, add mixed survivor semantics, prove Nash survival,
+  and build a finite three-action witness whose third action is strictly
+  dominated by a half/half mixture but by no pure action.
+- **Competing designs:** retain pure elimination as the only selected notion;
+  promote standard mixed elimination and rename the pure surface; add an exact
+  rational mixed-elimination algorithm now; or defer the standard notion while
+  merely documenting the mismatch.
+- **Kill conditions:** the mixed definition needs `PMF`, measurable or
+  infinite-support probability, Analysis, stored `Fintype`, raw
+  `Function.update`, a second profile/equilibrium API, or cannot separate mixed
+  from pure survival on a small nonvacuous game.  Any break in the D10
+  proof/execution boundary also kills the proposed promotion.
+- **Artifacts / observations:** `GameTheory.Core.Rationalizability` reuses the
+  canonical randomized-deviation scheme and `FinDist`; the pure semantics and
+  D10 algorithm are renamed without aliases.  No finiteness is stored in Core.
+  The hostile three-action game separates the notions: action two pays `3/4`
+  everywhere, no pure action dominates it, and the half/half mixture of actions
+  zero and one pays `1` everywhere.  It survives pure round one (including the
+  executable certificate) and fails mixed round one.  The focused
+  Core/Finite/test build completed 1,754 jobs warning-free.  Representative
+  mixed, pure, Nash, dominance, and executable-certificate facts depend only
+  on `propext`, `Classical.choice`, and `Quot.sound`.  The full Phase 2 audit
+  returned `VERIFIED=1`, reaching all six intended rationalizability inputs and
+  rejecting all three finite/Protocol/Analysis boundaries.  Exact coverage
+  returned `VERIFIED=1` at 65 ledgers and 2,623/8,324 claimed rows.  The
+  warning-clean default build completed all 3,531 jobs.  No kill condition
+  fired.
+- **Outcome / next action:** adopt D40.  Keep unqualified rationalizability for
+  the standard mixed notion, retain the explicitly named pure semantics and
+  executable checker, and require a separate algorithm/certificate gate before
+  adding executable mixed elimination.

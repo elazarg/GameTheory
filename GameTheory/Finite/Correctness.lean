@@ -105,28 +105,33 @@ theorem strict_euPreference_iff (G : TableGame ι) (who : ι)
 
 /-! ## Iterated strict dominance -/
 
-/-- The executable elimination rounds compute the semantic survivor sets. -/
-theorem mem_survivors_iff (G : TableGame ι) :
+/-- The executable pure-elimination rounds compute the semantic pure survivor
+sets. -/
+theorem mem_pureSurvivors_iff (G : TableGame ι) :
     ∀ (round : ℕ) (i : ι) (s : G.Action i),
-      s ∈ G.survivors round i ↔
-        s ∈ _root_.GameTheory.survivors G.toForm (euPreference G.utility) round i := by
+      s ∈ G.pureSurvivors round i ↔
+        s ∈ _root_.GameTheory.pureSurvivors G.toForm
+          (euPreference G.utility) round i := by
   intro round
   induction round with
-  | zero => intro i s; simp [survivors]
+  | zero => intro i s; simp [pureSurvivors]
   | succ round ih =>
     intro i s
-    rw [survivors, eliminateRound, Finset.mem_filter, _root_.GameTheory.mem_survivors_succ]
+    rw [pureSurvivors, eliminatePureRound, Finset.mem_filter,
+      _root_.GameTheory.mem_pureSurvivors_succ]
     have hprofile : ∀ profile : Profile G.sig,
-        (∀ j, profile j ∈ G.survivors round j) ↔
-          (∀ j, profile j ∈ _root_.GameTheory.survivors G.toForm
+        (∀ j, profile j ∈ G.pureSurvivors round j) ↔
+          (∀ j, profile j ∈ _root_.GameTheory.pureSurvivors G.toForm
             (euPreference G.utility) round j) :=
       fun profile => forall_congr' fun j => ih j (profile j)
     have hdom : ∀ t : G.Action i,
-        (∀ profile : Profile G.sig, (∀ j, profile j ∈ G.survivors round j) →
+        (∀ profile : Profile G.sig,
+          (∀ j, profile j ∈ G.pureSurvivors round j) →
             G.payoff (Profile.update profile i s) i <
               G.payoff (Profile.update profile i t) i) ↔
           StrictlyDominatesOn G.toForm (euPreference G.utility) i
-            (_root_.GameTheory.survivors G.toForm (euPreference G.utility) round) t s := by
+            (_root_.GameTheory.pureSurvivors G.toForm
+              (euPreference G.utility) round) t s := by
       intro t
       constructor
       · intro h profile hmem
@@ -136,46 +141,52 @@ theorem mem_survivors_iff (G : TableGame ι) :
     exact and_congr (ih i s)
       (forall_congr' fun t => imp_congr (ih i t) (not_congr (hdom t)))
 
-/-- The executable stability test is true exactly when the canonical semantic
-survivor sets have reached a fixed point. -/
-theorem survivorsStable_eq_true_iff (G : TableGame ι) (round : ℕ) :
-    G.survivorsStable round = true ↔
-      ∀ i, _root_.GameTheory.survivors G.toForm (euPreference G.utility) (round + 1) i =
-        _root_.GameTheory.survivors G.toForm (euPreference G.utility) round i := by
-  rw [survivorsStable, decide_eq_true_eq]
+/-- The executable pure-stability test is true exactly when the canonical
+semantic pure survivor sets have reached a fixed point. -/
+theorem pureSurvivorsStable_eq_true_iff (G : TableGame ι) (round : ℕ) :
+    G.pureSurvivorsStable round = true ↔
+      ∀ i, _root_.GameTheory.pureSurvivors G.toForm
+          (euPreference G.utility) (round + 1) i =
+        _root_.GameTheory.pureSurvivors G.toForm
+          (euPreference G.utility) round i := by
+  rw [pureSurvivorsStable, decide_eq_true_eq]
   constructor
   · intro hstable i
     ext s
-    rw [← mem_survivors_iff G, ← mem_survivors_iff G, hstable i]
+    rw [← mem_pureSurvivors_iff G, ← mem_pureSurvivors_iff G, hstable i]
   · intro hstable i
     apply Finset.ext
     intro s
-    rw [mem_survivors_iff G, mem_survivors_iff G, hstable i]
+    rw [mem_pureSurvivors_iff G, mem_pureSurvivors_iff G, hstable i]
 
 /-- Once the executable survivor iteration reaches a fixed point, every later
 round returns the same finite survivor family. -/
-theorem survivors_add_eq_of_survivorsStable (G : TableGame ι) {round : ℕ}
-    (hstable : G.survivorsStable round = true) (later : ℕ) :
-    G.survivors (round + later) = G.survivors round := by
-  rw [survivorsStable, decide_eq_true_eq] at hstable
-  have hstep : G.survivors (round + 1) = G.survivors round :=
+theorem pureSurvivors_add_eq_of_pureSurvivorsStable
+    (G : TableGame ι) {round : ℕ}
+    (hstable : G.pureSurvivorsStable round = true) (later : ℕ) :
+    G.pureSurvivors (round + later) = G.pureSurvivors round := by
+  rw [pureSurvivorsStable, decide_eq_true_eq] at hstable
+  have hstep : G.pureSurvivors (round + 1) = G.pureSurvivors round :=
     funext hstable
   induction later with
   | zero => simp
   | succ later ih =>
-    rw [Nat.add_succ, survivors, ih]
-    simpa only [survivors] using hstep
+    rw [Nat.add_succ, pureSurvivors, ih]
+    simpa only [pureSurvivors] using hstep
 
 /-- In particular, executable stability certifies stabilization of the
 canonical semantic survivor iteration at every later round. -/
-theorem semantic_survivors_add_eq_of_survivorsStable (G : TableGame ι) {round : ℕ}
-    (hstable : G.survivorsStable round = true) (later : ℕ) :
-    _root_.GameTheory.survivors G.toForm (euPreference G.utility) (round + later) =
-      _root_.GameTheory.survivors G.toForm (euPreference G.utility) round := by
+theorem semantic_pureSurvivors_add_eq_of_pureSurvivorsStable
+    (G : TableGame ι) {round : ℕ}
+    (hstable : G.pureSurvivorsStable round = true) (later : ℕ) :
+    _root_.GameTheory.pureSurvivors G.toForm
+        (euPreference G.utility) (round + later) =
+      _root_.GameTheory.pureSurvivors G.toForm
+        (euPreference G.utility) round := by
   funext i
   ext s
-  rw [← mem_survivors_iff G, ← mem_survivors_iff G,
-    survivors_add_eq_of_survivorsStable G hstable later]
+  rw [← mem_pureSurvivors_iff G, ← mem_pureSurvivors_iff G,
+    pureSurvivors_add_eq_of_pureSurvivorsStable G hstable later]
 
 /-! ## Pareto efficiency -/
 
