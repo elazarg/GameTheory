@@ -13,10 +13,10 @@ incorporated and reflected below.
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
-holonomy compactness work and finite source-forgetting marked-cylinder algebra
-are committed and counted; the generalized compact completion remains an open
-design. New Lean files are never counted as landed until committed, built, and
-reflected in the owning claim and [`FRONTIER.md`](FRONTIER.md).
+holonomy compactness work, finite source-forgetting marked-cylinder algebra,
+metrizable semantic completion, and bounded decoder are committed and counted.
+New Lean files are never counted as landed until committed, built, and reflected
+in the owning claim and [`FRONTIER.md`](FRONTIER.md).
 
 **Handoff validation.** At the last fully audited checkpoint, `lake build`
 succeeded, local Markdown links resolved, and the repository audit exited
@@ -123,10 +123,16 @@ blockers hidden in the P0 mathematical status.
   Exact forward packets with arbitrarily large finite charge in a fixed compact
   carrier close to one-seam lassos by finite pigeonhole recurrence, so this
   route needs neither one orbit uniform in the charge target nor a separate
-  rotation-recurrence theorem.  A general accept-or-retarget dispatcher,
-  resolved chart coverage and arc lifting, strategic Farkas decoding, finite
-  charged-packet production, and a consumer for the complementary
-  bounded-charge boundary remain open.
+  rotation-recurrence theorem.  The punishment-floor construction now supplies
+  one exact product-root predecessor orbit in every finite quitting game and
+  keeps every value above the behavioral punishment floor.  If its cumulative
+  absorption is unbounded, its finite prefixes feed this compiler and produce a
+  uniform payoff.  The complementary theorem bounds only this classically
+  selected orbit; it neither gives a common bound over all legal predecessor
+  orbits nor an optimal charge selector.  A general accept-or-retarget
+  dispatcher, resolved chart coverage and arc lifting, strategic Farkas
+  decoding, and a consumer for the selected bounded-charge boundary remain
+  open.
 - **Punishment-completed exact cycles (`177a0c03`, conditional compiler).** A
   coordinate may contract in deleted survival or be held by the exact
   punishment-value inequality; this includes credibly punishable negative solo

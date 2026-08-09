@@ -322,6 +322,12 @@ import Math.SchauderFixedPoint
 #print axioms Math.LinearAlgebra.affineEqualityInequality_feasible_or_farkas
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_weightedProjectiveLassos
 
+-- The punishment-floor predecessor producer and its selected-orbit
+-- charge alternative.
+#print axioms GameTheory.quittingPunishmentValue_le_rootSuccessorPayoff_of_tail_ge
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_punishmentFloorForwardCharge
+#print axioms GameTheory.quittingGame_uniformPayoff_or_punishmentFloorForwardChargeBound
+
 -- Stopping-law accounting, cyclic exposure, and phase-occupation duality.
 -- These checks live here rather than in production modules so ordinary builds
 -- remain quiet while the repository audit retains the same proof-hygiene

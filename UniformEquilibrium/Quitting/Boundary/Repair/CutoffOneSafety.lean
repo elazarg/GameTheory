@@ -134,16 +134,6 @@ theorem quittingCutoffOneDynamicDebt_eq
         (quittingPositiveSingletonDebtCap reward) 0]
   rfl
 
-/-- Exact Nash at the zero-tail root makes the pure-Quit endpoint safe. -/
-theorem quittingRootQuitPayoff_le_successor_of_isZeroNash
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (root : ι → PMF Bool) (who : ι)
-    (hnash : IsεQuittingRootNash reward (0 : Payoff ι) 0 root) :
-    quittingRootQuitPayoff reward (0 : Payoff ι) root who ≤
-      quittingRootSuccessorPayoff reward (0 : Payoff ι) root who := by
-  simpa [quittingRootQuitPayoff, quittingRootSuccessorPayoff] using
-    hnash who (PMF.pure true)
-
 /-- **Exact cutoff-one safety equivalence.**  At a zero-tail exact Nash root,
 the dynamic debt vanishes exactly when the positive-boundary Continue
 endpoint lies below the prescribed root payoff. -/
@@ -160,7 +150,7 @@ theorem quittingCutoffOneDynamicDebt_eq_zero_iff
     quittingRootSuccessorPayoff reward (0 : Payoff ι) root who
   have hquit : quitValue ≤ prescribed :=
     quittingRootQuitPayoff_le_successor_of_isZeroNash
-      reward root who hnash
+      reward 0 root who hnash
   have hnonneg : 0 ≤ quittingCutoffOneDynamicDebt reward root who :=
     quittingCutoffOneDynamicDebt_nonneg reward root who
   rw [quittingCutoffOneDynamicDebt_eq] at hnonneg

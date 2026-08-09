@@ -838,6 +838,7 @@ Key boundaries are:
 | Multi-owner face-circulation producer | `M+L+A+C` conditional | A supplied bounded circulation above punishment value produces arbitrarily charged finite packets and a uniform payoff by finite charged closing; generic certificate existence remains open. |
 | Signed projective monodromy | `M+L+C` conditional | Exact cyclic correction coordinate; strictly weaker than absolute seam variation for a fixed candidate, but not a weaker all-accuracy producer hypothesis. |
 | Finite charged closing | `M+L+A+C` conditional | Arbitrarily charged exact finite forward packets in one compact carrier yield a returned single-seam lasso and uniform payoff; no orbit uniform in the charge target is required. |
+| Punishment-floor predecessor producer | `M+L+A+C` | Every finite quitting game has a selected exact product-root predecessor orbit whose values stay above the behavioral punishment floor. Unbounded cumulative absorption on that orbit yields a uniform payoff by finite charged closing. Otherwise only the selected orbit is charge-bounded; no all-orbits uniform bound or charge-optimal selection is claimed. |
 | Finite phase-occupation duality | `M+L` conditional | Semantic/LP equivalence, attainment, bias decoding, and strong duality landed conditional on feasible occupation; strategic occupation production is not included, and global cross-SCC cancellation is not path-realizable. |
 | Quit-time/Never extremality for behavioral deviations | `M+L` | Landed. |
 | Exact-D optimizer and zero/positive split | `M+L+A+C` on zero branch | Landed. |
@@ -846,7 +847,7 @@ Key boundaries are:
 | Fixed-cutoff resolved holonomy graph | `M+L` | Compact/closed with full source path; fixed-last calibrated lift finite, in `UniformEquilibrium/Quitting/Boundary/Holonomy/Compactness.lean` at `14d75ff`. |
 | Boundary-holonomy tangent coordinates | `M+L` | Residual cocycles, self-similarity, max-plus tangent dynamics, realized bounds, and compact coordinate subsequences landed; realized-image closedness, source retention, producer, and decoder are not included. |
 | Greedy return/exit/dead-end | `M+X` | Checked experiment, natural abstract stopping point; not production/decoder. |
-| Realized arbitrary-length holonomy/decoder | `M+L/I` | Fixed-cutoff case landed; literal unbounded-length compact lift ruled out. Tightness or an infinity/stopping-law chart plus bounded decoder remains open. |
+| Metrizable marked-semantic completion and decoder | `M+L` | The compact metric quotient has sequential finite density, exact finite-cylinder specialization, continuous bounded holonomy and obstacle decoding, repair-value continuity, and finite subsequence realization of repair-state limits. It is semantic infrastructure, not a strategic orbit producer or prefix-consumption theorem. |
 | Anchored seam/exit strategic decoder | `I` | Open. |
 | Full-rate stationary cap | `M+L+C` | Landed verifier for supplied profiles. |
 | Two-player all-table uniform-payoff existence | `M+L+C` | Unconditional capstone landed in `UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean`; it does not claim stationary exact equilibrium or generalize the pair-repair classification to `n ≥ 3`. |

@@ -239,6 +239,32 @@ theorem isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
   isεQuittingRootEndpointNash_iff_isεQuittingRootNash
     reward tail 0 root
 
+/-- Exact root Nash dominates the pure-Quit endpoint against an arbitrary
+declared continuation. -/
+theorem quittingRootQuitPayoff_le_successor_of_isZeroNash
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (tail : Payoff ι) (root : ι → PMF Bool) (who : ι)
+    (hnash : IsεQuittingRootNash reward tail 0 root) :
+    quittingRootQuitPayoff reward tail root who ≤
+      quittingRootSuccessorPayoff reward tail root who := by
+  have h := hnash who (PMF.pure true)
+  change quittingRootQuitPayoff reward tail root who ≤
+    quittingRootSuccessorPayoff reward tail root who + 0 at h
+  simpa using h
+
+/-- Exact root Nash dominates the pure-Continue endpoint against an arbitrary
+declared continuation. -/
+theorem quittingRootContinuePayoff_le_successor_of_isZeroNash
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (tail : Payoff ι) (root : ι → PMF Bool) (who : ι)
+    (hnash : IsεQuittingRootNash reward tail 0 root) :
+    quittingRootContinuePayoff reward tail root who ≤
+      quittingRootSuccessorPayoff reward tail root who := by
+  have h := hnash who (PMF.pure false)
+  change quittingRootContinuePayoff reward tail root who ≤
+    quittingRootSuccessorPayoff reward tail root who + 0 at h
+  simpa using h
+
 /-- At a zero Quit-probability endpoint, exact endpoint Nash says Quit minus
 Continue is nonpositive. -/
 theorem quittingRootEndpointDifference_nonpos_of_quitProbability_eq_zero
