@@ -153,35 +153,104 @@ structure QuittingPositiveDebtSelfLoopLimit
 
 namespace QuittingPositiveDebtSelfLoopLimit
 
+/-- A positive limiting debt is bounded by the corresponding strictly
+positive own singleton reward, rather than merely by its positive part. -/
+theorem debt_le_soloReward_of_debt_pos
+    (limit : QuittingPositiveDebtSelfLoopLimit reward) (who : ι)
+    (hdebtPos : 0 < limit.debt who) :
+    limit.debt who ≤ reward (quittingSingletonTerminal who) who := by
+  have hdebtCap := limit.state_mem.2.2 who
+  unfold quittingPositiveSingletonDebtCap at hdebtCap
+  rcases lt_max_iff.mp (lt_of_lt_of_le hdebtPos hdebtCap) with
+    hzero | hsolo
+  · exact (lt_irrefl 0 hzero).elim
+  · simpa [max_eq_right hsolo.le] using hdebtCap
+
+/-- A positive-debt coordinate's own singleton reward is dominated by its
+prescribed value at the all-Continue exact Nash self-loop. -/
+theorem soloReward_le_value_of_debt_pos
+    (limit : QuittingPositiveDebtSelfLoopLimit reward) (who : ι)
+    (_hdebtPos : 0 < limit.debt who) :
+    reward (quittingSingletonTerminal who) who ≤ limit.value who := by
+  have hquit :=
+    quittingRootQuitPayoff_le_currentValue_of_nashBellmanEdge
+      reward (limit.value, quittingAllContinueSimplexRoot)
+        (limit.value, quittingAllContinueSimplexRoot)
+        limit.exactSelfLoop.1 who
+  simpa [quittingRootOfSimplex_allContinueSimplexRoot] using hquit
+
+/-- Positive limiting debt is no larger than its phantom prescribed value. -/
+theorem debt_le_value_of_debt_pos
+    (limit : QuittingPositiveDebtSelfLoopLimit reward) (who : ι)
+    (hdebtPos : 0 < limit.debt who) :
+    limit.debt who ≤ limit.value who :=
+  (limit.debt_le_soloReward_of_debt_pos who hdebtPos).trans
+    (limit.soloReward_le_value_of_debt_pos who hdebtPos)
+
+/-- Every positive-debt coordinate lies above its behavioral punishment
+floor at the phantom self-loop.  The distinguished owner is only the
+coordinate for which positivity is supplied by the extraction theorem. -/
+theorem punishmentValue_le_value_of_debt_pos
+    (limit : QuittingPositiveDebtSelfLoopLimit reward) (who : ι)
+    (hdebtPos : 0 < limit.debt who) :
+    quittingPunishmentValue reward who ≤ limit.value who := by
+  have hsoloPos : 0 < reward (quittingSingletonTerminal who) who :=
+    hdebtPos.trans_le (limit.debt_le_soloReward_of_debt_pos who hdebtPos)
+  have hsoloLe := limit.soloReward_le_value_of_debt_pos who hdebtPos
+  have hpunishment := quittingPunishmentValue_le_max_solo reward who
+  rw [QuittingSureSetOwnerRepair.quittingSetReward_of_nonempty reward
+    (Finset.singleton_nonempty who) who] at hpunishment
+  change quittingPunishmentValue reward who ≤
+    max (reward (quittingSingletonTerminal who) who) 0 at hpunishment
+  rw [max_eq_left hsoloPos.le] at hpunishment
+  exact hpunishment.trans hsoloLe
+
 /-- The marked positive-debt coordinate lies above its behavioral punishment
 floor at the phantom self-loop. -/
 theorem punishmentValue_le_ownerValue
     (limit : QuittingPositiveDebtSelfLoopLimit reward) :
-    quittingPunishmentValue reward limit.owner ≤ limit.value limit.owner := by
-  have hdebtCap := limit.state_mem.2.2 limit.owner
-  have hsoloPos :
-      0 < reward (quittingSingletonTerminal limit.owner) limit.owner := by
-    unfold quittingPositiveSingletonDebtCap at hdebtCap
-    rcases lt_max_iff.mp (lt_of_lt_of_le limit.ownerDebt_pos hdebtCap) with
-      hzero | hsolo
-    · exact (lt_irrefl 0 hzero).elim
-    · exact hsolo
-  have hsoloLe :
-      reward (quittingSingletonTerminal limit.owner) limit.owner ≤
-        limit.value limit.owner := by
-    have hquit :=
-      quittingRootQuitPayoff_le_currentValue_of_nashBellmanEdge
-        reward (limit.value, quittingAllContinueSimplexRoot)
-          (limit.value, quittingAllContinueSimplexRoot)
-          limit.exactSelfLoop.1 limit.owner
-    simpa [quittingRootOfSimplex_allContinueSimplexRoot] using hquit
-  have hpunishment := quittingPunishmentValue_le_max_solo reward limit.owner
-  rw [QuittingSureSetOwnerRepair.quittingSetReward_of_nonempty reward
-    (Finset.singleton_nonempty limit.owner) limit.owner] at hpunishment
-  change quittingPunishmentValue reward limit.owner ≤
-    max (reward (quittingSingletonTerminal limit.owner) limit.owner) 0 at hpunishment
-  rw [max_eq_left hsoloPos.le] at hpunishment
-  exact hpunishment.trans hsoloLe
+    quittingPunishmentValue reward limit.owner ≤ limit.value limit.owner :=
+  limit.punishmentValue_le_value_of_debt_pos
+    limit.owner limit.ownerDebt_pos
+
+/-- **All-date floor safety for positive debt.**  Suppose a boxed exact-D
+tail converges to the supplied all-Continue self-loop in both value and debt.
+At every finite date, every coordinate carrying positive debt already lies
+above its behavioral punishment floor.  Otherwise floor violation persists
+and the value coordinate moves only downward, while debt moves upward to a
+positive limiting coordinate; the self-loop then gives the opposite floor
+inequality. -/
+theorem punishmentValue_le_tailValue_of_debt_pos
+    (limit : QuittingPositiveDebtSelfLoopLimit reward)
+    (tail : ℕ → QuittingDebtPoint ι)
+    (hbox : ∀ time, tail time ∈ quittingDebtBox reward)
+    (hedge : ∀ time,
+      IsQuittingDynamicDebtEdge reward (tail time) (tail (time + 1)))
+    (hvalue : ∀ who, Tendsto (fun time ↦ (tail time).1.1 who) atTop
+      (nhds (limit.value who)))
+    (hdebt : ∀ who, Tendsto (fun time ↦ (tail time).2 who) atTop
+      (nhds (limit.debt who)))
+    (who : ι) (time : ℕ) (hdebtPos : 0 < (tail time).2 who) :
+    quittingPunishmentValue reward who ≤ (tail time).1.1 who := by
+  by_contra hnot
+  push Not at hnot
+  have hdebtMono := QuittingDynamicDebtTail.monotone_debt
+    tail hbox hedge who
+  have hlimitDebt : (tail time).2 who ≤ limit.debt who := by
+    apply ge_of_tendsto (hdebt who)
+    filter_upwards [eventually_ge_atTop time] with later hlater
+    exact hdebtMono hlater
+  have hlimitDebtPos : 0 < limit.debt who :=
+    hdebtPos.trans_le hlimitDebt
+  have hlimitFloor :=
+    limit.punishmentValue_le_value_of_debt_pos who hlimitDebtPos
+  have hlimitValueLe : limit.value who ≤ (tail time).1.1 who := by
+    apply le_of_tendsto (hvalue who)
+    filter_upwards [eventually_ge_atTop time] with later hlater
+    have hgap := quittingDynamicDebtTail_punishmentGap_mono
+      tail hedge who hnot later hlater
+    linarith
+  linarith
 
 end QuittingPositiveDebtSelfLoopLimit
 
