@@ -7,6 +7,8 @@ Authors: GameTheory contributors
 import UniformEquilibrium.Quitting.EssentialAPS.Cycle
 import UniformEquilibrium.Quitting.EssentialAPS.Regression
 import UniformEquilibrium.Quitting.EssentialAPS.InfiniteContraction
+import UniformEquilibrium.Quitting.EssentialAPS.OccupationCancellationRegression
+import UniformEquilibrium.Quitting.EssentialAPS.SegmentClosedExecution
 import UniformEquilibrium.Quitting.EssentialAPS.UniformPayoff
 import UniformEquilibrium.Quitting.EssentialAPS.AdaptiveMeshUniformPayoff
 
@@ -16,7 +18,8 @@ import UniformEquilibrium.Quitting.EssentialAPS.AdaptiveMeshUniformPayoff
 Umbrella import for the exact successor graph; algebraic, segment, and proper
 essential-APS prefixes; the carrier-restricted greatest fixed family;
 convex-fiber and unique-live-successor progress extraction; finite and coherent
-infinite executable APS runs; compact greatest fibers under unique live
+infinite executable APS runs; multivalued chronological execution under the
+exact segment-closure hypothesis; compact greatest fibers under unique live
 successors; uniform positive mass in every shifted window; the deterministic
 conversion from total mass to playerwise opponent mass; and uniform opponent
 block contraction for the implemented singleton roots.  It also exports the
@@ -24,6 +27,10 @@ qualitative survival-decay route, variable logarithmic subdivision,
 nonperiodic Snell supersolution, and uniform-payoff compiler.  The fixed-width
 and geometric-contraction APIs remain available as quantitative
 specializations.
+
+The occupation-cancellation regression records a separate semantic boundary:
+a balanced invariant occupation over several closed classes need not select a
+chronological execution with the same cancellation.
 
 The capstone is
 `quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live_adaptiveMesh`.

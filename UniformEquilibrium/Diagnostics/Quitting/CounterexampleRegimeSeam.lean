@@ -9,6 +9,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSurplus
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Quitting.Cycles.BehaviorPureTimeExtremality
 import UniformEquilibrium.Quitting.Cycles.PeriodicCompiler
+import UniformEquilibrium.Quitting.Cycles.PeriodicWindowEvaluation
 
 /-!
 # The source--tail--restart seam of a quitting counterexample
@@ -23,8 +24,9 @@ Every counterexample regime supplies simultaneously:
 * a projective optimized exact-D tail converging to a positive-debt
   all-Continue exact dynamic-debt self-loop; and
 * for every finite window of that tail, a periodically restarted behavior
-  profile whose exact pure-quit-time/`Never` cap exceeds its realized payoff
-  by the regime's terminal gap for some player.
+  profile whose complete behavioral best-response value is a finite maximum
+  of first-pass stop values and refusal/`Never`, and exceeds its realized
+  payoff by the regime's terminal gap for some player.
 
 The package deliberately has no field equating the packet mass with a late
 window's singleton occupation law, or the packet target with the tail's
@@ -142,6 +144,55 @@ theorem exists_cyclicWindow_pureTimeCap_gap
     regime.exists_pureTimeCap_gap
       (quittingCyclicBehaviorProfile reward
         (quittingDynamicDebtTailWindowCycle tail start length) phase)
+
+/-- Every restarted tail window exposes the full counterexample gap through
+the exact finite periodic evaluator: refusal/`Never` or one stop in the first
+pass.  This is the finite, search-facing form of
+`exists_cyclicWindow_pureTimeCap_gap`. -/
+theorem exists_cyclicWindow_finiteEvaluation_gap
+    (regime : QuittingCounterexampleRegime reward)
+    (tail : ℕ → QuittingDebtPoint ι) (start length : ℕ)
+    (phase : Fin (length + 1)) :
+    ∃ who,
+      quittingCyclicTerminalValue reward
+          (quittingDynamicDebtTailWindowCycle tail start length) phase who +
+          regime.terminalGap ≤
+        quittingPeriodicWindowBestResponseValue reward
+          (quittingCyclicRootSequence
+            (quittingDynamicDebtTailWindowCycle tail start length) phase)
+          who (length + 1) := by
+  letI : NeZero (length + 1) := ⟨Nat.succ_ne_zero length⟩
+  let cycle := quittingDynamicDebtTailWindowCycle tail start length
+  let profile := quittingCyclicBehaviorProfile reward cycle phase
+  obtain ⟨who, deviation, hgap⟩ := regime.terminalExploitability profile
+  refine ⟨who, ?_⟩
+  have hperiodic : ∀ time,
+      quittingProfileLiveRoot reward profile (time + (length + 1)) =
+        quittingProfileLiveRoot reward profile time := by
+    intro time
+    simp [profile, cycle]
+  have hbdd := bddAbove_range_quittingTerminalPayoff_update
+    reward profile who (quittingRewardBound_nonneg reward)
+      (abs_reward_le_quittingRewardBound reward)
+  have heval := sSup_range_quittingTerminalPayoff_update_eq_periodicWindow
+    reward profile who (length + 1) hperiodic
+      (quittingRewardBound_nonneg reward)
+      (abs_reward_le_quittingRewardBound reward)
+  calc
+    quittingCyclicTerminalValue reward cycle phase who +
+        regime.terminalGap =
+      quittingTerminalPayoff reward profile who + regime.terminalGap := by
+        simp [profile]
+    _ ≤ quittingTerminalPayoff reward
+        (Function.update profile who deviation) who := hgap
+    _ ≤ sSup (Set.range fun candidate :
+        (quittingGame reward).BehaviorStrategy who ↦
+          quittingTerminalPayoff reward
+            (Function.update profile who candidate) who) :=
+      le_csSup hbdd ⟨deviation, rfl⟩
+    _ = quittingPeriodicWindowBestResponseValue reward
+        (quittingCyclicRootSequence cycle phase) who (length + 1) := by
+      simpa [profile] using heval
 
 /-- **Combined source--tail seam.**  Every counterexample regime has a
 finite strict-refusal packet and an independently extracted positive-debt

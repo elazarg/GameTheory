@@ -69,6 +69,23 @@ def quittingPeriodicWindowBestResponseValue
     (quittingPeriodicWindowBestPhaseStop reward roots who period)
 
 omit [Fintype ι] [DecidableEq ι] in
+/-- A finite cyclic root sequence is invariant under its displayed period. -/
+@[simp] theorem quittingCyclicRootSequence_add_period
+    {period : ℕ} (cycle : Fin period → ι → PMF Bool)
+    (phase : Fin period) (time : ℕ) :
+    quittingCyclicRootSequence cycle phase (time + period) =
+      quittingCyclicRootSequence cycle phase time := by
+  calc
+    quittingCyclicRootSequence cycle phase (time + period) =
+        quittingCyclicRootSequence cycle phase (period + time) := by
+      rw [add_comm]
+    _ = quittingCyclicRootSequence cycle
+        (quittingCyclicOrbit phase period) time :=
+      quittingCyclicRootSequence_add cycle phase period time
+    _ = quittingCyclicRootSequence cycle phase time := by
+      rw [quittingCyclicOrbit_card]
+
+omit [Fintype ι] [DecidableEq ι] in
 /-- A root sequence invariant under one period is literally its own
 phase-switch restart after that period. -/
 theorem quittingPhaseSwitchRoots_self_of_periodic

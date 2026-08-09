@@ -46,14 +46,23 @@ assumed:
 `0 < η ≤ inf_N D_N ≤ D_N ≤ max_i max(0,r_i({i})) ≤ M`.
 
 The optimized projective tail retains debt at least `η` for one owner and a
-summable opponent clock.  Every infinite exact punishment-floor orbit has
-summable joint absorption and converges coordinatewise to all-Continue; every
-recurrent reachable edge has zero charge.  Reversing a floor-dominating exact-D
-segment preserves charge, so the optimized tail either has summable joint
-absorption or eventually violates the punishment floor at every date.  The
-summable branch is automatic when the punishment vector is nonpositive.  No
-unconditional theorem identifies the optimized tail with a floor-reachable
-orbit.
+summable opponent clock.  The optimized tail itself has summable joint
+absorption unconditionally: a floor violation amplifies monotonically, and the
+positive-debt owner closes the formerly exceptional branch.  Every infinite
+exact punishment-floor orbit also has summable joint absorption and converges
+coordinatewise to all-Continue.  The canonical capacity defines a bounded
+potential on the global boxed floor-admissible relation, so every recurrent
+edge there has zero charge.  Reversing a floor-dominating exact-D segment
+preserves charge, but no unconditional theorem identifies the optimized tail
+with a floor-admissible or floor-reachable orbit.
+
+The regime is empty below four players.  Any hypothetical finite counterexample
+can be reindexed to a canonical cardinal-minimal `Fin n` table with `n ≥ 4`;
+all nonempty proper restrictions are solved as restricted games, without an
+automatic extension across excluded-player joining deviations.  Exact toggle
+and stationary-cap ceilings, packet-support dynamics, and the division-free
+floor budget
+`(χ_i-v_s(i)) * opponentClock_i[s,∞) ≤ χ_i+M` give finite search filters.
 
 Payoff terminology is fixed in
 [`UniformEquilibrium/README.md`](../../UniformEquilibrium/README.md):
@@ -852,14 +861,17 @@ Key boundaries are:
 | Finite-quitting terminal-to-uniform equivalence | `M+L+C` | Landed and consumed. |
 | Uniform-payoff closure and reverse diagnostics | `M+L` | Fixed-skeleton reward closure, target equivalence under vanishing payoff gaps, tail-width and bounded-work characterizations, and transition-discontinuity counterexample landed; no forward producer. |
 | Support-retaining path/cycle compiler | `M+L+C` conditional | Landed; path or finite periodic witness production at every tolerance remains open. |
-| Essential-APS adaptive compiler | `M+L+A+C` on the stated component | Landed for compact functional unique-live terminal-free components with finite-window face avoidance; no common hazard ceiling or geometric rate, but arbitrary-game component production and the full-jump boundary remain open. |
+| Essential-APS adaptive compiler | `M+L+A+C` on the stated component | Landed for compact functional unique-live terminal-free components with finite-window face avoidance; exact segment closure on any owner carrier also gives finite terminal execution or an infinite exact APS run. Algebraic invariance and balanced occupation alone do not supply chronology. Arbitrary-game component production and the full-jump boundary remain open. |
 | Multi-owner face-circulation producer | `M+L+A+C` conditional | A supplied bounded circulation above punishment value produces arbitrarily charged finite packets and a uniform payoff by finite charged closing; generic certificate existence remains open. |
 | Signed projective monodromy | `M+L+C` conditional | Exact cyclic correction coordinate; strictly weaker than absolute seam variation for a fixed candidate, but not a weaker all-accuracy producer hypothesis. |
 | Finite charged closing | `M+L+A+C` conditional | Arbitrarily charged exact finite forward packets in one compact carrier yield a returned single-seam lasso and uniform payoff; no orbit uniform in the charge target is required. |
-| Punishment-floor finite-prefix producer | `M+L+A+C` | Every finite quitting game has exact product-root predecessor prefixes above the behavioral punishment floor. Either target-dependent prefixes have arbitrarily large charge and finite charged closing yields a uniform payoff, or one common finite bound controls every exact prefix in the canonical box with a punishment-rational anchor. On the floor-reachable exact-predecessor relation this is an exact finite budget with a canonical least bounded potential decreasing by the literal absorption charge. No single-orbit selection theorem is needed; strategic realization of the bounded branch remains open. |
+| Punishment-floor finite-prefix producer | `M+L+A+C` | Every finite quitting game has exact product-root predecessor prefixes above the behavioral punishment floor. Either target-dependent prefixes have arbitrarily large charge and finite charged closing yields a uniform payoff, or one common finite bound controls every exact prefix in the canonical box with a punishment-rational anchor. On the global boxed floor-admissible exact-predecessor relation this is an exact finite budget with a canonical least bounded potential decreasing by the literal absorption charge. No single-orbit selection theorem is needed; strategic realization of the bounded branch remains open. |
 | Finite phase-occupation duality | `M+L` conditional | Semantic/LP equivalence, attainment, bias decoding, and strong duality landed conditional on feasible occupation; strategic occupation production is not included, and global cross-SCC cancellation is not path-realizable. |
 | Quit-time/Never extremality for behavioral deviations | `M+L` | Landed. |
 | Exact-D optimizer and zero/positive split | `M+L+A+C` on zero branch | Landed. |
+| Combined counterexample normal form and finite screens | `M+L+A+C` | Nonexistence is exactly positive all-behavior terminal gap plus finite canonical floor-prefix capacity. The regime is empty below four players and has canonical minimal `Fin n` form; toggle/stationary ceilings, supported packet atoms, closed weak-preference walks, quantitative floor-clock budgets, and zero-charge recurrence are landed. Proper restriction and packet-support cycles are explicitly not ambient extensions or chronological Bellman orbits. |
+| Periodic-window and phantom-boundary evaluation | `M+L` | The full behavioral reply against periodic opponents is exactly a finite phase-stop/refusal maximum. Prescribed annotation minus actual terminal payoff is exactly surviving mass times the limiting boundary, with tail-charge moduli; favorable drift alone is not an exploitability certificate. |
+| Augmented-cap carrier and splice | `M+L` | Finite exact-D caps lie in a bounded punishment-floor carrier. Cap-minus-value transports exactly by survival; if one suffix co-realizes the terminal cap as its full deviation envelope, the terminal gap yields a logarithmic prefix-charge bound. The realization premise is open in general, and a rational two-player cap-only regression has zero charge in a solved game. |
 | Owner clock/packet and two-ended core | `M+L+A` | Landed; stronger preselected-mark bridge products remain mathematical/experimental. |
 | Finite-block boundary holonomy | `M+L` | Landed at `e1fe7dc`. |
 | Fixed-cutoff resolved holonomy graph | `M+L` | Compact/closed with full source path; fixed-last calibrated lift finite, in `UniformEquilibrium/Quitting/Boundary/Holonomy/Compactness.lean` at `14d75ff`. |
@@ -876,7 +888,7 @@ Key boundaries are:
 | Collision-repair exact characterization (owner indifference, spectator no-join, blocker-floor balance) | `M+L` | Landed (`QuittingCollisionRepairCharacterization`, `34fdc11`): full iff, both legs, arbitrary `n` with every non-owner non-blocker a spectator; forced rate δ ≥ γ/(γ+p); sub-floor mechanism failure below γ/(4M); at rate 1 collapses to the sure-exit test. |
 | Stationary min-max: `χ = inf_y Φ(y)`, both legs, full history-dependent generality | `M+L` | Landed (`QuittingStationaryMinMax`, `0829959`); constant-row cap supplies phase-switch hypothesis (P) at `punishCap = Φ(y)`; solo-clipped ceiling proved STRICTLY loose (`χ = 0` vs ceiling `2` witness); attainment and the finite-horizon `punishmentLevel` bridge deliberately unclaimed. |
 | Shared-punishment price | `M+L` | Two-player shared excess is zero.  A cyclic three-player table has exact behavioral and stationary shared excess `3/4`, with all minimizers classified by a fair first row; on the full-exposure dice table Never is an exact best reply against every committed plan. |
-| Budget-to-go, bounded potentials, and charged-path selection | `M+L` | Abstract strong duality and the Bellman least-supersolution are exact. Finite-path capacity, charge on one infinite path, divergence-preserving block selection, and the additional renewal principle are separated explicitly; for finite edge types the at-most-horizon maximum is attained by a literal path. Delayed-charge, greedy, incompatible-horizon, finite-tower, continuity, and positive-cycle regressions fence off invalid compactness and selection shortcuts. |
+| Budget-to-go, bounded potentials, and charged-path selection | `M+L` | Abstract strong duality and the Bellman least-supersolution are exact. Finite-path capacity, charge on one infinite path, divergence-preserving block selection, renewal, and dependent-choice chronological execution are separated explicitly; for finite edge types the at-most-horizon maximum is attained by a literal path. Delayed-charge, greedy, incompatible-horizon, finite-tower, continuity, and positive-cycle regressions fence off invalid compactness and selection shortcuts. |
 | `SwitchRepair` two-scale producer (switching cover → relaxed orbit) | `M [reported]`, REFUTED | Q166 answer: the no-resurrection theorem — occupation charge enters no pointwise packet clause, so vanishing-error packet families (rates bounded below) reduce to exact one-stage repairs or sure-pair sets; the producer cannot exist in the sure-blocker grammar. |
 | Two-owner root (support-enlarged one-stage mechanism: sure blocker, both others mix) | `M+L` on the regression; `M [reported]` in general | The explicit enlarged root `(1/2, 1, 1/3)` is a machine-checked exact stationary uniform certificate.  The fully general iff with floors remains mathematical rather than production Lean. |
 | K4 regression exact resolution (`χ = (2/3, 0, 2/7)`, period-one orbit `(1, 2/7, 1)`) | `M+L+C` | The two-sure-quitter root and the support-enlarged root are exact stationary uniform certificates with distinct payoffs; the table was never an engine obstruction. |

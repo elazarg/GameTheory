@@ -100,8 +100,14 @@ blockers hidden in the P0 mathematical status.
   each `p_t < 1` preserves survival and, with the nonperiodic Snell
   supersolution, compiles every initial point in the component to a
   uniform-equilibrium payoff. Fixed ceilings and block contractions are
-  stronger quantitative specializations. The theorem does not prove that this
-  component exists or covers the relevant payoff set in arbitrary games.
+  stronger quantitative specializations. More generally, exact segment closure
+  on any owner carrier produces either a finite terminal charged path or an
+  infinite exact APS run, without uniqueness, finiteness, or SCC assumptions.
+  Algebraic APS invariance and stationary occupation balance alone do not imply
+  that segment closure: a formal two-class regression has zero aggregate signed
+  occupation but every chronological path in one class has linearly growing
+  charge. The theorem does not prove that the compiler component exists or
+  covers the relevant payoff set in arbitrary games.
 - **Support witnesses (`a4f23756`, conditional compiler).**  Retaining the
   support-local endpoint witness collapses the ledger clock deterministically.
   Divergent support-rational paths compile with error
@@ -147,21 +153,26 @@ blockers hidden in the P0 mathematical status.
   separate field; the terminal compiler proves
   `η ≤ inf_N D_N ≤ D_N ≤ max_i max(0,r_i({i})) ≤ M`, and the projective tail
   retains debt at least `η` for one owner with a summable opponent clock.  The
-  charge capacity yields a bounded potential, forces every recurrent reachable
-  edge to have zero absorption, and makes every infinite exact floor orbit
+  charge capacity yields a bounded potential on the global boxed
+  floor-admissible relation, forces every recurrent edge there to have zero
+  absorption, and makes every infinite exact floor orbit
   summably absorbing and asymptotically all-Continue.  A floor-dominating
   endpoint reverses the exact-D tail into this prefix family without changing
   charge; hence the optimized tail either has summable joint absorption or
   eventually violates the punishment floor at every date.  Nonpositive
-  punishment values force the summable branch.  **2026-08-09: the violation
-  branch is closed unconditionally.**  Floor violation amplifies through
+  punishment values force the summable branch.  The violation branch is closed
+  unconditionally.  Floor violation amplifies through
   every exact edge (`χ - v ≤ c·(χ - w)`), so violators never rotate, and a
   perpetually violating tail with any positive debt coordinate is summably
   absorbing; the extracted optimized tail therefore has summable joint
   absorption with no side condition, and the former two-branch cross-lane
-  question has one branch.  The same wave narrowed the regime itself: it is
+  question has one branch, with the quantitative division-free bound
+  `(χ_i-v_s(i)) * opponentClock_i[s,∞) ≤ χ_i+M`.  The same wave narrowed the
+  regime itself: it is
   EMPTY below four players (player-reindex transport of the `Bool`/`Fin 3`
-  capstones plus a new arbitrary-`Unique` one-player existence theorem);
+  capstones plus an arbitrary-`Unique` one-player existence theorem), and any
+  hypothetical finite counterexample has a canonical cardinal-minimal `Fin n`
+  representative with `n ≥ 4` whose nonempty proper restrictions are solved;
   every coalition's sure-exit profile is toggle-exploitable at the terminal
   margin (no sure exit set exists), every stationary profile is exploitable
   through its unconditional Snell cap, some player's solo reward reaches the
@@ -169,7 +180,11 @@ blockers hidden in the P0 mathematical status.
   punishment-floor orbit's annotations converge with total variation at most
   `2·M·C*` to an exact all-Continue Nash--Bellman self-loop dominating floor
   and solo rewards; and the general-player analytic waist forces a normalized
-  singleton source packet on every counterexample table.  The computational
+  singleton source packet on every counterexample table.  That packet has
+  nonempty support, a supported atom paying at least `η` in one coordinate, and
+  a finite closed weak-preference walk; these are finite graph facts, not a
+  chronological Bellman orbit.  Exact toggle and stationary-cap ceilings give
+  further computable upper bounds on `η`.  The computational
   falsification and candidate protocol is recorded in
   [`design/CounterexampleSearchRegime.md`](design/CounterexampleSearchRegime.md).
 - **Punishment-completed exact cycles (`177a0c03`, conditional compiler).** A
@@ -2428,7 +2443,8 @@ active strict source surplus               summable absorption; roots -> Continu
 strict conditional-refusal defect          positive-debt dynamic self-loop limit
         +-------------------+--------------+
                             |
-every periodic tail window has a pure-time/Never gain at least eta ------ [L]
+every periodic tail window has an exactly finite-evaluated behavioral
+best-response gain at least eta ---------------------------------------- [L]
                             |
 arbitrary-player support dispatch:
   complementary mixture OR positive-charge exact return OR unblocked restart
@@ -2444,12 +2460,25 @@ transport law is
 v_t + d_t = T(x_t, v_(t+1) + d_(t+1)) + p_t ⊙ d_t
 ```
 
-coordinatewise.  Its diagonal seam cannot in general be converted locally
-into a charged predecessor; repair and support enlargement are indispensable
-alternatives.  Likewise, noncomplementary four-player singleton matrices can
-keep every ideal singleton restart promise- or refusal-blocked.  The open
-producer must therefore use exact product-root dynamics and nonsingleton
-collision rewards, not compactness or the three boundary objects in isolation.
+coordinatewise.  Finite cap-seeded prefixes transport cap-minus-value exactly
+by joint survival.  Conditional on realizing the terminal cap as the actual
+suffix's complete behavioral envelope, this yields
+`eta ≤ survival * capBound` and a logarithmic prefix-charge bound.  That
+realization is not automatic: the diagonal seam cannot in general be converted
+locally into a charged predecessor, so repair and support enlargement are
+indispensable alternatives.
+
+The periodic side is now exact rather than merely a pure-time lower bound:
+against periodic opponents, the full behavioral best response is the maximum
+of finitely many first-pass stop values and refusal/`Never`.  The phantom
+boundary discrepancy is exactly limiting joint survival times the limiting
+annotation, with tail-charge moduli; favorable signed drift can nevertheless
+overdeliver without creating exploitability.  Likewise, an exact bounded
+rational four-player singleton table has a positive compact escape separation
+for every owner distribution.  It is a grammar regression, not a game
+counterexample.  The open producer must therefore use exact product-root
+dynamics and nonsingleton collision rewards, not compactness, drift, or the
+three boundary objects in isolation.
 
 `MATH-P0-3` can bypass part of the bridge by finding a short repair. The
 refutation lane is logically independent after the terminal/nonexistence waist.

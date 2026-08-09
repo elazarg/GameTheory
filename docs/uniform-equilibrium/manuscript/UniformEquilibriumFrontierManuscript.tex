@@ -58,7 +58,7 @@ value; and an abstract duality identifying bounded orbit budgets with bounded
 potentials, calibrated against the repository's own one-stage operator.  It
 additionally contains fixed-skeleton reward perturbation and
 target-free payoff-existence closure, a support-witness compiler from
-divergent paths or finite absorbing cycles, and a fixed-mesh nonperiodic
+divergent paths or finite absorbing cycles, and an adaptive-mesh nonperiodic
 compiler proving uniform payoffs throughout the compact terminal-free
 functional unique-live essential-APS stratum.  It now also contains a genuine
 conditional producer class: a supplied bounded multi-owner face circulation
@@ -79,7 +79,15 @@ literal-length fence.  Matching-order analytic germs yield normalized
 cemetery/singleton packets; signed survival-weighted monodromy is the exact
 periodic correction coordinate, and arbitrarily charged finite forward packets
 close through one-seam projective lassos.  Punishment-completed
-cycles strictly extend the former nonnegative-solo cycle class.  Conversely,
+cycles strictly extend the former nonnegative-solo cycle class.  The combined
+quitting counterexample normal form is also exact: positive all-behavior
+terminal gap plus finite canonical floor-prefix charge capacity.  It forces
+summable absorption, finite toggle/stationary and packet-support screens, and a
+canonical minimal player set of cardinality at least four; two- and
+three-player quitting games are unconditional positive cases.  Periodic
+behavioral replies now reduce exactly to a finite stop/refusal maximum, while
+cap-seeded splicing isolates the remaining suffix co-realization premise.
+Conversely,
 an explicit two-player zero-sum game refutes the universal truncated-ledger
 producer while retaining an exact all-Continue uniform equilibrium.  Exactly
 two intentional open declarations remain; every remaining arrow is tagged
@@ -1381,6 +1389,50 @@ required positive gain at the relevant long horizon.  Failures of stationary,
 periodic, finite-memory, owner-solo, or selected-chain grammars do not meet
 this burden.
 
+For finite quitting games this burden now has an exact combined normal form.
+Nonexistence is equivalent to a positive all-behavior terminal gap \(\eta\)
+together with finiteness of the canonical absorption-charge capacity \(C^*\)
+of all boxed exact punishment-floor prefixes.  Dynamic debt is derived:
+\[
+ 0<\eta\leq \inf_N D_N\leq D_N
+ \leq \max_i\max\{0,r_i(\{i\})\}\leq M.
+\]
+The optimized exact-$D$ tail is summably absorbing and converges toward an
+all-Continue positive-debt self-loop annotation.  If a coordinate lies below
+its punishment value by \(\delta>0\) at date \(s\), the division-free estimate
+\[
+ \delta\sum_{t\geq s}\text{opponent-clock}_i(t)\leq \chi_i+M
+\]
+holds.  The canonical capacity is a bounded potential on the entire boxed
+floor-admissible predecessor relation, not only one selected orbit.
+
+The regime is empty below four players.  Any hypothetical finite
+counterexample can therefore be reindexed to a cardinal-minimal table on
+\(\operatorname{Fin}(n)\), \(n\geq4\), whose nonempty proper player
+restrictions are solved as restricted games.  This does not control excluded
+players' joining deviations.  Exact toggle and stationary-cap ceilings,
+supported packet atoms, and closed weak-preference walks provide finite search
+filters, but packet support is not itself a chronological Bellman orbit.
+
+Against periodically repeated opponents, the complete behavioral best reply is
+exactly the maximum of finitely many first-pass stop values and the
+refusal/Never value; no contraction premise is needed.  The discrepancy between
+a convergent Bellman annotation and the actual terminal payoff is exactly the
+limiting joint survival times the limiting boundary annotation, with explicit
+tail-charge moduli.  In particular, favorable signed drift can overdeliver
+while the restart is behaviorally unexploitable.  A bounded rational
+four-player singleton table has a positive compact escape separation for every
+owner distribution, so singleton complementarity cannot be assumed; this is a
+grammar regression, not a quitting-game counterexample.
+
+For cap-seeded exact prefixes, cap-minus-realized-value transports exactly by
+joint survival.  If one suffix co-realizes the terminal cap as its complete
+behavioral deviation envelope, a terminal gap implies both a survival lower
+bound and a logarithmic upper bound on prefix absorption charge.  The
+co-realization premise is the remaining strategic seam.  An exact two-player
+regression shows that positive augmented cap data may coexist with a unique
+all-Continue cap root of zero absorption in a solved game.
+
 For an actual stationary product profile \(x\), let \(u_i(x)\) be terminal
 payoff and \(c_i(x)\) its exact full-rate behavior cap.  The honest stationary
 filter is
@@ -1434,6 +1486,18 @@ Quitting terminal consumer &
 Positive/zero debt reduction &
 \texttt{QuittingFiniteDynamicDebt...}, provenance modules &
 \Prod through owner-clock and packet split.\\
+Combined counterexample normal form &
+\texttt{Diagnostics/Quitting/CounterexampleRegimeAll.lean} &
+\Prod: positive terminal gap plus finite canonical floor-prefix capacity;
+empty below four players, canonical minimal \texttt{Fin n} form, finite
+toggle/stationary and packet-support screens, quantitative floor-clock budget,
+and unconditional summable absorption of the optimized exact-$D$ tail.\\
+Periodic and augmented-cap semantics &
+\texttt{PeriodicWindowEvaluation.lean},
+\texttt{PunishmentFloorCapSplice.lean} &
+\Prod for exact periodic behavioral evaluation, phantom-boundary accounting,
+and conditional logarithmic charge bounds.  Co-realization of the cap as one
+actual suffix's full deviation envelope remains an explicit premise.\\
 Finite anchored middle &
 \texttt{QuittingBoundaryHolonomy.lean} and
 \texttt{QuittingBoundaryHolonomyCompactness.lean} &
@@ -1455,8 +1519,8 @@ packet-target mismatch has a quantitative rejection theorem; a general target
 dispatcher and chart coverage remain open.  Punishment-floor exact prefixes
 give an unconditional uniform-payoff-or-common-charge-bound dichotomy, but the
 bounded-prefix branch currently yields only a canonical bounded potential on
-the reachable exact-predecessor relation; its strategic realization remains
-unresolved.\\
+the global boxed floor-admissible exact-predecessor relation; its strategic
+realization remains unresolved.\\
 Face-circulation uniform payoff &
 \texttt{MultiOwnerFace\-CirculationFinite\-Closing.lean} &
 \Prod conditional on a bounded certificate, ratio ceiling \(<1\), and
@@ -1467,14 +1531,20 @@ Finite phase-occupation duality &
 \Prod conditional on phase-occupation nonemptiness; verification/optimization,
 not a strategic producer; cross-SCC cancellation is not path-realizable.\\
 Essential-APS infinite path &
-\texttt{QuittingEssentialAPSUniformPayoff.lean} &
+\texttt{Quitting/EssentialAPS/All.lean} &
 \Prod as a conditional positive stratum: compact functional unique-live,
 terminal-free components with finite-window face avoidance compile to uniform
-payoffs; arbitrary-game component production remains open.\\
+payoffs.  More generally, exact segment closure on an arbitrary owner carrier
+gives finite terminal execution or an infinite exact run.  Balanced occupation
+does not imply executable chronology; arbitrary-game component production
+remains open.\\
 Marked absorption cylinder/path &
-No Lean artifact yet; exact target in the positive-plateau claim files &
-\Open: finite semantic encoding, strategic closed graph, endpoint adapter, and
-two decoders all remain.\\
+\texttt{Quitting/AbsorptionPath/All.lean} &
+\Prod for finite marked semantics, the compact metrizable joint-semantic
+completion, exact finite specialization, continuous bounded holonomy,
+obstacle-cap and repair-value decoding, and closed associative splice diagrams.
+It is semantic infrastructure: strategic prefix consumption and an executable
+charged replacement remain open.\\
 Exact punishment value &
 \texttt{QuittingStationaryMinMax.lean} &
 \Prod: both inequalities, all plans; attainment and the finite-horizon
@@ -1492,8 +1562,9 @@ Punishment-completed exact cycles &
 \Prod for supplied absorbing cycles satisfying contraction or
 \(\chi_i\leq r_i(\{i\})\); no generic cycle producer.\\
 Orbit-budget duality and calibration &
-\texttt{Math/ChargedPathBudget...}, \texttt{QuittingQuitBonusSelfLoopBridge.lean} &
-\Prod for the duality, counterexamples, and the operator-level self-loop;
+\texttt{Math/ChargedPathBudget...}, \texttt{Math/ChargedPathExecution.lean} &
+\Prod for duality, renewal and divergence-preserving selection, chronological
+dependent-choice execution, counterexamples, and the operator-level self-loop;
 decidability boundary \Audit.\\
 Truncated ledger-cap boundary &
 \texttt{QuittingTruncatedLedgerCapBoundary.lean} &
@@ -1512,11 +1583,13 @@ support-enlarged, and path mechanisms.  If it is dense, fixed-skeleton payoff
 closure proves existence everywhere without a strategy limit.  If its
 complement has an open cell, select a rational interior table for obstruction
 search.
-\item \textbf{Decide the diagonal-survival producer.}  Either construct
-accuracy-indexed exact diagonal-endpoint prefixes with joint survival tending
-to zero, or derive a positive survival floor and classify the resulting
-projective residue.  The target-tail compiler makes this a scalar obstruction
-and removes the need for a shared punishment continuation.
+\item \textbf{Consume the combined counterexample regime.}  Starting from the
+forced supported singleton packet and the summably absorbing positive-debt
+tail, prove a strategically legal alternative: complementary mixture,
+support-enlarged positive-charge exact return, or an unblocked periodic
+restart.  The three branches are already consumed respectively by circulation,
+finite capacity, and the terminal gap; the missing theorem must use exact
+product-root dynamics and nonsingleton collision rewards.
 \item \textbf{Build a path-consistent support atlas.}  The local residue is
 nonempty but has an exact omitted-cell absorber, so the next finite grammar
 must enlarge support instead of escalating automatically to long cycles.
@@ -1538,22 +1611,25 @@ should feed the signed compiler through cyclic Abel discrepancy; an exact
 finite-forward producer may instead use the landed finite charged-closing
 adapter.  Matching analytic packet extraction, target mismatch, and both
 downstream compilers are already closed.
-\item \textbf{Discharge the remaining borrowed premises.}  The
-Solan--Vieille perfection-to-equilibrium proposition now gates both an
-outer equivalence leg and the repair of the weighted-lemma reading under
-intake; formalizing it removes the last paper IOU.
-\item \textbf{Continue the marked-cylinder lane.}  Fix the finite cylinder
-semantics (P0-A), design topology and decoders together (P0-B/C/D), and
-discharge uniformization by sequential contradiction (P0-E).  The robust
-pointwise alternative remains the load-bearing open arrow of that lane.
+\item \textbf{Close cap realization without axioms.}  The finite cap-seeded
+splice and logarithmic charge estimate are exact.  Construct one admissible
+suffix that co-realizes its prescribed terminal payoff and complete behavioral
+deviation envelope, or prove a repair/support-pivot alternative that feeds the
+existing charged-return compiler.
+\item \textbf{Continue the marked-cylinder lane at its actual frontier.}
+Finite cylinders, the compact metrizable semantic completion, bounded
+holonomy/obstacle/repair decoders, and closed associative splice diagrams are
+landed.  The remaining task is strategic prefix consumption or an executable
+charged replacement on that carrier, not another compactification.
 \item \textbf{Run the instrument and refutation searches in parallel.}
 The budget/potential duality gives exact negative filters and decidable
 template levels; searches are positive semidecisions and no bounded
 grammar exclusion is an all-behavior counterexample.
-\item \textbf{Package the known two-player base case.}  Formalize the
-six-scalar pure/no-pure split, vanishing owner-solo branch, role reversal,
-and terminal-to-uniform consumer; retain exact nonattainment as a
-regression.
+\item \textbf{Exploit minimal-counterexample restrictions.}  Two- and
+three-player quitting games are already closed.  For a cardinal-minimal
+counterexample on \(\operatorname{Fin}(n)\), quantify how equilibria of proper
+player restrictions can be extended or how an excluded player's profitable
+joining deviation enlarges support and supplies charge.
 \end{enumerate}
 
 \section{Acceptance test and conclusion}

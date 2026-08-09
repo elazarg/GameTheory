@@ -58,11 +58,20 @@ is `not_exists_uniformEquilibriumPayoff_iff_exists_gap_and_finiteChargeCapacity`
 The regime is machine-checked EMPTY below four players
 (`QuittingCounterexampleRegime.three_lt_card`): fewer than two players is
 refuted by the toggle consequences below, and two or three players by a new
-player-reindex transport (`Classification/PlayerReindex.lean`) of the
+player-reindex transport (`Classification/PlayerReindexNaturality.lean`) of the
 unconditional `Bool` and `Fin 3` existence theorems.  A one-player existence
 theorem for arbitrary `Unique` player types
 (`quittingGame_exists_uniformEquilibriumPayoff_onePlayer`) fills the
 previously unformalized base case.
+
+Player relabeling now preserves specified uniform-equilibrium payoffs and
+counterexample-regime inhabitation in both directions.  Hence any hypothetical
+finite counterexample may be searched on `Fin n`.  It may moreover be chosen
+cardinality-minimal with `n ≥ 4`; every smaller nonempty player type, and every
+nonempty proper restriction of the minimal table, then has a uniform-equilibrium
+payoff as a game in its own right (`MinimalFinCounterexample.lean`).  The
+restriction theorem does not extend that payoff to excluded players or control
+their joining deviations.
 
 Further machine-checked necessary conditions
 (`CounterexampleRegimeToggles.lean`, `CounterexampleRegimePacket.lean`):
@@ -95,7 +104,20 @@ Further machine-checked necessary conditions
 
   Otherwise the complementary-singleton circulation compiler would already
   produce a uniform-equilibrium payoff.  This strict refusal defect is
-  `exists_active_strictSingletonRefusal`.
+  `exists_active_strictSingletonRefusal`;
+- the forced packet has nonempty normalized support.  Its target is at least
+  `η` in some coordinate, and one supported singleton atom pays that coordinate
+  at least `η` (`exists_terminalGap_le_packetTarget` and
+  `exists_supportedSingleton_terminalGap`).  Unless the support is a singleton,
+  every supported owner has a distinct weakly preferred supported successor,
+  and a finite closed weak-preference walk exists.  This is graph structure,
+  not yet a chronological Bellman orbit; and
+- exact membership toggles give finite, computable upper envelopes for `η`:
+  the pure-toggle ceiling and the stationary-cap ceiling both dominate the
+  terminal gap.  A finite closed improvement walk can be selected from the
+  exact toggle graph.  Conversely, any ordinal potential that strictly
+  increases along improving toggles forces a sure-exit set and therefore a
+  uniform-equilibrium payoff.
 
 ## Derived geometry
 
@@ -122,18 +144,36 @@ where `p_t(i)` is player `i`'s own Quit probability.  The mismatch is diagonal
 and nonnegative.  Positive debt therefore does not by itself supply a charged
 exact predecessor at the same cap; repair or a support pivot is essential.
 
-The charge budget extends from anchored prefixes to every path in the
-punishment-floor reachable exact-predecessor relation.  Its canonical
-budget-to-go function is nonnegative, bounded above by `C`, and satisfies
+Finite exact-D caps nevertheless lie in a common reward-bounded,
+punishment-floor-admissible carrier.  For a cap-seeded prefix, the difference
+between cap evaluation and honest suffix-value evaluation is transported
+exactly by joint survival.  If the terminal cap is separately realized as the
+actual suffix's complete behavioral best-response envelope, then
+
+```text
+terminal gap ≤ joint survival * cap bound,
+total prefix absorption ≤ log(cap bound / terminal gap).
+```
+
+The realization premise is essential: the cap is Bellman bookkeeping until one
+suffix co-realizes both prescribed payoff and the complete deviation envelope.
+A rational two-player regression shows that an augmented cap can have a unique
+all-Continue exact Nash root and zero charge even though the game has an exact
+terminal Nash profile.
+
+The charge budget extends from anchored prefixes to every path in the global
+boxed punishment-floor-admissible exact-predecessor relation; reachability from
+one distinguished anchor is unnecessary.  Its canonical budget-to-go function
+is nonnegative, bounded above by `C*`, and satisfies
 
 ```text
 potential(current) + absorptionCharge(edge) ≤ potential(tail).
 ```
 
-Every closed reachable exact-predecessor path therefore has zero total charge.
-More locally, every edge lying in a reachable strongly connected component has
-zero absorption.  A positive-charge return, cycle, or self-loop is therefore a
-decisive finite certificate that the table is not a counterexample.
+Every closed path in this carrier therefore has zero total charge.  More
+locally, every recurrent edge has zero absorption.  A positive-charge return,
+cycle, or self-loop anywhere in the admissible carrier is therefore a decisive
+finite certificate that the table is not a counterexample.
 
 The prefix result is genuinely all-orbits.  Every infinite exact Nash--Bellman
 orbit in the canonical box whose initial value dominates the punishment floor
@@ -231,12 +271,22 @@ counterexample certificate must ultimately provide one `η > 0` valid against
 the entire behavioral profile space.
 
 For every finite window cut from the optimized exact-D tail, periodic restart
-does give a canonical profile to test.  In a counterexample regime its payoff
-is below the exact deterministic-quit-time/`Never` best-response supremum by at
-least `η` for some player (`exists_cyclicWindow_pureTimeCap_gap`).  Thus search
-need not optimize over arbitrary behavioral deviations for these profiles.
-It must record which branch is active: an in-window pure stop, refusal through
-the repeated window, or Never.
+does give a canonical profile to test.  Against periodic opponents, the full
+behavioral best-response value is exactly the maximum of a finite first-pass
+quit-time list and the refusal/`Never` value
+(`sSup_range_quittingTerminalPayoff_update_eq_periodicWindow`); no survival
+contraction assumption is needed.  In a counterexample regime this exact value
+exceeds the restarted payoff by at least `η` for some player
+(`exists_cyclicWindow_finiteEvaluation_gap`).  Thus search need not optimize
+over arbitrary behavioral deviations for these profiles.  It must record which
+finite branch is active: an in-window stop or refusal/`Never`.
+
+The prescribed Bellman annotation and realized infinite terminal payoff remain
+different quantities.  Their discrepancy is exactly terminal joint survival
+times the limiting boundary annotation.  Tail-charge estimates make both the
+annotation error and realized-payoff tail explicit, but favorable signed drift
+can overdeliver while the restart remains behaviorally unexploitable.  Drift
+magnitude alone is therefore not a strategic obstruction.
 
 ## Candidate record
 
@@ -245,7 +295,7 @@ three lanes:
 
 ```text
 reward table and normalization
-player count and declared symmetries
+canonical player count, minimality status, proper-restriction results, and declared symmetries
 M and positive-singleton cap K
 candidate terminal gap η
 cutoff N
@@ -253,7 +303,10 @@ certified D_N interval, check η ≤ D_N ≤ K, and minimizing exact-D chain
 optimized prefix-charge interval and maximizing exact prefix
 best terminal exploitability interval and profile grammar
 positive-return/SCC search and fixed-threshold stage counts
+pure-toggle and stationary-cap ceilings
+normalized packet support, weak-successor graph, and supported η-atom
 punishment-floor sign pattern
+floor-violation gap and division-free opponent-clock budget, when applicable
 solver residuals and exact rational reconstruction, when available
 ```
 
@@ -261,7 +314,7 @@ Do not promote a floating-point candidate solely because all finite trends
 look favorable.  Promotion requires either exact Lean witnesses or certified
 inequalities with enough data for reconstruction.
 
-## The cross-lane question — collapsed to one branch (2026-08-09)
+## The cross-lane question — collapsed to one branch
 
 The former two-branch alternative is now a theorem with a single surviving
 branch (`CounterexampleRegimeViolationCollapse.lean`).  At every exact
@@ -275,6 +328,17 @@ other players' summable clocks).  Consequently the optimized tail extracted
 from a counterexample regime has summable joint absorption UNCONDITIONALLY
 (`exists_terminalGapDynamicDebtTail_summableAbsorption`), and its roots
 converge coordinatewise to all-Continue.
+
+The same amplification has a division-free quantitative form.  If at date
+`s` player `i` is below punishment by `δ = χ_i - v_s(i) > 0`, then
+
+```text
+δ * sum_{t ≥ s} opponentClock_i(t) ≤ χ_i + M.
+```
+
+This is an instance of a game-independent survival-amplification theorem for a
+positive bounded gap sequence.  It is useful for certified search because it
+does not divide by a numerically small gap.
 
 The surviving object is rigid.  Along every infinite exact punishment-floor
 orbit the annotations converge with total coordinatewise variation at most
@@ -304,8 +368,12 @@ M μ ≥ 0  and  μ_i * (M μ)_i = 0 for every i,
 ```
 
 plus the pure-owner Never condition.  Failure of this complementarity can be
-uniformly separated from zero on the simplex.  Consequently the forced packet
-may be the source of perpetual restart blocking rather than its cure.
+uniformly separated from zero on the simplex.  `FourPlayerSingletonBlocker.lean`
+proves this with an exact bounded rational table and a strictly positive compact
+separation constant.  Consequently the forced packet may be the source of
+perpetual restart blocking rather than its cure.  The table is a regression for
+the singleton grammar, not a quitting-game counterexample or a late-window
+realization theorem.
 
 The decisive remaining producer must use information absent from the three
 seam objects separately: exact product-root dynamics and nonsingleton
