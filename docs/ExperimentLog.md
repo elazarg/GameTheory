@@ -4358,3 +4358,67 @@ memory.
   Phase 2 plus exact coverage both return `VERIFIED=1`.  The ledgers account
   for 67/91 M-FAIR declarations, with RoundRobin complete 27/27 and the next
   breadth gates named explicitly.
+
+### EXP-068: native ordinal stable-matching ownership
+
+- **Date / revision:** 2026-08-09, reserved on `98288d9`
+- **Status:** complete; supports D35 and closes the stable-matching critical gap
+- **Decision / question:** whether one-to-one matching should be a native
+  `Cooperative` branch over the probability-free `Ranking` vocabulary, retain
+  v1's integer-score market, or compile matching into artificial strategic
+  profiles and Nash equilibrium.
+- **Prediction:** two rankings over optional partners, an unbundled matching
+  function with a named injectivity predicate, and theorem-local finite linear
+  ranking certificates suffice for deferred-acceptance stability and balanced
+  perfectness.  The semantic market should store neither a cardinal utility
+  scale nor finiteness, decidability, probability, or game structure.
+- **Representative slice:** general finite Gale--Shapley existence followed by
+  perfectness in balanced, completely acceptable markets.  A three-by-three
+  fixture must force a rejection and partner replacement, expose a concrete
+  blocking pair for an unstable matching, and prove that the produced stable
+  matching is perfect; aligned or singleton preferences do not count.
+- **Competing designs:** native ordinal rankings with `none` as an explicit
+  outside option; v1's integer scores plus separate reservation values; or a
+  `GameForm` encoding whose equilibrium is interpreted as a matching.
+- **Kill conditions:** deferred acceptance needs a stored finite carrier or a
+  second preference representation; the public surface exposes raw function
+  updates or equality transports; stability requires dummy strategic players,
+  probability, Protocol, or Analysis; the general theorem only handles a
+  concrete cardinal score; or the fixture cannot distinguish stability,
+  perfectness, and an actual rejection path.
+- **Reserved artifacts / commands:** `GameTheory/Cooperative/Matching.lean`,
+  `GameTheory/Cooperative/GaleShapley.lean`,
+  `GameTheory/Cooperative/GaleShapley/Perfect.lean`, and
+  `GameTheory/Tests/Matching.lean`; focused builds, source and reachability
+  audits, axiom sampling, an exact bounded P-MATCH ledger, and a full clean
+  build before promotion through the opt-in `GameTheory.Cooperative` root.
+- **Observations / measurements:** the promoted Matching, Gale--Shapley, and
+  Perfect leaves have 129, 514, and 177 nonblank lines; the hostile test has
+  269.  A game-independent 61-line `Core.Rank` addition supplies finite best
+  elements and strict/weak composition directly from relation laws.  The
+  three-by-three fixture proves its named successor is exactly the first
+  rejection round, then proves right one replaces left two with left zero.
+  A separate assignment exposes `(left one, right zero)` as a blocking pair.
+  General finite deferred acceptance is stable, and balanced complete
+  acceptability makes every stable matching perfect.
+- **Boundary / trust:** source checks report zero cooperative transports, raw
+  updates, `Fintype.ofFinite`, placeholders, native reduction, or custom
+  axioms.  The Cooperative root reaches five semantic/algorithmic inputs and
+  rejects Nash, `FinDist`, Protocol execution, and measurable theory.  The
+  finite-best lemma, stable-existence theorem, perfectness theorem, and hostile
+  specialization print exactly `propext`, `Classical.choice`, and
+  `Quot.sound`.  The full 3,509-job build is warning-clean; Phase 1, corrected
+  Phase 2, corrected Phase 3, and exact coverage all return `VERIFIED=1`.
+- **Audit lesson / cost:** the gate found an older reachability probe naming
+  `FinDistConvergesPointwise` in the wrong namespace.  It was repaired to
+  probe the real analytic declaration, restoring a genuine 3/3 positive
+  sequential-bridge result while retaining the negative boundaries.  The
+  strengthened Phase 2 suite took 693 seconds and Phase 3 took 178 seconds,
+  still within CI's release envelope but worth later harness optimization.
+- **Outcome / promotion:** no kill condition fired.  D35 adopts the native
+  ordinal owner and promotes the opt-in `GameTheory.Cooperative` root.  The
+  P-MATCH ledger classifies all 74 bounded declarations: stable existence and
+  perfectness are complete, while 11 proposer-optimality, receiver-pessimal,
+  and symmetry declarations remain explicit BFS work.  The capability matrix
+  moves stable matching from critical gap to better; bargaining is the next
+  critical-gap rotation.

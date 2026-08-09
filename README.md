@@ -42,6 +42,8 @@ GameTheory/Stochastic    opt-in finite-support stochastic games, perfect-public
 GameTheory/Congestion    opt-in load calculus, Rosenthal potential, pure and
                          coarse-correlated affine PoA, and canonical
                          Pigou/Braess examples
+GameTheory/Cooperative   opt-in ordinal matching, finite deferred-acceptance
+                         stability, and balanced perfect matchings
 GameTheory/Mechanism     opt-in coordinated mechanisms, finite auctions,
                          combinatorial allocations, finite round-robin EF1,
                          all-pay arithmetic, and exact/VCG and checked
@@ -100,8 +102,8 @@ each finite horizon reuses canonical approximate Nash. The one-way
 zero-sum Shapley contraction, unique discounted value, and stationary
 statewise saddle selectors. Neither root contains an infinite-path law or a
 general uniform-equilibrium existence claim.
-Congestion and coordinated Mechanism domains are stable but opt-in, so their
-specialized APIs do not enlarge the main root. Languages and Experimental also
+Congestion, Cooperative, and coordinated Mechanism domains are stable but
+opt-in, so their specialized APIs do not enlarge the main root. Languages and Experimental also
 stay outside the root for the separate reasons recorded in their modules.
 The intrinsic language is likewise opt-in: its native product and closed-loop
 semantics precede any temporal compiler, while mixed strategies, utility,

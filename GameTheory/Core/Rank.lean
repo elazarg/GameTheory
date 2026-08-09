@@ -86,6 +86,67 @@ theorem strict_of_not
     strict ranks preferred alternative :=
   ⟨(htotal preferred alternative).resolve_right h, h⟩
 
+/-- In a finite nonempty set, a total transitive ranking has a best element.
+This is the relation-valued counterpart of taking a maximum; it avoids
+re-encoding ordinal preferences by numerical scores. -/
+theorem exists_best_finset
+    {ranks : α → α → Prop}
+    (htrans : Transitive ranks) (htotal : Total ranks)
+    {items : Finset α} (hne : items.Nonempty) :
+    ∃ best ∈ items, ∀ alternative ∈ items, ranks best alternative := by
+  classical
+  induction items using Finset.induction_on with
+  | empty => simp at hne
+  | @insert item items hnotmem ih =>
+      by_cases hempty : items.Nonempty
+      · obtain ⟨best, hbest, hmax⟩ := ih hempty
+        rcases htotal item best with hib | hbi
+        · exact ⟨item, Finset.mem_insert_self item items, fun alternative halt => by
+            rcases Finset.mem_insert.mp halt with heq | halt
+            · subst alternative
+              exact (htotal item item).elim id id
+            · exact htrans item best alternative hib (hmax alternative halt)⟩
+        · exact ⟨best, Finset.mem_insert_of_mem hbest, fun alternative halt => by
+            rcases Finset.mem_insert.mp halt with heq | halt
+            · subst alternative
+              exact hbi
+            · exact hmax alternative halt⟩
+      · have hitems : items = ∅ := Finset.not_nonempty_iff_eq_empty.mp hempty
+        exact ⟨item, Finset.mem_insert_self item items, fun alternative halt => by
+          rw [hitems] at halt
+          have heq : alternative = item := by simpa using halt
+          subst alternative
+          exact (htotal item item).elim id id⟩
+
+/-- Under antisymmetry, a weak comparison between distinct alternatives is
+strict. -/
+theorem strict_of_le_of_ne
+    {ranks : α → α → Prop} (hantisymm : Antisymmetric ranks)
+    {preferred alternative : α} (hle : ranks preferred alternative)
+    (hne : preferred ≠ alternative) :
+    strict ranks preferred alternative :=
+  ⟨hle, fun hreverse => hne (hantisymm preferred alternative hle hreverse)⟩
+
+/-- A strict comparison stays strict after a weakly worse alternative. -/
+theorem strict_trans
+    {ranks : α → α → Prop} (htrans : Transitive ranks)
+    {preferred middle alternative : α}
+    (hfirst : strict ranks preferred middle)
+    (hsecond : ranks middle alternative) :
+    strict ranks preferred alternative :=
+  ⟨htrans preferred middle alternative hfirst.1 hsecond,
+    fun hreverse => hfirst.2 (htrans middle alternative preferred hsecond hreverse)⟩
+
+/-- A weak improvement followed by a strict improvement is strict. -/
+theorem trans_strict
+    {ranks : α → α → Prop} (htrans : Transitive ranks)
+    {preferred middle alternative : α}
+    (hfirst : ranks preferred middle)
+    (hsecond : strict ranks middle alternative) :
+    strict ranks preferred alternative :=
+  ⟨htrans preferred middle alternative hfirst hsecond.1,
+    fun hreverse => hsecond.2 (htrans alternative preferred middle hreverse hfirst)⟩
+
 end Rank
 
 /-! ## A family of rankings, one per agent -/

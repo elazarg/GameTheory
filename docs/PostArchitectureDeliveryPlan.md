@@ -392,7 +392,7 @@ theory.
 | Domain | Gate theorem | Integration rule |
 |---|---|---|
 | coalitional games | Bondareva-Shapley or convex-game core nonemptiness after the existing Shapley/core base | larger theory moves to `GameTheory.Cooperative`; no artificial action profile |
-| matching and market design | Gale-Shapley stability and perfect matching, then strategyproofness or rural hospitals | native preferences and matchings; share order/list mathematics only |
+| matching and market design | **Gale--Shapley stability and balanced perfectness passed (EXP-068/D35); all 74 bounded declarations classified;** next proposer optimality, strategyproofness, or rural hospitals | native ordinal preferences and matchings; share order/list mathematics only |
 | bargaining | Nash solution affine invariance on an honest feasible utility set | native convex feasible-set branch under `Analysis` when topology is used |
 | finite fair division | **round-robin completeness and EF1 passed (EXP-067);** next two-agent EFX, envy-cycle elimination, or maximin-share breadth | `Mechanism.FairDivision` over canonical `Combinatorial.Allocation`; no measurable cake assumptions |
 | knowledge and epistemic games | **complete for pinned v1:** exact/approximate common knowledge and both agreement theorems | any future Protocol bridge must state the extra state-view premise; broader epistemic work is a new consumer, not recovery debt |
@@ -577,16 +577,16 @@ capability status is not renegotiated during that review.
 
 ### Current release-coverage checkpoint
 
-Last integrated checkpoint: 2026-08-09, after the approachability/regret-matching gate.
+Last integrated checkpoint: 2026-08-09, after the native ordinal stable-matching gate.
 These counts are milestones, not declaration-port percentages.
 
 | Release dimension | Current evidence | Release condition |
 |---|---|---|
-| mature workflows | 25 better, 5 comparable, 9 partial, 4 critical gaps | zero critical gaps; each partial audited for loss of mature use |
+| mature workflows | 26 better, 5 comparable, 9 partial, 3 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,146 of 8,324 pinned declarations are claimed by exact ledgers; 1,965 have reviewed dispositions and 181 are seeded `unreviewed` | report the exact remainder; complete every ledger supporting a parity claim |
-| current DFS seam | M-FAIR round-robin 27/27 classified and complete; 67/91 finite fair-division declarations reviewed | keep one canonical allocation; no raw update, game wrapper, or measurable cake import |
-| next capability rotation | matching and market design | Gale-Shapley stability and a perfect-matching hostile instance |
+| exact accounting | 2,220 of 8,324 pinned declarations are claimed by exact ledgers; 2,039 have reviewed dispositions and 181 are seeded `unreviewed` | report the exact remainder; complete every ledger supporting a parity claim |
+| current DFS seam | P-MATCH stable existence and perfectness complete; all 74 bounded declarations classified, with 11 optimality/symmetry rows deferred | preserve one ordinal preference/matching surface and the opt-in Cooperative boundary |
+| next capability rotation | bargaining | Nash-solution affine invariance on an honest feasible utility set |
 | release engineering | incremental full build and structural/coverage audits green | final cold build, flagship axiom sweep, examples, and generated release report |
 
 ## 15. Immediate queue
@@ -639,8 +639,11 @@ provisioned in CI.
    in `GameTheoryMath` and the canonical `FinDist` bridge in Analysis.  The
    finite fair-division rotation then recovered the general canonical
    round-robin completeness and EF1 theorems, closing its critical capability
-   gap with 67/91 declarations reviewed under EXP-067.  The lead queue now
-   rotates to matching and market design, while the remaining 81-row L-FOSG
+   gap with 67/91 declarations reviewed under EXP-067.  EXP-068/D35 then
+   validates native ordinal matching and recovers general deferred-acceptance
+   stability plus balanced perfectness, with all 74 declarations in the
+   bounded gate classified and 11 optimality/symmetry rows retained as BFS.
+   The lead queue now rotates to bargaining, while the remaining 81-row L-FOSG
    classification and D-REPEAT
    rank/self-generation/uniform harvesting, and validated static and language
    leaf recovery remain BFS work;

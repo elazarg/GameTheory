@@ -41,13 +41,13 @@ Verdicts are intentionally qualitative:
 
 ## Dashboard
 
-The 45 workflow rows below contain 25 better, 5 comparable, and 9 partial
-verdicts; 4 are critical gaps and 2 are deliberately retired or out of
+The 45 workflow rows below contain 26 better, 5 comparable, and 9 partial
+verdicts; 3 are critical gaps and 2 are deliberately retired or out of
 scope.  The strongest evidence is the canonical static/protocol spine, NFG,
 the frozen EFG/Kuhn/SPE transfers, finite learning, finite auctions, congestion,
 finite information design, and the executable rational frontend.  The release
-blockers are broader multi-round theory, equilibrium refinements, matching,
-and bargaining.  The many partial
+blockers are broader multi-round theory, equilibrium refinements, and
+bargaining.  The many partial
 rows are not treated as
 release-ready merely because their declaration review is advanced; in
 particular, the live FOSG queue still has 81 rows to classify
@@ -111,7 +111,7 @@ particular, the live FOSG queue still has 81 rows to classify
 | Formalize finite fair division, including indivisible EF1 | `Mechanism/FairDivision.lean`, finite files (M-FAIR) | [`GameTheory/Mechanism/FairDivision.lean`](../GameTheory/Mechanism/FairDivision.lean) reuses the canonical combinatorial allocation, separates completeness, and proves general finite choice round-robin EF1; the three-good fixture has conflicting rankings, strict envy, and a positive removal witness; [27/27 round-robin ledger](coverage/M-FAIR-round-robin.md) | better | Recover two-agent EFX, envy-cycle elimination, and maximin-share breadth without importing measurable cake assumptions. |
 | Formalize divisible cake cutting | divisible fair-division files (M-CAKE) | No continuous/measurable successor by D11 | deliberately retired or out of scope | Cake theory remains outside the finite release; reconsider only through the D11 measurable program. |
 | Prove voting, majority, delegation, and power-index results | `Voting/**` (M-VOTE) | [`GameTheory/Examples/Voting.lean`](../GameTheory/Examples/Voting.lean) supplies examples but not the mature theorem families | partial | Recover median/majority, delegation, liquid-democracy, and power-index results against the ranking foundations. |
-| Find and reason about stable matchings | matching and `GaleShapley/**` (P-MATCH) | `Cooperative` root is reserved; no successor domain is present | critical gap | Prove Gale--Shapley/perfect matching, then strategyproofness or rural hospitals. |
+| Find and reason about stable matchings | matching and `GaleShapley/**` (P-MATCH) | [`GameTheory/Cooperative.lean`](../GameTheory/Cooperative.lean) exposes ordinal preferences over optional partners, general finite deferred-acceptance stability, and balanced completely-acceptable perfectness; the 3-by-3 fixture proves an exact rejection round, holder replacement, and a concrete blocking-pair negative control; [74/74 bounded ledger](coverage/P-MATCH-stable-perfect.md) | better | Recover proposer optimality and one strategyproofness or rural-hospitals extension without reintroducing cardinal scores. |
 | Characterize bargaining solutions | `Cooperative/Bargaining.lean` (P-BARG) | No native feasible-utility successor is present | critical gap | Prove Nash-solution affine invariance on an honest feasible utility set. |
 
 ## Infrastructure and execution

@@ -270,7 +270,7 @@ if (-not $SkipReachability) {
   # must positively consume both stable halves and its analytic definition.
   $protocolAnalysisRejected = 0
   $protocolAnalysisConstants = @(
-      'GameTheory.Analysis.Protocol.FinDistConvergesPointwise',
+      'GameTheory.Analysis.FinDistConvergesPointwise',
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyConsistent')
   $protocolOutput = Run-Probe 'GameTheory.Protocol' $protocolAnalysisConstants
   foreach ($constant in $protocolAnalysisConstants) {
@@ -313,7 +313,7 @@ if (-not $SkipReachability) {
   $sequentialBridgeConstants = @(
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyRational',
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsBayesConsistent',
-      'GameTheory.Analysis.Protocol.FinDistConvergesPointwise')
+      'GameTheory.Analysis.FinDistConvergesPointwise')
   $sequentialOutput = Run-Probe 'GameTheory.Analysis.Protocol' `
     ($sequentialBridgeConstants + @('stdSimplex', 'Polynomial'))
   foreach ($constant in $sequentialBridgeConstants) {
@@ -336,7 +336,7 @@ if (-not $SkipReachability) {
   $efgSyntaxRejected = 0
   $efgSyntaxConstants = @(
       'GameTheory.IsNash',
-      'GameTheory.Analysis.Protocol.FinDistConvergesPointwise',
+      'GameTheory.Analysis.FinDistConvergesPointwise',
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyConsistent')
   $efgSyntaxOutput = Run-Probe 'GameTheory.Languages.EFG' `
     ($efgSyntaxConstants + @(

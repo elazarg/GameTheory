@@ -113,6 +113,8 @@ $EvolutionaryFiles = @(@(Select-Files 'GameTheory/Evolutionary') +
   @('GameTheory/Evolutionary.lean') | Sort-Object -Unique)
 $CongestionFiles = @(Select-Files 'GameTheory/Congestion')
 $MechanismFiles = @(Select-Files 'GameTheory/Mechanism')
+$CooperativeFiles = @(@(Select-Files 'GameTheory/Cooperative') +
+  @('GameTheory/Cooperative.lean') | Sort-Object -Unique)
 $StochasticFiles = @(@(Select-Files 'GameTheory/Stochastic') +
   @('GameTheory/Stochastic.lean') | Sort-Object -Unique)
 Report 'TRANSPORT_GAMETHEORYMATH_SOURCE' (Count-Pattern $MathFiles $TransportPattern)
@@ -125,6 +127,8 @@ Report 'TRANSPORT_CONGESTION_SOURCE' `
   (Count-Pattern $CongestionFiles $TransportPattern)
 Report 'TRANSPORT_MECHANISM_SOURCE' `
   (Count-Pattern $MechanismFiles $TransportPattern)
+Report 'TRANSPORT_COOPERATIVE_SOURCE' `
+  (Count-Pattern $CooperativeFiles $TransportPattern)
 Report 'TRANSPORT_STOCHASTIC_SOURCE' `
   (Count-Pattern $StochasticFiles $TransportPattern)
 Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
@@ -162,6 +166,7 @@ Report 'TRANSPORT_POST_ARCHITECTURE' `
 $Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $PostArchitectureFiles +
   $Phase2Files + $Phase3Files + $AnalysisFiles + $RepeatedFiles + $EpistemicFiles +
   $EvolutionaryFiles + $CongestionFiles + $MechanismFiles + $StochasticFiles +
+  $CooperativeFiles +
   @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
 Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
@@ -590,6 +595,37 @@ if (-not $SkipReachability) {
   Report 'FAIR_DIVISION_BOUNDARY_PROBES_REJECTED' `
     $fairDivisionBoundaryRejected
 
+  # Stable matching is a native ordinal branch.  Its opt-in root must expose
+  # the semantic market, deferred-acceptance stability, and perfectness while
+  # remaining independent of games, probability, Protocol, and Analysis.
+  $matchingInputs = @(
+    'GameTheory.MatchingMarket',
+    'GameTheory.MatchingMarket.deferredAcceptance_isStable',
+    'GameTheory.MatchingMarket.exists_stable',
+    'GameTheory.MatchingMarket.stable_matching_perfect',
+    'GameTheory.MatchingMarket.exists_perfect_stable')
+  $matchingBoundary = @(
+    'GameTheory.IsNash',
+    'GameTheory.Probability.FinDist',
+    'GameTheory.Protocol.ExecutionProtocol',
+    'MeasureTheory.Measure')
+  $matchingOutput = Run-Probe 'GameTheory.Cooperative' `
+    ($matchingInputs + $matchingBoundary)
+  $matchingInputsReached = 0
+  foreach ($constant in $matchingInputs) {
+    if (-not (Is-Unreachable $matchingOutput $constant)) {
+      $matchingInputsReached++
+    }
+  }
+  Report 'MATCHING_INPUT_PROBES_REACHED' $matchingInputsReached
+  $matchingBoundaryRejected = 0
+  foreach ($constant in $matchingBoundary) {
+    if (Is-Unreachable $matchingOutput $constant) {
+      $matchingBoundaryRejected++
+    }
+  }
+  Report 'MATCHING_BOUNDARY_PROBES_REJECTED' $matchingBoundaryRejected
+
   # The analytic root is the one place the budget is spent, and a probe that
   # only ever asserts absence would not notice if it stopped being spent there.
   $reached = 0
@@ -957,7 +993,7 @@ if (-not $SkipReachability) {
   $epistemicBoundary = @(
     'GameTheory.IsNash',
     'GameTheory.Protocol.InformationModel',
-    'GameTheory.Analysis.Protocol.FinDistConvergesPointwise',
+    'GameTheory.Analysis.FinDistConvergesPointwise',
     'stdSimplex',
     'Polynomial')
   $epistemicOutput =
@@ -1281,6 +1317,7 @@ if ($VerifyExpected) {
     TRANSPORT_EVOLUTIONARY_SOURCE = 0
     TRANSPORT_CONGESTION_SOURCE = 0
     TRANSPORT_MECHANISM_SOURCE = 0
+    TRANSPORT_COOPERATIVE_SOURCE = 0
     TRANSPORT_STOCHASTIC_SOURCE = 0
     TRANSPORT_GAMETHEORYMATH_SOURCE = 0
     TRANSPORT_POST_ARCHITECTURE = 0
@@ -1322,6 +1359,8 @@ if ($VerifyExpected) {
     $Expected['KNAPSACK_MECHANISM_INPUT_PROBES_REACHED'] = 6
     $Expected['FAIR_DIVISION_INPUT_PROBES_REACHED'] = 4
     $Expected['FAIR_DIVISION_BOUNDARY_PROBES_REJECTED'] = 4
+    $Expected['MATCHING_INPUT_PROBES_REACHED'] = 5
+    $Expected['MATCHING_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['ANALYSIS_PROBES_REACHED'] = 2
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
