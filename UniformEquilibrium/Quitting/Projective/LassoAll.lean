@@ -16,6 +16,7 @@ import UniformEquilibrium.Quitting.Projective.SignedProjectiveLassoStrictness
 import UniformEquilibrium.Quitting.Projective.SingleSeamProjectiveLasso
 import UniformEquilibrium.Quitting.Projective.ForwardBlockSingleSeam
 import UniformEquilibrium.Quitting.Projective.FiniteForwardProjectiveLasso
+import UniformEquilibrium.Quitting.Projective.PunishmentFloorForwardBudget
 import UniformEquilibrium.Quitting.Projective.ResolvedChart
 import UniformEquilibrium.Quitting.Projective.Boundary.All
 import UniformEquilibrium.Quitting.Debt.Ledger.VanishingChargeRecurrenceNoGo
@@ -45,6 +46,8 @@ Public entry point for the proved projective layer:
 * finite charged return on one fixed compact carrier;
 * payload-preserving finite forward packets and their complete compilation to
   single-seam projective lassos and uniform-equilibrium payoffs;
+* the game-level alternative between a uniform payoff and one common charge
+  bound for every punishment-floor exact forward-orbit prefix;
 * the no-go regression showing that repeated labels and compact recurrence do
   not imply a return small relative to a vanishing one-step charge;
 * exact characterization of signed monodromy as cyclic-value correction,
