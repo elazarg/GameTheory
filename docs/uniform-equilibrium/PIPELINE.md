@@ -155,18 +155,16 @@ blockers hidden in the P0 mathematical status.
   retains debt at least `η` for one owner with a summable opponent clock.  The
   charge capacity yields a bounded potential on the global boxed
   floor-admissible relation, forces every recurrent edge there to have zero
-  absorption, and makes every infinite exact floor orbit
-  summably absorbing and asymptotically all-Continue.  A floor-dominating
-  endpoint reverses the exact-D tail into this prefix family without changing
-  charge; hence the optimized tail either has summable joint absorption or
-  eventually violates the punishment floor at every date.  Nonpositive
-  punishment values force the summable branch.  The violation branch is closed
-  unconditionally.  Floor violation amplifies through
-  every exact edge (`χ - v ≤ c·(χ - w)`), so violators never rotate, and a
-  perpetually violating tail with any positive debt coordinate is summably
-  absorbing; the extracted optimized tail therefore has summable joint
-  absorption with no side condition, and the former two-branch cross-lane
-  question has one branch, with the quantitative division-free bound
+  absorption, and makes every infinite exact floor orbit summably absorbing
+  and asymptotically all-Continue.  The selected optimized tail now has a
+  stronger bridge: every unaugmented value dominates the punishment floor, so
+  every finite chronological segment reverses into this prefix family without
+  changing charge.  Zero debt follows directly from the augmented-cap floor;
+  positive debt uses floor-violation persistence and the limiting exact
+  self-loop.  Segmentwise reversal does not realize the Bellman boundary or
+  turn the chronology into one outward orbit from a fixed anchor.  Floor
+  violation amplification remains useful for arbitrary exact tails and gives
+  the quantitative division-free bound
   `(χ_i-v_s(i)) * opponentClock_i[s,∞) ≤ χ_i+M`.  The same wave narrowed the
   regime itself: it is
   EMPTY below four players (player-reindex transport of the `Bool`/`Fin 3`
@@ -2490,7 +2488,48 @@ against periodic opponents, the full behavioral best response is the maximum
 of finitely many first-pass stop values and refusal/`Never`.  The phantom
 boundary discrepancy is exactly limiting joint survival times the limiting
 annotation, with tail-charge moduli; favorable signed drift can nevertheless
-overdeliver without creating exploitability.  Likewise, an exact bounded
+overdeliver without creating exploitability.  The exact attachment formula is
+now also explicit.  If `C` is full joint survival through an absorbing exact
+Nash--Bellman word, `rho_i` is player `i`'s opponent-only survival, and
+`Delta_i` is its displayed endpoint drift, then the two periodic evaluator
+branches are bounded by
+
+```text
+C * [-Delta_i]_+ / (1-C)
+(rho_i-C) * [Delta_i]_+ / ((1-rho_i)(1-C)).
+```
+
+The pre-bound equalities retain the nonnegative phase and refusal slacks.
+Consequently ordinary endpoint recurrence is not enough; the seam must close
+at the scale of the survival gaps.  Positive dynamic debt survives in exactly
+the refusal normalization, so occupation identification can make the packet
+defect and phantom plateau coincide rather than contradict.  A successful
+producer must cancel that normalized term, select a different globally
+repairable support/phase word, or create a renewable charged return.  The
+opponent-survival-one case is the existing isolated negative-solo branch.
+
+The selected counterexample tail now has an exact charge-scale exclusion.
+Suppose late positive-absorption windows had endpoint distance divided by
+absorbed mass tending to zero.  Conditional collision would vanish; a compact
+subsequence of normalized singleton occupations would converge; the exact
+restart seam would identify its delivery with the tail boundary; and every
+positive limiting owner would be pinned to its singleton reward.  All-date
+punishment rationality then makes the limit a fully complementary normalized
+packet, contradicting the table-uniform packet defect.  Therefore there are
+`speed > 0` and `threshold` such that every positive-absorption window starting
+after `threshold` satisfies
+
+```text
+dist(v_start, v_end) >= speed * absorbedMass(window).
+```
+
+This is uniform ballisticity in the finite absorption clock, not a return
+theorem.  Since the total clock is summable, a bounded exact path may still
+approach its limit at a nonzero clock speed.  The remaining producer is now a
+product-root ballistic-return or terminal-realization theorem; compactness and
+bounded variation alone cannot supply it.
+
+Likewise, an exact bounded
 rational four-player singleton table has a positive compact escape separation
 for every owner distribution.  More generally, every fixed counterexample
 table has one positive compact refusal margin uniform over all of its normalized
@@ -2509,12 +2548,14 @@ rewards, and pin every cofinally active owner to its singleton reward.  Hence
 late-tail search has a certified scalar target; the unresolved issue is the
 occupation/funding/floor bridge, not the value of the suffix best response.
 Product-root collision is quadratically small in one-stage absorption.  The
-concentration theorem separates the zero-absorption branch; when absorption
-and singleton mass are positive, the conditional collision share is at most
-`choose(|I|,2)` times the maximum stage absorption and conditional delivery is
-within `2 M` times that share of the normalized singleton mixture.  Under these
-denominator conditions collision concentration removes higher-order terminal
-noise from the limit.  The canonical source-typed
+concentration theorem separates the zero-absorption branch.  With positive
+total absorption, the singleton mixture normalized by that same total differs
+from conditional delivery by at most `M` times the conditional collision
+share; no positive singleton-mass denominator is needed.  If one instead
+normalizes by singleton mass alone, the older `2 M` bound requires that mass
+to be positive.  The collision share is at most `choose(|I|,2)` times the
+maximum stage absorption, so higher-order terminal noise vanishes on arbitrary
+late windows.  The canonical source-typed
 window record additionally turns positive limiting owner occupation into a
 literal active source phase and pins the annotation boundary to the solo
 reward.  It does not identify the refusal-conditioned occupation, establish

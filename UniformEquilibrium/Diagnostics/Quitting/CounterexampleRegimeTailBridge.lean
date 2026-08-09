@@ -16,10 +16,12 @@ an individually rational terminal anchor by choosing exact predecessors.
 
 Consequently a finite dynamic-debt segment can be reversed into a
 punishment-floor prefix whenever its far endpoint dominates the punishment
-floor.  This is the honest bridge between the two carriers.  It
-does not assert that the positive optimized exact-debt tail has such
-endpoints.  Instead it records the sharp consequence: if floor-dominating
-endpoints occur cofinally, the tail's *joint* absorption charge is summable.
+floor.  This is the generic bridge between the two carriers, and it records
+the consequence that cofinally floor-dominating endpoints force summable
+joint absorption.  For the optimized counterexample tail, the endpoint premise
+is discharged downstream by all-date punishment rationality in
+`CounterexampleRegimeCapCarrier`; the generic conditional interface remains
+useful for arbitrary exact-D tails.
 
 The endpoint hypothesis cannot be dropped merely by translating payoffs.
 The quitting game's nonabsorbing payoff is fixed at zero, so a coordinatewise

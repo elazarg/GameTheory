@@ -1418,8 +1418,14 @@ survival-conservation coordinate:
 \]
 For the selected owner, eventual deleted survival is exactly the endpoint
 debt ratio and the remaining opponent clock is at most
-\(\log(K_i/\eta)\).  Every positive-debt coordinate is above its punishment
-floor at every finite date.  If a coordinate lies below
+\(\log(K_i/\eta)\).  Every unaugmented optimized-tail value is above its
+punishment floor at every finite date: zero debt removes the augmented-cap
+term directly, and positive debt is covered by persistence toward the limiting
+self-loop.  Consequently every finite chronological tail segment reverses to
+an exact punishment-floor prefix with unchanged absorption charge.  This
+segmentwise statement neither supplies one outward orbit from a fixed anchor
+nor realizes the annotation as a terminal payoff.  If an arbitrary exact-D
+coordinate lies below
 its punishment value by \(\delta>0\) at date \(s\), the division-free estimate
 \[
  \delta\sum_{t\geq s}\text{opponent-clock}_i(t)\leq \chi_i+M
@@ -1454,7 +1460,50 @@ tends to a limit at least \(\eta\): the obstruction is a positive phantom
 plateau on the Never boundary.  The canonical length-\(n+1\) restarted tail
 windows are blocked from the first window, and an infinite subfamily has one
 fixed obstructing player and one fixed refusal-versus-phase branch.  This does
-not attach such a suffix to an arbitrary earlier exact-$D$ prefix.  A bounded rational
+not attach such a suffix to an arbitrary earlier exact-$D$ prefix.
+
+The obstruction has an exact normalized form.  For an absorbing exact
+Nash--Bellman word, let \(C\) be joint survival, let \(\rho_i\) be survival of
+player \(i\)'s opponents, and let
+\(\Delta_i=v_i(0)-v_i(L)\).  After subtracting the nonnegative finite-window
+slacks, the phase and refusal branches are bounded respectively by
+\[
+  \frac{C[-\Delta_i]_+}{1-C},
+  \qquad
+  \frac{(\rho_i-C)[\Delta_i]_+}
+       {(1-\rho_i)(1-C)}.
+\]
+Thus compact recurrence and \(\Delta_i\to0\) do not attach the periodic word;
+the endpoint seam must vanish relative to the survival gaps.  In the refusal
+branch, positive dynamic debt survives in precisely this normalization.  Even
+if late singleton occupation is identified with the forced packet, the packet
+refusal defect and the phantom plateau can be the same persistent deviation,
+not contradictory restrictions.  The opponent-survival-one case is the
+separately classified isolated negative-solo exception.
+
+The optimized counterexample tail satisfies a stronger charge-scale
+restriction.  If positive-absorption windows escaping to infinity had
+\[
+ \frac{\operatorname{dist}(v_n,v_m)}
+      {1-\prod_{t=n}^{m-1}c_t}\longrightarrow0,
+\]
+then collision concentration and compact normalized singleton occupation
+would identify the restart delivery with the limiting annotation.  Every
+positive occupation coordinate is pinned to its singleton reward, while the
+all-date floor theorem supplies punishment rationality.  The resulting limit
+is a fully complementary normalized singleton packet, contradicting the
+uniform packet defect.  Hence there are \(\sigma>0\) and \(N\) such that
+\[
+ \operatorname{dist}(v_n,v_m)\geq
+ \sigma\left(1-\prod_{t=n}^{m-1}c_t\right)
+\]
+for every \(N\leq n<m\) with positive absorption.  This is ballisticity in a
+finite absorption clock, not recurrence: summable charge permits a bounded
+path to approach its endpoint at nonzero clock speed.  The remaining theorem
+must use product-root support and collision structure to produce an exact
+return or a realizable terminal suffix.
+
+A bounded rational
 four-player singleton table has a positive compact escape separation for every
 owner distribution, so singleton complementarity cannot be assumed; this is a
 grammar regression, not a quitting-game counterexample.

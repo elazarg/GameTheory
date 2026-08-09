@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTailBridge
 import UniformEquilibrium.Quitting.Debt.Dynamic.FiniteDynamicDebtCapCarrier
 
 /-!
@@ -86,6 +87,44 @@ theorem tailDynamicDebtCap_mem_and_floor (time : ℕ) :
         (quittingDynamicDebtCap (seam.tail time))).comp hcap
     exact ge_of_tendsto hcoordinate
       (hfinite.mono fun _ h ↦ h.2 who)
+
+/-- **All-date punishment rationality of the unaugmented optimized tail.**
+Every prescribed value of the selected exact-D tail already dominates the
+complete behavioral punishment floor.  If the displayed debt is zero this
+is the augmented-cap inequality with the augmentation removed; if it is
+positive, exact-debt persistence and the limiting self-loop remove it. -/
+theorem punishmentValue_le_tailValue (time : ℕ) (who : ι) :
+    quittingPunishmentValue reward who ≤ (seam.tail time).1.1 who := by
+  letI : Nonempty ι := regime.nonempty_players
+  by_cases hdebt : (seam.tail time).2 who = 0
+  · have hfloor := (seam.tailDynamicDebtCap_mem_and_floor time).2 who
+    simpa [quittingDynamicDebtCap_apply, hdebt] using hfloor
+  · have hdebtNonneg := (seam.tail_mem time).2.1 who
+    exact seam.punishmentValue_le_tailValue_of_debt_pos who time
+      (lt_of_le_of_ne hdebtNonneg (Ne.symm hdebt))
+
+/-- Every finite chronological segment of the optimized exact-D tail,
+reversed from its far endpoint, is a literal punishment-floor predecessor
+prefix.  No endpoint-floor hypothesis remains for this selected tail. -/
+def tailSegmentPunishmentFloorPrefix (horizon : ℕ) :
+    QuittingPunishmentFloorFinitePrefix reward := by
+  letI : Nonempty ι := regime.nonempty_players
+  exact quittingDynamicDebtSegmentToPunishmentFloorPrefix seam.tail horizon
+    (fun time _ ↦ seam.tail_mem time)
+    (fun time _ ↦ seam.tail_edge time)
+    (seam.punishmentValue_le_tailValue horizon)
+
+/-- Reversing the optimized segment preserves its literal joint absorption
+charge exactly. -/
+theorem tailSegmentPunishmentFloorPrefix_charge (horizon : ℕ) :
+    (seam.tailSegmentPunishmentFloorPrefix horizon).charge =
+      ∑ time ∈ Finset.range horizon,
+        quittingDynamicDebtTailAbsorptionCharge seam.tail time := by
+  letI : Nonempty ι := regime.nonempty_players
+  exact quittingDynamicDebtSegmentToPunishmentFloorPrefix_charge seam.tail
+    horizon (fun time _ ↦ seam.tail_mem time)
+      (fun time _ ↦ seam.tail_edge time)
+      (seam.punishmentValue_le_tailValue horizon)
 
 /-- The all-Continue limiting augmented cap. -/
 def limitDynamicDebtCap : Payoff ι :=

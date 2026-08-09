@@ -166,11 +166,11 @@ theorem debt_le_soloReward_of_debt_pos
   · exact (lt_irrefl 0 hzero).elim
   · simpa [max_eq_right hsolo.le] using hdebtCap
 
-/-- A positive-debt coordinate's own singleton reward is dominated by its
-prescribed value at the all-Continue exact Nash self-loop. -/
-theorem soloReward_le_value_of_debt_pos
-    (limit : QuittingPositiveDebtSelfLoopLimit reward) (who : ι)
-    (_hdebtPos : 0 < limit.debt who) :
+/-- Every coordinate's own singleton reward is dominated by its prescribed
+value at the all-Continue exact Nash self-loop.  This is a property of the
+exact Nash self-loop and does not require positive debt. -/
+theorem soloReward_le_value
+    (limit : QuittingPositiveDebtSelfLoopLimit reward) (who : ι) :
     reward (quittingSingletonTerminal who) who ≤ limit.value who := by
   have hquit :=
     quittingRootQuitPayoff_le_currentValue_of_nashBellmanEdge
@@ -178,6 +178,14 @@ theorem soloReward_le_value_of_debt_pos
         (limit.value, quittingAllContinueSimplexRoot)
         limit.exactSelfLoop.1 who
   simpa [quittingRootOfSimplex_allContinueSimplexRoot] using hquit
+
+/-- Positive-debt compatibility wrapper for the general self-loop singleton
+inequality. -/
+theorem soloReward_le_value_of_debt_pos
+    (limit : QuittingPositiveDebtSelfLoopLimit reward) (who : ι)
+    (_hdebtPos : 0 < limit.debt who) :
+    reward (quittingSingletonTerminal who) who ≤ limit.value who :=
+  limit.soloReward_le_value who
 
 /-- Positive limiting debt is no larger than its phantom prescribed value. -/
 theorem debt_le_value_of_debt_pos

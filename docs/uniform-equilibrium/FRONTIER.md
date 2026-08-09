@@ -47,14 +47,17 @@ assumed:
 
 The optimized projective tail retains debt at least `η` for one owner and a
 summable opponent clock.  The optimized tail itself has summable joint
-absorption unconditionally: a floor violation amplifies monotonically, and the
-positive-debt owner closes the formerly exceptional branch.  Every infinite
+absorption unconditionally.  More strongly, every unaugmented tail value
+dominates the punishment floor: zero debt removes the augmented-cap term,
+while positive debt is covered by the persistence theorem.  Hence every finite
+chronological tail segment reverses to a legal exact floor prefix with exactly
+the same absorption charge.  Every infinite
 exact punishment-floor orbit also has summable joint absorption and converges
 coordinatewise to all-Continue.  The canonical capacity defines a bounded
 potential on the global boxed floor-admissible relation, so every recurrent
-edge there has zero charge.  Reversing a floor-dominating exact-D segment
-preserves charge, but no unconditional theorem identifies the optimized tail
-with a floor-admissible or floor-reachable orbit.
+edge there has zero charge.  Segmentwise reversal does not make the
+chronological tail one outward orbit from a fixed anchor, nor does it realize
+its Bellman values as terminal payoffs.
 
 The regime is empty below four players.  Any hypothetical finite counterexample
 can be reindexed to a canonical cardinal-minimal `Fin n` table with `n ≥ 4`;
@@ -145,7 +148,33 @@ The finite-quitting front is now sharply reduced.
    fixed-player/fixed-branch subsequences. This closes the compatible
    ultimately-periodic evaluator; it does not attach those suffixes to an
    arbitrary exact-D prefix or establish the general cap-splice realization
-   premise.
+   premise.  More sharply, periodic attachment is governed by a normalized
+   seam.  For an absorbing exact Nash--Bellman word with joint survival `C`,
+   player-deleted survival `rho_i`, and endpoint drift `Delta_i`, the complete
+   behavioral gain is bounded by the maximum of
+
+   ```text
+   C * [-Delta_i]_+ / (1-C)
+   (rho_i-C) * [Delta_i]_+ / ((1-rho_i)(1-C)).
+   ```
+
+   These are exact branchwise formulas before the nonnegative finite-window
+   slacks are discarded.  Thus `Delta_i -> 0` and compact recurrence do not
+   suffice: the drift must vanish relative to the survival gaps.  In the
+   refusal branch the positive dynamic debt is exactly capable of financing
+   the surviving normalized term.  Even a valid identification of late owner
+   occupation with the singleton packet would therefore identify two views of
+   the same refusal defect, not produce a contradiction.  The
+   `rho_i = 1` isolated coordinate is the separately classified negative-solo
+   exception.  The optimized counterexample tail is now known to lie on the
+   opposite side of the joint normalization: there are `speed > 0` and a late
+   date such that every positive-absorption window satisfies
+   `dist(v_n,v_m) >= speed * (1-S_nm)`.  The proof uses collision concentration,
+   compact normalized singleton occupation, all-date punishment rationality,
+   and the uniform packet defect.  Thus no selected-tail window returns at
+   little-o of absorbed-mass scale.  This ballisticity is not recurrence;
+   summable absorption permits a bounded path to approach its limit at nonzero
+   clock speed.
 6. **Two endpoint charts (`M+L`).** Reading the same minimizers from both ends
    gives a forward positive-debt ray and a reverse ray ending on the terminal
    face with a quantitative depth-one packet. The middle length still diverges.
@@ -923,7 +952,7 @@ Key boundaries are:
 | Quit-time/Never extremality for behavioral deviations | `M+L` | Landed. |
 | Exact-D optimizer and zero/positive split | `M+L+A+C` on zero branch | Landed. |
 | Combined counterexample normal form and finite screens | `M+L+A+C` | Nonexistence is exactly positive all-behavior terminal gap plus finite canonical floor-prefix capacity. The regime is empty below four players and has canonical minimal `Fin n` form; toggle/stationary ceilings, supported packet atoms, closed weak-preference walks, quantitative floor-clock budgets, and zero-charge recurrence are landed. Proper restriction and packet-support cycles are explicitly not ambient extensions or chronological Bellman orbits. |
-| Periodic-window and phantom-boundary evaluation | `M+L` | The full behavioral reply against periodic opponents is exactly a finite phase-stop/refusal maximum. Prescribed annotation minus actual terminal payoff is exactly surviving mass times the limiting boundary, with tail-charge moduli; favorable drift alone is not an exploitability certificate. |
+| Periodic-window and phantom-boundary evaluation | `M+L` | The full behavioral reply against periodic opponents is exactly a finite phase-stop/refusal maximum. Prescribed annotation minus actual terminal payoff is exactly surviving mass times the limiting boundary, with tail-charge moduli; favorable drift alone is not an exploitability certificate. On the selected counterexample tail, endpoint drift is uniformly bounded below by absorbed mass on every sufficiently late absorbing window, so the remaining route is ballistic return or terminal realization rather than ordinary compact recurrence. |
 | Augmented-cap carrier and splice | `M+L` | Finite exact-D caps lie in a bounded punishment-floor carrier. Cap-minus-value transports exactly by survival; if one suffix co-realizes the terminal cap as its full deviation envelope, the terminal gap yields a logarithmic prefix-charge bound. The realization premise is open in general, and a rational two-player cap-only regression has zero charge in a solved game. |
 | Owner clock/packet and two-ended core | `M+L+A` | Landed; stronger preselected-mark bridge products remain mathematical/experimental. |
 | Finite-block boundary holonomy | `M+L` | Landed at `e1fe7dc`. |

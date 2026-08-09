@@ -224,21 +224,15 @@ summable and tend to zero, so every such root sequence converges coordinatewise
 to all-Continue.  Nevertheless, the actual behavior profile starting at every
 sufficiently late date remains terminally exploitable by at least `η`.
 
-The optimized exact-D path and the floor-prefix family are connected exactly
-at floor-dominating endpoints: reversing such a finite exact-D segment gives a
-floor prefix with the same total absorption.  Consequently the extracted tail
-has the alternative
-
-```text
-joint absorption is summable
-or eventually every endpoint violates the punishment floor in some coordinate.
-```
-
-If every punishment value is nonpositive, the zero-boundary approximants and
-their projective limit dominate the floor, so the first branch holds and the
-extracted tail has summable full joint absorption.  Without that sign condition
-the two carriers are still not identified; search output must not silently
-treat them as one orbit.
+The optimized exact-D path and the floor-prefix family now meet at every date.
+Every unaugmented selected-tail value dominates the punishment floor: zero
+debt removes the augmented-cap term directly, while positive debt invokes the
+floor-persistence/self-loop theorem.  Reversing any finite chronological
+segment therefore gives an exact floor prefix with exactly the same total
+absorption.  Search code may use this certificate without a punishment-sign or
+endpoint filter.  It must still respect orientation: these segments have
+different far-end anchors and do not constitute one outward orbit from a fixed
+terminal state, nor do their annotations equal honest suffix payoffs.
 
 ## Search lanes
 
@@ -372,11 +366,13 @@ kappa <= choose(|I|,2) * alpha^2.
 ```
 
 Hence the concentration theorem branches explicitly when a survival-weighted
-window has zero absorption.  When absorption and singleton mass are positive,
-maximum stage absorption `rho` bounds conditional collision fraction by
+window has zero absorption.  When total absorption is positive, maximum stage
+absorption `rho` bounds conditional collision fraction by
 `choose(|I|,2) * rho`, and conditional delivery is within
-`2 M choose(|I|,2) rho` of its normalized singleton mixture.  This supplies
-singleton concentration, not funding, punishment rationality, or the
+`M choose(|I|,2) rho` of the singleton mixture normalized by total absorption.
+This version has no separate positive-singleton denominator.  Normalization by
+singleton mass itself retains the older `2 M` estimate and does require that
+denominator.  These facts supply singleton concentration, not funding or the
 survival-reweighting needed to identify a refusal law with the original owner
 occupation conditioned off one player.
 
@@ -401,9 +397,25 @@ normalized owner occupation, and conditional absorbing delivery.  It proves
 normalization.  A positive limiting owner coordinate produces an actual
 positive-hazard source phase beyond the same cutoff and therefore pins the
 annotation boundary to that owner's singleton reward.  This closes the
-support-pinning part of the occupation bridge; funding, the punishment floor,
-and vanishing of the normalized refusal-reweighting ratio remain independent
-tests.
+support-pinning part of the occupation bridge.  On the selected optimized tail
+the punishment-floor clause is now automatic; funding and vanishing of the
+normalized refusal-reweighting ratio remain independent tests.
+
+The same data give a direct rejection test for charge-scale recurrence.  There
+are table- and tail-dependent `speed > 0` and `threshold` such that every
+positive-absorption selected-tail window beginning after `threshold` obeys
+
+```text
+dist(value[start], value[start + fuel])
+  >= speed * absorptionMass(window).
+```
+
+Therefore any exact candidate trace with the displayed ratio trending to zero
+cannot be the optimized tail of a counterexample.  A ratio bounded away from
+zero is not positive evidence for nonexistence: summable absorption allows
+ballistic convergence in finite clock time.  Scripts should report the ratio
+as a first-class diagnostic and search for exact product-root returns or
+terminal realization beyond it.
 
 ## Candidate record
 
@@ -450,7 +462,10 @@ a sub-punishment solo reward, zeroing its debt cap and contradicting the
 other players' summable clocks).  Consequently the optimized tail extracted
 from a counterexample regime has summable joint absorption UNCONDITIONALLY
 (`exists_terminalGapDynamicDebtTail_summableAbsorption`), and its roots
-converge coordinatewise to all-Continue.
+converge coordinatewise to all-Continue.  The later all-date floor theorem
+removes the violation branch entirely for this selected optimized tail; the
+amplification estimate remains a useful diagnostic for arbitrary exact-D
+traces.
 
 The same amplification has a division-free quantitative form.  If at date
 `s` player `i` is below punishment by `δ = χ_i - v_s(i) > 0`, then
@@ -480,12 +495,37 @@ every periodic tail window.  No theorem identifies the packet weights with
 late-window owner occupation or the packet target with realized window
 delivery.  Those are genuinely different objects.
 
+Even supplying those identifications would not by itself close the regime.
+For an absorbing exact Nash--Bellman word, write `C` for joint survival,
+`rho_i` for opponent-only survival, and `Delta_i` for endpoint drift.  Exact
+periodic evaluation gives the branchwise attachment bound
+
+```text
+max (
+  C * [-Delta_i]_+ / (1-C),
+  (rho_i-C) * [Delta_i]_+ / ((1-rho_i)(1-C))
+).
+```
+
+The actual identities subtract nonnegative finite-stop and refusal slacks.
+Hence search must certify normalized closure, not merely `Delta_i -> 0`.
+Under small-charge singleton occupation, the refusal coefficient reads the
+same owner share as the packet, while the normalized drift reads the phantom
+debt.  The limiting refusal term is therefore the packet refusal defect: the
+two objects can be dual descriptions of one obstruction.  Candidate searches
+should retain the two displayed ratios and reject any proposed attachment
+whose absolute seam shrinks but whose normalized seam stays positive.
+
 When a singleton occupation bridge is available, the two evaluator branches
 must be handled differently.  A phase stop at a pinned owner forces
 underfunding.  A positive refusal defect at a proper positive owner mass
 instead forces strict funding and a quantitative lower bound on that mass; if
-the packet clauses still fail, the missing clause is the punishment floor.
-Thus “the packet lacks funding” is not a branch-independent diagnosis.
+the clauses of a generic packet still fail, the scalar algebra leaves the
+punishment floor as the missing clause.  On the selected optimized tail that
+clause is now automatic.  Consequently charge-scale delivery closure would
+produce a forbidden complementary packet, which is exactly the ballisticity
+argument.  Thus “the packet lacks funding” is not a branch-independent
+diagnosis, and ordinary endpoint convergence is not delivery closure.
 
 The distinction matters.  Noncomplementary singleton matrices exist already
 with four players for which every singleton-owner distribution has a positive

@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitLimit
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitSelfLoop
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
@@ -31,6 +32,7 @@ import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupati
 import UniformEquilibrium.Quitting.AbsorptionPath.FiniteWindowRefusalReweighting
 import UniformEquilibrium.Quitting.Classification.SingletonPacketDefectAlgebra
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryLimitGeometry
+import UniformEquilibrium.Quitting.Cycles.PeriodicNormalizedSeam
 import UniformEquilibrium.Quitting.Debt.Dynamic.DynamicDebtCapChargedAnchorCounterexample
 import UniformEquilibrium.Quitting.Debt.Dynamic.PeriodicDebtHolonomy
 import UniformEquilibrium.Quitting.Debt.Dynamic.PunishmentFloorCapSplice
@@ -42,8 +44,8 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 
 This is the public umbrella for the combined counterexample normal form, its
 canonical prefix-charge capacity, quantitative exact-D restrictions,
-search-facing recurrence tests, the conditional bridge from optimized
-exact-D tails to punishment-floor prefixes, the membership-toggle and
+search-facing recurrence tests, the exact bridge from optimized exact-D tails
+to punishment-floor prefixes, the membership-toggle and
 stationary-cap instability families, support dynamics of the forced packet,
 canonical minimal finite counterexamples, emptiness at small player types,
 orbit value limits, quantitative floor-violation budgets, the collapse that
@@ -60,6 +62,15 @@ generate unbounded canonical prefix charge, linking the sure-exit and capacity
 screens.  The umbrella also exports the augmented-cap splice
 interface and the finite regressions delimiting singleton complementarity and
 cap-only arguments.
+
+Every unaugmented value on the optimized tail already dominates the behavioral
+punishment floor, so every finite chronological tail segment reverses to a
+legal exact floor prefix with the same charge.  The tail is also uniformly
+ballistic in absorption time: after one date, every positive-absorption window
+has endpoint distance at least one fixed positive multiple of its absorbed
+mass.  Thus no late window closes at little-o of charge scale.  This does not
+produce recurrence; finite total charge permits a bounded ballistic approach
+to the limiting all-Continue state.
 
 For proper-face arguments, the umbrella exports an original-coordinate
 outsider-`Never` estimate.  If the outsider's live continuation is at most
@@ -94,9 +105,24 @@ compiler supplies a uniform payoff.
 Canonical source-typed finite windows now retain normalized singleton owner
 occupation, collision mass, and full absorbing delivery.  Late collision
 vanishes at the product-law rate, and positive limiting owner occupation pins
-the annotation boundary directly.  Refusal conditioning uses a different
+the annotation boundary directly.  Normalizing the singleton mixture by total
+absorption gives a collision error bound without a positive singleton-mass
+premise.  Refusal conditioning uses a different
 deleted-player survival law; its normalized discrepancy is explicitly bounded
 by the chronological reweighting error divided by a positive deleted-absorption
 denominator.  No theorem here makes that ratio vanish for the canonical
 windows.
+
+Periodic attachment has a second, exact normalization fence.  For an
+absorbing exact Nash--Bellman word, the finite-stop and refusal branches of
+the literal periodic best-response envelope are controlled by endpoint drift
+divided by the joint and opponent survival gaps.  Ordinary endpoint
+convergence does not imply these normalized ratios vanish; on the optimized
+counterexample tail the joint-absorption ratio is eventually bounded away
+from zero in endpoint-distance scale.  In the refusal branch, positive debt
+can survive precisely in this normalization, so a
+tail-derived singleton packet and a phantom plateau need not contradict one
+another even after occupation identification.  The isolated
+opponent-survival-one branch remains the separately classified negative-solo
+exception.
 -/

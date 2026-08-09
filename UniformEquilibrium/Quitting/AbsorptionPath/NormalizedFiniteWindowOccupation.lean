@@ -232,6 +232,28 @@ theorem normalizedCollisionMass_nonneg
     0 ≤ window.normalizedCollisionMass :=
   div_nonneg window.collisionMass_nonneg window.absorptionMass_nonneg
 
+/-- Canonical singleton occupation is nonnegative. -/
+theorem normalizedSingletonOccupation_nonneg
+    (window : QuittingFiniteRootWindow roots) (owner : ι) :
+    0 ≤ window.normalizedSingletonOccupation owner :=
+  div_nonneg (window.singletonMass_nonneg owner)
+    window.absorptionMass_nonneg
+
+/-- On the positive-absorption branch, every canonical singleton occupation
+coordinate is at most one. -/
+theorem normalizedSingletonOccupation_le_one
+    (window : QuittingFiniteRootWindow roots) (owner : ι)
+    (habsorption : 0 < window.absorptionMass) :
+    window.normalizedSingletonOccupation owner ≤ 1 := by
+  have hprobability := (window.zero_or_positive_normalizedMass).resolve_left
+    (fun hzero ↦ habsorption.ne' hzero.1)
+  have howner : window.normalizedSingletonOccupation owner ≤
+      ∑ player : ι, window.normalizedSingletonOccupation player :=
+    Finset.single_le_sum
+      (fun player _ ↦ window.normalizedSingletonOccupation_nonneg player)
+      (Finset.mem_univ owner)
+  linarith [window.normalizedCollisionMass_nonneg]
+
 /-- For any sequence of source windows, if a common per-window ceiling on
 one-stage absorption tends to zero, then normalized collision mass tends to
 zero.  Window positions and lengths may vary arbitrarily. -/
@@ -248,6 +270,54 @@ theorem tendsto_normalizedCollisionMass_zero
   · exact fun index => (window index).normalizedCollisionMass_le
       (rho index) (hrho0 index) (hcap index)
   · simpa using hrho.const_mul ((Fintype.card ι).choose 2 : ℝ)
+
+/-- Conditional collision vanishes for arbitrary finite windows whose starts
+escape to infinity whenever the source roots' one-stage absorption tends to
+zero.  Window lengths may vary without any bound. -/
+theorem tendsto_normalizedCollisionMass_zero_of_start_tendsto
+    (window : ℕ → QuittingFiniteRootWindow roots)
+    (hstart : Tendsto (fun index ↦ (window index).start) atTop atTop)
+    (hroot : Tendsto (fun time ↦
+      quittingRootAbsorptionMass (roots time)) atTop (nhds 0)) :
+    Tendsto (fun index ↦ (window index).normalizedCollisionMass)
+      atTop (nhds 0) := by
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  let pairCount : ℝ := (Fintype.card ι).choose 2
+  let rho : ℝ := ε / (pairCount + 1)
+  have hpairCount : 0 ≤ pairCount := by positivity
+  have hrho : 0 < rho := div_pos hε (by linarith)
+  obtain ⟨rootThreshold, hrootThreshold⟩ :=
+    (Metric.tendsto_atTop.mp hroot) rho hrho
+  obtain ⟨windowThreshold, hwindowThreshold⟩ :=
+    eventually_atTop.1 ((tendsto_atTop.1 hstart) rootThreshold)
+  refine ⟨windowThreshold, fun index hindex ↦ ?_⟩
+  have hcap : ∀ phase : Fin (window index).fuel,
+      quittingRootAbsorptionMass ((window index).rootAt phase) ≤ rho := by
+    intro phase
+    have htime : rootThreshold ≤ (window index).start + phase.val :=
+      (hwindowThreshold index hindex).trans
+        (Nat.le_add_right _ _)
+    have hclose := hrootThreshold
+      ((window index).start + phase.val) htime
+    rw [Real.dist_eq, sub_zero] at hclose
+    change quittingRootAbsorptionMass
+      (roots ((window index).start + phase.val)) ≤ rho
+    exact (le_abs_self _).trans hclose.le
+  have hbound := (window index).normalizedCollisionMass_le
+    rho hrho.le hcap
+  have hstrict : pairCount * rho < ε := by
+    dsimp only [rho]
+    have hratio : pairCount / (pairCount + 1) < 1 := by
+      exact (div_lt_one (by linarith)).2 (by linarith)
+    calc
+      pairCount * (ε / (pairCount + 1)) =
+          ε * (pairCount / (pairCount + 1)) := by ring
+      _ < ε * 1 := mul_lt_mul_of_pos_left hratio hε
+      _ = ε := mul_one ε
+  rw [Real.dist_eq, sub_zero,
+    abs_of_nonneg (window index).normalizedCollisionMass_nonneg]
+  exact hbound.trans_lt hstrict
 
 /-! ## Singleton mixture and absorbing delivery -/
 
@@ -282,6 +352,28 @@ def singletonMixture
     (window : QuittingFiniteRootWindow roots)
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (who : ι) : ℝ :=
   window.singletonRewardContribution reward who / window.singletonTotal
+
+/-- Singleton reward mixture normalized by total absorption rather than by
+singleton absorption alone.  This is the natural coordinate for limits in
+which conditional collision vanishes. -/
+def absorptionNormalizedSingletonMixture
+    (window : QuittingFiniteRootWindow roots)
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (who : ι) : ℝ :=
+  ∑ owner : ι, window.normalizedSingletonOccupation owner *
+    reward (quittingSingletonTerminal owner) who
+
+/-- The absorption-normalized singleton mixture is the raw singleton reward
+contribution divided by total absorption. -/
+theorem absorptionNormalizedSingletonMixture_eq
+    (window : QuittingFiniteRootWindow roots)
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (who : ι) :
+    window.absorptionNormalizedSingletonMixture reward who =
+      window.singletonRewardContribution reward who /
+        window.absorptionMass := by
+  unfold absorptionNormalizedSingletonMixture normalizedSingletonOccupation
+    singletonRewardContribution singletonMass
+  simp_rw [div_mul_eq_mul_div]
+  rw [Finset.sum_div]
 
 /-- Full absorbing delivery obtained by restarting the joint window.  This
 uses joint absorption; it is not a player's periodic refusal value. -/
@@ -477,6 +569,27 @@ theorem abs_absorbingDelivery_sub_singletonMixture_le
       window.singletonRewardContribution reward who /
         window.singletonTotal from rfl)
   simpa [normalizedCollisionMass, mul_div_assoc] using h
+
+/-- The full restart delivery differs from the absorption-normalized
+singleton mixture by at most one reward bound times conditional collision.
+Unlike singleton-only normalization, this estimate needs no positive
+singleton denominator. -/
+theorem abs_delivery_sub_absorptionSingletonMixture_le
+    (window : QuittingFiniteRootWindow roots)
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) (who : ι)
+    {M : ℝ}
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (habsorption : 0 < window.absorptionMass) :
+    |window.absorbingDelivery reward who -
+        window.absorptionNormalizedSingletonMixture reward who| ≤
+      M * window.normalizedCollisionMass := by
+  rw [window.absorbingDelivery_eq reward who,
+    window.absorptionNormalizedSingletonMixture_eq reward who, add_div,
+    add_sub_cancel_left, abs_div, abs_of_pos habsorption]
+  have hbound := window.abs_collisionRewardContribution_le
+    reward who hreward
+  have hdiv := div_le_div_of_nonneg_right hbound habsorption.le
+  simpa [normalizedCollisionMass, mul_div_assoc] using hdiv
 
 /-- Ceiling form of the delivery comparison. -/
 theorem abs_absorbingDelivery_sub_singletonMixture_le_of_cap
