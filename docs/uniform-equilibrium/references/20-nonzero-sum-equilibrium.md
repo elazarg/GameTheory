@@ -176,6 +176,16 @@ unconditionally**, with no need for Solan–Vieille's A.1/A.2-restricted
 quitting-game theorem (recorded below), which exists to reach beyond `n = 3`,
 not to cover it.
 
+The production theorem
+`quittingGame_exists_uniformEquilibriumPayoff_threePlayer` in
+`UniformEquilibrium/Quitting/Classification/ThreePlayer/Existence.lean`
+formalizes this quitting-game consequence directly. Its proof is
+quitting-specific rather than a formalization of Solan's full absorbing-game
+argument: an analytic Bellman germ yields either an absorbing auxiliary
+endpoint or a normalized singleton source, and a finite three-coordinate
+alternative compiles the latter through complementarity or a directed
+singleton cycle.
+
 `[secondary]` **Munk–Solan (arXiv:2001.03094), confirmed verbatim by
 downloading and re-extracting the PDF text 2026-08-04** (title: *Sunspot
 Equilibrium in Positive Recursive Two-Dimensions Quitting Absorbing Games*;

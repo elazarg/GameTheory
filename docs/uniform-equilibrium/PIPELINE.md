@@ -1680,12 +1680,14 @@ unrestricted case has no theorem and had no row.
 consumed in 37 files is either proved once or recorded as an assumption — not
 left implicit in the member lemmas that happen to discharge it.
 
-### `LEAN-P1-1` — retargeted: the n≥3 blocker-designation lemma, after the capstone closed n=2 by a different route
+### `LEAN-P1-1` — retargeted: higher-dimensional blocker designation after the n≤3 capstones
 
 - **Status:** READY
 - **Lane:** P1
 - **Depends:** `le_of_lt_affine_on_unitInterval` (landed,
-  `UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean`); the general sure-exit-set theorem.
+  `UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean`);
+  `UniformEquilibrium/Quitting/Classification/ThreePlayer/Existence.lean`;
+  the general sure-exit-set theorem.
 - **Record:** [Two-player is
   closed](../../ideas/TwoPlayerBaseCaseExhaustion/TwoPlayerQuittingIsClosed.md)
 
@@ -1701,16 +1703,23 @@ weights. `n = 2` itself is independently and unconditionally closed by
 `quittingGame_exists_uniformEquilibriumPayoff_twoPlayer`
 (`UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean`), via branch classification (zero-solo,
 solo-quitter rate, pair-repair, joint-exit) rather than the six-scalar route,
-and needs no further work under this row. What survives here is the forward
-direction mined from that proof: generalize blocker designation to `n ≥ 3` —
-finitely many opponents plus affine-in-`p` failure of the no-join condition
-forces one opponent to block on all of `(0,1]`, and
-`le_of_lt_affine_on_unitInterval` nearly suffices as is.
+and needs no further work under this row. The three-player case is also
+unconditionally closed, by analytic singleton-source extraction followed by
+the dimension-three complementary-or-directed-cycle alternative in
+`UniformEquilibrium/Quitting/Classification/ThreePlayer/Existence.lean`.
+What survives here is the forward direction mined from the two-player proof:
+generalize blocker designation to arbitrary finite opponent sets. Finitely
+many opponents plus affine-in-`p` failure of the no-join condition forces one
+opponent to block on all of `(0,1]`, and
+`le_of_lt_affine_on_unitInterval` nearly suffices as is. Its first unresolved
+conjecture-facing use is therefore at `n ≥ 4`.
 
-**State.** `READY`. What breaks past `n = 2` is the pair-repair branch:
-coalitions of size `≥ 2` open internal-leaver deviations and spectator
-preemption that the two-player proof never enters — the precise `n = 3`
-frontier the mined map identifies.
+**State.** `READY`. Pair repair still stops being a complete grammar past
+`n = 2`: coalitions of size `≥ 2` open internal-leaver deviations and
+spectator preemption. The independent three-player theorem bypasses that
+grammar through analytic source extraction and a dimension-specific cycle
+classification. Thus this row is a reusable higher-dimensional lemma, not a
+claim that pair repair is the route to the `n ≥ 4` capstone.
 
 **Acceptance.** Blocker designation restated and proved at general `n`; the
 general sure-exit-set theorem ("no member leaves, no outsider joins",
@@ -2349,13 +2358,22 @@ QuittingThreeBranchDisjunction (the trichotomy), machine-checked -------- [L]
                      (UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean) -- branch
                      classification directly, not via the compiler -------- [L]
                        |
-        n >= 3: LEAN-P1-1, retargeted -- blocker designation generalizes;
-                     pair-repair (coalitions >= 2) is the open frontier --- READY
+        n = 3 capstone: quittingGame_exists_uniformEquilibriumPayoff_threePlayer
+                     (UniformEquilibrium/Quitting/Classification/ThreePlayer/Existence.lean)
+                     -- analytic singleton source plus finite directed-cycle
+                        classification ----------------------------------- [L]
+                       |
+        n >= 4: LEAN-P1-1 supplies reusable blocker designation, while
+                     higher-dimensional source decoding remains open ----- READY
 ```
 
-The capstone answers `n = 2` unconditionally by branch classification, so it
-does not itself depend on `MATH-P0-8`; the compiler is the route by which the
-trichotomy's open core (`MATH-P0-9`) is meant to close the general case.
+The two- and three-player capstones are unconditional and do not depend on
+`MATH-P0-8`. The relaxed compiler remains one route by which the trichotomy's
+open core (`MATH-P0-9`) could close the general case. The three-player proof
+also isolates the new frontier sharply: analytic extraction already produces
+the normalized singleton source, while dimensions four and above need a
+strategic decoder richer than the complementary-or-single-directed-cycle
+alternative.
 
 ## Milestones that changed this queue
 
@@ -2389,8 +2407,12 @@ trichotomy's open core (`MATH-P0-9`) is meant to close the general case.
 - The two-player capstone landed: `n = 2` finite quitting is closed
   unconditionally by branch classification, independent of the six-scalar
   stationary route that `LEAN-P1-1` originally targeted (refuted as a
-  complete route, even at `n = 2`); the mined `n = 3` map retargets that row
-  to blocker designation.
+  complete route, even at `n = 2`).
+- The three-player capstone landed: `n = 3` finite quitting is closed
+  unconditionally by analytic-germ endpoint classification, normalized
+  singleton-source extraction, and the finite complementary-or-directed-cycle
+  alternative. `LEAN-P1-1` is consequently a higher-dimensional blocker
+  lemma whose first unresolved application is at `n ≥ 4`.
 - `MATH-P0-9`'s open core was answered in part (Q159): the weighted
   one-stage correspondence's motion floor is false by a tremble
   counterexample. Production `5e7d0e7a` turns any supplied bounded

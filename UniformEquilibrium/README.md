@@ -353,6 +353,7 @@ reduced-cap conjecture and its placeholder have therefore been removed.
 | **The Big Match** (Blackwell–Ferguson 1968) | `exists_uniformEquilibriumPayoff_live` | `UniformEquilibrium/Examples/BigMatch/Uniform.lean` |
 | Compact terminal-free unique-live essential-APS component | `quittingEssentialAPS_isUniformEquilibriumPayoff_of_terminalFree_unique_live_adaptiveMesh` | `UniformEquilibrium/Quitting/EssentialAPS/AdaptiveMeshUniformPayoff.lean` |
 | Every finite two-player quitting game | `quittingGame_exists_uniformEquilibriumPayoff_twoPlayer` | `UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean` |
+| Every three-player quitting game | `quittingGame_exists_uniformEquilibriumPayoff_threePlayer` | `UniformEquilibrium/Quitting/Classification/ThreePlayer/Existence.lean` |
 
 `UniformEquilibrium/SpecialCases/SingleController/NoTrap.lean` closes the game-specific no-trap part of that
 residual: strong complementarity forces every state to reach the positive

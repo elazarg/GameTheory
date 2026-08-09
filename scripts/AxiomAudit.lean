@@ -84,9 +84,10 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.QuittingDisjunctionCounterexample.not_zeroSolo_and_not_admissible_and_isolatedNegative
 #print axioms GameTheory.quittingThreeBranch_not_mutually_exclusive
 
--- The two-player closure of the quitting conjecture.
+-- The low-dimensional closures of the quitting conjecture.
 #print axioms GameTheory.QuittingTwoPlayerExistence.quittingGame_exists_uniformEquilibriumPayoff_twoPlayer
 #print axioms GameTheory.QuittingTwoPlayerExistence.quittingGame_isUniformEquilibriumPayoff_jointExit
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_threePlayer
 
 -- The sure-exit-set characterization at every number of players: a pure
 -- exit profile is an exact terminal equilibrium exactly when no player

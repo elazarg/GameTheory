@@ -716,12 +716,18 @@ and feeding an all-errors family from the compiler into the landed selection
 theorem. The capping theorem for the planned-survival stopping index arrived
 with the phase-switch engine, its caps as named hypotheses.
 
-**And the first capstone exists**: every two-player quitting game has a
-uniform equilibrium payoff — `quittingGame_exists_uniformEquilibriumPayoff_twoPlayer`,
-zero hypotheses, four branches, no discount limit. Known mathematics since
-Vrieze–Thuijsman, but the first machine-checked existence theorem for a
-nontrivial stochastic-game class, and its route is the branch classification
-aimed at `n ≥ 3`, not the classical vanishing-discount argument.
+**The low-dimensional capstones are complete**: every two-player quitting
+game has a uniform equilibrium payoff by
+`quittingGame_exists_uniformEquilibriumPayoff_twoPlayer`, using a direct
+four-branch classification. Every three-player quitting game has one by
+`quittingGame_exists_uniformEquilibriumPayoff_threePlayer`. The latter
+starts from an unconditional analytic Bellman germ, translates absorbing
+auxiliary endpoints through punishment-admissible closing, and classifies an
+all-Continue endpoint into Never or a normalized singleton source. A finite
+three-coordinate alternative then yields either a complementary face
+circulation or one of the two strict directed singleton cycles. The
+three-coordinate alternative is dimension-specific; the unresolved quitting
+frontier begins at four players.
 
 The general semantic layer does not *forbid* such a profile — `IsUniformEquilibriumPayoff`
 quantifies over arbitrary behaviour — so this is a gap in the decompositions,
@@ -800,7 +806,9 @@ Key boundaries are:
   Neyman, consuming Bewley--Kohlberg); the repository has a substantial
   conditional/independent algebraic route, not yet the full classical theorem;
 - two-player non-zero-sum stochastic games are settled (Vieille 2000), and
-  two-player/three-player absorbing subclasses are settled;
+  three-player absorbing games are settled (Solan 1999); the repository now
+  contains unconditional quitting-game capstones for both two and three
+  players;
 - autonomous correlated equilibrium exists for every finite player number,
   but the device uses private contingent recommendations and delayed
   disclosure—not merely a public coin. No de-correlation theorem closes
@@ -842,6 +850,7 @@ Key boundaries are:
 | Anchored seam/exit strategic decoder | `I` | Open. |
 | Full-rate stationary cap | `M+L+C` | Landed verifier for supplied profiles. |
 | Two-player all-table uniform-payoff existence | `M+L+C` | Unconditional capstone landed in `UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean`; it does not claim stationary exact equilibrium or generalize the pair-repair classification to `n ≥ 3`. |
+| Three-player all-table uniform-payoff existence | `M+L+A+C` | Unconditional capstone in `UniformEquilibrium/Quitting/Classification/ThreePlayer/Existence.lean`; analytic endpoint classification produces a normalized singleton source, and a dimension-three complementary-or-directed-cycle alternative closes it. |
 | Sure-exit-set exact characterization (all `n`) | `M+L` | Landed (`QuittingSureExitSet`, `97b77b6`); coalition-face per-phase criterion is now a theorem; two-player joint exit recovered as instance. |
 | Two-blocker interval-cover gate | `M+L` | Landed (`QuittingBlockerIntervalCover`, `97b77b6`); single-blocker designation refuted by table witness; with ≤ 2 opponents the switching branch is vacuous, so `n = 3` is the exact threshold. |
 | Switching-residue regression and scalar obstructions | `M+L` | Landed (`QuittingSwitchingResidueRegression`, `97b77b6`); the fixed-blocker weight-level branch map is provably not total. |

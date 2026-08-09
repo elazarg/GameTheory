@@ -415,6 +415,7 @@ import UniformEquilibrium.Quitting.Boundary.Repair.DisjunctionCounterexample
 import UniformEquilibrium.Quitting.Boundary.Repair.DisjunctionCounterexampleRepair
 import UniformEquilibrium.Quitting.Cycles.ThreeBranchDisjunction
 import UniformEquilibrium.Quitting.Classification.TwoPlayer.Existence
+import UniformEquilibrium.Quitting.Classification.ThreePlayer.Existence
 import UniformEquilibrium.Quitting.Classification.LCP.All
 import UniformEquilibrium.Quitting.Conjecture.Basic
 import UniformEquilibrium.Quitting.Examples.Cyclic.FourPlayerQuitting
