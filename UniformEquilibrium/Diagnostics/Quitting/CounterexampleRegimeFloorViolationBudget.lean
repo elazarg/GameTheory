@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
+import Math.Probability.SurvivalAmplification
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
 
 /-!
@@ -16,8 +17,9 @@ bound
 
 `delta * opponentClock ≤ punishmentValue + rewardBound`.
 
-The cross-multiplied form remains meaningful for exact rational certificates
-and avoids division or rounding in search code.
+The proof is a thin quitting-game adapter around the scalar survival theorem
+in `Math.Probability.SurvivalAmplification`: quitting semantics are used only
+to produce positive bounded gaps and the one-step amplification inequality.
 -/
 
 noncomputable section
@@ -28,6 +30,81 @@ open Math.Probability
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 variable {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+
+/-- The scalar hazard obtained by shifting one player's opponent clock to a
+chosen starting date. -/
+def quittingOpponentClockHazard
+    (roots : ℕ → ι → PMF Bool) (who : ι) (start : ℕ) :
+    DiscreteHazard.ScalarHazard where
+  stop offset := quittingOpponentClockCharge roots who (start + offset)
+  stop_nonneg _offset := quittingOpponentClockCharge_nonneg roots who _
+  stop_le_one _offset := quittingOpponentClockCharge_le_one roots who _
+
+/-- Shifted punishment-floor gap along a dynamic-debt tail. -/
+def quittingPunishmentGapTail
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (tail : ℕ → QuittingDebtPoint ι) (who : ι) (start offset : ℕ) : ℝ :=
+  quittingPunishmentValue reward who - (tail (start + offset)).1.1 who
+
+theorem quittingPunishmentGapTail_pos
+    (tail : ℕ → QuittingDebtPoint ι)
+    (hedge : ∀ time,
+      IsQuittingDynamicDebtEdge reward (tail time) (tail (time + 1)))
+    (who : ι) (start : ℕ)
+    (hviolation : (tail start).1.1 who < quittingPunishmentValue reward who) :
+    ∀ offset, 0 < quittingPunishmentGapTail reward tail who start offset := by
+  intro offset
+  have hlate := quittingDynamicDebtTail_floorViolation_mono
+    tail hedge who hviolation (start + offset) (Nat.le_add_right start offset)
+  exact sub_pos.mpr hlate
+
+theorem quittingPunishmentGapTail_le_scale
+    (tail : ℕ → QuittingDebtPoint ι)
+    (hbox : ∀ time, tail time ∈ quittingDebtBox reward)
+    (who : ι) (start offset : ℕ) :
+    quittingPunishmentGapTail reward tail who start offset ≤
+      quittingPunishmentValue reward who + quittingRewardBound reward := by
+  have hlow : -quittingRewardBound reward ≤
+      (tail (start + offset)).1.1 who := (hbox (start + offset)).1.1 who
+  unfold quittingPunishmentGapTail
+  linarith
+
+/-- The game-specific one-edge estimate is exactly scalar survival
+amplification for the shifted opponent-clock hazard. -/
+theorem quittingPunishmentGapTail_amplify
+    (tail : ℕ → QuittingDebtPoint ι)
+    (hedge : ∀ time,
+      IsQuittingDynamicDebtEdge reward (tail time) (tail (time + 1)))
+    (who : ι) (start : ℕ)
+    (hviolation : (tail start).1.1 who < quittingPunishmentValue reward who) :
+    ∀ offset,
+      quittingPunishmentGapTail reward tail who start offset ≤
+        (1 - (quittingOpponentClockHazard
+          (quittingDynamicDebtTailRoots tail) who start).stop offset) *
+        quittingPunishmentGapTail reward tail who start (offset + 1) := by
+  intro offset
+  have hlate := quittingDynamicDebtTail_floorViolation_mono
+    tail hedge who hviolation (start + offset) (Nat.le_add_right start offset)
+  obtain ⟨-, hkey⟩ :=
+    quittingPunishmentValue_sub_le_continueMass_mul_of_nashBellmanEdge
+      (tail (start + offset)).1 (tail (start + offset + 1)).1
+      (hedge (start + offset)).1 who hlate
+  have hkeyFixed :
+      quittingPunishmentValue reward who -
+          (tail (start + offset)).1.1 who ≤
+        quittingFixedOpponentsContinueMass
+            (quittingDynamicDebtTailRoots tail) who (start + offset) *
+          (quittingPunishmentValue reward who -
+            (tail (start + offset + 1)).1.1 who) := hkey
+  change
+    quittingPunishmentValue reward who - (tail (start + offset)).1.1 who ≤
+      (1 - quittingOpponentClockCharge
+        (quittingDynamicDebtTailRoots tail) who (start + offset)) *
+      (quittingPunishmentValue reward who -
+        (tail (start + (offset + 1))).1.1 who)
+  rw [quittingOpponentClockCharge_eq_one_sub]
+  rw [show start + (offset + 1) = start + offset + 1 by omega]
+  simpa using hkeyFixed
 
 /-- Finite, division-free floor-violation clock budget. -/
 theorem quittingPunishmentGap_mul_partialOpponentClock_le
@@ -42,98 +119,16 @@ theorem quittingPunishmentGap_mul_partialOpponentClock_le
           quittingOpponentClockCharge
             (quittingDynamicDebtTailRoots tail) who (start + offset)) ≤
       quittingPunishmentValue reward who + quittingRewardBound reward := by
-  let gap := quittingPunishmentValue reward who - (tail start).1.1 who
-  let scale := quittingPunishmentValue reward who + quittingRewardBound reward
-  have hgap : 0 < gap := sub_pos.mpr hviolation
-  have hscale : 0 < scale := by
-    have hlow : -quittingRewardBound reward ≤ (tail start).1.1 who :=
-      (hbox start).1.1 who
-    dsimp only [gap, scale] at hgap ⊢
-    linarith
-  have hraw : ∀ offset,
-      gap ≤ quittingOpponentSurvivalWeight
-          (quittingDynamicDebtTailRoots tail) who start offset * scale := by
-    intro offset
-    have htelescope :=
-      quittingPunishmentGap_le_opponentSurvivalWeight_mul_of_dynamicDebtTail
-        tail hedge who start hviolation offset
-    have hlate : -quittingRewardBound reward ≤
-        (tail (start + offset)).1.1 who :=
-      (hbox (start + offset)).1.1 who
-    have hweight := quittingOpponentSurvivalWeight_nonneg
-      (quittingDynamicDebtTailRoots tail) who start offset
-    dsimp only [gap, scale]
-    calc
-      quittingPunishmentValue reward who - (tail start).1.1 who ≤
-          quittingOpponentSurvivalWeight
-              (quittingDynamicDebtTailRoots tail) who start offset *
-            (quittingPunishmentValue reward who -
-              (tail (start + offset)).1.1 who) := htelescope
-      _ ≤ quittingOpponentSurvivalWeight
-              (quittingDynamicDebtTailRoots tail) who start offset *
-            (quittingPunishmentValue reward who +
-              quittingRewardBound reward) :=
-          mul_le_mul_of_nonneg_left (by linarith) hweight
-  have hstep : ∀ offset,
-      gap * quittingOpponentClockCharge
-          (quittingDynamicDebtTailRoots tail) who (start + offset) ≤
-        scale *
-          (quittingOpponentSurvivalWeight
-              (quittingDynamicDebtTailRoots tail) who start offset -
-            quittingOpponentSurvivalWeight
-              (quittingDynamicDebtTailRoots tail) who start (offset + 1)) := by
-    intro offset
-    have hcharge := quittingOpponentClockCharge_nonneg
-      (quittingDynamicDebtTailRoots tail) who (start + offset)
-    have hfactor :
-        quittingOpponentSurvivalWeight
-              (quittingDynamicDebtTailRoots tail) who start offset -
-            quittingOpponentSurvivalWeight
-              (quittingDynamicDebtTailRoots tail) who start (offset + 1) =
-          quittingOpponentSurvivalWeight
-              (quittingDynamicDebtTailRoots tail) who start offset *
-            quittingOpponentClockCharge
-              (quittingDynamicDebtTailRoots tail) who (start + offset) := by
-      rw [quittingOpponentSurvivalWeight_succ,
-        quittingOpponentClockCharge_eq_one_sub]
-      ring
-    rw [hfactor]
-    calc
-      gap * quittingOpponentClockCharge
-            (quittingDynamicDebtTailRoots tail) who (start + offset) ≤
-          (quittingOpponentSurvivalWeight
-              (quittingDynamicDebtTailRoots tail) who start offset * scale) *
-            quittingOpponentClockCharge
-              (quittingDynamicDebtTailRoots tail) who (start + offset) :=
-        mul_le_mul_of_nonneg_right (hraw offset) hcharge
-      _ = scale *
-          (quittingOpponentSurvivalWeight
-              (quittingDynamicDebtTailRoots tail) who start offset *
-            quittingOpponentClockCharge
-              (quittingDynamicDebtTailRoots tail) who (start + offset)) := by
-        ring
-  have htelescope := Finset.sum_range_sub'
-    (fun offset => quittingOpponentSurvivalWeight
-      (quittingDynamicDebtTailRoots tail) who start offset) fuel
-  have hweight := quittingOpponentSurvivalWeight_nonneg
-    (quittingDynamicDebtTailRoots tail) who start fuel
-  change gap * _ ≤ scale
-  rw [Finset.mul_sum]
-  calc
-    (∑ offset ∈ Finset.range fuel,
-        gap * quittingOpponentClockCharge
-          (quittingDynamicDebtTailRoots tail) who (start + offset)) ≤
-      ∑ offset ∈ Finset.range fuel, scale *
-        (quittingOpponentSurvivalWeight
-            (quittingDynamicDebtTailRoots tail) who start offset -
-          quittingOpponentSurvivalWeight
-            (quittingDynamicDebtTailRoots tail) who start (offset + 1)) :=
-      Finset.sum_le_sum fun offset _ => hstep offset
-    _ = scale * (1 - quittingOpponentSurvivalWeight
-        (quittingDynamicDebtTailRoots tail) who start fuel) := by
-      rw [← Finset.mul_sum, htelescope]
-      simp [quittingOpponentSurvivalWeight]
-    _ ≤ scale := by nlinarith
+  simpa [quittingPunishmentGapTail, quittingOpponentClockHazard] using
+    DiscreteHazard.ScalarHazard.gap_mul_sum_stop_le_bound
+      (quittingOpponentClockHazard
+        (quittingDynamicDebtTailRoots tail) who start)
+      (quittingPunishmentGapTail reward tail who start)
+      (quittingPunishmentValue reward who + quittingRewardBound reward)
+      (quittingPunishmentGapTail_pos tail hedge who start hviolation)
+      (quittingPunishmentGapTail_le_scale tail hbox who start)
+      (quittingPunishmentGapTail_amplify tail hedge who start hviolation)
+      0 fuel
 
 /-- Full division-free floor-violation clock budget. -/
 theorem quittingPunishmentGap_mul_tsum_opponentClock_le
@@ -147,22 +142,15 @@ theorem quittingPunishmentGap_mul_tsum_opponentClock_le
         ∑' offset, quittingOpponentClockCharge
           (quittingDynamicDebtTailRoots tail) who (start + offset) ≤
       quittingPunishmentValue reward who + quittingRewardBound reward := by
-  let gap := quittingPunishmentValue reward who - (tail start).1.1 who
-  let clock := fun offset => quittingOpponentClockCharge
-    (quittingDynamicDebtTailRoots tail) who (start + offset)
-  have hgap : 0 ≤ gap := (sub_pos.mpr hviolation).le
-  have hnonneg : ∀ offset, 0 ≤ gap * clock offset := fun offset =>
-    mul_nonneg hgap (quittingOpponentClockCharge_nonneg _ _ _)
-  have hbound : ∀ fuel, ∑ offset ∈ Finset.range fuel,
-      gap * clock offset ≤
-        quittingPunishmentValue reward who + quittingRewardBound reward := by
-    intro fuel
-    rw [← Finset.mul_sum]
-    exact quittingPunishmentGap_mul_partialOpponentClock_le
-      tail hbox hedge who start fuel hviolation
-  have htsum := Real.tsum_le_of_sum_range_le hnonneg hbound
-  change gap * ∑' offset, clock offset ≤ _
-  rw [← tsum_mul_left]
-  exact htsum
+  simpa [quittingPunishmentGapTail, quittingOpponentClockHazard] using
+    DiscreteHazard.ScalarHazard.gap_mul_tsum_stop_natAdd_le_bound
+      (quittingOpponentClockHazard
+        (quittingDynamicDebtTailRoots tail) who start)
+      (quittingPunishmentGapTail reward tail who start)
+      (quittingPunishmentValue reward who + quittingRewardBound reward)
+      (quittingPunishmentGapTail_pos tail hedge who start hviolation)
+      (quittingPunishmentGapTail_le_scale tail hbox who start)
+      (quittingPunishmentGapTail_amplify tail hedge who start hviolation)
+      0
 
 end GameTheory
