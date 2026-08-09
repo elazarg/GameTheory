@@ -1,0 +1,57 @@
+/-
+# Power-index fixture
+
+The three-agent majority game is simple and symmetric.  A designated agent has
+raw probabilistic Banzhaf value one half, while every agent has normalized
+Shapley--Shubik power one third, so the fixture distinguishes the two indices.
+-/
+
+import GameTheory.Cooperative.Banzhaf
+
+namespace GameTheory.Tests.Banzhaf
+
+open GameTheory
+
+theorem majorityGame_isSimple : majorityGame.IsSimpleGame := by
+  refine ⟨?_, ?_, ?_⟩
+  · intro coalition
+    by_cases hwinning : 2 ≤ coalition.card
+    · exact Or.inr (by simp [majorityGame, hwinning])
+    · exact Or.inl (by simp [majorityGame, hwinning])
+  · intro smaller larger hsubset hwinning
+    have hsmall : 2 ≤ smaller.card := by
+      by_contra hnot
+      simp [majorityGame, hnot] at hwinning
+    have hlarge : 2 ≤ larger.card :=
+      hsmall.trans (Finset.card_le_card hsubset)
+    simp [majorityGame, hlarge]
+  · norm_num [majorityGame]
+
+theorem majorityGame_probabilisticBanzhafValue :
+    majorityGame.probabilisticBanzhafValue 0 = 1 / 2 := by
+  simp only [CoalitionalGame.probabilisticBanzhafValue]
+  rw [show
+    (Finset.univ : Finset (Finset (Fin 3))).filter
+        (fun coalition => (0 : Fin 3) ∉ coalition) =
+      {∅, {1}, {2}, {1, 2}} by decide]
+  norm_num [CoalitionalGame.marginalContribution, majorityGame]
+  rw [show
+      ({coalition ∈ ({∅, {1}, {2}, {1, 2}} : Finset (Finset (Fin 3))) |
+        2 ≤ (insert 0 coalition).card}).card = 3 by decide,
+    show
+      ({coalition ∈ ({∅, {1}, {2}, {1, 2}} : Finset (Finset (Fin 3))) |
+        2 ≤ coalition.card}).card = 1 by decide]
+  norm_num
+
+theorem majorityGame_shapleyShubikIndex (agent : Fin 3) :
+    majorityGame.shapleyShubikIndex majorityGame_isSimple agent = 1 / 3 := by
+  rw [show majorityGame.shapleyShubikIndex majorityGame_isSimple agent =
+    majorityGame.shapleyValue agent from rfl]
+  rw [CoalitionalGame.shapleyValue_eq_of_all_symmetric majorityGame]
+  · norm_num [majorityGame]
+  intro first second _ coalition hfirst hsecond
+  simp only [majorityGame]
+  rw [Finset.card_insert_of_notMem hfirst,
+    Finset.card_insert_of_notMem hsecond]
+
+end GameTheory.Tests.Banzhaf

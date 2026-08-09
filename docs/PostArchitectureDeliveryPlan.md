@@ -585,9 +585,9 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,539 of 8,324 pinned declarations are claimed by exact ledgers; 2,439 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,785-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | social-choice batch complete: May's anonymous, neutral, positively responsive characterization is a ranking-free Core result; 15/15 pinned rows reviewed | keep Gibbard--Satterthwaite, Sen, ranking foundations, and median strategic compilation as distinct bounded turns |
-| next capability rotation | cooperative games: inventory a bounded value/core/Banzhaf/convexity theorem spine against `Core.Coalitional`/`Core.Shapley` | preserve the foundational-Core versus opt-in-Cooperative split and avoid a second characteristic-function carrier |
+| exact accounting | 2,550 of 8,324 pinned declarations are claimed by exact ledgers; 2,450 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,774-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | cooperative power-index batch complete: raw Banzhaf and simple-game Shapley--Shubik reuse the canonical characteristic function and Shapley value; 11/11 pinned rows reviewed | keep convex core, Bondareva, additive/weighted examples, and cost of stability as distinct bounded turns |
+| next capability rotation | sequential/repeated games: select a bounded rank, self-generation, or uniform theorem spine against the validated public-monitoring waist | preserve the finite public-law boundary and refuse an unneeded infinite realized-path probability layer |
 | release engineering | warning-clean 3,517-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
@@ -669,10 +669,14 @@ provisioned in CI.
    choice rotation then recovers all 15 May declarations directly over
    `SignType`: majority is the unique anonymous, neutral, positively responsive
    binary rule, and a strict three-voter fixture exercises the generic theorem.
-   The queue now rotates to a bounded cooperative-game spine rather than
-   deepening immediately into Gibbard--Satterthwaite or Sen; D-REPEAT rank/self-
-   generation/uniform, mixed rationalizability, and validated mechanism and
-   language leaf recovery remain later BFS turns;
+   The cooperative rotation then recovers all 11 Banzhaf declarations on the
+   canonical coalitional game: direct finite averaging yields the raw power
+   index, simple games reuse the Shapley value, and the three-agent majority
+   fixture distinguishes one-half Banzhaf from one-third Shapley--Shubik power.
+   The queue now rotates to bounded sequential/repeated theory rather than
+   deepening immediately into convex core or social-choice impossibilities;
+   mixed rationalizability and validated mechanism and language leaf recovery
+   remain later BFS turns;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.
