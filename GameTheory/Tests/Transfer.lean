@@ -19,7 +19,7 @@ import GameTheory.Protocol.Strategic
 import GameTheory.Core.Utility
 import GameTheory.Core.Response
 import GameTheory.Experimental.PostArchitecture.MAIDThreeNodeWitness
-import GameTheory.Languages.Rounds
+import GameTheory.Experimental.PostArchitecture.RoundsWitness
 
 noncomputable section
 

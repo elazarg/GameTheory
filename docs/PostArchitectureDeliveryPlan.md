@@ -577,17 +577,18 @@ capability status is not renegotiated during that review.
 
 ### Current release-coverage checkpoint
 
-Last integrated checkpoint: 2026-08-09, after the topology-free Nash-bargaining gate.
+Last integrated checkpoint: 2026-08-09, after the canonical multi-round
+imperfect-monitoring gate.
 These counts are milestones, not declaration-port percentages.
 
 | Release dimension | Current evidence | Release condition |
 |---|---|---|
-| mature workflows | 27 better, 5 comparable, 9 partial, 2 critical gaps | zero critical gaps; each partial audited for loss of mature use |
+| mature workflows | 28 better, 5 comparable, 9 partial, 1 critical gap | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,250 of 8,324 pinned declarations are claimed by exact ledgers; 2,069 have reviewed dispositions and 181 are seeded `unreviewed` | report the exact remainder; complete every ledger supporting a parity claim |
-| current DFS seam | P-BARG Nash-product affine invariance complete; all 30 declarations classified, with 16 egalitarian/Kalai--Smorodinsky rows deferred | preserve a capability-free bargaining problem and the opt-in Cooperative boundary |
-| next capability rotation | multi-round language | previous-action information and imperfect-monitoring workflow |
-| release engineering | warning-clean 3,511-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
+| exact accounting | 2,483 of 8,324 pinned declarations are claimed by exact ledgers; 2,302 have reviewed dispositions and 181 are seeded `unreviewed` | report the exact 5,841-row remainder; complete every ledger supporting a parity claim |
+| current DFS seam | L-ROUND monitoring owner complete; all 233 declarations classified, with one canonical runner, generic perfect recall, and 37 substantive BFS rows deferred | preserve the Protocol/FOSG boundary and keep the old serialization stack retired |
+| next capability rotation | equilibrium refinements | one nondegenerate trembling-hand or perfect-equilibrium theorem across the explicit Analysis boundary |
+| release engineering | warning-clean 3,514-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -646,14 +647,18 @@ provisioned in CI.
    EXP-069/D36 then validates native capability-free bargaining and recovers
    Nash-product weak Pareto, symmetry, and positive-affine invariance, with all
    30 declarations classified and 16 egalitarian/Kalai--Smorodinsky rows
-   retained as BFS.  The lead queue now rotates to the multi-round language
-   critical gap, while the remaining 81-row L-FOSG
+   retained as BFS.  EXP-070/D37 then validates the thin multi-round monitoring
+   owner, proves generic perfect recall, and closes the previous-action/coarse-
+   monitoring workflow with all 233 L-ROUND declarations classified; 163
+   obsolete evaluator/serialization rows are retired and 37 substantive rows
+   remain named BFS.  The lead queue now rotates to the final critical gap,
+   equilibrium refinements, while the remaining 81-row L-FOSG
    classification and D-REPEAT
    rank/self-generation/uniform harvesting, and validated static and language
    leaf recovery remain BFS work;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
-   discharges L-ROUND or repeated-game parity.
+   substitutes for the finite monitoring or repeated-game release evidence.
 
 This queue may change when an experiment refutes an assumption, but a change
 must update this document rather than silently starting whichever domain is

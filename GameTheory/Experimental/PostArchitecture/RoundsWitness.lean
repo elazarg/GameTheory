@@ -1,5 +1,5 @@
 /-
-# A two-round simultaneous game
+# Historical two-round simultaneity architecture witness
 
 The multi-round counterpart of the one-shot simultaneous test. One round of
 simultaneous moves is enough to show that a single-mover tree cannot express

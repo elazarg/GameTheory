@@ -73,7 +73,10 @@ GameTheory/Languages     scoped language encodings and truthful Bayesian
                          configuration-dependent causality before compilation;
                          Solution is an intentional explicit opt-in leaf, not
                          a syntax-root import
-GameTheory/Examples      reader-facing examples with #eval and #guard tests
+  /MultiRound            finite imperfect-monitoring games with remembered own
+                         actions, canonical perfect recall, and direct
+                         Protocol/FOSG compilation
+GameTheory/Examples      reader-facing examples with silent #guard checks
 GameTheory/Tests         architecture and locality tests
 GameTheory/Experimental  architecture spikes, never re-exported
 GameTheoryMath           independently reusable, game-free mathematics,

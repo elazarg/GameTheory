@@ -41,12 +41,12 @@ Verdicts are intentionally qualitative:
 
 ## Dashboard
 
-The 45 workflow rows below contain 27 better, 5 comparable, and 9 partial
-verdicts; 2 are critical gaps and 2 are deliberately retired or out of
+The 45 workflow rows below contain 28 better, 5 comparable, and 9 partial
+verdicts; 1 is a critical gap and 2 are deliberately retired or out of
 scope.  The strongest evidence is the canonical static/protocol spine, NFG,
 the frozen EFG/Kuhn/SPE transfers, finite learning, finite auctions, congestion,
-finite information design, and the executable rational frontend.  The release
-blockers are broader multi-round theory and equilibrium refinements.  The many partial
+finite information design, multi-round monitoring, and the executable rational
+frontend.  The remaining release blocker is equilibrium refinement.  The many partial
 rows are not treated as
 release-ready merely because their declaration review is advanced; in
 particular, the live FOSG queue still has 81 rows to classify
@@ -86,7 +86,7 @@ particular, the live FOSG queue still has 81 rows to classify
 | Use trembling-hand and assessment refinements beyond ordinary mixed Nash | refinement and sequential-assessment files in `Concepts/Mixed/**` (S-MIX) | Pointwise assessment consistency exists in the opt-in Analysis/Protocol bridge, but the mature refinement workflow is not recovered | critical gap | Recover one nondegenerate trembling-hand or perfect-equilibrium theorem with the topology boundary explicit. |
 | Model simultaneous stochastic play with observation-local policies and serialize FOSG to EFG | `Languages/FOSG/**` (L-FOSG); `Languages/Bridges/**` (L-BRIDGE) | [`GameTheory/Languages/FOSG.lean`](../GameTheory/Languages/FOSG.lean), [`GameTheory/Languages/Bridges/FOSGToEFG.lean`](../GameTheory/Languages/Bridges/FOSGToEFG.lean) | partial | Finish the remaining L-FOSG and bridge queues; counterfactual reach, CFR, continuation coefficients, and strategic/utility transfer keep separate gates. |
 | Compile a typed MAID while preserving native owner, policy, outcome law, and Nash transfer | `Languages/MAID.lean`, `Languages/MAID/**` (L-MAID); frozen T3 | [`GameTheory/Languages/MAID.lean`](../GameTheory/Languages/MAID.lean), [`GameTheory/Languages/MAID/ToEFG.lean`](../GameTheory/Languages/MAID/ToEFG.lean), complete T3 ledger | better | Recover broader MAID refinement, recall, and Kuhn-facing results. |
-| Model multi-round games with previous-action information and imperfect monitoring | `Languages/MultiRound.lean`, `Languages/MultiRound/**` (L-ROUND) | [`GameTheory/Languages/Rounds.lean`](../GameTheory/Languages/Rounds.lean) is only a scoped successor | critical gap | Pass the L-ROUND gate and recover the mature monitoring/previous-action workflows. |
+| Model multi-round games with previous-action information and imperfect monitoring | `Languages/MultiRound.lean`, `Languages/MultiRound/**` (L-ROUND) | [`GameTheory/Languages/MultiRound.lean`](../GameTheory/Languages/MultiRound.lean), generic perfect recall, hostile coarse-monitoring fixture, and [233-row inventory](coverage/L-ROUND-broad.md) | better | Keep one Protocol/FOSG runner; absent-minded, finite-information Kuhn, and generic stagewise-Nash breadth remain explicit BFS. |
 | State intrinsic closed-loop configurations, information-local rules, solvability, and causal schedules | `Languages/Intrinsic.lean`, `Languages/Intrinsic/**` (L-INTR) | [`GameTheory/Languages/Intrinsic.lean`](../GameTheory/Languages/Intrinsic.lean) and `Intrinsic/Solution.lean`; 58/158 reviewed | partial | Separate gates remain for ownership/preferences, temporal compilation, recall, mixed/behavioral strategy, PMF/utility, equilibrium, and Kuhn. |
 | Use compositional open-game / expressiveness machinery | `Languages/OpenGame/**` (L-OPEN); residual expressiveness in L-BRIDGE | No stable successor; Frontier is reserved | deliberately retired or out of scope | Admit only after a compositional theorem and external semantic comparison; explicit named bridges may replace obsolete v1 transport. |
 
@@ -97,7 +97,7 @@ particular, the live FOSG queue still has 81 rows to classify
 | Define public-history repeated play, discounted values, triggers, and use the discounted folk theorem | `Concepts/Repeated/**` (D-REPEAT); frozen F7 | [`GameTheory/Repeated.lean`](../GameTheory/Repeated.lean), [`GameTheory/Analysis/Repeated/Folk.lean`](../GameTheory/Analysis/Repeated/Folk.lean), F7 witness | comparable | Recover the remaining rank/uniform parts separately; stable root has no infinite-path law. |
 | Propagate a finite public-monitoring signal prefix through successor/bind laws | D-REPEAT; frozen F8 | [`GameTheory/Repeated/Monitoring.lean`](../GameTheory/Repeated/Monitoring.lean), complete F8 ledger | comparable | The prefix law remains the lower layer; PPE and one-shot results come from the separately checked EXP-064 leaves. |
 | Use the broader repeated-game monitoring, rank, and uniform-equilibrium hierarchy | `Concepts/Repeated/**` (D-REPEAT) | [`GameTheory/Repeated.lean`](../GameTheory/Repeated.lean) now exposes finite-prefix monitoring, continuation values, canonical PPE, and the bounded one-shot-deviation principle; EXP-064 hostile witness | partial | Harvest rank/self-generation, approximate allowances, and uniform results; infinite realized-path probability remains excluded. |
-| Analyze finite stochastic games, uniform deviation caps, and discounted zero-sum stationary values | only `Languages/MultiRound/StochasticGame.lean` in L-ROUND; v1 lacks general value theory | [`GameTheory/Stochastic.lean`](../GameTheory/Stochastic.lean), [`GameTheory/Analysis/Stochastic.lean`](../GameTheory/Analysis/Stochastic.lean) | better | This beyond-v1 mature capability must remain opt-in and cannot discharge L-ROUND recovery; general uniform existence is excluded. |
+| Analyze finite stochastic games, uniform deviation caps, and discounted zero-sum stationary values | only `Languages/MultiRound/StochasticGame.lean` in L-ROUND; v1 lacks general value theory | [`GameTheory/Stochastic.lean`](../GameTheory/Stochastic.lean), [`GameTheory/Analysis/Stochastic.lean`](../GameTheory/Analysis/Stochastic.lean) | better | This beyond-v1 mature capability remains opt-in and does not erase the separate generic stagewise-Nash BFS row; general uniform existence is excluded. |
 
 ## Mechanisms, social domains, and cooperation
 

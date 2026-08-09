@@ -19,7 +19,7 @@ retroactively folded into the gate measurements.
 | `GameTheory/Protocol/Assessment.lean` | contexts, local optimality, the one-shot-deviation interface, sequential rationality |
 | `GameTheory/Protocol/Strategic.lean` | compilation of a protocol into a static `GameForm` |
 | `GameTheory/Languages/MAID.lean` | a three-node influence diagram compiled into the execution and information layers, with its workaround list |
-| `GameTheory/Languages/Rounds.lean` | a two-round simultaneous game, checking that simultaneity composes across rounds |
+| `GameTheory/Experimental/PostArchitecture/RoundsWitness.lean` | a two-round simultaneous game, checking that simultaneity composes across rounds |
 
 ## Kill criteria
 
@@ -48,7 +48,7 @@ law over traces; the `menu` field never receives a state.
 | cyclic arena refutes every bounded horizon | passed | `Tests/Arena.lean` |
 | finite strategy extraction over own decision sites | passed by both presentations | `Tree.lean`, `Tests/Extraction.lean` |
 | simultaneous actions | general-state only | `Tests/Simultaneous.lean` |
-| simultaneity composes across rounds | passed | `Languages/Rounds.lean` |
+| simultaneity composes across rounds | passed | `Experimental/PostArchitecture/RoundsWitness.lean` |
 | two languages reach the static core with no language-specific machinery | passed | `Tests/Transfer.lean` |
 
 ## Decisions
@@ -103,7 +103,7 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 
 The second front-end is the one that measures amortization. The shared layer is
 larger than the two front-ends put together, so the total is not the argument;
-the marginal cost is. `Rounds.lean` is 158 lines and receives the run law,
+the marginal cost is. `RoundsWitness.lean` is 158 lines and receives the run law,
 histories, reachability, backward induction, information locality, assessment,
 and compilation into the static core, contributing none of them.
 

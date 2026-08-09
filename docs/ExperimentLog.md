@@ -24,7 +24,7 @@ becomes difficult to scan.
 | EXP-011 | 2026-07-27 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | Supports | `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Information.lean` |
 | EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Decides D6 | [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md); `GameTheory/Tests/Candidates.lean`; `GameTheory/Tests/Simultaneous.lean` |
 | EXP-013 | 2026-07-27 | D6/D7 / Phase 3 | Does an assessment plus continuation express sequential rationality and one-shot deviations without a carried equilibrium? | Supports | `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Assessment.lean` |
-| EXP-014 | 2026-07-28 | D6 / Phase 3 | Can an influence diagram and a multi-round simultaneous game share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Languages/Rounds.lean` |
+| EXP-014 | 2026-07-28 | D6 / Phase 3 | Can an influence diagram and a multi-round simultaneous game share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Experimental/PostArchitecture/RoundsWitness.lean` |
 | EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
 | EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
 | EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Supports | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Randomized.lean` |
@@ -651,7 +651,8 @@ but should not erase their evidence.
   A discriminating probe (`outcome_law_depends_on_decision`) proves the compiled
   run law depends on the decision node's value, so the encoding does not
   collapse the decision away.
-- **Multi-round simultaneity (2026-07-28):** `GameTheory/Languages/Rounds.lean`.
+- **Multi-round simultaneity (2026-07-28):**
+  `GameTheory/Experimental/PostArchitecture/RoundsWitness.lean`.
   Simultaneity composes across rounds with no encoding trick: `active` is a
   predicate over players so a whole round is one state, `step` consumes a joint
   action so a round resolves in one transition, and the reached state carries
@@ -4474,3 +4475,69 @@ memory.
   owner in D36 and close bargaining as a critical capability gap.  Preserve
   topology-dependent existence for a later one-way Analysis bridge and rotate
   DFS to L-ROUND; recover egalitarian and Kalai--Smorodinsky as bounded BFS.
+
+### EXP-070: multi-round imperfect-monitoring ownership
+
+- **Date / revision:** 2026-08-09, reserved on `e0a1471`
+- **Status:** complete; supports canonical Protocol/FOSG ownership (D37)
+- **Decision / question:** whether the mature previous-action and imperfect-
+  monitoring workflow needs a second multi-round evaluator, can be expressed
+  only as ad hoc FOSG data, or merits a thin finite-monitoring constructor that
+  compiles directly to the accepted Protocol/FOSG semantics.
+- **Prediction:** a finite-horizon monitoring game can own only action carriers,
+  initial signals, and a finite-support signal law conditional on prior joint
+  actions.  Its execution state records realized joint actions and hidden
+  signals, while each Protocol information state records exactly the player's
+  own prior choices and received public/private signals.  The canonical FOSG
+  runner and compiler then supply all evaluation; no second history, policy,
+  probability, or equilibrium layer is needed.
+- **Representative slice:** a two-player, two-round game with at least three
+  actions.  Construct two reachable first-round histories with the same own
+  action and coarse signal but different opponent actions, and prove they give
+  the player equal information despite distinct hidden execution states.
+  Construct a third history with a different own action and prove the local
+  information differs.  A second-round policy must branch on the remembered
+  own action, and the canonical compiled run must preserve that branch.
+- **Competing designs:** revive v1's `Round.eval`/`evalRounds` plus compiler;
+  use raw `FOSG.Game` at every call site; or add a thin
+  `Languages.MultiRound.MonitoringGame` constructor whose target is the
+  existing execution/information pair.
+- **Kill conditions:** the constructor needs a duplicate runner or policy
+  type; policies can inspect hidden opponent actions/state; own previous action
+  is lost; coarse monitoring cannot merge distinct hidden histories; the base
+  record stores avoidable `Fintype`, decidable equality, utility, equilibrium,
+  topology, or an infinite-path law; or source-level updates/transports are
+  required in the public surface.
+- **Reserved artifacts / commands:**
+  `GameTheory/Languages/MultiRound/Monitoring.lean`,
+  `GameTheory/Languages/MultiRound.lean`, and a hostile test under
+  `GameTheory/Tests/`; focused root/test build, L-ROUND source/reachability
+  checks, bounded exact ledger, clean full build, and coverage audit before
+  promotion.
+- **Observations / measurements:** the native record stores no capability,
+  utility, solution concept, or alternate evaluator.  Hidden state contains
+  full realized joint actions and signals; local information contains only the
+  player's own prior choices and received signals.  The general constructor
+  proves canonical perfect recall.  In the hostile fixture, opponent actions
+  one and two produce distinct hidden histories but equal information for a
+  player that chose zero under the same coarse disagreement signal; changing
+  that player's own choice changes its information and its next policy action.
+  The canonical `jointAt` and `toGameForm` paths preserve this branch.  All
+  233 pinned declarations are classified: 27 adapted to canonical owners, 6
+  exact repeated-game theorem chains subsumed, 163 duplicate evaluator or
+  serialization declarations retired, and 37 absent-minded, finite-information
+  Kuhn, or generic stagewise-Nash declarations deferred.  Focused root/test
+  and relocated Transfer builds are warning-clean; Phase 3 source checks
+  report zero transports, raw updates, placeholders, and custom axioms.  Five
+  native/Protocol inputs are positively reached, while Nash, Analysis
+  consistency, Stochastic, and Repeated boundaries are rejected 4/4; the full
+  hardened Phase 3 suite returns `VERIFIED=1` in 207 seconds.  Perfect recall,
+  menu adequacy, hidden-opponent locality, and canonical-play samples use only
+  `propext`, `Classical.choice`, and `Quot.sound`.  Phase 2 source checks and
+  exact coverage also return `VERIFIED=1`; the warning-clean default build
+  emits only its success line for 3,514 jobs.
+- **Outcome / next action:** adopt D37 and promote the opt-in multi-round root.
+  The original two-round architecture witness moves to Experimental, leaving
+  one real public surface.  Close the last critical capability gap by rotating
+  DFS to equilibrium refinements; retain the three named L-ROUND queues for
+  BFS after the release-blocking gate.

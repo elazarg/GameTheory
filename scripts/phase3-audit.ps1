@@ -182,7 +182,17 @@ if (-not $SkipReachability) {
   function Run-Probe([string] $Root, [string[]] $Constants) {
     $checks = $Constants | ForEach-Object { "#check @$_" }
     Set-Content -Path $probeFile -Value (@("import $Root") + $checks) -Encoding utf8
-    return (& lake env lean $probeFile 2>&1 | Out-String)
+    $lines = @(& lake env lean $probeFile 2>&1)
+    $text = (($lines | ForEach-Object { $_.ToString() }) -join "`n")
+    if ($text.Trim().Length -eq 0) {
+      throw "Reachability probe for $Root produced no compiler output"
+    }
+    foreach ($constant in $Constants) {
+      if ($text -notmatch [regex]::Escape($constant)) {
+        throw "Reachability probe for $Root did not inspect $constant`n$text"
+      }
+    }
+    return $text
   }
   function Is-Unreachable([string] $Output, [string] $Constant) {
     $escaped = [regex]::Escape($Constant)
@@ -460,6 +470,39 @@ if (-not $SkipReachability) {
   }
   Report 'FOSG_INPUT_PROBES_REACHED' $fosgInputsReached
 
+  # The multi-round root is a thin constructor over the accepted FOSG and
+  # Protocol layers. Positive probes ensure those inputs remain in actual use;
+  # negative probes keep solutions, Analysis, and the independent stochastic
+  # and repeated branches from leaking into the language leaf.
+  $multiRoundInputs = @(
+    'GameTheory.Languages.MultiRound.MonitoringGame',
+    'GameTheory.Languages.MultiRound.MonitoringGame.execution',
+    'GameTheory.Languages.MultiRound.MonitoringGame.informationModel',
+    'GameTheory.Languages.MultiRound.MonitoringGame.perfectRecall',
+    'GameTheory.Languages.MultiRound.MonitoringGame.toGameForm')
+  $multiRoundBoundary = @(
+    'GameTheory.IsNash',
+    'GameTheory.Analysis.FinDistConvergesPointwise',
+    'GameTheory.Stochastic.Game',
+    'GameTheory.Repeated.informationModel')
+  $multiRoundOutput = Run-Probe 'GameTheory.Languages.MultiRound' `
+    ($multiRoundInputs + $multiRoundBoundary)
+  $multiRoundInputsReached = 0
+  foreach ($constant in $multiRoundInputs) {
+    if (-not (Is-Unreachable $multiRoundOutput $constant)) {
+      $multiRoundInputsReached++
+    }
+  }
+  Report 'MULTI_ROUND_INPUT_PROBES_REACHED' $multiRoundInputsReached
+  $multiRoundBoundaryRejected = 0
+  foreach ($constant in $multiRoundBoundary) {
+    if (Is-Unreachable $multiRoundOutput $constant) {
+      $multiRoundBoundaryRejected++
+    }
+  }
+  Report 'MULTI_ROUND_BOUNDARY_PROBES_REJECTED' `
+    $multiRoundBoundaryRejected
+
   # Kuhn correspondence is an opt-in FOSG leaf: it positively exposes the
   # two complete-history directions and their outcome projections, but remains
   # independent of the separate EFG syntax root.
@@ -558,6 +601,8 @@ if ($VerifyExpected) {
     $Expected['NFG_INPUT_PROBES_REACHED'] = 3
     $Expected['FOSG_SOLUTION_PROBES_REJECTED'] = 3
     $Expected['FOSG_INPUT_PROBES_REACHED'] = 3
+    $Expected['MULTI_ROUND_INPUT_PROBES_REACHED'] = 5
+    $Expected['MULTI_ROUND_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['FOSG_KUHN_INPUT_PROBES_REACHED'] = 5
     $Expected['FOSG_KUHN_EFG_PROBES_REJECTED'] = 1
     $Expected['NFG_FOSG_BRIDGE_INPUT_PROBES_REACHED'] = 4
