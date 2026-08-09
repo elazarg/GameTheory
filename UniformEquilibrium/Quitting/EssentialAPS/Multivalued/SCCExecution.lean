@@ -62,7 +62,7 @@ structure FiniteReachableSCC
 
 section EssentialAPS
 
-variable {ι : Type} [Fintype ι] [DecidableEq ι]
+variable {ι : Type} [DecidableEq ι]
 
 /-- A finite SCC of the exact Flesch successor relation. -/
 abbrev QuittingEssentialAPSSCC
