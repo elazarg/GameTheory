@@ -5,8 +5,9 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Quitting.Stationary.MinMax
+import UniformEquilibrium.Quitting.Bellman.Finite.NashBellmanFactory
 import UniformEquilibrium.Quitting.Bellman.Finite.NashBellmanClockReduction
-import UniformEquilibrium.Quitting.Circulation.MultiOwnerFaceCirculationFiniteClosing
+import UniformEquilibrium.Quitting.Projective.FiniteForwardProjectiveLasso
 
 /-!
 # A punishment-floor Nash--Bellman forward producer
@@ -26,16 +27,21 @@ opponent surely continues is handled separately by the exact empty-row cap.
 
 Consequently predecessor iteration from the punishment vector gives one
 chronological, product-realizable forward orbit of exact one-stage Nash roots,
-all of whose values are individually rational.  Finite prefixes of this orbit
-are the natural source packets for the existing finite-forward closing
-compiler.  No convexified APS selection or public correlation is used.
+all of whose values are individually rational.  Its finite prefixes are
+`QuittingFiniteForwardPacket`s.  Therefore unbounded cumulative absorption
+on this canonical orbit already implies a uniform-equilibrium payoff through
+the existing finite charged-return and single-seam compiler.
+
+The only branch left by this producer is explicit: cumulative absorption of
+the punishment-floor orbit is bounded.  That is the projective boundary
+regime; it is not hidden inside a compactness or strategy-selection premise.
 -/
 
 noncomputable section
 
 namespace GameTheory
 
-open Math.Probability Math.PMFProduct
+open Math.Probability Math.PMFProduct Math.ProbabilityMassFunction Math.Topology
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
@@ -122,10 +128,10 @@ theorem quittingPunishmentValue_le_rootSuccessorPayoff_of_tail_ge
             hagree player hp
       have hquitEq :
           quittingRootQuitPayoff reward tail root who =
-            reward (quittingSingletonTerminal who) who := by
+            quittingSetReward reward ({who} : Finset ι) who := by
         unfold quittingRootQuitPayoff
         rw [hupdate]
-        simp [quittingPureSetRoot]
+        simp [quittingRootExpectedPayoff, quittingPureSetRoot]
       rw [hquitEq] at hquit
       exact hsolo.trans hquit
     · have hagree :=
@@ -137,15 +143,12 @@ theorem quittingPunishmentValue_le_rootSuccessorPayoff_of_tail_ge
         by_cases hp : player = who
         · subst player
           simp [quittingAllContinueRoot]
-        · simpa [Function.update_of_ne hp, quittingPureSetRoot_empty,
+        · simpa [Function.update_of_ne hp, quittingPureSetRoot,
             quittingAllContinueRoot] using hagree player hp
       have hcontinueEq :
           quittingRootContinuePayoff reward tail root who = tail who := by
         unfold quittingRootContinuePayoff
-        rw [hupdate]
-        change quittingRootSuccessorPayoff reward tail
-          (quittingAllContinueRoot : ι → PMF Bool) who = tail who
-        rw [quittingRootSuccessorPayoff_allContinueRoot_eq]
+        rw [hupdate, quittingRootSuccessorPayoff_allContinueRoot_eq]
       rw [hcontinueEq] at hcontinue
       exact htail.trans hcontinue
   · have hc : c < 1 := lt_of_le_of_ne hc1 hdeg
@@ -184,90 +187,230 @@ theorem quittingPunishmentValue_le_rootSuccessorPayoff_of_tail_ge
       rw [hcontinueEq] at hcontinue
       exact hbellman.trans hcontinue
 
-/-- The punishment vector as a state of the canonical finite Nash--Bellman
-system. -/
-def quittingPunishmentFloorState
+/-- The punishment vector, with a harmless simplex coordinate, as a point of
+the canonical compact Nash--Bellman box. -/
+def quittingPunishmentFloorAnchor
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
-    (quittingFiniteNashBellmanSystem reward).carrier :=
-  ⟨quittingPunishmentFloor reward,
-    abs_quittingPunishmentFloor_le_quittingRewardBound reward⟩
+    (canonicalQuittingNashBellmanSerialRelation reward).box := by
+  refine ⟨(quittingPunishmentFloor reward,
+      quittingAllContinueSimplexRoot), ?_⟩
+  change quittingPunishmentFloor reward ∈ Set.Icc
+    (fun _ : ι => -quittingRewardBound reward)
+    (fun _ : ι => quittingRewardBound reward)
+  constructor
+  · intro who
+    exact (abs_le.mp
+      (abs_quittingPunishmentFloor_le_quittingRewardBound reward who)).1
+  · intro who
+    exact (abs_le.mp
+      (abs_quittingPunishmentFloor_le_quittingRewardBound reward who)).2
 
-/-- Iterated exact Nash predecessors, oriented forward from the punishment
-floor. -/
-def quittingPunishmentFloorForwardState
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
-    ℕ → (quittingFiniteNashBellmanSystem reward).carrier
-  | 0 => quittingPunishmentFloorState reward
-  | time + 1 =>
-      (quittingFiniteNashBellmanSystem reward).predecessor
-        (quittingPunishmentFloorForwardState reward time)
+/-- The exact predecessor orbit pulled forward from the punishment floor. -/
+def quittingPunishmentFloorForwardPoint
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (time : ℕ) : QuittingNashBellmanPoint ι :=
+  compactSerialIteratedPredecessor
+    (canonicalQuittingNashBellmanSerialRelation reward) time
+    (quittingPunishmentFloorAnchor reward)
 
-/-- The selected product root on a forward predecessor edge. -/
+/-- Every point on the orbit stays in the canonical compact box. -/
+theorem quittingPunishmentFloorForwardPoint_mem
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (time : ℕ) :
+    quittingPunishmentFloorForwardPoint reward time ∈
+      quittingNashBellmanBox (quittingRewardBound reward) :=
+  (compactSerialIteratedPredecessor
+    (canonicalQuittingNashBellmanSerialRelation reward) time
+    (quittingPunishmentFloorAnchor reward)).property
+
+/-- Consecutive forward points form one exact Nash--Bellman edge. -/
+theorem quittingPunishmentFloorForwardPoint_related
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (time : ℕ) :
+    IsQuittingNashBellmanEdge reward
+      (quittingPunishmentFloorForwardPoint reward (time + 1))
+      (quittingPunishmentFloorForwardPoint reward time) := by
+  rw [quittingPunishmentFloorForwardPoint,
+    compactSerialIteratedPredecessor_succ]
+  exact (canonicalQuittingNashBellmanSerialRelation reward).predecessor_related _
+
+/-- Payoff coordinate of the punishment-floor forward orbit. -/
+def quittingPunishmentFloorForwardValue
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (time : ℕ) : Payoff ι :=
+  (quittingPunishmentFloorForwardPoint reward time).1
+
+/-- Product root stored on the predecessor edge from time `t` to `t+1`. -/
 def quittingPunishmentFloorForwardRoot
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (time : ℕ) : ι → PMF Bool :=
-  Classical.choose (show ∃ root : ι → PMF Bool,
-      (quittingPunishmentFloorForwardState reward (time + 1)).1 =
-        quittingRootSuccessorPayoff reward
-          (quittingPunishmentFloorForwardState reward time).1 root ∧
-      IsεQuittingRootNash reward
-        (quittingPunishmentFloorForwardState reward time).1 0 root by
-    simpa [quittingPunishmentFloorForwardState,
-      quittingFiniteNashBellmanSystem] using
-      (quittingFiniteNashBellmanSystem reward).predecessor_related
-        (quittingPunishmentFloorForwardState reward time))
+  quittingRootOfSimplex
+    (quittingPunishmentFloorForwardPoint reward (time + 1)).2
 
-/-- Exact Bellman transport on the punishment-floor forward orbit. -/
+/-- Exact forward Bellman transport. -/
 theorem quittingPunishmentFloorForward_policy
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (time : ℕ) :
-    (quittingPunishmentFloorForwardState reward (time + 1)).1 =
+    quittingPunishmentFloorForwardValue reward (time + 1) =
       quittingRootSuccessorPayoff reward
-        (quittingPunishmentFloorForwardState reward time).1
+        (quittingPunishmentFloorForwardValue reward time)
         (quittingPunishmentFloorForwardRoot reward time) :=
-  (Classical.choose_spec (show ∃ root : ι → PMF Bool,
-      (quittingPunishmentFloorForwardState reward (time + 1)).1 =
-        quittingRootSuccessorPayoff reward
-          (quittingPunishmentFloorForwardState reward time).1 root ∧
-      IsεQuittingRootNash reward
-        (quittingPunishmentFloorForwardState reward time).1 0 root by
-    simpa [quittingPunishmentFloorForwardState,
-      quittingFiniteNashBellmanSystem] using
-      (quittingFiniteNashBellmanSystem reward).predecessor_related
-        (quittingPunishmentFloorForwardState reward time))).1
+  (quittingPunishmentFloorForwardPoint_related reward time).1
 
 /-- Exact root Nash on every selected forward edge. -/
 theorem quittingPunishmentFloorForward_isZeroNash
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (time : ℕ) :
     IsεQuittingRootNash reward
-      (quittingPunishmentFloorForwardState reward time).1 0
+      (quittingPunishmentFloorForwardValue reward time) 0
       (quittingPunishmentFloorForwardRoot reward time) :=
-  (Classical.choose_spec (show ∃ root : ι → PMF Bool,
-      (quittingPunishmentFloorForwardState reward (time + 1)).1 =
-        quittingRootSuccessorPayoff reward
-          (quittingPunishmentFloorForwardState reward time).1 root ∧
-      IsεQuittingRootNash reward
-        (quittingPunishmentFloorForwardState reward time).1 0 root by
-    simpa [quittingPunishmentFloorForwardState,
-      quittingFiniteNashBellmanSystem] using
-      (quittingFiniteNashBellmanSystem reward).predecessor_related
-        (quittingPunishmentFloorForwardState reward time))).2
+  (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+    reward (quittingPunishmentFloorForwardValue reward time)
+      (quittingPunishmentFloorForwardRoot reward time)).1
+    (quittingPunishmentFloorForwardPoint_related reward time).2
 
 /-- Every value on the selected forward orbit remains above the punishment
 floor. -/
-theorem quittingPunishmentFloor_le_forwardState
+theorem quittingPunishmentFloor_le_forwardValue
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (time : ℕ) (who : ι) :
     quittingPunishmentValue reward who ≤
-      (quittingPunishmentFloorForwardState reward time).1 who := by
+      quittingPunishmentFloorForwardValue reward time who := by
   induction time with
   | zero => rfl
   | succ time ih =>
       rw [quittingPunishmentFloorForward_policy reward time]
       exact quittingPunishmentValue_le_rootSuccessorPayoff_of_tail_ge
-        reward (quittingPunishmentFloorForwardState reward time).1
+        reward (quittingPunishmentFloorForwardValue reward time)
         (quittingPunishmentFloorForwardRoot reward time) who ih
         (quittingPunishmentFloorForward_isZeroNash reward time)
+
+/-- Exact one-stage Nash retains both actions' support-optimality at zero
+error. -/
+theorem isQuittingRootSupportApproxNash_zero_of_isZeroNash
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (tail : Payoff ι) (root : ι → PMF Bool)
+    (hnash : IsεQuittingRootNash reward tail 0 root) :
+    IsQuittingRootSupportApproxNash reward tail 0 root := by
+  have hendpoint :=
+    (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+      reward tail root).2 hnash
+  intro who
+  constructor
+  · intro hquit
+    have hweighted := (hendpoint who).2
+    have hquit0 : 0 ≤ (root who true).toReal := ENNReal.toReal_nonneg
+    nlinarith
+  · intro hcontinue
+    have hweighted := (hendpoint who).1
+    have hcontinue0 : 0 ≤ (root who false).toReal := ENNReal.toReal_nonneg
+    nlinarith
+
+/-- Canonical compact payoff carrier of the punishment-floor orbit. -/
+def quittingPunishmentFloorForwardCarrier
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    Set (Payoff ι) :=
+  Set.Icc (fun _ : ι => -quittingRewardBound reward)
+    (fun _ : ι => quittingRewardBound reward)
+
+/-- The canonical payoff carrier is compact. -/
+theorem quittingPunishmentFloorForwardCarrier_isCompact
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    IsCompact (quittingPunishmentFloorForwardCarrier reward) :=
+  isCompact_Icc
+
+/-- Every forward value belongs to the canonical payoff carrier. -/
+theorem quittingPunishmentFloorForwardValue_mem
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (time : ℕ) :
+    quittingPunishmentFloorForwardValue reward time ∈
+      quittingPunishmentFloorForwardCarrier reward :=
+  quittingPunishmentFloorForwardPoint_mem reward time
+
+/-- Any charged finite prefix of the exact orbit is a finite-forward packet at
+an arbitrary positive local tolerance. -/
+def quittingPunishmentFloorForwardPacket
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (supportError : ℝ) (hsupportError : 0 ≤ supportError)
+    (horizon : ℕ) (chargeTarget : ℝ)
+    (hcharge : chargeTarget ≤
+      ∑ time ∈ Finset.range horizon,
+        quittingRootAbsorptionMass
+          (quittingPunishmentFloorForwardRoot reward time)) :
+    QuittingFiniteForwardPacket reward
+      (quittingPunishmentFloorForwardCarrier reward)
+      supportError chargeTarget where
+  roots := quittingPunishmentFloorForwardRoot reward
+  value := quittingPunishmentFloorForwardValue reward
+  horizon := horizon
+  value_mem := fun time _ =>
+    quittingPunishmentFloorForwardValue_mem reward time
+  policy := fun time _ => quittingPunishmentFloorForward_policy reward time
+  support := by
+    intro time _ who
+    have hexact := isQuittingRootSupportApproxNash_zero_of_isZeroNash
+      reward (quittingPunishmentFloorForwardValue reward time)
+      (quittingPunishmentFloorForwardRoot reward time)
+      (quittingPunishmentFloorForward_isZeroNash reward time)
+    constructor
+    · intro hquit
+      have h := (hexact who).1 hquit
+      linarith
+    · intro hcontinue
+      have h := (hexact who).2 hcontinue
+      linarith
+  rational := by
+    intro target time _
+    have hfloor := quittingPunishmentFloor_le_forwardValue reward time target
+    linarith
+  chargeTarget_le := hcharge
+
+/-- **High-charge producer theorem.**  If the punishment-floor exact Nash
+orbit reaches every finite cumulative absorption target, then the existing
+finite-return/single-seam compiler closes the quitting-game conjecture for
+this reward table. -/
+theorem quittingGame_exists_uniformEquilibriumPayoff_of_punishmentFloorForwardCharge
+    [Nonempty ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (hcharge : ∀ chargeTarget : ℝ, 0 ≤ chargeTarget →
+      ∃ horizon : ℕ, chargeTarget ≤
+        ∑ time ∈ Finset.range horizon,
+          quittingRootAbsorptionMass
+            (quittingPunishmentFloorForwardRoot reward time)) :
+    ∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff := by
+  apply quittingGame_exists_uniformEquilibriumPayoff_of_finiteForwardPackets
+    reward (quittingPunishmentFloorForwardCarrier reward)
+      (quittingPunishmentFloorForwardCarrier_isCompact reward)
+  intro supportError hsupportError chargeTarget hchargeTarget
+  obtain ⟨horizon, hhorizon⟩ := hcharge chargeTarget hchargeTarget
+  exact ⟨quittingPunishmentFloorForwardPacket reward supportError
+    hsupportError.le horizon chargeTarget hhorizon⟩
+
+/-- **Exact producer alternative.**  Every finite quitting game either already
+gets a uniform-equilibrium payoff from the punishment-floor orbit, or that
+same game-generated orbit has a fixed finite upper bound on all cumulative
+absorption prefixes. -/
+theorem quittingGame_uniformPayoff_or_punishmentFloorForwardChargeBound
+    [Nonempty ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    (∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff) ∨
+      ∃ chargeBound : ℝ, 0 ≤ chargeBound ∧
+        ∀ horizon : ℕ,
+          (∑ time ∈ Finset.range horizon,
+            quittingRootAbsorptionMass
+              (quittingPunishmentFloorForwardRoot reward time)) < chargeBound := by
+  classical
+  by_cases hcharge : ∀ chargeTarget : ℝ, 0 ≤ chargeTarget →
+      ∃ horizon : ℕ, chargeTarget ≤
+        ∑ time ∈ Finset.range horizon,
+          quittingRootAbsorptionMass
+            (quittingPunishmentFloorForwardRoot reward time)
+  · exact Or.inl
+      (quittingGame_exists_uniformEquilibriumPayoff_of_punishmentFloorForwardCharge
+        reward hcharge)
+  · push_neg at hcharge
+    exact Or.inr hcharge
 
 end GameTheory
