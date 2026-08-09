@@ -22,8 +22,8 @@ Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
 
 The generated pinned index currently contains 436 Lean files and 8,324
-declarations. Sixty-eight work-package ledgers claim 2,676 declarations: 2,576
-have reviewed dispositions and 100 remain seeded `unreviewed`; a further 5,648 are
+declarations. Sixty-nine work-package ledgers claim 2,681 declarations: 2,581
+have reviewed dispositions and 100 remain seeded `unreviewed`; a further 5,643 are
 explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
 exclusive family ownership, exact ledger references, disposition vocabulary,
 duplicate claims, complete-status consistency, and index freshness. These
@@ -162,7 +162,7 @@ declaration-based.
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
 | P-CONG | `Congestion/**` | 4 | thin domain over `Core.Potential` and `Core.RobustWelfare` | validated through Rosenthal and EXP-052/053/D24 | complete recovery; Basic/Rosenthal/AffinePoA/Examples 50/50 reviewed, no deferred rows | [Rosenthal ledger](coverage/P-CONG-rosenthal.md); [affine PoA ledger](coverage/P-CONG-affine-poa.md); [Pigou/Braess ledger](coverage/P-CONG-examples.md) |
-| P-COAL | `Core/Coalition.lean`, `Cooperative/CoalitionalGame.lean`, `Cooperative/CoalitionalGame/**` | 10 | foundational Core objects, larger `Cooperative` root | validated foundation and canonical power-index leaf | partial; Banzhaf/Shapley--Shubik 11/11 reviewed and recovered | [power-index ledger](coverage/P-COAL-banzhaf.md); next convex core, Bondareva, additive/weighted examples, and cost of stability |
+| P-COAL | `Core/Coalition.lean`, `Cooperative/CoalitionalGame.lean`, `Cooperative/CoalitionalGame/**` | 10 | foundational Core objects, larger `Cooperative` root | validated foundation, canonical power-index leaf, and topology-free core-to-balancedness direction | partial; Banzhaf/Shapley--Shubik 11/11 and balancedness 5/5 reviewed and recovered | [power-index ledger](coverage/P-COAL-banzhaf.md); [balancedness ledger](coverage/P-COAL-balancedness.md); next convex-game Shapley-in-core, the hard Bondareva--Shapley converse, additive/weighted examples, and cost of stability |
 | P-MATCH | matching and `GaleShapley/**` files | 8 | native ordinal `Cooperative`/market-design branch | validated by EXP-068/D35 | partial; all 74 Matching/GaleShapley/Perfect declarations reviewed, general stable existence and balanced perfectness complete, 11 optimality/symmetry rows deferred | [stable/perfect ledger](coverage/P-MATCH-stable-perfect.md); next proposer optimality, rural hospitals, or strategyproofness |
 | P-BARG | `Cooperative/Bargaining.lean` | 1 | native feasible-utility branch, Analysis only for later existence theorems | validated by EXP-069/D36 | partial; all 30 declarations reviewed, Nash affine invariance complete and 16 egalitarian/Kalai--Smorodinsky rows deferred | [affine-invariance ledger](coverage/P-BARG-affine.md); next egalitarian and Kalai--Smorodinsky BFS gate |
 

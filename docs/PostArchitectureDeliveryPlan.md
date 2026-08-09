@@ -391,7 +391,7 @@ theory.
 
 | Domain | Gate theorem | Integration rule |
 |---|---|---|
-| coalitional games | Bondareva-Shapley or convex-game core nonemptiness after the existing Shapley/core base | larger theory moves to `GameTheory.Cooperative`; no artificial action profile |
+| coalitional games | **core allocation implies balancedness complete;** convex-game Shapley-in-core remains the preferred topology-free nonemptiness gate; the hard Bondareva--Shapley converse requires a separate Farkas/duality experiment | larger theory moves to `GameTheory.Cooperative`; no artificial action profile or stored balancedness certificate |
 | matching and market design | **Gale--Shapley stability and balanced perfectness passed (EXP-068/D35); all 74 bounded declarations classified;** next proposer optimality, strategyproofness, or rural hospitals | native ordinal preferences and matchings; share order/list mathematics only |
 | bargaining | **Nash solution affine invariance passed (EXP-069/D36); all 30 declarations classified, with 16 egalitarian/Kalai--Smorodinsky rows retained as BFS** | native capability-free feasible-utility branch in `Cooperative`; use `Analysis` only for later topology-dependent existence |
 | finite fair division | **round-robin completeness/EF1 and two-agent cut-and-choose EFX passed; both bounded ledgers complete;** next envy-cycle or maximin-share breadth | `Mechanism.FairDivision` over canonical `Combinatorial.Allocation`; no measurable cake assumptions |
@@ -577,18 +577,18 @@ capability status is not renegotiated during that review.
 
 ### Current release-coverage checkpoint
 
-Last integrated checkpoint: 2026-08-09, after the bounded
-Gibbard--Satterthwaite batch completed the current breadth-first seam.
+Last integrated checkpoint: 2026-08-09, after the bounded cooperative
+balancedness batch completed the current breadth-first seam.
 These counts are milestones, not declaration-port percentages.
 
 | Release dimension | Current evidence | Release condition |
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,676 of 8,324 pinned declarations are claimed by exact ledgers; 2,576 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,648-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | Gibbard--Satterthwaite complete: public strategyproofness and onto choice reuse weak linear rankings, the induced Arrow reduction stays private, and the main theorem does not require finite alternatives | retain one canonical ranking and aggregator surface; Sen remains a separate bounded social-choice gate |
-| next capability rotation | cooperative games: audit a bounded convex-core or Bondareva--Shapley theorem spine against the canonical coalitional game | do not reconstruct a second coalitional-game wrapper or hide balancedness assumptions in the carrier |
-| release engineering | warning-clean 3,536-job default build; structural and coverage audits green; sampled kernel trust profile unchanged | final cold build, exhaustive trust sweep, examples, and generated release report |
+| exact accounting | 2,681 of 8,324 pinned declarations are claimed by exact ledgers; 2,581 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,643-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | cooperative balancedness complete: named core projections and the finite core-to-balancedness theorem use the canonical coalitional carrier; pair-half majority weights refute probability normalization and inequality reversal | keep the hard balanced-to-core converse behind a Farkas/duality experiment; convex-game Shapley-in-core remains the topology-free cooperative gate |
+| next capability rotation | foundations/VNM: audit a bounded expected-utility representation spine and its finite-law preference owner | preserve the probability-free ranking split and do not introduce a second lottery or preference abstraction |
+| release engineering | warning-clean 3,538-job default build; structural and coverage audits green; sampled kernel trust profile unchanged | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
 
@@ -724,7 +724,14 @@ provisioned in CI.
    reduction remain private.  An onto one-voter selector with a strict
    profitable misreport is the hostile negative control.  The breadth-first
    queue now rotates to a bounded cooperative convex-core or
-   Bondareva--Shapley audit;
+   Bondareva--Shapley audit.  That audit recovers the exact five-row easy
+   direction: named efficiency and coalition-rationality projections plus the
+   finite theorem that a core allocation certifies balancedness.  Pair-half
+   weights make the three-player majority game explicitly non-balanced.  The
+   pinned source itself leaves balancedness-to-core to LP/Farkas duality, so
+   the plan does too; convex-game Shapley-in-core remains the preferred
+   topology-free cooperative gate.  The breadth-first queue now rotates to a
+   bounded foundations/VNM representation audit;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.

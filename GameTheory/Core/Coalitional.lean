@@ -69,12 +69,29 @@ def IsInCore (allocation : Allocation Agent) : Prop :=
     ∀ coalition : Finset Agent, G.value coalition ≤ payout allocation coalition
 
 omit [DecidableEq Agent] in
+/-- A core allocation is efficient: it distributes exactly the value of the
+grand coalition. -/
+theorem IsInCore.efficient {G : CoalitionalGame Agent}
+    {allocation : Allocation Agent} (hcore : IsInCore G allocation) :
+    payout allocation Finset.univ = G.value Finset.univ :=
+  hcore.1
+
+omit [DecidableEq Agent] in
+/-- A core allocation is coalition-rational: every coalition receives at least
+the value it could secure on its own. -/
+theorem IsInCore.coalition_rational {G : CoalitionalGame Agent}
+    {allocation : Allocation Agent} (hcore : IsInCore G allocation)
+    (coalition : Finset Agent) :
+    G.value coalition ≤ payout allocation coalition :=
+  hcore.2 coalition
+
+omit [DecidableEq Agent] in
 /-- **A core allocation is individually rational.** Each agent gets at least
 what they are worth alone, because a lone agent is a coalition. -/
 theorem IsInCore.individually_rational {G : CoalitionalGame Agent}
     {allocation : Allocation Agent} (hcore : IsInCore G allocation) (agent : Agent) :
     G.value {agent} ≤ allocation agent := by
-  simpa [payout] using hcore.2 {agent}
+  simpa [payout] using hcore.coalition_rational {agent}
 
 /-! ## A game with no core
 

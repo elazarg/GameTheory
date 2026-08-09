@@ -680,6 +680,53 @@ if (-not $SkipReachability) {
   Report 'BARGAINING_BOUNDARY_PROBES_REJECTED' `
     $bargainingBoundaryRejected
 
+  # Balancedness is an opt-in cooperative theorem over the canonical Core
+  # carrier.  The Cooperative root must expose both core projections and the
+  # easy Bondareva--Shapley direction; the focused leaf must remain free of
+  # strategic, probabilistic, protocol, measurable, and analytic semantics.
+  $balancednessInputs = @(
+    'GameTheory.IsInCore.efficient',
+    'GameTheory.IsInCore.coalition_rational',
+    'GameTheory.CoalitionalGame.IsBalancedCollection',
+    'GameTheory.CoalitionalGame.IsBalanced',
+    'GameTheory.IsInCore.isBalanced')
+  $balancednessBoundary = @(
+    'GameTheory.GameForm',
+    'GameTheory.Probability.FinDist',
+    'GameTheory.Protocol.ExecutionProtocol',
+    'MeasureTheory.Measure',
+    'stdSimplex')
+  $balancednessOutput = Run-Probe 'GameTheory.Cooperative' $balancednessInputs
+  $balancednessInputsReached = 0
+  foreach ($constant in $balancednessInputs) {
+    if (-not (Is-Unreachable $balancednessOutput $constant)) {
+      $balancednessInputsReached++
+    }
+  }
+  Report 'BALANCEDNESS_INPUT_PROBES_REACHED' $balancednessInputsReached
+  $balancednessLeafOutput = Run-Probe `
+    'GameTheory.Cooperative.Balancedness' $balancednessBoundary
+  $balancednessBoundaryRejected = 0
+  foreach ($constant in $balancednessBoundary) {
+    if (Is-Unreachable $balancednessLeafOutput $constant) {
+      $balancednessBoundaryRejected++
+    }
+  }
+  Report 'BALANCEDNESS_BOUNDARY_PROBES_REJECTED' `
+    $balancednessBoundaryRejected
+  $balancednessRootNames = @(
+    'GameTheory.CoalitionalGame.IsBalancedCollection',
+    'GameTheory.CoalitionalGame.IsBalanced',
+    'GameTheory.IsInCore.isBalanced')
+  $balancednessRootOutput = Run-Probe 'GameTheory' $balancednessRootNames
+  $balancednessRootRejected = 0
+  foreach ($constant in $balancednessRootNames) {
+    if (Is-Unreachable $balancednessRootOutput $constant) {
+      $balancednessRootRejected++
+    }
+  }
+  Report 'BALANCEDNESS_ROOT_PROBES_REJECTED' $balancednessRootRejected
+
   # The analytic root is the one place the budget is spent, and a probe that
   # only ever asserts absence would not notice if it stopped being spent there.
   $reached = 0
@@ -1703,6 +1750,9 @@ if ($VerifyExpected) {
     $Expected['MATCHING_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['BARGAINING_INPUT_PROBES_REACHED'] = 3
     $Expected['BARGAINING_BOUNDARY_PROBES_REJECTED'] = 4
+    $Expected['BALANCEDNESS_INPUT_PROBES_REACHED'] = 5
+    $Expected['BALANCEDNESS_BOUNDARY_PROBES_REJECTED'] = 5
+    $Expected['BALANCEDNESS_ROOT_PROBES_REJECTED'] = 3
     $Expected['ANALYSIS_PROBES_REACHED'] = 2
     $Expected['MATRIX_CORE_INPUT_PROBES_REACHED'] = 5
     $Expected['MATRIX_CORE_BOUNDARY_PROBES_REJECTED'] = 3
