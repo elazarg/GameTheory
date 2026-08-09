@@ -53,7 +53,7 @@ not a user-chosen larger constant.
 The Lean umbrella is `CounterexampleRegimeAll`.  The direct characterization
 is `not_exists_uniformEquilibriumPayoff_iff_exists_gap_and_finiteChargeCapacity`.
 
-### Landed narrowing (2026-08-09)
+### Derived finite and asymptotic narrowing
 
 The regime is machine-checked EMPTY below four players
 (`QuittingCounterexampleRegime.three_lt_card`): fewer than two players is
@@ -83,7 +83,19 @@ Further machine-checked necessary conditions
 - the analytic waist (`Classification/AnalyticWaist.lean`, general player
   type) forces a normalized singleton source packet on every counterexample
   table (`nonempty_normalizedSingletonSourcePacket`) — a finite
-  semialgebraic system search code can refute directly.
+  semialgebraic system search code can refute directly; and
+- that packet cannot be complementary on its active support.  Some owner has
+  mass `0 < μ_i < 1` and satisfies
+
+  ```text
+  target_i < singletonDelivery_i < refusal_i,
+  refusal_i - singletonDelivery_i
+    = μ_i / (1 - μ_i) * (singletonDelivery_i - target_i).
+  ```
+
+  Otherwise the complementary-singleton circulation compiler would already
+  produce a uniform-equilibrium payoff.  This strict refusal defect is
+  `exists_active_strictSingletonRefusal`.
 
 ## Derived geometry
 
@@ -91,7 +103,24 @@ The debt and charge fields have stronger derived forms.
 
 The terminal gap produces a subsequential limit of attained finite minimizers.
 The limit is an infinite exact-D path with an owner whose initial debt is at
-least `η` and whose opponent clock is summable.
+least `η` and whose opponent clock is summable.  Joint absorption is summable,
+the values and debts converge coordinatewise, and the roots converge to
+all-Continue.  Their joint limit is an exact dynamic-debt self-loop with the
+selected debt still at least `η`
+(`exists_terminalGapDynamicDebtTail_selfLoopLimit`).  Its selected value lies
+above both the solo reward and the behavioral punishment floor.  This is a
+Bellman boundary annotation, not the realized terminal payoff of Never.
+
+Writing `u_t = v_t + d_t` for the augmented cap of an exact dynamic-debt edge,
+the exact local transport law is
+
+```text
+u_t = T(x_t, u_(t+1)) + p_t ⊙ d_t,
+```
+
+where `p_t(i)` is player `i`'s own Quit probability.  The mismatch is diagonal
+and nonnegative.  Positive debt therefore does not by itself supply a charged
+exact predecessor at the same cap; repair or a support pivot is essential.
 
 The charge budget extends from anchored prefixes to every path in the
 punishment-floor reachable exact-predecessor relation.  Its canonical
@@ -201,6 +230,14 @@ not establish a terminal gap against all behavioral profiles.  A rigorous
 counterexample certificate must ultimately provide one `η > 0` valid against
 the entire behavioral profile space.
 
+For every finite window cut from the optimized exact-D tail, periodic restart
+does give a canonical profile to test.  In a counterexample regime its payoff
+is below the exact deterministic-quit-time/`Never` best-response supremum by at
+least `η` for some player (`exists_cyclicWindow_pureTimeCap_gap`).  Thus search
+need not optimize over arbitrary behavioral deviations for these profiles.
+It must record which branch is active: an in-window pure stop, refusal through
+the repeated window, or Never.
+
 ## Candidate record
 
 A search result should retain enough information to reproduce and compare all
@@ -249,15 +286,39 @@ annotations, not realized payoffs; the two-player positive-debt plateau
 table realizes this entire package inside a game that HAS a uniform payoff,
 so no contradiction can come from the tail data alone.
 
-The decisive remaining theorem is therefore a delivery mechanism that
-constructs profiles and consumes the gap field.  The candidate is periodic
-restart of late windows: replay a positive-mass window's roots forever; the
-restarted profile absorbs surely and pays exactly the window's normalized
-delivery.  The deviator's optimal stopping against the periodic profile
-reduces exactly to two window statistics (best phase stop and refusal
-value), so late-window exploitability is controlled by three payoff escapes
-only — delivery below a solo stop, profitable refusal, and profitable Never
-against a sole absorber — while drift-to-mass bias is provably
-non-strategic.  Closing the regime on this branch means ruling out
-perpetual payoff-escape blocking compatibly with the finite capacity `C*`,
-the blocker digraph, and the forced packet.
+The production seam is now explicit in `CounterexampleRegimeSeam.lean`.
+Every counterexample simultaneously carries the strict-refusal packet, the
+positive-debt all-Continue tail limit, and the exact pure-time/`Never` gap on
+every periodic tail window.  No theorem identifies the packet weights with
+late-window owner occupation or the packet target with realized window
+delivery.  Those are genuinely different objects.
+
+The distinction matters.  Noncomplementary singleton matrices exist already
+with four players for which every singleton-owner distribution has a positive
+promise or refusal escape.  In finite-dimensional notation, if
+`M_ij = r_i({j}) - r_i({i})`, the ideal singleton restart is escape-free only
+if
+
+```text
+M μ ≥ 0  and  μ_i * (M μ)_i = 0 for every i,
+```
+
+plus the pure-owner Never condition.  Failure of this complementarity can be
+uniformly separated from zero on the simplex.  Consequently the forced packet
+may be the source of perpetual restart blocking rather than its cure.
+
+The decisive remaining producer must use information absent from the three
+seam objects separately: exact product-root dynamics and nonsingleton
+collision rewards.  Its useful target is the following alternative:
+
+```text
+normalized source packet
+  -> complementary singleton mixture
+     or support-enlarged positive-charge exact return
+     or unblocked periodic restart window.
+```
+
+The first branch is consumed by the existing circulation compiler, the second
+contradicts finite capacity, and the third contradicts the terminal gap.  A
+local theorem converting the diagonal seam directly into charge is too strong;
+the support-enlargement or repair branch cannot be omitted.

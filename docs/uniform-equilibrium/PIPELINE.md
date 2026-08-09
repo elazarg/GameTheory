@@ -2414,6 +2414,43 @@ Exact-seam/self-seam finite pullback remains a side obligation for
 complementary-cylinder surgery, not for the behavioral-tail branch displayed
 above.
 
+The counterexample-regime route now has a separate, sharper production seam:
+
+```text
+no uniform payoff
+        |
+terminal gap eta > 0 + finite canonical floor-prefix capacity C* ------- [L]
+        |                                  |
+forced normalized singleton packet        optimized exact-D tail
+        |                                  |
+active strict source surplus               summable absorption; roots -> Continue
+        |                                  |
+strict conditional-refusal defect          positive-debt dynamic self-loop limit
+        +-------------------+--------------+
+                            |
+every periodic tail window has a pure-time/Never gain at least eta ------ [L]
+                            |
+arbitrary-player support dispatch:
+  complementary mixture OR positive-charge exact return OR unblocked restart
+                                                                    ----- OPEN
+```
+
+The two upper branches are simultaneous but not identified.  In particular,
+the packet distribution is not known to be a late-window occupation law, and
+the phantom limit is not a realized terminal payoff.  The exact augmented-cap
+transport law is
+
+```text
+v_t + d_t = T(x_t, v_(t+1) + d_(t+1)) + p_t ⊙ d_t
+```
+
+coordinatewise.  Its diagonal seam cannot in general be converted locally
+into a charged predecessor; repair and support enlargement are indispensable
+alternatives.  Likewise, noncomplementary four-player singleton matrices can
+keep every ideal singleton restart promise- or refusal-blocked.  The open
+producer must therefore use exact product-root dynamics and nonsingleton
+collision rewards, not compactness or the three boundary objects in isolation.
+
 `MATH-P0-3` can bypass part of the bridge by finding a short repair. The
 refutation lane is logically independent after the terminal/nonexistence waist.
 Two-player formalization, literature imports, and engineering work are safe
