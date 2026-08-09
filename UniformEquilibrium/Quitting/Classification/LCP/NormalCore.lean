@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import UniformEquilibrium.Quitting.Classification.LCP.MatrixClasses
 
 /-!
-# The recursively normal-player principal matrix
+# Printed and corrected recursively normal-player matrices
 
 Solan--Solan's displayed recursion omits the condition that the witness quitter
 `j` differ from the receiver `i`:
@@ -16,14 +16,18 @@ Solan--Solan's displayed recursion omits the condition that the witness quitter
 
 Taken literally after their standing zero-diagonal normalization, this recursion
 never removes a player: one may always choose `j = i`.  This file formalizes
-that printed recursion and proves the collapse.  It then defines the corrected
-**distinct-witness** recursion required by the adjacent prose, by the claim that
-`I₁` is Simon's normal-player set, and by later proof steps that explicitly
-extract `j ≠ i` from membership in `I₁`.
+that printed recursion and proves the collapse.
 
-The LCP gate uses the corrected recursion.  The source theorem is correspondingly
-kept behind the explicitly named repaired interface in `SourceInterfaces.lean`;
-the printed omission is not silently treated as a proved transport.
+It then defines the distinct-witness recursion suggested by the adjacent prose,
+by the identification of the first layer with Simon's normal-player set, and by
+later source arguments that explicitly require `j ≠ i`:
+
+`Iₙ₊₁ = {i ∈ Iₙ | ∃ j ∈ Iₙ, j ≠ i ∧ M i j ≤ 0}`.
+
+The corrected object is useful and mathematically natural, but defining it does
+not repair the source theorem.  Any stationary or sunspot consequence over this
+core must be proved separately; the algebraic gate imports no abstract record
+that assumes those conclusions.
 -/
 
 noncomputable section
@@ -72,8 +76,8 @@ theorem printedNormalCore_eq_univ_of_diagonal_nonpos
   simp [printedNormalCore,
     printedNormalLayer_eq_univ_of_diagonal_nonpos M hdiag]
 
-/-- In particular, the source's normalized matrix makes the literal printed
-normal core degenerate. -/
+/-- In particular, the source-normalized singleton matrix makes the literal
+printed normal core degenerate. -/
 theorem printedNormalCore_normalized_eq_univ
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
     printedNormalCore (normalizedSoloMatrix reward) = Finset.univ := by
@@ -130,17 +134,17 @@ def normalizedNormalPlayerMatrix
       normalCore (normalizedSoloMatrix reward) → ℝ :=
   normalPlayerMatrix (normalizedSoloMatrix reward)
 
-/-- A nonempty corrected normal core is the intended source theorem's first
-side condition. -/
+/-- A nonempty corrected normal core.  This is an algebraic side condition,
+not a strategic conclusion. -/
 def HasNormalPlayers (M : ι → ι → ℝ) : Prop :=
   (normalCore M).Nonempty
 
-/-- The corrected all-abnormal simple stationary branch. -/
+/-- The corrected all-abnormal matrix regime. -/
 def AllPlayersAbnormal (M : ι → ι → ℝ) : Prop :=
   normalCore M = ∅
 
 /-- Failure of corrected normal-core nonemptiness is equivalent to the
-all-abnormal branch. -/
+all-abnormal matrix regime. -/
 theorem allPlayersAbnormal_iff_not_hasNormalPlayers
     (M : ι → ι → ℝ) :
     AllPlayersAbnormal M ↔ ¬HasNormalPlayers M := by
