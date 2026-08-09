@@ -23,7 +23,8 @@ GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          Nash, Bayesian recommendation/obedience,
                          finite no-regret learning, concrete reindexing and
                          relabeling laws, social welfare, robust CCE smoothness,
-                         and foundational social/coalitional theory
+                         May's majority characterization, and foundational
+                         social/coalitional theory
 GameTheory/Protocol      execution, histories, information, assessment,
                          randomization, well-founded subgame perfection, and
                          static-form compilation

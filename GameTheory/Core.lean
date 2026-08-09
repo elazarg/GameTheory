@@ -43,6 +43,7 @@ import GameTheory.Core.BinaryCorrelated
 import GameTheory.Core.Transform
 import GameTheory.Core.ZeroSum
 import GameTheory.Core.SocialChoice
+import GameTheory.Core.May
 import GameTheory.Core.Arrow
 import GameTheory.Core.Coalitional
 import GameTheory.Core.Shapley

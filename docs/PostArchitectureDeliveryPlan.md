@@ -585,9 +585,9 @@ These counts are milestones, not declaration-port percentages.
 |---|---|---|
 | mature workflows | 28 better, 6 comparable, 9 partial, 0 critical gaps | zero critical gaps; each partial audited for loss of mature use |
 | frozen promises | F1-F8 and T1-T4 complete | remain green under the final public-import review |
-| exact accounting | 2,524 of 8,324 pinned declarations are claimed by exact ledgers; 2,424 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,800-row remainder; complete every ledger supporting a parity claim |
-| current BFS seam | static-response batch complete: strict dominance, unique best response, dominant-strategy solvability, and unique Nash are generic Core results; 15/15 pinned rows reviewed | keep mixed domination/rationalizability, IESDS/correlation, undominated existence/counterexamples, and transform laws as distinct bounded turns |
-| next capability rotation | mature social choice: select a bounded May, Gibbard--Satterthwaite, or Sen theorem spine against `Core.SocialChoice`/`Core.Arrow` | preserve the ranking/lottery preference split and refuse a second social-choice carrier |
+| exact accounting | 2,539 of 8,324 pinned declarations are claimed by exact ledgers; 2,439 have reviewed dispositions and 100 are seeded `unreviewed` | report the exact 5,785-row remainder; complete every ledger supporting a parity claim |
+| current BFS seam | social-choice batch complete: May's anonymous, neutral, positively responsive characterization is a ranking-free Core result; 15/15 pinned rows reviewed | keep Gibbard--Satterthwaite, Sen, ranking foundations, and median strategic compilation as distinct bounded turns |
+| next capability rotation | cooperative games: inventory a bounded value/core/Banzhaf/convexity theorem spine against `Core.Coalitional`/`Core.Shapley` | preserve the foundational-Core versus opt-in-Cooperative split and avoid a second characteristic-function carrier |
 | release engineering | warning-clean 3,517-job build with zero build-output commands; structural and coverage audits green | final cold build, exhaustive trust sweep, examples, and generated release report |
 
 ## 15. Immediate queue
@@ -665,10 +665,14 @@ provisioned in CI.
    776 L-FOSG declarations reviewed, the queue rotates to static S-DOM rather
    than deepening the same subfield.  The first static batch then recovers the
    15-row strict-dominance/dominant-solvability spine in generic Core, with
-   Prisoner's Dilemma witnessing unique Nash without enumeration.  The next
-   rotation is mature social choice; D-REPEAT rank/self-generation/uniform,
-   mixed rationalizability, and validated mechanism, cooperative, and language
-   leaf recovery remain later BFS turns;
+   Prisoner's Dilemma witnessing unique Nash without enumeration.  The social-
+   choice rotation then recovers all 15 May declarations directly over
+   `SignType`: majority is the unique anonymous, neutral, positively responsive
+   binary rule, and a strict three-voter fixture exercises the generic theorem.
+   The queue now rotates to a bounded cooperative-game spine rather than
+   deepening immediately into Gibbard--Satterthwaite or Sen; D-REPEAT rank/self-
+   generation/uniform, mixed rationalizability, and validated mechanism and
+   language leaf recovery remain later BFS turns;
 6. keep beyond-v1 uniform-existence and Frontier work off the lead queue: the
    sibling branch remains research evidence, and no stochastic advance
    substitutes for the finite monitoring or repeated-game release evidence.
