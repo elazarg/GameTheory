@@ -1339,7 +1339,7 @@ if (-not $SkipReachability) {
   Report 'TREMBLING_ANALYSIS_BOUNDARY_PROBES_REJECTED' `
     $tremblingAnalysisBoundaryRejected
 
-  # EXP-050/D22 and EXP-051/D23 keep the stable stochastic root
+  # D22, D23, and D39 keep the stable stochastic root
   # analysis-light. It must positively reach the four semantic layers,
   # canonical approximate Nash, and the structural zero-sum surface, while
   # rejecting Repeated and both analytic fixed-point routes.
@@ -1354,6 +1354,7 @@ if (-not $SkipReachability) {
   $stochasticBoundary = @(
     'GameTheory.UtilityGame.repeatedForm',
     'GameTheory.Stochastic.Game.shapleyOperator',
+    'GameTheory.Stochastic.Game.exists_isDiscountedStationaryBellmanEq_bounded',
     'kakutani_fixed_point')
   $stochasticOutput = Run-Probe 'GameTheory.Stochastic' `
     ($stochasticInputs + $stochasticBoundary)
@@ -1372,9 +1373,10 @@ if (-not $SkipReachability) {
   }
   Report 'STOCHASTIC_BOUNDARY_PROBES_REJECTED' $stochasticBoundaryRejected
 
-  # D23's one-way bridge must consume canonical matrix values, FinDist, the
-  # stable zero-sum surface, and the already-admitted D12 Kakutani path behind
-  # finite minimax. Protocol and Repeated remain unrelated and unreachable.
+  # D23/D39's one-way bridge must consume canonical matrix values, FinDist,
+  # mixed Nash, general-sum Fink existence, the game-independent positive-part
+  # algebra, and the already-admitted D12 fixed-point path. Protocol and
+  # Repeated remain unrelated and unreachable.
   $stochasticAnalysisInputs = @(
     'GameTheory.Stochastic.Game.shapleyOperator',
     'GameTheory.Stochastic.Game.contractingWith_shapleyOperator',
@@ -1383,6 +1385,9 @@ if (-not $SkipReachability) {
     'GameTheory.MatrixGame.abs_value_sub_le_of_entrywise_abs_le',
     'GameTheory.Stochastic.Game.IsZeroSum',
     'GameTheory.Probability.FinDist',
+    'GameTheory.Stochastic.Game.IsDiscountedStationaryBellmanEq',
+    'GameTheory.Stochastic.Game.exists_isDiscountedStationaryBellmanEq_bounded',
+    'GameTheoryMath.all_nonpos_of_weighted_positivePart_fixedPoint',
     'kakutani_fixed_point')
   $stochasticAnalysisBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
@@ -1526,8 +1531,8 @@ if ($VerifyExpected) {
     $Expected['TREMBLING_ANALYSIS_INPUT_PROBES_REACHED'] = 5
     $Expected['TREMBLING_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 7
-    $Expected['STOCHASTIC_BOUNDARY_PROBES_REJECTED'] = 3
-    $Expected['STOCHASTIC_ANALYSIS_INPUT_PROBES_REACHED'] = 8
+    $Expected['STOCHASTIC_BOUNDARY_PROBES_REJECTED'] = 4
+    $Expected['STOCHASTIC_ANALYSIS_INPUT_PROBES_REACHED'] = 11
     $Expected['STOCHASTIC_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
   }
   foreach ($entry in $Expected.GetEnumerator()) {

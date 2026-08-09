@@ -8,6 +8,7 @@ stationary saddle selector.
 -/
 
 import GameTheory.Analysis.Stochastic.Discounted
+import GameTheory.Analysis.Stochastic.Fink
 
 noncomputable section
 
@@ -67,5 +68,78 @@ theorem hostileGame_hasStationarySaddle {β : ℝ≥0} (hβ : β < 1)
           (hostileGame.discountedValue hβ) state))
       (hostileGame.stationarySaddleProfile hβ state) :=
   hostileGame.stationarySaddleProfile_isSaddlePoint hβ state
+
+/-! ## General-sum Fink witness -/
+
+/-- A two-point transition law with both states in its support. -/
+private def twoStateLaw (weight : ℝ) (hzero : 0 ≤ weight)
+    (hone : weight ≤ 1) : FinDist (Fin 2) :=
+  FinDist.mix weight hzero hone (FinDist.pure 0) (FinDist.pure 1)
+
+/-- A finite general-sum stochastic game. Agreement and disagreement change
+the transition weights, while the two players value the states differently. -/
+def generalSumGame : Game (Fin 2) where
+  State := Fin 2
+  Action _ := Fin 2
+  transition _ joint :=
+    if joint 0 = joint 1 then
+      twoStateLaw (1 / 3) (by norm_num) (by norm_num)
+    else
+      twoStateLaw (2 / 3) (by norm_num) (by norm_num)
+  stageUtility state joint who :=
+    if who = 0 then
+      if joint 0 = joint 1 then
+        if state = 0 then 2 else 1
+      else -1
+    else if joint 0 = joint 1 then 0
+    else if state = 0 then 1 else 2
+
+private instance generalSumStateFintype : Fintype generalSumGame.State :=
+  inferInstanceAs (Fintype (Fin 2))
+
+private instance generalSumActionFintype :
+    ∀ player, Fintype (generalSumGame.Action player) :=
+  fun _ => inferInstanceAs (Fintype (Fin 2))
+
+private instance generalSumActionNonempty :
+    ∀ player, Nonempty (generalSumGame.Action player) :=
+  fun _ => inferInstanceAs (Nonempty (Fin 2))
+
+private theorem generalSumGame_stageUtility_bound
+    (state : generalSumGame.State)
+    (joint : ∀ player, generalSumGame.Action player) (who : Fin 2) :
+    |generalSumGame.stageUtility state joint who| ≤ 2 := by
+  simp only [generalSumGame]
+  split_ifs <;> norm_num
+
+/-- Every transition is genuinely stochastic and reaches both public states. -/
+theorem generalSumGame_transition_supports_both
+    (state : generalSumGame.State)
+    (joint : ∀ player, generalSumGame.Action player) :
+    (0 : Fin 2) ∈ (generalSumGame.transition state joint).support ∧
+      (1 : Fin 2) ∈ (generalSumGame.transition state joint).support := by
+  simp only [generalSumGame]
+  split_ifs
+  · constructor
+    · exact FinDist.mem_support_mix_left (1 / 3) (by norm_num) (by norm_num)
+        (by norm_num) (by simp)
+    · exact FinDist.mem_support_mix_right (1 / 3) (by norm_num) (by norm_num)
+        (by norm_num) (by simp)
+  · constructor
+    · exact FinDist.mem_support_mix_left (2 / 3) (by norm_num) (by norm_num)
+        (by norm_num) (by simp)
+    · exact FinDist.mem_support_mix_right (2 / 3) (by norm_num) (by norm_num)
+        (by norm_num) (by simp)
+
+/-- The general fixed-point theorem supplies a stationary Bellman equilibrium
+for the hostile game at discount one half. -/
+theorem generalSumGame_exists_discountedStationaryBellmanEq :
+    ∃ (profile : generalSumGame.StationaryMixedProfile)
+        (value : generalSumGame.State → Fin 2 → ℝ),
+      generalSumGame.IsDiscountedStationaryBellmanEq (1 / 2) profile value ∧
+        ∀ state who, |value state who| ≤ 2 := by
+  exact generalSumGame.exists_isDiscountedStationaryBellmanEq_bounded
+    (1 / 2) 2 (by norm_num) (by norm_num) (by norm_num)
+    generalSumGame_stageUtility_bound
 
 end GameTheory.Stochastic.Examples

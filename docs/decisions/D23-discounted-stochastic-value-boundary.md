@@ -137,6 +137,11 @@ longer make its known namespace prefix appear unknown.
 
 This closes the mature discounted-value gate without pretending to prove the
 active sibling branch's general uniform-equilibrium conjecture. General
-history-dependent discounted optimality, vanishing-discount uniform values,
-and non-zero-sum stationary equilibrium existence remain separately gated
-Analysis or research work.
+history-dependent discounted optimality and vanishing-discount uniform values
+remain separately gated Analysis or research work.
+
+D39/EXP-072 later closes the finite general-sum stationary-equilibrium item
+that was still open here: `Analysis.Stochastic.Fink` now proves a stationary
+Bellman equilibrium by the same one-way analytic boundary. It does not change
+this decision's exclusions for arbitrary history-dependent optimality or
+uniform-equilibrium existence.

@@ -1306,6 +1306,17 @@ root and keep Protocol and Repeated out of the discounted bridge.
 No arbitrary infinite-history optimality theorem is inferred from the
 statewise result.
 
+EXP-072/D39 extends the same one-way bridge to finite general-sum discounted
+games.  The stable stochastic carrier remains unchanged.  Analysis constructs
+one product of the canonical mixed-action polytope and a bounded continuation-
+value cube, applies the already-admitted Brouwer dependency, and decodes the
+fixed point as canonical mixed Nash in every statewise auxiliary
+`UtilityGame`.  `GameTheoryMath` owns only the game-independent positive-part
+fixed-point identity used to verify the Nash adjustment.  The promoted surface
+uses `FinDist`, `Profile.update`, and `IsNash` exclusively; it adds no PMF,
+infinite-path, stored-discount, or parallel equilibrium layer.  Uniform
+equilibrium existence remains a separate open problem.
+
 EXP-052/D24 adds the first shared welfare consumer without creating a new
 semantic branch.  `Core.Welfare` defines aggregate and finite-law expected
 welfare plus smoothness directly on `UtilityGame`, then derives the

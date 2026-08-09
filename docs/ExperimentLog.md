@@ -77,6 +77,7 @@ becomes difficult to scan.
 | EXP-064 | 2026-08-03 | D5/D11 / repeated public monitoring | Can finite-prefix signal laws support canonical PPE and the bounded one-shot-deviation principle without an infinite-path law? | Supports; closes the public-monitoring equilibrium waist | `GameTheory/Repeated/Monitoring*.lean`; `GameTheory/Tests/MonitoringEquilibrium.lean`; [`coverage/D-REPEAT-monitoring-equilibrium.md`](coverage/D-REPEAT-monitoring-equilibrium.md) |
 | EXP-065 | 2026-08-03 | D0/D2/D4/D9 / finite contracts | Does hidden-action contract theory earn a native finite-support principal-agent branch, with an explicit outside option, rather than a one-player `GameForm` or an auction specialization? | Supports native ownership; decides D32 | [`decisions/D32-principal-agent-contract-ownership.md`](decisions/D32-principal-agent-contract-ownership.md); `GameTheory/Experimental/PostArchitecture/ContractOwnership.lean` |
 | EXP-066 | 2026-08-08 | D4/D5/D8/D9 / quasilinear mechanisms | Does weak monotonicity and its affine/Myerson consumers need a capability-free native quasilinear direct-mechanism owner, rather than overloading Groves-specific `VCGSetup` or outcome-generic `BayesianMechanism`? | Supports native ownership with canonical-IC compilation; decides D33 | [`decisions/D33-quasilinear-direct-mechanism-ownership.md`](decisions/D33-quasilinear-direct-mechanism-ownership.md); `GameTheory/Experimental/PostArchitecture/QuasiLinearMechanismOwnership.lean` |
+| EXP-072 | 2026-08-09 | D12/D22/D23 / general-sum discounted stochastic games | Can finite Fink existence use the canonical stochastic, probability, equilibrium, and fixed-point owners without the sibling's legacy closure? | Supports one-way Analysis bridge; decides D39 | [`decisions/D39-general-sum-discounted-stochastic-equilibrium.md`](decisions/D39-general-sum-discounted-stochastic-equilibrium.md); `GameTheory/Analysis/Stochastic/Fink.lean`; `GameTheoryMath/PositivePartFixedPoint.lean` |
 
 ## Entry template
 
@@ -4604,3 +4605,57 @@ memory.
   begin breadth-first release audit and recovery across the nine partial
   mature workflows; do not treat the six deferred limit predicates as already
   recovered.
+
+### EXP-072: general-sum discounted stochastic equilibrium boundary
+
+- **Date / revision:** 2026-08-09, reserved on `5255fc0`
+- **Status:** complete; supports D39
+- **Decision / question:** whether the sibling repository's finite
+  general-sum Fink theorem can enter through the existing one-way
+  `Analysis.Stochastic` boundary over the canonical stochastic game,
+  probability, and equilibrium owners, without importing its legacy carrier
+  hierarchy or broad stochastic umbrella.
+- **Prediction:** a stationary Bellman certificate and its existence theorem
+  should need only the current capability-light `Stochastic.Game`, `FinDist`,
+  finite mixed actions, and the adopted analytic fixed-point root.  Discount
+  data should remain theorem-local.  Infinite-play measures and uniform
+  equilibrium existence should not be prerequisites.
+- **Representative slice:** a finite two-state, two-action-per-player
+  general-sum game with genuinely stochastic transitions.  The endpoint must
+  produce a stationary mixed profile and continuation values satisfying both
+  the normalized Bellman equalities and every unilateral one-step inequality;
+  a concrete fixture must exercise both states and non-point-mass transition
+  laws.
+- **Competing designs:** adapt the Fink proof to the current semantic owners;
+  extract or import the sibling closure; retain general-sum discounted
+  existence as Frontier work; or take only the independent uniform-payoff
+  perturbation lemmas while deferring Fink.
+- **Kill conditions:** the proof requires storing discount, finiteness, or
+  topology in the base game; requires `PMF`, infinite-path measure theory, a
+  parallel probability/equilibrium/fixed-point stack, raw `Function.update`,
+  or user-visible transports; broadens stable imports beyond the one-way
+  Analysis root; depends on the sibling's Lean 4.32.0 toolchain behavior; or
+  the only practical port is the entire legacy stochastic carrier closure.
+- **Artifacts / observations:** the sibling theorem is a 1,443-line proof over
+  four legacy roots.  The successor proof uses the existing product of
+  standard simplices, ordinary mixed `UtilityGame` payoffs, and one new
+  game-independent positive-part lemma.  The hostile two-state game has
+  non-zero-sum state utilities and action-dependent transition laws whose
+  support contains both states.  No kill condition fired, and the stable
+  stochastic carrier was unchanged.
+- **Validation:**
+  `lake build GameTheory.Analysis.Stochastic.Fink
+  GameTheory.Analysis.Stochastic.Examples GameTheory.Analysis.Stochastic`
+  completed 3,115 jobs warning-free.  Headline axioms are exactly `propext`,
+  `Classical.choice`, and `Quot.sound`.  The full Phase 2 audit returned
+  `VERIFIED=1`: stable Stochastic reached 7 inputs and rejected 4 analytic or
+  unrelated names; Analysis.Stochastic reached 11 intended inputs and rejected
+  both Protocol and Repeated.  Source hazards, forbidden imports, and extra
+  fixed-point importers were all zero.  Exact coverage remained green; this is
+  a beyond-v1 capability rather than a pinned-v1 declaration claim.  The
+  warning-clean default build completed all 3,525 jobs.
+- **Outcome / next action:** adopt D39 and promote the general-sum stationary
+  Bellman theorem through the one-way Analysis root.  Keep arbitrary
+  history-dependent optimality and uniform-equilibrium existence behind their
+  separate infinite-play and vanishing-discount gates; resume breadth-first
+  mature-field recovery after this stable milestone.
