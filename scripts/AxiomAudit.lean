@@ -342,6 +342,9 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.quittingGame_uniformPayoff_or_punishmentFloorReachable_hasFiniteBudget
 #print axioms GameTheory.quittingGame_uniformPayoff_or_punishmentFloorReachable_canonicalPotential
 #print axioms GameTheory.quittingPunishmentFloorSelected_potential_decrement
+#print axioms GameTheory.not_exists_uniformEquilibriumPayoff_iff_nonempty_counterexampleRegime
+#print axioms GameTheory.QuittingCounterexampleRegime.reachable_cycle_chargeSum_eq_zero
+#print axioms GameTheory.QuittingCounterexampleRegime.exists_positiveDynamicDebtTail
 
 -- Stopping-law accounting, cyclic exposure, and phase-occupation duality.
 -- These checks live here rather than in production modules so ordinary builds

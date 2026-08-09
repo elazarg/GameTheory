@@ -140,6 +140,17 @@ blockers hidden in the P0 mathematical status.
   required by a marked cylinder.  A general accept-or-retarget dispatcher,
   resolved chart coverage and arc lifting, strategic Farkas decoding, and a
   realization or consumer for this bounded-potential branch remain open.
+
+  Nonexistence now has a combined quantitative normal form.  The same reward
+  table must simultaneously admit a uniform positive terminal exploitability
+  gap, a uniform positive lower bound on every attained finite-cutoff min-max
+  exact dynamic debt, and a common finite absorption-charge bound on every
+  exact punishment-floor prefix.  The latter yields a bounded potential and
+  excludes reachable positive-charge cycles; the debt floor yields a positive
+  exact-D limit tail with a summable opponent clock.  These two path carriers
+  are not yet identified.  The computational falsification and candidate
+  protocol is recorded in
+  [`design/CounterexampleSearchRegime.md`](design/CounterexampleSearchRegime.md).
 - **Punishment-completed exact cycles (`177a0c03`, conditional compiler).** A
   coordinate may contract in deleted survival or be held by the exact
   punishment-value inequality; this includes credibly punishable negative solo

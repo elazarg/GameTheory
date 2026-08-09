@@ -37,6 +37,16 @@ uniform-equilibrium payoff is equivalent to one fixed positive terminal
 exploitability gap against every behavioral profile.  This is an exact
 counterexample target, not a finite certificate language by itself.
 
+The counterexample restrictions now also have one combined production
+interface.  Nonexistence is equivalent to a nonempty certificate carrying a
+positive terminal gap, a positive lower bound on all attained finite-cutoff
+min-max exact dynamic debts, and a common finite charge bound on every exact
+punishment-floor prefix.  The last field induces the canonical bounded
+potential and rules out positive-charge cycles in the floor-reachable
+predecessor relation; the debt field produces a positive exact-D limit tail
+with a summable opponent clock.  No theorem currently identifies that limit
+tail with a path in the floor-reachable relation.
+
 Payoff terminology is fixed in
 [`UniformEquilibrium/README.md`](../../UniformEquilibrium/README.md):
 limiting-average, undiscounted-limit, and uniform finite-horizon notions are
