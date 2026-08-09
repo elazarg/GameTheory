@@ -23,6 +23,11 @@ program.
 ## Coordination and methods
 
 - [Program.md](Program.md) defines the stable research/formalization workflow.
+- [LLMReverseCompilationExperiment.md](LLMReverseCompilationExperiment.md)
+  specifies an experimental protocol for LLM-guided backward proof and
+  certificate-preimage search, including lane-specific evaluation and a JIT
+  context/API golfing trial. It is evidence methodology, not current frontier
+  truth.
 - [PIPELINE.md](PIPELINE.md) is project-control truth.
 - [FRONTIER.md](FRONTIER.md) is the curated mathematical state of knowledge.
 - [TOOLKIT.md](TOOLKIT.md) is the stable map of production interfaces and
