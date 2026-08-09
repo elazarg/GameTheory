@@ -17,6 +17,7 @@ import UniformEquilibrium.Quitting.Projective.SingleSeamProjectiveLasso
 import UniformEquilibrium.Quitting.Projective.ForwardBlockSingleSeam
 import UniformEquilibrium.Quitting.Projective.FiniteForwardProjectiveLasso
 import UniformEquilibrium.Quitting.Projective.ResolvedChart
+import UniformEquilibrium.Quitting.Projective.Boundary.All
 import UniformEquilibrium.Quitting.Debt.Ledger.VanishingChargeRecurrenceNoGo
 import Math.FinitePivotOrbit
 import Math.CompactFiniteChargedReturn
@@ -30,10 +31,12 @@ Public entry point for the proved projective layer:
 * matching-order extraction of the normalized cemetery and singleton masses,
   vanishing residual nonsingleton mass, the endpoint value mixture, and
   limiting complementarity as a complete singleton packet;
+* the game-generic fixed-target terminal acceptance/rejection specification,
+  exposed here only through thin packet-value wrappers;
 * the target-mismatch regression: an exact analytic matching branch whose
-  positive-cemetery packet value is quantitatively separated from every
-  nearby terminal approximate equilibrium, while other exact uniform targets
-  remain available;
+  positive-cemetery packet value has an explicit quantitative terminal
+  rejection witness, while an independently proved sure-exit uniform target
+  is available;
 * zero-anchor and affine-anchor normalized singleton projective-LCP algebra;
 * resolved affine feasibility-or-Farkas duality, together with the explicit
   arc-lifting contract required to turn a feasible tangent into a physical
@@ -53,11 +56,18 @@ Public entry point for the proved projective layer:
 * the converse exact-cycle adapter proving that the corresponding all-accuracy
   existential producer hypotheses remain equivalent.
 
-The arbitrary-game producer is not contained here.  Before the three
-accepted-target construction ingredients, it requires an explicit target
-gate: accept the packet value with an executable continuation contract, or
-reject it and retarget through a proved alternative.  On an accepted target
-the remaining ingredients are:
+The arbitrary-game producer is not contained here.  The terminal semantic
+layer characterizes exactly what it would mean to accept or reject one fixed
+packet value, and the mismatch example proves one concrete rejection.  It does
+not select a branch from projective packet, chart, or Farkas data.  Its
+conditional retarget adapter assumes target-free uniform-payoff existence and
+therefore is not a producer for that existence.
+
+The constructive projective target gate remains open: an accepted packet must
+still receive an executable continuation contract, while a rejected packet
+must yield a strategically produced retarget, rank descent, chart/Farkas
+obstruction, or genuine terminal nonexistence certificate.  Beyond that gate,
+the continuing projective branch still requires:
 
 1. construction and coverage of resolved quitting Bellman charts, including
    real/Puiseux arc lifting of feasible lexicographic tangents;
