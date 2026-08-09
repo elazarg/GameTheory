@@ -375,6 +375,7 @@ import UniformEquilibrium.Quitting.Paths.OpponentClockDichotomy
 import UniformEquilibrium.Quitting.Bellman.Finite.NashBellmanClockReduction
 import UniformEquilibrium.Quitting.Bellman.Finite.PunishmentFloorForward
 import UniformEquilibrium.Quitting.Bellman.Finite.PunishmentFloorFinitePrefix
+import UniformEquilibrium.Quitting.Bellman.Finite.PunishmentFloorFinitePrefixChargedBridge
 import UniformEquilibrium.Quitting.Bellman.Finite.NashBellmanValueConvergence
 import UniformEquilibrium.Quitting.Bellman.Finite.NashBellmanQuitEndpointLimit
 import Math.SqrtRate

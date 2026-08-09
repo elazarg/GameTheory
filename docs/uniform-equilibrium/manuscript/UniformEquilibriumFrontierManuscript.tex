@@ -538,9 +538,15 @@ these finite prefixes produce a uniform payoff, or one common finite charge
 bound controls every exact prefix in the canonical box with a
 punishment-rational anchor.  This bypasses selection of one charge-complete
 infinite orbit; the previously selected predecessor orbit is only a special
-case.  The remaining accepted-target obligations include chart coverage and
-arc lifting, semantic decoding of Farkas alternatives, and a consumer for the
-game-intrinsic bounded-charge branch.  A general accept-or-retarget dispatcher is an
+case.  On the exact-predecessor relation reachable from the punishment-floor
+anchor, the common bound becomes a finite path budget.  Its canonical
+budget-to-go is a bounded Bellman potential which decreases by at least the
+literal absorption mass of every predecessor row.  This certificate does not
+itself produce a strategic tail: unlike a marked calibrated cylinder, it carries
+no packet, debt, obstacle graph, or realization map.  The remaining
+accepted-target obligations include chart coverage and arc lifting, semantic
+decoding of Farkas alternatives, and a consumer for this game-intrinsic
+bounded-potential branch.  A general accept-or-retarget dispatcher is an
 additional upstream obligation.  Compact recurrence or repeated labels alone
 still do not imply the required return estimate.
 
@@ -1448,7 +1454,9 @@ coordinate, finite charged forward packets close through one seam, and the
 packet-target mismatch has a quantitative rejection theorem; a general target
 dispatcher and chart coverage remain open.  Punishment-floor exact prefixes
 give an unconditional uniform-payoff-or-common-charge-bound dichotomy, but the
-bounded-prefix branch remains unresolved.\\
+bounded-prefix branch currently yields only a canonical bounded potential on
+the reachable exact-predecessor relation; its strategic realization remains
+unresolved.\\
 Face-circulation uniform payoff &
 \texttt{MultiOwnerFace\-CirculationFinite\-Closing.lean} &
 \Prod conditional on a bounded certificate, ratio ceiling \(<1\), and

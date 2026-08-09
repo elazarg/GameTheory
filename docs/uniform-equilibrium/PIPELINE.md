@@ -130,10 +130,16 @@ blockers hidden in the P0 mathematical status.
   not uniformly bounded, target-dependent prefixes feed this compiler and
   produce a uniform payoff; no single orbit or quantifier exchange is needed.
   Hence the complementary branch has one common finite charge bound for every
-  such prefix, with the classically selected orbit only a special case.  A
-  general accept-or-retarget dispatcher, resolved chart coverage and arc
-  lifting, strategic Farkas decoding, and a consumer for this game-intrinsic
-  bounded-charge boundary remain open.
+  such prefix, with the classically selected orbit only a special case.  After
+  restriction to the states reachable from the punishment-floor anchor, this
+  bound is an exact finite path budget.  Its canonical budget-to-go is the least
+  nonnegative bounded potential and drops by at least the literal absorption
+  mass across every exact predecessor edge.  This is a global accounting law,
+  not yet a semantic map into the marked compactification: ordinary exact
+  prefixes do not carry the calibration, packet, debt, and obstacle coherence
+  required by a marked cylinder.  A general accept-or-retarget dispatcher,
+  resolved chart coverage and arc lifting, strategic Farkas decoding, and a
+  realization or consumer for this bounded-potential branch remain open.
 - **Punishment-completed exact cycles (`177a0c03`, conditional compiler).** A
   coordinate may contract in deleted survival or be held by the exact
   punishment-value inequality; this includes credibly punishable negative solo

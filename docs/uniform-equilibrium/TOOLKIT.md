@@ -82,7 +82,7 @@ obligations.
 | Support witness | At every tolerance, a support-wise approximately optimal root path, divergent absorption, and continuation-by-continuation individual rationality; alternatively a finite periodic witness with one absorbing phase | A terminal `3ε` profile and target-free uniform-payoff existence | Does not produce the paths or cycles for arbitrary games. |
 | Signed projective lasso | An accepted target and, at every tolerance, a finite root word whose signed survival-weighted monodromy is small relative to absorption for every cyclic entry phase, with support optimality and punishment rationality | Exact periodic correction, a divergent support-rational path, and a uniform payoff | Matching analytic packet extraction neither accepts its endpoint nor constructs the required physical candidate; absolute-weighted variation is only a stronger compatibility interface. |
 | Finite charged forward packets | At every charge target, one exact finite forward Bellman packet in a fixed compact carrier, with support optimality and punishment rationality | Compact charged return, a single-seam lasso, and a uniform payoff | Does not produce the packets or consume the complementary bounded-charge branch. |
-| Punishment-floor exact prefixes | An arbitrary finite quitting game and arbitrary finite exact Bellman prefixes in the canonical box starting above the behavioral punishment floor | Either a uniform payoff, or one common finite absorption-charge bound for every such prefix; the selected exact predecessor orbit is a special case | The bounded branch is an accounting constraint, not yet a terminal repair or a uniform-payoff construction. |
+| Punishment-floor exact prefixes | An arbitrary finite quitting game and arbitrary finite exact Bellman prefixes in the canonical box starting above the behavioral punishment floor | Either a uniform payoff, or one common finite absorption-charge bound for every such prefix; on the floor-reachable exact-predecessor relation the latter is an exact finite budget with a canonical bounded potential | The potential is an accounting certificate, not a marked-cylinder realization, terminal repair, or prefix-consumption theorem. |
 | Essential APS | A compact convex functional unique-live component with finite-window face avoidance, terminal-freeness, and bounds | A coherent executable path, qualitative deleted-player survival, adaptive finite meshes, and a uniform payoff for every initial component value | Does not prove that an arbitrary game has a nonempty component; pointwise full jumps remain outside the adaptive logarithmic mesh. |
 | Multi-owner face circulation | A bounded balanced circulation with positive phase ratios, one common ratio ceiling below `1`, and a payoff floor above the quitting punishment value | Arbitrarily charged finite packets and a uniform payoff by finite closing; independently, a chronological compact path | Does not construct such a circulation for every game or identify the selected target with a named certificate vertex. |
 | Punishment-completed finite cycle | An exact absorbing Nash--Bellman cycle where each coordinate either contracts in deleted survival or has punishment value at most its selected solo value | The selected phase value is a uniform-equilibrium payoff; the old nonnegative-solo admissible-cycle compiler is a corollary | Does not produce an exact cycle, and does not cover an isolated coordinate whose punishment value exceeds its negative solo value. |
@@ -100,6 +100,7 @@ generic quitting-game existence theorems.
 | Survival products | `Math/SurvivalProduct.lean` | Generic finite-product and cumulative-hazard estimates shared by stopping arguments. |
 | Compact finite-prefix relations | `Math/Topology/CompactFinitePrefixRelation.lean` | Inverse-limit selection from compatible compact finite prefixes; used by circulation paths. |
 | Finite charged return | `Math/FiniteChargedReturn.lean`, `Math/CompactFiniteChargedReturn.lean` | Converts sufficiently charged finite prefixes in one compact carrier into a close ordered block with fixed charge, without one orbit uniform in the target. |
+| Charged-path budget and selection | `Math/ChargedPathBudget.lean`, `Math/ChargedPathSelection.lean`, `Math/ChargedPathFiniteHorizon.lean` | Separates finite-path capacity from charge on one infinite path, constructs divergence-preserving and renewal block selections, identifies a finite budget with the least bounded potential, and attains every finite-edge horizon maximum by a literal path. |
 | Finite phase occupation duality | `Math/Probability/PhaseOccupationDuality.lean` | Semantic/LP primal equivalence, bounded attainment, phase-bias decoding, and strong duality conditional on occupation feasibility. |
 | Cyclic exposure | `Math/CyclicExposure.lean` | Sharp exposure bounds for finite permutation systems; the shared-punishment calculation is an application. |
 | Nonperiodic Snell supersolution | `UniformEquilibrium/Quitting/Paths/InfinitePathSupersolution.lean` | Turns exact Continue transport, vanishing local Quit error, and survival decay into history-dependent unilateral caps. |
@@ -143,7 +144,12 @@ value and obstacle cap continuous on the completion.  Its marked-stage
 hyperspace is an extensional graph rather than an ordered history, and its
 coherent six-coordinate diagrams do not imply total seam lifting or
 amalgamation of arbitrary independently selected splice witnesses.  The
-strategic charged-replacement constructor therefore remains separate.
+strategic charged-replacement constructor therefore remains separate.  The
+punishment-floor bounded potential and this marked completion are complementary
+but not interchangeable: the former controls accumulated absorption on every
+reachable exact-predecessor path, while the latter compactifies semantically
+coherent calibrated cylinders.  A proved calibration/realization map is needed
+before the potential can be used as a marked boundary observable.
 
 The general reverse diagnostics are:
 
