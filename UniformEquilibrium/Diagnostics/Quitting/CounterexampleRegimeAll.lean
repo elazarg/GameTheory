@@ -10,6 +10,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceObstructionCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledCapacityPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledTailPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOneStageObstructionCarrier
@@ -170,8 +171,14 @@ co-states obey the exact adjoint pairing law across adjacent windows.  This
 flow has an exact compact one-stage carrier: its source retains boxed exact
 Nash--Bellman and dynamic-debt constraints together with the punishment floor
 at both endpoints, every canonical tail edge belongs to it, and every finite
-co-state support is attained.  The theorem still does not choose a compatible
-co-state, expose a recurrent face, or decode a strategically realizable exit.
+co-state support is attained.  Enriching this carrier by the playerwise
+diagonal dynamic-debt source makes the previously missing debt price literal:
+the negative coordinate selector exposes exactly the zero-source face, and
+for an exact edge this face is equivalent to the corresponding augmented-cap
+transport equation.  Consecutive source coordinates fold to current debt
+minus survival-weighted terminal debt.  The theorem still does not force the
+canonical tail into that face, prove recurrence there, or decode a
+strategically realizable exit.
 
 Periodic attachment has a second, exact normalization fence.  For an
 absorbing exact Nash--Bellman word, the finite-stop and refusal branches of

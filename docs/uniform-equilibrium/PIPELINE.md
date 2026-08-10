@@ -2258,17 +2258,25 @@ The non-plateau one-stage source family is also now exact and compact.  It is
 the continuous raw-flow image of boxed exact dynamic-debt Nash--Bellman edges
 whose two value endpoints dominate the punishment floor; every canonical tail
 edge belongs, and every finite co-state support is attained.  Thus compactness
-and support attainment in item 2 are no longer the gate.  Selecting a
-debt-compatible co-state and decoding its exposed face remain items 3--4.
-The first selection audit rules out a shortcut: the only normal forced by the
-current coordinates is minus total absorption, which exposes the zero-flow
-all-Continue face and is stable under positive-survival adjoint transport.
-Playerwise debt discharge is not a fixed linear functional of that carrier,
-because aggregate collision mass loses player participation and the varying
-debt coordinate is absent; the prefix-capacity potential is nonlinear in the
-source state.  A debt-compatible normal therefore requires an enriched
-carrier retaining the playerwise diagonal debt source (or an independently
-proved normal-cone pricing inequality), not separation from the current image.
+and support attainment in item 2 are no longer the gate.  The base coordinates
+force only minus total absorption, which exposes the zero-flow all-Continue
+face and is stable under positive-survival adjoint transport; they do not
+linearly retain playerwise debt discharge.
+
+The exact carrier is therefore enriched by one grade-one coordinate per
+player, equal to the diagonal debt source `quitProbability_i * dynamicDebt_i`.
+The corresponding positive selector prices this source exactly, while its
+negative exposes precisely the attainable zero-source face.  On an exact
+source edge, membership in that face is equivalent to the playerwise
+augmented-cap transport equation; simultaneous membership for all players is
+equivalent to vector cap transport.  Consecutive source coordinates fold to
+current debt minus survival-weighted terminal debt.  This closes the linear
+representation and exposed-face part of item 3.  The remaining gate is
+dynamical, not functional-analytic: prove that the canonical tail must enter
+or recur in a useful zero-source face, or else turn its strictly positive
+priced debt current and the retained boundary term into one of the item-4
+exits.  The nonlinear prefix-capacity potential still supplies only an upper
+account and does not force this face membership.
 
 **Acceptance.** A game-facing utilization theorem, not another separator:
 every non-all-Continue counterexample tangent must either emit a positive raw
@@ -2679,11 +2687,13 @@ to a usable seam.  It works before normalization: actual window charges
 concatenate with survival weight, endpoint displacement remains an unweighted
 coboundary, and a finite co-state is transported by the adjoint map.  The
 killed-potential account retains the surviving boundary remainder explicitly.
-The remaining game theorem must identify a payoff-weighted raw current and a
-debt-compatible co-state, then decode an exposed face into phase repair,
-support enlargement, or a solved cycle realized by one product-root word.
-Generic cone, duality, and boundary-folding identities do not supply any of
-those strategic steps.
+The playerwise debt-source enrichment now supplies a literal compatible
+co-state and identifies its zero face with augmented-cap transport.  The
+remaining game theorem must force useful entry or recurrence in that face, or
+price a positive source against the retained boundary, and then decode the
+result into phase repair, support enlargement, or a solved cycle realized by
+one product-root word.  Generic cone, duality, and boundary-folding identities
+do not supply those strategic steps.
 
 Likewise, an exact bounded
 rational four-player singleton table has a positive compact escape separation
