@@ -1,8 +1,8 @@
 # D42: subgame perfection uses information-set-closed roots
 
-- **Status:** adopted and promoted
+- **Status:** adopted and promoted; one-shot consequence corrected by EXP-078
 - **Date:** 2026-08-09
-- **Experiment IDs:** EXP-075
+- **Experiment IDs:** EXP-075, EXP-078
 
 ## Decision
 
@@ -57,11 +57,22 @@ information set while retaining the initial root.
 No kill condition fired.  Focused Protocol, EFG, Zermelo, and hostile-test
 builds completed warning-free.
 
+EXP-078 then tested the tempting follow-up characterization rather than
+freezing it from analogy with perfect-information play. Its finite
+perfect-recall protocol has only the initial proper subgame. An incumbent
+policy is immune to every single-information-state replacement, but a
+complementary two-information-state replacement is strictly profitable.
+Thus perfect recall and no information-state revisit do not make local
+deviations characterize whole-policy Nash in a proper subgame.
+
 ## Consequences
 
 The previous one-shot theorem remains available with accurate historywise
-naming.  Textbook imperfect-information SPE now has the correct domain, but a
-general one-shot characterization for it is not claimed: that theorem must
-aggregate deviations at information sets within each proper subgame rather
-than condition on an arbitrary hidden history.  Coverage and capability
-records must report that remainder explicitly.
+naming. Textbook imperfect-information SPE has the correct domain and uses
+whole-policy deviations essentially. There is no general
+single-information-state one-shot characterization to deliver: EXP-078
+refutes it under the standard finite, well-founded, perfect-recall premises.
+Assessment-local and historywise one-shot theorems remain separate because
+they answer different useful questions. Any narrower future equivalence must
+state a premise that excludes the EXP-078 complementarity pattern and have a
+consumer that needs it.

@@ -23,34 +23,42 @@ Architecture-sensitive choices require a measured experiment and decision
 record before their public API freezes. Routine theorem recovery after a gate
 passes needs no new experiment.
 
+### Review-to-delivery rules
+
+The two repository-wide reviews sharpen how those admission rules are applied:
+
+- treat a reported missing theorem as a falsifiable hypothesis, not an API
+  specification; build the smallest hostile model before queueing the theorem;
+- measure coverage by a useful canonical workflow with a positive witness, a
+  nearby rejection, and a downstream consumer—not declaration-for-declaration
+  ancestry or names alone;
+- state the exact mathematical and bibliographic scope of standard names;
+  familiar terminology does not license a stronger theorem or attribution;
+- distinguish correctness corrections from optional breadth in the ledger, so
+  an absent but false or unused bridge cannot keep a sound family `partial`;
+  and
+- keep implementation-loop checks source-level and narrow; run deep
+  reachability and full-library audits only at integration or release gates.
+
 ## 2. Active dependency queue
 
-### A. Proper-subgame one-shot characterization
+### A. Proper-subgame semantics boundary — resolved
 
-Priority: highest sequential correctness remainder.
+EXP-075/D42 corrected textbook SPE to quantify whole-policy deviations only at
+information-set-closed roots. EXP-078 then machine-refuted the proposed
+single-information-state one-shot characterization, even for finite,
+well-founded, perfect-recall play with no information-state revisit. The
+initial history can be the only proper-subgame root while profitable policy
+changes require complementary changes at two information states.
 
-Goal: characterize textbook subgame perfection by information-local one-shot
-deviations within every information-set-closed subgame.
-
-Required slice:
-
-- the existing hidden-state crossed-root counterexample;
-- a proper imperfect-information subgame containing a nontrivial information
-  set;
-- deviation policies that cannot inspect the hidden history;
-- equivalence with the current SPE predicate; and
-- a perfect-information specialization agreeing with the historywise theorem.
-
-Kill conditions:
-
-- no syntax-specific subtree evaluator in Protocol;
-- no history-conditioned action at a nonsingleton information set;
-- no duplicate SPE predicate; and
-- no weakening of the current perfect-information theorem.
+No duplicate one-shot SPE predicate will be added. Historywise one-shot
+optimality, finite assessment-local optimality, and proper-subgame SPE retain
+their distinct scopes. A future restricted theorem needs a named consumer and
+a premise that explicitly excludes the EXP-078 counterexample.
 
 ### B. Unilateral Kuhn realization and Nash transfer
 
-Priority: after A where shared EFG proofs overlap; otherwise independent.
+Priority: highest active sequential transfer package.
 
 Goal: for one deviating player, realize the behavioral or mixed policy while
 fixing every nondeviator's induced behavior, then transport Nash inequalities.

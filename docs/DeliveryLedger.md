@@ -19,7 +19,7 @@ Status labels:
 | Finite-support probability | complete | `GameTheory.Probability.FinDist`, probability tests | Infinite laws require a measurable layer. |
 | Analysis dependency boundary | complete | importable `GameTheory.Analysis` root, one-way imports, structural audits | Keep fixed-point/topology dependencies out of semantic roots. |
 | Execution and information | complete | `GameTheory.Protocol`, execution/information tests | No second runner or universal semantic hub. |
-| Proper imperfect-information subgames | partial | `Protocol.SubgamePerfect`, crossed-root fixture | Prove the information-set one-shot iff inside every proper subgame. |
+| Proper imperfect-information subgames | complete | `Protocol.SubgamePerfect`, crossed-root fixture, EXP-078 complementarity counterexample | Whole-policy deviations are essential; no general single-information-state iff exists under perfect recall. |
 | Documentation and support evidence | complete | `CapabilityMatrix.md`, `SupportEvidenceMatrix.md`, `ReviewClosureLedger.md` | Keep claims synchronized with compiled evidence and dispositions. |
 
 ## Static and analytic families

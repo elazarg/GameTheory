@@ -165,7 +165,7 @@ The single-pass panel observations were re-derived separately before action:
 | P-01 | Imperfect-information `IsSubgamePerfect` quantified at every history, including roots that cut information sets. | closed | EXP-075/D42 introduced information-set-closed subgame roots. `IsHistorywiseOptimal` retains the stronger property under an honest name; crossed-root tests separate them. |
 | P-02 | Bayes consistency was unsatisfiable at zero-mass sites. | closed | Bayes' rule is required only through `IsBayesConsistentAt` at positive-mass sites; zero-mass beliefs are unrestricted. |
 | P-03 | `Zermelo` implied a win/lose determinacy theorem it did not contain. | closed | The header identifies constructive perfect-information backward induction and explicitly disclaims two-player win/lose determinacy. |
-| P-04 | Parallel one-shot formalisms and SPE-to-static-Nash were unexplained. | queued | Finite-horizon `IsOneShotOptimalWithin` now couples remaining fuel exactly to trace depth and reaches compiled Nash; well-founded historywise deviation serves a different scope. The proper-subgame one-shot iff remains the highest-priority delivery package. |
+| P-04 | Parallel one-shot formalisms and SPE-to-static-Nash were unexplained. | closed | Finite-horizon `IsOneShotOptimalWithin` couples remaining fuel to trace depth and reaches compiled Nash; well-founded historywise deviation serves a different scope. EXP-078 proves that neither can be collapsed into a general proper-subgame single-information-state iff: complementary changes at two information states defeat it under perfect recall. |
 | P-05 | Protocol exposed orphan constructors/helpers. | closed | `RecommendedPolicy` and the unused state-indexed `Context.ofDeviation` bridge were removed. `BehavioralAssessment.ofStrategy` is retained as the canonical total assessment constructor. |
 | P-06 | A 340-line backward probe lived in stable Protocol. | closed | The fixture moved to `Tests.Backward`; stable `Protocol.Backward` contains semantics and theorems only. |
 | P-07 | Sequential-rationality tests were nondiscriminating. | closed | `Analysis.Protocol.EFGTest` includes a payoff-sensitive assessment that fails sequential rationality and sequential equilibrium. |
@@ -225,13 +225,12 @@ The single-pass panel observations were re-derived separately before action:
 
 The queued rows are theorem breadth, not unresolved corrections:
 
-1. proper-subgame one-shot characterization and static transfer;
-2. unilateral Kuhn realization and Nash transfer;
-3. independent rationalizability and remaining transformation/correlation
+1. unilateral Kuhn realization and Nash transfer;
+2. independent rationalizability and remaining transformation/correlation
    characterizations;
-4. selected mathematical tuning/conditioning lemmas; and
-5. MAID strategic-relevance/requisite analysis; and
-6. the mature-family extensions already enumerated in
+3. selected mathematical tuning/conditioning lemmas;
+4. MAID strategic-relevance/requisite analysis; and
+5. the mature-family extensions already enumerated in
    `PostArchitectureDeliveryPlan.md`.
 
 Their absence is represented as `partial` or as a named next seam in

@@ -245,9 +245,10 @@ close-out below records which have since been discharged.
   the initial history yet fails historywise optimality because of a profitable
   deviation after an off-path decision. `IsSubgamePerfect` now uses
   information-set-closed subgame roots; the hidden-card control rejects a root
-  that cuts a nonsingleton information set. No general imperfect-information
-  one-shot iff SPE theorem is claimed. The exact frozen T4 NFG-to-FOSG
-  embedding remains a separate language theorem.
+  that cuts a nonsingleton information set. EXP-078 separately refutes a
+  general imperfect-information single-information-state one-shot iff SPE
+  theorem by a finite perfect-recall complementarity example. The exact frozen
+  T4 NFG-to-FOSG embedding remains a separate language theorem.
 
 ## Post-gate EFG amendment
 
@@ -257,10 +258,11 @@ EXP-034 carries that same hostile chance/imperfect-information EFG through the
 analytic consistency adapter to a concrete sequential equilibrium. EXP-035
 then gives that assessment a nonconstant hidden-state/action matching payoff
 and proves value `1 / 2` against every whole replacement behavioral policy.
-EXP-036 closes the full semantic SPE/one-shot-deviation theorem at the Protocol
-layer. A thin EFG-facing wrapper, T1 strategic/Nash extraction, and T4 remain
-delivery work; the nonconstant continuation-payoff and off-path SPE checks do
-not.
+EXP-036 closed the well-founded historywise-optimality/one-shot theorem at the
+Protocol layer; EXP-075/D42 later corrected its original SPE name, and EXP-078
+refuted a general proper-subgame local-deviation replacement. A thin EFG-facing
+wrapper, T1 strategic/Nash extraction, and T4 were the remaining gate-era
+delivery work; the current status is recorded below.
 
 The current reconciliation is maintained in
 [`DeliveryLedger.md`](DeliveryLedger.md), rather than by rewriting the

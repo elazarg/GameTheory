@@ -88,6 +88,7 @@ becomes difficult to scan.
 | EXP-075 | 2026-08-09 | D6 / imperfect-information subgames | Does the existing historywise optimality predicate coincide with textbook SPE when an information set crosses a candidate subtree? | Rejects the old name; decides D42 | [`decisions/D42-imperfect-information-subgames.md`](decisions/D42-imperfect-information-subgames.md); `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Tests/SubgameRoots.lean` |
 | EXP-076 | 2026-08-10 | D40 / rationalizability terminology | Is joint-opponent mixed dominance independent or correlated rationalizability? | Corrects D40 to correlated rationalizability | [`decisions/D40-mixed-pure-rationalizability.md`](decisions/D40-mixed-pure-rationalizability.md); `GameTheory/Tests/Rationalizability.lean` |
 | EXP-077 | 2026-08-10 | D6/D12 / finite sequential semantics | Must one-shot fuel track history depth, and when is normalized history mass a Bayes fiber? | Narrows both contracts; hostile regressions pass | `GameTheory/Protocol/{Assessment,BehavioralAssessment,Information}.lean`; `GameTheory/Tests/Assessment.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
+| EXP-078 | 2026-08-10 | D42 / imperfect-information one-shot deviations | Does absence of profitable single-information-set deviations inside every proper subgame characterize SPE under perfect recall? | Refutes; corrects D42 and closes the false delivery remainder | `GameTheory/Tests/SubgameOneShot.lean`; [`decisions/D42-imperfect-information-subgames.md`](decisions/D42-imperfect-information-subgames.md) |
 
 ## Entry template
 
@@ -4896,3 +4897,44 @@ memory.
   sequential-consistency premise as measured above. No kill condition fired;
   retain perfect recall as a convenient sufficient certificate, not as stored
   Bayes data.
+
+### EXP-078: imperfect-information one-shot deviations
+
+- **Date / revision:** 2026-08-10, reserved on `9bb069e`
+- **Status:** complete; refutes the proposed equivalence and corrects D42
+- **Decision / question:** D42; whether textbook imperfect-information SPE is
+  equivalent to the absence, in every proper subgame, of a profitable policy
+  change at one information state followed by the incumbent policy.
+- **Prediction:** the equivalence fails even with finite well-founded play,
+  perfect recall, and no information-state revisit.  If the initial history is
+  the only proper subgame, SPE is whole-policy Nash, while two information-set
+  changes can be complementary even though neither is profitable alone.
+- **Representative slice:** nature privately chooses a bit; one player acts at
+  two successive information sets, remembers the first action but never sees
+  nature's bit, and receives a strict gain only when both prescribed actions
+  change.  Each noninitial history cuts an information set across nature
+  branches, so the whole game is the only proper subgame.
+- **Competing designs:** prove the advertised general iff; restrict the theorem
+  to games where every continuation history is a proper subgame root; or retain
+  whole-policy SPE and assessment-based information-local optimality as
+  distinct concepts.
+- **Kill conditions:** the hostile model cannot satisfy perfect recall or
+  `ActsOnceWhereItMatters`; a noninitial proper subgame catches one of the two
+  changes; or one single-information-state deviation is already profitable.
+- **Artifacts / observations:** `GameTheory/Tests/SubgameOneShot.lean` builds a
+  four-rank finite protocol with an exact own-play decoder, proves perfect
+  recall and `ActsOnceWhereItMatters`, proves that the initial history is its
+  only nonterminal proper-subgame root, and verifies both sides of the
+  separation. The all-false incumbent defeats every replacement at one
+  reachable information state, but the all-true whole policy raises initial
+  continuation value from `0` to `1`, so the incumbent is not SPE. Every kill
+  condition is therefore machine-refuted.
+- **Validation:** `lake build GameTheory.Tests.SubgameOneShot` completed
+  warning-free in 1,729 jobs.
+- **Outcome / next action:** do not add a public proper-subgame one-shot
+  predicate or advertise a general iff. Whole-policy comparison at
+  information-set-closed roots remains the canonical SPE definition;
+  historywise one-shot optimality and assessment-based local optimality retain
+  their distinct, useful scopes. A future restricted theorem is admissible
+  only if a consumer supplies a stronger premise that defeats this
+  complementarity example.

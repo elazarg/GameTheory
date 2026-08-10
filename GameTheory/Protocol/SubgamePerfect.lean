@@ -13,7 +13,10 @@ histories, and the resulting recursion evaluates the same protocol step law
 while retaining the history an information-local policy may observe. Under
 `ActsOnceWhereItMatters`, a persistent policy replacement at the current
 information state is observationally a one-shot change, which characterizes
-the stronger historywise predicate.
+the stronger historywise predicate. Whole-policy replacement is essential in
+the proper-subgame predicate: when the initial history is the only proper
+root, complementary changes at several information states can be profitable
+even though no single-information-state replacement is.
 -/
 
 import GameTheory.Protocol.Assessment

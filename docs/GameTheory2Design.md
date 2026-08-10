@@ -823,7 +823,10 @@ and complete history. Under `ActsOnceWhereItMatters`, it is equivalent to
 `HasNoProfitableOneShotDeviation`. `IsSubgamePerfect` instead quantifies over
 histories whose continuation is closed under every active decision information
 set, and historywise optimality implies it. A general imperfect-information
-one-shot iff SPE theorem is not claimed.
+one-shot iff SPE theorem is false: EXP-078 gives a finite perfect-recall
+protocol whose incumbent defeats every single-information-state replacement
+but loses to a complementary whole-policy replacement in its only proper
+subgame.
 At finite horizon, `historyContext` still packages the actual continuation,
 and the local one-shot condition is equivalent to
 `IsSequentiallyRationalAt` in that context.
