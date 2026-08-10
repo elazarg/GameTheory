@@ -1731,14 +1731,11 @@ if ($DeepReachability) {
 if ($VerifyExpected) {
   $Expected = [ordered]@{
     FUNCTION_UPDATE_OUTSIDE_PROFILE = 0
-    TRANSPORT_IN_PROFILE_MODULE = 1
+    TRANSPORT_IN_PROFILE_MODULE = 0
     TRANSPORT_PHASE2_SOURCE = 1
     TRANSPORT_PHASE3_SOURCE = 0
     TRANSPORT_PHASE2_PROBE = 0
-    # One, and it is the measurement rather than a defect: the indexed
-    # round-trip statement cannot be written without a signature equality to
-    # transport along, which is the evidence the recheck exists to produce.
-    TRANSPORT_PHASE4_EVIDENCE = 1
+    TRANSPORT_PHASE4_EVIDENCE = 0
     TRANSPORT_ANALYSIS_SOURCE = 0
     TRANSPORT_REPEATED_SOURCE = 0
     TRANSPORT_EPISTEMIC_SOURCE = 0

@@ -1045,6 +1045,17 @@ failure control. Expanded environment wrappers were rejected after they made
 one leaf elaborate for more than 180 seconds; the fixed-environment theorem is
 the responsive public seam.
 
+EXP-085/D48 tests the first genuinely global obstruction rather than adding
+another definition. In the two-stage complementarity control, the first local
+counterfactual term is zero, the decisive off-path second term is one, and
+alternative-policy own reach recovers the exact profitable root deviation.
+Baseline own reach assigns that site zero mass and is therefore refuted as a
+global coefficient. D48 remains provisional: the same slice shows different
+remaining depths, but terminal absorption means it cannot choose between an
+explicit remaining-horizon evaluator and a common sufficiently large fuel.
+The next promotion gate is a generic bounded-evaluator root bridge followed by
+topological telescoping and a root-regret or exploitability consumer.
+
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic
 and incentive certificates directly without pretending to be a sequential

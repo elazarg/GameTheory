@@ -94,6 +94,8 @@ becomes difficult to scan.
 | EXP-081 | 2026-08-10 | D44 / canonical counterfactual reach | Can counterfactual reach and continuation coefficients be derived from canonical finite history laws without restoring a native FOSG runner? | Complete; supports | `Analysis/Protocol/CounterfactualReach.lean`; `Analysis/Protocol/CounterfactualReachTest.lean` |
 | EXP-082 | 2026-08-10 | D45 / counterfactual regret decomposition | Can canonical counterfactual reach support a theorem-level deviation-gain decomposition without a parallel payoff, deviation, or CFR semantics? | Complete; supports | [`decisions/D45-canonical-counterfactual-regret.md`](decisions/D45-canonical-counterfactual-regret.md); `Analysis/Protocol/CounterfactualRegret{,Test}.lean` |
 | EXP-083 | 2026-08-10 | D46 / local CFR regret matching | Can the action-local D45 quantity drive an actual cumulative regret-matching trace with a finite or asymptotic regret theorem? | Complete; supports local CFR | [`decisions/D46-local-counterfactual-regret-matching.md`](decisions/D46-local-counterfactual-regret-matching.md); `Analysis/Protocol/CounterfactualRegretMatching{,Test}.lean` |
+| EXP-084 | 2026-08-10 | D47 / generic local CFR realization | Can canonical behavioral execution derive the local realization equation on every qualifying no-revisit site? | Complete; supports | [`decisions/D47-generic-local-counterfactual-realization.md`](decisions/D47-generic-local-counterfactual-realization.md); `Analysis/Protocol/CounterfactualRegretLinearityTest.lean` |
+| EXP-085 | 2026-08-10 | D48 / global CFR decomposition | Which reach coefficient and evaluator contract survive a profitable coordinated two-site deviation? | Complete; narrows | [`decisions/D48-global-counterfactual-decomposition-gate.md`](decisions/D48-global-counterfactual-decomposition-gate.md); `Analysis/Protocol/CounterfactualDecompositionTest.lean` |
 
 ## Entry template
 
@@ -5242,3 +5244,60 @@ memory.
   or exploitability: next prove the across-information-set deviation
   decomposition, then connect all local learners to root regret or a
   two-player zero-sum exploitability theorem with a failed-learner control.
+
+### EXP-085: across-information-set counterfactual decomposition
+
+- **Date / revision:** 2026-08-10, reserved after `a520a87`
+- **Status:** complete; narrows D48 without adopting a global theorem
+- **Decision / question:** D48; whether a whole behavioral-policy deviation in
+  a finite perfect-recall Protocol admits a useful root-gain decomposition into
+  D45/D47 local counterfactual regrets, weighted by the deviator's own reach
+  under the alternative policy.
+- **Prediction:** the standard telescoping identity must include off-path
+  information sites and alternative-policy own reach. On the two-stage
+  complementarity fixture, the first-site term is zero, the off-path
+  second-after-true term is one, and their sum is the exact profitable root
+  gain. A statement summing only baseline-reached sites must fail.
+- **Representative slice:** the incumbent `false,false` policy versus the
+  `true,true` alternative in `Tests/SubgameOneShot`. Existing actual one-site
+  tests are all harmless, yet the whole deviation gains one. This forces a
+  correct decomposition to expose the off-path second information state.
+- **Competing designs:** fixed-horizon decomposition with a named common-depth
+  certificate; history-indexed remaining fuel; well-founded terminal
+  continuation values; or a theorem stated only for a synchronous finite EFG
+  layer. The shortest hostile slice should decide which evaluator can express
+  the identity without duplicating histories, runners, utilities, or regret.
+- **Kill conditions:** the sum ignores off-path sites or uses baseline rather
+  than alternative own reach; fixed fuel evaluates unequal-depth histories at
+  incompatible times; the result requires a second runner/regret semantics,
+  global finiteness stored in the model, raw update, public transport, or a
+  claim of global CFR before an exact root-gain consumer exists.
+- **Artifacts / observations:**
+  `Analysis/Protocol/CounterfactualDecompositionTest.lean` evaluates the
+  incumbent `false,false` policy and the `true,true` deviation on the canonical
+  two-stage Protocol. The first-site counterfactual action regret is exactly
+  zero. The off-path `second-after-true` regret is exactly one. Alternative
+  own reach weights those terms by one and one, recovering the well-founded
+  root gain exactly; baseline own reach gives the decisive second site weight
+  zero. Thus baseline-reached-only summation is machine-refuted. The proof uses
+  the same behavioral runner and D45 action regret, not a fixture-local regret
+  definition.
+- **Evaluator observation:** the two sites naturally use continuation fuels
+  two and one. This does not by itself refute a common larger fuel: once every
+  relevant continuation has terminated, Protocol absorption makes extra fuel
+  observationally irrelevant. A generic theorem must therefore expose either
+  a bounded-termination/absorption certificate or a remaining-horizon schedule;
+  the fixture does not justify choosing between them.
+- **Validation:** the hostile module completed 2,442 jobs warning-free in
+  8.5 seconds, and the full library completed 3,587 jobs warning-free. Fast
+  Phase 2 and Phase 3 audits report `VERIFIED=1`; their stale expected
+  transport ratchets were tightened from one to zero where the source had
+  already improved. Source checks found no placeholders, custom axioms, raw
+  updates, stored `Fintype.ofFinite`, public transport tokens,
+  `open Classical`, or lines over 100. Deep reachability mode was deliberately
+  not run.
+- **Outcome / next action:** narrows D48. Alternative-policy own reach and an
+  explicit off-path term are mandatory. Do not credit global CFR yet. Next
+  prove a generic single-site root-gain identity under a responsive bounded
+  evaluator contract, then telescope topologically ordered site changes and
+  consume every local term in a root-regret or exploitability theorem.

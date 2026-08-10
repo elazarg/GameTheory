@@ -128,8 +128,13 @@ Separate packages:
   all-nonterminal no-revisit decision fibers, with perfect recall discharging
   no-revisit, a genuine two-stage consumer, and an explicit global-failure
   control; and
-- **next:** the across-information-set perfect-recall decomposition, followed
-  by root regret or two-player zero-sum exploitability convergence.
+- **complete as a hostile gate:** a coordinated two-site deviation whose
+  first local term is zero and decisive off-path term is one; alternative own
+  reach recovers the exact root gain while baseline reach is machine-refuted;
+  and
+- **next:** the generic bounded-evaluator single-site root bridge, its
+  topologically telescoped perfect-recall decomposition, then root regret or
+  two-player zero-sum exploitability convergence.
 
 Do not merge these packages into the FOSG syntax root or hide serialization
 order behind choice. The coefficient package counts because its continuation
