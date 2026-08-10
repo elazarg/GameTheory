@@ -10,6 +10,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledCapacityPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledTailPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeExactCycleStrata
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFiniteInstability
@@ -33,6 +34,7 @@ import UniformEquilibrium.Diagnostics.Quitting.MinimalFinCounterexample
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
 import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupation
 import UniformEquilibrium.Quitting.AbsorptionPath.FiniteWindowRefusalReweighting
+import UniformEquilibrium.Quitting.AbsorptionPath.FlowCostateObstructionAdapter
 import UniformEquilibrium.Quitting.AbsorptionPath.SurvivalWeightedObstructionAdapter
 import UniformEquilibrium.Quitting.Classification.SingletonPacketDefectAlgebra
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryLimitGeometry
@@ -117,6 +119,12 @@ positively reached local dissipation to vanish, and strict dissipation forces
 strict boundary shortfall.  The counterexample
 regime does not supply that boundary dominance, so this accounting theorem
 does not erase the positive phantom plateau.
+The canonical prefix-capacity potential nevertheless supplies a natural
+account: remaining capacity is nonnegative, pays each chronological
+absorption charge, and after singleton-cap scaling is killed-excessive for
+the exact debt source.  Its initial mismatch with exact debt is explicit and
+has no proved sign or vanishing property; shifting the account arithmetically
+does not preserve excessivity automatically.
 Product-root collision mass is at most `choose (card ι) 2` times squared
 one-stage absorption.  The exported weighted-window concentration theorem has
 a separate zero-absorption branch; its conditional singleton-mixture payoff
@@ -146,6 +154,11 @@ joint-survival factor, while endpoint displacement is an unweighted
 coboundary.  This makes normalized tangent composition explicit, but does not
 yet supply a strategically feasible raw-current family or a compatible
 co-state.
+The same data is exported as a sparse two-grade raw flow.  Raw charge has
+survival degree one, endpoint coboundary has degree zero, and arbitrary finite
+co-states obey the exact adjoint pairing law across adjacent windows.  This
+still does not choose a source-compatible co-state or expose a strategically
+realizable face.
 
 Periodic attachment has a second, exact normalization fence.  For an
 absorbing exact Nash--Bellman word, the finite-stop and refusal branches of

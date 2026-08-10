@@ -2246,6 +2246,14 @@ adjacent windows preserve joint survival, singleton and collision raw charges,
 absorbed mass, endpoint coboundary, and normalized tangent composition in the
 generic graded block algebra.  Payoff weighting, source-compatible
 feasibility, and strategic realization remain outside that adapter.
+The adapter also has an exact sparse two-grade flow/co-state form: singleton
+and collision charge occupy survival degree one, endpoint coboundary occupies
+degree zero, and arbitrary co-states transport by the adjoint pairing law.
+Separately, remaining canonical prefix capacity, scaled by the singleton debt
+cap, is a concrete killed-excessive account for the exact diagonal debt
+source.  Its explicit initial mismatch with exact debt is uncontrolled, so it
+does not provide the equal initialization or boundary dominance needed to
+erase the phantom remainder.
 
 **Acceptance.** A game-facing utilization theorem, not another separator:
 every non-all-Continue counterexample tangent must either emit a positive raw
