@@ -1503,6 +1503,36 @@ path to approach its endpoint at nonzero clock speed.  The remaining theorem
 must use product-root support and collision structure to produce an exact
 return or a realizable terminal suffix.
 
+There is a chronology-preserving normalization of this phantom regime.  If
+\(L_t\) is the surviving Never mass and \(a_t=1-L_t>0\), conditioning on
+eventual absorption gives values \(y_t\) and weights
+\(\alpha_t=q_t/a_t\in[0,1]\) satisfying the exact consecutive recursion
+\[
+ y_t=\alpha_t g_t+(1-\alpha_t)y_{t+1}.
+\]
+This removes the phantom boundary without introducing the uncontrolled ratio
+\(q_{t+1}/q_t\).  A coordinate where the plateau equals its punishment value
+remains above the punishment floor after conditioning.  Every floor violation
+therefore uses strict plateau slack.  Although a common affine shrink toward
+the plateau repairs all coordinates at one date, exact transport of such a
+shrink telescopes to positive Never mass whenever the initial shrink is
+strict; it is a reparametrization of the boundary, not a strategic repair.
+
+A literal interior singleton row is exactly purifiable at the conditioned
+hazard.  If the plateau is coordinatewise pinned to singleton rewards, the
+whole conditioned singleton path retains both its Bellman recursion and exact
+endpoint Nash conditions.  Hence a counterexample on this stratum must retain
+a positive deleted-player survival clock.  Two persistent owners make every
+deleted clock contract and feed the existing infinite-path compiler.  In the
+remaining atomic one-owner limit, closedness gives a stationary solo endpoint
+equilibrium; nonexistence then forces the owner's singleton self-payoff to be
+negative.  This sign obstruction is genuine because refusing forever pays
+zero.  Multi-owner rows cannot generally be purified by exact rowwise product
+rescaling: with two positive marginals and positive Continue mass, their
+conditional coalition law determines scale one.  Thus the unresolved diffuse
+branch requires a deleted-clock approximation, rather than only joint-clock
+collision concentration or pointwise active-face pinning.
+
 A bounded rational
 four-player singleton table has a positive compact escape separation for every
 owner distribution, so singleton complementarity cannot be assumed; this is a
@@ -1675,11 +1705,13 @@ complement has an open cell, select a rational interior table for obstruction
 search.
 \item \textbf{Consume the combined counterexample regime.}  Starting from the
 forced supported singleton packet and the summably absorbing positive-debt
-tail, prove a strategically legal alternative: complementary mixture,
-support-enlarged positive-charge exact return, or an unblocked periodic
-restart.  The three branches are already consumed respectively by circulation,
-finite capacity, and the terminal gap; the missing theorem must use exact
-product-root dynamics and nonsingleton collision rewards.
+tail, use the exact eventual-absorption conditioning to prove a strategically
+legal alternative: a deleted-clock diffuse approximation, a floor-safe finite
+return, an absorbing singleton-owner exit, or a common terminal word.  Exact
+singleton conditioning, collision-aware and essential-APS return consumers,
+and common-word terminal consumers are already formalized.  The missing
+theorem must control playerwise refusal occupation and strict plateau slack;
+joint-clock compactness alone is insufficient.
 \item \textbf{Build a path-consistent support atlas.}  The local residue is
 nonempty but has an exact omitted-cell absorber, so the next finite grammar
 must enlarge support instead of escalating automatically to long cycles.

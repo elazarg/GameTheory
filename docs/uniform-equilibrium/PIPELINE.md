@@ -2329,6 +2329,22 @@ be removed by rowwise rescaling of a multi-owner product root.  The diffuse
 branch needs chronological singleton chattering or another approximate
 purification that retains the punishment floor.
 
+The punishment floor itself has now been separated cleanly from purification.
+If a plateau coordinate is tight at its punishment value, its conditioned
+coordinate remains above that floor at every date.  Every violation therefore
+uses strict plateau slack, with the exact deficit bounded by the ratio of
+surviving phantom mass to remaining absorption.  A common affine shrink toward
+the plateau restores all floors at one date, but the forced scale recursion
+telescopes to a positive Never mass whenever the initial shrink is strict.
+Thus pointwise viability repair cannot remove the boundary.  On the narrower
+coordinatewise singleton-tight stratum, an interior literal-solo source path
+does purify strategically: both Bellman and endpoint Nash survive at every
+date.  A counterexample must then retain some playerwise opponent-survival
+clock.  If the only persistent owner has a positive-rate atomic limit, the
+stationary solo limit is endpoint Nash; absence of a uniform payoff forces
+that owner's singleton self-payoff to be negative.  This is a sharp remaining
+monopoly branch rather than a compactness defect.
+
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.
 On proper singleton roots, a state-matched changing-owner Nash--Bellman cycle

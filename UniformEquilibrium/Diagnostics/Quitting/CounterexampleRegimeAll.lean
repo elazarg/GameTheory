@@ -14,6 +14,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCollisionAwareFiniteReturn
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCommonWordRealization
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedFloorViability
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceObstructionCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceDynamicAlternative
@@ -76,6 +77,7 @@ import UniformEquilibrium.Quitting.Classification.SingletonPacketDefectAlgebra
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryLimitGeometry
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryConditioning
 import UniformEquilibrium.Quitting.Cycles.ConditionedProductPurification
+import UniformEquilibrium.Quitting.Cycles.ConditionedSingletonStrategicPurification
 import UniformEquilibrium.Quitting.Cycles.PeriodOneTangentAtlas
 import UniformEquilibrium.Quitting.Cycles.PeriodicNormalizedSeam
 import UniformEquilibrium.Quitting.Debt.Dynamic.DynamicDebtCapChargedAnchorCounterexample
@@ -478,6 +480,19 @@ product-root purification at the new hazard scale.  Multi-owner rows are
 rigid: with positive Continue mass and two active marginals, preserving the
 conditional nonempty-coalition law forces scale one, so a genuine phantom
 boundary cannot be removed by exact rowwise product rescaling.
+
+Conditioning also has a sharp punishment-floor boundary.  Coordinates where
+the phantom plateau equals the punishment floor remain viable at every
+conditionable date; a violation can occur only at a coordinate with strict
+plateau slack, and its size is paid quantitatively by that slack.  A common
+affine shrink restores all floors pointwise, but exact transport of the shrink
+retains a positive Never mass, so this is not a strategic repair.  On the
+stronger stratum where every source row is an interior literal singleton row
+and the plateau is coordinatewise singleton-tight, conditioning preserves the
+exact Bellman and endpoint-Nash equations along the whole path.  Absence of a
+uniform equilibrium then forces an opponent-survival obstruction; in an
+atomic one-owner limit it further forces that owner's singleton self-payoff
+to be negative.
 
 The strategic consumers are now explicit.  Any supplied finite
 collision-aware product-root return satisfying exact Nash and punishment
