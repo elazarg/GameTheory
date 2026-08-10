@@ -523,6 +523,14 @@ create a second mixed-game API. EconCSLib's generic finite payoff definitions
 are useful evidence, but its separate rational/real mixed predicates show that
 polymorphism alone does not guarantee one semantic layer.
 
+EXP-079/D43 applies the same separation to intrinsic games. A uniquely
+solvable intrinsic model at a fixed nature value compiles to a utility-free
+`GameForm` whose deterministic outcome is the selected complete
+configuration. Configuration utility remains an argument, and agent-owned
+rule deviations use canonical `IsNash`; updating one rule re-solves every
+closed-loop decision. Temporal execution and nature lotteries are not implied
+by this strategic leaf.
+
 #### Validation spike
 
 Using one `GameForm`, define:

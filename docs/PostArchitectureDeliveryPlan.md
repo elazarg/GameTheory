@@ -116,7 +116,18 @@ Do not merge these packages into the FOSG syntax root or hide serialization
 order behind choice.  Counterfactual definitions do not count as delivery
 until a terminal/continuation law and then a regret consumer use them.
 
-### E. MAID strategic relevance
+### E. Intrinsic selected-solution strategic form — resolved
+
+EXP-079/D43 compiles a uniquely solvable intrinsic model at a caller-supplied
+nature value directly to the canonical static form. An agent deviation replaces
+one complete information-local rule and then re-solves the whole closed loop.
+The causal sender–receiver witness proves truthful Nash and rejects a control
+whose sender-only deviation changes the receiver downstream.
+
+Nature lotteries, temporal execution, and behavioral/mixed strategy are
+separate gates. Do not add them merely to make Intrinsic resemble Protocol.
+
+### F. MAID strategic relevance
 
 The promoted MAID compiler now has a multi-player, multi-site deviation and
 Nash witness.  The next same-language package is the Koller--Milch
@@ -126,7 +137,7 @@ serialization, and give a diagram where pruning changes the strategic policy
 domain while preserving the compiled outcome law.  Do not report MAID as
 strategic-relevance complete before that slice passes.
 
-### F. Static mature-family rotation
+### G. Static mature-family rotation
 
 These packages may proceed independently once their owner imports remain
 fixed:
@@ -144,7 +155,7 @@ Each package needs its own theorem-level consumer. Shared general mathematics
 belongs in Mathlib when available, otherwise in `GameTheoryMath` only after a
 live game-theoretic consumer exists.
 
-### G. Mechanism and algorithm extensions
+### H. Mechanism and algorithm extensions
 
 Independent packages:
 

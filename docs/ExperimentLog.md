@@ -89,6 +89,7 @@ becomes difficult to scan.
 | EXP-076 | 2026-08-10 | D40 / rationalizability terminology | Is joint-opponent mixed dominance independent or correlated rationalizability? | Corrects D40 to correlated rationalizability | [`decisions/D40-mixed-pure-rationalizability.md`](decisions/D40-mixed-pure-rationalizability.md); `GameTheory/Tests/Rationalizability.lean` |
 | EXP-077 | 2026-08-10 | D6/D12 / finite sequential semantics | Must one-shot fuel track history depth, and when is normalized history mass a Bayes fiber? | Narrows both contracts; hostile regressions pass | `GameTheory/Protocol/{Assessment,BehavioralAssessment,Information}.lean`; `GameTheory/Tests/Assessment.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
 | EXP-078 | 2026-08-10 | D42 / imperfect-information one-shot deviations | Does absence of profitable single-information-set deviations inside every proper subgame characterize SPE under perfect recall? | Refutes; corrects D42 and closes the false delivery remainder | `GameTheory/Tests/SubgameOneShot.lean`; [`decisions/D42-imperfect-information-subgames.md`](decisions/D42-imperfect-information-subgames.md) |
+| EXP-079 | 2026-08-10 | D4/D5/D31 / intrinsic strategic form | Can selected closed-loop solutions compile directly to canonical pure Nash while preserving downstream effects of one owned-rule deviation? | Supports; decides D43 | [`decisions/D43-intrinsic-selected-solution-strategic-form.md`](decisions/D43-intrinsic-selected-solution-strategic-form.md); `GameTheory/Experimental/PostArchitecture/IntrinsicStrategic.lean` |
 
 ## Entry template
 
@@ -4938,3 +4939,42 @@ memory.
   their distinct, useful scopes. A future restricted theorem is admissible
   only if a consumer supplies a stronger premise that defeats this
   complementarity example.
+
+### EXP-079: intrinsic selected-solution strategic form
+
+- **Date / revision:** 2026-08-10, working tree after `2b27132`
+- **Status:** complete; supports a selected-solution strategic leaf and D43
+- **Decision / question:** D4/D5/D31; whether an intrinsically solvable model
+  at a fixed nature value can compile its agent-owned pure decision rules to a
+  canonical `GameForm`, external configuration utility, and ordinary
+  `IsNash`, without choosing a temporal execution.
+- **Prediction:** the selected closed-loop configuration is already a
+  deterministic outcome law. A unilateral strategy update should re-solve
+  every downstream decision while retaining the same agent as the canonical
+  deviation coordinate.
+- **Representative slice:** a causal Boolean sender observes nature and a
+  receiver observes the sender decision. At nature `true`, truthful/copying
+  rules are Nash; a constant-false sender profile is not, because changing
+  only the sender rule changes both selected decisions and raises payoff.
+- **Competing designs:** direct selected-solution `GameForm`; temporal Protocol
+  compilation first; or a new intrinsic-specific utility/equilibrium layer.
+- **Kill conditions:** the hostile deviation cannot expose the downstream
+  fixed-point effect; compilation needs stored finiteness or probability;
+  utility must enter `Model`; or the proof needs a second equilibrium
+  predicate, temporal runner, public transport plumbing, or trust hazard.
+- **Evidence / observation:** the 164-nonblank-line spike has 17 declarations
+  and imports only the stable Intrinsic example/solution leaves and
+  `Core.Utility`. The causal signaling model is uniquely solvable. Updating
+  only the sender's rule changes both selected decisions from false to true;
+  the shared payoff rises from zero to one, so canonical `IsNash` rejects the
+  control while accepting truthful/copying rules. The compiler stores no
+  capability and introduces no runner, probability field, utility field,
+  equilibrium predicate, transport, or trust hazard.
+- **Validation:** `lake build
+  GameTheory.Experimental.PostArchitecture.IntrinsicStrategic` completed
+  1,724 jobs warning-free; focused source-hazard search is empty after comment
+  stripping.
+- **Outcome / next action:** supports. D43 adopts a theorem-only strategic leaf
+  at a caller-supplied nature state. Promote the compiler and hostile witness;
+  keep temporal execution, nature lotteries, and behavioral/mixed strategies
+  as separate gates.
