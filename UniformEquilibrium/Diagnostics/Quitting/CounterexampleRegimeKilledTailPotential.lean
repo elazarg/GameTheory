@@ -97,6 +97,27 @@ theorem killedDebtReference_eq_killedTailAccount
     (seam.killedDebtSource who) (seam.killedDebtReference who)
       (seam.killedDebtReference_step who) start fuel
 
+/-- With the initial value pinned to exact debt, the debt boundary is exactly
+the proposed account's boundary plus all of its killed dissipation.  Thus a
+boundary comparison in the opposite direction has no hidden slack: it can
+hold for an excessive account only when the whole dissipation sum vanishes. -/
+theorem debtBoundary_eq_dissipationSum_add_potentialBoundary
+    (seam : QuittingCounterexampleSeamWitness regime)
+    (who : ι) (potential : ℕ → ℝ) (start fuel : ℕ)
+    (hinitial : potential start = seam.killedDebtReference who start) :
+    killedBoundaryRemainder seam.killedDebtSurvival
+        (seam.killedDebtReference who) start fuel =
+      killedSourceSum seam.killedDebtSurvival
+          (killedDissipation seam.killedDebtSurvival
+            (seam.killedDebtSource who) potential) start fuel +
+        killedBoundaryRemainder seam.killedDebtSurvival potential
+          start fuel := by
+  have href := seam.killedDebtReference_eq_killedTailAccount who start fuel
+  have hpotential := potential_eq_source_add_dissipationSum_add_boundary
+    seam.killedDebtSurvival (seam.killedDebtSource who) potential start fuel
+  unfold killedTailAccount at href
+  linarith
+
 /-- If an excessive account starts from the exact debt reference and its
 surviving boundary dominates the exact debt boundary, its total killed
 dissipation on the window is zero.  The displayed boundary comparison is the
@@ -121,6 +142,33 @@ theorem killedDissipationSum_eq_zero_of_debtBoundary_le
       (seam.killedDebtReference who) seam.killedDebtSurvival_nonneg
       hexcessive (seam.killedDebtReference_step who) start fuel
       hinitial hboundary
+
+/-- For an excessive account initialized at exact debt, domination of the
+exact debt boundary is equivalent to vanishing of the full killed
+dissipation sum.  This exposes why boundary domination cannot be obtained by
+mere reanchoring: it is already the desired no-dissipation conclusion. -/
+theorem debtBoundary_le_potentialBoundary_iff_dissipationSum_eq_zero
+    (seam : QuittingCounterexampleSeamWitness regime)
+    (who : ι) (potential : ℕ → ℝ)
+    (hexcessive : IsKilledExcessive seam.killedDebtSurvival
+      (seam.killedDebtSource who) potential)
+    (start fuel : ℕ)
+    (hinitial : potential start = seam.killedDebtReference who start) :
+    (killedBoundaryRemainder seam.killedDebtSurvival
+          (seam.killedDebtReference who) start fuel ≤
+        killedBoundaryRemainder seam.killedDebtSurvival potential
+          start fuel) ↔
+      killedSourceSum seam.killedDebtSurvival
+          (killedDissipation seam.killedDebtSurvival
+            (seam.killedDebtSource who) potential) start fuel = 0 := by
+  constructor
+  · exact seam.killedDissipationSum_eq_zero_of_debtBoundary_le who
+      potential hexcessive start fuel hinitial
+  · intro hdissipation
+    have hidentity :=
+      seam.debtBoundary_eq_dissipationSum_add_potentialBoundary
+        who potential start fuel hinitial
+    linarith
 
 /-- Under the same minimal boundary comparison, every local dissipation that
 is reached with positive prefix survival vanishes. -/

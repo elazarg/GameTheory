@@ -2241,6 +2241,12 @@ plateau, or realize a product-root word.
 5. the decoded face is realized by one common product-root word with the
    punishment floor and behavioral deviation cap retained.
 
+The literal finite-window accounting part of item 1 is now formalized:
+adjacent windows preserve joint survival, singleton and collision raw charges,
+absorbed mass, endpoint coboundary, and normalized tangent composition in the
+generic graded block algebra.  Payoff weighting, source-compatible
+feasibility, and strategic realization remain outside that adapter.
+
 **Acceptance.** A game-facing utilization theorem, not another separator:
 every non-all-Continue counterexample tangent must either emit a positive raw
 seam priced by the compatible debt co-state and exhausted by a proved boundary

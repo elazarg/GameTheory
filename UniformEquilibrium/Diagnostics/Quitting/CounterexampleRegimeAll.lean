@@ -33,6 +33,7 @@ import UniformEquilibrium.Diagnostics.Quitting.MinimalFinCounterexample
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
 import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupation
 import UniformEquilibrium.Quitting.AbsorptionPath.FiniteWindowRefusalReweighting
+import UniformEquilibrium.Quitting.AbsorptionPath.SurvivalWeightedObstructionAdapter
 import UniformEquilibrium.Quitting.Classification.SingletonPacketDefectAlgebra
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryLimitGeometry
 import UniformEquilibrium.Quitting.Cycles.PeriodicNormalizedSeam
@@ -110,8 +111,9 @@ along the optimized tail.
 Playerwise dynamic debt is also exported as an exact killed-potential
 reference account.  An excessive account with the same initial value can
 dissipate only by losing the corresponding surviving boundary: boundary
-dominance forces every positively reached local dissipation to vanish, while
-strict dissipation forces strict boundary shortfall.  The counterexample
+dominance is equivalent to zero total killed dissipation, forces every
+positively reached local dissipation to vanish, and strict dissipation forces
+strict boundary shortfall.  The counterexample
 regime does not supply that boundary dominance, so this accounting theorem
 does not erase the positive phantom plateau.
 Product-root collision mass is at most `choose (card ι) 2` times squared
@@ -137,6 +139,12 @@ deleted-player survival law; its normalized discrepancy is explicitly bounded
 by the chronological reweighting error divided by a positive deleted-absorption
 denominator.  No theorem here makes that ratio vanish for the canonical
 windows.
+Adjacent source windows also form exact survival-weighted obstruction blocks:
+singleton and collision charge in the later window is killed by the earlier
+joint-survival factor, while endpoint displacement is an unweighted
+coboundary.  This makes normalized tangent composition explicit, but does not
+yet supply a strategically feasible raw-current family or a compatible
+co-state.
 
 Periodic attachment has a second, exact normalization fence.  For an
 absorbing exact Nash--Bellman word, the finite-stop and refusal branches of
