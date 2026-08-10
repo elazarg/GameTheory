@@ -2497,10 +2497,14 @@ coordinatewise clipping at the punishment vector leaves a uniform singleton
 gap whenever the outsider's punishment value is strictly below its singleton
 reward. In that scalar branch, cofinally many selected dates therefore carry
 positive-absorption exact Nash--Bellman edges with both endpoints above the
-punishment floor. The complementary scalar condition is
-`singletonReward ≤ punishmentValue`. The independently constructed edges do
-not concatenate: each predecessor is generated from its clipped target rather
-than identified with another selected conditioned state. The funded-underfloor
+punishment floor. Every such edge carries the uniform charge lower bound
+`gap / (gap + 2 * rewardBound)`. The complementary scalar condition is
+`singletonReward ≤ punishmentValue`, which means a negative singleton or
+exact punishment/singleton equality; the game also contains a distinct
+positive singleton owner carrying the terminal gap in the negative branch.
+The independently constructed edges cannot concatenate in their displayed
+form: every clipped tail stores the all-Continue simplex, whereas every reset
+predecessor root has positive absorption. The funded-underfloor
 alternative remains an exact account for unmodified targets, while floor
 clipping reduces viability itself to the scalar sign and chronology problem.
 Affine shrinkage supplies neither a state match nor a finite return.
@@ -2521,7 +2525,10 @@ coordinate by at least the gap minus the Nash tolerance; the conditioned
 source comparison subtracts only the vanishing diffuse joint-charge error.
 Hence vanishing Nash error and vanishing target displacement cannot coexist
 for a one-player activation. A viable reset must alter other marginals or
-match a distinct full-vector predecessor.
+match a distinct full-vector predecessor. A full-root tail perturbation by
+`delta` preserves endpoint Nash with only `delta` additional error and moves
+the successor payoff by at most `delta`; this is a consumer for a supplied
+full-vector tail match, not a producer of that match.
 
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.

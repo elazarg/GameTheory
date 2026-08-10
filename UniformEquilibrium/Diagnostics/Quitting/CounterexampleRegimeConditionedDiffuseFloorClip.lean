@@ -5,6 +5,8 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedDiffuseReset
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
+import UniformEquilibrium.Quitting.Boundary.Repair.FixedTailUniformAbsorption
 
 /-!
 # Punishment-floor clipping of diffuse reset targets
@@ -167,6 +169,8 @@ theorem exists_fixedOutsider_punishment_ge_singleton_or_cofinal_floorClippedRese
                     (fun date => (seam.tail date).1.1)
                     seam.limit.value time),
                 quittingAllContinueSimplexRoot) ∧
+            gap / (gap + 2 * quittingRewardBound reward) ≤
+              quittingRootAbsorptionMass (quittingRootOfSimplex root) ∧
             0 < quittingRootAbsorptionMass (quittingRootOfSimplex root) := by
   obtain ⟨who, eta, heta, hdates⟩ :=
     seam.exists_fixed_inactive_rescaledQuitDefect_of_diffuse hpositive hmesh
@@ -217,11 +221,107 @@ theorem exists_fixedOutsider_punishment_ge_singleton_or_cofinal_floorClippedRese
             (quittingRootOfSimplex root), root)
         (clipped, quittingAllContinueSimplexRoot) := by
       exact ⟨rfl, hnash⟩
+    have huniformCharge : gap / (gap + 2 * quittingRewardBound reward) ≤
+        quittingRootAbsorptionMass (quittingRootOfSimplex root) := by
+      exact gap_div_le_quittingRootAbsorptionMass_of_isZeroEndpointNash
+        reward clipped (quittingRootOfSimplex root) who
+        (quittingRewardBound_nonneg reward) hgap
+        (abs_reward_le_quittingRewardBound reward) hclipped hnash
     exact ⟨time, root, htime, hinactive,
       fun player => punishmentValue_le_quittingPunishmentFloorClip
         (reward := reward) target player,
-      hclipped, hnash, hpredecessorFloor, hexactEdge, habsorption⟩
+      hclipped, hnash, hpredecessorFloor, hexactEdge,
+      huniformCharge, habsorption⟩
   · exact ⟨who, Or.inl (le_of_not_gt hpunishment)⟩
+
+/-! ## Global positive-solo compatibility -/
+
+/-- A diffuse seam has a positive singleton owner somewhere in the game.  At
+the selected fixed outsider, the scalar floor fork is therefore sharpened to
+one of three alternatives: a distinct negative singleton, punishment
+equality, or the cofinal floor-clipped reset family.
+
+The distinctness in the negative branch is substantive: the positive-solo
+toggle cannot be the same coordinate as a negative singleton.  This is a
+search-facing form of the scalar residual; it does not assert that the
+positive owner and negative outsider can be chronologically matched. -/
+theorem exists_positiveSolo_owner_and_scalar_diffuse_alternative
+    (seam : QuittingCounterexampleSeamWitness regime)
+    (hpositive : ∀ time, 0 < quittingTailEventualAbsorption
+      (quittingDynamicDebtTailRoots seam.tail) time)
+    (hmesh : Tendsto (quittingTailConditionedAbsorptionWeight
+      (quittingDynamicDebtTailRoots seam.tail)) atTop (nhds 0)) :
+    ∃ owner who : ι,
+      regime.terminalGap ≤ quittingSoloReward reward owner owner ∧
+      ((who ≠ owner ∧ quittingSoloReward reward who who < 0) ∨
+        quittingPunishmentValue reward who = quittingSoloReward reward who who ∨
+        (∃ gap : ℝ, 0 < gap ∧ ∀ start, ∃ time,
+          ∃ root : QuittingRootSimplex ι,
+            start ≤ time ∧
+            quittingDynamicDebtTailRoots seam.tail time who = PMF.pure false ∧
+            (∀ player, quittingPunishmentValue reward player ≤
+              quittingPunishmentFloorClip reward
+                (quittingTailConditionedValue
+                  (quittingDynamicDebtTailRoots seam.tail)
+                  (fun date => (seam.tail date).1.1)
+                  seam.limit.value time) player) ∧
+            quittingPunishmentFloorClip reward
+                (quittingTailConditionedValue
+                  (quittingDynamicDebtTailRoots seam.tail)
+                  (fun date => (seam.tail date).1.1)
+                  seam.limit.value time) who ≤
+              reward (quittingSingletonTerminal who) who - gap ∧
+            IsεQuittingRootEndpointNash reward
+              (quittingPunishmentFloorClip reward
+                (quittingTailConditionedValue
+                  (quittingDynamicDebtTailRoots seam.tail)
+                  (fun date => (seam.tail date).1.1)
+                  seam.limit.value time))
+              0 (quittingRootOfSimplex root) ∧
+            (∀ player, quittingPunishmentValue reward player ≤
+              quittingRootSuccessorPayoff reward
+                (quittingPunishmentFloorClip reward
+                  (quittingTailConditionedValue
+                    (quittingDynamicDebtTailRoots seam.tail)
+                    (fun date => (seam.tail date).1.1)
+                    seam.limit.value time))
+                (quittingRootOfSimplex root) player) ∧
+            IsQuittingNashBellmanEdge reward
+              (quittingRootSuccessorPayoff reward
+                  (quittingPunishmentFloorClip reward
+                    (quittingTailConditionedValue
+                      (quittingDynamicDebtTailRoots seam.tail)
+                      (fun date => (seam.tail date).1.1)
+                      seam.limit.value time))
+                  (quittingRootOfSimplex root), root)
+              (quittingPunishmentFloorClip reward
+                  (quittingTailConditionedValue
+                    (quittingDynamicDebtTailRoots seam.tail)
+                    (fun date => (seam.tail date).1.1)
+                    seam.limit.value time),
+                quittingAllContinueSimplexRoot) ∧
+            gap / (gap + 2 * quittingRewardBound reward) ≤
+              quittingRootAbsorptionMass (quittingRootOfSimplex root) ∧
+            0 < quittingRootAbsorptionMass (quittingRootOfSimplex root))) := by
+  obtain ⟨owner, howner⟩ := regime.exists_terminalGap_le_soloReward
+  obtain ⟨who, hscalar⟩ :=
+    seam.exists_fixedOutsider_punishment_ge_singleton_or_cofinal_floorClippedReset
+      hpositive hmesh
+  refine ⟨owner, who, howner, ?_⟩
+  rcases hscalar with hreverse | hreset
+  · rcases singletonReward_neg_or_punishmentValue_eq_of_singleton_le
+      (reward := reward) who hreverse with hnegative | heq
+    · left
+      constructor
+      · intro hsame
+        subst who
+        have howner' : regime.terminalGap ≤
+            reward (quittingSingletonTerminal owner) owner := by
+          simpa [quittingSoloReward, quittingSingletonTerminal] using howner
+        linarith [regime.terminalGap_pos, howner']
+      · exact hnegative
+    · exact Or.inr (Or.inl heq)
+  · exact Or.inr (Or.inr hreset)
 
 end QuittingCounterexampleSeamWitness
 

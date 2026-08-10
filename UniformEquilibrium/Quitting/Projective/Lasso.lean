@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import UniformEquilibrium.Quitting.Cycles.CycleMismatchContraction
 import UniformEquilibrium.Quitting.Paths.SupportWitnessPeriodic
+import UniformEquilibrium.Quitting.Root.TailStability
 import Math.ProjectiveBellmanPacket
 
 /-!
@@ -115,37 +116,6 @@ theorem sum_quittingCyclicPrefixWeight_mul_one_sub
   | succ fuel ih =>
       rw [Finset.sum_range_succ, ih, quittingCyclicPrefixWeight_succ]
       ring
-
-/-- Endpoint differences are `1`-Lipschitz in the player's continuation
-coordinate. -/
-theorem abs_quittingRootEndpointDifference_sub_le_tail
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (first second : Payoff ι) (root : ι → PMF Bool) (who : ι) :
-    |quittingRootEndpointDifference reward first root who -
-        quittingRootEndpointDifference reward second root who| ≤
-      |first who - second who| := by
-  unfold quittingRootEndpointDifference
-  rw [quittingRootQuitPayoff_eq_deletedQuitValue,
-    quittingRootQuitPayoff_eq_deletedQuitValue,
-    quittingRootContinuePayoff_eq_deleted,
-    quittingRootContinuePayoff_eq_deleted]
-  have hmass0 := quittingRootDeletedContinueMass_nonneg root who
-  have hmass1 := quittingRootDeletedContinueMass_le_one root who
-  rw [show
-    (quittingRootDeletedQuitValue reward root who -
-          (quittingRootDeletedContinueReward reward root who +
-            quittingRootDeletedContinueMass root who * first who)) -
-        (quittingRootDeletedQuitValue reward root who -
-          (quittingRootDeletedContinueReward reward root who +
-            quittingRootDeletedContinueMass root who * second who)) =
-      quittingRootDeletedContinueMass root who * (second who - first who) by
-        ring,
-    abs_mul, abs_of_nonneg hmass0]
-  calc
-    quittingRootDeletedContinueMass root who * |second who - first who| ≤
-        1 * |second who - first who| :=
-      mul_le_mul_of_nonneg_right hmass1 (abs_nonneg _)
-    _ = |first who - second who| := by rw [one_mul, abs_sub_comm]
 
 /-- Support-local optimality survives a uniformly close continuation, with
 an additive error. -/
