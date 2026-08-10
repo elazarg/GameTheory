@@ -623,6 +623,13 @@ theorem bind_congr {μ : FinDist α} {f g : α → FinDist β}
   rw [prob_bind, prob_bind]
   exact expect_congr fun a ha => by rw [h a ha]
 
+/-- Pushforwards agree when their functions agree everywhere the source law
+can actually draw. -/
+theorem map_congr_of_eq_on_support {μ : FinDist α} {f g : α → β}
+    (h : ∀ a ∈ μ.support, f a = g a) : μ.map f = μ.map g := by
+  rw [map_eq_bind, map_eq_bind]
+  exact bind_congr fun a ha => by rw [h a ha]
+
 /-- Binding a constant branch discards the first law. -/
 @[simp]
 theorem bind_const (μ : FinDist α) (ν : FinDist β) : (μ.bind fun _ => ν) = ν := by

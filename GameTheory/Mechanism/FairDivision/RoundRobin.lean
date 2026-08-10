@@ -13,10 +13,8 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 
 Choice round-robin for finite additive indivisible-goods instances with agents
 ordered as `Fin n`. Agent `0` picks first, then turns cycle modulo `n`; each
-agent chooses a remaining good maximizing their own item value.
-
-For the EF1 guarantee, see R. J. Lipton, E. Markakis, E. Mossel, and
-A. Saberi, “On Approximately Fair Allocations of Indivisible Goods,” EC 2004.
+agent chooses a remaining good maximizing their own item value.  The module
+gives a self-contained proof of the resulting EF1 guarantee.
 -/
 
 open Finset BigOperators
@@ -660,9 +658,7 @@ private lemma roundRobin_ef1_of_later
 
     For `i.val < j.val`: `roundRobin_noEnvy_of_earlier` gives no envy; monotonicity
     (`toValuation_mono`) then makes any good from `A j` a valid EF1 witness.
-    For `j.val < i.val`: `roundRobin_ef1_of_later` provides `j`'s first good as witness.
-
-    [Lipton et al. 2004; AGT Ch.11] -/
+    For `j.val < i.val`: `roundRobin_ef1_of_later` provides `j`'s first good as witness. -/
 private theorem rawRoundRobinAlloc_isEF1
     [DecidableEq G]
     (w : AdditiveValuation (Fin n) G) (allGoods : Finset G)

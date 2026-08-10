@@ -1,14 +1,16 @@
 /-
-# Regret matching through Blackwell approachability
+# External-regret matching through Blackwell approachability
 
 This analytic bridge packages the expectation-level deterministic geometry
-behind Hart--Mas-Colell regret matching with the library's canonical finite
-law. It does not claim almost-sure convergence of sampled realized regrets.
-The Euclidean and Blackwell arguments remain game-independent in
-`GameTheoryMath.Approachability`.
+behind the Hart--Mas-Colell external-regret rule with the library's canonical
+finite law.  The coordinates are unconditional (Hannan) regrets against fixed
+actions, not action-pair conditional regrets, so this module makes no
+correlated-equilibrium claim.  It also does not claim almost-sure convergence
+of sampled realized regrets.  The Euclidean and Blackwell arguments remain
+game-independent in `GameTheoryMath.Approachability`.
 
-Primary reference: S. Hart and A. Mas-Colell, “A Simple Adaptive Procedure
-Leading to Correlated Equilibrium,” *Econometrica* 68 (2000).
+Primary reference: S. Hart and A. Mas-Colell, “A General Class of Adaptive
+Strategies,” *Journal of Economic Theory* 98 (2001), 26--54.
 -/
 
 import GameTheory.Probability.FinDist
@@ -19,6 +21,7 @@ noncomputable section
 namespace GameTheory.Analysis.Approachability
 
 open Filter GameTheory.Probability GameTheoryMath.Approachability
+  GameTheoryMath.OrthantProjection
 
 variable {ι Q : Type*}
 
@@ -33,8 +36,8 @@ theorem regretPayoff_ofLp (u : ι → Q → ℝ) (p : FinDist ι) (q : Q) (i : �
 
 variable [Fintype ι]
 
-/-- Hart--Mas-Colell regret matching: play in proportion to positive
-cumulative regret, with an arbitrary pure fallback when every coordinate is
+/-- External-regret matching: play in proportion to positive cumulative
+Hannan regret, with an arbitrary pure fallback when every coordinate is
 nonpositive.  This is proof semantics, not an executable selector. -/
 def regretMatch [Nonempty ι] (x : EuclideanSpace ℝ ι) : FinDist ι :=
   if h : 0 < ∑ i, max (x.ofLp i) 0 then

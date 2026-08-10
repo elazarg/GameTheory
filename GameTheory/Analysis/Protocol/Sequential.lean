@@ -78,12 +78,13 @@ theorem behavioralAssessmentConvergesPointwise_const
 limit of fully mixed, Bayes-consistent behavioral assessments. -/
 def BehavioralAssessment.IsSequentiallyConsistent
     [Fintype ι] (A : M.BehavioralAssessment)
+    (hantichain : M.DecisionInformationAntichain)
     [∀ (i : ι) (site : M.InformationSite i),
       Fintype (M.InformationHistory i site.1)] : Prop :=
   A.IsLimitConsistent
     BehavioralAssessment.IsFullyMixed
     (fun assessment =>
-      BehavioralAssessment.IsBayesConsistent M assessment)
+      BehavioralAssessment.IsBayesConsistent M assessment hantichain)
     BehavioralAssessmentConvergesPointwise
 
 /-- A fully mixed assessment that already obeys finite Bayes' rule is
@@ -92,9 +93,10 @@ theorem BehavioralAssessment.IsSequentiallyConsistent.of_fullyMixed_bayes
     [Fintype ι] {A : M.BehavioralAssessment}
     [∀ (i : ι) (site : M.InformationSite i),
       Fintype (M.InformationHistory i site.1)]
+    (hantichain : M.DecisionInformationAntichain)
     (hfull : A.IsFullyMixed)
-    (hbayes : BehavioralAssessment.IsBayesConsistent M A) :
-    A.IsSequentiallyConsistent :=
+    (hbayes : BehavioralAssessment.IsBayesConsistent M A hantichain) :
+    A.IsSequentiallyConsistent hantichain :=
   ⟨fun _ => A, fun _ => ⟨hfull, hbayes⟩,
     behavioralAssessmentConvergesPointwise_const A⟩
 
@@ -104,20 +106,22 @@ def BehavioralAssessment.IsSequentialEquilibriumFor
     [Fintype ι] (A : M.BehavioralAssessment)
     [∀ (i : ι) (site : M.InformationSite i),
       Fintype (M.InformationHistory i site.1)]
+    (hantichain : M.DecisionInformationAntichain)
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context
         (M.BehavioralPolicy i) E.History) : Prop :=
-  A.IsSequentiallyRational context ∧ A.IsSequentiallyConsistent
+  A.IsSequentiallyRational context ∧ A.IsSequentiallyConsistent hantichain
 
 theorem BehavioralAssessment.isSequentialEquilibriumFor_iff
     [Fintype ι] (A : M.BehavioralAssessment)
     [∀ (i : ι) (site : M.InformationSite i),
       Fintype (M.InformationHistory i site.1)]
+    (hantichain : M.DecisionInformationAntichain)
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context
         (M.BehavioralPolicy i) E.History) :
-    A.IsSequentialEquilibriumFor context ↔
-      A.IsSequentiallyRational context ∧ A.IsSequentiallyConsistent :=
+    A.IsSequentialEquilibriumFor hantichain context ↔
+      A.IsSequentiallyRational context ∧ A.IsSequentiallyConsistent hantichain :=
   Iff.rfl
 
 end InformationModel

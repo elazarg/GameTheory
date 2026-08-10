@@ -1,6 +1,6 @@
 # D27: knapsack half approximation returns a checked feasible allocation
 
-- **Status:** adopted
+- **Status:** adopted; positive-weight premise removed 2026-08-10
 - **Date:** 2026-08-02
 - **Experiment IDs:** EXP-056
 
@@ -36,13 +36,18 @@ weight-ten/value-ninety-five singleton is better.  The checked call succeeds,
 returns some supported feasible `Finset`, and its welfare is certified within a
 factor of two of `solveList` on the same explicit list.
 
+The follow-up hostile slice adds a zero-weight, positive-value item at capacity
+zero. The checked frontend accepts it, the density sorter places it before
+positive-weight items, and it cannot be the first item rejected for exceeding
+the remaining capacity.
+
 ## Measurements
 
 | Measure | EXP-056 result |
 |---|---|
 | representative inventory | nine fractional rows plus 21 greedy/approximation rows; the predecessor never proves fractional-greedy optimality and its final theorem takes that fact as a premise |
 | Mathlib overlap | executable merge sort and permutation/pairwise lemmas are reusable; no fractional-knapsack optimality theorem was found |
-| executable assumptions | explicit duplicate-free list and strictly positive natural weights; no ambient `Fintype`, real division, or caller-trusted order |
+| executable assumptions | explicit duplicate-free list; natural weights may be zero; no ambient `Fintype`, real division, or caller-trusted order |
 | returned object | the better of an actual greedy-prefix `Finset` and an actual highest-value feasible singleton `Finset` |
 | proof route | direct natural-number exchange at the first rejected item; cross multiplication only, with no fractional allocation or cast bridge |
 | exhaustive pre-check | 3,119,265 small finite instances checked independently with no counterexample |
@@ -55,7 +60,8 @@ factor of two of `solveList` on the same explicit list.
 
 ## Kill conditions and result
 
-Reject the design if zero weights or division are hidden behind defaults; if
+Reject the design if zero weights require a division default or invalidate the
+checked guarantee; if
 sorting is noncomputable or the caller can lie about density order; if an
 overweight singleton is compared; if the theorem names only an unattained
 maximum value; if it compares against a different feasible class from the
@@ -73,7 +79,7 @@ charges the suffix to the first rejected density plus omitted prefix weight.
 ## Result and consequences
 
 `ApproximationAlgorithm` is a separately audited executable leaf.  Its
-`approximate?` rejects duplicate or zero-weight raw inputs and internally
+`approximate?` rejects duplicate raw inputs and internally
 certifies the only ordering used by the theorem.  `ApproximationCorrectness`
 owns the computation-to-proof bridge without importing the exact solver.
 `Approximation` states `approximate?_half` for every supported feasible
@@ -85,3 +91,19 @@ optimality premise.  The historical fractional intermediates are retired with
 their reason recorded; their intended approximation result survives as a
 kernel-checked theorem about the allocation the executable frontend actually
 returns.
+
+## Positive-weight premise amendment
+
+The review found that strict positivity was stronger than the direct exchange
+proof needs. At the only point where positivity enters, the first rejected
+item satisfies `remaining < weight rejected`; positivity follows immediately
+from `0 ≤ remaining`. Removing the global premise therefore changes neither
+the density comparison nor the feasible class and does not introduce division.
+
+The input checker now certifies only `items.Nodup`. The algorithm guard and
+`Experimental.PostArchitecture.KnapsackApproximation` both exercise a
+zero-weight item, while the generic theorem covers every duplicate-free list.
+Focused builds passed for the algorithm/correctness/theorem stack (828 jobs),
+the EXP-056 witness (1,738 jobs), and the public mechanism aggregator (1,771
+jobs). This narrows the adopted API without changing its architecture or
+proof/execution boundary.

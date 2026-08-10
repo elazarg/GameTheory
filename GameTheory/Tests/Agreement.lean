@@ -8,6 +8,7 @@ knowledge.
 -/
 
 import GameTheory.Epistemic.Agreement
+import GameTheory.Epistemic.ApproximateAgreement
 
 noncomputable section
 
@@ -89,3 +90,171 @@ theorem true_not_commonKnowledgeAt :
   norm_num at hagree
 
 end GameTheory.Tests.Agreement
+
+namespace GameTheory.Tests.ApproximateAgreement
+
+open GameTheory.Epistemic GameTheory.Probability
+
+/-- Three worlds supporting common `p`-belief without exact common knowledge. -/
+inductive World
+  | center
+  | left
+  | right
+  deriving DecidableEq, Fintype
+
+inductive Agent
+  | first
+  | second
+  deriving DecidableEq, Fintype
+
+/-- The center has enough mass that either two-world cell assigns it
+probability `6/7`. -/
+def skewedPrior : FinDist World :=
+  FinDist.mix (3 / 4) (by norm_num) (by norm_num)
+    (FinDist.pure .center)
+    (FinDist.mix (1 / 2) (by norm_num) (by norm_num)
+      (FinDist.pure .left) (FinDist.pure .right))
+
+theorem skewedPrior_fullSupport : skewedPrior.FullSupport := by
+  intro world
+  rw [← FinDist.prob_pos_iff]
+  cases world with
+  | center =>
+      simp [skewedPrior, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+  | left =>
+      simp [skewedPrior, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+      norm_num
+  | right =>
+      simp [skewedPrior, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+      norm_num
+
+/-- Agent `false` pools the center with the left world. -/
+def leftCell : InfoPartition World where
+  cell
+    | .center | .left => {.center, .left}
+    | .right => {.right}
+  reflexive world := by cases world <;> simp
+  coherent world other hother := by
+    cases world <;> cases other <;> simp_all
+
+/-- Agent `true` instead pools the center with the right world. -/
+def rightCell : InfoPartition World where
+  cell
+    | .center | .right => {.center, .right}
+    | .left => {.left}
+  reflexive world := by cases world <;> simp
+  coherent world other hother := by
+    cases world <;> cases other <;> simp_all
+
+def approximatePartition : Agent → InfoPartition World
+  | .first => leftCell
+  | .second => rightCell
+
+/-- The reports at the center are genuinely different: the left-pooling agent
+assigns probability `1/7` to the left world, while the right-pooling agent
+assigns probability zero. -/
+def report : Agent → ℝ
+  | .first => 1 / 7
+  | .second => 0
+
+@[simp]
+theorem center_posterior_left (agent : Agent) :
+    posterior skewedPrior (approximatePartition agent) {.left} .center =
+      report agent := by
+  cases agent with
+  | first =>
+    simp [posterior, approximatePartition, leftCell,
+      skewedPrior, report, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+    norm_num
+  | second =>
+    simp [posterior, approximatePartition, rightCell,
+      skewedPrior, report, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+
+theorem reports_distinct : report .first ≠ report .second := by
+  norm_num [report]
+
+@[simp]
+theorem center_posterior_center (agent : Agent) :
+    posterior skewedPrior (approximatePartition agent) {.center} .center =
+      6 / 7 := by
+  cases agent with
+  | first =>
+    simp [posterior, approximatePartition, leftCell,
+      skewedPrior, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+    norm_num
+  | second =>
+    simp [posterior, approximatePartition, rightCell,
+      skewedPrior, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+    norm_num
+
+theorem report_states_eq :
+    (Finset.univ.filter fun world =>
+      ∀ agent : Agent,
+        posterior skewedPrior (approximatePartition agent) {.left} world =
+          report agent) =
+      {.center} := by
+  ext world
+  cases world with
+  | center =>
+    simp [center_posterior_left]
+  | left =>
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and,
+      Finset.mem_singleton]
+    constructor
+    · intro hall
+      have hsecond := hall Agent.second
+      simp [posterior, approximatePartition, rightCell, skewedPrior,
+        report, FinDist.prob_mix, FinDist.prob_pure_eq_ite] at hsecond
+      norm_num at hsecond
+    · intro hfalse
+      exact (World.noConfusion hfalse)
+  | right =>
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and,
+      Finset.mem_singleton]
+    constructor
+    · intro hall
+      have hfirst := hall Agent.first
+      simp [posterior, approximatePartition, leftCell, skewedPrior,
+        report, FinDist.prob_mix, FinDist.prob_pure_eq_ite] at hfirst
+    · intro hfalse
+      exact (World.noConfusion hfalse)
+
+/-- At threshold `3/4`, the center singleton is `p`-evident for both agents,
+and it lies in the event where both named posterior reports are realized. -/
+theorem commonThreeQuarterBelief_reports :
+    CommonPBeliefAt skewedPrior approximatePartition (3 / 4)
+      (Finset.univ.filter fun world =>
+        ∀ agent : Agent,
+          posterior skewedPrior (approximatePartition agent) {.left} world =
+            report agent)
+      .center := by
+  refine ⟨{.center}, by simp, ?_, ?_⟩
+  · intro agent world hworld
+    simp only [Finset.mem_singleton] at hworld
+    subst world
+    rw [mem_PBelief_iff]
+    rw [center_posterior_center]
+    norm_num
+  · intro world hworld
+    simp only [Finset.mem_singleton] at hworld
+    subst world
+    rw [mem_mutualPBelief_iff]
+    intro agent
+    rw [show (Finset.univ.filter fun candidate =>
+          ∀ who : Agent,
+            posterior skewedPrior (approximatePartition who) {.left}
+                candidate = report who) = {.center} from report_states_eq]
+    rw [center_posterior_center]
+    norm_num
+
+/-- A stable `p < 1` consumer of the full approximate-agreement entry point.
+The conclusion is non-vacuous because the two reports are distinct. -/
+theorem distinct_reports_satisfy_monderer_samet_bound :
+    |report .first - report .second| ≤ 2 * (1 - (3 / 4 : ℝ)) := by
+  exact @commonPBelief_posterior_reports_close
+    World instFintypeWorld instDecidableEqWorld
+    Agent instFintypeAgent skewedPrior skewedPrior_fullSupport
+    approximatePartition {.left} .center (3 / 4)
+    (by norm_num) report commonThreeQuarterBelief_reports .first .second
+
+end GameTheory.Tests.ApproximateAgreement

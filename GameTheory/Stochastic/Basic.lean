@@ -44,25 +44,6 @@ structure StageRecord where
 /-- Reverse-chronological perfect-public-monitoring history. -/
 abbrev PublicHistory := List G.StageRecord
 
-namespace PublicHistory
-
-/-- A fixed initial state plus the proof-free stage records determines the
-current public state. -/
-def currentState (initial : G.State) : G.PublicHistory → G.State
-  | [] => initial
-  | latest :: _ => latest.target
-
-@[simp]
-theorem currentState_nil (initial : G.State) :
-    currentState G initial [] = initial := rfl
-
-@[simp]
-theorem currentState_cons (initial : G.State) (latest : G.StageRecord)
-    (prior : G.PublicHistory) :
-    currentState G initial (latest :: prior) = latest.target := rfl
-
-end PublicHistory
-
 end Game
 
 end GameTheory.Stochastic

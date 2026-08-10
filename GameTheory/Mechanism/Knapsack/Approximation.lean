@@ -178,7 +178,7 @@ private theorem welfare_le_greedy_add_rejected
 actual allocation returned by the repaired approximation algorithm. -/
 theorem welfare_le_two_mul_approximate (weight value : Agent → ℕ)
     {items : List Agent} (hitems : items.Nodup)
-    (hpositive : ∀ item ∈ items, 0 < weight item) (capacity : ℕ)
+    (capacity : ℕ)
     {selected : Finset Agent} (hsupport : selected ⊆ items.toFinset)
     (hfeasible : load weight selected ≤ capacity) :
     welfare value selected ≤
@@ -246,17 +246,14 @@ theorem welfare_le_two_mul_approximate (weight value : Agent → ℕ)
         simp
       have hrejectedEligible : rejected ∈ eligible :=
         horderedPerm.mem_iff.mp hrejectedOrdered
-      have hrejectedRaw : rejected ∈ items :=
-        ((mem_feasibleItems weight capacity items rejected).mp
-          hrejectedEligible).1
-      have hrejectedPos : 0 < weight rejected :=
-        hpositive rejected hrejectedRaw
       have hcapacity : (split.taken.map weight).sum + split.remaining = capacity := by
         simpa [split] using
           greedySplit_sum_weight_add_remaining weight ordered capacity
       have htooHeavy : split.remaining < weight rejected := by
         apply greedySplit_rejected_tooHeavy weight ordered capacity
         simpa [split] using hrejected
+      have hrejectedPos : 0 < weight rejected :=
+        lt_of_le_of_lt (Nat.zero_le split.remaining) htooHeavy
       have hexchange :
           welfare value selected ≤ welfare value greedy + value rejected := by
         simpa [greedy] using
@@ -293,21 +290,21 @@ theorem approximate?_half (weight value : Agent → ℕ) (items : List Agent)
       ∀ selected : Finset Agent, selected ⊆ items.toFinset →
         load weight selected ≤ capacity →
           welfare value selected ≤ 2 * welfare value result := by
-  have hvalid : approximationInputValid weight items = true := by
+  have hvalid : approximationInputValid items = true := by
     unfold approximate? at hresult
     split at hresult <;> rename_i hcheck
     · simpa using hcheck
     · simp at hresult
-  have hinput := (approximationInputValid_eq_true_iff weight items).mp hvalid
+  have hinput := (approximationInputValid_eq_true_iff items).mp hvalid
   have hraw : approximate weight value items capacity = result := by
     unfold approximate? at hresult
     rw [hvalid] at hresult
     simpa using hresult
   subst result
   exact ⟨approximate_subset weight value items capacity,
-    approximate_feasible weight value hinput.1 capacity,
+    approximate_feasible weight value hinput capacity,
     fun selected hsupport hfeasible =>
-      welfare_le_two_mul_approximate weight value hinput.1 hinput.2 capacity
+      welfare_le_two_mul_approximate weight value hinput capacity
         hsupport hfeasible⟩
 
 /-- The checked half approximation is within a factor of two of the exact
@@ -318,14 +315,14 @@ theorem solveList_welfare_le_two_mul_approximate? (weight value : Agent → ℕ)
     welfare value (solveList weight value items capacity) ≤
       2 * welfare value result := by
   have hguarantee := (approximate?_half weight value items capacity hresult).2.2
-  have hvalid : approximationInputValid weight items = true := by
+  have hvalid : approximationInputValid items = true := by
     unfold approximate? at hresult
     split at hresult <;> rename_i hcheck
     · simpa using hcheck
     · simp at hresult
-  have hitems := (approximationInputValid_eq_true_iff weight items).mp hvalid
+  have hitems := (approximationInputValid_eq_true_iff items).mp hvalid
   exact hguarantee (solveList weight value items capacity)
     (solveList_subset_toFinset weight value items capacity)
-    (solveList_feasible weight value hitems.1 capacity)
+    (solveList_feasible weight value hitems capacity)
 
 end GameTheory.Mechanism.Knapsack

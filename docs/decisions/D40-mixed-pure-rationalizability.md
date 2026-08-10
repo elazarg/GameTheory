@@ -1,6 +1,6 @@
 # D40: distinguish correlated, independent, and pure rationalizability
 
-- **Status:** accepted, corrected 2026-08-10
+- **Status:** accepted, terminology corrected and sharpened 2026-08-10
 - **Date:** 2026-08-09
 - **Experiment IDs:** EXP-073, EXP-076
 
@@ -13,8 +13,9 @@ represents:
   `GameTheory.IsCorrelatedRationalizable` eliminate a pure strategy when a
   `FinDist` of surviving own strategies strictly improves against every
   surviving *joint* opponents' profile;
-- `GameTheory.pureSurvivors` and `GameTheory.IsPureRationalizable` name the
-  distinct pure-dominator iteration; and
+- `GameTheory.pureSurvivors` names the distinct pure-dominator iteration and
+  `GameTheory.SurvivesAllPureEliminationRounds` names its all-round survivor
+  property without overloading “rationalizability”; and
 - independent rationalizability has no public definition until a product of
   opponents' beliefs and its finite-game characterization are implemented and
   tested.

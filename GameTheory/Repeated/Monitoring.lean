@@ -9,6 +9,12 @@ it introduces no probability measure on infinite paths.
 The central theorem gives the two equivalent recursions for a successor
 history: append the newest signal to a generated prefix, or sample the first
 signal and generate the rest under the corresponding continuation profile.
+
+This native recursion is the semantic surface for repeated public-monitoring
+payoffs and equilibria; it is not claimed to be a Protocol runner.  Consumers
+that need a finite execution/information compiler use
+`Languages.MultiRound.MonitoringGame`, whose policies also remember a player's
+own earlier actions and therefore have a deliberately richer information type.
 -/
 
 import GameTheory.Repeated.Basic

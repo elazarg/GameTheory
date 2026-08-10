@@ -1,11 +1,13 @@
 /-
 # EXP-056 witness: repaired executable knapsack approximation
 
-The deliberately hostile input includes an overweight, high-value item.  The
-checked frontend accepts the explicit positive, duplicate-free list; every
-successful result is then a feasible allocation and is within factor two of
-the exact explicit-list solver.  This records the operational boundary without
-asking the kernel to normalize a sorted finite-set value.
+The first deliberately hostile input includes an overweight, high-value item.
+The second includes a zero-weight item, which the sorter places first and the
+greedy scan can never reject for lack of capacity.  The checked frontend needs
+only duplicate freedom; every successful result is then a feasible allocation
+and is within factor two of the exact explicit-list solver.  This records the
+operational boundary without asking the kernel to normalize a sorted
+finite-set value.
 -/
 
 import GameTheory.Mechanism.Knapsack
@@ -33,6 +35,10 @@ private def hostileItems : List (Fin 5) := [0, 1, 2, 3, 4]
 private theorem hostile_frontend_succeeds :
     (approximate? hostileWeight hostileValue hostileItems 10).isSome = true := by
   norm_num [approximate?, approximationInputValid, hostileItems, hostileWeight]
+  decide
+
+private theorem zeroWeight_frontend_succeeds :
+    (approximate? (fun _ : Unit => 0) (fun _ => 1) [()] 0).isSome = true := by
   decide
 
 private theorem hostile_best_feasible_singleton :

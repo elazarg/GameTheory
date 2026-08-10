@@ -6,7 +6,8 @@ multiplicative-weights bound with Core's finite independent-self-play bridge.
 `GameTheoryMath.OnlineLearning` owns the exponential-potential algebra and
 `GameTheory.Probability.OnlineLearning` is the sole adapter that turns its
 normalized vectors into canonical `FinDist` laws.  No second regret or CCE
-predicate is introduced here.
+predicate is introduced here. The module also supplies the finite-law limit
+theorem taking convergent fictitious-play empirical beliefs to mixed Nash.
 -/
 
 import GameTheory.Core.Learning

@@ -79,6 +79,13 @@ remain explicit theorem-family work rather than being hidden by the retirement.
 New monitoring examples compile through its `execution`, `informationModel`,
 `toFOSG`, and `toGameForm`; they do not introduce alternate evaluators.
 
+This decision is scoped to the finite multi-round language constructor. It does
+not claim to replace `Repeated.PublicMonitoring`: that branch's native
+`SignalHistory` recursion is the input to repeated continuation, discounted
+payoff, and PPE theory and is not presented as a Protocol runner. A consumer
+needing own-action recall and an execution/information object uses this
+constructor; a repeated public-strategy theorem uses the repeated branch.
+
 Absent-minded-driver value theory, finite-information Kuhn correspondence, and
 generic stagewise-Nash convenience are bounded BFS continuations. A richer
 constructor for pre-action signals, heterogeneous timing, or unbounded play

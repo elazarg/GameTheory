@@ -15,7 +15,7 @@ This syntax module imports no utility, preference, solution concept, or
 Analysis module.
 -/
 
-import GameTheory.Protocol.Information
+import GameTheory.Languages.FOSG
 
 noncomputable section
 
@@ -45,6 +45,21 @@ structure Game (ι : Type uι) where
 namespace Game
 
 variable {ι : Type uι} (G : Game ι)
+
+/-- Forget the tree-shaped and single-mover certificates and view an EFG as
+the canonical factored-observation stochastic game with the same execution and
+information objects.  This is a structural projection, not a serialization or
+a second evaluator. -/
+@[reducible]
+def toFOSG : FOSG.Game ι where
+  execution := G.execution
+  information := G.information
+
+@[simp]
+theorem toFOSG_execution : G.toFOSG.execution = G.execution := rfl
+
+@[simp]
+theorem toFOSG_information : G.toFOSG.information = G.information := rfl
 
 /-- The EFG history type is the Protocol history type, definitionally. -/
 abbrev History := G.execution.History

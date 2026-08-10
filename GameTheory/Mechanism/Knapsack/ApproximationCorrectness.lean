@@ -95,12 +95,10 @@ theorem mem_feasibleItems (weight : Agent → ℕ) (capacity : ℕ)
       item ∈ items ∧ weight item ≤ capacity := by
   simp [feasibleItems]
 
-/-- A successful input check reflects duplicate freedom and positive weights. -/
-theorem approximationInputValid_eq_true_iff (weight : Agent → ℕ)
-    (items : List Agent) :
-    approximationInputValid weight items = true ↔
-      items.Nodup ∧ ∀ item ∈ items, 0 < weight item := by
-  simp [approximationInputValid, List.all_eq_true]
+/-- A successful input check reflects duplicate freedom. -/
+theorem approximationInputValid_eq_true_iff (items : List Agent) :
+    approximationInputValid items = true ↔ items.Nodup := by
+  simp [approximationInputValid]
 
 omit [DecidableEq Agent] in
 /-- The split data reconstructs the entire scanned list. -/
@@ -361,11 +359,11 @@ theorem approximate?_supported_feasible (weight value : Agent → ℕ)
   · have hraw : approximate weight value items capacity = selected := by
       simpa using hselected
     subst selected
-    have hvalidTrue : approximationInputValid weight items = true := by
+    have hvalidTrue : approximationInputValid items = true := by
       simpa using hvalid
     exact ⟨approximate_subset weight value items capacity,
       approximate_feasible weight value
-        ((approximationInputValid_eq_true_iff weight items).mp hvalidTrue).1 capacity⟩
+        ((approximationInputValid_eq_true_iff items).mp hvalidTrue) capacity⟩
   · simp at hselected
 
 end GameTheory.Mechanism.Knapsack

@@ -117,4 +117,71 @@ structure IsSimpleGame (G : CoalitionalGame Agent) : Prop where
   /-- The grand coalition is winning. -/
   grandWinning : G.value Finset.univ = 1
 
+/-- Coalitions for which `agent` is pivotal: the coalition loses without the
+agent and wins when the agent joins. -/
+noncomputable def swingCoalitions
+    (G : CoalitionalGame Agent) (agent : Agent) : Finset (Finset Agent) :=
+  (Finset.univ : Finset (Finset Agent)).filter fun coalition =>
+    agent ∉ coalition ∧ G.value coalition = 0 ∧
+      G.value (insert agent coalition) = 1
+
+/-- In a simple game, a marginal contribution is exactly the indicator of a
+swing coalition. -/
+theorem IsSimpleGame.marginalContribution_eq_swingIndicator
+    {G : CoalitionalGame Agent} (simple : G.IsSimpleGame)
+    {agent : Agent} {coalition : Finset Agent} (hnotmem : agent ∉ coalition) :
+    G.marginalContribution agent coalition =
+      if coalition ∈ G.swingCoalitions agent then 1 else 0 := by
+  rcases simple.boolean coalition with hloses | hwins
+  · rcases simple.boolean (insert agent coalition) with hjoinedLoses | hjoinedWins
+    · simp [marginalContribution, swingCoalitions, hnotmem, hloses,
+        hjoinedLoses]
+    · simp [marginalContribution, swingCoalitions, hnotmem, hloses,
+        hjoinedWins]
+  · have hjoinedWins : G.value (insert agent coalition) = 1 :=
+      simple.monotone (Finset.subset_insert agent coalition) hwins
+    simp [marginalContribution, swingCoalitions, hnotmem, hwins,
+      hjoinedWins]
+
+/-- On a simple game, the probabilistic Banzhaf value is the classical swing
+count divided by the number of coalitions of the other agents. -/
+theorem IsSimpleGame.probabilisticBanzhafValue_eq_card_swingCoalitions
+    {G : CoalitionalGame Agent} (simple : G.IsSimpleGame) (agent : Agent) :
+    G.probabilisticBanzhafValue agent =
+      (G.swingCoalitions agent).card /
+        (2 ^ (Fintype.card Agent - 1) : ℝ) := by
+  classical
+  simp only [probabilisticBanzhafValue]
+  congr 1
+  calc
+    (∑ coalition ∈
+        (Finset.univ : Finset (Finset Agent)).filter
+          (fun coalition => agent ∉ coalition),
+      G.marginalContribution agent coalition) =
+        ∑ coalition ∈
+          (Finset.univ : Finset (Finset Agent)).filter
+            (fun coalition => agent ∉ coalition),
+          if coalition ∈ G.swingCoalitions agent then (1 : ℝ) else 0 := by
+      apply Finset.sum_congr rfl
+      intro coalition hcoalition
+      exact simple.marginalContribution_eq_swingIndicator
+        (by simpa using hcoalition)
+    _ = (G.swingCoalitions agent).card := by
+      rw [← Finset.sum_filter]
+      have hfilter :
+          ((Finset.univ : Finset (Finset Agent)).filter
+              (fun coalition => agent ∉ coalition)).filter
+                (fun coalition => coalition ∈ G.swingCoalitions agent) =
+            G.swingCoalitions agent := by
+        ext coalition
+        simp [swingCoalitions]
+      rw [hfilter]
+      simp
+
+/-- A simple game bundles its Boolean and monotonicity certificate with the
+coalitional game, so simple-game-only constructions need no ignored proof
+arguments. -/
+abbrev SimpleGame (Agent : Type ua) [Fintype Agent] [DecidableEq Agent] :=
+  {G : CoalitionalGame Agent // G.IsSimpleGame}
+
 end GameTheory.CoalitionalGame

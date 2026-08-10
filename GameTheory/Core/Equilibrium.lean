@@ -192,8 +192,10 @@ recommendation. -/
 def IsCorrelatedEq (statusQuo : FinDist (Profile F.sig)) : Prop :=
   IsEquilibrium F weaklyPrefers statusQuo (DeviationScheme.recommendation F.sig)
 
-/-- A strong Nash equilibrium: no nonempty coalition has a joint replacement
-that every member strictly prefers. -/
+/-- A strong Nash equilibrium: after every nonempty coalition replacement,
+some member weakly prefers the status quo.  For total preferences this is
+equivalent to saying that no coalition replacement makes every member strictly
+better off; see `isStrongNash_iff_not_all_gain`. -/
 def IsStrongNash (profile : Profile F.sig) : Prop :=
   IsEquilibrium F (Preference.coalition weaklyPrefers) (FinDist.pure profile)
     (DeviationScheme.coalitionConstant F.sig)

@@ -353,7 +353,7 @@ Report 'FIXED_POINT_IMPORTERS' $fixedPointNamers
 
 $Concepts = @('IsEquilibrium', 'IsNash', 'IsCoarseCorrelatedEq', 'IsCorrelatedEq',
   'IsStrongNash', 'IsBestResponse', 'WeaklyDominates', 'StrictlyDominatesOn',
-  'IsDominant', 'IsCorrelatedRationalizable', 'IsPureRationalizable',
+  'IsDominant', 'IsCorrelatedRationalizable', 'SurvivesAllPureEliminationRounds',
   'IsParetoEfficient')
 $duplicates = 0
 foreach ($concept in $Concepts) {
@@ -973,7 +973,7 @@ if ($DeepReachability) {
     'GameTheory.correlatedSurvivors',
     'GameTheory.IsCorrelatedRationalizable',
     'GameTheory.pureSurvivors',
-    'GameTheory.IsPureRationalizable',
+    'GameTheory.SurvivesAllPureEliminationRounds',
     'GameTheory.IsNash.isCorrelatedRationalizable')
   $rationalizabilityBoundary = @(
     'GameTheory.Finite.TableGame',
@@ -1202,13 +1202,13 @@ if ($DeepReachability) {
   # independent of both game semantics and the canonical law adapter.
   $mathApproachabilityInputs = @(
     'GameTheoryMath.Approachability.sq_infDist_avg_le',
-    'GameTheoryMath.Approachability.orthantProj',
-    'GameTheoryMath.Approachability.infDist_eq_norm_sub_orthantProj')
+    'GameTheoryMath.OrthantProjection.orthantProj',
+    'GameTheoryMath.OrthantProjection.infDist_eq_norm_sub_orthantProj')
   $mathApproachabilityBoundary = @(
     'GameTheory.UtilityGame',
     'GameTheory.Probability.FinDist')
   $mathApproachabilityOutput =
-    Run-Probe 'GameTheoryMath.ApproachabilityRegret' `
+    Run-Probe 'GameTheoryMath.Approachability' `
       ($mathApproachabilityInputs + $mathApproachabilityBoundary)
   $mathApproachabilityInputsReached = 0
   foreach ($constant in $mathApproachabilityInputs) {

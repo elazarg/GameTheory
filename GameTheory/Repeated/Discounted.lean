@@ -244,16 +244,8 @@ theorem discountedPayoff_le_of_forall_stagePayoff_le
     hdiscount0 hdiscount1 who hbound (profile := first)
   have hsecond := G.summable_discounted_stagePayoff_of_abs_bound
     hdiscount0 hdiscount1 who hbound (profile := second)
-  have hsum :
-      (∑' t : ℕ,
-        discount ^ t * G.stagePayoff (G.repeatedPlay first t) who) ≤
-      ∑' t : ℕ,
-        discount ^ t * G.stagePayoff (G.repeatedPlay second t) who := by
-    exact hfirst.tsum_le_tsum
-      (fun t => mul_le_mul_of_nonneg_left (hle t)
-        (pow_nonneg hdiscount0 t))
-      hsecond
-  exact mul_le_mul_of_nonneg_left hsum (sub_nonneg.mpr hdiscount1.le)
+  exact GameTheoryMath.normalizedDiscountedSum_le hdiscount0 hdiscount1
+    hfirst hsecond hle
 
 /-- Stationary repetition has the same normalized discounted payoff as its
 stage profile. -/

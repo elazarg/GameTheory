@@ -3,7 +3,7 @@
 
 Public entry point for the validated general MAID API.
 
-The concrete three-node architecture witness lives explicitly under
+The concrete three-node validation fixture lives explicitly under
 `GameTheory.Experimental.PostArchitecture.MAIDThreeNodeWitness`.
 -/
 

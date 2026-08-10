@@ -77,9 +77,17 @@ becomes difficult to scan.
 | EXP-064 | 2026-08-03 | D5/D11 / repeated public monitoring | Can finite-prefix signal laws support canonical PPE and the bounded one-shot-deviation principle without an infinite-path law? | Supports; closes the public-monitoring equilibrium waist | `GameTheory/Repeated/Monitoring*.lean`; `GameTheory/Tests/MonitoringEquilibrium.lean`; [`SupportEvidenceMatrix.md`](SupportEvidenceMatrix.md) |
 | EXP-065 | 2026-08-03 | D0/D2/D4/D9 / finite contracts | Does hidden-action contract theory earn a native finite-support principal-agent branch, with an explicit outside option, rather than a one-player `GameForm` or an auction specialization? | Supports native ownership; decides D32 | [`decisions/D32-principal-agent-contract-ownership.md`](decisions/D32-principal-agent-contract-ownership.md); `GameTheory/Experimental/PostArchitecture/ContractOwnership.lean` |
 | EXP-066 | 2026-08-08 | D4/D5/D8/D9 / quasilinear mechanisms | Does weak monotonicity and its affine/Myerson consumers need a capability-free native quasilinear direct-mechanism owner, rather than overloading Groves-specific `VCGSetup` or outcome-generic `BayesianMechanism`? | Supports native ownership with canonical-IC compilation; decides D33 | [`decisions/D33-quasilinear-direct-mechanism-ownership.md`](decisions/D33-quasilinear-direct-mechanism-ownership.md); `GameTheory/Experimental/PostArchitecture/QuasiLinearMechanismOwnership.lean` |
+| EXP-067 | 2026-08-09 | D34 / finite fair division | Does finite indivisible allocation merit a native capability-light owner? | Supports; decides D34 | [`decisions/D34-finite-fair-division-ownership.md`](decisions/D34-finite-fair-division-ownership.md); `GameTheory/Mechanism/FairDivision/` |
+| EXP-068 | 2026-08-09 | D35 / stable matching | Does ordinal one-to-one matching merit a native owner and executable DA bridge? | Supports; decides D35 | [`decisions/D35-native-ordinal-matching.md`](decisions/D35-native-ordinal-matching.md); `GameTheory/Cooperative/StableMatching.lean` |
+| EXP-069 | 2026-08-09 | D36 / bargaining | Can topology-free bargaining semantics remain independent of existence analysis? | Supports; decides D36 | [`decisions/D36-native-bargaining.md`](decisions/D36-native-bargaining.md); `GameTheory/Cooperative/Bargaining.lean` |
+| EXP-070 | 2026-08-09 | D37 / multi-round monitoring | Can imperfect monitoring compile directly to Protocol/FOSG without a second runner? | Supports; decides D37 | [`decisions/D37-canonical-multi-round-monitoring.md`](decisions/D37-canonical-multi-round-monitoring.md); `GameTheory/Languages/MultiRound/` |
+| EXP-071 | 2026-08-09 | D38 / equilibrium refinements | Does trembling-hand perfection belong in one-way Analysis over canonical mixed Nash? | Supports; decides D38 | [`decisions/D38-trembling-hand-boundary.md`](decisions/D38-trembling-hand-boundary.md); `GameTheory/Analysis/TremblingHand.lean` |
 | EXP-072 | 2026-08-09 | D12/D22/D23 / general-sum discounted stochastic games | Can finite Fink existence use the canonical stochastic, probability, equilibrium, and fixed-point owners without the sibling's legacy closure? | Supports one-way Analysis bridge; decides D39 | [`decisions/D39-general-sum-discounted-stochastic-equilibrium.md`](decisions/D39-general-sum-discounted-stochastic-equilibrium.md); `GameTheory/Analysis/Stochastic/Fink.lean`; `GameTheoryMath/PositivePartFixedPoint.lean` |
+| EXP-073 | 2026-08-09 | D40 / rationalizability | What survivor notion does joint-opponent mixed dominance compute? | Narrows; terminology corrected by EXP-076 | [`decisions/D40-mixed-pure-rationalizability.md`](decisions/D40-mixed-pure-rationalizability.md); `GameTheory/Core/Response.lean` |
 | EXP-074 | 2026-08-09 | D2/D4 / finite-law VNM | Can binary mixture independence yield the finite-outcome representation theorem through public `FinDist` alone? | Supports after rejecting zero-weight independence; decides D41 | [`decisions/D41-finite-law-vnm.md`](decisions/D41-finite-law-vnm.md); `GameTheory/Experimental/PostArchitecture/VNMFiniteSupport.lean`; `GameTheory/Core/VNM.lean`; `GameTheory/Tests/VNM.lean` |
 | EXP-075 | 2026-08-09 | D6 / imperfect-information subgames | Does the existing historywise optimality predicate coincide with textbook SPE when an information set crosses a candidate subtree? | Rejects the old name; decides D42 | [`decisions/D42-imperfect-information-subgames.md`](decisions/D42-imperfect-information-subgames.md); `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Tests/SubgameRoots.lean` |
+| EXP-076 | 2026-08-10 | D40 / rationalizability terminology | Is joint-opponent mixed dominance independent or correlated rationalizability? | Corrects D40 to correlated rationalizability | [`decisions/D40-mixed-pure-rationalizability.md`](decisions/D40-mixed-pure-rationalizability.md); `GameTheory/Tests/Rationalizability.lean` |
+| EXP-077 | 2026-08-10 | D6/D12 / finite sequential semantics | Must one-shot fuel track history depth, and when is normalized history mass a Bayes fiber? | Narrows both contracts; hostile regressions pass | `GameTheory/Protocol/{Assessment,BehavioralAssessment,Information}.lean`; `GameTheory/Tests/Assessment.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
 
 ## Entry template
 
@@ -3714,6 +3722,13 @@ memory.
   retain a separately audited natural executable leaf, structural correctness
   leaf, and ratio theorem about the returned allocation.  Exact Myerson
   payment remains behind M-BAYES/D11.  Return to the next DFS delivery gate.
+- **2026-08-10 follow-up:** the original run rejected zero-weight inputs, as
+  recorded above. A proof audit showed the global positive-weight premise was
+  unnecessary: the only rejected-item use derives positivity from
+  `remaining < weight`. The checker now requires only duplicate freedom, the
+  generic half bound accepts zero weights, and a zero-weight hostile guard and
+  EXP-056 witness build. D27 records this proof-driven narrowing without
+  rewriting the original experiment observation.
 
 ### EXP-057: FOSG observation ownership and native Kuhn retirement
 
@@ -4706,7 +4721,9 @@ memory.
 - **Outcome / next action:** the implementation and hostile separation remain
   valid.  EXP-076 corrects the public interpretation: the joint-opponent
   mixed-dominator iteration is correlated rationalizability, not the
-  Bernheim--Pearce independent-belief notion.
+  Bernheim--Pearce independent-belief notion. A subsequent terminology audit
+  also renamed the pure predicate to `SurvivesAllPureEliminationRounds`; the
+  original prediction above is retained as the experiment's historical claim.
 
 ### EXP-074: finite-law VNM representation waist
 
@@ -4831,3 +4848,51 @@ memory.
 - **Outcome / next action:** correct D40 and the architecture/capability
   records.  Keep independent rationalizability as an explicit delivery seam
   requiring a product-belief representation and a hostile three-player test.
+
+### EXP-077: finite-horizon one-shot depth and Bayes fibers
+
+- **Date / revision:** 2026-08-10, reserved on `e5548ae`
+- **Status:** complete; narrows the D6/D12 sequential contracts
+- **Decision / question:** D6/D12; whether finite-horizon one-shot optimality
+  may quantify the continuation budget independently of history depth, and
+  whether normalized history reach mass is Bayes conditioning without an
+  antichain premise on the information fiber.
+- **Prediction:** both public contracts need narrowing.  One-shot optimality
+  should compare deviations only at histories whose depth plus remaining fuel
+  is the compiled horizon.  Bayes consistency should request the exact
+  decision-fiber antichain property, with perfect recall proved sufficient.
+- **Representative slice:** the chance-rooted stopping game in
+  `Tests.EFGZermelo`, where the first decision can exit for `5` or continue to
+  a second decision, together with the hidden-state EFG assessment fiber.
+- **Competing designs:** retain the stronger truncated-payoff predicate;
+  couple history depth to the remaining horizon; require truncation-consistent
+  payoff.  For beliefs, document occupancy frequencies under the Bayes name;
+  require perfect recall directly; or require the minimal antichain property
+  and derive it from perfect recall.
+- **Kill conditions:** the depth-coupled predicate cannot still prove the
+  finite-horizon whole-policy/Nash bridge; the hostile stopping profile remains
+  uninhabited; the antichain property needs language syntax or stored recall;
+  or the correction introduces a second runner, belief carrier, or equilibrium
+  predicate.
+- **Evidence:** `IsOneShotOptimalWithin` now requires
+  `trace.length + fuel + 1 = horizon`; the whole-policy induction carries the
+  matching `trace.length + fuel = horizon` invariant. `Tests.Assessment`
+  checks the two valid decision depths, rejects both swapped fuel values, and
+  proves that early exit is absorbing. `DecisionInformationAntichain` is the
+  exact premise of Bayes consistency, while
+  `decisionInformationAntichain_of_perfectRecall` derives it from Protocol
+  recall. The hostile EFG threads that certificate through a concrete
+  sequential-equilibrium witness.
+- **Observation:** the depth-coupled premise still proves the arbitrary-policy
+  comparison and compiled Nash theorem. The minimal Bayes premise is strictly
+  below stored recall and needs no language syntax or new belief carrier. The
+  occupancy-mass helper remains public under an honest non-Bayesian name.
+- **Validation:** focused builds passed for `GameTheory.Protocol.Information`,
+  `GameTheory.Protocol.Assessment`, `GameTheory.Tests.Assessment`,
+  `GameTheory.Analysis.Protocol.Sequential`, and
+  `GameTheory.Analysis.Protocol.EFGTest`; the assessment regression completed
+  warning-free in 1,736 jobs.
+- **Outcome / next action:** narrow D6's finite-horizon contract and D12's
+  sequential-consistency premise as measured above. No kill condition fired;
+  retain perfect recall as a convenient sufficient certificate, not as stored
+  Bayes data.

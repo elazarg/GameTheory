@@ -4,7 +4,8 @@
   interface, finite-first trees retained as a derived presentation
 - **Date:** 2026-07-27
 - **Experiment IDs:** EXP-010, EXP-011, EXP-012; post-decision evidence
-  EXP-016, EXP-017, EXP-018, EXP-021, EXP-025, EXP-029, EXP-030, EXP-033
+  EXP-016, EXP-017, EXP-018, EXP-021, EXP-025, EXP-029, EXP-030, EXP-033,
+  EXP-077
 
 **Decision:** Execution and information are separate interfaces. The primary
 execution interface is the general-state `ExecutionProtocol`. The finite-first
@@ -135,8 +136,12 @@ finite-horizon information-local one-shot theorem proves that local one-shot
 optimality at every history defeats every whole replacement policy, and its
 compiler corollary is ordinary static `IsNash`. The actual history continuation
 is packaged as `historyContext`, and the quantified premise is equivalent to
-`IsSequentiallyRationalAt` in that context at every history and remaining
-horizon.
+`IsSequentiallyRationalAt` in that context at every history whose trace depth
+plus remaining continuation fuel is exactly the compiled horizon. EXP-077
+rejects the earlier depth-independent wording: in a stopping game it evaluated
+one history at incompatible total depths. The corrected induction carries this
+depth equation and still reaches arbitrary-policy comparison and compiled Nash;
+early terminal histories remain absorbing and create no fictitious decision.
 
 The remaining SPE-style theorem does not reopen D6. There is no public
 subgame-perfect-equilibrium predicate or full well-founded

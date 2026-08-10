@@ -142,6 +142,19 @@ theorem rescaled_is_positiveAffine :
   · intro agent outcome
     fin_cases outcome <;> norm_num [utility, Fin.ext_iff]
 
+/-- The finite convenience theorem selects its own extrema; the caller only
+supplies a strict comparison witnessing nonconstant utility. -/
+theorem rescaled_is_positiveAffine_without_endpoint_arguments :
+    ∃ (scale shift : Unit → ℝ),
+      (∀ agent, 0 < scale agent) ∧
+        ∀ outcome agent,
+          rescaledUtility outcome agent =
+            scale agent * utility outcome agent + shift agent := by
+  apply Preference.representsExpectedUtility_unique_positiveAffine_of_finite
+    eu_represents rescaled_represents
+  intro agent
+  exact ⟨2, 0, by norm_num [utility, Fin.ext_iff]⟩
+
 def lexicographic : WeakPreference Unit (Fin 3) := fun _ first second =>
   first.prob 0 > second.prob 0 ∨
     first.prob 0 = second.prob 0 ∧ first.prob 1 ≥ second.prob 1

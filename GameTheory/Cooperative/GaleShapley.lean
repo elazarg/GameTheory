@@ -532,7 +532,7 @@ theorem no_blocking_at_fixedPoint
 
 /-! ## Public deferred-acceptance result -/
 
-/-- Rejection state at the first classically selected fixed iterate. -/
+/-- Rejection state at a classically selected fixed iterate. -/
 noncomputable def daFixedPoint
     (linear : market.HasLinearPreferences) : Left → Finset Right :=
   (market.daStep linear)^[Classical.choose

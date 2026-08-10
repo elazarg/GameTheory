@@ -76,7 +76,7 @@ def betterAllocation (value : Agent → ℕ)
     (left right : Finset Agent) : Finset Agent :=
   if welfare value right ≤ welfare value left then left else right
 
-/-- Executable repaired half-approximation candidate.
+/-- Executable half-approximation candidate.
 
 The algorithm filters overweight items, sorts the remaining explicit list by
 the division-free density comparison, computes the stop-at-first-failure
@@ -90,18 +90,18 @@ def approximate (weight value : Agent → ℕ) (items : List Agent)
   let singleton := singletonAllocation (bestItem? value eligible)
   betterAllocation value greedy singleton
 
-/-- Executable validation for the approximation theorem's raw-input
-requirements.  Density order itself is produced internally by the verified
-sorter rather than trusted from the caller. -/
-def approximationInputValid (weight : Agent → ℕ) (items : List Agent) : Bool :=
-  decide items.Nodup && items.all fun item => decide (0 < weight item)
+/-- Executable validation for the approximation theorem's sole raw-input
+requirement.  Density order is produced internally, and zero-weight items are
+handled by the comparison and can never be the first item rejected for lack
+of capacity. -/
+def approximationInputValid (items : List Agent) : Bool :=
+  decide items.Nodup
 
-/-- Checked executable approximation frontend.  Invalid duplicate or
-zero-weight inputs return `none`; every successful result is an actual
-allocation. -/
+/-- Checked executable approximation frontend.  Duplicate inputs return
+`none`; every successful result is an actual allocation. -/
 def approximate? (weight value : Agent → ℕ) (items : List Agent)
     (capacity : ℕ) : Option (Finset Agent) :=
-  if approximationInputValid weight items then
+  if approximationInputValid items then
     some (approximate weight value items capacity)
   else
     none
@@ -127,5 +127,9 @@ private def exampleValue : ℕ → ℕ
       (decide (0 ∈ result), decide (3 ∈ result),
         welfare exampleValue result, result.card)) =
   some (false, true, 95, 1)
+
+-- Zero-weight items are valid inputs and do not narrow the checked
+-- half-approximation frontend.
+#guard (approximate? (fun _ : Unit => 0) (fun _ => 1) [()] 0).isSome
 
 end GameTheory.Mechanism.Knapsack

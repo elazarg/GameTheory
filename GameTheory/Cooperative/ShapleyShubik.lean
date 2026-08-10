@@ -19,22 +19,21 @@ variable {Agent : Type ua} [Fintype Agent] [DecidableEq Agent]
 
 /-- The Shapley--Shubik power index of a simple game. -/
 noncomputable def shapleyShubikIndex
-    (G : CoalitionalGame Agent) (_simple : G.IsSimpleGame) : Allocation Agent :=
-  G.shapleyValue
+    (G : SimpleGame Agent) : Allocation Agent :=
+  G.1.shapleyValue
 
 /-- Shapley--Shubik power is efficient. -/
 theorem shapleyShubikIndex_sum_eq_one
-    (G : CoalitionalGame Agent) (simple : G.IsSimpleGame) :
-    ∑ agent, G.shapleyShubikIndex simple agent = 1 := by
+    (G : SimpleGame Agent) :
+    ∑ agent, shapleyShubikIndex G agent = 1 := by
   simp only [shapleyShubikIndex]
-  rw [G.shapleyValue_efficient, simple.grandWinning]
+  rw [G.1.shapleyValue_efficient, G.2.grandWinning]
 
 /-- A null agent has zero Shapley--Shubik power. -/
 theorem shapleyShubikIndex_null
-    (G : CoalitionalGame Agent) (simple : G.IsSimpleGame)
-    {agent : Agent} (hnull : G.IsNull agent) :
-    G.shapleyShubikIndex simple agent = 0 := by
-  exact G.shapleyValue_null hnull
+    (G : SimpleGame Agent) {agent : Agent} (hnull : G.1.IsNull agent) :
+    shapleyShubikIndex G agent = 0 := by
+  exact G.1.shapleyValue_null hnull
 
 /-- An agent has Banzhaf value one in their singleton unanimity game. -/
 theorem unanimityGame_singleton_probabilisticBanzhafValue (agent : Agent) :

@@ -67,8 +67,12 @@ namespace QuasiLinear
 
 variable {G : UtilityGame ι} (ql : QuasiLinear G)
 
-/-- Every realized allocation gives each bidder nonnegative utility. -/
-def IsExPostIR : Prop :=
+/-- Every outcome in the game form gives each bidder nonnegative utility.
+
+This deliberately quantifies over arbitrary outcomes, not truthful reports or
+type profiles, so it is stronger than the standard ex-post individual
+rationality predicate owned by `BayesianMechanism`. -/
+def HasNonnegativeUtilityAtEveryOutcome : Prop :=
   ∀ outcome bidder, ql.payment outcome bidder ≤ ql.valuation bidder (ql.allocation outcome)
 
 /-- Transfers are never paid to bidders. -/

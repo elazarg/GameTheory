@@ -658,7 +658,8 @@ be disguised as degenerate instances of `IsEquilibrium`:
   profile-quantified predicates;
 - EXP-073/EXP-076/D40 distinguishes correlated-belief mixed-dominator
   elimination (`correlatedSurvivors`, `IsCorrelatedRationalizable`) from the
-  pure-dominator iteration (`pureSurvivors`, `IsPureRationalizable`).  The
+  pure-dominator iteration (`pureSurvivors`,
+  `SurvivesAllPureEliminationRounds`).  The
   Bernheim--Pearce independent-belief notion is not represented by an
   unqualified alias;
 - `IsIndividuallyRational F utility reservation profile` compares an explicit

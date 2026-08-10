@@ -111,11 +111,12 @@ def pureSurvivors : ℕ → ∀ j, Set (F.sig.Strategy j)
       ∀ t ∈ pureSurvivors n j,
         ¬ StrictlyDominatesOn F weaklyPrefers j (pureSurvivors n) t s}
 
-/-- Pure rationalizability: survival of every round of elimination by pure
-strict dominators. Mixed-dominator rationalizability is a distinct iteration
-in `GameTheory.Core.Rationalizability`; no all-round inclusion is asserted
-without the hypotheses needed to replace eliminated dominators. -/
-def IsPureRationalizable (who : ι) (s : F.sig.Strategy who) : Prop :=
+/-- Survival of every round of elimination by pure strict dominators.
+This is named for the elimination procedure rather than “rationalizability”:
+the standard epistemic notions use mixed dominators or best responses to
+beliefs and are distinct. -/
+def SurvivesAllPureEliminationRounds (who : ι)
+    (s : F.sig.Strategy who) : Prop :=
   ∀ round, s ∈ pureSurvivors F weaklyPrefers round who
 
 /-- A strict expected-utility Nash equilibrium: every genuine unilateral
@@ -379,10 +380,11 @@ theorem IsNash.survivesPure {profile : Profile F.sig}
     rw [Profile.update_eq_self] at hstrict
     exact hstrict.2 ((isNash_iff profile).1 hnash j t)
 
-/-- Every strategy in a Nash equilibrium is pure-rationalizable. -/
-theorem IsNash.isPureRationalizable {profile : Profile F.sig}
+/-- Every strategy in a Nash equilibrium survives every pure-elimination
+round. -/
+theorem IsNash.survivesAllPureEliminationRounds {profile : Profile F.sig}
     (hnash : IsNash F weaklyPrefers profile) (who : ι) :
-    IsPureRationalizable F weaklyPrefers who (profile who) :=
+    SurvivesAllPureEliminationRounds F weaklyPrefers who (profile who) :=
   fun round => hnash.survivesPure round who
 
 /-- Every action in a dominant profile survives pure elimination. -/
@@ -391,15 +393,15 @@ theorem dominantProfile_survivesPure (profile : Profile F.sig)
     ∀ round who, profile who ∈ pureSurvivors F weaklyPrefers round who :=
   hdom.isNash.survivesPure
 
-/-- A dominant action is pure-rationalizable when the other players can be
-filled out by dominant actions. -/
-theorem IsDominant.isPureRationalizable
+/-- A dominant action survives every pure-elimination round when the other
+players can be filled out by dominant actions. -/
+theorem IsDominant.survivesAllPureEliminationRounds
     {who : ι} {strategy : F.sig.Strategy who}
     (hdom : IsDominant F weaklyPrefers who strategy)
     (base : Profile F.sig)
     (hother : ∀ player, player ≠ who →
       IsDominant F weaklyPrefers player (base player)) :
-    IsPureRationalizable F weaklyPrefers who strategy := by
+    SurvivesAllPureEliminationRounds F weaklyPrefers who strategy := by
   let profile := Profile.update base who strategy
   have hall : IsDominantProfile F weaklyPrefers profile := by
     intro player
@@ -417,8 +419,8 @@ theorem IsDominant.isPureRationalizable
 /-! ## Elimination eliminates
 
 `pureSurvivors` is a definition; the facts below are what make it the *right* one.
-A strategy that something available beats strictly is gone after one round, an
-unconditionally dominated strategy is never rationalizable at all, and no
+A strategy that something available beats strictly is gone after one round,
+an unconditionally dominated strategy cannot survive every round, and no
 equilibrium ever plays one. -/
 
 /-- **One round removes what it should.** If a strategy still available strictly
@@ -433,13 +435,13 @@ theorem not_mem_pureSurvivors_succ_of_strictlyDominatesOn
     alternative ∉ pureSurvivors F weaklyPrefers (round + 1) who :=
   fun hmem => hmem.2 preferred hpreferred hdom
 
-/-- **A strictly dominated strategy is never pure-rationalizable**, and nothing is
-assumed about the strategy that beats it — the first round already allows
-everything, so the elimination fires there. -/
-theorem StrictlyDominates.not_isPureRationalizable {who : ι}
+/-- **A strictly dominated strategy cannot survive every pure-elimination
+round**, and nothing is assumed about the strategy that beats it — the first
+round already allows everything, so the elimination fires there. -/
+theorem StrictlyDominates.not_survivesAllPureEliminationRounds {who : ι}
     {preferred alternative : F.sig.Strategy who}
     (hdom : StrictlyDominates F weaklyPrefers who preferred alternative) :
-    ¬ IsPureRationalizable F weaklyPrefers who alternative := fun hrat =>
+    ¬ SurvivesAllPureEliminationRounds F weaklyPrefers who alternative := fun hrat =>
   not_mem_pureSurvivors_succ_of_strictlyDominatesOn (round := 0)
     (Set.mem_univ preferred)
     (hdom.strictlyDominatesOn _) (hrat 1)
@@ -459,7 +461,8 @@ removes the dominated. -/
 theorem IsNash.not_strictlyDominates {profile : Profile F.sig} {who : ι}
     {preferred : F.sig.Strategy who} (hnash : IsNash F weaklyPrefers profile) :
     ¬ StrictlyDominates F weaklyPrefers who preferred (profile who) := fun hdom =>
-  hdom.not_isPureRationalizable (hnash.isPureRationalizable who)
+  hdom.not_survivesAllPureEliminationRounds
+    (hnash.survivesAllPureEliminationRounds who)
 
 /-! ## Dominance orders the strategies
 
@@ -581,8 +584,9 @@ theorem ParetoDominates.irrefl (profile : Profile F.sig) :
 variable (F weaklyPrefers) in
 /-- Everyone is strictly better off under `better`. This is the comparison a
 coalition of *all* players can act on, which is why it is what an equilibrium
-against coalitions rules out — Pareto domination proper, which lets some players
-be indifferent, is a strictly stronger demand and is not ruled out. -/
+against coalitions rules out. Pareto domination proper permits some players to
+be indifferent, so it is a weaker comparison and can hold even when this one
+does not. -/
 def StrictlyParetoDominates (better worse : Profile F.sig) : Prop :=
   ∀ i, Preference.strict weaklyPrefers i (F.play better) (F.play worse)
 

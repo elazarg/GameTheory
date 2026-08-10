@@ -41,6 +41,36 @@ def InformationSite (i : ι) :=
       ¬ E.terminal history.1.state ∧
         ∃ action : E.Action i, some action ∈ M.menu i info }
 
+/-- Histories in one decision information fiber form an antichain: if one can
+continue to another, they were already the same history.  This is the minimal
+semantic premise under which summing their reach probabilities describes the
+probability of a disjoint information event. -/
+def InformationSite.IsHistoryAntichain {i : ι}
+    (site : M.InformationSite i) : Prop :=
+  ∀ (first second : M.InformationHistory i site.1)
+    (joint : ∀ j, Option (E.Action j))
+    (isLegal : E.Legal first.1.state joint) (reached : E.State)
+    (realized : reached ∈ (E.step first.1.state ⟨joint, isLegal⟩).support)
+    (fuel : ℕ),
+    ¬ E.ReachesWithin fuel (first.1.extend isLegal realized) second.1
+
+/-- Every reached decision information fiber is a history antichain. -/
+def DecisionInformationAntichain : Prop :=
+  ∀ (i : ι) (site : M.InformationSite i), site.IsHistoryAntichain
+
+/-- Perfect recall is sufficient for the exact antichain premise used by
+finite Bayes conditioning. -/
+theorem decisionInformationAntichain_of_perfectRecall
+    (hrecall : M.PerfectRecall) : M.DecisionInformationAntichain := by
+  intro i site first second joint isLegal reached realized fuel hreach
+  obtain ⟨_witness, _hnonterminal, action, haction⟩ := site.2
+  have hmenu : some action ∈ M.menu i (M.infoOf i first.1.trace) := by
+    simpa only [first.2] using haction
+  have hactive : E.active first.1.state i :=
+    ((M.menu_adequate i first.1.trace (some action)).mp hmenu).1
+  exact (M.infoOf_ne_of_perfectRecall_after_step hrecall i isLegal
+    realized hactive hreach) (second.2.trans first.2.symm)
+
 /-- A complete decision history determines an information site. -/
 def informationSite (i : ι) (history : E.History) (action : E.Action i)
     (hnonterminal : ¬ E.terminal history.state)
@@ -193,7 +223,9 @@ def historyReachProbability
     (history : E.History) : ℝ :=
   (M.runBehavioral strategy history.trace.length).prob history
 
-/-- Total reach probability of the histories in one finite information set. -/
+/-- Total reach probability of the histories in one finite information fiber.
+It is the probability of the information event when the fiber is a history
+antichain; without that premise it is an occupancy mass and may exceed one. -/
 def informationMass
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (i : ι) (site : M.InformationSite i)
@@ -202,11 +234,14 @@ def informationMass
     M.historyReachProbability strategy history
 
 /-- The Bayes belief obtained by normalizing history reach probabilities at an
-information site of positive mass. -/
+antichain information site of positive mass.  The antichain certificate rules
+out nested history events; it is logically load-bearing for the Bayes
+interpretation even though normalization itself only uses positivity. -/
 def bayesBelief
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (i : ι) (site : M.InformationSite i)
     [Fintype (M.InformationHistory i site.1)]
+    (_hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy i site) :
     FinDist (M.InformationHistory i site.1) :=
   FinDist.ofWeights
@@ -226,9 +261,10 @@ theorem bayesBelief_prob
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (i : ι) (site : M.InformationSite i)
     [Fintype (M.InformationHistory i site.1)]
+    (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy i site)
     (history : M.InformationHistory i site.1) :
-    (M.bayesBelief strategy i site hmass).prob history =
+    (M.bayesBelief strategy i site hantichain hmass).prob history =
       M.historyReachProbability strategy history /
         M.informationMass strategy i site :=
   FinDist.prob_ofWeights _ _ _ _
@@ -239,6 +275,7 @@ def BehavioralAssessment.IsBayesConsistentAt
     (A : M.BehavioralAssessment)
     (i : ι) (site : M.InformationSite i)
     [Fintype (M.InformationHistory i site.1)]
+    (_hantichain : site.IsHistoryAntichain)
     (_hmass : 0 < M.informationMass A.strategy i site) : Prop :=
   ∀ history : M.InformationHistory i site.1,
     (A.belief i site).prob history =
@@ -250,11 +287,13 @@ capability of this operation, not stored in the information model or
 assessment; zero-mass beliefs remain unrestricted. -/
 def BehavioralAssessment.IsBayesConsistent
     (A : M.BehavioralAssessment)
+    (hantichain : M.DecisionInformationAntichain)
     [∀ (i : ι) (site : M.InformationSite i),
       Fintype (M.InformationHistory i site.1)] : Prop :=
   ∀ (i : ι) (site : M.InformationSite i),
     ∀ hmass : 0 < M.informationMass A.strategy i site,
-      BehavioralAssessment.IsBayesConsistentAt (M := M) A i site hmass
+      BehavioralAssessment.IsBayesConsistentAt (M := M) A i site
+        (hantichain i site) hmass
 
 end Bayes
 

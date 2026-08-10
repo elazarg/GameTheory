@@ -533,6 +533,36 @@ theorem informationSite_eq_actingSite
     site = actingSite :=
   Subtype.ext (informationSite_info_eq_acting site)
 
+/-- The two hidden decision histories are simultaneous alternatives, never a
+history and its own continuation.  Hence normalized reach mass at the unique
+decision site is genuine Bayes conditioning even though the terminal view does
+not retain the player's action and the whole model need not satisfy perfect
+recall. -/
+theorem information_decisionInformationAntichain :
+    information.DecisionInformationAntichain := by
+  intro who site
+  cases who
+  intro first second joint isLegal reached realized fuel hreach
+  have hfirstInfo :
+      information.infoOf .player first.1.trace = View.acting := by
+    simpa [informationSite_info_eq_acting site] using first.2
+  have hsecondInfo :
+      information.infoOf .player second.1.trace = View.acting := by
+    simpa [informationSite_info_eq_acting site] using second.2
+  obtain ⟨firstHidden, hfirst⟩ :=
+    history_eq_decisionHistory_of_info_acting first.1 hfirstInfo
+  obtain ⟨secondHidden, hsecond⟩ :=
+    history_eq_decisionHistory_of_info_acting second.1 hsecondInfo
+  have hfirstLength : first.1.trace.length = 1 := by
+    rw [hfirst]
+    rfl
+  have hsecondLength : second.1.trace.length = 1 := by
+    rw [hsecond]
+    rfl
+  have hlength := hreach.trace_length_le
+  have hlength' : first.1.trace.length + 1 ≤ second.1.trace.length := hlength
+  omega
+
 theorem informationMass_fullyMixed_pos
     (site : information.InformationSite .player) :
     0 < information.informationMass
@@ -658,6 +688,7 @@ def fullyMixedAssessment : information.BehavioralAssessment where
   belief := fun who site => by
     cases who
     exact information.bayesBelief fullyMixedBehavioralProfile .player site
+      (information_decisionInformationAntichain .player site)
       (informationMass_fullyMixed_pos site)
 
 theorem fullyMixedAssessment_isFullyMixed :
@@ -668,10 +699,13 @@ theorem fullyMixedAssessment_isFullyMixed :
   exact fullyMixedBehavioralPolicy_fullSupport .acting
 
 theorem fullyMixedAssessment_isBayesConsistent :
-    fullyMixedAssessment.IsBayesConsistent := by
+    InformationModel.BehavioralAssessment.IsBayesConsistent information
+      fullyMixedAssessment
+      information_decisionInformationAntichain := by
   intro who site _hmass history
   cases who
   exact information.bayesBelief_prob fullyMixedBehavioralProfile .player site
+    (information_decisionInformationAntichain .player site)
     (informationMass_fullyMixed_pos site) history
 
 /-- At the unique acting site, the canonical normalized Bayes belief is the
@@ -750,9 +784,11 @@ theorem fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff :
     continuationContext_matchingPayoff_value]
 
 theorem fullyMixedAssessment_isSequentiallyConsistent :
-    game.IsSequentiallyConsistent fullyMixedAssessment := by
+    game.IsSequentiallyConsistent information_decisionInformationAntichain
+      fullyMixedAssessment := by
   exact
     InformationModel.BehavioralAssessment.IsSequentiallyConsistent.of_fullyMixed_bayes
+      information_decisionInformationAntichain
       fullyMixedAssessment_isFullyMixed
       fullyMixedAssessment_isBayesConsistent
 
@@ -761,8 +797,10 @@ Zero continuation payoff makes every whole continuation policy optimal; full
 mixing and finite Bayes consistency make the assessment its own valid
 approximating sequence. -/
 theorem fullyMixedAssessment_isSequentialEquilibrium :
-    game.IsSequentialEquilibriumWithin fullyMixedAssessment payoff 2 := by
-  rw [game.isSequentialEquilibriumWithin_iff]
+    game.IsSequentialEquilibriumWithin information_decisionInformationAntichain
+      fullyMixedAssessment payoff 2 := by
+  rw [game.isSequentialEquilibriumWithin_iff
+    information_decisionInformationAntichain]
   exact
     ⟨fullyMixedAssessment.isSequentiallyRationalWithin_zero 2,
       fullyMixedAssessment_isSequentiallyConsistent⟩
@@ -772,8 +810,10 @@ nonconstant matching payoff. Rationality quantifies over arbitrary replacement
 policies, so this is not a fixed-strategy payoff calculation. -/
 theorem fullyMixedAssessment_isSequentialEquilibrium_matchingPayoff :
     game.IsSequentialEquilibriumWithin
-      fullyMixedAssessment matchingPayoff 2 := by
-  rw [game.isSequentialEquilibriumWithin_iff]
+      information_decisionInformationAntichain fullyMixedAssessment
+        matchingPayoff 2 := by
+  rw [game.isSequentialEquilibriumWithin_iff
+    information_decisionInformationAntichain]
   exact
     ⟨fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff,
       fullyMixedAssessment_isSequentiallyConsistent⟩
@@ -841,22 +881,27 @@ theorem wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff :
 /-- Failed sequential rationality is already enough to refute sequential
 equilibrium, independently of the assessment's consistency status. -/
 theorem wrongAssessment_not_isSequentialEquilibrium_matchingPayoff :
-    ¬ game.IsSequentialEquilibriumWithin wrongAssessment matchingPayoff 2 := by
+    ¬ game.IsSequentialEquilibriumWithin information_decisionInformationAntichain
+      wrongAssessment matchingPayoff 2 := by
   intro hequilibrium
   apply wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff
   exact (game.isSequentialEquilibriumWithin_iff
-    wrongAssessment matchingPayoff 2).mp hequilibrium |>.1
+    information_decisionInformationAntichain wrongAssessment matchingPayoff 2).mp
+      hequilibrium |>.1
 
 /-- The language adapter supplies finite history fibers and the canonical
 full-policy continuation contexts. This is a genuine proposition, not a stub
 or a language-specific equilibrium definition. -/
 def sequentialEquilibriumTarget : Prop :=
-  game.IsSequentialEquilibriumWithin assessment payoff 2
+  game.IsSequentialEquilibriumWithin information_decisionInformationAntichain
+    assessment payoff 2
 
 theorem sequentialEquilibriumTarget_iff :
     sequentialEquilibriumTarget ↔
       assessment.IsSequentiallyRationalWithin payoff 2 ∧
-        game.IsSequentiallyConsistent assessment := by
-  exact game.isSequentialEquilibriumWithin_iff assessment payoff 2
+        game.IsSequentiallyConsistent information_decisionInformationAntichain
+          assessment := by
+  exact game.isSequentialEquilibriumWithin_iff
+    information_decisionInformationAntichain assessment payoff 2
 
 end GameTheory.Tests.EFG

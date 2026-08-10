@@ -62,8 +62,8 @@ theorem prior_expect_eq_sum (B : BayesianGame ι) (who : ι)
 prior-weighted interim values. -/
 theorem expectedUtility_update (B : BayesianGame ι)
     [DecidableEq ι]
-    [∀ i, Fintype (B.Ty i)] [∀ i, DecidableEq (B.Ty i)]
     (plan : Profile B.signature) (who : ι)
+    [Fintype (B.Ty who)] [DecidableEq (B.Ty who)]
     (deviation : B.Ty who → B.Act who) :
     expectedUtility B.utility who
         (B.toForm.play (Profile.update plan who deviation)) =

@@ -7,9 +7,9 @@ recurrence.  Claims about limits of these beliefs live in the analytic
 consumer; the core interface itself is just finite-support probability and the
 canonical best-response predicate.
 
-Primary references: G. W. Brown, “Iterative Solution of Games by Fictitious
-Play,” 1951; J. Robinson, “An Iterative Method of Solving a Game,” *Annals of
-Mathematics* 54 (1951).
+Primary reference for the process: G. W. Brown, “Iterative Solution of Games
+by Fictitious Play,” in T. C. Koopmans (ed.), *Activity Analysis of Production
+and Allocation*, Cowles Commission Monograph 13 (1951), 374--376.
 -/
 
 import GameTheory.Core.MixedImprovement

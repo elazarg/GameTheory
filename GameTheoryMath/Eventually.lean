@@ -2,8 +2,8 @@
 # Discrete eventual properties
 
 The minimal order-only combinator shared by finite-horizon equilibrium
-notions. It deliberately avoids the topology-facing filter API: both current
-consumers need the explicit threshold as data.
+notions. It keeps the public statement in explicit threshold form and avoids
+making these definitions depend on the topology-facing filter API.
 -/
 
 import Mathlib.Data.Nat.Basic

@@ -110,7 +110,7 @@ theorem ofPolytope_probs (μ : Profile sig.mixed) :
   funext i
   exact FinDist.ofSimplex_prob (μ i)
 
-/-- The polytope is inhabited exactly when every player has something to play. -/
+/-- If every player has a strategy, the mixed-profile polytope is inhabited. -/
 theorem mixedPolytope_nonempty [∀ i, Nonempty (sig.Strategy i)] :
     (mixedPolytope sig).Nonempty :=
   ⟨probs sig fun i => FinDist.pure (Classical.arbitrary (sig.Strategy i)),

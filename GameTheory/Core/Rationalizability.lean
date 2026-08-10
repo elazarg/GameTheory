@@ -11,7 +11,7 @@ restriction across opponents.
 The mixture is the canonical `FinDist` randomized unilateral deviation; no
 second profile, probability, or equilibrium layer is introduced.
 Pure-strategy elimination remains the separately named `pureSurvivors` /
-`IsPureRationalizable` surface in `Core.Response`.
+`SurvivesAllPureEliminationRounds` surface in `Core.Response`.
 
 Reference: A. Brandenburger and E. Dekel, “Rationalizability and Correlated
 Equilibria,” *Econometrica* 55 (1987), 1391–1402, DOI: 10.2307/1913562.

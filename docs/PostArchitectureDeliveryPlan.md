@@ -89,7 +89,17 @@ Separate packages:
 Do not merge these packages into the FOSG syntax root or hide serialization
 order behind choice.
 
-### E. Static mature-family rotation
+### E. MAID strategic relevance
+
+The promoted MAID compiler now has a multi-player, multi-site deviation and
+Nash witness.  The next same-language package is the Koller--Milch
+strategic-relevance/requisite-graph analysis: define relevance without storing
+utility or equilibrium in syntax, prove it invariant under the accepted
+serialization, and give a diagram where pruning changes the strategic policy
+domain while preserving the compiled outcome law.  Do not report MAID as
+strategic-relevance complete before that slice passes.
+
+### F. Static mature-family rotation
 
 These packages may proceed independently once their owner imports remain
 fixed:
@@ -107,12 +117,14 @@ Each package needs its own theorem-level consumer. Shared general mathematics
 belongs in Mathlib when available, otherwise in `GameTheoryMath` only after a
 live game-theoretic consumer exists.
 
-### F. Mechanism and algorithm extensions
+### G. Mechanism and algorithm extensions
 
 Independent packages:
 
 - analytic envelope identities above the stable single-parameter algebra;
 - monotonicity and critical payments for any truthful knapsack approximation;
+- move general Groves theory out of the auction namespace and document the
+  tie-breaking distinction among the remaining second-price presentations;
 - envy-cycle and maximin-share fair division; and
 - richer contract or information-design timing only with a typed consumer.
 

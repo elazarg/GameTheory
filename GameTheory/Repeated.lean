@@ -9,8 +9,11 @@ principle. `Discounted` adds deterministic-path values as real series and
 applies the ordinary static Nash predicate. `Periodic` supplies finite-cycle
 limits and `Trigger` turns public first deviations into permanent punishments.
 
-Finite-prefix execution and information compilation is layered over Protocol;
-stochastic laws over entire infinite paths are deliberately absent.
+Deterministic public-action prefixes compile to Protocol in `Repeated.Protocol`.
+Public-signal monitoring keeps the standard native `SignalHistory` recursion
+used by continuation and PPE theory; the separate finite multi-round language
+is the Protocol-backed constructor when an execution/information model is
+needed. Stochastic laws over entire infinite paths are deliberately absent.
 -/
 
 import GameTheory.Repeated.Basic

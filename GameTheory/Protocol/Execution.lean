@@ -81,9 +81,12 @@ def Legal (state : E.State) (joint : ∀ i, Option (E.Action i)) : Prop :=
 
 /-- Terminal states have no legal joint action.
 
-`active` is therefore unconstrained at terminal states: a protocol may declare
-somebody active where play has stopped, and nothing depends on whether it does,
-because no legal action exists there either way. -/
+`active` is therefore unconstrained by the execution runner at terminal states:
+a protocol may declare somebody active where play has stopped, and execution
+still exposes no legal joint action.  Downstream structures may impose stronger
+cross-history laws.  In particular, `InformationModel.menu_adequate` observes
+terminal activity through `LegalOption`, so model builders must keep terminal
+menus compatible with it. -/
 theorem terminal_no_legal {state : E.State} (hterm : E.terminal state)
     (joint : ∀ i, Option (E.Action i)) : ¬ E.Legal state joint :=
   fun hlegal => hlegal.1 hterm

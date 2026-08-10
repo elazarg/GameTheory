@@ -55,7 +55,9 @@ theorem isSubgameRoot_of_separatesDecisionHistories
 
 /-- A complete history realizes `info` as a genuine decision point for `who`.
 Terminal histories are excluded explicitly because activity is intentionally
-unconstrained after a protocol has stopped. -/
+unconstrained by execution after a protocol has stopped.  An attached
+information model may still constrain terminal activity through
+`menu_adequate`; terminal histories are never decision sites either way. -/
 def IsDecisionHistory (who : ι) (info : M.InfoState who)
     (history : E.History) : Prop :=
   ¬ E.terminal history.state ∧ E.active history.state who ∧

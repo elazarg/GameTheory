@@ -226,6 +226,40 @@ theorem representsExpectedUtility_unique_positiveAffine
     field_simp [ne_of_gt (sub_pos.mpr (hnondegenerate agent))]
     ring
 
+/-- On a finite nonempty outcome space, callers need only exhibit that the
+first representation is nonconstant for each agent.  Global best and worst
+endpoints are then selected automatically and the two representations differ
+by a positive affine transformation. -/
+theorem representsExpectedUtility_unique_positiveAffine_of_finite
+    [Finite Outcome] [Nonempty Outcome]
+    {weaklyPrefers : WeakPreference Agent Outcome}
+    {first second : Outcome → Agent → ℝ}
+    (hfirst : RepresentsExpectedUtility weaklyPrefers first)
+    (hsecond : RepresentsExpectedUtility weaklyPrefers second)
+    (hnonconstant : ∀ agent, ∃ low high,
+      first low agent < first high agent) :
+    ∃ (scale shift : Agent → ℝ),
+      (∀ agent, 0 < scale agent) ∧
+        ∀ outcome agent,
+          second outcome agent =
+            scale agent * first outcome agent + shift agent := by
+  let bestWitness : ∀ agent, ∃ best, ∀ outcome,
+      first outcome agent ≤ first best agent := fun agent =>
+    Finite.exists_max fun outcome => first outcome agent
+  let worstWitness : ∀ agent, ∃ worst, ∀ outcome,
+      first worst agent ≤ first outcome agent := fun agent =>
+    Finite.exists_min fun outcome => first outcome agent
+  let best : Agent → Outcome := fun agent => (bestWitness agent).choose
+  let worst : Agent → Outcome := fun agent => (worstWitness agent).choose
+  apply representsExpectedUtility_unique_positiveAffine hfirst hsecond best worst
+  · intro agent
+    obtain ⟨low, high, hlowHigh⟩ := hnonconstant agent
+    exact lt_of_le_of_lt ((worstWitness agent).choose_spec low)
+      (lt_of_lt_of_le hlowHigh ((bestWitness agent).choose_spec high))
+  · intro agent outcome
+    exact ⟨(worstWitness agent).choose_spec outcome,
+      (bestWitness agent).choose_spec outcome⟩
+
 namespace VNMProof
 
 variable {pref : FinDist Outcome → FinDist Outcome → Prop}

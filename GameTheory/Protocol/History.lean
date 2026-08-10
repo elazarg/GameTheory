@@ -268,6 +268,29 @@ theorem ReachesWithin.trans {firstFuel secondFuel : ℕ}
       have hstep := ReachesWithin.step joint isLegal realized (ih hsecond)
       simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hstep
 
+/-- Semantic reachability never shortens the canonical trace. -/
+theorem ReachesWithin.trace_length_le {fuel : ℕ}
+    {start target : E.History}
+    (hreach : E.ReachesWithin fuel start target) :
+    start.trace.length ≤ target.trace.length := by
+  induction hreach with
+  | refl => exact le_rfl
+  | step joint isLegal realized rest ih =>
+      exact le_trans (Nat.le_succ _) (by simpa [History.extend, Trace.length] using ih)
+
+/-- A reachable history at the same trace depth is the starting history. -/
+theorem ReachesWithin.eq_of_trace_length_eq {fuel : ℕ}
+    {start target : E.History}
+    (hreach : E.ReachesWithin fuel start target)
+    (hlength : start.trace.length = target.trace.length) :
+    target = start := by
+  cases hreach with
+  | refl => rfl
+  | step joint isLegal realized rest =>
+      have hle := rest.trace_length_le
+      simp only [History.extend, Trace.length] at hle
+      omega
+
 /-- Every complete history is semantically reachable from the initial history;
 its indexed trace supplies the exact transition budget. -/
 theorem reachesWithin_from_init (h : E.History) :

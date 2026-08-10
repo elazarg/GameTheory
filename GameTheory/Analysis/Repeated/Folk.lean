@@ -8,8 +8,9 @@ profiles in the observable mixed-action repeated game. The statement uses
 ordinary `IsNash` directly. There is no repeated-equilibrium wrapper and no
 probability law over an infinite path.
 
-Primary reference: D. Fudenberg, D. K. Levine, and E. Maskin, “The Folk
-Theorem with Imperfect Public Information,” *Econometrica* 62 (1994).
+Primary reference: D. Fudenberg and E. Maskin, “The Folk Theorem in Repeated
+Games with Discounting or with Incomplete Information,” *Econometrica* 54
+(1986), 533--554.
 -/
 
 import GameTheory.Analysis.Repeated.Feasible
@@ -138,7 +139,7 @@ theorem discounted_folk_theorem_approx
       mixedCycle hboundH' haccuracy
   have hgain : 0 ≤ 2 * bound := by positivity
   obtain ⟨patienceThreshold, hpatience0, hpatience1, hpatience⟩ :=
-    exists_discountFactor_threshold_oneStep
+    GameTheoryMath.exists_discountFactor_threshold_oneStep
       (gain := 2 * bound) (margin := punishmentMargin)
       hgain hpunishmentMargin
   let threshold : ℝ := max continuationThreshold patienceThreshold

@@ -43,4 +43,29 @@ theorem majorityGame_rule_unique
   CoalitionalGame.shapleyValue_unique
     rule hefficient hsymmetric hnull hadditive majorityGame
 
+/-- A singleton unanimity game is a nondegenerate asymmetric witness: player
+zero creates all value, while player one is null. -/
+private def asymmetricGame : CoalitionalGame (Fin 2) :=
+  CoalitionalGame.unanimityGame ({0} : Finset (Fin 2))
+    (Finset.singleton_nonempty 0)
+
+/-- The public efficiency and null-player theorems distinguish the two
+Shapley shares in the asymmetric witness. -/
+theorem asymmetricGame_shapleyValue :
+    asymmetricGame.shapleyValue 0 = 1 ∧
+      asymmetricGame.shapleyValue 1 = 0 := by
+  have hnull : asymmetricGame.IsNull (1 : Fin 2) := by
+    simpa only [asymmetricGame] using
+      (CoalitionalGame.unanimityGame_isNull_of_notMem
+        ({0} : Finset (Fin 2)) (Finset.singleton_nonempty 0)
+        (agent := (1 : Fin 2)) (by decide))
+  have hone := asymmetricGame.shapleyValue_null hnull
+  have hsum := asymmetricGame.shapleyValue_efficient
+  have hgrand : asymmetricGame.value Finset.univ = 1 := by
+    simpa only [asymmetricGame] using
+      (CoalitionalGame.unanimityGame_value_univ
+        ({0} : Finset (Fin 2)) (Finset.singleton_nonempty 0))
+  rw [Fin.sum_univ_two, hone, add_zero, hgrand] at hsum
+  exact ⟨hsum, hone⟩
+
 end GameTheory.Tests.Shapley

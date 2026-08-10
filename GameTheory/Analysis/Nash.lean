@@ -19,6 +19,7 @@ place a set-valued fixed-point theorem is used.
 -/
 
 import GameTheory.Analysis.Payoff
+import GameTheory.Core.Response
 import FixedPointTheorems.kakutani
 
 noncomputable section
@@ -102,6 +103,46 @@ theorem bestReply_nonempty [∀ i, Nonempty (F.sig.Strategy i)] (who : ι)
     ((continuous_payoff who).comp (continuous_update_reply who x)).continuousOn
   exact ⟨v, hv, fun w hw => hmax hw⟩
 
+omit [Fintype ι] [∀ i, Fintype (F.sig.Strategy i)] in
+/-- Taking probability vectors commutes with replacing one player's law. -/
+theorem probs_update (mu : Profile F.sig.mixed) (who : ι)
+    (replacement : FinDist (F.sig.Strategy who)) :
+    probs F.sig (Profile.update mu who replacement) =
+      Profile.update (probs F.sig mu) who replacement.prob := by
+  funext j
+  by_cases h : j = who
+  · subst h
+    show (Profile.update mu j replacement j).prob = _
+    rw [Profile.update_same, Profile.update_same]
+  · show (Profile.update mu who replacement j).prob = _
+    rw [Profile.update_of_ne _ _ h, Profile.update_of_ne _ _ h]
+    rfl
+
+/-- The analytic best-reply set is exactly the canonical semantic
+`IsBestResponse` predicate after transporting finite laws to their probability
+vectors.  This is the bridge between the fixed-point proof and the concepts in
+`Core.Response`. -/
+theorem prob_mem_bestReply_iff_isBestResponse (opponents : Profile F.sig.mixed)
+    (who : ι) (candidate : FinDist (F.sig.Strategy who)) :
+    candidate.prob ∈ bestReply F utility who (probs F.sig opponents) ↔
+      IsBestResponse F.mixed (euPreference utility) who opponents candidate := by
+  constructor
+  · rintro ⟨_, hmax⟩ alternative
+    have hle := hmax alternative.prob alternative.prob_mem_stdSimplex
+    show expectedUtility utility who
+        (F.mixed.play (Profile.update opponents who alternative)) ≤
+      expectedUtility utility who
+        (F.mixed.play (Profile.update opponents who candidate))
+    rw [← payoff_probs, ← payoff_probs, probs_update, probs_update]
+    exact hle
+  · intro hbest
+    refine ⟨candidate.prob_mem_stdSimplex, fun weights hweights => ?_⟩
+    let alternative : FinDist (F.sig.Strategy who) := FinDist.ofSimplex hweights
+    have hle := hbest alternative
+    rw [euPreference_apply, ← payoff_probs, ← payoff_probs,
+      probs_update, probs_update, FinDist.prob_ofSimplex] at hle
+    exact hle
+
 variable (F) in
 /-- Every player best replying at once. A fixed point of this correspondence is
 an equilibrium. -/
@@ -120,6 +161,25 @@ theorem bestReplies_nonempty [∀ i, Nonempty (F.sig.Strategy i)] (x : Profile F
     (bestReplies F utility x).Nonempty := by
   choose v hv using fun i => bestReply_nonempty utility i x
   exact ⟨v, fun i _ => hv i⟩
+
+/-- Membership in the product correspondence is simultaneous semantic best
+response. -/
+theorem probs_mem_bestReplies_iff (opponents candidates : Profile F.sig.mixed) :
+    probs F.sig candidates ∈ bestReplies F utility (probs F.sig opponents) ↔
+      ∀ who, IsBestResponse F.mixed (euPreference utility) who opponents
+        (candidates who) := by
+  simp only [bestReplies, Set.mem_pi, Set.mem_univ, forall_const]
+  exact forall_congr' fun who =>
+    prob_mem_bestReply_iff_isBestResponse utility opponents who (candidates who)
+
+/-- A fixed point of the analytic correspondence is exactly a mixed Nash
+equilibrium under the canonical core predicate. -/
+theorem probs_mem_bestReplies_self_iff_isNash (profile : Profile F.sig.mixed) :
+    probs F.sig profile ∈ bestReplies F utility (probs F.sig profile) ↔
+      IsNash F.mixed (euPreference utility) profile := by
+  rw [probs_mem_bestReplies_iff]
+  exact (isNash_iff_isBestResponse (F := F.mixed)
+    (weaklyPrefers := euPreference utility) profile).symm
 
 /-- **The correspondence has a closed graph.** Each condition defining it is a
 non-strict inequality between two continuous functions of the profile and the
@@ -153,19 +213,6 @@ theorem closedGraph_bestReplies :
 
 /-! ## From a fixed point to an equilibrium -/
 
-omit [Fintype ι] [∀ i, Fintype (F.sig.Strategy i)] in
-/-- Taking probability vectors commutes with replacing one player's law. -/
-theorem probs_update (μ : Profile F.sig.mixed) (who : ι) (r : FinDist (F.sig.Strategy who)) :
-    probs F.sig (Profile.update μ who r) = Profile.update (probs F.sig μ) who r.prob := by
-  funext j
-  by_cases h : j = who
-  · subst h
-    show (Profile.update μ j r j).prob = _
-    rw [Profile.update_same, Profile.update_same]
-  · show (Profile.update μ who r j).prob = _
-    rw [Profile.update_of_ne _ _ h, Profile.update_of_ne _ _ h]
-    rfl
-
 /-- **Every finite game has an equilibrium in mixed strategies.** -/
 theorem exists_isNash_mixed [∀ i, Nonempty (F.sig.Strategy i)] :
     ∃ μ : Profile F.sig.mixed, IsNash F.mixed (euPreference utility) μ := by
@@ -174,12 +221,8 @@ theorem exists_isNash_mixed [∀ i, Nonempty (F.sig.Strategy i)] :
     (fun x => bestReplies F utility x.1) (closedGraph_bestReplies utility)
     fun x => ⟨bestReplies_subset utility x.1, convex_bestReplies utility x.1,
       bestReplies_nonempty utility x.1⟩
-  refine ⟨ofPolytope F.sig x.2, (isNash_iff ..).2 fun who replacement => ?_⟩
-  have hbest := (hx who (Set.mem_univ who)).2 replacement.prob
-    replacement.prob_mem_stdSimplex
-  rw [Profile.update_eq_self] at hbest
-  show expectedUtility utility who (F.mixed.play _) ≤ expectedUtility utility who (F.mixed.play _)
-  rw [← payoff_probs, ← payoff_probs, probs_update, probs_ofPolytope]
-  exact hbest
+  refine ⟨ofPolytope F.sig x.2, (probs_mem_bestReplies_self_iff_isNash utility _).mp ?_⟩
+  rw [probs_ofPolytope]
+  exact hx
 
 end GameTheory

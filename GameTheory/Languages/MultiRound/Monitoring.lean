@@ -5,8 +5,11 @@ This is a constructor for a common native shape, not a second sequential
 semantics.  A monitoring game supplies action carriers, initial observations,
 and the finite-support law of the public/private signals emitted after a joint
 action.  It compiles directly to the accepted execution and information
-interfaces.  Protocol therefore remains the sole owner of histories, policies,
-run laws, and strategic-form compilation.
+interfaces.  Within this constructor, Protocol is therefore the sole owner of
+histories, policies, run laws, and strategic-form compilation.  This claim does
+not subsume `Repeated.PublicMonitoring`, whose native signal-history recursion
+serves repeated-game continuation and PPE theory rather than this richer
+own-action-recalling information model.
 
 The execution state retains realized joint actions and all signals.  A player's
 information state retains only that player's own previous choices and received

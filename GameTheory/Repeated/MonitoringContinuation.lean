@@ -22,12 +22,6 @@ namespace PublicMonitoring
 
 variable {G : UtilityGame.{uι, us, uo} ι}
 
-/-- Concatenate a realized public prefix with a future public history. -/
-def SignalHistory.append (M : G.PublicMonitoring) {t n : ℕ}
-    (history : M.SignalHistory t) (future : M.SignalHistory n) :
-    M.SignalHistory (t + n) :=
-  Fin.append history future
-
 /-- Strategic signature for public monitored strategies.  Its outcome is the
 chosen monitored profile itself, so utilities may evaluate its generated
 finite-history laws without adding a second equilibrium engine. -/

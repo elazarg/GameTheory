@@ -8,7 +8,7 @@ orthant with coordinatewise positive parts.
 import GameTheoryMath.Approachability
 import Mathlib.Analysis.InnerProductSpace.PiL2
 
-namespace GameTheoryMath.Approachability
+namespace GameTheoryMath.OrthantProjection
 
 variable {ι : Type*}
 
@@ -94,4 +94,4 @@ theorem norm_orthantProj_le (z : EuclideanSpace ℝ ι) : ‖orthantProj z‖ �
       nlinarith [sq_nonneg (z.ofLp i)]
   nlinarith [h, norm_nonneg (orthantProj z), norm_nonneg z]
 
-end GameTheoryMath.Approachability
+end GameTheoryMath.OrthantProjection

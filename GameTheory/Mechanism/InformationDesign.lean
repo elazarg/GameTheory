@@ -149,11 +149,27 @@ def IsReceiverOptimal (P : PersuasionProblem State Message Action)
 abbrev DecisionRule (_P : PersuasionProblem State Message Action) :=
   Message → Action
 
-/-- A rule is persuasive when it is receiver-optimal after every message,
-including zero-probability messages. -/
+/-- A rule is persuasive when it is receiver-optimal according to the
+unnormalized receiver score after every message.  At a zero-mass message all
+such scores vanish, so the quantified condition is automatic there. -/
 def IsPersuasive (P : PersuasionProblem State Message Action)
     (rule : P.DecisionRule) : Prop :=
   ∀ message, P.IsReceiverOptimal message (rule message)
+
+/-- On a finite nonempty action space, receiver obedience is automatic to
+make feasible: choose a receiver-score maximizer independently after each
+message.  Message finiteness is not needed for this pointwise construction. -/
+theorem exists_isPersuasive [Finite Action] [Nonempty Action]
+    (P : PersuasionProblem State Message Action) :
+    ∃ rule : P.DecisionRule, P.IsPersuasive rule := by
+  let rule : P.DecisionRule := fun message =>
+    Classical.choose
+      (Finite.exists_max fun action : Action => P.receiverScore message action)
+  refine ⟨rule, fun message alternative => ?_⟩
+  simpa only [rule] using
+    (Classical.choose_spec
+      (Finite.exists_max fun action : Action => P.receiverScore message action)
+      alternative)
 
 /-- Sender expected utility under a decision rule. -/
 def senderEU (P : PersuasionProblem State Message Action)
@@ -218,6 +234,13 @@ theorem exists_optimalPersuasive [Finite Message] [Finite Action]
     Finite.exists_max fun rule : FeasibleRule => P.senderEU rule.1
   exact ⟨best.1, best.2, fun alternative halternative =>
     hbest ⟨alternative, halternative⟩⟩
+
+/-- A sender-optimal persuasive rule therefore exists on finite message and
+nonempty finite action spaces without a separate feasibility premise. -/
+theorem exists_optimalPersuasive_of_nonempty [Finite Message] [Finite Action]
+    [Nonempty Action] (P : PersuasionProblem State Message Action) :
+    ∃ rule : P.DecisionRule, P.IsOptimalPersuasive rule :=
+  P.exists_optimalPersuasive P.exists_isPersuasive
 
 end PersuasionProblem
 

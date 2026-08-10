@@ -31,4 +31,21 @@ theorem normalizedDiscountedSum_le
     (fun t => mul_le_mul_of_nonneg_left (hle t) (pow_nonneg hdiscount0 t))
     hsecond
 
+/-- Sufficient patience makes a fixed continuation margin dominate any bounded
+one-period gain. -/
+theorem exists_discountFactor_threshold_oneStep
+    {gain margin : ℝ} (hgain : 0 ≤ gain) (hmargin : 0 < margin) :
+    ∃ threshold : ℝ, 0 ≤ threshold ∧ threshold < 1 ∧
+      ∀ discount : ℝ, threshold < discount → discount < 1 →
+        (1 - discount) * gain < discount * margin := by
+  let threshold : ℝ := gain / (gain + margin)
+  have hdenominator : 0 < gain + margin := by linarith
+  refine ⟨threshold, div_nonneg hgain hdenominator.le, ?_, ?_⟩
+  · rw [div_lt_one hdenominator]
+    linarith
+  · intro discount hdiscount _
+    have hmul : gain < discount * (gain + margin) :=
+      (div_lt_iff₀ hdenominator).1 hdiscount
+    nlinarith
+
 end GameTheoryMath

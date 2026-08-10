@@ -9,7 +9,8 @@ dependency maintenance [EXP-063](../ExperimentLog.md);
 post-decision boundary stresses [EXP-030](../ExperimentLog.md) and
 [EXP-031](../ExperimentLog.md); Protocol amendments
 [EXP-032](../ExperimentLog.md), [EXP-033](../ExperimentLog.md), and
-[EXP-034](../ExperimentLog.md).
+[EXP-034](../ExperimentLog.md), with the Bayes-fiber correction measured by
+[EXP-077](../ExperimentLog.md).
 
 ## Hypothesis
 
@@ -230,9 +231,13 @@ The additional enforced probes are two-sided:
 | `TRANSPORT_LANGUAGES` | 0 |
 
 EXP-034 supplies the first concrete theorem through that path. Stable Protocol
-normalizes existing history reach masses into a Bayes belief; the analytic
-bridge proves a fully mixed Bayes-consistent assessment sequentially consistent
-with its constant approximating sequence. On the hostile hidden-Boolean EFG,
+normalizes existing history reach masses into an information-site law. EXP-077
+clarifies when that law is a Bayes conditional: histories in the site must form
+an antichain, so their reach masses are disjoint rather than nested occupancy
+events. Stable Protocol exposes this exact `DecisionInformationAntichain`
+premise and proves perfect recall sufficient. The analytic bridge then proves a
+fully mixed Bayes-consistent assessment sequentially consistent with its
+constant approximating sequence. On the hostile hidden-Boolean EFG,
 the canonical runner gives both decision histories probability `1 / 2`, and the
 resulting assessment is a sequential equilibrium for zero continuation payoff.
 This is a concrete witness, not a general finite-EFG existence theorem, and it

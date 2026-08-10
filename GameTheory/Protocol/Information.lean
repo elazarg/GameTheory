@@ -23,6 +23,10 @@ design choices secure that.
   asserted to be local. `menu` therefore also decides *whether* a player moves,
   which is why it ranges over `Option (E.Action i)` — a player who cannot tell
   whose turn it is could not act at all.
+  Adequacy ranges over terminal histories too.  Although execution never asks
+  for an action after stopping, terminal activity still determines
+  `LegalOption`; histories sharing an information state must therefore agree on
+  that activity/menu shape, including terminal histories.
 * **Beliefs may see states; policies may not.** `InfoSet` and `BeliefOn` are
   analyst-level and mention `E.State` freely, and
   `legalOption_of_mem_menu` transports the one information-local menu to every
@@ -344,9 +348,11 @@ structure InformationModel (E : ExecutionProtocol ι) extends InfoSignals E wher
   `none` means "do not move", so this also encodes whether the player is
   active. -/
   menu : (i : ι) → InfoState i → Set (Option (E.Action i))
-  /-- Menu adequacy: after any history, the information-local menu and the
-  protocol's per-player legal options agree. Quantifying over hidden states is
-  what a *law* is for; the `menu` field itself never receives one. -/
+  /-- Menu adequacy: after any history, including a terminal history, the
+  information-local menu and the protocol's per-player legal options agree.
+  Quantifying over hidden states is what a *law* is for; the `menu` field itself
+  never receives one.  Consequently, histories with the same information state
+  must agree on activity even after execution has stopped. -/
   menu_adequate : ∀ (i : ι) {state : E.State} (trace : Trace E state)
       (choice : Option (E.Action i)),
     choice ∈ menu i (toInfoSignals.infoOf i trace) ↔ LegalOption E state i choice
@@ -466,6 +472,30 @@ theorem ownPlay_isSuffix_of_reachesWithin (i : ι) :
     | none => exact List.suffix_refl _
     | some action => exact List.suffix_cons _ _
 
+/-- Under perfect recall, an information state at which the player acts cannot
+reappear after that action.  This is the history-antichain fact needed to
+interpret normalized reach mass as conditional probability rather than an
+occupancy frequency. -/
+theorem infoOf_ne_of_perfectRecall_after_step
+    (hrecall : M.PerfectRecall) (i : ι)
+    {h later : E.History} {fuel : ℕ}
+    {joint : ∀ j, Option (E.Action j)} (isLegal : E.Legal h.state joint)
+    {reached : E.State}
+    (realized : reached ∈ (E.step h.state ⟨joint, isLegal⟩).support)
+    (hactive : E.active h.state i)
+    (hreach : E.ReachesWithin fuel (h.extend isLegal realized) later) :
+    M.infoOf i later.trace ≠ M.infoOf i h.trace := by
+  intro hinfo
+  obtain ⟨action, haction⟩ :=
+    (E.legalOption_of_legal isLegal i).exists_eq_some_of_active (joint i) hactive
+  have hsuffix := M.ownPlay_isSuffix_of_reachesWithin i hreach
+  have hlength := hsuffix.length_le
+  have hown := hrecall i h.trace later.trace hinfo.symm
+  simp only [History.extend, InfoSignals.ownPlay_extend, haction,
+    List.length_cons] at hlength
+  rw [← hown] at hlength
+  omega
+
 /-! ## Playing a profile
 
 A profile of information-local policies can be *run*, because the runner it
@@ -557,8 +587,8 @@ state can offer a rich set of actions and still leave the player one legal
 option. -/
 def ActsOnceWhereItMatters : Prop :=
   ∀ (i : ι) {state : E.State} (trace : Trace E state),
-    (M.actedAt i trace).Pairwise fun earlier later =>
-      earlier ≠ later ∨ Subsingleton (M.Choice i later)
+    (M.actedAt i trace).Pairwise fun later earlier =>
+      later ≠ earlier ∨ Subsingleton (M.Choice i earlier)
 
 /-- Never acting twice at one information state is the special case that ignores
 the menu. -/

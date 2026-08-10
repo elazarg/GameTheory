@@ -4,11 +4,12 @@
 One player privately observes a fair bit and must report it. Matching the type
 pays one and mismatching pays zero. Truthful reporting is interim-optimal at
 both types, hence Nash in the direct form; the exact compiler law then transfers
-the same profile to the information-local protocol form.
+the same profile to the information-local protocol form. A two-player
+common-bit coordination fixture separately exercises both deviation
+coordinates of the generic transfer theorem.
 -/
 
-import GameTheory.Core.BayesianEquilibrium
-import GameTheory.Languages.Bayesian
+import GameTheory.Languages.Bayesian.Strategic
 
 noncomputable section
 
@@ -79,79 +80,76 @@ theorem truthful_isNash :
     IsNash bitGame.toForm (euPreference bitGame.utility) truthful :=
   (bitGame.isNash_iff_interim truthful).2 truthful_interim_optimal
 
-/-- Utility on the protocol form. The `none` branch is unreachable after two
-steps but remains total for arbitrary histories. -/
-def protocolUtility : Utility (toProtocolForm bitGame).sig :=
-  fun outcome who =>
-    match outcome with
-    | some realized => bitGame.payoff realized.1 realized.2 who
-    | none => 0
-
-@[simp]
-theorem protocolUtility_some (outcome : bitGame.signature.Outcome) (who : Unit) :
-    protocolUtility (some outcome) who = bitGame.utility outcome who := rfl
-
-@[simp]
-theorem protocolUtility_realized (types : ∀ i, bitGame.Ty i)
-    (actions : ∀ i, bitGame.Act i) (who : Unit) :
-    protocolUtility (some (types, actions)) who =
-      bitGame.payoff types actions who := rfl
-
-theorem expectedUtility_protocol_map (who : Unit)
-    (law : FinDist bitGame.signature.Outcome) :
-    expectedUtility protocolUtility who (law.map some) =
-      expectedUtility bitGame.utility who law := by
-  rw [expectedUtility_map]
-  unfold expectedUtility
-  refine FinDist.expect_congr fun outcome _ => ?_
-  cases outcome
-  rfl
-
 /-- The information-local policy profile is Nash in the protocol-backed form.
-The proof uses only the exact compiler law, policy/plan equivalence, and the
-ordinary direct-form Nash theorem. -/
+This is now an instance of the generic language-facing transfer theorem. -/
 theorem truthful_protocol_isNash :
-    IsNash (toProtocolForm bitGame) (euPreference protocolUtility)
+    IsNash (toProtocolForm bitGame) (euPreference (protocolUtility bitGame))
       (policyProfileOfPlan bitGame truthful) := by
-  rw [isNash_iff]
-  refine fun who (replacement : (informationModel bitGame).Policy who) => ?_
-  have hnash := truthful_isNash
-  rw [isNash_iff] at hnash
-  have hdirect := hnash who (Policy.toPlan replacement)
-  have hupdate :
-      planOfPolicyProfile bitGame
-          (Profile.update (policyProfileOfPlan bitGame truthful) who replacement) =
-        Profile.update truthful who (Policy.toPlan replacement) := by
-    rw [planOfPolicyProfile_update,
-      planOfPolicyProfile_policyProfileOfPlan]
-  have hstatus :
-      planOfPolicyProfile bitGame (policyProfileOfPlan bitGame truthful) =
-        truthful :=
-    planOfPolicyProfile_policyProfileOfPlan bitGame truthful
-  have hupdateLaw := congrArg
-    (fun plan => (bitGame.toForm.play plan).map some) hupdate
-  have hstatusLaw := congrArg
-    (fun plan => (bitGame.toForm.play plan).map some) hstatus
-  rw [euPreference_apply] at hdirect ⊢
-  rw [toProtocolForm_play, toProtocolForm_play]
-  calc
-    expectedUtility protocolUtility who
-        ((bitGame.toForm.play
-          (planOfPolicyProfile bitGame
-            (Profile.update (policyProfileOfPlan bitGame truthful)
-              who replacement))).map some) =
-      expectedUtility protocolUtility who
-        ((bitGame.toForm.play
-          (Profile.update truthful who (Policy.toPlan replacement))).map some) :=
-            congrArg (expectedUtility protocolUtility who) hupdateLaw
-    _ ≤ expectedUtility protocolUtility who
-        ((bitGame.toForm.play truthful).map some) := by
-          rw [expectedUtility_protocol_map, expectedUtility_protocol_map]
-          exact hdirect
-    _ = expectedUtility protocolUtility who
-        ((bitGame.toForm.play
-          (planOfPolicyProfile bitGame
-            (policyProfileOfPlan bitGame truthful))).map some) :=
-          (congrArg (expectedUtility protocolUtility who) hstatusLaw).symm
+  exact (isNash_toProtocolForm_iff bitGame truthful).2 truthful_isNash
+
+namespace TwoPlayer
+
+/-- A common private bit observed by both players. -/
+def commonBitPrior : FinDist (∀ _ : Bool, Bool) :=
+  fairBit.map fun bit _ => bit
+
+/-- Both players are rewarded exactly when both reports match their respective
+types.  This makes a unilateral deviation by either source player observable. -/
+def coordinationGame : BayesianGame Bool where
+  Ty _ := Bool
+  Act _ := Bool
+  prior := commonBitPrior
+  payoff types actions _ :=
+    if actions false = types false ∧ actions true = types true then 1 else 0
+
+instance instNonemptyAction (i : Bool) : Nonempty (coordinationGame.Act i) :=
+  ⟨false⟩
+
+instance instFintypeType (i : Bool) : Fintype (coordinationGame.Ty i) :=
+  inferInstanceAs (Fintype Bool)
+
+instance instDecidableEqType (i : Bool) : DecidableEq (coordinationGame.Ty i) :=
+  inferInstanceAs (DecidableEq Bool)
+
+/-- Each of the two source players reports its own observed type. -/
+def truthful : Profile coordinationGame.signature :=
+  fun _ ownType => ownType
+
+/-- Truthful reporting is interim-optimal for both players and both types. -/
+theorem truthful_interim_optimal :
+    ∀ (who : Bool) (ownType : coordinationGame.Ty who)
+      (respond : coordinationGame.Act who),
+      coordinationGame.interimValue who ownType truthful respond ≤
+        coordinationGame.interimValue who ownType truthful
+          (truthful who ownType) := by
+  intro who ownType respond
+  unfold BayesianGame.interimValue
+  apply FinDist.expect_mono
+  intro types _
+  by_cases htype : types who = ownType
+  · simp only [htype, if_true]
+    cases who <;>
+      simp [coordinationGame, truthful, BayesianGame.actionsOf, htype]
+    <;> split <;> norm_num
+  · simp [htype]
+
+/-- Truthful reporting is Nash in the direct two-player Bayesian form. -/
+theorem truthful_isNash :
+    IsNash coordinationGame.toForm
+      (euPreference coordinationGame.utility) truthful :=
+  (coordinationGame.isNash_iff_interim truthful).2
+    truthful_interim_optimal
+
+/-- A two-player endpoint for the generic direct/protocol Nash equivalence.
+Unlike the one-player smoke test, both update coordinates are exercised by the
+quantified equilibrium theorem. -/
+theorem truthful_protocol_isNash :
+    IsNash (toProtocolForm coordinationGame)
+      (euPreference (protocolUtility coordinationGame))
+      (policyProfileOfPlan coordinationGame truthful) := by
+  exact (isNash_toProtocolForm_iff coordinationGame truthful).2
+    truthful_isNash
+
+end TwoPlayer
 
 end GameTheory.Tests.Bayesian

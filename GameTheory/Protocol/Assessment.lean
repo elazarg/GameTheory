@@ -337,14 +337,20 @@ theorem oneShotLaw_self (profile : Profile M.strategicSignature) (fuel : ℕ)
   rw [M.runFrom_succ_of_chooser_eq profile hterm chosen hchosen fuel]
   rfl
 
-/-- Every information-local one-shot deviation within the horizon is weakly
-worse than following `profile` immediately. The condition is sequential: it is
-quantified over every history, not only histories reached by `profile`. -/
+/-- Every information-local one-shot deviation within the compiled horizon is
+weakly worse than following `profile` immediately.
+
+The continuation fuel is coupled to the history depth: a history of depth `d`
+is compared with `fuel + 1` steps remaining only when
+`d + fuel + 1 = horizon`.  Thus unfinished histories are never evaluated as if
+they occurred at several incompatible times in the same finite game.  The
+condition is still sequential: it quantifies over every legal history at the
+appropriate depth, not only histories reached by `profile`. -/
 def IsOneShotOptimalWithin (profile : Profile M.strategicSignature) (who : ι)
     [DecidableEq (M.InfoState who)]
     (payoff : E.History → ℝ) (horizon : ℕ) : Prop :=
-  ∀ fuel, fuel < horizon → ∀ (h : E.History)
-    (hterm : ¬ E.terminal h.state)
+  ∀ fuel (h : E.History), h.trace.length + fuel + 1 = horizon →
+    ∀ (hterm : ¬ E.terminal h.state)
     (choice : M.Choice who (M.infoOf who h.trace)),
       (M.oneShotLaw profile fuel h hterm who choice).expect payoff ≤
         (M.runFrom profile (fuel + 1) h).expect payoff
@@ -356,17 +362,17 @@ theorem isOneShotOptimalWithin_iff_sequentiallyRationalAt_historyContext
     [DecidableEq (M.InfoState who)]
     (payoff : E.History → ℝ) (horizon : ℕ) :
     M.IsOneShotOptimalWithin profile who payoff horizon ↔
-      ∀ fuel, fuel < horizon → ∀ (h : E.History)
-        (hterm : ¬ E.terminal h.state),
+      ∀ fuel (h : E.History), h.trace.length + fuel + 1 = horizon →
+        ∀ (hterm : ¬ E.terminal h.state),
         M.IsSequentiallyRationalAt
           (profile who) (M.infoOf who h.trace)
           (M.historyContext profile who payoff fuel h hterm) := by
   constructor
-  · intro hopt fuel hlt h hterm alternative _
+  · intro hopt fuel h hdepth hterm alternative _
     rw [M.historyContext_value, M.historyContext_value, M.oneShotLaw_self]
-    exact hopt fuel hlt h hterm alternative
-  · intro hseq fuel hlt h hterm choice
-    have hlocal := hseq fuel hlt h hterm choice (Set.mem_univ _)
+    exact hopt fuel h hdepth hterm alternative
+  · intro hseq fuel h hdepth hterm choice
+    have hlocal := hseq fuel h hdepth hterm choice (Set.mem_univ _)
     rw [M.historyContext_value, M.historyContext_value, M.oneShotLaw_self] at hlocal
     exact hlocal
 
@@ -379,8 +385,8 @@ theorem expect_runFrom_update_le_of_isOneShotOptimalWithin
     [DecidableEq (M.InfoState who)]
     (payoff : E.History → ℝ) (horizon : ℕ)
     (hopt : M.IsOneShotOptimalWithin profile who payoff horizon)
-    (alternative : M.Policy who) {fuel : ℕ} (hle : fuel ≤ horizon)
-    (h : E.History) :
+    (alternative : M.Policy who) {fuel : ℕ} (h : E.History)
+    (hdepth : h.trace.length + fuel = horizon) :
     (M.runFrom (Profile.update profile who alternative) fuel h).expect payoff ≤
       (M.runFrom profile fuel h).expect payoff := by
   induction fuel generalizing h with
@@ -407,12 +413,15 @@ theorem expect_runFrom_update_le_of_isOneShotOptimalWithin
                 (h.extend chosen.2 realized)).expect payoff
               ≤ ((E.step h.state chosen).bindOnSupport fun _ realized =>
                   M.runFrom profile fuel (h.extend chosen.2 realized)).expect payoff :=
-            FinDist.expect_bindOnSupport_mono fun _ _ =>
-              ih (Nat.le_trans (Nat.le_succ fuel) hle) _
+            FinDist.expect_bindOnSupport_mono fun _ realized =>
+              ih (h.extend chosen.2 realized) (by
+                simp only [ExecutionProtocol.History.extend,
+                  ExecutionProtocol.Trace.length]
+                omega)
           _ = (M.oneShotLaw profile fuel h hterm who choice).expect payoff := by
             rfl
           _ ≤ (M.runFrom profile (fuel + 1) h).expect payoff :=
-            hopt fuel (Nat.lt_of_succ_le hle) h hterm choice
+            hopt fuel h (by omega) hterm choice
 
 /-- The static consequence of the information-local one-shot principle.
 Compiling the same policy profile introduces no new equilibrium notion: local
@@ -430,7 +439,8 @@ theorem isNash_toGameForm_of_isOneShotOptimalWithin
   simpa [expectedUtility, InformationModel.run] using
     M.expect_runFrom_update_le_of_isOneShotOptimalWithin
       profile who (fun h => utility h who) horizon (hopt who) alternative
-      (le_refl horizon) E.initHistory
+      E.initHistory (by
+        simp [ExecutionProtocol.initHistory, ExecutionProtocol.Trace.length])
 
 end InformationModel
 

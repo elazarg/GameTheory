@@ -13,7 +13,7 @@ noncomputable section
 namespace GameTheory.Analysis.ApproachabilityTest
 
 open Filter GameTheory.Probability GameTheory.Analysis.Approachability
-open GameTheoryMath.Approachability
+open GameTheoryMath.Approachability GameTheoryMath.OrthantProjection
 
 /-- Action zero is better in the first environment state; action one is better
 in the second. -/

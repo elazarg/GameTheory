@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Examples.StochasticUniform
 
-open Probability Stochastic
+open Probability Stochastic Protocol Protocol.ExecutionProtocol
 
 namespace Game
 
@@ -134,6 +134,161 @@ theorem one_not_isUniformEquilibriumPayoff (initial : Bool) :
   obtain ⟨profile, threshold, hprofile⟩ := hone (1 / 2) (by norm_num)
   have hclose := (hprofile threshold le_rfl).2 false
   norm_num at hclose
+
+/-! ## A reachable, nonconstant transient-payoff certificate -/
+
+/-- The initial state pays one or two (depending on the player), then the game
+enters a zero-payoff absorbing state. Payoffs are nonconstant along every
+positive-horizon path, and the transient contribution vanishes uniformly. -/
+def transientPayoff : Game Bool where
+  State := Bool
+  Action := fun _ => Bool
+  transition _state _action := FinDist.pure false
+  stageUtility state _action who :=
+    if state then if who then 2 else 1 else 0
+
+@[simp]
+theorem transientPayoff_stageUtility (state : Bool)
+    (action : Bool → Bool) (who : Bool) :
+    transientPayoff.stageUtility state action who =
+      if state then if who then 2 else 1 else 0 :=
+  rfl
+
+local instance transientPayoffActionNonempty :
+    ∀ i : Bool, Nonempty (transientPayoff.Action i) :=
+  fun _ => ⟨false⟩
+
+def transientProfile : transientPayoff.BehaviorProfile true :=
+  fun _ _ => FinDist.pure ⟨some false, ⟨false, rfl⟩⟩
+
+theorem transientPayoff_is_reachable_and_nonconstant :
+    transientPayoff.stageUtility true (fun _ => false) false = 1 ∧
+      transientPayoff.stageUtility true (fun _ => false) true = 2 ∧
+      transientPayoff.stageUtility false (fun _ => false) true = 0 := by
+  show (1 : ℝ) = 1 ∧ (2 : ℝ) = 2 ∧ (0 : ℝ) = 0
+  norm_num
+
+/-- A realized transition always reaches the absorbing false state. -/
+private theorem transientPayoff_target_false
+    {source target : Bool}
+    (joint : ∀ i, Option ((transientPayoff.toExecution true).Action i))
+    (isLegal : (transientPayoff.toExecution true).Legal source joint)
+    (realized :
+      target ∈
+        ((transientPayoff.toExecution true).step source
+          ⟨joint, isLegal⟩).support) :
+    target = false := by
+  have hpure : target ∈ (FinDist.pure false).support := realized
+  exact FinDist.mem_support_pure.mp hpure
+
+/-- Every history contains at most the one initial transient reward. -/
+private theorem transientPayoff_trace_valueSum_bounds
+    (history : (transientPayoff.toExecution true).History)
+    (who : Bool) :
+    0 ≤ history.valueSum
+        (fun event => transientPayoff.eventUtility true event who) ∧
+      history.valueSum
+        (fun event => transientPayoff.eventUtility true event who) ≤ 2 := by
+  show
+    0 ≤ history.trace.valueSum
+        (fun event => transientPayoff.eventUtility true event who) ∧
+      history.trace.valueSum
+        (fun event => transientPayoff.eventUtility true event who) ≤ 2
+  rcases history with ⟨state, trace⟩
+  induction trace with
+  | start => norm_num
+  | @extend source target prior joint isLegal realized ih =>
+      rw [Trace.valueSum_extend]
+      cases prior with
+      | start =>
+          cases who <;>
+            norm_num [Game.eventUtility, transientPayoff_stageUtility]
+      | @extend previous source earlier earlierJoint earlierLegal earlierRealized =>
+        have hsource : source = false :=
+          transientPayoff_target_false earlierJoint earlierLegal earlierRealized
+        subst source
+        simpa [Game.eventUtility, transientPayoff] using ih
+
+/-- At every horizon, every behavioral profile and deviation has payoff in
+the interval from zero to the reciprocal horizon, up to the player-two factor
+of two. -/
+theorem transientPayoff_finiteAveragePayoff_bounds (horizon : ℕ)
+    (profile : transientPayoff.BehaviorProfile true) (who : Bool) :
+    0 ≤ transientPayoff.finiteAveragePayoff true horizon profile who ∧
+      transientPayoff.finiteAveragePayoff true horizon profile who ≤
+        2 * (horizon : ℝ)⁻¹ := by
+  show
+    0 ≤ expectedUtility (transientPayoff.horizonUtility true horizon) who
+        ((transientPayoff.horizonForm true horizon).play profile) ∧
+      expectedUtility (transientPayoff.horizonUtility true horizon) who
+          ((transientPayoff.horizonForm true horizon).play profile) ≤
+        2 * (horizon : ℝ)⁻¹
+  constructor
+  · calc
+      0 = FinDist.expect
+          ((transientPayoff.horizonForm true horizon).play profile)
+          (fun _ => 0) := (FinDist.expect_const _ 0).symm
+      _ ≤ _ := FinDist.expect_mono fun history _ => by
+        unfold Game.horizonUtility Game.historyAverageUtility
+        have hsum :=
+          (transientPayoff_trace_valueSum_bounds history who).1
+        exact mul_nonneg (by positivity) hsum
+  · calc
+      _ ≤ FinDist.expect
+          ((transientPayoff.horizonForm true horizon).play profile)
+          (fun _ => 2 * (horizon : ℝ)⁻¹) :=
+        FinDist.expect_mono fun history _ => by
+          unfold Game.horizonUtility Game.historyAverageUtility
+          have hsum :=
+            (transientPayoff_trace_valueSum_bounds history who).2
+          have hinv : 0 ≤ (horizon : ℝ)⁻¹ := by positivity
+          calc
+            (horizon : ℝ)⁻¹ * history.valueSum
+                (fun event => transientPayoff.eventUtility true event who) ≤
+                (horizon : ℝ)⁻¹ * 2 :=
+              mul_le_mul_of_nonneg_left hsum hinv
+            _ = 2 * (horizon : ℝ)⁻¹ := by ring
+      _ = 2 * (horizon : ℝ)⁻¹ := FinDist.expect_const _ _
+
+/-- A nonconstant-payoff uniform deviation-cap constructor. The threshold
+makes the one-period transient smaller than the requested accuracy. -/
+theorem transientPayoff_hasUniformDeviationCapConstructor :
+    transientPayoff.HasUniformDeviationCapConstructor true (fun _ => 0) := by
+  intro delta hdelta
+  have hdeltaHalf : 0 < delta / 2 := by linarith
+  obtain ⟨n, hn⟩ := exists_nat_one_div_lt hdeltaHalf
+  let threshold := n + 1
+  refine ⟨transientProfile, threshold, fun horizon hhorizon => ?_⟩
+  have hthresholdPos : 0 < threshold := by
+    simp [threshold]
+  have hhorizonPos : 0 < horizon := lt_of_lt_of_le hthresholdPos hhorizon
+  have hcast : (threshold : ℝ) ≤ (horizon : ℝ) := by
+    exact_mod_cast hhorizon
+  have hinv : (horizon : ℝ)⁻¹ ≤ (threshold : ℝ)⁻¹ := by
+    simpa only [one_div] using
+      one_div_le_one_div_of_le (by exact_mod_cast hthresholdPos) hcast
+  have hsmall : 2 * (horizon : ℝ)⁻¹ ≤ delta := by
+    have hthresholdSmall : (threshold : ℝ)⁻¹ < delta / 2 := by
+      simpa [threshold, one_div] using hn
+    nlinarith
+  constructor
+  · intro who
+    have hbounds :=
+      transientPayoff_finiteAveragePayoff_bounds horizon transientProfile who
+    rw [sub_zero, abs_of_nonneg hbounds.1]
+    exact hbounds.2.trans hsmall
+  · intro who deviation
+    exact
+      (transientPayoff_finiteAveragePayoff_bounds horizon
+        (Profile.update transientProfile who deviation) who).2.trans
+        (by simpa using hsmall)
+
+/-- The public semantic uniform-payoff predicate is reached through the
+nonconstant deviation-cap certificate. -/
+theorem transientPayoff_isUniformEquilibriumPayoff :
+    transientPayoff.IsUniformEquilibriumPayoff true (fun _ => 0) :=
+  transientPayoff.isUniformEquilibriumPayoff_of_deviation_caps true
+    (fun _ => 0) transientPayoff_hasUniformDeviationCapConstructor
 
 end Game
 

@@ -184,6 +184,17 @@ theorem reserveVickreyUtility_eq_if_wins (value : ι → ℝ) (reserve : ℝ)
       hwin ((allocation_eq_some_iff reserve bids who).1 hsome)
     rw [if_neg hwin, utility_loser value reserve bids who halloc]
 
+/-- At zero reserve, when the opponents' maximum is nonnegative, the explicit
+allocation-and-payment presentation has exactly the payoff of the generic
+strict-winner second-price presentation. -/
+theorem utility_zeroReserve_eq_secondPricePayoff (value : ι → ℝ)
+    (bids : BidProfile ι) (who : ι) (hother : 0 ≤ maxOtherBid bids who) :
+    reserveVickreyUtility value 0 bids who =
+      secondPricePayoff value bids who := by
+  rw [reserveVickreyUtility_eq_if_wins]
+  simp only [reserveVickreyWins, reserveVickreyClearingPrice,
+    max_eq_right hother, secondPricePayoff]
+
 /-- A truthful bidder's reserve-price Vickrey payoff is nonnegative. -/
 theorem utility_nonneg (value : ι → ℝ) (reserve : ℝ) (bids : BidProfile ι) (who : ι)
     (htruth : bids who = value who) : 0 ≤ reserveVickreyUtility value reserve bids who := by

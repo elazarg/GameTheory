@@ -324,6 +324,12 @@ theorem prescribed_isPerfectPublicEquilibrium :
   prescribed_ppe_iff_noProfitableOneShotDeviation.mpr
     prescribed_hasNoProfitableOneShotDeviationAfterEveryHistory
 
+/-- The canonical exact-to-approximate Nash bridge lifts pointwise through
+every public continuation. -/
+theorem prescribed_isεPerfectPublicEquilibrium {ε : ℝ} (hε : 0 ≤ ε) :
+    monitoring.IsεPerfectPublicEquilibrium discount ε prescribed :=
+  prescribed_isPerfectPublicEquilibrium.isεPerfectPublicEquilibrium hε
+
 /-! A stationary mismatched profile supplies the converse regression: player
 zero can coordinate immediately, while the continuation stays mismatched. -/
 

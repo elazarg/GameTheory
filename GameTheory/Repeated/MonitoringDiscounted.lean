@@ -8,6 +8,7 @@ one-shot-deviation sufficiency argument lives separately.
 -/
 
 import GameTheory.Repeated.MonitoringPayoff
+import GameTheory.Core.Approximate
 import GameTheoryMath.Discounted
 import Mathlib.Analysis.Normed.Group.InfiniteSum
 import Mathlib.Analysis.SpecificLimits.Basic
@@ -259,10 +260,11 @@ def IsDiscountedPublicNash (M : G.PublicMonitoring) [DecidableEq ι]
     (discount : ℝ) (profile : M.MonitoredProfile) : Prop :=
   IsNash M.monitoredForm (euPreference (M.discountedUtility discount)) profile
 
-/-- Discounted public Nash equilibrium allowing an additive payoff loss. -/
+/-- Discounted public Nash equilibrium allowing an additive payoff loss. This
+is the canonical approximate-Nash predicate on the monitored strategic form. -/
 def IsεDiscountedPublicNash (M : G.PublicMonitoring) [DecidableEq ι]
     (discount ε : ℝ) (profile : M.MonitoredProfile) : Prop :=
-  IsNash M.monitoredForm (euPreferenceWithin ε (M.discountedUtility discount)) profile
+  IsεNash M.monitoredForm (M.discountedUtility discount) ε profile
 
 theorem isDiscountedPublicNash_iff (M : G.PublicMonitoring) [DecidableEq ι]
     (discount : ℝ) (profile : M.MonitoredProfile) :
@@ -277,8 +279,25 @@ theorem isεDiscountedPublicNash_iff (M : G.PublicMonitoring) [DecidableEq ι]
     M.IsεDiscountedPublicNash discount ε profile ↔ ∀ who deviation,
       M.discountedPayoff discount (Profile.update (sig := M.monitoredSignature)
         profile who deviation) who ≤ M.discountedPayoff discount profile who + ε := by
-  rw [IsεDiscountedPublicNash, isNash_iff]
+  rw [IsεDiscountedPublicNash, isεNash_iff]
   simp [monitoredForm, discountedUtility]
+
+/-- Exact public Nash implies approximate public Nash for every nonnegative
+error allowance. -/
+theorem IsDiscountedPublicNash.isεDiscountedPublicNash
+    {M : G.PublicMonitoring} [DecidableEq ι] {discount ε : ℝ}
+    {profile : M.MonitoredProfile}
+    (h : M.IsDiscountedPublicNash discount profile) (hε : 0 ≤ ε) :
+    M.IsεDiscountedPublicNash discount ε profile :=
+  IsεNash.of_isNash M.monitoredForm (M.discountedUtility discount) h hε
+
+/-- Zero approximation error recovers exact discounted public Nash. -/
+theorem isDiscountedPublicNash_iff_isεDiscountedPublicNash_zero
+    (M : G.PublicMonitoring) [DecidableEq ι] (discount : ℝ)
+    (profile : M.MonitoredProfile) :
+    M.IsDiscountedPublicNash discount profile ↔
+      M.IsεDiscountedPublicNash discount 0 profile :=
+  isNash_iff_isεNash_zero M.monitoredForm (M.discountedUtility discount)
 
 /-- A perfect public equilibrium is discounted Nash after every finite public
 signal history, including histories assigned zero probability on path.  The
@@ -292,6 +311,26 @@ after every finite public signal history. -/
 def IsεPerfectPublicEquilibrium (M : G.PublicMonitoring) [DecidableEq ι]
     (discount ε : ℝ) (profile : M.MonitoredProfile) : Prop :=
   ∀ t (history : M.SignalHistory t), M.IsεDiscountedPublicNash discount ε (M.after profile history)
+
+/-- Exact perfect public equilibrium implies its approximate form for every
+nonnegative error allowance. -/
+theorem IsPerfectPublicEquilibrium.isεPerfectPublicEquilibrium
+    {M : G.PublicMonitoring} [DecidableEq ι] {discount ε : ℝ}
+    {profile : M.MonitoredProfile}
+    (h : M.IsPerfectPublicEquilibrium discount profile) (hε : 0 ≤ ε) :
+    M.IsεPerfectPublicEquilibrium discount ε profile :=
+  fun t history => (h t history).isεDiscountedPublicNash hε
+
+/-- Approximate perfect public equilibrium is preserved by continuation after
+one public signal. -/
+theorem IsεPerfectPublicEquilibrium.afterSignal
+    {M : G.PublicMonitoring} [DecidableEq ι] {discount ε : ℝ}
+    {profile : M.MonitoredProfile}
+    (h : M.IsεPerfectPublicEquilibrium discount ε profile) (signal : M.Signal) :
+    M.IsεPerfectPublicEquilibrium discount ε (M.afterSignal profile signal) := by
+  intro t history
+  rw [M.after_afterSignal]
+  exact h (t + 1) (Fin.cons signal history)
 
 /-- No public deviation that changes only the current stage action improves
 the deviator's normalized discounted payoff. -/

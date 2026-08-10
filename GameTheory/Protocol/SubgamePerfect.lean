@@ -229,29 +229,6 @@ theorem HistoryReaches.step {start target : E.History}
   rcases rest with ⟨fuel, hrest⟩
   exact ⟨fuel + 1, .step joint isLegal realized hrest⟩
 
-/-- Semantic reachability never shortens the canonical trace. -/
-theorem ReachesWithin.trace_length_le {fuel : ℕ}
-    {start target : E.History}
-    (hreach : E.ReachesWithin fuel start target) :
-    start.trace.length ≤ target.trace.length := by
-  induction hreach with
-  | refl => exact le_rfl
-  | step joint isLegal realized rest ih =>
-      exact le_trans (Nat.le_succ _) (by simpa [History.extend, Trace.length] using ih)
-
-/-- A reachable history at the same trace depth is the starting history. -/
-theorem ReachesWithin.eq_of_trace_length_eq {fuel : ℕ}
-    {start target : E.History}
-    (hreach : E.ReachesWithin fuel start target)
-    (hlength : start.trace.length = target.trace.length) :
-    target = start := by
-  cases hreach with
-  | refl => rfl
-  | step joint isLegal realized rest =>
-      have hle := rest.trace_length_le
-      simp only [History.extend, Trace.length] at hle
-      omega
-
 /-- Choosers agreeing at every history reachable from `start` have equal
 history-preserving backward value there. -/
 theorem historyBackwardValue_congr_of_reaches

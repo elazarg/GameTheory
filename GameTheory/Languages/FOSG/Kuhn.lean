@@ -6,6 +6,10 @@ FOSG owns no native Kuhn machine.  A FOSG already carries the canonical
 same Protocol histories.  This leaf gives that existing theorem a named
 FOSG-facing surface without defining another history, strategy, product law,
 or evaluator.
+
+As in the EFG-facing surface, the correspondence is currently stated for whole
+profiles. It does not yet provide the per-player realization theorem needed to
+transfer Nash equilibria between behavioral and mixed strategy spaces.
 -/
 
 import GameTheory.Languages.FOSG

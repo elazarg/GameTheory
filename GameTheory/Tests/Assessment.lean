@@ -13,6 +13,7 @@ field and varies the other.
 -/
 
 import GameTheory.Protocol.Assessment
+import GameTheory.Tests.EFGZermelo
 import GameTheory.Tests.Randomized
 
 noncomputable section
@@ -166,7 +167,84 @@ theorem belief_matters :
   rw [ofBelief_value_pure, ofBelief_value_pure]
   simp [prefersLeft]
 
-/-! ## Probe 5: information-local one-shot optimality reaches compiled Nash
+/-! ## Probe 5: remaining fuel is coupled to realized depth
+
+The chance-rooted Zermelo fixture contains both a two-decision continuation
+and branches that stop early.  At horizon three, its first decision has one
+continuation step left, its second decision has none, and an early exit is
+absorbing for the unused final unit of fuel.  This is the stopping shape that
+the former depth-independent one-shot premise failed to distinguish. -/
+
+namespace StoppingDepth
+
+open EFGZermelo
+
+variable (profile : Profile information.strategicSignature)
+  (payoff : execution.History → ℝ)
+
+/-- The first decision is evaluated with exactly two total steps remaining. -/
+theorem first_decision_bound
+    (hopt : information.IsOneShotOptimalWithin profile () payoff 3)
+    (choice : information.Choice ()
+      (information.infoOf () leftHistory.trace)) :
+    (information.oneShotLaw profile 1 leftHistory left_not_terminal () choice).expect
+        payoff ≤
+      (information.runFrom profile 2 leftHistory).expect payoff := by
+  exact hopt 1 leftHistory (by rfl) left_not_terminal choice
+
+/-- The later decision is evaluated with exactly one total step remaining. -/
+theorem second_decision_bound
+    (hopt : information.IsOneShotOptimalWithin profile () payoff 3)
+    (choice : information.Choice ()
+      (information.infoOf () secondHistory.trace)) :
+    (information.oneShotLaw profile 0 secondHistory second_not_terminal () choice).expect
+        payoff ≤
+      (information.runFrom profile 1 secondHistory).expect payoff := by
+  exact hopt 0 secondHistory (by rfl) second_not_terminal choice
+
+/-- The depth equation rejects evaluating the first decision with the later
+decision's continuation fuel. -/
+theorem first_decision_wrong_fuel_rejected :
+    ¬ leftHistory.trace.length + 0 + 1 = 3 := by
+  have hlength : leftHistory.trace.length = 1 := rfl
+  omega
+
+/-- The depth equation likewise rejects giving the second decision an extra
+continuation step. -/
+theorem second_decision_wrong_fuel_rejected :
+    ¬ secondHistory.trace.length + 1 + 1 = 3 := by
+  have hlength : secondHistory.trace.length = 2 := rfl
+  omega
+
+def exitJoint : Unit → Option Action := fun _ => some .exit
+
+theorem exitLegal : execution.Legal leftHistory.state exitJoint := by
+  apply execution.legal_of_legalOption left_not_terminal
+  intro who
+  cases who
+  exact ⟨left_active, by simp [leftHistory, execution]⟩
+
+theorem exited_mem_exit_step :
+    State.exited ∈
+      (execution.step leftHistory.state ⟨exitJoint, exitLegal⟩).support := by
+  simp [leftHistory, exitJoint, execution, next]
+
+def exitedHistory : execution.History :=
+  leftHistory.extend exitLegal exited_mem_exit_step
+
+theorem exitedHistory_terminal : execution.terminal exitedHistory.state := by
+  simp [exitedHistory, execution]
+
+/-- Stopping before the nominal horizon consumes no fictitious decision: the
+history runner is already absorbing. -/
+theorem early_exit_absorbing :
+    information.runFrom profile 1 exitedHistory =
+      FinDist.pure exitedHistory := by
+  exact ExecutionProtocol.runHistoryFor_of_terminal _ _ exitedHistory_terminal
+
+end StoppingDepth
+
+/-! ## Probe 6: information-local one-shot optimality reaches compiled Nash
 
 The repeated-vote information model is hostile to a merely initial-history
 argument: the same player can be at either of two nonterminal histories, and
@@ -214,13 +292,13 @@ def upUtility (h : History twice) (_ : Unit) : ℝ :=
 the actual history context. The payoff bound handles every typed alternative;
 the existing one-step run theorem computes the baseline value. -/
 theorem up_sequentiallyRationalAt_historyContext :
-    ∀ fuel, fuel < 1 → ∀ (h : History twice)
-      (hterm : ¬ twice.terminal h.state),
+    ∀ fuel (h : History twice), h.trace.length + fuel + 1 = 1 →
+      ∀ (hterm : ¬ twice.terminal h.state),
         model.IsSequentiallyRationalAt
           (upProfile ()) (model.infoOf () h.trace)
           (model.historyContext upProfile ()
             (fun outcome => upUtility outcome ()) fuel h hterm) := by
-  intro fuel hfuel h hterm
+  intro fuel h hdepth hterm
   have hfuel0 : fuel = 0 := by omega
   subst fuel
   have hstopped : h.state.stopped = false := by
@@ -284,7 +362,8 @@ theorem arbitrary_policy_update_no_better (alternative : model.Policy ()) :
         (fun outcome => upUtility outcome ()) :=
   model.expect_runFrom_update_le_of_isOneShotOptimalWithin
     upProfile () (fun outcome => upUtility outcome ()) 1
-    up_isOneShotOptimalWithin alternative (le_refl 1) twice.initHistory
+    up_isOneShotOptimalWithin alternative twice.initHistory (by
+      simp [ExecutionProtocol.initHistory, ExecutionProtocol.Trace.length])
 
 /-- The optimal profile has value one in the compiled form. -/
 theorem up_expectedUtility :

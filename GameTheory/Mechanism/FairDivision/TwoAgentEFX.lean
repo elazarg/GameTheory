@@ -9,15 +9,19 @@ import Mathlib.Data.Finset.Max
 import Mathlib.Tactic.Linarith
 
 /-!
-# Two-agent EFX for finite indivisible goods
+# Two-agent positive-good EFX for finite indivisible goods
 
 Every finite two-agent instance with nonnegative additive item values admits an
-EFX allocation.  The proof uses the classical cut-and-choose construction:
-agent zero chooses a partition maximizing the value of its worse side, then
-agent one selects its preferred side. The constructor returns the canonical
-disjoint `Allocation`; completeness remains a separate certificate.
+allocation satisfying this library's `IsEFX` predicate: envy disappears after
+removing any good that the envying agent values strictly positively.  The proof
+uses a maximin cut-and-choose construction: agent zero chooses a partition
+maximizing the value of its worse side, then agent one selects its preferred
+side. The constructor returns the canonical disjoint `Allocation`; completeness
+remains a separate certificate.
 
-For the two-agent cut-and-choose construction, see G. Plaut and T. Roughgarden,
+The stronger all-goods EFX condition also tests goods of zero value.  Plaut and
+Roughgarden obtain that stronger condition for two agents using a leximin++
+cut; that construction is not formalized here.  See G. Plaut and T. Roughgarden,
 “Almost Envy-Freeness with General Valuations,” SODA 2018.
 -/
 
@@ -221,7 +225,7 @@ private theorem maximin_cut_partition_efx_for_zero_swapped
   · exact value_erase_le hnonneg (1 : Fin 2) S g
 
 /-- Every finite two-agent additive instance with nonnegative item values has
-a complete EFX allocation. -/
+a complete allocation satisfying positive-good EFX. -/
 theorem exists_efx_two_agents (v : AdditiveValuation (Fin 2) G)
     (hnonneg : Nonnegative v) :
     ∃ A : Allocation (Fin 2) G, IsComplete A ∧ IsEFX v A := by
@@ -246,8 +250,8 @@ theorem exists_efx_two_agents (v : AdditiveValuation (Fin 2) G)
     exact twoAgentAllocation_isComplete (Finset.univ \ S) S
       Finset.sdiff_disjoint (by ext g; simp)
 
-/-- Textbook specialization: two agents and two goods admit a complete EFX
-allocation. -/
+/-- Two agents and two goods admit a complete allocation satisfying
+positive-good EFX. -/
 theorem efx_two_agents_two_goods (v : AdditiveValuation (Fin 2) (Fin 2))
     (hnonneg : Nonnegative v) :
     ∃ A : Allocation (Fin 2) (Fin 2), IsComplete A ∧ IsEFX v A :=

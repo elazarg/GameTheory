@@ -6,7 +6,7 @@ beliefs.  The canonical coupling puts probability `1/2` on each matching
 state/point-mass-belief pair and has the required state and belief marginals.
 -/
 
-import GameTheory.Mechanism.FeasiblePosteriors
+import GameTheory.Mechanism.PosteriorSignals
 
 noncomputable section
 
@@ -67,6 +67,21 @@ theorem coupling_has_prior_state_marginal :
 theorem coupling_has_law_belief_marginal :
     law.coupling.map Prod.snd = law :=
   law.map_snd_coupling
+
+/-- The substantive splitting direction constructs a signal experiment for the
+nondegenerate two-posterior law, not merely its canonical coupling. -/
+theorem law_has_signalImplementation :
+    ∃ (signal : SignalStructure Bool (FinDist Bool))
+      (posterior : FinDist Bool → FinDist Bool),
+      signal.IsPosteriorAssignment prior posterior ∧
+        signal.inducedPosteriorLaw prior posterior = law :=
+  SignalStructure.exists_signalStructure_of_isBayesPlausible
+    prior law law_isBayesPlausible
+
+theorem constructedSignal_induces_law :
+    (SignalStructure.fromPosteriorLaw law).inducedPosteriorLaw prior id = law :=
+  SignalStructure.inducedPosteriorLaw_fromPosteriorLaw
+    prior law law_isBayesPlausible
 
 /-- Concentrating on the false point mass has the wrong mean for the fair
 prior, so Bayes plausibility is a substantive restriction. -/

@@ -6,6 +6,7 @@ action. The fair mutant is an explicit non-point-mass negative control.
 -/
 
 import GameTheory.Evolutionary
+import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
 
@@ -14,6 +15,67 @@ noncomputable section
 namespace GameTheory.Tests.Evolutionary
 
 open GameTheory.Evolutionary GameTheory.Probability
+
+/-! ## The second-order clause is load-bearing -/
+
+/-- The mutant ties the resident when facing the resident, but loses when the
+resident and mutant are each tested against the mutant. -/
+def tieBreakPayoff : Bool → Bool → ℝ
+  | true, true => 1
+  | false, true => 1
+  | true, false => 2
+  | false, false => 0
+
+theorem tieBreak_mutant_ties_first_order :
+    tieBreakPayoff true true = tieBreakPayoff false true :=
+  rfl
+
+theorem tieBreak_resident_wins_second_order :
+    tieBreakPayoff true false > tieBreakPayoff false false := by
+  norm_num [tieBreakPayoff]
+
+/-- A stable ESS whose distinct mutant reaches, and is rejected by, the
+second-order clause. A strict-Nash-only proof cannot establish this result. -/
+theorem tieBreak_true_isESS : IsESS tieBreakPayoff true := by
+  constructor
+  · intro mutant
+    cases mutant <;> norm_num [tieBreakPayoff]
+  · intro mutant _ hne
+    cases mutant
+    · norm_num [tieBreakPayoff]
+    · exact False.elim (hne rfl)
+
+/-- Reverse the second-order comparison while retaining the same first-order
+tie. The resident is Nash in the symmetric encounter but is not even neutrally
+stable. -/
+def nashOnlyPayoff : Bool → Bool → ℝ
+  | true, true => 1
+  | false, true => 1
+  | true, false => 0
+  | false, false => 2
+
+theorem nashOnly_true_isNash :
+    IsNash (symmetricForm Bool) (euPreference (symmetricUtility nashOnlyPayoff))
+      (residentProfile true) := by
+  have hfirst :
+      ∀ mutant, nashOnlyPayoff true true ≥ nashOnlyPayoff mutant true := by
+    intro mutant
+    cases mutant <;> norm_num [nashOnlyPayoff]
+  rw [isNash_iff]
+  intro who replacement
+  rw [euPreference_apply]
+  fin_cases who <;>
+    simpa [symmetricForm, symmetricUtility, residentProfile, opponent] using
+      hfirst replacement
+
+theorem nashOnly_true_not_isNSS : ¬ IsNSS nashOnlyPayoff true := by
+  intro hnss
+  have hsecond := hnss.2 false rfl
+  norm_num [nashOnlyPayoff] at hsecond
+
+theorem nashOnly_true_not_isESS : ¬ IsESS nashOnlyPayoff true := by
+  intro hess
+  exact nashOnly_true_not_isNSS hess.isNSS
 
 /-- Only choosing `true` earns a payoff; the opponent action is immaterial. -/
 def payoff (own _other : Bool) : ℝ := if own then 1 else 0

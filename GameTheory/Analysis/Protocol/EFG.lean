@@ -30,13 +30,14 @@ def IsSequentiallyConsistent
     [Fintype ι]
     [Fintype G.execution.State]
     [∀ i, DecidableEq (G.information.InfoState i)]
+    (hantichain : G.information.DecisionInformationAntichain)
     (assessment : G.information.BehavioralAssessment) : Prop := by
   letI : Fintype G.History := G.historyFintype
   letI (i : ι) (site : G.information.InformationSite i) :
       Fintype (G.information.InformationHistory i site.1) := by
     classical
     infer_instance
-  exact assessment.IsSequentiallyConsistent
+  exact assessment.IsSequentiallyConsistent hantichain
 
 /-- Sequential equilibrium of a finite EFG assessment over a supplied
 finite-horizon payoff. The logical predicate is the generic Protocol predicate;
@@ -47,6 +48,7 @@ def IsSequentialEquilibriumWithin
     [Fintype ι] [DecidableEq ι]
     [Fintype G.execution.State]
     [∀ i, DecidableEq (G.information.InfoState i)]
+    (hantichain : G.information.DecisionInformationAntichain)
     (assessment : G.information.BehavioralAssessment)
     (payoff : ι → G.History → ℝ) (fuel : ℕ) : Prop := by
   letI : Fintype G.History := G.historyFintype
@@ -54,7 +56,7 @@ def IsSequentialEquilibriumWithin
       Fintype (G.information.InformationHistory i site.1) := by
     classical
     infer_instance
-  exact assessment.IsSequentialEquilibriumFor fun i site =>
+  exact assessment.IsSequentialEquilibriumFor hantichain fun i site =>
     assessment.continuationContext site (payoff i) fuel
 
 /-- The adapter unfolds to full-policy rationality in the assessment's
@@ -64,11 +66,12 @@ theorem isSequentialEquilibriumWithin_iff
     [Fintype ι] [DecidableEq ι]
     [Fintype G.execution.State]
     [∀ i, DecidableEq (G.information.InfoState i)]
+    (hantichain : G.information.DecisionInformationAntichain)
     (assessment : G.information.BehavioralAssessment)
     (payoff : ι → G.History → ℝ) (fuel : ℕ) :
-    G.IsSequentialEquilibriumWithin assessment payoff fuel ↔
+    G.IsSequentialEquilibriumWithin hantichain assessment payoff fuel ↔
       assessment.IsSequentiallyRationalWithin payoff fuel ∧
-        G.IsSequentiallyConsistent assessment :=
+        G.IsSequentiallyConsistent hantichain assessment :=
   Iff.rfl
 
 end Game

@@ -42,7 +42,7 @@ theorem highDeal_not_isSubgameRoot :
     blind_cannot_tell
   rcases hcross with ⟨fuel, hreach⟩
   have hequal := ExecutionProtocol.ReachesWithin.eq_of_trace_length_eq
-    hiddenCard hreach (by rfl)
+    hreach (by rfl)
   have hstate := congrArg (fun history : hiddenCard.History => history.state) hequal
   simp [highDealHistory, lowDealHistory] at hstate
 
