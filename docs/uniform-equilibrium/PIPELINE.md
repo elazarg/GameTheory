@@ -2643,8 +2643,13 @@ mass `mu`, one has `rho-C=A*mu` and `1-rho=A*(1-mu)`.  The repeated-root phase
 and refusal evaluators become, respectively,
 `-C*tangent-phaseSlack` and, when `mu<1`,
 `mu/(1-mu)*tangent-refusalSlack/(A*(1-mu))`; `mu=1` is the isolated
-all-opponents-Continue boundary.  This settles the period-one readout but not
-the provenance or support-pivot consumer.
+all-opponents-Continue boundary.  The counterexample extractor now retains
+literal fuel one, so the actual selected roots carry these masses and
+endpoint tangents along the same subsequence; one fixed negative or
+active-positive coordinate has eventual strict sign.  The source edge's exact
+Nash--Bellman property makes both finite slacks nonnegative.  This settles the
+one-stage provenance/readout, but the repeated root is still only a diagnostic
+deviation and does not provide periodic tail attachment or the support pivot.
 For the active-positive branch, provenance at singleton level is now closed:
 once all tangent coordinates are nonnegative, the tail-derived tangent packet
 itself is a normalized singleton-source packet, its weighted surplus is

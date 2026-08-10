@@ -304,6 +304,189 @@ Continue mass after forcing the displayed player to Continue. -/
 
 /-! ## Exact slack-retaining tangent evaluator -/
 
+/-- A single exact Nash--Bellman step makes both period-one evaluator slacks
+nonnegative.  Only the two pure root deviations are used; no later edge and
+no repeated-root Nash hypothesis is required. -/
+theorem quittingPeriodOne_slacks_nonneg_of_step_nash
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι) (initial : ℝ)
+    (terminal : Payoff ι)
+    (hstep : initial = quittingRootSuccessorPayoff reward terminal root who)
+    (hnash : IsεQuittingRootNash reward terminal 0 root) :
+    0 ≤ quittingPeriodicWindowPhaseSlack reward
+        (quittingPeriodOneRootSequence root) who 1 initial ∧
+      0 ≤ quittingPeriodicWindowRefusalSlack reward
+        (quittingPeriodOneRootSequence root) who 1 initial (terminal who) := by
+  have hquit := hnash who (PMF.pure true)
+  have hcontinue := hnash who (PMF.pure false)
+  change quittingRootQuitPayoff reward terminal root who ≤
+      quittingRootSuccessorPayoff reward terminal root who + 0 at hquit
+  change quittingRootContinuePayoff reward terminal root who ≤
+      quittingRootSuccessorPayoff reward terminal root who + 0 at hcontinue
+  rw [← hstep] at hquit hcontinue
+  constructor
+  · unfold quittingPeriodicWindowPhaseSlack
+    apply sub_nonneg.mpr
+    have hphase :
+        quittingRootSequenceHazardTerminalValue reward
+            (quittingPeriodOneRootSequence root) who
+            (quittingPureTimeHazard (some 0)) 0 =
+          quittingRootQuitPayoff reward terminal root who := by
+      rw [quittingRootSequenceHazardTerminalValue_eq_hazardBellman]
+      simp [quittingFixedOpponentsQuitValue, quittingRootQuitPayoff,
+        quittingRootExpectedPayoff_eq_absorbingContribution_add,
+        quittingStationaryContinueMass_update_pure_true_eq_zero,
+        quittingPeriodOneRootSequence]
+    simpa [quittingPeriodicWindowBestPhaseStop,
+      quittingPeriodicWindowPhaseStopValue,
+      quittingRootSequencePureTimeTerminalValue, hphase] using hquit
+  · unfold quittingPeriodicWindowRefusalSlack
+    apply sub_nonneg.mpr
+    unfold quittingRootContinuePayoff at hcontinue
+    rw [quittingRootExpectedPayoff_eq_absorbingContribution_add] at hcontinue
+    simpa [quittingFiniteContinueToBoundaryValue,
+      quittingFixedOpponentsContinueReward,
+      quittingFixedOpponentsContinueMass, quittingRootContinuePayoff,
+      quittingPeriodOneRootSequence] using hcontinue
+
+omit [DecidableEq ι] in
+/-- One affine Bellman step is enough to identify the endpoint displacement
+of the periodically restarted root.  No recursion beyond this single edge is
+required. -/
+theorem quittingPeriodOne_absorption_mul_restartDelivery_sub_terminal_of_step
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι) (initial terminal : ℝ)
+    (hstep : initial =
+      quittingRootAbsorbingContribution reward root who +
+        quittingStationaryContinueMass root * terminal)
+    (habsorption : 0 < quittingRootAbsorptionMass root) :
+    quittingRootAbsorptionMass root *
+        (quittingWindowRestartDelivery reward
+            (quittingPeriodOneRootSequence root) who 0 1 - terminal) =
+      initial - terminal := by
+  have hmass : quittingRootAbsorptionMass root ≠ 0 := habsorption.ne'
+  have hgap : 1 - quittingStationaryContinueMass root ≠ 0 := by
+    unfold quittingRootAbsorptionMass at hmass
+    exact hmass
+  have hintercept :
+      quittingWindowAbsorbingIntercept reward
+          (quittingPeriodOneRootSequence root) who 0 1 =
+        quittingRootAbsorbingContribution reward root who := by
+    simp [quittingWindowAbsorbingIntercept]
+  unfold quittingWindowRestartDelivery
+  rw [hintercept, quittingJointSurvivalWeight_periodOne]
+  have habsorbing : quittingRootAbsorbingContribution reward root who =
+      initial - quittingStationaryContinueMass root * terminal := by
+    linarith
+  rw [habsorbing]
+  unfold quittingRootAbsorptionMass
+  field_simp [hgap]
+  ring
+
+/-- **Local period-one phase atlas.**  The exact phase identity only needs
+the displayed one-stage affine Bellman recurrence. -/
+theorem quittingPeriodOneBestPhaseStop_sub_restartDelivery_eq_tangent_of_step
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι) (initial terminal : ℝ)
+    (hstep : initial =
+      quittingRootAbsorbingContribution reward root who +
+        quittingStationaryContinueMass root * terminal)
+    (habsorption : 0 < quittingRootAbsorptionMass root) :
+    quittingPeriodicWindowBestPhaseStop reward
+          (quittingPeriodOneRootSequence root) who 1 -
+        quittingWindowRestartDelivery reward
+          (quittingPeriodOneRootSequence root) who 0 1 =
+      -quittingStationaryContinueMass root *
+          (quittingWindowRestartDelivery reward
+              (quittingPeriodOneRootSequence root) who 0 1 - terminal) -
+        quittingPeriodicWindowPhaseSlack reward
+          (quittingPeriodOneRootSequence root) who 1 initial := by
+  have htangent :=
+    quittingPeriodOne_absorption_mul_restartDelivery_sub_terminal_of_step
+      reward root who initial terminal hstep habsorption
+  unfold quittingPeriodicWindowPhaseSlack
+  unfold quittingRootAbsorptionMass at htangent
+  nlinarith
+
+/-- **Local period-one refusal atlas, proper-mass branch.**  The exact
+refusal identity only needs the displayed one-stage affine Bellman recurrence.
+The repeated root defines the deviation being evaluated; it is not asserted
+to be the source of any later tail edge. -/
+theorem quittingPeriodOneRefusalValue_sub_restartDelivery_eq_tangent_of_step
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι) (initial terminal : ℝ)
+    (hstep : initial =
+      quittingRootAbsorbingContribution reward root who +
+        quittingStationaryContinueMass root * terminal)
+    (habsorption : 0 < quittingRootAbsorptionMass root)
+    (hproper : quittingRootNormalizedSingletonMass root who < 1) :
+    quittingPeriodicWindowRefusalValue reward
+          (quittingPeriodOneRootSequence root) who -
+        quittingWindowRestartDelivery reward
+          (quittingPeriodOneRootSequence root) who 0 1 =
+      (quittingRootNormalizedSingletonMass root who /
+          (1 - quittingRootNormalizedSingletonMass root who)) *
+          (quittingWindowRestartDelivery reward
+              (quittingPeriodOneRootSequence root) who 0 1 - terminal) -
+        quittingPeriodicWindowRefusalSlack reward
+            (quittingPeriodOneRootSequence root) who 1 initial terminal /
+          (quittingRootAbsorptionMass root *
+            (1 - quittingRootNormalizedSingletonMass root who)) := by
+  let roots := quittingPeriodOneRootSequence root
+  let C := quittingStationaryContinueMass root
+  let rho := quittingStationaryContinueMass
+    (Function.update root who (PMF.pure false))
+  let A := quittingRootAbsorptionMass root
+  let mu := quittingRootNormalizedSingletonMass root who
+  let delivery := quittingWindowRestartDelivery reward roots who 0 1
+  let refusal := quittingPeriodicWindowRefusalValue reward roots who
+  let slack := quittingPeriodicWindowRefusalSlack reward roots who 1
+    initial terminal
+  have hrefusal :=
+    quittingPeriodicWindowRefusalValue_eq_continueToBoundary_add
+      reward roots who 1 (quittingPeriodOneRootSequence_periodic root) terminal
+  have htangent :=
+    quittingPeriodOne_absorption_mul_restartDelivery_sub_terminal_of_step
+      reward root who initial terminal hstep habsorption
+  have hAne : A ≠ 0 := habsorption.ne'
+  have hmuNe : 1 - mu ≠ 0 := sub_ne_zero.mpr (ne_of_gt hproper)
+  have hrhoC : rho - C = A * mu :=
+    quittingRootOpponentContinue_sub_continue_eq_absorption_mul_share
+      root who habsorption
+  have hrhoGap : 1 - rho = A * (1 - mu) :=
+    one_sub_quittingRootOpponentContinue_eq_absorption_mul_one_sub_share
+      root who habsorption
+  have hrefusalStep :
+      refusal = initial - slack + rho * (refusal - terminal) := by
+    dsimp only [refusal, slack, roots]
+    unfold quittingPeriodicWindowRefusalSlack
+    have hrefusal' := hrefusal
+    dsimp only [roots] at hrefusal'
+    simp only [quittingOpponentSurvivalWeight_periodOne] at hrefusal'
+    change quittingPeriodicWindowRefusalValue reward
+          (quittingPeriodOneRootSequence root) who =
+        quittingFiniteContinueToBoundaryValue reward
+            (quittingPeriodOneRootSequence root) who terminal 0 1 +
+          rho * (quittingPeriodicWindowRefusalValue reward
+            (quittingPeriodOneRootSequence root) who - terminal) at hrefusal'
+    linarith
+  have hraw :
+      (1 - rho) * (refusal - delivery) =
+        (rho - C) * (delivery - terminal) - slack := by
+    change A * (delivery - terminal) = initial - terminal at htangent
+    have hAC : A = 1 - C := rfl
+    rw [hAC] at htangent
+    nlinarith [hrefusalStep, htangent]
+  rw [hrhoGap, hrhoC] at hraw
+  have htarget :
+      refusal - delivery =
+        (mu / (1 - mu)) * (delivery - terminal) -
+          slack / (A * (1 - mu)) := by
+    field_simp [hAne, hmuNe]
+    ring_nf at hraw ⊢
+    exact hraw
+  exact htarget
+
 /-- **Period-one phase atlas.**  For a positive-absorption root, the exact
 phase seam is `-C` times the charge-normalized endpoint tangent, minus the
 displayed finite phase slack.

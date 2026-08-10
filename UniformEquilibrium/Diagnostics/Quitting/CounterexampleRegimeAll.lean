@@ -21,6 +21,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketDefect
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSurplus
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneTangentReadout
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeQuantitative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodicWindows
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSearchConsequences
@@ -190,7 +191,11 @@ Writing `A` for absorption, `mu` for the normalized singleton-owner mass,
 `rho-C=A*mu` and `1-rho=A*(1-mu)`.  The phase evaluator is
 `-C*tangent-phaseSlack`; on `mu<1` the refusal evaluator is
 `mu/(1-mu)*tangent-refusalSlack/(A*(1-mu))`.  At `mu=1` every opponent
-continues surely and the refusal denominator is genuinely zero.  This atlas
-does not identify an abstract packet with a one-stage root or remove the
-displayed strategic slacks.
+continues surely and the refusal denominator is genuinely zero.  The
+canonical extraction retains literal one-stage fuel and now packages actual
+root-mass and endpoint-tangent convergence to the tail packet, with one fixed
+signed coordinate.  Its single exact Nash--Bellman edge makes both displayed
+slacks nonnegative.  The periodically repeated root remains a diagnostic
+deviation; the source tail is not asserted to be periodic or attached to that
+restart.
 -/

@@ -328,11 +328,12 @@ namespace QuittingCounterexampleSeamWitness
 
 variable (seam : QuittingCounterexampleSeamWitness regime)
 
-/-- **Counterexample tail alternative.**  Either the selected exact-D tail is
-eventually the literal all-Continue root, or one-stage positive-absorption
-windows escaping to infinity produce a nonzero charge-tangent packet with
-explicit occupation and tangent convergence along a subsequence. -/
-theorem eventually_allContinue_or_exists_chargeTangentPacket :
+/-- **One-stage counterexample tail alternative.**  Either the selected
+exact-D tail is eventually the literal all-Continue root, or positive-
+absorption windows of literal fuel one escaping to infinity produce a nonzero
+charge-tangent packet with explicit occupation and tangent convergence along
+a subsequence. -/
+theorem eventually_allContinue_or_exists_oneStage_chargeTangentPacket :
     (∃ threshold, ∀ time, threshold ≤ time →
       quittingDynamicDebtTailRoots seam.tail time =
         (quittingAllContinueRoot : ι → PMF Bool)) ∨
@@ -340,6 +341,7 @@ theorem eventually_allContinue_or_exists_chargeTangentPacket :
       ∃ window : ℕ → QuittingFiniteRootWindow
           (quittingDynamicDebtTailRoots seam.tail),
         Tendsto (fun index ↦ (window index).start) atTop atTop ∧
+        (∀ index, (window index).fuel = 1) ∧
         (∀ index, 0 < (window index).absorptionMass) ∧
         (∀ owner, Tendsto
           (fun index ↦
@@ -387,13 +389,40 @@ theorem eventually_allContinue_or_exists_chargeTangentPacket :
         (quittingDynamicDebtTailRoots seam.tail) :=
       fun index ↦ window (subseq index)
     let packet := regime.chargeTangentPacketOfData data
-    refine ⟨packet, selectedWindow, ?_, ?_, ?_, ?_⟩
+    refine ⟨packet, selectedWindow, ?_, ?_, ?_, ?_, ?_⟩
     · exact hstartTendsto.comp hsubseq.tendsto_atTop
+    · intro index
+      simp [selectedWindow, window]
     · exact fun index ↦ habsorption (subseq index)
     · intro owner
       exact hoccupation owner
     · intro who
       exact htangent who
+
+/-- Backward-compatible form of the counterexample tail alternative, obtained
+by forgetting that every extracted window has fuel one. -/
+theorem eventually_allContinue_or_exists_chargeTangentPacket :
+    (∃ threshold, ∀ time, threshold ≤ time →
+      quittingDynamicDebtTailRoots seam.tail time =
+        (quittingAllContinueRoot : ι → PMF Bool)) ∨
+    ∃ packet : QuittingChargeTangentPacket reward,
+      ∃ window : ℕ → QuittingFiniteRootWindow
+          (quittingDynamicDebtTailRoots seam.tail),
+        Tendsto (fun index ↦ (window index).start) atTop atTop ∧
+        (∀ index, 0 < (window index).absorptionMass) ∧
+        (∀ owner, Tendsto
+          (fun index ↦
+            (window index).normalizedSingletonOccupation owner)
+          atTop (nhds (packet.mass owner))) ∧
+        ∀ who, Tendsto
+          (fun index ↦ seam.normalizedEndpointTangent (window index) who)
+          atTop (nhds (packet.tangent who)) := by
+  rcases seam.eventually_allContinue_or_exists_oneStage_chargeTangentPacket with
+    hplateau | ⟨packet, window, hstart, -, habsorption,
+      hoccupation, htangent⟩
+  · exact Or.inl hplateau
+  · exact Or.inr
+      ⟨packet, window, hstart, habsorption, hoccupation, htangent⟩
 
 end QuittingCounterexampleSeamWitness
 
