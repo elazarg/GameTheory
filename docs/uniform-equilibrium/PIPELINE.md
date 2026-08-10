@@ -2719,6 +2719,17 @@ The unresolved pivot is selecting simultaneous quit probabilities.  Those
 rates enter coalition masses and Möbius derivatives multiaffinely, so the
 pointwise certificates do not form one global linear certificate and positive
 reciprocal singleton synergy does not yet force a feasible root.
+There is now a canonical bridge to the established projective ontology.  For
+every cemetery weight `0<c≤1`, the tangent packet defines an anchored
+projective singleton packet with singleton weights `(1-c)*mass`, value equal
+to the boundary, and anchor
+`boundary-((1-c)/c)*tangent`.  On active support its projective LCP direction
+is exactly `-((1-c)/c)*tangent`, hence active positivity is a strict negative
+projective direction for `c<1`.  This identifies the correct pivot input but
+does not construct the pivot: `QuittingResolvedProjectiveChartInterface`
+still requires a feasible real/Puiseux lift, and no arbitrary-player theorem
+builds that arc from the packet.  The three-player analytic compiler is a
+separate finite-dimensional result rather than a generic chart constructor.
 
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges

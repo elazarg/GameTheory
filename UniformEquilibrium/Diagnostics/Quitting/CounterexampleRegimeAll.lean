@@ -31,6 +31,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSeam
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSmallPlayers
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTailBridge
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacket
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentAnchoredProjectiveLCP
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
@@ -101,6 +102,14 @@ Actual collision and higher Möbius terms are retained in the rows.  Choosing
 the simultaneous quit probabilities remains a genuinely multiaffine search;
 the singleton-level handoff does not itself produce that root or contradict
 all of its pointwise certificates.
+The same packet also embeds canonically into the existing anchored projective
+singleton LCP at every positive cemetery weight: singleton weights are a
+rescaling of packet mass and the anchor is boundary minus the corresponding
+rescaled tangent.  An active-positive coordinate becomes a strictly negative
+projective LCP direction.  What remains absent in arbitrary player count is
+the resolved-chart feasibility/arc lift turning that anchored first-event
+datum into actual product-root Nash--Bellman rates; the three-player analytic
+compiler does not supply such a generic constructor.
 
 Independently of that selected-tail geometry, reward-table closure gives a
 robust finite-cycle restriction: a hypothetical counterexample has one
