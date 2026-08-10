@@ -229,6 +229,15 @@ instance (i : information.InfoState ()) : Nonempty (information.Choice () i) := 
   | chance | right | exited | lnone | lpunish | lreward | punished | rewarded |
       snone | sexit | scontinue => exact ⟨⟨none, by simp [menu]⟩⟩
 
+/-- A total plan is required because contingent plans are total, even though
+backward maximization only inspects genuine decision histories. -/
+def fallbackProfile : Profile game.strategicSignature :=
+  fun _ _ => Classical.choice inferInstance
+
+theorem finiteDecisionChoices : information.HasFiniteDecisionChoices := by
+  intro _ info _ _
+  exact inferInstance
+
 def rank : State → ℕ
   | .chance => 3 | .left => 2 | .second => 1 | _ => 0
 
@@ -341,18 +350,22 @@ def rewardChoice : information.Choice () (information.infoOf () secondHistory.tr
 /-- The particular contingent plan constructed by the public existence
 theorem's Bellman engine. -/
 def bellmanProfile : Profile game.strategicSignature :=
-  information.backwardProfile singleMover wellFoundedPlay utility
+  information.backwardProfile singleMover fallbackProfile finiteDecisionChoices
+    wellFoundedPlay utility
 
 private def recurseValue (later : execution.History)
     (_ : execution.HistorySuccessor later secondHistory) : Unit → ℝ :=
-  information.backwardOutcome singleMover wellFoundedPlay utility later
+  information.backwardOutcome singleMover fallbackProfile finiteDecisionChoices
+    wellFoundedPlay utility later
 
 private theorem backwardOutcome_terminal_apply (history : execution.History)
     (hterm : execution.terminal history.state) :
-    information.backwardOutcome singleMover wellFoundedPlay utility history () =
+    information.backwardOutcome singleMover fallbackProfile finiteDecisionChoices
+      wellFoundedPlay utility history () =
       utility history () := by
   exact congrFun
-    (information.backwardOutcome_of_terminal singleMover hterm) ()
+    (information.backwardOutcome_of_terminal singleMover fallbackProfile
+      finiteDecisionChoices hterm) ()
 
 theorem rewardChoice_value :
     information.historyChoiceValue singleMover secondHistory second_not_terminal
@@ -411,10 +424,12 @@ theorem secondBestChoice_eq_rewardChoice : secondBestChoice = rewardChoice := by
   · exact Subtype.ext hreward
 
 theorem backwardChooser_second_action :
-    (information.backwardChooser singleMover wellFoundedPlay utility
+    (information.backwardChooser singleMover fallbackProfile finiteDecisionChoices
+      wellFoundedPlay utility
       secondHistory second_not_terminal).1 () = some .reward := by
   rw [InformationModel.backwardChooser,
-    information.backwardJoint_of_active singleMover secondHistory
+    information.backwardJoint_of_active singleMover fallbackProfile
+      finiteDecisionChoices secondHistory
       second_not_terminal _ () second_active]
   show secondBestChoice.1 = some .reward
   rw [secondBestChoice_eq_rewardChoice]
@@ -425,16 +440,20 @@ decision, rather than merely returning an opaque equilibrium witness. -/
 theorem bellmanProfile_chooses_reward :
     (bellmanProfile ()).act .second = some .reward := by
   show
-    (information.backwardPolicy singleMover wellFoundedPlay utility ()).act
+    (information.backwardPolicy singleMover fallbackProfile finiteDecisionChoices
+      wellFoundedPlay utility ()).act
       .second = some .reward
   calc
-    _ = (information.backwardPolicy singleMover wellFoundedPlay utility ()).act
+    _ = (information.backwardPolicy singleMover fallbackProfile
+        finiteDecisionChoices wellFoundedPlay utility ()).act
         (information.infoOf () secondHistory.trace) := by
           simp [infoOf_state, secondHistory]
-    _ = (information.backwardChooser singleMover wellFoundedPlay utility
+    _ = (information.backwardChooser singleMover fallbackProfile
+        finiteDecisionChoices wellFoundedPlay utility
         secondHistory second_not_terminal).1 () :=
-          information.backwardPolicy_act_at_decision singleMover perfect
-            secondHistory second_not_terminal () second_active
+          information.backwardPolicy_act_at_decision singleMover fallbackProfile
+            finiteDecisionChoices perfect secondHistory second_not_terminal ()
+              second_active
     _ = some .reward := backwardChooser_second_action
 
 private theorem histories_eq_of_state_eq
@@ -455,10 +474,12 @@ theorem history_eq_secondHistory_of_state (history : execution.History)
     (hstate.trans secondHistory_state.symm)
 
 theorem backwardOutcome_second :
-    information.backwardOutcome singleMover wellFoundedPlay utility
+    information.backwardOutcome singleMover fallbackProfile finiteDecisionChoices
+      wellFoundedPlay utility
       secondHistory () = 1 := by
   have hout := congrFun
-    (information.backwardOutcome_of_not_terminal singleMover
+    (information.backwardOutcome_of_not_terminal singleMover fallbackProfile
+      finiteDecisionChoices
       (certificate := wellFoundedPlay) (utility := utility)
       second_not_terminal) ()
   rw [hout]
@@ -468,13 +489,15 @@ theorem backwardOutcome_second :
 
 private theorem backwardOutcome_eq_one_of_state_second
     (history : execution.History) (hstate : history.state = .second) :
-    information.backwardOutcome singleMover wellFoundedPlay utility history () = 1 := by
+    information.backwardOutcome singleMover fallbackProfile finiteDecisionChoices
+      wellFoundedPlay utility history () = 1 := by
   rw [history_eq_secondHistory_of_state history hstate]
   exact backwardOutcome_second
 
 private def leftRecurseValue (later : execution.History)
     (_ : execution.HistorySuccessor later leftHistory) : Unit → ℝ :=
-  information.backwardOutcome singleMover wellFoundedPlay utility later
+  information.backwardOutcome singleMover fallbackProfile finiteDecisionChoices
+    wellFoundedPlay utility later
 
 theorem exitChoice_value :
     information.historyChoiceValue singleMover leftHistory left_not_terminal
@@ -533,10 +556,12 @@ theorem leftBestChoice_eq_exitChoice : leftBestChoice = exitChoice := by
     norm_num at hmax'
 
 theorem backwardChooser_left_action :
-    (information.backwardChooser singleMover wellFoundedPlay utility
+    (information.backwardChooser singleMover fallbackProfile finiteDecisionChoices
+      wellFoundedPlay utility
       leftHistory left_not_terminal).1 () = some .exit := by
   rw [InformationModel.backwardChooser,
-    information.backwardJoint_of_active singleMover leftHistory
+    information.backwardJoint_of_active singleMover fallbackProfile
+      finiteDecisionChoices leftHistory
       left_not_terminal _ () left_active]
   show leftBestChoice.1 = some .exit
   rw [leftBestChoice_eq_exitChoice]
@@ -547,21 +572,37 @@ exit instead of continuing to the payoff-one subgame. -/
 theorem bellmanProfile_chooses_exit :
     (bellmanProfile ()).act .left = some .exit := by
   show
-    (information.backwardPolicy singleMover wellFoundedPlay utility ()).act
+    (information.backwardPolicy singleMover fallbackProfile finiteDecisionChoices
+      wellFoundedPlay utility ()).act
       .left = some .exit
   calc
-    _ = (information.backwardPolicy singleMover wellFoundedPlay utility ()).act
+    _ = (information.backwardPolicy singleMover fallbackProfile
+        finiteDecisionChoices wellFoundedPlay utility ()).act
         (information.infoOf () leftHistory.trace) := by
           simp [infoOf_state, leftHistory]
-    _ = (information.backwardChooser singleMover wellFoundedPlay utility
+    _ = (information.backwardChooser singleMover fallbackProfile
+        finiteDecisionChoices wellFoundedPlay utility
         leftHistory left_not_terminal).1 () :=
-          information.backwardPolicy_act_at_decision singleMover perfect
-            leftHistory left_not_terminal () left_active
+          information.backwardPolicy_act_at_decision singleMover fallbackProfile
+            finiteDecisionChoices perfect leftHistory left_not_terminal ()
+              left_active
     _ = some .exit := backwardChooser_left_action
+
+/-- The total construction preserves the supplied plan at the chance
+information state, where the player never makes a decision. -/
+theorem backwardPolicy_chance_eq_fallback :
+    information.backwardPolicy singleMover fallbackProfile
+        finiteDecisionChoices wellFoundedPlay utility () .chance =
+      fallbackProfile () .chance := by
+  apply information.backwardPolicy_eq_fallback_of_no_decision_history
+  rintro ⟨history, _, hactive, hinfo⟩
+  rw [infoOf_state] at hinfo
+  simp [execution, hinfo] at hactive
 
 /-- The public EFG surface constructs a pure SPE on the hostile witness. -/
 theorem exists_subgamePerfect : ∃ p : Profile game.strategicSignature,
     game.IsSubgamePerfect wellFoundedPlay p utility :=
-  game.exists_isSubgamePerfect wellFoundedPlay perfect utility
+  game.exists_isSubgamePerfect fallbackProfile finiteDecisionChoices
+    wellFoundedPlay perfect utility
 
 end GameTheory.Tests.EFGZermelo

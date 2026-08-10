@@ -170,7 +170,7 @@ The single-pass panel observations were re-derived separately before action:
 | P-06 | A 340-line backward probe lived in stable Protocol. | closed | The fixture moved to `Tests.Backward`; stable `Protocol.Backward` contains semantics and theorems only. |
 | P-07 | Sequential-rationality tests were nondiscriminating. | closed | `Analysis.Protocol.EFGTest` includes a payoff-sensitive assessment that fails sequential rationality and sequential equilibrium. |
 | P-08 | History-state sufficiency was called perfect recall. | closed | `Protocol.Information` distinguishes the Markov/history-sufficiency premise from perfect recall. |
-| P-09 | Backward existence requests menus at unreachable information values. | queued | The current theorem honestly states the global finite/nonempty menu premise. A reachable-only capability weakening is optional protocol breadth, not used to justify the existing claim. |
+| P-09 | Backward existence requests menus at unreachable information values. | closed | `HasFiniteDecisionChoices` localizes finiteness to genuine decision histories; the canonical construction takes the total fallback that any contingent-plan existence statement necessarily needs. `Tests.ZermeloMenus` constructs an SPE with an actually infinite unreachable choice carrier and proves that the constructed policy preserves the fallback there. |
 | D-01 | PPE predicates had no public documentation or negative test. | closed | Exact/approximate public Nash and PPE now document public-strategy and off-path scope; `Tests.MonitoringEquilibrium` supplies positive and negative PPE witnesses. |
 | D-02 | Normalized discounted-sum algebra was duplicated. | closed | `GameTheoryMath.Discounted` owns the reusable comparison; repeated and monitoring modules consume it. |
 | D-03 | Uniform-tail quantification was duplicated across repeated and stochastic roots. | closed | `GameTheoryMath.EventuallyAtAll` owns the combinator; both concepts are transparent specializations. |
@@ -225,9 +225,8 @@ The single-pass panel observations were re-derived separately before action:
 
 The queued rows are theorem breadth, not unresolved corrections:
 
-1. MAID strategic-relevance/requisite analysis;
-2. the reachable-menu weakening for backward existence; and
-3. the remaining mature-family extensions already enumerated in
+1. MAID strategic-relevance/requisite analysis; and
+2. the remaining mature-family extensions already enumerated in
    `PostArchitectureDeliveryPlan.md`.
 
 Their absence is represented as `partial` or as a named next seam in

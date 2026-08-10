@@ -28,19 +28,21 @@ abbrev HasPerfectInformation : Prop :=
   G.information.SeparatesDecisionHistories
 
 /-- **Zermelo backward induction for EFG presentations.** A well-founded,
-perfect-information EFG with finite nonempty local choice carriers has a pure
-subgame-perfect contingent-plan profile. -/
+perfect-information EFG with a total fallback plan and finite choice carriers
+at genuine decision histories has a pure subgame-perfect contingent-plan
+profile. -/
 theorem exists_isSubgamePerfect
     [DecidableEq ι]
     [∀ who, DecidableEq (G.information.InfoState who)]
-    [∀ who info, Finite (G.information.Choice who info)]
-    [∀ who info, Nonempty (G.information.Choice who info)]
+    (fallback : Profile G.strategicSignature)
+    (finiteChoices : G.information.HasFiniteDecisionChoices)
     (certificate : G.execution.WellFoundedPlay)
     (hperfect : G.HasPerfectInformation)
     (utility : G.History → ι → ℝ) :
     ∃ profile : Profile G.strategicSignature,
       G.IsSubgamePerfect certificate profile utility :=
-  G.information.exists_isSubgamePerfect G.singleMover certificate hperfect utility
+  G.information.exists_isSubgamePerfect G.singleMover fallback finiteChoices
+    certificate hperfect utility
 
 end Game
 

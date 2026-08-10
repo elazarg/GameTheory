@@ -37,7 +37,7 @@ downstream theorem.
 | Bayesian Nash and revelation | two-player type-matching coordination equilibrium in [`Tests/Revelation.lean`](../GameTheory/Tests/Revelation.lean) | profitable-report controls in the one-player fixture | nondeviator preservation, truthful direct Nash, BNE-to-BCE certification, and exact BCE-to-information-structure reconstruction |
 | Persuasion feasibility | receiver-score maximization in [`Mechanism/InformationDesign.lean`](../GameTheory/Mechanism/InformationDesign.lean) | zero-mass messages are documented as automatic rather than substantive constraints | persuasive-rule and sender-optimal persuasive-rule existence |
 | Voting-power indices | majority-game swing counts in [`Tests/Banzhaf.lean`](../GameTheory/Tests/Banzhaf.lean) | Banzhaf and Shapley--Shubik values are numerically separated in the same fixture | normalized swing-count theorem and bundled simple-game Shapley--Shubik API |
-| Zermelo backward induction | chance-rooted Bellman profile in [`Tests/EFGZermelo.lean`](../GameTheory/Tests/EFGZermelo.lean) | strict comparisons rule out continue and punish | explicit exit and off-path reward prescriptions plus pure SPE existence |
+| Zermelo backward induction | chance-rooted Bellman profile in [`Tests/EFGZermelo.lean`](../GameTheory/Tests/EFGZermelo.lean) and an infinite unreachable menu in [`Tests/ZermeloMenus.lean`](../GameTheory/Tests/ZermeloMenus.lean) | strict comparisons rule out continue and punish; the infinite carrier refutes global menu finiteness | explicit exit/off-path reward prescriptions, fallback preservation, and pure SPE existence |
 
 ## Opt-in semantic surfaces
 
