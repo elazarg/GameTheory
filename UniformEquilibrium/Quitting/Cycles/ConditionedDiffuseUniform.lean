@@ -379,4 +379,40 @@ theorem
   exact ⟨requestedMesh, hrequestedMesh,
     min_le_left targetMesh safetyMesh, ⟨certificate⟩⟩
 
+/-- **Tight diffuse strategic dichotomy.**  On a singleton-tight exact source
+tail with vanishing conditioned mesh, either the game has a uniform payoff or
+some player-deleted conditioned clock is summable from some date. -/
+theorem
+    quittingGame_uniformPayoff_or_exists_summable_conditionedOpponentWeight
+    [Nonempty ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (boundary : Payoff ι)
+    (hpolicy : ∀ time, value time =
+      quittingRootSuccessorPayoff reward (value (time + 1)) (roots time))
+    (hnash : ∀ time,
+      IsεQuittingRootEndpointNash reward (value (time + 1)) 0 (roots time))
+    (hpositive : ∀ time, 0 < quittingTailEventualAbsorption roots time)
+    (hconditionedBound : ∀ time player,
+      |quittingTailConditionedValue roots value boundary time player| ≤
+        quittingRewardBound reward)
+    (htight : ∀ who, boundary who = quittingSoloBaseline reward who)
+    (hsourceFloor : ∀ time who,
+      quittingSoloBaseline reward who ≤ value time who)
+    (hmesh : Tendsto
+      (quittingTailConditionedAbsorptionWeight roots) atTop (nhds 0)) :
+    (∃ payoff : Payoff ι,
+        (quittingGame reward).IsUniformEquilibriumPayoff none payoff) ∨
+      ∃ who start, Summable (fun offset =>
+        quittingTailConditionedOpponentWeight roots (start + offset) who) := by
+  by_cases hclock : ∃ who start, Summable (fun offset =>
+      quittingTailConditionedOpponentWeight roots (start + offset) who)
+  · exact Or.inr hclock
+  · left
+    apply quittingGame_exists_uniformEquilibriumPayoff_of_conditionedDiffuseTail
+      reward roots value boundary hpolicy hnash hpositive hconditionedBound
+        htight hsourceFloor hmesh
+    push Not at hclock
+    exact hclock
+
 end GameTheory

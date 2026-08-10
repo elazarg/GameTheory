@@ -2457,7 +2457,9 @@ late diffuse suffixes.  No exact rowwise purification or extra occupation
 measure is assumed.  Consequently the deleted-complete diffuse branch of item
 5 is closed, including the all-errors uniform-payoff selection in
 `ConditionedDiffuseUniform.lean`.  Failure of deleted completeness is now a precise separate
-producer problem: extract an asymptotic solo chronology to feed the preceding
+producer problem: the named tight-diffuse dichotomy forces a summable
+player-deleted conditioned clock in every counterexample. Extract an
+asymptotic solo chronology from that clock to feed the preceding
 approximate punishment-cycle theorem.  Strict plateau slack remains the other
 conditioned boundary regime and still requires a support- or delivery-changing
 reset rather than affine shrinkage.
