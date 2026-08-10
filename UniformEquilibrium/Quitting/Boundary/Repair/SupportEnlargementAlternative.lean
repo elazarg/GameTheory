@@ -35,10 +35,10 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-! ## A generic support-local endpoint predicate -/
 
-/-- Support-local approximate endpoint complementarity, stated here rather
-than importing the path layer.  A played action must be within `δ` of the
-other endpoint, without multiplying its defect by its probability. -/
-def IsSupportEndpointApproxNash
+/-- Support-local approximate endpoint complementarity.  A played action must
+be within `δ` of the other endpoint, without multiplying its defect by its
+probability. -/
+def IsQuittingRootSupportApproxNash
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (tail : Payoff ι) (δ : ℝ) (root : ι → PMF Bool) : Prop :=
   ∀ who,
@@ -65,7 +65,7 @@ The Boolean marginal normalization then forces sure Quit. -/
 theorem quitProbability_eq_one_of_supportEndpointApproxNash_of_tolerance_lt
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (tail : Payoff ι) (δ : ℝ) (root : ι → PMF Bool) (who : ι)
-    (hsupport : IsSupportEndpointApproxNash reward tail δ root)
+    (hsupport : IsQuittingRootSupportApproxNash reward tail δ root)
     (htolerance : δ < quittingRootEndpointDifference reward tail root who) :
     (root who false).toReal = 0 ∧ (root who true).toReal = 1 := by
   have hcontinueNonneg : 0 ≤ (root who false).toReal := ENNReal.toReal_nonneg
@@ -88,7 +88,7 @@ theorem ownMarginal_repair_is_sureQuit_of_supportEndpointApproxNash
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (tail : Payoff ι) (δ : ℝ) (root : ι → PMF Bool) (who : ι)
     (marginal : PMF Bool)
-    (hsupport : IsSupportEndpointApproxNash reward tail δ
+    (hsupport : IsQuittingRootSupportApproxNash reward tail δ
       (Function.update root who marginal))
     (htolerance : δ < quittingRootEndpointDifference reward tail root who) :
     ((Function.update root who marginal) who false).toReal = 0 ∧

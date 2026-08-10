@@ -2478,12 +2478,18 @@ and leaves immediate Quit as the spectator test. Direct conditioned solo
 extraction and the singleton-floor compiler handle the deficient-clock case
 whenever this defect vanishes. Consequently every diffuse counterexample has a
 fixed positive sum of rescaled pure-Quit regrets recurring arbitrarily far
-along the tail. At a fixed continuation, support-local endpoint optimality at
-any tolerance below that gap forces the outsider to Quit surely, and changing
-only its own marginal leaves the endpoint gap invariant. Thus the local
-obligation is a sure-Quit reset rather than a small support enlargement. Its
-unresolved condition is a floor-safe, full-vector, state-matched realization
-of that reset or a delivery reset. Affine shrinkage cannot supply either one.
+along the tail. A single strict-plateau outsider realizes a uniform share of
+this defect cofinally while remaining prescribed `Never`. Its conditioned
+payoff stays uniformly below its singleton reward, and its literal endpoint
+difference against the next conditioned target stays uniformly positive. At a
+fixed continuation, support-local endpoint optimality at any tolerance below
+that gap forces the outsider to Quit surely, and changing only its own marginal
+leaves the endpoint gap invariant. Mixed-Nash existence also supplies a
+positive-absorption endpoint root into every target strictly below a singleton
+reward. Neither construction preserves the punishment floor or identifies the
+root's Bellman predecessor with the conditioned source state. The unresolved
+condition is a floor-safe, full-vector, state-matched reset or delivery reset.
+Affine shrinkage cannot supply either one.
 
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.

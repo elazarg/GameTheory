@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Quitting.Debt.Marked.PhaseSwitchCap
+import UniformEquilibrium.Quitting.Boundary.Repair.SupportEnlargementAlternative
 
 /-!
 # Support witnesses collapse Simon's ledger clock
@@ -50,17 +51,6 @@ namespace GameTheory
 open StochasticGame Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
-
-/-- The support-local form of Simon's one-stage `Eδ` condition.  Every action
-played with positive probability is within `δ` of the other endpoint. -/
-def IsQuittingRootSupportApproxNash
-    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
-    (tail : Payoff ι) (δ : ℝ) (root : ι → PMF Bool) : Prop :=
-  ∀ who,
-    (0 < (root who true).toReal →
-      -δ ≤ quittingRootEndpointDifference reward tail root who) ∧
-    (0 < (root who false).toReal →
-      quittingRootEndpointDifference reward tail root who ≤ δ)
 
 /-- A root sequence retains a support-local witness at every stage, against
 its actual continuation vector. -/

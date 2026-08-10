@@ -17,6 +17,8 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCollisionAwar
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCommonWordRealization
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedFloorViability
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedDiffuseClosure
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedDiffuseFixedOutsider
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedDiffuseReset
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedNegativeTangent
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedSlackThreshold
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
@@ -70,6 +72,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwn
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Quitting.Boundary.Repair.SupportEnlargementAlternative
+import UniformEquilibrium.Quitting.Boundary.Repair.FixedTailPositiveAbsorptionRoot
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
 import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
@@ -534,12 +537,16 @@ is summable while that defect vanishes, direct conditioned solo extraction
 places the owner's singleton vector above every singleton floor and punishment
 completion compiles it. Hence a counterexample has a fixed positive rescaled
 Quit defect recurring arbitrarily far along the tail, independently of its
-deleted-clock classification. At a fixed continuation this is a discontinuous
-reset obligation: support-local endpoint optimality with tolerance below the
-gap forces the obstructing player to Quit surely. Changing only that player's
-marginal cannot reduce the endpoint gap. A strategic repair must therefore
-move to the sure-Quit face or change the opponents or continuation enough to
-remove the gap.
+deleted-clock classification. One fixed strict-plateau outsider realizes this
+defect cofinally while remaining prescribed `Never`; its conditioned value is
+uniformly below its singleton reward, and its literal endpoint difference
+against the next conditioned target is uniformly positive. At a fixed
+continuation this is a discontinuous reset obligation: support-local endpoint
+optimality with tolerance below the gap forces the obstructing player to Quit
+surely, while changing only that player's marginal cannot reduce the endpoint
+gap. Mixed-Nash existence supplies a positive-absorption endpoint root into
+each target below a singleton reward. These roots need not preserve the
+punishment floor or match their Bellman predecessor to the source chronology.
 
 Negative ordinary tangent also has an exact conditioned interpretation.  It
 either remains a negative conditioned delivery gap, giving strict upward
