@@ -21,9 +21,9 @@ the exact-D/projective tail, bounded punishment-floor capacity, marked semantic
 compactness, elementary tail caps, and conditioned-tail chronology are all
 available. **Conditionally**, a singleton-tight diffuse suffix with uniform
 mesh at most `rho` and every player-deleted clock complete compiles to an
-asymptotic Nash profile with error `O(rho)`. The compiler becomes an all-errors
-producer only when the upstream construction supplies such suffixes with
-`rho → 0`; the unconditional counterexample split does not yet do so.
+asymptotic Nash profile with error `O(rho)`. The all-errors capstone is now
+explicit: arbitrarily fine such certificates imply a uniform-equilibrium
+payoff. The unconditional counterexample split does not yet supply them.
 
 The live residue has three natural exits:
 
@@ -2455,7 +2455,8 @@ uniformly small, and every conditioned player-deleted charge is nonsummable.
 The Nash and delivery errors are linear in the mesh bound and hence vanish on
 late diffuse suffixes.  No exact rowwise purification or extra occupation
 measure is assumed.  Consequently the deleted-complete diffuse branch of item
-5 is closed.  Failure of deleted completeness is now a precise separate
+5 is closed, including the all-errors uniform-payoff selection in
+`ConditionedDiffuseUniform.lean`.  Failure of deleted completeness is now a precise separate
 producer problem: extract an asymptotic solo chronology to feed the preceding
 approximate punishment-cycle theorem.  Strict plateau slack remains the other
 conditioned boundary regime and still requires a support- or delivery-changing
