@@ -2380,6 +2380,16 @@ support to a second positive quitter.  This is the precise finite residue:
 blocker inequalities force enlargement but do not choose rates satisfying the
 new active Bellman and complementarity rows.
 
+Punishment completion now also tolerates approximation on the contracting
+coordinates.  For a fixed-period absorbing family, the relevant root error is
+its cyclic survival charge divided by the deleted contraction gap; vanishing
+error and convergent targets give a named uniform payoff.  In particular,
+positive-hazard solo rows with endpoint-Nash error tending to zero and
+continuations converging to the owner's singleton vector compile whenever the
+owner's punishment value is no larger than the singleton payoff.  No positive
+lower bound on the hazards is required.  This is the intended consumer for a
+diffuse sole-owner conditioned branch.
+
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.
 On proper singleton roots, a state-matched changing-owner Nash--Bellman cycle
