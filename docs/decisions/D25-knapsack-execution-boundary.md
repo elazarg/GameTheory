@@ -107,7 +107,7 @@ The other 52 pinned rows do not ride this decision silently:
 - the allocation rule and its monotonicity theorem belong in the next real
   semantic slice;
 - mature truthfulness should be recovered topology-free through the existing
-  canonical `Mechanism.Auction.VCGSetup` with `Finset Agent` outcomes, while
+  canonical `Mechanism.GrovesSetup` with `Finset Agent` outcomes, while
   only equality to the predecessor's exact Myerson-envelope payment remains
   behind M-BAYES/D11.  The retired `SingleParameterMechanism` wrapper stack is
   not recreated.

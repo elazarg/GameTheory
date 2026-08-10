@@ -6,7 +6,7 @@ profile update, VCG, and Nash surfaces.
 -/
 
 import GameTheory.Mechanism.Knapsack.Basic
-import GameTheory.Mechanism.VCG
+import GameTheory.Mechanism.Groves
 
 noncomputable section
 
@@ -126,7 +126,7 @@ noncomputable def pivotOffset (A : Data Agent) (hcap : 0 ≤ A.capacity)
 knapsack allocation. -/
 @[reducible]
 noncomputable def vcgSetup (A : Data Agent) (hcap : 0 ≤ A.capacity) :
-    GameTheory.Mechanism.Auction.VCGSetup Agent where
+    GameTheory.Mechanism.GrovesSetup Agent where
   Θ := fun _ => ℝ
   Outcome := FeasibleAllocation A
   val := fun who report outcome => report * indicator outcome.1 who
@@ -170,8 +170,8 @@ theorem vcgSetup_offset_independent (A : Data Agent) (hcap : 0 ≤ A.capacity) :
 /-- Under the pivot normalization, a bidder reporting zero is charged zero. -/
 theorem vcgPayment_update_zero (A : Data Agent) (hcap : 0 ≤ A.capacity)
     (reports : GameTheory.Mechanism.Auction.BidProfile Agent) (who : Agent) :
-    (vcgSetup A hcap).vcgPayment (Profile.update reports who 0) who = 0 := by
-  simp only [GameTheory.Mechanism.Auction.VCGSetup.vcgPayment, vcgSetup,
+    (vcgSetup A hcap).grovesPayment (Profile.update reports who 0) who = 0 := by
+  simp only [GameTheory.Mechanism.GrovesSetup.grovesPayment, vcgSetup,
     pivotOffset, Profile.update_idem, feasibleAllocationRule, allocationRule]
   rw [sub_eq_zero]
   unfold maximalWelfare welfare aggregate

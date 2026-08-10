@@ -166,10 +166,12 @@ Independent packages:
 
 - analytic envelope identities above the stable single-parameter algebra;
 - monotonicity and critical payments for any truthful knapsack approximation;
-- move general Groves theory out of the auction namespace and document the
-  tie-breaking distinction among the remaining second-price presentations;
 - envy-cycle and maximin-share fair division; and
 - richer contract or information-design timing only with a typed consumer.
+
+The general Groves theory now lives in `Mechanism.Groves`, with a non-auction
+public-choice consumer and a canonical DSIC bridge. The remaining second-price
+presentations document and test their distinct tie-breaking scopes.
 
 The present greedy knapsack approximation is not a mechanism. All-pay support
 is arithmetic, not an auction model.

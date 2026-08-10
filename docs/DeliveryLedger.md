@@ -58,7 +58,7 @@ Status labels:
 | Multi-round | supported | perfect recall, coarse monitoring, Protocol/FOSG compiler and value consumer | Absent-minded values and stagewise-Nash conveniences. |
 | Intrinsic | supported | native closed-loop semantics, selected solution, fixed-nature pure strategic compilation, and canonical Nash with downstream re-solving | Nature lotteries, temporal compilation, and behavioral/mixed strategy are separate gates. |
 | Bayesian mechanisms and information design | supported | direct/Protocol Nash transfer, multi-player revelation, posterior splitting construction and feasibility | Analytic envelope theory. |
-| Auctions and knapsack | supported | Vickrey/reserve/VCG, zero-reserve payoff bridge, combinatorial allocation, exact and zero-weight-compatible approximate solvers | Extract general Groves theory from the auction namespace; truthful approximation still requires monotonicity and payments. |
+| Auctions, Groves, and knapsack | supported | general Groves public-choice truthfulness/DSIC, Vickrey/reserve/VCG, zero-reserve payoff bridge, combinatorial allocation, exact and zero-weight-compatible approximate solvers | Truthful approximation still requires monotonicity and payments. |
 | Fair division | supported | finite EF1 and two-agent EFX | Envy cycles and maximin share. |
 | Congestion | complete | Rosenthal, Nash existence, affine PoA, Pigou/Braess | None for current scope. |
 | Coalitional theory | partial | asymmetric Shapley witness, Banzhaf swing-count identity, bundled simple-game Shapley--Shubik, core-to-balancedness | Balancedness converse and convex-game core result. |

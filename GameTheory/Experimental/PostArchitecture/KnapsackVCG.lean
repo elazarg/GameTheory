@@ -92,7 +92,7 @@ example (replacement : ℝ) :
   exact pivotOffset_highOpponent
 
 example (reports : GameTheory.Mechanism.Auction.BidProfile (Fin 2)) :
-    (vcgSetup unitCapacityData unitCapacity_nonnegative).vcgPayment
+    (vcgSetup unitCapacityData unitCapacity_nonnegative).grovesPayment
       (Profile.update reports 0 0) 0 = 0 :=
   vcgPayment_update_zero unitCapacityData unitCapacity_nonnegative reports 0
 

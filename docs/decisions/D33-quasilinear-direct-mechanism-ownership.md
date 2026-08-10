@@ -8,7 +8,7 @@
 
 Whether weak monotonicity and its affine-maximizer and Myerson consumers should
 share a native quasilinear direct-mechanism owner, overload the existing
-Groves-specific `Mechanism.Auction.VCGSetup`, or be reconstructed from the
+Groves-specific `Mechanism.GrovesSetup`, or be reconstructed from the
 outcome-generic `Languages.BayesianMechanism` with extra certificates.
 
 ## Competing designs
@@ -17,13 +17,13 @@ outcome-generic `Languages.BayesianMechanism` with extra certificates.
    type-dependent valuations, an allocation rule, and payments.  Compile it to
    the canonical Bayesian mechanism and state DSIC through canonical incentive
    compatibility.
-2. Generalize `VCGSetup` until it also owns arbitrary quasilinear direct
+2. Generalize `GrovesSetup` until it also owns arbitrary quasilinear direct
    mechanisms, weak monotonicity, affine maximizers, and Myerson.
 3. Use `BayesianMechanism` alone and attach allocation/payment decomposition
    certificates to every theorem that needs quasilinear structure.
 
 Design 1 is adopted.  The native record owns exactly the structure shared by
-the three pinned families.  `VCGSetup` includes Groves-specific offsets and
+the three pinned families.  `GrovesSetup` includes Groves-specific offsets and
 welfare-maximizing allocation assumptions that weak monotonicity does not need.
 Conversely, an arbitrary Bayesian outcome does not expose the allocation and
 payment terms whose cancellation is the mathematical content of the theorem.
@@ -43,7 +43,7 @@ refutes DSIC.
 
 The generic theorem applies the two opposite canonical incentive constraints,
 rewrites only canonical `Profile.update` laws, and cancels the two payments.
-The existing `VCGSetup` embeds into the candidate with definitional equality of
+The existing `GrovesSetup` embeds into the candidate with definitional equality of
 true utility.
 
 ## Measurements

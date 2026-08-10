@@ -1,5 +1,5 @@
 /-
-# Vickrey--Clarke--Groves mechanisms
+# Groves mechanisms
 
 The mechanism data is capability-free. Finite social-welfare aggregation and
 report-independence certificates are required only by the truthfulness
@@ -18,13 +18,13 @@ noncomputable section
 
 open scoped BigOperators
 
-namespace GameTheory.Mechanism.Auction
+namespace GameTheory.Mechanism
 
 /-- Data for a Groves mechanism: dependent report types, outcomes, valuations,
 an allocation rule, and report-indexed Groves offsets.  Efficiency and
 own-report independence are theorem-local certificates because they are the
 operations that require finite enumeration and profile updates. -/
-structure VCGSetup (ι : Type) where
+structure GrovesSetup (ι : Type) where
   /-- Type and report space of each player. -/
   Θ : ι → Type
   /-- Allocation outcome. -/
@@ -36,17 +36,17 @@ structure VCGSetup (ι : Type) where
   /-- The Groves offset for each player. -/
   h : (i : ι) → (∀ j, Θ j) → ℝ
 
-namespace VCGSetup
+namespace GrovesSetup
 
-variable {ι : Type} (V : VCGSetup ι)
+variable {ι : Type} (V : GrovesSetup ι)
 
-/-- The canonical game signature whose strategies are VCG type reports and
+/-- The canonical game signature whose strategies are Groves type reports and
 whose retained outcome is the complete report profile. -/
 abbrev reportSignature : GameSignature ι where
   Strategy := V.Θ
   Outcome := ∀ i, V.Θ i
 
-/-- A dependent profile of reports for a VCG setup. -/
+/-- A dependent profile of reports for a Groves setup. -/
 abbrev ReportProfile := Profile V.reportSignature
 
 /-- Reportwise allocative efficiency: at every report profile, the selected
@@ -57,7 +57,8 @@ def IsEfficient [Fintype ι] : Prop :=
       ∑ i, V.val i (report i) (V.alloc report)
 
 /-- Groves payment: the report-independent offset less other players' reported welfare. -/
-def vcgPayment [Fintype ι] [DecidableEq ι] (report : V.ReportProfile) (who : ι) : ℝ :=
+def grovesPayment [Fintype ι] [DecidableEq ι]
+    (report : V.ReportProfile) (who : ι) : ℝ :=
   V.h who report -
     ∑ other ∈ Finset.univ.erase who,
       V.val other (report other) (V.alloc report)
@@ -65,7 +66,7 @@ def vcgPayment [Fintype ι] [DecidableEq ι] (report : V.ReportProfile) (who : �
 /-- True quasilinear utility at a report profile. -/
 def trueUtility [Fintype ι] [DecidableEq ι] (who : ι) (trueType : V.Θ who)
     (report : V.ReportProfile) : ℝ :=
-  V.val who trueType (V.alloc report) - V.vcgPayment report who
+  V.val who trueType (V.alloc report) - V.grovesPayment report who
 
 /-- True utility is total reported welfare with the true own coordinate, less
 the Groves offset. -/
@@ -76,13 +77,13 @@ theorem trueUtility_eq [Fintype ι] [DecidableEq ι] (who : ι) (trueType : V.Θ
         ∑ other ∈ Finset.univ.erase who,
           V.val other (report other) (V.alloc report) -
         V.h who report := by
-  simp only [trueUtility, vcgPayment]
+  simp only [trueUtility, grovesPayment]
   ring
 
 /-- Truthful reporting weakly dominates any alternative against fixed opposing
 reports.  The two premises are exactly the efficient-allocation and
 own-report-independent-offset certificates used by the proof. -/
-theorem vcg_truthful [Fintype ι] [DecidableEq ι]
+theorem groves_truthful [Fintype ι] [DecidableEq ι]
     (alloc_efficient : V.IsEfficient)
     (h_independent : ∀ (who : ι) (report : V.ReportProfile) (replacement : V.Θ who),
       V.h who (Profile.update report who replacement) = V.h who report)
@@ -121,7 +122,8 @@ theorem vcg_truthful [Fintype ι] [DecidableEq ι]
 /-- The deterministic utility game at a fixed profile of true types. Reports
 are strategies and realized outcomes retain the report profile. -/
 def toUtilityGame [Fintype ι] [DecidableEq ι] (trueTypes : V.ReportProfile) : UtilityGame ι :=
-  auctionGame V.alloc V.vcgPayment (fun i outcome => V.val i (trueTypes i) outcome)
+  Auction.auctionGame V.alloc V.grovesPayment
+    (fun i outcome => V.val i (trueTypes i) outcome)
 
 /-- Truthful reporting as a type-contingent dependent strategy. -/
 def truthfulStrategy : ∀ i, V.Θ i → V.Θ i := fun _ type => type
@@ -148,8 +150,8 @@ theorem truthfulStrategy_isExPostNash [Fintype ι] [DecidableEq ι]
   rw [isNash_iff]
   intro who alternative
   rw [euPreference_apply]
-  simp only [toUtilityGame, auctionGame_expectedUtility]
-  have htruth := V.vcg_truthful alloc_efficient h_independent trueTypes who
+  simp only [toUtilityGame, Auction.auctionGame_expectedUtility]
+  have htruth := V.groves_truthful alloc_efficient h_independent trueTypes who
     (trueTypes who) alternative
   rw [Profile.update_eq_self] at htruth
   unfold trueUtility at htruth
@@ -162,7 +164,7 @@ def toQuasiLinearMechanism [Fintype ι] [DecidableEq ι] :
   Ty := V.Θ
   value := V.val
   choose := V.alloc
-  payment := V.vcgPayment
+  payment := V.grovesPayment
 
 @[simp]
 theorem toQuasiLinearMechanism_trueUtility [Fintype ι] [DecidableEq ι]
@@ -184,9 +186,9 @@ theorem toQuasiLinearMechanism_isDSIC [Fintype ι] [DecidableEq ι]
       (Profile.update reports who misreport) ≤
     V.trueUtility who (types who)
       (Profile.update reports who (types who))
-  exact V.vcg_truthful alloc_efficient h_independent reports who
+  exact V.groves_truthful alloc_efficient h_independent reports who
     (types who) misreport
 
-end VCGSetup
+end GrovesSetup
 
-end GameTheory.Mechanism.Auction
+end GameTheory.Mechanism

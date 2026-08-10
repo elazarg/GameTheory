@@ -14,6 +14,7 @@ import GameTheory.Mechanism.BayesianWelfare
 import GameTheory.Mechanism.Combinatorial
 import GameTheory.Mechanism.FeasiblePosteriors
 import GameTheory.Mechanism.FairDivision
+import GameTheory.Mechanism.Groves
 import GameTheory.Mechanism.InformationDesign
 import GameTheory.Mechanism.JointFeasiblePosteriors
 import GameTheory.Mechanism.Knapsack
@@ -23,7 +24,6 @@ import GameTheory.Mechanism.QuasiLinear
 import GameTheory.Mechanism.Revelation
 import GameTheory.Mechanism.ReserveVickrey
 import GameTheory.Mechanism.SingleParameter
-import GameTheory.Mechanism.VCG
 
 namespace GameTheory
 

@@ -2,18 +2,18 @@
 # EXP-066: quasilinear direct-mechanism ownership
 
 Candidate shared data for weak monotonicity, affine maximizers, and Myerson.
-The hostile slice also checks transparent specialization from `VCGSetup` and
+The hostile slice also checks transparent specialization from `GrovesSetup` and
 compilation to the accepted Bayesian direct-mechanism language.
 -/
 
 import GameTheory.Mechanism.BayesianIncentives
-import GameTheory.Mechanism.VCG
+import GameTheory.Mechanism.Groves
 
 noncomputable section
 
 namespace GameTheory.Experimental.QuasiLinearMechanismOwnership
 
-open Languages Mechanism.Auction
+open Languages Mechanism Mechanism.Auction
 
 universe up ua ut
 
@@ -114,18 +114,18 @@ theorem toBayesianMechanism_isIncentiveCompatible [DecidableEq Player]
   hdsic
 
 /-- Every existing Groves setup is an instance of the candidate owner. -/
-def ofVCGSetup {ι : Type} [Fintype ι] [DecidableEq ι]
-    (V : VCGSetup ι) : DirectQuasiLinear ι V.Outcome where
+def ofGrovesSetup {ι : Type} [Fintype ι] [DecidableEq ι]
+    (V : GrovesSetup ι) : DirectQuasiLinear ι V.Outcome where
   Ty := V.Θ
   value := V.val
   choose := V.alloc
-  payment := V.vcgPayment
+  payment := V.grovesPayment
 
 @[simp]
-theorem ofVCGSetup_trueUtility {ι : Type} [Fintype ι] [DecidableEq ι]
-    (V : VCGSetup ι) (report : V.ReportProfile) (who : ι)
+theorem ofGrovesSetup_trueUtility {ι : Type} [Fintype ι] [DecidableEq ι]
+    (V : GrovesSetup ι) (report : V.ReportProfile) (who : ι)
     (trueType : V.Θ who) :
-    (ofVCGSetup V).trueUtility report who trueType =
+    (ofGrovesSetup V).trueUtility report who trueType =
       V.trueUtility who trueType report :=
   rfl
 

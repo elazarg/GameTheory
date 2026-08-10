@@ -67,7 +67,7 @@ The single-pass panel observations were re-derived separately before action:
 | R2-P9 | Bayesian interim decomposition requested finiteness for every player's type. | closed | `expectedUtility_update` now requests `Fintype`/`DecidableEq` only for the deviator's type carrier. |
 | R2-P10 | Knapsack half approximation unnecessarily required positive weights. | closed | D27's proof derives positivity only for the first rejected item; the checker now requires duplicate freedom only and zero-weight guards/witnesses compile. |
 | R2-P11 | Agreement and Shapley positive witnesses were degenerate. | closed | Agreement now includes unequal reports under `p = 3/4` common belief; Shapley includes an asymmetric singleton-unanimity game with shares `(1,0)`. |
-| R2-P12 | General Groves theory lives in the auction namespace. | queued | This is a real public namespace move rather than a local theorem patch and is named under mechanism extensions in `PostArchitectureDeliveryPlan.md`. |
+| R2-P12 | General Groves theory lives in the auction namespace. | closed | The general API is now `Mechanism.GrovesSetup` in `Mechanism.Groves`, with no compatibility alias. `Tests.Groves` proves truthfulness and canonical DSIC for a non-auction public-choice rule and rejects its inefficient reversal; knapsack remains a VCG specialization. |
 | R2-P13 | Three second-price presentations were disconnected. | retained | Reserve Vickrey now agrees with the generic strict-winner payoff at zero reserve when the opponents' maximum is nonnegative. The two-bidder language fixture intentionally resolves ties differently, so an unconditional equality would be false. |
 | R2-P14 | Finite vNM callers had to reselect best/worst endpoints for uniqueness. | closed | `representsExpectedUtility_unique_positiveAffine_of_finite` derives extrema from a nonconstancy witness; `Tests.VNM` consumes it. |
 | R2-P15 | Exact and ordinal potential were not separated by a fixture; the team-game surface appeared dead. | closed | `Tests.Potential` exhibits an ordinal potential that is not exact and uses the ordinal Nash theorem. `IsTeamGame` was retained after live consumers were found in FictitiousPlay, ZeroSum, Potential, and utility lemmas. |
@@ -185,7 +185,7 @@ The single-pass panel observations were re-derived separately before action:
 | ID | Finding | Status | Current disposition and evidence |
 |---|---|---|---|
 | K-01 | Generic auction efficiency quantified against one fixed valuation while describing reported efficiency. | closed | Efficiency is profile-indexed over reported valuations and instantiated by the exact knapsack mechanism in `Mechanism.Knapsack.Mechanism`; the old unsatisfiable reading is gone. |
-| K-02 | Parallel VCG towers did not reach canonical DSIC. | closed | `VCGSetup.toQuasiLinearMechanism_isDSIC`, affine-maximizer tests, and knapsack VCG bridges land in canonical `IsDSIC`. |
+| K-02 | Parallel VCG towers did not reach canonical DSIC. | closed | `GrovesSetup.toQuasiLinearMechanism_isDSIC`, affine-maximizer tests, and knapsack VCG bridges land in canonical `IsDSIC`. |
 | K-03 | `AllPay` contained arithmetic only but was advertised by the coordinated mechanism root. | closed | It is no longer imported by `GameTheory.Mechanism`; arithmetic remains an explicitly opt-in leaf until an auction model exists. |
 | K-04 | DSIC was described as Bayesian/interim incentive compatibility. | closed | Wording now says dominant-strategy or ex-post IC; Bayesian interim incentives have a separate compiled predicate surface. |
 | K-05 | Executable and semantic knapsack towers did not meet. | closed | `Knapsack.ExactBridge` proves the exact solver's welfare agrees with the semantic maximizer. Truthful greedy approximation remains explicitly unsupported pending monotonicity and critical payments. |
@@ -227,7 +227,7 @@ The queued rows are theorem breadth, not unresolved corrections:
 
 1. independent rationalizability;
 2. MAID strategic-relevance/requisite analysis;
-3. the Groves namespace move and reachable-menu weakening; and
+3. the reachable-menu weakening for backward existence; and
 4. the remaining mature-family extensions already enumerated in
    `PostArchitectureDeliveryPlan.md`.
 

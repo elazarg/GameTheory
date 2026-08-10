@@ -17,7 +17,7 @@ signature, or a mechanism-specific equilibrium API.
    predecessor's single-parameter mechanism wrapper.
 2. Use `Finset Agent` allocations and an explicit finite universe for semantic
    maximization, specializing to `Finset.univ` only at the mechanism boundary;
-   instantiate the canonical `VCGSetup` and canonical ex-post Nash theorem.
+   instantiate the canonical `GrovesSetup` and canonical ex-post Nash theorem.
 3. Define real semantics by importing the natural exact solver and restating
    real-valued load and welfare in the mechanism layer.
 4. Postpone every mechanism theorem until the analytic Myerson-envelope gate.
@@ -40,7 +40,7 @@ replacement, proves zero payment at a zero own report, and reaches canonical
 truthful ex-post Nash.
 
 The feasible outcome subtype is necessary rather than decorative:
-`VCGSetup` efficiency quantifies over every value of `Outcome`, so taking
+`GrovesSetup` efficiency quantifies over every value of `Outcome`, so taking
 `Outcome := Finset Agent` would incorrectly require the allocation to dominate
 infeasible alternatives.
 
@@ -81,7 +81,7 @@ matching the quantifier in canonical VCG efficiency.
 allocation semantics, explicit-universe feasible maximization, and the
 feasible outcome subtype.  `GameTheory.Mechanism.Knapsack.Mechanism` owns the
 full-universe allocation rule, numeric monotonicity, pivot-normalized
-`VCGSetup`, efficiency and offset certificates, zero normalization, and the
+`GrovesSetup`, efficiency and offset certificates, zero normalization, and the
 canonical ex-post Nash theorem.  It uses
 `GameTheory.Mechanism.Auction.BidProfile` and `Profile.update` directly.
 
