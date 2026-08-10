@@ -40,9 +40,11 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentAnchor
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentMixingCompatibility
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentProjectiveGauge
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentProjectiveGaugeDefect
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentRegularArcLift
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportTransversality
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerExactRoot
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerPacketEdge
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
@@ -158,7 +160,14 @@ uses a codimension-one reduced residual together with an explicit local
 recovery equivalence to the full equations.  Surjectivity and an outward
 kernel direction for that reduced system produce an analytic arc of literal
 full zeros and feed the existing Nash--Bellman decoder.  Constructing the
-reduced equation/recovery pair remains the exact analytic gate.
+reduced equation/recovery pair remains the exact analytic gate.  The natural
+choice of simply deleting one active mixing row fails in general.  Its exact
+missing scalar is `Bellman_i + (1-t*a_i)*Mixing_i`; after Bellman closure and
+nonzero own survival, this vanishes exactly when the omitted row does.  A
+normalized regression through the packet keeps every Bellman row and all
+retained mixing rows zero while the omitted row varies as `s*(Jv)_i`.
+Compatibility kills only the packet mass direction, not arbitrary zero-sum
+gauge variations, so no local recovery theorem follows from it.
 For two declared active owners, Bellman elimination makes the reduced support
 Jacobian exactly `[[0,D₁₂],[D₂₁,0]]`, where
 `Dᵢⱼ=r_i({i,j})-r_i({i})`.  A signed directed pivot is regular precisely
@@ -172,7 +181,14 @@ Bellman-eliminated continuation has active coordinates
 because a two-owner root has no triple or higher coalition.  If the inactive
 gain signs and continuation floor/upper-box bounds also hold, this packages
 one exact Nash--Bellman edge.  Those gates, and any reachable return, lasso,
-or cycle, remain separate.
+or cycle, remain separate.  Along the packet-selected ray
+`p_i=t*mass_i`, positive subunit hazards and survival are automatic.  Active
+continuation is exactly `boundary_i-t*tangent_i/(1-t*mass_j)`: nonnegative
+tangent makes its upper bound automatic, strict floor slack is stable for
+small `t`, and a tight floor with positive tangent fails at every positive
+scale.  Strict outsider singleton slack also gives eventual outsider Nash
+signs through an exact finite polynomial regression.  Tight outsider rows
+and inactive continuation bounds remain independent finite gates.
 
 Independently of that selected-tail geometry, reward-table closure gives a
 robust finite-cycle restriction: a hypothetical counterexample has one
@@ -362,4 +378,14 @@ end, a finitely killed window closes the telescope outright.  Otherwise the
 only quantitative error is the exact survival-weighted far debt, so a
 cofinal construction must make that remainder vanish or compare same-state
 debt with remaining capacity.
+When the punishment vector is coordinatewise nonpositive, every exact-`D`
+point of every finite zero-boundary chain already dominates the floor.  The
+reversed selected chain is therefore a literal path in the global
+floor-admissible relation, starting from its own terminal zero-payoff state;
+it becomes floor-anchor reachable if that one terminal state is reachable.
+More importantly, the global admissible capacity potential telescopes debt
+along each selected finite chain separately, so no nesting of minimizers
+across cutoffs is needed.  The remaining hypothesis is still the same-state
+terminal exact-debt cap being dominated by the terminal admissible capacity
+account.  Nonpositive punishment does not prove that comparison.
 -/

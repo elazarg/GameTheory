@@ -2808,6 +2808,23 @@ Consequently a cofinal construction needs precisely the displayed remainder
 to tend to zero, or a same-state far inequality `debt≤capacityAccount`.
 Fixed-coordinate projective convergence does not retain this moving boundary
 or the capacity coordinate.
+
+There is a useful nonpositive-punishment specialization.  If every
+punishment value is at most zero, the zero terminal value dominates the floor
+and dynamic Bellman propagation puts every exact-`D` point of every selected
+finite zero-boundary chain above it.  Reversing the chain gives a literal path
+in the full floor-admissible relation from that chain's terminal zero-payoff
+state to every earlier point.  This is not automatically a path from the
+distinguished punishment-floor anchor; reachability of the single terminal
+state is exactly sufficient to concatenate one.
+
+Using the global floor-admissible potential avoids that anchoring issue for
+the debt estimate.  On each aggregate minimizer independently, its scaled
+remaining capacity pays every seam and the finite backward telescope closes
+provided the terminal exact-`D` debt is bounded by the capacity account at
+the same terminal state.  Hence cross-cutoff nesting is unnecessary on this
+branch.  The terminal same-state boundary comparison remains the one gate;
+nonpositive punishment alone does not imply it.
 `Never` after a positive internal cutoff retains
 an arbitrary behavioral word, and sure-joint/sure-solo caps introduce
 nonzero pure-exit boundary pairs.  Those remaining cap branches require a
@@ -2912,6 +2929,23 @@ full zeros.  The remaining analytic task is therefore precise: construct
 the dependent-row projection and prove local recovery for the game-specific
 compatible system.  Compatibility by itself does not supply it.
 
+The obvious deletion of one active mixing row has now been ruled out.  For
+an owner `i`, the omitted information is exactly
+
+```text
+Bellman_i + (1-t*leading_i) * Mixing_i.
+```
+
+Once the Bellman row vanishes and own survival is nonzero, this scalar is
+equivalent to the omitted mixing equation.  On the sum-one slice there is an
+exact family through the packet with leading `mass+s*v` and Bellman-forced
+drift: all Bellman rows vanish, and each mixing row is exactly `s*(Jv)_i`.
+Thus a zero-sum variation can kill all retained rows but not the omitted row
+arbitrarily close to the base.  Packet compatibility says `J*mass=0`; it
+does not kill arbitrary gauge variations.  Any successful reduced chart
+therefore needs an additional game-specific identity, while adding the defect
+back merely restores the full square system.
+
 The two-owner chart is completely classified at this linearized level.  After
 Bellman elimination its reduced matrix is
 
@@ -2942,6 +2976,26 @@ Nash signs and continuation floor/upper-box bounds, this is one exact
 Nash--Bellman edge.  It does not supply a reachable return, lasso, or cycle;
 those global gates, rather than a hidden second-order active equation, are
 the two-owner residue.
+
+The tail-derived packet selects a canonical scale ray
+`p_i=t*mass_i`.  For every `0<t<1`, its two active hazards are positive and
+subunit and joint survival is positive.  The exact continuation regression
+is
+
+```text
+w_i = boundary_i - t*tangent_i/(1-t*mass_j).
+```
+
+Thus nonnegative tangent makes the active upper-box gate automatic, while
+active floor admissibility is exactly
+`t*tangent_i ≤ (boundary_i-floor_i)(1-t*mass_j)`.  Strict floor slack
+therefore works at sufficiently small scale, but a tight floor with positive
+tangent fails at every positive scale.  For an inactive owner the gain is an
+explicit finite polynomial `sigma_i(t)-boundary_i`; strict singleton slack
+makes it negative eventually.  Tight outsider rows expose independent
+pair/higher coefficients, and inactive continuation floor/box bounds remain
+separate.  The packet ray now yields one exact edge precisely under those
+visible gates, still without a return.
 
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges
