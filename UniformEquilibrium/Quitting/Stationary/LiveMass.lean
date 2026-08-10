@@ -59,6 +59,53 @@ theorem quittingStationaryContinueMass_le_one
     ENNReal.toReal_le_toReal (PMF.apply_ne_top _ _) (by simp)]
   exact PMF.coe_le_one _ _
 
+/-- Joint continuation factors into the continuation mass after forcing one
+player to Continue and that player's displayed Continue probability. -/
+theorem quittingStationaryContinueMass_eq_forcedContinue_mul_own
+    (root : ι → PMF Bool) (who : ι) :
+    quittingStationaryContinueMass root =
+      quittingStationaryContinueMass
+          (Function.update root who (PMF.pure false)) *
+        (root who false).toReal := by
+  classical
+  rw [quittingStationaryContinueMass_eq_prod_continueProbability,
+    quittingStationaryContinueMass_eq_prod_continueProbability,
+    ← Finset.mul_prod_erase Finset.univ
+      (fun player ↦ (root player false).toReal) (Finset.mem_univ who)]
+  have hforced :
+      (∏ player, (Function.update root who (PMF.pure false) player false).toReal) =
+        ∏ player ∈ Finset.univ.erase who, (root player false).toReal := by
+    rw [← Finset.mul_prod_erase Finset.univ
+      (fun player ↦
+        (Function.update root who (PMF.pure false) player false).toReal)
+      (Finset.mem_univ who)]
+    have hown :
+        (Function.update root who (PMF.pure false) who false).toReal = 1 := by
+      simp
+    rw [hown, one_mul]
+    refine Finset.prod_congr rfl fun player hplayer ↦ ?_
+    rw [Function.update_of_ne (Finset.ne_of_mem_erase hplayer)]
+  rw [hforced]
+  ring
+
+omit [DecidableEq ι] in
+/-- The product mass of joint continuation is at most each selected player's
+own Continue probability. -/
+theorem quittingStationaryContinueMass_le_ownContinueProbability
+    (root : ι → PMF Bool) (who : ι) :
+    quittingStationaryContinueMass root ≤ (root who false).toReal := by
+  classical
+  rw [quittingStationaryContinueMass_eq_prod_continueProbability,
+    ← Finset.mul_prod_erase Finset.univ
+      (fun player ↦ (root player false).toReal) (Finset.mem_univ who)]
+  have hprod :
+      (∏ player ∈ Finset.univ.erase who, (root player false).toReal) ≤ 1 :=
+    Finset.prod_le_one
+      (fun _ _ ↦ ENNReal.toReal_nonneg)
+      (fun player _ ↦ ENNReal.toReal_mono ENNReal.one_ne_top
+        ((root player).coe_le_one false))
+  exact mul_le_of_le_one_right ENNReal.toReal_nonneg hprod
+
 /-- Forcing one coordinate to Continue can only increase the all-continue
 mass. -/
 theorem quittingStationaryContinueMass_le_update_pure_false

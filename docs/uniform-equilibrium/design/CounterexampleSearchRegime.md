@@ -251,6 +251,23 @@ absorption charge while scaling `η`, `Δ`, `D_N`, `K`, and `M`.  Normalizing
 not compactify the other reward coordinates.  A solver must not compare
 payoff-scaled margins across different normalizations.
 
+A candidate counterexample must also satisfy a robust open-neighborhood test.
+There must be some `η₀ > 0` such that no reward table within coordinatewise
+distance `η₀` carries an absorbing, punishment-admissible exact cycle of any
+finite period.  Otherwise solved-cycle compilation followed by reward-table
+closure proves existence at the candidate itself.  This is stronger than
+failing to find a cycle at the original table.
+
+For a fixed period and fixed product-root word, own-set perturbations have an
+exact finite test.  The cyclic continuation correction is unique under joint
+absorption and eliminates as `a(t,i) = α(t,i)d(i)`, with `0 ≤ α(t,i) ≤ 1`.
+Each player's root signs therefore reduce to finite affine equalities and
+half-line constraints in the one scalar `d(i)`.  Search scripts should compute
+these interval intersections and the minimum residual before optimizing over
+roots or richer reward perturbations.  Infeasibility rejects only this
+own-set, fixed-root exactification slice; it is not evidence that the full
+nearby solved-cycle stratum is empty.
+
 ### Exact-D optimization
 
 For increasing cutoffs, solve the compact attained optimization defining
@@ -440,6 +457,7 @@ canonical periodic-window obstructing player and refusal/phase branch
 raw/normalized singleton occupation, collision share, and denominator branch
 remaining suffix charge and the certified `2 M R` best-response interval
 active-owner subsequences and singleton-pinning checks
+charge-normalized signed endpoint tangent and its negative/active-positive branch
 punishment-floor sign pattern
 floor-violation gap and division-free opponent-clock budget, when applicable
 solver residuals and exact rational reconstruction, when available

@@ -174,7 +174,15 @@ The finite-quitting front is now sharply reduced.
    and the uniform packet defect.  Thus no selected-tail window returns at
    little-o of absorbed-mass scale.  This ballisticity is not recurrence;
    summable absorption permits a bounded path to approach its limit at nonzero
-   clock speed.
+   clock speed.  The signed normalization is now retained as a
+   `QuittingChargeTangentPacket`: unless the tail is eventually literally
+   all-Continue, a subsequence of positive one-stage windows has convergent
+   owner occupation and normalized endpoint tangent, with tangent equal to
+   singleton delivery minus the phantom boundary.  Every counterexample
+   tangent is either negative in some coordinate or positive on an active
+   owner after negative coordinates are excluded.  Converting those signs
+   respectively into phase repair or support enlargement is the immediate
+   frontier.
 6. **Two endpoint charts (`M+L`).** Reading the same minimizers from both ends
    gives a forward positive-debt ray and a reverse ray ending on the terminal
    face with a quantitative depth-one packet. The middle length still diverges.
@@ -363,6 +371,26 @@ required.  Repetition of a label without large total charge still gives no
 such conclusion.
 
 ## Punishment-completed exact cycles
+
+There is also a reward-perturbative route to exact cycles.  The production
+strata distinguish raw cyclic Nash--Bellman consistency from an absorbing,
+punishment-admissible solved cycle.  Solved cycles compile to uniform payoffs,
+and if their reward tables accumulate at a given table then fixed-skeleton
+reward closure supplies a uniform payoff at the limit.  Contrapositively, any
+hypothetical counterexample is separated by a positive reward-table radius
+from every solved exact cycle of every finite period.
+
+For a supplied fixed root cycle,
+`UniformEquilibrium/Quitting/Cycles/OwnShiftCycleExactification.lean` gives the
+exact global equations for perturbing all terminal coalitions containing a
+player by one common player-specific amount.  Phase values cannot be corrected
+independently: they satisfy a cyclic affine feedback recurrence.  When the
+cycle absorbs, that recurrence has a unique solution, its unit multipliers lie
+in `[0,1]`, and all correction variables eliminate player by player to a
+finite system in the reward shifts alone.  This makes one perturbation stratum
+decidable and search-facing.  It does not show that the reduced system is
+feasible, that solved strata are dense, or that this low-dimensional shift
+family captures general coalition-reward perturbations.
 
 The exact-cycle compiler no longer needs every noncontracting coordinate to
 have nonnegative solo payoff.  In

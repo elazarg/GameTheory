@@ -487,25 +487,6 @@ theorem isεAsymptoticNash_quittingPhaseSwitchProfile_marked
     linarith [hotherError who hwho]
 
 omit [DecidableEq ι] in
-/-- The full continue mass at one root is at most any selected player's own
-continue probability. -/
-theorem quittingStationaryContinueMass_le_ownContinueProbability
-    (root : ι → PMF Bool) (who : ι) :
-    quittingStationaryContinueMass root ≤ (root who false).toReal := by
-  classical
-  rw [quittingStationaryContinueMass_eq_deletedContinueMass_mul_own]
-  all_goals
-    have hdeleted1 :
-        quittingRootDeletedContinueMass root who ≤ 1 :=
-      quittingStationaryContinueMass_le_one
-        (Function.update root who (PMF.pure false))
-    have hmissing :
-        0 ≤ (1 - quittingRootDeletedContinueMass root who) *
-          (root who false).toReal :=
-      mul_nonneg (sub_nonneg.mpr hdeleted1) ENNReal.toReal_nonneg
-    nlinarith
-
-omit [DecidableEq ι] in
 /-- A player's own planned-survival curve bounds the plan's joint survival. -/
 theorem quittingJointSurvivalWeight_le_quittingHazardSurvival_ownHazard
     (plan : ℕ → ι → PMF Bool) (who : ι) (fuel : ℕ) :

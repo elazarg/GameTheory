@@ -201,12 +201,31 @@ A quantitative program sits alongside: exact cycles of period `L` form
 semialgebraic strata in weight space, relaxed families exist when strata
 pass within backward distance of the weight
 (`QuittingRootEndpointBackwardStability`), and the minimal-period law is
-conjecturally governed by stratum conditioning. **Caveats, honestly**: the
-union over unbounded periods need not be tame, so this route requires a
-uniform structure across periods that is not yet identified; and of the
-conjectured identification of the three hardness measures (condition
-number, lock margin, weighted-gain weakness), one leg is a theorem
+conjecturally governed by stratum conditioning.  The relevant positive
+stratum is now exact: an absorbing punishment-admissible cycle is a solved
+game, density of such reward tables suffices by reward closure, and any
+counterexample is separated from their union by one positive reward radius.
+Perturbing the phases independently is invalid because their values feed
+around the cycle.  For a fixed root word, the exact global own-set system has
+been derived; under absorption its correction variables eliminate to one
+scalar feasibility problem per player.  **Caveats, honestly**: this is only
+one low-dimensional reward perturbation family, and the union over unbounded
+periods need not be tame, so this route still requires a uniform structure or
+a full-table rank theorem across periods.  Of the conjectured identification
+of the three hardness measures (condition number, lock margin,
+weighted-gain weakness), one leg is a theorem
 (`QuittingBackwardStabilityConditionNumber`) and the rest is hypothesis.
+
+The optimized counterexample tail supplies the complementary tangent
+geometry.  Unless it is eventually literally all-Continue, normalized
+positive-absorption windows extract a nonzero owner-occupation tangent with
+exact relation `tangent = singleton delivery - phantom boundary`.  The
+complementary sign pattern is already solved, leaving a negative-coordinate
+phase-repair branch and an active-positive support-enlargement branch.  Cycle
+strata are therefore an exit surface rather than the sole producer: the
+remaining problem is to convert one of these tail-derived signs into a
+renewable charged return, a punishment-completed cycle, or another realized
+terminal profile.
 
 ## An invitation
 

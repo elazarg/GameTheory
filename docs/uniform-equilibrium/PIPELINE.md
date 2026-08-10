@@ -241,6 +241,8 @@ superseded/resolved decision section in
 - `MATH-P0-5` — is the exact-cycle disjunct complete, or do ε-cycles diverge?
 - `MATH-P0-8` — the relaxed compiler: formalize Proposition 3
 - `MATH-P0-10` — the drift device: uniform threats against moving states
+- `MATH-P0-12` — make the counterexample seam strategically usable through
+  raw-flow/co-state duality
 - `MATH-P1-1` — re-derive Q148's encoding into the isolated-negative branch
 - `MATH-P1-2` — test affine hazard domination on the exact-D families
 - `MATH-P1-4` — formalize the weight whose gap survives faithful unpinning
@@ -743,6 +745,16 @@ minimal cycle length may depend on the size of ε**. If length diverges, the
 program's "either zero-solo or an admissible absorbing cycle of some finite
 length" would be **false** while quitting existence still holds — the reduction
 incomplete rather than the conjecture refuted.
+
+There is now a separate perturbative resolution target.  Solved absorbing
+cycle tables need only be dense, not present at the original table: the
+periodic compiler and reward-table closure then prove existence at the limit.
+Conversely a counterexample has a positive-radius neighborhood disjoint from
+all solved finite-cycle strata.  For one fixed root cycle, the exact global
+own-set perturbation equations and their absorbing playerwise reduction are
+formalized; the missing step is feasibility or a rank/transversality theorem
+for sufficiently rich reward perturbations.  This route can establish the
+conjecture without repairing the stronger exact-cycle disjunct at each table.
 
 **Note the cited source is already on disk**: it is the same Solan paper whose
 Theorem 2.1 this program proved false as printed. It may contain the growth
@@ -2189,6 +2201,55 @@ program's machinery — goes to the questions corpus after the farm.
 partial: the potential lemma over a granted BK-regular value curve, with the
 regularity layer tracked separately. Nothing here gates the quitting lane.
 
+### `MATH-P0-12` — raw-flow/co-state utilization of the counterexample seam
+
+- **Status:** PLANNED; generic Math worktree infrastructure exists but is
+  uncompiled and is not a quitting-game producer
+- **Lane:** P0 of the finite-quitting counterexample route
+- **Depends:** `CounterexampleRegimeTangentPacket`, normalized finite-window
+  occupation and refusal reweighting, dynamic-debt conservation and phantom
+  boundary geometry, packet-defect algebra, punishment-completed cycles, and
+  solved-cycle reward strata
+- **Generic worktree inputs:** `Math/SurvivalWeightedObstruction.lean`,
+  `Math/LinearProgramming/FlowCostateDuality.lean`, and
+  `Math/Probability/KilledTailPotential.lean`
+
+**Objective.** Remove the counterexample-seam-utilization mismatch.  The
+current regime detects an actual signed charge tangent and separately accounts
+for dynamic debt, but it does not turn a negative phase coordinate or a
+positive active-owner coordinate into one raw, source-compatible strategic
+seam consumed by an existing compiler.  The generic libraries deliberately
+separate survival-grade-one charges from the grade-zero endpoint coboundary,
+transport finite co-states by the adjoint map, and retain the killed boundary
+remainder.  They do not identify a packet with occupation, erase the phantom
+plateau, or realize a product-root word.
+
+**Near-term work.** Build the narrow quitting adapter and prove, in order:
+
+1. actual optimized-tail windows carry a payoff-weighted raw obstruction
+   current with exact survival transport, source annotations, collision
+   remainder, and endpoint coboundary;
+2. those currents lie in one closed source-compatible feasible family whose
+   support value is attained without normalizing away the absorption scale;
+3. an adjoint co-state can be chosen compatibly with the playerwise dynamic-
+   debt transport, with the surviving harmonic boundary term compared rather
+   than silently set to zero;
+4. an exposed recurrent face decodes into the existing tangent alternatives:
+   negative phase repair, active-positive support enlargement, a
+   punishment-admissible solved cycle stratum, or the separately handled
+   eventual all-Continue plateau; and
+5. the decoded face is realized by one common product-root word with the
+   punishment floor and behavioral deviation cap retained.
+
+**Acceptance.** A game-facing utilization theorem, not another separator:
+every non-all-Continue counterexample tangent must either emit a positive raw
+seam priced by the compatible debt co-state and exhausted by a proved boundary
+comparison, or produce one of the already compiled repair/return/cycle exits.
+The theorem must retain the two periodic evaluator branches and may not assume
+general cap-splice realization.  Until these conditions are met, the new Math
+files are reusable accounting infrastructure only and do not advance the
+landed existence claim.
+
 ## Literature import lane
 
 ### `LIT-P1-1` — audit and formalize four-player fallback-collapse propositions
@@ -2528,6 +2589,44 @@ theorem.  Since the total clock is summable, a bounded exact path may still
 approach its limit at a nonzero clock speed.  The remaining producer is now a
 product-root ballistic-return or terminal-realization theorem; compactness and
 bounded variation alone cannot supply it.
+
+The corresponding signed blow-up is sharper.  For every positive-absorption
+window the finite Bellman telescope gives the exact coordinate identity
+
+```text
+(v_start - v_end) / absorbedMass = restartDelivery - v_end.
+```
+
+Consequently only normalized singleton occupation needs a compactness
+subsequence: collision concentration and boundary convergence force the
+normalized endpoint tangent to converge with it.  The selected counterexample
+tail therefore has an exact alternative.  It is eventually the literal
+all-Continue root, or it produces a nonzero charge-tangent packet
+`(mass,boundary,tangent)` satisfying
+
+```text
+tangent = singletonMixture(mass) - boundary,
+mass_i > 0  ->  boundary_i = reward_i({i}).
+```
+
+The complementary sign pattern already compiles to a uniform payoff.  Thus a
+counterexample tangent has a negative coordinate, or—once all negative
+coordinates are excluded—a positive coordinate on its active owner support.
+These are now the two P0 consumers: phase repair for the negative branch and
+support enlargement for the active-positive branch.  Neither consumer may be
+replaced by unsigned recurrence or by an independently selected source
+packet.  The eventual all-Continue plateau remains a separate P0 branch.
+
+`MATH-P0-12` records the intended near-term bridge from this sign information
+to a usable seam.  It works before normalization: actual window charges
+concatenate with survival weight, endpoint displacement remains an unweighted
+coboundary, and a finite co-state is transported by the adjoint map.  The
+killed-potential account retains the surviving boundary remainder explicitly.
+The remaining game theorem must identify a payoff-weighted raw current and a
+debt-compatible co-state, then decode an exposed face into phase repair,
+support enlargement, or a solved cycle realized by one product-root word.
+Generic cone, duality, and boundary-folding identities do not supply any of
+those strategic steps.
 
 Likewise, an exact bounded
 rational four-player singleton table has a positive compact escape separation

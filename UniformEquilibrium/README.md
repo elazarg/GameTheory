@@ -335,6 +335,26 @@ instant module gives the exact two-condition characterization of a sure-solo
 exit completed by punishment.  Neither theorem produces an exact cycle for an
 arbitrary weight.
 
+`UniformEquilibrium/Quitting/Cycles/ExactCycleStrata.lean` packages the
+complementary reward-perturbative route.  An absorbing
+punishment-admissible exact cycle is a genuinely solved reward-table stratum,
+accumulation of such strata is enough by reward closure, and a hypothetical
+counterexample therefore has a positive-radius neighborhood free of every
+solved finite cycle.
+`UniformEquilibrium/Quitting/Cycles/OwnShiftCycleExactification.lean` gives the
+exact global cyclic feedback equations for one common own-set reward shift and
+eliminates all phase-value corrections on absorbing cycles, leaving one scalar
+feasibility variable per player.  Density and general coalition-dependent
+exactification remain producer problems.
+
+`UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeTangentPacket.lean`
+records the complementary tail-side geometry.  Unless the optimized
+counterexample tail is eventually literally all-Continue, positive one-stage
+absorption yields a nonzero signed tangent packet whose owner occupation,
+phantom boundary, and normalized endpoint displacement come from the same
+literal root sequence.  Its remaining sign alternatives are phase repair or
+active-support enlargement; the module does not claim either construction.
+
 The truncated-ledger package remains a sufficient certificate, but
 `UniformEquilibrium/Quitting/Debt/Ledger/TruncatedLedgerCapBoundary.lean` records that it is not a universal
 normal form.  Its two-player zero-sum counterexample has the exact all-Continue

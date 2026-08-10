@@ -10,6 +10,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeExactCycleStrata
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFiniteInstability
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFloorViolationBudget
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacket
@@ -23,6 +24,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSearchConsequ
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSeam
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSmallPlayers
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTailBridge
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacket
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
 import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
@@ -70,7 +72,22 @@ ballistic in absorption time: after one date, every positive-absorption window
 has endpoint distance at least one fixed positive multiple of its absorbed
 mass.  Thus no late window closes at little-o of charge scale.  This does not
 produce recurrence; finite total charge permits a bounded ballistic approach
-to the limiting all-Continue state.
+to the limiting all-Continue state.  The signed normalization is retained
+more precisely: either the tail is eventually literally all-Continue, or
+positive one-stage windows extract a nonzero charge-tangent packet from the
+same roots.  Its remaining finite sign dispatch is a negative coordinate or,
+after excluding all negative coordinates, a positive active-owner coordinate.
+The corresponding phase-repair and support-enlargement consumers remain open.
+
+Independently of that selected-tail geometry, reward-table closure gives a
+robust finite-cycle restriction: a hypothetical counterexample has one
+positive-radius reward neighborhood containing no punishment-admissible exact
+cycle of any period.  For a fixed root cycle, a common own-set reward shift is
+governed by an exact finite global feedback system.  On an absorbing cycle its
+value correction is unique, its unit multipliers lie on probability scale,
+and the system eliminates player by player.  This does not prove density of
+solved-cycle strata or show that own-set shifts exhaust general reward-table
+perturbations.
 
 For proper-face arguments, the umbrella exports an original-coordinate
 outsider-`Never` estimate.  If the outsider's live continuation is at most

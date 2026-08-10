@@ -23,8 +23,10 @@ actual terminal payoff when limiting survival is positive.
 
 The finite companion identity records the same phenomenon on a window.  The
 payoff obtained by repeating a positive-absorption window is its absorbing
-intercept divided by absorbed mass, and its displacement from the initial
-annotation is exactly signed endpoint drift divided by absorbed mass.
+intercept divided by absorbed mass.  Its displacement from the initial
+annotation is the survival-weighted endpoint drift, while its displacement
+from the far-end annotation is exactly endpoint drift divided by absorbed
+mass.  The latter is the charge-normalized tangent identity.
 -/
 
 noncomputable section
@@ -89,6 +91,50 @@ theorem quittingWindowRestartDelivery_sub_prescribed
   unfold quittingWindowRestartDelivery
   field_simp [hmass]
   linarith
+
+omit [DecidableEq ι] in
+/-- **Exact charge-tangent identity, division-free form.**  The absorbed mass
+times restart delivery minus the far-end annotation is exactly the endpoint
+displacement across the window. -/
+theorem quittingWindowAbsorption_mul_restartDelivery_sub_terminal
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι) (prescribed : ℕ → ℝ)
+    (hprescribed : IsQuittingLivePrescribedValue reward roots who prescribed)
+    (start fuel : ℕ)
+    (hsurvival : quittingJointSurvivalWeight roots start fuel < 1) :
+    (1 - quittingJointSurvivalWeight roots start fuel) *
+        (quittingWindowRestartDelivery reward roots who start fuel -
+          prescribed (start + fuel)) =
+      prescribed start - prescribed (start + fuel) := by
+  have hmass : 1 - quittingJointSurvivalWeight roots start fuel ≠ 0 := by
+    linarith
+  have htelescope :=
+    quittingPrescribedValue_eq_windowIntercept_add_survival_mul
+      reward roots who prescribed hprescribed start fuel
+  unfold quittingWindowRestartDelivery
+  field_simp [hmass]
+  linarith
+
+omit [DecidableEq ι] in
+/-- **Exact charge-normalized tangent seam.**  On a positive-absorption
+window, normalized endpoint displacement is restart delivery minus the
+far-end annotation. -/
+theorem quittingWindowRestartDelivery_sub_terminal_eq_endpointDrift_div_absorption
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (who : ι) (prescribed : ℕ → ℝ)
+    (hprescribed : IsQuittingLivePrescribedValue reward roots who prescribed)
+    (start fuel : ℕ)
+    (hsurvival : quittingJointSurvivalWeight roots start fuel < 1) :
+    quittingWindowRestartDelivery reward roots who start fuel -
+        prescribed (start + fuel) =
+      (prescribed start - prescribed (start + fuel)) /
+        (1 - quittingJointSurvivalWeight roots start fuel) := by
+  have hmass : 1 - quittingJointSurvivalWeight roots start fuel ≠ 0 := by
+    linarith
+  apply (eq_div_iff hmass).2
+  simpa [mul_comm] using
+    quittingWindowAbsorption_mul_restartDelivery_sub_terminal
+      reward roots who prescribed hprescribed start fuel hsurvival
 
 omit [DecidableEq ι] in
 /-- Finite `Never` truncations converge to the actual root-sequence terminal
