@@ -227,3 +227,20 @@ The Phase 3 audit now checks the split positively: `MAID.Basic` rejects two
 Protocol/solution probes while reaching three probability/DAG/syntax inputs,
 and `MAID.Strategic` reaches all four intended information, outcome-law, and
 equilibrium inputs.
+
+## Observation-pruning delivery milestone
+
+The stable `MAID.ObservationPruning` leaf now supplies the semantic target for
+later graphical requisite analysis. A pruning reduces each decision site's
+observed-parent configuration while retaining one strategic coordinate per
+source owner. Expansion back to the accepted policy type commutes with owner
+updates; reduced native and compiled forms have exact assignment laws and the
+same canonical Nash predicate. Full-space Nash implies reduced-space Nash,
+while the converse is deliberately absent.
+
+The hostile chance-signal fixture separates the policy domains: a constant
+decision factors through the empty observation set and keeps its compiled law,
+whereas a signal-reading policy is outside every reduced expansion. This does
+not by itself complete Koller--Milch graphical strategic relevance. A future
+graph criterion must produce the semantic representation certificate rather
+than introducing another policy or equilibrium semantics.

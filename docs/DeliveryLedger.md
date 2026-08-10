@@ -54,7 +54,7 @@ Status labels:
 |---|---|---|---|
 | NFG | complete | direct static compilation and shared solution concepts | None for the current language surface. |
 | FOSG and bridges | supported | EFG structural projection, explicit-order serialization, policy inversion, external history utility, and behavioral Nash equivalence in both player orders | Terminal/continuation support, then counterfactual reach and a regret consumer. |
-| MAID | supported | typed acyclic execution plus multi-player, multi-site native/compiled deviation-law and Nash equivalence | Strategic relevance/requisite analysis, then refinement, recall, and Kuhn extensions. |
+| MAID | supported | typed acyclic execution; multi-owner Nash transfer; source-owner observation pruning with exact native/compiled laws and a live removed-input control | Graphical strategic-relevance/requisite criterion, then refinement, recall, and Kuhn extensions. |
 | Multi-round | supported | perfect recall, coarse monitoring, Protocol/FOSG compiler and value consumer | Absent-minded values and stagewise-Nash conveniences. |
 | Intrinsic | supported | native closed-loop semantics, selected solution, fixed-nature pure strategic compilation, and canonical Nash with downstream re-solving | Nature lotteries, temporal compilation, and behavioral/mixed strategy are separate gates. |
 | Bayesian mechanisms and information design | supported | direct/Protocol Nash transfer, multi-player revelation, posterior splitting construction and feasibility | Analytic envelope theory. |

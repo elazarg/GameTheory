@@ -40,6 +40,7 @@ downstream theorem.
 | Surface | Discriminating stable evidence | Downstream boundary exercised |
 |---|---|---|
 | Typed MAID | two players and three sites, with one player owning two distinct decision sites, in [`Tests/MAID.lean`](../GameTheory/Tests/MAID.lean) | owner/site deviation regrouping plus native/compiled law and Nash equivalences |
+| MAID observation pruning | a constant decision factors through removal of an observed chance signal, while a signal-reading policy provably cannot, in [`Tests/MAIDObservationPruning.lean`](../GameTheory/Tests/MAIDObservationPruning.lean) | smaller source-owner policy domain, exact native/compiled laws, and one-way full-to-reduced Nash inheritance |
 | Bayesian Protocol compiler | two-player common-bit coordination with arbitrary policy/plan updates in [`Tests/Bayesian.lean`](../GameTheory/Tests/Bayesian.lean) | direct/protocol expected-utility and Nash equivalence |
 | FOSG strategic serialization | simultaneous own-action utility remains Nash under both hidden player orders, while all-false has a profitable serialized deviation, in [`Tests/FOSGStrategic.lean`](../GameTheory/Tests/FOSGStrategic.lean) | external history utility and canonical behavioral `IsNash` equivalence |
 | Multi-round monitoring | hidden opponent actions, remembered own actions, compiled play, and a nonzero external history value in [`Tests/MultiRoundMonitoring.lean`](../GameTheory/Tests/MultiRoundMonitoring.lean) | canonical Protocol/FOSG compiler and external value fold |

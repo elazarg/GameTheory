@@ -130,12 +130,17 @@ separate gates. Do not add them merely to make Intrinsic resemble Protocol.
 ### F. MAID strategic relevance
 
 The promoted MAID compiler now has a multi-player, multi-site deviation and
-Nash witness.  The next same-language package is the Koller--Milch
-strategic-relevance/requisite-graph analysis: define relevance without storing
-utility or equilibrium in syntax, prove it invariant under the accepted
-serialization, and give a diagram where pruning changes the strategic policy
-domain while preserving the compiled outcome law.  Do not report MAID as
-strategic-relevance complete before that slice passes.
+Nash witness. The semantic target of relevance pruning is now complete:
+`ObservationPruning` defines a smaller site-local policy domain, expands it by
+source owner, preserves native and compiled laws under every accepted order,
+and inherits Nash from the full deviation space. A chance-signal witness shows
+that constant policies factor through the smaller domain while a signal-reading
+policy does not.
+
+The next same-language package is the Koller--Milch graphical
+strategic-relevance/requisite criterion that discharges the semantic
+representation certificate. Do not report graphical strategic relevance as
+complete merely because the pruning target exists.
 
 ### G. Static mature-family rotation
 
