@@ -12,6 +12,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLock
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledCapacityPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledTailPotential
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOneStageObstructionCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeExactCycleStrata
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFiniteInstability
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFloorViolationBudget
@@ -27,6 +28,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSeam
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSmallPlayers
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTailBridge
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacket
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
 import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
@@ -83,6 +85,13 @@ positive one-stage windows extract a nonzero charge-tangent packet from the
 same roots.  Its remaining finite sign dispatch is a negative coordinate or,
 after excluding all negative coordinates, a positive active-owner coordinate.
 The corresponding phase-repair and support-enlargement consumers remain open.
+On the active-positive branch, after excluding every negative tangent
+coordinate, the same tail-derived packet is canonically a normalized
+singleton-source packet.  Its weighted surplus is its mass-weighted tangent,
+so it contains a distinct supported pair with positive reciprocal singleton
+effect.  This is the complete singleton-level handoff; actual collision
+rewards, continuation values, and pair/higher Möbius coefficients still block
+the product-root support lift.
 
 Independently of that selected-tail geometry, reward-table closure gives a
 robust finite-cycle restriction: a hypothetical counterexample has one
@@ -157,8 +166,11 @@ co-state.
 The same data is exported as a sparse two-grade raw flow.  Raw charge has
 survival degree one, endpoint coboundary has degree zero, and arbitrary finite
 co-states obey the exact adjoint pairing law across adjacent windows.  This
-still does not choose a source-compatible co-state or expose a strategically
-realizable face.
+flow has an exact compact one-stage carrier: its source retains boxed exact
+Nash--Bellman and dynamic-debt constraints together with the punishment floor
+at both endpoints, every canonical tail edge belongs to it, and every finite
+co-state support is attained.  The theorem still does not choose a compatible
+co-state, expose a recurrent face, or decode a strategically realizable exit.
 
 Periodic attachment has a second, exact normalization fence.  For an
 absorbing exact Nash--Bellman word, the finite-stop and refusal branches of

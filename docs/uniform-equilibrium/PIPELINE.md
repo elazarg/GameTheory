@@ -2254,6 +2254,12 @@ cap, is a concrete killed-excessive account for the exact diagonal debt
 source.  Its explicit initial mismatch with exact debt is uncontrolled, so it
 does not provide the equal initialization or boundary dominance needed to
 erase the phantom remainder.
+The non-plateau one-stage source family is also now exact and compact.  It is
+the continuous raw-flow image of boxed exact dynamic-debt Nash--Bellman edges
+whose two value endpoints dominate the punishment floor; every canonical tail
+edge belongs, and every finite co-state support is attained.  Thus compactness
+and support attainment in item 2 are no longer the gate.  Selecting a
+debt-compatible co-state and decoding its exposed face remain items 3--4.
 
 **Acceptance.** A game-facing utilization theorem, not another separator:
 every non-all-Continue counterexample tangent must either emit a positive raw
@@ -2639,6 +2645,13 @@ and refusal evaluators become, respectively,
 `mu/(1-mu)*tangent-refusalSlack/(A*(1-mu))`; `mu=1` is the isolated
 all-opponents-Continue boundary.  This settles the period-one readout but not
 the provenance or support-pivot consumer.
+For the active-positive branch, provenance at singleton level is now closed:
+once all tangent coordinates are nonnegative, the tail-derived tangent packet
+itself is a normalized singleton-source packet, its weighted surplus is
+`sum_i mass_i*tangent_i`, and a supported positive reciprocal-synergy pair
+follows.  The remaining pivot is genuinely higher order: construct one exact
+product root and continuation satisfying the support equalities, off-support
+inequalities, punishment floor, and the actual collision/Möbius terms.
 
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges
