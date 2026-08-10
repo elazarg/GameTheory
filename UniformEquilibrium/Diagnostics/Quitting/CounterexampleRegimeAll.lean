@@ -17,6 +17,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCollisionAwar
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCommonWordRealization
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedFloorViability
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedNegativeTangent
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedSlackThreshold
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceObstructionCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceDynamicAlternative
@@ -503,8 +504,13 @@ Negative ordinary tangent also has an exact conditioned interpretation.  It
 either remains a negative conditioned delivery gap, giving strict upward
 conditioned motion on a boundary-safe coordinate, or is quantitatively paid
 by strict phantom slack.  At an active negative coordinate the repeated-root
-phase gain converges to the negated tangent.  This is a real restriction, but
-does not attach the diagnostic repetition to the varying source suffix.
+phase gain converges to the negated tangent.  The exact punishment threshold
+is whether the tangent magnitude fits inside plateau punishment slack.  If it
+does not, the repeated-root delivery is eventually both phase-exploitable and
+below the punishment floor.  Exact affine shrink transport cannot repair this
+by rejoining the original chronology at a finite date.  These are real
+restrictions, but do not attach the diagnostic repetition to the varying
+source suffix.
 
 The strategic consumers are now explicit.  Any supplied finite
 collision-aware product-root return satisfying exact Nash and punishment

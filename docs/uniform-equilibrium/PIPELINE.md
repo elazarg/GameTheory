@@ -2359,6 +2359,13 @@ upward conditioned motion on a boundary-safe coordinate, or is funded by
 strict phantom slack with a quantitative bound.  Positive occupation of that
 coordinate makes the period-one phase gain converge to `-tau`.  This narrows
 the branch without manufacturing the missing attachment to the actual suffix.
+The relevant punishment threshold is exact: a packet delivery remains above
+the punishment floor precisely when the negative tangent magnitude fits inside
+the plateau's punishment slack.  Failure of that inequality makes every late
+selected repetition simultaneously phase-exploitable and underfloor.  Exact
+affine shrink transport cannot turn this into a finite reset, because any
+finite return to scale one forces the initial scale to have been one already.
+Thus a successful reset must change support, limiting delivery, or chronology.
 
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.
