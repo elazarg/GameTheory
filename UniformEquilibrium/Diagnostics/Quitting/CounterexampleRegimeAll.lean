@@ -8,6 +8,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitLimit
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitSelfLoop
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixConsumption
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixResidualRegression
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBoundaryProvenanceAlternative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
@@ -310,8 +311,14 @@ interpretation: its terminal exploitability is the calibrated path's maximum
 dynamic debt.  The generic consumption inequality then reduces to the
 concrete endpoint requirement that next-cutoff aggregate debt be paid by a
 scaled legal predecessor charge.  For a literally attached reachable edge,
-it suffices to bound the aggregate residual debt of the admissible prepended
-chain by that charge.  A positive internal cutoff retains an arbitrary word,
+one-edge conservation gives the sharp bound
+`residual ≤ jointContinue * oldDebt + |I| * M * charge`.  Thus the new
+diagonal seam is charged automatically, but old debt that survives joint
+Continue is a separate potential and must itself be charged before the
+consumer closes.  A rational augmented-cap regression has positive carried
+debt at an exact all-Continue Nash root with zero absorption, so no local
+exact-Nash bound may erase this term; the regression does not assert
+punishment-floor reachability.  A positive internal cutoff retains an arbitrary word,
 while sure-joint and sure-solo caps introduce nonzero pure-exit boundaries;
 those branches still need boundary reinsertion or an exact appended
 Nash--Bellman chain.

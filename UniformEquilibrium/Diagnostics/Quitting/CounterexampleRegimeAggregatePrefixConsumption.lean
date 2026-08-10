@@ -8,6 +8,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneAtta
 import UniformEquilibrium.Quitting.Bellman.Finite.PunishmentFloorFinitePrefixChargedBridge
 import UniformEquilibrium.Quitting.Boundary.Holonomy.QuantitativeAggregateTerminalAnchor
 import UniformEquilibrium.Quitting.Debt.Dynamic.FiniteDynamicDebtCalibration
+import UniformEquilibrium.Quitting.Debt.Dynamic.DynamicDebtConservation
 
 /-!
 # Aggregate prefix consumption of a terminal obstruction
@@ -243,6 +244,187 @@ theorem elementaryCap_consumed_by_minAggregateDrop_or_reachableCharge
   · right
     linarith
 
+/-! ## What joint charge actually controls -/
+
+omit [Nonempty ι] in
+/-- Exact one-edge conservation for a genuinely prepended calibrated chain.
+The residual aggregate debt is bounded by the joint-Continue transport of
+the old aggregate debt plus a diagonal seam paid by joint absorption.
+
+This is the sharp universal replacement for a false bound of residual debt
+by absorption alone.  The first term uses joint Continue mass and cannot be
+discarded merely because the edge is reachable. -/
+theorem prependResidual_le_jointContinue_mul_anchorDebt_add_charge
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (edge : QuittingPunishmentFloorReachableEdge reward)
+    (htail : edge.tail.1.1 = anchor.path 0) :
+    quittingFiniteNashBellmanPathAggregateDynamicDebt
+        reward (anchor.last + 2)
+        (quittingFiniteNashBellmanPathPrependPoint
+          (anchor.last + 1) edge.current.1.1 anchor.path) ≤
+      quittingStationaryContinueMass
+          (quittingRootOfSimplex edge.current.1.1.2) *
+        quittingFiniteNashBellmanPathAggregateDynamicDebt
+          reward (anchor.last + 1) anchor.path +
+      (Fintype.card ι : ℝ) * quittingRewardBound reward *
+        edge.toBoxEdge.absorptionCharge := by
+  have hedgeAnchor : IsQuittingNashBellmanEdge reward edge.current.1.1
+      (anchor.path 0) := by
+    rw [← htail]
+    exact edge.exactEdge
+  let extended := quittingFiniteNashBellmanPathPrependPoint
+    (anchor.last + 1) edge.current.1.1 anchor.path
+  have hextended : extended ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet
+        reward (anchor.last + 2) := by
+    simpa [extended, Nat.add_assoc] using
+      (quittingFiniteNashBellmanPathPrependPoint_mem
+        reward (anchor.last + 1) anchor.path anchor.path_mem
+        edge.current.1.1 edge.current.1.2 hedgeAnchor)
+  let current := quittingFiniteNashBellmanPathDynamicDebtPoint
+    reward (anchor.last + 2) extended 0
+  let successor := quittingFiniteNashBellmanPathDynamicDebtPoint
+    reward (anchor.last + 2) extended 1
+  have hcurrentBox : current ∈ quittingDebtBox reward :=
+    quittingFiniteNashBellmanPathDynamicDebtPoint_mem_box
+      reward (anchor.last + 2) extended hextended 0
+  have hsuccessorBox : successor ∈ quittingDebtBox reward :=
+    quittingFiniteNashBellmanPathDynamicDebtPoint_mem_box
+      reward (anchor.last + 2) extended hextended 1
+  have hdebtEdge : IsQuittingDynamicDebtEdge reward current successor :=
+    quittingFiniteNashBellmanPathDynamicDebtPoint_edge
+      reward (anchor.last + 2) extended hextended 0 (by omega)
+  have hcurrentPoint : current.1 = edge.current.1.1 := by
+    simp [current, quittingFiniteNashBellmanPathDynamicDebtPoint, extended]
+  have hcurrentDebt (who : ι) : current.2 who =
+      quittingFiniteNashBellmanPathDynamicDebt
+        reward (anchor.last + 2) extended who 0 := by
+    simp [current, quittingFiniteNashBellmanPathDynamicDebtPoint]
+  have hsuccessorDebt (who : ι) : successor.2 who =
+      quittingFiniteNashBellmanPathDynamicDebt
+        reward (anchor.last + 1) anchor.path who 0 := by
+    rw [show successor.2 who =
+      quittingFiniteNashBellmanPathDynamicDebt
+        reward (anchor.last + 2) extended who 1 by
+          simp [successor, quittingFiniteNashBellmanPathDynamicDebtPoint]]
+    simpa [extended, Nat.add_assoc] using
+      (quittingFiniteNashBellmanPathDynamicDebt_prependPoint_tail_eq
+        reward (anchor.last + 1) edge.current.1.1 anchor.path who)
+  have hconservation (who : ι) :
+      current.2 who =
+        quittingStationaryContinueMass
+            (quittingRootOfSimplex edge.current.1.1.2) * successor.2 who +
+          quittingDynamicDebtSeam current who := by
+    have h := quittingDynamicDebt_eq_continueMass_mul_add_seam
+      current successor hdebtEdge hsuccessorBox.2.1 who
+    rwa [hcurrentPoint] at h
+  have hseam (who : ι) :
+      quittingDynamicDebtSeam current who ≤
+        quittingRewardBound reward * edge.toBoxEdge.absorptionCharge := by
+    have hraw := quittingDynamicDebtSeam_le_cap_mul_absorptionMass
+      current hcurrentBox who
+    have hcap : quittingPositiveSingletonDebtCap reward who ≤
+        quittingRewardBound reward :=
+      (le_abs_self _).trans
+        (abs_quittingPositiveSingletonDebtCap_le_rewardBound reward who)
+    have hcharge0 : 0 ≤ edge.toBoxEdge.absorptionCharge :=
+      edge.toBoxEdge.absorptionCharge_nonneg
+    rw [hcurrentPoint] at hraw
+    exact hraw.trans (mul_le_mul_of_nonneg_right hcap hcharge0)
+  unfold quittingFiniteNashBellmanPathAggregateDynamicDebt
+  rw [show (∑ who,
+      quittingFiniteNashBellmanPathDynamicDebt
+        reward (anchor.last + 2) extended who 0) =
+      ∑ who, current.2 who by
+        apply Finset.sum_congr rfl
+        intro who _
+        exact (hcurrentDebt who).symm]
+  calc
+    (∑ who, current.2 who) =
+        ∑ who,
+          (quittingStationaryContinueMass
+              (quittingRootOfSimplex edge.current.1.1.2) * successor.2 who +
+            quittingDynamicDebtSeam current who) := by
+      apply Finset.sum_congr rfl
+      intro who _
+      exact hconservation who
+    _ = quittingStationaryContinueMass
+          (quittingRootOfSimplex edge.current.1.1.2) *
+          (∑ who, successor.2 who) +
+        ∑ who, quittingDynamicDebtSeam current who := by
+      rw [Finset.sum_add_distrib, Finset.mul_sum]
+    _ ≤ quittingStationaryContinueMass
+          (quittingRootOfSimplex edge.current.1.1.2) *
+          (∑ who, successor.2 who) +
+        ∑ _who : ι,
+          (quittingRewardBound reward * edge.toBoxEdge.absorptionCharge) := by
+      have hs : (∑ who, quittingDynamicDebtSeam current who) ≤
+          ∑ _who : ι,
+            (quittingRewardBound reward *
+              edge.toBoxEdge.absorptionCharge) := by
+        apply Finset.sum_le_sum
+        intro who _
+        exact hseam who
+      exact add_le_add_right hs _
+    _ = quittingStationaryContinueMass
+          (quittingRootOfSimplex edge.current.1.1.2) *
+          (∑ who,
+            quittingFiniteNashBellmanPathDynamicDebt
+              reward (anchor.last + 1) anchor.path who 0) +
+        (Fintype.card ι : ℝ) * quittingRewardBound reward *
+          edge.toBoxEdge.absorptionCharge := by
+      rw [show (∑ who, successor.2 who) =
+          ∑ who, quittingFiniteNashBellmanPathDynamicDebt
+            reward (anchor.last + 1) anchor.path who 0 by
+        apply Finset.sum_congr rfl
+        intro who _
+        exact hsuccessorDebt who]
+      simp [mul_assoc]
+
+omit [Nonempty ι] in
+/-- The exact extra observable needed to turn conservation into a pure charge
+bound is the joint-Continue-carried old debt.  If that surviving potential is
+itself charged at scale `carriedScale`, the whole prepended residual is
+charged at scale `carriedScale + card * rewardBound`. -/
+theorem prependResidual_le_charge_of_carriedDebt_le_charge
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (edge : QuittingPunishmentFloorReachableEdge reward)
+    (htail : edge.tail.1.1 = anchor.path 0)
+    (carriedScale : ℝ)
+    (hcarried :
+      quittingStationaryContinueMass
+          (quittingRootOfSimplex edge.current.1.1.2) *
+        quittingFiniteNashBellmanPathAggregateDynamicDebt
+          reward (anchor.last + 1) anchor.path ≤
+        carriedScale * edge.toBoxEdge.absorptionCharge) :
+    quittingFiniteNashBellmanPathAggregateDynamicDebt
+        reward (anchor.last + 2)
+        (quittingFiniteNashBellmanPathPrependPoint
+          (anchor.last + 1) edge.current.1.1 anchor.path) ≤
+      (carriedScale +
+          (Fintype.card ι : ℝ) * quittingRewardBound reward) *
+        edge.toBoxEdge.absorptionCharge := by
+  have hconservation :=
+    prependResidual_le_jointContinue_mul_anchorDebt_add_charge
+      anchor edge htail
+  calc
+    quittingFiniteNashBellmanPathAggregateDynamicDebt
+        reward (anchor.last + 2)
+        (quittingFiniteNashBellmanPathPrependPoint
+          (anchor.last + 1) edge.current.1.1 anchor.path) ≤
+      quittingStationaryContinueMass
+          (quittingRootOfSimplex edge.current.1.1.2) *
+        quittingFiniteNashBellmanPathAggregateDynamicDebt
+          reward (anchor.last + 1) anchor.path +
+      (Fintype.card ι : ℝ) * quittingRewardBound reward *
+        edge.toBoxEdge.absorptionCharge := hconservation
+    _ ≤ carriedScale * edge.toBoxEdge.absorptionCharge +
+        (Fintype.card ι : ℝ) * quittingRewardBound reward *
+          edge.toBoxEdge.absorptionCharge := add_le_add_left hcarried _
+    _ = (carriedScale +
+          (Fintype.card ι : ℝ) * quittingRewardBound reward) *
+        edge.toBoxEdge.absorptionCharge := by ring
+
 /-- The immediate Never branch is consumed once the residual aggregate debt
 of the genuinely prepended chain is charged to its new root.  Unlike the
 generic gate, the hypothesis here is a concrete exact-`D` endpoint inequality
@@ -313,6 +495,41 @@ theorem immediateNever_consumed_of_prependResidual_le_charge
           (.never : QuittingElementaryTailCap ι))
   rw [hroots]
   exact hcomparison
+
+/-- Natural chargeable-potential form of the immediate Never consumer.  The
+only extra premise beyond literal reachable attachment is a bound on the old
+debt that survives the new root's joint-Continue event. -/
+theorem immediateNever_consumed_of_carriedDebt_le_charge
+    (regime : QuittingCounterexampleRegime reward)
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (edge : QuittingPunishmentFloorReachableEdge reward)
+    (htail : edge.tail.1.1 = anchor.path 0)
+    (carriedScale : ℝ) (hcarriedScale : 0 ≤ carriedScale)
+    (hcarried :
+      quittingStationaryContinueMass
+          (quittingRootOfSimplex edge.current.1.1.2) *
+        quittingFiniteNashBellmanPathAggregateDynamicDebt
+          reward (anchor.last + 1) anchor.path ≤
+        carriedScale * edge.toBoxEdge.absorptionCharge) :
+    regime.terminalGap / 2 ≤
+        quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+            reward (anchor.last + 1) -
+          quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+            reward (anchor.last + 2) ∨
+      regime.terminalGap / 2 ≤
+        (carriedScale +
+            (Fintype.card ι : ℝ) * quittingRewardBound reward) *
+          edge.toBoxEdge.absorptionCharge := by
+  have hscale : 0 ≤ carriedScale +
+      (Fintype.card ι : ℝ) * quittingRewardBound reward :=
+    add_nonneg hcarriedScale
+      (mul_nonneg (Nat.cast_nonneg _) (quittingRewardBound_nonneg reward))
+  apply regime.immediateNever_consumed_of_prependResidual_le_charge
+    anchor edge htail
+      (carriedScale +
+        (Fintype.card ι : ℝ) * quittingRewardBound reward) hscale
+  exact prependResidual_le_charge_of_carriedDebt_le_charge
+    anchor edge htail carriedScale hcarried
 
 end QuittingCounterexampleRegime
 

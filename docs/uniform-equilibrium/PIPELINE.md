@@ -2760,10 +2760,22 @@ minAggregate(next cutoff) ≤ scale * legal predecessor charge.
 For a reachable edge literally attached to the selected minimizer, the
 prepend constructor supplies an admissible longer chain; it is enough to
 bound that chain's residual aggregate debt by the scaled new-root charge.
-This consumes half the gap through objective drop or legal charge.  The
-endpoint bound is not presently derived from absorption alone because
-playerwise debt uses deleted-player survival whereas the charged relation
-records joint absorption.  `Never` after a positive internal cutoff retains
+Exact one-edge conservation identifies the residual more sharply:
+
+```text
+residual ≤ jointContinue * oldAggregateDebt + |I| * M * legalCharge.
+```
+
+The diagonal seam is therefore paid by joint absorption, while the old debt
+carried through joint Continue is a distinct potential.  If this carried
+term is itself chargeable, the two scales combine and half the gap is
+consumed through objective drop or legal charge.  It cannot be deleted by a
+purely local exact-Nash argument: a rational augmented-cap regression has
+positive aggregate debt at an exact all-Continue root and zero absorption for
+every finite proposed multiplier.  That regression is deliberately local
+and does not establish punishment-floor reachability, so a reachability- or
+potential-based control of the carried term remains the precise gate.
+`Never` after a positive internal cutoff retains
 an arbitrary behavioral word, and sure-joint/sure-solo caps introduce
 nonzero pure-exit boundary pairs.  Those remaining cap branches require a
 boundary-reinsertion inequality or an exact appended Nash--Bellman chain.
