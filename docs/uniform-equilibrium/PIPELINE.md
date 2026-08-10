@@ -2842,6 +2842,25 @@ spends that capacity.  A finite two-player regression has nonpositive
 punishment values but one positive terminal cap, so `punishment≤0` does not
 imply the cap-zero branch.  The regression is not a counterexample regime and
 does not falsify the full same-state capacity inequality.
+
+The incoming-path search is now reduced to a finite alternative.  The global
+floor-admissible potential is invariant under changing only the stored root,
+so an incoming edge to any zero-payoff root reserves capacity for the
+selected terminal state.  If
+
+```text
+0 < terminalDebt < |I| * M,
+```
+
+the canonical one-owner hazard
+`p=terminalDebt/(|I|*M)` has exactly the funding charge and is interior on its
+support.  The frozen-root affine solver then returns either a genuine
+floor-admissible incoming edge, which closes the carry telescope, or explicit
+Farkas infeasibility multipliers for that root.  If terminal debt saturates
+`|I|*M`, every singleton cap equals `M`; the obvious hazard-one
+pure-singleton zero-target predecessor is Bellman-infeasible.  The saturated
+residual is therefore a nonlinear search over more complicated
+full-absorption product roots, not an unquantified boundary issue.
 `Never` after a positive internal cutoff retains
 an arbitrary behavioral word, and sure-joint/sure-solo caps introduce
 nonzero pure-exit boundary pairs.  Those remaining cap branches require a
@@ -3034,6 +3053,16 @@ realize the min--max infimum, whose attainment is not known.  A tight inactive
 singleton row is exactly the finite outsider regression starting from zero,
 so its pair/higher coefficients are the next explicit data rather than a
 hidden continuity premise.
+
+The tight active punishment face can be consumed approximately, but only
+with scale-dependent semantics.  Its exact deficit
+`t*tangent_i/(1-t*mass_j)` tends to zero.  For every positive rationality
+error and tail slack, sufficiently small positive scales admit a
+player-specific target-closed punishment tail whose terminal value lies below
+the exact-ray continuation plus those tolerances.  A single stationary row
+working uniformly for every error would attain the punishment infimum, which
+general min--max theory does not promise.  This closes the scalar tight-floor
+defect at fixed accuracy, not the common-suffix/co-realization or return gate.
 
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges

@@ -30,6 +30,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneAtta
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneTangentReadout
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeReachableCarryTelescope
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeNonpositiveFloorTerminalCapRegression
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTerminalIncomingPathAlternative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeQuantitative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodicWindows
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSearchConsequences
@@ -48,6 +49,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSuppor
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerExactRoot
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerPacketEdge
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerPacketDichotomy
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerApproxPunishment
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
@@ -205,6 +207,14 @@ row, or upper-box coordinate is tight.  At an active positive-tangent
 coordinate, equality with the punishment value blocks the ray at every
 positive scale; it does not realize the min--max infimum.  A tight inactive
 singleton row is exactly the finite outsider regression starting from zero.
+The tight active punishment face is nevertheless asymptotically consumable
+at any fixed tolerance.  Its exact floor deficit tends to zero with the
+hazard scale, and approximate min--max supplies a player-specific
+target-closed punishment tail below the exact-ray continuation plus the
+chosen rationality error and tail slack.  A single stationary row working
+for all errors would force actual attainment of the punishment infimum, so
+the available tails necessarily depend on scale/tolerance and do not yet
+form one common multi-player suffix or return.
 
 Independently of that selected-tail geometry, reward-table closure gives a
 robust finite-cycle restriction: a hypothetical counterexample has one
@@ -414,4 +424,12 @@ two-player regression has nonpositive punishment values but positive
 terminal cap, so `punishment ≤ 0` alone cannot erase the boundary; it is not
 a counterexample-regime witness and does not falsify the full capacity
 inequality.
+The terminal funding search is now finite.  The admissible capacity potential
+depends only on payoff, not on the stored root.  Whenever
+`0 < terminalDebt < |I|*M`, a canonical one-owner hazard has exactly enough
+absorption to fund the cap; frozen-root feasibility yields either a literal
+incoming admissible edge and the carry conclusion, or explicit finite Farkas
+multipliers for that root.  At saturation, every singleton cap equals `M`
+and the obvious pure-singleton zero-target predecessor is Bellman-infeasible.
+More complicated full-absorption roots remain the saturated residual.
 -/
