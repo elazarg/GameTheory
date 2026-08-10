@@ -210,7 +210,7 @@ The single-pass panel observations were re-derived separately before action:
 | ID | Finding | Status | Current disposition and evidence |
 |---|---|---|---|
 | L-01 | EFG inherited the incorrect imperfect-information subgame predicate. | closed | It uses D42 proper roots and the crossed-information-set regression. |
-| L-02 | Kuhn correspondence was whole-profile only and insufficient for Nash transfer. | queued | Whole-profile law equality is labeled partial. Unilateral realization fixing nondeviators and Nash transfer are delivery package B. |
+| L-02 | Kuhn correspondence was whole-profile only and insufficient for Nash transfer. | closed | `Protocol.Strategic` proves both unilateral updated-law directions with nondeviators fixed; `Languages.EFG.Kuhn` transfers Nash both ways, and `Tests.EFGKuhnNash` supplies a two-player coordination consumer plus a law-changing nondeviator control. |
 | L-03 | Kuhn callers repeated a redundant acts-once hypothesis. | closed | Perfect recall supplies the consequence internally; public history-law theorems request perfect recall directly. |
 | L-04 | General MAID semantics had no nonexperimental consumer. | closed | `Tests.MAID` exercises a two-player, three-site diagram, owner/site deviation regrouping, native/compiled law equality, and Nash equivalence on the stable public surface. |
 | L-05 | Superseded MAID unit-order theorem chains remained public. | closed | The duplicate chain and stranded finite-law helper were removed; general order theorems own the result. |
@@ -225,12 +225,11 @@ The single-pass panel observations were re-derived separately before action:
 
 The queued rows are theorem breadth, not unresolved corrections:
 
-1. unilateral Kuhn realization and Nash transfer;
-2. independent rationalizability and remaining transformation/correlation
+1. independent rationalizability and remaining transformation/correlation
    characterizations;
-3. selected mathematical tuning/conditioning lemmas;
-4. MAID strategic-relevance/requisite analysis; and
-5. the mature-family extensions already enumerated in
+2. selected mathematical tuning/conditioning lemmas;
+3. MAID strategic-relevance/requisite analysis; and
+4. the mature-family extensions already enumerated in
    `PostArchitectureDeliveryPlan.md`.
 
 Their absence is represented as `partial` or as a named next seam in

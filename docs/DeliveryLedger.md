@@ -42,7 +42,7 @@ Status labels:
 | Family | Status | Current evidence | Next seam |
 |---|---|---|---|
 | EFG strategic extraction | complete | pure/mixed strategic law and Nash equivalences | Broader convenience API only. |
-| Kuhn correspondence | partial | perfect recall implies no-revisit; whole-profile behavioral/mixed law equality | Unilateral realization fixing nondeviators, then Nash transfer. |
+| Kuhn correspondence | complete | whole-profile laws plus protocol-level unilateral updated-law equivalence; two-player EFG witness transfers expected-utility Nash in both directions | Broader convenience results are separate from the finite perfect-recall correspondence. |
 | Zermelo backward induction | complete | constructive Bellman profile, explicit exit/reward fixture, pure SPE | None at current finite local-choice scope. |
 | Behavioral assessment and sequential equilibrium | supported | decision-fiber antichain contract, perfect-recall certificate, positive/falsifying hidden-state assessments | Broader refinement families. |
 | Repeated games | supported | deterministic Protocol prefixes; native public-signal histories, discounting, triggers, PPE, uniform equilibrium, folk theorem | Monitoring rank, self-generation, public randomization; native monitoring is not claimed as a Protocol runner. |

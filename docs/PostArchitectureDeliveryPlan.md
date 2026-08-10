@@ -56,21 +56,23 @@ optimality, finite assessment-local optimality, and proper-subgame SPE retain
 their distinct scopes. A future restricted theorem needs a named consumer and
 a premise that explicitly excludes the EXP-078 counterexample.
 
-### B. Unilateral Kuhn realization and Nash transfer
+### B. Unilateral Kuhn realization and Nash transfer — resolved
 
-Priority: highest active sequential transfer package.
+`Protocol.Strategic` now owns the exact updated-law theorems at the lowest
+sufficient semantic layer. They realize either an arbitrary behavioral or
+mixed deviation while every nondeviator keeps the canonical induced policy.
+The EFG surface specializes those laws and transfers expected-utility Nash in
+both directions under perfect recall.
 
-Goal: for one deviating player, realize the behavioral or mixed policy while
-fixing every nondeviator's induced behavior, then transport Nash inequalities.
-
-The current whole-profile law equivalence is not sufficient. The new theorem
-must quantify the deviator explicitly and prove equality of the relevant
-updated outcome laws. It must retain perfect recall as the public premise;
-no-revisit remains an internal consequence.
+`Tests.EFGKuhnNash` is the hostile consumer: two players move sequentially,
+the deviator may use a genuine mixed strategy, the other player's action
+changes the terminal law, and a coordination equilibrium crosses both Nash
+transfer directions. No-revisit remains an internal consequence of perfect
+recall rather than a duplicated public premise.
 
 ### C. Repeated public-monitoring breadth
 
-Priority: next mature dynamic family after A/B boundaries are fixed.
+Priority: highest active mature dynamic family.
 
 Recover, in order:
 
@@ -85,7 +87,8 @@ one-shot theorem must reuse that predicate.
 
 ### D. FOSG strategic and counterfactual analysis
 
-Priority: after B fixes the strategic-transfer boundary.
+Priority: eligible now that B fixes the strategic-transfer boundary; keep its
+strategic-transfer slice separate from the counterfactual/CFR package.
 
 Separate packages:
 

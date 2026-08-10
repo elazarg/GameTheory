@@ -237,6 +237,282 @@ theorem toBehavioralGameForm_play_image_eq_mixed_play_image
         M.runMixed mixed horizon = law }
   exact M.runBehavioral_image_eq_runMixed_image hactsOnce hconstrain horizon
 
+/-! ## Unilateral realization
+
+Whole-profile law equality is insufficient for strategic transfer: a
+unilateral theorem must keep every opponent coordinate fixed. The proof
+factors the independent pure-policy draw at the deviator, establishes the
+round trip against pure opponents, and integrates over arbitrary opponent
+laws. -/
+
+section UnilateralRealization
+
+variable [DecidableEq ι]
+  [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
+
+omit [∀ i, Fintype (M.InfoState i)]
+  [∀ i, DecidableEq (M.InfoState i)] in
+private theorem runMixed_update_eq_opponents_bind
+    (mixed : Profile M.strategicSignature.mixed) (who : ι)
+    (replacement : M.MixedPolicy who) (horizon : ℕ) :
+    M.runMixed (Profile.update mixed who replacement) horizon =
+      (FinDist.pi fun other : {other // other ≠ who} => mixed other.1).bind
+        fun opponents =>
+          replacement.bind fun policy =>
+            M.run
+              ((Equiv.piSplitAt who fun i => M.Policy i).symm
+                (policy, opponents)) horizon := by
+  rw [runMixed, runMixedFrom, FinDist.pi_eq_map_product who,
+    Profile.update_same]
+  have hothers :
+      (fun other : {other // other ≠ who} =>
+          Profile.update mixed who replacement other.1) =
+        (fun other : {other // other ≠ who} => mixed other.1) := by
+    funext other
+    exact Profile.update_of_ne mixed replacement other.2
+  rw [hothers, FinDist.bind_map]
+  unfold FinDist.product
+  rw [FinDist.bind_bind]
+  calc
+    _ = replacement.bind fun policy =>
+        (FinDist.pi fun other : {other // other ≠ who} => mixed other.1).bind
+          fun opponents =>
+            M.run
+              ((Equiv.piSplitAt who fun i => M.Policy i).symm
+                (policy, opponents)) horizon := by
+          refine FinDist.bind_congr fun policy _ => ?_
+          rw [FinDist.bind_map]
+          rfl
+    _ = _ := FinDist.bind_comm replacement
+      (FinDist.pi fun other : {other // other ≠ who} => mixed other.1) _
+
+private theorem kuhn_mixed_roundTrip_against_pure
+    (hrecall : M.PerfectRecall) (who : ι)
+    (replacement : M.MixedPolicy who)
+    (opponents : ∀ other : {other // other ≠ who}, M.Policy other.1)
+    (horizon : ℕ) :
+    (((InformationModel.MixedPolicy.toBehavioral
+        (M := M) replacement).toMixed).bind fun policy =>
+        M.run
+          ((Equiv.piSplitAt who fun i => M.Policy i).symm
+            (policy, opponents)) horizon) =
+      (replacement.bind fun policy =>
+        M.run
+          ((Equiv.piSplitAt who fun i => M.Policy i).symm
+            (policy, opponents)) horizon) := by
+  let pureProfile : Profile M.strategicSignature :=
+    (Equiv.piSplitAt who fun i => M.Policy i).symm
+      (replacement.support_nonempty.choose, opponents)
+  let pureMixed : Profile M.strategicSignature.mixed :=
+    fun i => FinDist.pure (pureProfile i)
+  let roundTrip : M.MixedPolicy who :=
+    (InformationModel.MixedPolicy.toBehavioral
+      (M := M) replacement).toMixed
+  let mixedProfile : Profile M.strategicSignature.mixed :=
+    Profile.update (sig := M.strategicSignature.mixed)
+      pureMixed who replacement
+  let behavioral : Profile M.behavioralSignature :=
+    fun i => InformationModel.MixedPolicy.toBehavioral
+      (M := M) (mixedProfile i)
+  have hroundTrip :=
+    (M.runMixed_toMixed
+      (M.actsOnceWhereItMatters_of_perfectRecall hrecall)
+      behavioral horizon).trans
+      (M.runMixed_toBehavioral
+        (InformationModel.constrainsAlike_of_perfectRecall hrecall)
+        horizon mixedProfile).symm
+  have hroundProfile :
+      (fun i =>
+        (InformationModel.MixedPolicy.toBehavioral
+          (M := M) (mixedProfile i)).toMixed) =
+        Profile.update (sig := M.strategicSignature.mixed)
+          pureMixed who roundTrip := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      simp [mixedProfile, pureMixed, roundTrip]
+    · simp [mixedProfile, pureMixed, roundTrip, hi,
+        InformationModel.MixedPolicy.toBehavioral_pure,
+        InformationModel.Policy.toBehavioral_toMixed]
+  have hpureProfile :
+      (fun other : {other // other ≠ who} => pureProfile other.1) =
+        opponents := by
+    funext other
+    simp [pureProfile, other.2]
+  rw [hroundProfile,
+    runMixed_update_eq_opponents_bind (M := M)
+      pureMixed who roundTrip horizon,
+    runMixed_update_eq_opponents_bind (M := M)
+      pureMixed who replacement horizon,
+    FinDist.pi_pure] at hroundTrip
+  simp only [FinDist.pure_bind] at hroundTrip
+  rw [hpureProfile] at hroundTrip
+  simpa [roundTrip] using hroundTrip
+
+/-- A player's mixed strategy may be read behaviorally and redrawn as mixed
+without changing the history law against the other players' fixed mixed
+strategies. -/
+theorem kuhn_mixed_roundTrip_update
+    (hrecall : M.PerfectRecall)
+    (mixed : Profile M.strategicSignature.mixed) (who : ι)
+    (replacement : M.MixedPolicy who) (horizon : ℕ) :
+    M.runMixed
+        (Profile.update (sig := M.strategicSignature.mixed) mixed who
+          (InformationModel.MixedPolicy.toBehavioral
+            (M := M) replacement).toMixed) horizon =
+      M.runMixed
+        (Profile.update (sig := M.strategicSignature.mixed)
+          mixed who replacement) horizon := by
+  rw [runMixed_update_eq_opponents_bind (M := M)
+      mixed who (InformationModel.MixedPolicy.toBehavioral
+        (M := M) replacement).toMixed horizon,
+    runMixed_update_eq_opponents_bind (M := M)
+      mixed who replacement horizon]
+  refine FinDist.bind_congr fun opponents _ => ?_
+  exact kuhn_mixed_roundTrip_against_pure
+    (M := M) hrecall who replacement opponents horizon
+
+omit [Fintype ι] [∀ i, DecidableEq (M.InfoState i)] in
+private theorem toMixed_update
+    (behavioral : Profile M.behavioralSignature) (who : ι)
+    (replacement : M.BehavioralPolicy who) :
+    (fun i => ((Profile.update behavioral who replacement) i).toMixed) =
+      Profile.update (sig := M.strategicSignature.mixed)
+        (fun i => (behavioral i).toMixed) who
+        replacement.toMixed := by
+  funext i
+  by_cases hi : i = who
+  · subst i
+    rw [Profile.update_same, Profile.update_same]
+  · rw [Profile.update_of_ne _ _ hi, Profile.update_of_ne _ _ hi]
+
+omit [Fintype ι] [∀ i, Fintype (M.InfoState i)]
+  [∀ i, DecidableEq (M.InfoState i)] in
+private theorem toBehavioral_update
+    (mixed : Profile M.strategicSignature.mixed) (who : ι)
+    (replacement : M.MixedPolicy who) :
+    (fun i => InformationModel.MixedPolicy.toBehavioral
+        (M := M) (Profile.update mixed who replacement i)) =
+      Profile.update (sig := M.behavioralSignature)
+        (fun i => InformationModel.MixedPolicy.toBehavioral
+          (M := M) (mixed i)) who
+        (InformationModel.MixedPolicy.toBehavioral
+          (M := M) replacement) := by
+  funext i
+  by_cases hi : i = who
+  · subst i
+    rw [Profile.update_same, Profile.update_same]
+  · rw [Profile.update_of_ne _ _ hi, Profile.update_of_ne _ _ hi]
+
+/-- A behavioral policy and its behavioral-to-mixed-to-behavioral round trip
+are realization-equivalent for one player while every other behavioral policy
+is held fixed. -/
+theorem kuhn_behavioral_roundTrip_update
+    (hrecall : M.PerfectRecall)
+    (behavioral : Profile M.behavioralSignature) (who : ι)
+    (replacement : M.BehavioralPolicy who) (horizon : ℕ) :
+    M.runBehavioral
+        (Profile.update behavioral who
+          (InformationModel.MixedPolicy.toBehavioral
+            (M := M) replacement.toMixed))
+        horizon =
+      M.runBehavioral (Profile.update behavioral who replacement) horizon := by
+  let roundTrip : M.BehavioralPolicy who :=
+    InformationModel.MixedPolicy.toBehavioral
+      (M := M) replacement.toMixed
+  have hleft := M.runMixed_toMixed
+    (M.actsOnceWhereItMatters_of_perfectRecall hrecall)
+    (Profile.update behavioral who roundTrip) horizon
+  have hright := M.runMixed_toMixed
+    (M.actsOnceWhereItMatters_of_perfectRecall hrecall)
+    (Profile.update behavioral who replacement) horizon
+  rw [toMixed_update (M := M) behavioral who roundTrip] at hleft
+  rw [toMixed_update (M := M) behavioral who replacement] at hright
+  have hlocal := M.kuhn_mixed_roundTrip_update hrecall
+    (fun i => (behavioral i).toMixed) who replacement.toMixed horizon
+  have hresult := hleft.symm.trans (hlocal.trans hright)
+  simpa [roundTrip] using hresult
+
+/-- Replacing one player's mixed strategy by an arbitrary behavioral strategy
+commutes with the conditional behavioral reading while every nondeviator keeps
+its induced behavior. -/
+theorem kuhn_mixed_update_toBehavioral
+    (hrecall : M.PerfectRecall)
+    (mixed : Profile M.strategicSignature.mixed) (who : ι)
+    (replacement : M.BehavioralPolicy who) (horizon : ℕ) :
+    M.runBehavioral
+        (Profile.update (sig := M.behavioralSignature)
+          (fun i => InformationModel.MixedPolicy.toBehavioral
+            (M := M) (mixed i)) who replacement)
+        horizon =
+      M.runMixed
+        (Profile.update (sig := M.strategicSignature.mixed)
+          mixed who replacement.toMixed) horizon := by
+  let behavioral : Profile M.behavioralSignature :=
+    fun i => InformationModel.MixedPolicy.toBehavioral
+      (M := M) (mixed i)
+  have hback := M.runMixed_toBehavioral
+    (InformationModel.constrainsAlike_of_perfectRecall hrecall) horizon
+    (Profile.update mixed who replacement.toMixed)
+  rw [toBehavioral_update (M := M)
+    mixed who replacement.toMixed] at hback
+  have hround := M.kuhn_behavioral_roundTrip_update
+    hrecall behavioral who replacement horizon
+  exact hround.symm.trans hback.symm
+
+/-- Starting from a behavioral profile, an arbitrary mixed deviation is
+realized by its behavioral reading without changing any nondeviator's
+behavioral policy. -/
+theorem kuhn_behavioral_update_toMixed
+    (hrecall : M.PerfectRecall)
+    (behavioral : Profile M.behavioralSignature) (who : ι)
+    (replacement : M.MixedPolicy who) (horizon : ℕ) :
+    M.runMixed
+        (Profile.update (sig := M.strategicSignature.mixed)
+          (fun i => (behavioral i).toMixed) who replacement)
+        horizon =
+      M.runBehavioral
+        (Profile.update (sig := M.behavioralSignature)
+          behavioral who
+            (InformationModel.MixedPolicy.toBehavioral
+              (M := M) replacement)) horizon := by
+  let deviation : M.BehavioralPolicy who :=
+    InformationModel.MixedPolicy.toBehavioral (M := M) replacement
+  let roundBehavioral : Profile M.behavioralSignature :=
+    fun i => InformationModel.MixedPolicy.toBehavioral
+      (M := M) (behavioral i).toMixed
+  have hforward := M.runMixed_toMixed
+    (M.actsOnceWhereItMatters_of_perfectRecall hrecall)
+    (Profile.update behavioral who deviation) horizon
+  rw [toMixed_update (M := M) behavioral who deviation] at hforward
+  have hbackBase := M.runMixed_toBehavioral
+    (InformationModel.constrainsAlike_of_perfectRecall hrecall) horizon
+    (Profile.update (sig := M.strategicSignature.mixed)
+      (fun i => (behavioral i).toMixed) who deviation.toMixed)
+  rw [toBehavioral_update (M := M)
+    (fun i => (behavioral i).toMixed) who deviation.toMixed] at hbackBase
+  have hbaseToRound :
+      M.runBehavioral (Profile.update behavioral who deviation) horizon =
+        M.runBehavioral
+          (Profile.update roundBehavioral who
+            (InformationModel.MixedPolicy.toBehavioral
+              (M := M) deviation.toMixed))
+          horizon :=
+    hforward.symm.trans hbackBase
+  have hplayer := M.kuhn_behavioral_roundTrip_update
+    hrecall roundBehavioral who deviation horizon
+  have hbaseToDeviation := hbaseToRound.trans hplayer
+  have hbackDeviation := M.runMixed_toBehavioral
+    (InformationModel.constrainsAlike_of_perfectRecall hrecall) horizon
+    (Profile.update (sig := M.strategicSignature.mixed)
+      (fun i => (behavioral i).toMixed) who replacement)
+  rw [toBehavioral_update (M := M)
+    (fun i => (behavioral i).toMixed) who replacement] at hbackDeviation
+  have hresult := hbackDeviation.trans hbaseToDeviation.symm
+  simpa [deviation, roundBehavioral] using hresult
+
+end UnilateralRealization
+
 end InformationModel
 
 end GameTheory.Protocol
