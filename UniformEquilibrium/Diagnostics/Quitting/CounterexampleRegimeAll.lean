@@ -82,6 +82,7 @@ import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryLimitGeometry
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryConditioning
 import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseChronology
 import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseUniform
+import UniformEquilibrium.Quitting.Cycles.ConditionedDeletedClockSoloCompletion
 import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseProductRescaling
 import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseStrategicRescaling
 import UniformEquilibrium.Quitting.Cycles.ConditionedProductPurification
@@ -508,7 +509,7 @@ is a stationary solo endpoint equilibrium; punishment completion enforces
 its singleton payoff, even when the owner's own payoff is negative.  Thus the
 remaining tight-singleton obstruction is genuinely diffuse.
 
-That diffuse stratum now has a complete deleted-clock compiler.  Divide every
+That diffuse stratum now has a complete clock alternative. Divide every
 source hazard by the remaining eventual-absorption mass.  The resulting
 product roots are legal, retain every nonsummable player-deleted clock, and
 approximate the conditioned coalition law quadratically in the normalized
@@ -516,12 +517,15 @@ mesh.  Exact source complementarity improves the active Continue error to the
 player-deleted absorption scale.  A two-clock telescope therefore gives an
 explicit asymptotic Nash profile whenever the boundary is coordinatewise
 singleton-tight, the mesh is uniformly small, and every conditioned deleted
-clock is nonsummable.  Its policy, Quit, and Continue errors are all linear in
-the mesh bound and vanish on late diffuse suffixes.  Thus exact rowwise
-purification is unnecessary on this branch.  The conditioned residual is now
-strict plateau slack, or failure of deleted-clock completeness; the latter
-must still be converted into the asymptotic solo chronology consumed by the
-approximate punishment-cycle theorem.
+clock is nonsummable. Its policy, Quit, and Continue errors are all linear in
+the mesh bound and vanish on late diffuse suffixes. If one deleted clock is
+summable, rescaling instead forces a unique nonsummable owner, summable
+non-owner hazards, and literal terminal convergence to the owner's singleton
+vector. Late owner-active rows then feed the approximate punishment-completed
+solo compiler under singleton individual rationality. Thus exact rowwise
+purification is unnecessary, and deleted-clock failure is no longer a
+residual on the singleton-tight, singleton-floor-safe stratum. The
+conditioned residual is strict plateau/source-floor slack.
 
 Negative ordinary tangent also has an exact conditioned interpretation.  It
 either remains a negative conditioned delivery gap, giving strict upward

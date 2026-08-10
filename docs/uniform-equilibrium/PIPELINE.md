@@ -1,10 +1,10 @@
 # Uniform-equilibrium project pipeline
 
-**Repository checkpoint:** `dcbaa757` (2026-08-10). The mathematical checkpoint
-`50fac9c2` includes conditioned-tail chronology, exact atomic purification,
-approximate punishment completion, and the singleton-tight deleted-complete
-diffuse compiler. **This file revised 2026-08-10 after the automated external
-review.**
+**Repository checkpoint:** `12d3aa35` (2026-08-10). The mathematical checkpoint
+includes conditioned-tail chronology, exact atomic purification, approximate
+punishment completion, the singleton-tight diffuse compiler, and the exact
+deleted-clock split. **This file revised 2026-08-10 after the deficient-clock
+branch was consumed.**
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
@@ -19,19 +19,20 @@ The conjecture-level search begins at four players: the two- and three-player
 cases are compiled. For a hypothetical counterexample, terminal instability,
 the exact-D/projective tail, bounded punishment-floor capacity, marked semantic
 compactness, elementary tail caps, and conditioned-tail chronology are all
-available. **Conditionally**, a singleton-tight diffuse suffix with uniform
-mesh at most `rho` and every player-deleted clock complete compiles to an
-asymptotic Nash profile with error `O(rho)`. The all-errors capstone is now
-explicit: arbitrarily fine such certificates imply a uniform-equilibrium
-payoff. The unconditional counterexample split does not yet supply them.
+available. A singleton-tight diffuse suffix with uniform mesh at most `rho`
+and every player-deleted clock complete compiles to an asymptotic Nash profile
+with error `O(rho)`. A deficient clock is now consumed as well: it forces a
+unique rescaled owner, literal terminal concentration on that owner's
+singleton vector, and—under singleton individual rationality—an approximate
+punishment-completed solo equilibrium. Thus the whole singleton-tight,
+singleton-floor-safe diffuse stratum compiles; the unconditional
+counterexample split does not yet force that stratum.
 
-The live residue has three natural exits:
+The live residue has two natural exits:
 
-1. spend strict plateau/punishment slack in a floor-safe support or delivery
-   reset;
-2. convert a deficient player-deleted clock into an asymptotic solo chronology,
-   then use approximate punishment completion; or
-3. solve the enlarged-support complementarity and state-matching problem forced
+1. spend strict plateau/punishment or singleton-floor slack in a floor-safe
+   support or delivery reset; or
+2. solve the enlarged-support complementarity and state-matching problem forced
    by the eventual all-Continue plateau, producing a positive-mass return or an
    equivalent terminal consumer.
 
@@ -2244,9 +2245,9 @@ regularity layer tracked separately. Nothing here gates the quitting lane.
 ### `MATH-P0-12` — grounded counterexample-seam utilization
 
 - **Status:** ACTIVE SUPPORTING LANE; accounting, compact carriers, exact strategic
-  consumers, and the singleton-tight deleted-complete diffuse compiler are
-  compiled; strict-slack reset, deleted-clock-deficient solo extraction, and
-  enlarged-support state matching remain open
+  consumers, and the complete singleton-tight diffuse alternative are
+  compiled; strict-slack/source-floor reset and enlarged-support state matching
+  remain open
 - **Lane:** P0 of the finite-quitting counterexample route
 - **Depends:** `CounterexampleRegimeTangentPacket`, normalized finite-window
   occupation and refusal reweighting, dynamic-debt conservation and phantom
@@ -2268,8 +2269,8 @@ plateau, or realize a product-root word.
 
 **Diminishing-returns stop rule.** This row is no longer permission to extend
 the diagnostic ontology. New work counts only if it (a) rules out strict
-plateau slack, (b) compiles a deficient deleted clock through approximate solo
-punishment completion, (c) solves enlarged-support state matching, or (d)
+plateau or singleton-source-floor slack, (b) solves enlarged-support state
+matching, or (c)
 constructs one common floor-safe product-root chronology consumed by a landed
 terminal/cycle compiler. A new compact carrier, co-state, separator, tangent
 identity, or conditional decoder without one of those consequences is useful
@@ -2456,11 +2457,16 @@ The Nash and delivery errors are linear in the mesh bound and hence vanish on
 late diffuse suffixes.  No exact rowwise purification or extra occupation
 measure is assumed.  Consequently the deleted-complete diffuse branch of item
 5 is closed, including the all-errors uniform-payoff selection in
-`ConditionedDiffuseUniform.lean`.  Failure of deleted completeness is now a precise separate
-producer problem: the named tight-diffuse dichotomy forces a summable
-player-deleted conditioned clock in every counterexample. Extract an
-asymptotic solo chronology from that clock to feed the preceding
-approximate punishment-cycle theorem.  Strict plateau slack remains the other
+`ConditionedDiffuseUniform.lean`. Failure of deleted completeness is no longer
+a separate producer problem. `ConditionedDeletedClockMonopoly.lean` extracts a
+unique nonsummable owner and summable non-owner hazards;
+`ConditionedDeletedClockTerminalConcentration.lean` proves literal late-tail
+convergence to the owner's singleton vector; and
+`ConditionedDeletedClockSoloCompletion.lean` deletes the vanishing hazards and
+feeds the resulting caps to approximate punishment completion. Consequently
+the complete and deficient clock branches both close whenever the conditioned
+source is singleton-tight and singleton-floor-safe and every singleton owner
+is punishment-rational. Strict plateau or source-floor slack is the remaining
 conditioned boundary regime and still requires a support- or delivery-changing
 reset rather than affine shrinkage.
 
@@ -2484,16 +2490,16 @@ phase.  A successful route must create new chronological phase weights or a
 floor-safe conditioned singleton flow.
 
 **Acceptance.** A game-facing state-matched realization theorem, not another
-separator.  After the diffuse compiler, every residual counterexample tail
-must either convert strict plateau slack into a floor-safe support or delivery
-reset, convert failure of a deleted clock into the asymptotic solo chronology
-consumed by approximate punishment completion, construct a positive-mass
+separator. After the diffuse and deficient-clock compilers, every residual
+counterexample tail must either convert strict plateau/source-floor slack into
+a floor-safe support or delivery reset, construct a positive-mass
 finite return consumed by the collision-aware or singleton-APS compiler, or
 solve the enlarged-support complementarity system forced by the eventual
 all-Continue plateau.  The theorem may not assume common cap-splice
 realization, replace product roots by correlated rows, or discard the surviving
-boundary.  The currently landed results close the singleton-tight
-deleted-complete diffuse stratum but do not prove this residual alternative.
+boundary. The currently landed results close the full singleton-tight,
+singleton-floor-safe diffuse stratum but do not prove this residual
+alternative.
 
 ## Literature import lane
 

@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseCompiler
+import UniformEquilibrium.Quitting.Cycles.ConditionedDeletedClockMonopoly
 import UniformEquilibrium.Quitting.Terminal.TargetTail.TerminalUniformPayoffSelection
 
 /-!

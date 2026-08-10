@@ -202,4 +202,124 @@ theorem half_le_one_sub_prod_one_sub_of_one_le_sum_range
       _ ≤ 1 := hmain
   linarith
 
+/-- The elementary lower union bound for a finite survival product. -/
+theorem one_sub_sum_range_le_prod_one_sub
+    (charge : ℕ → ℝ)
+    (hcharge0 : ∀ n, 0 ≤ charge n)
+    (hcharge1 : ∀ n, charge n ≤ 1)
+    (start fuel : ℕ) :
+    1 - ∑ offset ∈ Finset.range fuel, charge (start + offset) ≤
+      ∏ offset ∈ Finset.range fuel, (1 - charge (start + offset)) := by
+  induction fuel with
+  | zero => simp
+  | succ fuel ih =>
+      let accumulated :=
+        ∑ offset ∈ Finset.range fuel, charge (start + offset)
+      let current := charge (start + fuel)
+      let survival :=
+        ∏ offset ∈ Finset.range fuel, (1 - charge (start + offset))
+      have haccumulated : 0 ≤ accumulated :=
+        Finset.sum_nonneg fun offset _ => hcharge0 (start + offset)
+      have hcurrent0 : 0 ≤ current := hcharge0 (start + fuel)
+      have hcurrent1 : current ≤ 1 := hcharge1 (start + fuel)
+      have hfactor : 0 ≤ 1 - current := by linarith
+      rw [Finset.sum_range_succ, Finset.prod_range_succ]
+      change 1 - (accumulated + current) ≤ survival * (1 - current)
+      calc
+        1 - (accumulated + current) ≤
+            (1 - accumulated) * (1 - current) := by
+          nlinarith [mul_nonneg haccumulated hcurrent0]
+        _ ≤ survival * (1 - current) :=
+          mul_le_mul_of_nonneg_right ih hfactor
+
+/-- If every shifted finite survival product tends to zero, then its
+nonnegative unit-interval charge cannot be summable. -/
+theorem not_summable_of_tendsto_prod_one_sub_zero
+    (charge : ℕ → ℝ)
+    (hcharge0 : ∀ n, 0 ≤ charge n)
+    (hcharge1 : ∀ n, charge n ≤ 1)
+    (hcomplete : ∀ start, Tendsto (fun fuel =>
+      ∏ offset ∈ Finset.range fuel, (1 - charge (start + offset)))
+        atTop (nhds 0)) :
+    ¬Summable charge := by
+  intro hsummable
+  have htail : Tendsto (fun start : ℕ =>
+      ∑' offset : ℕ, charge (offset + start)) atTop (nhds 0) :=
+    tendsto_sum_nat_add charge
+  have heventually : ∀ᶠ start : ℕ in atTop,
+      (∑' offset : ℕ, charge (offset + start)) < (1 / 2 : ℝ) :=
+    htail.eventually (Iio_mem_nhds (by norm_num))
+  obtain ⟨start, hstart⟩ := heventually.exists
+  have hsuffix : Summable (fun offset => charge (start + offset)) := by
+    have hadd : Summable (fun offset => charge (offset + start)) :=
+      (summable_nat_add_iff start).2 hsummable
+    simpa [Nat.add_comm] using hadd
+  have hlower : ∀ fuel,
+      (1 / 2 : ℝ) ≤
+        ∏ offset ∈ Finset.range fuel, (1 - charge (start + offset)) := by
+    intro fuel
+    have hfinite :
+        (∑ offset ∈ Finset.range fuel, charge (start + offset)) ≤
+          ∑' offset : ℕ, charge (start + offset) :=
+      hsuffix.sum_le_tsum (Finset.range fuel) fun offset _ =>
+        hcharge0 (start + offset)
+    have htailRewrite :
+        (∑' offset : ℕ, charge (start + offset)) =
+          ∑' offset : ℕ, charge (offset + start) := by
+      congr 1
+      funext offset
+      rw [Nat.add_comm]
+    rw [htailRewrite] at hfinite
+    have hunion := one_sub_sum_range_le_prod_one_sub
+      charge hcharge0 hcharge1 start fuel
+    linarith
+  have hzero : (1 / 2 : ℝ) ≤ 0 :=
+    ge_of_tendsto' (hcomplete start) hlower
+  norm_num at hzero
+
+/-- A nonsummable nonnegative unit-interval charge has vanishing finite
+survival products on every suffix.  This is the converse direction to
+`not_summable_of_tendsto_prod_one_sub_zero`. -/
+theorem tendsto_prod_one_sub_zero_of_not_summable
+    (charge : ℕ → ℝ)
+    (hcharge0 : ∀ n, 0 ≤ charge n)
+    (hcharge1 : ∀ n, charge n ≤ 1)
+    (hdiverges : ¬Summable charge)
+    (start : ℕ) :
+    Tendsto (fun fuel =>
+      ∏ offset ∈ Finset.range fuel, (1 - charge (start + offset)))
+        atTop (nhds 0) := by
+  have hsuffix : ¬Summable (fun offset => charge (start + offset)) := by
+    intro hsummable
+    have hshift : Summable (fun offset => charge (offset + start)) := by
+      simpa [Nat.add_comm] using hsummable
+    exact hdiverges ((summable_nat_add_iff start).1 hshift)
+  have hsum : Tendsto (fun fuel : ℕ =>
+      ∑ offset ∈ Finset.range fuel, charge (start + offset))
+      atTop atTop :=
+    (not_summable_iff_tendsto_nat_atTop_of_nonneg
+      (fun offset => hcharge0 (start + offset))).1 hsuffix
+  have hinv : Tendsto (fun fuel : ℕ =>
+      (1 + ∑ offset ∈ Finset.range fuel,
+        charge (start + offset))⁻¹) atTop (nhds 0) := by
+    exact tendsto_inv_atTop_zero.comp (tendsto_const_nhds.add_atTop hsum)
+  refine squeeze_zero
+    (fun fuel => Finset.prod_nonneg fun offset _ => by
+      linarith [hcharge1 (start + offset)])
+    (fun fuel => ?_) hinv
+  have hdenominator : 0 <
+      1 + ∑ offset ∈ Finset.range fuel,
+        charge (start + offset) := by
+    have hsum0 : 0 ≤ ∑ offset ∈ Finset.range fuel,
+        charge (start + offset) :=
+      Finset.sum_nonneg fun offset _ => hcharge0 (start + offset)
+    linarith
+  change (∏ offset ∈ Finset.range fuel,
+      (1 - charge (start + offset))) ≤
+    (1 + ∑ offset ∈ Finset.range fuel,
+      charge (start + offset))⁻¹
+  rw [inv_eq_one_div, le_div_iff₀ hdenominator]
+  exact prod_one_sub_mul_one_add_sum_range_le_one
+    charge hcharge0 hcharge1 start fuel
+
 end Math
