@@ -94,6 +94,78 @@ theorem exists_aggregateAnchor_terminalGap_le_packetCharge
       regime.terminalGap_pos
       (regime.terminalGap_le_canonicalAggregateFullPrefixRepairValue last)
 
+/-! ## The immediate Never cap -/
+
+/-- Attaching Never immediately after the complete calibrated prefix reads
+exactly the maximum playerwise dynamic debt.  This is the one elementary cap
+whose boundary pair is already the zero-boundary pair used by exact-`D`.
+
+A compressed Never cap with a positive internal cutoff does not satisfy this
+identity: it retains the supplied behavioral word before reaching Never. -/
+theorem immediateNever_terminalExploitability_eq_maxDynamicDebt
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward) :
+    quittingTerminalExploitability reward
+        (quittingPhaseSwitchProfile reward anchor.roots
+          (quittingElementaryCapRoots
+            (.never : QuittingElementaryTailCap ι))
+          (anchor.last + 1)) =
+      quittingFiniteNashBellmanPathMaxDynamicDebt
+        reward (anchor.last + 1) anchor.path := by
+  rw [← quittingPhaseSwitch_behavioralTailGain_eq_terminalExploitability
+    reward anchor.roots
+      (quittingElementaryCapRoots
+        (.never : QuittingElementaryTailCap ι))
+      (anchor.last + 1) (by omega) (quittingRewardBound_nonneg reward)
+      (abs_reward_le_quittingRewardBound reward)]
+  simpa [QuittingAggregateCalibratedTerminalAnchor.roots] using
+    (fullPrefix_behavioralTailGain_elementaryNever_eq_maxDynamicDebt
+      reward anchor.last anchor.path anchor.path_mem)
+
+/-- For the immediate Never cap, the generic objective/charge comparison
+reduces to a single endpoint statement: the next optimized residual debt is
+paid by the legal edge charge. -/
+theorem immediateNever_terminalExploitability_le_drop_add_charge
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (edge : QuittingPunishmentFloorReachableEdge reward)
+    (chargeScale : ℝ)
+    (hendpoint :
+      quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+          reward (anchor.last + 2) ≤
+        chargeScale * edge.toBoxEdge.absorptionCharge) :
+    quittingTerminalExploitability reward
+        (quittingPhaseSwitchProfile reward anchor.roots
+          (quittingElementaryCapRoots
+            (.never : QuittingElementaryTailCap ι))
+          (anchor.last + 1)) ≤
+      quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+          reward (anchor.last + 1) -
+        quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+          reward (anchor.last + 2) +
+        chargeScale * edge.toBoxEdge.absorptionCharge := by
+  calc
+    quittingTerminalExploitability reward
+        (quittingPhaseSwitchProfile reward anchor.roots
+          (quittingElementaryCapRoots
+            (.never : QuittingElementaryTailCap ι))
+          (anchor.last + 1)) =
+      quittingFiniteNashBellmanPathMaxDynamicDebt
+        reward (anchor.last + 1) anchor.path :=
+      immediateNever_terminalExploitability_eq_maxDynamicDebt anchor
+    _ ≤ quittingFiniteNashBellmanPathAggregateDynamicDebt
+        reward (anchor.last + 1) anchor.path :=
+      quittingFiniteNashBellmanPathMaxDynamicDebt_le_aggregate
+        reward (anchor.last + 1) anchor.path anchor.path_mem
+    _ = quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+        reward (anchor.last + 1) := by
+      rw [anchor.path_eq_minimizer]
+      rfl
+    _ ≤ quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+          reward (anchor.last + 1) -
+        quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+          reward (anchor.last + 2) +
+        chargeScale * edge.toBoxEdge.absorptionCharge := by
+      linarith
+
 /-- **Conditional elementary-cap consumption gate.**
 
 Suppose the initial state of an aggregate-calibrated prefix is literally the
@@ -170,6 +242,77 @@ theorem elementaryCap_consumed_by_minAggregateDrop_or_reachableCharge
   · exact Or.inl hdrop
   · right
     linarith
+
+/-- The immediate Never branch is consumed once the residual aggregate debt
+of the genuinely prepended chain is charged to its new root.  Unlike the
+generic gate, the hypothesis here is a concrete exact-`D` endpoint inequality
+on a chain that the existing prepend constructor proves admissible.
+
+No current theorem derives `hresidual` from absorption mass alone.  In
+particular, playerwise dynamic debt is transported by deleted-player survival,
+whereas the charged relation records joint absorption. -/
+theorem immediateNever_consumed_of_prependResidual_le_charge
+    (regime : QuittingCounterexampleRegime reward)
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (edge : QuittingPunishmentFloorReachableEdge reward)
+    (htail : edge.tail.1.1 = anchor.path 0)
+    (chargeScale : ℝ) (hchargeScale : 0 ≤ chargeScale)
+    (hresidual :
+      quittingFiniteNashBellmanPathAggregateDynamicDebt
+          reward (anchor.last + 2)
+          (quittingFiniteNashBellmanPathPrependPoint
+            (anchor.last + 1) edge.current.1.1 anchor.path) ≤
+        chargeScale * edge.toBoxEdge.absorptionCharge) :
+    regime.terminalGap / 2 ≤
+        quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+            reward (anchor.last + 1) -
+          quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+            reward (anchor.last + 2) ∨
+      regime.terminalGap / 2 ≤
+        chargeScale * edge.toBoxEdge.absorptionCharge := by
+  have hedgeAnchor : IsQuittingNashBellmanEdge reward edge.current.1.1
+      (anchor.path 0) := by
+    rw [← htail]
+    exact edge.exactEdge
+  let extended := quittingFiniteNashBellmanPathPrependPoint
+    (anchor.last + 1) edge.current.1.1 anchor.path
+  have hextended : extended ∈
+      quittingFiniteZeroBoundaryNashBellmanChainSet
+        reward (anchor.last + 2) := by
+    simpa [extended, Nat.add_assoc] using
+      (quittingFiniteNashBellmanPathPrependPoint_mem
+        reward (anchor.last + 1) anchor.path anchor.path_mem
+        edge.current.1.1 edge.current.1.2 hedgeAnchor)
+  have hnext :
+      quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+          reward (anchor.last + 2) ≤
+        quittingFiniteNashBellmanPathAggregateDynamicDebt
+          reward (anchor.last + 2) extended := by
+    exact quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt_le
+      reward (anchor.last + 2) extended hextended
+  have hendpoint :
+      quittingFiniteZeroBoundaryNashBellmanMinDynamicDebt
+          reward (anchor.last + 2) ≤
+        chargeScale * edge.toBoxEdge.absorptionCharge := by
+    exact hnext.trans (by simpa [extended] using hresidual)
+  have hcomparison :=
+    immediateNever_terminalExploitability_le_drop_add_charge
+      anchor edge chargeScale hendpoint
+  apply regime.elementaryCap_consumed_by_minAggregateDrop_or_reachableCharge
+    anchor edge htail (fun _ => quittingAllContinueRoot) (.never) 0
+      chargeScale hchargeScale
+  have hroots :
+      quittingElementaryTailRoots (fun _ => quittingAllContinueRoot) 0
+          (.never : QuittingElementaryTailCap ι) =
+        quittingElementaryCapRoots
+          (.never : QuittingElementaryTailCap ι) := by
+    funext time
+    simpa using
+      (quittingElementaryTailRoots_add
+        (fun _ => quittingAllContinueRoot) 0 time
+          (.never : QuittingElementaryTailCap ι))
+  rw [hroots]
+  exact hcomparison
 
 end QuittingCounterexampleRegime
 

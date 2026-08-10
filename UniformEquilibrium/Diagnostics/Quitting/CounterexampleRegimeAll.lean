@@ -294,4 +294,14 @@ theorem splits half the gap between the next-cutoff objective drop and one
 legal predecessor charge once literal state attachment and the comparison
 `capped exploitability ≤ objective drop + scaled charge` are supplied; neither
 premise follows from tail compression alone.
+Among the elementary caps, immediate `Never` has an exact zero-boundary
+interpretation: its terminal exploitability is the calibrated path's maximum
+dynamic debt.  The generic consumption inequality then reduces to the
+concrete endpoint requirement that next-cutoff aggregate debt be paid by a
+scaled legal predecessor charge.  For a literally attached reachable edge,
+it suffices to bound the aggregate residual debt of the admissible prepended
+chain by that charge.  A positive internal cutoff retains an arbitrary word,
+while sure-joint and sure-solo caps introduce nonzero pure-exit boundaries;
+those branches still need boundary reinsertion or an exact appended
+Nash--Bellman chain.
 -/

@@ -2748,6 +2748,25 @@ exploitability is at most the next-cutoff aggregate-objective drop plus a
 scaled absorption charge of that edge, then half the terminal gap is paid by
 the drop or by the legal charge.  Calibration proves the drop is nonnegative;
 it does not prove the displayed comparison or construct the attached edge.
+The elementary grammar can be sharpened cap by cap.  Immediate `Never`
+(internal cutoff zero) uses the exact zero-boundary pair, and its terminal
+exploitability is exactly the complete calibrated path's maximum dynamic
+debt.  Hence its comparison reduces to
+
+```text
+minAggregate(next cutoff) ≤ scale * legal predecessor charge.
+```
+
+For a reachable edge literally attached to the selected minimizer, the
+prepend constructor supplies an admissible longer chain; it is enough to
+bound that chain's residual aggregate debt by the scaled new-root charge.
+This consumes half the gap through objective drop or legal charge.  The
+endpoint bound is not presently derived from absorption alone because
+playerwise debt uses deleted-player survival whereas the charged relation
+records joint absorption.  `Never` after a positive internal cutoff retains
+an arbitrary behavioral word, and sure-joint/sure-solo caps introduce
+nonzero pure-exit boundary pairs.  Those remaining cap branches require a
+boundary-reinsertion inequality or an exact appended Nash--Bellman chain.
 For the active-positive branch, provenance at singleton level is now closed:
 once all tangent coordinates are nonnegative, the tail-derived tangent packet
 itself is a normalized singleton-source packet, its weighted surplus is
