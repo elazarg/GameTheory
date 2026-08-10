@@ -45,9 +45,13 @@ may be carried in an arbitrary open neighborhood.  A separate decoder proves
 that every physical zero on this arc is an exact undiscounted Nash--Bellman
 root.
 
-Failure of derivative surjectivity or absence of an outward kernel direction
-is the explicit singular residual.  No lifting, Puiseux resolution, or
-arbitrary-player conclusion is asserted in that case.
+This is an abstract regular-lift interface.  For the literal ungauged chart
+at a compatible packet, `CounterexampleRegimeTangentSupportTransversality`
+proves that the projective scale line is a nonzero radial-zero kernel and
+that derivative surjectivity is incompatible with any positive-radial kernel
+direction.  A projective gauge or radial-parameter formulation is therefore
+needed before this interface can produce an arc.  No lifting, Puiseux
+resolution, or arbitrary-player conclusion is asserted here.
 -/
 
 set_option autoImplicit false
@@ -734,8 +738,10 @@ theorem constructs an actual positive analytic equality arc.  `U` carries
 strict outsider, floor, upper-box, and positivity signs; only signs strict at
 the base point may be placed there.
 
-The singular residual is precisely failure of derivative surjectivity or of
-an outward kernel direction.  No assertion is made in that case. -/
+For the literal compatible ungauged chart, the later transversality theorem
+shows that the two displayed regularity premises cannot hold together.  This
+theorem remains the exact analytic consumer for a future gauged chart; it is
+not itself a compatible-packet producer. -/
 theorem hasPositiveRadialAnalyticArcAt_of_regular_supportBlowup
     (packet : QuittingChargeTangentPacket reward) (scale : ℝ)
     (support : Finset ι)

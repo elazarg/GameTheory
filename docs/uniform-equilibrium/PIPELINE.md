@@ -2837,7 +2837,7 @@ active-positive tangent, this forces a supported distinct pair whose
 reciprocal collision increment is negative.  Thus first-order compatibility
 is not automatic: the finite dispatch is compatible-with-negative-collision
 or a signed pair-join pivot.  Turning either branch into a physical support
-arc still requires the analytic lift or the missing Farkas column/sign
+arc still requires a gauged analytic lift or the missing Farkas column/sign
 conditions.
 
 The regular analytic branch of that lift is now implemented after the first
@@ -2858,11 +2858,24 @@ rows off support.  The resulting finite map is polynomial.  If its derivative
 at the packet point is surjective and its kernel contains a direction with
 positive radial coordinate, the existing analytic regular-level theorem
 constructs a positive radial equality arc.  A separate decoder turns points
-in a strict physical sign cell into exact Nash--Bellman roots.  The regular
-compatible branch is therefore a real producer.  The residual is now
-specific: singular derivative, no outward kernel direction, or failure of
-the strict outsider/floor/box cell; resolving those cases requires a higher
-blow-up/Puiseux pivot or one of the signed pair exits.
+in a strict physical sign cell into exact Nash--Bellman roots.  This is a
+valid consumer interface, but it cannot be discharged on the literal
+compatible ungauged packet.  Its exceptional-divisor base points form a
+scale line with nonzero tangent `(0,mass,-tangent)` in the full derivative
+kernel.  Since the blow-up domain has exactly one more dimension than the
+equality rows, surjectivity makes that radial-zero scale line the entire
+kernel and excludes a positive-radial direction.  A projective gauge or a
+radial-parameter implicit-function theorem is therefore necessary; the
+ungauged “regular compatible branch” is not a producer.
+
+The reduced active-support system makes the same obstruction finite.  With
+`J_ij=r_i({i,j})-r_i({i})`, compatibility gives `J*mass=0`.  For a radial
+column `b`, outward solvability is `-b∈range(J)`, whereas full row rank is
+surjectivity of `[b|J]`; they cannot coexist.  In the outward branch a
+nonzero left costate annihilates both `J` and `b`.  For three active owners
+with one reciprocal directed pair nonzero, a single explicit radial minor
+decides the exact transverse/no-outward versus singular/outward alternative.
+These are gauge-design data, not a return or equilibrium.
 
 The two-owner chart is completely classified at this linearized level.  After
 Bellman elimination its reduced matrix is

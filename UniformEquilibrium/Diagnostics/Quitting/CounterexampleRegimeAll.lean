@@ -40,6 +40,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentAnchor
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentMixingCompatibility
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentRegularArcLift
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportTransversality
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
@@ -127,17 +128,25 @@ energy must cancel the positive singleton energy exactly, forcing a supported
 pair with negative reciprocal collision increment.  These are finite
 first-order directions; neither the canonical sign separator nor the pair
 it selects is yet a feasible analytic arc or a strategic Farkas certificate.
-On the compatible branch, the first radial blow-up supplies the constructive
-regular locus.  Hazards are `t*leading` and continuation is
+On the compatible branch, the first radial blow-up supplies the exact
+polynomial interface.  Hazards are `t*leading` and continuation is
 `boundary+t*drift`; exact polynomial residuals retain every coalition and
 factor the physical Bellman and mixing equations by `t`.  The packet solves
 the exceptional-divisor Bellman rows, and compatibility solves its active
 mixing rows.  If the blow-up derivative is surjective and its kernel has a
 positive radial direction, the existing analytic implicit-function theorem
 produces a positive radial equality arc.  With the strict physical cell signs,
-each nonzero point decodes to an exact Nash--Bellman root.  Failure of
-surjectivity, outward direction, or strict outsider signs is the remaining
-singular residue; no arbitrary singular lifting theorem is claimed.
+each nonzero point decodes to an exact Nash--Bellman root.  The literal
+ungauged compatible chart cannot meet those two regularity hypotheses:
+compatibility makes every exceptional-divisor base point lie on one
+projective scale line, whose nonzero tangent has radial coordinate zero; the
+source has exactly one dimension more than the equality rows, so
+surjectivity makes that line the whole kernel.  A projective gauge or a
+radial-parameter implicit-function theorem is therefore mandatory.  On a
+three-owner support, one explicit radial minor exactly separates the
+transverse-surjective/no-outward branch from the singular/outward branch and
+the latter supplies a finite left costate.  None of these statements creates
+a global return.
 For two declared active owners, Bellman elimination makes the reduced support
 Jacobian exactly `[[0,D₁₂],[D₂₁,0]]`, where
 `Dᵢⱼ=r_i({i,j})-r_i({i})`.  A signed directed pivot is regular precisely
