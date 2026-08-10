@@ -9,7 +9,9 @@ runner or history type.
 The construction preserves source histories and source-local choices at every
 serialization round. Exact public claims compare the target law after erasing
 serialization-only microsteps; the un-erased EFG history contains strictly
-more scheduling data.
+more scheduling data. Whole-round support lands back at a clean boundary, and
+the exact law and terminal-support results also hold for continuations from
+any supplied reached boundary.
 -/
 
 import GameTheory.Languages.EFG
@@ -1059,6 +1061,15 @@ def eraseHistory [DecidableEq ι]
     (history : (execution G order).History) : History G :=
   history.state.history
 
+/-- Erasure preserves terminality exactly: administrative serialization
+phases neither stop play early nor extend a stopped source history. -/
+@[simp]
+theorem terminal_eraseHistory_iff [DecidableEq ι]
+    (history : (execution G order).History) :
+    (execution G order).terminal history.state ↔
+      G.execution.terminal (eraseHistory G order history).state := by
+  rfl
+
 /-- Sequentially draw the remaining scheduled target choices and finally
 resolve the completed source joint.  This is an internal proof normal form,
 not a second execution semantics. -/
@@ -1893,8 +1904,10 @@ private theorem state_of_mem_runBehavioralFrom_boundary_any
       hterm order.slots 0 (Nat.zero_add order.slots)
       (Prefix.initial (G := G) (order := order) history) trace hreached
 
-/-- Every integral number of serialized blocks ends at a boundary. -/
-private theorem state_of_mem_runBehavioralFrom_blocks
+/-- Every integral number of serialized blocks ends at a round boundary. This
+is the support invariant needed to continue serialized play from a reached
+history without exposing a partially collected source joint. -/
+theorem state_of_mem_runBehavioralFrom_rounds
     [Fintype ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player) :
@@ -1937,9 +1950,35 @@ private theorem state_of_mem_runBehavioralFrom_blocks
       subst middleState
       exact ih middleSource middleTrace hreached
 
-/-- Any integral number of serialized blocks has exactly the projected source
-history law. -/
-private theorem map_erase_runBehavioralFrom_blocks
+/-- Whole serialized rounds started at the target root end at a round
+boundary. -/
+theorem state_of_mem_runBehavioral_rounds
+    [Fintype ι] [DecidableEq ι]
+    (target : (player : ι) →
+      (information G order).BehavioralPolicy player)
+    (rounds : ℕ) {reached : (execution G order).History}
+    (hreached : reached ∈
+      ((information G order).runBehavioral target
+        (rounds * roundWidth order)).support) :
+    ∃ sourceHistory : History G,
+      reached.state = .stage sourceHistory 0
+        (Prefix.initial (G := G) (order := order) sourceHistory) := by
+  unfold InformationModel.runBehavioral at hreached
+  have hinit : (execution G order).initHistory =
+      ⟨.stage G.execution.initHistory 0
+        (Prefix.initial (G := G) (order := order)
+          G.execution.initHistory),
+        (execution G order).initHistory.trace⟩ := by
+    rfl
+  rw [hinit] at hreached
+  exact state_of_mem_runBehavioralFrom_rounds G order target rounds
+    G.execution.initHistory (execution G order).initHistory.trace hreached
+
+/-- From any reached round boundary, an integral number of serialized rounds
+has exactly the projected source continuation law. This is stronger than the
+initial-state law: downstream analyses may condition on the supplied boundary
+history and continue from there. -/
+theorem map_erase_runBehavioralFrom_eq_source
     [Fintype ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player) :
@@ -2029,8 +2068,116 @@ theorem map_erase_runBehavioral_eq_source
         (execution G order).initHistory.trace⟩ := by
     rfl
   rw [hinit]
-  exact map_erase_runBehavioralFrom_blocks G order target rounds
+  exact map_erase_runBehavioralFrom_eq_source G order target rounds
     G.execution.initHistory (execution G order).initHistory.trace
+
+/-- A source continuation history has positive probability exactly when some
+positively supported serialized continuation erases to it. -/
+theorem mem_support_runBehavioralFrom_projected_iff
+    [Fintype ι] [DecidableEq ι]
+    (target : (player : ι) →
+      (information G order).BehavioralPolicy player)
+    (rounds : ℕ) (history : History G)
+    (trace : (execution G order).Trace
+      (.stage history 0
+        (Prefix.initial (G := G) (order := order) history)))
+    (sourceReached : History G) :
+    sourceReached ∈
+        (G.information.runBehavioralFrom
+          (projectBehavioral G order target) rounds history).support ↔
+      ∃ targetReached ∈
+          ((information G order).runBehavioralFrom target
+            (rounds * roundWidth order)
+            ⟨.stage history 0
+              (Prefix.initial (G := G) (order := order) history), trace⟩).support,
+        eraseHistory G order targetReached = sourceReached := by
+  rw [← map_erase_runBehavioralFrom_eq_source G order target rounds
+    history trace, FinDist.support_map]
+  rfl
+
+/-- Initial-state support form of
+`mem_support_runBehavioralFrom_projected_iff`. -/
+theorem mem_support_runBehavioral_projected_iff
+    [Fintype ι] [DecidableEq ι]
+    (target : (player : ι) →
+      (information G order).BehavioralPolicy player)
+    (rounds : ℕ) (sourceReached : History G) :
+    sourceReached ∈
+        (G.information.runBehavioral
+          (projectBehavioral G order target) rounds).support ↔
+      ∃ targetReached ∈
+          ((information G order).runBehavioral target
+            (rounds * roundWidth order)).support,
+        eraseHistory G order targetReached = sourceReached := by
+  rw [← map_erase_runBehavioral_eq_source G order target rounds,
+    FinDist.support_map]
+  rfl
+
+/-- Terminal continuations occur with positive probability before
+serialization exactly when they occur after a whole number of serialized
+rounds. -/
+theorem exists_terminal_mem_support_runBehavioralFrom_iff
+    [Fintype ι] [DecidableEq ι]
+    (target : (player : ι) →
+      (information G order).BehavioralPolicy player)
+    (rounds : ℕ) (history : History G)
+    (trace : (execution G order).Trace
+      (.stage history 0
+        (Prefix.initial (G := G) (order := order) history))) :
+    (∃ targetReached ∈
+        ((information G order).runBehavioralFrom target
+          (rounds * roundWidth order)
+          ⟨.stage history 0
+            (Prefix.initial (G := G) (order := order) history), trace⟩).support,
+      (execution G order).terminal targetReached.state) ↔
+      ∃ sourceReached ∈
+        (G.information.runBehavioralFrom
+          (projectBehavioral G order target) rounds history).support,
+        G.execution.terminal sourceReached.state := by
+  constructor
+  · rintro ⟨targetReached, htarget, hterm⟩
+    refine ⟨eraseHistory G order targetReached, ?_, ?_⟩
+    · exact (mem_support_runBehavioralFrom_projected_iff G order target
+        rounds history trace _).2 ⟨targetReached, htarget, rfl⟩
+    · exact (terminal_eraseHistory_iff G order targetReached).1 hterm
+  · rintro ⟨sourceReached, hsource, hterm⟩
+    obtain ⟨targetReached, htarget, herase⟩ :=
+      (mem_support_runBehavioralFrom_projected_iff G order target rounds
+        history trace sourceReached).1 hsource
+    refine ⟨targetReached, htarget, ?_⟩
+    apply (terminal_eraseHistory_iff G order targetReached).2
+    rw [herase]
+    exact hterm
+
+/-- Initial-state terminal-support form of
+`exists_terminal_mem_support_runBehavioralFrom_iff`. -/
+theorem exists_terminal_mem_support_runBehavioral_iff
+    [Fintype ι] [DecidableEq ι]
+    (target : (player : ι) →
+      (information G order).BehavioralPolicy player)
+    (rounds : ℕ) :
+    (∃ targetReached ∈
+        ((information G order).runBehavioral target
+          (rounds * roundWidth order)).support,
+      (execution G order).terminal targetReached.state) ↔
+      ∃ sourceReached ∈
+        (G.information.runBehavioral
+          (projectBehavioral G order target) rounds).support,
+        G.execution.terminal sourceReached.state := by
+  constructor
+  · rintro ⟨targetReached, htarget, hterm⟩
+    refine ⟨eraseHistory G order targetReached, ?_, ?_⟩
+    · exact (mem_support_runBehavioral_projected_iff G order target
+        rounds _).2 ⟨targetReached, htarget, rfl⟩
+    · exact (terminal_eraseHistory_iff G order targetReached).1 hterm
+  · rintro ⟨sourceReached, hsource, hterm⟩
+    obtain ⟨targetReached, htarget, herase⟩ :=
+      (mem_support_runBehavioral_projected_iff G order target rounds
+        sourceReached).1 hsource
+    refine ⟨targetReached, htarget, ?_⟩
+    apply (terminal_eraseHistory_iff G order targetReached).2
+    rw [herase]
+    exact hterm
 
 /-- Forward translation preserves every finite source history law. -/
 theorem map_erase_runBehavioral_translate

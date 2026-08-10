@@ -172,6 +172,128 @@ def trueFirstEquilibrium :=
   FOSGToEFG.translateBehavioral source trueFirst
     (behavioralProfile allTrueActions)
 
+/-- One complete serialized round has exactly the source support after
+erasure; the witness is stated at the public runner rather than only as a law
+equality. -/
+theorem falseFirst_one_round_support (sourceReached : source.History) :
+    sourceReached ∈
+        (source.information.runBehavioral
+          (behavioralProfile allTrueActions) 1).support ↔
+      ∃ targetReached ∈
+          ((FOSGToEFG.information source
+            GameTheory.Examples.FOSG.falseFirst).runBehavioral
+            falseFirstEquilibrium 3).support,
+        FOSGToEFG.eraseHistory source
+          GameTheory.Examples.FOSG.falseFirst targetReached = sourceReached := by
+  have hsupport := FOSGToEFG.mem_support_runBehavioral_projected_iff
+    source GameTheory.Examples.FOSG.falseFirst falseFirstEquilibrium 1
+    sourceReached
+  unfold falseFirstEquilibrium at hsupport
+  rw [FOSGToEFG.project_translate_profile] at hsupport
+  unfold falseFirstEquilibrium
+  simpa [GameTheory.Examples.FOSG.falseFirst, FOSGToEFG.roundWidth] using
+    hsupport
+
+/-- Supported histories after a whole serialized round are genuine source
+round boundaries, so they can seed the public continuation theorem. -/
+theorem falseFirst_one_round_ends_at_boundary
+    {reached : (FOSGToEFG.execution source
+      GameTheory.Examples.FOSG.falseFirst).History}
+    (hreached : reached ∈
+      ((FOSGToEFG.information source
+        GameTheory.Examples.FOSG.falseFirst).runBehavioral
+        falseFirstEquilibrium 3).support) :
+    ∃ sourceHistory : source.History,
+      reached.state = FOSGToEFG.State.stage sourceHistory 0
+        (FOSGToEFG.Prefix.initial (G := source)
+          (order := GameTheory.Examples.FOSG.falseFirst) sourceHistory) := by
+  simpa [GameTheory.Examples.FOSG.falseFirst, FOSGToEFG.roundWidth] using
+    FOSGToEFG.state_of_mem_runBehavioral_rounds source
+      GameTheory.Examples.FOSG.falseFirst falseFirstEquilibrium 1
+      hreached
+
+/-- Terminal support is preserved by a complete serialized round. -/
+theorem falseFirst_terminal_support_iff :
+    (∃ targetReached ∈
+        ((FOSGToEFG.information source
+          GameTheory.Examples.FOSG.falseFirst).runBehavioral
+          falseFirstEquilibrium 3).support,
+      (FOSGToEFG.execution source
+        GameTheory.Examples.FOSG.falseFirst).terminal targetReached.state) ↔
+      ∃ sourceReached ∈
+        (source.information.runBehavioral
+          (behavioralProfile allTrueActions) 1).support,
+        source.execution.terminal sourceReached.state := by
+  have hsupport := FOSGToEFG.exists_terminal_mem_support_runBehavioral_iff
+    source GameTheory.Examples.FOSG.falseFirst falseFirstEquilibrium 1
+  unfold falseFirstEquilibrium at hsupport
+  rw [FOSGToEFG.project_translate_profile] at hsupport
+  unfold falseFirstEquilibrium
+  simpa [GameTheory.Examples.FOSG.falseFirst, FOSGToEFG.roundWidth] using
+    hsupport
+
+/-- The source one-shot game has a genuinely supported terminal history after
+one round. -/
+theorem allTrue_has_terminal_support :
+    ∃ sourceReached ∈
+        (source.information.runBehavioral
+          (behavioralProfile allTrueActions) 1).support,
+      source.execution.terminal sourceReached.state := by
+  let law := source.information.runBehavioral
+    (behavioralProfile allTrueActions) 1
+  obtain ⟨sourceReached, hreached⟩ := law.support_nonempty
+  refine ⟨sourceReached, hreached, ?_⟩
+  have hinit : ¬ source.execution.terminal
+      source.execution.initHistory.state := by
+    simp [source, NFG.OneShotFOSG.execution,
+      ExecutionProtocol.initHistory]
+  unfold law InformationModel.runBehavioral at hreached
+  rw [show 1 = 0 + 1 by omega,
+    source.information.runBehavioralFrom_succ_of_not_terminal
+      (behavioralProfile allTrueActions) 0 hinit] at hreached
+  simp only [FinDist.support_bind, FinDist.support_bindOnSupport,
+    Set.mem_iUnion] at hreached
+  obtain ⟨draw, _, target, htarget, hfinal⟩ := hreached
+  rw [InformationModel.runBehavioralFrom,
+    ExecutionProtocol.runRandomizedFor_zero,
+    FinDist.mem_support_pure] at hfinal
+  subst sourceReached
+  have htargetTerm : source.execution.terminal target := by
+    cases target with
+    | initial =>
+        simp [NFG.OneShotFOSG.execution] at htarget
+    | finished actions =>
+        simp
+  exact htargetTerm
+
+/-- The positive terminal witness crosses the serializer; this rules out a
+vacuous terminal-support equivalence. -/
+theorem falseFirst_has_terminal_support :
+    ∃ targetReached ∈
+        ((FOSGToEFG.information source
+          GameTheory.Examples.FOSG.falseFirst).runBehavioral
+          falseFirstEquilibrium 3).support,
+      (FOSGToEFG.execution source
+        GameTheory.Examples.FOSG.falseFirst).terminal targetReached.state :=
+  falseFirst_terminal_support_iff.mpr allTrue_has_terminal_support
+
+/-- Zero target microsteps are a nearby negative control: the serialized root
+is not terminal before a source round has been resolved. -/
+theorem falseFirst_no_terminal_support_at_zero :
+    ¬ ∃ targetReached ∈
+        ((FOSGToEFG.information source
+          GameTheory.Examples.FOSG.falseFirst).runBehavioral
+          falseFirstEquilibrium 0).support,
+      (FOSGToEFG.execution source
+        GameTheory.Examples.FOSG.falseFirst).terminal targetReached.state := by
+  rintro ⟨targetReached, hreached, hterm⟩
+  rw [InformationModel.runBehavioral, InformationModel.runBehavioralFrom,
+    ExecutionProtocol.runRandomizedFor_zero,
+    FinDist.mem_support_pure] at hreached
+  subst targetReached
+  simp [FOSGToEFG.execution, FOSGToEFG.terminal,
+    FOSGToEFG.State.history] at hterm
+
 /-- The equilibrium survives false-first serialization. -/
 theorem falseFirstEquilibrium_isNash :
     IsNash

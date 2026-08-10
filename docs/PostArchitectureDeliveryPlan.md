@@ -97,7 +97,7 @@ self-generating characterization of PPE payoffs. It does not claim the
 constrained-efficiency or bang-bang results of Abreu--Pearce--Stacchetti, and
 public lotteries are not silently folded into the decomposition operator.
 
-### D. FOSG strategic and counterfactual analysis — strategic transfer resolved
+### D. FOSG strategic and counterfactual analysis — transfer/support resolved
 
 Priority: eligible now that B fixes the strategic-transfer boundary; keep its
 strategic-transfer slice separate from the counterfactual/CFR package.
@@ -108,8 +108,11 @@ Separate packages:
   serialization; the two-player simultaneous witness transports behavioral
   Nash through both player orders and transports a profitable-deviation
   control;
-- **next:** terminal and continuation support laws;
-- counterfactual reach and continuation coefficients; and
+- **complete:** whole-round boundary support, exact continuation laws from an
+  arbitrary supplied boundary, support-by-erasure, and terminal-support
+  equivalence; the simultaneous witness has a positive terminal history and
+  rejects terminal support before play;
+- **next:** counterfactual reach and continuation coefficients; and
 - CFR only after a regret theorem consumes those coefficients.
 
 Do not merge these packages into the FOSG syntax root or hide serialization
