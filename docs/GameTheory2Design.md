@@ -988,6 +988,14 @@ only within the semantic level whose data they preserve:
    between allowed deviation schemes; this is the level that transports
    equilibrium.
 
+The stable explicit-order FOSG serializer now reaches the third level without
+putting utility or equilibrium in FOSG syntax.  Erasing administrative
+microsteps preserves external history utility, projection and translation
+preserve the deviating source owner, and ordinary behavioral `IsNash` is
+equivalent before and after serialization.  The hostile two-player witness
+checks both player orders and a profitable-deviation control.  Counterfactual
+reach remains a later, separate semantic package.
+
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic
 and incentive certificates directly without pretending to be a sequential
