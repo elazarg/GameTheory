@@ -2774,6 +2774,26 @@ still requires a feasible real/Puiseux lift, and no arbitrary-player theorem
 builds that arc from the packet.  The three-player analytic compiler is a
 separate finite-dimensional result rather than a generic chart constructor.
 
+The exceptional-divisor mixing equations are now explicit.  For every active
+owner `i`, the packet identity and boundary pinning reduce the first-order row
+to
+
+```text
+Σ_{j≠i} mass_j * (r_i({i,j}) - r_i({i})).
+```
+
+If a row is nonzero, a supported outsider has a pair-join effect with the
+same strict sign; the canonical `{-1,0,1}` sign functional separates the
+active residual vector from zero.  If all active rows vanish, their
+mass-weighted sum says that collision-increment energy is exactly the
+negative of singleton packet energy.  With nonnegative tangents and one
+active-positive tangent, this forces a supported distinct pair whose
+reciprocal collision increment is negative.  Thus first-order compatibility
+is not automatic: the finite dispatch is compatible-with-negative-collision
+or a signed pair-join pivot.  Turning either branch into a physical support
+arc still requires the analytic lift or the missing Farkas column/sign
+conditions.
+
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges
 concatenate with survival weight, endpoint displacement remains an unweighted

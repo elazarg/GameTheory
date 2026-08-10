@@ -35,6 +35,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSmallPlayers
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTailBridge
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacket
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentAnchoredProjectiveLCP
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentMixingCompatibility
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
@@ -113,6 +114,15 @@ projective LCP direction.  What remains absent in arbitrary player count is
 the resolved-chart feasibility/arc lift turning that anchored first-event
 datum into actual product-root Nash--Bellman rates; the three-player analytic
 compiler does not supply such a generic constructor.
+At the first blow-up, the active mixing row has a simpler exact form.  On a
+positive-mass owner it is the mass-weighted pair-join effect
+`sum_{j≠i} mass_j * (r_i({i,j})-r_i({i}))`.  Either every active row
+vanishes, or a supported outsider has the same strict sign and supplies a
+finite pair-join pivot.  In the compatible active-positive branch, collision
+energy must cancel the positive singleton energy exactly, forcing a supported
+pair with negative reciprocal collision increment.  These are finite
+first-order directions; neither the canonical sign separator nor the pair
+it selects is yet a feasible analytic arc or a strategic Farkas certificate.
 
 Independently of that selected-tail geometry, reward-table closure gives a
 robust finite-cycle restriction: a hypothetical counterexample has one
