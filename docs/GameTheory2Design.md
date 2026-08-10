@@ -1080,6 +1080,23 @@ regret. The adopted scope is one fixed finite deviation decomposition; a
 uniform complete pure-policy schedule and the strategic external-regret bridge
 remain prerequisites for an exploitability claim.
 
+EXP-088/D50 makes that aggregation deviation-uniform without creating an
+aggregate CFR semantics. The game-independent theorem accepts a D48 upper
+decomposition for every deviation and gives them one shared finite sum of
+local orthant distances; exact decompositions are a specialization. A public
+`[lo, hi]` action-utility certificate now supplies D46's vector bound, and a
+normalized counterfactual-reach fiber transfers ordinary continuation ranges
+to those action utilities. In the hostile two-stage schedule, all four
+payoff-relevant pure plans are present, false-first plans use zero later-site
+reach, and both local limits are derived from `[0,1]` payoffs. Committing both
+learned coordinates is proved to be a fixed round-independent behavioral
+strategy, so every root gain is Core's canonical `externalRegret`; the compiled
+time-average positive regret converges through the existing static theorem.
+Exact `1` and `-1` strategic controls keep the bridge nonvacuous. The adopted
+scope is every deviation carrying the finite D48 certificate, not general
+schedule synthesis, domination of arbitrary behavioral replacements, or
+two-player zero-sum exploitability.
+
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic
 and incentive certificates directly without pretending to be a sequential

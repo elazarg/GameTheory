@@ -47,5 +47,9 @@ deviations, discharge payoff-vector bounds from a public payoff-range
 certificate, and connect the result to canonical strategic external regret.
 Two-player zero-sum exploitability follows only after that uniform bridge.
 
+EXP-088/D50 subsequently discharges that uniform strategic bridge for every
+deviation carrying a finite D48 upper-decomposition certificate; D49's adopted
+scope remains the fixed-deviation theorem recorded here.
+
 Unequal-depth information fibers remain outside D48 and therefore outside this
 decision.

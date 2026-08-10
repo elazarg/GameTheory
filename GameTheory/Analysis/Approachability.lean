@@ -36,6 +36,58 @@ theorem regretPayoff_ofLp (u : ι → Q → ℝ) (p : FinDist ι) (q : Q) (i : �
 
 variable [Fintype ι]
 
+/-- A public payoff-range certificate supplies the bounded-vector premise used
+by regret matching.  The deliberately simple `card * width` bound avoids any
+extra square-root side conditions and is uniform in both the current law and
+the environment. -/
+theorem regretPayoff_norm_le_card_mul_width [Nonempty ι]
+    (u : ι → Q → ℝ) {lo hi : ℝ}
+    (hrange : ∀ action environment,
+      u action environment ∈ Set.Icc lo hi)
+    (law : FinDist ι) (environment : Q) :
+    ‖regretPayoff u law environment‖ ≤
+      (Fintype.card ι : ℝ) * (hi - lo) := by
+  let witness : ι := Classical.choice inferInstance
+  have hwidth : 0 ≤ hi - lo := by
+    have h := hrange witness environment
+    exact sub_nonneg.mpr (h.1.trans h.2)
+  have hexpectLower : lo ≤ law.expect (fun action => u action environment) := by
+    have h := FinDist.expect_mono
+      (μ := law)
+      (u := fun _action : ι => lo)
+      (v := fun action => u action environment)
+      (fun action _ => (hrange action environment).1)
+    simpa using h
+  have hexpectUpper : law.expect (fun action => u action environment) ≤ hi := by
+    exact FinDist.expect_le_of_forall law (fun action => u action environment) hi
+      (fun action _ => (hrange action environment).2)
+  have hcoord : ∀ action,
+      |(regretPayoff u law environment).ofLp action| ≤ hi - lo := by
+    intro action
+    rw [regretPayoff_ofLp, abs_le]
+    have hvalue := hrange action environment
+    constructor <;> linarith [hvalue.1, hvalue.2]
+  have hsq : ‖regretPayoff u law environment‖ ^ 2 ≤
+      (Fintype.card ι : ℝ) * (hi - lo) ^ 2 := by
+    rw [norm_sq_eq_sum]
+    calc
+      (∑ action : ι,
+          (regretPayoff u law environment).ofLp action ^ 2) ≤
+          ∑ _action : ι, (hi - lo) ^ 2 := by
+        apply Finset.sum_le_sum
+        intro action _
+        have habs := hcoord action
+        rw [abs_le] at habs
+        nlinarith [habs.1, habs.2]
+      _ = (Fintype.card ι : ℝ) * (hi - lo) ^ 2 := by simp
+  have hcard : (1 : ℝ) ≤ Fintype.card ι := by
+    exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
+  have hbound0 : 0 ≤ (Fintype.card ι : ℝ) * (hi - lo) :=
+    mul_nonneg (by positivity) hwidth
+  nlinarith [norm_nonneg (regretPayoff u law environment),
+    sq_nonneg ((Fintype.card ι : ℝ) * (hi - lo)),
+    mul_nonneg (sub_nonneg.mpr hcard) (sq_nonneg (hi - lo))]
+
 /-- External-regret matching: play in proportion to positive cumulative
 Hannan regret, with an arbitrary pure fallback when every coordinate is
 nonpositive.  This is proof semantics, not an executable selector. -/

@@ -98,6 +98,7 @@ becomes difficult to scan.
 | EXP-085 | 2026-08-10 | D48 / global CFR decomposition | Which reach coefficient and evaluator contract survive a profitable coordinated two-site deviation? | Complete; narrows | [`decisions/D48-global-counterfactual-decomposition-gate.md`](decisions/D48-global-counterfactual-decomposition-gate.md); `Analysis/Protocol/CounterfactualDecompositionTest.lean` |
 | EXP-086 | 2026-08-10 | D48 / bounded root decomposition | Can common-depth local replacements bridge exactly to root gain and telescope without a second evaluator? | Complete; supports scoped D48 | [`decisions/D48-global-counterfactual-decomposition-gate.md`](decisions/D48-global-counterfactual-decomposition-gate.md); `Analysis/Protocol/Counterfactual{Decomposition,RootBridgeTest}.lean` |
 | EXP-087 | 2026-08-11 | D49 / finite root-regret aggregation | Can every local D46 process jointly control a canonical D48 root deviation? | Complete; supports fixed finite deviations | [`decisions/D49-finite-root-regret-aggregation.md`](decisions/D49-finite-root-regret-aggregation.md); `Analysis/Protocol/CounterfactualRootRegret{,Test}.lean` |
+| EXP-088 | 2026-08-11 | D50 / uniform root external regret | Can one local CFR family uniformly control every certified pure plan and reach canonical strategic external regret? | Complete; supports decomposition-certified families | [`decisions/D50-uniform-root-external-regret.md`](decisions/D50-uniform-root-external-regret.md); `Analysis/Protocol/CounterfactualRootRegret{,Test}.lean` |
 
 ## Entry template
 
@@ -5426,3 +5427,61 @@ memory.
   topological schedule, obtain a deviation-uniform bound, discharge local norm
   bounds from payoff ranges, and connect the result to canonical strategic
   external regret before the two-player zero-sum specialization.
+
+### EXP-088: uniform finite-deviation root regret
+
+- **Date / revision:** 2026-08-11, reserved after `c7aec57`
+- **Status:** complete; supports D50 for decomposition-certified finite
+  deviation families
+- **Decision / question:** D50; whether one finite family of D46 local
+  processes controls every payoff-relevant pure policy deviation uniformly and
+  reaches the canonical strategic external-regret interface.
+- **Prediction:** the D49 right-hand side is independent of the selected local
+  coordinates. Quantifying the D48 upper decomposition over a finite deviation
+  carrier should therefore give one common root-regret bound. A fixed
+  behavioral replacement in the compiled strategic form must have the same
+  time-average gain as the corresponding root deviation; otherwise the result
+  is not yet useful for equilibrium or exploitability.
+- **Representative slice:** extend the two-stage complementarity consumer from
+  the single `true,true` deviation to every payoff-relevant Boolean plan. The
+  branch with a false first action must be handled as a nonprofitable control,
+  not by inventing a missing local learner. Then consume Core's canonical
+  external-regret/time-average theorem.
+- **Competing designs:** quantify deviations over the existing finite-family
+  inequality; bundle a complete topological site schedule; or expose only a
+  per-deviation theorem and derive uniformity at the strategic layer.
+- **Kill conditions:** a maximum over newly defined proxy utilities; a
+  round-varying replacement presented as external regret; omitted pure plans;
+  a bound depending on the selected deviation; convergence assumed rather
+  than inherited from all local D46 processes; or a zero-sum exploitability
+  label before canonical external regret is reached.
+- **Planned validation:** a responsive uniform aggregation leaf, a compiled
+  strategic-form consumer with positive and nonprofitable plan controls,
+  narrow builds, fast expected Phase 2/3 audits, and a package gate only after
+  promotion. Deep reachability remains excluded from the implementation loop.
+- **Artifacts / observations:**
+  `GameTheoryMath.RegretAggregation.positiveAverageGains_le_sum_infDist`
+  gives every deviation the same local-distance right-hand side and accepts an
+  upper decomposition, so false-first plans use zero later-site reach rather
+  than a fictional learner. Its asymptotic companion derives every root limit
+  from the finite family of local limits. The Protocol specialization consumes
+  actual D46 averages. `regretPayoff_norm_le_card_mul_width` and
+  `counterfactualActionUtility_mem_Icc` turn the hostile slice's proved
+  `[0,1]` continuation certificate into both local norm bounds. The consumer
+  enumerates all four payoff-relevant Boolean plans and proves that committing
+  both learned coordinates is a fixed, round-independent behavioral strategy.
+  Each scalar root gain is exactly `UtilityGame.externalRegret`; the compiled
+  `timeAverage` external regret converges through Core's existing theorem.
+  Canonical positive and nonprofitable controls are exactly `1` and `-1`.
+- **Measurements:** warm narrow builds complete in about 7.2 seconds for the
+  stable Protocol leaf and 9.1 seconds for the hostile consumer. The first
+  cold consumer rebuild crossed the 30-second shell budget after two stable
+  dependencies changed; the exact process check found no surviving Lake or
+  Lean process, and the warm retry restored the normal implementation loop.
+  Deep reachability was not run.
+- **Outcome / next action:** adopts scoped D50. The result is useful at the
+  canonical strategic interface and no longer assumes local boundedness or
+  root convergence. It does not yet synthesize complete schedules for every
+  Protocol, dominate arbitrary behavioral replacements, or prove
+  exploitability. Next specialize both players' external-regret bounds to an
+  explicit two-player zero-sum saddle gap with a nonzero control.

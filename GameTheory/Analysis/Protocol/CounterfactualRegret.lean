@@ -514,6 +514,59 @@ theorem counterfactualReachProbability_nonneg
       · exact Finset.prod_nonneg fun other _ => FinDist.prob_nonneg _ _
       · exact FinDist.prob_nonneg _ _
 
+/-- A normalized counterfactual-reach fiber turns pointwise continuation
+payoff bounds into the same bounds on pure-action counterfactual utility. -/
+theorem counterfactualActionUtility_mem_Icc
+    [Fintype ι] [DecidableEq ι]
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    [Fintype (M.InformationHistory who site.1)]
+    (payoff : E.History → ℝ) (fuel : ℕ)
+    (choice : M.Choice who site.1) {lo hi : ℝ}
+    (hmass : ∑ history : M.InformationHistory who site.1,
+      M.counterfactualReachProbability strategy who history.1.trace = 1)
+    (hcontinuation : ∀ history : M.InformationHistory who site.1,
+      behavioralContinuationValue M strategy who
+          ((strategy who).commit site.1 choice) payoff fuel history.1 ∈
+        Set.Icc lo hi) :
+    counterfactualActionUtility M strategy who site payoff fuel choice ∈
+      Set.Icc lo hi := by
+  unfold counterfactualActionUtility counterfactualContinuationValue
+  constructor
+  · calc
+      lo = (∑ history : M.InformationHistory who site.1,
+          M.counterfactualReachProbability strategy who history.1.trace) * lo := by
+            rw [hmass, one_mul]
+      _ = ∑ history : M.InformationHistory who site.1,
+          M.counterfactualReachProbability strategy who history.1.trace * lo := by
+            rw [Finset.sum_mul]
+      _ ≤ ∑ history : M.InformationHistory who site.1,
+          M.counterfactualReachProbability strategy who history.1.trace *
+            behavioralContinuationValue M strategy who
+              ((strategy who).commit site.1 choice) payoff fuel history.1 := by
+            apply Finset.sum_le_sum
+            intro history _
+            exact mul_le_mul_of_nonneg_left (hcontinuation history).1
+              (counterfactualReachProbability_nonneg M strategy who
+                history.1.trace)
+  · calc
+      (∑ history : M.InformationHistory who site.1,
+          M.counterfactualReachProbability strategy who history.1.trace *
+            behavioralContinuationValue M strategy who
+              ((strategy who).commit site.1 choice) payoff fuel history.1) ≤
+          ∑ history : M.InformationHistory who site.1,
+            M.counterfactualReachProbability strategy who history.1.trace * hi := by
+              apply Finset.sum_le_sum
+              intro history _
+              exact mul_le_mul_of_nonneg_left (hcontinuation history).2
+                (counterfactualReachProbability_nonneg M strategy who
+                  history.1.trace)
+      _ = (∑ history : M.InformationHistory who site.1,
+          M.counterfactualReachProbability strategy who history.1.trace) * hi := by
+            rw [Finset.sum_mul]
+      _ = hi := by rw [hmass, one_mul]
+
 /-- Named certificate that the focal player's own reach is constant on one
 information fiber.  Perfect recall implies it, while absent-minded models may
 establish it directly at selected sites. -/
