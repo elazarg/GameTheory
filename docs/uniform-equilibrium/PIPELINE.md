@@ -2265,12 +2265,11 @@ transport finite co-states by the adjoint map, and retain the killed boundary
 remainder.  They do not identify a packet with occupation, erase the phantom
 plateau, or realize a product-root word.
 
-**Diminishing-returns stop rule.** This row is no longer permission to extend
-the diagnostic ontology. New work counts only if it (a) rules out strict
-plateau slack, (b) solves enlarged-support state
-matching, or (c)
-constructs one common floor-safe product-root chronology consumed by a landed
-terminal/cycle compiler. A new compact carrier, co-state, separator, tangent
+**Diminishing-returns stop rule.** This row excludes extensions of the
+diagnostic ontology by themselves. Work advances the row only if it (a) rules
+out strict plateau slack, (b) solves enlarged-support state matching, or (c)
+constructs one common floor-safe product-root chronology consumed by an
+existing terminal/cycle compiler. A new compact carrier, co-state, separator, tangent
 identity, or conditional decoder without one of those consequences is useful
 infrastructure but does not advance this P0 row.
 
@@ -2486,10 +2485,24 @@ fixed continuation, support-local endpoint optimality at any tolerance below
 that gap forces the outsider to Quit surely, and changing only its own marginal
 leaves the endpoint gap invariant. Mixed-Nash existence also supplies a
 positive-absorption endpoint root into every target strictly below a singleton
-reward. Neither construction preserves the punishment floor or identifies the
-root's Bellman predecessor with the conditioned source state. The unresolved
-condition is a floor-safe, full-vector, state-matched reset or delivery reset.
-Affine shrinkage cannot supply either one.
+reward. These witnesses admit an exact cofinal split on the same selected
+dates. Either the conditioned target dominates every punishment value and
+admits a positive-absorption endpoint-Nash reset root, or one fixed underfloor
+coordinate recurs with the quantitative account
+`eventualAbsorption * floorDeficit ≤ phantomSurvival * boundarySlack`.
+The first alternative retains floor admissibility but does not identify the
+root's Bellman predecessor with the conditioned source state. The second
+alternative isolates strict plateau funding as the obstruction. Affine
+shrinkage supplies neither a state match nor a finite return.
+
+Approximate root/continuation splicing does not require sure absorption. An
+`eta`-endpoint-Nash root against a target, followed by an actual terminal
+`epsilon`-Nash continuation whose payoff is within `delta` of that target,
+gives a terminal `(eta + epsilon + 2*delta)`-Nash profile. This consumer
+separates the remaining task precisely: the conditioned proper-face suffix
+retains the persistent Quit defect, so it is not the required vanishing-error
+continuation, and an independently selected endpoint reset does not repair
+that defect or match the predecessor state.
 
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.
@@ -2511,7 +2524,7 @@ phase.  A successful route must create new chronological phase weights or a
 floor-safe conditioned singleton flow.
 
 **Acceptance.** A game-facing state-matched realization theorem, not another
-separator. After the diffuse and deficient-clock compilers, every residual
+separator. Every residual
 counterexample tail must either convert strict plateau slack into
 a floor-safe support or delivery reset, construct a positive-mass
 finite return consumed by the collision-aware or singleton-APS compiler, or
@@ -2520,7 +2533,7 @@ all-Continue plateau.  The theorem may not assume common cap-splice
 realization, replace product roots by correlated rows, or discard the surviving
 boundary. The full singleton-tight diffuse stratum is closed, and any diffuse
 counterexample has a strict plateau
-coordinate and a persistent positive outsider-Quit defect. They do not yet
+coordinate and a persistent positive outsider-Quit defect. These facts do not
 turn that defect into a state-matched sure-Quit reset or return.
 
 ## Literature import lane

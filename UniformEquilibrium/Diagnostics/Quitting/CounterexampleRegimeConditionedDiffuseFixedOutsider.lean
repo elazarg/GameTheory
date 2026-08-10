@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedDiffuseClosure
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedFloorViability
 
 /-!
 # A fixed inactive outsider in the diffuse defect branch
@@ -287,6 +288,10 @@ theorem exists_cofinal_fixed_inactive_rescaledEndpointGap_of_diffuse
           quittingTailConditionedValue
             (quittingDynamicDebtTailRoots seam.tail)
             (fun date => (seam.tail date).1.1) seam.limit.value time who) ∧
+      quittingTailConditionedValue
+          (quittingDynamicDebtTailRoots seam.tail)
+          (fun date => (seam.tail date).1.1) seam.limit.value time who ≤
+        reward (quittingSingletonTerminal who) who - eta ∧
       eta / 2 ≤ quittingRootEndpointDifference reward
         (quittingTailConditionedValue
           (quittingDynamicDebtTailRoots seam.tail)
@@ -348,7 +353,7 @@ theorem exists_cofinal_fixed_inactive_rescaledEndpointGap_of_diffuse
   let cutoff := max smallCutoff chargeCutoff
   refine ⟨who, eta, heta, ?_⟩
   intro start
-  obtain ⟨time, htime, hinactive, hdefect, _⟩ :=
+  obtain ⟨time, htime, hinactive, hdefect, hvalue⟩ :=
     hdates (max start cutoff)
   have hcut : cutoff ≤ time :=
     le_trans (le_max_right _ _) htime
@@ -423,8 +428,185 @@ theorem exists_cofinal_fixed_inactive_rescaledEndpointGap_of_diffuse
       quittingRootEndpointDifference reward next targetRoot who := by
     rw [hendpoint]
     linarith
-  exact ⟨time, le_trans (le_max_left _ _) htime, hinactive, hdefect, by
+  exact ⟨time, le_trans (le_max_left _ _) htime, hinactive, hdefect, hvalue, by
     simpa only [roots, value, boundary, targetRoot, next] using hendpointLower⟩
+
+/-! A reset target has one further game-facing gate: punishment-floor
+    admissibility.  If that gate fails cofinally, finite-player recurrence
+    fixes the violating coordinate and the floor module exposes the exact
+    phantom-survival account financing the violation. -/
+theorem exists_cofinal_endpoint_reset_or_fixed_underfloor_slack
+    (seam : QuittingCounterexampleSeamWitness regime)
+    (hpositive : ∀ time, 0 < quittingTailEventualAbsorption
+      (quittingDynamicDebtTailRoots seam.tail) time)
+    (hmesh : Tendsto (quittingTailConditionedAbsorptionWeight
+      (quittingDynamicDebtTailRoots seam.tail)) atTop (nhds 0)) :
+    ∃ who : ι, ∃ eta : ℝ, 0 < eta ∧
+      ((∀ start, ∃ time, start ≤ time ∧
+          quittingDynamicDebtTailRoots seam.tail time who = PMF.pure false ∧
+          quittingTailConditionedValue
+              (quittingDynamicDebtTailRoots seam.tail)
+              (fun date => (seam.tail date).1.1) seam.limit.value time who ≤
+            reward (quittingSingletonTerminal who) who - eta ∧
+          eta / 2 ≤ quittingRootEndpointDifference reward
+            (quittingTailConditionedValue
+              (quittingDynamicDebtTailRoots seam.tail)
+              (fun date => (seam.tail date).1.1) seam.limit.value (time + 1))
+            (quittingTailDiffuseRescaledRoot
+              (quittingDynamicDebtTailRoots seam.tail) time
+              (hpositive time)) who ∧
+          (∀ player, quittingPunishmentValue reward player ≤
+            quittingTailConditionedValue
+              (quittingDynamicDebtTailRoots seam.tail)
+              (fun date => (seam.tail date).1.1) seam.limit.value time player)) ∨
+       (∃ underfloor : ι, ∀ start, ∃ time, start ≤ time ∧
+          quittingDynamicDebtTailRoots seam.tail time who = PMF.pure false ∧
+          quittingTailConditionedValue
+              (quittingDynamicDebtTailRoots seam.tail)
+              (fun date => (seam.tail date).1.1) seam.limit.value time who ≤
+            reward (quittingSingletonTerminal who) who - eta ∧
+          eta / 2 ≤ quittingRootEndpointDifference reward
+            (quittingTailConditionedValue
+              (quittingDynamicDebtTailRoots seam.tail)
+              (fun date => (seam.tail date).1.1) seam.limit.value (time + 1))
+            (quittingTailDiffuseRescaledRoot
+              (quittingDynamicDebtTailRoots seam.tail) time
+              (hpositive time)) who ∧
+          quittingTailConditionedValue
+              (quittingDynamicDebtTailRoots seam.tail)
+              (fun date => (seam.tail date).1.1) seam.limit.value time underfloor <
+            quittingPunishmentValue reward underfloor ∧
+          quittingPunishmentValue reward underfloor < seam.limit.value underfloor ∧
+          quittingTailEventualAbsorption
+              (quittingDynamicDebtTailRoots seam.tail) time *
+            (quittingPunishmentValue reward underfloor -
+              quittingTailConditionedValue
+                (quittingDynamicDebtTailRoots seam.tail)
+                (fun date => (seam.tail date).1.1) seam.limit.value time underfloor) ≤
+          quittingJointSurvivalLimit
+              (quittingDynamicDebtTailRoots seam.tail) time *
+            (seam.limit.value underfloor -
+              quittingPunishmentValue reward underfloor))) := by
+  obtain ⟨who, eta, heta, hreset⟩ :=
+    seam.exists_cofinal_fixed_inactive_rescaledEndpointGap_of_diffuse
+      hpositive hmesh
+  let roots := quittingDynamicDebtTailRoots seam.tail
+  let value : ℕ → Payoff ι := fun time => (seam.tail time).1.1
+  let boundary := seam.limit.value
+  let floor := quittingPunishmentValue reward
+  let conditioned : ℕ → ι → ℝ := fun time player =>
+    quittingTailConditionedValue roots value boundary time player
+  let admissible : ℕ → Prop := fun time =>
+    ∀ player, floor player ≤ conditioned time player
+  by_cases hcofinal : ∀ start, ∃ time, start ≤ time ∧
+      roots time who = PMF.pure false ∧
+      conditioned time who ≤ reward (quittingSingletonTerminal who) who - eta ∧
+      eta / 2 ≤ quittingRootEndpointDifference reward
+        (conditioned (time + 1))
+        (quittingTailDiffuseRescaledRoot roots time (hpositive time)) who ∧
+      admissible time
+  · exact ⟨who, eta, heta, Or.inl (by
+      intro start
+      obtain ⟨time, htime, hinactive, hvalue, hendpoint, hadmissible⟩ :=
+        hcofinal start
+      exact ⟨time, htime, by simpa [roots] using hinactive,
+        by simpa [value, boundary, conditioned] using hvalue,
+        by simpa [roots, value, boundary, conditioned] using hendpoint,
+        by simpa [floor, conditioned] using hadmissible⟩)⟩
+  · push Not at hcofinal
+    obtain ⟨start₀, hno⟩ := hcofinal
+    have hbadPair : ∀ start, ∃ pair : ℕ × ι,
+        max start start₀ ≤ pair.1 ∧
+        roots pair.1 who = PMF.pure false ∧
+        conditioned pair.1 who ≤ reward (quittingSingletonTerminal who) who - eta ∧
+        eta / 2 ≤ quittingRootEndpointDifference reward
+          (conditioned (pair.1 + 1))
+          (quittingTailDiffuseRescaledRoot roots pair.1
+            (hpositive pair.1)) who ∧
+        conditioned pair.1 pair.2 < floor pair.2 ∧
+        floor pair.2 < boundary pair.2 ∧
+        quittingTailEventualAbsorption roots pair.1 *
+            (floor pair.2 - conditioned pair.1 pair.2) ≤
+          quittingJointSurvivalLimit roots pair.1 *
+            (boundary pair.2 - floor pair.2) := by
+      intro start
+      obtain ⟨time, htime, hinactive, _, hvalue, hendpoint⟩ :=
+        hreset (max start start₀)
+      have hnotAdmissible : ¬admissible time := by
+        intro hadmissible
+        have hstart₀ : start₀ ≤ time :=
+          le_trans (le_max_right _ _) htime
+        exact (hno time hstart₀
+          (by simpa [roots] using hinactive)
+          (by simpa [value, boundary, conditioned] using hvalue)
+          (by simpa [roots, value, boundary, conditioned] using hendpoint))
+          hadmissible
+      have hviolates : ∃ player, conditioned time player < floor player := by
+        by_contra hnone
+        push Not at hnone
+        apply hnotAdmissible
+        intro player
+        exact le_of_not_gt (by
+          intro hlt
+          linarith [hnone player])
+      obtain ⟨player, hviolation⟩ := hviolates
+      have hslack :=
+        seam.punishmentValue_lt_limitValue_of_conditionedTailValue_lt
+          time player (hpositive time) hviolation
+      have hbudget :=
+        seam.eventualAbsorption_mul_conditionedPunishmentDeficit_le
+          time player (hpositive time)
+      have hslack' : floor player < boundary player := by
+        simpa [floor, boundary] using hslack
+      have hbudget' : quittingTailEventualAbsorption roots time *
+          (floor player - conditioned time player) ≤
+        quittingJointSurvivalLimit roots time *
+          (boundary player - floor player) := by
+        simpa [roots, value, boundary, floor, conditioned,
+          QuittingCounterexampleSeamWitness.conditionedTailValue] using hbudget
+      exact ⟨⟨time, player⟩,
+        htime,
+        by simpa [roots] using hinactive,
+        by simpa [value, boundary, conditioned] using hvalue,
+        by simpa [roots, value, boundary, conditioned] using hendpoint,
+        hviolation, hslack', hbudget'⟩
+    let selected : ℕ → ℕ × ι := fun start =>
+      Classical.choose (hbadPair start)
+    have hselected : ∀ start, max start start₀ ≤ (selected start).1 ∧
+        roots (selected start).1 who = PMF.pure false ∧
+        conditioned (selected start).1 who ≤
+          reward (quittingSingletonTerminal who) who - eta ∧
+        eta / 2 ≤ quittingRootEndpointDifference reward
+          (conditioned ((selected start).1 + 1))
+          (quittingTailDiffuseRescaledRoot roots (selected start).1
+            (hpositive (selected start).1)) who ∧
+        conditioned (selected start).1 (selected start).2 <
+          floor (selected start).2 ∧
+        floor (selected start).2 < boundary (selected start).2 ∧
+        quittingTailEventualAbsorption roots (selected start).1 *
+            (floor (selected start).2 -
+              conditioned (selected start).1 (selected start).2) ≤
+          quittingJointSurvivalLimit roots (selected start).1 *
+            (boundary (selected start).2 - floor (selected start).2) := by
+      intro start
+      exact Classical.choose_spec (hbadPair start)
+    let color : ℕ → ι := fun start => (selected start).2
+    obtain ⟨underfloor, hinfinite⟩ := Finite.exists_infinite_fiber color
+    have hinfinite' : Set.Infinite {start : ℕ | color start = underfloor} :=
+      Set.infinite_coe_iff.1 hinfinite
+    refine ⟨who, eta, heta, Or.inr ⟨underfloor, ?_⟩⟩
+    intro start
+    obtain ⟨index, hindex, hindex_gt⟩ := hinfinite'.exists_gt start
+    have hsel := hselected index
+    have hcolor : (selected index).2 = underfloor := hindex
+    have htime : start ≤ (selected index).1 :=
+      le_trans (Nat.le_of_lt hindex_gt)
+        (le_trans (le_max_left _ _) hsel.1)
+    have hfields := hsel
+    rw [hcolor] at hfields
+    exact ⟨(selected index).1, htime, hfields.2.1, hfields.2.2.1,
+      hfields.2.2.2.1, hfields.2.2.2.2.1, hfields.2.2.2.2.2.1,
+      hfields.2.2.2.2.2.2⟩
 
 end QuittingCounterexampleSeamWitness
 
