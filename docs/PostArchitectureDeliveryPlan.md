@@ -123,7 +123,11 @@ Separate packages:
 - **complete:** local cumulative regret matching at one information site,
   including arbitrary-law installation, a pointwise Protocol realization
   interface, the finite bound `t * infDist^2 <= (2M)^2`, asymptotic local
-  convergence, and an update that puts all mass on the profitable action; and
+  convergence, and an update that puts all mass on the profitable action;
+- **complete:** generic realization of that pointwise interface at
+  all-nonterminal no-revisit decision fibers, with perfect recall discharging
+  no-revisit, a genuine two-stage consumer, and an explicit global-failure
+  control; and
 - **next:** the across-information-set perfect-recall decomposition, followed
   by root regret or two-player zero-sum exploitability convergence.
 

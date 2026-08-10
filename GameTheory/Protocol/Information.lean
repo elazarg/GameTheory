@@ -1126,6 +1126,35 @@ theorem BehavioralPolicy.withLaw_of_ne {i : ι} [DecidableEq (M.InfoState i)]
   simp [withLaw, hne]
 
 variable {M} in
+/-- Reinstalling a behavioral policy's own local law changes nothing. -/
+theorem BehavioralPolicy.withLaw_eq_self {i : ι}
+    [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (info : M.InfoState i) :
+    policy.withLaw info (policy info) = policy := by
+  funext other
+  by_cases hsame : other = info
+  · subst other
+    rw [BehavioralPolicy.withLaw_self]
+  · rw [BehavioralPolicy.withLaw_of_ne _ _ _ hsame]
+
+variable {M} in
+/-- A pure commitment at an information state forgets whichever law had just
+been installed at that same state. -/
+theorem BehavioralPolicy.withLaw_commit {i : ι}
+    [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (info : M.InfoState i)
+    (law : FinDist (M.Choice i info)) (choice : M.Choice i info) :
+    (policy.withLaw info law).commit info choice =
+      policy.commit info choice := by
+  funext other
+  by_cases hsame : other = info
+  · subst other
+    rw [BehavioralPolicy.commit_self, BehavioralPolicy.commit_self]
+  · rw [BehavioralPolicy.commit_of_ne _ _ _ hsame,
+      BehavioralPolicy.commit_of_ne _ _ _ hsame,
+      BehavioralPolicy.withLaw_of_ne _ _ _ hsame]
+
+variable {M} in
 /-- **Committing keeps the profile mixed.** Re-extending the rest of a drawn
 policy with a fixed choice at one information state is again the mixed reading
 of a behavioral profile — the one that has committed there.

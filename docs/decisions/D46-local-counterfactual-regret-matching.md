@@ -66,10 +66,10 @@ pointwise semantic equality; if arbitrary local laws need raw update or public
 transport; if the fixture proves only one distribution; or if local learning
 is presented as global exploitability convergence. No kill condition fired.
 
-The realization premise remains explicit because a general proof that a
-perfect-recall tree's continuation value is linear in every installed local
-law is a separate semantic theorem. The hostile fixture demonstrates that the
-premise is dischargeable and nonvacuous.
+The low-level adapter retains its realization premise for other semantics.
+EXP-084/D47 subsequently discharges it generically for nonterminal decision
+fibers satisfying the no-revisit condition, while preserving this theorem as
+the reusable approachability boundary.
 
 ## Public API consequences
 
@@ -78,7 +78,8 @@ Protocol-analysis root and the finite `regretMatch_sq_infDist_avg_le` result to
 `GameTheory.Analysis.Approachability`. Add `BehavioralPolicy.withLaw` and its
 self/other equations to Protocol information semantics.
 
-The next gate is the across-information-set performance/deviation
+After D47's generic qualifying-site realization, the next gate is the
+across-information-set performance/deviation
 decomposition under perfect recall, followed by a two-player zero-sum average
 strategy or exploitability theorem. It must consume the local cumulative
 result and include a control where one local learner fails.

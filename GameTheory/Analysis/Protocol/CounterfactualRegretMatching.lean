@@ -38,6 +38,127 @@ def localCounterfactualRegretVector
   WithLp.toLp 2 fun choice =>
     M.counterfactualActionRegret strategy who site payoff fuel choice
 
+/-- Install the learner's current law at one information site of an otherwise
+fixed behavioral profile.  This is a transparent specialization of the sole
+public profile update and the transport-free `BehavioralPolicy.withLaw`. -/
+def strategyWithLocalLaw
+    [DecidableEq ι]
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    (law : FinDist (M.Choice who site.1)) :
+    (player : ι) → M.BehavioralPolicy player :=
+  Profile.update (sig := M.behavioralSignature) strategy who
+    ((strategy who).withLaw site.1 law)
+
+@[simp]
+theorem strategyWithLocalLaw_same
+    [DecidableEq ι]
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    (law : FinDist (M.Choice who site.1)) :
+    strategyWithLocalLaw M strategy who site law who site.1 = law := by
+  rw [strategyWithLocalLaw, Profile.update_same,
+    BehavioralPolicy.withLaw_self]
+
+@[simp]
+theorem strategyWithLocalLaw_of_ne
+    [DecidableEq ι]
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    (law : FinDist (M.Choice who site.1))
+    {other : ι} (hne : other ≠ who) :
+    strategyWithLocalLaw M strategy who site law other = strategy other := by
+  exact Profile.update_of_ne (sig := M.behavioralSignature) strategy _ hne
+
+/-- The pure-commitment counterfactual utility is independent of which law is
+currently installed at the focal site. -/
+theorem counterfactualActionUtility_strategyWithLocalLaw
+    [Fintype ι] [DecidableEq ι]
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    [Fintype (M.InformationHistory who site.1)]
+    (law : FinDist (M.Choice who site.1))
+    (payoff : E.History → ℝ) (fuel : ℕ)
+    (choice : M.Choice who site.1) :
+    counterfactualActionUtility M
+        (strategyWithLocalLaw M strategy who site law)
+        who site payoff fuel choice =
+      counterfactualActionUtility M strategy who site payoff fuel choice := by
+  unfold counterfactualActionUtility
+  rw [show strategyWithLocalLaw M strategy who site law who =
+      (strategy who).withLaw site.1 law by
+        rw [strategyWithLocalLaw, Profile.update_same],
+    BehavioralPolicy.withLaw_commit]
+  exact M.counterfactualContinuationValue_eq_of_eq_off
+    (fun other hne => strategyWithLocalLaw_of_ne M strategy who site law hne)
+      site ((strategy who).commit site.1 choice) payoff fuel
+
+/-- Generic realization of the local vector at any qualifying strategy: its
+current site law is the mixed action and pure-commitment continuation values
+are the ordinary finite-action utilities. -/
+theorem localCounterfactualRegretVector_eq_regretPayoff_actionUtility
+    [Fintype ι] [DecidableEq ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    [Fintype (M.InformationHistory who site.1)]
+    [Fintype (M.Choice who site.1)]
+    (hallNonterminal : InformationSite.AllNonterminal M site)
+    (payoff : E.History → ℝ) (fuel : ℕ) :
+    localCounterfactualRegretVector M strategy who site payoff (fuel + 1) =
+      regretPayoff
+        (fun choice (_environment : Unit) =>
+          counterfactualActionUtility M strategy who site
+            payoff (fuel + 1) choice)
+        (strategy who site.1) () := by
+  ext choice
+  rw [regretPayoff_ofLp]
+  exact M.counterfactualActionRegret_eq_sub_expect hactsOnce strategy who
+    site hallNonterminal payoff fuel choice
+
+/-- Installing an arbitrary current law in a fixed environment realizes the
+ordinary regret-payoff vector for the environment's pure-commitment
+counterfactual utilities. -/
+theorem localCounterfactualRegretVector_strategyWithLocalLaw
+    {Q : Type*}
+    [Fintype ι] [DecidableEq ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    [Fintype (M.InformationHistory who site.1)]
+    [Fintype (M.Choice who site.1)]
+    (hallNonterminal : InformationSite.AllNonterminal M site)
+    (law : FinDist (M.Choice who site.1))
+    (payoff : E.History → ℝ) (fuel : ℕ) (environment : Q) :
+    localCounterfactualRegretVector M
+        (strategyWithLocalLaw M strategy who site law)
+        who site payoff (fuel + 1) =
+      regretPayoff
+        (fun choice (_current : Q) =>
+          counterfactualActionUtility M strategy who site
+            payoff (fuel + 1) choice)
+        law environment := by
+  ext choice
+  rw [localCounterfactualRegretVector, regretPayoff_ofLp,
+    WithLp.ofLp_toLp]
+  rw [M.counterfactualActionRegret_eq_sub_expect hactsOnce
+      (strategyWithLocalLaw M strategy who site law) who site
+        hallNonterminal payoff fuel,
+    strategyWithLocalLaw_same]
+  rw [M.counterfactualActionUtility_strategyWithLocalLaw strategy who site
+    law payoff (fuel + 1) choice]
+  congr 1
+  apply FinDist.expect_congr
+  intro current _
+  exact M.counterfactualActionUtility_strategyWithLocalLaw strategy who site
+    law payoff (fuel + 1) current
+
 /-- Any exact Protocol realization of the ordinary regret-payoff vector
 inherits the finite regret-matching estimate.  The premise is pointwise in
 every current action law and environment; it does not assume convergence. -/

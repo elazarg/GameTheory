@@ -32,6 +32,180 @@ def behavioralContinuationValue [Fintype ι] [DecidableEq ι]
     (Profile.update (sig := M.behavioralSignature)
       strategy who alternative) fuel history).expect payoff
 
+/-- At a history in the selected information state, installing a local law
+commutes with the one-step independent product: equivalently, first draw the
+selected player's choice and then use the corresponding pure commitment.
+
+This is a law identity, not merely an expectation calculation, and it needs
+only the finite player product already used by behavioral execution. -/
+theorem behavioralJoint_update_withLaw_eq_bind
+    [Fintype ι] [DecidableEq ι]
+    (profile : (i : ι) → M.BehavioralPolicy i) (who : ι)
+    (policy : M.BehavioralPolicy who)
+    [DecidableEq (M.InfoState who)]
+    (info : M.InfoState who) (law : FinDist (M.Choice who info))
+    {state : E.State} (trace : E.Trace state) (hterm : ¬ E.terminal state)
+    (hinfo : M.infoOf who trace = info) :
+    M.behavioralJoint
+        (Profile.update (sig := M.behavioralSignature)
+          profile who (policy.withLaw info law))
+        trace hterm =
+      law.bind fun choice =>
+        M.behavioralJoint
+          (Profile.update (sig := M.behavioralSignature)
+            profile who (policy.commit info choice))
+          trace hterm := by
+  subst info
+  let jointOf :
+      ((i : ι) → M.Choice i (M.infoOf i trace)) →
+        { joint : (i : ι) → Option (E.Action i) // E.Legal state joint } :=
+    fun draws => ⟨fun i => (draws i).1,
+      ExecutionProtocol.legal_of_legalOption hterm fun i =>
+        (M.menu_adequate i trace (draws i).1).mp (draws i).2⟩
+  let otherLaws :
+      (other : {other : ι // other ≠ who}) →
+        FinDist (M.Choice other.1 (M.infoOf other.1 trace)) :=
+    fun other => profile other.1 (M.infoOf other.1 trace)
+  let split :=
+    Equiv.piSplitAt who fun i => M.Choice i (M.infoOf i trace)
+  have hwithWho :
+      Profile.update (sig := M.behavioralSignature) profile who
+          (policy.withLaw (M.infoOf who trace) law) who
+            (M.infoOf who trace) = law := by
+    rw [Profile.update_same, BehavioralPolicy.withLaw_self]
+  have hwithOthers :
+      (fun other : {other : ι // other ≠ who} =>
+          Profile.update (sig := M.behavioralSignature) profile who
+              (policy.withLaw (M.infoOf who trace) law)
+            other.1 (M.infoOf other.1 trace)) =
+        otherLaws := by
+    funext other
+    rw [Profile.update_of_ne _ _ other.2]
+  have hcommitWho (choice : M.Choice who (M.infoOf who trace)) :
+      Profile.update (sig := M.behavioralSignature) profile who
+          (policy.commit (M.infoOf who trace) choice) who
+            (M.infoOf who trace) = FinDist.pure choice := by
+    rw [Profile.update_same, BehavioralPolicy.commit_self]
+  have hcommitOthers (choice : M.Choice who (M.infoOf who trace)) :
+      (fun other : {other : ι // other ≠ who} =>
+          Profile.update (sig := M.behavioralSignature) profile who
+              (policy.commit (M.infoOf who trace) choice)
+            other.1 (M.infoOf other.1 trace)) =
+        otherLaws := by
+    funext other
+    rw [Profile.update_of_ne _ _ other.2]
+  unfold behavioralJoint
+  rw [← FinDist.map_bind]
+  apply congrArg (FinDist.map jointOf)
+  rw [FinDist.pi_eq_map_product who, hwithWho, hwithOthers]
+  have hbranches :
+      (fun choice : M.Choice who (M.infoOf who trace) =>
+          FinDist.pi fun i =>
+            Profile.update (sig := M.behavioralSignature) profile who
+                (policy.commit (M.infoOf who trace) choice) i
+              (M.infoOf i trace)) =
+        fun choice =>
+          FinDist.map split.symm
+            (FinDist.product (FinDist.pure choice)
+              (FinDist.pi otherLaws)) := by
+    funext choice
+    rw [FinDist.pi_eq_map_product who, hcommitWho choice,
+      hcommitOthers choice]
+  rw [hbranches, FinDist.product, FinDist.map_bind]
+  refine FinDist.bind_congr fun choice _ => ?_
+  rw [FinDist.product, FinDist.pure_bind, FinDist.map_comp]
+
+/-- After leaving a genuine decision at `info`, a persistent installed law and
+one of its pure commitments are observationally identical to the remaining
+run when that information state cannot matter twice. -/
+theorem withLaw_eq_commit_after_actsOnce
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    {who : ι}
+    (policy : M.BehavioralPolicy who)
+    [DecidableEq (M.InfoState who)]
+    (info : M.InfoState who) (law : FinDist (M.Choice who info))
+    (choice : M.Choice who info)
+    {h : E.History} (hinfo : M.infoOf who h.trace = info)
+    (hactive : E.active h.state who)
+    {joint : ∀ i, Option (E.Action i)} (isLegal : E.Legal h.state joint)
+    {target : E.State}
+    (realized : target ∈ (E.step h.state ⟨joint, isLegal⟩).support)
+    {fuel : ℕ} (later : E.History)
+    (hreach : ExecutionProtocol.ReachesWithin E fuel
+      (h.extend isLegal realized) later)
+    (hlater : ¬ E.terminal later.state) :
+    policy.withLaw info law (M.infoOf who later.trace) =
+      policy.commit info choice (M.infoOf who later.trace) := by
+  subst info
+  by_cases hne : M.infoOf who later.trace ≠ M.infoOf who h.trace
+  · rw [BehavioralPolicy.withLaw_of_ne _ _ _ hne,
+      BehavioralPolicy.commit_of_ne _ _ _ hne]
+  push Not at hne
+  by_cases hactiveLater : E.active later.state who
+  · have hdisj :
+        M.infoOf who later.trace ≠ M.infoOf who h.trace ∨
+          Subsingleton (M.Choice who (M.infoOf who h.trace)) := by
+      obtain ⟨laterJoint, hlaterJoint⟩ := E.progress later.state hlater
+      have hlaterLegal : E.Legal later.state laterJoint :=
+        ⟨hlater, hlaterJoint⟩
+      obtain ⟨laterTarget, hlaterRealized⟩ :=
+        (E.step later.state
+          ⟨laterJoint, hlaterLegal⟩).support_nonempty
+      obtain ⟨_, hsome⟩ := LegalOption.exists_eq_some_of_active
+        (joint who) (ExecutionProtocol.legalOption_of_legal isLegal who)
+          hactive
+      obtain ⟨_, hlaterSome⟩ := LegalOption.exists_eq_some_of_active
+        (laterJoint who)
+        (ExecutionProtocol.legalOption_of_legal hlaterLegal who)
+          hactiveLater
+      exact M.infoOf_ne_or_subsingleton_of_actsOnce hactsOnce who
+        isLegal realized (by rw [hsome]; rfl) hreach hlaterLegal
+          hlaterRealized (by rw [hlaterSome]; rfl)
+    rcases hdisj with hne' | hsubsingleton
+    · exact absurd hne hne'
+    · rw [hne, BehavioralPolicy.withLaw_self,
+        BehavioralPolicy.commit_self]
+      exact FinDist.eq_pure_of_subsingleton law choice
+  · exact M.behavioral_eq_of_not_active _ _ later.trace hactiveLater
+
+/-- Behavioral continuation from a nonterminal selected decision is affine in
+the law installed there.  No global finiteness of information states is used:
+the proof factors only the current finite player product, then uses no-revisit
+to make the selected coordinate invisible downstream. -/
+theorem runBehavioralFrom_update_withLaw_eq_bind
+    [Fintype ι] [DecidableEq ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (profile : (i : ι) → M.BehavioralPolicy i) (who : ι)
+    (policy : M.BehavioralPolicy who)
+    [DecidableEq (M.InfoState who)]
+    (info : M.InfoState who) (law : FinDist (M.Choice who info))
+    (h : E.History) (hinfo : M.infoOf who h.trace = info)
+    (hterm : ¬ E.terminal h.state) (hactive : E.active h.state who)
+    (fuel : ℕ) :
+    M.runBehavioralFrom
+        (Profile.update (sig := M.behavioralSignature) profile who
+          (policy.withLaw info law)) (fuel + 1) h =
+      law.bind fun choice =>
+        M.runBehavioralFrom
+          (Profile.update (sig := M.behavioralSignature) profile who
+            (policy.commit info choice)) (fuel + 1) h := by
+  rw [M.runBehavioralFrom_succ_of_not_terminal _ fuel hterm,
+    M.behavioralJoint_update_withLaw_eq_bind profile who policy info law
+      h.trace hterm hinfo,
+    FinDist.bind_bind]
+  refine FinDist.bind_congr fun choice _ => ?_
+  rw [M.runBehavioralFrom_succ_of_not_terminal _ fuel hterm]
+  refine FinDist.bind_congr fun draw _ => ?_
+  refine FinDist.bindOnSupport_congr fun target realized => ?_
+  refine M.runBehavioralFrom_congr fuel _ fun later hreach hlater player => ?_
+  by_cases hplayer : player = who
+  · subst player
+    rw [Profile.update_same, Profile.update_same]
+    exact M.withLaw_eq_commit_after_actsOnce hactsOnce policy
+      info law choice (h := h) hinfo hactive draw.2 realized later hreach hlater
+  · rw [Profile.update_of_ne _ _ hplayer,
+      Profile.update_of_ne _ _ hplayer]
+
 /-- A continuation value at an information site weighted by everybody except
 the focal player's reach. -/
 def counterfactualContinuationValue [Fintype ι] [DecidableEq ι]
@@ -43,6 +217,92 @@ def counterfactualContinuationValue [Fintype ι] [DecidableEq ι]
   ∑ history : M.InformationHistory who site.1,
     M.counterfactualReachProbability strategy who history.1.trace *
       behavioralContinuationValue M strategy who alternative payoff fuel history.1
+
+/-- Changing only the focal player's baseline policy leaves counterfactual
+continuation value unchanged when the supplied continuation policy is fixed.
+Counterfactual reach omits that baseline coordinate, and the continuation
+runner overwrites it. -/
+theorem counterfactualContinuationValue_eq_of_eq_off
+    [Fintype ι] [DecidableEq ι]
+    {first second : (player : ι) → M.BehavioralPolicy player}
+    {who : ι}
+    (hagree : ∀ other, other ≠ who → first other = second other)
+    (site : M.InformationSite who)
+    [Fintype (M.InformationHistory who site.1)]
+    (alternative : M.BehavioralPolicy who)
+    (payoff : E.History → ℝ) (fuel : ℕ) :
+    counterfactualContinuationValue M first who site
+        alternative payoff fuel =
+      counterfactualContinuationValue M second who site
+        alternative payoff fuel := by
+  have hupdated :
+      Profile.update (sig := M.behavioralSignature) first who alternative =
+        Profile.update (sig := M.behavioralSignature) second who alternative := by
+    funext player
+    by_cases hplayer : player = who
+    · subst player
+      rw [Profile.update_same, Profile.update_same]
+    · rw [Profile.update_of_ne _ _ hplayer,
+        Profile.update_of_ne _ _ hplayer, hagree player hplayer]
+  unfold counterfactualContinuationValue
+  apply Finset.sum_congr rfl
+  intro history _
+  rw [M.counterfactualReachProbability_eq_of_eq_off hagree history.1.trace]
+  unfold behavioralContinuationValue
+  rw [hupdated]
+
+/-- At a nonterminal history in a no-revisit decision fiber, ordinary
+continuation value is affine in the selected information-local law. -/
+theorem behavioralContinuationValue_withLaw_eq_expect
+    [Fintype ι] [DecidableEq ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    (policy : M.BehavioralPolicy who)
+    (law : FinDist (M.Choice who site.1))
+    (history : M.InformationHistory who site.1)
+    (hterm : ¬ E.terminal history.1.state)
+    (payoff : E.History → ℝ) (fuel : ℕ) :
+    behavioralContinuationValue M strategy who
+        (policy.withLaw site.1 law) payoff (fuel + 1) history.1 =
+      law.expect fun choice =>
+        behavioralContinuationValue M strategy who
+          (policy.commit site.1 choice) payoff (fuel + 1) history.1 := by
+  unfold behavioralContinuationValue
+  rw [M.runBehavioralFrom_update_withLaw_eq_bind hactsOnce strategy who
+    policy site.1 law history.1 history.2 hterm
+      (InformationSite.active M site history) fuel,
+    FinDist.expect_bind]
+
+/-- Counterfactual continuation value is affine in a law installed at a
+nonterminal, no-revisit information site.  The reach weights stay canonical;
+only the existing behavioral continuation runner is factored. -/
+theorem counterfactualContinuationValue_withLaw_eq_expect
+    [Fintype ι] [DecidableEq ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    [Fintype (M.InformationHistory who site.1)]
+    (hallNonterminal : InformationSite.AllNonterminal M site)
+    (policy : M.BehavioralPolicy who)
+    (law : FinDist (M.Choice who site.1))
+    (payoff : E.History → ℝ) (fuel : ℕ) :
+    counterfactualContinuationValue M strategy who site
+        (policy.withLaw site.1 law) payoff (fuel + 1) =
+      law.expect fun choice =>
+        counterfactualContinuationValue M strategy who site
+          (policy.commit site.1 choice) payoff (fuel + 1) := by
+  unfold counterfactualContinuationValue
+  simp_rw [M.behavioralContinuationValue_withLaw_eq_expect hactsOnce
+    strategy who site policy law _ (hallNonterminal _) payoff fuel,
+    ← FinDist.expect_smul]
+  exact FinDist.expect_sum_comm law
+    (fun (history : M.InformationHistory who site.1) choice =>
+    M.counterfactualReachProbability strategy who history.1.trace *
+      behavioralContinuationValue M strategy who
+        (policy.commit site.1 choice) payoff (fuel + 1) history.1)
 
 /-- Counterfactual regret of a whole continuation-policy replacement. Positive
 values mean that the replacement improves the counterfactual continuation
@@ -67,6 +327,75 @@ def counterfactualActionRegret [Fintype ι] [DecidableEq ι]
     (choice : M.Choice who site.1) : ℝ :=
   counterfactualRegret M strategy who site payoff fuel
     ((strategy who).commit site.1 choice)
+
+/-- Counterfactual continuation payoff of one pure local commitment.  This is
+the ordinary finite-action utility whose external regret is D45 action regret
+when the selected information state is not revisited. -/
+def counterfactualActionUtility [Fintype ι] [DecidableEq ι]
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    [Fintype (M.InformationHistory who site.1)]
+    (payoff : E.History → ℝ) (fuel : ℕ)
+    (choice : M.Choice who site.1) : ℝ :=
+  counterfactualContinuationValue M strategy who site
+    ((strategy who).commit site.1 choice) payoff fuel
+
+/-- At a nonterminal no-revisit site, the current counterfactual continuation
+value is the expectation of its pure-commitment continuation utilities. -/
+theorem counterfactualContinuationValue_eq_expect_actionUtility
+    [Fintype ι] [DecidableEq ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    [Fintype (M.InformationHistory who site.1)]
+    (hallNonterminal : InformationSite.AllNonterminal M site)
+    (payoff : E.History → ℝ) (fuel : ℕ) :
+    counterfactualContinuationValue M strategy who site
+        (strategy who) payoff (fuel + 1) =
+      (strategy who site.1).expect
+        (counterfactualActionUtility M strategy who site payoff (fuel + 1)) := by
+  calc
+    counterfactualContinuationValue M strategy who site
+        (strategy who) payoff (fuel + 1) =
+      counterfactualContinuationValue M strategy who site
+        ((strategy who).withLaw site.1 (strategy who site.1))
+          payoff (fuel + 1) := by
+            rw [BehavioralPolicy.withLaw_eq_self]
+    _ = _ := by
+      exact (show
+          counterfactualContinuationValue M strategy who site
+              ((strategy who).withLaw site.1 (strategy who site.1))
+                payoff (fuel + 1) =
+            (strategy who site.1).expect fun choice =>
+              counterfactualContinuationValue M strategy who site
+                ((strategy who).commit site.1 choice) payoff (fuel + 1)
+        from M.counterfactualContinuationValue_withLaw_eq_expect hactsOnce
+          strategy who site hallNonterminal (strategy who)
+            (strategy who site.1) payoff fuel)
+
+/-- D45 action regret is exactly external regret for the pure-commitment
+continuation utility.  This is the generic realization equation D46 had to
+assume model by model. -/
+theorem counterfactualActionRegret_eq_sub_expect
+    [Fintype ι] [DecidableEq ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (site : M.InformationSite who)
+    [Fintype (M.InformationHistory who site.1)]
+    (hallNonterminal : InformationSite.AllNonterminal M site)
+    (payoff : E.History → ℝ) (fuel : ℕ)
+    (choice : M.Choice who site.1) :
+    counterfactualActionRegret M strategy who site payoff (fuel + 1) choice =
+      counterfactualActionUtility M strategy who site payoff (fuel + 1) choice -
+        (strategy who site.1).expect
+          (counterfactualActionUtility M strategy who site payoff (fuel + 1)) := by
+  rw [counterfactualActionRegret, counterfactualRegret,
+    counterfactualActionUtility,
+    M.counterfactualContinuationValue_eq_expect_actionUtility hactsOnce
+      strategy who site hallNonterminal payoff fuel]
 
 /-- The ordinary continuation value under the canonical Bayes belief at a
 positive-mass information site. -/

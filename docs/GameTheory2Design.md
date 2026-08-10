@@ -1033,6 +1033,18 @@ positive-regret losing control, and checks that the actual update selects the
 profitable action. The scope remains local: a global CFR or exploitability
 claim still requires the across-information-set perfect-recall decomposition.
 
+EXP-084/D47 removes the remaining model-by-model realization proof at every
+qualifying decision site. The canonical behavioral runner is affine in a law
+installed at an all-nonterminal information fiber when
+`ActsOnceWhereItMatters`; perfect recall supplies the latter no-revisit fact
+but deliberately does not imply terminal inactivity. The affine runner law
+lifts to counterfactual continuation, pure-commitment utility, exact action
+regret, and the D46 vector equation. A two-stage consumer passes the generic
+equation directly into local convergence and retains a coordinated-deviation
+failure control. Expanded environment wrappers were rejected after they made
+one leaf elaborate for more than 180 seconds; the fixed-environment theorem is
+the responsive public seam.
+
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic
 and incentive certificates directly without pretending to be a sequential

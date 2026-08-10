@@ -41,6 +41,25 @@ def InformationSite (i : ι) :=
       ¬ E.terminal history.1.state ∧
         ∃ action : E.Action i, some action ∈ M.menu i info }
 
+/-- Every history in this decision information fiber is nonterminal.  This is
+stronger than `InformationSite`: Protocol deliberately permits a terminal
+history to share an information state and nominal activity with a nonterminal
+decision history, even though execution will not consult it. -/
+def InformationSite.AllNonterminal {i : ι}
+    (site : M.InformationSite i) : Prop :=
+  ∀ history : M.InformationHistory i site.1,
+    ¬ E.terminal history.1.state
+
+/-- A decision site's information-local menu makes its player active at every
+history in the fiber, including a nominally active terminal history. -/
+theorem InformationSite.active {i : ι} (site : M.InformationSite i)
+    (history : M.InformationHistory i site.1) :
+    E.active history.1.state i := by
+  obtain ⟨_witness, _hnonterminal, action, haction⟩ := site.2
+  have hmenu : some action ∈ M.menu i (M.infoOf i history.1.trace) := by
+    simpa only [history.2] using haction
+  exact ((M.menu_adequate i history.1.trace (some action)).mp hmenu).1
+
 /-- Histories in one decision information fiber form an antichain: if one can
 continue to another, they were already the same history.  This is the minimal
 semantic premise under which summing their reach probabilities describes the

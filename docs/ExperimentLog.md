@@ -5177,3 +5177,68 @@ memory.
   across-information-set deviation decomposition under perfect recall, then
   connect all local learners to a root-regret or two-player zero-sum average
   strategy theorem with a failed-learner control.
+
+### EXP-084: generic local CFR realization
+
+- **Date / revision:** 2026-08-10, reserved after `62ee981`
+- **Status:** complete; supports D47 with a compile-time narrowing
+- **Decision / question:** D47; whether the exact realization premise left by
+  D46 can be discharged once for canonical Protocol semantics when a decision
+  information state is not revisited, rather than reproved by each model.
+- **Prediction:** under `ActsOnceWhereItMatters` and an explicit certificate
+  that the information fiber is nonterminal, continuation value is affine in
+  a law installed by `BehavioralPolicy.withLaw`. Expanding that law over pure
+  commitments should identify D45's local counterfactual-regret vector with
+  the existing `regretPayoff`, yielding ready-to-use finite and asymptotic
+  local CFR theorems. Perfect recall should discharge only the no-revisit
+  premise, since Protocol intentionally does not force terminal players to be
+  inactive.
+- **Representative slice:** a two-stage perfect-recall decision problem with
+  nonconstant downstream continuation, so the proof cannot succeed merely by
+  reducing a one-step terminal payoff. The existing complementarity fixture
+  also supplies a hostile control: separately harmless actual root changes can
+  conceal a profitable coordinated policy change, while a sound local
+  counterfactual calculation must expose the relevant downstream action.
+- **Competing designs:** a generic runner-linearity theorem plus the existing
+  D45/D46 APIs; a model-specific realization proof at every information site;
+  a second counterfactual runner; or a stronger stored protocol well-formedness
+  condition that terminal states have no active players.
+- **Kill conditions:** linearity fails despite no revisit; the theorem silently
+  assumes terminal inactivity; it needs global finite information carriers,
+  raw update, public transport, a duplicate runner/regret semantics, or only
+  works for the named fixture; or the hostile control shows the result has
+  been overstated as global CFR/exploitability.
+- **Artifacts / observations:** `behavioralJoint_update_withLaw_eq_bind`
+  factors the current finite player product at one coordinate.
+  `runBehavioralFrom_update_withLaw_eq_bind` uses the existing runner and
+  `ActsOnceWhereItMatters` to preserve that mixture through arbitrary
+  downstream play. `InformationSite.AllNonterminal` records the separate fact
+  execution needs at every history in the fiber; `InformationSite.active` is
+  derived from the information-local menu. The runner identity lifts through
+  expectation and the canonical counterfactual sum to
+  `counterfactualActionRegret_eq_sub_expect`. The resulting vector theorem
+  identifies D45 regret with ordinary `regretPayoff` for every installed law.
+  A two-decision perfect-recall consumer uses fuel two, passes the generic
+  realization directly into D46 asymptotic learning, and retains the known
+  harmless-one-site/profitable-two-site SPE counterexample.
+- **Compile-time observation:** an expanded environment-wide convenience
+  wrapper made the matching leaf elaborate beyond a 184-second timeout. Moving
+  the same dependent statement to a separate adapter leaf still exceeded the
+  64-second implementation-loop guard, while deleting that theorem made the
+  adapter build in 13.8 seconds. The wrapper was rejected. The promoted
+  fixed-environment vector theorem builds with the matching leaf in 10.6
+  seconds, and the direct hostile consumer builds in 10.8 seconds.
+- **Validation:** the combined old/new counterfactual consumers completed
+  2,451 jobs warning-free; the stable Protocol-analysis aggregate completed
+  2,446 jobs warning-free. Fast Phase 2 and Phase 3 expected audits report
+  `VERIFIED=1` in 8.8 and 5.3 seconds. The full `GameTheory` target completed
+  3,586 jobs warning-free. The promoted source and consumer contain no
+  placeholders, custom axioms, raw updates, stored `Fintype.ofFinite`, public
+  transport tokens, or lines over 100. Deep reachability mode was deliberately
+  not run.
+- **Outcome / next action:** supports and adopts D47, narrowed to the responsive
+  fixed-environment realization seam. Qualifying perfect-recall sites no
+  longer need a model-specific D46 realization proof. Do not credit global CFR
+  or exploitability: next prove the across-information-set deviation
+  decomposition, then connect all local learners to root regret or a
+  two-player zero-sum exploitability theorem with a failed-learner control.
