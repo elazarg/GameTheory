@@ -70,9 +70,7 @@ changes the terminal law, and a coordination equilibrium crosses both Nash
 transfer directions. No-revisit remains an internal consequence of perfect
 recall rather than a duplicated public premise.
 
-### C. Repeated public-monitoring breadth
-
-Priority: highest active mature dynamic family.
+### C. Repeated public-monitoring breadth — core resolved
 
 Recover, in order:
 
@@ -80,16 +78,24 @@ Recover, in order:
    the exact bridge from each deviation row to the canonical one-signal
    history law; the hostile fixture proves pairwise rank two under perfect
    action observation and rejects a constant monitor;
-2. **next:** self-generation/decomposition over the existing
-   continuation-value API;
-3. public randomization only if it has a concrete signal-law consumer; and
-4. monitored uniform results without introducing an infinite finite-support
-   path law.
+2. **complete:** finite-support APS decomposition and self-generation over the
+   existing continuation/payoff API; a two-state Prisoner's Dilemma witness
+   uses signal-contingent reward/punishment, rejects constant cooperative
+   continuation, and reaches an actual PPE payoff;
+3. **gated breadth:** public randomization only if it has a concrete signal-law
+   consumer; and
+4. **separate breadth:** monitored uniform results without introducing an
+   infinite finite-support path law.
 
 PPE remains canonical discounted Nash after every public history. Monitoring
 rank remains an explicitly one-period informativeness condition, linked to
 repeated play through finite prefix probabilities. Any new one-shot theorem
 must reuse the canonical PPE predicate.
+
+The recursive package covers pure public strategies and the greatest bounded
+self-generating characterization of PPE payoffs. It does not claim the
+constrained-efficiency or bang-bang results of Abreu--Pearce--Stacchetti, and
+public lotteries are not silently folded into the decomposition operator.
 
 ### D. FOSG strategic and counterfactual analysis
 

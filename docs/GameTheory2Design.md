@@ -1245,6 +1245,14 @@ row with the probability change in the native one-signal history law under the
 canonical one-shot deviation; no rank claim is phrased through a hypothetical
 infinite path distribution.
 
+The recursive public-monitoring layer likewise stays within finite-support
+expectations. Its Abreu--Pearce--Stacchetti decomposition operator uses current
+stage profiles and signal-contingent continuation promises; coordinatewise
+bounds enter only when the generated pure public strategy is proved to realize
+its infinite discounted payoff. The resulting self-generation theorem feeds
+the canonical PPE and one-shot-deviation predicates. Public randomization,
+constrained-efficiency, and bang-bang conclusions are separate claims.
+
 ### D12. Package and stability boundaries
 
 Use separate dependency roots, not only directories:

@@ -45,7 +45,7 @@ Status labels:
 | Kuhn correspondence | complete | whole-profile laws plus protocol-level unilateral updated-law equivalence; two-player EFG witness transfers expected-utility Nash in both directions | Broader convenience results are separate from the finite perfect-recall correspondence. |
 | Zermelo backward induction | complete | constructive Bellman profile, explicit exit/reward fixture, pure SPE | None at current finite local-choice scope. |
 | Behavioral assessment and sequential equilibrium | supported | decision-fiber antichain contract, perfect-recall certificate, positive/falsifying hidden-state assessments | Broader refinement families. |
-| Repeated games | supported | deterministic Protocol prefixes; native public-signal histories; individual/pairwise deviation-signal rank with a one-prefix bridge; discounting, triggers, PPE, uniform equilibrium, folk theorem | Self-generation and public randomization; native monitoring is not claimed as a Protocol runner. |
+| Repeated games | supported | deterministic Protocol prefixes; native public-signal histories; deviation-signal rank; discounting, triggers, PPE, bounded APS self-generation, deterministic uniform equilibrium, folk theorem | Public randomization and monitored uniformity are separate breadth; native monitoring is not claimed as a Protocol runner. |
 | Stochastic games | supported | finite horizon, nonconstant transient uniform-payoff certificate, discounted values, stationary Bellman equilibrium | No general uniform-existence claim. |
 
 ## Languages, mechanisms, and parallel domains

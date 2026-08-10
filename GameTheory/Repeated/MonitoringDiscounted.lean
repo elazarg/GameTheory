@@ -362,6 +362,15 @@ theorem IsPerfectPublicEquilibrium.hasNoProfitableOneShotDeviationAfterEveryHist
   intro t history
   exact (h t history).hasNoProfitableOneShotDeviation
 
+/-- Perfect public equilibrium includes discounted public Nash at the empty
+history. -/
+theorem IsPerfectPublicEquilibrium.isDiscountedPublicNash
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {discount : ℝ} {profile : M.MonitoredProfile}
+    (h : M.IsPerfectPublicEquilibrium discount profile) :
+    M.IsDiscountedPublicNash discount profile := by
+  simpa [after] using h 0 (fun index => index.elim0)
+
 theorem IsPerfectPublicEquilibrium.afterSignal {M : G.PublicMonitoring} [DecidableEq ι]
     {discount : ℝ} {profile : M.MonitoredProfile}
     (h : M.IsPerfectPublicEquilibrium discount profile) (signal : M.Signal) :
