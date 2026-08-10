@@ -38,6 +38,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentAnchor
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentMixingCompatibility
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentRegularArcLift
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
@@ -135,6 +136,16 @@ produces a positive radial equality arc.  With the strict physical cell signs,
 each nonzero point decodes to an exact Nash--Bellman root.  Failure of
 surjectivity, outward direction, or strict outsider signs is the remaining
 singular residue; no arbitrary singular lifting theorem is claimed.
+For two declared active owners, Bellman elimination makes the reduced support
+Jacobian exactly `[[0,D₁₂],[D₂₁,0]]`, where
+`Dᵢⱼ=r_i({i,j})-r_i({i})`.  A signed directed pivot is regular precisely
+when its reciprocal effect is nonzero, and the outward leading variation is
+explicit.  In contrast, if those two owners are the entire positive support
+and both packet rows are compatible, positivity forces `D₁₂=D₂₁=0`:
+the whole reduced Jacobian vanishes.  A negative reciprocal collision
+increment then restates positive reciprocal singleton effect but does not
+remove the singularity.  Exact two-owner compatibility therefore belongs to
+the higher-order residue, not the regular arc branch.
 
 Independently of that selected-tail geometry, reward-table closure gives a
 robust finite-cycle restriction: a hypothetical counterexample has one

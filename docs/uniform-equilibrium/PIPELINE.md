@@ -2837,6 +2837,26 @@ specific: singular derivative, no outward kernel direction, or failure of
 the strict outsider/floor/box cell; resolving those cases requires a higher
 blow-up/Puiseux pivot or one of the signed pair exits.
 
+The two-owner chart is completely classified at this linearized level.  After
+Bellman elimination its reduced matrix is
+
+```text
+[ 0    D12 ]
+[ D21   0  ],        Dij = r_i({i,j}) - r_i({i}),
+```
+
+with determinant `-D12*D21`.  A signed pivot with `D12≠0` has an explicit
+outward leading solve exactly when `D21≠0`; the sign of `D21` gives the
+determinant orientation.  However, if two owners are the entire positive
+support of a compatible packet, their two weighted compatibility rows force
+`D12=D21=0`, so the reduced Jacobian is the zero matrix.  In the negative
+reciprocal-collision branch this merely converts to positive reciprocal
+singleton effect; it does not restore regularity.  Thus literal compatible
+two-owner support is a genuine higher-order singular case.  The regular
+first-blow-up producer can operate on larger compatible supports or on a
+rebased signed pivot, but it cannot be claimed for the exact two-owner packet
+without another blow-up or support change.
+
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges
 concatenate with survival weight, endpoint displacement remains an unweighted
