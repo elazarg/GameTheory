@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitLimit
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitSelfLoop
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixConsumption
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBoundaryProvenanceAlternative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
@@ -262,4 +263,13 @@ therefore returns, behind every selected one-root prefix, a sure-joint,
 sure-solo, or `Never` cap whose terminal exploitability remains above half the
 gap.  This is an unconditional terminal obstruction, not a recovery of the
 active owner's deviation or of the stored Nash--Bellman annotation.
+For the canonical aggregate minimizer, this co-realized repair floor is also
+bounded above by the optimized aggregate exact-`D` objective.  Consequently
+every cutoff has a marked aggregate anchor whose packet mass carries the
+terminal gap with an explicit reward/cardinality constant.  The packet is not
+yet a punishment-floor reachable predecessor.  A conditional consumption
+theorem splits half the gap between the next-cutoff objective drop and one
+legal predecessor charge once literal state attachment and the comparison
+`capped exploitability ≤ objective drop + scaled charge` are supplied; neither
+premise follows from tail compression alone.
 -/

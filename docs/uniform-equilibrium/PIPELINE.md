@@ -2732,6 +2732,22 @@ returns the terminal obstruction to a finite grammar but does not identify
 the active owner, attach its stationary refusal, or equate the stored far
 annotation with honest suffix value.  Prefix consumption must use this
 co-realized obstruction rather than silently substituting the annotation.
+On the canonical aggregate minimizer this gives the unconditional sandwich
+
+```text
+terminalGap ≤ fullPrefixRepairValue ≤ minAggregateExactD.
+```
+
+The quantitative aggregate-anchor theorem then selects, at every cutoff, a
+marked packet satisfying
+`terminalGap ≤ 2*M*|I|*|I→Bool|*packetMass`.  This is a same-cutoff calibrated
+packet, not a punishment-floor reachable edge.  The exact remaining
+prefix-consumption interface is now formalized: if a reachable predecessor is
+literally attached to the selected minimizer state and capped terminal
+exploitability is at most the next-cutoff aggregate-objective drop plus a
+scaled absorption charge of that edge, then half the terminal gap is paid by
+the drop or by the legal charge.  Calibration proves the drop is nonnegative;
+it does not prove the displayed comparison or construct the attached edge.
 For the active-positive branch, provenance at singleton level is now closed:
 once all tangent coordinates are nonnegative, the tail-derived tangent packet
 itself is a normalized singleton-source packet, its weighted surplus is
