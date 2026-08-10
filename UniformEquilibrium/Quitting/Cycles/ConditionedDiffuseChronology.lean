@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryConditioning
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
 import UniformEquilibrium.Quitting.EssentialAPS.Basic
+import Math.DivergentChargeRecurrence
 
 /-!
 # The diffuse conditioned quitting chronology
@@ -57,6 +58,60 @@ theorem quittingTailEventualAbsorption_mem_unitInterval
     linarith, by
     unfold quittingTailEventualAbsorption
     linarith⟩
+
+omit [DecidableEq ι] in
+/-- A summable one-stage absorption clock leaves vanishing eventual
+absorption in late suffixes. -/
+theorem tendsto_quittingTailEventualAbsorption_zero_of_summable_absorption
+    (roots : ℕ → ι → PMF Bool)
+    (hsummable : Summable (fun time =>
+      quittingRootAbsorptionMass (roots time))) :
+    Tendsto (quittingTailEventualAbsorption roots) atTop (nhds 0) := by
+  let charge : ℕ → ℝ := fun time =>
+    quittingRootAbsorptionMass (roots time)
+  have hcharge0 : ∀ time, 0 ≤ charge time := fun time =>
+    quittingRootAbsorptionMass_nonneg (roots time)
+  have hcharge1 : ∀ time, charge time ≤ 1 := fun time => by
+    dsimp only [charge, quittingRootAbsorptionMass]
+    linarith [quittingStationaryContinueMass_nonneg (roots time)]
+  have htail : Tendsto (fun start : ℕ =>
+      ∑' offset : ℕ, charge (start + offset)) atTop (nhds 0) := by
+    simpa [Nat.add_comm] using tendsto_sum_nat_add charge
+  apply squeeze_zero
+    (fun time => (quittingTailEventualAbsorption_mem_unitInterval
+      roots time).1)
+    ?_ htail
+  intro start
+  have hsuffix : Summable (fun offset => charge (start + offset)) := by
+    have hadd : Summable (fun offset => charge (offset + start)) :=
+      (summable_nat_add_iff start).2 (by simpa [charge] using hsummable)
+    simpa [Nat.add_comm] using hadd
+  have hlower : 1 - ∑' offset : ℕ, charge (start + offset) ≤
+      quittingJointSurvivalLimit roots start := by
+    apply ge_of_tendsto (tendsto_quittingJointSurvivalLimit roots start)
+    exact Filter.Eventually.of_forall fun fuel => by
+      have hfinite := Math.one_sub_sum_range_le_prod_one_sub
+        charge hcharge0 hcharge1 start fuel
+      have hsum : (∑ offset ∈ Finset.range fuel,
+          charge (start + offset)) ≤
+          ∑' offset : ℕ, charge (start + offset) :=
+        hsuffix.sum_le_tsum (Finset.range fuel)
+          (fun offset _ => hcharge0 (start + offset))
+      calc
+        1 - ∑' offset : ℕ, charge (start + offset) ≤
+            1 - ∑ offset ∈ Finset.range fuel,
+              charge (start + offset) := by linarith
+        _ ≤ ∏ offset ∈ Finset.range fuel,
+              (1 - charge (start + offset)) := hfinite
+        _ = quittingJointSurvivalWeight roots start fuel := by
+          unfold quittingJointSurvivalWeight
+          rw [quittingFiniteContinueWeight_eq_product]
+          apply Finset.prod_congr rfl
+          intro offset hoffset
+          dsimp only [charge, quittingRootAbsorptionMass]
+          ring
+  unfold quittingTailEventualAbsorption
+  linarith
 
 omit [DecidableEq ι] in
 /-- Physical one-stage absorption is no larger than its share of all

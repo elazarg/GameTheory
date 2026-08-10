@@ -1,10 +1,10 @@
 # Uniform-equilibrium project pipeline
 
-**Repository checkpoint:** `12d3aa35` (2026-08-10). The mathematical checkpoint
+**Repository checkpoint:** `1926e1e3` (2026-08-10). The mathematical checkpoint
 includes conditioned-tail chronology, exact atomic purification, approximate
 punishment completion, the singleton-tight diffuse compiler, and the exact
-deleted-clock split. **This file revised 2026-08-10 after the deficient-clock
-branch was consumed.**
+deleted-clock split. **This file revised 2026-08-10 after source-floor error
+was absorbed into the deleted clock.**
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
@@ -24,13 +24,14 @@ and every player-deleted clock complete compiles to an asymptotic Nash profile
 with error `O(rho)`. A deficient clock is now consumed as well: it forces a
 unique rescaled owner, literal terminal concentration on that owner's
 singleton vector, and—under singleton individual rationality—an approximate
-punishment-completed solo equilibrium. Thus the whole singleton-tight,
-singleton-floor-safe diffuse stratum compiles; the unconditional
-counterexample split does not yet force that stratum.
+punishment-completed solo equilibrium. Exact source Nash also charges every
+singleton-floor deficit to the deleted clock, so no source-floor hypothesis
+remains. Thus the whole singleton-tight diffuse stratum compiles; a diffuse
+counterexample must have a strict phantom plateau coordinate.
 
 The live residue has two natural exits:
 
-1. spend strict plateau/punishment or singleton-floor slack in a floor-safe
+1. spend strict plateau/punishment slack in a floor-safe
    support or delivery reset; or
 2. solve the enlarged-support complementarity and state-matching problem forced
    by the eventual all-Continue plateau, producing a positive-mass return or an
@@ -2246,7 +2247,7 @@ regularity layer tracked separately. Nothing here gates the quitting lane.
 
 - **Status:** ACTIVE SUPPORTING LANE; accounting, compact carriers, exact strategic
   consumers, and the complete singleton-tight diffuse alternative are
-  compiled; strict-slack/source-floor reset and enlarged-support state matching
+  compiled; strict-plateau reset and enlarged-support state matching
   remain open
 - **Lane:** P0 of the finite-quitting counterexample route
 - **Depends:** `CounterexampleRegimeTangentPacket`, normalized finite-window
@@ -2269,7 +2270,7 @@ plateau, or realize a product-root word.
 
 **Diminishing-returns stop rule.** This row is no longer permission to extend
 the diagnostic ontology. New work counts only if it (a) rules out strict
-plateau or singleton-source-floor slack, (b) solves enlarged-support state
+plateau slack, (b) solves enlarged-support state
 matching, or (c)
 constructs one common floor-safe product-root chronology consumed by a landed
 terminal/cycle compiler. A new compact carrier, co-state, separator, tangent
@@ -2464,11 +2465,15 @@ unique nonsummable owner and summable non-owner hazards;
 convergence to the owner's singleton vector; and
 `ConditionedDeletedClockSoloCompletion.lean` deletes the vanishing hazards and
 feeds the resulting caps to approximate punishment completion. Consequently
-the complete and deficient clock branches both close whenever the conditioned
-source is singleton-tight and singleton-floor-safe and every singleton owner
-is punishment-rational. Strict plateau or source-floor slack is the remaining
-conditioned boundary regime and still requires a support- or delivery-changing
-reset rather than affine shrinkage.
+the complete and deficient clock branches both close whenever the phantom
+boundary is singleton-tight and every singleton owner is punishment-rational.
+Exact source Nash bounds a possible singleton-floor deficit by twice the
+source deleted clock; late clock comparison therefore raises the uniform Quit
+constant from `2M` to `6M` but removes the floor premise entirely. On the
+canonical summably absorbing seam, a diffuse positive-absorption tail must
+therefore have some strict coordinate `solo_i < boundary_i`. This strict
+phantom plateau is the remaining conditioned boundary regime and still
+requires a support- or delivery-changing reset rather than affine shrinkage.
 
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.
@@ -2491,14 +2496,15 @@ floor-safe conditioned singleton flow.
 
 **Acceptance.** A game-facing state-matched realization theorem, not another
 separator. After the diffuse and deficient-clock compilers, every residual
-counterexample tail must either convert strict plateau/source-floor slack into
+counterexample tail must either convert strict plateau slack into
 a floor-safe support or delivery reset, construct a positive-mass
 finite return consumed by the collision-aware or singleton-APS compiler, or
 solve the enlarged-support complementarity system forced by the eventual
 all-Continue plateau.  The theorem may not assume common cap-splice
 realization, replace product roots by correlated rows, or discard the surviving
-boundary. The currently landed results close the full singleton-tight,
-singleton-floor-safe diffuse stratum but do not prove this residual
+boundary. The currently landed results close the full singleton-tight diffuse
+stratum and prove that any diffuse counterexample has a strict plateau
+coordinate, but do not prove this residual
 alternative.
 
 ## Literature import lane

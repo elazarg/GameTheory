@@ -12,10 +12,11 @@ import UniformEquilibrium.Quitting.Boundary.Exceptional.BellmanTail
 
 This file begins the strategic half of diffuse product rescaling.  The
 immediate-Quit channel needs no delicate complementarity calculation on a
-singleton-tight boundary coordinate.  The conditioned value stays above the
-singleton floor, while forcing the player to Quit differs from the singleton
-payoff only when an opponent also quits.  The latter event is bounded by the
-rescaled opponent absorption, hence by `card(I)` times the conditioned mesh.
+singleton-tight boundary coordinate.  Exact source Nash charges any
+conditioned singleton-floor deficit to the source deleted clock, while forcing
+the player to Quit differs from the singleton payoff only when an opponent
+also quits.  Source and target deleted clocks are comparable in the late
+diffuse range, giving a uniform `6 M * card(I) * alpha` error.
 
 The Continue channel is genuinely subtler.  Its useful estimate must retain
 an opponent-absorption factor and uses the exact source mixing equation; no
@@ -328,6 +329,108 @@ theorem quittingTailDiffuseRescaledRoot_opponentAbsorption_le_card_mul_weight
     quittingTailDiffuseRescaledTotal_le_card_mul_conditionedWeight
       roots time hpositive
 
+/-- Exact policy and endpoint Nash make every singleton-floor deficit of the
+source annotation a deleted-clock error.  No source-floor hypothesis is
+needed: forcing `who` to Quit is already within two reward bounds times the
+opponents' absorption of the singleton payoff, and exact Nash puts that
+forced-Quit value below the prescribed source value. -/
+theorem quittingSoloBaseline_le_sourceValue_add_opponentAbsorption
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (hpolicy : ∀ time, value time =
+      quittingRootSuccessorPayoff reward (value (time + 1)) (roots time))
+    (hnash : ∀ time,
+      IsεQuittingRootEndpointNash reward (value (time + 1)) 0 (roots time))
+    (time : ℕ) (who : ι) {M : ℝ}
+    (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M) :
+    quittingSoloBaseline reward who ≤ value time who +
+      2 * M * quittingRootOpponentAbsorptionMass (roots time) who := by
+  have hnashRoot : IsεQuittingRootNash reward
+      (value (time + 1)) 0 (roots time) :=
+    (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+      reward (value (time + 1)) (roots time)).1 (hnash time)
+  have hquit := quittingRootQuitPayoff_le_successor_of_isZeroNash
+    reward (value (time + 1)) (roots time) who hnashRoot
+  have hquitStationary :
+      quittingStationaryFixedOpponentsQuitValue reward (roots time) who ≤
+        value time who := by
+    calc
+      quittingStationaryFixedOpponentsQuitValue reward (roots time) who =
+          quittingRootQuitPayoff reward (value (time + 1))
+            (roots time) who := by
+        symm
+        simpa [quittingStationaryFixedOpponentsQuitValue] using
+          (quittingRootQuitPayoff_eq_fixedOpponentsQuitValue reward
+            (fun _ => roots time) who (value (time + 1)) 0)
+      _ ≤ quittingRootSuccessorPayoff reward (value (time + 1))
+          (roots time) who := hquit
+      _ = value time who := (congrFun (hpolicy time) who).symm
+  have hsolo :=
+    abs_quittingStationaryFixedOpponentsQuitValue_sub_singleton_le
+      (reward := reward) (roots time) who hM hreward
+  rw [abs_le] at hsolo
+  rw [quittingSoloBaseline_apply]
+  change reward (quittingSingletonTerminal who) who ≤ _
+  linarith
+
+/-- On a singleton-tight phantom boundary, the conditioned singleton-floor
+deficit is at most two reward bounds times the conditioned deleted clock.
+This is the quantitative replacement for an exact source-floor premise. -/
+theorem quittingSoloBaseline_le_conditionedValue_add_opponentWeight
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (boundary : Payoff ι)
+    (hpolicy : ∀ time, value time =
+      quittingRootSuccessorPayoff reward (value (time + 1)) (roots time))
+    (hnash : ∀ time,
+      IsεQuittingRootEndpointNash reward (value (time + 1)) 0 (roots time))
+    (time : ℕ) (who : ι) {M : ℝ}
+    (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hpositive : 0 < quittingTailEventualAbsorption roots time)
+    (htight : boundary who = quittingSoloBaseline reward who) :
+    quittingSoloBaseline reward who ≤
+      quittingTailConditionedValue roots value boundary time who +
+        2 * M * quittingTailConditionedOpponentWeight roots time who := by
+  have hsource := quittingSoloBaseline_le_sourceValue_add_opponentAbsorption
+    (reward := reward) roots value hpolicy hnash time who hM hreward
+  have hconditioned := quittingTailConditionedValue_sub_floor
+    roots value boundary (quittingSoloBaseline reward) time who hpositive
+  rw [htight, sub_self, mul_zero, sub_zero] at hconditioned
+  have hdeficit :
+      quittingSoloBaseline reward who -
+          quittingTailConditionedValue roots value boundary time who =
+        (quittingSoloBaseline reward who - value time who) /
+          quittingTailEventualAbsorption roots time := by
+    calc
+      quittingSoloBaseline reward who -
+          quittingTailConditionedValue roots value boundary time who =
+        -(quittingTailConditionedValue roots value boundary time who -
+          quittingSoloBaseline reward who) := by ring
+      _ = -((value time who - quittingSoloBaseline reward who) /
+          quittingTailEventualAbsorption roots time) := by rw [hconditioned]
+      _ = (quittingSoloBaseline reward who - value time who) /
+          quittingTailEventualAbsorption roots time := by ring
+  have hsourceDeficit :
+      quittingSoloBaseline reward who - value time who ≤
+        2 * M * quittingRootOpponentAbsorptionMass (roots time) who := by
+    linarith
+  have hconditionedDeficit :
+      quittingSoloBaseline reward who -
+          quittingTailConditionedValue roots value boundary time who ≤
+        2 * M * quittingTailConditionedOpponentWeight roots time who := by
+    rw [hdeficit]
+    unfold quittingTailConditionedOpponentWeight
+    calc
+      (quittingSoloBaseline reward who - value time who) /
+          quittingTailEventualAbsorption roots time ≤
+        (2 * M * quittingRootOpponentAbsorptionMass (roots time) who) /
+          quittingTailEventualAbsorption roots time :=
+        div_le_div_of_nonneg_right hsourceDeficit hpositive.le
+      _ = 2 * M *
+          (quittingRootOpponentAbsorptionMass (roots time) who /
+            quittingTailEventualAbsorption roots time) := by ring
+  linarith
+
 /-- **Uniform immediate-Quit error after diffuse rescaling.**  On a boundary
 coordinate tight at the player's singleton payoff, source floor viability
 makes the conditioned value dominate that singleton payoff.  Immediate Quit
@@ -390,6 +493,94 @@ theorem quittingStationaryFixedOpponentsQuitValue_rescaledRoot_le_conditionedVal
               quittingTailConditionedAbsorptionWeight roots time) :=
           add_le_add hconditionedFloor (le_refl _)
         _ = _ := by ring
+
+/-- **Uniform immediate-Quit error without a source-floor premise.**  Exact
+source policy and endpoint Nash charge any singleton-floor deficit to the
+source deleted clock.  In the late diffuse range that clock is at most twice
+the target deleted clock, so immediate Quit at the rescaled row improves the
+conditioned value by at most `6 M * card(I) * alpha` for every player. -/
+theorem
+    quittingStationaryFixedOpponentsQuitValue_rescaledRoot_le_conditionedValue_add_of_nash
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (boundary : Payoff ι)
+    (hpolicy : ∀ time, value time =
+      quittingRootSuccessorPayoff reward (value (time + 1)) (roots time))
+    (hnash : ∀ time,
+      IsεQuittingRootEndpointNash reward (value (time + 1)) 0 (roots time))
+    (time : ℕ) (who : ι) {M : ℝ}
+    (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hpositive : 0 < quittingTailEventualAbsorption roots time)
+    (htight : boundary who = quittingSoloBaseline reward who)
+    (hsmall : Fintype.card ι *
+      quittingTailConditionedAbsorptionWeight roots time ≤ 1) :
+    quittingStationaryFixedOpponentsQuitValue reward
+        (quittingTailDiffuseRescaledRoot roots time hpositive) who ≤
+      quittingTailConditionedValue roots value boundary time who +
+        6 * M * Fintype.card ι *
+          quittingTailConditionedAbsorptionWeight roots time := by
+  let targetOpponent := quittingRootOpponentAbsorptionMass
+    (quittingTailDiffuseRescaledRoot roots time hpositive) who
+  let sourceOpponent := quittingTailConditionedOpponentWeight roots time who
+  have htarget :=
+    abs_quittingStationaryFixedOpponentsQuitValue_sub_singleton_le
+      (reward := reward)
+      (quittingTailDiffuseRescaledRoot roots time hpositive) who hM hreward
+  have hsource :=
+    quittingSoloBaseline_le_conditionedValue_add_opponentWeight
+      (reward := reward) roots value boundary hpolicy hnash time who hM
+        hreward hpositive htight
+  have hclock :=
+    half_conditionedOpponentWeight_le_rescaledRoot_opponentAbsorption
+      roots time who hpositive hsmall
+  have htargetCard :=
+    quittingTailDiffuseRescaledRoot_opponentAbsorption_le_card_mul_weight
+      roots time who hpositive
+  rw [abs_le] at htarget
+  rw [quittingSoloBaseline_apply] at hsource
+  change reward (quittingSingletonTerminal who) who ≤
+    quittingTailConditionedValue roots value boundary time who +
+      2 * M * sourceOpponent at hsource
+  change sourceOpponent / 2 ≤ targetOpponent at hclock
+  change targetOpponent ≤ Fintype.card ι *
+    quittingTailConditionedAbsorptionWeight roots time at htargetCard
+  have hsourceClock : sourceOpponent ≤ 2 * targetOpponent := by linarith
+  have hcoefficient : 0 ≤ 2 * M := mul_nonneg (by norm_num) hM
+  have hclockBound :
+      2 * M * (targetOpponent + sourceOpponent) ≤
+        6 * M * targetOpponent := by
+    calc
+      2 * M * (targetOpponent + sourceOpponent) ≤
+          2 * M * (targetOpponent + 2 * targetOpponent) :=
+        mul_le_mul_of_nonneg_left
+          (add_le_add (le_refl targetOpponent) hsourceClock) hcoefficient
+      _ = 6 * M * targetOpponent := by ring
+  have hcardBound :
+      6 * M * targetOpponent ≤
+        6 * M * (Fintype.card ι *
+          quittingTailConditionedAbsorptionWeight roots time) :=
+    mul_le_mul_of_nonneg_left htargetCard
+      (mul_nonneg (by norm_num) hM)
+  calc
+    quittingStationaryFixedOpponentsQuitValue reward
+          (quittingTailDiffuseRescaledRoot roots time hpositive) who ≤
+        reward (quittingSingletonTerminal who) who +
+          2 * M * targetOpponent := by
+      dsimp only [targetOpponent]
+      linarith
+    _ ≤ quittingTailConditionedValue roots value boundary time who +
+          2 * M * sourceOpponent + 2 * M * targetOpponent := by linarith
+    _ = quittingTailConditionedValue roots value boundary time who +
+          2 * M * (targetOpponent + sourceOpponent) := by ring
+    _ ≤ quittingTailConditionedValue roots value boundary time who +
+          6 * M * targetOpponent := add_le_add (le_refl _) hclockBound
+    _ ≤ quittingTailConditionedValue roots value boundary time who +
+          6 * M * (Fintype.card ι *
+            quittingTailConditionedAbsorptionWeight roots time) :=
+      add_le_add (le_refl _) hcardBound
+    _ = quittingTailConditionedValue roots value boundary time who +
+          6 * M * Fintype.card ι *
+            quittingTailConditionedAbsorptionWeight roots time := by ring
 
 /-- **Active immediate-Quit comparison on the tight stratum.**  At a source
 row where `who` actually mixes toward Quit, both the conditioned source

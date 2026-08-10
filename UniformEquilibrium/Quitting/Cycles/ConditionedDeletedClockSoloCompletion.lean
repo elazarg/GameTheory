@@ -192,6 +192,8 @@ theorem isUniformEquilibriumPayoff_soloReward_of_summableConditionedDeletedClock
     (boundary : Payoff ι) (owner : ι) (start : ℕ)
     (hpolicy : ∀ time, value time =
       quittingRootSuccessorPayoff reward (value (time + 1)) (roots time))
+    (hnash : ∀ time,
+      IsεQuittingRootEndpointNash reward (value (time + 1)) 0 (roots time))
     (hpositive : ∀ time, 0 < quittingTailEventualAbsorption roots time)
     (heventualZero : Tendsto
       (quittingTailEventualAbsorption roots) atTop (nhds 0))
@@ -200,8 +202,6 @@ theorem isUniformEquilibriumPayoff_soloReward_of_summableConditionedDeletedClock
         quittingRewardBound reward)
     (htight : ∀ who,
       boundary who = quittingSoloBaseline reward who)
-    (hsourceFloor : ∀ time who,
-      quittingSoloBaseline reward who ≤ value time who)
     (hmesh : Tendsto
       (quittingTailConditionedAbsorptionWeight roots) atTop (nhds 0))
     (hsmall : ∀ time, start ≤ time → Fintype.card ι *
@@ -340,7 +340,7 @@ theorem isUniformEquilibriumPayoff_soloReward_of_summableConditionedDeletedClock
     ∑ who : ι,
       |selectedValue n who - quittingSoloReward reward owner who|
   let quitError : ℕ → ℝ := fun n =>
-    2 * M * Fintype.card ι *
+    6 * M * Fintype.card ι *
       quittingTailConditionedAbsorptionWeight roots (start + select n)
   have hselectedPositive : ∀ n,
       0 < (selectedRoots n owner true).toReal := by
@@ -389,7 +389,7 @@ theorem isUniformEquilibriumPayoff_soloReward_of_summableConditionedDeletedClock
   have hquitVanish : Tendsto quitError atTop (nhds 0) := by
     have halpha := (hmesh.comp (tendsto_add_atTop_nat start)).comp hselectTendsto
     simpa [quitError, M, Function.comp_apply, Nat.add_comm] using
-      halpha.const_mul (2 * quittingRewardBound reward * Fintype.card ι)
+      halpha.const_mul (6 * quittingRewardBound reward * Fintype.card ι)
   apply isUniformEquilibriumPayoff_soloReward_of_deletedQuitLimits
     reward owner selectedRoots selectedValue hazardError targetError quitError
     (quittingRewardBound_nonneg reward)
@@ -408,12 +408,14 @@ theorem isUniformEquilibriumPayoff_soloReward_of_summableConditionedDeletedClock
   · intro n who hwho
     simpa [selectedRoots, selectedValue, targetRoots, monoValue, targetValue,
       quitError, M, quittingTailDiffuseRescaledRoots] using
-        quittingStationaryFixedOpponentsQuitValue_rescaledRoot_le_conditionedValue_add
-          (reward := reward) roots value boundary (start + select n) who
+        quittingStationaryFixedOpponentsQuitValue_rescaledRoot_le_conditionedValue_add_of_nash
+          (reward := reward) roots value boundary hpolicy hnash
+          (start + select n) who
           (quittingRewardBound_nonneg reward)
           (abs_reward_le_quittingRewardBound reward)
           (hpositive (start + select n)) (htight who)
-          (hsourceFloor (start + select n) who)
+          (hsmall (start + select n)
+            (Nat.le_add_right start (select n)))
   · exact hpunishment
 
 /-- **Closed singleton-tight diffuse alternative.**  If every singleton
@@ -439,8 +441,6 @@ theorem
         quittingRewardBound reward)
     (htight : ∀ who,
       boundary who = quittingSoloBaseline reward who)
-    (hsourceFloor : ∀ time who,
-      quittingSoloBaseline reward who ≤ value time who)
     (hmesh : Tendsto
       (quittingTailConditionedAbsorptionWeight roots) atTop (nhds 0))
     (hpunishment : ∀ who, quittingPunishmentValue reward who ≤
@@ -478,12 +478,12 @@ theorem
     refine ⟨quittingSoloReward reward owner, ?_⟩
     exact
       isUniformEquilibriumPayoff_soloReward_of_summableConditionedDeletedClock
-        reward roots value boundary owner newStart hpolicy hpositive
-        heventualZero hconditionedBound htight hsourceFloor hmesh hsmall
+        reward roots value boundary owner newStart hpolicy hnash hpositive
+        heventualZero hconditionedBound htight hmesh hsmall
         hsummableNew (hpunishment owner)
   · apply quittingGame_exists_uniformEquilibriumPayoff_of_conditionedDiffuseTail
       reward roots value boundary hpolicy hnash hpositive hconditionedBound
-        htight hsourceFloor hmesh
+        htight hmesh
     push Not at hclock
     exact hclock
 

@@ -1829,8 +1829,6 @@ theorem conditionedDiffuseRescaledRoots_isεAsymptoticNash_and_approximates
       |quittingTailConditionedValue roots value boundary time player| ≤ M)
     (htight : ∀ who,
       boundary who = quittingSoloBaseline reward who)
-    (hsourceFloor : ∀ time who,
-      quittingSoloBaseline reward who ≤ value time who)
     (hmesh : ∀ time,
       quittingTailConditionedAbsorptionWeight roots time ≤ rho)
     (hsmall : ∀ time, Fintype.card ι *
@@ -1843,7 +1841,7 @@ theorem conditionedDiffuseRescaledRoots_isεAsymptoticNash_and_approximates
     (quittingGame reward).IsεAsymptoticNash
         (quittingTerminalPayoff reward)
         ((6 * M * Fintype.card ι * rho) +
-          (2 * M * Fintype.card ι * rho) +
+          (6 * M * Fintype.card ι * rho) +
           ((7 * Fintype.card ι + 16) * M * rho))
         (quittingInfinitePathProfile reward
           (quittingTailDiffuseRescaledRoots roots hpositive)) ∧
@@ -1854,7 +1852,7 @@ theorem conditionedDiffuseRescaledRoots_isεAsymptoticNash_and_approximates
           quittingTailConditionedValue roots value boundary 0 who| ≤
         6 * M * Fintype.card ι * rho := by
   let policyCoefficient := 6 * M * Fintype.card ι * rho
-  let quitError := 2 * M * Fintype.card ι * rho
+  let quitError := 6 * M * Fintype.card ι * rho
   let refusalCoefficient := (7 * Fintype.card ι + 16) * M * rho
   let target := quittingTailConditionedValue roots value boundary 0
   let targetRoots := quittingTailDiffuseRescaledRoots roots hpositive
@@ -1894,18 +1892,18 @@ theorem conditionedDiffuseRescaledRoots_isεAsymptoticNash_and_approximates
       quit_le := by
         intro time who
         have hquit :=
-          quittingStationaryFixedOpponentsQuitValue_rescaledRoot_le_conditionedValue_add
-            (reward := reward) roots value boundary time who hM hreward
-              (hpositive time) (htight who) (hsourceFloor time who)
+          quittingStationaryFixedOpponentsQuitValue_rescaledRoot_le_conditionedValue_add_of_nash
+            (reward := reward) roots value boundary hpolicy hnash time who hM
+              hreward (hpositive time) (htight who) (hsmall time)
         change _ ≤ targetValue time who + quitError
         dsimp only [targetValue, quitError]
         calc
           _ ≤ quittingTailConditionedValue roots value boundary time who +
-              2 * M * Fintype.card ι *
+              6 * M * Fintype.card ι *
                 quittingTailConditionedAbsorptionWeight roots time := hquit
           _ ≤ quittingTailConditionedValue roots value boundary time who +
-              2 * M * Fintype.card ι * rho := by
-            have hcoefficient : 0 ≤ 2 * M * (Fintype.card ι : ℝ) := by
+              6 * M * Fintype.card ι * rho := by
+            have hcoefficient : 0 ≤ 6 * M * (Fintype.card ι : ℝ) := by
               positivity
             simpa [add_comm] using
               (add_le_add_left

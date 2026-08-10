@@ -126,8 +126,6 @@ structure QuittingConditionedDiffuseCertificate
     |quittingTailConditionedValue roots value boundary time player| ≤
       quittingRewardBound reward
   tight : ∀ who, boundary who = quittingSoloBaseline reward who
-  sourceFloor : ∀ time who,
-    quittingSoloBaseline reward who ≤ value time who
   mesh : ∀ time,
     quittingTailConditionedAbsorptionWeight roots time ≤ rho
   small : ∀ time, Fintype.card ι *
@@ -156,7 +154,7 @@ theorem isεAsymptoticNash_and_approximates
     (quittingGame reward).IsεAsymptoticNash
         (quittingTerminalPayoff reward)
         ((6 * quittingRewardBound reward * Fintype.card ι * rho) +
-          (2 * quittingRewardBound reward * Fintype.card ι * rho) +
+          (6 * quittingRewardBound reward * Fintype.card ι * rho) +
           ((7 * Fintype.card ι + 16) * quittingRewardBound reward * rho))
         certificate.profile ∧
       ∀ who,
@@ -169,8 +167,8 @@ theorem isεAsymptoticNash_and_approximates
       certificate.policy certificate.nash
       (quittingRewardBound_nonneg reward) certificate.rho_nonneg
       (abs_reward_le_quittingRewardBound reward) certificate.positive
-      certificate.conditionedBound certificate.tight certificate.sourceFloor
-      certificate.mesh certificate.small certificate.half
+      certificate.conditionedBound certificate.tight certificate.mesh
+      certificate.small certificate.half
       certificate.deletedComplete
 
 end QuittingConditionedDiffuseCertificate
@@ -180,7 +178,7 @@ terminal Nash error. -/
 def quittingConditionedDiffuseCompilerCoefficient
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : ℝ :=
   6 * quittingRewardBound reward * Fintype.card ι +
-    2 * quittingRewardBound reward * Fintype.card ι +
+    6 * quittingRewardBound reward * Fintype.card ι +
     (7 * Fintype.card ι + 16) * quittingRewardBound reward
 
 omit [DecidableEq ι] in
@@ -218,7 +216,7 @@ theorem
   have hcompiled := certificate.isεAsymptoticNash_and_approximates.1
   have herrorEq :
       (6 * quittingRewardBound reward * Fintype.card ι * rho) +
-          (2 * quittingRewardBound reward * Fintype.card ι * rho) +
+          (6 * quittingRewardBound reward * Fintype.card ι * rho) +
           ((7 * Fintype.card ι + 16) * quittingRewardBound reward * rho) =
         coefficient * rho := by
     dsimp only [coefficient]
@@ -274,8 +272,6 @@ theorem
       |quittingTailConditionedValue roots value boundary time player| ≤
         quittingRewardBound reward)
     (htight : ∀ who, boundary who = quittingSoloBaseline reward who)
-    (hsourceFloor : ∀ time who,
-      quittingSoloBaseline reward who ≤ value time who)
     (hmesh : Tendsto
       (quittingTailConditionedAbsorptionWeight roots) atTop (nhds 0))
     (hdeletedComplete : ∀ who start,
@@ -331,9 +327,6 @@ theorem
           quittingTailConditionedValue_suffix] using
             hconditionedBound (start + time) player
       tight := htight
-      sourceFloor := by
-        intro time who
-        exact hsourceFloor (start + time) who
       mesh := by
         intro time
         rw [show quittingTailConditionedAbsorptionWeight suffixRoots time =
@@ -398,8 +391,6 @@ theorem
       |quittingTailConditionedValue roots value boundary time player| ≤
         quittingRewardBound reward)
     (htight : ∀ who, boundary who = quittingSoloBaseline reward who)
-    (hsourceFloor : ∀ time who,
-      quittingSoloBaseline reward who ≤ value time who)
     (hmesh : Tendsto
       (quittingTailConditionedAbsorptionWeight roots) atTop (nhds 0)) :
     (∃ payoff : Payoff ι,
@@ -412,7 +403,7 @@ theorem
   · left
     apply quittingGame_exists_uniformEquilibriumPayoff_of_conditionedDiffuseTail
       reward roots value boundary hpolicy hnash hpositive hconditionedBound
-        htight hsourceFloor hmesh
+        htight hmesh
     push Not at hclock
     exact hclock
 
