@@ -321,6 +321,108 @@ def aggregateCapacityAccount (time : ℕ) : ℝ :=
   (Fintype.card ι : ℝ) * quittingRewardBound reward *
     remainingCapacity path hpath hpunishment time
 
+include hpath in
+/-- The terminal displayed payoff is literally the zero boundary. -/
+theorem terminal_payoff_eq_zero :
+    (quittingFiniteNashBellmanPathDynamicDebtPoint
+      reward cutoff path cutoff).1.1 = 0 := by
+  simp only [quittingFiniteNashBellmanPathDynamicDebtPoint, dif_pos le_rfl]
+  have hindex :
+      (⟨cutoff, Nat.lt_succ_self cutoff⟩ : Fin (cutoff + 1)) =
+        Fin.last cutoff := by
+    apply Fin.ext
+    rfl
+  rw [hindex]
+  exact hpath.2.1
+
+/-- The terminal exact-D annotation is the fixed positive-singleton cap,
+independently of the selected path and of its unconstrained terminal root. -/
+theorem terminal_debt_eq_positiveSingletonDebtCap (who : ι) :
+    (quittingFiniteNashBellmanPathDynamicDebtPoint
+      reward cutoff path cutoff).2 who =
+        quittingPositiveSingletonDebtCap reward who := by
+  simp [quittingFiniteNashBellmanPathDynamicDebtPoint,
+    quittingFiniteNashBellmanPathDynamicDebt,
+    quittingFiniteDynamicDebt_zero]
+
+/-- Exact aggregate terminal debt. -/
+theorem debt_cutoff_eq_sum_positiveSingletonDebtCap :
+    debt (reward := reward) path cutoff =
+      ∑ who, quittingPositiveSingletonDebtCap reward who := by
+  unfold debt
+  apply Finset.sum_congr rfl
+  intro who _
+  exact terminal_debt_eq_positiveSingletonDebtCap path who
+
+/-- The canonical global admissible potential is bounded by the regime's
+least prefix-charge capacity at every admissible source. -/
+theorem admissiblePotential_le_prefixChargeBound
+    (regime : QuittingCounterexampleRegime reward)
+    (state : QuittingPunishmentFloorAdmissibleState reward) :
+    quittingPunishmentFloorAdmissiblePotential reward state ≤
+      quittingPunishmentFloorPrefixChargeBound reward := by
+  unfold quittingPunishmentFloorAdmissiblePotential
+  apply (quittingPunishmentFloorAdmissibleChargedRelation reward).value_le
+    (quittingPunishmentFloorPrefixChargeBound_nonneg reward)
+  intro target segment
+  rw [← QuittingPunishmentFloorAdmissibleChargedRelation.pathToFinitePrefix_charge
+    segment]
+  exact regime.prefixCharge_le
+    (QuittingPunishmentFloorAdmissibleChargedRelation.pathToFinitePrefix segment)
+
+/-- Remaining global admissible capacity is nonnegative. -/
+theorem remainingCapacity_nonneg
+    (regime : QuittingCounterexampleRegime reward) (time : ℕ) :
+    0 ≤ remainingCapacity path hpath hpunishment time := by
+  unfold remainingCapacity
+  exact sub_nonneg.mpr
+    (admissiblePotential_le_prefixChargeBound regime _)
+
+/-- The scaled global admissible capacity account is nonnegative. -/
+theorem aggregateCapacityAccount_nonneg
+    (regime : QuittingCounterexampleRegime reward) (time : ℕ) :
+    0 ≤ aggregateCapacityAccount path hpath hpunishment time :=
+  mul_nonneg
+    (mul_nonneg (Nat.cast_nonneg _) (quittingRewardBound_nonneg reward))
+    (remainingCapacity_nonneg path hpath hpunishment regime time)
+
+/-- Any admissible predecessor path ending at a displayed chain state reserves
+at least its own charge in the remaining global capacity of that state.  This
+is the useful orientation for paying the terminal debt. -/
+theorem incomingPath_charge_le_remainingCapacity
+    (regime : QuittingCounterexampleRegime reward)
+    {sourceState : QuittingPunishmentFloorAdmissibleState reward}
+    (time : ℕ)
+    (segment : (quittingPunishmentFloorAdmissibleChargedRelation reward).Path
+      sourceState
+      (quittingFiniteDynamicDebtAdmissibleState
+        path hpath hpunishment time)) :
+    segment.chargeSum ≤ remainingCapacity path hpath hpunishment time := by
+  have hdrop :=
+    (quittingPunishmentFloorAdmissiblePotential_isBoundedPotential
+      regime.prefixCharge_le).isPotential.chargeSum_le segment
+  have hsource := admissiblePotential_le_prefixChargeBound regime sourceState
+  unfold remainingCapacity
+  linarith
+
+/-- The chain's intrinsic reversed path has the opposite orientation: it
+spends terminal remaining capacity on the way to an earlier state.  Thus it
+cannot by itself lower-bound the terminal slack required by the carry gate. -/
+theorem terminal_remainingCapacity_add_intrinsicCharge_le
+    (regime : QuittingCounterexampleRegime reward)
+    (time : ℕ) (htime : time ≤ cutoff) :
+    remainingCapacity path hpath hpunishment cutoff +
+        (quittingFiniteDynamicDebtAdmissibleTerminalPathTo
+          path hpath hpunishment time htime).chargeSum ≤
+      remainingCapacity path hpath hpunishment time := by
+  let segment := quittingFiniteDynamicDebtAdmissibleTerminalPathTo
+    path hpath hpunishment time htime
+  have hdrop :=
+    (quittingPunishmentFloorAdmissiblePotential_isBoundedPotential
+      regime.prefixCharge_le).isPotential.chargeSum_le segment
+  unfold remainingCapacity
+  linarith
+
 omit hpath hpunishment in
 theorem survival_nonneg (time : ℕ) :
     0 ≤ survival (reward := reward) path time :=
@@ -493,26 +595,9 @@ theorem debt_zero_le_aggregateCapacityAccount_zero_of_far
       have hsurvival : survival (reward := reward) path time ≤ 1 :=
         quittingStationaryContinueMass_le_one _
       have haccount_nonneg :
-          0 ≤ aggregateCapacityAccount path hpath hpunishment (time + 1) := by
-        -- This sign follows from the global prefix bound on every admissible
-        -- path; prove it directly from the canonical value elimination rule.
-        unfold aggregateCapacityAccount remainingCapacity
-        have hvalue : quittingPunishmentFloorAdmissiblePotential reward
-              (quittingFiniteDynamicDebtAdmissibleState
-                path hpath hpunishment (time + 1)) ≤
-            quittingPunishmentFloorPrefixChargeBound reward := by
-          unfold quittingPunishmentFloorAdmissiblePotential
-          apply (quittingPunishmentFloorAdmissibleChargedRelation reward).value_le
-            (quittingPunishmentFloorPrefixChargeBound_nonneg reward)
-          intro target segment
-          rw [← QuittingPunishmentFloorAdmissibleChargedRelation.pathToFinitePrefix_charge
-            segment]
-          exact regime.prefixCharge_le
-            (QuittingPunishmentFloorAdmissibleChargedRelation.pathToFinitePrefix
-              segment)
-        exact mul_nonneg
-          (mul_nonneg (Nat.cast_nonneg _)
-            (quittingRewardBound_nonneg reward)) (sub_nonneg.mpr hvalue)
+          0 ≤ aggregateCapacityAccount path hpath hpunishment (time + 1) :=
+        aggregateCapacityAccount_nonneg
+          path hpath hpunishment regime (time + 1)
       calc
         source (reward := reward) path time +
             survival (reward := reward) path time *
@@ -525,7 +610,62 @@ theorem debt_zero_le_aggregateCapacityAccount_zero_of_far
     0 cutoff (by omega)
   simpa using hfar
 
+/-- The strict zero-singleton-cap subclass closes the terminal gate
+automatically.  This is exactly the previously solved zero-solo class; the
+weaker hypothesis `punishmentValue ≤ 0` does not imply these cap equalities. -/
+theorem debt_zero_le_aggregateCapacityAccount_zero_of_terminalCap_eq_zero
+    (regime : QuittingCounterexampleRegime reward)
+    (hterminalCap : ∀ who,
+      quittingPositiveSingletonDebtCap reward who = 0) :
+    debt (reward := reward) path 0 ≤
+      aggregateCapacityAccount path hpath hpunishment 0 := by
+  apply debt_zero_le_aggregateCapacityAccount_zero_of_far
+    path hpath hpunishment regime
+  rw [debt_cutoff_eq_sum_positiveSingletonDebtCap path]
+  have hsum : (∑ who, quittingPositiveSingletonDebtCap reward who) = 0 := by
+    apply Finset.sum_eq_zero
+    intro who _
+    exact hterminalCap who
+  rw [hsum]
+  exact aggregateCapacityAccount_nonneg
+    path hpath hpunishment regime cutoff
+
+/-- A quantitative incoming predecessor path is sufficient to pay the
+terminal cap and hence close the intrinsic carry telescope.  This is the
+sharp constructive orientation: paths leaving the zero boundary spend
+capacity, whereas a path ending there reserves its charge in the terminal
+remaining-capacity slack. -/
+theorem debt_zero_le_aggregateCapacityAccount_zero_of_incomingPath
+    (regime : QuittingCounterexampleRegime reward)
+    {sourceState : QuittingPunishmentFloorAdmissibleState reward}
+    (segment : (quittingPunishmentFloorAdmissibleChargedRelation reward).Path
+      sourceState
+      (quittingFiniteDynamicDebtAdmissibleState
+        path hpath hpunishment cutoff))
+    (hpays : debt (reward := reward) path cutoff ≤
+      (Fintype.card ι : ℝ) * quittingRewardBound reward *
+        segment.chargeSum) :
+    debt (reward := reward) path 0 ≤
+      aggregateCapacityAccount path hpath hpunishment 0 := by
+  have hreserved := incomingPath_charge_le_remainingCapacity
+    path hpath hpunishment regime cutoff segment
+  have hscale : 0 ≤
+      (Fintype.card ι : ℝ) * quittingRewardBound reward :=
+    mul_nonneg (Nat.cast_nonneg _) (quittingRewardBound_nonneg reward)
+  apply debt_zero_le_aggregateCapacityAccount_zero_of_far
+    path hpath hpunishment regime
+  calc
+    debt (reward := reward) path cutoff ≤
+        (Fintype.card ι : ℝ) * quittingRewardBound reward *
+          segment.chargeSum := hpays
+    _ ≤ (Fintype.card ι : ℝ) * quittingRewardBound reward *
+        remainingCapacity path hpath hpunishment cutoff :=
+      mul_le_mul_of_nonneg_left hreserved hscale
+    _ = aggregateCapacityAccount path hpath hpunishment cutoff := rfl
+
 end QuittingFiniteDynamicDebtAdmissibleChronology
+
+open QuittingFiniteDynamicDebtAdmissibleChronology
 
 /-- Aggregate-calibrated specialization of the intrinsic finite-chain carry
 telescope.  Each cutoff is handled on its own selected minimizer, so no
@@ -547,6 +687,42 @@ theorem aggregateCalibratedAnchor_initialDebt_le_admissibleCapacity_of_far
         anchor.path anchor.path_mem hpunishment 0 :=
   QuittingFiniteDynamicDebtAdmissibleChronology.debt_zero_le_aggregateCapacityAccount_zero_of_far
       anchor.path anchor.path_mem hpunishment regime hfar
+
+/-- Aggregate-calibrated zero-cap specialization. -/
+theorem aggregateCalibratedAnchor_initialDebt_le_admissibleCapacity_of_terminalCap_eq_zero
+    (regime : QuittingCounterexampleRegime reward)
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (hpunishment : ∀ who, quittingPunishmentValue reward who ≤ 0)
+    (hterminalCap : ∀ who,
+      quittingPositiveSingletonDebtCap reward who = 0) :
+    QuittingFiniteDynamicDebtAdmissibleChronology.debt
+        (reward := reward) anchor.path 0 ≤
+      QuittingFiniteDynamicDebtAdmissibleChronology.aggregateCapacityAccount
+        anchor.path anchor.path_mem hpunishment 0 :=
+  debt_zero_le_aggregateCapacityAccount_zero_of_terminalCap_eq_zero
+      anchor.path anchor.path_mem hpunishment regime hterminalCap
+
+/-- Aggregate-calibrated incoming-path consumer. -/
+theorem aggregateCalibratedAnchor_initialDebt_le_admissibleCapacity_of_incomingPath
+    (regime : QuittingCounterexampleRegime reward)
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (hpunishment : ∀ who, quittingPunishmentValue reward who ≤ 0)
+    {sourceState : QuittingPunishmentFloorAdmissibleState reward}
+    (segment : (quittingPunishmentFloorAdmissibleChargedRelation reward).Path
+      sourceState
+      (quittingFiniteDynamicDebtAdmissibleState anchor.path anchor.path_mem
+        hpunishment (anchor.last + 1)))
+    (hpays :
+      QuittingFiniteDynamicDebtAdmissibleChronology.debt
+          (reward := reward) anchor.path (anchor.last + 1) ≤
+        (Fintype.card ι : ℝ) * quittingRewardBound reward *
+          segment.chargeSum) :
+    QuittingFiniteDynamicDebtAdmissibleChronology.debt
+        (reward := reward) anchor.path 0 ≤
+      QuittingFiniteDynamicDebtAdmissibleChronology.aggregateCapacityAccount
+        anchor.path anchor.path_mem hpunishment 0 :=
+  debt_zero_le_aggregateCapacityAccount_zero_of_incomingPath
+      anchor.path anchor.path_mem hpunishment regime segment hpays
 
 /-- A chronological reachable predecessor sequence equipped with literal
 exact dynamic-debt states over exactly the same Nash--Bellman points. -/

@@ -29,6 +29,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSurplus
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneAttachmentRepair
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneTangentReadout
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeReachableCarryTelescope
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeNonpositiveFloorTerminalCapRegression
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeQuantitative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodicWindows
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSearchConsequences
@@ -41,10 +42,12 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentMixing
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentProjectiveGauge
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentProjectiveGaugeDefect
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentProjectiveGaugeScalarClosure
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentRegularArcLift
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportTransversality
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerExactRoot
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerPacketEdge
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerPacketDichotomy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
@@ -168,6 +171,13 @@ normalized regression through the packet keeps every Bellman row and all
 retained mixing rows zero while the omitted row varies as `s*(Jv)_i`.
 Compatibility kills only the packet mass direction, not arbitrary zero-sum
 gauge variations, so no local recovery theorem follows from it.
+Nor does packet sign/energy force the missing scalar to cross zero.  For a
+three-owner support, a nonzero radial minor makes the omitted defect have a
+nonzero derivative and hence one fixed one-sided sign along any supplied
+reduced branch.  If the minor vanishes, the explicit outward direction kills
+all selected first-order rows and leaves an honest higher-order closure
+problem.  The finite alternative is transverse sign obstruction versus
+higher-order singularity, not an implicit first-order repair.
 For two declared active owners, Bellman elimination makes the reduced support
 Jacobian exactly `[[0,D₁₂],[D₂₁,0]]`, where
 `Dᵢⱼ=r_i({i,j})-r_i({i})`.  A signed directed pivot is regular precisely
@@ -189,6 +199,12 @@ small `t`, and a tight floor with positive tangent fails at every positive
 scale.  Strict outsider singleton slack also gives eventual outsider Nash
 signs through an exact finite polynomial regression.  Tight outsider rows
 and inactive continuation bounds remain independent finite gates.
+Consequently either every sufficiently small positive scale supplies a
+positive-charge exact edge, or some punishment boundary, inactive singleton
+row, or upper-box coordinate is tight.  At an active positive-tangent
+coordinate, equality with the punishment value blocks the ray at every
+positive scale; it does not realize the min--max infimum.  A tight inactive
+singleton row is exactly the finite outsider regression starting from zero.
 
 Independently of that selected-tail geometry, reward-table closure gives a
 robust finite-cycle restriction: a hypothetical counterexample has one
@@ -388,4 +404,14 @@ along each selected finite chain separately, so no nesting of minimizers
 across cutoffs is needed.  The remaining hypothesis is still the same-state
 terminal exact-debt cap being dominated by the terminal admissible capacity
 account.  Nonpositive punishment does not prove that comparison.
+The far datum is now explicit: terminal payoff is zero and terminal aggregate
+debt is `sum_i max(0,r_i({i}))`.  If this cap vanishes, the telescope closes.
+More generally, an admissible path ending at the terminal state reserves its
+charge in terminal remaining capacity and closes the estimate when the
+scaled incoming charge pays that cap.  The intrinsic reversed chain has the
+opposite orientation and spends, rather than funds, terminal capacity.  A
+two-player regression has nonpositive punishment values but positive
+terminal cap, so `punishment ≤ 0` alone cannot erase the boundary; it is not
+a counterexample-regime witness and does not falsify the full capacity
+inequality.
 -/

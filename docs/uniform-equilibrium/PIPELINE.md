@@ -2825,6 +2825,23 @@ provided the terminal exact-`D` debt is bounded by the capacity account at
 the same terminal state.  Hence cross-cutoff nesting is unnecessary on this
 branch.  The terminal same-state boundary comparison remains the one gate;
 nonpositive punishment alone does not imply it.
+
+That boundary is no longer abstract.  At the selected chain's terminal point
+the payoff is exactly zero and the aggregate exact debt is
+
+```text
+∑_i max(0, r_i({i})).
+```
+
+If this singleton cap vanishes, the intrinsic telescope closes immediately.
+More generally, a floor-admissible path ending at the terminal state reserves
+its charge in terminal remaining capacity; if the scaled incoming charge pays
+the displayed cap, the initial debt bound follows.  The selected chain's own
+reversed path has the wrong orientation: it starts at the terminal state and
+spends that capacity.  A finite two-player regression has nonpositive
+punishment values but one positive terminal cap, so `punishment≤0` does not
+imply the cap-zero branch.  The regression is not a counterexample regime and
+does not falsify the full same-state capacity inequality.
 `Never` after a positive internal cutoff retains
 an arbitrary behavioral word, and sure-joint/sure-solo caps introduce
 nonzero pure-exit boundary pairs.  Those remaining cap branches require a
@@ -2946,6 +2963,17 @@ does not kill arbitrary gauge variations.  Any successful reduced chart
 therefore needs an additional game-specific identity, while adding the defect
 back merely restores the full square system.
 
+The missing scalar also does not generically cross zero.  On the exact
+normalized regression it is `scale * pairJoinSlope`, so a nonzero slope has
+one fixed sign for every positive scale.  For three active owners, a nonzero
+radial minor forces any outward variation annihilating the retained rows to
+have nonzero omitted-row derivative; along any supplied differentiable
+reduced branch the defect therefore has a fixed one-sided sign and cannot be
+closed by the intermediate value theorem.  If the minor is zero, the explicit
+outward direction kills the selected rows to first order and leaves a genuine
+higher-order problem.  The exact alternative is transverse sign obstruction
+versus higher-order singular closure.
+
 The two-owner chart is completely classified at this linearized level.  After
 Bellman elimination its reduced matrix is
 
@@ -2996,6 +3024,16 @@ makes it negative eventually.  Tight outsider rows expose independent
 pair/higher coefficients, and inactive continuation floor/box bounds remain
 separate.  The packet ray now yields one exact edge precisely under those
 visible gates, still without a return.
+
+These gates form a finite dichotomy.  Either every sufficiently small
+positive scale gives a positive-charge exact Nash--Bellman edge, or at least
+one punishment boundary, inactive singleton row, or upper-box coordinate is
+tight.  Equality between an active positive-tangent boundary and its
+punishment value blocks the packet ray at every positive scale; it does not
+realize the min--max infimum, whose attainment is not known.  A tight inactive
+singleton row is exactly the finite outsider regression starting from zero,
+so its pair/higher coefficients are the next explicit data rather than a
+hidden continuity premise.
 
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges
