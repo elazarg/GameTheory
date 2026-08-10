@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
-import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryConditioning
+import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseChronology
 
 /-!
 # Punishment-floor viability after removing the phantom boundary
@@ -143,31 +143,6 @@ theorem quittingTailEventualAbsorption_mul_conditionedFloorDeficit_le
         (boundary who - floor who) := by
   rw [quittingTailEventualAbsorption_mul_conditionedFloorDeficit
     roots value boundary floor time who hpositive]
-  linarith
-
-omit [DecidableEq ι] in
-/-- Conditioning preserves a floor coordinate whenever the phantom boundary
-is tight at that coordinate. -/
-theorem floor_le_quittingTailConditionedValue_of_boundary_eq_floor
-    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
-    (boundary floor : Payoff ι) (time : ℕ) (who : ι)
-    (hpositive : 0 < quittingTailEventualAbsorption roots time)
-    (hfloor : floor who ≤ value time who)
-    (htight : boundary who = floor who) :
-    floor who ≤
-      quittingTailConditionedValue roots value boundary time who := by
-  have hidentity :=
-    quittingTailEventualAbsorption_mul_conditionedFloorDeficit
-      roots value boundary floor time who hpositive
-  rw [htight, sub_self, mul_zero] at hidentity
-  have hsurplus : 0 ≤ value time who - floor who := sub_nonneg.mpr hfloor
-  have hnonpos : quittingTailEventualAbsorption roots time *
-      (floor who -
-        quittingTailConditionedValue roots value boundary time who) ≤ 0 := by
-    linarith
-  have hdeficit : floor who -
-      quittingTailConditionedValue roots value boundary time who ≤ 0 := by
-    nlinarith
   linarith
 
 omit [DecidableEq ι] in
@@ -434,7 +409,7 @@ theorem punishmentValue_le_conditionedTailValue_of_limit_tight
     (quittingDynamicDebtTailRoots seam.tail)
     (fun date ↦ (seam.tail date).1.1) seam.limit.value
     (quittingPunishmentValue reward) time who hpositive
-    (seam.punishmentValue_le_tailValue time who) htight
+    htight (seam.punishmentValue_le_tailValue time who)
 
 /-- A conditioned punishment-floor violation forces strict plateau slack in
 the same coordinate. -/

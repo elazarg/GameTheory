@@ -2203,9 +2203,10 @@ regularity layer tracked separately. Nothing here gates the quitting lane.
 
 ### `MATH-P0-12` — raw-flow/co-state utilization of the counterexample seam
 
-- **Status:** IN PROGRESS; accounting, compact carriers, and exact strategic
-  consumers are compiled, while the state-matched realization theorem remains
-  open
+- **Status:** IN PROGRESS; accounting, compact carriers, exact strategic
+  consumers, and the singleton-tight deleted-complete diffuse compiler are
+  compiled; strict-slack reset, deleted-clock-deficient solo extraction, and
+  enlarged-support state matching remain open
 - **Lane:** P0 of the finite-quitting counterexample route
 - **Depends:** `CounterexampleRegimeTangentPacket`, normalized finite-window
   occupation and refusal reweighting, dynamic-debt conservation and phantom
@@ -2390,6 +2391,24 @@ owner's punishment value is no larger than the singleton payoff.  No positive
 lower bound on the hazards is required.  This is the intended consumer for a
 diffuse sole-owner conditioned branch.
 
+The complementary multi-owner diffuse consumer is now complete.  Rescale the
+source hazard of each player by the remaining eventual-absorption mass.  The
+result is a legal product-root chronology.  Its empty/singleton/collision law
+differs from the conditioned source law only at quadratic order in the
+normalized mesh, while exact source complementarity bounds each Continue
+error by the corresponding player-deleted absorption clock.  The joint-policy
+and deleted-refusal telescopes therefore produce an explicit asymptotic Nash
+profile whenever the boundary is coordinatewise singleton-tight, the mesh is
+uniformly small, and every conditioned player-deleted charge is nonsummable.
+The Nash and delivery errors are linear in the mesh bound and hence vanish on
+late diffuse suffixes.  No exact rowwise purification or extra occupation
+measure is assumed.  Consequently the deleted-complete diffuse branch of item
+5 is closed.  Failure of deleted completeness is now a precise separate
+producer problem: extract an asymptotic solo chronology to feed the preceding
+approximate punishment-cycle theorem.  Strict plateau slack remains the other
+conditioned boundary regime and still requires a support- or delivery-changing
+reset rather than affine shrinkage.
+
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.
 On proper singleton roots, a state-matched changing-owner Nash--Bellman cycle
@@ -2410,14 +2429,16 @@ phase.  A successful route must create new chronological phase weights or a
 floor-safe conditioned singleton flow.
 
 **Acceptance.** A game-facing state-matched realization theorem, not another
-separator: every non-all-Continue counterexample tail must either construct a
-floor-safe positive-mass finite return consumed by the collision-aware or
-singleton-APS compiler, construct a divergent singleton-flow chronology whose
-finite meshes give a uniform payoff, or enter a terminal/common-repair branch
-already compiled above.  The theorem may not assume common cap-splice
+separator.  After the diffuse compiler, every residual counterexample tail
+must either convert strict plateau slack into a floor-safe support or delivery
+reset, convert failure of a deleted clock into the asymptotic solo chronology
+consumed by approximate punishment completion, construct a positive-mass
+finite return consumed by the collision-aware or singleton-APS compiler, or
+solve the enlarged-support complementarity system forced by the eventual
+all-Continue plateau.  The theorem may not assume common cap-splice
 realization, replace product roots by correlated rows, or discard the surviving
-boundary.  The currently landed results sharply reduce this target but do not
-prove it.
+boundary.  The currently landed results close the singleton-tight
+deleted-complete diffuse stratum but do not prove this residual alternative.
 
 ## Literature import lane
 

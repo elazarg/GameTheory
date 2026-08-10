@@ -1532,9 +1532,17 @@ singleton-tight counterexample boundary, so the atomic sole-owner branch is
 excluded there; only vanishing conditioned hazards remain.  Multi-owner rows
 cannot generally be purified by exact rowwise product
 rescaling: with two positive marginals and positive Continue mass, their
-conditional coalition law determines scale one.  Thus the unresolved diffuse
-branch requires a deleted-clock approximation, rather than only joint-clock
-collision concentration or pointwise active-face pinning.
+conditional coalition law determines scale one.  Exact preservation is not
+needed in the diffuse limit.  Dividing hazards by the remaining
+eventual-absorption mass gives legal product roots whose coalition law differs
+from the conditioned source law quadratically in the normalized mesh.  Source
+complementarity retains a player-deleted absorption factor in every Continue
+error.  A joint-policy/deleted-refusal telescope therefore compiles the
+singleton-tight branch whenever every conditioned deleted clock is complete;
+both its Nash error and its delivery error are linear in the mesh bound and
+vanish on late diffuse suffixes.  No correlated row or additional occupation
+measure is used.  The remaining conditioned regimes are strict plateau slack
+and failure of deleted-clock completeness.
 
 Ordinary negative tangent has a complementary exact split.  It equals the
 conditioned delivery gap plus the surviving phantom mass times the conditioned
@@ -1575,7 +1583,9 @@ vanishing normalized error and convergent targets give the limiting uniform
 payoff.  In particular, positive solo hazards tending to zero, endpoint-Nash
 errors tending to zero, and continuation vectors converging to the singleton
 payoff suffice whenever the owner is punishment-rational.  No atomic lower
-bound on the solo hazard is required.
+bound on the solo hazard is required.  What remains in the latter lane is the
+producer: a deleted-clock-deficient diffuse tail must be shown to have the
+asymptotic solo chronology required by this compiler.
 
 A bounded rational
 four-player singleton table has a positive compact escape separation for every
@@ -1750,12 +1760,14 @@ search.
 \item \textbf{Consume the combined counterexample regime.}  Starting from the
 forced supported singleton packet and the summably absorbing positive-debt
 tail, use the exact eventual-absorption conditioning to prove a strategically
-legal alternative: a deleted-clock diffuse approximation, a floor-safe finite
-return, an absorbing singleton-owner exit, or a common terminal word.  Exact
-singleton conditioning, collision-aware and essential-APS return consumers,
-and common-word terminal consumers are already formalized.  The missing
-theorem must control playerwise refusal occupation and strict plateau slack;
-joint-clock compactness alone is insufficient.
+legal alternative: a floor-safe finite return, a strict-slack support reset,
+an asymptotic singleton-owner chronology, or a common terminal word.  Exact
+singleton conditioning, the deleted-complete diffuse approximation,
+collision-aware and essential-APS return consumers, approximate solo-cycle
+completion, and common-word terminal consumers are already formalized.  The
+missing theorem must turn failure of a deleted clock into the required solo
+chronology or consume strict plateau slack; joint-clock compactness alone is
+insufficient.
 \item \textbf{Build a path-consistent support atlas.}  The local residue is
 nonempty but has an exact omitted-cell absorber, so the next finite grammar
 must enlarge support instead of escalating automatically to long cycles.
