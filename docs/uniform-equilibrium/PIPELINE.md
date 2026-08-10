@@ -2291,6 +2291,22 @@ positive harmonic debt boundary.  The precise open input in item 3 is now
 this late boundary-mismatch comparison (or a different theorem consuming its
 strict growth), not an unspecified recurrence principle.
 
+Neither existing compactification supplies that comparison automatically.
+A formal scalar regression has exact finite survival-one recursion and zero
+debt at every moving terminal diagonal, while every fixed coordinate tends to
+the positive harmonic value one and every fixed source tends to zero.
+Two-ended exact-D compactification retains the reverse ray but has no bridge
+survival.  The metrizable marked decoder does retain the completed path, both
+anchors, and repair state on one subsequence; its state space does not retain
+the canonical prefix-capacity potential needed for the debt/capacity boundary
+comparison.  On the actual tail, the capacity account is antitone, its raw
+drops and absorption carry loss are summable, hence its killed dissipation is
+summable and tends to zero.  Consequently the one-step boundary-mismatch
+excess over initial mismatch tends to zero along the full tail.  This is the
+maximal unconditional conclusion currently available: asymptotic equality
+does not imply a finite zero or the nonexpansion used by the face-recurrence
+theorem.
+
 **Acceptance.** A game-facing utilization theorem, not another separator:
 every non-all-Continue counterexample tangent must either emit a positive raw
 seam priced by the compatible debt co-state and exhausted by a proved boundary

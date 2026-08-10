@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitLimit
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitSelfLoop
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBoundaryProvenanceAlternative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
@@ -204,6 +205,15 @@ recurrence follows if that mismatch is nonexpanding on positive-length
 windows at arbitrarily late starts, but the current regime supplies only the
 reverse weak inequality.  Thus the remaining premise is a concrete boundary
 comparison, not compactness or co-state selection.
+Projective provenance cannot silently provide that comparison: a moving zero
+terminal boundary may escape every fixed coordinate and leave a positive
+harmonic limit, even under exact finite killed recursions.  The two-ended
+compactification retains a reverse ray but no bridge survival, while the
+metrizable marked decoder jointly retains both anchors and repair state but
+does not carry the canonical capacity potential.  On the actual optimized
+tail the capacity account is antitone, its killed dissipations are summable,
+and the one-step boundary-mismatch excess tends to zero.  This gives
+asymptotic equality only; every finite excess may remain strictly positive.
 
 Periodic attachment has a second, exact normalization fence.  For an
 absorbing exact Nash--Bellman word, the finite-stop and refusal branches of
