@@ -343,5 +343,12 @@ diagonal seam.  Its scaled account is killed-excessive for aggregate debt,
 and finite telescoping reduces all carried terms to one survival-weighted
 far-end boundary comparison.  Neither reachability nor finite charge
 capacity supplies that comparison, and the calibrated minimizers have not
-yet been assembled into such a literal coherent reachable chronology.
+yet been assembled into such a literal coherent reachable chronology.  A
+literal reachable state must dominate the punishment floor coordinatewise,
+which the zero-boundary aggregate-minimizer API does not establish; any
+strict floor violation rules out the required identification.  At the other
+end, a finitely killed window closes the telescope outright.  Otherwise the
+only quantitative error is the exact survival-weighted far debt, so a
+cofinal construction must make that remainder vanish or compare same-state
+debt with remaining capacity.
 -/

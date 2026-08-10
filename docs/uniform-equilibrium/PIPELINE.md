@@ -2789,7 +2789,25 @@ Thus the carried terms are not independent local errors: they collapse to
 one terminal boundary.  What remains is to construct this coherent reachable
 chronology from the calibrated minimizers and to prove the far-boundary
 domination or vanishing.  Reachability and finite capacity alone prove
-neither.
+neither.  The constructor gate already has a simple necessary condition:
+every literal reachable state dominates the behavioral punishment floor
+coordinatewise.  The aggregate zero-boundary minimizer API does not prove
+this, and a strict floor violation at its initial point formally excludes
+the desired identification.  Nor are independently selected minimizers at
+successive cutoffs known to be related by a literal prepend.
+
+The terminal gate is now exact.  If a finite window has zero joint-survival
+weight, the telescope closes without an endpoint hypothesis.  In general,
+
+```text
+initialDebt ≤ initialCapacityAccount
+              + survivalWeight * farDebt.
+```
+
+Consequently a cofinal construction needs precisely the displayed remainder
+to tend to zero, or a same-state far inequality `debt≤capacityAccount`.
+Fixed-coordinate projective convergence does not retain this moving boundary
+or the capacity coordinate.
 `Never` after a positive internal cutoff retains
 an arbitrary behavioral word, and sure-joint/sure-solo caps introduce
 nonzero pure-exit boundary pairs.  Those remaining cap branches require a
