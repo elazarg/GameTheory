@@ -69,6 +69,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwn
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerApproxPunishment
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
+import UniformEquilibrium.Quitting.Boundary.Repair.SupportEnlargementAlternative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
 import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
@@ -512,7 +513,7 @@ is a stationary solo endpoint equilibrium; punishment completion enforces
 its singleton payoff, even when the owner's own payoff is negative.  Thus the
 remaining tight-singleton obstruction is genuinely diffuse.
 
-That diffuse stratum now has a complete clock alternative. Divide every
+That diffuse stratum has a complete clock alternative. Divide every
 source hazard by the remaining eventual-absorption mass.  The resulting
 product roots are legal, retain every nonsummable player-deleted clock, and
 approximate the conditioned coalition law quadratically in the normalized
@@ -533,7 +534,12 @@ is summable while that defect vanishes, direct conditioned solo extraction
 places the owner's singleton vector above every singleton floor and punishment
 completion compiles it. Hence a counterexample has a fixed positive rescaled
 Quit defect recurring arbitrarily far along the tail, independently of its
-deleted-clock classification.
+deleted-clock classification. At a fixed continuation this is a discontinuous
+reset obligation: support-local endpoint optimality with tolerance below the
+gap forces the obstructing player to Quit surely. Changing only that player's
+marginal cannot reduce the endpoint gap. A strategic repair must therefore
+move to the sure-Quit face or change the opponents or continuation enough to
+remove the gap.
 
 Negative ordinary tangent also has an exact conditioned interpretation.  It
 either remains a negative conditioned delivery gap, giving strict upward
@@ -558,7 +564,7 @@ that singleton target with positive owner hazard must place positive hazard
 on a second player.  This forces support enlargement without solving the
 enlarged root's simultaneous complementarity equations.
 
-The strategic consumers are now explicit.  Any supplied finite
+The strategic consumers are explicit.  Any supplied finite
 collision-aware product-root return satisfying exact Nash and punishment
 admissibility is a solved exact cycle.  On the proper singleton stratum, a
 state-matched Nash--Bellman cycle with changing owners is already an essential

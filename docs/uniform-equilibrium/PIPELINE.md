@@ -2442,7 +2442,7 @@ owner's punishment value is no larger than the singleton payoff.  No positive
 lower bound on the hazards is required.  This is the intended consumer for a
 diffuse sole-owner conditioned branch.
 
-The complementary multi-owner diffuse consumer is now complete.  Rescale the
+The complementary multi-owner diffuse consumer is complete.  Rescale the
 source hazard of each player by the remaining eventual-absorption mass.  The
 result is a legal product-root chronology.  Its empty/singleton/collision law
 differs from the conditioned source law only at quadratic order in the
@@ -2478,9 +2478,12 @@ and leaves immediate Quit as the spectator test. Direct conditioned solo
 extraction and the singleton-floor compiler handle the deficient-clock case
 whenever this defect vanishes. Consequently every diffuse counterexample has a
 fixed positive sum of rescaled pure-Quit regrets recurring arbitrarily far
-along the tail. Its unresolved condition is outsider support enlargement or a
-delivery reset; it is neither a deleted-clock nor a source-floor condition.
-Affine shrinkage cannot supply the reset.
+along the tail. At a fixed continuation, support-local endpoint optimality at
+any tolerance below that gap forces the outsider to Quit surely, and changing
+only its own marginal leaves the endpoint gap invariant. Thus the local
+obligation is a sure-Quit reset rather than a small support enlargement. Its
+unresolved condition is a floor-safe, full-vector, state-matched realization
+of that reset or a delivery reset. Affine shrinkage cannot supply either one.
 
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.
@@ -2509,10 +2512,10 @@ finite return consumed by the collision-aware or singleton-APS compiler, or
 solve the enlarged-support complementarity system forced by the eventual
 all-Continue plateau.  The theorem may not assume common cap-splice
 realization, replace product roots by correlated rows, or discard the surviving
-boundary. The currently landed results close the full singleton-tight diffuse
-stratum and prove that any diffuse counterexample has a strict plateau
+boundary. The full singleton-tight diffuse stratum is closed, and any diffuse
+counterexample has a strict plateau
 coordinate and a persistent positive outsider-Quit defect. They do not yet
-turn that defect into a state-matched enlarged-support edge or return.
+turn that defect into a state-matched sure-Quit reset or return.
 
 ## Literature import lane
 
