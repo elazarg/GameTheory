@@ -68,6 +68,30 @@ theorem heterogeneous_nash_transport
   isNash_reindexPlayers heterogeneousForm weaklyPrefers playerSwap
     heterogeneousProfile
 
+/-- CCE transport also survives unequal strategy carriers; the profile law is
+reindexed, not rebuilt from independent marginals. -/
+theorem heterogeneous_cce_transport
+    (weaklyPrefers : WeakPreference Bool Unit)
+    (statusQuo : FinDist (Profile heterogeneousSignature)) :
+    IsCoarseCorrelatedEq (heterogeneousForm.reindexPlayers playerSwap)
+        (Preference.reindexPlayers playerSwap weaklyPrefers)
+        (statusQuo.map (Profile.reindexPlayers playerSwap)) ↔
+      IsCoarseCorrelatedEq heterogeneousForm weaklyPrefers statusQuo :=
+  isCoarseCorrelatedEq_reindexPlayers heterogeneousForm weaklyPrefers
+    playerSwap statusQuo
+
+/-- Recommendation-reading deviations cross the same heterogeneous player
+swap in both directions. -/
+theorem heterogeneous_correlated_transport
+    (weaklyPrefers : WeakPreference Bool Unit)
+    (statusQuo : FinDist (Profile heterogeneousSignature)) :
+    IsCorrelatedEq (heterogeneousForm.reindexPlayers playerSwap)
+        (Preference.reindexPlayers playerSwap weaklyPrefers)
+        (statusQuo.map (Profile.reindexPlayers playerSwap)) ↔
+      IsCorrelatedEq heterogeneousForm weaklyPrefers statusQuo :=
+  isCorrelatedEq_reindexPlayers heterogeneousForm weaklyPrefers
+    playerSwap statusQuo
+
 abbrev boolSignature : GameSignature Bool where
   Strategy _ := Bool
   Outcome := Unit
@@ -83,6 +107,17 @@ theorem strategyFlip_false (player : Bool) :
     strategyFlip player false = true := by
   simp [strategyFlip]
 
+/-- Strategy relabeling also transports the constant-deviation CCE space. -/
+theorem flipped_coarseCorrelated_transport
+    (weaklyPrefers : WeakPreference Bool Unit)
+    (statusQuo : FinDist (Profile boolSignature)) :
+    IsCoarseCorrelatedEq (boolForm.relabelStrategies strategyFlip)
+        weaklyPrefers
+        (statusQuo.map (Profile.relabelStrategies strategyFlip)) ↔
+      IsCoarseCorrelatedEq boolForm weaklyPrefers statusQuo :=
+  isCoarseCorrelatedEq_relabelStrategies boolForm weaklyPrefers
+    strategyFlip statusQuo
+
 /-- CE transport conjugates the nonidentity response space in both directions. -/
 theorem flipped_correlated_transport
     (weaklyPrefers : WeakPreference Bool Unit)
@@ -93,5 +128,13 @@ theorem flipped_correlated_transport
       IsCorrelatedEq boolForm weaklyPrefers statusQuo :=
   isCorrelatedEq_relabelStrategies boolForm weaklyPrefers strategyFlip
     statusQuo
+
+/-- Independent mixed play commutes with flipping every sampled pure action. -/
+theorem flipped_mixed_lifting
+    (profile : Profile (boolSignature.relabelStrategies fun _ => Bool).mixed) :
+    (boolForm.relabelStrategies strategyFlip).mixed.play profile =
+      boolForm.mixed.play fun player =>
+        (profile player).map (strategyFlip player).symm :=
+  mixed_relabelStrategies_play boolForm strategyFlip profile
 
 end GameTheory.Tests.Transform

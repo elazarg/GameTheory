@@ -15,7 +15,7 @@ Status labels:
 
 | Gate | Status | Evidence | Remainder |
 |---|---|---|---|
-| Static core and deviation locality | complete | `GameTheory.Core`, locality and transformation tests | None for the common equilibrium waist. |
+| Static core and deviation locality | complete | `GameTheory.Core`; locality tests; full Nash/CCE/CE outcome, player, and strategy transformation squares; mixed-play commutation | None for the common equilibrium waist. |
 | Finite-support probability | complete | `GameTheory.Probability.FinDist`, probability tests | Infinite laws require a measurable layer. |
 | Analysis dependency boundary | complete | importable `GameTheory.Analysis` root, one-way imports, structural audits | Keep fixed-point/topology dependencies out of semantic roots. |
 | Execution and information | complete | `GameTheory.Protocol`, execution/information tests | No second runner or universal semantic hub. |

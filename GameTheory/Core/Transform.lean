@@ -2,11 +2,10 @@
 # Concrete game-form transformations
 
 The public transformation surface is intentionally concrete. Outcome
-relabeling has an explicit Nash/CCE/CE pullback square. Player
-reindexing and per-player strategy equivalence are invertible profile
-operations.  The current laws cover Nash for both, correlated equilibrium for
-strategy relabeling, and mixed-play commutation for player reindexing; the
-remaining product-law squares are not inferred.
+relabeling has an explicit Nash/CCE/CE pullback square. Player reindexing and
+per-player strategy equivalence are invertible profile operations. Nash, CCE,
+and CE commute with both equivalences, and the independent mixed extension
+commutes with both profile transformations at the actual play law.
 No generic morphism or certificate hierarchy is introduced.
 -/
 
@@ -86,6 +85,13 @@ def unreindexPlayers {ι : Type uι} {κ : Type uκ}
     {sig : GameSignature ι} (equiv : ι ≃ κ)
     (profile : Profile (sig.reindexPlayers equiv)) : Profile sig :=
   (Equiv.piCongrLeft' sig.Strategy equiv).symm profile
+
+@[simp]
+theorem reindexPlayers_apply {ι : Type uι} {κ : Type uκ}
+    {sig : GameSignature ι} (equiv : ι ≃ κ)
+    (profile : Profile sig) (player : κ) :
+    reindexPlayers equiv profile player = profile (equiv.symm player) :=
+  rfl
 
 @[simp]
 theorem unreindex_reindex {ι : Type uι} {κ : Type uκ}
@@ -180,6 +186,47 @@ theorem isNash_reindexPlayers {ι : Type uι} {κ : Type uκ}
     have hsource := h (equiv.symm who) sourceReplacement
     simpa [sourceReplacement, Preference.reindexPlayers] using hsource
 
+/-- Coarse correlated equilibrium is invariant under an invertible player
+reindexing. -/
+theorem isCoarseCorrelatedEq_reindexPlayers {ι : Type uι} {κ : Type uκ}
+    [DecidableEq ι] [DecidableEq κ]
+    (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
+    (equiv : ι ≃ κ) (statusQuo : FinDist (Profile F.sig)) :
+    IsCoarseCorrelatedEq (F.reindexPlayers equiv)
+        (Preference.reindexPlayers equiv weaklyPrefers)
+        (statusQuo.map (Profile.reindexPlayers equiv)) ↔
+      IsCoarseCorrelatedEq F weaklyPrefers statusQuo := by
+  rw [isCoarseCorrelatedEq_iff, isCoarseCorrelatedEq_iff]
+  constructor
+  · intro h who replacement
+    obtain ⟨target, rfl⟩ := equiv.symm.surjective who
+    have htarget := h target replacement
+    simpa [Preference.reindexPlayers, GameForm.outcomeLaw] using htarget
+  · intro h who replacement
+    have hsource := h (equiv.symm who) replacement
+    simpa [Preference.reindexPlayers, GameForm.outcomeLaw] using hsource
+
+/-- Correlated equilibrium is invariant under an invertible player
+reindexing; recommendation-dependent responses are transported with their
+owner coordinate. -/
+theorem isCorrelatedEq_reindexPlayers {ι : Type uι} {κ : Type uκ}
+    [DecidableEq ι] [DecidableEq κ]
+    (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
+    (equiv : ι ≃ κ) (statusQuo : FinDist (Profile F.sig)) :
+    IsCorrelatedEq (F.reindexPlayers equiv)
+        (Preference.reindexPlayers equiv weaklyPrefers)
+        (statusQuo.map (Profile.reindexPlayers equiv)) ↔
+      IsCorrelatedEq F weaklyPrefers statusQuo := by
+  rw [isCorrelatedEq_iff, isCorrelatedEq_iff]
+  constructor
+  · intro h who respond
+    obtain ⟨target, rfl⟩ := equiv.symm.surjective who
+    have htarget := h target respond
+    simpa [Preference.reindexPlayers, GameForm.outcomeLaw] using htarget
+  · intro h who respond
+    have hsource := h (equiv.symm who) respond
+    simpa [Preference.reindexPlayers, GameForm.outcomeLaw] using hsource
+
 /-! ## Strategy relabeling -/
 
 /-- Replace every strategy carrier, keeping players and outcomes fixed. -/
@@ -272,6 +319,26 @@ theorem isNash_relabelStrategies {ι : Type uι} [DecidableEq ι]
   · intro h who replacement
     simpa using h who ((equiv who).symm replacement)
 
+/-- Coarse correlated equilibrium is invariant under invertible strategy
+relabeling. -/
+theorem isCoarseCorrelatedEq_relabelStrategies
+    {ι : Type uι} [DecidableEq ι]
+    (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
+    {Strategy : ι → Type us'}
+    (equiv : ∀ player, F.sig.Strategy player ≃ Strategy player)
+    (statusQuo : FinDist (Profile F.sig)) :
+    IsCoarseCorrelatedEq (F.relabelStrategies equiv) weaklyPrefers
+        (statusQuo.map (Profile.relabelStrategies equiv)) ↔
+      IsCoarseCorrelatedEq F weaklyPrefers statusQuo := by
+  rw [isCoarseCorrelatedEq_iff, isCoarseCorrelatedEq_iff]
+  constructor
+  · intro h who replacement
+    have htarget := h who (equiv who replacement)
+    simpa [GameForm.outcomeLaw, Profile.relabelStrategies] using htarget
+  · intro h who replacement
+    have hsource := h who ((equiv who).symm replacement)
+    simpa [GameForm.outcomeLaw, Profile.relabelStrategies] using hsource
+
 /-- Correlated equilibrium is invariant under invertible strategy relabeling.
 The response map is conjugated by the coordinate equivalence, so every target
 deviation is reflected to a source deviation and conversely. -/
@@ -299,6 +366,24 @@ theorem isCorrelatedEq_relabelStrategies {ι : Type uι} [DecidableEq ι]
     have hsource := h who sourceRespond
     simpa [sourceRespond, GameForm.outcomeLaw,
       Profile.relabelStrategies] using hsource
+
+/-- Strategy relabeling commutes with the independent mixed extension at the
+actual play law. Each target-coordinate law is simply pushed back through the
+corresponding strategy equivalence. -/
+theorem mixed_relabelStrategies_play {ι : Type uι} [Fintype ι]
+    (F : GameForm ι) {Strategy : ι → Type us'}
+    (equiv : ∀ player, F.sig.Strategy player ≃ Strategy player)
+    (profile : Profile (F.sig.relabelStrategies Strategy).mixed) :
+    (F.relabelStrategies equiv).mixed.play profile =
+      F.mixed.play fun player =>
+        (profile player).map (equiv player).symm := by
+  show
+    (FinDist.pi profile).bind
+        (fun target => F.play (Profile.unrelabelStrategies equiv target)) =
+      (FinDist.pi fun player =>
+        (profile player).map (equiv player).symm).bind F.play
+  rw [FinDist.pi_map, FinDist.bind_map]
+  rfl
 
 set_option maxHeartbeats 800000 in
 /-- Player reindexing commutes with the independent mixed extension at the

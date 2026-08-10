@@ -124,7 +124,7 @@ The single-pass panel observations were re-derived separately before action:
 | F-02 | Strong-Nash prose used the no-all-strict-gain reading without totality. | closed | The definition is described through coalition preference; `isStrongNash_iff_not_all_gain` requests `Preference.Total` explicitly. |
 | F-03 | An implicit undeclared type variable could be auto-bound in `Mixed`. | closed | `autoImplicit` is disabled in the module and the variable is declared explicitly. |
 | F-04 | `Preference.comapOutcome` had no generic transformation consumer. | closed | `Core.Transform` proves generic Nash, CCE, and CE outcome-pullback squares; tests exercise the public theorem. |
-| F-05 | The transformation invariance square was incomplete. | queued | Outcome relabeling has Nash/CCE/CE; player/strategy equivalences have selected exact laws. Remaining CCE/CE reindexing and mixed/strategy commutation are explicit static-family breadth, not silently claimed. |
+| F-05 | The transformation invariance square was incomplete. | closed | `Core.Transform` now has Nash/CCE/CE laws for outcome pullback, player reindexing, and strategy relabeling, plus mixed-play commutation for both profile equivalences. `Tests.Transform` exercises unequal player strategy carriers and a nonidentity strategy flip. |
 | F-06 | Signature/Form headers contained stale exclusivity or design-process language. | closed | Headers describe current operations and semantics only. |
 | F-07 | A generic finite-law expectation bound lived in `Mixed`. | closed | `FinDist.expect_le_of_forall` owns it and all callers use the probability API. |
 | F-08 | Binary CE documentation claimed existence while proving uniqueness only. | closed | `fairProfile_isNash`, `fairProduct_isCorrelatedEq`, and `existsUnique_correlatedEq` now prove existence and uniqueness. |
@@ -225,11 +225,11 @@ The single-pass panel observations were re-derived separately before action:
 
 The queued rows are theorem breadth, not unresolved corrections:
 
-1. independent rationalizability and remaining transformation/correlation
-   characterizations;
-2. selected mathematical tuning/conditioning lemmas;
-3. MAID strategic-relevance/requisite analysis; and
-4. the mature-family extensions already enumerated in
+1. independent rationalizability and the reverse BCE information-structure
+   foundation theorem;
+2. MAID strategic-relevance/requisite analysis;
+3. the Groves namespace move and reachable-menu weakening; and
+4. the remaining mature-family extensions already enumerated in
    `PostArchitectureDeliveryPlan.md`.
 
 Their absence is represented as `partial` or as a named next seam in
