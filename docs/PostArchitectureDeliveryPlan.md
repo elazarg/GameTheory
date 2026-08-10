@@ -115,14 +115,19 @@ Separate packages:
 - **complete:** canonical counterfactual reach and continuation coefficients;
   actual reach remains `InformationModel.historyReachProbability`, the
   one-step coefficient is an exact continuation mass, and a two-step hostile
-  consumer checks recursive multiplication; and
-- **next:** a regret decomposition that consumes those coefficients, with CFR
-  convergence gated on that result.
+  consumer checks recursive multiplication;
+- **complete:** whole-policy and pure-action counterfactual regret, with an
+  exact scaled identity to canonical Bayes continuation deviation gain,
+  perfect-recall and weaker-certificate sign theorems, and exact profitable and
+  harmful controls; and
+- **next:** cumulative CFR updates and convergence consuming the action-local
+  decomposition.
 
 Do not merge these packages into the FOSG syntax root or hide serialization
 order behind choice. The coefficient package counts because its continuation
 law is canonical and its recursive factorization has hostile consumers. It is
-not CFR coverage until a regret theorem, and then a convergence result, use it.
+not CFR convergence coverage until a cumulative update theorem uses the
+action-local decomposition and controls average regret or exploitability.
 
 ### E. Intrinsic selected-solution strategic form — resolved
 

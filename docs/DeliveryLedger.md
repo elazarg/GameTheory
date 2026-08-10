@@ -53,7 +53,7 @@ Status labels:
 | Family | Status | Current evidence | Next seam |
 |---|---|---|---|
 | NFG | complete | direct static compilation and shared solution concepts | None for the current language surface. |
-| FOSG and bridges | supported | EFG structural projection, explicit-order serialization, whole-round boundary/terminal/continuation support, policy inversion, external history utility, behavioral Nash equivalence in both player orders, and canonical focal/counterfactual history-reach factorization | Regret decomposition consuming counterfactual coefficients, then CFR convergence. |
+| FOSG and bridges | supported | EFG structural projection, explicit-order serialization, whole-round boundary/terminal/continuation support, policy inversion, external history utility, behavioral Nash equivalence in both player orders, canonical focal/counterfactual history-reach factorization, and whole-policy/pure-action regret decompositions with canonical deviation-gain sign equivalence | Cumulative CFR update and convergence with an average-regret or exploitability consumer. |
 | MAID | supported | typed acyclic execution; multi-owner Nash transfer; source-owner observation pruning with exact native/compiled laws and a live removed-input control | Graphical strategic-relevance/requisite criterion, then refinement, recall, and Kuhn extensions. |
 | Multi-round | supported | perfect recall, coarse monitoring, Protocol/FOSG compiler and value consumer | Absent-minded values and stagewise-Nash conveniences. |
 | Intrinsic | supported | native closed-loop semantics, selected solution, fixed-nature pure strategic compilation, and canonical Nash with downstream re-solving | Nature lotteries, temporal compilation, and behavioral/mixed strategy are separate gates. |

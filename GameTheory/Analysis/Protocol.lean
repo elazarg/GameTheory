@@ -9,6 +9,7 @@ back into Protocol.
 import GameTheory.Analysis.Protocol.Sequential
 import GameTheory.Analysis.Protocol.EFG
 import GameTheory.Analysis.Protocol.CounterfactualReach
+import GameTheory.Analysis.Protocol.CounterfactualRegret
 
 namespace GameTheory.Analysis.Protocol
 

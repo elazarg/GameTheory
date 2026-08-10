@@ -1011,8 +1011,17 @@ package rather than a FOSG syntax feature. The existing canonical
 counterfactual products factor it on every indexed trace, and the one-step
 coefficient is the exact mass of the corresponding canonical continuation.
 Simultaneous focal/opponent controls and a genuine two-step consumer prevent
-vacuous or last-step-only coverage. Regret decomposition and CFR convergence
-remain later gates.
+vacuous or last-step-only coverage.
+
+EXP-082/D45 adds the next theorem-only layer over the same owners. A
+counterfactual continuation value uses canonical history fibers, reach, and
+the behavioral continuation runner. Whole-policy regret and its pure-action
+`BehavioralPolicy.commit` specialization satisfy an exact scaled identity
+with ordinary canonical Bayes continuation deviation gain. Perfect recall
+discharges the common-own-reach premise through the existing `ownPlay` record;
+the named weaker certificate remains available at selected sites. Exact
+positive and negative action controls prevent definition-only credit. This is
+a regret decomposition, not a cumulative CFR algorithm or convergence result.
 
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic

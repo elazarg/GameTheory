@@ -92,6 +92,7 @@ becomes difficult to scan.
 | EXP-079 | 2026-08-10 | D4/D5/D31 / intrinsic strategic form | Can selected closed-loop solutions compile directly to canonical pure Nash while preserving downstream effects of one owned-rule deviation? | Supports; decides D43 | [`decisions/D43-intrinsic-selected-solution-strategic-form.md`](decisions/D43-intrinsic-selected-solution-strategic-form.md); `GameTheory/Experimental/PostArchitecture/IntrinsicStrategic.lean` |
 | EXP-080 | 2026-08-10 | D40 / independent rationalizability | Can canonical mixed profiles express product beliefs and exhibit the strict three-player separation from correlated rationalizability? | Supports; completes D40 product-belief package | [`decisions/D40-mixed-pure-rationalizability.md`](decisions/D40-mixed-pure-rationalizability.md); `GameTheory/Core/Rationalizability.lean`; `GameTheory/Tests/Rationalizability.lean` |
 | EXP-081 | 2026-08-10 | D44 / canonical counterfactual reach | Can counterfactual reach and continuation coefficients be derived from canonical finite history laws without restoring a native FOSG runner? | Complete; supports | `Analysis/Protocol/CounterfactualReach.lean`; `Analysis/Protocol/CounterfactualReachTest.lean` |
+| EXP-082 | 2026-08-10 | D45 / counterfactual regret decomposition | Can canonical counterfactual reach support a theorem-level deviation-gain decomposition without a parallel payoff, deviation, or CFR semantics? | Complete; supports | [`decisions/D45-canonical-counterfactual-regret.md`](decisions/D45-canonical-counterfactual-regret.md); `Analysis/Protocol/CounterfactualRegret{,Test}.lean` |
 
 ## Entry template
 
@@ -5072,3 +5073,53 @@ memory.
   reach plus theorem-only focal/counterfactual factors. The coefficient package
   is delivered; it does not count as CFR. Next add a regret decomposition that
   consumes these coefficients, and only then gate a CFR convergence theorem.
+
+### EXP-082: counterfactual regret decomposition
+
+- **Date / revision:** 2026-08-10, reserved after `c8dff38`
+- **Status:** complete; supports D45
+- **Decision / question:** D45; whether canonical counterfactual reach can
+  support a useful deviation-gain/regret decomposition over finite Protocol
+  continuations without defining a second utility, deviation, history, or
+  equilibrium semantics.
+- **Prediction:** a counterfactual continuation value should weight each
+  canonical history in an information fiber by
+  `counterfactualReachProbability`, evaluate the existing
+  `runBehavioralFrom` continuation after an information-local commitment, and
+  expose a theorem relating local regret to an ordinary behavioral-policy
+  deviation gain. A mere definition or self-average identity is insufficient.
+- **Representative slice:** nature selects one of two hidden histories in a
+  shared decision information site. Matching hidden `true` pays two and
+  matching `false` pays one, so pure `true` has exact regret `1/4` and pure
+  `false` has exact regret `-1/4` against the fully mixed policy.
+- **Competing designs:** counterfactual values over canonical histories and
+  external payoff; reuse only the existing assessment continuation context;
+  compile to the canonical behavioral `GameForm` and decompose its deviation
+  gain; or restore native FOSG/CFR value and regret structures.
+- **Kill conditions:** the theorem does not consume
+  `counterfactualReachProbability`; normalized assessment beliefs erase the
+  reach factor; repeated information states are silently treated as perfect
+  recall; local terms do not control an ordinary canonical deviation gain; or
+  the spike needs a second runner, payoff/equilibrium predicate, raw update,
+  stored global finiteness, public transport, or an unconsumed regret family.
+- **Artifacts / observations:** `counterfactualContinuationValue` weights the
+  existing history fiber by D44 reach and evaluates the canonical behavioral
+  continuation runner. `informationMass_mul_bayesGain_eq_ownReach_mul_counterfactualRegret`
+  is the exact deviation-gain identity; the sign theorem consumes it.
+  `counterfactualActionRegret` specializes through the existing
+  transport-free pure commitment. Focal reach is proved equal to the
+  probability of `ownPlay`, so perfect recall supplies the named
+  `CommonPlayerReachAt` certificate; positive information mass makes its
+  factor positive. The hostile fixture also consumes that weaker certificate
+  directly without claiming recall.
+- **Validation:** narrow source/consumer build completed 1,775 jobs and the
+  stable Protocol-analysis aggregate completed 1,776 jobs warning-free. Fast
+  Phase 2 and Phase 3 expected audits both report `VERIFIED=1`; the full build
+  completed 3,585 jobs warning-free. The promoted source and consumer contain
+  no placeholders, custom axioms, raw updates, stored `Fintype.ofFinite`,
+  `open Classical`, transport tokens, or lines over 100. Deep reachability mode
+  was deliberately not run.
+- **Outcome / next action:** supports. Adopt D45 and promote the generic and
+  action-local decompositions. This does not count as cumulative CFR or a
+  convergence result. Next require a repeated update trace, an actual
+  average-regret/exploitability theorem, and a discriminating failure control.
