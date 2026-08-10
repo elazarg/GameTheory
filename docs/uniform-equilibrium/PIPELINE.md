@@ -2678,9 +2678,16 @@ For the active-positive branch, provenance at singleton level is now closed:
 once all tangent coordinates are nonnegative, the tail-derived tangent packet
 itself is a normalized singleton-source packet, its weighted surplus is
 `sum_i mass_i*tangent_i`, and a supported positive reciprocal-synergy pair
-follows.  The remaining pivot is genuinely higher order: construct one exact
-product root and continuation satisfying the support equalities, off-support
-inequalities, punishment floor, and the actual collision/Möbius terms.
+follows.  The continuation half of the higher-order pivot is now exact.  Once
+a product root and its intended interior support are supplied, one finite
+homogeneous affine system contains the Bellman equations, support equalities,
+off-support inequalities, punishment floor, payoff box, and actual
+collision/Möbius terms.  Its feasible branch decodes an exact Nash--Bellman
+edge; its infeasible branch returns explicit Farkas multipliers for that root.
+The unresolved pivot is selecting simultaneous quit probabilities.  Those
+rates enter coalition masses and Möbius derivatives multiaffinely, so the
+pointwise certificates do not form one global linear certificate and positive
+reciprocal singleton synergy does not yet force a feasible root.
 
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges

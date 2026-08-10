@@ -31,6 +31,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSmallPlayers
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTailBridge
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacket
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
 import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
@@ -91,9 +92,14 @@ On the active-positive branch, after excluding every negative tangent
 coordinate, the same tail-derived packet is canonically a normalized
 singleton-source packet.  Its weighted surplus is its mass-weighted tangent,
 so it contains a distinct supported pair with positive reciprocal singleton
-effect.  This is the complete singleton-level handoff; actual collision
-rewards, continuation values, and pair/higher Möbius coefficients still block
-the product-root support lift.
+effect.  For any supplied product root and intended interior support, the
+remaining collision-aware continuation lift is now one explicit finite affine
+system: its physical branch decodes an exact Nash--Bellman edge, and its dual
+branch supplies Farkas multipliers certifying that this root has no lift.
+Actual collision and higher Möbius terms are retained in the rows.  Choosing
+the simultaneous quit probabilities remains a genuinely multiaffine search;
+the singleton-level handoff does not itself produce that root or contradict
+all of its pointwise certificates.
 
 Independently of that selected-tail geometry, reward-table closure gives a
 robust finite-cycle restriction: a hypothetical counterexample has one
