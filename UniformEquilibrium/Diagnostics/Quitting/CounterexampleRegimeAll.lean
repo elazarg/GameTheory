@@ -31,6 +31,11 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneTang
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeReachableCarryTelescope
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeNonpositiveFloorTerminalCapRegression
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTerminalIncomingPathAlternative
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapacityNearMaximizerRebase
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeStatePreservingChronologyCapacity
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTerminalFundingFarkasDecoder
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTerminalFundingSupportNecessity
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTerminalFundingSupportEnlargement
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeQuantitative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodicWindows
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSearchConsequences
@@ -433,12 +438,26 @@ two-player regression has nonpositive punishment values but positive
 terminal cap, so `punishment ≤ 0` alone cannot erase the boundary; it is not
 a counterexample-regime witness and does not falsify the full capacity
 inequality.
-The terminal funding search is now finite.  The admissible capacity potential
-depends only on payoff, not on the stored root.  Whenever
-`0 < terminalDebt < |I|*M`, a canonical one-owner hazard has exactly enough
-absorption to fund the cap; frozen-root feasibility yields either a literal
-incoming admissible edge and the carry conclusion, or explicit finite Farkas
-multipliers for that root.  At saturation, every singleton cap equals `M`
-and the obvious pure-singleton zero-target predecessor is Bellman-infeasible.
-More complicated full-absorption roots remain the saturated residual.
+The terminal cap is at most the reward bound `M`, rather than merely
+`|I|*M`.  In a counterexample regime it is positive, and the player-cardinality
+restriction therefore makes it strictly smaller than `|I|*M`; the former
+saturation branch cannot occur.  Nevertheless the canonical one-owner funding
+root never supplies the desired incoming edge: its selected owner has positive
+singleton reward, so the exact zero-target Bellman row gives a finite Farkas
+obstruction.  Any physical funding root must enlarge support, and every such
+root must place positive conditional mass on a simultaneous-quitting coalition
+that pays the positive-singleton owner strictly negatively.  A compatible
+two-owner tangent packet with vanishing pair-join rows still cannot provide
+this zero-target lift on exactly its two-owner support.
+
+Capacity can also be optimized without discarding chronology: among literal
+zero-boundary exact-`D` chains, a near-maximal chain has an actual state-matched
+predecessor edge of arbitrarily small absorption while retaining positive
+aggregate debt.  Payoff drift, debt loss, and normalized owner hazards are all
+uniformly bounded on charge scale.  This is the correct compact control datum,
+but not yet a viability theorem.  At zero absorption an exact dynamic-debt edge
+fixes payoff and debt while leaving the successor stored root arbitrary; two
+successive zero-charge limits therefore collapse to the known positive-debt
+all-Continue phantom plateau.  No current equation controls root velocity or
+turns this compactified edge into a strategic return.
 -/

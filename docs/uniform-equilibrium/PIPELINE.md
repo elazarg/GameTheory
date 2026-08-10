@@ -2843,24 +2843,40 @@ punishment values but one positive terminal cap, so `punishment≤0` does not
 imply the cap-zero branch.  The regression is not a counterexample regime and
 does not falsify the full same-state capacity inequality.
 
-The incoming-path search is now reduced to a finite alternative.  The global
-floor-admissible potential is invariant under changing only the stored root,
-so an incoming edge to any zero-payoff root reserves capacity for the
-selected terminal state.  If
+The incoming-path search has a finite local decoder, but its canonical root is
+now known to be obstructed.  The global floor-admissible potential is invariant
+under changing only the stored root, so an incoming edge to any zero-payoff
+root reserves capacity for the selected terminal state.  Moreover
 
 ```text
 0 < terminalDebt < |I| * M,
 ```
 
-the canonical one-owner hazard
-`p=terminalDebt/(|I|*M)` has exactly the funding charge and is interior on its
-support.  The frozen-root affine solver then returns either a genuine
-floor-admissible incoming edge, which closes the carry telescope, or explicit
-Farkas infeasibility multipliers for that root.  If terminal debt saturates
-`|I|*M`, every singleton cap equals `M`; the obvious hazard-one
-pure-singleton zero-target predecessor is Bellman-infeasible.  The saturated
-residual is therefore a nonlinear search over more complicated
-full-absorption product roots, not an unquantified boundary issue.
+the aggregate singleton cap is at most `M`.  In a counterexample it is positive
+and, because there are at least four players, automatically satisfies the
+displayed strict inequality.  Thus the former saturated branch is absent.
+The canonical one-owner hazard
+`p=terminalDebt/(|I|*M)` still cannot be the incoming edge: its chosen owner
+has positive singleton reward, and the exact zero-target Bellman equation
+forces the corresponding Farkas obstruction.  This is a structural diagnosis,
+not a failed numerical choice.  Any physical zero-target funding root must
+enlarge support and put positive conditional probability on a
+simultaneous-quitting coalition giving that owner a strictly negative payoff.
+A compatible two-owner tangent packet with zero pair-join rows cannot realize
+the lift on exactly its two-owner support.  The residual is therefore a
+collision-aware support-enlargement search.
+
+There is also a state-preserving capacity formulation.  Supremizing charge
+over literal zero-boundary exact-`D` chronologies produces near-maximal chains
+whose actual initial states admit state-matched predecessor edges of
+arbitrarily small absorption while the aggregate debt remains at least the
+terminal gap.  Along those edges, payoff drift, debt loss, and the normalized
+owner hazards are uniformly bounded on charge scale.  This retains the datum
+lost by arbitrary rebasing.  It still does not give a Nagumo continuation:
+at the zero-absorption all-Continue stratum, payoff and debt are fixed while
+the successor stored root is unconstrained.  Hence two successive small-edge
+limits can collapse to the positive-debt phantom plateau without controlling
+root velocity or producing a finite return.
 `Never` after a positive internal cutoff retains
 an arbitrary behavioral word, and sure-joint/sure-solo caps introduce
 nonzero pure-exit boundary pairs.  Those remaining cap branches require a

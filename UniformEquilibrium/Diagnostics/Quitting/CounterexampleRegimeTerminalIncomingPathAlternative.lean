@@ -5,6 +5,8 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeReachableCarryTelescope
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceDynamicAlternative
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSmallPlayers
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Quitting.Boundary.Repair.SureSetOwnerRepair
 
@@ -33,7 +35,9 @@ namespace GameTheory
 
 open Finset
 open Math.ChargedPathBudget
+open Math.LinearProgramming.FlowCostateDuality
 open Math.ProbabilityMassFunction
+open QuittingFiniteDynamicDebtAdmissibleChronology
 open QuittingSureSetOwnerRepair
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
@@ -116,6 +120,47 @@ theorem quittingRootAbsorptionMass_sureSetOwnerRoot_empty
   rw [stationaryContinueMass_sureSetOwnerRoot_empty]
   ring
 
+omit [DecidableEq ι] in
+/-- The aggregate positive-singleton terminal debt uses only diagonal
+coordinates of singleton reward rows, so it is bounded by the canonical
+sum-of-all-absolute-rewards bound itself, without a player-cardinality
+factor. -/
+theorem sum_positiveSingletonDebtCap_le_quittingRewardBound :
+    (∑ who, quittingPositiveSingletonDebtCap reward who) ≤
+      quittingRewardBound reward := by
+  classical
+  let row : {S : Finset ι // S.Nonempty} → ℝ :=
+    fun terminal ↦ ∑ who, |reward terminal who|
+  have hinjective : Function.Injective
+      (quittingSingletonTerminal : ι → {S : Finset ι // S.Nonempty}) := by
+    intro first second heq
+    have hval : ({first} : Finset ι) = {second} :=
+      congrArg Subtype.val heq
+    simpa using hval
+  have hdiagonal : (∑ who, quittingPositiveSingletonDebtCap reward who) ≤
+      ∑ who, row (quittingSingletonTerminal who) := by
+    apply Finset.sum_le_sum
+    intro who _
+    calc
+      quittingPositiveSingletonDebtCap reward who ≤
+          |reward (quittingSingletonTerminal who) who| := by
+        unfold quittingPositiveSingletonDebtCap
+        exact max_le (abs_nonneg _) (le_abs_self _)
+      _ ≤ row (quittingSingletonTerminal who) := by
+        exact Finset.single_le_sum
+          (fun player _ ↦ abs_nonneg (reward (quittingSingletonTerminal who) player))
+          (Finset.mem_univ who)
+  have hrows : (∑ who, row (quittingSingletonTerminal who)) ≤
+      ∑ terminal, row terminal := by
+    rw [← Finset.sum_image (s := (Finset.univ : Finset ι))
+      (f := row) hinjective.injOn]
+    exact Finset.sum_le_sum_of_subset_of_nonneg
+      (Finset.subset_univ _)
+      (fun terminal _ _ ↦ Finset.sum_nonneg
+        (fun who _ ↦ abs_nonneg (reward terminal who)))
+  exact hdiagonal.trans (by
+    simpa [quittingRewardBound, row] using hrows)
+
 /-- A pure singleton quitter cannot have zero Bellman target when its own
 positive singleton debt cap is nonzero.  This is the exact one-stage
 obstruction at the hazard-one boundary; it is independent of Nash signs. -/
@@ -195,10 +240,10 @@ variable (hpath : path ∈
 variable (hpunishment : ∀ who, quittingPunishmentValue reward who ≤ 0)
 
 /-- A physical frozen-root lift whose one-stage absorption charge pays the
-terminal singleton debt closes the remaining far-boundary gate.  The edge
-lands at a zero-payoff state carrying the supplied root; potential invariance
-transfers its reserved capacity to the selected terminal root. -/
-theorem debt_zero_le_aggregateCapacityAccount_zero_of_frozenRootLift
+terminal singleton debt proves the exact terminal boundary comparison.  The
+edge lands at a zero-payoff state carrying the supplied root; potential
+invariance transfers its reserved capacity to the selected terminal root. -/
+theorem terminal_debt_le_aggregateCapacityAccount_of_frozenRootLift
     (regime : QuittingCounterexampleRegime reward)
     (root : ι → PMF Bool) (support : Finset ι)
     (hsupport : IsQuittingRootInteriorOnSupport root support)
@@ -210,8 +255,8 @@ theorem debt_zero_le_aggregateCapacityAccount_zero_of_frozenRootLift
     (hpays : debt (reward := reward) path cutoff ≤
       (Fintype.card ι : ℝ) * quittingRewardBound reward *
         quittingRootAbsorptionMass root) :
-    debt (reward := reward) path 0 ≤
-      aggregateCapacityAccount path hpath hpunishment 0 := by
+    debt (reward := reward) path cutoff ≤
+      aggregateCapacityAccount path hpath hpunishment cutoff := by
   let sourceState := quittingFrozenRootContinuationAdmissibleState
     (reward := reward) 0 root support continuation hlift tailRoot
   let zeroState := quittingZeroPayoffAdmissibleState
@@ -241,8 +286,6 @@ theorem debt_zero_le_aggregateCapacityAccount_zero_of_frozenRootLift
       (quittingRootOfSimplex (quittingFrozenRootLiftSimplex root)) =
         quittingRootAbsorptionMass root
     rw [quittingRootOfSimplex_frozenRootLiftSimplex]
-  apply debt_zero_le_aggregateCapacityAccount_zero_of_far
-    path hpath hpunishment regime
   have hscale : 0 ≤ (Fintype.card ι : ℝ) * quittingRewardBound reward :=
     mul_nonneg (Nat.cast_nonneg _) (quittingRewardBound_nonneg reward)
   calc
@@ -258,6 +301,294 @@ theorem debt_zero_le_aggregateCapacityAccount_zero_of_frozenRootLift
       rw [← hpotential]
       linarith
     _ = aggregateCapacityAccount path hpath hpunishment cutoff := rfl
+
+/-- The terminal comparison from a physical frozen-root lift closes the
+entire intrinsic carry telescope. -/
+theorem debt_zero_le_aggregateCapacityAccount_zero_of_frozenRootLift
+    (regime : QuittingCounterexampleRegime reward)
+    (root : ι → PMF Bool) (support : Finset ι)
+    (hsupport : IsQuittingRootInteriorOnSupport root support)
+    (continuation : Payoff ι)
+    (hlift : IsQuittingFrozenRootContinuationLift reward 0
+      (quittingPunishmentValue reward) (quittingRewardBound reward)
+      root support continuation)
+    (tailRoot : QuittingRootSimplex ι)
+    (hpays : debt (reward := reward) path cutoff ≤
+      (Fintype.card ι : ℝ) * quittingRewardBound reward *
+        quittingRootAbsorptionMass root) :
+    debt (reward := reward) path 0 ≤
+      aggregateCapacityAccount path hpath hpunishment 0 := by
+  apply debt_zero_le_aggregateCapacityAccount_zero_of_far
+    path hpath hpunishment regime
+  exact terminal_debt_le_aggregateCapacityAccount_of_frozenRootLift
+    path hpath hpunishment regime root support hsupport continuation hlift
+      tailRoot hpays
+
+include hpath in
+/-- Aggregate diagonal debt source is nonnegative at every displayed point. -/
+theorem source_nonneg (time : ℕ) :
+    0 ≤ source (reward := reward) path time := by
+  unfold source
+  exact Finset.sum_nonneg (fun who _ ↦
+    quittingDynamicDebtSeam_nonneg
+      (quittingFiniteNashBellmanPathDynamicDebtPoint
+        reward cutoff path time)
+      (quittingFiniteNashBellmanPathDynamicDebtPoint_mem_box
+        reward cutoff path hpath time) who)
+
+include hpath in
+/-- Aggregate exact debt is nonnegative at every displayed point. -/
+theorem debt_nonneg (time : ℕ) :
+    0 ≤ debt (reward := reward) path time := by
+  unfold debt
+  exact Finset.sum_nonneg (fun who _ ↦
+    (quittingFiniteNashBellmanPathDynamicDebtPoint_mem_box
+      reward cutoff path hpath time).2.1 who)
+
+/-- A terminal capacity comparison propagates to every earlier point of the
+same intrinsic finite chronology. -/
+theorem debt_le_aggregateCapacityAccount_of_far_at
+    (regime : QuittingCounterexampleRegime reward)
+    (hfar : debt (reward := reward) path cutoff ≤
+      aggregateCapacityAccount path hpath hpunishment cutoff) :
+    ∀ time, time ≤ cutoff →
+      debt (reward := reward) path time ≤
+        aggregateCapacityAccount path hpath hpunishment time := by
+  intro time htime
+  exact Nat.decreasingInduction (n := cutoff) (motive := fun time _ ↦
+      debt (reward := reward) path time ≤
+        aggregateCapacityAccount path hpath hpunishment time)
+    (fun liveTime hlive ih ↦ by
+      have hdebt := debt_step path hpath liveTime hlive
+      have haccount := source_add_aggregateCapacityAccount_succ_le
+        path hpath hpunishment regime liveTime hlive
+      have hsurvival : survival (reward := reward) path liveTime ≤ 1 :=
+        quittingStationaryContinueMass_le_one _
+      have haccountNext : 0 ≤
+          aggregateCapacityAccount path hpath hpunishment (liveTime + 1) :=
+        aggregateCapacityAccount_nonneg
+          path hpath hpunishment regime (liveTime + 1)
+      calc
+        debt (reward := reward) path liveTime =
+            source (reward := reward) path liveTime +
+              survival (reward := reward) path liveTime *
+                debt (reward := reward) path (liveTime + 1) := hdebt
+        _ ≤ source (reward := reward) path liveTime +
+              survival (reward := reward) path liveTime *
+                aggregateCapacityAccount path hpath hpunishment
+                  (liveTime + 1) := by
+            gcongr
+            exact survival_nonneg path liveTime
+        _ ≤ source (reward := reward) path liveTime +
+              aggregateCapacityAccount path hpath hpunishment
+                (liveTime + 1) := by
+            gcongr
+            exact mul_le_of_le_one_left haccountNext hsurvival
+        _ ≤ aggregateCapacityAccount path hpath hpunishment liveTime :=
+          haccount)
+    hfar htime
+
+/-- A physical frozen-root terminal lift dominates aggregate debt by the
+capacity account at every point, not only at the initial point. -/
+theorem debt_le_aggregateCapacityAccount_of_frozenRootLift_at
+    (regime : QuittingCounterexampleRegime reward)
+    (root : ι → PMF Bool) (support : Finset ι)
+    (hsupport : IsQuittingRootInteriorOnSupport root support)
+    (continuation : Payoff ι)
+    (hlift : IsQuittingFrozenRootContinuationLift reward 0
+      (quittingPunishmentValue reward) (quittingRewardBound reward)
+      root support continuation)
+    (tailRoot : QuittingRootSimplex ι)
+    (hpays : debt (reward := reward) path cutoff ≤
+      (Fintype.card ι : ℝ) * quittingRewardBound reward *
+        quittingRootAbsorptionMass root) :
+    ∀ time, time ≤ cutoff →
+      debt (reward := reward) path time ≤
+        aggregateCapacityAccount path hpath hpunishment time := by
+  apply debt_le_aggregateCapacityAccount_of_far_at
+    path hpath hpunishment regime
+  exact terminal_debt_le_aggregateCapacityAccount_of_frozenRootLift
+    path hpath hpunishment regime root support hsupport continuation hlift
+      tailRoot hpays
+
+/-- **Tight initial capacity forces immediate zero-source entry.**  Once a
+physical incoming lift has paid the positive terminal boundary, the carry
+comparison holds at every date.  If the initial capacity account is no
+larger than exact initial debt, the two are equal.  Exact debt recursion and
+the stronger additive capacity recursion then force aggregate debt source
+zero at date zero, or (when the next debt itself is zero) at date one.
+
+This is the sharp extra comparison needed to turn boundary funding into a
+literal exposed-face edge.  The landed minimizer APIs provide the opposite
+inequality but do not currently prove this reverse inequality. -/
+theorem source_zero_or_succ_zero_of_frozenRootLift_and_initial_tight
+    (regime : QuittingCounterexampleRegime reward)
+    (hcutoff : 0 < cutoff)
+    (hterminal : 0 < debt (reward := reward) path cutoff)
+    (root : ι → PMF Bool) (support : Finset ι)
+    (hsupport : IsQuittingRootInteriorOnSupport root support)
+    (continuation : Payoff ι)
+    (hlift : IsQuittingFrozenRootContinuationLift reward 0
+      (quittingPunishmentValue reward) (quittingRewardBound reward)
+      root support continuation)
+    (tailRoot : QuittingRootSimplex ι)
+    (hpays : debt (reward := reward) path cutoff ≤
+      (Fintype.card ι : ℝ) * quittingRewardBound reward *
+        quittingRootAbsorptionMass root)
+    (htight : aggregateCapacityAccount path hpath hpunishment 0 ≤
+      debt (reward := reward) path 0) :
+    source (reward := reward) path 0 = 0 ∨
+      (1 < cutoff ∧ source (reward := reward) path 1 = 0) := by
+  have hdom := debt_le_aggregateCapacityAccount_of_frozenRootLift_at
+    path hpath hpunishment regime root support hsupport continuation hlift
+      tailRoot hpays
+  have hdom0 := hdom 0 (Nat.zero_le cutoff)
+  have heq0 : debt (reward := reward) path 0 =
+      aggregateCapacityAccount path hpath hpunishment 0 :=
+    le_antisymm hdom0 htight
+  have hdom1 := hdom 1 hcutoff
+  have hdebt0 := debt_step path hpath 0 hcutoff
+  have haccount0 := source_add_aggregateCapacityAccount_succ_le
+    path hpath hpunishment regime 0 hcutoff
+  have hcarry : aggregateCapacityAccount path hpath hpunishment 1 ≤
+      survival (reward := reward) path 0 *
+        debt (reward := reward) path 1 := by
+    rw [← heq0] at haccount0
+    norm_num at hdebt0 haccount0
+    linarith
+  have hkilled : debt (reward := reward) path 1 ≤
+      survival (reward := reward) path 0 *
+        debt (reward := reward) path 1 := hdom1.trans hcarry
+  by_cases hnextDebt : debt (reward := reward) path 1 = 0
+  · right
+    have hcutoffOne : 1 < cutoff := by
+      by_contra hnot
+      have : cutoff = 1 := by omega
+      subst cutoff
+      linarith
+    refine ⟨hcutoffOne, ?_⟩
+    have hdebt1 := debt_step path hpath 1 hcutoffOne
+    have hsource1 := source_nonneg path hpath 1
+    have hcarry1 : 0 ≤ survival (reward := reward) path 1 *
+        debt (reward := reward) path (1 + 1) :=
+      mul_nonneg (survival_nonneg path 1) (debt_nonneg path hpath (1 + 1))
+    rw [hnextDebt] at hdebt1
+    linarith
+  · left
+    have hnextDebtPos : 0 < debt (reward := reward) path 1 :=
+      lt_of_le_of_ne (debt_nonneg path hpath 1) (Ne.symm hnextDebt)
+    have hsurvivalLe : survival (reward := reward) path 0 ≤ 1 :=
+      quittingStationaryContinueMass_le_one _
+    have hsurvivalEq : survival (reward := reward) path 0 = 1 := by
+      nlinarith
+    have hcharge : charge (reward := reward) path 0 = 0 := by
+      unfold charge quittingRootAbsorptionMass
+      change 1 - survival (reward := reward) path 0 = 0
+      linarith
+    have hsourceLe := source_le_card_mul_rewardBound_mul_charge
+      path hpath 0
+    rw [hcharge, mul_zero] at hsourceLe
+    exact le_antisymm hsourceLe (source_nonneg path hpath 0)
+
+include hpath hpunishment in
+/-- Vanishing aggregate source puts the corresponding finite exact edge in
+every playerwise debt-source exposed face.  A counterexample seam witness is
+used only to certify that zero is the attained supporting value of the
+compact carrier. -/
+theorem all_debtSourceZeroFaces_of_source_eq_zero
+    {regime : QuittingCounterexampleRegime reward}
+    (seam : QuittingCounterexampleSeamWitness regime)
+    (time : ℕ) (htime : time < cutoff)
+    (hsource : source (reward := reward) path time = 0) :
+    ∀ selected,
+      quittingDebtSourceObstructionFlow
+          (quittingFiniteNashBellmanPathDynamicDebtPoint
+              reward cutoff path time,
+            quittingFiniteNashBellmanPathDynamicDebtPoint
+              reward cutoff path (time + 1)) ∈
+        exposedFace (quittingDebtSourceZeroFaceCostate selected)
+          (quittingDebtSourceOneStageObstructionCarrier reward) := by
+  let edge : QuittingDebtPoint ι × QuittingDebtPoint ι :=
+    (quittingFiniteNashBellmanPathDynamicDebtPoint
+        reward cutoff path time,
+      quittingFiniteNashBellmanPathDynamicDebtPoint
+        reward cutoff path (time + 1))
+  have hedge : edge ∈ quittingFloorDynamicDebtEdgeGraph reward := by
+    constructor
+    · exact ⟨quittingFiniteNashBellmanPathDynamicDebtPoint_mem_box
+          reward cutoff path hpath time,
+        quittingFiniteNashBellmanPathDynamicDebtPoint_mem_box
+          reward cutoff path hpath (time + 1),
+        quittingFiniteNashBellmanPathDynamicDebtPoint_edge
+          reward cutoff path hpath time htime⟩
+    · intro who
+      exact ⟨quittingPunishmentValue_le_finiteDynamicDebtPoint_of_nonpos
+          path hpath hpunishment time who,
+        quittingPunishmentValue_le_finiteDynamicDebtPoint_of_nonpos
+          path hpath hpunishment (time + 1) who⟩
+  have hflow : quittingDebtSourceObstructionFlow edge ∈
+      quittingDebtSourceOneStageObstructionCarrier reward :=
+    ⟨edge, hedge, rfl⟩
+  intro selected
+  apply (seam.mem_exposedFace_quittingDebtSourceZeroFaceCostate_iff
+    selected (quittingDebtSourceObstructionFlow edge)).2
+  refine ⟨hflow, ?_⟩
+  rw [quittingDebtSourceObstructionFlow_source]
+  have hcoordinateNonneg : 0 ≤ quittingDynamicDebtSeam edge.1 selected :=
+    quittingDynamicDebtSeam_nonneg edge.1 hedge.1.1 selected
+  have hcoordinateLe : quittingDynamicDebtSeam edge.1 selected ≤
+      source (reward := reward) path time := by
+    unfold source
+    exact Finset.single_le_sum
+      (fun who _ ↦ quittingDynamicDebtSeam_nonneg edge.1 hedge.1.1 who)
+      (Finset.mem_univ selected)
+  rw [hsource] at hcoordinateLe
+  exact le_antisymm hcoordinateLe hcoordinateNonneg
+
+/-- Tight initial capacity upgrades a physical terminal lift to a literal
+all-player zero-source exposed face at the first or second finite edge. -/
+theorem all_debtSourceZeroFaces_zero_or_one_of_frozenRootLift_and_initial_tight
+    {regime : QuittingCounterexampleRegime reward}
+    (seam : QuittingCounterexampleSeamWitness regime)
+    (hcutoff : 0 < cutoff)
+    (hterminal : 0 < debt (reward := reward) path cutoff)
+    (root : ι → PMF Bool) (support : Finset ι)
+    (hsupport : IsQuittingRootInteriorOnSupport root support)
+    (continuation : Payoff ι)
+    (hlift : IsQuittingFrozenRootContinuationLift reward 0
+      (quittingPunishmentValue reward) (quittingRewardBound reward)
+      root support continuation)
+    (tailRoot : QuittingRootSimplex ι)
+    (hpays : debt (reward := reward) path cutoff ≤
+      (Fintype.card ι : ℝ) * quittingRewardBound reward *
+        quittingRootAbsorptionMass root)
+    (htight : aggregateCapacityAccount path hpath hpunishment 0 ≤
+      debt (reward := reward) path 0) :
+    (∀ selected,
+      quittingDebtSourceObstructionFlow
+          (quittingFiniteNashBellmanPathDynamicDebtPoint
+              reward cutoff path 0,
+            quittingFiniteNashBellmanPathDynamicDebtPoint
+              reward cutoff path 1) ∈
+        exposedFace (quittingDebtSourceZeroFaceCostate selected)
+          (quittingDebtSourceOneStageObstructionCarrier reward)) ∨
+      (1 < cutoff ∧ ∀ selected,
+        quittingDebtSourceObstructionFlow
+            (quittingFiniteNashBellmanPathDynamicDebtPoint
+                reward cutoff path 1,
+              quittingFiniteNashBellmanPathDynamicDebtPoint
+                reward cutoff path 2) ∈
+          exposedFace (quittingDebtSourceZeroFaceCostate selected)
+            (quittingDebtSourceOneStageObstructionCarrier reward)) := by
+  rcases source_zero_or_succ_zero_of_frozenRootLift_and_initial_tight
+      path hpath hpunishment regime hcutoff hterminal root support hsupport
+        continuation hlift tailRoot hpays htight with hzero | ⟨hcutoff1, hzero⟩
+  · exact Or.inl
+      (all_debtSourceZeroFaces_of_source_eq_zero
+        path hpath hpunishment seam 0 hcutoff hzero)
+  · exact Or.inr ⟨hcutoff1,
+      all_debtSourceZeroFaces_of_source_eq_zero
+        path hpath hpunishment seam 1 hcutoff1 hzero⟩
 
 /-- **Incoming frozen-root alternative.**  For any supplied interior-support
 product root whose literal absorption would fund the terminal cap, either
@@ -436,5 +767,206 @@ theorem saturated_terminalDebt_no_pureSingleton_incomingEdge
   simpa [quittingRootOfSimplex_frozenRootLiftSimplex] using hedge.1
 
 end QuittingFiniteDynamicDebtAdmissibleChronology
+
+/-! ## Counterexample-regime exhaustion of the strict terminal branch -/
+
+namespace QuittingAggregateCalibratedTerminalAnchor
+
+/-- Enriched exact debt-source flow of one displayed finite anchor edge. -/
+def debtSourceFlow
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (time : ℕ) :
+    RawGradedFlow QuittingObstructionGrade
+      (QuittingDebtSourceObstructionCoordinate ι) :=
+  quittingDebtSourceObstructionFlow
+    (quittingFiniteNashBellmanPathDynamicDebtPoint
+        reward (anchor.last + 1) anchor.path time,
+      quittingFiniteNashBellmanPathDynamicDebtPoint
+        reward (anchor.last + 1) anchor.path (time + 1))
+
+/-- One finite anchor edge lies simultaneously in every playerwise
+debt-source zero face of the exact counterexample carrier. -/
+def IsAllDebtSourceZeroFace
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (time : ℕ) : Prop :=
+  ∀ selected, anchor.debtSourceFlow time ∈
+    exposedFace (quittingDebtSourceZeroFaceCostate selected)
+      (quittingDebtSourceOneStageObstructionCarrier reward)
+
+/-- Every calibrated positive-debt anchor has strictly positive aggregate
+terminal cap.  Its marked positive initial debt is already bounded by the
+same player's singleton cap. -/
+theorem terminalAggregateDebt_pos
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward) :
+    0 < ∑ who, quittingPositiveSingletonDebtCap reward who := by
+  have hownerCap :
+      quittingFiniteNashBellmanPathDynamicDebt
+          reward (anchor.last + 1) anchor.path anchor.owner 0 ≤
+        quittingPositiveSingletonDebtCap reward anchor.owner :=
+    quittingFiniteNashBellmanPathDynamicDebt_le_cap
+      reward (anchor.last + 1) anchor.path anchor.path_mem anchor.owner 0
+        (by omega)
+  have hcapPos : 0 < quittingPositiveSingletonDebtCap reward anchor.owner :=
+    anchor.ownerDebt_pos.trans_le hownerCap
+  exact hcapPos.trans_le
+    (Finset.single_le_sum
+      (fun who _ ↦ le_max_left 0 (reward (quittingSingletonTerminal who) who))
+      (Finset.mem_univ anchor.owner))
+
+/-- In a counterexample regime the terminal aggregate debt is automatically
+strictly below the `card * rewardBound` funding scale.  The important sharp
+estimate is `terminal debt ≤ rewardBound`; the regime supplies at least four
+players, so the previously exposed saturated branch cannot occur. -/
+theorem terminalAggregateDebt_lt_card_mul_rewardBound
+    (regime : QuittingCounterexampleRegime reward)
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward) :
+    (∑ who, quittingPositiveSingletonDebtCap reward who) <
+      (Fintype.card ι : ℝ) * quittingRewardBound reward := by
+  have hdebtPos := anchor.terminalAggregateDebt_pos
+  have hdebtLe : (∑ who, quittingPositiveSingletonDebtCap reward who) ≤
+      quittingRewardBound reward :=
+    sum_positiveSingletonDebtCap_le_quittingRewardBound
+      (reward := reward)
+  have hboundPos : 0 < quittingRewardBound reward :=
+    hdebtPos.trans_le hdebtLe
+  have hcard : (3 : ℝ) < Fintype.card ι := by
+    exact_mod_cast regime.three_lt_card
+  nlinarith
+
+/-- **Counterexample-regime terminal boundary alternative.**  For every
+calibrated positive-debt anchor in the nonpositive-floor lane, the canonical
+one-owner strict funding root is available automatically.  Hence the finite
+boundary is genuinely exhausted by a floor-admissible incoming edge and the
+carry comparison, unless explicit finite Farkas multipliers reject that
+specific game-facing continuation system.
+
+There is no saturated residual in a counterexample regime: the sum-form
+reward bound and `card ≥ 4` force strictness. -/
+theorem boundaryCarry_fundingEdge_or_farkas
+    (regime : QuittingCounterexampleRegime reward)
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (hpunishment : ∀ who, quittingPunishmentValue reward who ≤ 0) :
+    (QuittingFiniteDynamicDebtAdmissibleChronology.debt
+          (reward := reward) anchor.path 0 ≤
+        QuittingFiniteDynamicDebtAdmissibleChronology.aggregateCapacityAccount
+          anchor.path anchor.path_mem hpunishment 0 ∧
+      ∃ root : ι → PMF Bool, ∃ support : Finset ι, ∃ continuation,
+        IsQuittingRootInteriorOnSupport root support ∧
+        (Fintype.card ι : ℝ) * quittingRewardBound reward *
+            quittingRootAbsorptionMass root =
+          QuittingFiniteDynamicDebtAdmissibleChronology.debt
+            (reward := reward) anchor.path (anchor.last + 1) ∧
+        IsQuittingFrozenRootContinuationLift reward 0
+          (quittingPunishmentValue reward) (quittingRewardBound reward)
+          root support continuation ∧
+        IsQuittingNashBellmanEdge reward
+          (0, quittingFrozenRootLiftSimplex root)
+          (continuation, quittingAllContinueSimplexRoot)) ∨
+      ∃ root : ι → PMF Bool, ∃ support : Finset ι,
+        IsQuittingRootInteriorOnSupport root support ∧
+        (Fintype.card ι : ℝ) * quittingRewardBound reward *
+            quittingRootAbsorptionMass root =
+          QuittingFiniteDynamicDebtAdmissibleChronology.debt
+            (reward := reward) anchor.path (anchor.last + 1) ∧
+        HasQuittingFrozenRootLiftFarkasCertificate (reward := reward) 0
+          (quittingPunishmentValue reward) (quittingRewardBound reward)
+          root support := by
+  apply QuittingFiniteDynamicDebtAdmissibleChronology.strict_terminalDebt_fundingEdge_or_farkas
+    anchor.path anchor.path_mem hpunishment regime anchor.owner
+      quittingAllContinueSimplexRoot
+  · rw [QuittingFiniteDynamicDebtAdmissibleChronology.debt_cutoff_eq_sum_positiveSingletonDebtCap]
+    exact anchor.terminalAggregateDebt_pos
+  · rw [QuittingFiniteDynamicDebtAdmissibleChronology.debt_cutoff_eq_sum_positiveSingletonDebtCap]
+    exact anchor.terminalAggregateDebt_lt_card_mul_rewardBound regime
+
+/-- **Unconditional finite boundary-exhaustion trichotomy.**  In the
+counterexample-regime nonpositive-floor lane, every calibrated anchor has
+one of three game-facing outcomes:
+
+* the first or second exact finite edge lies in every debt-source zero face;
+* the initial admissible capacity account has strict positive slack over
+  exact aggregate debt;
+* explicit finite Farkas multipliers reject the canonical strictly mixed
+  terminal-funding root.
+
+Thus persistent positive debt source is priced by a literal, strictly
+positive initial capacity slack.  Eliminating that slack requires the still
+missing reverse objective comparison; terminal boundary domination alone
+cannot do it. -/
+theorem zeroFace_zero_or_one_or_initialCapacitySlack_or_farkas
+    (regime : QuittingCounterexampleRegime reward)
+    (seam : QuittingCounterexampleSeamWitness regime)
+    (anchor : QuittingAggregateCalibratedTerminalAnchor reward)
+    (hpunishment : ∀ who, quittingPunishmentValue reward who ≤ 0) :
+    anchor.IsAllDebtSourceZeroFace 0 ∨
+      (1 < anchor.last + 1 ∧ anchor.IsAllDebtSourceZeroFace 1) ∨
+      QuittingFiniteDynamicDebtAdmissibleChronology.debt
+          (reward := reward) anchor.path 0 <
+        QuittingFiniteDynamicDebtAdmissibleChronology.aggregateCapacityAccount
+          anchor.path anchor.path_mem hpunishment 0 ∨
+      ∃ root : ι → PMF Bool, ∃ support : Finset ι,
+        IsQuittingRootInteriorOnSupport root support ∧
+        (Fintype.card ι : ℝ) * quittingRewardBound reward *
+            quittingRootAbsorptionMass root =
+          QuittingFiniteDynamicDebtAdmissibleChronology.debt
+            (reward := reward) anchor.path (anchor.last + 1) ∧
+        HasQuittingFrozenRootLiftFarkasCertificate (reward := reward) 0
+          (quittingPunishmentValue reward) (quittingRewardBound reward)
+          root support := by
+  rcases anchor.boundaryCarry_fundingEdge_or_farkas regime hpunishment with
+    ⟨hcarry, root, support, continuation, hsupport, hfunds, hlift, _hedge⟩ |
+      ⟨root, support, hsupport, hfunds, hfarkas⟩
+  · by_cases htight :
+      QuittingFiniteDynamicDebtAdmissibleChronology.aggregateCapacityAccount
+          anchor.path anchor.path_mem hpunishment 0 ≤
+        QuittingFiniteDynamicDebtAdmissibleChronology.debt
+          (reward := reward) anchor.path 0
+    · have hterminal : 0 <
+          QuittingFiniteDynamicDebtAdmissibleChronology.debt
+            (reward := reward) anchor.path (anchor.last + 1) := by
+        rw [debt_cutoff_eq_sum_positiveSingletonDebtCap]
+        exact anchor.terminalAggregateDebt_pos
+      have hpays :
+          QuittingFiniteDynamicDebtAdmissibleChronology.debt
+              (reward := reward) anchor.path (anchor.last + 1) ≤
+            (Fintype.card ι : ℝ) * quittingRewardBound reward *
+              quittingRootAbsorptionMass root := by
+        rw [hfunds]
+      rcases
+          all_debtSourceZeroFaces_zero_or_one_of_frozenRootLift_and_initial_tight
+            anchor.path anchor.path_mem hpunishment seam (by omega) hterminal
+              root support hsupport continuation hlift
+                quittingAllContinueSimplexRoot hpays htight with hzero | hnext
+      · exact Or.inl (by
+          simpa [IsAllDebtSourceZeroFace, debtSourceFlow] using hzero)
+      · exact Or.inr (Or.inl ⟨hnext.1, by
+          simpa [IsAllDebtSourceZeroFace, debtSourceFlow] using hnext.2⟩)
+    · exact Or.inr (Or.inr (Or.inl (lt_of_not_ge htight)))
+  · exact Or.inr (Or.inr (Or.inr
+      ⟨root, support, hsupport, hfunds, hfarkas⟩))
+
+end QuittingAggregateCalibratedTerminalAnchor
+
+/-! ## Sharp scalar regression for the remaining initial slack -/
+
+/-- Terminal domination plus exact killed debt recursion and the stronger
+additive capacity recursion do not force a zero source.  This one-edge
+finite regression has a tightly funded terminal boundary, but positive
+initial capacity slack absorbs a strictly positive source.  It targets the
+precise scalar implication used above; it is not asserted to instantiate a
+quitting counterexample regime. -/
+theorem fundedTerminalBoundary_does_not_force_zeroSource_regression :
+    let survival : ℝ := 1 / 2
+    let source : ℝ := 1
+    let terminalDebt : ℝ := 1
+    let initialDebt : ℝ := 3 / 2
+    let terminalAccount : ℝ := 1
+    let initialAccount : ℝ := 2
+    0 ≤ survival ∧ survival ≤ 1 ∧
+      initialDebt = source + survival * terminalDebt ∧
+      initialAccount = source + terminalAccount ∧
+      terminalDebt ≤ terminalAccount ∧
+      initialDebt < initialAccount ∧ 0 < source := by
+  norm_num
 
 end GameTheory
