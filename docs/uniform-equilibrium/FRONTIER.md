@@ -820,34 +820,32 @@ period-one solo-quitter row is verified only against a *passive* continuation),
 and untouched by the plateau and optimized-debt splits, which are on-path
 finite-chain algebra.
 
-That historical gap has now been closed at the level of vocabulary and exact
-local semantics. `UniformEquilibrium/Quitting/Punishment/InstantPunishment.lean`
+`UniformEquilibrium/Quitting/Punishment/InstantPunishment.lean`
 defines `QuittingInstantPunishmentWorks`, allows an arbitrary continuation
 after a refused stage-zero quit, proves its exact equivalence to punishment
 individual rationality plus the no-join inequalities, and compiles either pair
-of conditions to a uniform-equilibrium payoff. The remaining issue is a
-**producer**, not expressibility: the current global branch analysis does not
+of conditions to a uniform-equilibrium payoff. The missing condition is a
+**producer**, not expressibility: the global branch analysis does not
 force some owner to satisfy both instant conditions, nor does the instant
 theorem consume the strict-slack or enlarged-support residues by itself. The
-deficient deleted-clock residue is now consumed separately by owner-monopoly
+deficient deleted-clock case is consumed separately by owner-monopoly
 concentration and approximate solo punishment completion.
 
-**The punishment target is no longer inexpressible (`L`).** An earlier sweep
-found no min-max or punishment construction anywhere, and that verdict is now
-falsified: `PunishmentLevel.lean` supplies a finite-horizon min-max level,
+**The punishment target is explicit (`L`).** `PunishmentLevel.lean` supplies a
+finite-horizon min-max level,
 individual rationality in exact and approximate form, and the necessary
 condition that a uniform equilibrium payoff is eventually approximately
-individually rational. The `χ` in the older quitting files remains an unrelated
+individually rational. The `χ` in the older quitting files is an unrelated
 best-response-summary coefficient — a name collision, not a punishment notion.
 
-The folk bill is now two-thirds closed, superseding the previous paragraph
-here. **The floor landed** (`UniformEquilibrium/Quitting/Punishment/Floor.lean`): the naive floor
-refuted first, the unconditional floor `max{(T−1)/T·mIn, mOut}`, the
+The folk bill contains two proved components.
+`UniformEquilibrium/Quitting/Punishment/Floor.lean` gives the unconditional
+floor `max{(T−1)/T·mIn, mOut}`, the
 sandwich converging to `max 0 (solo)` under two finitely-checkable table
-conditions, exactness on the hostile witness — and **the no-go generator
-refutes for the first time**: the zero payoff is not a uniform equilibrium
-payoff of the quit-bonus table, margin `1/4` from horizon `4`. **The
-feasible set landed** (`Feasible.lean`): finite-horizon and asymptotic,
+conditions, and exactness on the hostile witness. Its no-go generator proves
+that zero is not a uniform-equilibrium payoff of the quit-bonus table, with
+margin `1/4` from horizon `4`. `Feasible.lean` supplies the finite-horizon and
+asymptotic feasible sets,
 composed with IR into the full necessary direction, with the non-convexity
 fence (`(p−q)² = −1`) proving the classical folk hypothesis shape false for
 this model at horizon one. What remains of the bill: the sufficiency
@@ -987,7 +985,7 @@ Key boundaries are:
 | Quit-time/Never extremality for behavioral deviations | `M+L` | Landed. |
 | Exact-D optimizer and zero/positive split | `M+L+A+C` on zero branch | Landed. |
 | Combined counterexample normal form and finite screens | `M+L+A+C` | Nonexistence is exactly positive all-behavior terminal gap plus finite canonical floor-prefix capacity. The regime is empty below four players and has canonical minimal `Fin n` form; toggle/stationary ceilings, supported packet atoms, closed weak-preference walks, quantitative floor-clock budgets, and zero-charge recurrence are landed. Proper restriction and packet-support cycles are explicitly not ambient extensions or chronological Bellman orbits. |
-| Periodic-window and phantom-boundary evaluation | `M+L` | The full behavioral reply against periodic opponents is exactly a finite phase-stop/refusal maximum. Conditioning on eventual absorption removes the phantom boundary while retaining exact consecutive chronology. Singleton rows purify exactly. On the diffuse singleton-tight stratum, hazard rescaling has quadratic coalition-law error. Complete deleted clocks feed a two-clock compiler. A deficient clock forces a unique nonsummable owner, summable non-owner hazards, and literal terminal convergence to the owner's singleton vector; deleting late hazards and applying punishment completion compiles the owner whenever its singleton payoff is individually rational. Exact source Nash charges every singleton-floor deficit to the source deleted clock, so no source-floor premise remains. Hence a diffuse positive-absorption counterexample seam must have some strict phantom coordinate `solo_i < boundary_i`; every such player is eventually literal `Never`, so the late quitter support is a proper singleton-tight face. The residual is controlling these strict outsiders, enlarging support, or producing a state-matched collision-aware return. |
+| Periodic-window and phantom-boundary evaluation | `M+L` | The full behavioral reply against periodic opponents is exactly a finite phase-stop/refusal maximum. Conditioning on eventual absorption removes the phantom boundary while retaining exact consecutive chronology. Singleton rows purify exactly. On the diffuse singleton-tight stratum, hazard rescaling has quadratic coalition-law error. Complete deleted clocks feed a two-clock compiler. A deficient clock forces a unique nonsummable owner, summable non-owner hazards, and literal terminal convergence to the owner's singleton vector; direct conditioned solo extraction and punishment completion compile the owner whenever the rescaled pure-Quit defect vanishes. Exact source Nash charges every singleton-floor deficit to the source deleted clock, so no source-floor premise is required. Hence a diffuse positive-absorption counterexample seam has a strict phantom coordinate `solo_i < boundary_i`; every such player is eventually literal `Never`, and the quitter support lies on a proper singleton-tight face beyond a common cutoff. The regime forces a fixed positive rescaled pure-Quit defect arbitrarily far along that face. The residual is to consume this outsider support-enlargement pressure or produce a state-matched collision-aware return. |
 | Collision-aware and singleton return compilers | `M+L+A` conditional | Any supplied finite collision-aware exact Nash return with punishment admissibility is a solved exact cycle. On proper singleton roots, a changing-owner state-matched Nash--Bellman cycle is already an essential-APS cycle and compiles without an extra punishment field. Counterexample data currently supplies neither a finite return nor a divergent singleton chronology. |
 | Eventual all-Continue plateau | `M+L` | The branch is eventually an exactly constant positive-debt phantom state and literally delivers zero. Its selected owner has singleton reward at least the terminal gap, every positive solo rate has a strict joining blocker, and any exact singleton-target Nash root must enlarge support to a second quitter. The residual is the enlarged root's simultaneous complementarity/rate selection, not late dynamics of the plateau. |
 | Approximate punishment completion | `M+L` | Absorbing fixed-period cycles compile under vanishing root error normalized by deleted contraction. In the sole-owner case, arbitrarily small positive hazards and approximate endpoint Nash at continuations converging to the singleton vector suffice, provided the owner is punishment-rational. This removes the need for an atomic lower hazard bound. |

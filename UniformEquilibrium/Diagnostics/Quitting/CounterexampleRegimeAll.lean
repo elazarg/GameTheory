@@ -83,6 +83,8 @@ import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryLimitGeometry
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryConditioning
 import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseChronology
 import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseUniform
+import UniformEquilibrium.Quitting.Cycles.ConditionedProperFaceDeficientClock
+import UniformEquilibrium.Quitting.Cycles.ConditionedSoloExtraction
 import UniformEquilibrium.Quitting.Cycles.ConditionedDeletedClockSoloCompletion
 import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseProductRescaling
 import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseStrategicRescaling
@@ -522,11 +524,16 @@ clock is nonsummable. Its policy, Quit, and Continue errors are all linear in
 the mesh bound and vanish on late diffuse suffixes. If one deleted clock is
 summable, rescaling instead forces a unique nonsummable owner, summable
 non-owner hazards, and literal terminal convergence to the owner's singleton
-vector. Late owner-active rows then feed the approximate punishment-completed
-solo compiler under singleton individual rationality. Thus exact rowwise
-purification is unnecessary, and deleted-clock failure is no longer a
-residual on the singleton-tight, singleton-floor-safe stratum. The
-conditioned residual is strict plateau/source-floor slack.
+vector. Owner-active rows feed the approximate punishment-completed solo
+compiler under singleton individual rationality. Exact rowwise purification
+is unnecessary: both deleted-clock cases compile on the singleton-tight
+stratum. On a proper face, strict plateau players are literal `Never` and the
+compiler leaves only their uniform immediate-Quit defect. If a deleted clock
+is summable while that defect vanishes, direct conditioned solo extraction
+places the owner's singleton vector above every singleton floor and punishment
+completion compiles it. Hence a counterexample has a fixed positive rescaled
+Quit defect recurring arbitrarily far along the tail, independently of its
+deleted-clock classification.
 
 Negative ordinary tangent also has an exact conditioned interpretation.  It
 either remains a negative conditioned delivery gap, giving strict upward

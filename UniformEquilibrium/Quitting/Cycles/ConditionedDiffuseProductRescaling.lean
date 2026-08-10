@@ -116,6 +116,27 @@ omit [DecidableEq ι] in
       quittingTailDiffuseRescaledHazard roots time :=
   hazardOfRoot_rootOfHazard _ _ _
 
+omit [DecidableEq ι] in
+/-- A literal source spectator remains a literal spectator after diffuse
+rescaling.  Thus conditioning changes only the hazards already present in
+the source row; it never creates a new quitter. -/
+theorem quittingTailDiffuseRescaledRoot_eq_pure_false_of_source_eq_pure_false
+    (roots : ℕ → ι → PMF Bool) (time : ℕ) (who : ι)
+    (hpositive : 0 < quittingTailEventualAbsorption roots time)
+    (hinactive : roots time who = PMF.pure false) :
+  quittingTailDiffuseRescaledRoot roots time hpositive who =
+      PMF.pure false := by
+  apply pmf_eq_pure_false_of_apply_true_toReal_eq_zero
+  rw [show
+    ((quittingTailDiffuseRescaledRoot roots time hpositive who) true).toReal =
+        quittingTailDiffuseRescaledHazard roots time who by
+      exact congrFun
+        (hazardOfRoot_quittingTailDiffuseRescaledRoot roots time hpositive)
+        who]
+  unfold quittingTailDiffuseRescaledHazard
+  rw [hinactive]
+  simp
+
 /-- Sum of rescaled player marginals at one conditioned row. -/
 def quittingTailDiffuseRescaledTotal
     (roots : ℕ → ι → PMF Bool) (time : ℕ) : ℝ :=

@@ -1,11 +1,5 @@
 # Uniform-equilibrium project pipeline
 
-**Repository checkpoint:** `1926e1e3` (2026-08-10). The mathematical checkpoint
-includes conditioned-tail chronology, exact atomic purification, approximate
-punishment completion, the singleton-tight diffuse compiler, and the exact
-deleted-clock split. **This file revised 2026-08-10 after source-floor error
-was absorbed into the deleted clock.**
-
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
 holonomy compactness work, finite source-forgetting marked-cylinder algebra,
@@ -13,7 +7,7 @@ metrizable semantic completion, and bounded decoder are committed and counted.
 New Lean files are never counted as landed until committed, built, and reflected
 in the owning claim and [`FRONTIER.md`](FRONTIER.md).
 
-## Current gate — 2026-08-10
+## Main theorem boundary
 
 The conjecture-level search begins at four players: the two- and three-player
 cases are compiled. For a hypothetical counterexample, terminal instability,
@@ -21,25 +15,28 @@ the exact-D/projective tail, bounded punishment-floor capacity, marked semantic
 compactness, elementary tail caps, and conditioned-tail chronology are all
 available. A singleton-tight diffuse suffix with uniform mesh at most `rho`
 and every player-deleted clock complete compiles to an asymptotic Nash profile
-with error `O(rho)`. A deficient clock is now consumed as well: it forces a
-unique rescaled owner, literal terminal concentration on that owner's
-singleton vector, and—under singleton individual rationality—an approximate
-punishment-completed solo equilibrium. Exact source Nash also charges every
-singleton-floor deficit to the deleted clock, so no source-floor hypothesis
-remains. Thus the whole singleton-tight diffuse stratum compiles; a diffuse
-counterexample must have a strict phantom plateau coordinate.
+with error `O(rho)`. A deficient clock forces a unique rescaled owner, literal
+terminal concentration on that owner's singleton vector, and—under singleton
+individual rationality—an approximate punishment-completed solo equilibrium.
+Exact source Nash charges every singleton-floor deficit to the deleted clock,
+so no source-floor hypothesis is required. The singleton-tight diffuse stratum
+therefore compiles. A diffuse counterexample has a strict phantom plateau
+coordinate, and every such coordinate is eventually literal `Never`. On the
+resulting proper singleton-tight face, both deleted-clock cases imply the same
+obstruction: the sum of positive rescaled pure-Quit regrets has a fixed positive
+lower excursion arbitrarily far along the tail.
 
 The live residue has two natural exits:
 
-1. spend strict plateau/punishment slack in a floor-safe
-   support or delivery reset; or
+1. consume the persistent outsider joining gain by a floor-safe support
+   enlargement or delivery reset; or
 2. solve the enlarged-support complementarity and state-matching problem forced
    by the eventual all-Continue plateau, producing a positive-mass return or an
    equivalent terminal consumer.
 
 Raw compactness, another separator, playerwise punishment tails, an unattached
 period-one gain, and a bounded-capacity scalar by themselves do not close any
-of these exits. The priority order is now explicit:
+of these exits. The priority order is:
 
 1. `MATH-P0-9` is the primary positive lane: produce, at every accuracy, a
    support-rational divergent path or finite witness-retaining cycle consumed
@@ -2380,11 +2377,11 @@ along the whole chronology.  In contrast, a row with two active marginals and
 positive Continue mass is rigid: exact preservation of its conditional
 coalition law forces scale one.  A genuine phantom boundary therefore cannot
 be removed by rowwise rescaling of a multi-owner product root.  The diffuse
-branch cannot use exact rowwise purification.  The later quadratic product
-rescaling closes its singleton-tight, player-deleted-complete subcase; only the
-deleted-clock-deficient and strict-slack regimes remain from this split.
+branch cannot use exact rowwise purification. Quadratic product rescaling
+closes its singleton-tight, player-deleted-complete subcase; the complementary
+cases are deleted-clock deficiency and strict plateau slack.
 
-The punishment floor itself has now been separated cleanly from purification.
+The punishment floor is separate from purification.
 If a plateau coordinate is tight at its punishment value, its conditioned
 coordinate remains above that floor at every date.  Every violation therefore
 uses strict plateau slack, with the exact deficit bounded by the ratio of
@@ -2435,7 +2432,7 @@ support to a second positive quitter.  This is the precise finite residue:
 blocker inequalities force enlargement but do not choose rates satisfying the
 new active Bellman and complementarity rows.
 
-Punishment completion now also tolerates approximation on the contracting
+Punishment completion also tolerates approximation on the contracting
 coordinates.  For a fixed-period absorbing family, the relevant root error is
 its cyclic survival charge divided by the deleted contraction gap; vanishing
 error and convergent targets give a named uniform payoff.  In particular,
@@ -2458,8 +2455,9 @@ The Nash and delivery errors are linear in the mesh bound and hence vanish on
 late diffuse suffixes.  No exact rowwise purification or extra occupation
 measure is assumed.  Consequently the deleted-complete diffuse branch of item
 5 is closed, including the all-errors uniform-payoff selection in
-`ConditionedDiffuseUniform.lean`. Failure of deleted completeness is no longer
-a separate producer problem. `ConditionedDeletedClockMonopoly.lean` extracts a
+`ConditionedDiffuseUniform.lean`. A deficient deleted clock yields a direct
+consumer rather than an independent producer obligation.
+`ConditionedDeletedClockMonopoly.lean` extracts a
 unique nonsummable owner and summable non-owner hazards;
 `ConditionedDeletedClockTerminalConcentration.lean` proves literal late-tail
 convergence to the owner's singleton vector; and
@@ -2468,16 +2466,21 @@ feeds the resulting caps to approximate punishment completion. Consequently
 the complete and deficient clock branches both close whenever the phantom
 boundary is singleton-tight and every singleton owner is punishment-rational.
 Exact source Nash bounds a possible singleton-floor deficit by twice the
-source deleted clock; late clock comparison therefore raises the uniform Quit
+source deleted clock; clock comparison therefore raises the uniform Quit
 constant from `2M` to `6M` but removes the floor premise entirely. On the
-canonical summably absorbing seam, a diffuse positive-absorption tail must
-therefore have some strict coordinate `solo_i < boundary_i`. Such a player is
-eventually prescribed literal `Never`: arbitrarily late positive Quit hazards
-would pin its boundary back to the singleton payoff. Hence, after one common
-cutoff, the physical quitter support is a proper subset contained in the
-singleton-tight face. The remaining task is now an outsider problem: control
-the strict spectators' Quit deviations or enlarge the active support in a
-state-matched way. Affine shrinkage still cannot supply that reset.
+canonical summably absorbing seam, a diffuse positive-absorption tail has some
+strict coordinate `solo_i < boundary_i`. Such a player is eventually prescribed
+literal `Never`: positive Quit hazards arbitrarily far along the tail would pin
+its boundary back to the singleton payoff. Beyond one common cutoff, the
+physical quitter support is therefore a proper subset of the singleton-tight
+face. The proper-face compiler charges Continue only to the joint policy error
+and leaves immediate Quit as the spectator test. Direct conditioned solo
+extraction and the singleton-floor compiler handle the deficient-clock case
+whenever this defect vanishes. Consequently every diffuse counterexample has a
+fixed positive sum of rescaled pure-Quit regrets recurring arbitrarily far
+along the tail. Its unresolved condition is outsider support enlargement or a
+delivery reset; it is neither a deleted-clock nor a source-floor condition.
+Affine shrinkage cannot supply the reset.
 
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.
@@ -2508,8 +2511,8 @@ all-Continue plateau.  The theorem may not assume common cap-splice
 realization, replace product roots by correlated rows, or discard the surviving
 boundary. The currently landed results close the full singleton-tight diffuse
 stratum and prove that any diffuse counterexample has a strict plateau
-coordinate, but do not prove this residual
-alternative.
+coordinate and a persistent positive outsider-Quit defect. They do not yet
+turn that defect into a state-matched enlarged-support edge or return.
 
 ## Literature import lane
 

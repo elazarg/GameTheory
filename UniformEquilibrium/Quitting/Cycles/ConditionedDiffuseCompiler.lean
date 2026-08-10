@@ -1809,6 +1809,69 @@ theorem abs_conditionedValue_sub_rescaledSuccessorPayoff_le_jointCharge
       mul_le_mul_of_nonneg_left hsquare hcoefficient
     _ = (6 * M * Fintype.card ι * rho) * absorption := by ring
 
+/-- A source spectator needs no singleton-boundary estimate for its Continue
+endpoint.  Diffuse rescaling keeps the player at literal Never, so its
+prescribed endpoint is pure Continue and the joint policy error is already a
+deleted-clock error for that player. -/
+theorem rescaledContinuePayoff_le_conditionedValue_add_jointCharge_of_source_pure_false
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (boundary : Payoff ι)
+    (hpolicy : ∀ time, value time =
+      quittingRootSuccessorPayoff reward (value (time + 1)) (roots time))
+    {M rho : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hconditionedBound : ∀ time player,
+      |quittingTailConditionedValue roots value boundary time player| ≤ M)
+    (time : ℕ) (who : ι)
+    (hcurrent : 0 < quittingTailEventualAbsorption roots time)
+    (hnext : 0 < quittingTailEventualAbsorption roots (time + 1))
+    (hinactive : roots time who = PMF.pure false)
+    (hmesh : quittingTailConditionedAbsorptionWeight roots time ≤ rho)
+    (hsmall : Fintype.card ι *
+      quittingTailConditionedAbsorptionWeight roots time ≤ 1) :
+    quittingStationaryFixedOpponentsContinueReward reward
+          (quittingTailDiffuseRescaledRoot roots time hcurrent) who +
+        quittingStationaryFixedOpponentsContinueMass
+            (quittingTailDiffuseRescaledRoot roots time hcurrent) who *
+          quittingTailConditionedValue roots value boundary (time + 1) who ≤
+      quittingTailConditionedValue roots value boundary time who +
+        (6 * M * Fintype.card ι * rho) *
+          quittingRootOpponentAbsorptionMass
+            (quittingTailDiffuseRescaledRoot roots time hcurrent) who := by
+  let targetRoot := quittingTailDiffuseRescaledRoot roots time hcurrent
+  let next := quittingTailConditionedValue roots value boundary (time + 1)
+  have htargetInactive : targetRoot who = PMF.pure false :=
+    quittingTailDiffuseRescaledRoot_eq_pure_false_of_source_eq_pure_false
+      roots time who hcurrent hinactive
+  have hsuccessor :
+      quittingRootSuccessorPayoff reward next targetRoot who =
+        quittingStationaryFixedOpponentsContinueReward reward targetRoot who +
+          quittingStationaryFixedOpponentsContinueMass targetRoot who *
+            next who := by
+    rw [quittingRootSuccessorPayoff_eq_endpointMix, htargetInactive]
+    simp [PMF.pure_apply]
+    simpa [quittingStationaryFixedOpponentsContinueReward,
+      quittingStationaryFixedOpponentsContinueMass] using
+        quittingRootContinuePayoff_eq_fixedOpponents
+          reward (fun _ => targetRoot) who next 0
+  have habsorption : quittingRootAbsorptionMass targetRoot =
+      quittingRootOpponentAbsorptionMass targetRoot who := by
+    unfold quittingRootOpponentAbsorptionMass
+    congr 1
+    funext player
+    by_cases hplayer : player = who
+    · subst player
+      simp [htargetInactive]
+    · simp [Function.update_of_ne hplayer]
+  have hpolicyBound :=
+    abs_conditionedValue_sub_rescaledSuccessorPayoff_le_jointCharge
+      (reward := reward) roots value boundary hpolicy hM hreward
+        hconditionedBound time who hcurrent hnext hmesh hsmall
+  have hupper := neg_le_of_abs_le hpolicyBound
+  dsimp only [targetRoot, next] at hsuccessor habsorption
+  rw [hsuccessor, habsorption] at hupper
+  linarith
+
 /-- **Compiler for the singleton-tight deleted-complete diffuse branch.**
 Every hypothesis is local to the conditioned source chronology.  The target
 product path has separated joint-policy and deleted-refusal errors, hence is
@@ -1963,6 +2026,212 @@ theorem conditionedDiffuseRescaledRoots_isεAsymptoticNash_and_approximates
     positivity
   simpa [certificate, policyCoefficient, quitError, refusalCoefficient,
     target, targetRoots] using
+    (certificate.isεAsymptoticNash_and_approximates reward target
+      hpolicyCoefficient hquitError hrefusal hM hreward)
+
+/-- **Proper-face diffuse compiler.**  A late source row may contain both
+singleton-tight active players and literal-Never spectators.  Tight players
+use the deleted-clock strategic estimate.  Spectators remain pure Continue
+after rescaling, so their Continue endpoint is controlled by the joint
+policy estimate; only their pure-Quit endpoint must be supplied separately.
+
+This is the exact compiler interface for the proper singleton-tight face:
+strict plateau coordinates cost no Continue error and expose only an
+immediate-Quit obstruction. -/
+theorem
+    conditionedDiffuseRescaledRoots_isεAsymptoticNash_and_approximates_of_tight_or_inactive
+    [Nonempty ι]
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (boundary : Payoff ι)
+    (hpolicy : ∀ time, value time =
+      quittingRootSuccessorPayoff reward (value (time + 1)) (roots time))
+    (hnash : ∀ time,
+      IsεQuittingRootEndpointNash reward (value (time + 1)) 0 (roots time))
+    {M rho quitError : ℝ} (hM : 0 ≤ M) (hrho : 0 ≤ rho)
+    (hquitError : 0 ≤ quitError)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hpositive : ∀ time,
+      0 < quittingTailEventualAbsorption roots time)
+    (hconditionedBound : ∀ time player,
+      |quittingTailConditionedValue roots value boundary time player| ≤ M)
+    (htightOrInactive : ∀ time who,
+      boundary who = quittingSoloBaseline reward who ∨
+        roots time who = PMF.pure false)
+    (hquit_le : ∀ time who,
+      quittingStationaryFixedOpponentsQuitValue reward
+          (quittingTailDiffuseRescaledRoot roots time (hpositive time)) who ≤
+        quittingTailConditionedValue roots value boundary time who +
+          quitError)
+    (hmesh : ∀ time,
+      quittingTailConditionedAbsorptionWeight roots time ≤ rho)
+    (hsmall : ∀ time, Fintype.card ι *
+      quittingTailConditionedAbsorptionWeight roots time ≤ 1)
+    (hhalf : ∀ time,
+      quittingTailConditionedAbsorptionWeight roots time ≤ 1 / 2)
+    (hdeletedComplete : ∀ who start,
+      ¬Summable (fun offset =>
+        quittingTailConditionedOpponentWeight roots (start + offset) who)) :
+    (quittingGame reward).IsεAsymptoticNash
+        (quittingTerminalPayoff reward)
+        ((6 * M * Fintype.card ι * rho) + quitError +
+          ((13 * Fintype.card ι + 16) * M * rho))
+        (quittingInfinitePathProfile reward
+          (quittingTailDiffuseRescaledRoots roots hpositive)) ∧
+      ∀ who,
+        |quittingTerminalPayoff reward
+            (quittingInfinitePathProfile reward
+              (quittingTailDiffuseRescaledRoots roots hpositive)) who -
+          quittingTailConditionedValue roots value boundary 0 who| ≤
+        6 * M * Fintype.card ι * rho := by
+  let policyCoefficient := 6 * M * Fintype.card ι * rho
+  let refusalCoefficient := (13 * Fintype.card ι + 16) * M * rho
+  let target := quittingTailConditionedValue roots value boundary 0
+  let targetRoots := quittingTailDiffuseRescaledRoots roots hpositive
+  let targetValue : ℕ → Payoff ι := fun time =>
+    quittingTailConditionedValue roots value boundary time
+  have hopponentSurvival : ∀ who start,
+      Tendsto (quittingOpponentSurvivalWeight targetRoots who start)
+        atTop (nhds 0) := by
+    intro who start
+    exact tendsto_zero_opponentSurvivalWeight_quittingTailDiffuseRescaledRoots
+      roots hpositive hsmall who start (hdeletedComplete who start)
+  have hjointSurvival : ∀ start,
+      Tendsto (quittingJointSurvivalWeight targetRoots start)
+        atTop (nhds 0) := by
+    intro start
+    let who : ι := Classical.choice (inferInstance : Nonempty ι)
+    exact squeeze_zero
+      (fun fuel => quittingJointSurvivalWeight_nonneg targetRoots start fuel)
+      (fun fuel =>
+        quittingJointSurvivalWeight_le_quittingOpponentSurvivalWeight
+          targetRoots who start fuel)
+      (hopponentSurvival who start)
+  have hpolicy_le_refusal :
+      6 * M * Fintype.card ι * rho ≤
+        (13 * Fintype.card ι + 16) * M * rho := by
+    have hMrho : 0 ≤ M * rho := mul_nonneg hM hrho
+    calc
+      6 * M * Fintype.card ι * rho =
+          (6 * Fintype.card ι) * (M * rho) := by ring
+      _ ≤ (13 * Fintype.card ι + 16) * (M * rho) := by
+        exact mul_le_mul_of_nonneg_right (by
+          have hcard : 0 ≤ (Fintype.card ι : ℝ) := Nat.cast_nonneg _
+          linarith) hMrho
+      _ = (13 * Fintype.card ι + 16) * M * rho := by ring
+  let certificate : QuittingInfinitePathJointPolicySeparatedErrorCertificate
+      reward target policyCoefficient quitError refusalCoefficient M :=
+    { roots := targetRoots
+      value := targetValue
+      value_zero := rfl
+      joint_survival := hjointSurvival
+      opponent_survival := hopponentSurvival
+      value_bound := hconditionedBound
+      policy_error := by
+        intro time who
+        exact abs_conditionedValue_sub_rescaledSuccessorPayoff_le_jointCharge
+          (reward := reward) roots value boundary hpolicy hM hreward
+            hconditionedBound time who (hpositive time) (hpositive (time + 1))
+              (hmesh time) (hsmall time)
+      quit_le := by
+        intro time who
+        exact hquit_le time who
+      continue_le := by
+        intro time who
+        have hopponentIdentity :
+            1 - quittingStationaryFixedOpponentsContinueMass
+                (targetRoots time) who =
+              quittingRootOpponentAbsorptionMass (targetRoots time) who := by
+          unfold quittingStationaryFixedOpponentsContinueMass
+            quittingFixedOpponentsContinueMass
+            quittingRootOpponentAbsorptionMass quittingRootAbsorptionMass
+          ring
+        rw [hopponentIdentity]
+        rcases htightOrInactive time who with htight | hinactive
+        · have hcontinue :=
+            rescaledContinuePayoff_le_conditionedValue_add_deletedCharge
+              (reward := reward) roots value boundary hpolicy hnash time who hM
+                hreward (hconditionedBound (time + 1) who) (hpositive time)
+                  (hpositive (time + 1)) htight (hsmall time) (hhalf time)
+          dsimp only [targetRoots, targetValue, refusalCoefficient]
+          change _ ≤ _ + _ *
+            quittingRootOpponentAbsorptionMass
+              (quittingTailDiffuseRescaledRoot roots time (hpositive time)) who
+          calc
+            _ ≤ quittingTailConditionedValue roots value boundary time who +
+                (7 * Fintype.card ι + 16) * M *
+                  quittingTailConditionedAbsorptionWeight roots time *
+                  quittingRootOpponentAbsorptionMass
+                    (quittingTailDiffuseRescaledRoot roots time
+                      (hpositive time)) who := hcontinue
+            _ ≤ quittingTailConditionedValue roots value boundary time who +
+                ((7 * Fintype.card ι + 16) * M * rho) *
+                  quittingRootOpponentAbsorptionMass
+                    (quittingTailDiffuseRescaledRoot roots time
+                      (hpositive time)) who := by
+              have hfactor : 0 ≤ (7 * Fintype.card ι + 16) * M := by
+                positivity
+              have hcharge := mul_le_mul_of_nonneg_left (hmesh time) hfactor
+              have hopponent0 := quittingRootAbsorptionMass_nonneg
+                (Function.update
+                  (quittingTailDiffuseRescaledRoot roots time (hpositive time))
+                  who (PMF.pure false))
+              gcongr
+            _ ≤ quittingTailConditionedValue roots value boundary time who +
+                ((13 * Fintype.card ι + 16) * M * rho) *
+                  quittingRootOpponentAbsorptionMass
+                    (quittingTailDiffuseRescaledRoot roots time
+                      (hpositive time)) who := by
+              have hopponent0 := quittingRootAbsorptionMass_nonneg
+                (Function.update
+                  (quittingTailDiffuseRescaledRoot roots time (hpositive time))
+                  who (PMF.pure false))
+              have hMrho : 0 ≤ M * rho := mul_nonneg hM hrho
+              have hcoefficient :
+                  (7 * Fintype.card ι + 16) * M * rho ≤
+                    (13 * Fintype.card ι + 16) * M * rho := by
+                calc
+                  (7 * Fintype.card ι + 16) * M * rho =
+                      (7 * Fintype.card ι + 16) * (M * rho) := by ring
+                  _ ≤ (13 * Fintype.card ι + 16) * (M * rho) := by
+                    exact mul_le_mul_of_nonneg_right (by
+                      have hcard : 0 ≤ (Fintype.card ι : ℝ) :=
+                        Nat.cast_nonneg _
+                      linarith) hMrho
+                  _ = (13 * Fintype.card ι + 16) * M * rho := by ring
+              gcongr
+        · have hcontinue :=
+            rescaledContinuePayoff_le_conditionedValue_add_jointCharge_of_source_pure_false
+              (reward := reward) roots value boundary hpolicy hM hreward
+                hconditionedBound time who (hpositive time)
+                  (hpositive (time + 1)) hinactive (hmesh time) (hsmall time)
+          dsimp only [targetRoots, targetValue, refusalCoefficient]
+          change _ ≤ _ + _ *
+            quittingRootOpponentAbsorptionMass
+              (quittingTailDiffuseRescaledRoot roots time (hpositive time)) who
+          calc
+            _ ≤ quittingTailConditionedValue roots value boundary time who +
+                (6 * M * Fintype.card ι * rho) *
+                  quittingRootOpponentAbsorptionMass
+                    (quittingTailDiffuseRescaledRoot roots time
+                      (hpositive time)) who := hcontinue
+            _ ≤ quittingTailConditionedValue roots value boundary time who +
+                ((13 * Fintype.card ι + 16) * M * rho) *
+                  quittingRootOpponentAbsorptionMass
+                    (quittingTailDiffuseRescaledRoot roots time
+                      (hpositive time)) who := by
+              have hopponent0 := quittingRootAbsorptionMass_nonneg
+                (Function.update
+                  (quittingTailDiffuseRescaledRoot roots time (hpositive time))
+                  who (PMF.pure false))
+              gcongr }
+  have hpolicyCoefficient : 0 ≤ policyCoefficient := by
+    unfold policyCoefficient
+    positivity
+  have hrefusal : 0 ≤ refusalCoefficient := by
+    unfold refusalCoefficient
+    positivity
+  simpa [certificate, policyCoefficient, refusalCoefficient, target,
+    targetRoots] using
     (certificate.isεAsymptoticNash_and_approximates reward target
       hpolicyCoefficient hquitError hrefusal hM hreward)
 

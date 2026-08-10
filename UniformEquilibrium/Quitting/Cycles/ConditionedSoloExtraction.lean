@@ -89,54 +89,53 @@ theorem value_le_sum_charge_add_product_tail
   induction fuel with
   | zero => simp
   | succ fuel ih =>
-      let prefix := ∏ offset ∈ Finset.range fuel,
+      let prefixWeight := ∏ offset ∈ Finset.range fuel,
         coefficient (start + offset)
       let nextCharge := charge (start + fuel)
       let nextCoefficient := coefficient (start + fuel)
-      have hprefix0 : 0 ≤ prefix := by
-        simpa only [prefix] using hproductNonneg fuel
-      have hprefix1 : prefix ≤ 1 := by
-        simpa only [prefix] using hproductOne fuel
+      have hprefix0 : 0 ≤ prefixWeight := by
+        simpa only [prefixWeight] using hproductNonneg fuel
+      have hprefix1 : prefixWeight ≤ 1 := by
+        simpa only [prefixWeight] using hproductOne fuel
       have hscaledStep :
-          prefix * value (start + fuel) ≤
-            prefix * nextCharge +
-              prefix * nextCoefficient * value (start + fuel + 1) := by
+          prefixWeight * value (start + fuel) ≤
+            prefixWeight * nextCharge +
+              prefixWeight * nextCoefficient * value (start + fuel + 1) := by
         calc
-          prefix * value (start + fuel) ≤
-              prefix *
+          prefixWeight * value (start + fuel) ≤
+              prefixWeight *
                 (charge (start + fuel) +
                   coefficient (start + fuel) * value (start + fuel + 1)) :=
             mul_le_mul_of_nonneg_left (hstep (start + fuel)) hprefix0
-          _ = prefix * nextCharge +
-              prefix * nextCoefficient * value (start + fuel + 1) := by
+          _ = prefixWeight * nextCharge +
+              prefixWeight * nextCoefficient * value (start + fuel + 1) := by
             dsimp only [nextCharge, nextCoefficient]
             ring
-      have hscaledCharge : prefix * nextCharge ≤ nextCharge := by
+      have hscaledCharge : prefixWeight * nextCharge ≤ nextCharge := by
         calc
-          prefix * nextCharge ≤ 1 * nextCharge :=
+          prefixWeight * nextCharge ≤ 1 * nextCharge :=
             mul_le_mul_of_nonneg_right hprefix1
               (hcharge (start + fuel))
           _ = nextCharge := one_mul _
       calc
         value start ≤
             (∑ offset ∈ Finset.range fuel, charge (start + offset)) +
-              prefix * value (start + fuel) := by
-          simpa only [prefix] using ih
+              prefixWeight * value (start + fuel) := by
+          simpa only [prefixWeight] using ih
         _ ≤ (∑ offset ∈ Finset.range fuel, charge (start + offset)) +
-              (prefix * nextCharge +
-                prefix * nextCoefficient * value (start + fuel + 1)) :=
-          add_le_add_left hscaledStep _
+              (prefixWeight * nextCharge +
+                prefixWeight * nextCoefficient * value (start + fuel + 1)) := by
+          gcongr
         _ ≤ (∑ offset ∈ Finset.range fuel, charge (start + offset)) +
               (nextCharge +
-                prefix * nextCoefficient * value (start + fuel + 1)) := by
-          apply add_le_add_left
-          exact add_le_add_right hscaledCharge _
+                prefixWeight * nextCoefficient * value (start + fuel + 1)) := by
+          gcongr
         _ = (∑ offset ∈ Finset.range (fuel + 1),
               charge (start + offset)) +
               (∏ offset ∈ Finset.range (fuel + 1),
                 coefficient (start + offset)) *
                 value (start + (fuel + 1)) := by
-          dsimp only [prefix, nextCharge, nextCoefficient]
+          dsimp only [prefixWeight, nextCharge, nextCoefficient]
           rw [Finset.sum_range_succ, Finset.prod_range_succ]
           simp only [Nat.add_assoc]
           ring
@@ -170,6 +169,7 @@ theorem abs_quittingRootAbsorbingContribution_sub_absorption_mul_solo_le
 
 /-! ## The conditioned solo recurrence -/
 
+omit [DecidableEq ι] in
 /-- The conditioned Bellman recursion in a division-safe form that does not
 require positive one-stage absorption.  Rows with zero current absorption are
 pure continuation rows. -/
@@ -245,7 +245,6 @@ theorem abs_quittingTailConditionedValue_sub_singleton_le_step
           (absorbing - absorption * solo) / eventual := by
       dsimp only [alpha]
       field_simp [hcurrent.ne']
-      ring
     rw [hrearrange, abs_div, abs_of_pos hcurrent]
     calc
       |absorbing - absorption * solo| / eventual ≤
@@ -267,7 +266,7 @@ theorem abs_quittingTailConditionedValue_sub_singleton_le_step
         (absorbing / eventual - alpha * solo) +
           continuation * (next - solo) := by
     rw [hrec]
-    nlinarith [hweights]
+    linear_combination solo * hweights
   change |current - solo| ≤
     2 * M * beta + continuation * |next - solo|
   rw [hidentity]

@@ -88,6 +88,20 @@ omit [DecidableEq ι] in
   rw [quittingTailEventualAbsorption_suffix]
   rfl
 
+omit [DecidableEq ι] in
+@[simp] theorem quittingTailDiffuseRescaledRoot_suffix
+    (roots : ℕ → ι → PMF Bool) (start time : ℕ)
+    (hpositive : 0 < quittingTailEventualAbsorption roots (start + time)) :
+    quittingTailDiffuseRescaledRoot (quittingRootSequenceSuffix roots start)
+        time (by simpa using hpositive) =
+      quittingTailDiffuseRescaledRoot roots (start + time) hpositive := by
+  unfold quittingTailDiffuseRescaledRoot
+  congr 1
+  funext who
+  unfold quittingTailDiffuseRescaledHazard
+  simp only [quittingRootSequenceSuffix,
+    quittingTailEventualAbsorption_suffix]
+
 @[simp] theorem quittingTailConditionedOpponentWeight_suffix
     (roots : ℕ → ι → PMF Bool) (start time : ℕ) (who : ι) :
     quittingTailConditionedOpponentWeight
@@ -372,6 +386,282 @@ theorem
             hsource }
   exact ⟨requestedMesh, hrequestedMesh,
     min_le_left targetMesh safetyMesh, ⟨certificate⟩⟩
+
+/-- Mesh coefficient in the proper-face diffuse compiler.  The remaining
+pure-Quit error of literal-Never spectators is kept as a separate additive
+quantity. -/
+def quittingConditionedProperFaceDiffuseCompilerCoefficient
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) : ℝ :=
+  6 * quittingRewardBound reward * Fintype.card ι +
+    (13 * Fintype.card ι + 16) * quittingRewardBound reward
+
+omit [DecidableEq ι] in
+theorem quittingConditionedProperFaceDiffuseCompilerCoefficient_nonneg
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    0 ≤ quittingConditionedProperFaceDiffuseCompilerCoefficient reward := by
+  unfold quittingConditionedProperFaceDiffuseCompilerCoefficient
+  have hbound := quittingRewardBound_nonneg reward
+  positivity
+
+/-- Sum of the positive one-stage pure-Quit regrets of the diffuse rescaled
+row against its conditioned source value.  Finiteness of the player set makes
+this a convenient uniform scalar obstruction. -/
+def quittingConditionedRescaledQuitDefect
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (boundary : Payoff ι)
+    (hpositive : ∀ time, 0 < quittingTailEventualAbsorption roots time)
+    (time : ℕ) : ℝ :=
+  ∑ who, max 0
+    (quittingStationaryFixedOpponentsQuitValue reward
+        (quittingTailDiffuseRescaledRoot roots time (hpositive time)) who -
+      quittingTailConditionedValue roots value boundary time who)
+
+theorem quittingConditionedRescaledQuitDefect_nonneg
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (boundary : Payoff ι)
+    (hpositive : ∀ time, 0 < quittingTailEventualAbsorption roots time)
+    (time : ℕ) :
+    0 ≤ quittingConditionedRescaledQuitDefect reward roots value boundary
+      hpositive time := by
+  unfold quittingConditionedRescaledQuitDefect
+  exact Finset.sum_nonneg fun who _ => le_max_left _ _
+
+theorem quittingStationaryFixedOpponentsQuitValue_le_conditionedValue_add_defect
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (boundary : Payoff ι)
+    (hpositive : ∀ time, 0 < quittingTailEventualAbsorption roots time)
+    (time : ℕ) (who : ι) :
+    quittingStationaryFixedOpponentsQuitValue reward
+        (quittingTailDiffuseRescaledRoot roots time (hpositive time)) who ≤
+      quittingTailConditionedValue roots value boundary time who +
+        quittingConditionedRescaledQuitDefect reward roots value boundary
+          hpositive time := by
+  let regret := quittingStationaryFixedOpponentsQuitValue reward
+      (quittingTailDiffuseRescaledRoot roots time (hpositive time)) who -
+    quittingTailConditionedValue roots value boundary time who
+  have hterm : max 0 regret ≤
+      quittingConditionedRescaledQuitDefect reward roots value boundary
+        hpositive time := by
+    unfold quittingConditionedRescaledQuitDefect
+    exact Finset.single_le_sum
+      (fun player _ => le_max_left 0
+        (quittingStationaryFixedOpponentsQuitValue reward
+            (quittingTailDiffuseRescaledRoot roots time (hpositive time))
+              player -
+          quittingTailConditionedValue roots value boundary time player))
+      (Finset.mem_univ who)
+  have hregret : regret ≤ max 0 regret := le_max_right _ _
+  dsimp only [regret] at hregret hterm
+  linarith
+
+/-- **Single-tail proper-face diffuse compiler.**  Suppose the conditioned
+mesh vanishes, every deleted conditioned clock is complete, and each source
+coordinate is either singleton-tight or literal Never.  If the rescaled
+pure-Quit error of the latter spectators also vanishes uniformly in the
+finite player set, then the game has a uniform-equilibrium payoff.
+
+This theorem isolates the sole strategic residue left by a proper
+singleton-tight face: an eventually absent player may still want to join the
+current quitting coalition. -/
+theorem
+    quittingGame_exists_uniformEquilibriumPayoff_of_conditionedProperFaceDiffuseTail
+    [Nonempty ι]
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (roots : ℕ → ι → PMF Bool) (value : ℕ → Payoff ι)
+    (boundary : Payoff ι)
+    (hpolicy : ∀ time, value time =
+      quittingRootSuccessorPayoff reward (value (time + 1)) (roots time))
+    (hnash : ∀ time,
+      IsεQuittingRootEndpointNash reward (value (time + 1)) 0 (roots time))
+    (hpositive : ∀ time, 0 < quittingTailEventualAbsorption roots time)
+    (hconditionedBound : ∀ time player,
+      |quittingTailConditionedValue roots value boundary time player| ≤
+        quittingRewardBound reward)
+    (htightOrInactive : ∀ time who,
+      boundary who = quittingSoloBaseline reward who ∨
+        roots time who = PMF.pure false)
+    (quitError : ℕ → ℝ)
+    (hquitErrorVanish : Tendsto quitError atTop (nhds 0))
+    (hquit_le : ∀ time who,
+      quittingStationaryFixedOpponentsQuitValue reward
+          (quittingTailDiffuseRescaledRoot roots time (hpositive time)) who ≤
+        quittingTailConditionedValue roots value boundary time who +
+          quitError time)
+    (hmesh : Tendsto
+      (quittingTailConditionedAbsorptionWeight roots) atTop (nhds 0))
+    (hdeletedComplete : ∀ who start,
+      ¬Summable (fun offset =>
+        quittingTailConditionedOpponentWeight roots (start + offset) who)) :
+    ∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff := by
+  apply quittingGame_exists_uniformEquilibriumPayoff_of_terminalNash_all_errors
+    reward
+  intro epsilon hepsilon
+  let coefficient :=
+    quittingConditionedProperFaceDiffuseCompilerCoefficient reward
+  let targetMesh := epsilon / (2 * (coefficient + 1))
+  let targetQuitError := epsilon / 2
+  have hcoefficient : 0 ≤ coefficient := by
+    exact quittingConditionedProperFaceDiffuseCompilerCoefficient_nonneg reward
+  have hdenominator : 0 < 2 * (coefficient + 1) := by positivity
+  have htargetMesh : 0 < targetMesh := div_pos hepsilon hdenominator
+  have htargetQuitError : 0 < targetQuitError := by
+    dsimp only [targetQuitError]
+    linarith
+  have hcardNat : 0 < Fintype.card ι := Fintype.card_pos
+  have hcard : 0 < (Fintype.card ι : ℝ) := by exact_mod_cast hcardNat
+  let safetyMesh : ℝ := 1 / (2 * Fintype.card ι)
+  let requestedMesh := min targetMesh safetyMesh
+  have hsafetyMesh : 0 < safetyMesh := by
+    dsimp only [safetyMesh]
+    positivity
+  have hrequestedMesh : 0 < requestedMesh :=
+    lt_min htargetMesh hsafetyMesh
+  have heventuallyMesh : ∀ᶠ time : ℕ in atTop,
+      quittingTailConditionedAbsorptionWeight roots time < requestedMesh :=
+    (tendsto_order.1 hmesh).2 requestedMesh hrequestedMesh
+  have heventuallyQuit : ∀ᶠ time : ℕ in atTop,
+      quitError time < targetQuitError :=
+    (tendsto_order.1 hquitErrorVanish).2 targetQuitError htargetQuitError
+  obtain ⟨start, hstart⟩ := Filter.eventually_atTop.1
+    (heventuallyMesh.and heventuallyQuit)
+  let suffixRoots := quittingRootSequenceSuffix roots start
+  let suffixValue : ℕ → Payoff ι := fun time => value (start + time)
+  have hsafetyHalf : safetyMesh ≤ 1 / 2 := by
+    dsimp only [safetyMesh]
+    apply (div_le_div_iff₀ (by positivity : 0 < 2 * (Fintype.card ι : ℝ))
+      (by norm_num : (0 : ℝ) < 2)).2
+    norm_num
+    exact_mod_cast (Nat.succ_le_iff.mpr hcardNat)
+  have hsuffixPositive : ∀ time,
+      0 < quittingTailEventualAbsorption suffixRoots time := by
+    intro time
+    simpa only [suffixRoots, quittingTailEventualAbsorption_suffix] using
+      hpositive (start + time)
+  have hcompiled :=
+    conditionedDiffuseRescaledRoots_isεAsymptoticNash_and_approximates_of_tight_or_inactive
+      suffixRoots suffixValue boundary
+      (by
+        intro time
+        simpa only [suffixRoots, suffixValue, quittingRootSequenceSuffix,
+          Nat.add_assoc] using hpolicy (start + time))
+      (by
+        intro time
+        simpa only [suffixRoots, suffixValue, quittingRootSequenceSuffix,
+          Nat.add_assoc] using hnash (start + time))
+      (quittingRewardBound_nonneg reward) hrequestedMesh.le
+      htargetQuitError.le (abs_reward_le_quittingRewardBound reward)
+      hsuffixPositive
+      (by
+        intro time player
+        simpa only [suffixRoots, suffixValue,
+          quittingTailConditionedValue_suffix] using
+            hconditionedBound (start + time) player)
+      (by
+        intro time who
+        simpa only [suffixRoots, quittingRootSequenceSuffix] using
+          htightOrInactive (start + time) who)
+      (by
+        intro time who
+        have hsource := hquit_le (start + time) who
+        have herror :=
+          (hstart (start + time) (Nat.le_add_right start time)).2.le
+        calc
+          quittingStationaryFixedOpponentsQuitValue reward
+                (quittingTailDiffuseRescaledRoot suffixRoots time
+                  (hsuffixPositive time)) who =
+              quittingStationaryFixedOpponentsQuitValue reward
+                (quittingTailDiffuseRescaledRoot roots (start + time)
+                  (hpositive (start + time))) who := by
+            rw [show quittingTailDiffuseRescaledRoot suffixRoots time
+                (hsuffixPositive time) =
+              quittingTailDiffuseRescaledRoot roots (start + time)
+                (hpositive (start + time)) by
+              simpa only [suffixRoots] using
+                quittingTailDiffuseRescaledRoot_suffix roots start time
+                  (hpositive (start + time))]
+          _ ≤ quittingTailConditionedValue roots value boundary
+                (start + time) who + quitError (start + time) := hsource
+          _ ≤ quittingTailConditionedValue suffixRoots suffixValue boundary
+                time who + targetQuitError := by
+            rw [show quittingTailConditionedValue suffixRoots suffixValue
+                boundary time =
+              quittingTailConditionedValue roots value boundary
+                (start + time) by
+              simp only [suffixRoots, suffixValue,
+                quittingTailConditionedValue_suffix]]
+            gcongr)
+      (by
+        intro time
+        rw [show quittingTailConditionedAbsorptionWeight suffixRoots time =
+            quittingTailConditionedAbsorptionWeight roots (start + time) by
+          simp only [suffixRoots,
+            quittingTailConditionedAbsorptionWeight_suffix]]
+        exact (hstart (start + time) (Nat.le_add_right start time)).1.le)
+      (by
+        intro time
+        have halpha : quittingTailConditionedAbsorptionWeight suffixRoots time ≤
+            requestedMesh := by
+          rw [show quittingTailConditionedAbsorptionWeight suffixRoots time =
+              quittingTailConditionedAbsorptionWeight roots (start + time) by
+            simp only [suffixRoots,
+              quittingTailConditionedAbsorptionWeight_suffix]]
+          exact (hstart (start + time) (Nat.le_add_right start time)).1.le
+        have halphaSafety :
+            quittingTailConditionedAbsorptionWeight suffixRoots time ≤
+              safetyMesh := halpha.trans (min_le_right _ _)
+        calc
+          (Fintype.card ι : ℝ) *
+              quittingTailConditionedAbsorptionWeight suffixRoots time ≤
+            Fintype.card ι * safetyMesh :=
+              mul_le_mul_of_nonneg_left halphaSafety hcard.le
+          _ = 1 / 2 := by
+            dsimp only [safetyMesh]
+            field_simp
+          _ ≤ 1 := by norm_num)
+      (by
+        intro time
+        have halpha : quittingTailConditionedAbsorptionWeight suffixRoots time ≤
+            requestedMesh := by
+          rw [show quittingTailConditionedAbsorptionWeight suffixRoots time =
+              quittingTailConditionedAbsorptionWeight roots (start + time) by
+            simp only [suffixRoots,
+              quittingTailConditionedAbsorptionWeight_suffix]]
+          exact (hstart (start + time) (Nat.le_add_right start time)).1.le
+        exact halpha.trans (min_le_right _ _ |>.trans hsafetyHalf))
+      (by
+        intro who suffixStart
+        have hsource := hdeletedComplete who (start + suffixStart)
+        simpa only [suffixRoots,
+          quittingTailConditionedOpponentWeight_suffix, Nat.add_assoc] using
+            hsource)
+  refine ⟨quittingInfinitePathProfile reward
+      (quittingTailDiffuseRescaledRoots suffixRoots hsuffixPositive), ?_⟩
+  have herrorEq :
+      (6 * quittingRewardBound reward * Fintype.card ι * requestedMesh) +
+          targetQuitError +
+          ((13 * Fintype.card ι + 16) * quittingRewardBound reward *
+            requestedMesh) =
+        coefficient * requestedMesh + targetQuitError := by
+    dsimp only [coefficient]
+    unfold quittingConditionedProperFaceDiffuseCompilerCoefficient
+    ring
+  have hmeshError : coefficient * requestedMesh ≤ epsilon / 2 := by
+    have hrequestedLe : requestedMesh ≤ targetMesh := min_le_left _ _
+    have hfirst : coefficient * requestedMesh ≤ coefficient * targetMesh :=
+      mul_le_mul_of_nonneg_left hrequestedLe hcoefficient
+    apply hfirst.trans
+    dsimp only [targetMesh]
+    rw [show coefficient * (epsilon / (2 * (coefficient + 1))) =
+        coefficient * epsilon / (2 * (coefficient + 1)) by ring]
+    rw [div_le_iff₀ hdenominator]
+    nlinarith [mul_nonneg hcoefficient hepsilon.le]
+  intro who deviation
+  have hlocal := hcompiled.1 who deviation
+  rw [herrorEq] at hlocal
+  dsimp only [targetQuitError] at hlocal
+  linarith
 
 /-- **Tight diffuse strategic dichotomy.**  On a singleton-tight exact source
 tail with vanishing conditioned mesh, either the game has a uniform payoff or

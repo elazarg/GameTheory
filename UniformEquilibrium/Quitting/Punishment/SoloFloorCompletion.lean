@@ -45,7 +45,7 @@ theorem isUniformEquilibriumPayoff_soloReward_of_soloFloor_of_punishmentIR
       quittingSoloReward reward owner owner) :
     (quittingGame reward).IsUniformEquilibriumPayoff none
       (quittingSoloReward reward owner) := by
-  let rate : ℕ → ℝ := fun n => (((n + 1 : ℕ) : ℝ))⁻¹
+  let rate : ℕ → ℝ := fun n => 1 / ((n : ℝ) + 1)
   have hratePos : ∀ n, 0 < rate n := by
     intro n
     dsimp only [rate]
@@ -53,16 +53,12 @@ theorem isUniformEquilibriumPayoff_soloReward_of_soloFloor_of_punishmentIR
   have hrateOne : ∀ n, rate n ≤ 1 := by
     intro n
     dsimp only [rate]
-    change 1 / (((n + 1 : ℕ) : ℝ)) ≤ 1
     apply (div_le_one (by positivity)).2
     exact_mod_cast (show (1 : ℕ) ≤ n + 1 by omega)
   have hrateVanish : Tendsto rate atTop (nhds 0) := by
-    have hshift : Tendsto (fun n : ℕ => n + 1) atTop atTop :=
-      tendsto_add_atTop_nat 1
-    have hcast : Tendsto (fun n : ℕ => (((n + 1 : ℕ) : ℝ)))
-        atTop atTop :=
-      tendsto_natCast_atTop_atTop.comp hshift
-    simpa [rate] using tendsto_inv_atTop_zero.comp hcast
+    simpa only [rate] using
+      (tendsto_one_div_add_atTop_nhds_zero_nat :
+        Tendsto (fun n : ℕ => (1 : ℝ) / (n + 1)) atTop (nhds 0))
   let hazard : ℕ → PMF Bool := fun n =>
     quittingHazardCoin (rate n) (hratePos n).le (hrateOne n)
   let error : ℕ → ℝ := fun n =>
@@ -75,14 +71,13 @@ theorem isUniformEquilibriumPayoff_soloReward_of_soloFloor_of_punishmentIR
   have herrorVanish : Tendsto error atTop (nhds 0) := by
     simpa [error, mul_assoc] using
       hrateVanish.const_mul (2 * quittingRewardBound reward)
-  apply isUniformEquilibriumPayoff_soloReward_of_approximate_caps
-    reward owner hazard error
-  · intro n
+  have hhazardPositive : ∀ n, 0 < (hazard n true).toReal := by
+    intro n
     dsimp only [hazard]
     rw [quittingHazardCoin_true_toReal]
     exact hratePos n
-  · exact herror0
-  · exact herrorVanish
+  apply isUniformEquilibriumPayoff_soloReward_of_approximate_caps
+    reward owner hazard error hhazardPositive herror0 herrorVanish
   · intro n other hother
     let M := quittingRewardBound reward
     let target := quittingSoloReward reward owner other
@@ -95,15 +90,16 @@ theorem isUniformEquilibriumPayoff_soloReward_of_soloFloor_of_punishmentIR
           (abs_reward_le_quittingRewardBound reward
             ⟨{owner, other}, by simp⟩ other))
     have htargetAbs : |target| ≤ M := by
-      simpa [M, target, quittingSoloReward] using
-        (abs_reward_le_quittingRewardBound reward
-          (quittingSingletonTerminal owner) other)
+      change |reward (quittingSingletonTerminal owner) other| ≤
+        quittingRewardBound reward
+      exact abs_reward_le_quittingRewardBound reward
+        (quittingSingletonTerminal owner) other
     have hspread : collision - target ≤ 2 * M := by
       have htargetLower := (abs_le.mp htargetAbs).1
       linarith
     have hcontinue : 0 ≤ 1 - rate n := sub_nonneg.mpr (hrateOne n)
     rw [quittingStationaryUnilateralCap_solo_other
-      reward hother (hazard n)]
+      reward hother (hazard n) (hhazardPositive n)]
     apply max_le
     · rw [quittingStationaryFixedOpponentsQuitValue_solo_other_eq_mix
         reward hother (hazard n)]
@@ -121,8 +117,7 @@ theorem isUniformEquilibriumPayoff_soloReward_of_soloFloor_of_punishmentIR
             (le_refl _)
         _ = target + rate n * (collision - target) := by ring
         _ ≤ target + rate n * (2 * M) := by
-          exact add_le_add_left
-            (mul_le_mul_of_nonneg_left hspread (hratePos n).le) target
+          gcongr
         _ = quittingSoloReward reward owner other + error n := by
           dsimp only [target, M, error]
           ring
