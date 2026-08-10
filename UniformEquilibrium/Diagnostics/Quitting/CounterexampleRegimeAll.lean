@@ -44,6 +44,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacket
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentProjectiveGauge
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentProjectiveGaugeDefect
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentProjectiveGaugeScalarClosure
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentProjectiveGaugeSecondJet
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentRegularArcLift
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportTransversality
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerExactRoot
@@ -180,6 +181,14 @@ reduced branch.  If the minor vanishes, the explicit outward direction kills
 all selected first-order rows and leaves an honest higher-order closure
 problem.  The finite alternative is transverse sign obstruction versus
 higher-order singularity, not an implicit first-order repair.
+For the three-owner zero-minor branch, the first nontrivial omitted-row
+calculation is now exact.  Along the sum-one Bellman-forced affine outward
+path, the defect is `s^2*(Q+s*C)`.  Nonzero quadratic coefficient gives an
+eventual fixed sign; if it vanishes, a nonzero cubic coefficient gives a
+fixed sign at every positive scale; if both vanish, this scalar is identically
+zero along the path.  The path is not asserted to solve the retained
+nonlinear mixing rows, so this classifies the second jet without constructing
+an arc or return.
 For two declared active owners, Bellman elimination makes the reduced support
 Jacobian exactly `[[0,D₁₂],[D₂₁,0]]`, where
 `Dᵢⱼ=r_i({i,j})-r_i({i})`.  A signed directed pivot is regular precisely

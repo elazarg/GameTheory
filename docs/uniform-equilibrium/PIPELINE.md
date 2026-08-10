@@ -2993,6 +2993,22 @@ outward direction kills the selected rows to first order and leaves a genuine
 higher-order problem.  The exact alternative is transverse sign obstruction
 versus higher-order singular closure.
 
+The first higher-order term is also explicit in the three-owner zero-minor
+branch.  For the omitted row and the gauged outward affine path, Bellman
+forcing and compatibility cancel the constant and linear terms and leave
+
+```text
+defect(s) = s^2 * (Q + s*C).
+```
+
+Here `Q` and `C` are explicit products of the packet masses, gauged outward
+variation, and the triple-join remainder.  If `Q≠0`, the defect has an
+eventual fixed sign.  If `Q=0` but `C≠0`, it is the exact fixed-sign cubic
+`s^3*C`; if both vanish, the omitted scalar is identically zero on this
+affine path.  The retained nonlinear mixing rows are not claimed to vanish
+on that path, so the final zero-coefficient cell is a sharply described
+higher-order branch, not yet a physical solution.
+
 The two-owner chart is completely classified at this linearized level.  After
 Bellman elimination its reduced matrix is
 
