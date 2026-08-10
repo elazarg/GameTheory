@@ -2367,6 +2367,19 @@ affine shrink transport cannot turn this into a finite reset, because any
 finite return to scale one forces the initial scale to have been one already.
 Thus a successful reset must change support, limiting delivery, or chronology.
 
+The literal eventual all-Continue alternative is also fully rigid internally.
+Two consecutive all-Continue roots force equality of the complete dynamic-debt
+states, so an eventual plateau is exactly constant and equal to the extracted
+limit.  Its actual terminal payoff is zero; the entire displayed value is
+phantom.  The distinguished debt owner still has
+`terminalGap ≤ debt ≤ singleton reward ≤ limit value`.  Consequently every
+positive solo rate is blocked by a strict joiner, with the finite affine family
+reducing to one universal blocker or two overlapping blockers.  Any exact
+endpoint-Nash root at the owner's singleton target must therefore enlarge
+support to a second positive quitter.  This is the precise finite residue:
+blocker inequalities force enlargement but do not choose rates satisfying the
+new active Bellman and complementarity rows.
+
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.
 On proper singleton roots, a state-matched changing-owner Nash--Bellman cycle

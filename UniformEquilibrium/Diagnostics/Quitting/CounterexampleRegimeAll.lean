@@ -26,6 +26,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledCapacit
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledTailPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOneStageObstructionCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeExactCycleStrata
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeEventualAllContinuePlateau
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFiniteInstability
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFloorViolationBudget
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacket
@@ -511,6 +512,17 @@ below the punishment floor.  Exact affine shrink transport cannot repair this
 by rejoining the original chronology at a finite date.  These are real
 restrictions, but do not attach the diagnostic repetition to the varying
 source suffix.
+
+The literal eventual all-Continue alternative has no hidden late dynamics.
+Two consecutive all-Continue roots force equality of the complete augmented
+states, so the tail is eventually the constant extracted limit.  Its actual
+terminal payoff is zero and the displayed value is wholly phantom.  The
+selected owner nevertheless satisfies
+`terminalGap ≤ debt ≤ singleton reward ≤ displayed value`.  Every positive
+solo rate has a strict joining blocker, and any exact endpoint-Nash root at
+that singleton target with positive owner hazard must place positive hazard
+on a second player.  This forces support enlargement without solving the
+enlarged root's simultaneous complementarity equations.
 
 The strategic consumers are now explicit.  Any supplied finite
 collision-aware product-root return satisfying exact Nash and punishment
