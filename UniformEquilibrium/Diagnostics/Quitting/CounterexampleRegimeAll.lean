@@ -39,6 +39,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacket
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentAnchoredProjectiveLCP
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentMixingCompatibility
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentProjectiveGauge
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentRegularArcLift
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportTransversality
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerExactRoot
@@ -148,6 +149,16 @@ three-owner support, one explicit radial minor exactly separates the
 transverse-surjective/no-outward branch from the singular/outward branch and
 the latter supplies a finite left costate.  None of these statements creates
 a global return.
+The canonical projective gauge `sum leading = 1` now removes exactly the
+scale line, with an injective affine chart and an exact equality between its
+full-residual zero image and the ungauged zero set on that hyperplane.  The
+gauged full system is square, so full derivative surjectivity would isolate
+the base rather than produce an arc.  A nonvacuous regular theorem therefore
+uses a codimension-one reduced residual together with an explicit local
+recovery equivalence to the full equations.  Surjectivity and an outward
+kernel direction for that reduced system produce an analytic arc of literal
+full zeros and feed the existing Nash--Bellman decoder.  Constructing the
+reduced equation/recovery pair remains the exact analytic gate.
 For two declared active owners, Bellman elimination makes the reduced support
 Jacobian exactly `[[0,D₁₂],[D₂₁,0]]`, where
 `Dᵢⱼ=r_i({i,j})-r_i({i})`.  A signed directed pivot is regular precisely

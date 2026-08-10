@@ -2895,6 +2895,23 @@ with one reciprocal directed pair nonzero, a single explicit radial minor
 decides the exact transverse/no-outward versus singular/outward alternative.
 These are gauge-design data, not a return or equilibrium.
 
+The scale quotient itself is now exact.  Normalize the leading hazards by
+`sum_i leading_i=1` and parameterize the slice by zero-sum variations around
+the packet mass.  The resulting affine chart is injective, its range is
+exactly that hyperplane, and its full-residual zeros map exactly to the
+ungauged full zeros in the slice.  It also preserves the radial coordinate
+and feeds the existing physical Nash--Bellman decoder.
+
+Gauge removal alone is not yet the arc theorem: after normalization the full
+system is square, so an invertible/full-surjective derivative isolates the
+packet.  The correct regular interface drops one dependent equation, asks
+for local exact recovery of the full system, and applies the regular-level
+theorem to that codimension-one reduced residual.  Surjectivity plus an
+outward kernel direction there yields a positive analytic arc of literal
+full zeros.  The remaining analytic task is therefore precise: construct
+the dependent-row projection and prove local recovery for the game-specific
+compatible system.  Compatibility by itself does not supply it.
+
 The two-owner chart is completely classified at this linearized level.  After
 Bellman elimination its reduced matrix is
 
