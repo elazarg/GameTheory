@@ -106,7 +106,7 @@ theorem traceViaLeft_ne_traceViaRight : traceViaLeft ≠ traceViaRight := by
   have hprev := congrArg tracePrevious hequal
   simp [traceViaLeft, traceViaRight, tracePrevious] at hprev
 
-/-- **Hostile test 4a.** A merging arena refutes tree-shapedness, and for the
+/-- A merging arena refutes tree-shapedness, and for the
 intended reason: one state carries two distinct histories. -/
 theorem mergingArena_not_treeShaped : ¬ mergingArena.IsTreeShaped := by
   intro htree
@@ -160,7 +160,7 @@ theorem loopTrace_length (count : ℕ) : (loopTrace count).length = count := by
   | zero => rfl
   | succ count ih => simpa [loopTrace, Trace.length] using ih
 
-/-- **Hostile test 4b.** No horizon bounds a cyclic arena, and for the intended
+/-- No horizon bounds a cyclic arena, and for the intended
 reason: histories of every length exist and none of them has stopped. -/
 theorem cyclicArena_not_boundedHorizon (horizon : ℕ) :
     ¬ cyclicArena.BoundedHorizon horizon := by

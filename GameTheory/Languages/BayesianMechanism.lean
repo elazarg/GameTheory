@@ -1,16 +1,16 @@
 /-
-# Bayesian direct mechanisms
+# Bayesian direct-mechanism syntax and compilation
 
 A Bayesian mechanism keeps true types separate from reports. Its utility reads
 the true type profile and the chosen outcome; a misreport therefore cannot
 silently change the type used to evaluate the deviator.
 
-The compiler makes reports the actions of an ordinary `BayesianGame`.
-Truthful Bayes-Nash is then the existing `IsNash` predicate on that game's
-direct contingent-plan form.
+The compiler makes reports the actions of an ordinary `BayesianGame`.  This
+module contains data and compilation only; incentive predicates and equilibrium
+theorems live under `GameTheory.Mechanism`.
 -/
 
-import GameTheory.Core.BayesianEquilibrium
+import GameTheory.Core.Bayesian
 
 noncomputable section
 
@@ -52,17 +52,6 @@ def truthfulReports (types : ∀ i, M.Ty i) :
     Profile M.reportSignature :=
   fun i => M.truth i (types i)
 
-/-- Dominant-strategy incentive compatibility: truth beats every report for
-every true type profile and every fixed profile of opponents' reports. -/
-def IsIncentiveCompatible : Prop :=
-  ∀ (who : ι) (types : ∀ i, M.Ty i)
-    (reports : Profile M.reportSignature) (misreport : M.Report who),
-    M.utility types
-        (M.choose (Profile.update reports who misreport)) who ≤
-      M.utility types
-        (M.choose
-          (Profile.update reports who (M.truth who (types who)))) who
-
 /-- Compile a prior and direct mechanism to the accepted Bayesian-game
 semantics. Reports are actions; payoff uses true types separately. -/
 @[reducible]
@@ -99,37 +88,6 @@ theorem actionsOf_update_truthfulPlan
         (deviation (types who)) := by
   rw [BayesianGame.actionsOf_update, M.actionsOf_truthfulPlan]
   rfl
-
-/-- **Incentive compatibility implies truthful Bayes-Nash.** The conclusion is
-ordinary Nash of the compiled Bayesian game form, with no second Bayesian
-equilibrium predicate. -/
-theorem isNash_truthfulPlan_of_isIncentiveCompatible
-    (prior : FinDist (∀ i, M.Ty i))
-    (hIC : M.IsIncentiveCompatible) :
-    IsNash (M.toBayesianGame prior).toForm
-      (euPreference (M.toBayesianGame prior).utility)
-      (M.truthfulPlan prior) := by
-  rw [isNash_iff]
-  intro who deviation
-  rw [euPreference_apply]
-  unfold expectedUtility
-  rw [BayesianGame.toForm_play, FinDist.expect_map,
-    BayesianGame.toForm_play, FinDist.expect_map]
-  apply FinDist.expect_mono
-  intro types _
-  rw [M.actionsOf_update_truthfulPlan, M.actionsOf_truthfulPlan]
-  have hpoint :=
-    hIC who types (M.truthfulReports types) (deviation (types who))
-  show
-    M.utility types
-        (M.choose
-          (Profile.update (M.truthfulReports types) who
-            (deviation (types who)))) who ≤
-      M.utility types (M.choose (M.truthfulReports types)) who
-  have hreport :
-      M.truth who (types who) = M.truthfulReports types who := rfl
-  rw [hreport, Profile.update_eq_self] at hpoint
-  exact hpoint
 
 end BayesianMechanism
 

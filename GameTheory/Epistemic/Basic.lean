@@ -43,14 +43,6 @@ theorem posterior_eq_of_mem_cell [DecidableEq Ω] (prior : FinDist Ω)
       posterior prior partition event other := by
   simp only [posterior, partition.coherent state other hother]
 
-/-- Partitions with the same current cell induce the same posterior. -/
-theorem posterior_eq_of_cell_eq [DecidableEq Ω] (prior : FinDist Ω)
-    (first second : InfoPartition Ω) (event : Finset Ω) (state : Ω)
-    (hcell : first.cell state = second.cell state) :
-    posterior prior first event state =
-      posterior prior second event state := by
-  simp only [posterior, hcell]
-
 /-- An event is self-evident when every cell meeting it is contained in it. -/
 def IsSelfEvident (partition : InfoPartition Ω) (event : Finset Ω) : Prop :=
   ∀ state ∈ event, partition.cell state ⊆ event

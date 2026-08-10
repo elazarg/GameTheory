@@ -89,7 +89,7 @@ default.
 Promotion starts with the checked finite-cell, posterior, self-evidence,
 disjoint-cell, sum-decomposition, and Aumann-agreement slice. Broader S5 and
 approximate-common-knowledge recovery follows only after the D-KNOW
-declaration ledger classifies the pinned inventory.
+declaration ledger classifies the representative inventory.
 
 That promotion is complete. `GameTheory.Epistemic.Basic` contains the
 partition, posterior, and self-evidence interface;

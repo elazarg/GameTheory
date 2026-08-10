@@ -669,7 +669,7 @@ theorem fullyMixedAssessment_isFullyMixed :
 
 theorem fullyMixedAssessment_isBayesConsistent :
     fullyMixedAssessment.IsBayesConsistent := by
-  intro who site history
+  intro who site _hmass history
   cases who
   exact information.bayesBelief_prob fullyMixedBehavioralProfile .player site
     (informationMass_fullyMixed_pos site) history
@@ -777,6 +777,75 @@ theorem fullyMixedAssessment_isSequentialEquilibrium_matchingPayoff :
   exact
     ⟨fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff,
       fullyMixedAssessment_isSequentiallyConsistent⟩
+
+/-! A falsifying assessment reuses the same continuation runner. Its belief
+puts all mass on hidden `true`, while its strategy chooses `false`. -/
+
+def trueBelief
+    (who : Player) (site : information.InformationSite who) :
+    FinDist (information.InformationHistory who site.1) := by
+  cases who
+  rw [informationSite_info_eq_acting site]
+  exact FinDist.pure (decisionInformationHistory true)
+
+def wrongAssessment : information.BehavioralAssessment where
+  strategy := behavioralProfile
+  belief := trueBelief
+
+@[simp]
+theorem wrongAssessment_belief_acting :
+    wrongAssessment.belief .player actingSite =
+      FinDist.pure (decisionInformationHistory true) := by
+  rfl
+
+def alwaysTruePolicy : information.BehavioralPolicy .player
+  | .waiting => FinDist.pure ⟨none, by simp⟩
+  | .acting => FinDist.pure ⟨some true, by simp⟩
+  | .done => FinDist.pure ⟨none, by simp⟩
+
+/-- Under the dogmatic belief, continuation value is exactly the probability
+of choosing `true` at the acting information state. -/
+theorem wrongAssessment_continuationContext_value
+    (alternative : information.BehavioralPolicy .player) :
+    (wrongAssessment.continuationContext actingSite
+      (matchingPayoff .player) 2).value alternative =
+        (alternative .acting).expect fun choice =>
+          if choice.1 = some true then 1 else 0 := by
+  have hupdated :
+      Profile.update (sig := information.behavioralSignature)
+          wrongAssessment.strategy .player alternative =
+        Profile.update (sig := information.behavioralSignature)
+          fullyMixedBehavioralProfile .player alternative := by
+    funext who
+    cases who
+    exact Profile.update_same _ _ _
+  rw [InformationModel.BehavioralAssessment.continuationContext_value,
+    wrongAssessment_belief_acting, FinDist.expect_bind, FinDist.expect_pure,
+    hupdated]
+  exact runBehavioralFrom_decision_matchingPayoff true alternative
+
+/-- The prescribed `false` policy has value zero, while the whole-policy
+alternative choosing `true` has value one. -/
+theorem wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff :
+    ¬ wrongAssessment.IsSequentiallyRationalWithin matchingPayoff 2 := by
+  intro hrational
+  have hdeviation :=
+    hrational .player actingSite alwaysTruePolicy (Set.mem_univ _)
+  rw [wrongAssessment_continuationContext_value,
+    wrongAssessment_continuationContext_value] at hdeviation
+  norm_num [alwaysTruePolicy, wrongAssessment, behavioralProfile,
+    behavioralPolicy] at hdeviation
+  simp at hdeviation
+  norm_num at hdeviation
+
+/-- Failed sequential rationality is already enough to refute sequential
+equilibrium, independently of the assessment's consistency status. -/
+theorem wrongAssessment_not_isSequentialEquilibrium_matchingPayoff :
+    ¬ game.IsSequentialEquilibriumWithin wrongAssessment matchingPayoff 2 := by
+  intro hequilibrium
+  apply wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff
+  exact (game.isSequentialEquilibriumWithin_iff
+    wrongAssessment matchingPayoff 2).mp hequilibrium |>.1
 
 /-- The language adapter supplies finite history fibers and the canonical
 full-policy continuation contexts. This is a genuine proposition, not a stub

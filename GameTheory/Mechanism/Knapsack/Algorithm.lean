@@ -1,10 +1,6 @@
 /-
-Executable 0/1 knapsack primitives, adapted from the pinned v1 source:
-`reference/GameTheory-v1/GameTheory/Auctions/Knapsack/Basic.lean`
-at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
-
-`solveList` is exact skip/take recursion over the supplied list.  It makes no
-memoization or asymptotic-complexity claim.
+Executable 0/1 knapsack primitives. `solveList` is exact skip/take recursion
+over the supplied list. It makes no memoization or asymptotic-complexity claim.
 -/
 
 import GameTheory.Mechanism.Knapsack.Aggregate

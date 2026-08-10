@@ -53,7 +53,7 @@ claim and forces the public theorem to expose an acceptable fallback.
 | axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
 | gate validation | focused root/test build, 3,440-job full build, Phase 2 structural and exact coverage `VERIFIED=1` |
 
-The focused and root builds, architecture audit, exact pinned-v1 accounting,
+The focused and root builds, architecture audit, exact bootstrap accounting,
 and independent integration review all pass.
 
 ## Kill condition

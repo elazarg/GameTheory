@@ -687,7 +687,7 @@ theorem nativeRun_eq_serialRun
       (by simp [Stage.initial])]
   simp [Stage.initial, Stage.assignment]
 
-/-- Flagship EXP-041 result: the native simultaneous-frontier evaluator and
+/-- The native simultaneous-frontier evaluator and
 the compiled EFG's actual behavioral runner have the same complete
 typed-assignment law. -/
 theorem nativeRun_eq_compiledBehavioralRun

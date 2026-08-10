@@ -121,7 +121,7 @@ theorem recalling_historyLaws (horizon : ℕ) :
         recallingGame.information.runBehavioral behavioral horizon = law } =
       { law | ∃ mixed : Profile recallingGame.information.strategicSignature.mixed,
         recallingGame.information.runMixed mixed horizon = law } :=
-  recallingGame.kuhn_historyLaws recallingActsOnce recallingPerfectRecall horizon
+  recallingGame.kuhn_historyLaws recallingPerfectRecall horizon
 
 /-- Arbitrary retained outcome data commutes with the predrawn mixed witness. -/
 theorem recalling_outcomeLaw

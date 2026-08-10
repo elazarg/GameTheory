@@ -21,9 +21,8 @@ def signature : GameSignature (Fin 2) where
   Outcome := Bool × Bool
 
 @[reducible]
-def form : GameForm (Fin 2) where
-  sig := signature
-  play profile := FinDist.pure (profile 0, profile 1)
+def form : GameForm (Fin 2) :=
+  GameForm.deterministic signature fun profile => (profile 0, profile 1)
 
 def utility (outcome : Bool × Bool) (_who : Fin 2) : ℝ :=
   if outcome.1 = outcome.2 then 1 else 0
@@ -81,8 +80,8 @@ theorem cumulativeExternalRegret_le_one :
 /-- The no-regret reduction turns the checked cumulative bound into a
 `1 / 2`-coarse correlated equilibrium guarantee. -/
 theorem timeAverage_isHalfCoarseCorrelatedEq :
-    game.IsεCoarseCorrelatedEq (1 / 2)
-      (game.timeAverage roundLaw) := by
+    IsεCoarseCorrelatedEq game.form game.utility (1 / 2)
+      (game.form.timeAverage roundLaw) := by
   simpa using game.timeAverage_isεCoarseCorrelatedEq_of_regret_le
     (roundLaw := roundLaw) (R := 1) cumulativeExternalRegret_le_one
 
@@ -90,7 +89,7 @@ theorem timeAverage_isHalfCoarseCorrelatedEq :
 player zero gains `1 / 2` by always choosing `false`. -/
 theorem timeAverage_not_coarseCorrelatedEq :
     ¬ IsCoarseCorrelatedEq game.form game.preference
-      (game.timeAverage roundLaw) := by
+      (game.form.timeAverage roundLaw) := by
   rw [game.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero]
   intro h
   rw [game.isεCoarseCorrelatedEq_iff_externalRegret_le] at h
@@ -102,24 +101,35 @@ theorem timeAverage_not_coarseCorrelatedEq :
 
 /-! ### Independent self-play API -/
 
-/-- The finite self-play bridge is exposed over canonical `FinDist` mixed
-profiles and the canonical CCE predicate. -/
-theorem independent_selfPlay_api : True := by
-  let mixedProfile : Profile signature.mixed := fun _ => FinDist.pure false
-  have hband : ∀ who outcome, game.utility outcome who ∈ Set.Icc (0 : ℝ) 1 := by
-    intro who outcome
-    simp only [utility]
-    split <;> norm_num
-  have _ := game.externalRegret_pi mixedProfile 0 false
-  have _ := game.normGain (fun _ => 0) 1 mixedProfile 0 false
-  have _ := game.expect_expectedUtility_update mixedProfile 0
-  have _ := game.normGain_mem_Icc (lo := fun _ => 0) (width := 1)
-    (by norm_num) (by simpa using hband) mixedProfile 0 false
-  have _ := game.expect_normGain (fun _ => 0) 1 mixedProfile 0
-  have _ := game.expectedUtility_deviation_eq_width_mul_normGain
-    (lo := fun _ => 0) (width := 1) (by norm_num) mixedProfile 0 false
-  have _ := game.selfPlay_timeAverage_isεCoarseCorrelatedEq (T := 1) (bound := 0)
-    (fun _ => mixedProfile)
-  trivial
+/-- Constant coordinated independent self-play has zero regret and therefore
+induces an exact coarse correlated equilibrium through the product-law bridge. -/
+theorem coordinated_independentSelfPlay_isCoarseCorrelatedEq :
+    let mixedProfile : Profile signature.mixed := fun _ => FinDist.pure false
+    IsεCoarseCorrelatedEq game.form game.utility 0
+      (game.form.timeAverage fun _ : Fin 1 => FinDist.pi mixedProfile) := by
+  dsimp
+  simpa using game.selfPlay_timeAverage_isεCoarseCorrelatedEq
+    (mixedProfile := fun _ : Fin 1 => fun _ => FinDist.pure false)
+    (bound := 0) (by
+      intro who action
+      have hupper :
+          expectedUtility game.utility who
+              (game.form.mixed.play
+                (Profile.update (fun _ : Fin 2 => FinDist.pure false) who
+                  (FinDist.pure action))) ≤ 1 := by
+        rw [expectedUtility]
+        have h := FinDist.expect_mono
+          (μ := game.form.mixed.play
+            (Profile.update (fun _ : Fin 2 => FinDist.pure false) who
+              (FinDist.pure action)))
+          (u := fun outcome => game.utility outcome who)
+          (v := fun _ => (1 : ℝ))
+          (fun outcome _ => by
+            show (if outcome.1 = outcome.2 then (1 : ℝ) else 0) ≤ 1
+            split <;> norm_num)
+        simpa using h
+      simp only [Fin.sum_univ_one]
+      norm_num [game, form, utility, expectedUtility] at ⊢
+      simpa [game, expectedUtility, utility] using hupper)
 
 end GameTheory.Tests.Learning

@@ -4,11 +4,8 @@
 This is the analytic side of repeated play. Feasibility is the convex hull of
 stage payoff vectors; opponent minmax is an order-theoretic punishment value.
 The finite-cycle approximation uses the independent denominator-clearing lemma
-from `GameTheoryMath`.
-
-The proof inventory is adapted from the pinned v1
-`FolkTheorem/{Feasible,Main}.lean`, with unused ambient/interior geometry and
-the separate general security hierarchy deliberately omitted under EXP-031.
+from `GameTheoryMath`. The construction needs neither ambient/interior geometry
+nor a separate general security hierarchy.
 -/
 
 import Mathlib.Analysis.Convex.Combination
@@ -169,13 +166,17 @@ def strictIndividuallyRationalPayoffSet (G : UtilityGame ι)
   G.feasibleSet ∩ strictReservationSet reservation
 
 /-- Best payoff against a fixed full punishment profile; the punished player's
-stored coordinate is ignored and replaced. -/
+stored coordinate is ignored and replaced.  On an empty strategy carrier this
+inherits `iSup`'s empty-index convention; operational punishment theorems below
+therefore request the relevant nonemptiness explicitly. -/
 def bestResponseValueAgainstPunishment (G : UtilityGame ι)
     [DecidableEq ι] (who : ι) (punishment : Profile G.form.sig) : ℝ :=
   ⨆ own : G.form.sig.Strategy who,
     G.stagePayoff (Profile.update punishment who own) who
 
-/-- The lowest best-response value the other players can impose. -/
+/-- The lowest best-response value the other players can impose.  On an empty
+profile carrier this inherits `iInf`'s empty-index convention; no minmax claim
+is made there. -/
 def opponentMinmaxLevel (G : UtilityGame ι) [DecidableEq ι]
     (who : ι) : ℝ :=
   ⨅ punishment : Profile G.form.sig,

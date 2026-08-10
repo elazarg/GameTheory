@@ -26,7 +26,7 @@ transfer; T4 the one-shot NFG-to-FOSG embedding commuting with compilation. The
 exact declarations and baselines are frozen in
 [`../Phase0ArchitectureEvidence.md`](../Phase0ArchitectureEvidence.md).
 
-**Measurements:** The complete pinned v1 snapshot has 436 Lean files and
+**Measurements:** The complete bootstrap snapshot has 436 Lean files and
 117,094 nonblank lines: 380/99,301 in `GameTheory/` and 56/17,793 in `Math/`.
 Within authored `GameTheory/` file text, `KernelGame` occurs in 187 files and 47
 language files. The 14 language bridge files contain 6,243 nonblank lines. Language code contains 84
@@ -37,7 +37,7 @@ three expressiveness declarations compose kernel morphisms/simulations. Direct
 T3 laws are 8/12 nonblank lines versus 20/25-line certificate wrappers; T4 is
 21 direct lines plus a 9-line wrapper.
 
-**Evidence from existing libraries:** v1 proves that a static outcome-law target
+**Evidence from existing libraries:** the baseline proves that a static outcome-law target
 supports mixed lifting, Nash existence, CE/CCE, learning, potential games, and
 several language bridges. It also proves that Kuhn mixed-to-behavioral needs
 reach mass/support factorization and player-local action posteriors, not merely
@@ -45,7 +45,7 @@ a field named perfect recall. Native EFG, MAID, FOSG, and open-game structures
 retain materially different protocol data. The snapshot contains duplicate
 static equilibrium surfaces despite the hub.
 
-**Unexpected costs:** The most general v1 transport surface is much larger than
+**Unexpected costs:** The most general the baseline transport surface is much larger than
 the direct T1/T3/T4 preservation lemmas and has no same-level composition in
 language consumers. The snapshot has no git history, so historical change
 concentration cannot be measured. The Bayesian branch contains no declaration
@@ -179,7 +179,7 @@ off-path histories.
 
 ### Unexpected cost from Phase 0, resolved
 
-The pinned snapshot's Bayesian branch was ex-ante only, which left open whether
+The comparison corpus's Bayesian branch was ex-ante only, which left open whether
 the shared local-deviation interface could carry an interim, type-dependent
 deviation at all. It can: the interim probe fits the same interface with no new
 equilibrium predicate.

@@ -4,6 +4,9 @@
 Finite Monderer--Samet `p`-belief operators over the canonical finite prior.
 The quantitative approximate-agreement bound is developed separately from this
 operator and exact-bridge layer.
+
+Primary reference: D. Monderer and D. Samet, “Approximating Common Knowledge
+with Common Beliefs,” *Games and Economic Behavior* 1 (1989).
 -/
 
 import GameTheory.Epistemic.Knowledge
@@ -17,10 +20,6 @@ open GameTheory.Probability
 universe uι uΩ
 
 variable {Ω : Type uΩ} [Fintype Ω] [DecidableEq Ω]
-
-/-- A probability threshold lies in the unit interval. -/
-def IsProbabilityThreshold (threshold : ℝ) : Prop :=
-  0 ≤ threshold ∧ threshold ≤ 1
 
 /-- The event where the current posterior of `event` is at least `threshold`. -/
 def PBelief (prior : FinDist Ω) (partition : InfoPartition Ω)

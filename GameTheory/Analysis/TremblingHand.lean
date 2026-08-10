@@ -4,9 +4,13 @@
 Core owns finite mixed perturbations and their restricted deviation scheme.
 This one-way analytic leaf adds pointwise convergence and the resulting limit
 refinement.  It never introduces another mixed extension or Nash predicate.
+
+Primary reference: R. Selten, “Reexamination of the Perfectness Concept for
+Equilibrium Points in Extensive Games,” *International Journal of Game
+Theory* 4 (1975).
 -/
 
-import GameTheory.Analysis.FiniteLaw
+import GameTheory.Analysis.ExpectedUtility
 import GameTheory.Core.TremblingHand
 
 noncomputable section
@@ -102,6 +106,10 @@ private def scaledPerturbation (profile : Profile F.sig.mixed)
     (n : ℕ) : F.Perturbation :=
   fun i action => vanishingWeight n * (profile i).prob action
 
+private def perturbationMass [∀ i, Fintype (F.sig.Strategy i)]
+    (lower : F.Perturbation) (who : ι) : ℝ :=
+  ∑ action, lower who action
+
 /-- Every full-support mixed Nash equilibrium is trembling-hand perfect.  Its
 own profile is feasible and remains optimal in each restricted game; scaling
 its positive masses supplies a vanishing perturbation certificate. -/
@@ -126,6 +134,100 @@ theorem _root_.GameTheory.IsNash.isTremblingHandPerfect_of_fullSupport
       vanishingWeight_tendsto_zero.mul_const ((profile i).prob action)
   · exact Analysis.mixedProfileConvergesPointwise_const profile
 
+/-- A trembling-hand perfect profile is mixed Nash.  Finite action carriers
+let an arbitrary mixed deviation be repaired to satisfy each positive lower
+bound; those repairs converge back to the original deviation as the bounds
+vanish. Expected-utility continuity then passes the perturbed equilibrium
+inequalities to the limit. -/
+theorem IsTremblingHandPerfect.isNash
+    [∀ i, Fintype (F.sig.Strategy i)]
+    {utility : F.sig.Outcome → ι → ℝ}
+    {profile : Profile F.sig.mixed}
+    (hperfect : F.IsTremblingHandPerfect (euPreference utility) profile) :
+    IsNash F.mixed (euPreference utility) profile := by
+  rw [isNash_iff]
+  intro who replacement
+  rw [euPreference_apply]
+  rcases hperfect with ⟨lower, approximating, hequilibria, hzero, hconverges⟩
+  have hlowerNonneg (n : ℕ) (action : F.sig.Strategy who) :
+      0 ≤ lower n who action :=
+    (hequilibria n).1 who action |>.le
+  have hmassLe (n : ℕ) :
+      perturbationMass F (lower n) who ≤ 1 := by
+    calc
+      ∑ action, lower n who action ≤
+          ∑ action, (approximating n who).prob action := by
+        apply Finset.sum_le_sum
+        intro action _
+        exact (hequilibria n).2.1 who action
+      _ = 1 := FinDist.sum_prob (approximating n who)
+  let weight : ℕ → F.sig.Strategy who → ℝ := fun n action =>
+    lower n who action +
+      (1 - perturbationMass F (lower n) who) * replacement.prob action
+  have hweightNonneg (n : ℕ) (action : F.sig.Strategy who) :
+      0 ≤ weight n action := by
+    apply add_nonneg (hlowerNonneg n action)
+    exact mul_nonneg (sub_nonneg.mpr (hmassLe n))
+      (FinDist.prob_nonneg replacement action)
+  have hweightSum (n : ℕ) : ∑ action, weight n action = 1 := by
+    simp only [weight, Finset.sum_add_distrib, ← Finset.mul_sum,
+      FinDist.sum_prob, perturbationMass]
+    ring
+  let repaired : ℕ → FinDist (F.sig.Strategy who) := fun n =>
+    FinDist.ofWeights (weight n) (hweightNonneg n) (hweightSum n)
+  have hrepairedRespects (n : ℕ) :
+      F.StrategyRespectsPerturbation (lower n who) (repaired n) := by
+    intro action
+    rw [show (repaired n).prob action = weight n action by
+      exact FinDist.prob_ofWeights ..]
+    exact le_add_of_nonneg_right
+      (mul_nonneg (sub_nonneg.mpr (hmassLe n))
+        (FinDist.prob_nonneg replacement action))
+  have hmassZero :
+      Tendsto (fun n => perturbationMass F (lower n) who) atTop (nhds 0) := by
+    unfold perturbationMass
+    simpa using tendsto_finsetSum Finset.univ fun action _ => hzero who action
+  have hrepairedConverges :
+      Analysis.FinDistConvergesPointwise repaired replacement := by
+    intro action
+    have hone : Tendsto (fun _ : ℕ => (1 : ℝ)) atTop (nhds 1) :=
+      tendsto_const_nhds
+    have hlimit := (hzero who action).add
+      ((hone.sub hmassZero).mul_const (replacement.prob action))
+    simpa [repaired, weight, FinDist.prob_ofWeights] using hlimit
+  have hupdatedConverges (other : ι) :
+      Analysis.FinDistConvergesPointwise
+        (fun n => Profile.update (approximating n) who (repaired n) other)
+        (Profile.update profile who replacement other) := by
+    by_cases hother : other = who
+    · subst hother
+      simpa only [Profile.update_same] using hrepairedConverges
+    · simpa only [Profile.update_of_ne _ _ hother] using hconverges other
+  let G : UtilityGame ι := ⟨F, utility⟩
+  have hstatusTendsto :
+      Tendsto
+        (fun n => expectedUtility utility who (F.mixed.play (approximating n)))
+        atTop
+        (nhds (expectedUtility utility who (F.mixed.play profile))) := by
+    simpa only [G] using
+      (UtilityGame.expectedUtility_mixed_tendsto (G := G) hconverges who)
+  have hdeviationTendsto :
+      Tendsto
+        (fun n => expectedUtility utility who
+          (F.mixed.play (Profile.update (approximating n) who (repaired n))))
+        atTop
+        (nhds (expectedUtility utility who
+          (F.mixed.play (Profile.update profile who replacement)))) := by
+    simpa only [G] using
+      (UtilityGame.expectedUtility_mixed_tendsto (G := G)
+        hupdatedConverges who)
+  apply le_of_tendsto_of_tendsto hdeviationTendsto hstatusTendsto
+  exact Eventually.of_forall fun n => by
+    have hpref :=
+      ((F.isPerturbedEq_iff (euPreference utility) (lower n) (approximating n)).mp
+        (hequilibria n).2).2 who (repaired n) (hrepairedRespects n)
+    simpa only [euPreference_apply] using hpref
+
 end GameForm
 
 namespace UtilityGame
@@ -140,6 +242,15 @@ theorem isTremblingHandPerfect_iff (G : UtilityGame ι)
     G.IsTremblingHandPerfect profile ↔
       G.form.IsTremblingHandPerfect (euPreference G.utility) profile :=
   Iff.rfl
+
+/-- Expected-utility trembling-hand perfection refines ordinary mixed Nash. -/
+theorem IsTremblingHandPerfect.isNash
+    (G : UtilityGame ι)
+    [∀ i, Fintype (G.form.sig.Strategy i)]
+    {profile : Profile G.form.sig.mixed}
+    (hperfect : G.IsTremblingHandPerfect profile) :
+    IsNash G.form.mixed (euPreference G.utility) profile :=
+  GameForm.IsTremblingHandPerfect.isNash G.form hperfect
 
 end UtilityGame
 

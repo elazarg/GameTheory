@@ -3,13 +3,13 @@
 
 Feasible payoffs strictly above every opponent-minmax punishment level are
 limits of normalized discounted payoff vectors of history-dependent Nash
-profiles in the observable mixed-action repeated game.
-
-This is the EXP-031 flagship. Its proof architecture is adapted from the pinned
-v1 `FolkTheorem/Main.lean`, while its statement uses the existing
-`UtilityGame.mixed`, deterministic repeated path, discounted utility, and
+profiles in the observable mixed-action repeated game. The statement uses
+`UtilityGame.mixed`, deterministic repeated paths, discounted utility, and
 ordinary `IsNash` directly. There is no repeated-equilibrium wrapper and no
 probability law over an infinite path.
+
+Primary reference: D. Fudenberg, D. K. Levine, and E. Maskin, “The Folk
+Theorem with Imperfect Public Information,” *Econometrica* 62 (1994).
 -/
 
 import GameTheory.Analysis.Repeated.Feasible

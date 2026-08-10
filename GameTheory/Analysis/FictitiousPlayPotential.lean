@@ -34,7 +34,7 @@ theorem IsExactPotential.summable_harmonic_aggregatePlayedGain
     Summable (fun t : ℕ =>
       (1 / ((t : ℝ) + 2)) * G.aggregatePlayedGain history t) := by
   let value : ℕ → ℝ := fun n =>
-    G.mixedPotential potential (G.empiricalBelief history (n + 1))
+    G.form.mixedPotential potential (G.form.empiricalBelief history (n + 1))
   let errorScale : ℝ :=
     ((Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) * (4 * C)
   let error : ℕ → ℝ := fun t =>
@@ -96,9 +96,9 @@ theorem IsExactPotential.summable_harmonic_aggregatePlayedGain
         rw [htelescopes]
       _ ≤ 2 * C + ∑' t, error t := by
         have hvalueN := G.mixedPotential_abs_le_of_abs_bound potential hbound
-          (G.empiricalBelief history (n + 1))
+          (G.form.empiricalBelief history (n + 1))
         have hvalue0 := G.mixedPotential_abs_le_of_abs_bound potential hbound
-          (G.empiricalBelief history (0 + 1))
+          (G.form.empiricalBelief history (0 + 1))
         have hvalueDiff : value n - value 0 ≤ 2 * C := by
           dsimp [value] at hvalueN hvalue0 ⊢
           linarith [(abs_le.mp hvalue0).1, (abs_le.mp hvalueN).2]
@@ -232,12 +232,12 @@ theorem IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero_of_abs_bo
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) :
     Tendsto (fun t : ℕ =>
-      G.mixedImprovement (G.empiricalBelief history (t + 1))) atTop (nhds 0) := by
+      G.mixedImprovement (G.form.empiricalBelief history (t + 1))) atTop (nhds 0) := by
   have hweighted := UtilityGame.IsExactPotential.weightedPlayedGain_tendsto_zero
     (G := G) hpotential hbound hplay
   exact squeeze_zero
     (fun t => G.mixedImprovement_nonneg
-      (G.empiricalBelief history (t + 1)))
+      (G.form.empiricalBelief history (t + 1)))
     (fun t =>
       UtilityGame.IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
         (G := G) hplay t)
@@ -250,7 +250,7 @@ theorem IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) :
     Tendsto (fun t : ℕ =>
-      G.mixedImprovement (G.empiricalBelief history (t + 1))) atTop (nhds 0) := by
+      G.mixedImprovement (G.form.empiricalBelief history (t + 1))) atTop (nhds 0) := by
   obtain ⟨C, hbound⟩ := G.exists_profile_abs_bound potential
   exact UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero_of_abs_bound
       (G := G) hpotential hbound hplay
@@ -276,7 +276,7 @@ theorem IsExactPotential.eventually_isεNash_of_isFictitiousPlay_of_abs_bound
     (hplay : G.IsFictitiousPlay history) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ t in atTop,
       IsεNash G.form.mixed G.utility ε
-        (G.empiricalBelief history (t + 1)) :=
+        (G.form.empiricalBelief history (t + 1)) :=
   G.eventually_isεNash_of_mixedImprovement_tendsto_zero
     (UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero_of_abs_bound
         (G := G) hpotential hbound hplay) hε
@@ -291,7 +291,7 @@ theorem IsExactPotential.eventually_isεNash_of_isFictitiousPlay
     (hplay : G.IsFictitiousPlay history) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ t in atTop,
       IsεNash G.form.mixed G.utility ε
-        (G.empiricalBelief history (t + 1)) :=
+        (G.form.empiricalBelief history (t + 1)) :=
   G.eventually_isεNash_of_mixedImprovement_tendsto_zero
     (UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero
       (G := G) hpotential hplay) hε
@@ -305,14 +305,14 @@ theorem IsFictitiousPlay.eventually_isεNash_of_weightedPlayedGain_tendsto_zero
       atTop (nhds 0)) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ t in atTop,
       IsεNash G.form.mixed G.utility ε
-        (G.empiricalBelief history (t + 1)) := by
+        (G.form.empiricalBelief history (t + 1)) := by
   have himprovement :
       Tendsto (fun t : ℕ =>
-        G.mixedImprovement (G.empiricalBelief history (t + 1)))
+        G.mixedImprovement (G.form.empiricalBelief history (t + 1)))
         atTop (nhds 0) :=
     squeeze_zero
       (fun t => G.mixedImprovement_nonneg
-        (G.empiricalBelief history (t + 1)))
+        (G.form.empiricalBelief history (t + 1)))
       (fun t => UtilityGame.IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
         (G := G) hplay t)
       hgain

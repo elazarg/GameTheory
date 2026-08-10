@@ -106,7 +106,7 @@ theorem selector_not_isDictator_zero : ¬ selector.IsDictator 0 := by
   rw [selector_rankZero] at htop
   simp [profile, rankZero] at htop
 
-/-- The finite-cardinality flagship is usable directly on the same public SCF
+/-- The finite-cardinality theorem is usable directly on the same public SCF
 surface exercised by the negative fixture. -/
 theorem strategyproof_onto_isDictatorial
     (choice : SocialChoiceFunction (Fin 1) (Fin 3))

@@ -4,10 +4,6 @@
 This file isolates the order-independence payload from the EFG compiler.
 Node kernels act on the typed total assignment, and independent kernels commute
 without exposing a swap certificate or an implementation-specific state type.
-The adjacent-kernel proof shape is adapted from the pinned
-`GameTheory/Languages/MAID/FoldEval.lean` at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; the typed carrier, direct global
-theorem, and compiler bridge are new.
 -/
 
 import GameTheory.Languages.MAID.ToEFG
@@ -544,7 +540,7 @@ theorem behavioralJoint_eq_serialJointLaw
   have hpending :
       state.path.length < topological.order.length :=
     (state.not_terminal_iff topological).mp hterminal
-  apply finDist_map_injective
+  apply FinDist.map_injective
     (f := fun joint => joint.1) Subtype.val_injective
   let node := state.pendingNode topological hpending
   match hkind : diagram.kind node with

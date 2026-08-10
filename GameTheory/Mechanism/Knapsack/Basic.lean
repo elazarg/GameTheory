@@ -1,11 +1,8 @@
 /-
 # Real finite-set knapsack semantics
 
-This module adapts the finite allocation and welfare mathematics from
-`reference/GameTheory-v1/GameTheory/Auctions/Knapsack/Basic.lean` at pinned
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.  Boolean allocations are
-replaced by `Finset`; the finite universe is explicit until a mechanism needs
-the full player universe.
+Allocations are finite sets; the finite universe remains explicit until a
+mechanism needs the full player universe.
 -/
 
 import GameTheory.Mechanism.Knapsack.Aggregate

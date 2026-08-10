@@ -1,7 +1,7 @@
 /-
 # Sequential equilibrium for finite EFG presentations
 
-This is the language adapter EXP-032 deliberately left open. Stable EFG syntax
+This language adapter keeps stable EFG syntax
 is a transparent specialization of Protocol and imports no solution concept.
 Here, above the analytic boundary, finite tree-shaped histories provide the
 instances required by pointwise Bayes consistency, and the assessment's own

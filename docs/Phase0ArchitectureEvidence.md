@@ -1,17 +1,15 @@
 # Phase 0 architecture evidence
 
-This document closes the evidence deliverables for RFC Phase 0. All source
-observations refer to the ignored v1 snapshot at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; paths below are relative to
-`reference/GameTheory-v1/`. No declaration in the snapshot is a dependency of
-the rewrite.
+This document closes the evidence deliverables for RFC Phase 0. Its corpus and
+dependency measurements are historical architecture evidence; no measured
+source is a dependency of the library.
 
 ## Frozen representative transfers
 
 These are the four transfers that must survive the later vertical slices. A
 name in quotation marks is a test label, not a frozen public declaration name.
 
-| ID | Transfer and v1 evidence | Level | Native data actually used | Deliberately forgotten | Direct baseline and certificate evidence |
+| ID | Transfer and the baseline evidence | Level | Native data actually used | Deliberately forgotten | Direct baseline and certificate evidence |
 |---|---|---|---|---|---|
 | T1 | Finite EFG strategic extraction: `EFGGame.toNFGGame_eu`, `toNFGGameDet_outcomeKernel`, and the generic mixed lift in `Concepts/Mixed/GameMorphism.lean` | strategic and incentive | tree evaluation, contingent pure plans, outcome kernel, utility evaluation, unilateral deviations | histories after evaluation, information sets, recall | `Languages/Bridges/EFG_NFG.lean`: direct EU theorem 8 nonblank lines; deterministic morphism 12. The snapshot has no named pure/mixed Nash transfer, so the later tests are explicitly “EFG strategic extraction pure Nash iff” and “mixed Nash iff”; neither may be credited before it exists. |
 | T2 | Kuhn behavioral/mixed correspondence: `EFG.kuhn_behavioral_to_mixed_udist` and `EFG.kuhn_mixed_to_behavioral_udist` | protocol, then strategic outcome-law | behavioral and pure contingent plans, finite information/action carriers, tree height, reach mass/support factorization, perfect recall; mixed-to-behavioral additionally factors through step-mass invariance, support factorization, and player-local action posteriors | utilities for the core theorem; unreached fallback actions after the witness is chosen | The utility-law wrappers are 9 and 11 nonblank lines. The mixed-to-behavioral EFG adapter contains a 31-line semantic invocation plus a 98-line run/evaluation bridge. The direct native EFG theorem is the baseline; a certificate may not store its conclusion. |
@@ -27,7 +25,7 @@ retired the wrappers: no live composition consumer justified them.
 
 ### Kuhn dependency audit
 
-The v1 mixed-to-behavioral hierarchy makes four obligations visible:
+the baseline mixed-to-behavioral hierarchy makes four obligations visible:
 
 1. `StepMassInvariant` and `StepSupportFactorization` control reach weights.
 2. `ActionPosteriorLocal` says a player's conditional action law depends only
@@ -45,7 +43,7 @@ equality receives no credit.
 
 ## Frozen flagship theorem list
 
-| ID | Existing declaration | Why it is flagship | v1 disposition |
+| ID | Existing declaration | Why it is flagship | the baseline disposition |
 |---|---|---|---|
 | F1 | `KernelGame.mixed_nash_exists` in `Concepts/Existence/NashExistenceMixed.lean` | finite mixed Nash existence and the PMF/simplex/analysis boundary | Harvest after D1/D2; Analysis layer only. |
 | F2 | `KernelGame.timeAverage_isεCCE_of_regret_le` in `Concepts/Learning/NoRegretToCCE.lean` | learning-to-CCE reuse of the common deviation logic | Stable static consumer after Phase 2. |
@@ -54,14 +52,14 @@ equality receives no credit.
 | F5 | `BayesNash.outcomeLaw_bayesCorrelatedEq` in `Mechanism/Bayesian/BayesCorrelatedEq.lean` | type-dependent obedience and Bayesian outcome-law transfer | Provisional. The snapshot contains no occurrence of “interim”; Phase 2 must add a genuinely interim conditional-deviation test rather than rename the ex-ante theorem. |
 | F6 | `Mechanism.isIC_implies_truthful_bayesNash` in `Mechanism/Bayesian/MechanismDesign.lean` | truthfulness/incentive-compatibility representative | Stable coordinated mechanism layer over shared deviations. |
 | F7 | `KernelGame.discounted_folk_theorem_approx` in `Concepts/Welfare/FolkTheorem/Main.lean` | discounted repeated-game flagship | Retain deterministic/stagewise theorem; it does not justify an infinite-path probability core. |
-| F8 | `KernelGame.PublicMonitoring.signalHistoryDist_succ_eq_bind_first` in `Concepts/Repeated/Monitoring.lean` | finite-prefix stochastic monitoring law | Stable finite-prefix probability; infinite path laws remain outside v1. |
+| F8 | `KernelGame.PublicMonitoring.signalHistoryDist_succ_eq_bind_first` in `Concepts/Repeated/Monitoring.lean` | finite-prefix stochastic monitoring law | Stable finite-prefix probability; infinite path laws remain outside the baseline. |
 
 ## Required domain dispositions
 
-| Domain | Concrete v1 probe | Data used and forgotten | v1 disposition and next hostile probe |
+| Domain | Concrete the baseline probe | Data used and forgotten | the baseline disposition and next hostile probe |
 |---|---|---|---|
 | Mechanism design | `Mechanism.isIC_implies_truthful_bayesNash` | reports, allocation/outcome rule, type-dependent utility, unilateral report deviations; forgets syntax after induced play | Stable coordinated layer over forms/preferences. Re-express this theorem through the Phase 2 local deviation predicate. |
-| Bayesian/incomplete information | `BayesNash.outcomeLaw_bayesCorrelatedEq` | common prior, types, actions, type-dependent obedience maps; forgets signals after forming the recommendation law | Provisional native branch. The Phase 2 target “interim deviation iff conditional best response” is mandatory because v1 only exposes ex-ante `BayesNash`. |
+| Bayesian/incomplete information | `BayesNash.outcomeLaw_bayesCorrelatedEq` | common prior, types, actions, type-dependent obedience maps; forgets signals after forming the recommendation law | Provisional native branch. The Phase 2 target “interim deviation iff conditional best response” is mandatory because the baseline only exposes ex-ante `BayesNash`. |
 | Auctions | `GameTheory.vickrey_truthful_isNash`; continuous audit: `SingleParameterMechanism.payment_formula_of_isDSIC_of_zeroNormalized` | finite bids/outcomes for Vickrey; real reports, continuity, and integration for Myerson | Finite/discrete auctions stable. Continuous Myerson material belongs behind the D11/Analysis boundary and must not enlarge the core probability API. |
 | Voting/social choice | `GameTheory.May.may_theorem` and `GameTheory.medianIdeal_strategyproof` | rules and preference profiles; only the strategyproof result needs deviations | Stable coordinated branch. Keep rule/property theorems outside strategic form; compile only `medianIdeal_strategyproof` if Phase 2 gains reuse. |
 | Knowledge/epistemic games | `GameTheory.aumann_full_agreement` | finite states, partitions, common prior/posteriors, common knowledge; no action profile | Provisional separate information consumer. Phase 3 must show whether its surviving `InfoState` can state the theorem without reconstructing partitions. |
@@ -71,14 +69,14 @@ equality receives no credit.
 | Sequential rationality | `EFG.oneShotDeviation_iff_spe` and `EFG.IsPerfectBayesianEq.sequentiallyRational` | histories, subtrees, information sets, conditional beliefs, reachability | Stable target of native protocol/information semantics. It must not import from a static compilation to recover lost histories. |
 | Cooperative games, matching, bargaining | `MatchingMarket.stable_matching_perfect`, `CoalGame.shapleyValue_isCore_of_isConvex`, `BargainingProblem.nashSolution_affine_invariant` | coalitions, matchings, feasible utility sets; no strategic profile | Parallel stable branches. No artificial `GameForm` compilation. |
 
-### Coverage of the remaining v1 topical families
+### Coverage of the remaining the baseline topical families
 
 This maps every current top-level source family into the disposition above or
 records its separate boundary.
 
-| v1 family | Representative declaration | Disposition |
+| the baseline family | Representative declaration | Disposition |
 |---|---|---|
-| `Core`, static equilibrium, dominance, correlation, mixed games | `GameForm.IsNashFor`, `KernelGame.IsCorrelatedEq_iff_IsCorrelatedEqFor_eu` | Rebuild once at form/preference/deviation level in Phases 1–2; do not port v1 wrappers as parallel definitions. |
+| `Core`, static equilibrium, dominance, correlation, mixed games | `GameForm.IsNashFor`, `KernelGame.IsCorrelatedEq_iff_IsCorrelatedEqFor_eu` | Rebuild once at form/preference/deviation level in Phases 1–2; do not port the baseline wrappers as parallel definitions. |
 | Learning and communication | `timeAverage_isεCCE_of_regret_le`, `CheapTalkExtension.babbling_nash` | Stable consumers of the static core after Phase 2. |
 | Congestion | `CongestionGame.nash_exists` | Stable domain wrapper over potential games; harvest with attribution after the potential gate. |
 | NFG | `NFGGame.toKernelGame`, `IsNashMixed` | Finite frontend/compilation source. `IsNashPure` is evidence of duplicate logic and is not copied. |
@@ -89,9 +87,9 @@ records its separate boundary.
 | Standalone theorems | `KernelGame.correlatedEq_exists`, `KernelGame.von_neumann_minimax` | Analysis layer; harvest only through the chosen finite-law/simplex bridge. |
 | Voting | `DelegationProfile.resolves_total_iff_acyclic` | Stable parallel voting branch; it needs graph/relation infrastructure, not strategic semantics. |
 
-## Measured v1 hub baseline
+## Measured the baseline hub baseline
 
-The complete pinned snapshot contains the `GameTheory/` library corpus and its
+The complete comparison corpus contains the `GameTheory/` library corpus and its
 local `Math/` support corpus. Hub-use counts intentionally scan only
 `GameTheory/`, where the game architecture lives. “Mentions” means a whole-word
 match in authored file text, including comments and strings; transport-token
@@ -116,16 +114,10 @@ are excluded where “nonblank” is stated.
 | Language uses of `GameForm.Transport.comp` / `compSameMiddle` / `compOfHom` | 0 |
 | Language uses of `KernelGame.Morphism`, `Simulation`, or `Bisimulation` composition | 3, all in expressiveness relations |
 
-Reproduce the corpus, hub, bridge, transport, import-closure, and declaration
-line measurements with the checked-in audit:
-
-```text
-pwsh -NoProfile -File scripts/phase0-audit.ps1 -VerifyExpected
-```
-
-The implementation and expected values are in
-[`scripts/phase0-audit.ps1`](../scripts/phase0-audit.ps1). A mismatch makes the
-command fail.
+The temporary source-comparison audit used to obtain these measurements was
+retired after the architecture was frozen. The measurements remain historical
+evidence; current boundaries are checked by the self-contained structural
+audits.
 
 The 84 transport tokens (after stripping nested comments, line comments, and
 strings) are concentrated: 23 in `Bridges/OpenGame_MAID.lean`, 17 in
@@ -138,7 +130,7 @@ The hub also did not eliminate duplicate public logical surfaces:
 `NFGGame.IsNashPure` restates unilateral-deviation Nash, while
 `KernelGame.IsNash`, `GameForm.IsNashFor`, `BayesianGame.BayesNash`, and the
 open-game-carried `IsEquilibriumIn` expose different mixtures of duplicates,
-wrappers, and genuinely native semantics. In particular, v1's
+wrappers, and genuinely native semantics. In particular, the comparison design's
 `BayesianGame.BayesNash` is an `Iff.rfl` wrapper around ex-ante strategic Nash,
 whereas open-game equilibrium is native data and cannot honestly be replaced
 by the same predicate.
@@ -164,7 +156,7 @@ D0 is narrowed by semantic level:
   below on an actual consumer or composition. This defers D7 as required.
 
 The universal hub is rejected as the default because its utility-bearing core
-touches 49.2% of v1 files, does not retain sequential information, and coexists
+touches 49.2% of the baseline files, does not retain sequential information, and coexists
 with duplicate equilibrium surfaces. Coordinated-only branches are rejected at
 the static level because NFG, Bayesian, and other static consumers otherwise
 restate the same unilateral-deviation logic. They remain the correct choice at

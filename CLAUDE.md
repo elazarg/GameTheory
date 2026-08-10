@@ -22,21 +22,15 @@ the sequential layer under `GameTheory/Protocol`, native encodings under
 import the external fixed-point package, and no module outside it may import it
 back; a file that does can reach all of `stdSimplex` and `Polynomial`, which the
 core and the executable frontend must never see. Both directions are checked by
-`scripts/phase2-audit.ps1`, including a probe that asserts the analytic root
-*does* reach them. See `docs/Phase2IncentiveSlice.md` and
+`scripts/phase2-audit.ps1`; its explicit `-DeepReachability` release mode also
+asserts that the analytic root *does* reach them. See
+`docs/Phase2IncentiveSlice.md` and
 `docs/Phase3SequentialSlice.md` for what the gates guarantee and, more usefully,
 for the recorded limits they do not, and `docs/Phase4StaticHarvest.md` for the
 theorem families recovered on the settled API.
 
-With the architecture settled, the mode shifts from validation to harvesting:
-recover theorem statements, proof structure, and tests from the pinned snapshot
-and adapt them to the accepted API.
-
-The old implementation is available only as an ignored evidence snapshot at
-`reference/GameTheory-v1/`, pinned to
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`. Never import it, edit it, or treat
-its names as compatibility requirements. Use it to measure real costs and to
-recover theorem obligations that a greenfield prototype must represent.
+With the architecture settled, the mode shifts from validation to theorem
+delivery against the accepted API and the successor-native delivery ledger.
 
 ## Tempo: move fast, depth first
 
@@ -45,9 +39,8 @@ Move fast in two deliberate stages:
 1. First validate the architecture depth first. Push one hostile vertical slice
    through its downstream theorem, kill or repair weak abstractions immediately,
    and do not spend time building breadth on an unsettled foundation.
-2. Once the relevant gate passes, steal aggressively from v1: recover theorem
-   statements, proof structure, helpers, and tests from the pinned snapshot and
-   adapt them to the accepted API instead of reproving them gratuitously.
+2. Once the relevant gate passes, reuse standard theorem statements, proof
+   structure, helpers, and tests instead of reproving them gratuitously.
 
 Parallelize independent theorem families after their shared definitions are
 stable. Use faster models for routine translation, import repair, short proofs,
@@ -90,9 +83,9 @@ recorded evidence for a named experiment, and their directory names say so.
   tactics before committing a proof.
 - Search Mathlib APIs before inspecting or recreating general-purpose proofs.
 - Address all diagnostics and linter warnings before calling a slice complete.
-- During design validation, do not broaden scope by porting adjacent v1
-  modules. During theorem harvesting, port only the assigned inventory against
-  the accepted shared API.
+- During design validation, do not broaden scope with adjacent theorem
+  families. During theorem delivery, work only against the assigned scope and
+  accepted shared API.
 
 ## Environment commands
 
@@ -114,12 +107,12 @@ for dependency or phase-gate validation.
   their experiments justify sharing more.
 - Equilibrium deviations are local and law-linear by construction; response
   and dominance concepts keep their profile-quantified logical shape.
-- Finite-support probability is the v1 default, but its representation remains
-  experiment-gated. Infinite stochastic path laws wait for a measurable layer.
+- Finite-support probability is the stable default. Infinite stochastic path
+  laws wait for a measurable layer.
 - Executable finite algorithms and real-valued correctness proofs live in
   separate dependency roots.
-- D0 is decided from the measured v1 hub, direct-bridge baselines, and a small
-  hybrid prototype—not by rebuilding the hardest theorem three times.
+- D0 is decided from measured dependency baselines and a small hybrid
+  prototype—not by rebuilding the hardest theorem three times.
 
 When an RFC choice fails its kill condition, record the failure and narrow or
 replace the design. Do not patch around it to preserve sunk work.

@@ -131,6 +131,15 @@ theorem strict_of_le_of_ne
     strict ranks preferred alternative :=
   ⟨hle, fun hreverse => hne (hantisymm preferred alternative hle hreverse)⟩
 
+/-- A linear weak ranking strictly orders every pair of distinct items. -/
+theorem strict_total_of_linear
+    {ranks : α → α → Prop} (hlinear : Linear ranks)
+    {first second : α} (hne : first ≠ second) :
+    strict ranks first second ∨ strict ranks second first := by
+  rcases hlinear.2.2.1 first second with hfirst | hsecond
+  · exact Or.inl (strict_of_le_of_ne hlinear.2.2.2 hfirst hne)
+  · exact Or.inr (strict_of_le_of_ne hlinear.2.2.2 hsecond hne.symm)
+
 /-- A strict comparison stays strict after a weakly worse alternative. -/
 theorem strict_trans
     {ranks : α → α → Prop} (htrans : Transitive ranks)

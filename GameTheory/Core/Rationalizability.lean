@@ -1,17 +1,20 @@
 /-
-# Mixed-strategy rationalizability
+# Correlated rationalizability by mixed-dominator elimination
 
-Bernheim--Pearce rationalizability eliminates a pure strategy when a finite
-mixture of surviving strategies strictly improves against every surviving
-opponents' profile.  The mixture is the canonical `FinDist` randomized
-unilateral deviation; no second profile, probability, or equilibrium layer is
-introduced.  Pure-strategy elimination remains the explicitly weaker
-`pureSurvivors` / `IsPureRationalizable` surface in `Core.Response`.
+For finite games, correlated rationalizability admits an iterated-deletion
+characterization: eliminate a pure strategy when a finite mixture of surviving
+own strategies strictly improves against every surviving joint opponents'
+profile.  Unlike Bernheim--Pearce independent rationalizability for games with
+three or more players, this characterization does not impose a product-belief
+restriction across opponents.
 
-The theorem family is adapted from
-`reference/GameTheory-v1/GameTheory/Concepts/Dominance/DominanceSolvable.lean`
-and `Rationalizability.lean` at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+The mixture is the canonical `FinDist` randomized unilateral deviation; no
+second profile, probability, or equilibrium layer is introduced.
+Pure-strategy elimination remains the separately named `pureSurvivors` /
+`IsPureRationalizable` surface in `Core.Response`.
+
+Reference: A. Brandenburger and E. Dekel, “Rationalizability and Correlated
+Equilibria,” *Econometrica* 55 (1987), 1391–1402, DOI: 10.2307/1913562.
 -/
 
 import GameTheory.Core.Response
@@ -116,22 +119,27 @@ variable (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
 /-- Strategies surviving `round` rounds of elimination by mixed dominators.
 Every action in the dominating mixture and every opponents' action profile must
 survive the preceding round. -/
-def survivors : ℕ → ∀ who, Set (F.sig.Strategy who)
+def correlatedSurvivors : ℕ → ∀ who, Set (F.sig.Strategy who)
   | 0, _ => Set.univ
   | round + 1, who =>
       { alternative |
-        alternative ∈ survivors round who ∧
+        alternative ∈ correlatedSurvivors round who ∧
           ¬ ∃ replacement : FinDist (F.sig.Strategy who),
-            (∀ action ∈ replacement.support, action ∈ survivors round who) ∧
+            (∀ action ∈ replacement.support,
+              action ∈ correlatedSurvivors round who) ∧
               ∀ profile : Profile F.sig,
-                (∀ player, profile player ∈ survivors round player) →
+                (∀ player,
+                  profile player ∈ correlatedSurvivors round player) →
                   Preference.strict weaklyPrefers who
                     (randomizedDeviationOutcome F profile who replacement)
                     (F.play (Profile.update profile who alternative)) }
 
-/-- Standard rationalizability: survival of every mixed-elimination round. -/
-def IsRationalizable (who : ι) (strategy : F.sig.Strategy who) : Prop :=
-  ∀ round, strategy ∈ survivors F weaklyPrefers round who
+/-- Correlated rationalizability's mixed-dominator elimination property:
+survival of every finite elimination round.  The independent-belief
+Bernheim--Pearce notion is intentionally not represented by this name. -/
+def IsCorrelatedRationalizable (who : ι)
+    (strategy : F.sig.Strategy who) : Prop :=
+  ∀ round, strategy ∈ correlatedSurvivors F weaklyPrefers round who
 
 end Survivors
 
@@ -140,34 +148,36 @@ section Theorems
 variable {F : GameForm ι} {weaklyPrefers : WeakPreference ι F.sig.Outcome}
 
 @[simp]
-theorem survivors_zero (who : ι) :
-    survivors F weaklyPrefers 0 who = Set.univ :=
+theorem correlatedSurvivors_zero (who : ι) :
+    correlatedSurvivors F weaklyPrefers 0 who = Set.univ :=
   rfl
 
-theorem mem_survivors_succ {round : ℕ} {who : ι}
+theorem mem_correlatedSurvivors_succ {round : ℕ} {who : ι}
     {strategy : F.sig.Strategy who} :
-    strategy ∈ survivors F weaklyPrefers (round + 1) who ↔
-      strategy ∈ survivors F weaklyPrefers round who ∧
+    strategy ∈ correlatedSurvivors F weaklyPrefers (round + 1) who ↔
+      strategy ∈ correlatedSurvivors F weaklyPrefers round who ∧
         ¬ ∃ replacement : FinDist (F.sig.Strategy who),
           (∀ action ∈ replacement.support,
-            action ∈ survivors F weaklyPrefers round who) ∧
+            action ∈ correlatedSurvivors F weaklyPrefers round who) ∧
             ∀ profile : Profile F.sig,
               (∀ player,
-                profile player ∈ survivors F weaklyPrefers round player) →
+                profile player ∈
+                  correlatedSurvivors F weaklyPrefers round player) →
                 Preference.strict weaklyPrefers who
                   (randomizedDeviationOutcome F profile who replacement)
                   (F.play (Profile.update profile who strategy)) :=
   Iff.rfl
 
-theorem survivors_antitone (round : ℕ) (who : ι) :
-    survivors F weaklyPrefers (round + 1) who ⊆
-      survivors F weaklyPrefers round who :=
+theorem correlatedSurvivors_antitone (round : ℕ) (who : ι) :
+    correlatedSurvivors F weaklyPrefers (round + 1) who ⊆
+      correlatedSurvivors F weaklyPrefers round who :=
   fun _ h => h.1
 
-theorem survivors_mono {earlier later : ℕ} (hround : earlier ≤ later)
+theorem mem_correlatedSurvivors_of_le {earlier later : ℕ}
+    (hround : earlier ≤ later)
     {who : ι} {strategy : F.sig.Strategy who}
-    (h : strategy ∈ survivors F weaklyPrefers later who) :
-    strategy ∈ survivors F weaklyPrefers earlier who := by
+    (h : strategy ∈ correlatedSurvivors F weaklyPrefers later who) :
+    strategy ∈ correlatedSurvivors F weaklyPrefers earlier who := by
   induction hround with
   | refl => exact h
   | step _ ih => exact ih h.1
@@ -175,9 +185,12 @@ theorem survivors_mono {earlier later : ℕ} (hround : earlier ≤ later)
 /-- A Nash action survives every round of mixed elimination.  Expected-utility
 linearity turns every randomized replacement into an allowed deviation from
 the point-mass coarse-correlated equilibrium. -/
-theorem IsNash.survives {utility : Utility F.sig} {profile : Profile F.sig}
+theorem IsNash.survivesCorrelatedElimination
+    {utility : Utility F.sig} {profile : Profile F.sig}
     (hnash : IsNash F (euPreference utility) profile) :
-    ∀ round who, profile who ∈ survivors F (euPreference utility) round who := by
+    ∀ round who,
+      profile who ∈
+        correlatedSurvivors F (euPreference utility) round who := by
   have hrandomized :
       IsEquilibrium F (euPreference utility) (FinDist.pure profile)
         (DeviationScheme.unilateralRandomized F.sig) :=
@@ -195,12 +208,12 @@ theorem IsNash.survives {utility : Utility F.sig} {profile : Profile F.sig}
       simpa [randomizedDeviationOutcome, GameForm.outcomeLaw,
         Profile.update_eq_self] using hrandomized who replacement
 
-/-- Every action played at a Nash equilibrium is rationalizable. -/
-theorem IsNash.isRationalizable {utility : Utility F.sig}
+/-- Every action played at a Nash equilibrium is correlated rationalizable. -/
+theorem IsNash.isCorrelatedRationalizable {utility : Utility F.sig}
     {profile : Profile F.sig}
     (hnash : IsNash F (euPreference utility) profile) (who : ι) :
-    IsRationalizable F (euPreference utility) who (profile who) :=
-  fun round => hnash.survives round who
+    IsCorrelatedRationalizable F (euPreference utility) who (profile who) :=
+  fun round => hnash.survivesCorrelatedElimination round who
 
 /-- Every action in a dominant expected-utility profile survives mixed
 elimination. -/
@@ -208,18 +221,19 @@ theorem dominantProfile_survives {utility : Utility F.sig}
     (profile : Profile F.sig)
     (hdom : IsDominantProfile F (euPreference utility) profile) :
     ∀ round who,
-      profile who ∈ survivors F (euPreference utility) round who :=
-  hdom.isNash.survives
+      profile who ∈
+        correlatedSurvivors F (euPreference utility) round who :=
+  hdom.isNash.survivesCorrelatedElimination
 
 /-- A dominant action is rationalizable when the other players can be filled
 out by dominant actions. -/
-theorem IsDominant.isRationalizable {utility : Utility F.sig}
+theorem IsDominant.isCorrelatedRationalizable {utility : Utility F.sig}
     {who : ι} {strategy : F.sig.Strategy who}
     (hdom : IsDominant F (euPreference utility) who strategy)
     (base : Profile F.sig)
     (hother : ∀ player, player ≠ who →
       IsDominant F (euPreference utility) player (base player)) :
-    IsRationalizable F (euPreference utility) who strategy := by
+    IsCorrelatedRationalizable F (euPreference utility) who strategy := by
   let profile := Profile.update base who strategy
   have hall : IsDominantProfile F (euPreference utility) profile := by
     intro player
@@ -236,9 +250,9 @@ theorem IsDominant.isRationalizable {utility : Utility F.sig}
 
 /-- A rationalizable strategy cannot be globally mixed dominated: the first
 round would remove it. -/
-theorem IsRationalizable.not_strictlyDominatedByMixed
+theorem IsCorrelatedRationalizable.not_strictlyDominatedByMixed
     {who : ι} {strategy : F.sig.Strategy who}
-    (hrat : IsRationalizable F weaklyPrefers who strategy) :
+    (hrat : IsCorrelatedRationalizable F weaklyPrefers who strategy) :
     ¬ StrictlyDominatedByMixed F weaklyPrefers who strategy := by
   rintro ⟨replacement, hdominates⟩
   exact (hrat 1).2
@@ -247,21 +261,21 @@ theorem IsRationalizable.not_strictlyDominatedByMixed
 
 /-- Pure strict dominance already supplies a mixed dominator, so a purely
 dominated strategy is not rationalizable. -/
-theorem StrictlyDominates.not_isRationalizable
+theorem StrictlyDominates.not_isCorrelatedRationalizable
     {who : ι} {preferred alternative : F.sig.Strategy who}
     (hdom : StrictlyDominates F weaklyPrefers who preferred alternative) :
-    ¬ IsRationalizable F weaklyPrefers who alternative :=
+    ¬ IsCorrelatedRationalizable F weaklyPrefers who alternative :=
   fun hrat => hrat.not_strictlyDominatedByMixed
     hdom.toStrictlyDominatedByMixed
 
-/-- Under a strictly dominant action, every distinct alternative fails standard
-rationalizability in the first round. -/
-theorem IsStrictDominant.not_isRationalizable_of_ne
+/-- Under a strictly dominant action, every distinct alternative fails
+correlated rationalizability in the first round. -/
+theorem IsStrictDominant.not_isCorrelatedRationalizable_of_ne
     {who : ι} {preferred alternative : F.sig.Strategy who}
     (hdom : IsStrictDominant F weaklyPrefers who preferred)
     (hne : alternative ≠ preferred) :
-    ¬ IsRationalizable F weaklyPrefers who alternative :=
-  (hdom alternative hne).not_isRationalizable
+    ¬ IsCorrelatedRationalizable F weaklyPrefers who alternative :=
+  (hdom alternative hne).not_isCorrelatedRationalizable
 
 end Theorems
 

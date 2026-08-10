@@ -5,15 +5,9 @@ This module owns the closed-loop configuration semantics of an intrinsic game:
 information-local decision rules, their fixed points, and causality relative to
 a configuration-dependent schedule.  It deliberately carries no finite
 enumeration, probability law, player ownership, utility, compiler, or mixed
-strategy layer; those belong to consumers that need them.
-
-EXP-062 / D31 validate this capability-light root with both a solvable
-closed-loop witness and a configuration-dependent causal schedule.  Its
-mathematical source is pinned v1
-`GameTheory/Languages/Intrinsic/Syntax.lean` at
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; the successor keeps the native
-configuration semantics while discarding the source's stored capabilities and
-later probability, ownership, and utility layers.
+strategy layer; those belong to consumers that need them. Solvability and
+causality are expressed without storing enumeration or execution capabilities
+in the model.
 -/
 
 import Mathlib.Logic.Equiv.Defs

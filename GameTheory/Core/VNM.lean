@@ -5,9 +5,8 @@ Preferences remain the canonical family of weak rankings over `FinDist`.
 This file adds the two mixture axioms and the expected-utility representation
 theorem; it introduces no second lottery carrier or preference relation.
 
-The finite-outcome converse adapts the proof from
-`Concepts/Foundations/VNM/Basic.lean` in the pinned v1 snapshot at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+Primary reference: J. von Neumann and O. Morgenstern, *Theory of Games and
+Economic Behavior*, Princeton University Press, 1944.
 -/
 
 import GameTheory.Core.Preference
@@ -31,7 +30,11 @@ def MixtureIndependent (weaklyPrefers : WeakPreference Agent Outcome) : Prop :=
         (FinDist.mix t hpos.le h1 first common)
         (FinDist.mix t hpos.le h1 second common)
 
-/-- Every law ranked between two others is indifferent to a mixture of them. -/
+/-- Certainty-equivalent mixture solvability: every law ranked between two
+others is indifferent to a mixture of them. This is the algebraic finite-law
+axiom used by the representation proof; it is stronger in presentation than a
+bare Archimedean or topological continuity condition, and no equivalence with
+those formulations is claimed here. -/
 def MixtureContinuous (weaklyPrefers : WeakPreference Agent Outcome) : Prop :=
   ∀ agent best middle worst,
     weaklyPrefers agent best middle → weaklyPrefers agent middle worst →
@@ -128,6 +131,100 @@ theorem vnmAxioms (hrep : RepresentsExpectedUtility weaklyPrefers utility) :
   ⟨hrep.total, hrep.transitive, hrep.mixtureIndependent, hrep.mixtureContinuous⟩
 
 end RepresentsExpectedUtility
+
+/-- Two nondegenerate expected-utility representations with common selected
+best and worst outcomes differ by a positive affine transformation for each
+agent. The bounds merely say that the selected endpoints bracket every pure
+outcome; representation transfers the same ordering to the second utility. -/
+theorem representsExpectedUtility_unique_positiveAffine
+    {weaklyPrefers : WeakPreference Agent Outcome}
+    {first second : Outcome → Agent → ℝ}
+    (hfirst : RepresentsExpectedUtility weaklyPrefers first)
+    (hsecond : RepresentsExpectedUtility weaklyPrefers second)
+    (best worst : Agent → Outcome)
+    (hnondegenerate : ∀ agent,
+      first (worst agent) agent < first (best agent) agent)
+    (hbounds : ∀ agent outcome,
+      first (worst agent) agent ≤ first outcome agent ∧
+        first outcome agent ≤ first (best agent) agent) :
+    ∃ (scale shift : Agent → ℝ),
+      (∀ agent, 0 < scale agent) ∧
+        ∀ outcome agent,
+          second outcome agent =
+            scale agent * first outcome agent + shift agent := by
+  let scale : Agent → ℝ := fun agent =>
+    (second (best agent) agent - second (worst agent) agent) /
+      (first (best agent) agent - first (worst agent) agent)
+  let shift : Agent → ℝ := fun agent =>
+    second (worst agent) agent - scale agent * first (worst agent) agent
+  have hsecondGap (agent : Agent) :
+      second (worst agent) agent < second (best agent) agent := by
+    have hpref : weaklyPrefers agent
+        (FinDist.pure (best agent)) (FinDist.pure (worst agent)) :=
+      (hfirst agent _ _).mpr (by
+        simp only [FinDist.expect_pure]
+        exact (hnondegenerate agent).le)
+    have hnotReverse : ¬ weaklyPrefers agent
+        (FinDist.pure (worst agent)) (FinDist.pure (best agent)) := by
+      intro hreverse
+      have hle := (hfirst agent _ _).mp hreverse
+      simp only [FinDist.expect_pure] at hle
+      exact (not_le_of_gt (hnondegenerate agent)) hle
+    have hle := (hsecond agent _ _).mp hpref
+    simp only [FinDist.expect_pure] at hle
+    apply lt_of_le_of_ne hle
+    intro heq
+    apply hnotReverse
+    apply (hsecond agent _ _).mpr
+    simp only [FinDist.expect_pure]
+    exact heq.ge
+  refine ⟨scale, shift, ?_, ?_⟩
+  · intro agent
+    exact div_pos (sub_pos.mpr (hsecondGap agent))
+      (sub_pos.mpr (hnondegenerate agent))
+  · intro outcome agent
+    let t :=
+      (first outcome agent - first (worst agent) agent) /
+        (first (best agent) agent - first (worst agent) agent)
+    have ht0 : 0 ≤ t :=
+      div_nonneg (sub_nonneg.mpr (hbounds agent outcome).1)
+        (sub_nonneg.mpr (hnondegenerate agent).le)
+    have ht1 : t ≤ 1 := by
+      dsimp [t]
+      rw [div_le_one (sub_pos.mpr (hnondegenerate agent))]
+      linarith [(hbounds agent outcome).2]
+    let lottery := FinDist.mix t ht0 ht1
+      (FinDist.pure (best agent)) (FinDist.pure (worst agent))
+    have hfirstEq :
+        lottery.expect (fun result => first result agent) =
+          first outcome agent := by
+      dsimp [lottery]
+      rw [FinDist.expect_mix, FinDist.expect_pure, FinDist.expect_pure]
+      dsimp [t]
+      field_simp [ne_of_gt (sub_pos.mpr (hnondegenerate agent))]
+      ring
+    have hpureLottery : weaklyPrefers agent (FinDist.pure outcome) lottery := by
+      apply (hfirst agent _ _).mpr
+      rw [hfirstEq, FinDist.expect_pure]
+    have hlotteryPure : weaklyPrefers agent lottery (FinDist.pure outcome) := by
+      apply (hfirst agent _ _).mpr
+      rw [FinDist.expect_pure, hfirstEq]
+    have hsecondLe := (hsecond agent _ _).mp hpureLottery
+    have hsecondGe := (hsecond agent _ _).mp hlotteryPure
+    simp only [FinDist.expect_pure] at hsecondLe hsecondGe
+    have hsecondEq :
+        lottery.expect (fun result => second result agent) =
+          second outcome agent :=
+      le_antisymm hsecondLe hsecondGe
+    have hmixEq :
+        t * second (best agent) agent +
+            (1 - t) * second (worst agent) agent =
+          second outcome agent := by
+      simpa [lottery, FinDist.expect_mix] using hsecondEq
+    rw [← hmixEq]
+    dsimp [scale, shift, t]
+    field_simp [ne_of_gt (sub_pos.mpr (hnondegenerate agent))]
+    ring
 
 namespace VNMProof
 

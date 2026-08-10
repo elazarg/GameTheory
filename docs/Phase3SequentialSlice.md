@@ -233,18 +233,21 @@ close-out below records which have since been discharged.
   `isOneShotOptimalWithin_iff_sequentiallyRationalAt_historyContext` identifies
   the quantified one-shot premise exactly with `IsSequentiallyRationalAt` in
   those contexts.
-- **The full well-founded strategic theorem is now closed (EXP-036).**
+- **The full well-founded historywise theorem is closed (EXP-036, renamed by
+  EXP-075/D42).**
   `Protocol.SubgamePerfect` adds history-preserving backward recursion over the
   existing `WellFoundedPlay` certificate and proves that it agrees with the
   forward history runner whenever the latter has stopped. Its
-  `IsSubgamePerfect` predicate quantifies over every player, every whole
+  `IsHistorywiseOptimal` predicate quantifies over every player, every whole
   information-local replacement policy, and every complete history, including
   off-path histories. Under `ActsOnceWhereItMatters`, it is equivalent to
   `HasNoProfitableOneShotDeviation`. The discriminating probe is optimal from
-  the initial history yet fails subgame perfection because of a profitable
-  deviation after an off-path decision. No converse from initial static Nash is
-  claimed or needed. The exact frozen T4 NFG-to-FOSG embedding remains a
-  separate language theorem.
+  the initial history yet fails historywise optimality because of a profitable
+  deviation after an off-path decision. `IsSubgamePerfect` now uses
+  information-set-closed subgame roots; the hidden-card control rejects a root
+  that cuts a nonsingleton information set. No general imperfect-information
+  one-shot iff SPE theorem is claimed. The exact frozen T4 NFG-to-FOSG
+  embedding remains a separate language theorem.
 
 ## Post-gate EFG amendment
 
@@ -260,5 +263,5 @@ delivery work; the nonconstant continuation-payoff and off-path SPE checks do
 not.
 
 The current reconciliation is maintained in
-[`V1CoverageLedger.md`](V1CoverageLedger.md), rather than by rewriting the
+[`DeliveryLedger.md`](DeliveryLedger.md), rather than by rewriting the
 gate-era findings above.

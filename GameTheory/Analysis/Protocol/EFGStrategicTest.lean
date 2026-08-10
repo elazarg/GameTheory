@@ -1,5 +1,5 @@
 /-
-Hostile T1 strategic-transfer probe.
+Nonconstant-payoff strategic-transfer probe.
 
 The existing finite EFG hides a fair Boolean state and then lets one player
 choose without observing it. Here a pure contingent plan always chooses

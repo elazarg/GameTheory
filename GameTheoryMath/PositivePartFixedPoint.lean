@@ -5,10 +5,6 @@ The finite-dimensional Nash adjustment map has a small algebraic core that is
 independent of games and probability: if weighted gains sum to zero and each
 weight satisfies the positive-part adjustment identity, every gain is
 nonpositive.
-
-The proof is adapted from
-`../GameTheory/Math/OptimizationLocalGlobal.lean` at commit
-`da076851bab19519521aa1e0d2da127e29fcd5c9`.
 -/
 
 import Mathlib.Algebra.Order.BigOperators.Group.Finset

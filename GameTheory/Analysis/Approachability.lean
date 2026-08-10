@@ -1,13 +1,18 @@
 /-
 # Regret matching through Blackwell approachability
 
-This analytic bridge packages Hart--Mas-Colell regret matching with the
-library's canonical finite law.  The Euclidean and Blackwell arguments remain
-game-independent in `GameTheoryMath.Approachability`.
+This analytic bridge packages the expectation-level deterministic geometry
+behind Hart--Mas-Colell regret matching with the library's canonical finite
+law. It does not claim almost-sure convergence of sampled realized regrets.
+The Euclidean and Blackwell arguments remain game-independent in
+`GameTheoryMath.Approachability`.
+
+Primary reference: S. Hart and A. Mas-Colell, “A Simple Adaptive Procedure
+Leading to Correlated Equilibrium,” *Econometrica* 68 (2000).
 -/
 
 import GameTheory.Probability.FinDist
-import GameTheoryMath.ApproachabilityRegret
+import GameTheoryMath.OrthantProjection
 
 noncomputable section
 

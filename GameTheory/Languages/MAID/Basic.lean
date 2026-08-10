@@ -4,7 +4,7 @@
 Syntax stores neither finite-carrier capabilities nor an execution order.
 Native policies are indexed by decision site and receive only that site's
 observed-parent configuration. Evaluation resolves the entire current minimal
-frontier by one dependent finite product. EXP-040 and EXP-041 validate this
+frontier by one dependent finite product. The public laws validate this
 representation and its exact compiled-EFG semantics.
 -/
 

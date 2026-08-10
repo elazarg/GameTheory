@@ -62,7 +62,6 @@ theorem mem_supportFinset {μ : FinDist α} {a : α} :
     a ∈ μ.supportFinset ↔ a ∈ μ.support :=
   Set.Finite.mem_toFinset _
 
-@[ext]
 theorem ext {μ ν : FinDist α} (h : μ.toPMF = ν.toPMF) : μ = ν := Subtype.ext h
 
 /-! ## Operations -/
@@ -136,6 +135,18 @@ theorem map_id (μ : FinDist α) : map id μ = μ := bind_pure μ
 theorem map_comp (g : β → γ) (f : α → β) (μ : FinDist α) :
     map g (map f μ) = map (g ∘ f) μ := by
   simp only [map_eq_bind, bind_bind, pure_bind, Function.comp_def]
+
+/-- Pushforward along an injective function is injective on finite laws. -/
+theorem map_injective {f : α → β} (hf : Function.Injective f) :
+    Function.Injective (map f) := by
+  intro first second hequal
+  letI : Nonempty α := ⟨first.support_nonempty.choose⟩
+  have hback := congrArg (map (Function.invFun f)) hequal
+  rw [map_comp, map_comp] at hback
+  have hleft : Function.invFun f ∘ f = id := by
+    funext value
+    exact Function.leftInverse_invFun hf value
+  simpa only [hleft, map_id] using hback
 
 @[simp]
 theorem map_pure (f : α → β) (a : α) : map f (pure a) = pure (f a) := by
@@ -439,6 +450,14 @@ theorem expect_mono {μ : FinDist α} {u v : α → ℝ}
   refine Finset.sum_le_sum fun a ha => ?_
   exact mul_le_mul_of_nonneg_left (h a (mem_supportFinset.1 ha)) (prob_nonneg μ a)
 
+/-- An expectation is no larger than a bound respected everywhere on the
+finite support. -/
+theorem expect_le_of_forall (mu : FinDist α) (observable : α → ℝ) (bound : ℝ)
+    (hbound : ∀ a ∈ mu.support, observable a ≤ bound) :
+    mu.expect observable ≤ bound := by
+  refine le_of_le_of_eq (expect_mono hbound) ?_
+  exact expect_const mu bound
+
 /-- A pointwise absolute bound on the support bounds finite-support
 expectation by the same constant. -/
 theorem abs_expect_le_of_abs_bound (μ : FinDist α) (u : α → ℝ) {C : ℝ}
@@ -452,8 +471,7 @@ theorem abs_expect_le_of_abs_bound (μ : FinDist α) (u : α → ℝ) {C : ℝ}
       expect_mono fun a ha => (abs_le.mp (h a ha)).2
     simpa [expect_const] using hupper
 
-/-- Expectation distributes over finite-support `bind`. Adapted from the v1
-finite-support expectation development. -/
+/-- Expectation distributes over finite-support `bind`. -/
 theorem expect_bind (μ : FinDist α) (f : α → FinDist β) (u : β → ℝ) :
     expect (bind μ f) u = expect μ fun a => expect (f a) u := by
   classical
@@ -568,6 +586,7 @@ theorem expect_prob_pure (μ : FinDist α) (b : α) :
 
 /-- Two laws with the same real masses are equal. This is the public
 extensionality principle; it mentions no representation. -/
+@[ext]
 theorem ext_of_prob {μ ν : FinDist α} (h : ∀ a, μ.prob a = ν.prob a) : μ = ν := by
   refine ext (PMF.ext fun a => ?_)
   exact (ENNReal.toReal_eq_toReal_iff' (PMF.apply_ne_top _ _) (PMF.apply_ne_top _ _)).1 (h a)
@@ -1125,7 +1144,7 @@ theorem expect_mix (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ ν : FinDist α) 
 
 Independent products need finitely many players and nothing else. -/
 
-theorem ennreal_tsum_pi_fin {n : ℕ} {A : Fin n → Type*}
+private theorem ennreal_tsum_pi_fin {n : ℕ} {A : Fin n → Type*}
     (g : (i : Fin n) → A i → ENNReal) :
     ∑' s : ((i : Fin n) → A i), ∏ i, g i (s i) = ∏ i, ∑' a, g i a := by
   induction n with
@@ -1142,7 +1161,7 @@ theorem ennreal_tsum_pi_fin {n : ℕ} {A : Fin n → Type*}
     simp_rw [hsplit, ENNReal.tsum_mul_left]
     rw [ENNReal.tsum_mul_right, ih, Fin.prod_univ_succ]
 
-theorem ennreal_tsum_pi {ι : Type*} [Fintype ι] {A : ι → Type*}
+private theorem ennreal_tsum_pi {ι : Type*} [Fintype ι] {A : ι → Type*}
     (g : (i : ι) → A i → ENNReal) :
     ∑' s : ((i : ι) → A i), ∏ i, g i (s i) = ∏ i, ∑' a, g i a := by
   classical

@@ -43,9 +43,8 @@ abbrev signature : GameSignature ι where
 /-- Deterministic normal-form syntax compiles directly to the canonical static
 form. It introduces no language-specific deviation or equilibrium predicate. -/
 @[reducible]
-def toGameForm : GameForm ι where
-  sig := G.signature
-  play profile := FinDist.pure (G.outcome profile)
+def toGameForm : GameForm ι :=
+  GameForm.deterministic G.signature G.outcome
 
 @[simp]
 theorem toGameForm_play (profile : Profile G.signature) :

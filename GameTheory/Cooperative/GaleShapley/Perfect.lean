@@ -2,10 +2,7 @@
 # Perfect stable matchings
 
 In a balanced finite market where every possible partner is strictly better
-than the outside option, stability forces every agent to be matched.  The
-counting and blocking-pair argument adapts the pinned v1 proof in
-`GameTheory/Cooperative/GaleShapley/Perfect.lean` at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+than the outside option, stability forces every agent to be matched.
 -/
 
 import GameTheory.Cooperative.GaleShapley

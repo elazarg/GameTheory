@@ -1,11 +1,9 @@
 /-
 # Finite-support principal-agent contracts
 
-Hidden-action moral-hazard environments with risk-neutral agents and
-outcome-contingent payments. Adapted from the pinned v1 evidence at
-`GameTheory/Mechanism/Contracts/Basic.lean`, commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; this version uses `FinDist` and
-keeps outside options explicit.
+Hidden-action moral-hazard environments with risk-neutral agents,
+finite-support outcome laws, outcome-contingent payments, and explicit outside
+options.
 -/
 
 import GameTheory.Probability.FinDist

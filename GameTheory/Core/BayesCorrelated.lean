@@ -6,9 +6,13 @@ recommended action profiles. It is Bayes plausible when its type marginal is
 the common prior, and obedient when no player gains from a deviation depending
 only on that player's own type and recommendation.
 
-The flagship theorem pushes a Bayes-Nash plan from a finite private-signal
+The main theorem pushes a Bayes-Nash plan from a finite private-signal
 information structure to an obedient recommendation law in the original game.
 Bayes-Nash remains ordinary `IsNash` of the induced Bayesian game form.
+
+Primary reference: D. Bergemann and S. Morris, “Bayes Correlated Equilibrium
+and the Comparison of Information Structures in Games,” *Theoretical
+Economics* 11 (2016).
 -/
 
 import GameTheory.Core.BayesianEquilibrium

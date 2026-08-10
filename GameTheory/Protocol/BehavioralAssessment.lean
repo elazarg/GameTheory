@@ -233,24 +233,28 @@ theorem bayesBelief_prob
         M.informationMass strategy i site :=
   FinDist.prob_ofWeights _ _ _ _
 
-/-- Bayes' rule at one finite information set. -/
+/-- Bayes' rule at one positive-mass finite information set.  At zero mass the
+conditional belief is undefined and no equality is asserted. -/
 def BehavioralAssessment.IsBayesConsistentAt
     (A : M.BehavioralAssessment)
     (i : ι) (site : M.InformationSite i)
-    [Fintype (M.InformationHistory i site.1)] : Prop :=
+    [Fintype (M.InformationHistory i site.1)]
+    (_hmass : 0 < M.informationMass A.strategy i site) : Prop :=
   ∀ history : M.InformationHistory i site.1,
     (A.belief i site).prob history =
       M.historyReachProbability A.strategy history /
         M.informationMass A.strategy i site
 
-/-- Bayes' rule at every information state. Finiteness is a capability of this
-operation, not stored in the information model or assessment. -/
+/-- Bayes' rule at every positive-mass information state. Finiteness is a
+capability of this operation, not stored in the information model or
+assessment; zero-mass beliefs remain unrestricted. -/
 def BehavioralAssessment.IsBayesConsistent
     (A : M.BehavioralAssessment)
     [∀ (i : ι) (site : M.InformationSite i),
       Fintype (M.InformationHistory i site.1)] : Prop :=
   ∀ (i : ι) (site : M.InformationSite i),
-    BehavioralAssessment.IsBayesConsistentAt (M := M) A i site
+    ∀ hmass : 0 < M.informationMass A.strategy i site,
+      BehavioralAssessment.IsBayesConsistentAt (M := M) A i site hmass
 
 end Bayes
 

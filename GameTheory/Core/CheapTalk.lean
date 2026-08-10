@@ -4,6 +4,9 @@
 An observable pre-play message followed by a message-contingent action is a
 static strategy enrichment. Protocol remains reserved for communication whose
 intermediate history or timing is itself semantically observable.
+
+Primary reference: V. P. Crawford and J. Sobel, “Strategic Information
+Transmission,” *Econometrica* 50 (1982).
 -/
 
 import GameTheory.Core.Equilibrium

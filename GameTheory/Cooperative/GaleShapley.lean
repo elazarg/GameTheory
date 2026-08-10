@@ -2,11 +2,15 @@
 # Gale--Shapley deferred acceptance
 
 The algorithm is an inflationary rejection process.  Its data are finite only
-at this operation layer; the underlying ordinal market remains capability-free.
-The proof follows the mathematical spine of the pinned v1 implementation at
-`GameTheory/Cooperative/GaleShapley.lean` (commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`), replacing integer maximization by
-the canonical relation-valued ranking.
+at this operation layer; the underlying ordinal market remains capability-free
+and uses relation-valued rankings directly.
+
+Primary reference: D. Gale and L. S. Shapley, “College Admissions and the
+Stability of Marriage,” *American Mathematical Monthly* 69 (1962).
+
+This module proves stable matching existence and balanced perfectness.
+Proposer optimality, lattice structure, rural-hospitals results, and
+strategyproofness remain separate theorem packages.
 -/
 
 import GameTheory.Cooperative.Matching

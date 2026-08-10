@@ -34,6 +34,19 @@ structure GameForm (ι : Type uι) where
 
 namespace GameForm
 
+/-- Build a game form whose profile determines one outcome. This is the
+canonical embedding of deterministic semantics into the finite-law core. -/
+abbrev deterministic (sig : GameSignature ι)
+    (outcome : Profile sig → sig.Outcome) : GameForm ι where
+  sig := sig
+  play profile := FinDist.pure (outcome profile)
+
+@[simp]
+theorem deterministic_play (sig : GameSignature ι)
+    (outcome : Profile sig → sig.Outcome) (profile : Profile sig) :
+    (deterministic sig outcome).play profile = FinDist.pure (outcome profile) :=
+  rfl
+
 /-- The outcome law induced by a law over profiles. Every solution concept
 compares values of this function, so law-linearity of deviations is built in:
 a deviation acts on profiles and is lifted by `bind`. -/

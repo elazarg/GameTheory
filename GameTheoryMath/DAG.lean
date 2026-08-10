@@ -1,11 +1,9 @@
 /-
 # Finite directed acyclic graphs
 
-Game-independent relation and topological-order facts needed by the general
-MAID slice. The construction adapts the proof idea from the pinned v1
-`Math/DAG.lean` at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`,
-while generalizing its `Fin n` carrier to an arbitrary type. Finiteness and
-decidable equality are required only by order construction.
+Game-independent relation and topological-order facts over arbitrary vertex
+types. Finiteness and decidable equality are required only by order
+construction.
 -/
 
 import Mathlib.Data.Fintype.Card

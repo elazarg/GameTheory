@@ -1,10 +1,9 @@
 /-
 # EXP-062: intrinsic-game ownership
 
-This hostile slice adapts the closed-loop configuration and causality ideas
-from pinned v1 `GameTheory/Languages/Intrinsic/{Syntax,Examples,Tests}.lean` at
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.  It deliberately omits the
-pinned PMF, utility, compiler, mixed/behavioral, and Kuhn layers.
+This hostile slice tests closed-loop configuration and causality while
+deliberately omitting probability, utility, compiler, mixed/behavioral, and
+Kuhn layers.
 -/
 
 import Mathlib.Logic.Equiv.Bool

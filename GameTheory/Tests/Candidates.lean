@@ -143,7 +143,7 @@ theorem takePlan_ne_leavePlan :
   have hmass := congrArg (fun law => FinDist.prob law Spot.tookIt) hequal
   simp [FinDist.prob_pure_eq_ite] at hmass
 
-/-! ## Probe 3: hostile test 5, the extracted strategy type is finite
+/-! ## Finite extracted strategies
 
 Finiteness comes from the *local* action carriers, over the tree's own decision
 sites. -/

@@ -6,8 +6,9 @@
 /.codex/
 /.worktrees/
 
-# The pinned v1 tree is local evidence, not part of the new library.
-/reference/GameTheory-v1/
+# Local bootstrap inputs are not part of the public library.
+/reference/
+/review-synthesis.md
 
 *.log
 *.olean

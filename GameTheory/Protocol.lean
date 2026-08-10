@@ -29,9 +29,10 @@ history runner, so compilation introduces no parallel evaluator.
 at reached decision sites, states finite Bayes consistency without importing
 topology, and forms continuation contexts from whole replacement policies.
 `SubgamePerfect` lifts well-founded backward value to complete histories and
-proves that strategic subgame perfection is equivalent to information-local
-one-shot optimality under the same no-revisit condition used by the
-behavioral/mixed representation theorem.
+separates textbook subgame perfection over information-set-closed roots from
+the stronger historywise continuation predicate.  The latter is equivalent to
+information-local one-shot optimality under the same no-revisit condition used
+by the behavioral/mixed representation theorem.
 
 `Tree` is the derived finite-first presentation. It is faithful only where no
 two players move at once, so it is a convenience for single-mover games rather

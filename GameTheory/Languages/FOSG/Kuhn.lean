@@ -6,11 +6,6 @@ FOSG owns no native Kuhn machine.  A FOSG already carries the canonical
 same Protocol histories.  This leaf gives that existing theorem a named
 FOSG-facing surface without defining another history, strategy, product law,
 or evaluator.
-
-The recovered theorem family is attributed to
-`reference/GameTheory-v1/GameTheory/Languages/FOSG/Native/History.lean` and
-`Native/HistoryMarginal.lean` at pinned commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
 import GameTheory.Languages.FOSG
@@ -80,18 +75,19 @@ theorem kuhn_mixed_to_behavioral
       (InformationModel.constrainsAlike_of_perfectRecall hrecall)
       horizon mixed).symm⟩
 
-/-- Behavioral and mixed FOSG profiles realize the same complete-history laws
-under the two standard named information hypotheses. -/
+/-- Under perfect recall, behavioral and mixed FOSG profiles realize the same
+complete-history laws. Perfect recall supplies the no-revisit consequence used
+in the behavioral-to-mixed direction. -/
 theorem kuhn_historyLaws
     [∀ who, Fintype (G.information.InfoState who)]
     [∀ who, DecidableEq (G.information.InfoState who)]
-    (hactsOnce : G.information.ActsOnceWhereItMatters)
     (hrecall : G.information.PerfectRecall) (horizon : ℕ) :
     { law | ∃ behavioral : Profile G.behavioralSignature,
         G.information.runBehavioral behavioral horizon = law } =
       { law | ∃ mixed : Profile G.information.strategicSignature.mixed,
         G.information.runMixed mixed horizon = law } :=
-  G.information.runBehavioral_image_eq_runMixed_image hactsOnce
+  G.information.runBehavioral_image_eq_runMixed_image
+    (G.information.actsOnceWhereItMatters_of_perfectRecall hrecall)
     (InformationModel.constrainsAlike_of_perfectRecall hrecall) horizon
 
 /-- Every outcome projection of the behavioral history law is preserved by

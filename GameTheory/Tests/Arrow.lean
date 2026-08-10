@@ -3,7 +3,7 @@
 
 The proof module uses a private strict-order representation. This file stays
 entirely on the weak `Ranking` surface and checks both a concrete admissible
-aggregator and the finite-cardinality flagship.
+aggregator and the finite-cardinality theorem.
 -/
 
 import GameTheory.Core.Arrow

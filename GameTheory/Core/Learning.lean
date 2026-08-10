@@ -9,6 +9,11 @@ deviation or correlation model.
 The finite-horizon theorem is pure averaging. No strategy carrier, outcome
 carrier, or player type needs to be finite because every law has finite support;
 only the time index `Fin T` is enumerated.
+
+Primary references: Y. Freund and R. E. Schapire, “A Decision-Theoretic
+Generalization of On-Line Learning,” EuroCOLT 1995; S. Hart and A. Mas-Colell,
+“A Simple Adaptive Procedure Leading to Correlated Equilibrium,”
+*Econometrica* 68 (2000).
 -/
 
 import GameTheory.Core.Utility
@@ -23,6 +28,13 @@ universe uι us uo
 
 variable {ι : Type uι}
 
+/-- An `ε`-coarse correlated equilibrium is the canonical coarse correlated
+equilibrium predicate for expected utility relaxed by `ε`. -/
+def IsεCoarseCorrelatedEq [DecidableEq ι]
+    (F : GameForm.{uι, us, uo} ι) (utility : Utility F.sig) (ε : ℝ)
+    (statusQuo : FinDist (Profile F.sig)) : Prop :=
+  IsCoarseCorrelatedEq F (euPreferenceWithin ε utility) statusQuo
+
 namespace UtilityGame
 
 variable [DecidableEq ι]
@@ -36,12 +48,6 @@ def externalRegret (G : UtilityGame.{uι, us, uo} ι)
       (statusQuo.bind fun profile =>
         G.form.play (Profile.update profile who replacement)) -
     expectedUtility G.utility who (G.form.outcomeLaw statusQuo)
-
-/-- An `ε`-coarse correlated equilibrium is the canonical coarse correlated
-equilibrium predicate for expected utility relaxed by `ε`. -/
-def IsεCoarseCorrelatedEq (G : UtilityGame.{uι, us, uo} ι) (ε : ℝ)
-    (statusQuo : FinDist (Profile G.form.sig)) : Prop :=
-  IsCoarseCorrelatedEq G.form (euPreferenceWithin ε G.utility) statusQuo
 
 /-- External regret is the status-quo expectation of pointwise deviation
 gain. This is the affine form used by finite time averaging. -/
@@ -91,9 +97,9 @@ approximate coarse-correlated-equilibrium predicate. -/
 theorem isεCoarseCorrelatedEq_iff_externalRegret_le
     (G : UtilityGame.{uι, us, uo} ι) {ε : ℝ}
     {statusQuo : FinDist (Profile G.form.sig)} :
-    G.IsεCoarseCorrelatedEq ε statusQuo ↔
+    IsεCoarseCorrelatedEq G.form G.utility ε statusQuo ↔
       ∀ who replacement, G.externalRegret statusQuo who replacement ≤ ε := by
-  rw [UtilityGame.IsεCoarseCorrelatedEq, isCoarseCorrelatedEq_iff]
+  rw [IsεCoarseCorrelatedEq, isCoarseCorrelatedEq_iff]
   constructor
   · intro h who replacement
     have hpref := h who replacement
@@ -111,8 +117,8 @@ theorem isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
     (G : UtilityGame.{uι, us, uo} ι)
     {statusQuo : FinDist (Profile G.form.sig)} :
     IsCoarseCorrelatedEq G.form G.preference statusQuo ↔
-      G.IsεCoarseCorrelatedEq 0 statusQuo := by
-  rw [isCoarseCorrelatedEq_iff, UtilityGame.IsεCoarseCorrelatedEq,
+      IsεCoarseCorrelatedEq G.form G.utility 0 statusQuo := by
+  rw [isCoarseCorrelatedEq_iff, IsεCoarseCorrelatedEq,
     isCoarseCorrelatedEq_iff]
   constructor
   · intro h who replacement
@@ -126,21 +132,31 @@ theorem isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
     rw [euPreferenceWithin_apply] at hpref
     linarith
 
+end UtilityGame
+
+namespace GameForm
+
 /-- The uniform time average of finitely many laws over pure profiles. -/
-def timeAverage (G : UtilityGame.{uι, us, uo} ι) {T : ℕ} [NeZero T]
-    (roundLaw : Fin T → FinDist (Profile G.form.sig)) :
-    FinDist (Profile G.form.sig) :=
+def timeAverage (F : GameForm.{uι, us, uo} ι) {T : ℕ} [NeZero T]
+    (roundLaw : Fin T → FinDist (Profile F.sig)) :
+    FinDist (Profile F.sig) :=
   (FinDist.uniformFin T).bind roundLaw
+
+end GameForm
+
+namespace UtilityGame
+
+variable [DecidableEq ι]
 
 /-- External regret of a finite time average is average external regret. -/
 theorem externalRegret_timeAverage (G : UtilityGame.{uι, us, uo} ι)
     {T : ℕ} [NeZero T]
     (roundLaw : Fin T → FinDist (Profile G.form.sig)) (who : ι)
     (replacement : G.form.sig.Strategy who) :
-    G.externalRegret (G.timeAverage roundLaw) who replacement =
+    G.externalRegret (G.form.timeAverage roundLaw) who replacement =
       (∑ t, G.externalRegret (roundLaw t) who replacement) / T := by
   rw [externalRegret_eq_expect_gain]
-  unfold timeAverage
+  unfold GameForm.timeAverage
   rw [FinDist.expect_bind, FinDist.expect_uniformFin]
   congr 1
   exact Finset.sum_congr rfl fun t _ =>
@@ -155,7 +171,8 @@ theorem timeAverage_isεCoarseCorrelatedEq_of_regret_le
     (hregret :
       ∀ who replacement,
         (∑ t, G.externalRegret (roundLaw t) who replacement) ≤ R) :
-    G.IsεCoarseCorrelatedEq (R / T) (G.timeAverage roundLaw) := by
+    IsεCoarseCorrelatedEq G.form G.utility (R / T)
+      (G.form.timeAverage roundLaw) := by
   rw [G.isεCoarseCorrelatedEq_iff_externalRegret_le]
   intro who replacement
   rw [externalRegret_timeAverage]
@@ -171,10 +188,9 @@ product of players' mixed actions.  This section keeps that bridge at the
 same finite-support layer: it neither installs an algorithm nor assumes that
 the strategy carriers themselves are finite.
 
-The multiplicative-weights recurrence from the pinned library deliberately
-does not live here.  Its quantitative regret theorem belongs to the
-game-independent online-learning layer; see the D-LEARN self-play coverage
-record for the bounded follow-up experiment.
+The multiplicative-weights recurrence deliberately does not live here. Its
+quantitative regret theorem belongs to the game-independent online-learning
+layer, while this section exposes only the finite-law bridge.
 -/
 
 variable [Fintype ι]
@@ -196,8 +212,8 @@ theorem externalRegret_pi (G : UtilityGame.{uι, us, uo} ι)
   rw [GameForm.outcomeLaw, GameForm.mixed_play, GameForm.mixed_play, ← hpi, FinDist.bind_map]
 
 /-- A pure-action payoff in independent play, normalized to the unit interval
-using a player-specific payoff band.  This is the input interface a future
-finite online-learning algorithm consumes. -/
+using a player-specific payoff band.  It is the unit-range input consumed by
+the multiplicative-weights construction in `GameTheory.Analysis.Learning`. -/
 def normGain (G : UtilityGame.{uι, us, uo} ι) (lo : ι → ℝ) (width : ℝ)
     (mixedProfile : Profile G.form.sig.mixed) (who : ι)
     (action : G.form.sig.Strategy who) : ℝ :=
@@ -322,8 +338,8 @@ theorem selfPlay_timeAverage_isεCoarseCorrelatedEq
           (G.form.mixed.play
             (Profile.update (mixedProfile round) who (FinDist.pure action))) -
         expectedUtility G.utility who (G.form.mixed.play (mixedProfile round)))) ≤ bound) :
-    G.IsεCoarseCorrelatedEq (bound / T)
-      (G.timeAverage fun round => FinDist.pi (mixedProfile round)) := by
+    IsεCoarseCorrelatedEq G.form G.utility (bound / T)
+      (G.form.timeAverage fun round => FinDist.pi (mixedProfile round)) := by
   apply G.timeAverage_isεCoarseCorrelatedEq_of_regret_le
   intro who action
   rw [show (∑ round : Fin T, G.externalRegret

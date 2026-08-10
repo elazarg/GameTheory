@@ -9,7 +9,7 @@ only because payoffs or the prior are degenerate.
 -/
 
 import GameTheory.Core.BayesCorrelated
-import GameTheory.Languages.BayesianMechanism
+import GameTheory.Mechanism.BayesianIncentives
 
 noncomputable section
 
@@ -64,7 +64,8 @@ theorem truthful_isNash :
   mechanism.isNash_truthfulPlan_of_isIncentiveCompatible
     prior mechanism_isIncentiveCompatible
 
-/-- The F6 compiler theorem feeds the F5 outcome-law theorem directly. -/
+/-- Truthful compilation feeds the Bayes-correlated outcome-law theorem
+directly. -/
 theorem truthfulRecommendation_isBayesCorrelatedEq :
     (mechanism.toBayesianGame prior).IsBayesCorrelatedEq
       ((mechanism.toBayesianGame prior).strategyRecommendationLaw

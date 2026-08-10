@@ -1,9 +1,5 @@
 /-
 Correctness guarantees for the explicit-list knapsack solver.
-
-Ported from the proof ideas in the pinned v1 source:
-`reference/GameTheory-v1/GameTheory/Auctions/Knapsack/Basic.lean`
-at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
 import GameTheory.Mechanism.Knapsack.Algorithm

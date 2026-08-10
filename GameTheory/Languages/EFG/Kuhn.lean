@@ -8,7 +8,9 @@ another evaluator, strategy representation, or equilibrium notion.
 The two directions deliberately retain their sharp hypotheses. Predrawing a
 behavioral plan needs no repeated nontrivial information state; reading a mixed
 plan behaviorally needs recall, used through the weaker constraint-locality
-fact it implies.
+fact it implies. The API relates whole profiles and their induced laws. It does
+not yet provide the per-player realization theorem needed to transfer Nash
+equilibria between behavioral and mixed strategy spaces.
 -/
 
 import GameTheory.Languages.EFG.Strategic
@@ -82,23 +84,24 @@ theorem kuhn_mixed_to_behavioral
       (InformationModel.constrainsAlike_of_perfectRecall hrecall)
       horizon mixed).symm⟩
 
-/-- Behavioral and mixed EFG profiles realize exactly the same history laws
-when both sharp conditions hold. -/
+/-- Under perfect recall, behavioral and mixed EFG profiles realize exactly the
+same history laws. Perfect recall supplies the no-revisit consequence used in
+the behavioral-to-mixed direction. -/
 theorem kuhn_historyLaws
     [∀ who, Fintype (G.information.InfoState who)]
     [∀ who, DecidableEq (G.information.InfoState who)]
-    (hactsOnce : G.information.ActsOnceWhereItMatters)
     (hrecall : G.information.PerfectRecall) (horizon : ℕ) :
     { law | ∃ behavioral : Profile G.behavioralSignature,
         G.information.runBehavioral behavioral horizon = law } =
       { law | ∃ mixed : Profile G.strategicSignature.mixed,
         G.information.runMixed mixed horizon = law } :=
-  G.information.runBehavioral_image_eq_runMixed_image hactsOnce
+  G.information.runBehavioral_image_eq_runMixed_image
+    (G.information.actsOnceWhereItMatters_of_perfectRecall hrecall)
     (InformationModel.constrainsAlike_of_perfectRecall hrecall) horizon
 
 /-- Pushing a behavioral history law through any outcome map preserves the
 behavioral-to-mixed correspondence. This is the utility-distribution theorem
-from v1 with utility generalized to arbitrary retained outcome data. -/
+with utility generalized to arbitrary retained outcome data. -/
 theorem kuhn_behavioral_to_mixed_outcomeLaw
     [∀ who, Fintype (G.information.InfoState who)]
     [∀ who, DecidableEq (G.information.InfoState who)]

@@ -4,15 +4,11 @@
 This capability-free owner exposes the allocation and payment structure needed
 by weak monotonicity, affine maximizers, and Myerson-style consumers.  It
 compiles to the canonical Bayesian direct-mechanism language, so DSIC remains
-that language's incentive-compatibility predicate rather than a parallel
+the library's ordinary dominant-strategy predicate rather than a parallel
 solution concept.
-
-The mathematical statement and payment-cancellation proof are adapted from
-`GameTheory/Mechanism/Bayesian/Monotonicity.lean` in the pinned v1 snapshot at
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
-import GameTheory.Languages.BayesianMechanism
+import GameTheory.Mechanism.BayesianIncentives
 
 noncomputable section
 

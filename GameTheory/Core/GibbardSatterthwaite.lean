@@ -7,10 +7,9 @@ strategyproof onto choice function to the existing Arrow theorem.  Raised
 rankings, staged voter replacement, and the induced aggregator are private
 proof machinery rather than a second social-choice language.
 
-The proof follows
-`reference/GameTheory-v1/GameTheory/Mechanism/SocialChoice/GibbardSatterthwaite.lean`
-at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`, adapted from strict
-relations to the public weak-ranking interface.
+Primary references: A. Gibbard, “Manipulation of Voting Schemes,”
+*Econometrica* 41 (1973); M. A. Satterthwaite, “Strategy-proofness and
+Arrow's Conditions,” *Journal of Economic Theory* 10 (1975).
 -/
 
 import GameTheory.Core.Arrow
@@ -23,13 +22,107 @@ namespace SocialChoiceFunction
 
 variable {Voter : Type uv} {Alternative : Type ua}
 
-private theorem strict_total_of_linear {ranks : Alternative → Alternative → Prop}
-    (hlinear : Rank.Linear ranks) {first second : Alternative}
-    (hne : first ≠ second) :
-    Rank.strict ranks first second ∨ Rank.strict ranks second first := by
-  rcases hlinear.2.2.1 first second with hfirst | hsecond
-  · exact Or.inl (Rank.strict_of_le_of_ne hlinear.2.2.2 hfirst hne)
-  · exact Or.inr (Rank.strict_of_le_of_ne hlinear.2.2.2 hsecond hne.symm)
+/-! ## Positive dictatorship witness -/
+
+/-- Select the dictator's best alternative on linear inputs, with an arbitrary
+fallback on malformed rankings.  The fallback is invisible to all public
+social-choice laws, whose domain premise is `Preference.Linear`. -/
+noncomputable def dictatorialChoice [Fintype Alternative]
+    [Nonempty Alternative] (dictator : Voter) :
+    SocialChoiceFunction Voter Alternative := by
+  classical
+  exact fun ranks =>
+    if hlinear : Rank.Linear (ranks dictator) then
+      Classical.choose <| Rank.exists_best_finset hlinear.2.1 hlinear.2.2.1
+        (Finset.univ_nonempty : (Finset.univ : Finset Alternative).Nonempty)
+    else Classical.choice inferInstance
+
+/-- The canonical dictatorial choice function really selects a top alternative
+of the dictator's reported linear ranking. -/
+theorem dictatorialChoice_isDictator [Fintype Alternative]
+    [Nonempty Alternative] (dictator : Voter) :
+    (dictatorialChoice dictator : SocialChoiceFunction Voter Alternative).IsDictator
+      dictator := by
+  intro ranks hlinear alternative
+  rw [dictatorialChoice, dif_pos (hlinear dictator)]
+  exact (Classical.choose_spec <| Rank.exists_best_finset
+    (hlinear dictator).2.1 (hlinear dictator).2.2.1
+      (Finset.univ_nonempty : (Finset.univ : Finset Alternative).Nonempty)).2
+        alternative (Finset.mem_univ _)
+
+/-- Every exact dictator is strategyproof on the unrestricted linear-ranking
+domain. -/
+theorem IsDictator.isStrategyProof
+    {choice : SocialChoiceFunction Voter Alternative} {dictator : Voter}
+    (hdictator : choice.IsDictator dictator) : choice.IsStrategyProof := by
+  intro ranks hlinear voter report hreport himproves
+  by_cases hvoter : voter = dictator
+  · subst voter
+    exact himproves.2
+      (hdictator ranks hlinear
+        (choice (replaceRanking ranks dictator report)))
+  · have hreplacement :
+        Preference.Linear (replaceRanking ranks voter report) := by
+      intro current
+      by_cases hcurrent : current = voter
+      · subst current
+        simpa using hreport
+      · rw [replaceRanking_of_ne _ hcurrent]
+        exact hlinear current
+    have hold := hdictator ranks hlinear
+      (choice (replaceRanking ranks voter report))
+    have hnew := hdictator (replaceRanking ranks voter report) hreplacement
+      (choice ranks)
+    rw [replaceRanking_of_ne _ (fun h => hvoter h.symm)] at hnew
+    have heq : choice ranks = choice (replaceRanking ranks voter report) :=
+      (hlinear dictator).2.2.2 _ _ hold hnew
+    rw [← heq] at himproves
+    exact Rank.strict_irrefl (ranks voter) _ himproves
+
+/-- On a finite nonempty alternative set, the canonical dictatorial choice
+function is onto the admissible linear-ranking domain. -/
+theorem dictatorialChoice_isOnto [Fintype Alternative]
+    [Nonempty Alternative] (dictator : Voter) :
+    (dictatorialChoice dictator : SocialChoiceFunction Voter Alternative).IsOnto := by
+  intro target
+  classical
+  letI : LinearOrder Alternative := WellOrderingRel.isWellOrder.linearOrder
+  let maximum : Alternative :=
+    (Finset.univ : Finset Alternative).max' Finset.univ_nonempty
+  let relabel : Alternative ≃ Alternative := Equiv.swap target maximum
+  let rank : Alternative → Alternative → Prop := fun preferred alternative =>
+    relabel alternative ≤ relabel preferred
+  let ranks : Ranking Voter Alternative := fun _ => rank
+  have hrank : Rank.Linear rank := by
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · intro item
+      exact le_rfl
+    · intro preferred middle alternative hfirst hsecond
+      exact le_trans hsecond hfirst
+    · intro first second
+      exact le_total (relabel second) (relabel first)
+    · intro first second hfirst hsecond
+      exact relabel.injective (le_antisymm hsecond hfirst)
+  have hranks : Preference.Linear ranks := fun _ => hrank
+  refine ⟨ranks, hranks, ?_⟩
+  have hchosenTop := dictatorialChoice_isDictator dictator ranks hranks target
+  have htargetTop :
+      ranks dictator target (dictatorialChoice dictator ranks) := by
+    show relabel (dictatorialChoice dictator ranks) ≤ relabel target
+    rw [show relabel target = maximum by
+      simp [relabel, Equiv.swap_apply_left]]
+    exact Finset.le_max' (Finset.univ : Finset Alternative)
+      (relabel (dictatorialChoice dictator ranks)) (Finset.mem_univ _)
+  exact hrank.2.2.2 _ _ hchosenTop htargetTop
+
+/-- The canonical dictatorship simultaneously witnesses the consistency of
+the strategyproofness and onto premises. -/
+theorem dictatorialChoice_isStrategyProof_and_isOnto
+    [Fintype Alternative] [Nonempty Alternative] (dictator : Voter) :
+    (dictatorialChoice dictator : SocialChoiceFunction Voter Alternative).IsStrategyProof ∧
+      (dictatorialChoice dictator : SocialChoiceFunction Voter Alternative).IsOnto :=
+  ⟨(dictatorialChoice_isDictator dictator).isStrategyProof,
+    dictatorialChoice_isOnto dictator⟩
 
 /-- **Single-voter monotonicity.** A strategyproof choice does not change when
 one voter replaces their report by a linear ranking that weakly raises the
@@ -67,11 +160,11 @@ theorem IsStrategyProof.monotone_step
   have hnewReverse :
       Rank.strict report (choice (replaceRanking ranks voter report))
         (choice ranks) :=
-    (strict_total_of_linear hreport hne.symm).resolve_left hnotNew
+    (Rank.strict_total_of_linear hreport hne.symm).resolve_left hnotNew
   have holdForward :
       Rank.strict (ranks voter) (choice ranks)
         (choice (replaceRanking ranks voter report)) :=
-    (strict_total_of_linear (hlinear voter) hne).resolve_left hnotOld
+    (Rank.strict_total_of_linear (hlinear voter) hne).resolve_left hnotOld
   exact hnewReverse.2
     (hraised (choice (replaceRanking ranks voter report)) holdForward.1)
 

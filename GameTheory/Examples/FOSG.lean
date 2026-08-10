@@ -3,13 +3,8 @@
 
 This small simultaneous two-bit game is deliberately utility-free: FOSG owns
 execution and information, while a later consumer may attach an evaluation.
-It is the canonical replacement for the one-step native FOSG examples in the
-pinned v1 `GameTheory/Languages/FOSG/Examples.lean` at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
-
-Unlike the old fixture, it installs neither a finite-history enumeration nor a
-bounded evaluator.  Its regression is the exact canonical history law of the
-stable FOSG-to-EFG serializer.
+It installs neither a finite-history enumeration nor a bounded evaluator. Its
+regression is the exact canonical history law of the FOSG-to-EFG serializer.
 -/
 
 import GameTheory.Languages.Bridges.FOSGToEFG

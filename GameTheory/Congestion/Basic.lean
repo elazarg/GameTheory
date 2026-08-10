@@ -10,9 +10,6 @@ The static presentation below deliberately reuses `GameForm`, `UtilityGame`,
 `Profile.update`, expected-utility Nash, and the potential/dynamics theory in
 `GameTheory.Core`.  It does not introduce a congestion-specific game or
 equilibrium predicate.
-
-Mathematical provenance: `reference/GameTheory-v1/GameTheory/Congestion/Basic.lean`
-at pinned commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
 import GameTheory.Core.Utility
@@ -54,9 +51,8 @@ def signature (C : CongestionGame ι) : GameSignature ι where
 
 /-- The deterministic static form associated to a congestion game. -/
 @[reducible]
-def toGameForm (C : CongestionGame ι) : GameForm ι where
-  sig := C.signature
-  play profile := Probability.FinDist.pure profile
+def toGameForm (C : CongestionGame ι) : GameForm ι :=
+  GameForm.deterministic C.signature fun profile => profile
 
 /-- Count the players whose selected strategies occupy a resource. -/
 noncomputable def congestion [Fintype ι] (C : CongestionGame ι) (σ : C.Profile)
@@ -176,15 +172,6 @@ theorem congestion_update [Fintype ι] [DecidableEq ι]
     (GameTheory.Profile.update (sig := C.toGameForm.sig) σ who s') who r
   rw [GameTheory.Profile.update_same] at h
   rw [h, congestionWithout_update]
-
-open Classical in
-/-- A player's contribution can increase the other-player load by at most one. -/
-theorem congestion_le_congestionWithout_add_one [Fintype ι]
-    (C : CongestionGame ι) (σ : C.Profile) (who : ι) (r : C.Resource) :
-    C.congestion σ r ≤ C.congestionWithout σ who r + 1 := by
-  classical
-  rw [congestion_decompose C σ who r]
-  split_ifs <;> omega
 
 open Classical in
 /-- Other-player congestion is bounded by full congestion. -/

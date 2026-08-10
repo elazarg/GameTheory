@@ -2,9 +2,7 @@
 # Quasi-fields of bundles
 
 Closure lemmas for the finite bundle families used by coordinated
-combinatorial mechanisms. Ported mathematically from
-`reference/GameTheory-v1/GameTheory/Auctions/Combinatorial.lean` at pinned
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+combinatorial mechanisms.
 -/
 
 import GameTheory.Mechanism.Combinatorial.Basic

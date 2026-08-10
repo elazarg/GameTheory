@@ -1,16 +1,10 @@
 /-
 # Executable knapsack approximation frontend
 
-This leaf repairs the executable shape of the pinned greedy approximation:
-items are supplied explicitly, individually infeasible items are removed,
+Items are supplied explicitly, individually infeasible items are removed,
 density order is computed without division, and the result is an actual
 finite-set allocation chosen between the greedy prefix and a feasible
-singleton.  Correctness and the approximation ratio live in a separate leaf.
-
-The recovered theorem family is attributed to
-`reference/GameTheory-v1/GameTheory/Auctions/Knapsack/Basic.lean` at pinned
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; the executable API is repaired
-rather than source-compatible.
+singleton. Correctness and the approximation ratio live in a separate leaf.
 -/
 
 import GameTheory.Mechanism.Knapsack.Aggregate

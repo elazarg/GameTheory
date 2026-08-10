@@ -5,10 +5,6 @@ Additive valuations and fairness predicates over the canonical disjoint
 allocation from `Mechanism.Combinatorial`.  Completeness is a separate
 certificate; neither carrier finiteness nor decidable equality is stored in
 the allocation itself.
-
-Mathematical statements are adapted from
-`reference/GameTheory-v1/GameTheory/Mechanism/FairDivision/Indivisible/Basic.lean`
-at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
 import GameTheory.Mechanism.Combinatorial.Basic
@@ -43,7 +39,7 @@ def Nonnegative (v : AdditiveValuation ι G) : Prop :=
 
 /-- Every good is assigned.  Pairwise disjointness is already carried by the
 canonical allocation type. -/
-def IsComplete [Fintype G] [DecidableEq G] (A : Allocation ι G) : Prop :=
+def IsComplete (A : Allocation ι G) : Prop :=
   ∀ g : G, ∃ i : ι, g ∈ A i
 
 /-- Envy-freeness for additive valuations. -/

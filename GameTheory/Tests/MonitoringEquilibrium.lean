@@ -31,6 +31,18 @@ def allFalse : Profile coordination.form.sig := fun _ => false
 def allTrue : Profile coordination.form.sig := fun _ => true
 def coordinated (b : Bool) : Profile coordination.form.sig := fun _ => b
 
+/-- At the payoff-one coordinated profile, no coalition can make all of its
+members strictly better because one is already the maximal stage payoff. -/
+theorem allFalse_isStrongNash :
+    IsStrongNash coordination.form (euPreference coordination.utility) allFalse := by
+  rw [isStrongNash_iff]
+  intro coalition hnonempty replacement
+  obtain ⟨member, hmember⟩ := hnonempty
+  refine ⟨member, hmember, ?_⟩
+  simp only [euPreference_apply, coordinationForm, expectedUtility_pure]
+  simp [allFalse]
+  split <;> norm_num
+
 def fairCoin : FinDist Bool :=
   FinDist.mix (1 / 2) (by norm_num) (by norm_num)
     (FinDist.pure false) (FinDist.pure true)
@@ -311,5 +323,53 @@ theorem prescribed_isPerfectPublicEquilibrium :
     monitoring.IsPerfectPublicEquilibrium discount prescribed :=
   prescribed_ppe_iff_noProfitableOneShotDeviation.mpr
     prescribed_hasNoProfitableOneShotDeviationAfterEveryHistory
+
+/-! A stationary mismatched profile supplies the converse regression: player
+zero can coordinate immediately, while the continuation stays mismatched. -/
+
+def mismatched : Profile coordination.form.sig
+  | 0 => false
+  | 1 => true
+
+def mismatchedProfile : monitoring.MonitoredProfile :=
+  monitoring.stationaryMonitoredProfile mismatched
+
+@[simp]
+theorem discountedPayoff_mismatchedProfile (who : Fin 2) :
+    monitoring.discountedPayoff discount mismatchedProfile who = 0 := by
+  unfold mismatchedProfile
+  rw [monitoring.discountedPayoff_stationaryMonitoredProfile
+    (by norm_num [discount]) (by norm_num [discount])]
+  fin_cases who <;> simp [mismatched, stagePayoff_eq_agreement]
+
+@[simp]
+theorem afterSignal_mismatchedProfile (signal : Bool) :
+    monitoring.afterSignal mismatchedProfile signal = mismatchedProfile := by
+  simp [mismatchedProfile]
+
+/-- Player zero's one-shot switch to `true` is strictly profitable. -/
+theorem mismatchedProfile_has_profitable_oneShotDeviation :
+    ¬ monitoring.HasNoProfitableOneShotDeviation discount mismatchedProfile := by
+  intro hno
+  have hdeviation := hno 0 true
+  rw [monitoring.discountedPayoff_eq_head_add_expected
+    (by norm_num [discount]) (by norm_num [discount])
+    (Profile.update (sig := monitoring.monitoredSignature) mismatchedProfile 0
+      (monitoring.oneShotDeviation mismatchedProfile 0 true)) 0
+    (stagePayoff_abs_le_one · 0)] at hdeviation
+  rw [monitoring.currentProfile_update_oneShotDeviation] at hdeviation
+  simp_rw [monitoring.afterSignal_update_oneShotDeviation,
+    afterSignal_mismatchedProfile, discountedPayoff_mismatchedProfile] at hdeviation
+  norm_num [discount, mismatchedProfile, mismatched, stagePayoff_eq_agreement,
+    UtilityGame.PublicMonitoring.stationaryMonitoredProfile, Profile.update] at hdeviation
+
+/-- The profitable root deviation falsifies perfect public equilibrium. -/
+theorem mismatchedProfile_not_isPerfectPublicEquilibrium :
+    ¬ monitoring.IsPerfectPublicEquilibrium discount mismatchedProfile := by
+  intro hppe
+  apply mismatchedProfile_has_profitable_oneShotDeviation
+  have hall := hppe.hasNoProfitableOneShotDeviationAfterEveryHistory
+  simpa [UtilityGame.PublicMonitoring.after] using
+    hall 0 (fun k => k.elim0)
 
 end GameTheory.Tests.MonitoringEquilibrium

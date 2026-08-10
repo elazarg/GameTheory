@@ -6,7 +6,7 @@ The hostile slice also checks transparent specialization from `VCGSetup` and
 compilation to the accepted Bayesian direct-mechanism language.
 -/
 
-import GameTheory.Languages.BayesianMechanism
+import GameTheory.Mechanism.BayesianIncentives
 import GameTheory.Mechanism.VCG
 
 noncomputable section

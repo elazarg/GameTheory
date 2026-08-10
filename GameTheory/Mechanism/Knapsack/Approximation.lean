@@ -1,15 +1,12 @@
 /-
-# Repaired knapsack half approximation
+# Executable knapsack half approximation
 
-The pinned predecessor assumed fractional-greedy optimality and compared the
-integral prefix with a possibly infeasible highest bid.  This module instead
-proves a division-free finite exchange bound and connects it to the actual
-feasible allocation returned by the checked executable frontend.
+This module proves a division-free finite exchange bound and connects it to
+the actual feasible allocation returned by the checked executable frontend.
 
-The repaired statement and exchange proof recover the intended mathematics
-from `reference/GameTheory-v1/GameTheory/Auctions/Knapsack/Basic.lean` at
-pinned commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29` without preserving its
-conditional fractional-optimality premise or unattained maximum.
+For the monotone half-approximation underlying this construction, see
+A. Mu'alem and N. Nisan, “Truthful Approximation Mechanisms for Restricted
+Combinatorial Auctions,” *Games and Economic Behavior* 64 (2008).
 -/
 
 import GameTheory.Mechanism.Knapsack.ApproximationCorrectness

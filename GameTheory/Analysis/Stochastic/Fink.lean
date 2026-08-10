@@ -1,11 +1,12 @@
 /-
-# General-sum discounted stationary equilibria
+# General-sum discounted stationary Bellman equilibria
 
-This module adapts the fixed-point argument from the sibling repository's
-`GameTheory/Concepts/Stochastic/Equilibrium/Discounted/Fink.lean` at commit
-`da076851bab19519521aa1e0d2da127e29fcd5c9`. It deliberately uses the successor
-library's canonical `FinDist`, `UtilityGame`, mixed Nash predicate, profile
-update, simplex bridge, and one-way analytic fixed-point dependency.
+The fixed-point construction uses the canonical `FinDist`, `UtilityGame`,
+mixed Nash predicate, profile update, simplex bridge, and one-way analytic
+fixed-point dependency.
+
+Primary reference: A. M. Fink, “Equilibrium in a Stochastic n-Person Game,”
+*Journal of Science of the Hiroshima University, Series A-I* 28 (1964).
 -/
 
 import GameTheory.Analysis.Nash
@@ -480,7 +481,10 @@ theorem isDiscountedStationaryBellmanEq_of_finkMap_fixedPoint
     rw [← G.finkAuxPayoff_eq_expectedUtility]
     simpa [finkMap, finkAmbientUpdate, finkValue] using hcoordinate
 
-/-- **Fink's theorem for finite stochastic games.** -/
+/-- A finite stochastic game admits a bounded stationary profile and value
+function satisfying the statewise mixed-Nash and Bellman equations. This is the
+stationary Bellman fixed-point conclusion; equilibrium against arbitrary
+history-dependent deviations requires a separate one-shot-deviation theorem. -/
 theorem exists_isDiscountedStationaryBellmanEq_bounded
     [Fintype G.State] [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)]

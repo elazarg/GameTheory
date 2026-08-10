@@ -4,6 +4,9 @@
 The game-independent squared-distance argument behind Blackwell
 approachability.  A strategic layer only has to provide the steering and
 bounded-residual hypotheses below.
+
+Primary reference: D. Blackwell, “An Analog of the Minimax Theorem for Vector
+Payoffs,” *Pacific Journal of Mathematics* 6 (1956).
 -/
 
 import Mathlib.Analysis.InnerProductSpace.Basic
@@ -122,25 +125,31 @@ theorem avgVec_norm_le (payoff : P → Q → E) (br : E → P) (qseq : ℕ → Q
       all_goals first | exact ih | exact hM _ _
     nlinarith [key, hsum, hM0]
 
-open Filter in
-/-- Blackwell's B-set condition yields a stationary average-dependent response
-whose induced payoff average approaches the closed target. -/
-theorem blackwell_approaches [ProperSpace E] (payoff : P → Q → E) (S : Set E)
-    (hScl : IsClosed S) (hSne : S.Nonempty) {M : ℝ} (hM0 : 0 ≤ M)
+/-! ## Blackwell responses -/
+
+/-- Blackwell's B-set condition yields one average-dependent response whose
+nearest-point witnesses satisfy the steering and residual bounds for every
+opponent sequence. -/
+theorem exists_blackwell_response [ProperSpace E]
+    (payoff : P → Q → E) (S : Set E) (s₀ : E) (hs₀ : s₀ ∈ S)
+    (hScl : IsClosed S) {M : ℝ} (hM0 : 0 ≤ M)
     (hM : ∀ p q, ‖payoff p q‖ ≤ M)
     (hBset : ∀ x : E, ∀ π ∈ S, ‖x - π‖ = Metric.infDist x S →
-      ∃ p : P, ∀ q : Q, inner ℝ (payoff p q - π) (x - π) ≤ 0)
-    (qseq : ℕ → Q) :
-    ∃ br : E → P,
-      Tendsto (fun t => Metric.infDist (avgVec payoff br qseq t) S) atTop (nhds 0) := by
-  obtain ⟨s₀, hs₀⟩ := hSne
+      ∃ p : P, ∀ q : Q, inner ℝ (payoff p q - π) (x - π) ≤ 0) :
+    ∃ br : E → P, ∀ qseq : ℕ → Q, ∀ t : ℕ,
+      ∃ π ∈ S,
+        ‖avgVec payoff br qseq t - π‖ =
+          Metric.infDist (avgVec payoff br qseq t) S ∧
+        inner ℝ (payoff (br (avgVec payoff br qseq t)) (qseq t) - π)
+          (avgVec payoff br qseq t - π) ≤ 0 ∧
+        ‖payoff (br (avgVec payoff br qseq t)) (qseq t) - π‖ ≤
+          3 * M + ‖s₀‖ := by
   choose npt hnptS hnptDist using fun x => hScl.exists_infDist_eq_dist ⟨s₀, hs₀⟩ x
   have hdist : ∀ x, ‖x - npt x‖ = Metric.infDist x S := fun x => by
     rw [← dist_eq_norm]
     exact (hnptDist x).symm
   choose br hbr using fun x => hBset x (npt x) (hnptS x) (hdist x)
-  refine ⟨br, infDist_avg_tendsto_zero (C := 3 * M + ‖s₀‖)
-    (avgVec_succ payoff br qseq) (fun t => ?_)⟩
+  refine ⟨br, fun qseq t => ?_⟩
   refine ⟨npt (avgVec payoff br qseq t), hnptS _, hdist _, hbr _ (qseq t), ?_⟩
   set x := avgVec payoff br qseq t with hx_def
   have hx : ‖x‖ ≤ M := avgVec_norm_le payoff br qseq hM0 hM t
@@ -161,5 +170,37 @@ theorem blackwell_approaches [ProperSpace E] (payoff : P → Q → E) (S : Set E
       norm_sub_le _ _
     _ ≤ M + (2 * M + ‖s₀‖) := add_le_add (hM _ _) hnpt_le
     _ = 3 * M + ‖s₀‖ := by ring
+
+/-- Finite-time squared-distance bound for the stationary response selected by
+Blackwell's B-set condition. -/
+theorem blackwell_sq_infDist_avg_le [ProperSpace E]
+    (payoff : P → Q → E) (S : Set E) (s₀ : E) (hs₀ : s₀ ∈ S)
+    (hScl : IsClosed S) {M : ℝ} (hM0 : 0 ≤ M)
+    (hM : ∀ p q, ‖payoff p q‖ ≤ M)
+    (hBset : ∀ x : E, ∀ π ∈ S, ‖x - π‖ = Metric.infDist x S →
+      ∃ p : P, ∀ q : Q, inner ℝ (payoff p q - π) (x - π) ≤ 0) :
+    ∃ br : E → P, ∀ qseq : ℕ → Q, ∀ t : ℕ,
+      (t : ℝ) ^ 2 * Metric.infDist (avgVec payoff br qseq t) S ^ 2 ≤
+        (t : ℝ) * (3 * M + ‖s₀‖) ^ 2 := by
+  obtain ⟨br, hbr⟩ := exists_blackwell_response payoff S s₀ hs₀ hScl hM0 hM hBset
+  refine ⟨br, fun qseq => ?_⟩
+  exact sq_infDist_avg_le (avgVec_succ payoff br qseq) (hbr qseq)
+
+open Filter in
+/-- Blackwell's B-set condition yields one stationary average-dependent
+response whose payoff average approaches the closed target against every
+opponent sequence. -/
+theorem blackwell_approaches [ProperSpace E] (payoff : P → Q → E) (S : Set E)
+    (hScl : IsClosed S) (hSne : S.Nonempty) {M : ℝ} (hM0 : 0 ≤ M)
+    (hM : ∀ p q, ‖payoff p q‖ ≤ M)
+    (hBset : ∀ x : E, ∀ π ∈ S, ‖x - π‖ = Metric.infDist x S →
+      ∃ p : P, ∀ q : Q, inner ℝ (payoff p q - π) (x - π) ≤ 0) :
+    ∃ br : E → P, ∀ qseq : ℕ → Q,
+      Tendsto (fun t => Metric.infDist (avgVec payoff br qseq t) S)
+        atTop (nhds 0) := by
+  obtain ⟨s₀, hs₀⟩ := hSne
+  obtain ⟨br, hbr⟩ := exists_blackwell_response payoff S s₀ hs₀ hScl hM0 hM hBset
+  refine ⟨br, fun qseq => ?_⟩
+  exact infDist_avg_tendsto_zero (avgVec_succ payoff br qseq) (hbr qseq)
 
 end GameTheoryMath.Approachability

@@ -20,7 +20,7 @@ for every positive tolerance, its finite multiplicative-weights trajectory
 exhibits a canonical approximate CCE law. -/
 theorem multiplicativeWeights_selfPlay_api {epsilon : ℝ} (hepsilon : 0 < epsilon) :
     ∃ law : FinDist (Profile signature),
-      game.IsεCoarseCorrelatedEq epsilon law := by
+      IsεCoarseCorrelatedEq game.form game.utility epsilon law := by
   apply game.mwSelfPlay_exists_isεCoarseCorrelatedEq_of_pos
     (lo := fun _ => 0) (width := 1) (L := Real.log 2)
     (by norm_num)

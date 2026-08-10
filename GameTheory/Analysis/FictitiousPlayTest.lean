@@ -18,10 +18,10 @@ namespace GameTheory.Tests.FictitiousPlay
 the corresponding pure mixed strategy. -/
 theorem constant_empiricalBelief_converges (who : Fin 2) :
     Analysis.FinDistConvergesPointwise
-      (fun t => game.empiricalBelief constantHistory (t + 1) who)
+      (fun t => game.form.empiricalBelief constantHistory (t + 1) who)
       (game.form.purify coordinated who) := by
   have hsequence :
-      (fun t => game.empiricalBelief constantHistory (t + 1) who) =
+      (fun t => game.form.empiricalBelief constantHistory (t + 1) who) =
         fun _ => game.form.purify coordinated who := by
     funext t
     exact congrFun (constant_empiricalBelief t) who

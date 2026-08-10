@@ -11,6 +11,7 @@ import GameTheory.Cooperative.Balancedness
 import GameTheory.Cooperative.Banzhaf
 import GameTheory.Cooperative.Bargaining
 import GameTheory.Cooperative.GaleShapley.Perfect
+import GameTheory.Cooperative.ShapleyShubik
 
 namespace GameTheory
 

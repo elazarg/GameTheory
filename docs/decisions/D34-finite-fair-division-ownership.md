@@ -7,7 +7,7 @@
 ## Decision / question
 
 Whether indivisible fair division should reuse
-`Mechanism.Combinatorial.Allocation`, expose v1's parallel function-valued
+`Mechanism.Combinatorial.Allocation`, expose the comparison design's parallel function-valued
 allocation plus feasibility predicate, or compile fairness through a strategic
 mechanism model.
 

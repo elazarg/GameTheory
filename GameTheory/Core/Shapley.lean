@@ -5,9 +5,8 @@ The Shapley value lives directly on `CoalitionalGame`. Its weighted marginal
 contributions use explicit finite enumeration, while the game itself continues
 to store only its characteristic function and the empty-coalition law.
 
-The uniqueness proof is adapted from the pinned v1 theorem inventory at
-`reference/GameTheory-v1/GameTheory/Cooperative/CoalitionalGame/Core.lean` and
-`Shapley.lean`, commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+Primary reference: L. S. Shapley, “A Value for n-Person Games,” in
+*Contributions to the Theory of Games II*, Princeton University Press, 1953.
 -/
 
 import GameTheory.Core.Coalitional
@@ -26,17 +25,6 @@ universe ua
 namespace CoalitionalGame
 
 variable {Agent : Type ua} [DecidableEq Agent]
-
-/-- The extra worth created when `agent` joins `coalition`. -/
-def marginalContribution
-    (G : CoalitionalGame Agent) (agent : Agent)
-    (coalition : Finset Agent) : ℝ :=
-  G.value (insert agent coalition) - G.value coalition
-
-/-- A null agent never changes a coalition's worth. -/
-def IsNull (G : CoalitionalGame Agent) (agent : Agent) : Prop :=
-  ∀ coalition : Finset Agent, agent ∉ coalition →
-    G.marginalContribution agent coalition = 0
 
 section FiniteAgents
 
@@ -67,20 +55,6 @@ theorem shapleyValue_null
   rw [hnull coalition hcoalition, mul_zero]
 
 end FiniteAgents
-
-/-- Pointwise sum of coalitional games. -/
-def add
-    (G H : CoalitionalGame Agent) :
-    CoalitionalGame Agent where
-  value coalition := G.value coalition + H.value coalition
-  value_empty := by simp [G.value_empty, H.value_empty]
-
-/-- Scalar multiplication of a coalitional game. -/
-def smul
-    (scalar : ℝ) (G : CoalitionalGame Agent) :
-    CoalitionalGame Agent where
-  value coalition := scalar * G.value coalition
-  value_empty := by simp [G.value_empty]
 
 /-- Two agents are symmetric when exchanging which one joins any coalition
 containing neither leaves its worth unchanged. -/

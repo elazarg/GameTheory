@@ -44,6 +44,11 @@ def prisonersDilemma : TableGame (Fin 2) where
   actionDecEq _ := inferInstance
   payoff profile i := dilemmaPayoff (profile i) (profile (opponent i))
 
+@[simp] theorem prisonersDilemma_payoff (profile : Profile prisonersDilemma.sig)
+    (who : Fin 2) :
+    prisonersDilemma.payoff profile who =
+      dilemmaPayoff (profile who) (profile (opponent who)) := rfl
+
 /-- Both defect. -/
 def bothDefect : Profile prisonersDilemma.sig := fun _ => .defect
 
@@ -153,10 +158,12 @@ theorem prisonersDilemma_isCorrelatedEq_iff
 
 /-- Hence cooperation survives no round of elimination — from the abstract
 theorem, not from a second computation. -/
-theorem prisonersDilemma_cooperate_not_isRationalizable (who : Fin 2) :
-    ¬ IsRationalizable prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
+theorem prisonersDilemma_cooperate_not_isCorrelatedRationalizable
+    (who : Fin 2) :
+    ¬ IsCorrelatedRationalizable prisonersDilemma.toForm
+      (euPreference prisonersDilemma.utility)
       who .cooperate :=
-  (prisonersDilemma_defect_strictlyDominates who).not_isRationalizable
+  (prisonersDilemma_defect_strictlyDominates who).not_isCorrelatedRationalizable
 
 /-- And no equilibrium plays it. The elimination and equilibrium families meet
 here: nothing about this profile is computed, it follows from the two theorems
@@ -178,15 +185,30 @@ theorem prisonersDilemma_bothDefect_not_isParetoEfficient :
   rw [← TableGame.isParetoEfficient_eq_true_iff]
   decide
 
-/-- It *is* weakly Pareto efficient all the same, and that is not an accident:
-being a strong equilibrium forces it. The two notions come apart exactly where
-Pareto domination allows indifference. -/
-theorem prisonersDilemma_bothDefect_isWeaklyParetoEfficient
-    (hstrong : IsStrongNash prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
-      bothDefect) :
-    IsWeaklyParetoEfficient prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
-      bothDefect :=
-  hstrong.isWeaklyParetoEfficient (euPreference_total _)
+/-- Mutual cooperation makes both players strictly better off, so mutual
+defection is not even weakly Pareto efficient. -/
+theorem prisonersDilemma_bothDefect_not_isWeaklyParetoEfficient :
+    ¬ IsWeaklyParetoEfficient prisonersDilemma.toForm
+      (euPreference prisonersDilemma.utility) bothDefect := by
+  intro hefficient
+  apply hefficient
+  refine ⟨bothCooperate, ?_⟩
+  intro who
+  rw [euPreference_strict_iff]
+  rw [TableGame.toForm_play, TableGame.toForm_play, expectedUtility_pure,
+    expectedUtility_pure, TableGame.utility_apply, TableGame.utility_apply,
+    prisonersDilemma_payoff, prisonersDilemma_payoff]
+  fin_cases who <;>
+    norm_num [bothDefect, bothCooperate, dilemmaPayoff, opponent]
+
+/-- Mutual defection is not a strong Nash equilibrium: the grand coalition can
+switch to mutual cooperation and strictly improve both players' payoffs. -/
+theorem prisonersDilemma_bothDefect_not_isStrongNash :
+    ¬ IsStrongNash prisonersDilemma.toForm
+      (euPreference prisonersDilemma.utility) bothDefect := by
+  intro hstrong
+  exact prisonersDilemma_bothDefect_not_isWeaklyParetoEfficient
+    (hstrong.isWeaklyParetoEfficient (euPreference_total _))
 
 /-- Mutual defection stays an equilibrium once the players may randomize. Mixed
 Nash is not a separate predicate here — it is `IsNash` of the mixed extension —

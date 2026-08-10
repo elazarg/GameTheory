@@ -1,6 +1,6 @@
 param(
   [switch] $VerifyExpected,
-  [switch] $SkipReachability
+  [switch] $DeepReachability
 )
 
 $ErrorActionPreference = 'Stop'
@@ -353,7 +353,8 @@ Report 'FIXED_POINT_IMPORTERS' $fixedPointNamers
 
 $Concepts = @('IsEquilibrium', 'IsNash', 'IsCoarseCorrelatedEq', 'IsCorrelatedEq',
   'IsStrongNash', 'IsBestResponse', 'WeaklyDominates', 'StrictlyDominatesOn',
-  'IsDominant', 'IsRationalizable', 'IsPureRationalizable', 'IsParetoEfficient')
+  'IsDominant', 'IsCorrelatedRationalizable', 'IsPureRationalizable',
+  'IsParetoEfficient')
 $duplicates = 0
 foreach ($concept in $Concepts) {
   $pattern = '(?m)^\s*(?:@\[[^]]*\]\s*)?(?:noncomputable\s+)?def\s+' +
@@ -411,14 +412,16 @@ Report 'PRISONERS_DILEMMA_DEF_LINES' `
   (Measure-Span 'GameTheory/Examples/Classic.lean' '^inductive Choice\b' '^def bothDefect\b')
 
 # --------------------------------------------------------------------------
-# 5. Symbol-reachability probes
+# 5. Optional symbol-reachability probes
 #
 # Authored-import checks cannot see Mathlib's transitive closure. These probes
 # elaborate a one-line file against a public root and require the named
-# constant to be *unknown*.
+# constant to be *unknown*. They intentionally launch many independent Lean
+# processes, so keep them out of the implementation loop and reserve them for
+# CI and release gates.
 # --------------------------------------------------------------------------
 
-if (-not $SkipReachability) {
+if ($DeepReachability) {
   # Delivery audits run in parallel during breadth recovery. A fixed filename
   # lets one process overwrite another process's import root between writing
   # and elaboration, producing spurious reachability failures.
@@ -961,17 +964,17 @@ if (-not $SkipReachability) {
   }
   Report 'VNM_BOUNDARY_PROBES_REJECTED' $vnmBoundaryRejected
 
-  # D40 keeps standard mixed rationalizability in Core while the executable
-  # frontend remains an explicitly pure checker.  Positive probes require the
-  # mixed and pure semantics to coexist; negative probes keep algorithms and
+  # D40 keeps correlated mixed-dominator rationalizability in Core while the
+  # executable frontend remains an explicitly pure checker. Positive probes
+  # require the two semantics to coexist; negative probes keep algorithms and
   # higher semantic layers out of the Core leaf.
   $rationalizabilityInputs = @(
     'GameTheory.StrictlyDominatedByMixed',
-    'GameTheory.survivors',
-    'GameTheory.IsRationalizable',
+    'GameTheory.correlatedSurvivors',
+    'GameTheory.IsCorrelatedRationalizable',
     'GameTheory.pureSurvivors',
     'GameTheory.IsPureRationalizable',
-    'GameTheory.IsNash.isRationalizable')
+    'GameTheory.IsNash.isCorrelatedRationalizable')
   $rationalizabilityBoundary = @(
     'GameTheory.Finite.TableGame',
     'GameTheory.Protocol.ExecutionProtocol',
@@ -1029,33 +1032,6 @@ if (-not $SkipReachability) {
     @('GameTheory.UtilityGame')
   $mathGameRejected = Is-Unreachable $mathOutput 'GameTheory.UtilityGame'
   Report 'GAMETHEORYMATH_GAME_REJECTED' ([int] $mathGameRejected)
-
-  $affineUtilityInputs = @(
-    'GameTheoryMath.IsAffineUtility',
-    'GameTheoryMath.IsRiskNeutral',
-    'GameTheoryMath.IsAffineUtility.isRiskNeutral',
-    'GameTheoryMath.IsRiskNeutral.isAffine')
-  $affineUtilityBoundary = @(
-    'GameTheory.Probability.FinDist',
-    'GameTheory.UtilityGame')
-  $affineUtilityRootOutput = Run-Probe 'GameTheoryMath' $affineUtilityInputs
-  $affineUtilityInputsReached = 0
-  foreach ($constant in $affineUtilityInputs) {
-    if (-not (Is-Unreachable $affineUtilityRootOutput $constant)) {
-      $affineUtilityInputsReached++
-    }
-  }
-  Report 'AFFINE_UTILITY_INPUT_PROBES_REACHED' $affineUtilityInputsReached
-  $affineUtilityLeafOutput = Run-Probe `
-    'GameTheoryMath.AffineUtility' $affineUtilityBoundary
-  $affineUtilityBoundaryRejected = 0
-  foreach ($constant in $affineUtilityBoundary) {
-    if (Is-Unreachable $affineUtilityLeafOutput $constant) {
-      $affineUtilityBoundaryRejected++
-    }
-  }
-  Report 'AFFINE_UTILITY_BOUNDARY_PROBES_REJECTED' `
-    $affineUtilityBoundaryRejected
 
   # EXP-049/D21 keeps the exponential-potential proof independent of both
   # game semantics and the canonical law representation. Core owns only the
@@ -1803,7 +1779,7 @@ if ($VerifyExpected) {
     throw ("PRISONERS_DILEMMA_DEF_LINES: RFC 7.3 budgets under 25, got " +
       $Results['PRISONERS_DILEMMA_DEF_LINES'])
   }
-  if (-not $SkipReachability) {
+  if ($DeepReachability) {
     $Expected['UNREACHABLE_PROBES_PASSED'] = 6
     $Expected['KNAPSACK_ALGORITHM_BOUNDARY_PROBES_REJECTED'] = 7
     $Expected['KNAPSACK_APPROXIMATION_ALGORITHM_BOUNDARY_PROBES_REJECTED'] = 7
@@ -1841,8 +1817,6 @@ if ($VerifyExpected) {
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
     $Expected['REPEATED_BRIDGE_PROTOCOL_REJECTED'] = 1
     $Expected['GAMETHEORYMATH_GAME_REJECTED'] = 1
-    $Expected['AFFINE_UTILITY_INPUT_PROBES_REACHED'] = 4
-    $Expected['AFFINE_UTILITY_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['MATH_LEARNING_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['CORE_LEARNING_MW_PROBES_REJECTED'] = 2
     $Expected['CORE_FICTITIOUS_INPUT_PROBES_REACHED'] = 2

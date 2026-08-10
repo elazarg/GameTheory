@@ -26,7 +26,7 @@ expected-utility representation directly on the canonical
 1. Prove the finite converse through the public `FinDist` support and
    conditioning API. **Selected.**
 2. Promote only representation-implies-axioms and defer the converse.
-3. Expose PMF/ENNReal or a second public lottery carrier to port the v1 proof.
+3. Expose PMF/ENNReal or a second public lottery carrier to port the baseline proof.
 4. Route the theorem through simplex topology or the Analysis fixed-point
    boundary.
 5. Export a reusable compound-indifference or standard-lottery certificate
@@ -48,7 +48,7 @@ indifference through arbitrary finite `bind`.  The proof uses only public
 The first draft exposed a useful falsification: permitting mixture weight zero
 in independence makes both mixtures equal the common branch and therefore
 forces every comparison for any reflexive preference.  The corrected axiom
-requires `0 < t`, matching the pinned theorem.  A supported head supplies a
+requires `0 < t`, matching the representative theorem.  A supported head supplies a
 positive weight, while a nonempty complement supplies weight strictly below
 one, so the induction remains valid.
 

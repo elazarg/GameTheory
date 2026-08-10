@@ -14,13 +14,11 @@ import Mathlib.Tactic.Linarith
 Every finite two-agent instance with nonnegative additive item values admits an
 EFX allocation.  The proof uses the classical cut-and-choose construction:
 agent zero chooses a partition maximizing the value of its worse side, then
-agent one selects its preferred side.
+agent one selects its preferred side. The constructor returns the canonical
+disjoint `Allocation`; completeness remains a separate certificate.
 
-The mathematics is adapted from
-`reference/GameTheory-v1/GameTheory/Mechanism/FairDivision/Indivisible/Basic.lean`
-at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.  The successor constructor
-returns the canonical disjoint `Allocation`; completeness remains a separate
-certificate.
+For the two-agent cut-and-choose construction, see G. Plaut and T. Roughgarden,
+“Almost Envy-Freeness with General Valuations,” SODA 2018.
 -/
 
 namespace GameTheory.Mechanism.FairDivision

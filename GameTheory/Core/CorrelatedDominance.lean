@@ -10,11 +10,8 @@ The results are specialized to expected utility.  They introduce neither a
 second equilibrium predicate nor a second conditioning interface, and they do
 not require finite strategy carriers.
 
-The theorem family is adapted from
-`reference/GameTheory-v1/GameTheory/Concepts/Correlation/CorrelatedNashMixed.lean`
-and
-`reference/GameTheory-v1/GameTheory/Concepts/Correlation/CorrelationSaturation.lean`
-at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+Primary reference: R. J. Aumann, “Subjectivity and Correlation in Randomized
+Strategies,” *Journal of Mathematical Economics* 1 (1974).
 -/
 
 import GameTheory.Core.Response

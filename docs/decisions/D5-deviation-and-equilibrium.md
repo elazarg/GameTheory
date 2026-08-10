@@ -14,7 +14,7 @@ instances of `IsEquilibrium`.
 
 ## Competing designs
 
-1. Separate primitive definitions per concept, as in the pinned v1 snapshot,
+1. Separate primitive definitions per concept, as in the bootstrap snapshot,
    which exposes `NFGGame.IsNashPure`, `KernelGame.IsNash`, `GameForm.IsNashFor`
    and `BayesianGame.BayesNash` as different logical surfaces.
 2. One equilibrium predicate whose deviations receive the whole profile. This

@@ -7,9 +7,9 @@ the game is balanced by finite double counting.  This is the easy direction
 of Bondareva--Shapley; the converse requires a separate finite-dimensional
 duality argument and is not claimed here.
 
-The definitions and theorem are adapted from
-`reference/GameTheory-v1/GameTheory/Cooperative/CoalitionalGame/Bondareva.lean`
-at pinned commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+Primary references: O. N. Bondareva, “Some Applications of Linear Programming
+Methods to the Theory of Cooperative Games,” 1963; L. S. Shapley, “On
+Balanced Sets and Cores,” *Naval Research Logistics Quarterly* 14 (1967).
 -/
 
 import GameTheory.Core.Coalitional

@@ -381,7 +381,7 @@ theorem native_play_symm_eq_compiled_play
     ((behavioralProfileEquiv topological semantics).apply_symm_apply
       behavioral)
 
-/-- **T3 equilibrium transfer.** Native behavioral Nash equilibrium is exactly
+/-- Native behavioral Nash equilibrium is exactly
 behavioral Nash equilibrium of the compiled EFG after histories are forgotten
 to typed assignments. Deviations range over source players; one deviation
 replaces all and only that owner's site-local rules. -/

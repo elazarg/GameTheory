@@ -86,24 +86,6 @@ theorem IsStable.not_isBlockingPair
     ¬ market.IsBlockingPair matching left right :=
   fun blocks => stable.2.2 ⟨left, right, blocks⟩
 
-/-- Stable matchings of a fixed market. -/
-abbrev StableMatching (market : MatchingMarket Left Right) :=
-  { matching : Matching Left Right // market.IsStable matching }
-
-namespace StableMatching
-
-instance (market : MatchingMarket Left Right) :
-    CoeFun market.StableMatching (fun _ => Matching Left Right) where
-  coe matching := matching.1
-
-@[ext]
-theorem ext
-    {market : MatchingMarket Left Right} {first second : market.StableMatching}
-    (h : ∀ left, first left = second left) : first = second :=
-  Subtype.ext (funext h)
-
-end StableMatching
-
 /-- The empty partial assignment is one-to-one. -/
 theorem empty_isMatching :
     IsMatching (fun _ : Left => (none : Option Right)) := by

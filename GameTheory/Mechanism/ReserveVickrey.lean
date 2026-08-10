@@ -1,7 +1,7 @@
 /-
 # Reserve-price Vickrey auction
 
-This opt-in single-item auction keeps the source's strict-clear rule: a tied
+This opt-in single-item auction uses a strict-clear rule: a tied
 top bid does not allocate.  It is built entirely from the generic deterministic
 auction constructor and the canonical response predicates.
 -/

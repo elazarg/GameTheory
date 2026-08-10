@@ -5,11 +5,8 @@ The trigger remembers the first public stage profile that differs from the
 intended path and identifies one differing player. Under a unilateral
 deviation, that player is necessarily the deviator; all other players then use
 the selected punishment profile. The final theorem packages the standard
-one-period-gain versus discounted-tail calculation as ordinary `IsNash`.
-
-The proof architecture is adapted from the pinned v1
-`FolkTheorem/Trigger.lean`. The list-history representation selected by EXP-030
-removes its dependent-history transport and its direct `Function.update` use.
+one-period-gain versus discounted-tail calculation as ordinary `IsNash`. List
+histories avoid dependent-history transport and direct `Function.update` use.
 -/
 
 import GameTheory.Repeated.Periodic
@@ -329,10 +326,12 @@ theorem triggerRepeatedProfile_isNash
   let deviatingPath : ℕ → Profile G.form.sig :=
     fun t => G.repeatedPlay deviatingProfile t
   by_cases hnever : ∀ t, deviatingPath t = path t
-  · apply mul_le_mul_of_nonneg_left _ (sub_nonneg.mpr hdiscount1.le)
+  · unfold discountedPayoff GameTheoryMath.normalizedDiscountedSum
+    apply mul_le_mul_of_nonneg_left _ (sub_nonneg.mpr hdiscount1.le)
     apply le_of_eq
     apply tsum_congr
     intro t
+    dsimp only
     have hdev :
         G.repeatedPlay
             (Profile.update (G.triggerRepeatedProfile path punishment)

@@ -117,6 +117,31 @@ theorem positive_affine_same_preference (preferred alternative : FinDist (Fin 3)
       euPreference utility () preferred alternative :=
   euPreference_affine utility (fun _ => by norm_num) () preferred alternative
 
+def rescaledUtility : Fin 3 → Unit → ℝ :=
+  affineUtility utility (fun _ => 2) (fun _ => 5)
+
+theorem rescaled_represents :
+    Preference.RepresentsExpectedUtility
+      (euPreference utility) rescaledUtility := by
+  intro agent preferred alternative
+  exact (euPreference_affine utility (fun _ => by norm_num)
+    agent preferred alternative).symm
+
+/-- The uniqueness theorem is usable with concrete endpoint witnesses, rather
+than merely asserting existence of some unrelated representation. -/
+theorem rescaled_is_positiveAffine :
+    ∃ (scale shift : Unit → ℝ),
+      (∀ agent, 0 < scale agent) ∧
+        ∀ outcome agent,
+          rescaledUtility outcome agent =
+            scale agent * utility outcome agent + shift agent := by
+  apply Preference.representsExpectedUtility_unique_positiveAffine
+    eu_represents rescaled_represents (fun _ => 0) (fun _ => 2)
+  · intro agent
+    norm_num [utility, Fin.ext_iff]
+  · intro agent outcome
+    fin_cases outcome <;> norm_num [utility, Fin.ext_iff]
+
 def lexicographic : WeakPreference Unit (Fin 3) := fun _ first second =>
   first.prob 0 > second.prob 0 ∨
     first.prob 0 = second.prob 0 ∧ first.prob 1 ≥ second.prob 1
@@ -188,7 +213,8 @@ theorem lexicographic_not_representsExpectedUtility :
 
 theorem lexicographic_characterization_fails :
     ¬ (Preference.Total lexicographic ∧ Preference.Transitive lexicographic ∧
-      Preference.MixtureIndependent lexicographic ∧ Preference.MixtureContinuous lexicographic) := by
+      Preference.MixtureIndependent lexicographic ∧
+        Preference.MixtureContinuous lexicographic) := by
   intro haxioms
   obtain ⟨represented, hrepresentation⟩ :=
     (Preference.vnmAxioms_iff_exists_representsExpectedUtility lexicographic).mp haxioms

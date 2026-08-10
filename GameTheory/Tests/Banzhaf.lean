@@ -6,7 +6,7 @@ raw probabilistic Banzhaf value one half, while every agent has normalized
 Shapley--Shubik power one third, so the fixture distinguishes the two indices.
 -/
 
-import GameTheory.Cooperative.Banzhaf
+import GameTheory.Cooperative.ShapleyShubik
 
 namespace GameTheory.Tests.Banzhaf
 

@@ -1,9 +1,12 @@
 /-
 # Concrete game-form transformations
 
-The public transformation surface is intentionally concrete. Player
-reindexing and per-player strategy equivalence are invertible operations with
-exact profile, play, mixed-extension, Nash, and correlated-equilibrium laws.
+The public transformation surface is intentionally concrete. Outcome
+relabeling has an explicit Nash/CCE/CE pullback square. Player
+reindexing and per-player strategy equivalence are invertible profile
+operations.  The current laws cover Nash for both, correlated equilibrium for
+strategy relabeling, and mixed-play commutation for player reindexing; the
+remaining product-law squares are not inferred.
 No generic morphism or certificate hierarchy is introduced.
 -/
 
@@ -16,6 +19,51 @@ namespace GameTheory
 open Probability
 
 universe uι uκ us us' uo
+
+/-! ## Outcome relabeling -/
+
+/-- Relabeling outcomes and pulling the preference back along the same map
+preserves Nash equilibrium for an arbitrary weak preference. -/
+theorem isNash_mapOutcome_comap {ι : Type uι} [DecidableEq ι]
+    (F : GameForm ι) {Outcome' : Type*}
+    (relabel : F.sig.Outcome → Outcome')
+    (weaklyPrefers : WeakPreference ι Outcome')
+    (profile : Profile F.sig) :
+    IsNash (F.mapOutcome relabel) weaklyPrefers profile ↔
+      IsNash F (Preference.comapOutcome relabel weaklyPrefers) profile := by
+  rw [isNash_iff, isNash_iff]
+  rfl
+
+/-- The same outcome/preference pullback preserves coarse correlated
+equilibrium without changing the profile law. -/
+theorem isCoarseCorrelatedEq_mapOutcome_comap
+    {ι : Type uι} [DecidableEq ι]
+    (F : GameForm ι) {Outcome' : Type*}
+    (relabel : F.sig.Outcome → Outcome')
+    (weaklyPrefers : WeakPreference ι Outcome')
+    (statusQuo : FinDist (Profile F.sig)) :
+    IsCoarseCorrelatedEq (F.mapOutcome relabel) weaklyPrefers statusQuo ↔
+      IsCoarseCorrelatedEq F
+        (Preference.comapOutcome relabel weaklyPrefers) statusQuo := by
+  rw [isCoarseCorrelatedEq_iff, isCoarseCorrelatedEq_iff]
+  simp only [Preference.comapOutcome_apply,
+    GameForm.outcomeLaw_mapOutcome, FinDist.map_bind]
+  rfl
+
+/-- The same outcome/preference pullback preserves correlated equilibrium. -/
+theorem isCorrelatedEq_mapOutcome_comap
+    {ι : Type uι} [DecidableEq ι]
+    (F : GameForm ι) {Outcome' : Type*}
+    (relabel : F.sig.Outcome → Outcome')
+    (weaklyPrefers : WeakPreference ι Outcome')
+    (statusQuo : FinDist (Profile F.sig)) :
+    IsCorrelatedEq (F.mapOutcome relabel) weaklyPrefers statusQuo ↔
+      IsCorrelatedEq F
+        (Preference.comapOutcome relabel weaklyPrefers) statusQuo := by
+  rw [isCorrelatedEq_iff, isCorrelatedEq_iff]
+  simp only [Preference.comapOutcome_apply,
+    GameForm.outcomeLaw_mapOutcome, FinDist.map_bind]
+  rfl
 
 /-! ## Player reindexing -/
 

@@ -74,10 +74,21 @@ def enumerateNash (G : TableGame ι) : Finset (Profile G.sig) :=
 /-! ## Dominance -/
 
 /-- `preferred` is at least as good as `alternative` at every profile. -/
-def weaklyDominates (G : TableGame ι) (who : ι) (preferred alternative : G.Action who) : Bool :=
+def veryWeaklyDominates (G : TableGame ι) (who : ι)
+    (preferred alternative : G.Action who) : Bool :=
   decide (∀ profile : Profile G.sig,
     G.payoff (Profile.update profile who alternative) who ≤
       G.payoff (Profile.update profile who preferred) who)
+
+/-- `preferred` is at least as good everywhere and strictly better somewhere. -/
+def weaklyDominates (G : TableGame ι) (who : ι)
+    (preferred alternative : G.Action who) : Bool :=
+  decide ((∀ profile : Profile G.sig,
+      G.payoff (Profile.update profile who alternative) who ≤
+        G.payoff (Profile.update profile who preferred) who) ∧
+    ∃ profile : Profile G.sig,
+      G.payoff (Profile.update profile who alternative) who <
+        G.payoff (Profile.update profile who preferred) who)
 
 /-- `preferred` is strictly better than `alternative` at every profile. -/
 def strictlyDominates (G : TableGame ι) (who : ι) (preferred alternative : G.Action who) : Bool :=
@@ -85,9 +96,10 @@ def strictlyDominates (G : TableGame ι) (who : ι) (preferred alternative : G.A
     G.payoff (Profile.update profile who alternative) who <
       G.payoff (Profile.update profile who preferred) who)
 
-/-- `s` weakly dominates every alternative. -/
+/-- `s` is at least as good as every alternative at every profile. -/
 def isDominant (G : TableGame ι) (who : ι) (s : G.Action who) : Bool :=
-  decide (∀ alternative : G.Action who, G.weaklyDominates who s alternative = true)
+  decide (∀ alternative : G.Action who,
+    G.veryWeaklyDominates who s alternative = true)
 
 /-- Every player plays a dominant action. -/
 def isDominantProfile (G : TableGame ι) (profile : Profile G.sig) : Bool :=

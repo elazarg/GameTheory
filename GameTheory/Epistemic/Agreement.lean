@@ -3,9 +3,12 @@
 
 Finite cell decomposition and Aumann's agreement theorem over the canonical
 finite probability law.
+
+Primary reference: R. J. Aumann, “Agreeing to Disagree,” *Annals of
+Statistics* 4 (1976).
 -/
 
-import GameTheory.Epistemic.Basic
+import GameTheory.Epistemic.Knowledge
 
 noncomputable section
 
@@ -136,5 +139,27 @@ theorem aumann_full_agreement [DecidableEq Ω]
         secondReport * ∑ state ∈ publicEvent, prior.prob state := by
     rw [← hfirstTotal, ← hsecondTotal]
   exact mul_right_cancel₀ hpublic_pos.ne' hequal
+
+/-- **Aumann agreement from common knowledge.** The common-knowledge witness
+supplies the nonempty event that is self-evident for both selected agents;
+constancy of their reports only needs to hold on the commonly known event. -/
+theorem aumann_full_agreement_of_commonKnowledgeAt [DecidableEq Ω]
+    {agents : Type*} (prior : FinDist Ω) (hfull : prior.FullSupport)
+    (partition : agents → InfoPartition Ω) (first second : agents)
+    (event reportEvent : Finset Ω) {state : Ω}
+    {firstReport secondReport : ℝ}
+    (hcommon : CommonKnowledgeAt partition reportEvent state)
+    (hfirstReport :
+      ∀ world ∈ reportEvent,
+        posterior prior (partition first) event world = firstReport)
+    (hsecondReport :
+      ∀ world ∈ reportEvent,
+        posterior prior (partition second) event world = secondReport) :
+    firstReport = secondReport := by
+  obtain ⟨publicEvent, hsubset, hstate, hself⟩ := hcommon
+  exact aumann_full_agreement prior hfull (partition first) (partition second)
+    event ⟨state, hstate⟩ (hself first) (hself second)
+    (fun world hworld => hfirstReport world (hsubset hworld))
+    (fun world hworld => hsecondReport world (hsubset hworld))
 
 end GameTheory.Epistemic

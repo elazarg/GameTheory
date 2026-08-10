@@ -18,7 +18,7 @@ open Tests.FictitiousPlayPotential
 
 theorem improvement_tendsto_zero :
     Tendsto (fun t : ℕ =>
-      game.mixedImprovement (game.empiricalBelief history (t + 1)))
+      game.mixedImprovement (game.form.empiricalBelief history (t + 1)))
       atTop (nhds 0) :=
   UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero
     (G := game) exactPotential isFictitiousPlay
@@ -28,7 +28,7 @@ approximate Nash condition. -/
 theorem eventually_isεNash {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ t in atTop,
       IsεNash game.form.mixed game.utility ε
-        (game.empiricalBelief history (t + 1)) :=
+        (game.form.empiricalBelief history (t + 1)) :=
   UtilityGame.IsExactPotential.eventually_isεNash_of_isFictitiousPlay
     (G := game) exactPotential isFictitiousPlay hε
 

@@ -20,9 +20,8 @@ def signature : GameSignature (Fin 1) where
   Outcome := Bool
 
 @[reducible]
-def form : GameForm (Fin 1) where
-  sig := signature
-  play profile := FinDist.pure (profile 0)
+def form : GameForm (Fin 1) :=
+  GameForm.deterministic signature fun profile => profile 0
 
 def reward (outcome : Bool) : ℝ := if outcome then 1 else 0
 
@@ -47,7 +46,7 @@ theorem exactPotential :
     (isExactPotential_of_identicalInterests (F := form) reward)
 
 theorem firstBelief :
-    game.empiricalBelief history 1 = game.form.purify allFalse := by
+    game.form.empiricalBelief history 1 = game.form.purify allFalse := by
   funext who
   show (FinDist.uniformFin 1).map
       (fun round : Fin 1 => history round.val who) = FinDist.pure false
@@ -87,7 +86,7 @@ theorem isFictitiousPlay : game.IsFictitiousPlay history := by
   rw [euPreference_apply, expectedUtility_update, expectedUtility_update]
   have hplayed : history (t + 1) 0 = true := by simp [history]
   rw [hplayed, FinDist.expect_pure]
-  exact expect_le_of_forall replacement reward 1 fun action _ => by
+  exact FinDist.expect_le_of_forall replacement reward 1 fun action _ => by
     cases action <;> norm_num [reward]
 
 /-- The first action chosen against the inferior empirical belief gains one. -/
@@ -102,10 +101,10 @@ theorem firstPlayedGain : game.playedGain history 0 0 = 1 := by
 /-- The first empirical-potential increment is the nonzero half-step predicted
 by the general recurrence. -/
 theorem firstPotentialStep :
-    game.mixedPotential potential
-        (Profile.update (game.empiricalBelief history 1) 0
-          (game.empiricalMarginal history 0 2)) -
-      game.mixedPotential potential (game.empiricalBelief history 1) = 1 / 2 := by
+    game.form.mixedPotential potential
+        (Profile.update (game.form.empiricalBelief history 1) 0
+          (game.form.empiricalMarginal history 0 2)) -
+      game.form.mixedPotential potential (game.form.empiricalBelief history 1) = 1 / 2 := by
   calc
     _ = (1 / (0 + 2 : ℝ)) * game.playedGain history 0 0 :=
       by simpa using
@@ -116,7 +115,7 @@ theorem firstPotentialStep :
 /-- The generic aggregate-improvement bound specializes to a process with a
 strictly positive first played gain. -/
 theorem firstImprovementBound :
-    game.mixedImprovement (game.empiricalBelief history 1) ≤
+    game.mixedImprovement (game.form.empiricalBelief history 1) ≤
       game.weightedPlayedGain history 0 :=
   UtilityGame.IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
     (G := game) isFictitiousPlay 0
@@ -129,29 +128,29 @@ theorem potential_abs_bound (profile : Profile signature) :
 /-- The quantitative one-coordinate estimate applies to the same nonzero first
 step; it is not proved only for constant trajectories. -/
 theorem firstPotentialStep_abs_bound :
-    |game.mixedPotential potential
-          (Profile.update (game.empiricalBelief history 1) 0
-            (game.empiricalMarginal history 0 2)) -
-        game.mixedPotential potential (game.empiricalBelief history 1)| ≤
+    |game.form.mixedPotential potential
+          (Profile.update (game.form.empiricalBelief history 1) 0
+            (game.form.empiricalMarginal history 0 2)) -
+        game.form.mixedPotential potential (game.form.empiricalBelief history 1)| ≤
       (1 / (0 + 2 : ℝ)) * (2 * 1) := by
   simpa using
     (game.mixedPotential_update_empiricalMarginal_succ_abs_sub_le
       potential potential_abs_bound history
-      (game.empiricalBelief history 1) 0 0 rfl)
+      (game.form.empiricalBelief history 1) 0 0 rfl)
 
 /-- The uniform `4C/(t+2)` gain-stability estimate includes the changed
 player's own coordinate. -/
 theorem firstGainStep_abs_bound :
     |game.mixedPotentialGain potential
-          (Profile.update (game.empiricalBelief history 1) 0
-            (game.empiricalMarginal history 0 2)) 0 true -
+          (Profile.update (game.form.empiricalBelief history 1) 0
+            (game.form.empiricalMarginal history 0 2)) 0 true -
         game.mixedPotentialGain potential
-          (game.empiricalBelief history 1) 0 true| ≤
+          (game.form.empiricalBelief history 1) 0 true| ≤
       (1 / (0 + 2 : ℝ)) * (4 * 1) := by
   simpa using
     (game.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le
       potential potential_abs_bound history
-      (game.empiricalBelief history 1) true 0 rfl)
+      (game.form.empiricalBelief history 1) true 0 rfl)
 
 theorem firstAggregatePlayedGain : game.aggregatePlayedGain history 0 = 1 := by
   rw [UtilityGame.aggregatePlayedGain]
@@ -161,8 +160,8 @@ theorem firstAggregatePlayedGain : game.aggregatePlayedGain history 0 = 1 := by
 single update produces the next empirical belief. -/
 theorem firstAdvanceAll :
     game.advanceMarginals history 0 Finset.univ.toList
-        (game.empiricalBelief history 1) =
-      game.empiricalBelief history 2 := by
+        (game.form.empiricalBelief history 1) =
+      game.form.empiricalBelief history 2 := by
   simpa using game.advanceMarginals_univ_eq_empiricalBelief_succ history 0
 
 /-- The Lyapunov lower bound is exercised on the same path whose first-order
@@ -171,8 +170,8 @@ theorem firstLyapunovBound :
     (1 / (0 + 2 : ℝ)) * game.aggregatePlayedGain history 0 -
         ((Fintype.card (Fin 1) : ℝ) * (Fintype.card (Fin 1) : ℝ)) *
           ((1 / (0 + 2 : ℝ)) ^ 2 * (4 * 1)) ≤
-      game.mixedPotential potential (game.empiricalBelief history 2) -
-        game.mixedPotential potential (game.empiricalBelief history 1) := by
+      game.form.mixedPotential potential (game.form.empiricalBelief history 2) -
+        game.form.mixedPotential potential (game.form.empiricalBelief history 1) := by
   simpa using
     (UtilityGame.IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge
       (G := game) exactPotential potential_abs_bound history 0)

@@ -73,7 +73,7 @@ theorem truthful_interim_optimal :
     split <;> norm_num
   · simp [htype]
 
-/-- The stable EXP-008 theorem supplies ordinary Nash directly; there is no
+/-- Interim optimality supplies ordinary Nash directly; there is no
 Bayes-specific equilibrium predicate. -/
 theorem truthful_isNash :
     IsNash bitGame.toForm (euPreference bitGame.utility) truthful :=

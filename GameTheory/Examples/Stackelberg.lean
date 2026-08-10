@@ -6,9 +6,6 @@ stores a leader commitment and a follower action after every possible
 commitment. The underlying simultaneous game is independently presented as a
 `TableGame`, so its equilibrium statement uses the canonical static `IsNash`
 predicate.
-
-This replaces the pinned v1 `StackelbergGame` structure and its parallel
-solution predicates with two already validated semantic roots.
 -/
 
 import GameTheory.Finite.Correctness
@@ -20,8 +17,7 @@ namespace GameTheory.Examples.Stackelberg
 open GameTheory GameTheory.Finite GameTheory.Probability GameTheory.Protocol
 
 /-- A maximizing commitment beats any comparison whose recorded response is
-the response function's value there. This is the mathematical payload of v1's
-generic leader-payoff projection, without a parallel game structure. -/
+the response function's value there. -/
 theorem leaderPayoff_ge_of_maximizes {Leader Follower : Type}
     (payoff : Leader → Follower → ℝ) (response : Leader → Follower)
     (chosen comparison : Leader) (comparisonResponse : Follower)
@@ -33,8 +29,7 @@ theorem leaderPayoff_ge_of_maximizes {Leader Follower : Type}
   rw [← hresponse]
   exact hmaximizes comparison
 
-/-- Two best responses coincide when the designated response is unique. This
-retains v1's generic uniqueness lemma independently of any game wrapper. -/
+/-- Two best responses coincide when the designated response is unique. -/
 theorem response_eq_of_unique {Leader Follower : Type}
     (payoff : Leader → Follower → ℝ) (response : Leader → Follower)
     (commitment : Leader) (candidate : Follower)

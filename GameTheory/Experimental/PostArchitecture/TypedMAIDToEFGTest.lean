@@ -539,7 +539,7 @@ theorem left_behavioral_assignment_law_eq_native :
       FinDist.map (fun state => state.values)
         (GameTheory.Languages.MAID.run diagram semantics responsive 2 initial) := by
   have hrun :=
-    map_state_runBehavioralFrom_eq_serialRun_unit leftFirst
+    map_state_runBehavioralFrom_eq_serialRun leftFirst
       semantics responsive 4 (execution leftFirst semantics).initHistory
   have hmapped :=
     congrArg (FinDist.map (Stage.assignment leftFirst semantics))
@@ -562,7 +562,7 @@ theorem right_behavioral_assignment_law_eq_native :
       FinDist.map (fun state => state.values)
         (GameTheory.Languages.MAID.run diagram semantics responsive 2 initial) := by
   have hrun :=
-    map_state_runBehavioralFrom_eq_serialRun_unit rightFirst
+    map_state_runBehavioralFrom_eq_serialRun rightFirst
       semantics responsive 4 (execution rightFirst semantics).initHistory
   have hmapped :=
     congrArg (FinDist.map (Stage.assignment rightFirst semantics))

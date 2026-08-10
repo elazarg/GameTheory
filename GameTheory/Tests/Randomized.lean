@@ -679,7 +679,7 @@ theorem recall_runMixed_eq_runBehavioral (β : (i : Unit) → recallModel.Behavi
     recallModel.runMixedFrom (fun i => (β i).toMixed) fuel h =
       recallModel.runBehavioralFrom β fuel h :=
   recallModel.runMixedFrom_toMixed
-    (recallModel.actsOnceWhereItMatters_of_actsOnce recall_actsOnceAtEachInfoState) fuel β h
+    (recallModel.actsOnceWhereItMatters_of_perfectRecall recall_perfectRecall) fuel β h
 
 /-- **And the direction that needs recall, on the same slice.** Both halves of
 the equivalence now hold on one protocol, under one signal design, with each
@@ -700,7 +700,7 @@ theorem recall_kuhn (fuel : ℕ) :
       { law | ∃ mixed : (i : Unit) → recallModel.MixedPolicy i,
         recallModel.runMixed mixed fuel = law } :=
   recallModel.runBehavioral_image_eq_runMixed_image
-    (recallModel.actsOnceWhereItMatters_of_actsOnce recall_actsOnceAtEachInfoState)
+    (recallModel.actsOnceWhereItMatters_of_perfectRecall recall_perfectRecall)
     (InformationModel.constrainsAlike_of_perfectRecall recall_perfectRecall) fuel
 
 end GameTheory.Tests.Randomized

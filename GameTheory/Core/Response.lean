@@ -13,9 +13,7 @@ equilibrium family, which is what makes the cross-family theorems below short.
 Pareto dominance and efficiency close the file: they compare whole profiles
 across all players rather than deviations of one unit.  Profile individual
 rationality compares those same canonical expected utilities with an explicit
-reservation vector.  Its closure results are adapted from
-`reference/GameTheory-v1/GameTheory/Concepts/Welfare/IndividualRationality.lean`
-at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+reservation vector.
 -/
 
 import GameTheory.Core.Utility
@@ -41,12 +39,25 @@ def IsBestResponse (who : ι) (opponents : Profile F.sig)
     weaklyPrefers who (F.play (Profile.update opponents who candidate))
       (F.play (Profile.update opponents who alternative))
 
-/-- `preferred` weakly dominates `alternative` for `who`: it is at least as good
-at *every* profile. -/
-def WeaklyDominates (who : ι) (preferred alternative : F.sig.Strategy who) : Prop :=
+/-- `preferred` very weakly dominates `alternative` for `who`: it is at least
+as good at every profile. This reflexive comparison is the one used to define
+a dominant strategy. -/
+def VeryWeaklyDominates (who : ι)
+    (preferred alternative : F.sig.Strategy who) : Prop :=
   ∀ profile : Profile F.sig,
     weaklyPrefers who (F.play (Profile.update profile who preferred))
       (F.play (Profile.update profile who alternative))
+
+/-- Textbook weak dominance: `preferred` is at least as good everywhere and
+strictly better at some profile. Unlike `VeryWeaklyDominates`, this relation is
+irreflexive for reflexive preferences. -/
+def WeaklyDominates (who : ι)
+    (preferred alternative : F.sig.Strategy who) : Prop :=
+  VeryWeaklyDominates F weaklyPrefers who preferred alternative ∧
+    ∃ profile : Profile F.sig,
+      Preference.strict weaklyPrefers who
+        (F.play (Profile.update profile who preferred))
+        (F.play (Profile.update profile who alternative))
 
 /-- `preferred` strictly dominates `alternative` for `who` at every profile
 whose coordinates lie in `allowed`.
@@ -71,7 +82,7 @@ def StrictlyDominates (who : ι) (preferred alternative : F.sig.Strategy who) : 
 
 /-- `s` is dominant for `who`: it weakly dominates every alternative. -/
 def IsDominant (who : ι) (s : F.sig.Strategy who) : Prop :=
-  ∀ alternative, WeaklyDominates F weaklyPrefers who s alternative
+  ∀ alternative, VeryWeaklyDominates F weaklyPrefers who s alternative
 
 /-- `s` is strictly dominant for `who`: it strictly dominates every distinct
 alternative.  Reflexivity of the weak preference is intentionally not stored;
@@ -101,8 +112,9 @@ def pureSurvivors : ℕ → ∀ j, Set (F.sig.Strategy j)
         ¬ StrictlyDominatesOn F weaklyPrefers j (pureSurvivors n) t s}
 
 /-- Pure rationalizability: survival of every round of elimination by pure
-strict dominators.  Standard mixed rationalizability is the stronger notion in
-`GameTheory.Core.Rationalizability`. -/
+strict dominators. Mixed-dominator rationalizability is a distinct iteration
+in `GameTheory.Core.Rationalizability`; no all-round inclusion is asserted
+without the hypotheses needed to replace eliminated dominators. -/
 def IsPureRationalizable (who : ι) (s : F.sig.Strategy who) : Prop :=
   ∀ round, s ∈ pureSurvivors F weaklyPrefers round who
 
@@ -121,6 +133,14 @@ def ImprovingStep (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
   ∃ who replacement,
     target = Profile.update source who replacement ∧
       expectedUtility utility who (F.play source) < expectedUtility utility who (F.play target)
+
+/-- From every profile, some finite path of strict unilateral improvements
+reaches a Nash profile. This is a response-graph property; potential functions
+are one sufficient certificate, not its semantic owner. -/
+def WeaklyAcyclic (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ) : Prop :=
+  ∀ source, ∃ target,
+    Relation.ReflTransGen (ImprovingStep F utility) source target ∧
+      IsNash F (euPreference utility) target
 
 end Definitions
 
@@ -146,7 +166,7 @@ theorem pureSurvivors_antitone (round : ℕ) (j : ι) :
       pureSurvivors F weaklyPrefers round j :=
   fun _ hs => hs.1
 
-theorem pureSurvivors_mono {earlier later : ℕ} (hround : earlier ≤ later)
+theorem mem_pureSurvivors_of_le {earlier later : ℕ} (hround : earlier ≤ later)
     {j : ι} {strategy : F.sig.Strategy j}
     (h : strategy ∈ pureSurvivors F weaklyPrefers later j) :
     strategy ∈ pureSurvivors F weaklyPrefers earlier j := by
@@ -223,17 +243,38 @@ theorem IsStrictDominant.toDominant
     exact hrefl who _
   · exact (hstrict alternative heq profile (fun _ => Set.mem_univ _)).1
 
-/-- A weakly dominating strategy inherits best-response status when the
+/-- Strict dominance implies textbook weak dominance whenever a profile is
+available to witness strict improvement. -/
+theorem StrictlyDominates.toWeaklyDominates {who : ι}
+    {preferred alternative : F.sig.Strategy who}
+    (hstrict : StrictlyDominates F weaklyPrefers who preferred alternative)
+    (witness : Profile F.sig) :
+    WeaklyDominates F weaklyPrefers who preferred alternative :=
+  ⟨fun profile => (hstrict profile (fun _ => Set.mem_univ _)).1,
+    ⟨witness, hstrict witness (fun _ => Set.mem_univ _)⟩⟩
+
+/-- A very weakly dominating strategy inherits best-response status when the
 preference is transitive. -/
+theorem VeryWeaklyDominates.isBestResponse_of_isBestResponse
+    (htrans : Preference.Transitive weaklyPrefers) {who : ι}
+    {preferred alternative : F.sig.Strategy who}
+    (hdom : VeryWeaklyDominates F weaklyPrefers who preferred alternative)
+    (opponents : Profile F.sig)
+    (hbest : IsBestResponse F weaklyPrefers who opponents alternative) :
+    IsBestResponse F weaklyPrefers who opponents preferred := by
+  intro candidate
+  exact htrans who _ _ _ (hdom opponents) (hbest candidate)
+
+/-- Textbook weak dominance has the same best-response inheritance through
+its everywhere-weak projection. -/
 theorem WeaklyDominates.isBestResponse_of_isBestResponse
     (htrans : Preference.Transitive weaklyPrefers) {who : ι}
     {preferred alternative : F.sig.Strategy who}
     (hdom : WeaklyDominates F weaklyPrefers who preferred alternative)
     (opponents : Profile F.sig)
     (hbest : IsBestResponse F weaklyPrefers who opponents alternative) :
-    IsBestResponse F weaklyPrefers who opponents preferred := by
-  intro candidate
-  exact htrans who _ _ _ (hdom opponents) (hbest candidate)
+    IsBestResponse F weaklyPrefers who opponents preferred :=
+  hdom.1.isBestResponse_of_isBestResponse htrans opponents hbest
 
 /-- A dominant strategy is a best response to every opponents' profile. -/
 theorem IsDominant.isBestResponse {who : ι} {s : F.sig.Strategy who}
@@ -422,22 +463,37 @@ theorem IsNash.not_strictlyDominates {profile : Profile F.sig} {who : ι}
 
 /-! ## Dominance orders the strategies
 
-Weak dominance inherits the shape of the preference it is built from: reflexive
-when the preference is, transitive when the preference is. Neither is assumed
-of a `WeakPreference`, so both are stated as consequences. -/
+Very weak dominance inherits the reflexive and transitive shape of the
+preference it is built from. Textbook weak dominance is not reflexive, but is
+transitive when the underlying preference is. -/
 
-/-- Weak dominance is reflexive whenever the preference is. -/
-theorem weaklyDominates_refl (hrefl : Preference.Reflexive weaklyPrefers) (who : ι)
-    (s : F.sig.Strategy who) : WeaklyDominates F weaklyPrefers who s s :=
+/-- Very weak dominance is reflexive whenever the preference is. -/
+theorem veryWeaklyDominates_refl (hrefl : Preference.Reflexive weaklyPrefers)
+    (who : ι) (s : F.sig.Strategy who) :
+    VeryWeaklyDominates F weaklyPrefers who s s :=
   fun profile => hrefl who (F.play (Profile.update profile who s))
 
-/-- Weak dominance is transitive whenever the preference is. -/
-theorem WeaklyDominates.trans (htrans : Preference.Transitive weaklyPrefers) {who : ι}
+/-- Very weak dominance is transitive whenever the preference is. -/
+theorem VeryWeaklyDominates.trans
+    (htrans : Preference.Transitive weaklyPrefers) {who : ι}
+    {first middle last : F.sig.Strategy who}
+    (hfirst : VeryWeaklyDominates F weaklyPrefers who first middle)
+    (hsecond : VeryWeaklyDominates F weaklyPrefers who middle last) :
+    VeryWeaklyDominates F weaklyPrefers who first last :=
+  fun profile => htrans who _ _ _ (hfirst profile) (hsecond profile)
+
+/-- Textbook weak dominance is transitive for a transitive preference. -/
+theorem WeaklyDominates.trans
+    (htrans : Preference.Transitive weaklyPrefers) {who : ι}
     {first middle last : F.sig.Strategy who}
     (hfirst : WeaklyDominates F weaklyPrefers who first middle)
     (hsecond : WeaklyDominates F weaklyPrefers who middle last) :
-    WeaklyDominates F weaklyPrefers who first last :=
-  fun profile => htrans who _ _ _ (hfirst profile) (hsecond profile)
+    WeaklyDominates F weaklyPrefers who first last := by
+  refine ⟨hfirst.1.trans htrans hsecond.1, ?_⟩
+  obtain ⟨profile, hstrict⟩ := hfirst.2
+  refine ⟨profile, htrans who _ _ _ hstrict.1 (hsecond.1 profile), ?_⟩
+  intro hback
+  exact hstrict.2 (htrans who _ _ _ (hsecond.1 profile) hback)
 
 /-- Strict dominance on an allowed set is transitive whenever the preference is,
 and the middle strategy need not be allowed. -/
@@ -452,11 +508,10 @@ theorem StrictlyDominatesOn.trans (htrans : Preference.Transitive weaklyPrefers)
   exact (hfirst profile hprofile).2
     (htrans who _ _ _ (hsecond profile hprofile).1 hback)
 
-/-- A dominant strategy weakly dominates a dominated one, so dominance and
-domination cannot disagree. -/
-theorem IsDominant.weaklyDominates {who : ι} {s : F.sig.Strategy who}
+/-- A dominant strategy very weakly dominates every alternative. -/
+theorem IsDominant.veryWeaklyDominates {who : ι} {s : F.sig.Strategy who}
     (hdom : IsDominant F weaklyPrefers who s) (alternative : F.sig.Strategy who) :
-    WeaklyDominates F weaklyPrefers who s alternative := hdom alternative
+    VeryWeaklyDominates F weaklyPrefers who s alternative := hdom alternative
 
 /-- **A dominant strategy is never strictly dominated.** A witness profile is
 needed and not a technicality: with no profile at all, strict dominance is

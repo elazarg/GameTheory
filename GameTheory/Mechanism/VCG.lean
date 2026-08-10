@@ -1,11 +1,14 @@
 /-
 # Vickrey--Clarke--Groves mechanisms
 
-The mechanism data is capability-free.  Finite social-welfare aggregation and
+The mechanism data is capability-free. Finite social-welfare aggregation and
 report-independence certificates are required only by the truthfulness
-theorems.  The prior-free informational-game wrapper from the pinned source is
-represented canonically as one deterministic `UtilityGame` for every true-type
-profile; ex-post equilibrium is ordinary Nash at every such profile.
+theorems. For every true-type profile, the mechanism induces one deterministic
+`UtilityGame`; ex-post equilibrium is ordinary Nash in that game.
+
+Primary references: E. H. Clarke, “Multipart Pricing of Public Goods,”
+*Public Choice* 11 (1971); T. Groves, “Incentives in Teams,” *Econometrica* 41
+(1973).
 -/
 
 import GameTheory.Mechanism.Auction
@@ -46,6 +49,13 @@ abbrev reportSignature : GameSignature ι where
 /-- A dependent profile of reports for a VCG setup. -/
 abbrev ReportProfile := Profile V.reportSignature
 
+/-- Reportwise allocative efficiency: at every report profile, the selected
+outcome maximizes the total valuation induced by those reports. -/
+def IsEfficient [Fintype ι] : Prop :=
+  ∀ (report : V.ReportProfile) (outcome : V.Outcome),
+    ∑ i, V.val i (report i) outcome ≤
+      ∑ i, V.val i (report i) (V.alloc report)
+
 /-- Groves payment: the report-independent offset less other players' reported welfare. -/
 def vcgPayment [Fintype ι] [DecidableEq ι] (report : V.ReportProfile) (who : ι) : ℝ :=
   V.h who report -
@@ -73,9 +83,7 @@ theorem trueUtility_eq [Fintype ι] [DecidableEq ι] (who : ι) (trueType : V.Θ
 reports.  The two premises are exactly the efficient-allocation and
 own-report-independent-offset certificates used by the proof. -/
 theorem vcg_truthful [Fintype ι] [DecidableEq ι]
-    (alloc_efficient : ∀ (report : V.ReportProfile) (outcome : V.Outcome),
-      ∑ i, V.val i (report i) (V.alloc report) ≥
-        ∑ i, V.val i (report i) outcome)
+    (alloc_efficient : V.IsEfficient)
     (h_independent : ∀ (who : ι) (report : V.ReportProfile) (replacement : V.Θ who),
       V.h who (Profile.update report who replacement) = V.h who report)
     (report : V.ReportProfile) (who : ι) (trueType alternative : V.Θ who) :
@@ -130,9 +138,7 @@ theorem toUtilityGame_play_truthful [Fintype ι] [DecidableEq ι]
 /-- Truthful reporting is an ex-post equilibrium: for every true-type profile,
 the truthful report profile is ordinary expected-utility Nash. -/
 theorem truthfulStrategy_isExPostNash [Fintype ι] [DecidableEq ι]
-    (alloc_efficient : ∀ (report : V.ReportProfile) (outcome : V.Outcome),
-      ∑ i, V.val i (report i) (V.alloc report) ≥
-        ∑ i, V.val i (report i) outcome)
+    (alloc_efficient : V.IsEfficient)
     (h_independent : ∀ (who : ι) (report : V.ReportProfile) (replacement : V.Θ who),
       V.h who (Profile.update report who replacement) = V.h who report) :
     ∀ trueTypes : V.ReportProfile,
@@ -164,6 +170,22 @@ theorem toQuasiLinearMechanism_trueUtility [Fintype ι] [DecidableEq ι]
     V.toQuasiLinearMechanism.trueUtility report who trueType =
       V.trueUtility who trueType report :=
   rfl
+
+/-- Efficient Groves allocation with own-report-independent offsets is DSIC
+through the canonical quasilinear direct-mechanism predicate. -/
+theorem toQuasiLinearMechanism_isDSIC [Fintype ι] [DecidableEq ι]
+    (alloc_efficient : V.IsEfficient)
+    (h_independent : ∀ (who : ι) (report : V.ReportProfile)
+      (replacement : V.Θ who),
+      V.h who (Profile.update report who replacement) = V.h who report) :
+    V.toQuasiLinearMechanism.IsDSIC := by
+  intro who types reports misreport
+  show V.trueUtility who (types who)
+      (Profile.update reports who misreport) ≤
+    V.trueUtility who (types who)
+      (Profile.update reports who (types who))
+  exact V.vcg_truthful alloc_efficient h_independent reports who
+    (types who) misreport
 
 end VCGSetup
 

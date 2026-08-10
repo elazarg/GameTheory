@@ -1,10 +1,10 @@
 /-
-# Strategic subgame perfection, including an off-path history
+# Historywise continuation optimality, including an off-path history
 
 The incumbent exits immediately. Its threatened continuation is therefore
 absent from the incumbent run law, but it is still a complete protocol history.
 Rewarding is strictly better than punishing there, so initial optimality does
-not imply subgame perfection.
+not imply optimality after every complete history.
 -/
 
 import GameTheory.Protocol.SubgamePerfect
@@ -439,24 +439,24 @@ theorem incumbent_optimal_from_initial
       (Profile.update incumbentProfile () alternative))
     arena.initHistory
 
-/-- Both directions of the generic theorem specialize to the finite
-perfect-information arena without an EFG-specific solution concept. -/
-theorem subgamePerfect_iff_noProfitableOneShotDeviation :
-    model.IsSubgamePerfect arena_wellFoundedPlay
+/-- Both directions of the generic theorem specialize to the finite arena
+without an EFG-specific solution concept. -/
+theorem historywiseOptimal_iff_noProfitableOneShotDeviation :
+    model.IsHistorywiseOptimal arena_wellFoundedPlay
         incumbentProfile payoff ↔
       model.HasNoProfitableOneShotDeviation
         arena_wellFoundedPlay incumbentProfile payoff :=
-  model.isSubgamePerfect_iff_hasNoProfitableOneShotDeviation
+  model.isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     model_actsOnceWhereItMatters arena_wellFoundedPlay
     incumbentProfile payoff
 
 /-- The incumbent's bad continuation is rejected at the off-path decision
 history, even though the incumbent exits before reaching it. -/
-theorem incumbent_not_subgamePerfect :
-    ¬ model.IsSubgamePerfect arena_wellFoundedPlay
+theorem incumbent_not_historywiseOptimal :
+    ¬ model.IsHistorywiseOptimal arena_wellFoundedPlay
       incumbentProfile payoff := by
-  intro hspe
-  have hdecision := hspe () rewardingPolicy decisionHistory
+  intro hoptimal
+  have hdecision := hoptimal () rewardingPolicy decisionHistory
   rw [rewarding_value_decision, incumbent_value_decision] at hdecision
   norm_num at hdecision
 
@@ -465,7 +465,7 @@ theorem incumbent_has_profitableOneShotDeviation :
     ¬ model.HasNoProfitableOneShotDeviation
       arena_wellFoundedPlay incumbentProfile payoff := by
   intro hnone
-  exact incumbent_not_subgamePerfect
-    (subgamePerfect_iff_noProfitableOneShotDeviation.mpr hnone)
+  exact incumbent_not_historywiseOptimal
+    (historywiseOptimal_iff_noProfitableOneShotDeviation.mpr hnone)
 
 end GameTheory.Tests.SubgamePerfect

@@ -15,7 +15,7 @@ exercised in both directions too: the one-step condition gives global
 optimality, and global optimality gives it back.
 -/
 
-import GameTheory.Protocol.Backward
+import GameTheory.Tests.Backward
 
 noncomputable section
 
@@ -23,7 +23,7 @@ namespace GameTheory.Tests.OneShot
 
 open GameTheory GameTheory.Protocol GameTheory.Probability
 open GameTheory.Protocol.ExecutionProtocol
-open GameTheory.Protocol.BackwardProbe
+open GameTheory.Tests.Backward
 
 /-- The backward value of grabbing, at every state. -/
 theorem value_grab :

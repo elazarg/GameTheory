@@ -4,12 +4,10 @@
 This leaf specializes the canonical quasilinear direct mechanism to real
 single-parameter reports and linear values.  It contains the payment sandwich,
 allocation monotonicity, zero normalization, and implementability vocabulary
-that need no integration, continuity, or measure theory.  Envelope integrals
-and payment uniqueness belong in a one-way Analysis consumer.
+that need no integration, continuity, or measure theory.
 
-The definitions and algebraic proofs are adapted from
-`GameTheory/Mechanism/Bayesian/Myerson.lean` in the pinned v1 snapshot at
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+Primary reference: R. B. Myerson, “Optimal Auction Design,” *Mathematics of
+Operations Research* 6 (1981).
 -/
 
 import GameTheory.Mechanism.QuasiLinear
@@ -198,8 +196,7 @@ theorem isMonotone_of_isDSIC [DecidableEq Player]
     subst heq
     simp
 
-/-- Allocation as a one-variable own-report slice, used by the later Analysis
-envelope theory. -/
+/-- Allocation as a one-variable own-report slice. -/
 abbrev OwnAllocation [DecidableEq Player]
     (allocation : SingleParameterReportProfile Player → Player → ℝ)
     (who : Player) (reports : SingleParameterReportProfile Player)

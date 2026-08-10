@@ -21,7 +21,7 @@ happens the first time one does.
 
 *Prove the primitive here.* Brouwer from Sperner's lemma is a topology project
 with no game-theoretic content, and the pinned Mathlib supplies neither
-endpoint. v1 did not attempt it either.
+endpoint. the baseline did not attempt it either.
 
 *Do without it.* Real, and partly taken: a potential game has a pure
 equilibrium with no fixed point and no topology, and that theorem is already in
@@ -141,7 +141,7 @@ None fired. Stable continuation, periodic paths, and trigger incentives live
 under `GameTheory.Repeated`; convex feasibility, opponent minmax, and the
 flagship live under `GameTheory.Analysis.Repeated`; residual-floor denominator
 clearing lives in the independent `GameTheoryMath` Lake target. The 2,324-line
-apparent v1 support closure narrowed to 1,468 nonblank lines in stable Repeated,
+apparent the baseline support closure narrowed to 1,468 nonblank lines in stable Repeated,
 783 in the analytic repeated subtree including its concrete witness and root,
 and 185 in `GameTheoryMath` (177 in the approximation module plus its root). In
 particular, the old 255-line unused

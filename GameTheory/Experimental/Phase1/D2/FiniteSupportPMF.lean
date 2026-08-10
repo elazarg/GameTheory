@@ -1,9 +1,8 @@
 /-
 # EXP-003 candidate A: a PMF carrying finite support
 
-The operation and expectation proofs are adapted from the pinned v1 files
-`Math/FiniteProbabilityMassFunction.lean` and
-`Math/ProbabilityMassFunction/Simplex.lean` at commit `a3d8c67...`.
+This candidate tests a PMF subtype carrying explicit finite support together
+with the operations and expectation laws needed by the core.
 -/
 
 import Mathlib.Analysis.Convex.StdSimplex

@@ -9,6 +9,7 @@ canonical pivot-normalized VCG mechanism.
 import GameTheory.Mechanism.Knapsack.Basic
 import GameTheory.Mechanism.Knapsack.Algorithm
 import GameTheory.Mechanism.Knapsack.Correctness
+import GameTheory.Mechanism.Knapsack.ExactBridge
 import GameTheory.Mechanism.Knapsack.ApproximationAlgorithm
 import GameTheory.Mechanism.Knapsack.ApproximationCorrectness
 import GameTheory.Mechanism.Knapsack.Approximation

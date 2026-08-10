@@ -1,68 +1,78 @@
-# D40: distinguish mixed and pure rationalizability
+# D40: distinguish correlated, independent, and pure rationalizability
 
-- **Status:** accepted
+- **Status:** accepted, corrected 2026-08-10
 - **Date:** 2026-08-09
-- **Experiment IDs:** EXP-073
+- **Experiment IDs:** EXP-073, EXP-076
 
 ## Decision
 
-Use Bernheim--Pearce mixed-strategy elimination as the unqualified stable
-notion:
+Name the existing joint-opponent mixed-dominator iteration for what it
+represents:
 
-- `GameTheory.survivors` and `GameTheory.IsRationalizable` eliminate a pure
-  strategy when a `FinDist` of surviving own strategies strictly improves
-  against every surviving opponents' profile;
+- `GameTheory.correlatedSurvivors` and
+  `GameTheory.IsCorrelatedRationalizable` eliminate a pure strategy when a
+  `FinDist` of surviving own strategies strictly improves against every
+  surviving *joint* opponents' profile;
 - `GameTheory.pureSurvivors` and `GameTheory.IsPureRationalizable` name the
-  weaker pure-dominator iteration;
-- D10's executable frontend remains a pure-elimination checker, and its public
-  procedures and correctness theorems say `pure` explicitly.
+  distinct pure-dominator iteration; and
+- independent rationalizability has no public definition until a product of
+  opponents' beliefs and its finite-game characterization are implemented and
+  tested.
 
-There are no source-compatibility aliases.  The earlier unqualified pure names
-were provisional greenfield surface, not a semantics to preserve.
+Do not provide an unqualified `IsRationalizable` alias.  In games with three
+or more players it would hide the material distinction between arbitrary
+beliefs over joint opponents' actions and products of per-opponent beliefs.
+There are no source-compatibility aliases.
 
 ## Competing designs
 
-1. Keep pure elimination as the only selected `IsRationalizable` notion.
-2. Promote standard mixed elimination and rename the pure semantics and
-   executable checker. **Selected.**
-3. Add an exact rational mixed-elimination algorithm in the same change.
-4. Defer mixed rationalizability and document the mismatch.
+1. Keep calling joint-profile mixed elimination Bernheim--Pearce or standard
+   rationalizability.
+2. Rename it correlated rationalizability and leave independent
+   rationalizability absent until its product-belief semantics exists.
+   **Selected.**
+3. Implement independent rationalizability immediately in the corrective
+   change.
+4. Collapse the API back to pure elimination.
 
-Design 1 misnames a strictly weaker solution concept and loses a mature v1
-workflow.  Design 3 would confuse proof semantics (`FinDist` over real expected
-utility) with a new rational-certificate algorithm whose representation and
-completeness obligations were not requested.  Design 4 leaves an avoidable
-semantic trap on the public surface.
+Design 1 is false for three or more players.  Brandenburger and Dekel separate
+correlated rationalizability, which allows correlated beliefs across
+opponents, from the independent notion originally defined by Bernheim and
+Pearce.  Design 3 would freeze a new product-distribution API without its own
+hostile slice.  Design 4 would discard a valid and useful correlated-belief
+operator.
+
+Primary references:
+
+- B. D. Bernheim, “Rationalizable Strategic Behavior,” *Econometrica* 52
+  (1984), 1007–1028, DOI: 10.2307/1911196.
+- A. Brandenburger and E. Dekel, “Rationalizability and Correlated
+  Equilibria,” *Econometrica* 55 (1987), 1391–1402,
+  DOI: 10.2307/1913562.
 
 ## Representative slice and measurements
 
-The Core definition reuses `DeviationScheme.unilateralRandomized`,
+The Core operator reuses `DeviationScheme.unilateralRandomized`,
 `GameForm.outcomeLaw`, `FinDist`, `Preference.strict`, and `Profile.update`.
-It stores no finiteness and imports neither Analysis nor a domain root.  Nash
-survival factors through the existing theorem that expected-utility CCE blocks
-randomized unilateral replacements.
+It stores no finiteness and imports neither Analysis nor a domain root.  The
+hostile three-action game still separates mixed and pure dominators in its
+first round.
 
-The hostile finite game has three row actions.  The third pays `3/4` against
-every column; neither of the first two pure actions dominates it, while their
-half/half mixture pays `1` against every column.  Consequently it survives pure
-round one, the D10 checker certifies that fact, and standard mixed round one
-removes it.  The focused Core/Finite/test build completed 1,754 jobs
-warning-free.
+EXP-076 compared the implemented quantifiers with the primary definitions.
+The implementation ranges over a single joint opponents' profile, so its
+dual best-response belief may correlate different opponents' actions.  The
+public API and all direct consumers were renamed without aliases.  A focused
+Core/Finite/test/example build completed 1,757 jobs warning-free.
 
 ## Kill condition and result
 
-Reject the split if standard rationalizability needs `PMF`, measurable or
-infinite-support probability, Analysis, stored `Fintype`, raw
-`Function.update`, a second equilibrium/profile API, or cannot be separated
-from pure elimination on a small game.  Also reject it if renaming the D10
-checker breaks its proof/execution boundary.
+Reject the corrected name if the implementation enforces a product of
+per-opponent beliefs, or if the correlated and independent notions coincide in
+all finite multiplayer games.  Neither is true: the implementation has no
+product restriction, and the primary literature gives a three-player strict
+separation.
 
-No kill condition fired.  The mixed semantics are proof-only Core; the renamed
-pure algorithm remains rational, finite, executable, and exactly connected to
-`IsPureRationalizable`'s survivor iteration.  A future mixed checker is a
-separate algorithm/certificate gate, not an implication of this decision.
-
-The full reachability audit reached all six intended mixed/pure Core inputs and
-rejected the finite frontend, Protocol, and analytic existence.  Representative
-theorems depend only on `propext`, `Classical.choice`, and `Quot.sound`; exact
-coverage and the 3,531-job warning-clean default build are green.
+The correction therefore stands.  A future independent-rationalizability
+package must choose an explicit finite product-law representation, prove its
+own elimination/best-response correspondence, and include a three-player
+example separating it from `IsCorrelatedRationalizable`.

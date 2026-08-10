@@ -2,9 +2,8 @@
 # Periodic repeated paths
 
 Exact normalized discounted values of finite cycles and their uniform
-convergence to cycle averages as the discount factor tends to one. The proof
-inventory is adapted from the pinned v1 `FolkTheorem/Periodic.lean`, but the
-result now uses explicit payoff bounds and the canonical list-history path.
+convergence to cycle averages as the discount factor tends to one, using
+explicit payoff bounds and canonical list-history paths.
 -/
 
 import Mathlib.Analysis.SumOverResidueClass
@@ -191,7 +190,7 @@ theorem discountedPayoff_periodicRepeatedProfile_eq
           (discount ^ j.val *
             G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) *
               (1 - discount ^ n)⁻¹) := by
-      simp only [discountedPayoff]
+      simp only [discountedPayoff, GameTheoryMath.normalizedDiscountedSum]
       rw [show G.periodicRepeatedProfile cycle = profile from rfl, hsplit]
       congr 1
       exact Finset.sum_congr rfl fun j _ => hinner j
@@ -228,7 +227,8 @@ theorem discountedContinuationPayoff_periodicPath_eq
           (fun t => cycle (Fin.ofNat n t)) start who =
         G.discountedPayoff discount
           (G.periodicRepeatedProfile rotated) who := by
-    simp only [discountedContinuationPayoff, discountedPayoff]
+    simp only [discountedContinuationPayoff, discountedPayoff,
+      GameTheoryMath.normalizedDiscountedSum]
     congr 1
     apply tsum_congr
     intro k
@@ -382,7 +382,8 @@ theorem exists_discountFactor_threshold_periodicAllContinuations
         G.discountedContinuationPayoff discount
           (fun t => cycle (Fin.ofNat n t))
           ((Fin.ofNat n start).val) who := by
-    simp only [discountedContinuationPayoff]
+    simp only [discountedContinuationPayoff,
+      GameTheoryMath.normalizedDiscountedSum]
     congr 1
     apply tsum_congr
     intro k

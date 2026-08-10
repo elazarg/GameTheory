@@ -1,6 +1,6 @@
 # D6: execution protocols and information models
 
-- **Status:** decided for v1 — general-state execution as the primary
+- **Status:** decided for the baseline — general-state execution as the primary
   interface, finite-first trees retained as a derived presentation
 - **Date:** 2026-07-27
 - **Experiment IDs:** EXP-010, EXP-011, EXP-012; post-decision evidence
@@ -119,7 +119,7 @@ remove that friction.
 
 ## Post-decision close-out
 
-D7 has since been rejected for v1 and D0 is final; neither status remains open.
+D7 has since been rejected for the baseline and D0 is final; neither status remains open.
 The post-decision history and randomized runners close the execution mismatch
 that was recorded at the gate. Both behavioral/mixed directions now hold at the
 history-law level, under their distinct no-revisit and recall-like conditions,

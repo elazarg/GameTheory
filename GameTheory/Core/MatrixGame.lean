@@ -4,11 +4,6 @@
 Rectangular real matrices compile to the canonical deterministic `GameForm`.
 Mixed row/column profiles, their expected payoff, and security predicates are
 static and topology-free; existence and selected values remain in Analysis.
-
-The mathematical interface is adapted from
-`reference/GameTheory-v1/GameTheory/Concepts/ZeroSum/MatrixGame.lean` at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`, without its parallel kernel-game,
-PMF, or equilibrium layers.
 -/
 
 import GameTheory.Core.ZeroSum

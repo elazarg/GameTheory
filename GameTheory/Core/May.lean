@@ -6,12 +6,11 @@ is anonymous, neutral, and positively responsive.  This is ranking-free
 finite social-choice mathematics: it uses `SignType` ballots and no lottery,
 probability, utility, mechanism, or equilibrium layer.
 
-The proof follows
-`reference/GameTheory-v1/GameTheory/Mechanism/SocialChoice/May.lean` at pinned
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+Primary reference: K. O. May, “A Set of Independent Necessary and Sufficient
+Conditions for Simple Majority Decision,” *Econometrica* 20 (1952).
 -/
 
-import GameTheory.Core.SocialChoice
+import GameTheory.Core.Rank
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Sign.Basic
 import Mathlib.Tactic.Order

@@ -1,11 +1,9 @@
 /-
 # Intrinsic-form examples
 
-This leaf recovers the native causal examples from pinned v1
-`GameTheory/Languages/Intrinsic/{Examples,Tests}.lean` at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.  It deliberately retains only
-closed-loop configurations, information, solvability, and causality; evaluation,
-probability, temporal execution, and randomization are separate consumers.
+This leaf exercises closed-loop configurations, information, solvability, and
+causality. Evaluation, probability, temporal execution, and randomization are
+separate consumers.
 -/
 
 import GameTheory.Languages.Intrinsic

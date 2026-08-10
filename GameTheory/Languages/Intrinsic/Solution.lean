@@ -1,10 +1,8 @@
 /-
 # Selected intrinsic closed-loop solutions
 
-This opt-in theorem leaf recovers the solution-map mathematics from pinned v1
-`GameTheory/Languages/Intrinsic/{Syntax,Theorems}.lean` at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.  A selected decision profile is
-obtained solely from the existing unique-solvability certificate.
+This opt-in theorem leaf obtains a selected decision profile solely from the
+existing unique-solvability certificate.
 -/
 
 import GameTheory.Languages.Intrinsic

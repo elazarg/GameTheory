@@ -1,7 +1,7 @@
 /-
 # Concrete transformation regression tests
 
-These tests keep the D8 hostile cases on the promoted API. The player swap uses
+These tests exercise the promoted API. The player swap uses
 unequal strategy carriers; the strategy flip exercises recommendation-dependent
 correlated deviations.
 -/
@@ -13,6 +13,17 @@ noncomputable section
 namespace GameTheory.Tests.Transform
 
 open Probability
+
+/-- Outcome relabeling exercises the generic preference pullback, not only the
+expected-utility specialization. -/
+theorem outcome_pullback_nash
+    (F : GameForm Bool) {Outcome' : Type*}
+    (relabel : F.sig.Outcome → Outcome')
+    (weaklyPrefers : WeakPreference Bool Outcome')
+    (profile : Profile F.sig) :
+    IsNash (F.mapOutcome relabel) weaklyPrefers profile ↔
+      IsNash F (Preference.comapOutcome relabel weaklyPrefers) profile :=
+  isNash_mapOutcome_comap F relabel weaklyPrefers profile
 
 abbrev HeterogeneousStrategy : Bool → Type
   | false => Bool

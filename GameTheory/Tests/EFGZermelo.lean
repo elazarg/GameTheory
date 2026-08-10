@@ -276,6 +276,289 @@ reward strictly better than punishment at the resulting off-path decision. -/
 def utility (h : game.History) (_ : Unit) : ℝ := match h.state with
   | .exited => 5 | .rewarded => 1 | _ => 0
 
+theorem chance_inactive : ¬ execution.active .chance () := by simp
+
+theorem chanceLegal : execution.Legal .chance execution.noop :=
+  execution.noop_isLegal chance_not_terminal (fun _ => chance_inactive)
+
+theorem left_mem_chance_step :
+    State.left ∈
+      (execution.step .chance ⟨execution.noop, chanceLegal⟩).support := by
+  exact (fairCoin_support .left).mpr (Or.inl rfl)
+
+def leftTrace : execution.Trace .left :=
+  .extend .start execution.noop chanceLegal left_mem_chance_step
+
+def leftHistory : execution.History := ⟨.left, leftTrace⟩
+
+theorem left_not_terminal : ¬ execution.terminal leftHistory.state := by simp [leftHistory]
+
+theorem left_active : execution.active leftHistory.state () := by simp [leftHistory]
+
+def continueJoint : Unit → Option Action := fun _ => some .continue
+
+theorem continueLegal : execution.Legal leftHistory.state continueJoint := by
+  apply execution.legal_of_legalOption left_not_terminal
+  intro who
+  cases who
+  exact ⟨left_active, by simp [leftHistory, execution]⟩
+
+theorem second_mem_continue_step :
+    State.second ∈
+      (execution.step leftHistory.state ⟨continueJoint, continueLegal⟩).support := by
+  simp [leftHistory, continueJoint, execution, next]
+
+def secondHistory : execution.History :=
+  leftHistory.extend continueLegal second_mem_continue_step
+
+@[simp]
+theorem secondHistory_state : secondHistory.state = .second := rfl
+
+@[simp]
+theorem execution_step_second
+    (joint : Unit → Option Action) (hlegal : execution.Legal .second joint) :
+    execution.step .second ⟨joint, hlegal⟩ =
+      FinDist.pure (next .second (joint ())) := rfl
+
+theorem second_not_terminal : ¬ execution.terminal secondHistory.state := by
+  simp [secondHistory]
+
+theorem second_active : execution.active secondHistory.state () := by
+  simp [secondHistory]
+
+def exitChoice : information.Choice () (information.infoOf () leftHistory.trace) :=
+  ⟨some .exit, by rw [infoOf_state]; simp [menu, leftHistory]⟩
+
+def continueChoice : information.Choice () (information.infoOf () leftHistory.trace) :=
+  ⟨some .continue, by rw [infoOf_state]; simp [menu, leftHistory]⟩
+
+def punishChoice : information.Choice () (information.infoOf () secondHistory.trace) :=
+  ⟨some .punish, by rw [infoOf_state]; simp [menu, secondHistory]⟩
+
+def rewardChoice : information.Choice () (information.infoOf () secondHistory.trace) :=
+  ⟨some .reward, by rw [infoOf_state]; simp [menu, secondHistory]⟩
+
+/-- The particular contingent plan constructed by the public existence
+theorem's Bellman engine. -/
+def bellmanProfile : Profile game.strategicSignature :=
+  information.backwardProfile singleMover wellFoundedPlay utility
+
+private def recurseValue (later : execution.History)
+    (_ : execution.HistorySuccessor later secondHistory) : Unit → ℝ :=
+  information.backwardOutcome singleMover wellFoundedPlay utility later
+
+private theorem backwardOutcome_terminal_apply (history : execution.History)
+    (hterm : execution.terminal history.state) :
+    information.backwardOutcome singleMover wellFoundedPlay utility history () =
+      utility history () := by
+  exact congrFun
+    (information.backwardOutcome_of_terminal singleMover hterm) ()
+
+theorem rewardChoice_value :
+    information.historyChoiceValue singleMover secondHistory second_not_terminal
+      recurseValue () second_active rewardChoice = 1 := by
+  simp [InformationModel.historyChoiceValue, InformationModel.jointOfChoice,
+    ExecutionProtocol.historyStepValue, recurseValue, rewardChoice,
+    next, secondHistory]
+  rw [backwardOutcome_terminal_apply _ (by simp [execution])]
+  rfl
+
+theorem punishChoice_value :
+    information.historyChoiceValue singleMover secondHistory second_not_terminal
+      recurseValue () second_active punishChoice = 0 := by
+  simp [InformationModel.historyChoiceValue, InformationModel.jointOfChoice,
+    ExecutionProtocol.historyStepValue, recurseValue, punishChoice,
+    next, secondHistory]
+  rw [backwardOutcome_terminal_apply _ (by simp [execution])]
+  rfl
+
+private def secondBestChoice :
+    information.Choice () (information.infoOf () secondHistory.trace) :=
+  information.bestHistoryChoice singleMover secondHistory second_not_terminal
+    recurseValue () second_active
+
+theorem secondBestChoice_eq_rewardChoice : secondBestChoice = rewardChoice := by
+  have hchoices :
+      secondBestChoice.1 = some .punish ∨
+        secondBestChoice.1 = some .reward := by
+    have hmenu := secondBestChoice.2
+    have hmenu' :
+        secondBestChoice.1 ∈
+          menu (information.infoOf () secondHistory.trace) := hmenu
+    have hmenuEq :
+        menu (information.infoOf () secondHistory.trace) =
+          {some Action.punish, some Action.reward} := by
+      rw [infoOf_state]
+      rfl
+    have hconcrete :
+        secondBestChoice.1 ∈
+          ({some Action.punish, some Action.reward} : Set (Option Action)) := by
+      rw [← hmenuEq]
+      exact hmenu'
+    exact (Set.mem_insert_iff.mp hconcrete).imp id Set.mem_singleton_iff.mp
+  rcases hchoices with hpunish | hreward
+  · have hbest : secondBestChoice = punishChoice := Subtype.ext hpunish
+    have hmax := information.historyChoiceValue_le_bestHistoryChoice
+      singleMover secondHistory second_not_terminal recurseValue () second_active
+      rewardChoice
+    have hmax' :
+        information.historyChoiceValue singleMover secondHistory second_not_terminal
+          recurseValue () second_active rewardChoice ≤
+        information.historyChoiceValue singleMover secondHistory second_not_terminal
+          recurseValue () second_active secondBestChoice := hmax
+    rw [rewardChoice_value, hbest, punishChoice_value] at hmax'
+    norm_num at hmax'
+  · exact Subtype.ext hreward
+
+theorem backwardChooser_second_action :
+    (information.backwardChooser singleMover wellFoundedPlay utility
+      secondHistory second_not_terminal).1 () = some .reward := by
+  rw [InformationModel.backwardChooser,
+    information.backwardJoint_of_active singleMover secondHistory
+      second_not_terminal _ () second_active]
+  show secondBestChoice.1 = some .reward
+  rw [secondBestChoice_eq_rewardChoice]
+  rfl
+
+/-- Backward induction prescribes reward at the consequential off-path
+decision, rather than merely returning an opaque equilibrium witness. -/
+theorem bellmanProfile_chooses_reward :
+    (bellmanProfile ()).act .second = some .reward := by
+  show
+    (information.backwardPolicy singleMover wellFoundedPlay utility ()).act
+      .second = some .reward
+  calc
+    _ = (information.backwardPolicy singleMover wellFoundedPlay utility ()).act
+        (information.infoOf () secondHistory.trace) := by
+          simp [infoOf_state, secondHistory]
+    _ = (information.backwardChooser singleMover wellFoundedPlay utility
+        secondHistory second_not_terminal).1 () :=
+          information.backwardPolicy_act_at_decision singleMover perfect
+            secondHistory second_not_terminal () second_active
+    _ = some .reward := backwardChooser_second_action
+
+private theorem histories_eq_of_state_eq
+    (first second : execution.History) (hstate : first.state = second.state) :
+    first = second := by
+  cases first with
+  | mk state trace =>
+    cases second with
+    | mk otherState otherTrace =>
+      dsimp at hstate
+      subst otherState
+      exact congrArg (fun current => ExecutionProtocol.History.mk state current)
+        ((treeShaped state).elim trace otherTrace)
+
+theorem history_eq_secondHistory_of_state (history : execution.History)
+    (hstate : history.state = .second) : history = secondHistory :=
+  histories_eq_of_state_eq history secondHistory
+    (hstate.trans secondHistory_state.symm)
+
+theorem backwardOutcome_second :
+    information.backwardOutcome singleMover wellFoundedPlay utility
+      secondHistory () = 1 := by
+  have hout := congrFun
+    (information.backwardOutcome_of_not_terminal singleMover
+      (certificate := wellFoundedPlay) (utility := utility)
+      second_not_terminal) ()
+  rw [hout]
+  simp [ExecutionProtocol.historyStepValue, backwardChooser_second_action, next]
+  rw [backwardOutcome_terminal_apply _ (by simp [execution])]
+  rfl
+
+private theorem backwardOutcome_eq_one_of_state_second
+    (history : execution.History) (hstate : history.state = .second) :
+    information.backwardOutcome singleMover wellFoundedPlay utility history () = 1 := by
+  rw [history_eq_secondHistory_of_state history hstate]
+  exact backwardOutcome_second
+
+private def leftRecurseValue (later : execution.History)
+    (_ : execution.HistorySuccessor later leftHistory) : Unit → ℝ :=
+  information.backwardOutcome singleMover wellFoundedPlay utility later
+
+theorem exitChoice_value :
+    information.historyChoiceValue singleMover leftHistory left_not_terminal
+      leftRecurseValue () left_active exitChoice = 5 := by
+  simp [InformationModel.historyChoiceValue, InformationModel.jointOfChoice,
+    ExecutionProtocol.historyStepValue, leftRecurseValue, exitChoice,
+    next, leftHistory]
+  rw [backwardOutcome_terminal_apply _ (by simp [execution])]
+  rfl
+
+theorem continueChoice_value :
+    information.historyChoiceValue singleMover leftHistory left_not_terminal
+      leftRecurseValue () left_active continueChoice = 1 := by
+  simp [InformationModel.historyChoiceValue, InformationModel.jointOfChoice,
+    ExecutionProtocol.historyStepValue, leftRecurseValue, continueChoice,
+    next, leftHistory]
+  apply backwardOutcome_eq_one_of_state_second
+  rfl
+
+private def leftBestChoice :
+    information.Choice () (information.infoOf () leftHistory.trace) :=
+  information.bestHistoryChoice singleMover leftHistory left_not_terminal
+    leftRecurseValue () left_active
+
+theorem leftBestChoice_eq_exitChoice : leftBestChoice = exitChoice := by
+  have hchoices :
+      leftBestChoice.1 = some .exit ∨
+        leftBestChoice.1 = some .continue := by
+    have hmenu := leftBestChoice.2
+    have hmenu' :
+        leftBestChoice.1 ∈
+          menu (information.infoOf () leftHistory.trace) := hmenu
+    have hmenuEq :
+        menu (information.infoOf () leftHistory.trace) =
+          {some Action.exit, some Action.continue} := by
+      rw [infoOf_state]
+      rfl
+    have hconcrete :
+        leftBestChoice.1 ∈
+          ({some Action.exit, some Action.continue} : Set (Option Action)) := by
+      rw [← hmenuEq]
+      exact hmenu'
+    exact (Set.mem_insert_iff.mp hconcrete).imp id Set.mem_singleton_iff.mp
+  rcases hchoices with hexit | hcontinue
+  · exact Subtype.ext hexit
+  · have hbest : leftBestChoice = continueChoice := Subtype.ext hcontinue
+    have hmax := information.historyChoiceValue_le_bestHistoryChoice
+      singleMover leftHistory left_not_terminal leftRecurseValue () left_active
+      exitChoice
+    have hmax' :
+        information.historyChoiceValue singleMover leftHistory left_not_terminal
+          leftRecurseValue () left_active exitChoice ≤
+        information.historyChoiceValue singleMover leftHistory left_not_terminal
+          leftRecurseValue () left_active leftBestChoice := hmax
+    rw [exitChoice_value, hbest, continueChoice_value] at hmax'
+    norm_num at hmax'
+
+theorem backwardChooser_left_action :
+    (information.backwardChooser singleMover wellFoundedPlay utility
+      leftHistory left_not_terminal).1 () = some .exit := by
+  rw [InformationModel.backwardChooser,
+    information.backwardJoint_of_active singleMover leftHistory
+      left_not_terminal _ () left_active]
+  show leftBestChoice.1 = some .exit
+  rw [leftBestChoice_eq_exitChoice]
+  rfl
+
+/-- At the first decision, backward induction takes the strict payoff-five
+exit instead of continuing to the payoff-one subgame. -/
+theorem bellmanProfile_chooses_exit :
+    (bellmanProfile ()).act .left = some .exit := by
+  show
+    (information.backwardPolicy singleMover wellFoundedPlay utility ()).act
+      .left = some .exit
+  calc
+    _ = (information.backwardPolicy singleMover wellFoundedPlay utility ()).act
+        (information.infoOf () leftHistory.trace) := by
+          simp [infoOf_state, leftHistory]
+    _ = (information.backwardChooser singleMover wellFoundedPlay utility
+        leftHistory left_not_terminal).1 () :=
+          information.backwardPolicy_act_at_decision singleMover perfect
+            leftHistory left_not_terminal () left_active
+    _ = some .exit := backwardChooser_left_action
+
 /-- The public EFG surface constructs a pure SPE on the hostile witness. -/
 theorem exists_subgamePerfect : ∃ p : Profile game.strategicSignature,
     game.IsSubgamePerfect wellFoundedPlay p utility :=

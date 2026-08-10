@@ -8,6 +8,9 @@ identifies it with prior-weighted interim optimality at every own type.
 The interim value is intentionally unnormalised. Zero-probability types then
 need no side condition, and conditioning machinery stays out of the static
 core.
+
+Primary reference: J. C. Harsanyi, “Games with Incomplete Information Played
+by Bayesian Players,” *Management Science* 14 (1967–1968).
 -/
 
 import GameTheory.Core.Bayesian
@@ -86,8 +89,7 @@ theorem expectedUtility_update (B : BayesianGame ι)
   · simp [htype]
 
 /-- Ex-ante Nash of the direct form is exactly interim optimality at every own
-type. This is the stable form of EXP-008's result; no `BayesNash` wrapper is
-introduced. -/
+type; no `BayesNash` wrapper is introduced. -/
 theorem isNash_iff_interim (B : BayesianGame ι)
     [DecidableEq ι]
     [∀ i, Fintype (B.Ty i)] [∀ i, DecidableEq (B.Ty i)]

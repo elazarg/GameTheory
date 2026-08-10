@@ -8,6 +8,7 @@ one-shot-deviation sufficiency argument lives separately.
 -/
 
 import GameTheory.Repeated.MonitoringPayoff
+import GameTheoryMath.Discounted
 import Mathlib.Analysis.Normed.Group.InfiniteSum
 import Mathlib.Analysis.SpecificLimits.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Module
@@ -37,7 +38,8 @@ def monitoredForm (M : G.PublicMonitoring) : GameForm ι where
 /-- Normalized discounted expected payoff under public monitoring. -/
 def discountedPayoff (M : G.PublicMonitoring) (discount : ℝ)
     (profile : M.MonitoredProfile) (who : ι) : ℝ :=
-  (1 - discount) * ∑' t : ℕ, discount ^ t * M.monitoredStagePayoff profile t who
+  GameTheoryMath.normalizedDiscountedSum discount fun t =>
+    M.monitoredStagePayoff profile t who
 
 /-- Discounted payoff after a specified, possibly off-path, public history. -/
 def discountedContinuationPayoff (M : G.PublicMonitoring) (discount : ℝ)
@@ -82,9 +84,8 @@ theorem discountedPayoff_le_of_forall_monitoredStagePayoff_le
     hdiscount0 hdiscount1 who hfirst
   have hsSecond := M.summable_discounted_monitoredStagePayoff_of_abs_bound
     hdiscount0 hdiscount1 who hsecond
-  apply mul_le_mul_of_nonneg_left _ (sub_nonneg.mpr hdiscount1.le)
-  exact hsFirst.tsum_le_tsum
-    (fun t => mul_le_mul_of_nonneg_left (hle t) (pow_nonneg hdiscount0 t)) hsSecond
+  exact GameTheoryMath.normalizedDiscountedSum_le hdiscount0 hdiscount1
+    hsFirst hsSecond hle
 
 theorem abs_discountedPayoff_le_of_abs_stagePayoff_bound
     (M : G.PublicMonitoring) {discount bound : ℝ}
@@ -111,7 +112,7 @@ theorem abs_discountedPayoff_le_of_abs_stagePayoff_bound
   have hgeom : Summable fun t : ℕ => bound * discount ^ t :=
     (summable_geometric_of_lt_one hdiscount0 hdiscount1).mul_left bound
   have hne : 1 - discount ≠ 0 := by linarith
-  unfold discountedPayoff
+  unfold discountedPayoff GameTheoryMath.normalizedDiscountedSum
   rw [abs_mul, abs_of_nonneg (sub_nonneg.mpr hdiscount1.le)]
   calc
     (1 - discount) * |∑' t : ℕ, discount ^ t * M.monitoredStagePayoff profile t who| ≤
@@ -218,7 +219,7 @@ theorem discountedPayoff_eq_head_add_expected
       _ = discount * ∑' n : ℕ, discount ^ n *
           M.monitoredStagePayoff profile (n + 1) who := by rw [tsum_mul_left]
       _ = _ := by rw [hinterchange]
-  unfold discountedPayoff
+  unfold discountedPayoff GameTheoryMath.normalizedDiscountedSum
   rw [show (∑' n : ℕ,
       discount ^ n * M.monitoredStagePayoff profile n who) =
       ∑' n : ℕ, term n by rfl]
@@ -250,7 +251,7 @@ theorem discountedPayoff_stationaryMonitoredProfile (M : G.PublicMonitoring)
     M.discountedPayoff discount (M.stationaryMonitoredProfile profile) who =
       G.stagePayoff profile who := by
   have hne : 1 - discount ≠ 0 := by linarith
-  simp [discountedPayoff, tsum_mul_right,
+  simp [discountedPayoff, GameTheoryMath.normalizedDiscountedSum, tsum_mul_right,
     tsum_geometric_of_lt_one hdiscount0 hdiscount1, hne]
 
 /-- Exact discounted Nash equilibrium in public strategies. -/
@@ -279,20 +280,28 @@ theorem isεDiscountedPublicNash_iff (M : G.PublicMonitoring) [DecidableEq ι]
   rw [IsεDiscountedPublicNash, isNash_iff]
   simp [monitoredForm, discountedUtility]
 
+/-- A perfect public equilibrium is discounted Nash after every finite public
+signal history, including histories assigned zero probability on path.  The
+deviations remain within public strategies over `M.SignalHistory`. -/
 def IsPerfectPublicEquilibrium (M : G.PublicMonitoring) [DecidableEq ι]
     (discount : ℝ) (profile : M.MonitoredProfile) : Prop :=
   ∀ t (history : M.SignalHistory t), M.IsDiscountedPublicNash discount (M.after profile history)
 
+/-- Approximate perfect public equilibrium with the same additive tolerance
+after every finite public signal history. -/
 def IsεPerfectPublicEquilibrium (M : G.PublicMonitoring) [DecidableEq ι]
     (discount ε : ℝ) (profile : M.MonitoredProfile) : Prop :=
   ∀ t (history : M.SignalHistory t), M.IsεDiscountedPublicNash discount ε (M.after profile history)
 
+/-- No public deviation that changes only the current stage action improves
+the deviator's normalized discounted payoff. -/
 def HasNoProfitableOneShotDeviation (M : G.PublicMonitoring) [DecidableEq ι]
     (discount : ℝ) (profile : M.MonitoredProfile) : Prop :=
   ∀ who action, M.discountedPayoff discount
     (Profile.update (sig := M.monitoredSignature) profile who
       (M.oneShotDeviation profile who action)) who ≤ M.discountedPayoff discount profile who
 
+/-- The one-shot condition holds after every finite public signal history. -/
 def HasNoProfitableOneShotDeviationAfterEveryHistory
     (M : G.PublicMonitoring) [DecidableEq ι] (discount : ℝ)
     (profile : M.MonitoredProfile) : Prop :=

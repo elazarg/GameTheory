@@ -1,7 +1,6 @@
 /-
 # Welfare-maximizing knapsack mechanism
 
-The allocation mathematics is adapted from the pinned v1 knapsack source.
 Mechanism and equilibrium semantics reuse the canonical auction report,
 profile update, VCG, and Nash surfaces.
 -/
@@ -137,11 +136,7 @@ noncomputable def vcgSetup (A : Data Agent) (hcap : 0 ≤ A.capacity) :
 /-- The selected feasible allocation maximizes reported welfare over the VCG
 outcome space. -/
 theorem vcgSetup_efficient (A : Data Agent) (hcap : 0 ≤ A.capacity) :
-    ∀ (reports : (vcgSetup A hcap).ReportProfile)
-      (outcome : (vcgSetup A hcap).Outcome),
-      (∑ who, (vcgSetup A hcap).val who (reports who)
-        ((vcgSetup A hcap).alloc reports)) ≥
-      ∑ who, (vcgSetup A hcap).val who (reports who) outcome := by
+    (vcgSetup A hcap).IsEfficient := by
   intro reports outcome
   let selected : FeasibleAllocation A := outcome
   let bids : GameTheory.Mechanism.Auction.BidProfile Agent := reports
@@ -203,6 +198,13 @@ theorem vcgSetup_truthful_isExPostNash (A : Data Agent)
         (euPreference ((vcgSetup A hcap).toUtilityGame trueTypes).utility)
         trueTypes :=
   (vcgSetup A hcap).truthfulStrategy_isExPostNash
+    (vcgSetup_efficient A hcap) (vcgSetup_offset_independent A hcap)
+
+/-- The welfare-maximizing pivot mechanism is DSIC through the canonical
+quasilinear direct-mechanism predicate. -/
+theorem vcgSetup_isDSIC (A : Data Agent) (hcap : 0 ≤ A.capacity) :
+    (vcgSetup A hcap).toQuasiLinearMechanism.IsDSIC :=
+  (vcgSetup A hcap).toQuasiLinearMechanism_isDSIC
     (vcgSetup_efficient A hcap) (vcgSetup_offset_independent A hcap)
 
 end GameTheory.Mechanism.Knapsack

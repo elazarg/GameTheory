@@ -28,9 +28,8 @@ namespace TableGame
 /-- Compilation into proof semantics: the outcome is the realized action
 profile, played deterministically. -/
 @[reducible]
-def toForm (G : TableGame ι) : GameForm ι where
-  sig := G.sig
-  play profile := FinDist.pure profile
+def toForm (G : TableGame ι) : GameForm ι :=
+  GameForm.deterministic G.sig fun profile => profile
 
 /-- Rational payoffs become real utilities. -/
 def utility (G : TableGame ι) : Utility G.sig :=
@@ -57,7 +56,7 @@ theorem isNash_eq_true_iff (G : TableGame ι) (profile : Profile G.sig) :
     G.isNash profile = true ↔ IsNash G.toForm (euPreference G.utility) profile := by
   rw [isNash_toForm_iff, isNash, decide_eq_true_eq]
 
-/-- The flagship frontend theorem: a profile is enumerated exactly when the
+/-- The main frontend theorem: a profile is enumerated exactly when the
 compiled game is Nash there. -/
 theorem mem_enumerateNash_iff (G : TableGame ι) (profile : Profile G.sig) :
     profile ∈ G.enumerateNash ↔ IsNash G.toForm (euPreference G.utility) profile := by
@@ -71,6 +70,20 @@ theorem weaklyDominates_eq_true_iff (G : TableGame ι) (who : ι)
     G.weaklyDominates who preferred alternative = true ↔
       WeaklyDominates G.toForm (euPreference G.utility) who preferred alternative := by
   rw [weaklyDominates, decide_eq_true_eq]
+  constructor
+  · rintro ⟨hweak, profile, hstrict⟩
+    exact ⟨fun current => by simpa using hweak current,
+      ⟨profile, (euPreference_strict_iff _ _ _ _).2 (by simpa using hstrict)⟩⟩
+  · rintro ⟨hweak, profile, hstrict⟩
+    exact ⟨fun current => by simpa using hweak current,
+      ⟨profile, by
+        simpa using (euPreference_strict_iff _ _ _ _).1 hstrict⟩⟩
+
+theorem veryWeaklyDominates_eq_true_iff (G : TableGame ι) (who : ι)
+    (preferred alternative : G.Action who) :
+    G.veryWeaklyDominates who preferred alternative = true ↔
+      VeryWeaklyDominates G.toForm (euPreference G.utility) who preferred alternative := by
+  rw [veryWeaklyDominates, decide_eq_true_eq]
   exact forall_congr' fun profile => by simp
 
 theorem strictlyDominates_eq_true_iff (G : TableGame ι) (who : ι)
@@ -91,7 +104,8 @@ theorem isDominantProfile_eq_true_iff (G : TableGame ι) (profile : Profile G.si
   rw [isDominantProfile, decide_eq_true_eq]
   refine forall_congr' fun who => ?_
   rw [isDominant, decide_eq_true_eq]
-  exact forall_congr' fun alternative => weaklyDominates_eq_true_iff G who _ alternative
+  exact forall_congr' fun alternative =>
+    veryWeaklyDominates_eq_true_iff G who _ alternative
 
 /-- Strict expected-utility preference on a deterministic form is a rational
 payoff inequality. -/

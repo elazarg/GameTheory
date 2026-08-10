@@ -22,35 +22,39 @@ variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
 variable {G : UtilityGame.{uι, us, uo} ι}
 variable {potential : Profile G.form.sig → ℝ}
 
-namespace UtilityGame
+namespace GameForm
 
 /-- The multilinear extension of a pure-profile potential. -/
-def mixedPotential (G : UtilityGame ι) (potential : Profile G.form.sig → ℝ)
-    (mixedProfile : Profile G.form.sig.mixed) : ℝ :=
+def mixedPotential (G : GameForm ι) (potential : Profile G.sig → ℝ)
+    (mixedProfile : Profile G.sig.mixed) : ℝ :=
   (FinDist.pi mixedProfile).expect potential
 
 /-- The mixed potential agrees with the original potential on the canonical
 pure embedding. -/
 @[simp]
-theorem mixedPotential_purify (G : UtilityGame ι)
-    (potential : Profile G.form.sig → ℝ) (profile : Profile G.form.sig) :
-    G.mixedPotential potential (G.form.purify profile) = potential profile := by
+theorem mixedPotential_purify (G : GameForm ι)
+    (potential : Profile G.sig → ℝ) (profile : Profile G.sig) :
+    G.mixedPotential potential (G.purify profile) = potential profile := by
   unfold mixedPotential
-  have hpure : G.form.purify profile =
+  have hpure : G.purify profile =
       fun i => FinDist.pure (profile i) := rfl
   rw [hpure, FinDist.pi_pure, FinDist.expect_pure]
 
 /-- The mixed potential is affine in every player's own mixed strategy. -/
-theorem mixedPotential_update (G : UtilityGame ι)
-    (potential : Profile G.form.sig → ℝ)
-    (mixedProfile : Profile G.form.sig.mixed) (who : ι)
-    (replacement : FinDist (G.form.sig.Strategy who)) :
+theorem mixedPotential_update (G : GameForm ι)
+    (potential : Profile G.sig → ℝ)
+    (mixedProfile : Profile G.sig.mixed) (who : ι)
+    (replacement : FinDist (G.sig.Strategy who)) :
     G.mixedPotential potential (Profile.update mixedProfile who replacement) =
       replacement.expect fun action =>
         G.mixedPotential potential
           (Profile.update mixedProfile who (FinDist.pure action)) := by
   unfold mixedPotential
   rw [GameForm.pi_update_mixed, FinDist.expect_bind]
+
+end GameForm
+
+namespace UtilityGame
 
 /-- A pure unilateral change has the same expected-utility and mixed-potential
 difference as its pointwise pure changes. -/
@@ -62,13 +66,13 @@ theorem IsExactPotential.mixed_pure_diff
         (G.form.mixed.play
           (Profile.update mixedProfile who (FinDist.pure action))) -
       expectedUtility G.utility who (G.form.mixed.play mixedProfile) =
-    G.mixedPotential potential
+    G.form.mixedPotential potential
         (Profile.update mixedProfile who (FinDist.pure action)) -
-      G.mixedPotential potential mixedProfile := by
+      G.form.mixedPotential potential mixedProfile := by
   have hproduct := GameForm.pi_map_recommendation G.form.sig mixedProfile who
     (fun _ => action)
   rw [FinDist.map_const] at hproduct
-  simp only [expectedUtility_bind, mixedPotential]
+  simp only [expectedUtility_bind, GameForm.mixedPotential]
   rw [← hproduct, FinDist.expect_map, FinDist.expect_map,
     ← FinDist.expect_sub, ← FinDist.expect_sub]
   exact FinDist.expect_congr fun profile _ => hpotential who profile action
@@ -82,10 +86,10 @@ theorem IsExactPotential.mixed_update_diff
     expectedUtility G.utility who
         (G.form.mixed.play (Profile.update mixedProfile who replacement)) -
       expectedUtility G.utility who (G.form.mixed.play mixedProfile) =
-    G.mixedPotential potential (Profile.update mixedProfile who replacement) -
-      G.mixedPotential potential mixedProfile := by
+    G.form.mixedPotential potential (Profile.update mixedProfile who replacement) -
+      G.form.mixedPotential potential mixedProfile := by
   rw [GameForm.mixed_play_update, expectedUtility_bind,
-    G.mixedPotential_update]
+    G.form.mixedPotential_update]
   calc
     replacement.expect (fun action =>
           expectedUtility G.utility who
@@ -99,23 +103,23 @@ theorem IsExactPotential.mixed_update_diff
           expectedUtility G.utility who (G.form.mixed.play mixedProfile)) := by
       rw [FinDist.expect_sub, FinDist.expect_const]
     _ = replacement.expect (fun action =>
-        G.mixedPotential potential
+        G.form.mixedPotential potential
             (Profile.update mixedProfile who (FinDist.pure action)) -
-          G.mixedPotential potential mixedProfile) :=
+          G.form.mixedPotential potential mixedProfile) :=
       FinDist.expect_congr fun action _ =>
         IsExactPotential.mixed_pure_diff
           (G := G) (potential := potential) hpotential mixedProfile who action
     _ = replacement.expect (fun action =>
-          G.mixedPotential potential
+          G.form.mixedPotential potential
             (Profile.update mixedProfile who (FinDist.pure action))) -
-        G.mixedPotential potential mixedProfile := by
+        G.form.mixedPotential potential mixedProfile := by
       rw [FinDist.expect_sub, FinDist.expect_const]
 
 /-- The mixed extension of an exact-potential game is again exact-potential,
 with the expected extension of the original potential. -/
 theorem IsExactPotential.mixed
     (hpotential : IsExactPotential G.form G.utility potential) :
-    IsExactPotential G.form.mixed G.utility (G.mixedPotential potential) :=
+    IsExactPotential G.form.mixed G.utility (G.form.mixedPotential potential) :=
   fun who mixedProfile replacement =>
     IsExactPotential.mixed_update_diff
       (G := G) (potential := potential) hpotential mixedProfile who replacement

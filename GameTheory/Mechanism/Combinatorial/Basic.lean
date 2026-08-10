@@ -3,8 +3,6 @@
 
 This opt-in mechanism layer defines normalized monotone valuations and feasible
 allocations.  It does not commit the core to an auction-specific outcome type.
-Ported mathematically from `reference/GameTheory-v1/GameTheory/Auctions/Combinatorial.lean`
-at pinned commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
 import Mathlib.Algebra.BigOperators.Ring.Finset

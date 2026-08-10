@@ -4,7 +4,9 @@
 The source normal form compiles to `GameForm`; the target FOSG contains exactly
 an execution protocol and its factored information model. The one-shot
 compiler uses the real history runner and preserves the source outcome and
-utility laws.
+utility laws. This is a lift of normal forms into a deliberately one-round
+FOSG fragment; it is not a characterization or inverse compiler for arbitrary
+FOSGs.
 -/
 
 import GameTheory.Languages.NFG
@@ -265,7 +267,7 @@ def toProtocolForm [∀ i, Nonempty (G.Action i)] : GameForm ι :=
   ((game G).toGameForm 1).mapOutcome
     (fun history => outcomeOfState G history.state)
 
-/-- **T4 commuting law.** Lifting a source profile, running the actual FOSG
+/-- Lifting a source profile, running the actual FOSG
 compiler for one step, and reading the terminal source outcome gives exactly
 the direct NFG play law, embedded into the total optional codomain. -/
 theorem toProtocolForm_play_policyProfile
@@ -307,7 +309,7 @@ def utilityOfOutcome (utility : G.Outcome → ι → ℝ) :
   | none => fun _ => 0
   | some outcome => utility outcome
 
-/-- The frozen predecessor's utility-distribution claim follows directly from
+/-- The utility-distribution law follows directly from
 the commuting outcome law, with utility kept outside both language syntaxes. -/
 theorem toProtocolForm_utilityLaw_policyProfile
     [∀ i, Nonempty (G.Action i)]

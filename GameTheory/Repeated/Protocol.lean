@@ -23,7 +23,7 @@ variable {ι : Type uι}
 
 /-- A public finite prefix of chosen stage profiles, in chronological order. -/
 abbrev Prefix (G : UtilityGame ι) :=
-  List (Profile G.form.sig)
+  G.ProfileHistory
 
 namespace Prefix
 

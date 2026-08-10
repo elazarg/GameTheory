@@ -6,7 +6,10 @@ source player and one resolver step.  The target state retains the canonical
 source history and certified source-local choices; it introduces no second
 runner or history type.
 
-EXP-059 and EXP-060 validate the construction shape.  EXP-061 generalizes it.
+The construction preserves source histories and source-local choices at every
+serialization round. Exact public claims compare the target law after erasing
+serialization-only microsteps; the un-erased EFG history contains strictly
+more scheduling data.
 -/
 
 import GameTheory.Languages.EFG

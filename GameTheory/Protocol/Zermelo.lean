@@ -8,11 +8,13 @@ evaluate its continuation recursively, and assemble those history choices into
 one information-local pure profile.
 
 The construction uses the conventional strong perfect-information premise: an
-information state at which a player moves identifies the complete history.
-This replaces the predecessor's syntax-specific sibling-subtree disjointness
-proofs; it does not introduce a second tree or evaluator. A weaker theorem
-could exempt information states whose legal choice carrier is a subsingleton,
-but that extra generality is not needed for perfect-information existence.
+information state at which a player moves identifies the complete history. It
+does not introduce a second tree or evaluator. A weaker theorem could exempt
+information states whose legal choice carrier is a subsingleton, but that extra
+generality is not needed for perfect-information existence.
+
+The `Zermelo` module name follows the backward-induction tradition; no
+two-player win/lose determinacy theorem is claimed by this file.
 -/
 
 import GameTheory.Protocol.SubgamePerfect
@@ -40,6 +42,16 @@ def SeparatesDecisionHistories : Prop :=
     ¬ E.terminal second.state → E.active second.state who →
     M.infoOf who first.trace = M.infoOf who second.trace →
     first = second
+
+/-- Under perfect information every history starts a subgame, because a
+decision information set contains at most that history. -/
+theorem isSubgameRoot_of_separatesDecisionHistories
+    (hperfect : M.SeparatesDecisionHistories)
+    (root : E.History) : M.IsSubgameRoot root := by
+  intro who inside outside hinside hinsTerm hinsActive houtTerm houtActive hinfo
+  have hequal := hperfect who inside outside hinsTerm hinsActive
+    houtTerm houtActive hinfo
+  simpa [hequal] using hinside
 
 /-- A complete history realizes `info` as a genuine decision point for `who`.
 Terminal histories are excluded explicitly because activity is intentionally
@@ -529,12 +541,12 @@ theorem exists_isSubgamePerfect [DecidableEq ι]
     (certificate : E.WellFoundedPlay)
     (hperfect : M.SeparatesDecisionHistories)
     (utility : E.History → ι → ℝ) :
-    ∃ profile : Profile M.strategicSignature,
+  ∃ profile : Profile M.strategicSignature,
       M.IsSubgamePerfect certificate profile utility := by
   refine ⟨M.backwardProfile singleMover certificate utility, ?_⟩
-  apply M.isSubgamePerfect_of_hasNoProfitableOneShotDeviation
-  exact M.backwardProfile_hasNoProfitableOneShotDeviation
-    singleMover hperfect
+  apply IsHistorywiseOptimal.isSubgamePerfect
+  apply M.isHistorywiseOptimal_of_hasNoProfitableOneShotDeviation
+  exact M.backwardProfile_hasNoProfitableOneShotDeviation singleMover hperfect
 
 end InformationModel
 

@@ -124,7 +124,7 @@ example (who : ι) (opponents : Profile F.sig) (candidate : F.sig.Strategy who) 
           (F.play (Profile.update opponents who alternative)) := rfl
 
 example (who : ι) (preferred alternative : F.sig.Strategy who) :
-    WeaklyDominates F weaklyPrefers who preferred alternative =
+    VeryWeaklyDominates F weaklyPrefers who preferred alternative =
       ∀ profile : Profile F.sig,
         weaklyPrefers who (F.play (Profile.update profile who preferred))
           (F.play (Profile.update profile who alternative)) := rfl

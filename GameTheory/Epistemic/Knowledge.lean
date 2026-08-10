@@ -97,29 +97,7 @@ theorem isSelfEvident_iff_Knows_eq
       Finset.Subset.antisymm (Knows_subset partition event) hsubset,
     fun hequal => hequal.ge⟩
 
-/-! ## Mutual and common knowledge -/
-
-/-- Every agent in the finite family knows the event. -/
-def mutualKnowledge {ι : Type uι} [Fintype ι]
-    (partition : ι → InfoPartition Ω) (event : Finset Ω) : Finset Ω :=
-  Finset.univ.filter fun state =>
-    ∀ agent : ι, state ∈ Knows (partition agent) event
-
-@[simp]
-theorem mem_mutualKnowledge_iff {ι : Type uι} [Fintype ι]
-    (partition : ι → InfoPartition Ω) (event : Finset Ω) (state : Ω) :
-    state ∈ mutualKnowledge partition event ↔
-      ∀ agent, state ∈ Knows (partition agent) event := by
-  simp [mutualKnowledge]
-
-/-- Mutual knowledge is veridical when the family has an agent. -/
-theorem mutualKnowledge_subset {ι : Type uι} [Fintype ι] [Nonempty ι]
-    (partition : ι → InfoPartition Ω) (event : Finset Ω) :
-    mutualKnowledge partition event ⊆ event := by
-  intro state hstate
-  rw [mem_mutualKnowledge_iff] at hstate
-  let agent : ι := Classical.choice inferInstance
-  exact Knows_subset (partition agent) event (hstate agent)
+/-! ## Common knowledge -/
 
 /-- `event` is common knowledge at `state` when a public event containing the
 state is self-evident for every agent and contained in `event`. -/

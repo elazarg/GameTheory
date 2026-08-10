@@ -6,9 +6,8 @@ inequality.  Aggregating it over resources proves cost smoothness, which the
 canonical `UtilityGame.IsSmooth.nash_bound` turns into the pure Nash `5/2`
 social-cost bound.
 
-Mathematical provenance: theorem statements and proof structure are recovered
-from `reference/GameTheory-v1/GameTheory/Congestion/AffinePoA.lean` at pinned
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+Primary reference: G. Christodoulou and E. Koutsoupias, “The Price of Anarchy
+of Finite Congestion Games,” STOC 2005.
 -/
 
 import GameTheory.Congestion.Basic
@@ -175,7 +174,7 @@ theorem socialCost_nash_le [DecidableEq ι] (C : CongestionGame ι)
 
 /-- **Robust price of anarchy of affine congestion games.**  The `5/2` bound
 extends from pure Nash equilibria to every coarse correlated equilibrium. -/
-theorem correlated_socialCost_le [DecidableEq ι] (C : CongestionGame ι)
+theorem coarseCorrelated_socialCost_le [DecidableEq ι] (C : CongestionGame ι)
     {a b : C.Resource → ℝ} (h : C.IsAffine a b) {law : FinDist C.Profile}
     (hlaw : IsCoarseCorrelatedEq C.toGameForm (euPreference C.utility) law)
     (target : C.Profile) :

@@ -8,9 +8,9 @@ aggregation rule takes one ranking per agent and returns one ranking, and every
 law it is asked to satisfy — totality, transitivity, the strict part — is the
 same law the equilibrium theory uses.
 
-The rule below is pairwise majority, and the theorem it exists for is a
-*failure*: individually impeccable rankings can aggregate into a cycle. That
-failure is why the subject has impossibility theorems at all.
+The rule below is pairwise majority.  The concrete Condorcet-cycle witness is
+a reader-facing consumer in `GameTheory.Examples.Voting`; this foundational
+module supplies only the reusable aggregation definitions and laws.
 -/
 
 import GameTheory.Core.Rank
@@ -111,17 +111,6 @@ def IsDictator (choice : SocialChoiceFunction Voter Alternative)
     (dictator : Voter) : Prop :=
   ∀ ranks, Preference.Linear ranks → ∀ alternative,
     ranks dictator (choice ranks) alternative
-
-/-- A dictator's selected alternative equals any supplied top alternative. -/
-theorem IsDictator.eq_of_forall_ranks
-    {choice : SocialChoiceFunction Voter Alternative} {dictator : Voter}
-    (hdictator : choice.IsDictator dictator)
-    {ranks : Ranking Voter Alternative} (hlinear : Preference.Linear ranks)
-    {alternative : Alternative}
-    (htop : ∀ other, ranks dictator alternative other) :
-    choice ranks = alternative :=
-  (hlinear dictator).2.2.2 _ _
-    (hdictator ranks hlinear alternative) (htop (choice ranks))
 
 end SocialChoiceFunction
 

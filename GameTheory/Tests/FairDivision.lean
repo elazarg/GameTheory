@@ -98,7 +98,7 @@ same conflicting-value instance. -/
 theorem roundRobin_complete : IsComplete (roundRobinAllocation values) :=
   roundRobinAllocation_isComplete values
 
-/-- The release flagship specializes to the hostile value profile. -/
+/-- The existence theorem specializes to the hostile value profile. -/
 theorem roundRobin_isEF1 : IsEF1 values (roundRobinAllocation values) :=
   roundRobinAllocation_isEF1 values values_nonnegative
 

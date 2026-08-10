@@ -1,6 +1,6 @@
 param(
   [switch] $VerifyExpected,
-  [switch] $SkipReachability
+  [switch] $DeepReachability
 )
 
 $ErrorActionPreference = 'Stop'
@@ -171,11 +171,13 @@ Report 'PROTOCOL_MODULES' $ProtocolFiles.Count
 Report 'LANGUAGE_MODULES' $LanguageFiles.Count
 
 # --------------------------------------------------------------------------
-# 4. Symbol reachability. The sequential layer inherits the core's dependency
-#    budget: convexity and polynomial theory must stay out.
+# 4. Optional symbol reachability. The sequential layer inherits the core's
+#    dependency budget: convexity and polynomial theory must stay out. These
+#    compiler probes are a deliberate CI/release gate, not an implementation-
+#    loop check.
 # --------------------------------------------------------------------------
 
-if (-not $SkipReachability) {
+if ($DeepReachability) {
   # Keep concurrent delivery audits from racing on one probe source file.
   $probeFile = Join-Path ([IO.Path]::GetTempPath()) `
     ("gametheory-phase3-probe-$PID.lean")
@@ -581,7 +583,7 @@ if ($VerifyExpected) {
     # stop it drifting.
     LIBRARY_LINES_OVER_100 = 0
   }
-  if (-not $SkipReachability) {
+  if ($DeepReachability) {
     $Expected['UNREACHABLE_PROBES_PASSED'] = 3
     $Expected['BAYESIAN_SOLUTION_PROBES_REJECTED'] = 2
     $Expected['BAYESIAN_INPUT_PROBES_REACHED'] = 2

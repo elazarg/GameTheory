@@ -8,6 +8,7 @@ and a second-round policy branches on it.
 -/
 
 import GameTheory.Languages.MultiRound
+import GameTheory.Languages.FOSG.Values
 import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.NormNum
 
@@ -156,5 +157,36 @@ theorem compiled_play_is_canonical :
     fixture.toGameForm.play repeatProfile =
       fixture.informationModel.run repeatProfile fixture.horizon :=
   fixture.toGameForm_play repeatProfile
+
+/-- A concrete one-round history for exercising the opt-in external-value
+leaf on the compiled FOSG. -/
+theorem initialLegal01 :
+    fixture.execution.Legal fixture.execution.initHistory.state (joint 0 1) := by
+  simpa using joint_legal 0 1
+
+theorem initial_step01 :
+    fixture.execution.step fixture.execution.initHistory.state
+        ⟨joint 0 1, initialLegal01⟩ =
+      FinDist.pure (oneRound 0 1) := by
+  simpa using step_unequal (first := 0) (second := 1) (by decide)
+
+def history01 : fixture.execution.History :=
+  fixture.execution.initHistory.extend initialLegal01 (by
+    rw [initial_step01]
+    exact FinDist.mem_support_pure.mpr rfl)
+
+/-- Player zero receives a nonzero transition value; player one receives zero.
+The value is external to the monitoring syntax and execution object. -/
+def transitionValue (_ : fixture.execution.StepEvent) (player : Player) : ℕ :=
+  if player = 0 then 7 else 0
+
+/-- The FOSG value leaf folds the caller-supplied transition value over the
+actual compiled history. -/
+theorem compiled_fosg_cumulativeValue :
+    fixture.toFOSG.cumulativeValue transitionValue history01 0 = 7 := by
+  unfold history01
+  rw [Languages.FOSG.Game.cumulativeValue_extend,
+    Languages.FOSG.Game.cumulativeValue_init]
+  rfl
 
 end GameTheory.Tests.MultiRoundMonitoring

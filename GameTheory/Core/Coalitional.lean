@@ -50,6 +50,29 @@ theorem ext {G H : CoalitionalGame Agent}
   funext coalition
   exact h coalition
 
+/-- Pointwise sum of coalitional games. -/
+def add (G H : CoalitionalGame Agent) : CoalitionalGame Agent where
+  value coalition := G.value coalition + H.value coalition
+  value_empty := by simp [G.value_empty, H.value_empty]
+
+/-- Scalar multiplication of a coalitional game. -/
+def smul (scalar : ℝ) (G : CoalitionalGame Agent) : CoalitionalGame Agent where
+  value coalition := scalar * G.value coalition
+  value_empty := by simp [G.value_empty]
+
+variable [DecidableEq Agent]
+
+/-- The extra worth created when `agent` joins `coalition`. -/
+def marginalContribution
+    (G : CoalitionalGame Agent) (agent : Agent)
+    (coalition : Finset Agent) : ℝ :=
+  G.value (insert agent coalition) - G.value coalition
+
+/-- A null agent never changes a coalition's worth. -/
+def IsNull (G : CoalitionalGame Agent) (agent : Agent) : Prop :=
+  ∀ coalition : Finset Agent, agent ∉ coalition →
+    G.marginalContribution agent coalition = 0
+
 end CoalitionalGame
 
 /-- A division of the proceeds among the agents. -/

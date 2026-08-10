@@ -214,7 +214,19 @@ theorem correlatedEq_profile_prob_eq_quarter
   · linarith [hall.1, hall.2.1, hall.2.2]
   · linarith [hall.1, hall.2.1]
 
-/-- A Matching-Pennies-like game has exactly one correlated equilibrium: the
+/-- The independent product of the fair marginals is a mixed Nash profile. -/
+theorem fairProfile_isNash :
+    IsNash F.mixed (euPreference utility) h.fairProfile :=
+  (h.isNash_iff_half h.fairProfile).2
+    ⟨h.probTrue_fairProfile 0, h.probTrue_fairProfile 1⟩
+
+/-- The independent product of the fair marginals is a correlated
+equilibrium. -/
+theorem fairProduct_isCorrelatedEq :
+    IsCorrelatedEq F (euPreference utility) (FinDist.pi h.fairProfile) :=
+  h.fairProfile_isNash.isCorrelatedEq_pi
+
+/-- Any correlated equilibrium of a Matching-Pennies-like game equals the
 independent product of its fair marginals. -/
 theorem correlatedEq_unique
     {law : FinDist (Profile F.sig)}
@@ -229,6 +241,14 @@ theorem correlatedEq_unique
   rw [h.fairProfile_prob_action,
     h.fairProfile_prob_action]
   norm_num
+
+/-- A Matching-Pennies-like game has exactly one correlated equilibrium: the
+independent product of its fair marginals. -/
+theorem existsUnique_correlatedEq (h : F.MatchingPenniesLike utility) :
+    ∃! law : FinDist (Profile F.sig),
+      IsCorrelatedEq F (euPreference utility) law :=
+  ⟨FinDist.pi h.fairProfile, h.fairProduct_isCorrelatedEq,
+    fun _ lawIsCE => h.correlatedEq_unique lawIsCE⟩
 
 end GameForm.MatchingPenniesLike
 

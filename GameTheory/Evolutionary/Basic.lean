@@ -1,9 +1,14 @@
 /-
 # Static evolutionary stability
 
-ESS and NSS are properties of a homogeneous two-argument payoff kernel. No
-population state, dynamics, finite carrier, topology, or game form is part of
-their definition.
+ESS and NSS are properties of a homogeneous two-argument payoff kernel. The
+strategy carrier may contain pure actions, mixed population strategies, or
+another explicitly chosen phenotype; the generic definition does not silently
+choose among them. No population state, dynamics, finite carrier, topology, or
+game form is part of the definition.
+
+Primary reference: J. Maynard Smith and G. R. Price, “The Logic of Animal
+Conflict,” *Nature* 246 (1973).
 -/
 
 import Mathlib.Data.Real.Basic

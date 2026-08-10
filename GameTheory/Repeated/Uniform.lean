@@ -5,16 +5,17 @@ A uniform equilibrium has a coordinatewise long-run average payoff and is an
 approximate Nash equilibrium of every sufficiently long finite truncation.
 Finite-horizon rationality is defined through the canonical `IsεNash` surface;
 the familiar repeated-game name is a transparent specialization, not a second
-equilibrium engine.
+equilibrium engine. This is a property of one repeated-strategy profile;
+`Stochastic.Game.IsUniformEquilibriumPayoff` instead certifies a payoff vector
+and may choose a finite-horizon behavioral profile for each accuracy.
 
-The theorem family is adapted from
-`reference/GameTheory-v1/GameTheory/Concepts/Repeated/Uniform.lean` and the
-long-run definitions from `Concepts/Repeated/Basic.lean`, both at pinned commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+For the uniform-equilibrium tradition, see J.-F. Mertens and A. Neyman,
+“Stochastic Games,” *International Journal of Game Theory* 10 (1981).
 -/
 
 import GameTheory.Core.Approximate
 import GameTheory.Repeated.Basic
+import GameTheoryMath.Eventually
 
 noncomputable section
 
@@ -50,9 +51,9 @@ theorem isεFiniteRepeatedNash_iff
 
 /-- A single horizon threshold makes the profile approximately Nash at every
 longer truncation. -/
-def IsUniformεEquilibrium (G : UtilityGame ι) [DecidableEq ι]
+abbrev IsUniformεEquilibrium (G : UtilityGame ι) [DecidableEq ι]
     (epsilon : ℝ) (profile : G.RepeatedProfile) : Prop :=
-  ∃ threshold : ℕ, ∀ horizon, threshold ≤ horizon →
+  GameTheoryMath.EventuallyAtAll fun horizon =>
     G.IsεFiniteRepeatedNash horizon epsilon profile
 
 /-- A uniform equilibrium has a long-run average and satisfies every positive
@@ -77,10 +78,8 @@ theorem IsUniformεEquilibrium.mono
     {epsilon epsilon' : ℝ} {profile : G.RepeatedProfile}
     (h : G.IsUniformεEquilibrium epsilon profile)
     (hle : epsilon ≤ epsilon') :
-    G.IsUniformεEquilibrium epsilon' profile := by
-  obtain ⟨threshold, hthreshold⟩ := h
-  exact ⟨threshold, fun horizon hhorizon =>
-    (hthreshold horizon hhorizon).mono hle⟩
+    G.IsUniformεEquilibrium epsilon' profile :=
+  GameTheoryMath.EventuallyAtAll.mono h fun _ hhorizon => hhorizon.mono hle
 
 /-- Stationary repetition of a stage Nash equilibrium is uniform: every
 nonempty finite truncation is exact Nash and its average payoff is constant. -/
@@ -93,6 +92,8 @@ theorem stationaryRepeatedProfile_isUniformEquilibrium_of_isNash
     G.hasLongRunAveragePayoff_stationaryRepeatedProfile profile⟩, ?_⟩
   intro epsilon hepsilon
   refine ⟨1, fun horizon hhorizon => ?_⟩
+  show G.IsεFiniteRepeatedNash horizon epsilon
+    (G.stationaryRepeatedProfile profile)
   rw [G.isεFiniteRepeatedNash_iff]
   intro who deviation
   have hhorizon0 : horizon ≠ 0 := by omega

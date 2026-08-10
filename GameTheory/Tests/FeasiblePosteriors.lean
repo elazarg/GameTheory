@@ -68,4 +68,16 @@ theorem coupling_has_law_belief_marginal :
     law.coupling.map Prod.snd = law :=
   law.map_snd_coupling
 
+/-- Concentrating on the false point mass has the wrong mean for the fair
+prior, so Bayes plausibility is a substantive restriction. -/
+def biasedLaw : PosteriorLaw Bool :=
+  FinDist.pure (FinDist.pure false)
+
+theorem biasedLaw_not_isBayesPlausible :
+    ¬ biasedLaw.IsBayesPlausible prior := by
+  intro hplausible
+  have hprob := congrArg (fun belief : FinDist Bool => belief.prob true) hplausible
+  norm_num [PosteriorLaw.IsBayesPlausible, PosteriorLaw.mean, biasedLaw,
+    prior, FinDist.prob_mix, FinDist.prob_pure_eq_ite] at hprob
+
 end GameTheory.Tests.FeasiblePosteriors

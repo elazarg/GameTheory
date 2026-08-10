@@ -6,8 +6,12 @@ root deliberately imports no game semantics.
 -/
 
 import GameTheoryMath.DAG
-import GameTheoryMath.AffineUtility
+import GameTheoryMath.OrthantProjection
+import GameTheoryMath.Discounted
+import GameTheoryMath.Eventually
+import GameTheoryMath.HarmonicSequence
 import GameTheoryMath.OnlineLearning
+import GameTheoryMath.PositivePartFixedPoint
 import GameTheoryMath.SimplexApproximation
 
 namespace GameTheoryMath

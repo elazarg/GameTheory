@@ -7,6 +7,9 @@ data explicitly.  The concrete second-price specialization is instead a
 payoff-only strict-winner presentation, so ties give every bidder zero and it
 makes no allocation or revenue claim.  The concrete first-price specialization
 faithfully uses an arbitrary maximal-bid tie breaker.
+
+Primary reference: W. Vickrey, “Counterspeculation, Auctions, and Competitive
+Sealed Tenders,” *Journal of Finance* 16 (1961).
 -/
 
 import GameTheory.Core.Response
@@ -71,12 +74,6 @@ def IsExPostIR : Prop :=
 /-- Transfers are never paid to bidders. -/
 def NoPositiveTransfers : Prop :=
   ∀ outcome bidder, 0 ≤ ql.payment outcome bidder
-
-/-- The selected allocation maximizes total reported valuation. -/
-def IsEfficient : Prop :=
-  ∀ outcome alternative,
-    (∑ bidder, ql.valuation bidder (ql.allocation outcome)) ≥
-      ∑ bidder, ql.valuation bidder alternative
 
 /-- The total transfer collected at every outcome is zero. -/
 def IsStronglyBudgetBalanced : Prop :=

@@ -9,7 +9,11 @@ maximize the potential and nobody can gain by moving alone.
 Two strengths are recorded, because the existence argument needs only the weaker
 one. An *exact* potential moves by exactly as much as the deviator's expected
 utility; an *ordinal* potential only has to move in the same direction. The
-first implies the second and the theorems are proved for the second.
+first implies the second, and the equilibrium-existence family is proved at
+the ordinal level.
+
+Primary reference: D. Monderer and L. S. Shapley, “Potential Games,” *Games
+and Economic Behavior* 14 (1996).
 -/
 
 import GameTheory.Core.Response
@@ -212,12 +216,6 @@ theorem IsExactPotential.no_infinite_improving_path [Finite (Profile F.sig)]
     have hpotentialEq : potential (path left) = potential (path right) := by rw [heq]
     exact hmono.injective hpotentialEq
   exact not_injective_infinite_finite path hinjective
-
-/-- From every profile, some finite improving path reaches a Nash profile. -/
-def WeaklyAcyclic (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ) : Prop :=
-  ∀ source, ∃ target,
-    Relation.ReflTransGen (ImprovingStep F utility) source target ∧
-      IsNash F (euPreference utility) target
 
 /-- Every improving step strictly raises an ordinal potential. -/
 theorem IsOrdinalPotential.improvingStep_increases_potential

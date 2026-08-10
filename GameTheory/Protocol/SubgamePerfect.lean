@@ -1,18 +1,19 @@
 /-
-# Well-founded strategic subgame perfection
+# Well-founded continuation optimality and subgame perfection
 
-Subgame perfection is strategic: every player must prefer the profile to every
-whole replacement policy after every history, including histories the profile
-does not reach. The single-controller theorem in `Backward` is therefore not an
-SPE theorem, and the fuelled result in `Assessment` supplies only the forward
-finite-horizon implication.
+Historywise continuation optimality asks every player to prefer the profile to
+every whole replacement policy after every history, including histories the
+profile does not reach.  In imperfect-information games that is stronger than
+subgame perfection: a proper subgame may start only where its continuation is
+closed under every decision information set.
 
-This module closes that gap without adding an EFG evaluator. `WellFoundedPlay`
-lifts from states to histories, and the resulting recursion evaluates the same
-protocol step law while retaining the history an information-local policy may
-observe. Under `ActsOnceWhereItMatters`, a persistent policy replacement at the
-current information state is observationally a one-shot change, which supplies
-the converse.
+This module defines that closure directly over canonical protocol histories,
+without adding an EFG evaluator. `WellFoundedPlay` lifts from states to
+histories, and the resulting recursion evaluates the same protocol step law
+while retaining the history an information-local policy may observe. Under
+`ActsOnceWhereItMatters`, a persistent policy replacement at the current
+information state is observationally a one-shot change, which characterizes
+the stronger historywise predicate.
 -/
 
 import GameTheory.Protocol.Assessment
@@ -228,6 +229,29 @@ theorem HistoryReaches.step {start target : E.History}
   rcases rest with ⟨fuel, hrest⟩
   exact ⟨fuel + 1, .step joint isLegal realized hrest⟩
 
+/-- Semantic reachability never shortens the canonical trace. -/
+theorem ReachesWithin.trace_length_le {fuel : ℕ}
+    {start target : E.History}
+    (hreach : E.ReachesWithin fuel start target) :
+    start.trace.length ≤ target.trace.length := by
+  induction hreach with
+  | refl => exact le_rfl
+  | step joint isLegal realized rest ih =>
+      exact le_trans (Nat.le_succ _) (by simpa [History.extend, Trace.length] using ih)
+
+/-- A reachable history at the same trace depth is the starting history. -/
+theorem ReachesWithin.eq_of_trace_length_eq {fuel : ℕ}
+    {start target : E.History}
+    (hreach : E.ReachesWithin fuel start target)
+    (hlength : start.trace.length = target.trace.length) :
+    target = start := by
+  cases hreach with
+  | refl => rfl
+  | step joint isLegal realized rest =>
+      have hle := rest.trace_length_le
+      simp only [History.extend, Trace.length] at hle
+      omega
+
 /-- Choosers agreeing at every history reachable from `start` have equal
 history-preserving backward value there. -/
 theorem historyBackwardValue_congr_of_reaches
@@ -265,6 +289,23 @@ end ExecutionProtocol
 namespace InformationModel
 
 variable (M : InformationModel E)
+
+/-- A history starts a proper subgame when every decision information set met
+below it is wholly contained below it.  Inactive and terminal histories do not
+belong to decision information sets and therefore impose no closure demand. -/
+def IsSubgameRoot (root : E.History) : Prop :=
+  ∀ (who : ι) (inside outside : E.History),
+    E.HistoryReaches root inside →
+    ¬ E.terminal inside.state → E.active inside.state who →
+    ¬ E.terminal outside.state → E.active outside.state who →
+    M.infoOf who inside.trace = M.infoOf who outside.trace →
+    E.HistoryReaches root outside
+
+/-- The initial history always starts a subgame: every complete history is a
+continuation of it. -/
+theorem initHistory_isSubgameRoot : M.IsSubgameRoot E.initHistory := by
+  intro who inside outside hinside hinsTerm hinsActive houtTerm houtActive hinfo
+  exact ⟨outside.trace.length, E.reachesWithin_from_init outside⟩
 
 /-- A replacement at the current information state becomes invisible after the
 first step when that information state cannot recur with a genuine choice. -/
@@ -406,9 +447,11 @@ def HasNoProfitableOneShotDeviation [DecidableEq ι]
           (M.historyChooser profile)
           (fun outcome => utility outcome who) history
 
-/-- A pure profile is subgame perfect when no whole replacement policy improves
-any player's payoff after any complete history, reached or off path. -/
-def IsSubgamePerfect [DecidableEq ι]
+/-- A pure profile is historywise optimal when no whole replacement policy
+improves any player's payoff after any complete history.  This stronger notion
+is useful in perfect-information backward induction and has the clean
+history-local one-shot characterization below. -/
+def IsHistorywiseOptimal [DecidableEq ι]
     (certificate : E.WellFoundedPlay)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ) : Prop :=
@@ -422,9 +465,37 @@ def IsSubgamePerfect [DecidableEq ι]
           (M.historyChooser profile)
           (fun outcome => utility outcome who) history
 
+/-- A pure profile is subgame perfect when no player benefits from a whole
+replacement policy in any information-set-closed subgame, reached or off path.
+The initial history is always included. -/
+def IsSubgamePerfect [DecidableEq ι]
+    (certificate : E.WellFoundedPlay)
+    (profile : Profile M.strategicSignature)
+    (utility : E.History → ι → ℝ) : Prop :=
+  ∀ (history : E.History), M.IsSubgameRoot history →
+    ∀ (who : ι) (alternative : M.Policy who),
+      E.historyBackwardValue certificate
+          (M.historyChooser
+            (Profile.update profile who alternative))
+          (fun outcome => utility outcome who) history ≤
+        E.historyBackwardValue certificate
+          (M.historyChooser profile)
+          (fun outcome => utility outcome who) history
+
+/-- Historywise optimality implies subgame perfection by restriction to the
+certified subgame roots. -/
+theorem IsHistorywiseOptimal.isSubgamePerfect [DecidableEq ι]
+    {certificate : E.WellFoundedPlay}
+    {profile : Profile M.strategicSignature}
+    {utility : E.History → ι → ℝ}
+    (hoptimal : M.IsHistorywiseOptimal certificate profile utility) :
+    M.IsSubgamePerfect certificate profile utility := by
+  intro history hroot who alternative
+  exact hoptimal who alternative history
+
 /-- One-shot optimality at every history defeats every whole replacement
-information-local policy. -/
-theorem isSubgamePerfect_of_hasNoProfitableOneShotDeviation
+information-local policy after every history. -/
+theorem isHistorywiseOptimal_of_hasNoProfitableOneShotDeviation
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
     {certificate : E.WellFoundedPlay}
     {profile : Profile M.strategicSignature}
@@ -432,7 +503,7 @@ theorem isSubgamePerfect_of_hasNoProfitableOneShotDeviation
     (hopt :
       M.HasNoProfitableOneShotDeviation
         certificate profile utility) :
-    M.IsSubgamePerfect certificate profile utility := by
+    M.IsHistorywiseOptimal certificate profile utility := by
   intro who alternative history
   induction history using
       (E.wellFounded_historySuccessor certificate).induction with
@@ -483,15 +554,15 @@ theorem isSubgamePerfect_of_hasNoProfitableOneShotDeviation
                 hopt who current hterm choice
 
 /-- Under the same no-revisit condition used by the behavioral/mixed
-representation theorem, subgame perfection rules out every one-shot
+representation theorem, historywise optimality rules out every one-shot
 deviation. -/
-theorem hasNoProfitableOneShotDeviation_of_isSubgamePerfect
+theorem hasNoProfitableOneShotDeviation_of_isHistorywiseOptimal
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
     (hactsOnce : M.ActsOnceWhereItMatters)
     {certificate : E.WellFoundedPlay}
     {profile : Profile M.strategicSignature}
     {utility : E.History → ι → ℝ}
-    (hspe : M.IsSubgamePerfect certificate profile utility) :
+    (hoptimal : M.IsHistorywiseOptimal certificate profile utility) :
     M.HasNoProfitableOneShotDeviation
       certificate profile utility := by
   intro who history hterm choice
@@ -502,7 +573,7 @@ theorem hasNoProfitableOneShotDeviation_of_isSubgamePerfect
   have hprofile :
       Profile.update profile who alternative = changed := by
     rfl
-  have hbest := hspe who alternative history
+  have hbest := hoptimal who alternative history
   rw [hprofile,
     E.historyBackwardValue_of_not_terminal
       (chooser := M.historyChooser changed) hterm] at hbest
@@ -531,22 +602,22 @@ theorem hasNoProfitableOneShotDeviation_of_isSubgamePerfect
         (M.historyChooser profile)
         (fun outcome => utility outcome who) history := hbest
 
-/-- **Well-founded one-shot deviation principle.** On an information model
-where genuine choices do not recur at one information state, a profile is
-subgame perfect exactly when no player has a profitable one-shot deviation
-after any history. -/
-theorem isSubgamePerfect_iff_hasNoProfitableOneShotDeviation
+/-- **Well-founded historywise one-shot deviation principle.** On an
+information model where genuine choices do not recur at one information state,
+a profile is optimal after every history exactly when no player has a
+profitable one-shot deviation after any history. -/
+theorem isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
     (hactsOnce : M.ActsOnceWhereItMatters)
     (certificate : E.WellFoundedPlay)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ) :
-    M.IsSubgamePerfect certificate profile utility ↔
+    M.IsHistorywiseOptimal certificate profile utility ↔
       M.HasNoProfitableOneShotDeviation
         certificate profile utility :=
-  ⟨M.hasNoProfitableOneShotDeviation_of_isSubgamePerfect
+  ⟨M.hasNoProfitableOneShotDeviation_of_isHistorywiseOptimal
       hactsOnce,
-    M.isSubgamePerfect_of_hasNoProfitableOneShotDeviation⟩
+    M.isHistorywiseOptimal_of_hasNoProfitableOneShotDeviation⟩
 
 end InformationModel
 

@@ -43,7 +43,9 @@ module goes through `legal_of_legalOption`.
 The information state accumulates along a `Trace`, not over states. An
 information set is a set of *histories* a player cannot tell apart; indexing it
 by states instead would presuppose that a state summarizes everything a player
-remembers, which is exactly perfect recall.
+remembers.  That is a history-sufficiency or Markov property, distinct from
+perfect recall: perfect recall constrains how a player's information evolves
+across its own earlier observations and actions.
 
 The signal fields and the menu law are split into two structures because the
 adequacy law must mention `infoOf`, and `infoOf` is a recursion over the signal
@@ -189,9 +191,9 @@ single draw made in advance: a policy answers that information state once and
 for all, while a player randomizing locally draws again. The predicate below
 names the condition that rules this out.
 
-It is not recall. Recall is about what a player *remembers*; this is about
-whether it is *asked twice*, and a game can fail it while every player
-remembers everything. -/
+This is stated separately from recall because later correspondence theorems
+need precisely the no-revisit consequence. With the own-play formulation
+below, perfect recall implies it; the converse need not hold. -/
 
 /-- The information states at which a player has acted along a history, most
 recent first. Passing through an information state without moving does not
@@ -246,6 +248,36 @@ theorem actedAt_eq_map_ownPlay (S : InfoSignals E) (i : ι) :
     | none => exact S.actedAt_eq_map_ownPlay i prior
     | some action => rw [List.map_cons, S.actedAt_eq_map_ownPlay i prior]
 
+/-- Every recorded information state comes from an earlier trace, before a
+strictly shorter record of the player's own actions. -/
+private theorem exists_prior_ownPlay_length_lt_of_mem_actedAt
+    (S : InfoSignals E) (i : ι) :
+    ∀ {state : E.State} (trace : Trace E state) {info : S.InfoState i},
+      info ∈ S.actedAt i trace →
+        ∃ (priorState : E.State) (prior : Trace E priorState),
+          S.infoOf i prior = info ∧
+            (S.ownPlay i prior).length < (S.ownPlay i trace).length
+  | _, .start, _, hmem => by simp only [actedAt_start, List.not_mem_nil] at hmem
+  | _, .extend prior joint isLegal realized, info, hmem => by
+      cases hchoice : joint i with
+      | none =>
+          simp only [actedAt, hchoice] at hmem
+          obtain ⟨priorState, earlier, hinfo, hlength⟩ :=
+            S.exists_prior_ownPlay_length_lt_of_mem_actedAt i prior hmem
+          refine ⟨priorState, earlier, hinfo, ?_⟩
+          simpa only [ownPlay, hchoice] using hlength
+      | some action =>
+          simp only [actedAt, hchoice, List.mem_cons] at hmem
+          rcases hmem with rfl | hmem
+          · refine ⟨_, prior, rfl, ?_⟩
+            simp only [ownPlay, hchoice, List.length_cons]
+            omega
+          · obtain ⟨priorState, earlier, hinfo, hlength⟩ :=
+              S.exists_prior_ownPlay_length_lt_of_mem_actedAt i prior hmem
+            refine ⟨priorState, earlier, hinfo, ?_⟩
+            simp only [ownPlay, hchoice, List.length_cons]
+            omega
+
 /-- **Perfect recall.** A player reaching one information state by two histories
 has done the same things along both: the same information states, the same
 actions, in the same order. What it may forget is what others did, never its own
@@ -275,6 +307,27 @@ protocol: a state may recur freely as long as the player's information about it
 does not. -/
 def ActsOnceAtEachInfoState : Prop :=
   ∀ (i : ι) {state : E.State} (trace : Trace E state), (S.actedAt i trace).Nodup
+
+/-- Perfect recall prevents a player from acting twice at the same information
+state: revisiting it after an action would require its current own-play record
+to equal a strictly shorter earlier record. -/
+theorem PerfectRecall.actsOnceAtEachInfoState (hrecall : S.PerfectRecall) :
+    S.ActsOnceAtEachInfoState := by
+  intro i state trace
+  induction trace with
+  | start => simp [actedAt]
+  | @extend source target prior joint isLegal realized ih =>
+      cases hchoice : joint i with
+      | none => simpa only [actedAt, hchoice] using ih
+      | some action =>
+          simp only [actedAt, hchoice, List.nodup_cons]
+          refine ⟨?_, ih⟩
+          intro hmem
+          obtain ⟨priorState, earlier, hinfo, hlength⟩ :=
+            S.exists_prior_ownPlay_length_lt_of_mem_actedAt i prior hmem
+          have hequal := hrecall i earlier prior hinfo
+          rw [hequal] at hlength
+          exact (Nat.lt_irrefl _ hlength)
 
 end InfoSignals
 
@@ -324,12 +377,6 @@ theorem subsingleton_choice_of_menu_subsingleton {i : ι} (info : M.InfoState i)
 /-- A player's policy: a choice from its own menu, given only its own
 information state. -/
 def Policy (i : ι) : Type _ := (info : M.InfoState i) → M.Choice i info
-
-/-- A policy that also reads a correlated device's recommendation. The
-recommendation is one more information-local input; it is still not the
-execution state. -/
-def RecommendedPolicy (Recommendation : ι → Type ur) (i : ι) : Type _ :=
-  Recommendation i → M.Policy i
 
 variable {M}
 
@@ -518,6 +565,13 @@ the menu. -/
 theorem actsOnceWhereItMatters_of_actsOnce (hactsOnce : M.ActsOnceAtEachInfoState) :
     M.ActsOnceWhereItMatters := fun i _ trace =>
   (hactsOnce i trace).imp fun hne => Or.inl hne
+
+variable {M} in
+/-- Perfect recall supplies the no-revisit condition needed to pre-draw local
+behavioral choices. -/
+theorem actsOnceWhereItMatters_of_perfectRecall (hrecall : M.PerfectRecall) :
+    M.ActsOnceWhereItMatters :=
+  M.actsOnceWhereItMatters_of_actsOnce hrecall.actsOnceAtEachInfoState
 
 /-- **An information state a player has acted at does not return, unless there
 was nothing to choose there.** This is the form the condition is used in: having

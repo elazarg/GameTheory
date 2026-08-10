@@ -7,7 +7,7 @@
 ## Decision / question
 
 Whether one-to-one matching should use the probability-free `Ranking`
-foundation, preserve v1's integer-score market with separate reservation
+foundation, preserve the comparison design's integer-score market with separate reservation
 values, or be represented by an artificial strategic game whose Nash
 equilibria encode assignments.
 
@@ -24,7 +24,7 @@ Design 1 is adopted.  Remaining unmatched is an alternative, not a second
 numeric scale.  The semantic market stores only the two ordinal relations; it
 does not store finiteness, decidability, linearity, probability, or strategic
 structure.  A matching remains a left-to-optional-right function with an
-explicit one-to-one certificate, preserving the lightweight and useful v1
+explicit one-to-one certificate, preserving the lightweight and useful the baseline
 representation.
 
 ## Representative hostile slice

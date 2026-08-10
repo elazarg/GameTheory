@@ -5,10 +5,6 @@ The exponential-potential argument is game-independent.  This module exposes
 it as finite real-vector mathematics: probabilities are coordinates summing
 to one, not a second probability-law type.  `GameTheory.Probability` may turn
 those coordinates into the canonical `FinDist` representation.
-
-The theorem spine is adapted from the pinned v1 file
-`Math/OnlineLearning/MultiplicativeWeights.lean` at
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
@@ -251,6 +247,28 @@ theorem exp_sub_one_sub_self_le_sq {eta : ℝ} (hzero : 0 ≤ eta) (hone : eta �
   rw [hsum, sq_abs] at hb
   norm_num [Nat.factorial] at hb
   nlinarith [hb, le_abs_self (Real.exp eta - (1 + eta)), sq_nonneg eta]
+
+/-- On the usual learning-rate range, the exponential remainder is at most
+quadratic. This game-independent form is the convenient input for choosing a
+horizon-dependent rate in downstream learning reductions. -/
+theorem externalRegret_le_quadratic {eta : ℝ} (heta : 0 < eta)
+    (hetaOne : eta ≤ 1) {gain : ℕ → A → ℝ}
+    (hgain : ∀ s a, gain s a ∈ Set.Icc (0 : ℝ) 1) (T : ℕ) :
+    externalRegret eta gain T ≤
+      Real.log (Fintype.card A) / eta + eta * T := by
+  have hremainder :
+      (Real.exp eta - 1 - eta) / eta ≤ eta := by
+    rw [div_le_iff₀ heta]
+    simpa [pow_two] using exp_sub_one_sub_self_le_sq heta.le hetaOne
+  have hscaled :=
+    mul_le_mul_of_nonneg_right hremainder (Nat.cast_nonneg T)
+  calc
+    externalRegret eta gain T ≤
+        Real.log (Fintype.card A) / eta +
+          (Real.exp eta - 1 - eta) / eta * T :=
+      externalRegret_le heta hgain T
+    _ ≤ Real.log (Fintype.card A) / eta + eta * T := by
+      linarith
 
 theorem fixedActionRegret_le_externalRegret
     (eta : ℝ) (gain : ℕ → A → ℝ) (T : ℕ) (a : A) :

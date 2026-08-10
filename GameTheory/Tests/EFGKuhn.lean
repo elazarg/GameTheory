@@ -126,9 +126,9 @@ def recallGame : Languages.EFG.Game Unit where
     rfl
 
 theorem recallGame_actsOnce :
-    recallGame.information.ActsOnceWhereItMatters :=
-  recallModel.actsOnceWhereItMatters_of_actsOnce
-    recall_actsOnceAtEachInfoState
+  recallGame.information.ActsOnceWhereItMatters :=
+  recallGame.information.actsOnceWhereItMatters_of_perfectRecall
+    recall_perfectRecall
 
 theorem recallGame_perfectRecall :
     recallGame.information.PerfectRecall :=
@@ -170,7 +170,7 @@ theorem historyLaws (horizon : ℕ) :
       { law | ∃ mixed : Profile recallGame.strategicSignature.mixed,
         recallGame.information.runMixed mixed horizon = law } :=
   recallGame.kuhn_historyLaws
-    recallGame_actsOnce recallGame_perfectRecall horizon
+    recallGame_perfectRecall horizon
 
 /-- The language-facing utility corollary retains arbitrary, nonconstant
 history-dependent utility. -/

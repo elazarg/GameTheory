@@ -58,7 +58,7 @@ theorem isNash_iff_mixedGain_nonpos (mixedProfile : Profile G.form.sig.mixed) :
     intro who replacement
     rw [euPreference_apply, GameForm.mixed_play_update,
       expectedUtility_bind]
-    refine expect_le_of_forall replacement _ _ fun action _ => ?_
+    refine FinDist.expect_le_of_forall replacement _ _ fun action _ => ?_
     exact sub_nonpos.mp (hgain who action)
 
 /-- The aggregate positive pure-deviation gain at a mixed profile. -/
@@ -165,7 +165,7 @@ theorem isεNash_of_mixedImprovement_le
   rw [isεNash_iff]
   intro who replacement
   rw [GameForm.mixed_play_update, expectedUtility_bind]
-  refine expect_le_of_forall replacement _ _ fun action _ => ?_
+  refine FinDist.expect_le_of_forall replacement _ _ fun action _ => ?_
   have hgain := G.mixedGain_le_of_mixedImprovement_le hε who action
   unfold mixedGain at hgain
   linarith

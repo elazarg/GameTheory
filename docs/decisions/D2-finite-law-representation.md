@@ -1,6 +1,6 @@
 # D2: finite-law representation
 
-- **Status:** adopted for the v1 finite core; Phase 2 kill tests passed
+- **Status:** adopted for the baseline finite core; Phase 2 kill tests passed
 - **Date:** 2026-07-22, amended 2026-07-30
 - **Evidence:** EXP-003, EXP-004, EXP-006, EXP-007; post-decision stress
   EXP-030
@@ -21,11 +21,8 @@ Candidate B's dependent product is explicitly routed through Candidate A's PMF
 implementation in `D2/Interop.lean`; it is measured negative interoperability
 evidence, not an independent Finsupp dependent-product implementation.
 
-Candidate A adapts proof ideas from the pinned v1
-`Math/FiniteProbabilityMassFunction.lean`,
-`Math/PMFProduct/Basic.lean`, and
-`Math/ProbabilityMassFunction/Simplex.lean` at `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
-The snapshot is not imported.
+Candidate A tests the finite-support PMF operations, dependent products,
+expectation laws, and simplex boundary needed by the stable probability API.
 
 ## Measurements
 

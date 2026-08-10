@@ -7,6 +7,7 @@ to the shared utility-free form and equilibrium predicate.
 
 import GameTheory.Core.Utility
 import GameTheory.Evolutionary.Basic
+import GameTheory.Evolutionary.Mixed
 
 noncomputable section
 
@@ -25,11 +26,11 @@ def opponent : Fin 2 → Fin 2
 
 /-- The deterministic two-player form used to present a symmetric encounter. -/
 @[reducible]
-def symmetricForm (S : Type uS) : GameForm (Fin 2) where
-  sig :=
+def symmetricForm (S : Type uS) : GameForm (Fin 2) :=
+  GameForm.deterministic
     { Strategy := fun _ => S
       Outcome := Fin 2 → S }
-  play profile := FinDist.pure profile
+    fun profile => profile
 
 /-- The orientation-sensitive utility induced by a population payoff kernel. -/
 def symmetricUtility (payoff : S → S → ℝ) :
@@ -53,5 +54,15 @@ theorem IsESS.isNash_symmetric {payoff : S → S → ℝ} {resident : S}
   fin_cases who <;>
     simpa [symmetricForm, symmetricUtility, residentProfile, opponent] using
       h.1 replacement
+
+/-- A mixed-mutation ESS is Nash in the symmetric encounter game whose pure
+strategies are finite population laws. -/
+theorem IsMixedESS.isNash_symmetric
+    {payoff : S → S → ℝ} {resident : FinDist S}
+    (h : IsMixedESS payoff resident) :
+    IsNash (symmetricForm (FinDist S))
+      (euPreference (symmetricUtility (mixedPayoff payoff)))
+      (residentProfile resident) :=
+  IsESS.isNash_symmetric h
 
 end GameTheory.Evolutionary

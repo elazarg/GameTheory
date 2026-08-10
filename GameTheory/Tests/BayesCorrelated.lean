@@ -87,4 +87,49 @@ theorem outcomeLaw_isBayesCorrelatedEq :
   information.isBayesCorrelatedEq_outcomeLaw_of_isNash
     matchingPlan matchingPlan_isNash
 
+/-- Recommend the action opposite the true type. The type marginal remains
+correct, but following the recommendation is strictly suboptimal. -/
+def mismatchingPlan : Profile game.signature :=
+  fun _ ownType => !ownType
+
+def mismatchingRecommendation : game.RecommendationLaw :=
+  game.strategyRecommendationLaw mismatchingPlan
+
+theorem mismatchingRecommendation_isBayesPlausible :
+    game.IsBayesPlausible mismatchingRecommendation :=
+  game.strategyRecommendationLaw_isBayesPlausible mismatchingPlan
+
+def flipDeviation : game.ObedienceDeviation 0 :=
+  fun _ recommended => !recommended
+
+theorem mismatchingRecommendation_recommendedValue :
+    game.recommendedValue mismatchingRecommendation 0 = 0 := by
+  unfold BayesianGame.recommendedValue mismatchingRecommendation
+    BayesianGame.strategyRecommendationLaw
+  rw [FinDist.expect_map]
+  convert FinDist.expect_const game.prior 0 using 1
+  apply FinDist.expect_congr
+  intro types _
+  simp [mismatchingPlan, BayesianGame.actionsOf]
+
+theorem mismatchingRecommendation_deviatingValue :
+    game.deviatingValue mismatchingRecommendation 0 flipDeviation = 1 := by
+  unfold BayesianGame.deviatingValue mismatchingRecommendation
+    BayesianGame.strategyRecommendationLaw
+  rw [FinDist.expect_map]
+  convert FinDist.expect_const game.prior 1 using 1
+  apply FinDist.expect_congr
+  intro types _
+  simp [game, mismatchingPlan, flipDeviation,
+    BayesianGame.actionsOf, BayesianGame.applyObedienceDeviation]
+
+/-- Bayes plausibility alone does not imply obedience. -/
+theorem mismatchingRecommendation_not_isBayesCorrelatedEq :
+    ¬ game.IsBayesCorrelatedEq mismatchingRecommendation := by
+  rintro ⟨_, obedient⟩
+  have hdeviation := obedient 0 flipDeviation
+  rw [mismatchingRecommendation_deviatingValue,
+    mismatchingRecommendation_recommendedValue] at hdeviation
+  norm_num at hdeviation
+
 end GameTheory.Tests.BayesCorrelated

@@ -35,21 +35,16 @@ jobs:
           lint: false
           use-mathlib-cache: true
 
-      # Phase 0 and the full coverage source/freshness audit intentionally
-      # require the ignored, pinned v1 evidence snapshot.  A clean checkout
-      # can still verify every relationship recorded in the tracked index, but
-      # the source-backed checks remain explicit local release-gate work.
+      # Source-level checks stay fast for local iteration. CI additionally
+      # exercises the intentionally expensive compiler reachability probes.
       - name: Verify Phase 1 architecture measurements
         run: ./scripts/phase1-audit.ps1 -VerifyExpected
 
       - name: Verify Phase 2 architecture measurements and reachability probes
-        run: ./scripts/phase2-audit.ps1 -VerifyExpected
+        run: ./scripts/phase2-audit.ps1 -VerifyExpected -DeepReachability
 
       - name: Verify Phase 3 architecture measurements and reachability probes
-        run: ./scripts/phase3-audit.ps1 -VerifyExpected
-
-      - name: Verify tracked coverage relationships (not the full snapshot gate)
-        run: ./scripts/coverage-audit.ps1 -TrackedIndexOnly -VerifyExpected
+        run: ./scripts/phase3-audit.ps1 -VerifyExpected -DeepReachability
 
       - name: Verify build and audits do not mutate tracked files
         run: git diff --exit-code

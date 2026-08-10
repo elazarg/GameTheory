@@ -64,7 +64,7 @@ example : terminalActive.terminal terminalActive.init := trivial
 
 example : terminalActive.active terminalActive.init () := trivial
 
-/-- This machine-refutes the v1 claim that every terminal local legal-move
+/-- This machine-refutes the claim that every terminal local legal-move
 type is a singleton.  Terminal execution still stops by construction. -/
 theorem terminal_choice_not_subsingleton :
     ¬ Subsingleton (terminalModel.Choice () ()) := by

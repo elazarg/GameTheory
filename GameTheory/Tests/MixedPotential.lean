@@ -20,9 +20,8 @@ def signature : GameSignature (Fin 2) where
   Outcome := Bool × Bool
 
 @[reducible]
-def form : GameForm (Fin 2) where
-  sig := signature
-  play profile := FinDist.pure (profile 0, profile 1)
+def form : GameForm (Fin 2) :=
+  GameForm.deterministic signature fun profile => (profile 0, profile 1)
 
 def common (outcome : Bool × Bool) : ℝ :=
   if outcome.1 = outcome.2 then 1 else 0
@@ -53,16 +52,16 @@ theorem exactPotential : IsExactPotential game.form game.utility potential := by
 
 /-- The expected coordination potential is genuinely nonconstant under mixed
 play: randomizing one coordinate against `false` gives one half. -/
-theorem mixedPotential_half : game.mixedPotential potential halfMixed = 1 / 2 := by
-  rw [halfMixed, game.mixedPotential_update, fairCoin, FinDist.expect_mix,
+theorem mixedPotential_half : game.form.mixedPotential potential halfMixed = 1 / 2 := by
+  rw [halfMixed, game.form.mixedPotential_update, fairCoin, FinDist.expect_mix,
     FinDist.expect_pure, FinDist.expect_pure, purify_update, purify_update,
-    game.mixedPotential_purify, game.mixedPotential_purify]
+    game.form.mixedPotential_purify, game.form.mixedPotential_purify]
   norm_num [potential, common, allFalse, Profile.update_same, Profile.update_of_ne]
 
 /-- The generic mixed exact-potential theorem specializes to the nonconstant
 coordination fixture. -/
 theorem mixedExactPotential :
-    IsExactPotential game.form.mixed game.utility (game.mixedPotential potential) :=
+    IsExactPotential game.form.mixed game.utility (game.form.mixedPotential potential) :=
   UtilityGame.IsExactPotential.mixed exactPotential
 
 /-- Replacing the fair coin by the pure coordinated action raises both
@@ -72,9 +71,9 @@ theorem fair_to_coordinated_diff :
         (game.form.mixed.play
           (Profile.update halfMixed 0 (FinDist.pure false))) -
       expectedUtility game.utility 0 (game.form.mixed.play halfMixed) =
-    game.mixedPotential potential
+    game.form.mixedPotential potential
         (Profile.update halfMixed 0 (FinDist.pure false)) -
-      game.mixedPotential potential halfMixed :=
+      game.form.mixedPotential potential halfMixed :=
   UtilityGame.IsExactPotential.mixed_pure_diff exactPotential halfMixed 0 false
 
 end GameTheory.Tests.MixedPotential

@@ -1,9 +1,9 @@
 /-
 # EXP-008: the Bayesian interim-deviation scope probe
 
-Phase 0 recorded that the pinned v1 snapshot contains no occurrence of
-"interim": its `BayesNash` is an `Iff.rfl` wrapper around ex-ante strategic
-Nash. Phase 2 therefore has to produce a genuinely *interim*, type-dependent
+The baseline ex-ante formulation contains no interim deviation: its
+`BayesNash` is an `Iff.rfl` wrapper around strategic Nash. Phase 2 therefore
+has to produce a genuinely *interim*, type-dependent
 deviation test rather than rename the ex-ante theorem.
 
 This is a scope probe, not a public API. It answers one question: does an

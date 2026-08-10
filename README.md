@@ -2,25 +2,22 @@
 
 Greenfield Lean 4 game-theory library built on Mathlib.
 
-The foundational architecture spike in
-[`docs/GameTheory2Design.md`](docs/GameTheory2Design.md) has passed Phases 0-3.
-The scoped Phase 4 static harvest is complete, and Phase 5's named queue is
-complete while its method remains a standing design-stress protocol. The active
-coverage and expansion schedule is
-[`docs/PostArchitectureDeliveryPlan.md`](docs/PostArchitectureDeliveryPlan.md);
-its honest pinned-v1 baseline is
-[`docs/V1CoverageLedger.md`](docs/V1CoverageLedger.md). User-facing parity is
-tracked separately in
-[`docs/V1CapabilityMatrix.md`](docs/V1CapabilityMatrix.md): exact declaration
-accounting is regression evidence, while release usefulness is judged by
-mature workflows and cannot be bought with unrelated beyond-v1 breadth.
+The governing architecture is
+[`docs/GameTheory2Design.md`](docs/GameTheory2Design.md). Current delivery
+status is recorded in [`docs/DeliveryLedger.md`](docs/DeliveryLedger.md), the
+next dependency-gated work in
+[`docs/PostArchitectureDeliveryPlan.md`](docs/PostArchitectureDeliveryPlan.md),
+and recognizable public workflows in
+[`docs/CapabilityMatrix.md`](docs/CapabilityMatrix.md). The disposition of the
+repository-wide review is indexed in
+[`docs/ReviewClosureLedger.md`](docs/ReviewClosureLedger.md).
 
 ```text
 GameTheory/Probability   finite-support probability laws (FinDist)
 GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          deviations, equilibrium and response concepts, static
                          game theory, strict-dominance solvability, approximate
-                         Nash, mixed and pure rationalizability, Bayesian
+                         Nash, correlated and pure rationalizability, Bayesian
                          recommendation/obedience, correlated conditional
                          obedience and relative dominated-support exclusion,
                          finite no-regret learning, concrete reindexing and
@@ -123,16 +120,11 @@ stay outside the root for the separate reasons recorded in their modules.
 The intrinsic language is likewise opt-in: its native product and closed-loop
 semantics precede any temporal compiler, while mixed strategies, utility,
 perfect recall, and Kuhn equivalence remain separately gated.
-Per D28 and D31, `GameTheory.Languages.FOSG.Values`,
-`GameTheory.Languages.FOSG.Kuhn`, and
+`GameTheory.Languages.FOSG.Values`, `GameTheory.Languages.FOSG.Kuhn`, and
 `GameTheory.Languages.Intrinsic.Solution` are intentional explicit opt-in
 leaves. They are therefore not imported by their language syntax roots.
 Examples and Tests compile in the default library target but are not
 public-root imports.
-
-The ignored `reference/GameTheory-v1/` directory is an exact source snapshot of
-the previous library at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
-It is evidence for design experiments, not a dependency or migration source.
 
 ## Environment
 
@@ -147,22 +139,20 @@ Mathlib build artifacts.
 
 ```text
 lake build
-pwsh -NoProfile -File scripts/phase0-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase1-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
-pwsh -NoProfile -File scripts/coverage-audit.ps1 -VerifyExpected
 ```
 
 `lake build` compiles every module, including examples, tests, and experiments.
-The phase audits re-check the architecture constraints. Later Phase 4/5 probes
-were folded into the historically named Phase 2/3 scripts. The coverage audit
-owns the separate pinned-v1 accounting gate: it checks exclusive file
-ownership, a current generated declaration index, and exact reviewed ledger
-rows before any `v1-accounted` claim.
+The default structural audits are fast, source-level implementation-loop
+checks. Release and CI gates additionally run the compiler reachability suite:
 
-Hosted CI runs the full build, the self-contained Phase 1-3 audits, and the
-tracked-index structural coverage checks on a clean checkout. Phase 0 and the
-coverage audit's source-ownership and index-freshness checks additionally
-require the exact ignored `reference/GameTheory-v1/` snapshot; they remain
-explicit local release gates until that pinned evidence is provisioned in CI.
+```text
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected -DeepReachability
+pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected -DeepReachability
+```
+
+The deep mode launches many independent Lean processes and is intentionally
+not part of routine iteration. Hosted CI runs it after the full build on a
+clean checkout.

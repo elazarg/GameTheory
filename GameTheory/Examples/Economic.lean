@@ -6,8 +6,7 @@ game compiles through `TableGame`; public equilibrium statements use the
 canonical semantic `IsNash` predicate.
 
 The discrete Cournot and Traveler tables deliberately expose all of their pure
-equilibria. This corrects stronger prose claims in the pinned v1 examples that
-are refuted by exhaustive enumeration of those same payoff tables.
+equilibria, as verified by exhaustive enumeration.
 -/
 
 import GameTheory.Finite.Correctness
@@ -44,8 +43,7 @@ instance (i : Bool) : DecidableEq (dictatorAction i) := by
   cases i <;> simp [dictatorAction] <;> infer_instance
 
 /-- A dictator chooses the division while the receiver is strategically
-passive. Unlike the pinned presentation, the receiver is not assigned fake
-division choices. -/
+passive and has exactly one action. -/
 def dictatorGame : TableGame Bool where
   Action := dictatorAction
   actionFintype := inferInstance
@@ -152,7 +150,7 @@ def cournotProfit : Quantity → Quantity → ℚ
   | .three, .two => 0
   | .three, .three => 0
 
-/-- The three-quantity Cournot duopoly from the pinned example. -/
+/-- A three-quantity Cournot duopoly. -/
 def cournotDuopoly : TableGame (Fin 2) where
   Action _ := Quantity
   actionFintype _ := inferInstance
@@ -173,8 +171,7 @@ theorem cournotDuopoly_bothQuantityTwo_isNash :
   rw [← TableGame.isNash_eq_true_iff]
   decide
 
-/-- Exhaustive enumeration refutes the pinned prose claim that `(2, 2)` is
-the unique pure equilibrium of this particular table. -/
+/-- This particular table has exactly three pure Nash equilibria. -/
 theorem cournotDuopoly_nashCount :
     cournotDuopoly.enumerateNash.card = 3 := by
   decide

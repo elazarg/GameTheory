@@ -4,12 +4,8 @@
 An affine maximizer chooses an alternative maximizing positively weighted
 reported welfare plus an alternative bias, then charges Clarke externality
 payments.  Its output is the canonical capability-free quasilinear direct
-mechanism, whose DSIC predicate is itself canonical Bayesian incentive
-compatibility.
-
-The construction and proofs are adapted from
-`GameTheory/Mechanism/Bayesian/AffineMaximizer.lean` in the pinned v1 snapshot
-at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+mechanism, whose DSIC predicate uses the library's ordinary dominant-strategy
+surface.
 -/
 
 import GameTheory.Mechanism.QuasiLinear

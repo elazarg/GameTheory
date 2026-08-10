@@ -11,8 +11,9 @@ the validated core, protocol, finite, analysis, repeated, and scoped language
 layers. Current work is post-architecture delivery: close the frozen
 obligations, then recover mature theorem families in dependency-gated waves.
 The governing architecture is `docs/GameTheory2Design.md`; the mutable delivery
-order is `docs/PostArchitectureDeliveryPlan.md`, and current pinned-v1 coverage
-is `docs/V1CoverageLedger.md`.
+order is `docs/PostArchitectureDeliveryPlan.md`, current status is
+`docs/DeliveryLedger.md`, and public workflows are in
+`docs/CapabilityMatrix.md`.
 
 ## Sources of truth
 
@@ -24,18 +25,10 @@ matter:
 - experiment-gated decisions require a decision record with measurements;
 - disproof conditions override architectural preference.
 
-For delivery status, use the post-architecture plan and coverage ledger rather
+For delivery status, use the post-architecture plan and delivery ledger rather
 than inferring completion from a phase name, module count, or nearby theorem.
 Update the owning ledger row in the same commit as the evidence that changes
 its status.
-
-The ignored `reference/GameTheory-v1/` tree is an exact source snapshot at
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`. It is empirical evidence only:
-it is not a dependency, need not compile, must not be edited, and must never be
-imported by new code. After the relevant domain gate passes, mine its theorem
-statements, proof ideas, helpers, and examples aggressively with pinned-path
-attribution. Reuse mathematics, not compatibility wrappers, duplicate
-semantics, or obsolete transport machinery.
 
 ## Tempo: move fast, depth first
 
@@ -46,11 +39,10 @@ semantics, or obsolete transport machinery.
    shortest experiment that can falsify a decision, resolve the failure, and
    continue until the dependency path is trustworthy. Do not create breadth to
    make an unvalidated foundation look productive.
-2. **Then steal the theorems.** After a gate passes, mine the pinned v1 tree for
-   theorem statements, proof ideas, helper lemmas, and test examples. Port or
-   adapt them instead of reproving known mathematics from scratch. "Steal"
-   means reuse aggressively with attribution to the pinned path/commit; it does
-   not mean preserve a bad API, compatibility surface, or unsound statement.
+2. **Then recover theorem depth.** After a gate passes, reuse established proof
+   ideas and standard mathematical statements instead of reproving known
+   mathematics gratuitously. Do not preserve bad APIs, compatibility surfaces,
+   duplicate semantics, or unsound statements.
 3. **Parallelize routine recovery.** Partition independent theorem families or
    leaf modules among agents when integration boundaries are already fixed.
    Give each task a narrow file/theorem scope and an explicit target API so
@@ -83,9 +75,9 @@ current design, not the only surviving account of how it was chosen.
 
 ## Working discipline
 
-1. Work in dependency-gated order. Do not port domain breadth before the
-   relevant architecture gate passes; after it passes, harvest the matching v1
-   theorem inventory quickly.
+1. Work in dependency-gated order. Do not add domain breadth before the
+   relevant architecture gate passes; after it passes, recover the matching
+   theorem family quickly.
 2. For an experiment-gated choice, log the run in `docs/ExperimentLog.md`, then
    state the competing designs, representative slice, measurements, kill
    condition, experiment IDs, and result under `docs/decisions/` before
@@ -129,11 +121,10 @@ current design, not the only surviving account of how it was chosen.
 ```text
 docs/GameTheory2Design.md       architecture RFC
 docs/PostArchitectureDeliveryPlan.md active delivery waves and domain gates
-docs/V1CoverageLedger.md        pinned-v1 family and flagship status
+docs/DeliveryLedger.md          successor family and gate status
+docs/CapabilityMatrix.md        recognizable public workflows
 docs/ExperimentLog.md           concise chronological evidence ledger
 docs/decisions/                 measured architecture decisions
-reference/README.md            reference-snapshot contract
-reference/GameTheory-v1/       ignored old GameTheory/ and Math/ trees
 GameTheory/                     current public and opt-in Lean modules
 GameTheoryMath/                 independently reusable mathematics
 lakefile.lean                   package and `GameTheory` library targets
@@ -158,11 +149,10 @@ lake env lean --version
 ```
 
 Once source exists, warnings are failures and the relevant target must build
-without placeholders. Keep `.lake/`, the pinned reference snapshot, and local
-tool state ignored.
+without placeholders. Keep `.lake/` and local tool state ignored.
 
 ## Scope and repository hygiene
 
-Preserve unrelated user changes. Do not modify the pinned reference, generated
-dependency trees, or `lake-manifest.json` by hand. Keep commits focused on one
+Preserve unrelated user changes. Do not modify generated dependency trees or
+`lake-manifest.json` by hand. Keep commits focused on one
 decision or vertical slice, and report the exact validation performed.

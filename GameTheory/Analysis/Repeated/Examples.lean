@@ -137,7 +137,7 @@ theorem cooperationPayoff_strictly_individuallyRational :
   simpa [cooperationPayoff, UtilityGame.opponentMinmaxVector] using
     opponentMinmax_lt_cooperation who
 
-/-- The flagship instantiated at a familiar payoff that is feasible but not a
+/-- The theorem instantiated at a familiar payoff that is feasible but not a
 one-shot equilibrium payoff. -/
 theorem prisonersDilemma_cooperation_approached_by_repeatedNash :
     ∀ ε > 0, ∃ threshold : ℝ,

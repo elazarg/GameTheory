@@ -63,16 +63,16 @@ namespace GameTheory.Tests.EFGSubgamePerfect
 
 open GameTheory GameTheory.Languages GameTheory.Protocol
 
-/-- The EFG surface reduces directly to the canonical well-founded Protocol
+/-- The EFG surface reduces directly to the canonical historywise Protocol
 equivalence on a two-decision perfect-recall game. -/
-theorem oneShotDeviation_iff_subgamePerfect
+theorem oneShotDeviation_iff_historywiseOptimal
     (profile : Profile EFGKuhn.recallGame.strategicSignature)
     (utility : EFGKuhn.recallGame.History → Unit → ℝ) :
-    EFGKuhn.recallGame.IsSubgamePerfect
+    EFGKuhn.recallGame.IsHistorywiseOptimal
         twice_wellFoundedPlay profile utility ↔
       EFGKuhn.recallGame.HasNoProfitableOneShotDeviation
         twice_wellFoundedPlay profile utility :=
-  EFGKuhn.recallGame.isSubgamePerfect_iff_hasNoProfitableOneShotDeviation
+  EFGKuhn.recallGame.isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     EFGKuhn.recallGame_actsOnce twice_wellFoundedPlay profile utility
 
 end GameTheory.Tests.EFGSubgamePerfect

@@ -7,8 +7,8 @@ potential theory then supplies pure Nash existence, finite improvement, and
 weak acyclicity under exactly the finite-profile assumptions those conclusions
 need.
 
-Mathematical provenance: `reference/GameTheory-v1/GameTheory/Congestion/Rosenthal.lean`
-at pinned commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+Primary reference: R. W. Rosenthal, “A Class of Games Possessing Pure-Strategy
+Nash Equilibria,” *International Journal of Game Theory* 2 (1973).
 -/
 
 import GameTheory.Congestion.Basic

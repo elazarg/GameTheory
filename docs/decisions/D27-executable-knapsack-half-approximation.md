@@ -40,7 +40,7 @@ factor of two of `solveList` on the same explicit list.
 
 | Measure | EXP-056 result |
 |---|---|
-| pinned inventory | nine fractional rows plus 21 greedy/approximation rows; the predecessor never proves fractional-greedy optimality and its final theorem takes that fact as a premise |
+| representative inventory | nine fractional rows plus 21 greedy/approximation rows; the predecessor never proves fractional-greedy optimality and its final theorem takes that fact as a premise |
 | Mathlib overlap | executable merge sort and permutation/pairwise lemmas are reusable; no fractional-knapsack optimality theorem was found |
 | executable assumptions | explicit duplicate-free list and strictly positive natural weights; no ambient `Fintype`, real division, or caller-trusted order |
 | returned object | the better of an actual greedy-prefix `Finset` and an actual highest-value feasible singleton `Finset` |

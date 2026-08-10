@@ -27,7 +27,7 @@ predecessor's exact skip/take recurrence while removing its Boolean-coordinate
 updates, global finite-universe wrapper, and noncomputable public execution
 entry point.  Design 3 remains a useful reference optimizer but does not test
 the recursive correctness chain.  Design 4 is the honest route to a complexity
-claim; v1 supplied neither memoization nor a cost theorem, so it is not a
+claim; the baseline supplied neither memoization nor a cost theorem, so it is not a
 prerequisite for recovering the mathematical optimum result.
 
 The naming distinction is substantive.  When every item fits, the recurrence
@@ -49,7 +49,7 @@ decidable equality.
 
 | Measure | EXP-054 result |
 |---|---|
-| pinned inventory | 71 declarations: 31 real/mechanism, 19 natural solver, 21 greedy/approximation |
+| representative inventory | 71 declarations: 31 real/mechanism, 19 natural solver, 21 greedy/approximation |
 | predecessor hazards | 45 raw `Function.update` occurrences; 19 noncomputable public definitions |
 | predecessor execution seam | recursive kernel computes, but both finite-universe public wrappers are noncomputable |
 | worst-case recurrence | `C(n) = 2^(n + 1) - 1` solver calls when every item fits; no memoization |

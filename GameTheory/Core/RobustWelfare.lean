@@ -6,9 +6,8 @@ finite-law external-regret characterization of approximate coarse correlated
 equilibrium.  Keeping the bridge separate lets `Core.Welfare` remain below
 learning while the public Core root still exports the robust result.
 
-Mathematical provenance: theorem statements and proof structure are recovered
-from `reference/GameTheory-v1/GameTheory/Concepts/Welfare/Smoothness.lean` at
-pinned commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+Primary reference: T. Roughgarden, “Intrinsic Robustness of the Price of
+Anarchy,” STOC 2009.
 -/
 
 import GameTheory.Core.Learning
@@ -34,7 +33,8 @@ the statement independent of any finiteness assumption on profiles or
 outcomes. -/
 theorem IsSmooth.epsilonCoarseCorrelated_bound [Fintype ι] [DecidableEq ι]
     {G : UtilityGame ι} {lam mu ε : ℝ} (hsmooth : G.IsSmooth lam mu)
-    {law : FinDist (Profile G.form.sig)} (hlaw : G.IsεCoarseCorrelatedEq ε law)
+    {law : FinDist (Profile G.form.sig)}
+    (hlaw : IsεCoarseCorrelatedEq G.form G.utility ε law)
     (target : Profile G.form.sig) :
     lam * G.socialWelfare target ≤
       (1 + mu) * G.expectedSocialWelfare law + (Fintype.card ι) * ε := by

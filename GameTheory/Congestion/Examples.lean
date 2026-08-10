@@ -5,9 +5,6 @@ The canonical routing examples are expressed through `CongestionGame` and its
 existing deterministic game form.  Their Nash statements therefore use the
 library-wide `IsNash` predicate and `Profile.update`, rather than a separate
 routing-game semantics.
-
-Mathematical provenance: `reference/GameTheory-v1/GameTheory/Congestion/Examples.lean`
-at pinned commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
 import GameTheory.Congestion.AffinePoA

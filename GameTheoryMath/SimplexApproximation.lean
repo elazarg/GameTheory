@@ -1,11 +1,7 @@
 /-
 # Finite simplex approximation
 
-Generic denominator-clearing lemmas for finite probability vectors. The
-construction and proof inventory are adapted from
-`reference/GameTheory-v1/Math/SimplexApproximation.lean` at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; EXP-031 records why the
-game-independent result survives while its old global namespace does not.
+Generic denominator-clearing lemmas for finite probability vectors.
 -/
 
 import Mathlib.Analysis.SpecificLimits.Basic

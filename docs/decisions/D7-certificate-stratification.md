@@ -1,6 +1,6 @@
-# D7: no certificate stratification in v1
+# D7: no certificate stratification in the baseline
 
-- **Status:** rejected for v1; reopenable on a named transfer that the shared
+- **Status:** rejected for the baseline; reopenable on a named transfer that the shared
   target cannot carry
 - **Date:** 2026-07-28
 - **Experiment IDs:** EXP-009, EXP-014, EXP-015
@@ -60,7 +60,7 @@ certificate could still earn its place, and no such transfer exists here yet.
 
 ## Result
 
-Reject for v1. Keep compilation as functions and named evaluation theorems.
+Reject for the baseline. Keep compilation as functions and named evaluation theorems.
 Reopen only on a concrete transfer that the shared static form provably cannot
 carry, and measure that transfer against its direct bridge before adding a
 level.
@@ -80,7 +80,7 @@ appeared and been examined, and the rejection stands for a stronger reason.
 
 **Experiment ID:** EXP-019.
 
-The pinned snapshot proves the behavioral-from-mixed direction of the
+The comparison corpus proves the behavioral-from-mixed direction of the
 strategy-representation equivalence not from recall but from three conditions
 about reach mass, with recall demoted to sufficient. Structurally those are named
 adequacy certificates, and restating the theorem over them would have been the

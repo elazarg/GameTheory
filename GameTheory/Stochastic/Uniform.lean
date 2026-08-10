@@ -3,11 +3,14 @@
 
 Uniformity quantifies one behavioral profile over all sufficiently long finite
 horizons. It needs neither an infinite-path law nor a new equilibrium engine.
-No general existence theorem is claimed here.
+The payoff-level property may choose a new profile for each accuracy, unlike
+`UtilityGame.IsUniformEquilibrium`, which is a property of one repeated
+profile. No general existence theorem is claimed here.
 -/
 
 import GameTheory.Stochastic.FiniteHorizon
 import GameTheory.Core.Approximate
+import GameTheoryMath.Eventually
 
 noncomputable section
 
@@ -51,10 +54,10 @@ theorem IsεHorizonNash.mono [DecidableEq ι] {initial : G.State}
     (utility := G.horizonUtility initial horizon) h hepsilon
 
 /-- One profile is epsilon-Nash at every sufficiently long finite horizon. -/
-def IsUniformεEquilibrium [DecidableEq ι] (initial : G.State)
+abbrev IsUniformεEquilibrium [DecidableEq ι] (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (epsilon : ℝ)
     (profile : G.BehaviorProfile initial) : Prop :=
-  ∃ threshold : ℕ, ∀ horizon, threshold ≤ horizon →
+  GameTheoryMath.EventuallyAtAll fun horizon =>
     G.IsεHorizonNash initial horizon epsilon profile
 
 /-- A uniform equilibrium payoff is approximated by one long-horizon
@@ -73,20 +76,15 @@ theorem IsUniformεEquilibrium.mono [DecidableEq ι] {initial : G.State}
     {profile : G.BehaviorProfile initial}
     (h : G.IsUniformεEquilibrium initial epsilon profile)
     (hepsilon : epsilon ≤ epsilon') :
-    G.IsUniformεEquilibrium initial epsilon' profile := by
-  obtain ⟨threshold, hthreshold⟩ := h
-  exact ⟨threshold, fun horizon hhorizon =>
+    G.IsUniformεEquilibrium initial epsilon' profile :=
+  GameTheoryMath.EventuallyAtAll.mono h fun horizon hhorizon =>
     IsεNash.mono (F := G.horizonForm initial horizon)
       (utility := G.horizonUtility initial horizon)
-      (hthreshold horizon hhorizon) hepsilon⟩
+      hhorizon hepsilon
 
-/-- A proof-facing certificate for a uniform equilibrium payoff.  At every
+/-- A proof-facing certificate for a uniform equilibrium payoff. At every
 positive accuracy it supplies one profile whose on-path payoff is close to the
-claimed value and whose unilateral deviations are capped by that value.
-
-This is the elementary certificate calculus from the active sibling's
-`Concepts/Stochastic/Uniform.lean`, adapted to the canonical Protocol horizon
-form; it does not use that branch's unproved existence claim. -/
+claimed value and whose unilateral deviations are capped by that value. -/
 def HasUniformDeviationCapConstructor [DecidableEq ι] (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (value : ι → ℝ) : Prop :=
   ∀ delta : ℝ, 0 < delta →

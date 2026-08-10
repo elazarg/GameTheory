@@ -2,14 +2,11 @@
 # The finite revelation principle
 
 Any pure Bayes-Nash plan of a canonical `BayesianGame` induces a direct
-mechanism in which truthful reporting is Bayes-Nash.  The construction and
-proof adapt the pinned v1 evidence at
-`GameTheory/Mechanism/Bayesian/RevelationPrinciple.lean`, commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`, while removing its duplicate
-general-mechanism and Bayesian-equilibrium predicates.
+mechanism in which truthful reporting is Bayes-Nash, using the ordinary
+Bayesian game and equilibrium predicates.
 -/
 
-import GameTheory.Languages.BayesianMechanism
+import GameTheory.Mechanism.BayesianIncentives
 
 noncomputable section
 

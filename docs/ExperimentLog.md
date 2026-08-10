@@ -11,7 +11,7 @@ becomes difficult to scan.
 
 | ID | Date | RFC decision | Question/slice | Outcome | Artifacts |
 |---|---|---|---|---|---|
-| EXP-001 | 2026-07-22 | D0 / Phase 0 | Which semantic layers earn shared infrastructure in v1? | Narrows | [`Phase0ArchitectureEvidence.md`](Phase0ArchitectureEvidence.md); [`decisions/D0-semantic-architecture.md`](decisions/D0-semantic-architecture.md); [`phase0-audit.ps1`](../scripts/phase0-audit.ps1) |
+| EXP-001 | 2026-07-22 | D0 / Phase 0 | Which semantic layers earn shared infrastructure? | Narrows | [`Phase0ArchitectureEvidence.md`](Phase0ArchitectureEvidence.md); [`decisions/D0-semantic-architecture.md`](decisions/D0-semantic-architecture.md) |
 | EXP-002 | 2026-07-22 | D1 / Phase 1 | Indexed signature parameter or bundled signature field? | Narrows | [`decisions/D1-signature-ownership.md`](decisions/D1-signature-ownership.md); `GameTheory/Experimental/Phase1/D1/` |
 | EXP-003 | 2026-07-22 | D2 / Phase 1 | PMF-with-finite-support or normalized `Finsupp`? | Narrows | [`decisions/D2-finite-law-representation.md`](decisions/D2-finite-law-representation.md); `GameTheory/Experimental/Phase1/D2/` |
 | EXP-004 | 2026-07-23 | D1/D2 / Phase 1 review | Do the original metrics and simplex slice survive adversarial review? | Narrows | [`Phase1CoreCompetition.md`](Phase1CoreCompetition.md); [`phase1-audit.ps1`](../scripts/phase1-audit.ps1) |
@@ -22,7 +22,7 @@ becomes difficult to scan.
 | EXP-009 | 2026-07-26 | D6/D7 / Phase 3 input | Does the open-game context hint at a better sequential interface, and is its carried equilibrium derivable? | Narrows | read-only audit of the pinned `Languages/OpenGame/` and `Bridges/OpenGame_EFG.lean` |
 | EXP-010 | 2026-07-27 | D6 / Phase 3 | Can a general-state execution protocol express terminal play and chance without an impossible total chooser or dummy probability data? | Supports | `GameTheory/Protocol/Execution.lean`; `GameTheory/Tests/Execution.lean` |
 | EXP-011 | 2026-07-27 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | Supports | `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Information.lean` |
-| EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Decides D6 | [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md); `GameTheory/Tests/Candidates.lean`; `GameTheory/Tests/Simultaneous.lean` |
+| EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for the baseline? | Decides D6 | [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md); `GameTheory/Tests/Candidates.lean`; `GameTheory/Tests/Simultaneous.lean` |
 | EXP-013 | 2026-07-27 | D6/D7 / Phase 3 | Does an assessment plus continuation express sequential rationality and one-shot deviations without a carried equilibrium? | Supports | `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Assessment.lean` |
 | EXP-014 | 2026-07-28 | D6 / Phase 3 | Can an influence diagram and a multi-round simultaneous game share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Experimental/PostArchitecture/RoundsWitness.lean` |
 | EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
@@ -66,7 +66,7 @@ becomes difficult to scan.
 | EXP-053 | 2026-08-02 | D2/D4/D5/D9/D24 / robust smoothness | Can canonical `FinDist` expected welfare lift smoothness from pure Nash to epsilon/exact CCE without another semantic layer or import cycle? | Supports; narrows to theorem-only Core bridge | `GameTheory/Probability/FinDist.lean`; `GameTheory/Core/{Welfare,RobustWelfare}.lean`; `GameTheory/Congestion/AffinePoA.lean` |
 | EXP-054 | 2026-08-02 | D4/D9/D10 / executable knapsack auction | Where is the boundary between knapsack mechanism semantics, executable dynamic programming/greedy algorithms, and correctness? | Narrows to an explicit-list exact natural solver; decides D25; mechanism and approximation remain gated | [`decisions/D25-knapsack-execution-boundary.md`](decisions/D25-knapsack-execution-boundary.md); `GameTheory/{Experimental/PostArchitecture,Mechanism}/Knapsack*` |
 | EXP-055 | 2026-08-02 | D4/D5/D9/D25 / real knapsack mechanism | Can explicit finite-set real knapsack semantics instantiate canonical VCG truthfulness without restoring the predecessor's single-parameter wrapper stack? | Supports; decides D26 | [`decisions/D26-real-knapsack-vcg-boundary.md`](decisions/D26-real-knapsack-vcg-boundary.md); `GameTheory/Mechanism/Knapsack/{Aggregate,Basic,Mechanism}.lean`; hostile witness |
-| EXP-056 | 2026-08-02 | D9/D10/D25/D26 / knapsack approximation | Can a certified executable ratio order support an actual feasible half-approximate allocation after repairing the pinned theorem's overweight-singleton defect? | Supports after narrowing to a direct integral exchange proof; decides D27 | [`decisions/D27-executable-knapsack-half-approximation.md`](decisions/D27-executable-knapsack-half-approximation.md); `GameTheory/Mechanism/Knapsack/Approximation*.lean`; hostile witness |
+| EXP-056 | 2026-08-02 | D9/D10/D25/D26 / knapsack approximation | Can a certified executable ratio order support an actual feasible half-approximate allocation after repairing the representative theorem's overweight-singleton defect? | Supports after narrowing to a direct integral exchange proof; decides D27 | [`decisions/D27-executable-knapsack-half-approximation.md`](decisions/D27-executable-knapsack-half-approximation.md); `GameTheory/Mechanism/Knapsack/Approximation*.lean`; hostile witness |
 | EXP-057 | 2026-08-02 | D6/D7/D9/D15 / FOSG observation and Kuhn surface | Does FOSG need any native observation-model/Kuhn execution layer, or only transparent named theorems over the canonical `InformationModel`? | Supports theorem-only projection; decides D28 | [`decisions/D28-fosg-kuhn-protocol-projection.md`](decisions/D28-fosg-kuhn-protocol-projection.md); `Languages/FOSG/Kuhn.lean`; same-execution hostile witness |
 | EXP-058 | 2026-08-02 | D6/D7/D15/D28 / FOSG reachable-observation facts | Which parts of the pinned reachable-observation proof machine survive once Protocol owns histories and information? | Retires the adapter; decides D29 | [`decisions/D29-fosg-reachable-observation-retirement.md`](decisions/D29-fosg-reachable-observation-retirement.md); terminal-activity and compressed-information hostile witnesses |
 | EXP-059 | 2026-08-02 | D6/D8/D14/D15/D28 / FOSG-to-EFG serialization | Can a simultaneous stochastic FOSG be serialized as a single-mover EFG while hiding within-round choices and preserving its mapped history law? | Supports explicit hidden-phase serialization; decides D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFG.lean` |
@@ -74,11 +74,12 @@ becomes difficult to scan.
 | EXP-061 | 2026-08-02 | D6/D8/D14/D15/D30 / generic explicit-order FOSG-to-EFG bridge | Can D30's validated hidden-phase construction be expressed once over the canonical FOSG/EFG APIs, with explicit finite player order and the same exact history, signal, policy, inactivity, and order laws? | Supports; promotes the stable generic bridge and completes D30's API gate | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Languages/Bridges/FOSGToEFG.lean`; generic hostile witnesses |
 | EXP-062 | 2026-08-03 | D4/D6/D7/D9 / intrinsic games ownership | Does configuration-dependent causality and closed-loop solvability earn a native intrinsic-game branch by proving a theorem or counterexample unavailable from bare Protocol without first choosing a temporal compiler? | Supports; native closed-loop and causality root approved, later compiler/mixed/utility/Kuhn layers remain gated | `GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean`; D31; focused compile, hazard, axiom, and premise-independence audits |
 | EXP-063 | 2026-08-03 | D12 / dependency maintenance | Do Lean and Mathlib 4.32.2 preserve the fixed-point dependency, trust profile, and enforced architecture boundaries? | Supports; toolchain-aligned maintained fork repinned without theorem-source change | `lean-toolchain`; `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
-| EXP-064 | 2026-08-03 | D5/D11 / repeated public monitoring | Can finite-prefix signal laws support canonical PPE and the bounded one-shot-deviation principle without an infinite-path law? | Supports; closes the public-monitoring equilibrium waist | `GameTheory/Repeated/Monitoring*.lean`; `GameTheory/Tests/MonitoringEquilibrium.lean`; [`coverage/D-REPEAT-monitoring-equilibrium.md`](coverage/D-REPEAT-monitoring-equilibrium.md) |
+| EXP-064 | 2026-08-03 | D5/D11 / repeated public monitoring | Can finite-prefix signal laws support canonical PPE and the bounded one-shot-deviation principle without an infinite-path law? | Supports; closes the public-monitoring equilibrium waist | `GameTheory/Repeated/Monitoring*.lean`; `GameTheory/Tests/MonitoringEquilibrium.lean`; [`SupportEvidenceMatrix.md`](SupportEvidenceMatrix.md) |
 | EXP-065 | 2026-08-03 | D0/D2/D4/D9 / finite contracts | Does hidden-action contract theory earn a native finite-support principal-agent branch, with an explicit outside option, rather than a one-player `GameForm` or an auction specialization? | Supports native ownership; decides D32 | [`decisions/D32-principal-agent-contract-ownership.md`](decisions/D32-principal-agent-contract-ownership.md); `GameTheory/Experimental/PostArchitecture/ContractOwnership.lean` |
 | EXP-066 | 2026-08-08 | D4/D5/D8/D9 / quasilinear mechanisms | Does weak monotonicity and its affine/Myerson consumers need a capability-free native quasilinear direct-mechanism owner, rather than overloading Groves-specific `VCGSetup` or outcome-generic `BayesianMechanism`? | Supports native ownership with canonical-IC compilation; decides D33 | [`decisions/D33-quasilinear-direct-mechanism-ownership.md`](decisions/D33-quasilinear-direct-mechanism-ownership.md); `GameTheory/Experimental/PostArchitecture/QuasiLinearMechanismOwnership.lean` |
 | EXP-072 | 2026-08-09 | D12/D22/D23 / general-sum discounted stochastic games | Can finite Fink existence use the canonical stochastic, probability, equilibrium, and fixed-point owners without the sibling's legacy closure? | Supports one-way Analysis bridge; decides D39 | [`decisions/D39-general-sum-discounted-stochastic-equilibrium.md`](decisions/D39-general-sum-discounted-stochastic-equilibrium.md); `GameTheory/Analysis/Stochastic/Fink.lean`; `GameTheoryMath/PositivePartFixedPoint.lean` |
 | EXP-074 | 2026-08-09 | D2/D4 / finite-law VNM | Can binary mixture independence yield the finite-outcome representation theorem through public `FinDist` alone? | Supports after rejecting zero-weight independence; decides D41 | [`decisions/D41-finite-law-vnm.md`](decisions/D41-finite-law-vnm.md); `GameTheory/Experimental/PostArchitecture/VNMFiniteSupport.lean`; `GameTheory/Core/VNM.lean`; `GameTheory/Tests/VNM.lean` |
+| EXP-075 | 2026-08-09 | D6 / imperfect-information subgames | Does the existing historywise optimality predicate coincide with textbook SPE when an information set crosses a candidate subtree? | Rejects the old name; decides D42 | [`decisions/D42-imperfect-information-subgames.md`](decisions/D42-imperfect-information-subgames.md); `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Tests/SubgameRoots.lean` |
 
 ## Entry template
 
@@ -99,9 +100,9 @@ but should not erase their evidence.
 ### EXP-001: Semantic architecture baseline and scope inventory
 
 - **Date / revision:** 2026-07-22, initial uncommitted repository scaffold
-- **Decision / question:** D0 and Phase 0; whether the v1 evidence supports a universal hub, coordinated branches, or a stratified hybrid at each semantic level
-- **Representative slice:** four named cross-representation transfers, a frozen cross-domain flagship list, and one concrete probe for every proposed v1 domain
-- **Evidence:** pinned `reference/GameTheory-v1/` snapshot at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; run `pwsh -NoProfile -File scripts/phase0-audit.ps1 -VerifyExpected`; interpretation and direct baselines are in [`Phase0ArchitectureEvidence.md`](Phase0ArchitectureEvidence.md)
+- **Decision / question:** D0 and Phase 0; whether the measured dependency evidence supports a universal hub, coordinated branches, or a stratified hybrid at each semantic level
+- **Representative slice:** four named cross-representation transfers, a frozen cross-domain flagship list, and one concrete probe for every proposed domain
+- **Evidence:** measurements and direct baselines recorded in [`Phase0ArchitectureEvidence.md`](Phase0ArchitectureEvidence.md)
 - **Observation:** the complete snapshot is 436 Lean files/117,094 nonblank lines; its `GameTheory/` corpus is 380/99,301 and `Math/` is 56/17,793. Authored text in 187/380 `GameTheory/` files mentions the utility-bearing hub, including 47 language files. There are 6,243 nonblank bridge lines and 84 code-level language `cast`/`Eq.ndrec` tokens after comments and strings are stripped. Generic transport has no language-level `Transport.comp` consumer. Kuhn mixed-to-behavioral requires reach/support and posterior-locality facts beyond perfect recall. Historical change concentration is unmeasurable because the pinned archive has no git history.
 - **Outcome:** narrows — share utility-free static forms and deviation logic; retain coordinated native protocol/information branches; withhold a generic certificate hierarchy pending Phase 3 composition and cost measurements
 - **Next action:** run Phase 1's D1/D2 miniature competition under the explicit bridge/certificate budget in [`decisions/D0-semantic-architecture.md`](decisions/D0-semantic-architecture.md)
@@ -121,7 +122,7 @@ but should not erase their evidence.
 - **Date / revision:** 2026-07-22, Phase 1 working tree based on `e727659`
 - **Decision / question:** D2; whether a finite-support `PMF` subtype or normalized `Finsupp` gives the better semantic and Analysis boundary
 - **Representative slice:** pure/map/bind/product and laws, real expectation and bind, support, dependent finite products, PMF conversion, a nontrivial finite-support law on `Nat`, and a finite-carrier `stdSimplex` round trip preserving pure/product/expectation/affine mixture
-- **Evidence:** `pwsh -NoProfile -File scripts/phase1-audit.ps1 -VerifyExpected -Time`; `lake build GameTheory.Experimental.Phase1.D1.Stress GameTheory.Experimental.Phase1.D2.Interop`; source under `GameTheory/Experimental/Phase1/D2/`; v1 proof ideas attributed in candidate A
+- **Evidence:** `pwsh -NoProfile -File scripts/phase1-audit.ps1 -VerifyExpected -Time`; `lake build GameTheory.Experimental.Phase1.D1.Stress GameTheory.Experimental.Phase1.D2.Interop`; source under `GameTheory/Experimental/Phase1/D2/`; candidate A includes the required operation and expectation proofs
 - **Observation:** after review-strengthening, the PMF/Finsupp cores are 345/221 nonblank lines; their expectation-bind proofs are 52/19 lines and simplex equivalences 14/12. PMF uses 24 `toReal`, 41 `ENNReal`, 3 transport, and 5 classical/noncomputable tokens; Finsupp uses 0/1/4/8. The Finsupp candidate needs an additional 101-line PMF/dependent-product boundary (3 `toReal`, 3 `ENNReal`, 3 transport, 4 classical/noncomputable), and its dependent product routes through Candidate A rather than constituting an independent implementation. Both now exercise two-point support on `Nat`; Candidate A proves affine mixture and its simplex commutation. Exact current counts are asserted by the audit script.
 - **Outcome:** narrows — neither representation dominates, so apply D2's stated fallback and choose a finite-support `PMF` subtype behind the future `FinDist` API
 - **Next action:** Phase 2 uses only the chosen PMF-subtype representation; retain the Finsupp candidate solely as EXP-003 evidence
@@ -278,7 +279,7 @@ but should not erase their evidence.
 - **Evidence:** `GameTheory/Experimental/Phase2/BayesianProbe.lean` (158
   nonblank lines), theorem `BayesianGame.isNash_iff_interim`
 - **Observation:** ex-ante Bayes-Nash is `IsNash` of the compiled form under
-  `euPreference`, with no new predicate, unlike v1's `Iff.rfl` wrapper. The
+  `euPreference`, with no new predicate, unlike the comparison design's `Iff.rfl` wrapper. The
   interim condition is not a renaming: `isNash_iff_interim` needs the prior to
   decompose over the deviator's own type (`prior_expect_eq_sum`) and needs an
   ex-ante deviation to be reconstructed from a single-type change, and it is
@@ -296,8 +297,7 @@ but should not erase their evidence.
 
 ### EXP-009: Open games as a source of core abstractions
 
-- **Date / revision:** 2026-07-26, read-only audit of the pinned v1 snapshot at
-  `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; no new Lean code
+- **Date / revision:** 2026-07-26, read-only comparison audit; no new Lean code
 - **Decision / question:** D6 and D7; whether the open-game presentation hints
   at a better abstraction for the Phase 3 sequential interface, and whether its
   equilibrium-as-a-field is independent content or derivable from native
@@ -313,7 +313,7 @@ but should not erase their evidence.
   `Context X Y R := X x (Y -> R)`. Corpus sizes: about 8,000 nonblank lines of
   open-game material; `Bridges/OpenGame_MAID.lean` is 1,860 nonblank lines and
   holds 23 of the snapshot's 84 code-level transport tokens, the single worst
-  concentration in v1; `Bridges/OpenGame_EFG.lean` is 506 nonblank lines for one
+  concentration in the baseline; `Bridges/OpenGame_EFG.lean` is 506 nonblank lines for one
   two-stage example; `OpenGame/Theorems.lean` is 64 nonblank lines and contains
   no generic theorem about `OpenGame`.
 - **Observation:** three separable findings.
@@ -327,7 +327,7 @@ but should not erase their evidence.
      exactly what upgrades a static equilibrium to a sequential one.
      `Theorems.lean` states the same decomposition directly:
      `conditioned_iff_plain_and_offPath`.
-  2. *Storing it is still wrong, and v1 shows why.* Each constructor writes its
+  2. *Storing it is still wrong, and the baseline shows why.* Each constructor writes its
      own field: `ShapeN` hand-writes unilateral-deviation Nash with a raw
      `Function.update`, and `ShapeS` writes a different two-part condition. That
      is an additional duplicate public Nash surface, which RFC 9.1.1 forbids,
@@ -387,7 +387,7 @@ but should not erase their evidence.
   field and one law; and `active` is proposition-valued rather than a `Finset`,
   keeping enumeration out of proof semantics (D9). `Trace` is `Type`-valued, so
   `IsTreeShaped := ∀ state, Subsingleton (Trace E state)` is a genuine
-  uniqueness statement - the repair for v1's `Subsingleton (Reachable s t)`,
+  uniqueness statement - the repair for the comparison design's `Subsingleton (Reachable s t)`,
   which was vacuous under proof irrelevance.
   One negative datapoint, and it is not about D6: the concrete protocol needed
   `@[reducible]`, because `coinThenMove.State` does not reduce to its carrier at
@@ -464,7 +464,7 @@ but should not erase their evidence.
 
 - **Date / revision:** 2026-07-27, Phase 3 working tree
 - **Decision / question:** D6; finite-first inductive trees or general-state
-  transition systems for v1. The RFC's criterion is that the general candidate
+  transition systems for the baseline. The RFC's criterion is that the general candidate
   wins only if the finite evaluator and the backward-induction API arise from a
   small well-founded or bounded certificate rather than from a second parallel
   semantics.
@@ -580,7 +580,7 @@ but should not erase their evidence.
   `continuation : State → ℝ` - which is the open-game context with the
   co-outcome channel dropped, as EXP-009 measured that channel to have no
   consumer. Local optimality is a *definition* over those fields, in deliberate
-  contrast to v1, where every open-game constructor stored its own
+  contrast to the baseline, where every open-game constructor stored its own
   `IsEquilibriumIn` and hand-wrote a Nash condition.
   `isLocallyOptimal_iff_no_profitable_deviation` is the one-shot-deviation
   interface, with both sides derived from `value`.
@@ -706,7 +706,7 @@ but should not erase their evidence.
   something the target forgets, such as recall or the identity of a decision
   site. No such transfer exists here yet, which is itself the reason the
   hierarchy is unamortized.
-- **Outcome:** rejects D7 for v1 - keep compilation as functions and named
+- **Outcome:** rejects D7 for the baseline - keep compilation as functions and named
   evaluation theorems; reopen only on a concrete transfer the shared static form
   provably cannot carry
 - **Next action:** record
@@ -781,7 +781,7 @@ but should not erase their evidence.
   information state.
   That fixes the shape of the eventual equivalence. It cannot be proved without
   forbidding a player to return to an information state it has already acted at,
-  which is the condition the pinned snapshot carries under a different name —
+  which is the condition the comparison corpus carries under a different name —
   and which is *not* recall. Recall governs the other direction.
 - **Outcome:** narrows — keep both randomizations over the shared `Choice`; the
   equivalence needs a no-revisit hypothesis, whose necessity is now recorded as a
@@ -921,7 +921,7 @@ randomizations, voting once satisfies the condition, and the equivalence is
 instantiated there.
 
 What this settles about the direction that needs recall: nothing. This is the
-direction that needs none, exactly as the pinned snapshot's structure predicted,
+direction that needs none, exactly as the comparison corpus's structure predicted,
 and the condition it does need is about being asked twice rather than about
 memory.
 
@@ -1461,7 +1461,7 @@ memory.
   boundary exists to contain.
 - **Next action:** instantiate `GameTheory.Analysis` as that boundary, with the
   existing six probes required to keep passing and the new root's reachability
-  recorded as expected rather than exempted. The v1 snapshot took the same
+  recorded as expected rather than exempted. the baseline snapshot took the same
   dependency and built roughly four and a half thousand lines on it (Schauder,
   KKM, Scarf, the simplex approximation layer, Loomis); the harvest should
   measure how much of that a finite-game existence theorem actually needs before
@@ -1471,7 +1471,7 @@ memory.
   bridge, the payoff polynomial, and Kakutani applied to the best-reply
   correspondence, and `exists_isNash_mixed` depends on the three standard axioms
   only. Three hundred and fifty-one lines above the dependency, and none of
-  v1's four and a half thousand were needed. The containment checks are in
+  the comparison design's four and a half thousand were needed. The containment checks are in
   `scripts/phase2-audit.ps1`; the direction of the new probe is the part worth
   remembering, since it asserts reachability rather than absence.
 
@@ -1641,7 +1641,7 @@ memory.
 - **Date / revision:** 2026-07-30, working tree based on `7b184d0`
 - **Decision / question:** D4 and Phase 5; whether Arrow's theorem can quantify
   over the accepted `Ranking` family and its named laws, rather than reviving
-  v1's separate `PrefRel` vocabulary or silently reinterpreting a weak
+  the comparison design's separate `PrefRel` vocabulary or silently reinterpreting a weak
   comparison as a strict one.
 - **Representative slice:** finite nonempty electorate, at least three
   alternatives, unrestricted profiles of linear weak rankings, collective
@@ -1656,8 +1656,8 @@ memory.
   probability, game forms, topology, or executable finiteness into its authored
   surface.
 - **Evidence:** the theorem inventory is
-  `reference/GameTheory-v1/GameTheory/Mechanism/SocialChoice/Arrow.lean` at
-  `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; the adapted proof is
+  `comparison corpus` at
+  `the original measurement`; the adapted proof is
   `GameTheory/Core/Arrow.lean`, and the three-voter/three-alternative public
   witness is `GameTheory/Tests/Arrow.lean`. `lake build
   GameTheory.Tests.Arrow` completed in 842 jobs. `#print axioms
@@ -1701,10 +1701,10 @@ memory.
   must be stored in the game; the characterization requires a generic
   certificate hierarchy; or the majority-game witness cannot use the existing
   primitive unchanged.
-- **Evidence:** the pinned inventory is
-  `reference/GameTheory-v1/GameTheory/Cooperative/CoalitionalGame/Core.lean`
+- **Evidence:** the representative inventory is
+  `comparison corpus`
   and `Shapley.lean` at
-  `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; the adapted construction and
+  `the original measurement`; the adapted construction and
   characterization are `GameTheory/Core/Shapley.lean`, and the discriminating
   endpoint is `GameTheory/Tests/Shapley.lean`. `lake build
   GameTheory.Tests.Shapley` completed in 1,070 jobs. Axiom checks for
@@ -1806,8 +1806,8 @@ memory.
   `scripts/phase3-audit.ps1 -VerifyExpected`. The source inventory was
   `Concepts/Repeated/{Basic,Discounted}.lean`,
   `Languages/MultiRound/RepeatedGame.lean`, and
-  `Concepts/Welfare/FolkTheorem/Main.lean` in the pinned snapshot at
-  `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+  `Concepts/Welfare/FolkTheorem/Main.lean` in the comparison corpus at
+  `the original measurement`.
 - **Observations / measurements:** the first candidate stored a dependent
   `Fin t → Profile` history. Equating it with a Protocol prefix immediately
   required proof-dependent transport, firing the kill condition. Replacing the
@@ -1841,7 +1841,7 @@ memory.
   folk theorem's feasible-payoff geometry and simplex approximation belong in
   the stable `GameTheory.Repeated` root, in `GameTheory.Analysis`, or in a new
   one-way analytic bridge over repeated play.
-- **Representative slice:** the pinned theorem
+- **Representative slice:** the representative theorem
   `KernelGame.discounted_folk_theorem_approx`: approximate a feasible payoff
   strictly above every opponent-security level by normalized discounted payoff
   vectors of history-dependent Nash profiles. Preserve its deterministic
@@ -1860,15 +1860,15 @@ memory.
 - **Evidence:** the source inventory was
   `Concepts/Welfare/FolkTheorem/{Geometry,Periodic,Trigger,Main}.lean`,
   `Concepts/ZeroSum/SecurityStrategy.lean`, and
-  `Math/SimplexApproximation.lean` in the pinned snapshot at
-  `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
-- **Pre-implementation measurement:** the eight apparent v1 support files total
+  `Math/SimplexApproximation.lean` in the comparison corpus at
+  `the original measurement`.
+- **Pre-implementation measurement:** the eight apparent the baseline support files total
   2,324 nonblank lines. Of those, the 255-line ambient/interior `Geometry.lean`
   contributes no declaration used by the flagship, and the 328-line general
   security file is imported only for a narrower opponent-minmax construction
   already developed inside `Feasible.lean`. The required denominator-clearing
   lemma is a 134-line game-independent file and has no Mathlib equivalent in the
-  pinned dependency. Greenfield Analysis currently provides the finite-law
+  dependency. Greenfield Analysis currently provides the finite-law
   simplex equivalence, mixed-profile polytope, mixed payoff polynomial, Nash
   existence, and two-player zero-sum minimax. The last two do not directly
   express an `n`-player game against a coalition, so forcing reuse would change
@@ -2230,7 +2230,7 @@ memory.
 - **Decision / question:** D6 and delivery gate W1-B; whether the accepted
   execution/information split supports a public strategic subgame-perfect
   predicate and a full one-shot-deviation equivalence without returning to
-  v1's syntax-recursive EFG evaluator.
+  the comparison design's syntax-recursive EFG evaluator.
 - **Hypothesis:** lift `WellFoundedPlay` from states to complete histories and
   define terminal continuation value by well-founded recursion on history
   extension. Subgame perfection can then quantify, for every player and every
@@ -2243,7 +2243,7 @@ memory.
   every complete history, and a local replacement choice at each nonterminal
   history. Exercise both directions on a finite tree-shaped EFG with an
   explicitly off-path decision history.
-- **Competing designs:** port v1's recursive `GameTree`/subtree predicate;
+- **Competing designs:** port the comparison design's recursive `GameTree`/subtree predicate;
   expose the existing single-controller state-chooser theorem under an SPE
   name; retain only the finite-horizon forward theorem; or add the
   history-level well-founded strategic theorem and keep the finite EFG layer a
@@ -2851,7 +2851,7 @@ memory.
   theorem; store `Fintype` or decidability in epistemic data; or require
   topology/Analysis for the finite agreement theorem.
 - **Evidence:** Mathlib has no Aumann/common-knowledge development. The
-  pinned theorem uses only finite cells, a common prior, self-evidence, and
+  representative theorem uses only finite cells, a common prior, self-evidence, and
   finite sums. Protocol deliberately defines `InfoSet` by existence of a
   history and does not assert a state partition. The hostile model satisfies
   menu adequacy, yet its one merged terminal state belongs to the information
@@ -3152,7 +3152,7 @@ memory.
   Mail results are a static bridge between the canonical Bayesian and
   Epistemic branches, or whether their messaging interpretation forces a
   Protocol execution model.
-- **Prediction:** the pinned theorems observe only endpoint worlds, private
+- **Prediction:** the representative theorems observe only endpoint worlds, private
   views, posteriors, common `p`-belief, and a type-contingent action plan. One
   canonical finite prior on worlds should push forward to the Bayesian type
   prior while directly feeding the epistemic partition. No theorem quantifies
@@ -3347,7 +3347,7 @@ memory.
   with semantic uniform-equilibrium payoff.  It does not adapt the sibling's
   `sorry`-tainted `exists_uniformDeviationCapConstructor` or any dependent
   existence statement, adds no Analysis/asymptotic dependency, and credits no
-  pinned-v1 declaration.  The focused 1,732-job and full 3,422-job builds pass;
+  bootstrap declaration.  The focused 1,732-job and full 3,422-job builds pass;
   Phase 2, Phase 3, and exact coverage audits return `VERIFIED=1`, and the four
   adapted declarations use only `propext`, `Classical.choice`, and
   `Quot.sound`.
@@ -3439,7 +3439,7 @@ memory.
   or a congestion-local definition.  The pinned generic price-of-anarchy ratio
   hierarchy is not a candidate for this first slice.
 - **Measurements to collect:** Mathlib overlap, import closure, public surface
-  size, theorem-local finiteness/equality assumptions, v1 declaration reuse,
+  size, theorem-local finiteness/equality assumptions, the baseline declaration reuse,
   source hazards, build cost, axiom profile, and whether later CCE/no-regret
   consumers can reuse the definition without entering this first theorem.
 - **Kill conditions:** a duplicate Nash or utility predicate, stored finite
@@ -3743,7 +3743,7 @@ memory.
   every field manually; or provide a theorem-only `FOSG.Kuhn` leaf whose
   statements reduce to `InformationModel` laws.  A later named FOSG-to-EFG
   comparison remains a separate batch.
-- **Measurements to collect:** exact pinned dependency clusters and row
+- **Measurements to collect:** exact dependency clusters and row
   dispositions; import and source-hazard surface; assumptions on both Kuhn
   directions; whether the hostile signal change is expressible without
   changing execution; build and audit cost; axiom profile; and whether any
@@ -3927,7 +3927,7 @@ memory.
   `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound.lean`;
   `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRoundWitnesses.lean`;
   their narrow Lake targets; `scripts/phase2-audit.ps1`;
-  `scripts/phase3-audit.ps1`; `scripts/coverage-audit.ps1`; full `lake build`;
+  `scripts/phase3-audit.ps1`; `git diff --check`; full `lake build`;
   embedded `#print axioms` commands.
 - **Outcome / next action:** no kill condition fired.  D30's hidden-phase
   design composes across stochastic source rounds, exact source-signal replay,
@@ -4072,7 +4072,7 @@ memory.
   build, trust, reachability, and coverage gates remain unchanged.
 - **Representative slice:** resolve the full manifest, fetch the matching
   Mathlib cache, build the two fixed-point modules first, then compile every
-  GameTheory/GameTheoryMath submodule and run the complete phase and pinned-v1
+  GameTheory/GameTheoryMath submodule and run the complete phase and bootstrap
   coverage audits.
 - **Kill conditions:** dependency resolution retains or introduces a second
   Mathlib revision; the fixed-point dependency fails on `v4.32.2`; any trusted
@@ -4090,7 +4090,7 @@ memory.
   all six theorem-source files and the root Lean source are byte-identical.  The
   upstream MIT license was retained byte-for-byte; only toolchain and generated
   dependency metadata otherwise differ.
-- **Observations / measurements:** the first attempt in the active v1 checkout
+- **Observations / measurements:** the first attempt in the active the baseline checkout
   exposed untracked generated files inside its ignored Mathlib clone, so it was
   preserved and the validation was restarted in a clean clone.  Intermittent
   GitHub HTTPS failures required retries but did not change resolution.  The
@@ -4103,7 +4103,7 @@ memory.
   `brouwer_fixed_point`, `kakutani_fixed_point`, and
   `GameTheory.exists_isNash_mixed` each report exactly `propext`,
   `Classical.choice`, and `Quot.sound`.  Phase 0 reproduced its frozen source
-  measurements, and Phase 1, Phase 2, Phase 3, and exact pinned-v1 coverage all
+  measurements, and Phase 1, Phase 2, Phase 3, and exact bootstrap coverage all
   returned `VERIFIED=1`; in particular `FIXED_POINT_IMPORTERS=1`,
   `ANALYSIS_PROBES_REACHED=2`, `SORRY_OR_ADMIT=0`, and `CUSTOM_AXIOM=0`.
 - **Outcome / next action:** no kill condition fired.  D12 records the new
@@ -4147,11 +4147,11 @@ memory.
   build, Phase 2/3 audits, and exact coverage audit recorded below.
 - **Observations / measurements:** arbitrary continuations and finite
   deviations stayed cast-free and use only `Profile.update`.  Finite-support
-  expectation made the stage-payoff tower law strictly cleaner than v1: it
+  expectation made the stage-payoff tower law strictly cleaner than the baseline: it
   needs no boundedness premise.  Discounted public Nash is literally `IsNash`
   on the deterministic monitored form; PPE and one-shot optimality quantify
   over every typed finite history, including zero-probability histories.  The
-  exact sufficiency proof did not need v1's approximate accumulated-allowance
+  exact sufficiency proof did not need the comparison design's approximate accumulated-allowance
   detour: induction controls finite truncations and dominated convergence
   reaches an arbitrary public deviation.  No player, strategy, signal, or
   outcome finiteness is stored or assumed; only `0 ≤ discount < 1` and a
@@ -4201,7 +4201,7 @@ memory.
   deterministic one-player utility game; or reuse of the auction
   `QuasiLinear`/VCG surface.
 - **Kill conditions:** the accounting and participation chain cannot be stated
-  without a strategic-game wrapper; `FinDist` loses a pinned theorem that PMF
+  without a strategic-game wrapper; `FinDist` loses a representative theorem that PMF
   supplied; explicit outside options force duplicate normalized predicates;
   the negative control fails; or the slice needs stored `Finite`/`Fintype`,
   raw `Function.update`, public transports, placeholders, or custom axioms.
@@ -4311,7 +4311,7 @@ memory.
 - **Status:** complete; supports D34 and closes the finite-EF1 critical gap
 - **Decision / question:** whether finite indivisible fair division should
   consume `Mechanism.Combinatorial.Allocation`, define a parallel raw bundle
-  profile as v1 did, or compile allocations into a strategic game.
+  profile as the baseline did, or compile allocations into a strategic game.
 - **Prediction:** the capability-free combinatorial allocation plus an
   additive item-valuation specialization and a separate completeness
   certificate suffice for a general finite round-robin EF1 theorem.  Raw
@@ -4324,7 +4324,7 @@ memory.
   conflicting rankings, allocate a non-singleton bundle, exhibit genuine
   envy, and discharge EF1 only after removing a positively valued good.
 - **Competing designs:** reuse the existing canonical disjoint allocation and
-  add fair-division predicates; reproduce v1's public function-valued
+  add fair-division predicates; reproduce the comparison design's public function-valued
   allocation and feasibility predicate; or model allocation as a strategic
   mechanism outcome before fairness can be stated.
 - **Kill conditions:** the general proof essentially needs a second public
@@ -4348,7 +4348,7 @@ memory.
   and finite goods.  Private recursion uses a local `if`-based bundle update;
   the public result is the canonical allocation plus completeness.
 - **Boundary / trust:** source scans initially found nineteen `▸` transports
-  and one `change` inherited from v1; all were rewritten rather than waived.
+  and one `change` inherited from the baseline; all were rewritten rather than waived.
   Phase 2 reports zero mechanism transports, zero raw updates, four reached
   fair-division inputs, and four rejected boundaries: `FinDist`, `IsNash`,
   Protocol execution, and measurable theory.  The completeness theorem, EF1
@@ -4356,7 +4356,7 @@ memory.
   `propext`, `Classical.choice`, and `Quot.sound`.
 - **Outcome / promotion:** no kill condition fired.  D34 adopts
   `Mechanism.FairDivision` over `Combinatorial.Allocation`; raw recursive state
-  remains private and v1's public `roundRobinAux` is retired.  The focused
+  remains private and the comparison design's public `roundRobinAux` is retired.  The focused
   root/test build is warning-free, the full build completes 3,504 jobs, and
   Phase 2 plus exact coverage both return `VERIFIED=1`.  The ledgers account
   for 67/91 M-FAIR declarations, with RoundRobin complete 27/27 and the next
@@ -4368,7 +4368,7 @@ memory.
 - **Status:** complete; supports D35 and closes the stable-matching critical gap
 - **Decision / question:** whether one-to-one matching should be a native
   `Cooperative` branch over the probability-free `Ranking` vocabulary, retain
-  v1's integer-score market, or compile matching into artificial strategic
+  the comparison design's integer-score market, or compile matching into artificial strategic
   profiles and Nash equilibrium.
 - **Prediction:** two rankings over optional partners, an unbundled matching
   function with a named injectivity predicate, and theorem-local finite linear
@@ -4381,7 +4381,7 @@ memory.
   blocking pair for an unstable matching, and prove that the produced stable
   matching is perfect; aligned or singleton preferences do not count.
 - **Competing designs:** native ordinal rankings with `none` as an explicit
-  outside option; v1's integer scores plus separate reservation values; or a
+  outside option; the comparison design's integer scores plus separate reservation values; or a
   `GameForm` encoding whose equilibrium is interpreted as a matching.
 - **Kill conditions:** deferred acceptance needs a stored finite carrier or a
   second preference representation; the public surface exposes raw function
@@ -4500,7 +4500,7 @@ memory.
   Construct a third history with a different own action and prove the local
   information differs.  A second-round policy must branch on the remembered
   own action, and the canonical compiled run must preserve that branch.
-- **Competing designs:** revive v1's `Round.eval`/`evalRounds` plus compiler;
+- **Competing designs:** revive the comparison design's `Round.eval`/`evalRounds` plus compiler;
   use raw `FOSG.Game` at every call site; or add a thin
   `Languages.MultiRound.MonitoringGame` constructor whose target is the
   existing execution/information pair.
@@ -4653,7 +4653,7 @@ memory.
   unrelated names; Analysis.Stochastic reached 11 intended inputs and rejected
   both Protocol and Repeated.  Source hazards, forbidden imports, and extra
   fixed-point importers were all zero.  Exact coverage remained green; this is
-  a beyond-v1 capability rather than a pinned-v1 declaration claim.  The
+  a additional capability rather than a bootstrap declaration claim.  The
   warning-clean default build completed all 3,525 jobs.
 - **Outcome / next action:** adopt D39 and promote the general-sum stationary
   Bellman theorem through the one-way Analysis root.  Keep arbitrary
@@ -4664,7 +4664,8 @@ memory.
 ### EXP-073: mixed versus pure rationalizability ownership
 
 - **Date / revision:** 2026-08-09, reserved on `18e947b`
-- **Status:** complete; supports D40
+- **Status:** complete; implementation evidence retained, terminology
+  conclusion corrected by EXP-076
 - **Decision / question:** whether standard Bernheim--Pearce rationalizability
   (iterated elimination by mixed dominators) can use canonical `FinDist`,
   randomized unilateral deviations, and `GameForm` directly while the D10
@@ -4702,10 +4703,10 @@ memory.
   returned `VERIFIED=1` at 65 ledgers and 2,623/8,324 claimed rows.  The
   warning-clean default build completed all 3,531 jobs.  No kill condition
   fired.
-- **Outcome / next action:** adopt D40.  Keep unqualified rationalizability for
-  the standard mixed notion, retain the explicitly named pure semantics and
-  executable checker, and require a separate algorithm/certificate gate before
-  adding executable mixed elimination.
+- **Outcome / next action:** the implementation and hostile separation remain
+  valid.  EXP-076 corrects the public interpretation: the joint-opponent
+  mixed-dominator iteration is correlated rationalizability, not the
+  Bernheim--Pearce independent-belief notion.
 
 ### EXP-074: finite-law VNM representation waist
 
@@ -4754,3 +4755,79 @@ memory.
   66-row Basic ledger advances S-FOUND but does not complete the broader
   family; axiom independence, convergence, and selected strategic-equivalence
   results remain later breadth-first packages.
+
+### EXP-075: imperfect-information subgame semantics
+
+- **Date / revision:** 2026-08-09, reserved on `ac42e67`
+- **Status:** complete; supports D42
+- **Decision / question:** whether the predicate currently called
+  `IsSubgamePerfect`, which compares whole replacement policies after every
+  complete history, is textbook subgame perfection for imperfect-information
+  protocols.
+- **Prediction:** it is strictly stronger.  The historywise predicate and its
+  one-shot equivalence remain valuable under an honest name; textbook SPE
+  should quantify only over histories whose continuation is closed under every
+  decision information set.
+- **Representative slice:** two indistinguishable decision histories reached
+  through different chance outcomes, with a candidate continuation rooted at
+  exactly one of them.  The closure predicate must reject that root while the
+  initial history remains a subgame root.
+- **Competing designs:** retain the current name; restrict SPE to perfect
+  information; or define information-set-closed subgame roots at Protocol and
+  keep historywise optimality as a separate stronger notion.
+- **Kill conditions:** the closure predicate needs EFG syntax, a second
+  evaluator, user-visible transport, or cannot distinguish the crossed
+  information-set root from the initial root.
+- **Artifacts / observations:** the canonical closure predicate needs only
+  `HistoryReaches`, activity, terminality, and equality of `infoOf`.  The
+  initial history is always a root.  In the existing hidden-card protocol, the
+  high-deal history is not: its continuation contains the high node of the
+  blind seat's decision information set but not the indistinguishable low
+  node.  `IsHistorywiseOptimal` retains the established one-shot equivalence
+  and implies the new root-restricted `IsSubgamePerfect`.  Strong perfect
+  information makes every history a root, so Zermelo existence remains an SPE
+  theorem.  No kill condition fired.
+- **Validation:** `lake build GameTheory.Protocol.SubgamePerfect
+  GameTheory.Protocol.Zermelo GameTheory.Languages.EFG.SubgamePerfect
+  GameTheory.Languages.EFG.Zermelo GameTheory.Tests.SubgameRoots
+  GameTheory.Tests.SubgamePerfect GameTheory.Tests.EFGSubgamePerfect
+  GameTheory.Tests.EFGZermelo` completed warning-free.
+- **Outcome / next action:** adopt D42.  Reserve the SPE name for proper
+  information-set-closed subgames, retain the stronger theorem under the
+  historywise name, and report the general imperfect-information one-shot iff
+  SPE theorem as open rather than inferred.
+
+### EXP-076: correlated versus independent rationalizability terminology
+
+- **Date / revision:** 2026-08-10
+- **Status:** complete; corrects D40 terminology
+- **Decision / question:** whether the mixed-dominator survivor iteration from
+  EXP-073 is the independent rationalizability of Bernheim and Pearce or the
+  correlated-belief variant distinguished in later primary literature.
+- **Prediction:** because the dominance comparison quantifies over joint
+  opponents' profiles without a product-belief restriction, the correct
+  public qualifier is `correlated`; an unqualified name would be ambiguous in
+  games with three or more players.
+- **Representative slice:** compare the Lean quantifiers with Bernheim's
+  no-correlation premise and Brandenburger--Dekel's definitions of correlated
+  and independent best-reply sets; then rename every stable direct consumer
+  without aliases.
+- **Competing designs:** retain the unqualified Bernheim--Pearce label; rename
+  the existing operator correlated and defer the independent operator; or add
+  an untested product-distribution surface in the corrective change.
+- **Kill conditions:** the Lean operator already factors beliefs by opponent;
+  the primary definitions do not distinguish the concepts beyond two-player
+  games; or the rename cannot be made without compatibility aliases.
+- **Artifacts / observations:** `correlatedSurvivors` permits every surviving
+  joint opponents' profile in the mixed-dominance comparison.  Brandenburger
+  and Dekel explicitly identify independent rationalizability with product
+  beliefs and correlated rationalizability with unrestricted joint beliefs,
+  and give a strict three-player separation.  Bernheim explicitly assumes no
+  correlation while noting that it can be relaxed.  No kill condition fired.
+- **Validation:** `lake build GameTheory.Core.Rationalizability
+  GameTheory.Tests.Rationalizability GameTheory.Examples.Classic` completed
+  1,757 jobs warning-free.  Source search finds no remaining stable
+  `IsRationalizable` or `survivors` declaration.
+- **Outcome / next action:** correct D40 and the architecture/capability
+  records.  Keep independent rationalizability as an explicit delivery seam
+  requiring a product-belief representation and a hostile three-player test.

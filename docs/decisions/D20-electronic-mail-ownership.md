@@ -57,7 +57,7 @@ The slice proves both sides of the Electronic Mail lesson:
 ## Kill condition
 
 Reject static ownership if an intermediate message history or transition law
-is needed to state a pinned theorem, if the endpoint model cannot express the
+is needed to state a representative theorem, if the endpoint model cannot express the
 information result, if two priors or another equilibrium predicate are
 required, or if either independent input root must import the other.
 

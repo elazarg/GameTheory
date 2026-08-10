@@ -39,7 +39,7 @@ namespace BayesianGame
 /-- The signature of realized action profiles. -/
 abbrev actionSignature (B : BayesianGame ι) : GameSignature ι where
   Strategy := B.Act
-  Outcome := (∀ i, B.Ty i) × (∀ i, B.Act i)
+  Outcome := Unit
 
 /-- The signature of type-contingent pure plans. -/
 abbrev signature (B : BayesianGame ι) : GameSignature ι where

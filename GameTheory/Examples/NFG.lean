@@ -1,10 +1,9 @@
 /-
 # Normal-form examples with non-finite action spaces
 
-This file adapts the countable-action smoke test from the pinned v1
-`Languages/NFG/CountableExample.lean`. It checks that deterministic NFG syntax
-and the canonical semantic solution concepts remain independent of executable
-finite enumeration.
+This countable-action smoke test checks that deterministic NFG syntax and the
+canonical semantic solution concepts remain independent of executable finite
+enumeration.
 -/
 
 import GameTheory.Core.Response

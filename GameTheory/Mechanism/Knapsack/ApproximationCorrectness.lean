@@ -4,10 +4,6 @@
 This module proves the checked-input, sorting, support, feasibility, and
 attainment properties of `ApproximationAlgorithm`.  The approximation-ratio
 proof is built on this structural boundary.
-
-Proof ideas are recovered from
-`reference/GameTheory-v1/GameTheory/Auctions/Knapsack/Basic.lean` at pinned
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 -/
 
 import GameTheory.Mechanism.Knapsack.ApproximationAlgorithm

@@ -39,6 +39,15 @@ mass, the existing canonical mixed-Nash proof supplies the equilibrium, and a
 separate checked theorem says the game has no pure Nash equilibrium. The slice
 therefore cannot pass through a point mass or singleton shortcut.
 
+Post-decision completion also proves the defining refinement direction under
+finite expected-utility assumptions. An arbitrary mixed deviation is repaired
+by adding every lower bound and distributing the remaining mass according to
+that deviation; the repaired deviations converge pointwise, and finite
+expected-utility continuity passes the equilibrium inequality to the limit.
+A weakly dominated Nash equilibrium supplies the negative control: every
+positive tremble makes its dominated action strictly suboptimal, so it is not
+perfect.
+
 ## Measurements
 
 | Measure | EXP-071 result |
@@ -48,7 +57,7 @@ therefore cannot pass through a point mass or singleton shortcut.
 | canonical reuse | perturbed equilibrium is `IsEquilibrium` for `DeviationScheme.perturbedMixed`; its hom maps into `unilateralConstant` |
 | stored capabilities | none; finiteness and decidable equality occur only where the deviation scheme needs finite players |
 | representation | real `FinDist.prob` only; no PMF, ENNReal, or second probability carrier |
-| hostile distinction | fair Matching Pennies is fully mixed and perfect while admitting no pure Nash profile |
+| hostile distinction | fair Matching Pennies is fully mixed and perfect while admitting no pure Nash profile; a weakly dominated Nash fixture is not perfect |
 | bounded accounting | all 26 pinned declarations classified; 20 adapted/subsumed and six alternative-limit rows deferred |
 | boundary correction | an Analysis-importing fixture under `Tests` was rejected and moved under `Analysis`; no source-check exemption was added |
 | source checks | zero forbidden imports, raw `Function.update`, representation leaks, source transports, placeholders, custom axioms, or build-output commands |

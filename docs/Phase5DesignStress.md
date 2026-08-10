@@ -20,9 +20,9 @@ that the same bill might come due again. It does not, and the reason is worth
 recording because it is not the reason one would guess.
 
 Those lines were never spent on equilibrium existence. Measured by import, in
-the pinned snapshot:
+the comparison corpus:
 
-| v1 module | lines | what consumes it |
+| the baseline module | lines | what consumes it |
 |---|---:|---|
 | `FixedPoint/Scarf` | 2554 | **nothing** |
 | `LinearProgramming` | — | **nothing** |
@@ -30,7 +30,7 @@ the pinned snapshot:
 | `Simplex` → `Minimax/Loomis` | ~1200 | Loomis's theorem, and through it Perron–Frobenius |
 | `SimplexApproximation` | 134 | the folk theorem, all five importers |
 
-Equilibrium existence in v1 went a different way entirely — Brouwer, via
+Equilibrium existence in the baseline went a different way entirely — Brouwer, via
 `ProductSimplexBrouwer`, `NashExistenceMixed`, and `NashExistence`: **842
 lines**. The same theorem here is **320**, because Kakutani applies directly to
 the best-reply correspondence and the finite-support law type already presents a
@@ -78,7 +78,7 @@ unrestricted profiles of linear weak rankings through collective rationality,
 strict Pareto, and IIA to an exact dictator. The public statement uses
 `Ranking`, `Rank.Linear`, and `Rank.strict`; the Geanakoplos pivotal-voter proof
 changes to strict relations only behind a private reflexive-closure bridge. The
-pinned v1 proof supplied the theorem inventory and proof architecture without
+bootstrap proof supplied the theorem inventory and proof architecture without
 restoring its parallel `PrefRel`/`PrefProfile`/`SWF` vocabulary.
 
 The first reachability probe found the defect the Condorcet slice had missed.
@@ -204,7 +204,7 @@ the opponent-minmax construction, and the existence theorem form the one-way
 `GameTheory.Analysis.Repeated` bridge. Residual-floor denominator clearing is
 game-independent and therefore lives in the separately audited
 `GameTheoryMath` target. The 255-line unused ambient geometry and 328-line
-general security hierarchy in the apparent v1 support closure were not ported.
+general security hierarchy in the apparent the baseline support closure were not ported.
 
 The probes make the split physical. Basic, Discounted, and the public Repeated
 root all reject `stdSimplex` and `Polynomial`; the bridge positively reaches a
@@ -298,15 +298,14 @@ The named Phase 5 queue is exhausted. Further theorem families that challenge
 a recorded boundary should be reserved as new experiments rather than treated
 as unmeasured extensions of the decisions above.
 
-This does not mean the frozen Phase 0 flagships, transfers, or v1 theorem
-inventory are complete. Routine recovery against an already validated domain
-contract is harvesting and needs attribution plus coverage accounting, not a
-new experiment. A theorem that challenges ownership, representation,
+This does not mean every theorem family is complete. Routine delivery against
+an already validated domain contract needs compiled evidence and an updated
+delivery row, not a new experiment. A theorem that challenges ownership, representation,
 dependency direction, or another recorded boundary re-enters this stress
 protocol through a reserved experiment.
 
 The mutable queue, frozen-obligation reconciliation, domain gates, mature
 blind-spot program, and Frontier capacity rules now live in
 [`PostArchitectureDeliveryPlan.md`](PostArchitectureDeliveryPlan.md). Current
-pinned-v1 recovery status lives in
-[`V1CoverageLedger.md`](V1CoverageLedger.md).
+family delivery status lives in
+[`DeliveryLedger.md`](DeliveryLedger.md).

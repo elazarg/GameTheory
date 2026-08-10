@@ -95,4 +95,43 @@ theorem alternating_regretMatch_approaches :
   regretMatch_approaches utility (M := 6) (by norm_num) regretPayoff_norm_le
     alternatingEnvironment
 
+/-! A falsifying fixture: boundedness alone does not make an arbitrary
+response approach an arbitrary closed target. -/
+
+def constantPayoff (_ : Unit) (_ : Unit) : ℝ := 1
+
+def constantResponse (_ : ℝ) : Unit := ()
+
+@[simp]
+theorem constantPayoff_avg_succ (n : ℕ) :
+    avgVec constantPayoff constantResponse (fun _ => ()) (n + 1) = 1 := by
+  induction n with
+  | zero => simp [avgVec, constantPayoff]
+  | succ n ih =>
+      rw [avgVec]
+      rw [ih]
+      simp [constantPayoff]
+      field_simp
+
+/-- The constant-payoff response stays a unit distance from the singleton
+target, so it supplies a concrete negative convergence check. -/
+theorem constantPayoff_does_not_approach_zero :
+    ¬ Tendsto
+      (fun t => Metric.infDist
+        (avgVec constantPayoff constantResponse (fun _ => ()) t) ({0} : Set ℝ))
+      atTop (nhds 0) := by
+  intro hzero
+  have hone :
+      Tendsto
+        (fun t => Metric.infDist
+          (avgVec constantPayoff constantResponse (fun _ => ()) t) ({0} : Set ℝ))
+        atTop (nhds 1) := by
+    apply tendsto_const_nhds.congr'
+    filter_upwards [eventually_ge_atTop 1] with t ht
+    cases t with
+    | zero => omega
+    | succ n => simp [Metric.infDist_singleton, constantPayoff_avg_succ]
+  have : (1 : ℝ) = 0 := tendsto_nhds_unique hone hzero
+  norm_num at this
+
 end GameTheory.Analysis.ApproachabilityTest

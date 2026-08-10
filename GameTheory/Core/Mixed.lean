@@ -19,6 +19,8 @@ so.
 
 import GameTheory.Core.Utility
 
+set_option autoImplicit false
+
 noncomputable section
 
 namespace GameTheory
@@ -55,17 +57,11 @@ theorem purify_update (F : GameForm ι) (σ : Profile F.sig) (who : ι)
     rw [Profile.update_of_ne _ _ hwho]
     rfl
 
-/-- An expectation is no larger than a bound every point of the support
-respects. -/
-theorem expect_le_of_forall {α : Type*} (μ : FinDist α) (observable : α → ℝ) (bound : ℝ)
-    (hbound : ∀ a ∈ μ.support, observable a ≤ bound) : μ.expect observable ≤ bound := by
-  refine le_of_le_of_eq (FinDist.expect_mono hbound) ?_
-  exact FinDist.expect_const μ bound
-
 /-- **A pure equilibrium stays one in the mixed extension.** The deviator gains
 nothing by randomizing, because randomizing averages deviations it already could
 not gain from. -/
-theorem IsNash.purify (hnash : IsNash F (euPreference utility) σ) :
+theorem IsNash.purify {σ : Profile F.sig}
+    (hnash : IsNash F (euPreference utility) σ) :
     IsNash F.mixed (euPreference utility) (F.purify σ) := by
   rw [isNash_iff] at hnash ⊢
   intro who replacement
@@ -75,7 +71,7 @@ theorem IsNash.purify (hnash : IsNash F (euPreference utility) σ) :
   show (replacement.bind fun s =>
       F.mixed.play (Profile.update (F.purify σ) who (FinDist.pure s))).expect _ ≤ _
   rw [FinDist.expect_bind]
-  refine expect_le_of_forall _ _ _ fun s _ => ?_
+  refine FinDist.expect_le_of_forall _ _ _ fun s _ => ?_
   rw [purify_update, GameForm.mixed_play_purify]
   exact hnash who s
 

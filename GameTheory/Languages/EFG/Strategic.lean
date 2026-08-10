@@ -6,7 +6,7 @@ by its `InformationModel`. The strategic form therefore applies the accepted
 Protocol compiler directly; there is no EFG-specific evaluator and no
 intermediate normal-form game.
 
-The two flagship equivalences expose ordinary pure and mixed `IsNash` in the
+The two central equivalences expose ordinary pure and mixed `IsNash` in the
 native `run` and `runMixed` vocabulary. They define no language-specific
 equilibrium predicate.
 -/
@@ -67,7 +67,7 @@ theorem toGameForm_play (horizon : ℕ)
 
 variable [DecidableEq ι]
 
-/-- **Pure T1 transfer.** Ordinary Nash of the extracted EFG strategic form is
+/-- Ordinary Nash of the extracted EFG strategic form is
 exactly the native contingent-plan deviation inequality. -/
 theorem isNash_toGameForm_iff
     (utility : G.History → ι → ℝ)
@@ -94,7 +94,7 @@ theorem toGameForm_mixed_play
       G.information.runMixed mixed horizon :=
   InformationModel.toGameForm_mixed_play G.information horizon mixed
 
-/-- **Mixed T1 transfer.** Mixed Nash of the extracted EFG strategic form is
+/-- Mixed Nash of the extracted EFG strategic form is
 exactly the native mixed-policy deviation inequality. -/
 theorem isNash_mixed_toGameForm_iff
     (utility : G.History → ι → ℝ)

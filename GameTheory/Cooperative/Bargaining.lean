@@ -7,10 +7,8 @@ compactness, topology, or existence assumption.  The Nash product needs a
 finite player enumeration, so that capability appears only on its predicate
 and theorems.
 
-The algebraic proof spine adapts
-`reference/GameTheory-v1/GameTheory/Cooperative/Bargaining.lean` at commit
-`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`, while removing its unused
-logarithm and probability imports.
+Primary reference: J. F. Nash Jr., “The Bargaining Problem,” *Econometrica*
+18 (1950).
 -/
 
 import Mathlib.Algebra.Order.BigOperators.GroupWithZero.Finset

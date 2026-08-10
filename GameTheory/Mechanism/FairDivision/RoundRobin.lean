@@ -14,6 +14,9 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 Choice round-robin for finite additive indivisible-goods instances with agents
 ordered as `Fin n`. Agent `0` picks first, then turns cycle modulo `n`; each
 agent chooses a remaining good maximizing their own item value.
+
+For the EF1 guarantee, see R. J. Lipton, E. Markakis, E. Mossel, and
+A. Saberi, “On Approximately Fair Allocations of Indivisible Goods,” EC 2004.
 -/
 
 open Finset BigOperators

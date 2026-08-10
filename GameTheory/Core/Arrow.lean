@@ -7,10 +7,11 @@ transitive, total, and has no ties. Pareto, IIA, and dictatorship speak only
 about its named strict part.
 
 The proof privately changes representation between linear weak rankings and
-strict linear rankings. The pivotal-voter argument is adapted from
-`reference/GameTheory-v1/GameTheory/Mechanism/SocialChoice/Arrow.lean` at
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; unlike that source, this module
-does not expose a second preference, profile, or social-welfare-function type.
+strict linear rankings. The public interface exposes no second preference,
+profile, or social-welfare-function type.
+
+Primary reference: K. J. Arrow, *Social Choice and Individual Values*, 2nd
+edition, Yale University Press, 1963.
 -/
 
 import GameTheory.Core.SocialChoice

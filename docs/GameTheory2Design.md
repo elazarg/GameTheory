@@ -132,15 +132,15 @@ than fields forced into its foundation.
 | D0 | Share static forms, incentive logic, and one execution base; use direct named bridges | Final | Mine the existing hub, price direct bridges, and prototype only the hybrid |
 | D1 | Bind profiles to a signature and store that signature in each form | Decided | Implement six core operations in indexed and bundled-signature prototypes |
 | D2 | Represent finite-support laws by a finite-support `PMF` subtype | Adopted | Compare a finite-support `PMF` subtype with normalized `Finsupp`, including their finite-carrier simplex bridge |
-| D3 | Do not introduce a generic probability-monad class in v1 | Adopted | Revisit only after a second probability model shares three nontrivial theorems |
+| D3 | Do not introduce a generic probability-monad class in the baseline | Adopted | Revisit only after a second probability model shares three nontrivial theorems |
 | D4 | Separate `GameForm`, preferences, and utility evaluation | Adopted | Define Nash, CE, welfare, and utility invariance without duplicate predicates |
 | D5 | Define equilibrium once from local, law-linear deviations; keep profile-quantified response concepts distinct | Accepted | Express five equilibria plus best response, dominance, and one Bayesian slice |
 | D6 | Keep execution and information separate; use general-state execution primarily and finite trees as a derived presentation | Decided | Compare both execution orders on terminal, chance, locality, and assessment tests |
-| D7 | Use direct named bridges; add no semantic certificate hierarchy in v1 | Rejected for v1 | Compare certificate composition with a bespoke direct-bridge baseline |
+| D7 | Use direct named bridges; add no semantic certificate hierarchy in the baseline | Rejected for the baseline | Compare certificate composition with a bespoke direct-bridge baseline |
 | D8 | Keep only a minimal transformation taxonomy | Adopted | Prove relabeling, reindexing, mixed lifting, and equilibrium transport |
 | D9 | Treat finiteness as independent capabilities | Adopted | Audit assumptions in the vertical slices |
 | D10 | Add a separate rational, finite, executable frontend | Adopted | `#eval` pure Nash/dominance and prove the output specification |
-| D11 | Keep measurable and infinite-path probability outside v1 | Adopted | A later isolated measurable-kernel spike may reopen this decision |
+| D11 | Keep measurable and infinite-path probability outside the baseline | Adopted | A later isolated measurable-kernel spike may reopen this decision |
 | D12 | Split general mathematics, challenges, and frontier research from the stable core | Adopted | Enforce trust, dependency, documentation-sync, and cold-build tests |
 
 ## 5. Core decisions and falsification plans
@@ -364,9 +364,9 @@ to serve D10: arbitrary real or nonnegative-real weights are not an executable
 substitute for a rational distribution.
 
 This is not a clean-room comparison. The current
-`reference/GameTheory-v1/Math/FiniteProbabilityMassFunction.lean` already implements the `PMF` subtype
+`comparison corpus` already implements the `PMF` subtype
 and substantial pure/map/bind/product/expectation/support theory, with further
-bind, conditioning, independence, and update experience under `reference/GameTheory-v1/Math/PMFProduct`.
+bind, conditioning, independence, and update experience under `comparison corpus`.
 Mine those proofs as measured prior art. In particular, count the actual
 `toReal`, classical, support, and reducibility costs before deciding whether to
 reuse, extract, or replace that implementation. The current convergence layer's
@@ -436,16 +436,16 @@ an infinite-support law in its statement and cannot be cleanly isolated in a
 countable extension. In that event, keep distinct finite and countable forms
 unless a precise shared interface has already passed D3's reopening test.
 
-Infinite repetition has a stricter v1 boundary. Stable repeated-game theorems
+Infinite repetition has a stricter the baseline boundary. Stable repeated-game theorems
 may use stagewise expected utility, deterministic paths of mixed stage
 profiles, recursive/Bellman expectations, and finite-prefix distributions of
 realized signals. They must not encode a stochastic law on the entire infinite
 signal-history space as `FinDist` or as a merely countably supported law. Under
 indefinitely nondegenerate stochastic monitoring, such a path law is generally
 not countably supported. The current
-`reference/GameTheory-v1/GameTheory/Concepts/Welfare/FolkTheorem/Main.lean` presentation—an `ℕ`-indexed
+`comparison corpus` presentation—an `ℕ`-indexed
 path of stage profiles evaluated per round—is positive evidence for this
-boundary; `reference/GameTheory-v1/GameTheory/Concepts/Repeated/Monitoring.lean` currently stops at
+boundary; `comparison corpus` currently stops at
 finite-prefix signal laws. Genuine path-space probability waits for D11's
 measurable layer.
 
@@ -458,7 +458,7 @@ A small `GProb` class would conceal these obligations rather than solve them.
 
 Therefore:
 
-- v1 uses a concrete finite-support probability type;
+- the baseline uses a concrete finite-support probability type;
 - a countable `PMF` extension may be added with explicit expectation
   hypotheses;
 - continuous and infinite-path probability are a separate measurable research
@@ -656,9 +656,11 @@ be disguised as degenerate instances of `IsEquilibrium`:
   strategies at every opponents' profile;
 - strict dominance and dominant strategies/profiles are built once from those
   profile-quantified predicates;
-- EXP-073/D40 distinguishes standard mixed rationalizability (`survivors`,
-  `IsRationalizable`) from the weaker pure-dominator iteration
-  (`pureSurvivors`, `IsPureRationalizable`);
+- EXP-073/EXP-076/D40 distinguishes correlated-belief mixed-dominator
+  elimination (`correlatedSurvivors`, `IsCorrelatedRationalizable`) from the
+  pure-dominator iteration (`pureSurvivors`, `IsPureRationalizable`).  The
+  Bernheim--Pearce independent-belief notion is not represented by an
+  unqualified alias;
 - `IsIndividuallyRational F utility reservation profile` compares an explicit
   reservation vector with the same canonical expected utilities and consumes
   Pareto improvement directly.  Mechanism participation and cooperative or
@@ -667,7 +669,7 @@ be disguised as degenerate instances of `IsEquilibrium`:
 These predicates share `GameForm.outcomeLaw`, preferences, and the profile
 operations with equilibrium, but they are a separate concept family. D10's
 boolean dominance and pure-elimination algorithms prove correctness against
-the explicitly named pure definitions; standard mixed rationalizability stays
+the explicitly named pure definitions; correlated rationalizability stays
 proof-semantic until a separate executable certificate gate passes.
 
 #### Validation spike
@@ -810,16 +812,17 @@ perfect-information or controller-supplied `GameForm`.
 
 The finite-horizon information-local theorem remains the forward adapter from
 one-shot optimality at every history to whole-policy optimality and ordinary
-Nash in the compiled form. EXP-036 closes the distinct well-founded strategic
-theorem in `Protocol.SubgamePerfect`. History-preserving backward recursion
-uses the existing `WellFoundedPlay` certificate and agrees with the forward
-history runner wherever that runner has stopped. `IsSubgamePerfect` quantifies
-over every player, every whole information-local replacement policy, and every
-complete history, including off-path histories. Under
-`ActsOnceWhereItMatters`, it is equivalent to
-`HasNoProfitableOneShotDeviation`. The hostile probe is optimal against every
-whole replacement policy from the initial history but is rejected at an
-off-path decision, so no invalid converse from initial static Nash is claimed.
+Nash in the compiled form. EXP-036 established the distinct well-founded
+historywise theorem in `Protocol.SubgamePerfect`; EXP-075/D42 corrected its
+public name after the imperfect-information root test. History-preserving
+backward recursion uses the existing `WellFoundedPlay` certificate and agrees
+with the forward history runner wherever that runner has stopped.
+`IsHistorywiseOptimal` quantifies over every player, whole replacement policy,
+and complete history. Under `ActsOnceWhereItMatters`, it is equivalent to
+`HasNoProfitableOneShotDeviation`. `IsSubgamePerfect` instead quantifies over
+histories whose continuation is closed under every active decision information
+set, and historywise optimality implies it. A general imperfect-information
+one-shot iff SPE theorem is not claimed.
 At finite horizon, `historyContext` still packages the actual continuation,
 and the local one-shot condition is equivalent to
 `IsSequentiallyRationalAt` in that context.
@@ -835,7 +838,8 @@ Beliefs are laws over complete histories, not merely execution states, because
 two histories may merge into one state. Their projection
 satisfies the existing state-level `BeliefOn` predicate. Sequential rationality
 compares whole continuation behavioral policies; a local-law reduction requires
-a separately proved one-shot-deviation theorem. Finite Bayes consistency and a
+a separately proved one-shot-deviation theorem. Finite Bayes consistency at
+positive-mass information sites and a
 predicate-parametric limit schema stay in Protocol; pointwise convergence and
 Kreps-Wilson consistency live in the one-way
 `GameTheory.Analysis.Protocol` bridge.
@@ -889,9 +893,9 @@ duplicating terminality with a horizon field. This protocol is not the
 representation of infinite repeated games; those may compile directly to a
 game form or use a later infinite-horizon execution interface.
 
-The existing `reference/GameTheory-v1/GameTheory/Concepts/Mixed/SequentialAssessment.lean`,
-`reference/GameTheory-v1/GameTheory/Languages/EFG/Sequential.lean`, and
-`reference/GameTheory-v1/GameTheory/Languages/EFG/OneShotDeviation.lean` are the empirical baseline for
+The existing `comparison corpus`,
+`comparison corpus`, and
+`comparison corpus` are the empirical baseline for
 beliefs, consistency, sequential rationality, and one-shot deviations. The
 spike must inventory their conditional-law and locality obligations rather than
 designing `InfoState` only around strategy compilation.
@@ -953,7 +957,7 @@ that separation adds certificates and casts without enabling independent
 reuse. The outcome of D6 may legitimately be more than one execution
 interface; a universal record is not a success criterion.
 
-Reject general-state-first for v1 if it passes syntax examples but fails any
+Reject general-state-first for the baseline if it passes syntax examples but fails any
 terminal, chance, locality, or finite-extraction hostile test. Reject
 finite-first if the simultaneous-action and MAID/FOSG slices require duplicate
 execution/evaluation theories rather than a small extension. A MAID is not
@@ -1170,14 +1174,14 @@ Change the concrete representation if evaluation requires classical choice,
 opaque real arithmetic, or large proof terms at runtime. The proof-semantic
 target remains stable; only the executable representation should change.
 
-### D11. Measurable and infinite-path probability are outside v1
+### D11. Measurable and infinite-path probability are outside the baseline
 
 Continuous auctions, continuous mixed strategies, and stochastic laws on an
 entire infinite realized-signal path require a measurable-kernel/integration
 design, not a cosmetic replacement of `PMF`. Do not burden the finite core with
 measurable-space parameters in anticipation of future work.
 
-After v1, run an isolated spike formalizing one continuous Bayesian auction and
+After the baseline, run an isolated spike formalizing one continuous Bayesian auction and
 one continuous mixed-strategy game, plus one infinite stochastic-monitoring
 path law. Compare:
 
@@ -1192,13 +1196,13 @@ statements and supports substantive shared proofs.
 
 During the architecture spike, classify every selected flagship theorem by its
 actual probability needs. D11 is validated if the stable finite/discrete slice
-requires no measurable-kernel imports. It is disproved as a v1 scope decision
+requires no measurable-kernel imports. It is disproved as a the baseline scope decision
 if an explicitly selected flagship result—not a hypothetical future auction—
 essentially quantifies over continuous distributions or an infinite stochastic
 path law. In that case, design a separate measurable core before freezing the
 finite API; do not simulate it through a generic monad placeholder.
 
-Infinite repeated games do not by themselves disprove D11. The v1 presentation
+Infinite repeated games do not by themselves disprove D11. the baseline presentation
 boundary from D2 permits stagewise expected utility, deterministic paths of
 mixed stage profiles, recursive values, and finite-prefix signal laws. A
 theorem requiring the stochastic law of an entire infinite realized-signal
@@ -1270,7 +1274,7 @@ is deliberately unreachable from this bridge.
 
 EXP-032 fixes the complementary bridge direction needed by sequential
 consistency. Stable `GameTheory.Protocol` owns behavioral assessments,
-history-supported beliefs, finite Bayes consistency, and a topology-free limit
+history-supported beliefs, finite positive-mass Bayes consistency, and a topology-free limit
 schema. `GameTheory.Analysis.Protocol` owns pointwise convergence and the
 Kreps-Wilson specialization. Protocol rejects both analytic declarations;
 positive bridge probes reach stable rationality, stable Bayes consistency, and
@@ -1535,14 +1539,14 @@ No domain-wide porting occurs during this spike.
   induction or one-shot deviation, one Bayesian/interim result, one
   mechanism-design truthfulness result, and the discounted repeated-game
   result used to classify infinite-horizon probability needs.
-- Give every existing domain an explicit v1 disposition. The initial defaults
+- Give every existing domain an explicit the baseline disposition. The initial defaults
   to confirm or overturn are:
 
-| Domain | Default v1 disposition | Required probe |
+| Domain | Default the baseline disposition | Required probe |
 |---|---|---|
 | Mechanism design | stable coordinated layer over shared forms/preferences | one truthfulness or incentive-compatibility theorem |
 | Bayesian/incomplete-information games | provisional native branch sharing only justified vocabulary | one interim, type-dependent deviation slice |
-| Auctions | finite/discrete models in v1; continuous models in D11 | one finite auction plus the D11 continuous-auction statement audit |
+| Auctions | finite/discrete models in the baseline; continuous models in D11 | one finite auction plus the D11 continuous-auction statement audit |
 | Voting and social choice | stable coordinated branch; do not force strategic form where unnecessary | one rule/property theorem and one strategic compilation if useful |
 | Knowledge/epistemic games | provisional information/protocol consumer or separate branch | one knowledge result testing whether `InfoState` retains enough structure |
 | Potential games | stable static-form theory | potential-improvement implies pure-equilibrium existence on a finite game |
@@ -1552,7 +1556,7 @@ No domain-wide porting occurs during this spike.
 | Cooperative games, matching, bargaining | parallel stable branches | one representative theorem without artificial strategy profiles |
 
 Deliverables: the transfer inventory, frozen flagship list, domain-disposition
-matrix with concrete declaration names, measured v1 hub baseline, and a
+matrix with concrete declaration names, measured the baseline hub baseline, and a
 provisional D0 decision with an explicit bridge/certificate complexity budget.
 There are no generic “future bridge” entries. A certificate abstraction
 receives no credit for hypothetical consumers.
@@ -1600,7 +1604,7 @@ CCE, CE, and strong Nash without violating locality.
 - If Phase 0 provisionally selected the hybrid, build its smallest protocol-
   adequacy prototype and derive strategic facts. If it selected coordinated
   branches, build the direct bridges only. Do not rebuild a universal hub unless
-  the measured v1 evidence identified a specific, testable repair.
+  the measured the baseline evidence identified a specific, testable repair.
 - Implement the selected bespoke direct-bridge baselines in either case.
 - Test perfect recall, observation preservation, terminal execution, chance,
   information locality, history uniqueness, finite strategic extraction,
@@ -1626,7 +1630,7 @@ share an execution base and what information interface survived the spike.
 - Run usability and performance tests.
 
 Deliverable: accept/reject decisions for every remaining provisional item,
-plus a frozen v1 core API. D7 is adopted only if the measured hybrid beats its
+plus a frozen the baseline core API. D7 is adopted only if the measured hybrid beats its
 direct bridge baselines on actual reuse or composition.
 
 #### Post-architecture delivery
@@ -1652,11 +1656,10 @@ bridge, without admitting an infinite-path law or the open uniform-existence
 claim.
 
 The RFC continues to govern architecture and disproof conditions. Mutable
-delivery order, frozen-obligation status, v1 declaration accounting, mature
-subfields missing from v1, and the isolated research portfolio are governed by
-[`PostArchitectureDeliveryPlan.md`](PostArchitectureDeliveryPlan.md). The
-current pinned-v1 family baseline is
-[`V1CoverageLedger.md`](V1CoverageLedger.md). Neither document may silently
+delivery order, obligation status, mature missing subfields, and the isolated
+research portfolio are governed by
+[`PostArchitectureDeliveryPlan.md`](PostArchitectureDeliveryPlan.md). Current
+family status is recorded in [`DeliveryLedger.md`](DeliveryLedger.md). Neither document may silently
 reopen an adopted decision; a conflicting result reserves an experiment and
 amends the relevant decision record.
 
@@ -1708,7 +1711,7 @@ These reject or narrow one decision but do not pause unrelated core work:
 - EFG and MAID cannot share an execution protocol honestly: retain a smaller
   transition base or separate execution interfaces;
 - general-state-first fails the hostile sequential tests: use finite-first for
-  v1 and retain the general protocol as a later experiment;
+  the baseline and retain the general protocol as a later experiment;
 - D0's transfer inventory is too small to amortize certificates: retain shared
   static forms and use bespoke sequential bridges;
 - coordinated branches duplicate solution concepts or evaluation proofs:

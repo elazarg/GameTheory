@@ -1,8 +1,8 @@
 /-
 # EXP-019: can the reach-mass conditions be stated without transport?
 
-The pinned v1 snapshot proves the recall direction of Kuhn's theorem not from
-recall but from three conditions about *reach mass*, with recall demoted to a
+The more general recall direction of Kuhn's theorem can be stated from three
+conditions about *reach mass*, with recall demoted to a
 sufficient condition. That is more general than what the library proves. It is
 also, structurally, a family of named adequacy certificates — the stratification
 D7 rejected on a baseline of zero consumers — so restating the theorem over

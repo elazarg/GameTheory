@@ -9,7 +9,7 @@ exact frozen transfers T1, T3, and T4, the minimal public D8 transformation
 surface, and several provisional domain probes remain delivery obligations.
 They are reconciled explicitly in
 [`PostArchitectureDeliveryPlan.md`](PostArchitectureDeliveryPlan.md) and
-[`V1CoverageLedger.md`](V1CoverageLedger.md).
+[`DeliveryLedger.md`](DeliveryLedger.md).
 
 The mode here differs from the earlier phases. Those validated architecture by
 pushing hostile slices at it; this one assumes the architecture and asks whether
@@ -116,16 +116,16 @@ without it.
 
 ## The mechanism-design encoding
 
-`Languages/Mechanism.lean` is the static counterpart to the sequential
-encodings, and it carries the same obligation: a workaround list, read before
-the theorems.
+`Languages/Mechanism.lean` is the capability-light static counterpart to the
+sequential encodings. It contains only mechanism data and its structural
+compiler; incentive and equilibrium results live in `Mechanism.Strategyproof`.
 
 Its finding is a negative one, which is the useful kind here. Mechanism design
-needed no new solution concept. *Strategyproofness is `IsDominantProfile`* of
-the induced game form with the truthful profile substituted, and
-`isStrategyproof_iff` proves that unfolding it reaches the inequality an
-economist would write. No fake agents, no extension of the game form, no second
-notion of dominance.
+needed no new solution concept. In the coordinated solution leaf,
+*strategyproofness is `IsDominantProfile`* of the induced game form with the
+truthful profile substituted, and `isStrategyproof_iff` unfolds to the
+pointwise inequality. No fake agents, no extension of the game form, and no
+second notion of dominance are introduced.
 
 The instance is the two-bidder second-price auction, where truthful bidding is
 dominant, paired with the first-price auction, where it is refuted. The second
@@ -169,7 +169,7 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 
 ## Outstanding
 
-- Whether any of v1's four and a half thousand lines above the same dependency
+- Whether any of the comparison design's four and a half thousand lines above the same dependency
   (Schauder, KKM, Scarf, the simplex approximation layer) is worth porting. The
   existence theorem here needed none of it, so the question is what *else* would
   need it, and nothing yet does.

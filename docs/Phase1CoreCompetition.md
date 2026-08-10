@@ -10,7 +10,7 @@ subsequent automated-review corrections to its evidence and affine slice.
   semantics will keep one logical API. The bridge now proves pure-vertex,
   expectation, product, and affine-mixture preservation for the winning law.
 - Experimental modules are isolated under
-  `GameTheory.Experimental.Phase1`; no v1 source is imported and no stable API
+  `GameTheory.Experimental.Phase1`; no the baseline source is imported and no stable API
   imports the losing representation.
 
 Exact metrics and commands are in
