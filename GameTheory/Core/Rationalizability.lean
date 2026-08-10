@@ -1,5 +1,5 @@
 /-
-# Correlated rationalizability by mixed-dominator elimination
+# Correlated and independent rationalizability
 
 For finite games, correlated rationalizability admits an iterated-deletion
 characterization: eliminate a pure strategy when a finite mixture of surviving
@@ -8,8 +8,8 @@ profile.  Unlike Bernheim--Pearce independent rationalizability for games with
 three or more players, this characterization does not impose a product-belief
 restriction across opponents.
 
-The mixture is the canonical `FinDist` randomized unilateral deviation; no
-second profile, probability, or equilibrium layer is introduced.
+The correlated mixture and every independent marginal use the canonical
+`FinDist`; no second profile, probability, or equilibrium layer is introduced.
 Pure-strategy elimination remains the separately named `pureSurvivors` /
 `SurvivesAllPureEliminationRounds` surface in `Core.Response`.
 
@@ -17,6 +17,7 @@ Reference: A. Brandenburger and E. Dekel, “Rationalizability and Correlated
 Equilibria,” *Econometrica* 55 (1987), 1391–1402, DOI: 10.2307/1913562.
 -/
 
+import GameTheory.Core.Mixed
 import GameTheory.Core.Response
 
 noncomputable section
@@ -142,6 +143,62 @@ def IsCorrelatedRationalizable (who : ι)
   ∀ round, strategy ∈ correlatedSurvivors F weaklyPrefers round who
 
 end Survivors
+
+section IndependentSurvivors
+
+variable [Fintype ι]
+variable (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
+
+/-- `strategy` is a best response to an independent profile of beliefs.  The
+focal player's marginal is overwritten by a point mass, so only the opponents'
+marginals affect either outcome law. -/
+def IsIndependentBestResponse (who : ι) (strategy : F.sig.Strategy who)
+    (beliefs : Profile F.sig.mixed) : Prop :=
+  ∀ alternative : F.sig.Strategy who,
+    weaklyPrefers who
+      (F.mixed.play
+        (Profile.update beliefs who (FinDist.pure strategy)))
+      (F.mixed.play
+        (Profile.update beliefs who (FinDist.pure alternative)))
+
+/-- Expected utility against independent beliefs is the expectation, over the
+product profile law, of the corresponding pure-profile replacement. -/
+theorem expectedUtility_mixed_play_update_pure
+    (utility : Utility F.sig) (beliefs : Profile F.sig.mixed)
+    (who : ι) (strategy : F.sig.Strategy who) :
+    expectedUtility utility who
+        (F.mixed.play
+          (Profile.update beliefs who (FinDist.pure strategy))) =
+      (FinDist.pi beliefs).expect fun profile =>
+        expectedUtility utility who
+          (F.play (Profile.update profile who strategy)) := by
+  rw [GameForm.mixed_play]
+  rw [show FinDist.pure strategy =
+      (beliefs who).map (fun _ => strategy) by simp]
+  rw [← GameForm.pi_map_recommendation, expectedUtility_bind,
+    FinDist.expect_map]
+
+/-- Strategies surviving iterated independent-belief best response.  Each
+opponent's marginal must be supported on the preceding round; the product law
+is supplied by the canonical mixed extension. -/
+def independentSurvivors : ℕ → ∀ who, Set (F.sig.Strategy who)
+  | 0, _ => Set.univ
+  | round + 1, who =>
+      { strategy |
+        strategy ∈ independentSurvivors round who ∧
+          ∃ beliefs : Profile F.sig.mixed,
+            (∀ player, player ≠ who →
+              ∀ action ∈ (beliefs player).support,
+                action ∈ independentSurvivors round player) ∧
+              IsIndependentBestResponse F weaklyPrefers who strategy beliefs }
+
+/-- Bernheim--Pearce independent rationalizability: survival of every
+independent-belief best-response round. -/
+def IsIndependentRationalizable (who : ι)
+    (strategy : F.sig.Strategy who) : Prop :=
+  ∀ round, strategy ∈ independentSurvivors F weaklyPrefers round who
+
+end IndependentSurvivors
 
 section Theorems
 
@@ -278,5 +335,178 @@ theorem IsStrictDominant.not_isCorrelatedRationalizable_of_ne
   (hdom alternative hne).not_isCorrelatedRationalizable
 
 end Theorems
+
+section IndependentTheorems
+
+variable [Fintype ι]
+variable {F : GameForm ι} {weaklyPrefers : WeakPreference ι F.sig.Outcome}
+
+@[simp]
+theorem independentSurvivors_zero (who : ι) :
+    independentSurvivors F weaklyPrefers 0 who = Set.univ :=
+  rfl
+
+theorem mem_independentSurvivors_succ {round : ℕ} {who : ι}
+    {strategy : F.sig.Strategy who} :
+    strategy ∈ independentSurvivors F weaklyPrefers (round + 1) who ↔
+      strategy ∈ independentSurvivors F weaklyPrefers round who ∧
+        ∃ beliefs : Profile F.sig.mixed,
+          (∀ player, player ≠ who →
+            ∀ action ∈ (beliefs player).support,
+              action ∈ independentSurvivors F weaklyPrefers round player) ∧
+            IsIndependentBestResponse F weaklyPrefers who strategy beliefs :=
+  Iff.rfl
+
+theorem independentSurvivors_antitone (round : ℕ) (who : ι) :
+    independentSurvivors F weaklyPrefers (round + 1) who ⊆
+      independentSurvivors F weaklyPrefers round who :=
+  fun _ h => h.1
+
+theorem mem_independentSurvivors_of_le {earlier later : ℕ}
+    (hround : earlier ≤ later) {who : ι} {strategy : F.sig.Strategy who}
+    (h : strategy ∈ independentSurvivors F weaklyPrefers later who) :
+    strategy ∈ independentSurvivors F weaklyPrefers earlier who := by
+  induction hround with
+  | refl => exact h
+  | step _ ih => exact ih h.1
+
+/-- Independent-belief survival implies correlated mixed-dominator survival.
+The proof averages any purported pointwise mixed dominator against the product
+belief witnessing independent best response. -/
+theorem independentSurvivors_subset_correlatedSurvivors
+    {utility : Utility F.sig} :
+    ∀ round who,
+      independentSurvivors F (euPreference utility) round who ⊆
+        correlatedSurvivors F (euPreference utility) round who := by
+  intro round
+  induction round with
+  | zero => intro who _ _; exact Set.mem_univ _
+  | succ round ih =>
+      intro who strategy survives
+      obtain ⟨survivesEarlier, beliefs, beliefsSupported, best⟩ := survives
+      refine ⟨ih who survivesEarlier, ?_⟩
+      rintro ⟨replacement, _, dominates⟩
+      let profileLaw := FinDist.pi beliefs
+      have bestValue (alternative : F.sig.Strategy who) :
+          profileLaw.expect (fun profile =>
+              expectedUtility utility who
+                (F.play (Profile.update profile who alternative))) ≤
+            profileLaw.expect fun profile =>
+              expectedUtility utility who
+                (F.play (Profile.update profile who strategy)) := by
+        have hbest := best alternative
+        rw [euPreference_apply,
+          expectedUtility_mixed_play_update_pure,
+          expectedUtility_mixed_play_update_pure] at hbest
+        exact hbest
+      have averageReplacement_le :
+          profileLaw.expect (fun profile =>
+              expectedUtility utility who
+                (randomizedDeviationOutcome F profile who replacement)) ≤
+            profileLaw.expect fun profile =>
+              expectedUtility utility who
+                (F.play (Profile.update profile who strategy)) := by
+        simp_rw [expectedUtility_randomizedDeviationOutcome]
+        rw [FinDist.expect_comm]
+        calc
+          replacement.expect (fun alternative =>
+              profileLaw.expect fun profile =>
+                expectedUtility utility who
+                  (F.play (Profile.update profile who alternative))) ≤
+              replacement.expect (fun _ =>
+                profileLaw.expect fun profile =>
+                  expectedUtility utility who
+                    (F.play (Profile.update profile who strategy))) :=
+            FinDist.expect_mono fun alternative _ => bestValue alternative
+          _ = profileLaw.expect fun profile =>
+                expectedUtility utility who
+                  (F.play (Profile.update profile who strategy)) :=
+            FinDist.expect_const ..
+      have pointwiseStrict (profile : Profile F.sig)
+          (hprofile : profile ∈ profileLaw.support) :
+          expectedUtility utility who
+              (F.play (Profile.update profile who strategy)) <
+            expectedUtility utility who
+              (randomizedDeviationOutcome F profile who replacement) := by
+        have allSurvive :
+            ∀ player,
+              Profile.update profile who strategy player ∈
+                correlatedSurvivors F (euPreference utility) round player := by
+          intro player
+          by_cases hplayer : player = who
+          · subst player
+            simpa only [Profile.update_same] using ih who survivesEarlier
+          · rw [Profile.update_of_ne _ _ hplayer]
+            apply ih player
+            exact beliefsSupported player hplayer (profile player)
+              ((FinDist.mem_support_pi.mp hprofile) player)
+        have hstrict := dominates (Profile.update profile who strategy) allSurvive
+        rw [euPreference_strict_iff] at hstrict
+        simpa [randomizedDeviationOutcome, Profile.update_idem] using hstrict
+      have averageStrict :
+          profileLaw.expect (fun profile =>
+              expectedUtility utility who
+                (F.play (Profile.update profile who strategy))) <
+            profileLaw.expect fun profile =>
+              expectedUtility utility who
+                (randomizedDeviationOutcome F profile who replacement) := by
+        let difference := fun profile =>
+          expectedUtility utility who
+              (F.play (Profile.update profile who strategy)) -
+            expectedUtility utility who
+              (randomizedDeviationOutcome F profile who replacement)
+        obtain ⟨witness, hwitness⟩ := profileLaw.support_nonempty
+        have hnegative : profileLaw.expect difference < 0 :=
+          FinDist.expect_lt_of_mem_support profileLaw difference 0
+            (fun profile hprofile => sub_nonpos.mpr (pointwiseStrict profile hprofile).le)
+            hwitness (sub_neg.mpr (pointwiseStrict witness hwitness))
+        dsimp only [difference] at hnegative
+        rw [FinDist.expect_sub] at hnegative
+        linarith
+      exact (not_lt_of_ge averageReplacement_le) averageStrict
+
+/-- Independent rationalizability is contained in correlated
+rationalizability for finite expected-utility games. -/
+theorem IsIndependentRationalizable.isCorrelatedRationalizable
+    {utility : Utility F.sig} {who : ι} {strategy : F.sig.Strategy who}
+    (hindependent :
+      IsIndependentRationalizable F (euPreference utility) who strategy) :
+    IsCorrelatedRationalizable F (euPreference utility) who strategy :=
+  fun round => independentSurvivors_subset_correlatedSurvivors round who
+    (hindependent round)
+
+/-- Every pure Nash action survives every independent-belief round.  Point-mass
+opponent marginals are supported on the preceding Nash actions. -/
+theorem IsNash.survivesIndependentElimination
+    {utility : Utility F.sig} {profile : Profile F.sig}
+    (hnash : IsNash F (euPreference utility) profile) :
+    ∀ round who,
+      profile who ∈
+        independentSurvivors F (euPreference utility) round who := by
+  intro round
+  induction round with
+  | zero => intro who; exact Set.mem_univ _
+  | succ round ih =>
+      intro who
+      refine ⟨ih who, F.purify profile, ?_, ?_⟩
+      · intro player _ action haction
+        have haction_eq : action = profile player := by
+          simpa only [GameForm.purify, FinDist.mem_support_pure] using haction
+        simpa only [haction_eq] using ih player
+      · intro alternative
+        rw [purify_update, purify_update, GameForm.mixed_play_purify,
+          GameForm.mixed_play_purify]
+        simpa only [Profile.update_eq_self] using
+          (isNash_iff profile).1 hnash who alternative
+
+/-- Every action played at a pure Nash equilibrium is independently
+rationalizable. -/
+theorem IsNash.isIndependentRationalizable
+    {utility : Utility F.sig} {profile : Profile F.sig}
+    (hnash : IsNash F (euPreference utility) profile) (who : ι) :
+    IsIndependentRationalizable F (euPreference utility) who (profile who) :=
+  fun round => hnash.survivesIndependentElimination round who
+
+end IndependentTheorems
 
 end GameTheory

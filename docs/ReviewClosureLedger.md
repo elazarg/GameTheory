@@ -56,7 +56,7 @@ The single-pass panel observations were re-derived separately before action:
 
 | ID | Finding | Status | Current disposition and evidence |
 |---|---|---|---|
-| R2-P1 | Pure strict-dominator survival still carried a rationalizability name. | closed | The predicate is `SurvivesAllPureEliminationRounds`; correlated rationalizability remains explicit and independent/product-belief rationalizability remains queued. |
+| R2-P1 | Pure strict-dominator survival still carried a rationalizability name. | closed | The predicate is `SurvivesAllPureEliminationRounds`; correlated and independent rationalizability now have separate joint-belief and product-belief semantics, with a strict three-player separation witness. |
 | R2-P2 | Structurally identical EFG/FOSG carriers had no relation. | closed | `EFG.Game.toFOSG` transparently forgets only tree/single-mover certificates while preserving the exact execution and information objects. |
 | R2-P3 | Analytic best-reply correspondences had no bridge to Core `IsBestResponse`. | closed | `prob_mem_bestReply_iff_isBestResponse`, the product correspondence theorem, and the fixed-point/Nash iff now connect the surfaces; mixed-Nash existence consumes the bridge. |
 | R2-P4 | Fictitious-play limit theorems used only constant or eventually constant paths. | closed | `Analysis.FictitiousPlayTest` supplies a two-player path changing forever, proves empirical convergence to the uniform profile, and applies `limit_isNash`. |
@@ -225,10 +225,9 @@ The single-pass panel observations were re-derived separately before action:
 
 The queued rows are theorem breadth, not unresolved corrections:
 
-1. independent rationalizability;
-2. MAID strategic-relevance/requisite analysis;
-3. the reachable-menu weakening for backward existence; and
-4. the remaining mature-family extensions already enumerated in
+1. MAID strategic-relevance/requisite analysis;
+2. the reachable-menu weakening for backward existence; and
+3. the remaining mature-family extensions already enumerated in
    `PostArchitectureDeliveryPlan.md`.
 
 Their absence is represented as `partial` or as a named next seam in

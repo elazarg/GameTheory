@@ -26,7 +26,7 @@ Status labels:
 
 | Family | Status | Current evidence | Next seam |
 |---|---|---|---|
-| Equilibrium, dominance, and response | supported | Core Nash/CE/CCE/strong Nash, correlated rationalizability, explicitly named pure-elimination survivors, response dynamics | Independent rationalizability, secure equilibrium, and further elimination theorems. |
+| Equilibrium, dominance, and response | supported | Core Nash/CE/CCE/strong Nash, distinct correlated and product-belief independent rationalizability with a strict three-player separation, explicitly named pure-elimination survivors, response dynamics | Secure equilibrium and further elimination theorems. |
 | Mixed games and refinements | supported | mixed extension, improvement, trembling-hand positive/negative tests | Separately gate additional limit refinements. |
 | Correlation and Bayesian obedience | supported | CE/CCE local-obedience iff; BCE interim-obedience iff, BNE outcome laws, and constructive information-structure foundation; dominated-support results | Richer public signaling regimes and further approximation results. |
 | Potential and learning | supported | exact/mixed potential, ordinal-not-exact Nash, fictitious-play convergence, and optimally tuned square-root MW regret/CCE rates | Weighted-potential generalization. |

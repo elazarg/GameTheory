@@ -147,8 +147,7 @@ complete merely because the pruning target exists.
 These packages may proceed independently once their owner imports remain
 fixed:
 
-- independent rationalizability, secure equilibrium, and remaining
-  dominance/elimination results;
+- secure equilibrium and remaining dominance/elimination results;
 - weighted-potential theory;
 - general security and constant-sum correlation;
 - Sen and median-voter social choice;
@@ -159,6 +158,10 @@ fixed:
 Each package needs its own theorem-level consumer. Shared general mathematics
 belongs in Mathlib when available, otherwise in `GameTheoryMath` only after a
 live game-theoretic consumer exists.
+
+Independent rationalizability is complete through the existing mixed-product
+law: iterated product-belief best response has a Nash-survival theorem and a
+strict three-player separation from correlated rationalizability.
 
 ### H. Mechanism and algorithm extensions
 

@@ -90,6 +90,7 @@ becomes difficult to scan.
 | EXP-077 | 2026-08-10 | D6/D12 / finite sequential semantics | Must one-shot fuel track history depth, and when is normalized history mass a Bayes fiber? | Narrows both contracts; hostile regressions pass | `GameTheory/Protocol/{Assessment,BehavioralAssessment,Information}.lean`; `GameTheory/Tests/Assessment.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
 | EXP-078 | 2026-08-10 | D42 / imperfect-information one-shot deviations | Does absence of profitable single-information-set deviations inside every proper subgame characterize SPE under perfect recall? | Refutes; corrects D42 and closes the false delivery remainder | `GameTheory/Tests/SubgameOneShot.lean`; [`decisions/D42-imperfect-information-subgames.md`](decisions/D42-imperfect-information-subgames.md) |
 | EXP-079 | 2026-08-10 | D4/D5/D31 / intrinsic strategic form | Can selected closed-loop solutions compile directly to canonical pure Nash while preserving downstream effects of one owned-rule deviation? | Supports; decides D43 | [`decisions/D43-intrinsic-selected-solution-strategic-form.md`](decisions/D43-intrinsic-selected-solution-strategic-form.md); `GameTheory/Experimental/PostArchitecture/IntrinsicStrategic.lean` |
+| EXP-080 | 2026-08-10 | D40 / independent rationalizability | Can canonical mixed profiles express product beliefs and exhibit the strict three-player separation from correlated rationalizability? | Supports; completes D40 product-belief package | [`decisions/D40-mixed-pure-rationalizability.md`](decisions/D40-mixed-pure-rationalizability.md); `GameTheory/Core/Rationalizability.lean`; `GameTheory/Tests/Rationalizability.lean` |
 
 ## Entry template
 
@@ -4978,3 +4979,50 @@ memory.
   at a caller-supplied nature state. Promote the compiler and hostile witness;
   keep temporal execution, nature lotteries, and behavioral/mixed strategies
   as separate gates.
+
+### EXP-080: product-belief independent rationalizability
+
+- **Date / revision:** 2026-08-10, reserved after `ab53b29`
+- **Status:** complete; supports the canonical mixed-profile product design
+- **Decision / question:** D40; whether a canonical mixed-strategy profile can
+  represent per-opponent independent beliefs without a new probability layer,
+  and whether that surface separates from unrestricted correlated beliefs in
+  a finite three-player game.
+- **Prediction:** overwrite the focal marginal in an existing mixed profile by
+  a pure candidate, then use `GameForm.mixed` to obtain the product outcome
+  law. Iterated best response should restrict each opponent marginal's support
+  to the preceding round. A two-binary-opponent fixture should admit a
+  correlated diagonal belief but no product belief for one candidate action.
+- **Representative slice:** one focal player has a candidate with zero payoff
+  and two alternatives whose diagonal payoffs have opposite signs while both
+  reward off-diagonal opponent actions. The other two players have constant
+  utility. Half mass on the two diagonal profiles supports the candidate under
+  correlation; independence either creates off-diagonal mass or degenerates
+  at a diagonal endpoint where one alternative is strictly profitable.
+- **Competing designs:** canonical mixed profiles and `FinDist.pi`; a bespoke
+  dependent opponent-product type; or leave independent rationalizability
+  absent and retain only correlated mixed-dominator elimination.
+- **Kill conditions:** the mixed profile does not enforce a product law; the
+  candidate is a best response to some product belief; the candidate fails
+  correlated rationalizability; the test works with only two players; or the
+  implementation requires a second probability/equilibrium abstraction,
+  stored finiteness, public transport plumbing, or a trust hazard.
+- **Artifacts / observations:** `IsIndependentBestResponse` overwrites the
+  focal marginal and evaluates the result through `GameForm.mixed`;
+  `independentSurvivors` restricts every opponent marginal's support to the
+  preceding round. Pure Nash actions survive every round, and
+  `IsIndependentRationalizable.isCorrelatedRationalizable` proves the expected
+  inclusion by averaging a purported mixed dominator against the product
+  witness. The hostile `Option Bool` player game has exactly three players.
+  Its focal action `0` survives all correlated rounds, while symbolic payoff
+  polynomials and probability bounds refute every product belief in independent
+  round one. Thus the converse inclusion is machine-refuted.
+- **Validation:** `lake build GameTheory.Tests.Rationalizability` completed
+  1,756 jobs warning-free; Phase 2 and Phase 3 expected audits both report
+  `VERIFIED=1`; the full build completed 3,580 jobs warning-free. The fast
+  source guards report no direct updates, placeholders, custom axioms,
+  transport growth, or lines over 100. Deep reachability mode was not run.
+- **Outcome / next action:** supports. Complete the D40 independent surface
+  without a bespoke opponent-product type or compatibility alias. Preserve the
+  separate correlated, independent, and pure-elimination names; any executable
+  checker remains a distinct finite-algorithm gate.

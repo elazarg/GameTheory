@@ -1,8 +1,8 @@
 # D40: distinguish correlated, independent, and pure rationalizability
 
-- **Status:** accepted, terminology corrected and sharpened 2026-08-10
+- **Status:** accepted; independent product-belief package completed by EXP-080
 - **Date:** 2026-08-09
-- **Experiment IDs:** EXP-073, EXP-076
+- **Experiment IDs:** EXP-073, EXP-076, EXP-080
 
 ## Decision
 
@@ -16,9 +16,10 @@ represents:
 - `GameTheory.pureSurvivors` names the distinct pure-dominator iteration and
   `GameTheory.SurvivesAllPureEliminationRounds` names its all-round survivor
   property without overloading “rationalizability”; and
-- independent rationalizability has no public definition until a product of
-  opponents' beliefs and its finite-game characterization are implemented and
-  tested.
+- `GameTheory.independentSurvivors` and
+  `GameTheory.IsIndependentRationalizable` iterate best response to a profile
+  of per-opponent `FinDist` marginals, interpreted by the canonical mixed
+  extension as an independent product law.
 
 Do not provide an unqualified `IsRationalizable` alias.  In games with three
 or more players it would hide the material distinction between arbitrary
@@ -42,6 +43,11 @@ opponents, from the independent notion originally defined by Bernheim and
 Pearce.  Design 3 would freeze a new product-distribution API without its own
 hostile slice.  Design 4 would discard a valid and useful correlated-belief
 operator.
+
+The original staged choice of Design 2 remains the reason the terminology fix
+landed first. EXP-080 later discharged Design 3's missing gate without adding a
+new product-distribution type: an existing mixed profile supplies the marginal
+laws and `GameForm.mixed` supplies their product.
 
 Primary references:
 
@@ -73,7 +79,10 @@ all finite multiplayer games.  Neither is true: the implementation has no
 product restriction, and the primary literature gives a three-player strict
 separation.
 
-The correction therefore stands.  A future independent-rationalizability
-package must choose an explicit finite product-law representation, prove its
-own elimination/best-response correspondence, and include a three-player
-example separating it from `IsCorrelatedRationalizable`.
+The correction therefore stands, and EXP-080 completes the named independent
+surface. `Tests.Rationalizability` proves that one candidate survives every
+correlated mixed-dominator round but is rejected in the first independent
+best-response round. The general inclusion theorem proves independent implies
+correlated rationalizability. The symbolic converse counterexample quantifies
+over every pair of opponent marginals; it is not a sampled or
+definition-for-definition comparison.

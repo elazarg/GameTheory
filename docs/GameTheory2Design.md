@@ -678,8 +678,10 @@ be disguised as degenerate instances of `IsEquilibrium`:
 These predicates share `GameForm.outcomeLaw`, preferences, and the profile
 operations with equilibrium, but they are a separate concept family. D10's
 boolean dominance and pure-elimination algorithms prove correctness against
-the explicitly named pure definitions; correlated rationalizability stays
-proof-semantic until a separate executable certificate gate passes.
+the explicitly named pure definitions. Correlated and independent
+rationalizability remain separate proof-semantic iterations; the latter uses
+the canonical mixed-profile product law. Either needs a separate executable
+certificate gate before entering the finite algorithm layer.
 
 #### Validation spike
 
