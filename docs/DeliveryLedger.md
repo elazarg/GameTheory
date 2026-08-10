@@ -28,7 +28,7 @@ Status labels:
 |---|---|---|---|
 | Equilibrium, dominance, and response | supported | Core Nash/CE/CCE/strong Nash, correlated rationalizability, explicitly named pure-elimination survivors, response dynamics | Independent rationalizability, secure equilibrium, and further elimination theorems. |
 | Mixed games and refinements | supported | mixed extension, improvement, trembling-hand positive/negative tests | Separately gate additional limit refinements. |
-| Correlation and Bayesian obedience | supported | CE/CCE, BCE outcome laws, dominated-support results | Public signaling regimes and further approximation results. |
+| Correlation and Bayesian obedience | supported | CE/CCE, positive-recommendation conditional-obedience iff, BCE outcome laws, dominated-support results | Public signaling regimes and further approximation results. |
 | Potential and learning | supported | exact/mixed potential plus an ordinal-not-exact Nash witness, fictitious-play construction and convergence | Weighted-potential generalization. |
 | Zero-sum and minimax | supported | matrix security, selected values, attained maximin--minimax equality | General security and measurable extensions. |
 | Welfare and smoothness | supported | IR/Pareto transport, Nash/CCE smoothness | Additional finite welfare consequences. |

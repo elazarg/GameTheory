@@ -74,6 +74,70 @@ theorem IsCorrelatedEq.conditional_obedience
     simp [respond, hreco']
   rwa [hdeviation] at hconditional
 
+/-- For expected utility, correlated equilibrium is exactly obedience after
+each recommendation that can actually be observed.  Recommendations outside
+the law's support impose no condition.
+
+The reverse implication disintegrates the law by the deviator's observed
+recommendation.  Thus the local replacement checks jointly cover an arbitrary
+recommendation-dependent response without requiring the strategy type itself
+to be finite. -/
+theorem isCorrelatedEq_iff_conditional_obedience
+    (law : FinDist (Profile F.sig)) :
+    IsCorrelatedEq F (euPreference utility) law ↔
+      ∀ who recommended replacement,
+        ∀ hrecommended :
+            ∃ profile : Profile F.sig,
+              profile ∈ {candidate | candidate who = recommended} ∧
+                profile ∈ law.support,
+          (law.condOn {profile | profile who = recommended} hrecommended).expect
+                (fun profile => expectedUtility utility who (F.play profile)) ≥
+            (law.condOn {profile | profile who = recommended} hrecommended).expect
+                (fun profile => expectedUtility utility who
+                  (F.play (Profile.update profile who replacement))) := by
+  constructor
+  · intro hce who recommended replacement hrecommended
+    exact hce.conditional_obedience who recommended replacement hrecommended
+  · intro hobedient
+    rw [isCorrelatedEq_iff]
+    intro who respond
+    rw [euPreference_apply, expectedUtility_outcomeLaw, expectedUtility_bind]
+    have hdecompose := FinDist.eq_bind_condOnFibre law (fun profile => profile who)
+    conv_lhs => rw [hdecompose, FinDist.expect_bind]
+    conv_rhs => rw [hdecompose, FinDist.expect_bind]
+    apply FinDist.expect_mono
+    intro recommended hrecommendedMap
+    rw [FinDist.support_map] at hrecommendedMap
+    obtain ⟨witness, hwitness, rfl⟩ := hrecommendedMap
+    have hrecommended :
+        ∃ profile : Profile F.sig,
+          profile ∈ {candidate | candidate who = witness who} ∧
+            profile ∈ law.support :=
+      ⟨witness, rfl, hwitness⟩
+    have hfibre :
+        ∃ profile ∈ (fun candidate => candidate who) ⁻¹' {witness who},
+          profile ∈ law.support :=
+      ⟨witness, Set.mem_preimage.mpr (Set.mem_singleton _), hwitness⟩
+    rw [FinDist.condOnFibre, dif_pos hfibre]
+    calc
+      (law.condOn {profile | profile who = witness who} hrecommended).expect
+          (fun profile => expectedUtility utility who
+            (F.play (Profile.update profile who (respond (profile who))))) =
+          (law.condOn {profile | profile who = witness who} hrecommended).expect
+            (fun profile => expectedUtility utility who
+              (F.play (Profile.update profile who (respond (witness who))))) := by
+        apply FinDist.expect_congr
+        intro profile hprofile
+        have hrecommended :=
+          (FinDist.support_condOn law {profile | profile who = witness who}
+            hrecommended hprofile).1
+        have hrecommended' : profile who = witness who := by
+          simpa only [Set.mem_setOf_eq] using hrecommended
+        rw [hrecommended']
+      _ ≤ (law.condOn {profile | profile who = witness who} hrecommended).expect
+            (fun profile => expectedUtility utility who (F.play profile)) :=
+        hobedient who (witness who) (respond (witness who)) hrecommended
+
 /-- A correlated equilibrium never recommends an action that is strictly
 dominated on a product set carrying the whole support.  The relative form is
 the one needed by iterated elimination: the product set may shrink between

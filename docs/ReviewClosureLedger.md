@@ -98,7 +98,7 @@ The single-pass panel observations were re-derived separately before action:
 | C-08 | Potential-game header overstated ordinal theorem coverage. | closed | The header identifies exactly the equilibrium-existence family proved at ordinal strength. |
 | C-09 | Fictitious-play potential bounds were documented as equalities/two-sided estimates. | closed | Docstrings now state their proved one-sided lower-bound content. |
 | C-10 | `Core.lean` omitted major exported families from its description. | closed | The root header describes the stable static theory and its analysis boundary without an exhaustive fragile list. |
-| C-11 | CE-to-obedience exists but the converse characterization is absent. | queued | This is a same-family correlation extension under “Correlation and Bayesian obedience” in `DeliveryLedger.md`; current docstrings claim only the proved direction. |
+| C-11 | CE-to-obedience exists but the converse characterization is absent. | closed | `isCorrelatedEq_iff_conditional_obedience` proves both directions by disintegrating the finite law over observed recommendations, without a finite strategy-carrier assumption. `Tests.CorrelatedDominance` constructs a fair diagonal, non-product recommendation from local checks and rejects a crossed point mass by one profitable switch. |
 
 ## Social choice, Bayesian theory, and coalitional foundations
 
