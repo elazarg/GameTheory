@@ -150,6 +150,16 @@ theorem expectedPayoff_eq_expect_columns {I J : Type u} (A : I → J → ℝ)
   rw [mixedProfile_update_one]
   rfl
 
+/-- Expected payoff of a separable zero-sum matrix is the difference of the
+two marginal expectations. -/
+theorem expectedPayoff_sub {I J : Type u} (rowValue : I → ℝ)
+    (colValue : J → ℝ) (row : FinDist I) (col : FinDist J) :
+    expectedPayoff (fun currentRow currentCol =>
+        rowValue currentRow - colValue currentCol) row col =
+      row.expect rowValue - col.expect colValue := by
+  rw [expectedPayoff_eq_expect_rows]
+  simp_rw [expectedPayoff_pure_row, FinDist.expect_sub, FinDist.expect_const]
+
 /-- Row external regret is the fixed row's payoff against the status quo's
 column marginal minus the correlated status-quo payoff. -/
 theorem externalRegret_zero_eq {I J : Type u} (A : I → J → ℝ)

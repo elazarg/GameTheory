@@ -1110,6 +1110,20 @@ a new exploitability/regret wrapper is needed. This is the static consumer for
 future dynamic bounds, not a claim that one Protocol/CFR schedule already
 supplies both players' certificates.
 
+EXP-090/D52 supplies that first dynamic consumer without prematurely freezing
+a coupled learner. Two local D46 regret-matching processes in the existing
+simultaneous one-shot FOSG/Protocol generate one product round law. Each
+player's D50 gain is proved equal to canonical external regret against that
+same law; time averaging and finite positive-part sums give uniform row and
+column bounds, which D51 turns into canonical empirical-marginal `IsεNash`
+with vanishing tolerance. The fallback is arbitrary, so each player receives
+a constructed strict improving action: both initial regrets are exactly `1`,
+the shared saddle gap is `2`, and both learned laws provably move. The adopted
+scope is this explicit one-site-per-player schedule. A genuinely multi-site
+two-player slice must expose the reusable scheduling contract before any
+general dynamics API, arbitrary-replacement exploitability theorem, or
+unequal-depth extension is admitted.
+
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic
 and incentive certificates directly without pretending to be a sequential

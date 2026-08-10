@@ -149,16 +149,22 @@ Separate packages:
   external regrets to every pure and mixed empirical saddle gap and canonical
   `IsεNash`, tested on a correlated exact-equilibrium trace and a nonzero
   gap-`2` control; and
-- **next:** instantiate both players' D50 certificates on the same zero-sum
-  Protocol/CFR round law and feed them to that static bridge. General schedule
-  synthesis, arbitrary behavioral replacements, and unequal-depth information
-  fibers remain separate gates.
+- **complete:** a same-trace two-player Protocol learning consumer: both D46
+  laws move, both initial canonical regrets equal `1`, the shared saddle gap is
+  `2`, and D50 plus D51 gives empirical-marginal canonical `IsεNash` with
+  vanishing tolerance; and
+- **next:** test reusable finite schedule synthesis on a genuinely multi-site
+  two-player Protocol before freezing a coupled dynamics API. Arbitrary
+  behavioral replacements and unequal-depth information fibers remain
+  separate gates.
 
 Do not merge these packages into the FOSG syntax root or hide serialization
 order behind choice. The coefficient package counts because its continuation
-law is canonical and its recursive factorization has hostile consumers. It is
-not full CFR exploitability coverage until one two-player Protocol schedule
-supplies both sides of the now-established static zero-sum saddle-gap theorem.
+law is canonical and its recursive factorization has hostile consumers. The
+explicit one-shot schedule now supplies both sides of the static zero-sum
+saddle-gap theorem. This is not yet a general CFR exploitability surface:
+multi-site schedule synthesis, arbitrary behavioral replacements, and
+unequal-depth fibers remain explicit later gates.
 
 ### E. Intrinsic selected-solution strategic form — resolved
 
