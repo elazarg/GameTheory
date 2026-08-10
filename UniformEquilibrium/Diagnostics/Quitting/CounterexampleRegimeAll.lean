@@ -10,6 +10,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledTailPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeExactCycleStrata
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFiniteInstability
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFloorViolationBudget
@@ -106,6 +107,13 @@ At the local dynamic-debt level, vanishing of the named diagonal seam is
 exactly the criterion for the displayed root to lift to a Nash--Bellman edge
 between augmented caps; the umbrella does not assert that this criterion holds
 along the optimized tail.
+Playerwise dynamic debt is also exported as an exact killed-potential
+reference account.  An excessive account with the same initial value can
+dissipate only by losing the corresponding surviving boundary: boundary
+dominance forces every positively reached local dissipation to vanish, while
+strict dissipation forces strict boundary shortfall.  The counterexample
+regime does not supply that boundary dominance, so this accounting theorem
+does not erase the positive phantom plateau.
 Product-root collision mass is at most `choose (card ι) 2` times squared
 one-stage absorption.  The exported weighted-window concentration theorem has
 a separate zero-absorption branch; its conditional singleton-mixture payoff

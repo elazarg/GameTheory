@@ -2203,14 +2203,14 @@ regularity layer tracked separately. Nothing here gates the quitting lane.
 
 ### `MATH-P0-12` — raw-flow/co-state utilization of the counterexample seam
 
-- **Status:** PLANNED; generic Math worktree infrastructure exists but is
-  uncompiled and is not a quitting-game producer
+- **Status:** IN PROGRESS; the generic graded accounting layer is proved and
+  compiled, but it is not by itself a quitting-game producer
 - **Lane:** P0 of the finite-quitting counterexample route
 - **Depends:** `CounterexampleRegimeTangentPacket`, normalized finite-window
   occupation and refusal reweighting, dynamic-debt conservation and phantom
   boundary geometry, packet-defect algebra, punishment-completed cycles, and
   solved-cycle reward strata
-- **Generic worktree inputs:** `Math/SurvivalWeightedObstruction.lean`,
+- **Generic inputs:** `Math/SurvivalWeightedObstruction.lean`,
   `Math/LinearProgramming/FlowCostateDuality.lean`, and
   `Math/Probability/KilledTailPotential.lean`
 

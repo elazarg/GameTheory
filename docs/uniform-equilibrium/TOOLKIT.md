@@ -125,6 +125,7 @@ generic quitting-game existence theorems.
 | Joint-survival selection | `UniformEquilibrium/Quitting/Paths/JointSurvivalSelection.lean` | Identifies compactly selected continuation values with actual infinite-path terminal values under joint-survival decay. |
 | Projective first-event algebra | `Math/ProjectiveBellmanPacket.lean` | Exact cemetery/absorption normalization and Bellman balance before any chart or recurrence argument. |
 | Affine equality/Farkas alternative | `Math/AffineEqualityFarkas.lean` | A finite feasible-tangent-or-dual-row alternative; strategic decoding and arc lifting are separate inputs. |
+| Graded survival transport | `Math/SurvivalWeightedObstruction.lean`, `Math/LinearProgramming/FlowCostateDuality.lean`, `Math/Probability/KilledTailPotential.lean` | Separates survival-grade-one raw charges from grade-zero endpoint coboundaries, transports finite co-states by the adjoint map, and folds killed scalar potentials while retaining the terminal boundary remainder. These are accounting identities; a client must still supply a feasible strategic current, a compatible co-state, and any boundary comparison used to eliminate dissipation. |
 
 Phase-occupation duality is optimization infrastructure.  Until a concrete
 strategic construction supplies a feasible phase occupation, it is not itself
