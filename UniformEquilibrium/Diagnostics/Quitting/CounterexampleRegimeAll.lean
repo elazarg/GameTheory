@@ -12,9 +12,12 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePref
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBoundaryProvenanceAlternative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCollisionAwareFiniteReturn
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCommonWordRealization
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceObstructionCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceDynamicAlternative
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceStrategicDecoder
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledCapacityPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledTailPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOneStageObstructionCarrier
@@ -28,6 +31,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSurplus
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneAttachmentRepair
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneTangentReadout
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePreferenceLassoCirculationObstruction
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeReachableCarryTelescope
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeNonpositiveFloorTerminalCapRegression
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTerminalIncomingPathAlternative
@@ -42,6 +46,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSearchConsequ
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSeam
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSmallPlayers
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTailBridge
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTargetTailGluingObstruction
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacket
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentAnchoredProjectiveLCP
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentMixingCompatibility
@@ -69,12 +74,15 @@ import UniformEquilibrium.Quitting.AbsorptionPath.FlowCostateObstructionAdapter
 import UniformEquilibrium.Quitting.AbsorptionPath.SurvivalWeightedObstructionAdapter
 import UniformEquilibrium.Quitting.Classification.SingletonPacketDefectAlgebra
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryLimitGeometry
+import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryConditioning
+import UniformEquilibrium.Quitting.Cycles.ConditionedProductPurification
 import UniformEquilibrium.Quitting.Cycles.PeriodOneTangentAtlas
 import UniformEquilibrium.Quitting.Cycles.PeriodicNormalizedSeam
 import UniformEquilibrium.Quitting.Debt.Dynamic.DynamicDebtCapChargedAnchorCounterexample
 import UniformEquilibrium.Quitting.Debt.Dynamic.PeriodicDebtHolonomy
 import UniformEquilibrium.Quitting.Debt.Dynamic.PunishmentFloorCapSplice
 import UniformEquilibrium.Quitting.Paths.OutsiderNeverGluing
+import UniformEquilibrium.Quitting.EssentialAPS.NashBellmanSingletonCycle
 import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResponse
 
 /-!
@@ -460,4 +468,26 @@ fixes payoff and debt while leaving the successor stored root arbitrary; two
 successive zero-charge limits therefore collapse to the known positive-debt
 all-Continue phantom plateau.  No current equation controls root velocity or
 turns this compactified edge into a strategic return.
+
+Conditioning a positive-survival tail on eventual absorption provides a
+second, chronology-preserving normalization.  Its conditioned values satisfy
+an exact affine recursion with absorption weight in `[0,1]`, remain in the
+reward box, and approach the active singleton face at the corresponding
+relative opponent-absorption rate.  Singleton-support rows admit exact
+product-root purification at the new hazard scale.  Multi-owner rows are
+rigid: with positive Continue mass and two active marginals, preserving the
+conditional nonempty-coalition law forces scale one, so a genuine phantom
+boundary cannot be removed by exact rowwise product rescaling.
+
+The strategic consumers are now explicit.  Any supplied finite
+collision-aware product-root return satisfying exact Nash and punishment
+admissibility is a solved exact cycle.  On the proper singleton stratum, a
+state-matched Nash--Bellman cycle with changing owners is already an essential
+APS cycle and needs no separate punishment field.  Likewise, a simultaneous
+all-player zero-debt-source face return compiles to a solved cycle.  A
+counterexample forbids all three.  What is not supplied is the common
+chronological word itself.  Playerwise target-closed punishment tails do not
+glue: their simultaneous existence is compatible with a strictly positive
+common-tail repair value, and the packet's strict preference lasso actually
+excludes using the whole packet mass as a singleton-circulation phase.
 -/

@@ -2203,8 +2203,9 @@ regularity layer tracked separately. Nothing here gates the quitting lane.
 
 ### `MATH-P0-12` — raw-flow/co-state utilization of the counterexample seam
 
-- **Status:** IN PROGRESS; the generic graded accounting layer is proved and
-  compiled, but it is not by itself a quitting-game producer
+- **Status:** IN PROGRESS; accounting, compact carriers, and exact strategic
+  consumers are compiled, while the state-matched realization theorem remains
+  open
 - **Lane:** P0 of the finite-quitting counterexample route
 - **Depends:** `CounterexampleRegimeTangentPacket`, normalized finite-window
   occupation and refusal reweighting, dynamic-debt conservation and phantom
@@ -2307,14 +2308,55 @@ maximal unconditional conclusion currently available: asymptotic equality
 does not imply a finite zero or the nonexpansion used by the face-recurrence
 theorem.
 
-**Acceptance.** A game-facing utilization theorem, not another separator:
-every non-all-Continue counterexample tangent must either emit a positive raw
-seam priced by the compatible debt co-state and exhausted by a proved boundary
-comparison, or produce one of the already compiled repair/return/cycle exits.
-The theorem must retain the two periodic evaluator branches and may not assume
-general cap-splice realization.  Until these conditions are met, the new Math
-files are reusable accounting infrastructure only and do not advance the
-landed existence claim.
+There is now a better chronology-preserving projective scale.  Let `L_t` be
+the tail's limiting joint-survival mass and normalize by the remaining
+eventual absorption `a_t=1-L_t`.  The conditioned value removes the phantom
+boundary and satisfies the exact consecutive recursion
+
+```text
+y_t = alpha_t * absorbingDelivery_t + (1-alpha_t) * y_(t+1),
+alpha_t = q_t / a_t in [0,1].
+```
+
+This avoids the uncontrolled ratio `q_(t+1)/q_t`, keeps values in the reward
+box, and gives `|y_t(i)-r_i({i})| ≤ 2*M*alpha_t` on active support.  It exposes
+an atomic/diffuse split.  A singleton-support atomic row is exactly purifiable
+to an ordinary solo product root with the conditioned hazard, stagewise and
+along the whole chronology.  In contrast, a row with two active marginals and
+positive Continue mass is rigid: exact preservation of its conditional
+coalition law forces scale one.  A genuine phantom boundary therefore cannot
+be removed by rowwise rescaling of a multi-owner product root.  The diffuse
+branch needs chronological singleton chattering or another approximate
+purification that retains the punishment floor.
+
+The receiving compilers are explicit.  A finite collision-aware product-root
+return with exact Nash and punishment admissibility is a solved exact cycle.
+On proper singleton roots, a state-matched changing-owner Nash--Bellman cycle
+is already an executable essential-APS cycle and requires no separate
+punishment field.  A common simultaneous zero-debt-source face return also
+compiles.  Counterexamples exclude each of these literal words.  What remains
+is their production: statewise curve selection gives nearby exact edges but
+does not match one edge's successor state to the next edge's current state.
+
+Nor can common realization be inferred from playerwise punishment tails.
+Zero behavioral-tail repair is equivalent to arbitrarily accurate elementary
+one-word terminal Nash realization; the terminal gap makes that repair value
+strictly positive after every counterexample prefix, even though all
+player-indexed target-closed punishment tails exist at every accuracy.  The
+strict preference lasso supplies no hidden singleton circulation either: its
+entrance inequality excludes the packet mass from every face-circulation
+phase.  A successful route must create new chronological phase weights or a
+floor-safe conditioned singleton flow.
+
+**Acceptance.** A game-facing state-matched realization theorem, not another
+separator: every non-all-Continue counterexample tail must either construct a
+floor-safe positive-mass finite return consumed by the collision-aware or
+singleton-APS compiler, construct a divergent singleton-flow chronology whose
+finite meshes give a uniform payoff, or enter a terminal/common-repair branch
+already compiled above.  The theorem may not assume common cap-splice
+realization, replace product roots by correlated rows, or discard the surviving
+boundary.  The currently landed results sharply reduce this target but do not
+prove it.
 
 ## Literature import lane
 
