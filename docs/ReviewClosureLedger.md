@@ -113,7 +113,7 @@ The single-pass panel observations were re-derived separately before action:
 | S-07 | `BayesianGame.actionSignature` carried an unused outcome type. | closed | Its outcome is `Unit`; only the dependent action profile is represented there. |
 | S-08 | `replaceRanking` looked like an illicit profile update and a helper had no consumer. | closed | `replaceRanking` is the social-choice domain operation with live GS/tests consumers; the unused dictator helper was removed. It does not use `Function.update`. |
 | S-09 | GS assumptions lacked a positive strategyproof-and-onto witness. | closed | `dictatorialChoice_isStrategyProof_and_isOnto` supplies the canonical positive witness; tests retain onto, manipulable, and nondictatorial discriminators. |
-| S-10 | BCE lacks the standard interim obedience iff and a reverse epistemic foundation theorem. | queued | Current BCE claims are ex-ante deviation-map obedience and BNE-to-BCE only. Interim characterization and converse information-structure results remain named correlation breadth. |
+| S-10 | BCE lacks the standard interim obedience iff and a reverse epistemic foundation theorem. | queued | The first half is now complete: `isBayesCorrelatedEq_iff_interim_obedience` characterizes BCE by positive own-type/recommendation cells without global carrier finiteness, and `Tests.BayesCorrelated` has positive and falsifying consumers. The reverse information-structure foundation theorem remains queued correlation breadth. |
 | S-11 | Arrow's Pareto label could be read as weak rather than strict unanimity. | closed | The definition and docstring state strict Pareto on linear rankings and quantify over the named strict parts. |
 
 ## Static foundations and transformations

@@ -80,6 +80,41 @@ theorem matchingPlan_isNash :
     split <;> norm_num
   · simp [htype]
 
+/-- Every positive own-type/recommendation cell of the induced law obeys: on
+its support the recommendation equals the true type, while a replacement can
+pay at most one. -/
+theorem outcomeLaw_interim_obedience :
+    ∀ who ownType recommended replacement,
+      ∀ hObserved :
+          ∃ rec ∈ game.obedienceEvent who ownType recommended,
+            rec ∈ (information.outcomeLaw matchingPlan).support,
+        game.interimDeviatingValue (information.outcomeLaw matchingPlan)
+              who ownType recommended replacement hObserved ≤
+          game.interimRecommendedValue (information.outcomeLaw matchingPlan)
+            who ownType recommended hObserved := by
+  intro who ownType recommended replacement hObserved
+  unfold BayesianGame.interimDeviatingValue
+    BayesianGame.interimRecommendedValue
+  apply FinDist.expect_mono
+  intro rec hrec
+  have hsupported :=
+    (FinDist.support_condOn (information.outcomeLaw matchingPlan)
+      (game.obedienceEvent who ownType recommended) hObserved hrec).2
+  rw [BayesianGame.InformationStructure.outcomeLaw, FinDist.support_map]
+    at hsupported
+  obtain ⟨types, _, rfl⟩ := hsupported
+  simp [game, matchingPlan, Profile.update]
+  split <;> norm_num
+
+/-- The conditional characterization certifies the induced law without
+enumerating deviations over all type/recommendation pairs at once. -/
+theorem outcomeLaw_isBayesCorrelatedEq_via_interim :
+    game.IsBayesCorrelatedEq (information.outcomeLaw matchingPlan) :=
+  (game.isBayesCorrelatedEq_iff_interim_obedience
+      (information.outcomeLaw matchingPlan)).2
+    ⟨information.outcomeLaw_isBayesPlausible matchingPlan,
+      outcomeLaw_interim_obedience⟩
+
 /-- The Bayes-Nash plan induces a Bayes-plausible and obedient recommendation
 law in the original game. -/
 theorem outcomeLaw_isBayesCorrelatedEq :
@@ -131,5 +166,23 @@ theorem mismatchingRecommendation_not_isBayesCorrelatedEq :
   rw [mismatchingRecommendation_deviatingValue,
     mismatchingRecommendation_recommendedValue] at hdeviation
   norm_num at hdeviation
+
+/-- Therefore the mismatching recommendation cannot pass every positive-cell
+interim check either.  Bayes plausibility is held fixed, so the failure is an
+obedience failure rather than a marginal-law failure. -/
+theorem mismatchingRecommendation_not_interim_obedient :
+    ¬ ∀ who ownType recommended replacement,
+      ∀ hObserved :
+          ∃ rec ∈ game.obedienceEvent who ownType recommended,
+            rec ∈ mismatchingRecommendation.support,
+        game.interimDeviatingValue mismatchingRecommendation who ownType
+              recommended replacement hObserved ≤
+          game.interimRecommendedValue mismatchingRecommendation who ownType
+            recommended hObserved := by
+  intro hinterim
+  apply mismatchingRecommendation_not_isBayesCorrelatedEq
+  exact (game.isBayesCorrelatedEq_iff_interim_obedience
+    mismatchingRecommendation).2
+      ⟨mismatchingRecommendation_isBayesPlausible, hinterim⟩
 
 end GameTheory.Tests.BayesCorrelated

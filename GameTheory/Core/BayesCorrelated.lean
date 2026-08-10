@@ -128,6 +128,138 @@ def IsBayesCorrelatedEq (B : BayesianGame.{uι, ut, ua} ι)
       B.deviatingValue recommendation who deviation ≤
         B.recommendedValue recommendation who
 
+/-- The recommendation records in which a player observes one particular
+own-type/recommended-action pair. -/
+def obedienceEvent (B : BayesianGame.{uι, ut, ua} ι) (who : ι)
+    (ownType : B.Ty who) (recommended : B.Act who) :
+    Set ((∀ i, B.Ty i) × Profile B.actionSignature) :=
+  (fun rec => (rec.1 who, rec.2 who)) ⁻¹' {(ownType, recommended)}
+
+/-- Interim payoff from obeying on a positive-probability observation cell. -/
+def interimRecommendedValue (B : BayesianGame.{uι, ut, ua} ι)
+    (recommendation : B.RecommendationLaw) (who : ι)
+    (ownType : B.Ty who) (recommended : B.Act who)
+    (hObserved :
+      ∃ rec ∈ B.obedienceEvent who ownType recommended,
+        rec ∈ recommendation.support) : ℝ :=
+  (recommendation.condOn (B.obedienceEvent who ownType recommended) hObserved).expect
+    fun rec => B.payoff rec.1 rec.2 who
+
+/-- Interim payoff from replacing one recommendation on a positive-probability
+observation cell. -/
+def interimDeviatingValue (B : BayesianGame.{uι, ut, ua} ι)
+    (recommendation : B.RecommendationLaw) (who : ι)
+    (ownType : B.Ty who) (recommended replacement : B.Act who)
+    (hObserved :
+      ∃ rec ∈ B.obedienceEvent who ownType recommended,
+        rec ∈ recommendation.support) : ℝ :=
+  (recommendation.condOn (B.obedienceEvent who ownType recommended) hObserved).expect
+    fun rec => B.payoff rec.1 (Profile.update rec.2 who replacement) who
+
+/-- **Interim obedience characterizes finite Bayes-correlated equilibrium.**
+Bayes plausibility plus every positive own-type/recommendation cell preferring
+obedience to a fixed replacement is equivalent to the existing ex-ante
+deviation-map definition.
+
+The reverse implication disintegrates the recommendation law by the observed
+pair.  Consequently the result needs neither all-player type finiteness nor an
+additional posterior representation. -/
+theorem isBayesCorrelatedEq_iff_interim_obedience
+    (B : BayesianGame.{uι, ut, ua} ι)
+    (recommendation : B.RecommendationLaw) :
+    B.IsBayesCorrelatedEq recommendation ↔
+      B.IsBayesPlausible recommendation ∧
+        ∀ who ownType recommended replacement,
+          ∀ hObserved :
+              ∃ rec ∈ B.obedienceEvent who ownType recommended,
+                rec ∈ recommendation.support,
+            B.interimDeviatingValue recommendation who ownType recommended
+                replacement hObserved ≤
+              B.interimRecommendedValue recommendation who ownType recommended
+                hObserved := by
+  classical
+  constructor
+  · rintro ⟨hplausible, hobedient⟩
+    refine ⟨hplausible, ?_⟩
+    intro who ownType recommended replacement hObserved
+    let deviation : B.ObedienceDeviation who := fun candidateType candidateAction =>
+      if candidateType = ownType ∧ candidateAction = recommended then
+        replacement
+      else candidateAction
+    have hglobal := hobedient who deviation
+    unfold deviatingValue recommendedValue at hglobal
+    have hconditional := FinDist.expect_condOn_le_of_expect_le_of_eq_off
+      recommendation (B.obedienceEvent who ownType recommended) hObserved
+      hglobal (by
+        intro rec _ hnot
+        have hpair : ¬(rec.1 who = ownType ∧ rec.2 who = recommended) := by
+          simpa only [obedienceEvent, Set.mem_preimage, Set.mem_singleton_iff,
+            Prod.mk.injEq] using hnot
+        simp [applyObedienceDeviation, deviation, hpair,
+          Profile.update_eq_self])
+    unfold interimDeviatingValue interimRecommendedValue
+    refine le_trans ?_ hconditional
+    apply le_of_eq
+    apply FinDist.expect_congr
+    intro rec hrec
+    have hcell :=
+      (FinDist.support_condOn recommendation
+        (B.obedienceEvent who ownType recommended) hObserved hrec).1
+    have hpair : rec.1 who = ownType ∧ rec.2 who = recommended := by
+      simpa only [obedienceEvent, Set.mem_preimage, Set.mem_singleton_iff,
+        Prod.mk.injEq] using hcell
+    simp [applyObedienceDeviation, deviation, hpair]
+  · rintro ⟨hplausible, hinterim⟩
+    refine ⟨hplausible, ?_⟩
+    intro who deviation
+    unfold deviatingValue recommendedValue
+    have hdecompose := FinDist.eq_bind_condOnFibre recommendation
+      (fun rec => (rec.1 who, rec.2 who))
+    conv_lhs => rw [hdecompose, FinDist.expect_bind]
+    conv_rhs => rw [hdecompose, FinDist.expect_bind]
+    apply FinDist.expect_mono
+    intro observed hObservedMap
+    rw [FinDist.support_map] at hObservedMap
+    obtain ⟨witness, hwitness, rfl⟩ := hObservedMap
+    have hObserved :
+        ∃ rec ∈ B.obedienceEvent who (witness.1 who) (witness.2 who),
+          rec ∈ recommendation.support :=
+      ⟨witness, Set.mem_preimage.mpr (Set.mem_singleton _), hwitness⟩
+    have hfibre :
+        ∃ rec ∈ (fun rec => (rec.1 who, rec.2 who)) ⁻¹'
+            {(witness.1 who, witness.2 who)},
+          rec ∈ recommendation.support :=
+      ⟨witness, Set.mem_preimage.mpr (Set.mem_singleton _), hwitness⟩
+    rw [FinDist.condOnFibre, dif_pos hfibre]
+    calc
+      (recommendation.condOn
+          (B.obedienceEvent who (witness.1 who) (witness.2 who))
+          hObserved).expect
+          (fun rec => B.payoff rec.1
+            (B.applyObedienceDeviation rec.1 rec.2 who deviation) who) =
+          B.interimDeviatingValue recommendation who (witness.1 who)
+            (witness.2 who) (deviation (witness.1 who) (witness.2 who))
+            hObserved := by
+        unfold interimDeviatingValue
+        apply FinDist.expect_congr
+        intro rec hrec
+        have hcell :=
+          (FinDist.support_condOn recommendation
+            (B.obedienceEvent who (witness.1 who) (witness.2 who))
+            hObserved hrec).1
+        have hpair :
+            rec.1 who = witness.1 who ∧ rec.2 who = witness.2 who := by
+          simpa only [obedienceEvent, Set.mem_preimage, Set.mem_singleton_iff,
+            Prod.mk.injEq] using hcell
+        simp [applyObedienceDeviation, hpair]
+      _ ≤ B.interimRecommendedValue recommendation who (witness.1 who)
+            (witness.2 who) hObserved :=
+        hinterim who (witness.1 who) (witness.2 who)
+          (deviation (witness.1 who) (witness.2 who)) hObserved
+      _ = (recommendation.condOn
+          (B.obedienceEvent who (witness.1 who) (witness.2 who))
+          hObserved).expect (fun rec => B.payoff rec.1 rec.2 who) := rfl
+
 omit [DecidableEq ι] in
 /-- Following the deterministic recommendation law has the plan's ex-ante
 expected utility. -/
