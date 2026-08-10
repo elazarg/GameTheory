@@ -57,6 +57,21 @@ def periodOneReadoutTangent
       who 0 1 -
     (seam.tail (start index + 1)).1.1 who
 
+/-- The actual canonical tail strictly after a selected one-stage root. -/
+def periodOneReadoutActualSuffix
+    (start : ℕ → ℕ) (index : ℕ) : ℕ → ι → PMF Bool :=
+  fun offset ↦ quittingDynamicDebtTailRoots seam.tail
+    (start index + 1 + offset)
+
+/-- Attach the selected root for one stage and then follow the actual
+canonical tail.  Only the first stage is periodically re-read; the attached
+sequence itself is not periodic. -/
+def periodOneReadoutActualAttachment
+    (start : ℕ → ℕ) (index : ℕ) : ℕ → ι → PMF Bool :=
+  quittingPhaseSwitchRoots
+    (quittingPeriodOneRootSequence (seam.periodOneReadoutRoot start index))
+    (seam.periodOneReadoutActualSuffix start index) 1
+
 /-- The source edge at a selected start supplies exactly the one affine
 recurrence required by the local period-one atlas. -/
 theorem periodOneReadout_step
@@ -312,6 +327,121 @@ theorem fullMass_boundary
     (seam.periodOneReadoutRoot readout.start index) who
     (readout.absorption_pos index) hfull
 
+/-- Exact attachment-defect identity for the selected root followed by its
+actual canonical suffix.  The last summand is the unresolved semantic seam:
+the actual suffix's literal-`Never` payoff need not equal the stationary
+refusal value of the selected root. -/
+theorem actualAttachmentNever_sub_initial_eq
+    (index : ℕ) (who : ι) :
+    quittingRootSequencePureTimeTerminalValue reward
+          (seam.periodOneReadoutActualAttachment readout.start index)
+          who none 0 -
+        (seam.tail (readout.start index)).1.1 who =
+      (quittingPeriodicWindowRefusalValue reward
+          (quittingPeriodOneRootSequence
+            (seam.periodOneReadoutRoot readout.start index)) who -
+        quittingWindowRestartDelivery reward
+          (quittingPeriodOneRootSequence
+            (seam.periodOneReadoutRoot readout.start index)) who 0 1) +
+      quittingStationaryContinueMass
+          (seam.periodOneReadoutRoot readout.start index) *
+        seam.periodOneReadoutTangent readout.start index who +
+      quittingStationaryContinueMass
+          (Function.update
+            (seam.periodOneReadoutRoot readout.start index) who
+              (PMF.pure false)) *
+        (quittingRootSequencePureTimeTerminalValue reward
+            (seam.periodOneReadoutActualSuffix readout.start index)
+            who none 0 -
+          quittingPeriodicWindowRefusalValue reward
+            (quittingPeriodOneRootSequence
+              (seam.periodOneReadoutRoot readout.start index)) who) := by
+  simpa [periodOneReadoutActualAttachment, periodOneReadoutTangent] using
+    quittingPeriodOne_attachedNever_sub_initial_eq reward
+      (seam.periodOneReadoutRoot readout.start index)
+      (seam.periodOneReadoutActualSuffix readout.start index) who
+      ((seam.tail (readout.start index)).1.1 who)
+      ((seam.tail (readout.start index + 1)).1.1 who)
+      (seam.periodOneReadout_step readout.start index who)
+      (readout.absorption_pos index)
+
+/-- The actual one-stage attachment realizes the selected annotation exactly
+provided the attached suffix realizes the displayed far annotation.  This
+premise is not supplied by an abstract infinite Nash--Bellman tail. -/
+theorem actualAttachmentValue_eq_initial_of_suffix_realizes
+    (index : ℕ) (who : ι)
+    (hrealize :
+      quittingRootSequenceTerminalValue reward
+          (seam.periodOneReadoutActualSuffix readout.start index) who 0 =
+        (seam.tail (readout.start index + 1)).1.1 who) :
+    quittingRootSequenceTerminalValue reward
+        (seam.periodOneReadoutActualAttachment readout.start index) who 0 =
+      (seam.tail (readout.start index)).1.1 who := by
+  let root := seam.periodOneReadoutRoot readout.start index
+  let suffix := seam.periodOneReadoutActualSuffix readout.start index
+  let attached := seam.periodOneReadoutActualAttachment readout.start index
+  have hrec := quittingRootSequenceTerminalValue_eq_rootSuccessorPayoff
+    reward attached who 0
+  have hswitch :=
+    quittingRootSequenceTerminalValue_quittingPhaseSwitchRoots_switch
+      reward (quittingPeriodOneRootSequence root) suffix 1 who
+  have hroot : attached 0 = root := by
+    change quittingPhaseSwitchRoots (quittingPeriodOneRootSequence root)
+        suffix 1 0 = root
+    rw [quittingPhaseSwitchRoots_of_lt _ _ (by omega)]
+    rfl
+  have htail :
+      quittingRootSequenceTerminalValue reward attached who 1 =
+        (seam.tail (readout.start index + 1)).1.1 who := by
+    change quittingRootSequenceTerminalValue reward
+        (quittingPhaseSwitchRoots (quittingPeriodOneRootSequence root)
+          suffix 1) who 1 = _
+    rw [hswitch]
+    exact hrealize
+  rw [hroot, quittingRootSuccessorPayoff_apply_eq_affine, htail] at hrec
+  exact hrec.trans (seam.periodOneReadout_step readout.start index who).symm
+
+/-- Sharp conditional transfer to a profitable literal-`Never` deviation
+against the actual attached tail.  The first hypothesis realizes the honest
+profile value; the second is exactly the boundary-defect inequality exposed
+by `actualAttachmentNever_sub_initial_eq`. -/
+theorem actualAttachmentNever_profitable_of_boundaryDefect
+    (index : ℕ) (who : ι)
+    (hrealize :
+      quittingRootSequenceTerminalValue reward
+          (seam.periodOneReadoutActualSuffix readout.start index) who 0 =
+        (seam.tail (readout.start index + 1)).1.1 who)
+    (hdefect :
+      quittingStationaryContinueMass
+          (Function.update
+            (seam.periodOneReadoutRoot readout.start index) who
+              (PMF.pure false)) *
+        (quittingPeriodicWindowRefusalValue reward
+            (quittingPeriodOneRootSequence
+              (seam.periodOneReadoutRoot readout.start index)) who -
+          quittingRootSequencePureTimeTerminalValue reward
+            (seam.periodOneReadoutActualSuffix readout.start index)
+            who none 0) <
+      (quittingPeriodicWindowRefusalValue reward
+          (quittingPeriodOneRootSequence
+            (seam.periodOneReadoutRoot readout.start index)) who -
+        quittingWindowRestartDelivery reward
+          (quittingPeriodOneRootSequence
+            (seam.periodOneReadoutRoot readout.start index)) who 0 1) +
+      quittingStationaryContinueMass
+          (seam.periodOneReadoutRoot readout.start index) *
+        seam.periodOneReadoutTangent readout.start index who) :
+    0 < quittingRootSequencePureTimeTerminalValue reward
+          (seam.periodOneReadoutActualAttachment readout.start index)
+          who none 0 -
+        quittingRootSequenceTerminalValue reward
+          (seam.periodOneReadoutActualAttachment readout.start index)
+          who 0 := by
+  rw [actualAttachmentValue_eq_initial_of_suffix_realizes
+    seam readout index who hrealize]
+  rw [actualAttachmentNever_sub_initial_eq seam readout index who]
+  linarith
+
 /-- A packet coordinate cannot simultaneously have full mass and a positive
 tangent: positive mass pins the boundary to the singleton payoff, while full
 mass makes the singleton mixture that same payoff. -/
@@ -465,6 +595,83 @@ theorem activePositive_refusalGain
   rw [hgain]
   exact mul_pos (div_pos hindex.1 (sub_pos.mpr hindex.2.1))
     hindex.2.2.1
+
+/-- Conditional active-positive transfer to the actual attached canonical
+tail.  The two explicit suffix hypotheses are precisely what the abstract
+Nash--Bellman tail does not provide: realization of its far annotation as an
+actual terminal payoff, and a literal-`Never` suffix payoff no smaller than
+the selected root's stationary refusal value.  Under them, the positive
+period-one refusal diagnostic becomes a profitable genuine deviation. -/
+theorem activePositive_actualAttachmentNever_profitable
+    (owner : ι) (hmass : 0 < readout.packet.mass owner)
+    (htangent : 0 < readout.packet.tangent owner)
+    (hrealize : ∀ᶠ index in atTop,
+      quittingRootSequenceTerminalValue reward
+          (seam.periodOneReadoutActualSuffix readout.start index) owner 0 =
+        (seam.tail (readout.start index + 1)).1.1 owner)
+    (hsuffixNever : ∀ᶠ index in atTop,
+      quittingPeriodicWindowRefusalValue reward
+          (quittingPeriodOneRootSequence
+            (seam.periodOneReadoutRoot readout.start index)) owner ≤
+        quittingRootSequencePureTimeTerminalValue reward
+          (seam.periodOneReadoutActualSuffix readout.start index)
+          owner none 0) :
+    ∀ᶠ index in atTop,
+      0 < quittingRootSequencePureTimeTerminalValue reward
+            (seam.periodOneReadoutActualAttachment readout.start index)
+            owner none 0 -
+          quittingRootSequenceTerminalValue reward
+            (seam.periodOneReadoutActualAttachment readout.start index)
+            owner 0 := by
+  have hactive :=
+    (activePositive_refusalGain seam readout owner hmass htangent).2.2
+  filter_upwards [hactive, hrealize, hsuffixNever] with
+    index hindex hrealizeIndex hsuffixIndex
+  have hrhoNonneg := quittingStationaryContinueMass_nonneg
+    (Function.update (seam.periodOneReadoutRoot readout.start index)
+      owner (PMF.pure false))
+  have hCNonneg := quittingStationaryContinueMass_nonneg
+    (seam.periodOneReadoutRoot readout.start index)
+  have hleftNonpos :
+      quittingStationaryContinueMass
+          (Function.update
+            (seam.periodOneReadoutRoot readout.start index) owner
+              (PMF.pure false)) *
+        (quittingPeriodicWindowRefusalValue reward
+            (quittingPeriodOneRootSequence
+              (seam.periodOneReadoutRoot readout.start index)) owner -
+          quittingRootSequencePureTimeTerminalValue reward
+            (seam.periodOneReadoutActualSuffix readout.start index)
+            owner none 0) ≤ 0 :=
+    mul_nonpos_of_nonneg_of_nonpos hrhoNonneg (sub_nonpos.mpr hsuffixIndex)
+  have hcorrectionNonneg :
+      0 ≤ quittingStationaryContinueMass
+          (seam.periodOneReadoutRoot readout.start index) *
+        seam.periodOneReadoutTangent readout.start index owner :=
+    mul_nonneg hCNonneg hindex.2.2.1.le
+  have hdefect :
+      quittingStationaryContinueMass
+          (Function.update
+            (seam.periodOneReadoutRoot readout.start index) owner
+              (PMF.pure false)) *
+        (quittingPeriodicWindowRefusalValue reward
+            (quittingPeriodOneRootSequence
+              (seam.periodOneReadoutRoot readout.start index)) owner -
+          quittingRootSequencePureTimeTerminalValue reward
+            (seam.periodOneReadoutActualSuffix readout.start index)
+            owner none 0) <
+      (quittingPeriodicWindowRefusalValue reward
+          (quittingPeriodOneRootSequence
+            (seam.periodOneReadoutRoot readout.start index)) owner -
+        quittingWindowRestartDelivery reward
+          (quittingPeriodOneRootSequence
+            (seam.periodOneReadoutRoot readout.start index)) owner 0 1) +
+      quittingStationaryContinueMass
+          (seam.periodOneReadoutRoot readout.start index) *
+        seam.periodOneReadoutTangent readout.start index owner := by
+    linarith [hindex.2.2.2.2.2]
+  exact actualAttachmentNever_profitable_of_boundaryDefect
+    seam readout index owner hrealizeIndex hdefect
 
 end CounterexampleRegimePeriodOneTangentReadout
 

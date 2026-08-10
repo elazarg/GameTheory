@@ -2687,6 +2687,24 @@ converges to `mass/(1-mass)*tangent > 0`.  Thus the unresolved issue is no
 longer evaluator sign or normalization; it is converting this profitable
 diagnostic repetition into the collision-aware support lift or a legally
 attached return.
+The attachment audit makes the latter alternative exact.  Following the
+selected root by its actual canonical suffix gives
+
+```text
+attachedNever - initial
+  = periodicRefusalGain + jointSurvival*tangent
+      + opponentSurvival*(actualSuffixNever - periodicRefusalValue).
+```
+
+Moreover the attached profile realizes the displayed initial annotation if
+the actual suffix realizes the far annotation.  Those are the two semantic
+premises: suffix-value realization and a lower bound on the suffix `Never`
+payoff controlling the last boundary defect.  Under them, active positivity
+does yield eventual literal profitable deviations.  Neither follows from
+pointwise convergence to all-Continue, and the current owner-specific clock
+bound does not apply to an arbitrary active packet owner.  Hence attachment
+has been reduced to a precise terminal-boundary seam, not completed by the
+local refusal calculation.
 For the active-positive branch, provenance at singleton level is now closed:
 once all tangent coordinates are nonnegative, the tail-derived tangent packet
 itself is a normalized singleton-source packet, its weighted surplus is

@@ -225,6 +225,13 @@ roots eventually have proper positive owner mass, positive endpoint tangent,
 and positive own Continue probability; exact root complementarity then makes
 the refusal slack zero.  The diagnostic repeated-root refusal gain converges
 to `mass/(1-mass)*tangent` and is eventually strictly positive.  This sharpens
-the refusal branch quantitatively but still does not attach the repeated root
-as a continuation of the optimized tail.
+the refusal branch quantitatively.  The exact attachment formula shows what
+prevents an unconditional transfer: actual attached `Never` gain is the
+periodic refusal gain plus the joint-survival tangent correction plus
+opponent survival times the difference between actual suffix-`Never` payoff
+and stationary refusal value.  The counterexample tail neither realizes its
+far annotation as an honest suffix payoff nor controls this final boundary
+defect.  If both facts are supplied, the diagnostic becomes an eventual
+literal profitable deviation; they are not consequences of the present tail
+asymptotics.
 -/

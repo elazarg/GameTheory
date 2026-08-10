@@ -595,6 +595,115 @@ theorem quittingPeriodOneRefusalValue_sub_restartDelivery_eq_tangent_of_step
     exact hraw
   exact htarget
 
+/-! ## Conditional attachment seam -/
+
+/-- Exact boundary-defect formula for attaching one displayed root to an
+arbitrary actual suffix and deviating to literal `Never`.  The first two
+terms are the period-one refusal diagnostic and the restart/annotation
+correction.  The last term is the precise attachment defect: opponent
+survival times the difference between the suffix's actual `Never` payoff and
+the stationary refusal value.  Thus the diagnostic alone is not an
+unconditional attachment theorem. -/
+theorem quittingPeriodOne_attachedNever_sub_initial_eq
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (tail : ℕ → ι → PMF Bool) (who : ι)
+    (initial terminal : ℝ)
+    (hstep : initial =
+      quittingRootAbsorbingContribution reward root who +
+        quittingStationaryContinueMass root * terminal)
+    (habsorption : 0 < quittingRootAbsorptionMass root) :
+    quittingRootSequencePureTimeTerminalValue reward
+          (quittingPhaseSwitchRoots (quittingPeriodOneRootSequence root)
+            tail 1) who none 0 - initial =
+      (quittingPeriodicWindowRefusalValue reward
+          (quittingPeriodOneRootSequence root) who -
+        quittingWindowRestartDelivery reward
+          (quittingPeriodOneRootSequence root) who 0 1) +
+      quittingStationaryContinueMass root *
+        (quittingWindowRestartDelivery reward
+            (quittingPeriodOneRootSequence root) who 0 1 - terminal) +
+      quittingStationaryContinueMass
+          (Function.update root who (PMF.pure false)) *
+        (quittingRootSequencePureTimeTerminalValue reward tail who none 0 -
+          quittingPeriodicWindowRefusalValue reward
+            (quittingPeriodOneRootSequence root) who) := by
+  let roots := quittingPeriodOneRootSequence root
+  let attached := quittingPhaseSwitchRoots roots tail 1
+  let refusal := quittingPeriodicWindowRefusalValue reward roots who
+  let delivery := quittingWindowRestartDelivery reward roots who 0 1
+  let tailNever :=
+    quittingRootSequencePureTimeTerminalValue reward tail who none 0
+  let rho := quittingStationaryContinueMass
+    (Function.update root who (PMF.pure false))
+  let C := quittingStationaryContinueMass root
+  have hattachedRaw :=
+    quittingRootSequenceHazardTerminalValue_phaseSwitch_eq_finite
+      reward roots tail 1 who (quittingPureTimeHazard none)
+  have hsuffix : (fun offset ↦
+      quittingPureTimeHazard none (1 + offset)) =
+        quittingPureTimeHazard none := rfl
+  rw [hsuffix,
+    quittingFiniteTerminalHazardValue_never_eq_continueToBoundary]
+      at hattachedRaw
+  have hattached :
+      quittingRootSequencePureTimeTerminalValue reward attached who none 0 =
+        quittingFiniteContinueToBoundaryValue reward roots who tailNever 0 1 := by
+    simpa [quittingRootSequencePureTimeTerminalValue, attached, tailNever]
+      using hattachedRaw
+  have hrefusal :=
+    quittingPeriodicWindowRefusalValue_eq_continueToBoundary_add
+      reward roots who 1 (quittingPeriodOneRootSequence_periodic root)
+        tailNever
+  have hfinite :
+      quittingFiniteContinueToBoundaryValue reward roots who tailNever 0 1 =
+        refusal + rho * (tailNever - refusal) := by
+    have hrefusal' : refusal =
+        quittingFiniteContinueToBoundaryValue reward roots who tailNever 0 1 +
+          rho * (refusal - tailNever) := by
+      simpa [refusal, rho, roots] using hrefusal
+    linear_combination -hrefusal'
+  have htangent :=
+    quittingPeriodOne_absorption_mul_restartDelivery_sub_terminal_of_step
+      reward root who initial terminal hstep habsorption
+  have hdelivery : delivery - initial = C * (delivery - terminal) := by
+    change (1 - C) * (delivery - terminal) = initial - terminal at htangent
+    linear_combination htangent
+  change quittingRootSequencePureTimeTerminalValue reward attached who none 0 -
+      initial = (refusal - delivery) + C * (delivery - terminal) +
+        rho * (tailNever - refusal)
+  rw [hattached, hfinite]
+  linear_combination hdelivery
+
+/-- Sharp positivity criterion for the one-root attachment.  The right side
+is exactly the amount by which the local diagnostic and restart correction
+must dominate an adverse suffix-`Never` boundary defect. -/
+theorem quittingPeriodOne_attachedNever_sub_initial_pos_iff
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (tail : ℕ → ι → PMF Bool) (who : ι)
+    (initial terminal : ℝ)
+    (hstep : initial =
+      quittingRootAbsorbingContribution reward root who +
+        quittingStationaryContinueMass root * terminal)
+    (habsorption : 0 < quittingRootAbsorptionMass root) :
+    0 < quittingRootSequencePureTimeTerminalValue reward
+          (quittingPhaseSwitchRoots (quittingPeriodOneRootSequence root)
+            tail 1) who none 0 - initial ↔
+      quittingStationaryContinueMass
+          (Function.update root who (PMF.pure false)) *
+        (quittingPeriodicWindowRefusalValue reward
+            (quittingPeriodOneRootSequence root) who -
+          quittingRootSequencePureTimeTerminalValue reward tail who none 0) <
+      (quittingPeriodicWindowRefusalValue reward
+          (quittingPeriodOneRootSequence root) who -
+        quittingWindowRestartDelivery reward
+          (quittingPeriodOneRootSequence root) who 0 1) +
+      quittingStationaryContinueMass root *
+        (quittingWindowRestartDelivery reward
+            (quittingPeriodOneRootSequence root) who 0 1 - terminal) := by
+  rw [quittingPeriodOne_attachedNever_sub_initial_eq reward root tail who
+    initial terminal hstep habsorption]
+  constructor <;> intro h <;> ring_nf at h ⊢ <;> linarith
+
 /-- **Period-one phase atlas.**  For a positive-absorption root, the exact
 phase seam is `-C` times the charge-normalized endpoint tangent, minus the
 displayed finite phase slack.
