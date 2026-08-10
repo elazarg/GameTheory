@@ -16,6 +16,7 @@ import GameTheory.Analysis.Protocol
 import GameTheory.Analysis.Repeated
 import GameTheory.Analysis.Stochastic
 import GameTheory.Analysis.TremblingHand
+import GameTheory.Analysis.ZeroSumLearning
 
 namespace GameTheory.Analysis
 

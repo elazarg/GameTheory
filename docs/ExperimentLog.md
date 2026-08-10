@@ -5485,3 +5485,52 @@ memory.
   Protocol, dominate arbitrary behavioral replacements, or prove
   exploitability. Next specialize both players' external-regret bounds to an
   explicit two-player zero-sum saddle gap with a nonzero control.
+
+### EXP-089: zero-sum empirical saddle gap
+
+- **Date / revision:** 2026-08-11, reserved after `dfec280`
+- **Status:** completed; supports scoped D51
+- **Decision / question:** D51; whether the sum of both players' canonical
+  external regrets is exactly the saddle deviation gap of their independent
+  empirical marginals in a two-player zero-sum game.
+- **Prediction:** zero-sum cancellation removes the correlated round payoff.
+  Row regret should leave the payoff of a fixed row against the column
+  marginal; column regret should leave the payoff of the row marginal against
+  a fixed column. Their sum is the explicit saddle gap, and uniform bounds for
+  both players should imply canonical approximate mixed Nash.
+- **Representative slice:** first prove the algebra for arbitrary finite-law
+  traces in a rectangular matrix game, then use a mismatched Boolean trace
+  whose empirical marginals have a strictly positive checked gap. Only after
+  that static theorem passes may a Protocol/CFR specialization be credited.
+- **Competing designs:** an explicit gap equality plus canonical
+  `IsεNash`; a new maximized exploitability definition; or a matrix-only proxy
+  regret. Prefer the equality and existing equilibrium predicate if they
+  suffice.
+- **Kill conditions:** a second regret definition, independent marginals
+  assumed rather than derived, cancellation that uses non-zero-sum payoffs, a
+  gap theorem without a positive control, or a Protocol-specific proof before
+  the static algebra is reusable.
+- **Planned validation:** one responsive stable Analysis leaf, a positive and
+  zero-gap matrix consumer, narrow builds, fast Phase 2/3 audits, and no deep
+  reachability in the implementation loop.
+- **Artifacts / observations:**
+  `GameTheory.MatrixGame.saddleGap_eq_externalRegret_add`
+  cancels the correlated baseline payoff from the two canonical external
+  regrets. Pure and mixed deviation corollaries lead directly to canonical
+  `IsεNash` for the independently played empirical marginals. The theorem
+  accepts an arbitrary joint trace law and derives both marginals with
+  `FinDist.map`; it does not assume the trace itself is independent. The
+  correlated diagonal control has signed regrets `-1` and `1` and produces an
+  exact mixed Nash certificate. The mismatched pure control has row and column
+  regrets `2` and `0`, and the exact saddle gap is `2`.
+- **Measurements:** the stable leaf and hostile consumer each complete a warm
+  build in about 6.3 seconds (1,725 and 1,726 jobs respectively); the combined
+  rebuild after the final public-name polish completed in 15.4 seconds. The
+  Analysis aggregator completed 3,211 jobs in 11.4 seconds, and the cached
+  stable package gate completed 3,594 jobs in 3.3 seconds. Both fast audits
+  reported `VERIFIED=1`. Deep reachability was not run.
+- **Outcome / next action:** adopts scoped D51. The static no-regret-to-zero-sum
+  equilibrium implication is now reusable and canonical, including genuinely
+  correlated history laws and nonzero evidence. Next build one two-player
+  zero-sum Protocol/CFR schedule whose D50 bounds share the same round law and
+  consume D51; do not relabel this static gate as full CFR exploitability.

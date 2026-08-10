@@ -1097,6 +1097,19 @@ scope is every deviation carrying the finite D48 certificate, not general
 schedule synthesis, domination of arbitrary behavioral replacements, or
 two-player zero-sum exploitability.
 
+EXP-089/D51 closes the reusable static zero-sum implication before adding
+another dynamic layer. An arbitrary finite law over joint matrix profiles is
+mapped to its row and column empirical marginals. The two players' canonical
+external regrets then add exactly to the pure saddle deviation gap because the
+correlated round payoff cancels under the existing zero-sum utility. Affinity
+extends the bound to mixed deviations, and the sum of uniform regret bounds
+feeds the canonical `IsεNash` predicate directly. A perfectly correlated
+diagonal trace has signed regrets `-1` and `1` and yields exact mixed Nash;
+a mismatched pure trace has exact gap `2`. Thus neither trace independence nor
+a new exploitability/regret wrapper is needed. This is the static consumer for
+future dynamic bounds, not a claim that one Protocol/CFR schedule already
+supplies both players' certificates.
+
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic
 and incentive certificates directly without pretending to be a sequential

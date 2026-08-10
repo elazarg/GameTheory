@@ -145,17 +145,20 @@ Separate packages:
   payoff-relevant pure plans in the hostile topological schedule, and exact
   compilation to canonical fixed-strategy external regret and its time
   average, with `1` and `-1` controls; and
-- **next:** specialize both players' canonical external-regret bounds to an
-  explicit two-player zero-sum saddle gap/exploitability theorem. General
-  schedule synthesis, arbitrary behavioral replacements, and unequal-depth
-  information fibers remain separate gates.
+- **complete:** reusable two-player zero-sum cancellation from both canonical
+  external regrets to every pure and mixed empirical saddle gap and canonical
+  `IsεNash`, tested on a correlated exact-equilibrium trace and a nonzero
+  gap-`2` control; and
+- **next:** instantiate both players' D50 certificates on the same zero-sum
+  Protocol/CFR round law and feed them to that static bridge. General schedule
+  synthesis, arbitrary behavioral replacements, and unequal-depth information
+  fibers remain separate gates.
 
 Do not merge these packages into the FOSG syntax root or hide serialization
 order behind choice. The coefficient package counts because its continuation
 law is canonical and its recursive factorization has hostile consumers. It is
-not full CFR exploitability coverage until the new uniform canonical
-external-regret interface is consumed by a two-player zero-sum saddle-gap
-theorem.
+not full CFR exploitability coverage until one two-player Protocol schedule
+supplies both sides of the now-established static zero-sum saddle-gap theorem.
 
 ### E. Intrinsic selected-solution strategic form — resolved
 
