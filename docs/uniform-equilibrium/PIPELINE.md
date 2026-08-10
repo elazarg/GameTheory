@@ -2705,6 +2705,17 @@ pointwise convergence to all-Continue, and the current owner-specific clock
 bound does not apply to an arbitrary active packet owner.  Hence attachment
 has been reduced to a precise terminal-boundary seam, not completed by the
 local refusal calculation.
+The co-realized terminal lane supplies a different unconditional consumer.
+The regime gap lower-bounds `behavioralTailRepairValue` behind every positive
+finite prefix, because both the actual prescribed payoff and the full
+behavioral envelope are evaluated on the same suffix.  Elementary tail
+compression preserves that gain to arbitrary tolerance; in particular every
+selected one-root prefix admits a sure-joint, sure-solo, or `Never` capped
+actual suffix with terminal exploitability above half the regime gap.  This
+returns the terminal obstruction to a finite grammar but does not identify
+the active owner, attach its stationary refusal, or equate the stored far
+annotation with honest suffix value.  Prefix consumption must use this
+co-realized obstruction rather than silently substituting the annotation.
 For the active-positive branch, provenance at singleton level is now closed:
 once all tangent coordinates are nonnegative, the tail-derived tangent packet
 itself is a normalized singleton-source packet, its weighted surplus is

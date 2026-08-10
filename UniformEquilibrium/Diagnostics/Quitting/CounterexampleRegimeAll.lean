@@ -23,6 +23,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketDefect
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSurplus
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneAttachmentRepair
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneTangentReadout
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeQuantitative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodicWindows
@@ -243,4 +244,12 @@ far annotation as an honest suffix payoff nor controls this final boundary
 defect.  If both facts are supplied, the diagnostic becomes an eventual
 literal profitable deviation; they are not consequences of the present tail
 asymptotics.
+The terminal-gap lane remains co-realized even when that owner-specific
+attachment fails.  Every positive finite prefix has behavioral-tail repair
+value at least the regime gap, because the boundary value and all-behavior
+envelope come from the same actual suffix.  Elementary tail compression
+therefore returns, behind every selected one-root prefix, a sure-joint,
+sure-solo, or `Never` cap whose terminal exploitability remains above half the
+gap.  This is an unconditional terminal obstruction, not a recovery of the
+active owner's deviation or of the stored Nash--Bellman annotation.
 -/
