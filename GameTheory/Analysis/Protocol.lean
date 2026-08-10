@@ -10,6 +10,7 @@ import GameTheory.Analysis.Protocol.Sequential
 import GameTheory.Analysis.Protocol.EFG
 import GameTheory.Analysis.Protocol.CounterfactualReach
 import GameTheory.Analysis.Protocol.CounterfactualRegret
+import GameTheory.Analysis.Protocol.CounterfactualDecomposition
 import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
 
 namespace GameTheory.Analysis.Protocol

@@ -127,6 +127,47 @@ private theorem trace_length_le_of_reachesWithin {fuel : ℕ}
         ExecutionProtocol.Trace.length] at ih
       omega
 
+/-- A history in a behavioral run either stopped early at a terminal state or
+used the entire fuel budget. This is the bounded-cut fact needed to compare a
+root run with continuation values at one information depth. -/
+theorem terminal_or_trace_length_eq_of_mem_support_runBehavioralFrom
+    [Fintype ι]
+    (policies : (player : ι) → M.BehavioralPolicy player) :
+    ∀ (fuel : ℕ) (start target : E.History),
+      target ∈ (M.runBehavioralFrom policies fuel start).support →
+        E.terminal target.state ∨
+          target.trace.length = start.trace.length + fuel := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro start target htarget
+      rw [InformationModel.runBehavioralFrom,
+        ExecutionProtocol.runRandomizedFor_zero,
+        FinDist.mem_support_pure] at htarget
+      subst target
+      exact Or.inr (by omega)
+  | succ fuel ih =>
+      intro start target htarget
+      by_cases hterm : E.terminal start.state
+      · rw [M.runBehavioralFrom_of_terminal policies (fuel + 1) hterm,
+          FinDist.mem_support_pure] at htarget
+        subst target
+        exact Or.inl hterm
+      · rw [M.runBehavioralFrom_succ_of_not_terminal policies fuel hterm,
+          FinDist.support_bind] at htarget
+        simp only [Set.mem_iUnion] at htarget
+        obtain ⟨draw, _hdraw, hinner⟩ := htarget
+        rw [FinDist.support_bindOnSupport] at hinner
+        simp only [Set.mem_iUnion] at hinner
+        obtain ⟨reached, realized, hrest⟩ := hinner
+        rcases ih (start.extend draw.2 realized) target hrest with
+          htargetTerminal | hlength
+        · exact Or.inl htargetTerminal
+        · right
+          simp [ExecutionProtocol.History.extend,
+            ExecutionProtocol.Trace.length] at hlength ⊢
+          omega
+
 /-- Read a certified legal joint as one information-local choice per player. -/
 def choicesOfLegal {state : E.State} (trace : E.Trace state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action })

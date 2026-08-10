@@ -1056,6 +1056,17 @@ explicit remaining-horizon evaluator and a common sufficiently large fuel.
 The next promotion gate is a generic bounded-evaluator root bridge followed by
 topological telescoping and a root-regret or exploitability consumer.
 
+EXP-086 adopts that bridge for bounded common-depth sites. Strict-prefix
+runner congruence makes a local replacement invisible before its information
+depth; runner support is either terminal and absorbed or exactly at the cut.
+The cut law reindexes over canonical information histories, so actual history
+reach factors into own reach times D44 counterfactual reach and yields exact
+D45 regret. Perfect recall supplies the common own-reach coefficient. A finite
+topological telescope then turns the hostile zero first term and unit off-path
+term into exact unit gain in the canonical behavioral root runner. This earns
+whole-policy decomposition coverage, not cumulative CFR or exploitability;
+unequal-depth information fibers also remain a separate evaluator gate.
+
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic
 and incentive certificates directly without pretending to be a sequential

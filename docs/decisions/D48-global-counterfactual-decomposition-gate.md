@@ -1,20 +1,28 @@
 # D48: Gate global counterfactual decomposition on root usefulness
 
-- **Status:** provisional; coefficient decided, generic root theorem pending
+- **Status:** adopted for bounded common-depth topological chains
 - **Date:** 2026-08-10
 - **Experiment ID:** EXP-085
 
-## Decision so far
+## Decision
 
 Any across-information-set deviation decomposition must include information
 sites reached only by the alternative policy and weight local counterfactual
 terms by that alternative's own reach. Baseline-reached-only sums are rejected.
 
-This is not yet an adopted global CFR interface. Promotion requires a generic
-single-site theorem relating a canonical root payoff change to the matching
-local counterfactual term, followed by a telescoping theorem for a topological
-sequence of site changes. The final consumer must bound root regret or
-two-player zero-sum exploitability using all local learners.
+For a common-depth information site, split the canonical behavioral run at the
+site depth. A policy replacement that agrees off that site is invisible before
+the cut and on cut histories outside the site. Reindex the cut law over the
+canonical information-history fiber, factor history reach into own and
+counterfactual reach, and obtain exactly
+
+`root gain = own reach * D45 counterfactual regret`.
+
+Perfect recall supplies common own reach. Apply the theorem to a topologically
+ordered finite chain of local replacements and telescope the root gains. This
+is the adopted whole-policy decomposition surface. It is not yet a global CFR
+convergence or exploitability claim; those require the next cumulative
+consumer.
 
 ## Hostile evidence
 
@@ -30,14 +38,16 @@ continuations, D45 counterfactual action regret, recursive player reach, and
 the existing well-founded root value. It does not receive credit merely for
 naming a sum.
 
-## Evaluator constraint
+## Evaluator contract
 
-The first and second sites have different remaining depths. The hostile slice
-uses continuation fuels two and one. A common larger fuel is also sound once a
-bounded-termination certificate guarantees absorption, so EXP-085 does not
-choose prematurely between a remaining-horizon evaluator and a sufficiently
-large absorbing evaluator. A generic theorem must make one of those contracts
-explicit; an unqualified fixed-fuel identity is not acceptable.
+The API takes an explicit site depth and continuation fuel. Common depth makes
+the cut well-defined. A runner-support theorem handles shorter terminal
+branches by absorption and proves every nonterminal cut history consumed the
+full prefix fuel. Different sites may use different continuation fuels; no
+second horizon-indexed payoff or regret definition is introduced.
+
+Sites with unequal-depth histories remain outside this theorem. They require a
+separate evaluator experiment rather than weakening the adopted statement.
 
 ## Kill conditions and next gate
 
@@ -46,6 +56,8 @@ second runner or regret semantics, stores global finiteness in the model,
 exposes raw update or transport, or labels an arithmetic telescoping lemma as
 global CFR without proving the single-site semantic bridge.
 
-Next prove that bridge under the smallest bounded evaluator certificate, then
-telescope topologically ordered local replacements. Only a root-regret or
-exploitability consumer can move this decision to adopted.
+EXP-086 passes these kill conditions. The generic bridge and telescope build
+in responsive leaves, and the hostile two-site consumer proves exact unit root
+gain from the zero first term and unit off-path term. Next consume every local
+cumulative bound in root regret, then prove the two-player zero-sum
+exploitability specialization.

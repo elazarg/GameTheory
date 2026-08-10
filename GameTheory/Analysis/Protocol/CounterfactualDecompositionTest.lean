@@ -7,6 +7,7 @@ policy gains one.  A correct counterfactual decomposition must recover that
 gain at the off-path second-after-true information site.
 -/
 
+import GameTheory.Analysis.Protocol.CounterfactualDecomposition
 import GameTheory.Analysis.Protocol.CounterfactualRegretLinearityTest
 
 noncomputable section
@@ -569,5 +570,90 @@ theorem baselineReach_misses_decisive_site :
     simp [FinDist.prob_pure_eq_ite, firstChoice,
       InformationModel.ownPlayReachProbability]
   · exact alternativeOwnReach_second false true
+
+theorem firstSite_commonDepth :
+    InformationSite.CommonDepth information firstSite 1 := by
+  intro history
+  calc
+    history.1.trace.length =
+        (firstInformationHistory
+          (firstHistoryEquivBool history)).1.trace.length := by
+      exact congrArg
+        (fun current : information.InformationHistory () firstSite.1 =>
+          current.1.trace.length)
+        (firstHistoryEquivBool.symm_apply_apply history).symm
+    _ = 1 := by rfl
+
+theorem secondSite_commonDepth (firstAction : Bool) :
+    InformationSite.CommonDepth information (secondSite firstAction) 2 := by
+  intro history
+  calc
+    history.1.trace.length =
+        (secondInformationHistory firstAction
+          (secondHistoryEquivBool firstAction history)).1.trace.length := by
+      exact congrArg
+        (fun current : information.InformationHistory ()
+            (secondSite firstAction).1 => current.1.trace.length)
+        ((secondHistoryEquivBool firstAction).symm_apply_apply history).symm
+    _ = 2 := by rfl
+
+theorem firstCommit_prefix_eq :
+    information.runBehavioral
+        (Profile.update (sig := information.behavioralSignature)
+          incumbentBehavioralStrategy ()
+            (incumbentBehavioralPolicy.commit firstSite.1
+              (firstChoice true))) 1 =
+      information.runBehavioral incumbentBehavioralStrategy 1 := by
+  exact information.runBehavioral_prefix_eq_of_agree_off_site
+    incumbentBehavioralStrategy () firstSite
+      (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice true)) 1
+      firstSite_commonDepth (fun hne =>
+        InformationModel.BehavioralPolicy.commit_of_ne
+          incumbentBehavioralPolicy firstSite.1 (firstChoice true) hne)
+
+def firstCommittedPolicy : information.BehavioralPolicy () :=
+  incumbentBehavioralPolicy.commit firstSite.1 (firstChoice true)
+
+def firstCommittedStrategy (_who : Unit) :
+    information.BehavioralPolicy () :=
+  firstCommittedPolicy
+
+theorem secondCommit_prefix_eq :
+    information.runBehavioral
+        (Profile.update (sig := information.behavioralSignature)
+          firstCommittedStrategy ()
+            (firstCommittedPolicy.commit (secondSite true).1
+              (secondChoice true true))) 2 =
+      information.runBehavioral firstCommittedStrategy 2 := by
+  exact information.runBehavioral_prefix_eq_of_agree_off_site
+    firstCommittedStrategy () (secondSite true)
+      (firstCommittedPolicy.commit (secondSite true).1
+        (secondChoice true true)) 2
+      (secondSite_commonDepth true) (fun hne =>
+        InformationModel.BehavioralPolicy.commit_of_ne firstCommittedPolicy
+          (secondSite true).1 (secondChoice true true) hne)
+
+/-- The generic D48 cut theorem now reaches the decisive off-path update: the
+three-step root gain is exactly the expected one-step continuation gain under
+the unchanged two-step prefix law. -/
+theorem secondCommit_rootGain_eq_cutExpectation :
+    (information.runBehavioral
+        (Profile.update (sig := information.behavioralSignature)
+          firstCommittedStrategy ()
+            (firstCommittedPolicy.commit (secondSite true).1
+              (secondChoice true true))) 3).expect terminalPayoff -
+      (information.runBehavioral firstCommittedStrategy 3).expect
+        terminalPayoff =
+    (information.runBehavioral firstCommittedStrategy 2).expect
+      (fun history =>
+        (information.runBehavioralFrom
+          (Profile.update (sig := information.behavioralSignature)
+            firstCommittedStrategy ()
+              (firstCommittedPolicy.commit (secondSite true).1
+                (secondChoice true true))) 1 history).expect terminalPayoff -
+        (information.runBehavioralFrom firstCommittedStrategy 1 history).expect
+          terminalPayoff) := by
+  exact information.rootGain_eq_prefixExpectation _ _ terminalPayoff 2 1
+    secondCommit_prefix_eq
 
 end GameTheory.Analysis.Protocol.CounterfactualDecompositionTest

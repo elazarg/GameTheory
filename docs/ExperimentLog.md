@@ -96,6 +96,7 @@ becomes difficult to scan.
 | EXP-083 | 2026-08-10 | D46 / local CFR regret matching | Can the action-local D45 quantity drive an actual cumulative regret-matching trace with a finite or asymptotic regret theorem? | Complete; supports local CFR | [`decisions/D46-local-counterfactual-regret-matching.md`](decisions/D46-local-counterfactual-regret-matching.md); `Analysis/Protocol/CounterfactualRegretMatching{,Test}.lean` |
 | EXP-084 | 2026-08-10 | D47 / generic local CFR realization | Can canonical behavioral execution derive the local realization equation on every qualifying no-revisit site? | Complete; supports | [`decisions/D47-generic-local-counterfactual-realization.md`](decisions/D47-generic-local-counterfactual-realization.md); `Analysis/Protocol/CounterfactualRegretLinearityTest.lean` |
 | EXP-085 | 2026-08-10 | D48 / global CFR decomposition | Which reach coefficient and evaluator contract survive a profitable coordinated two-site deviation? | Complete; narrows | [`decisions/D48-global-counterfactual-decomposition-gate.md`](decisions/D48-global-counterfactual-decomposition-gate.md); `Analysis/Protocol/CounterfactualDecompositionTest.lean` |
+| EXP-086 | 2026-08-10 | D48 / bounded root decomposition | Can common-depth local replacements bridge exactly to root gain and telescope without a second evaluator? | Complete; supports scoped D48 | [`decisions/D48-global-counterfactual-decomposition-gate.md`](decisions/D48-global-counterfactual-decomposition-gate.md); `Analysis/Protocol/Counterfactual{Decomposition,RootBridgeTest}.lean` |
 
 ## Entry template
 
@@ -5290,10 +5291,12 @@ memory.
   the fixture does not justify choosing between them.
 - **Validation:** the hostile module completed 2,442 jobs warning-free in
   8.5 seconds, and the full library completed 3,587 jobs warning-free. Fast
-  Phase 2 and Phase 3 audits report `VERIFIED=1`; their stale expected
-  transport ratchets were tightened from one to zero where the source had
-  already improved. Source checks found no placeholders, custom axioms, raw
-  updates, stored `Fintype.ofFinite`, public transport tokens,
+  Phase 2 and Phase 3 audits report `VERIFIED=1`. A follow-up found that an
+  attempted zero ratchet had mistaken the designated singleton-subprofile
+  transport and the deliberately transport-bearing D1 experiment for stale
+  source; the expected values remain one for each, with all other scoped
+  transport counts unchanged. Source checks found no placeholders, custom
+  axioms, raw updates, stored `Fintype.ofFinite`, public transport tokens,
   `open Classical`, or lines over 100. Deep reachability mode was deliberately
   not run.
 - **Outcome / next action:** narrows D48. Alternative-policy own reach and an
@@ -5301,3 +5304,58 @@ memory.
   prove a generic single-site root-gain identity under a responsive bounded
   evaluator contract, then telescope topologically ordered site changes and
   consume every local term in a root-regret or exploitability theorem.
+
+### EXP-086: bounded single-site root bridge
+
+- **Date / revision:** 2026-08-10, reserved after `d2ec040`
+- **Status:** complete; supports scoped adoption
+- **Decision / question:** D48; whether one common-depth information-site
+  replacement admits an exact root-gain identity through the canonical
+  behavioral runner, using only a bounded cut and the existing D45 regret.
+- **Prediction:** split the run at the site's depth, prove that a local policy
+  change is invisible before the cut and outside the site afterward, then
+  reindex the cut law over the canonical information-history fiber. Common
+  alternative own reach should factor out and leave exactly D45
+  counterfactual regret.
+- **Representative slice:** first prove a generic strict-prefix runner
+  congruence and common-depth local-replacement prefix law; then make the
+  EXP-085 two-site fixture consume the root bridge rather than closing its
+  identity by normalization alone.
+- **Kill conditions:** the semantic bridge is merely assumed as a certificate;
+  the proof needs a second runner, global stored finiteness, raw update, public
+  transport, or an evaluator stronger than an explicit bounded cut; or the
+  generic theorem cannot discharge both the on-path zero and off-path positive
+  terms of EXP-085 within the responsive narrow-build budget.
+- **Artifacts / observations:**
+  `Analysis/Protocol/CounterfactualDecomposition.lean` proves strict-prefix
+  runner congruence, common-depth prefix invariance, exact root splitting,
+  cut-law reindexing through canonical history reach, past-site irrelevance,
+  and the single-site identity
+  `root gain = own reach * D45 counterfactual regret`. Perfect recall supplies
+  the common own-reach coefficient, and a pure-action corollary targets D47.
+  Early terminal branches require no equal-depth fiction: a new runner-support
+  theorem proves that they are absorbed, while every nonterminal cut history
+  has used the full fuel block.
+- **Hostile consumer:** the first local replacement has exact zero root gain.
+  After that ancestor is installed, the off-path second replacement has unit
+  own reach and unit action regret. A generic finite telescope then proves the
+  coordinated two-site policy has exact unit gain in the canonical three-step
+  behavioral runner. Baseline reach still assigns the decisive site zero.
+- **Compile-time observation:** placing both composed applications back into
+  the already large hostile fixture exceeded the 30-second loop guard. Keeping
+  the generic theorem in its own leaf and the composed consumers in
+  `CounterfactualRootBridgeTest.lean` reduced their narrow builds to about 8
+  and 9 seconds. No expanded convenience wrapper was retained.
+- **Validation:** the stable decomposition leaf, hostile fixture, and composed
+  root consumer build warning-free in roughly 7–9 seconds when cached; the
+  Protocol-analysis aggregate completed 2,447 jobs warning-free. Fast Phase 2
+  and Phase 3 audits report `VERIFIED=1`. The first full build crossed its
+  60-second process guard; its exact orphaned `lake build GameTheory` tree was
+  inspected and stopped, and the cached rerun completed 3,589 jobs
+  warning-free in 9.8 seconds. Deep reachability mode was not run.
+- **Outcome / next action:** supports D48 for bounded common-depth sites and a
+  caller-supplied finite topological chain of local replacements. This is an
+  exact whole-policy root decomposition, but not yet a global CFR convergence
+  theorem. Next use the finite telescope plus every D46 local cumulative bound
+  to control root regret, then specialize to two-player zero-sum
+  exploitability with a failed-learner control.

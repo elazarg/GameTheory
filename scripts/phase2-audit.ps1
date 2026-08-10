@@ -1731,11 +1731,15 @@ if ($DeepReachability) {
 if ($VerifyExpected) {
   $Expected = [ordered]@{
     FUNCTION_UPDATE_OUTSIDE_PROFILE = 0
-    TRANSPORT_IN_PROFILE_MODULE = 0
+    # The one dependent transport implementing singleton subprofiles remains
+    # confined to the designated profile implementation module.
+    TRANSPORT_IN_PROFILE_MODULE = 1
     TRANSPORT_PHASE2_SOURCE = 1
     TRANSPORT_PHASE3_SOURCE = 0
     TRANSPORT_PHASE2_PROBE = 0
-    TRANSPORT_PHASE4_EVIDENCE = 0
+    # The indexed round-trip experiment deliberately records the transport
+    # cost that caused the bundled design to win D1.
+    TRANSPORT_PHASE4_EVIDENCE = 1
     TRANSPORT_ANALYSIS_SOURCE = 0
     TRANSPORT_REPEATED_SOURCE = 0
     TRANSPORT_EPISTEMIC_SOURCE = 0
