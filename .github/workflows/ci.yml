@@ -3,7 +3,11 @@ name: Lean CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, uniform-existence]
+  schedule:
+    # Keep the long-running proof and repository audits alive even when the
+    # research branch has no fresh push that day.
+    - cron: '17 2 * * *'
   workflow_dispatch:
 
 permissions:
@@ -73,7 +77,7 @@ jobs:
 
   full:
     name: Full build and audit
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:

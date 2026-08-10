@@ -819,11 +819,16 @@ period-one solo-quitter row is verified only against a *passive* continuation),
 and untouched by the plateau and optimized-debt splits, which are on-path
 finite-chain algebra.
 
-The gap is structural, not a missing case, and it has now narrowed to a single
-item: **no file in the quitting apparatus has a predicate for behaviour that
-differs at stage two depending on stage-one history.** Stationary rows, cyclic
-row-sequences, and zero-pinned finite chains have no off-path branch anywhere.
-That trigger shape is the remaining obstruction.
+That historical gap has now been closed at the level of vocabulary and exact
+local semantics. `UniformEquilibrium/Quitting/Punishment/InstantPunishment.lean`
+defines `QuittingInstantPunishmentWorks`, allows an arbitrary continuation
+after a refused stage-zero quit, proves its exact equivalence to punishment
+individual rationality plus the no-join inequalities, and compiles either pair
+of conditions to a uniform-equilibrium payoff. The remaining issue is a
+**producer**, not expressibility: the current global branch analysis does not
+force some owner to satisfy both instant conditions, nor does the instant
+theorem consume the strict-slack, deficient deleted-clock, or enlarged-support
+residues by itself.
 
 **The punishment target is no longer inexpressible (`L`).** An earlier sweep
 found no min-max or punishment construction anywhere, and that verdict is now

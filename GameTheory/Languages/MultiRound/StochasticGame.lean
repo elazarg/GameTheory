@@ -35,13 +35,12 @@ structure StochasticGame (ι : Type) where
   /-- State space. -/
   State : Type
   /-- Per-player action set.  **State-independent**: the same actions are
-  available to player `i` at every state.  Formulations that let the action
-  set vary with the state reduce to this one by padding — give every player
-  every action everywhere, and let an action that is illegal at a state carry
-  the payoff and transition of some fixed legal one, so that every strategy
-  using illegal actions has a payoff-equivalent legal counterpart in both
-  directions.  That reduction is standard and is *not* formalized here; see
-  the scope note in `UniformExistenceConjecture.lean`. -/
+  available to player `i` at every state.  Naively padding state-dependent
+  action sets is not faithful for the repository's perfect-monitoring
+  behavioral semantics: duplicate illegal labels can provide public
+  randomization even when their one-stage payoff and transition are copied
+  from a legal action.  See `PaddedDuplicateLotterySeparation.lean` and the
+  scope note in `UniformExistenceConjecture.lean`. -/
   Act : ι → Type
   /-- Stage payoff given state and joint action. -/
   stagePayoff : State → (∀ i, Act i) → ι → ℝ

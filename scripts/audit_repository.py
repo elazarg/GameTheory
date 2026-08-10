@@ -25,7 +25,10 @@ FORBIDDEN_PATTERNS = [
     (re.compile(r"@\[\s*implemented_by\s*\]"), "implemented_by escape hatch"),
     (re.compile(r"\bnative_decide\b"), "native_decide proof"),
 ]
-AXIOM_LINE_RE = re.compile(r"^'([^']+)' depends on axioms: \[(.*)\]$")
+AXIOM_REPORT_RE = re.compile(
+    r"'([^']+)' depends on axioms: \[(.*?)\]", re.DOTALL
+)
+AXIOM_DIRECTIVE_RE = re.compile(r"^\s*#print\s+axioms\b", re.MULTILINE)
 DEFAULT_ROOTS = {
     "GameTheory",
     "UniformEquilibrium",
@@ -116,6 +119,10 @@ def island_containment_audit(
 
 
 def run_axiom_audit() -> tuple[list[str], str]:
+    audit_source = pathlib.Path("scripts/AxiomAudit.lean").read_text(encoding="utf-8")
+    requested = len(
+        AXIOM_DIRECTIVE_RE.findall(strip_comments_and_strings(audit_source))
+    )
     result = subprocess.run(
         ["lake", "env", "lean", "scripts/AxiomAudit.lean"],
         text=True,
@@ -126,20 +133,23 @@ def run_axiom_audit() -> tuple[list[str], str]:
         return [f"scripts/AxiomAudit.lean failed with exit code {result.returncode}"], result.stdout
 
     failures: list[str] = []
-    audited = 0
-    for line in result.stdout.splitlines():
-        match = AXIOM_LINE_RE.match(line.strip())
-        if not match:
-            continue
-        audited += 1
-        decl, raw_axioms = match.groups()
+    reports = AXIOM_REPORT_RE.findall(result.stdout)
+    audited = len(reports)
+    for decl, raw_axioms in reports:
         axioms = {part.strip() for part in raw_axioms.split(",") if part.strip()}
         unexpected = sorted(axioms - ALLOWED_AXIOMS)
         if unexpected:
             failures.append(f"{decl}: unexpected axioms {unexpected}")
 
+    if requested == 0:
+        failures.append("scripts/AxiomAudit.lean contains no #print axioms directives")
     if audited == 0:
         failures.append("scripts/AxiomAudit.lean produced no parsable axiom reports")
+    if audited != requested:
+        failures.append(
+            "scripts/AxiomAudit.lean report count mismatch: "
+            f"requested {requested}, parsed {audited}"
+        )
     return failures, result.stdout
 
 

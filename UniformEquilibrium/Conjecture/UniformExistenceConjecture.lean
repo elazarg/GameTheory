@@ -42,9 +42,13 @@ them is known.
 
 `StochasticGame.Act : ι → Type` does not depend on the state, so the statement
 below is the conjecture for finite stochastic games whose action sets are the
-same at every state.  Formulations with state-dependent action sets reduce to
-this one by padding, which preserves `ε`-equilibria in both directions, but
-**that reduction is not formalized here**.  Until it is, the statement is the
+same at every state.  A naive reduction from state-dependent action sets by
+padding is **not** semantics-preserving for the present perfect-monitoring
+behavioral notion: duplicate illegal labels can act as a public randomization
+device.  `PaddedDuplicateLotterySeparation.lean` gives a finite counterexample
+to the claimed two-way transfer.  A faithful extension therefore needs either
+state-dependent action types or a semantics that observes only normalized
+legal actions.  Until one of those routes is formalized, the statement is the
 conjecture for the state-independent class rather than for every textbook
 presentation of a finite stochastic game.  Quitting games are unaffected:
 their action set is `Bool` at every state.

@@ -1,11 +1,10 @@
 # Uniform-equilibrium project pipeline
 
-**Production-Lean checkpoint:** `50fac9c2` (2026-08-10), including the
-conditioned-tail chronology, exact atomic purification, approximate punishment
-completion, and the singleton-tight deleted-complete diffuse compiler. The
-last complete root repository audit remains the 2026-08-03 pair `14d75ff` /
-`cd1db11`; subsequent mathematical commits use warning-free targeted dependency
-builds and axiom probes. **This file revised 2026-08-10.**
+**Repository checkpoint:** `90a47784` (2026-08-10). The mathematical checkpoint
+`50fac9c2` includes conditioned-tail chronology, exact atomic purification,
+approximate punishment completion, and the singleton-tight deleted-complete
+diffuse compiler. **This file revised 2026-08-10 after the automated external
+review.**
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
@@ -20,8 +19,11 @@ The conjecture-level search begins at four players: the two- and three-player
 cases are compiled. For a hypothetical counterexample, terminal instability,
 the exact-D/projective tail, bounded punishment-floor capacity, marked semantic
 compactness, elementary tail caps, and conditioned-tail chronology are all
-available. The singleton-tight diffuse branch with every player-deleted clock
-complete now compiles to asymptotic Nash play.
+available. **Conditionally**, a singleton-tight diffuse suffix with uniform
+mesh at most `rho` and every player-deleted clock complete compiles to an
+asymptotic Nash profile with error `O(rho)`. The compiler becomes an all-errors
+producer only when the upstream construction supplies such suffixes with
+`rho → 0`; the unconditional counterexample split does not yet do so.
 
 The live residue has three natural exits:
 
@@ -35,9 +37,17 @@ The live residue has three natural exits:
 
 Raw compactness, another separator, playerwise punishment tails, an unattached
 period-one gain, and a bounded-capacity scalar by themselves do not close any
-of these exits. `MATH-P0-12` below owns this three-way strategic realization
-gate; the older accounting layers are retained there as proved dependencies,
-not competing P0 tasks.
+of these exits. The priority order is now explicit:
+
+1. `MATH-P0-8` is the primary positive lane: finish the per-tolerance
+   punish-at-a-clock compiler using the landed Q161 mathematics.
+2. `MATH-P0-12` is the grounding lane: it may advance only by eliminating one
+   of the three residues above or by producing the common state-matched word an
+   existing compiler consumes. Another carrier, separator, or accounting
+   identity does not satisfy that bar.
+3. The negative lane remains secondary until it has an explicit checkable
+   certificate format; candidate tables without certificates are discovery
+   data, not counterexamples.
 
 **Handoff validation.** At the last fully audited checkpoint, `lake build`
 succeeded, local Markdown links resolved, and the repository audit exited
@@ -717,7 +727,9 @@ toolchain mismatch and the no-install fence meant nobody confirmed
 
 ### `LEAN-F0-8` — the bounded-transversality lemma behind the case-2 repair
 
-- **Status:** READY
+- **Status:** ACTIVE — Q161's abstract probability and unrestricted-deviation
+  components are formalized; the game-specific Case-1 process and final
+  per-tolerance producer remain open
 - **Lane:** F0
 - **Depends:** `QuittingUnboundedInverseIterate`.
 - **Record:** [Perturbed FTV inverse iterate][perturbed-ftv]
@@ -1092,10 +1104,14 @@ The clause map is done and recorded in the same file, in a dedicated
 `ε`-equilibrium) and S.3 (absorbing profile, all players sequentially
 `ε`-perfect) each have a **one-directional, proved** correspondent in the
 repository (zero-solo ⟹ S.1; admissible cycle ⟹ S.3, via a definitional match
-between Simon's `E_ε` and AGKRS's Definition 3.1), but neither is an *iff*,
+between Simon's `E_ε` and AGKRS's Definition 3.1), but neither is an *iff*.
 S.2 (instant equilibria, keyed to the full stochastic game's min-max value)
-has **no** counterpart anywhere in the repository's current vocabulary, and
-the repository's own third branch (isolated-negative) has no counterpart in
+now has an exact quitting counterpart in `Punishment/InstantPunishment.lean`:
+`QuittingInstantPunishmentWorks` is characterized by punishment individual
+rationality plus the no-join inequalities and implies a uniform payoff. The
+remaining correspondence question is whether Simon's branch hypotheses force
+those two repository conditions. The repository's own third branch
+(isolated-negative) has no counterpart in
 AGKRS's trichotomy — it is a per-block failure diagnostic internal to the
 repository's cyclic construction, not a residual case Simon's or AGKRS's
 proofs leave open. **The "internal completeness ⟺ quitting conjecture"
@@ -1104,8 +1120,9 @@ not claimed.**
 
 **Acceptance.** A clause-by-clause map with each correspondence either proved,
 refuted, or explicitly open, plus wing records for whichever source the
-argument leans on. **Met**, with three of four live cells left `open` (S.1
-and S.3 one-directional only; S.2 and isolated-negative uncorrelated) — see
+argument leans on. **Met**, with the producer directions left `open` (S.1
+and S.3 one-directional only; S.2 now represented but not derived from the
+published branch hypotheses; isolated-negative uncorrelated) — see
 the wing record for the reasoning behind each verdict.
 
 ### `MATH-P1-4` — formalize the weight whose gap survives faithful unpinning
@@ -2025,35 +2042,41 @@ on one table.
 - **Status:** READY
 - **Lane:** P0
 - **Depends:** phase-switch engine, `quittingPlannedSurvivalStoppingIndex`,
-  punishment floor, the ε-bridge, the reached-stage transfer (in flight).
+  punishment floor, the ε-bridge, and reached-stage transfer.
 - **Record:** [`SurvivalWindowLandingByContinuationLifting`](../../ideas/UniformEquilibriumLiterature/SurvivalWindowLandingByContinuationLifting.md), Q158
 
 **Objective.** The per-tolerance existence engine: an `ε`-rational chain with
 divergent quit mass whose consecutive values are `δ`-linked compiles to a
 `3ε`-equilibrium, via punish-at-a-clock.
 
-**State.** `READY`, and this is the decisive chunk. The four no-gos of this
+**State.** `ACTIVE`, and this is the primary positive lane. The four no-gos of this
 wave jointly force any closing proof into exactly this architecture: per-`ε`
 families of unbounded period, an off-path punishment component, deviation
 pricing in the deleted deficit, and no compactness/budget/projection shortcut.
 Component inventory: phase-switch wrapper landed; stopping index `i♯` landed;
-punishment floor landed; ε-bridge landed; reached-stage transfer in flight.
-**Missing**: ~~the cumulative-advantage ledger `W` and its index `i*`~~
+punishment floor landed; ε-bridge landed; reached-stage transfer landed where
+its hypotheses are available. **Landed:** ~~the cumulative-advantage ledger
+`W` and its index `i*`~~
 (**landed**, `UniformEquilibrium/Quitting/Debt/Ledger/PunishClock.lean` — summand pinned to the deleted
 normalization, clocks and combinator, Abel cash-out, the assembled cap
-consuming a ledger condition); the rank-one decision-discrepancy argument and
-the "only repetitive continuing matters" deviation reduction — **both now
-posed as Question 161** (the DDP maximal inequality, the rank-variation
-bound, the rank-one corollary, and the domination consequence with the
-unrestricted deviation quantifier made explicit — the step the architecture
-guard warns about is Part D, and the question says so); plus the small
-residuals: **ceiling-IR punishment attainment and Case-2 wiring landed**
+consuming a ledger condition); Q161's abstract maximal inequality and the
+unrestricted live-chain deviation cap, in
+`Math/Probability/DecisionVariationMaximalInequality.lean` and
+`UniformEquilibrium/Quitting/Paths/LiveChainDominationCap.lean`; plus the small
+residuals, **ceiling-IR punishment attainment and Case-2 wiring**
 (`UniformEquilibrium/Quitting/Cycles/PhaseSwitchResiduals.lean`); the truncated-ledger transfer's
 premise is **false** — the seed discrepancy at the truncation back-propagates
 geometrically, leaving a survival-weighted correction at every prefix index —
-and its honest form is a folding lemma riding the assembly's own
-reach-probability bounds (Case 1 via Q161's corollary, Case 2 via the wired
-clock), to be landed once Q161 returns.
+and its honest folding lemma in `TruncationLedgerFold.lean`.
+
+**Exact remaining seam.** `RankOneCrossing.lean` is still an abstract
+consumer. The repository does not construct, from the proposed quitting plan,
+the adaptive decision-discrepancy process whose live histories imply a score
+crossing and whose expected decision variation has the required uniform
+budget. Nor is there yet one theorem packaging those Case-1 data, the Case-2
+clock, the floor-valid punishment continuation, and the per-tolerance chain
+into the terminal `ε`-Nash object. The old `M [reported]` wording overcredited
+the paper answer; this theorem inventory is authoritative.
 
 **Acceptance.** The compiler as a theorem consuming a per-tolerance family and
 producing the terminal `ε`-Nash objects the selection theorem eats. Landing it
@@ -2222,9 +2245,9 @@ program's machinery — goes to the questions corpus after the farm.
 partial: the potential lemma over a granted BK-regular value curve, with the
 regularity layer tracked separately. Nothing here gates the quitting lane.
 
-### `MATH-P0-12` — raw-flow/co-state utilization of the counterexample seam
+### `MATH-P0-12` — grounded counterexample-seam utilization
 
-- **Status:** IN PROGRESS; accounting, compact carriers, exact strategic
+- **Status:** ACTIVE SUPPORTING LANE; accounting, compact carriers, exact strategic
   consumers, and the singleton-tight deleted-complete diffuse compiler are
   compiled; strict-slack reset, deleted-clock-deficient solo extraction, and
   enlarged-support state matching remain open
@@ -2246,6 +2269,15 @@ separate survival-grade-one charges from the grade-zero endpoint coboundary,
 transport finite co-states by the adjoint map, and retain the killed boundary
 remainder.  They do not identify a packet with occupation, erase the phantom
 plateau, or realize a product-root word.
+
+**Diminishing-returns stop rule.** This row is no longer permission to extend
+the diagnostic ontology. New work counts only if it (a) rules out strict
+plateau slack, (b) compiles a deficient deleted clock through approximate solo
+punishment completion, (c) solves enlarged-support state matching, or (d)
+constructs one common floor-safe product-root chronology consumed by a landed
+terminal/cycle compiler. A new compact carrier, co-state, separator, tangent
+identity, or conditional decoder without one of those consequences is useful
+infrastructure but does not advance this P0 row.
 
 **Work decomposition.** The first three infrastructure layers are compiled;
 the remaining work is strategic and chronological:
