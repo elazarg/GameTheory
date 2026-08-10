@@ -2,7 +2,7 @@
 
 - **Status:** adopted for bounded common-depth topological chains
 - **Date:** 2026-08-10
-- **Experiment ID:** EXP-085
+- **Experiment ID:** EXP-085, EXP-086
 
 ## Decision
 

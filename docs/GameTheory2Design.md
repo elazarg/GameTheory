@@ -1067,6 +1067,19 @@ term into exact unit gain in the canonical behavioral root runner. This earns
 whole-policy decomposition coverage, not cumulative CFR or exploitability;
 unequal-depth information fibers also remain a separate evaluator gate.
 
+EXP-087/D49 connects the local and root layers without adding an aggregate
+regret semantics. `avgVec` now has an exact Cesaro-sum theorem, and
+game-independent orthant geometry bounds any finite weighted coordinate
+selection by the sum of local distances. The Protocol specialization accepts
+an exact D48 root-gain identity. Its simultaneous two-site consumer couples
+both actual D46 processes, proves their state equations through D47, and uses
+D48 to identify every canonical behavioral root gain with their two selected
+coordinates. Under the ordinary local norm bounds, both local limits drive
+positive average root gain to zero. A law-ignoring control retains exact unit
+regret. The adopted scope is one fixed finite deviation decomposition; a
+uniform complete pure-policy schedule and the strategic external-regret bridge
+remain prerequisites for an exploitability claim.
+
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic
 and incentive certificates directly without pretending to be a sequential

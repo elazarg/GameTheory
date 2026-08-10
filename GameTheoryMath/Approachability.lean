@@ -102,6 +102,21 @@ theorem avgVec_succ (payoff : P → Q → E) (br : E → P) (qseq : ℕ → Q) (
   simp only [avgVec]
   rw [smul_add, smul_smul, smul_smul, c1, c2, one_smul]
 
+/-- The reactive Cesaro recurrence is exactly the uniform average of the
+payoffs it generated.  This is the bridge from one-step regret vectors to a
+cumulative regret statement. -/
+theorem avgVec_smul_eq_sum (payoff : P → Q → E) (br : E → P)
+    (qseq : ℕ → Q) (t : ℕ) :
+    (t : ℝ) • avgVec payoff br qseq t =
+      ∑ n ∈ Finset.range t,
+        payoff (br (avgVec payoff br qseq n)) (qseq n) := by
+  induction t with
+  | zero => simp [avgVec]
+  | succ n ih =>
+      rw [Finset.sum_range_succ, ← ih]
+      simpa only [Nat.cast_add, Nat.cast_one] using
+        avgVec_succ payoff br qseq n
+
 /-- A reactive average of uniformly bounded payoffs remains in the same ball. -/
 theorem avgVec_norm_le (payoff : P → Q → E) (br : E → P) (qseq : ℕ → Q)
     {M : ℝ} (hM0 : 0 ≤ M) (hM : ∀ p q, ‖payoff p q‖ ≤ M) :

@@ -252,6 +252,73 @@ theorem runBehavioralFrom_eq_of_agree_off_pastSite
   · exact congrFun (hothers player hplayer)
       (M.infoOf player later.trace)
 
+/-- Changes confined to an earlier common-depth information site do not alter
+action regret at a strictly later site. Counterfactual reach already omits the
+focal player's policy, and the continuation runner cannot revisit the earlier
+site. -/
+theorem counterfactualActionRegret_eq_of_agree_off_pastSite
+    [Fintype ι] [DecidableEq ι]
+    (first second : (i : ι) → M.BehavioralPolicy i)
+    (who : ι) [DecidableEq (M.InfoState who)]
+    (pastSite : M.InformationSite who) (pastDepth : ℕ)
+    (hpastDepth : InformationSite.CommonDepth M pastSite pastDepth)
+    (hplayers : ∀ other, other ≠ who → first other = second other)
+    (hwho : ∀ {info : M.InfoState who}, info ≠ pastSite.1 →
+      first who info = second who info)
+    (laterSite : M.InformationSite who)
+    [Fintype (M.InformationHistory who laterSite.1)]
+    (hlater : ∀ history : M.InformationHistory who laterSite.1,
+      pastDepth < history.1.trace.length)
+    (payoff : E.History → ℝ) (fuel : ℕ)
+    (choice : M.Choice who laterSite.1) :
+    M.counterfactualActionRegret first who laterSite payoff fuel choice =
+      M.counterfactualActionRegret second who laterSite payoff fuel choice := by
+  have hcontinuation : ∀
+      (firstPolicy secondPolicy : M.BehavioralPolicy who),
+      (∀ {info : M.InfoState who}, info ≠ pastSite.1 →
+        firstPolicy info = secondPolicy info) →
+      M.counterfactualContinuationValue first who laterSite firstPolicy
+          payoff fuel =
+        M.counterfactualContinuationValue second who laterSite secondPolicy
+          payoff fuel := by
+    intro firstPolicy secondPolicy hpolicy
+    unfold InformationModel.counterfactualContinuationValue
+    apply Finset.sum_congr rfl
+    intro history _
+    rw [M.counterfactualReachProbability_eq_of_eq_off hplayers
+      history.1.trace]
+    apply congrArg
+      (fun value : ℝ =>
+        M.counterfactualReachProbability second who history.1.trace * value)
+    unfold InformationModel.behavioralContinuationValue
+    apply congrArg (fun law : FinDist E.History => law.expect payoff)
+    exact M.runBehavioralFrom_eq_of_agree_off_pastSite
+      (Profile.update (sig := M.behavioralSignature) first who firstPolicy)
+      (Profile.update (sig := M.behavioralSignature) second who secondPolicy)
+      who pastSite pastDepth hpastDepth
+      (fun other hne => by
+        rw [Profile.update_of_ne _ _ hne, Profile.update_of_ne _ _ hne]
+        exact hplayers other hne)
+      (fun hinfo => by
+        rw [Profile.update_same, Profile.update_same]
+        exact hpolicy hinfo)
+      history.1 (hlater history) fuel
+  have hcommitted : ∀ {info : M.InfoState who}, info ≠ pastSite.1 →
+      (first who).commit laterSite.1 choice info =
+        (second who).commit laterSite.1 choice info := by
+    intro info hinfo
+    by_cases hlaterInfo : info = laterSite.1
+    · subst info
+      rw [BehavioralPolicy.commit_self, BehavioralPolicy.commit_self]
+    · rw [BehavioralPolicy.commit_of_ne _ _ _ hlaterInfo,
+          BehavioralPolicy.commit_of_ne _ _ _ hlaterInfo]
+      exact hwho hinfo
+  unfold InformationModel.counterfactualActionRegret
+    InformationModel.counterfactualRegret
+  rw [hcontinuation ((first who).commit laterSite.1 choice)
+      ((second who).commit laterSite.1 choice) hcommitted,
+    hcontinuation (first who) (second who) hwho]
+
 /-- The bounded cut gain vanishes on every reached history outside the local
 replacement site, including histories absorbed before the cut depth. -/
 theorem cutGain_eq_zero_of_info_ne

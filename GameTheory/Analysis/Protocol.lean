@@ -12,6 +12,7 @@ import GameTheory.Analysis.Protocol.CounterfactualReach
 import GameTheory.Analysis.Protocol.CounterfactualRegret
 import GameTheory.Analysis.Protocol.CounterfactualDecomposition
 import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
+import GameTheory.Analysis.Protocol.CounterfactualRootRegret
 
 namespace GameTheory.Analysis.Protocol
 

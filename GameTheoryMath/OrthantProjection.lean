@@ -82,6 +82,18 @@ theorem infDist_eq_norm_sub_orthantProj (x : EuclideanSpace ℝ ι) :
         nlinarith [hyi, h]
     nlinarith [hsq, norm_nonneg (x - orthantProj x), norm_nonneg (x - y)]
 
+/-- Every positive coordinate is bounded by Euclidean distance from the
+nonpositive orthant. -/
+theorem positivePart_le_infDist (x : EuclideanSpace ℝ ι) (i : ι) :
+    max (x.ofLp i) 0 ≤ Metric.infDist x nonposOrthant := by
+  rw [infDist_eq_norm_sub_orthantProj]
+  calc
+    max (x.ofLp i) 0 = |(x - orthantProj x).ofLp i| := by
+      rw [sub_orthantProj_ofLp, abs_of_nonneg (le_max_right _ _)]
+    _ = ‖(x - orthantProj x).ofLp i‖ := by
+      rw [Real.norm_eq_abs]
+    _ ≤ ‖x - orthantProj x‖ := PiLp.norm_apply_le _ _
+
 /-- Coordinatewise clamping at zero is norm-nonincreasing. -/
 theorem norm_orthantProj_le (z : EuclideanSpace ℝ ι) : ‖orthantProj z‖ ≤ ‖z‖ := by
   have h : ‖orthantProj z‖ ^ 2 ≤ ‖z‖ ^ 2 := by

@@ -97,6 +97,7 @@ becomes difficult to scan.
 | EXP-084 | 2026-08-10 | D47 / generic local CFR realization | Can canonical behavioral execution derive the local realization equation on every qualifying no-revisit site? | Complete; supports | [`decisions/D47-generic-local-counterfactual-realization.md`](decisions/D47-generic-local-counterfactual-realization.md); `Analysis/Protocol/CounterfactualRegretLinearityTest.lean` |
 | EXP-085 | 2026-08-10 | D48 / global CFR decomposition | Which reach coefficient and evaluator contract survive a profitable coordinated two-site deviation? | Complete; narrows | [`decisions/D48-global-counterfactual-decomposition-gate.md`](decisions/D48-global-counterfactual-decomposition-gate.md); `Analysis/Protocol/CounterfactualDecompositionTest.lean` |
 | EXP-086 | 2026-08-10 | D48 / bounded root decomposition | Can common-depth local replacements bridge exactly to root gain and telescope without a second evaluator? | Complete; supports scoped D48 | [`decisions/D48-global-counterfactual-decomposition-gate.md`](decisions/D48-global-counterfactual-decomposition-gate.md); `Analysis/Protocol/Counterfactual{Decomposition,RootBridgeTest}.lean` |
+| EXP-087 | 2026-08-11 | D49 / finite root-regret aggregation | Can every local D46 process jointly control a canonical D48 root deviation? | Complete; supports fixed finite deviations | [`decisions/D49-finite-root-regret-aggregation.md`](decisions/D49-finite-root-regret-aggregation.md); `Analysis/Protocol/CounterfactualRootRegret{,Test}.lean` |
 
 ## Entry template
 
@@ -5359,3 +5360,69 @@ memory.
   theorem. Next use the finite telescope plus every D46 local cumulative bound
   to control root regret, then specialize to two-player zero-sum
   exploitability with a failed-learner control.
+
+### EXP-087: finite root-regret aggregation
+
+- **Date / revision:** reserved 2026-08-10 after `455742b`; completed
+  2026-08-11 in the following focused commit
+- **Status:** complete; supports D49 for fixed finite D48 decompositions
+- **Decision / question:** D49; whether the D48 root telescope and every D46
+  local average-regret process yield a uniform bound on canonical behavioral
+  root deviations, rather than merely a family of unrelated local limits.
+- **Prediction:** a finite family of local regret vectors controls every pure
+  policy deviation by the sum of their distances to the nonpositive orthants.
+  The exact Cesaro identity for `avgVec` must connect instantaneous D48 terms
+  to those local averages; a finite sum of the D46 limits should then drive
+  positive root regret to zero.
+- **Representative slice:** first prove the game-independent finite-family
+  inequality, then instantiate it on the two-stage complementarity Protocol
+  with all topologically relevant information sites and simultaneous local
+  regret-matching state. Retain the fixed `false,false` trajectory as a
+  failed-learner control with persistent unit root regret.
+- **Competing designs:** an abstract finite-family aggregation theorem with a
+  separate Protocol decomposition premise; a bundled finite information-site
+  schedule; or a fixture-specific simultaneous CFR recursion promoted only
+  after its types stabilize.
+- **Kill conditions:** credit from a new root-regret definition alone; a bound
+  for one local site presented as global CFR; omission of off-path sites;
+  convergence assumed rather than obtained from every D46 process; a second
+  runner or payoff semantics; or a consumer that never bounds a canonical
+  root deviation.
+- **Artifacts / observations:** `GameTheoryMath.Approachability` proves the
+  exact Cesaro identity for `avgVec`; `OrthantProjection` bounds each positive
+  coordinate by orthant distance; and `RegretAggregation` proves the finite
+  weighted-coordinate and positive-average-gain bounds. The Protocol leaf
+  names the actual D45/D46 running average and specializes the finite bound to
+  an exact D48 scalar root decomposition.
+- **Hostile positive consumer:** the two-stage complementarity fixture runs
+  simultaneous regret matching at the first and off-path second-after-true
+  sites. Each local process sees the other site's law as environment. Its
+  mutually recursive state is proved equal to both actual D46 averages; D47
+  discharges both realization equations; the new past-site invariance theorem
+  and D48 root bridges prove the canonical per-round root gain is exactly the
+  sum of their selected coordinates. With the ordinary local norm-bound
+  premises, the two D46 limits and the finite root inequality give vanishing
+  positive average root gain.
+- **Negative control:** a law-ignoring process repeats the incumbent and the
+  coordinated deviation. Its canonical positive root average is exactly one
+  at every nonempty horizon. The finite inequality still sees the unit
+  off-path term, but realization fails, so no convergence theorem applies.
+- **Compile-time observation:** a dependent convenience wrapper applying every
+  asymptotic local theorem in one elaborator call repeatedly crossed the
+  30-second loop guard. It was removed. The responsive consumer invokes D46
+  once per concrete site and combines the two limits through the finite bound;
+  the final leaf rebuilds in about 8.4 seconds when cached.
+- **Validation:** narrow stable and hostile targets build warning-free;
+  `CounterfactualRootRegretTest` completes 2,447 jobs in 8.4 seconds cached.
+  The promoted `GameTheoryMath` and Protocol-analysis aggregates complete
+  2,463 jobs in 10.8 seconds. Fast expected Phase 2/3 audits both report
+  `VERIFIED=1`, with Analysis transport still zero and no source hazards. The
+  first package build crossed the 30-second process guard; its exact build tree
+  was inspected and stopped, and the cached rerun completed 3,592 jobs
+  warning-free in 16.8 seconds. Deep reachability mode was deliberately not
+  run.
+- **Outcome / next action:** adopts D49 for a fixed finite D48 decomposition.
+  Do not claim full CFR or exploitability. Next enumerate a complete finite
+  topological schedule, obtain a deviation-uniform bound, discharge local norm
+  bounds from payoff ranges, and connect the result to canonical strategic
+  external regret before the two-player zero-sum specialization.

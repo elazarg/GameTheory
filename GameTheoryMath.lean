@@ -12,6 +12,7 @@ import GameTheoryMath.Eventually
 import GameTheoryMath.HarmonicSequence
 import GameTheoryMath.OnlineLearning
 import GameTheoryMath.PositivePartFixedPoint
+import GameTheoryMath.RegretAggregation
 import GameTheoryMath.SimplexApproximation
 
 namespace GameTheoryMath

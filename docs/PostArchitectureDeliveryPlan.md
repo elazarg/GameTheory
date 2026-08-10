@@ -136,14 +136,20 @@ Separate packages:
   perfect-recall and action-facing corollaries, and a finite topological
   telescope whose canonical behavioral-run consumer recovers that exact unit
   coordinated gain; and
-- **next:** use every local cumulative bound to control root regret, then prove
-  two-player zero-sum exploitability convergence.
+- **complete:** finite-family root-regret aggregation, including the exact
+  Cesaro bridge, a simultaneous two-site D46 process, an exact D48 per-round
+  root identity, conditional root convergence from both ordinary local norm
+  bounds, and a fixed non-learning trajectory with persistent unit regret; and
+- **next:** make the root bound uniform over every pure policy deviation in a
+  complete finite topological schedule, discharge local norm bounds from a
+  payoff-range certificate, then prove two-player zero-sum exploitability.
 
 Do not merge these packages into the FOSG syntax root or hide serialization
 order behind choice. The coefficient package counts because its continuation
 law is canonical and its recursive factorization has hostile consumers. It is
-not global CFR convergence coverage until an across-information-set theorem
-uses every local learner to control root regret or exploitability.
+not full CFR exploitability coverage until one finite schedule controls every
+pure policy deviation uniformly and reaches the canonical strategic
+external-regret interface.
 
 ### E. Intrinsic selected-solution strategic form — resolved
 
