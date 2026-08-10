@@ -112,12 +112,17 @@ Separate packages:
   arbitrary supplied boundary, support-by-erasure, and terminal-support
   equivalence; the simultaneous witness has a positive terminal history and
   rejects terminal support before play;
-- **next:** counterfactual reach and continuation coefficients; and
-- CFR only after a regret theorem consumes those coefficients.
+- **complete:** canonical counterfactual reach and continuation coefficients;
+  actual reach remains `InformationModel.historyReachProbability`, the
+  one-step coefficient is an exact continuation mass, and a two-step hostile
+  consumer checks recursive multiplication; and
+- **next:** a regret decomposition that consumes those coefficients, with CFR
+  convergence gated on that result.
 
 Do not merge these packages into the FOSG syntax root or hide serialization
-order behind choice.  Counterfactual definitions do not count as delivery
-until a terminal/continuation law and then a regret consumer use them.
+order behind choice. The coefficient package counts because its continuation
+law is canonical and its recursive factorization has hostile consumers. It is
+not CFR coverage until a regret theorem, and then a convergence result, use it.
 
 ### E. Intrinsic selected-solution strategic form — resolved
 

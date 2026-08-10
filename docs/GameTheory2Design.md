@@ -1003,8 +1003,16 @@ putting utility or equilibrium in FOSG syntax.  Erasing administrative
 microsteps preserves external history utility, projection and translation
 preserve the deviating source owner, and ordinary behavioral `IsNash` is
 equivalent before and after serialization.  The hostile two-player witness
-checks both player orders and a profitable-deviation control.  Counterfactual
-reach remains a later, separate semantic package.
+checks both player orders and a profitable-deviation control.
+
+EXP-081/D44 adds counterfactual reach as a separate generic Protocol-analysis
+package rather than a FOSG syntax feature. The existing canonical
+`historyReachProbability` remains actual reach; theorem-only focal and
+counterfactual products factor it on every indexed trace, and the one-step
+coefficient is the exact mass of the corresponding canonical continuation.
+Simultaneous focal/opponent controls and a genuine two-step consumer prevent
+vacuous or last-step-only coverage. Regret decomposition and CFR convergence
+remain later gates.
 
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic

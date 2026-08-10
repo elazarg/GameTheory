@@ -91,6 +91,7 @@ becomes difficult to scan.
 | EXP-078 | 2026-08-10 | D42 / imperfect-information one-shot deviations | Does absence of profitable single-information-set deviations inside every proper subgame characterize SPE under perfect recall? | Refutes; corrects D42 and closes the false delivery remainder | `GameTheory/Tests/SubgameOneShot.lean`; [`decisions/D42-imperfect-information-subgames.md`](decisions/D42-imperfect-information-subgames.md) |
 | EXP-079 | 2026-08-10 | D4/D5/D31 / intrinsic strategic form | Can selected closed-loop solutions compile directly to canonical pure Nash while preserving downstream effects of one owned-rule deviation? | Supports; decides D43 | [`decisions/D43-intrinsic-selected-solution-strategic-form.md`](decisions/D43-intrinsic-selected-solution-strategic-form.md); `GameTheory/Experimental/PostArchitecture/IntrinsicStrategic.lean` |
 | EXP-080 | 2026-08-10 | D40 / independent rationalizability | Can canonical mixed profiles express product beliefs and exhibit the strict three-player separation from correlated rationalizability? | Supports; completes D40 product-belief package | [`decisions/D40-mixed-pure-rationalizability.md`](decisions/D40-mixed-pure-rationalizability.md); `GameTheory/Core/Rationalizability.lean`; `GameTheory/Tests/Rationalizability.lean` |
+| EXP-081 | 2026-08-10 | D44 / canonical counterfactual reach | Can counterfactual reach and continuation coefficients be derived from canonical finite history laws without restoring a native FOSG runner? | Complete; supports | `Analysis/Protocol/CounterfactualReach.lean`; `Analysis/Protocol/CounterfactualReachTest.lean` |
 
 ## Entry template
 
@@ -5026,3 +5027,48 @@ memory.
   without a bespoke opponent-product type or compatibility alias. Preserve the
   separate correlated, independent, and pure-elimination names; any executable
   checker remains a distinct finite-algorithm gate.
+
+### EXP-081: canonical FOSG counterfactual reach
+
+- **Date / revision:** 2026-08-10, reserved after `cd92ec9`
+- **Status:** complete; supports D44
+- **Decision / question:** D44; whether counterfactual reach and
+  continuation coefficients can be theorem-only functions of canonical
+  `InformationModel` finite history laws, without a native FOSG history,
+  runner, probability carrier, or bridge-specific equilibrium predicate.
+- **Representative slice:** a simultaneous finite game in which changing the
+  focal contribution changes actual reach but not counterfactual reach, plus
+  a separate opponent-only change that makes counterfactual reach zero. A
+  two-step imperfect-recall fixture consults one player twice at the same
+  information state and checks focal reach `1/2 * 1/2 = 1/4` against
+  counterfactual reach `1`.
+- **Competing designs:** canonical behavioral history-law marginals with an
+  explicit focal-policy substitution; a bespoke counterfactual runner; or no
+  stable surface until a regret consumer fixes the required coefficient shape.
+- **Kill conditions:** the proposed coefficient still varies with the focal
+  player's own reach factor; loses opponent or chance mass; requires a second
+  runner/carrier, stored global finiteness, public transport plumbing, or a
+  definition that no continuation/regret theorem consumes.
+- **Artifacts / observations:** the spike first produced a recursive actual
+  trace weight, then rejected it after discovering the existing canonical
+  `historyReachProbability`; the promoted API contains no duplicate actual
+  reach. `behavioralJoint_prob_eq_prod` derives coordinate masses from the
+  canonical product law. `runBehavioralFrom_one_prob_extend` identifies each
+  selected joint/transition coefficient with the exact one-step continuation
+  mass, `historyReachProbability_extend` proves the recursive continuation
+  equation for the existing history law, and
+  `historyReachProbability_eq_player_mul_counterfactual` factors canonical
+  reach on every indexed trace. Full counterfactual reach is invariant under
+  focal-policy changes. The simultaneous fixture separately falsifies loss of
+  opponent mass; the two-step fixture falsifies a last-step-only alias.
+- **Validation:** the narrow source/consumer build completed 1,738 jobs
+  warning-free; Phase 2 and Phase 3 expected audits both report `VERIFIED=1`;
+  the full build completed 3,583 jobs warning-free. The promoted source and
+  consumers have no placeholders, custom axioms, raw
+  updates, `Fintype.ofFinite`, `open Classical`, transport tokens, or lines
+  over 100. Fast Phase 2/3 audits and full integration are recorded with the
+  promotion commit; deep reachability mode is deliberately not run.
+- **Outcome / next action:** supports. D44 adopts canonical Protocol history
+  reach plus theorem-only focal/counterfactual factors. The coefficient package
+  is delivered; it does not count as CFR. Next add a regret decomposition that
+  consumes these coefficients, and only then gate a CFR convergence theorem.
