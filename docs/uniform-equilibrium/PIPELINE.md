@@ -2775,6 +2775,21 @@ positive aggregate debt at an exact all-Continue root and zero absorption for
 every finite proposed multiplier.  That regression is deliberately local
 and does not establish punishment-floor reachability, so a reachability- or
 potential-based control of the carried term remains the precise gate.
+There is nevertheless a genuine multi-edge reduction.  For any supplied
+chronology of literally reachable predecessor edges carrying coherent exact
+dynamic-debt annotations, canonical remaining prefix capacity decreases by
+legal charge.  After scaling by `|I|*M`, it pays every diagonal seam and is a
+killed-excessive account for aggregate debt.  Finite telescoping leaves only
+
+```text
+survivalWeight * farDebt ≤ survivalWeight * farCapacityAccount.
+```
+
+Thus the carried terms are not independent local errors: they collapse to
+one terminal boundary.  What remains is to construct this coherent reachable
+chronology from the calibrated minimizers and to prove the far-boundary
+domination or vanishing.  Reachability and finite capacity alone prove
+neither.
 `Never` after a positive internal cutoff retains
 an arbitrary behavioral word, and sure-joint/sure-solo caps introduce
 nonzero pure-exit boundary pairs.  Those remaining cap branches require a

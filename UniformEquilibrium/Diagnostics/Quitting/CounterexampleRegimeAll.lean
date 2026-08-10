@@ -28,6 +28,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketSurplus
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneAttachmentRepair
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodOneTangentReadout
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeReachableCarryTelescope
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeQuantitative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePeriodicWindows
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSearchConsequences
@@ -322,4 +323,11 @@ punishment-floor reachability.  A positive internal cutoff retains an arbitrary 
 while sure-joint and sure-solo caps introduce nonzero pure-exit boundaries;
 those branches still need boundary reinsertion or an exact appended
 Nash--Bellman chain.
+Across a supplied coherent chronology of literally reachable predecessor
+edges, the canonical remaining-capacity potential does amortize every new
+diagonal seam.  Its scaled account is killed-excessive for aggregate debt,
+and finite telescoping reduces all carried terms to one survival-weighted
+far-end boundary comparison.  Neither reachability nor finite charge
+capacity supplies that comparison, and the calibrated minimizers have not
+yet been assembled into such a literal coherent reachable chronology.
 -/
