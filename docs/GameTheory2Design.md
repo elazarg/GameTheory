@@ -1124,6 +1124,20 @@ two-player slice must expose the reusable scheduling contract before any
 general dynamics API, arbitrary-replacement exploitability theorem, or
 unequal-depth extension is admitted.
 
+EXP-091/D53 supplies that multi-site slice without turning its scheduler into
+an API. A common fair Boolean type creates two positive-probability acting
+sites per player. One explicit four-coordinate recurrence is proved equal to
+the four canonical D46 averages under the actual shared behavioral profile.
+Their product laws form complete legal contingent choices; the resulting pure
+matrix payoff is exactly direct Bayesian ex-ante utility. D50 controls every
+fixed complete plan for both players on the same law, and D51 yields canonical
+empirical-marginal `IsεNash` with vanishing tolerance. Interactive matching
+pennies gives an exact initial saddle gap of `2` and forces at least one law to
+move at every type. It also refutes the stronger preliminary expectation that
+arbitrary fallbacks make both players improve at every type. The adopted scope
+is the explicit same-depth scheduler; reusable synthesis, arbitrary behavioral
+replacements, and unequal-depth fibers remain separate gates.
+
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic
 and incentive certificates directly without pretending to be a sequential

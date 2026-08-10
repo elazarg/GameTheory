@@ -5593,3 +5593,71 @@ memory.
   Next test reusable finite Protocol schedule synthesis beyond one-shot
   single-site players before freezing any dynamics API; arbitrary behavioral
   replacements and unequal-depth information fibers remain separate.
+
+### EXP-091: multi-site Bayesian Protocol regret schedule
+
+- **Date / revision:** 2026-08-11, reserved after `26ed504`
+- **Status:** completed; supports scoped D53
+- **Decision / question:** D53; whether the existing local Protocol learners
+  can assemble into one useful two-player, multi-information-site zero-sum
+  learning trace without introducing a generic coupled-state abstraction.
+- **Prediction:** the Bayesian compiler supplies two positive-probability type
+  sites per Boolean player at one common depth. For a separable zero-sum payoff,
+  four local regret matchers should generate the same counterfactual vectors
+  under the actual shared behavioral profile as in their local recurrences.
+  Independent site laws should induce one law over complete contingent plans;
+  D50 should bound every fixed-plan external regret on that law and D51 should
+  yield empirical approximate Nash with vanishing tolerance.
+- **Representative slice:** a common fair Boolean type observed by both
+  players, Boolean actions, and payoff equal to the row player's type-local
+  score minus the column player's type-local score. Each type has positive
+  prior mass. At every player/type site, define a strict improving action
+  relative to regret matching's arbitrary fallback and require the learned law
+  to move after the first observation.
+- **Competing designs:** explicit site-indexed plan-law assembly using the
+  existing D46/D50 interfaces; a reusable coupled learner structure before its
+  invariants are known; or direct full-plan regret matching that bypasses
+  Protocol counterfactual analysis. Prefer the explicit assembly if it stays
+  responsive and exposes the real scheduling equalities.
+- **Kill conditions:** a payoff-irrelevant site; a zero-probability type; any
+  local learner evaluated only against a fallback profile without an equality
+  to its vector under the actual shared profile; unrelated player or site
+  trace laws; an assumed root decomposition or regret limit; no direct D50 or
+  D51 consumer; constant laws; or a duplicate runner, regret, or equilibrium
+  semantics.
+- **Planned validation:** first prove the four-site carrier/history facts and
+  actual-profile vector equalities, then exact positive controls and complete
+  plan-law regret decomposition, then D50/D51 convergence. Use only responsive
+  leaf builds and fast Phase 2/3 audits; do not run deep reachability in the
+  implementation loop.
+- **Artifacts / observations:**
+  `GameTheory.Analysis.Protocol.BayesianZeroSumLearningTest` uses a common fair
+  Boolean type and matching-pennies payoff, so all four acting information
+  sites have counterfactual reach exactly `1/2` and every branch remains
+  payoff-relevant. One explicit four-coordinate Cesaro state drives the actual
+  shared behavioral profile; each scheduled D46 average is proved equal to
+  its corresponding state coordinate. The induced `FinDist.pi` laws range
+  over complete legal type-contingent choices, and their pure payoff is proved
+  equal to the direct Bayesian game's ex-ante expected utility. Direct
+  Protocol calculations identify each local counterfactual utility with the
+  appropriate prior-weighted matching-pennies response value. Consequently
+  D50 controls every complete contingent deviation for both players on the
+  same round law, and D51 yields canonical empirical `IsεNash` with tolerance
+  tending to zero. The round-zero complete-plan saddle gap is exactly `2`.
+  The original prediction that *every* arbitrary-fallback site could be given
+  its own strict improving action was too strong for a genuinely interactive
+  zero-sum payoff: at a matching-pennies fallback pair one player can tie while
+  the other improves. The proved sharp control is that at every type at least
+  one player's law moves; hence all branches are live and the joint dynamics
+  are nonconstant without replacing the game by separable private scores.
+- **Measurements:** the completed hostile leaf builds 2,452 jobs in about 8.7
+  seconds on a warm tree. The cached Analysis aggregate builds 3,211 jobs in
+  3.4 seconds and the stable package gate builds 3,596 jobs in 3.3 seconds.
+  Fast Phase 2 and Phase 3 audits report `VERIFIED=1` in 8.9 and 4.6 seconds,
+  respectively. Deep reachability was not run.
+- **Outcome / next action:** adopts scoped D53. Same-depth multi-site Bayesian
+  Protocol learning now reaches a useful strategic result over complete
+  contingent plans without a new learner, runner, regret, or equilibrium
+  abstraction. Do not generalize the explicit four-coordinate scheduler yet:
+  the next distinct seams are reusable schedule synthesis, arbitrary
+  behavioral replacements, and unequal-depth information fibers.

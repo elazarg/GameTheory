@@ -153,18 +153,23 @@ Separate packages:
   laws move, both initial canonical regrets equal `1`, the shared saddle gap is
   `2`, and D50 plus D51 gives empirical-marginal canonical `IsεNash` with
   vanishing tolerance; and
-- **next:** test reusable finite schedule synthesis on a genuinely multi-site
-  two-player Protocol before freezing a coupled dynamics API. Arbitrary
-  behavioral replacements and unequal-depth information fibers remain
-  separate gates.
+- **complete:** a genuinely multi-site Bayesian Protocol consumer: two
+  positive-probability type sites per player share one four-coordinate
+  recurrence, D50 controls every complete contingent plan on one induced law,
+  D51 gives canonical empirical `IsεNash` with vanishing tolerance, the
+  initial complete-plan saddle gap is `2`, and at least one law moves at every
+  type; and
+- **next:** extract reusable finite schedule synthesis only after a second
+  topology exposes its invariants. Arbitrary behavioral replacements and
+  unequal-depth information fibers remain separate gates.
 
 Do not merge these packages into the FOSG syntax root or hide serialization
 order behind choice. The coefficient package counts because its continuation
 law is canonical and its recursive factorization has hostile consumers. The
-explicit one-shot schedule now supplies both sides of the static zero-sum
-saddle-gap theorem. This is not yet a general CFR exploitability surface:
-multi-site schedule synthesis, arbitrary behavioral replacements, and
-unequal-depth fibers remain explicit later gates.
+explicit one-shot and same-depth Bayesian schedules now supply both sides of
+the static zero-sum saddle-gap theorem. This is not yet a general CFR
+exploitability surface: reusable schedule synthesis, arbitrary behavioral
+replacements, and unequal-depth fibers remain explicit later gates.
 
 ### E. Intrinsic selected-solution strategic form — resolved
 
