@@ -2260,6 +2260,15 @@ whose two value endpoints dominate the punishment floor; every canonical tail
 edge belongs, and every finite co-state support is attained.  Thus compactness
 and support attainment in item 2 are no longer the gate.  Selecting a
 debt-compatible co-state and decoding its exposed face remain items 3--4.
+The first selection audit rules out a shortcut: the only normal forced by the
+current coordinates is minus total absorption, which exposes the zero-flow
+all-Continue face and is stable under positive-survival adjoint transport.
+Playerwise debt discharge is not a fixed linear functional of that carrier,
+because aggregate collision mass loses player participation and the varying
+debt coordinate is absent; the prefix-capacity potential is nonlinear in the
+source state.  A debt-compatible normal therefore requires an enriched
+carrier retaining the playerwise diagonal debt source (or an independently
+proved normal-cone pricing inequality), not separation from the current image.
 
 **Acceptance.** A game-facing utilization theorem, not another separator:
 every non-all-Continue counterexample tangent must either emit a positive raw
@@ -2650,6 +2659,13 @@ active-positive coordinate has eventual strict sign.  The source edge's exact
 Nash--Bellman property makes both finite slacks nonnegative.  This settles the
 one-stage provenance/readout, but the repeated root is still only a diagnostic
 deviation and does not provide periodic tail attachment or the support pivot.
+The active-positive refusal calculation is now sharp: its limiting owner mass
+is strictly below one, own Continue probability is eventually positive, exact
+root complementarity kills the refusal slack, and the diagnostic refusal gain
+converges to `mass/(1-mass)*tangent > 0`.  Thus the unresolved issue is no
+longer evaluator sign or normalization; it is converting this profitable
+diagnostic repetition into the collision-aware support lift or a legally
+attached return.
 For the active-positive branch, provenance at singleton level is now closed:
 once all tangent coordinates are nonnegative, the tail-derived tangent packet
 itself is a normalized singleton-source packet, its weighted surplus is

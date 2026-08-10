@@ -349,6 +349,114 @@ theorem quittingPeriodOne_slacks_nonneg_of_step_nash
       quittingFixedOpponentsContinueMass, quittingRootContinuePayoff,
       quittingPeriodOneRootSequence] using hcontinue
 
+/-- Positive prescribed Quit probability activates root complementarity, so
+the period-one phase slack of the actual Nash--Bellman step is zero. -/
+theorem quittingPeriodOne_phaseSlack_eq_zero_of_quitProbability_pos
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι) (initial : ℝ)
+    (terminal : Payoff ι)
+    (hstep : initial = quittingRootSuccessorPayoff reward terminal root who)
+    (hnash : IsεQuittingRootNash reward terminal 0 root)
+    (hquit : 0 < (root who true).toReal) :
+    quittingPeriodicWindowPhaseSlack reward
+        (quittingPeriodOneRootSequence root) who 1 initial = 0 := by
+  have hquitLe :=
+    quittingRootQuitPayoff_le_successor_of_isZeroNash
+      reward terminal root who hnash
+  have hcontinueLe :=
+    quittingRootContinuePayoff_le_successor_of_isZeroNash
+      reward terminal root who hnash
+  have hmix := quittingRootSuccessorPayoff_eq_endpointMix
+    reward terminal root who
+  have hsum := quittingRoot_continueProbability_add_quitProbability root who
+  have hcontinueNonneg : 0 ≤ (root who false).toReal := ENNReal.toReal_nonneg
+  have hquitEq : quittingRootQuitPayoff reward terminal root who =
+      quittingRootSuccessorPayoff reward terminal root who := by
+    apply le_antisymm hquitLe
+    by_contra hnot
+    have hquitStrict : quittingRootQuitPayoff reward terminal root who <
+        quittingRootSuccessorPayoff reward terminal root who :=
+      lt_of_not_ge hnot
+    have hweightedQuit := mul_lt_mul_of_pos_left hquitStrict hquit
+    have hweightedContinue :=
+      mul_le_mul_of_nonneg_left hcontinueLe hcontinueNonneg
+    have hstrict := add_lt_add_of_lt_of_le
+      hweightedQuit hweightedContinue
+    have hweights : (root who true).toReal +
+        (root who false).toReal = 1 := by linarith
+    rw [← hmix, ← add_mul, hweights, one_mul] at hstrict
+    exact lt_irrefl _ hstrict
+  have hphase :
+      quittingRootSequenceHazardTerminalValue reward
+          (quittingPeriodOneRootSequence root) who
+          (quittingPureTimeHazard (some 0)) 0 =
+        quittingRootQuitPayoff reward terminal root who := by
+    rw [quittingRootSequenceHazardTerminalValue_eq_hazardBellman]
+    simp [quittingFixedOpponentsQuitValue, quittingRootQuitPayoff,
+      quittingRootExpectedPayoff_eq_absorbingContribution_add,
+      quittingStationaryContinueMass_update_pure_true_eq_zero,
+      quittingPeriodOneRootSequence]
+  unfold quittingPeriodicWindowPhaseSlack
+  rw [show quittingPeriodicWindowBestPhaseStop reward
+      (quittingPeriodOneRootSequence root) who 1 =
+        quittingRootQuitPayoff reward terminal root who by
+    simp [quittingPeriodicWindowBestPhaseStop,
+      quittingPeriodicWindowPhaseStopValue,
+      quittingRootSequencePureTimeTerminalValue, hphase]]
+  rw [hquitEq, ← hstep]
+  ring
+
+/-- Positive prescribed Continue probability activates root
+complementarity, so the period-one refusal slack of the actual Nash--Bellman
+step is zero. -/
+theorem quittingPeriodOne_refusalSlack_eq_zero_of_continueProbability_pos
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (root : ι → PMF Bool) (who : ι) (initial : ℝ)
+    (terminal : Payoff ι)
+    (hstep : initial = quittingRootSuccessorPayoff reward terminal root who)
+    (hnash : IsεQuittingRootNash reward terminal 0 root)
+    (hcontinue : 0 < (root who false).toReal) :
+    quittingPeriodicWindowRefusalSlack reward
+        (quittingPeriodOneRootSequence root) who 1 initial (terminal who) = 0 := by
+  have hquitLe :=
+    quittingRootQuitPayoff_le_successor_of_isZeroNash
+      reward terminal root who hnash
+  have hcontinueLe :=
+    quittingRootContinuePayoff_le_successor_of_isZeroNash
+      reward terminal root who hnash
+  have hmix := quittingRootSuccessorPayoff_eq_endpointMix
+    reward terminal root who
+  have hsum := quittingRoot_continueProbability_add_quitProbability root who
+  have hquitNonneg : 0 ≤ (root who true).toReal := ENNReal.toReal_nonneg
+  have hcontinueEq : quittingRootContinuePayoff reward terminal root who =
+      quittingRootSuccessorPayoff reward terminal root who := by
+    apply le_antisymm hcontinueLe
+    by_contra hnot
+    have hcontinueStrict : quittingRootContinuePayoff reward terminal root who <
+        quittingRootSuccessorPayoff reward terminal root who :=
+      lt_of_not_ge hnot
+    have hweightedQuit := mul_le_mul_of_nonneg_left hquitLe hquitNonneg
+    have hweightedContinue :=
+      mul_lt_mul_of_pos_left hcontinueStrict hcontinue
+    have hstrict := add_lt_add_of_le_of_lt
+      hweightedQuit hweightedContinue
+    have hweights : (root who true).toReal +
+        (root who false).toReal = 1 := by linarith
+    rw [← hmix, ← add_mul, hweights, one_mul] at hstrict
+    exact lt_irrefl _ hstrict
+  have hfinite :
+      quittingFiniteContinueToBoundaryValue reward
+          (quittingPeriodOneRootSequence root) who (terminal who) 0 1 =
+        quittingRootContinuePayoff reward terminal root who := by
+    unfold quittingRootContinuePayoff
+    rw [quittingRootExpectedPayoff_eq_absorbingContribution_add]
+    simp [quittingFiniteContinueToBoundaryValue,
+      quittingFixedOpponentsContinueReward,
+      quittingFixedOpponentsContinueMass, quittingPeriodOneRootSequence]
+  unfold quittingPeriodicWindowRefusalSlack
+  rw [hfinite, hcontinueEq, ← hstep]
+  ring
+
 omit [DecidableEq ι] in
 /-- One affine Bellman step is enough to identify the endpoint displacement
 of the periodically restarted root.  No recursion beyond this single edge is

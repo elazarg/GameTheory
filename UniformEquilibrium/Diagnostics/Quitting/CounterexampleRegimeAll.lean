@@ -198,4 +198,11 @@ signed coordinate.  Its single exact Nash--Bellman edge makes both displayed
 slacks nonnegative.  The periodically repeated root remains a diagnostic
 deviation; the source tail is not asserted to be periodic or attached to that
 restart.
+On the active-positive owner, full limiting mass is impossible.  The selected
+roots eventually have proper positive owner mass, positive endpoint tangent,
+and positive own Continue probability; exact root complementarity then makes
+the refusal slack zero.  The diagnostic repeated-root refusal gain converges
+to `mass/(1-mass)*tangent` and is eventually strictly positive.  This sharpens
+the refusal branch quantitatively but still does not attach the repeated root
+as a continuation of the optimized tail.
 -/

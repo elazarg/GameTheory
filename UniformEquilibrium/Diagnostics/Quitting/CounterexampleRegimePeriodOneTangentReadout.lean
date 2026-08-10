@@ -187,6 +187,59 @@ theorem slacks_nonneg (index : ℕ) (who : ι) :
       simpa [periodOneReadoutRoot, quittingDynamicDebtTailRoots] using hstep)
     hnash
 
+/-- Positive prescribed Quit probability makes the selected edge's phase
+slack vanish by exact root complementarity. -/
+theorem phaseSlack_eq_zero_of_quitProbability_pos
+    (index : ℕ) (who : ι)
+    (hquit : 0 <
+      (seam.periodOneReadoutRoot readout.start index who true).toReal) :
+    quittingPeriodicWindowPhaseSlack reward
+        (quittingPeriodOneRootSequence
+          (seam.periodOneReadoutRoot readout.start index)) who 1
+        ((seam.tail (readout.start index)).1.1 who) = 0 := by
+  have hedge := (seam.tail_edge (readout.start index)).1
+  have hstep := congrFun hedge.1 who
+  have hnash :=
+    (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+      reward (seam.tail (readout.start index + 1)).1.1
+      (seam.periodOneReadoutRoot readout.start index)).1 (by
+        simpa [periodOneReadoutRoot, quittingDynamicDebtTailRoots] using
+          hedge.2)
+  exact quittingPeriodOne_phaseSlack_eq_zero_of_quitProbability_pos reward
+    (seam.periodOneReadoutRoot readout.start index) who
+    ((seam.tail (readout.start index)).1.1 who)
+    (seam.tail (readout.start index + 1)).1.1
+    (by
+      simpa [periodOneReadoutRoot, quittingDynamicDebtTailRoots] using hstep)
+    hnash hquit
+
+/-- Positive prescribed Continue probability makes the selected edge's
+refusal slack vanish by exact root complementarity. -/
+theorem refusalSlack_eq_zero_of_continueProbability_pos
+    (index : ℕ) (who : ι)
+    (hcontinue : 0 <
+      (seam.periodOneReadoutRoot readout.start index who false).toReal) :
+    quittingPeriodicWindowRefusalSlack reward
+        (quittingPeriodOneRootSequence
+          (seam.periodOneReadoutRoot readout.start index)) who 1
+        ((seam.tail (readout.start index)).1.1 who)
+        ((seam.tail (readout.start index + 1)).1.1 who) = 0 := by
+  have hedge := (seam.tail_edge (readout.start index)).1
+  have hstep := congrFun hedge.1 who
+  have hnash :=
+    (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+      reward (seam.tail (readout.start index + 1)).1.1
+      (seam.periodOneReadoutRoot readout.start index)).1 (by
+        simpa [periodOneReadoutRoot, quittingDynamicDebtTailRoots] using
+          hedge.2)
+  exact quittingPeriodOne_refusalSlack_eq_zero_of_continueProbability_pos
+    reward (seam.periodOneReadoutRoot readout.start index) who
+    ((seam.tail (readout.start index)).1.1 who)
+    (seam.tail (readout.start index + 1)).1.1
+    (by
+      simpa [periodOneReadoutRoot, quittingDynamicDebtTailRoots] using hstep)
+    hnash hcontinue
+
 /-- Exact phase readout on an actual selected edge.  The slack is retained;
 no optimality beyond the source Nash--Bellman edge is asserted. -/
 theorem bestPhaseStop_sub_restartDelivery_eq
@@ -258,6 +311,160 @@ theorem fullMass_boundary
   exact quittingPeriodOne_fullSingletonMass_boundary
     (seam.periodOneReadoutRoot readout.start index) who
     (readout.absorption_pos index) hfull
+
+/-- A packet coordinate cannot simultaneously have full mass and a positive
+tangent: positive mass pins the boundary to the singleton payoff, while full
+mass makes the singleton mixture that same payoff. -/
+theorem packet_mass_lt_one_of_pos_mass_pos_tangent
+    (owner : ι) (hmass : 0 < readout.packet.mass owner)
+    (htangent : 0 < readout.packet.tangent owner) :
+    readout.packet.mass owner < 1 := by
+  have hmassLe : readout.packet.mass owner ≤ 1 := by
+    calc
+      readout.packet.mass owner ≤
+          ∑ player : ι, readout.packet.mass player :=
+        Finset.single_le_sum
+          (fun player _ ↦ readout.packet.mass_nonneg player)
+          (Finset.mem_univ owner)
+      _ = 1 := readout.packet.mass_sum
+  apply lt_of_le_of_ne hmassLe
+  intro hmassEq
+  have hone : readout.packet.mass owner = 1 := hmassEq
+  have herase :
+      ∑ other ∈ (Finset.univ.erase owner : Finset ι),
+          readout.packet.mass other = 0 := by
+    have hsplit := Finset.sum_erase_add
+      (s := (Finset.univ : Finset ι))
+      (f := readout.packet.mass) (a := owner) (Finset.mem_univ owner)
+    rw [readout.packet.mass_sum, hone] at hsplit
+    linarith
+  have hzero : ∀ other ∈ (Finset.univ.erase owner : Finset ι),
+      readout.packet.mass other = 0 := by
+    intro other hother
+    apply le_antisymm
+    · calc
+        readout.packet.mass other ≤
+            ∑ player ∈ (Finset.univ.erase owner : Finset ι),
+              readout.packet.mass player :=
+          Finset.single_le_sum
+            (fun player _ ↦ readout.packet.mass_nonneg player) hother
+        _ = 0 := herase
+    · exact readout.packet.mass_nonneg other
+  have hweighted :
+      ∑ other ∈ (Finset.univ.erase owner : Finset ι),
+          readout.packet.mass other *
+            reward (quittingSingletonTerminal other) owner = 0 := by
+    apply Finset.sum_eq_zero
+    intro other hother
+    rw [hzero other hother, zero_mul]
+  have hmixture :
+      quittingSingletonMixture reward readout.packet.mass owner =
+        reward (quittingSingletonTerminal owner) owner := by
+    unfold quittingSingletonMixture
+    rw [← Finset.sum_erase_add _ _ (Finset.mem_univ owner), hone,
+      one_mul, hweighted, zero_add]
+  have htangentEq := readout.packet.tangent_eq owner
+  rw [hmixture,
+    readout.packet.positive_mass_pins_boundary owner hmass] at htangentEq
+  linarith
+
+/-- The active-positive packet branch has an honest proper-mass refusal
+readout.  Eventually the selected root gives the owner positive probability
+to Continue, exact complementarity kills refusal slack, and the repeated-root
+refusal evaluator is strictly above restart.  This evaluates a diagnostic
+repetition of the selected root; it does not attach that repetition to the
+source tail. -/
+theorem activePositive_refusalGain
+    (owner : ι) (hmass : 0 < readout.packet.mass owner)
+    (htangent : 0 < readout.packet.tangent owner) :
+    readout.packet.mass owner < 1 ∧
+      Tendsto (fun index ↦
+        quittingPeriodicWindowRefusalValue reward
+            (quittingPeriodOneRootSequence
+              (seam.periodOneReadoutRoot readout.start index)) owner -
+          quittingWindowRestartDelivery reward
+            (quittingPeriodOneRootSequence
+              (seam.periodOneReadoutRoot readout.start index)) owner 0 1)
+        atTop (nhds ((readout.packet.mass owner /
+          (1 - readout.packet.mass owner)) * readout.packet.tangent owner)) ∧
+      ∀ᶠ index in atTop,
+        0 < seam.periodOneReadoutMass readout.start index owner ∧
+          seam.periodOneReadoutMass readout.start index owner < 1 ∧
+          0 < seam.periodOneReadoutTangent readout.start index owner ∧
+          0 < (seam.periodOneReadoutRoot readout.start index owner false).toReal ∧
+          quittingPeriodicWindowRefusalSlack reward
+              (quittingPeriodOneRootSequence
+                (seam.periodOneReadoutRoot readout.start index)) owner 1
+              ((seam.tail (readout.start index)).1.1 owner)
+              ((seam.tail (readout.start index + 1)).1.1 owner) = 0 ∧
+          0 < quittingPeriodicWindowRefusalValue reward
+                (quittingPeriodOneRootSequence
+                  (seam.periodOneReadoutRoot readout.start index)) owner -
+              quittingWindowRestartDelivery reward
+                (quittingPeriodOneRootSequence
+                  (seam.periodOneReadoutRoot readout.start index)) owner 0 1 := by
+  have hmassLt :=
+    packet_mass_lt_one_of_pos_mass_pos_tangent seam readout owner
+      hmass htangent
+  have hcontinueTendsto :
+      Tendsto (fun index ↦
+        (seam.periodOneReadoutRoot readout.start index owner false).toReal)
+        atTop (nhds 1) := by
+    simpa [periodOneReadoutRoot, Function.comp_def] using
+      (seam.continueProbability_tendsto_one owner).comp readout.start_tendsto
+  have hbase : ∀ᶠ index in atTop,
+      0 < seam.periodOneReadoutMass readout.start index owner ∧
+        seam.periodOneReadoutMass readout.start index owner < 1 ∧
+        0 < seam.periodOneReadoutTangent readout.start index owner ∧
+        0 < (seam.periodOneReadoutRoot readout.start index owner false).toReal := by
+    filter_upwards
+      [(readout.mass_tendsto owner).eventually_const_lt hmass,
+        (readout.mass_tendsto owner).eventually_lt_const hmassLt,
+        (readout.tangent_tendsto owner).eventually_const_lt htangent,
+        hcontinueTendsto.eventually_const_lt zero_lt_one] with
+        index hmassPos hmassProper htangentPos hcontinuePos
+    exact ⟨hmassPos, hmassProper, htangentPos, hcontinuePos⟩
+  have hgainEq : ∀ᶠ index in atTop,
+      quittingPeriodicWindowRefusalValue reward
+            (quittingPeriodOneRootSequence
+              (seam.periodOneReadoutRoot readout.start index)) owner -
+          quittingWindowRestartDelivery reward
+            (quittingPeriodOneRootSequence
+              (seam.periodOneReadoutRoot readout.start index)) owner 0 1 =
+        (seam.periodOneReadoutMass readout.start index owner /
+          (1 - seam.periodOneReadoutMass readout.start index owner)) *
+            seam.periodOneReadoutTangent readout.start index owner := by
+    filter_upwards [hbase] with index hindex
+    have hslack := refusalSlack_eq_zero_of_continueProbability_pos
+      seam readout index owner hindex.2.2.2
+    rw [refusalValue_sub_restartDelivery_eq seam readout
+      index owner hindex.2.1, hslack]
+    simp
+  have halgebra :
+      Tendsto (fun index ↦
+        (seam.periodOneReadoutMass readout.start index owner /
+          (1 - seam.periodOneReadoutMass readout.start index owner)) *
+            seam.periodOneReadoutTangent readout.start index owner)
+        atTop (nhds ((readout.packet.mass owner /
+          (1 - readout.packet.mass owner)) * readout.packet.tangent owner)) := by
+    have hdenominator : Tendsto (fun index : ℕ ↦
+        (1 : ℝ) - seam.periodOneReadoutMass readout.start index owner)
+        atTop (nhds (1 - readout.packet.mass owner)) :=
+      (tendsto_const_nhds : Tendsto (fun _ : ℕ ↦ (1 : ℝ))
+        atTop (nhds 1)).sub (readout.mass_tendsto owner)
+    exact ((readout.mass_tendsto owner).div hdenominator
+      (by linarith : 1 - readout.packet.mass owner ≠ 0)).mul
+        (readout.tangent_tendsto owner)
+  have hgainTendsto := halgebra.congr' (hgainEq.mono fun _ h ↦ h.symm)
+  refine ⟨hmassLt, hgainTendsto, ?_⟩
+  filter_upwards [hbase, hgainEq] with index hindex hgain
+  have hslack := refusalSlack_eq_zero_of_continueProbability_pos
+    seam readout index owner hindex.2.2.2
+  refine ⟨hindex.1, hindex.2.1, hindex.2.2.1, hindex.2.2.2,
+    hslack, ?_⟩
+  rw [hgain]
+  exact mul_pos (div_pos hindex.1 (sub_pos.mpr hindex.2.1))
+    hindex.2.2.1
 
 end CounterexampleRegimePeriodOneTangentReadout
 
