@@ -76,14 +76,20 @@ Priority: highest active mature dynamic family.
 
 Recover, in order:
 
-1. monitoring rank and its finite-prefix laws;
-2. self-generation/decomposition over the existing continuation-value API;
+1. **complete:** individual and pairwise monitoring rank, numerical rank, and
+   the exact bridge from each deviation row to the canonical one-signal
+   history law; the hostile fixture proves pairwise rank two under perfect
+   action observation and rejects a constant monitor;
+2. **next:** self-generation/decomposition over the existing
+   continuation-value API;
 3. public randomization only if it has a concrete signal-law consumer; and
 4. monitored uniform results without introducing an infinite finite-support
    path law.
 
-PPE remains canonical discounted Nash after every public history. Any new
-one-shot theorem must reuse that predicate.
+PPE remains canonical discounted Nash after every public history. Monitoring
+rank remains an explicitly one-period informativeness condition, linked to
+repeated play through finite prefix probabilities. Any new one-shot theorem
+must reuse the canonical PPE predicate.
 
 ### D. FOSG strategic and counterfactual analysis
 

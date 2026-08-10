@@ -1238,6 +1238,13 @@ public history, including zero-probability histories, and uniformly bounded
 stage expected payoffs imply the exact one-shot-deviation principle without
 constructing a law on an infinite realized path.
 
+Monitoring informativeness stays on that finite side of the boundary. The
+individual and pairwise rank conditions are linear independence of one-stage
+public-signal probability differences. Their semantic bridge identifies each
+row with the probability change in the native one-signal history law under the
+canonical one-shot deviation; no rank claim is phrased through a hypothetical
+infinite path distribution.
+
 ### D12. Package and stability boundaries
 
 Use separate dependency roots, not only directories:
