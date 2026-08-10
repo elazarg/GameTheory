@@ -9,12 +9,14 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOrbitSelfLoop
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixConsumption
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixResidualRegression
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAtomicOwner
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBoundaryProvenanceAlternative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCollisionAwareFiniteReturn
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCommonWordRealization
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedFloorViability
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedNegativeTangent
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceObstructionCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceDynamicAlternative
@@ -78,6 +80,7 @@ import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryLimitGeometry
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryConditioning
 import UniformEquilibrium.Quitting.Cycles.ConditionedProductPurification
 import UniformEquilibrium.Quitting.Cycles.ConditionedSingletonStrategicPurification
+import UniformEquilibrium.Quitting.Cycles.ConditionedTangentSeam
 import UniformEquilibrium.Quitting.Cycles.PeriodOneTangentAtlas
 import UniformEquilibrium.Quitting.Cycles.PeriodicNormalizedSeam
 import UniformEquilibrium.Quitting.Debt.Dynamic.DynamicDebtCapChargedAnchorCounterexample
@@ -490,9 +493,18 @@ retains a positive Never mass, so this is not a strategic repair.  On the
 stronger stratum where every source row is an interior literal singleton row
 and the plateau is coordinatewise singleton-tight, conditioning preserves the
 exact Bellman and endpoint-Nash equations along the whole path.  Absence of a
-uniform equilibrium then forces an opponent-survival obstruction; in an
-atomic one-owner limit it further forces that owner's singleton self-payoff
-to be negative.
+uniform equilibrium then forces an opponent-survival obstruction.  Two
+persistent owners kill every deleted clock.  A positive-rate one-owner limit
+is a stationary solo endpoint equilibrium; punishment completion enforces
+its singleton payoff, even when the owner's own payoff is negative.  Thus the
+remaining tight-singleton obstruction is genuinely diffuse.
+
+Negative ordinary tangent also has an exact conditioned interpretation.  It
+either remains a negative conditioned delivery gap, giving strict upward
+conditioned motion on a boundary-safe coordinate, or is quantitatively paid
+by strict phantom slack.  At an active negative coordinate the repeated-root
+phase gain converges to the negated tangent.  This is a real restriction, but
+does not attach the diagnostic repetition to the varying source suffix.
 
 The strategic consumers are now explicit.  Any supplied finite
 collision-aware product-root return satisfying exact Nash and punishment

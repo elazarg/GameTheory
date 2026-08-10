@@ -2342,8 +2342,23 @@ does purify strategically: both Bellman and endpoint Nash survive at every
 date.  A counterexample must then retain some playerwise opponent-survival
 clock.  If the only persistent owner has a positive-rate atomic limit, the
 stationary solo limit is endpoint Nash; absence of a uniform payoff forces
-that owner's singleton self-payoff to be negative.  This is a sharp remaining
-monopoly branch rather than a compactness defect.
+that owner's singleton self-payoff to be negative by at least the terminal
+gap.  That sign is not the end of the branch: the row is an absorbing
+period-one cycle, and punishment completion enforces it whenever the owner's
+punishment value is no larger than the singleton payoff.  The latter inequality
+is automatic at the singleton-tight counterexample boundary.  Hence no
+positive-rate atomic owner cluster survives on this stratum; the residual
+owner-monopoly branch must have conditioned hazard tending to zero.
+
+The negative-tangent alternative also admits an exact conditioned seam.  If
+`tau` is ordinary delivery minus the next annotation and `delta` is conditioned
+delivery minus the next conditioned value, then
+`tau = delta + L * (conditionedNext - plateau)`.  Consequently a negative
+tangent either remains a negative conditioned delivery gap, forcing strict
+upward conditioned motion on a boundary-safe coordinate, or is funded by
+strict phantom slack with a quantitative bound.  Positive occupation of that
+coordinate makes the period-one phase gain converge to `-tau`.  This narrows
+the branch without manufacturing the missing attachment to the actual suffix.
 
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.
