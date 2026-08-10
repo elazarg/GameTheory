@@ -2891,11 +2891,22 @@ determinant orientation.  However, if two owners are the entire positive
 support of a compatible packet, their two weighted compatibility rows force
 `D12=D21=0`, so the reduced Jacobian is the zero matrix.  In the negative
 reciprocal-collision branch this merely converts to positive reciprocal
-singleton effect; it does not restore regularity.  Thus literal compatible
-two-owner support is a genuine higher-order singular case.  The regular
-first-blow-up producer can operate on larger compatible supports or on a
-rebased signed pivot, but it cannot be claimed for the exact two-owner packet
-without another blow-up or support change.
+singleton effect; it does not restore the Jacobian rank.  Nevertheless the
+exact two-owner chart integrates without another blow-up.  A product root
+supported on those owners has no triple or higher coalition, and for hazards
+`p1,p2<1` Bellman elimination gives
+
+```text
+w1 = (z1 - p2*r1({2})) / (1-p2),
+w2 = (z2 - p1*r2({1})) / (1-p1).
+```
+
+When `D12=D21=0`, both active Quit and Continue values equal the pinned
+boundary exactly for every such hazard pair.  Under explicit inactive-owner
+Nash signs and continuation floor/upper-box bounds, this is one exact
+Nash--Bellman edge.  It does not supply a reachable return, lasso, or cycle;
+those global gates, rather than a hidden second-order active equation, are
+the two-owner residue.
 
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges

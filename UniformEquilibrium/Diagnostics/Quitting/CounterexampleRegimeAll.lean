@@ -41,6 +41,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentMixing
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentRegularArcLift
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportTransversality
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerExactRoot
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
@@ -153,10 +154,14 @@ Jacobian exactly `[[0,D₁₂],[D₂₁,0]]`, where
 when its reciprocal effect is nonzero, and the outward leading variation is
 explicit.  In contrast, if those two owners are the entire positive support
 and both packet rows are compatible, positivity forces `D₁₂=D₂₁=0`:
-the whole reduced Jacobian vanishes.  A negative reciprocal collision
-increment then restates positive reciprocal singleton effect but does not
-remove the singularity.  Exact two-owner compatibility therefore belongs to
-the higher-order residue, not the regular arc branch.
+the whole reduced Jacobian vanishes.  This singularity integrates exactly
+rather than requiring a second jet.  For arbitrary hazards below one, the
+Bellman-eliminated continuation has active coordinates
+`w_i=(z_i-p_j*r_i({j}))/(1-p_j)` and symmetrically; both active gains vanish,
+because a two-owner root has no triple or higher coalition.  If the inactive
+gain signs and continuation floor/upper-box bounds also hold, this packages
+one exact Nash--Bellman edge.  Those gates, and any reachable return, lasso,
+or cycle, remain separate.
 
 Independently of that selected-tail geometry, reward-table closure gives a
 robust finite-cycle restriction: a hypothetical counterexample has one
