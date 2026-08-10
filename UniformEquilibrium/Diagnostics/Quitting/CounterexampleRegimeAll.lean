@@ -37,6 +37,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacket
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentAnchoredProjectiveLCP
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentMixingCompatibility
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacketEnergy
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentRegularArcLift
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
@@ -123,6 +124,17 @@ energy must cancel the positive singleton energy exactly, forcing a supported
 pair with negative reciprocal collision increment.  These are finite
 first-order directions; neither the canonical sign separator nor the pair
 it selects is yet a feasible analytic arc or a strategic Farkas certificate.
+On the compatible branch, the first radial blow-up supplies the constructive
+regular locus.  Hazards are `t*leading` and continuation is
+`boundary+t*drift`; exact polynomial residuals retain every coalition and
+factor the physical Bellman and mixing equations by `t`.  The packet solves
+the exceptional-divisor Bellman rows, and compatibility solves its active
+mixing rows.  If the blow-up derivative is surjective and its kernel has a
+positive radial direction, the existing analytic implicit-function theorem
+produces a positive radial equality arc.  With the strict physical cell signs,
+each nonzero point decodes to an exact Nash--Bellman root.  Failure of
+surjectivity, outward direction, or strict outsider signs is the remaining
+singular residue; no arbitrary singular lifting theorem is claimed.
 
 Independently of that selected-tail geometry, reward-table closure gives a
 robust finite-cycle restriction: a hypothetical counterexample has one

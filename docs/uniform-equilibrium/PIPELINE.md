@@ -2794,6 +2794,30 @@ or a signed pair-join pivot.  Turning either branch into a physical support
 arc still requires the analytic lift or the missing Farkas column/sign
 conditions.
 
+The regular analytic branch of that lift is now implemented after the first
+radial blow-up
+
+```text
+hazard = t * leading,
+continuation = boundary + t * drift.
+```
+
+The divided Bellman residual retains every quitting coalition, and the
+divided active-mixing residual retains every pair and higher opponent
+coalition.  Multiplication by `t` recovers the literal physical equations.
+At `t=0`, the packet with `leading=scale*mass` and
+`drift=-scale*tangent` solves every Bellman row; the active rows are exactly
+the compatibility residuals above.  For a fixed support, add zero-leading
+rows off support.  The resulting finite map is polynomial.  If its derivative
+at the packet point is surjective and its kernel contains a direction with
+positive radial coordinate, the existing analytic regular-level theorem
+constructs a positive radial equality arc.  A separate decoder turns points
+in a strict physical sign cell into exact Nash--Bellman roots.  The regular
+compatible branch is therefore a real producer.  The residual is now
+specific: singular derivative, no outward kernel direction, or failure of
+the strict outsider/floor/box cell; resolving those cases requires a higher
+blow-up/Puiseux pivot or one of the signed pair exits.
+
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges
 concatenate with survival weight, endpoint displacement remains an unweighted
