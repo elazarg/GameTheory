@@ -1,15 +1,11 @@
 # Uniform-equilibrium project pipeline
 
-**Production-Lean checkpoint:** adaptive APS `1ee8d9c2`, truncated-ledger
-boundary `10c9f22d`, punishment-completed cycles `177a0c03`, and projective
-packet/lasso tools `3ca078d8` with matching analytic extraction `687ee117`.
-The last complete repository
-audit remains the 2026-08-03 pair `14d75ff` / `cd1db11`. **This file revised
-2026-08-07** — discrete hazard stopping, phase-occupation duality,
-target-anchored closure, face-circulation compilation, uniform-payoff
-diagnostics, adaptive essential-APS meshes, the boundary-holonomy tangent
-layer, punishment completion, and projective packet/lasso compilation are
-incorporated and reflected below.
+**Production-Lean checkpoint:** `50fac9c2` (2026-08-10), including the
+conditioned-tail chronology, exact atomic purification, approximate punishment
+completion, and the singleton-tight deleted-complete diffuse compiler. The
+last complete root repository audit remains the 2026-08-03 pair `14d75ff` /
+`cd1db11`; subsequent mathematical commits use warning-free targeted dependency
+builds and axiom probes. **This file revised 2026-08-10.**
 
 This is project-control truth: decisions, dependency priorities, gates, and
 acceptance conditions. It is not a mathematical exposition. The fixed-cutoff
@@ -17,6 +13,31 @@ holonomy compactness work, finite source-forgetting marked-cylinder algebra,
 metrizable semantic completion, and bounded decoder are committed and counted.
 New Lean files are never counted as landed until committed, built, and reflected
 in the owning claim and [`FRONTIER.md`](FRONTIER.md).
+
+## Current gate — 2026-08-10
+
+The conjecture-level search begins at four players: the two- and three-player
+cases are compiled. For a hypothetical counterexample, terminal instability,
+the exact-D/projective tail, bounded punishment-floor capacity, marked semantic
+compactness, elementary tail caps, and conditioned-tail chronology are all
+available. The singleton-tight diffuse branch with every player-deleted clock
+complete now compiles to asymptotic Nash play.
+
+The live residue has three natural exits:
+
+1. spend strict plateau/punishment slack in a floor-safe support or delivery
+   reset;
+2. convert a deficient player-deleted clock into an asymptotic solo chronology,
+   then use approximate punishment completion; or
+3. solve the enlarged-support complementarity and state-matching problem forced
+   by the eventual all-Continue plateau, producing a positive-mass return or an
+   equivalent terminal consumer.
+
+Raw compactness, another separator, playerwise punishment tails, an unattached
+period-one gain, and a bounded-capacity scalar by themselves do not close any
+of these exits. `MATH-P0-12` below owns this three-way strategic realization
+gate; the older accounting layers are retained there as proved dependencies,
+not competing P0 tasks.
 
 **Handoff validation.** At the last fully audited checkpoint, `lake build`
 succeeded, local Markdown links resolved, and the repository audit exited
@@ -38,7 +59,7 @@ intentional `sorry` declarations are
 `exists_uniformDeviationCapConstructor` in `UniformExistenceConjecture.lean` and
 `quittingGame_exists_uniformEquilibriumPayoff` in `UniformEquilibrium/Quitting/Conjecture/Basic.lean`.
 These are guarded by the placeholder/leaf audit and documented in the
-[proof-engineering audit](../../ephemeral/ProofEngineeringAudit.md), rather than
+[proof-engineering audit](audits/2026-08-03-ProofEngineeringAudit.md), rather than
 blockers hidden in the P0 mathematical status.
 
 ## Incorporation checkpoint — 2026-08-07
@@ -729,7 +750,7 @@ proves the statement it cites.
 - **Lane:** P0
 - **Depends:** `QuittingThreeBranchDisjunction`; Simon 2007 Theorem 3 and its
   post-theorem remark; Solan, *Int. Game Theory Rev.* **3** (2001) 291–299.
-- **Record:** [`ephemeral/Simon2007/program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §1
+- **Record:** [`program-bearings.md`](../../ephemeral/literature/notes/Simon2007/program-bearings.md) §1
 
 **Objective.** Decide whether a weight can exist for which approximate
 equilibria exist, ε-cycles exist for **every** ε with minimal length → ∞ as
@@ -781,7 +802,7 @@ disjunct's status corrected either way.
   [`SurvivalWindowLandingByContinuationLifting`](../../ideas/UniformEquilibriumLiterature/SurvivalWindowLandingByContinuationLifting.md).
   Defect №12 (`(iii)⇒(ii)`, the asserted constant `1/2`) remains open and
   still touches the equivalence.
-- **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §2
+- **Record:** [`program-bearings.md`](../../ephemeral/literature/notes/Simon2007/program-bearings.md) §2
 
 **Objective.** Adopt the equivalent orbit-side certificate for refutation:
 given no stationary and no instant approximate equilibria, exhibit `ε₀ > 0` and
@@ -806,7 +827,7 @@ behavioural-gap criterion.
 - **Lane:** P0
 - **Depends:** `Uniform.lean`'s deviation-cap constructor (the program's
   standing intentional placeholder).
-- **Record:** [`program-bearings.md`](../../ephemeral/Simon2007/program-bearings.md) §8
+- **Record:** [`program-bearings.md`](../../ephemeral/literature/notes/Simon2007/program-bearings.md) §8
 
 **Objective.** Evaluate Simon's Proposition 3 punishment design against the
 constructor's intended interface before attempting the placeholder.
@@ -2226,21 +2247,23 @@ transport finite co-states by the adjoint map, and retain the killed boundary
 remainder.  They do not identify a packet with occupation, erase the phantom
 plateau, or realize a product-root word.
 
-**Near-term work.** Build the narrow quitting adapter and prove, in order:
+**Work decomposition.** The first three infrastructure layers are compiled;
+the remaining work is strategic and chronological:
 
-1. actual optimized-tail windows carry a payoff-weighted raw obstruction
+1. **done:** actual optimized-tail windows carry a payoff-weighted raw obstruction
    current with exact survival transport, source annotations, collision
    remainder, and endpoint coboundary;
-2. those currents lie in one closed source-compatible feasible family whose
+2. **done:** those currents lie in one closed source-compatible feasible family whose
    support value is attained without normalizing away the absorption scale;
-3. an adjoint co-state can be chosen compatibly with the playerwise dynamic-
-   debt transport, with the surviving harmonic boundary term compared rather
-   than silently set to zero;
-4. an exposed recurrent face decodes into the existing tangent alternatives:
+3. **done as an exact alternative:** playerwise debt sources, capacity accounts,
+   and the surviving harmonic boundary are represented without silently
+   setting the boundary to zero; the resulting strict-capacity branch is a
+   real residual, not a proved recurrence;
+4. **partial:** an exposed recurrent face decodes into the existing tangent alternatives:
    negative phase repair, active-positive support enlargement, a
    punishment-admissible solved cycle stratum, or the separately handled
    eventual all-Continue plateau; and
-5. the decoded face is realized by one common product-root word with the
+5. **open:** the decoded face is realized by one common product-root word with the
    punishment floor and behavioral deviation cap retained.
 
 The literal finite-window accounting part of item 1 is now formalized:
@@ -2327,8 +2350,9 @@ along the whole chronology.  In contrast, a row with two active marginals and
 positive Continue mass is rigid: exact preservation of its conditional
 coalition law forces scale one.  A genuine phantom boundary therefore cannot
 be removed by rowwise rescaling of a multi-owner product root.  The diffuse
-branch needs chronological singleton chattering or another approximate
-purification that retains the punishment floor.
+branch cannot use exact rowwise purification.  The later quadratic product
+rescaling closes its singleton-tight, player-deleted-complete subcase; only the
+deleted-clock-deficient and strict-slack regimes remain from this split.
 
 The punishment floor itself has now been separated cleanly from purification.
 If a plateau coordinate is tight at its punishment value, its conditioned
@@ -2554,10 +2578,12 @@ unread. Topic-vocabulary search is not an acceptable substitute: it returned NOT
 LOCATABLE twice on a citation that was exact. **Sweep the repository's own
 unprocessed PDFs as part of this.** Twice in one session a decisive source was
 already on disk and unread: the withdrawn Simon preprint, and Solan's PhD
-dissertation at `ephemeral/old/_source_eilons_thesis.pdf`, whose Section 4 is
+dissertation at
+`ephemeral/archive/legacy-pre-2026-08/_source_eilons_thesis.pdf`, whose Section 4 is
 the refereed MOR material and which settled the largest borrowed-premise
-exposure in the tree. Note also that `ephemeral/sources/aps-quitting-2026.pdf`
-is a 3 KB HTML bot-block page, not a paper.
+exposure in the tree. The obsolete 3 KB bot-block response named
+`aps-quitting-2026.pdf` remains quarantined in the legacy archive; the actual
+APS source is under `ephemeral/literature/sources/`.
 
 ### `LIT-P2-3` — close the three residues of the borrowed-premise census
 

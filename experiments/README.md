@@ -11,6 +11,26 @@ production import graph.
 The signal-processing research interpretation and open questions are collected
 in `ideas/wild/README.md`.
 
+## Directory lifecycle
+
+- The top-level registered programs and Lean probes form the reproducible base
+  suite listed below; keep their paths stable because `run_all.py` and
+  `RESULTS.md` refer to them directly.
+- [`quitting_repair_cegis/`](quitting_repair_cegis/) is the tracked exact-rational
+  repair search package.
+- `certsearch/` contains certificate-guided searches; its `block_pair/`
+  subdirectory contains the larger historical block-pair campaign.
+- `counterexample_pairwise_consistency/` contains the Q172 pair/triple
+  consistency campaign and its exact witnesses.
+- `quitting/` and `tools/` contain useful unregistered probes routed out of
+  ephemeral scratch.
+- `archive/integrated/` retains experiment sources already consumed by
+  production Lean; `archive/rejected/` retains explicit negative or incomplete
+  probes. Neither archive is an active implementation queue.
+
+Python caches, `*.olean`, screenshots, and logs are generated products rather
+than experiments and should not be stored here.
+
 Proposed adversarial searches that have not yet been implemented are specified
 in [`PROPOSALS.md`](PROPOSALS.md). Each proposal records its exact finite
 protocol and the proof required before any result can be promoted beyond

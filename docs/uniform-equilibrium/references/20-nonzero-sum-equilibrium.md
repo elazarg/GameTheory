@@ -212,7 +212,7 @@ past that.
 
 `[primary, dissertation-text]` **The decisive source: Solan's own doctoral
 dissertation.** A local copy already sat unread in the repository at
-`ephemeral/old/_source_eilons_thesis.pdf` (97 pp., PDF `CreationDate`
+`ephemeral/archive/legacy-pre-2026-08/_source_eilons_thesis.pdf` (97 pp., PDF `CreationDate`
 10 Nov 1998, Center for the Study/Rationality and Interactive Decision
 Theory, Hebrew University of Jerusalem, advisor Prof. Abraham Neyman). The
 Acknowledgments name **three anonymous referees of Mathematics of Operations

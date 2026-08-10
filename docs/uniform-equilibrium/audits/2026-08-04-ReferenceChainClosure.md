@@ -56,18 +56,18 @@ pass.
 | 1 | Vrieze & Thuijsman 1989 | No | — | — |
 | 2 | Flesch, Thuijsman & Vrieze 1996 | No | — | — |
 | 3 | Flesch, Thuijsman & Vrieze 1997 | No | — | — |
-| 4 | Solan 1999 | **Yes** | Local PDF — Solan's PhD thesis (`ephemeral/old/_source_eilons_thesis.pdf`), the monograph containing this result | 38 |
+| 4 | Solan 1999 | **Yes** | Local PDF — Solan's PhD thesis (`ephemeral/archive/legacy-pre-2026-08/_source_eilons_thesis.pdf`), the monograph containing this result | 38 |
 | 5 | Vieille 2000a | No | — | — |
 | 6 | Vieille 2000b | No | — | — |
 | 7 | Vieille 2000c | No | — | — |
 | 8 | Solan 2000 (*Absorbing Team Games*) | No | — | — |
 | 9 | Solan & Vieille 2001 (*Quitting Games*) | **Yes** | Semantic Scholar reference-graph, DOI `10.1287/moor.26.2.265.10549` | 17 |
-| 10 | Solan & Vieille 2002a (*Quitting Games — An Example*) | **Yes** | Local PDF (`ephemeral/old/counterexample-research/sources/quitting-example.pdf`) | 9 |
+| 10 | Solan & Vieille 2002a (*Quitting Games — An Example*) | **Yes** | Local PDF (`ephemeral/archive/legacy-pre-2026-08/counterexample-research/sources/quitting-example.pdf`) | 9 |
 | 11 | Solan & Vieille 2002b (GEB, correlated equilibrium) | No | — | — |
 | 12 | Solan & Vohra 2002 | No | — | — |
 | 13 | Simon 2012 | **Yes** | Semantic Scholar reference-graph, DOI `10.1287/moor.1110.0524` | 19 |
 | 14 | Solan & Solan 2018/19 (Sunspot) | No | arXiv id known (1803.00878), not fetched — see gaps | — |
-| 15 | Solan & Solan 2020 (LCP) | **Yes** | Local PDF (`ephemeral/old/counterexample-research/sources/solan-solan-qmatrix.pdf`, arXiv:1707.02598) | 26 |
+| 15 | Solan & Solan 2020 (LCP) | **Yes** | Local PDF (`ephemeral/archive/legacy-pre-2026-08/counterexample-research/sources/solan-solan-qmatrix.pdf`, arXiv:1707.02598) | 26 |
 | 16 | Munk & Solan 2020 | **Yes** | Semantic Scholar reference-graph, arXiv:2001.03094 | 18 |
 | 17 | AGKRS 2022 (*Absorption Paths and Equilibria in Quitting Games*) | **Yes** | Local PDFs — preprint (`absorption-paths.pdf`, arXiv:2012.04369) and published version (`ephemeral/s10107-022-01807-6.pdf`) | 23 |
 | 18 | Ashkenazi-Golan, Flesch & Solan (*Absorbing Blackwell Games*) | **Yes** | Semantic Scholar reference-graph, arXiv:2208.11425 | 46 |
@@ -273,14 +273,14 @@ many independent closed reference lists corroborate the same citation.
     existence attempt found in this sweep, likely hard to obtain.
 31. Laraki, R., Solan, E. & Vieille, N., "Continuous-time Games of Timing,"
     Journal of Economic Theory 120(2), 206–238, 2005 — local PDF present
-    (`ephemeral/old/counterexample-research/sources/continuous-timing.pdf`),
+    (`ephemeral/archive/legacy-pre-2026-08/counterexample-research/sources/continuous-timing.pdf`),
     never processed into the wing. Same author trio as *Quitting Games*;
     adjacent timing/Dynkin-game research cluster, not itself about quitting
     games.
 32. Simon, R.S., "The challenge of non-zero-sum stochastic games,"
     International Journal of Game Theory 46(1), 191–204 (year given as both
     2016 and 2017 across sources — see discrepancy note), 2016/17 — local
-    PDF present (`ephemeral/old/counterexample-research/sources/simon-challenge.pdf`),
+    PDF present (`ephemeral/archive/legacy-pre-2026-08/counterexample-research/sources/simon-challenge.pdf`),
     never processed. A survey/open-problems paper directly on this program's
     subject; its own reference list supplied several of the items above.
 33. Maitra, A. & Sudderth, W. — cluster of Borel/general-state-space

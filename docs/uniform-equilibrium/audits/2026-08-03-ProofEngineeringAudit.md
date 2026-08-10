@@ -5,8 +5,8 @@
 working-tree changes.
 
 This is a measured engineering assessment, not theorem status. Production Lean
-is authoritative about declarations; [`PIPELINE.md`](../docs/uniform-equilibrium/PIPELINE.md)
-owns priorities and [`FRONTIER.md`](../docs/uniform-equilibrium/FRONTIER.md)
+is authoritative about declarations; [`PIPELINE.md`](../PIPELINE.md)
+owns priorities and [`FRONTIER.md`](../FRONTIER.md)
 owns the curated mathematical boundary.
 
 ## Executive verdict

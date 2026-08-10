@@ -204,7 +204,7 @@ author as Solan 1999 above. See
 **Solan 1998 (dissertation)** — E. Solan's doctoral dissertation, Center for
 the Study of Rationality, Hebrew University of Jerusalem, advisor A. Neyman
 (PDF `CreationDate` 10 Nov 1998). Local copy:
-`ephemeral/old/_source_eilons_thesis.pdf`. `—` Section 4 is, per its own
+`ephemeral/archive/legacy-pre-2026-08/_source_eilons_thesis.pdf`. `—` Section 4 is, per its own
 Acknowledgments, the material refereed by three anonymous MOR referees into
 Solan 1999 above. Theorem 4.23 ("Every three-player repeated game with
 absorbing states has a perturbed equilibrium payoff") plus Definition 3.9 and

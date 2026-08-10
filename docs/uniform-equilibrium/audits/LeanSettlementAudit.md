@@ -107,7 +107,7 @@
 Revised 2026-07-31, twice: first by the wave review, then corrected after
 external review (gate-or-alternative framing, dependency-ordered execution,
 build-verified module status, restored Q55--69 ledger). Companion documents:
-`ephemeral/old/WaveReviewQ70-78.md` (historical review + erratum),
+`ephemeral/archive/legacy-pre-2026-08/WaveReviewQ70-78.md` (historical review + erratum),
 [Question79-InertMixedCertificateDirectClosure.md](../../../questions/old/Question79-InertMixedCertificateDirectClosure.md),
 [Question80-AdaptiveSemanticLeafSupply.md](../../../questions/old/Question80-AdaptiveSemanticLeafSupply.md).
 Revised again on 2026-08-01 after

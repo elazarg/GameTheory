@@ -8,7 +8,7 @@
 
 ## Trigger
 
-`ephemeral/old/counterexample-research/sources/simon-noeq-v1.pdf` — R. S. Simon,
+`ephemeral/archive/legacy-pre-2026-08/counterexample-research/sources/simon-noeq-v1.pdf` — R. S. Simon,
 *A Stochastic Game without Approximate Equilibria*, arXiv:2310.04217v1
 [math.FA], 6 Oct 2023 — had been downloaded into the repository and never
 processed. Its abstract claims a stochastic game with finitely many players

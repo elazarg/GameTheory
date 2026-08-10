@@ -1,5 +1,9 @@
 # Repository reorganization (2026-08-03)
 
+Revised 2026-08-10 to separate active local seams, dated evidence, literature,
+and rebuildable artifacts, and to make the durable pipeline the sole status
+authority.
+
 The research workspace was reorganized so file location communicates lifecycle
 instead of topic alone. Do not recreate the old paths.
 
@@ -12,7 +16,10 @@ instead of topic alone. Do not recreate the old paths.
 | isolated proof and computation probes | `experiments/` | gitignored by default; production never imports it |
 | active self-contained questions | `questions/` | launch queue; no project-specific cross-references in question bodies |
 | farmed questions and appended answers | `questions/old/` | `old` means already dispatched, not verified or closed |
-| mutable research state and local evidence | `ephemeral/` | frontier, proof-mining ledgers, reviews, certificates, monitor, old scratch |
+| live local research seams | `ephemeral/active/` | keep small; durable status belongs in the pipeline |
+| dated local evidence | `ephemeral/archive/YYYY-MM/` | retained provenance, never authoritative status |
+| local literature material | `ephemeral/literature/` | separate `sources/`, `notes/`, and unprocessed `incoming/` |
+| monitor sources | `ephemeral/progress-monitor/` | retain source only; profiles, screenshots, logs, and PID files are generated |
 
 ## Important moves
 
@@ -36,8 +43,13 @@ instead of topic alone. Do not recreate the old paths.
    priority, or current gate.
 3. Keep question packets self-contained. Record commit hashes, adapters,
    reviewer status, and implementation links outside the question file.
-4. Use `ephemeral/` only for genuinely mutable or local material. Move a record
-   to `docs/` once its role is durable, even if later evidence may supersede
-   its dated conclusions.
+4. Use `ephemeral/active/` only for genuinely current local material. Archive
+   superseded evidence by month, and move a record to `docs/` once its role is
+   durable. `docs/uniform-equilibrium/PIPELINE.md` is the sole project-status
+   authority; ignored questions, ideas, experiments, and ephemeral notes are
+   inputs rather than competing ledgers.
 5. Paths in older prose may describe historical locations; new links and
    commands must use the canonical locations above.
+6. Do not archive generated objects. Delete and regenerate `*.olean`, Python
+   caches, TeX auxiliary files, browser profiles, preview images, logs, and PID
+   files from retained sources when needed.
