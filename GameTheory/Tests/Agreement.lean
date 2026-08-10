@@ -71,6 +71,47 @@ theorem coarse_posterior_true :
     posterior fairPrior coarse {true} true = 1 / 2 := by
   norm_num [posterior, coarse, fairPrior, FinDist.prob_pure_eq_ite]
 
+theorem revealingTrueCellPositive :
+    ∃ world ∈ (revealing.cell true : Set Bool), world ∈ fairPrior.support :=
+  ⟨true, by simp [revealing], fairPrior_fullSupport true⟩
+
+theorem coarseTrueCellPositive :
+    ∃ world ∈ (coarse.cell true : Set Bool), world ∈ fairPrior.support :=
+  ⟨true, by simp [coarse], fairPrior_fullSupport true⟩
+
+/-- The finite-cell posterior and canonical conditioning interfaces compute the
+same revealing posterior. -/
+theorem revealing_condOn_prob_true :
+    (fairPrior.condOn (revealing.cell true : Set Bool)
+      revealingTrueCellPositive).probOf ({true} : Set Bool) = 1 := by
+  have hevent : ({true} : Set Bool) = (({true} : Finset Bool) : Set Bool) := by
+    ext world
+    simp
+  rw [hevent]
+  rw [← posterior_eq_probOf_condOn fairPrior revealing {true} true
+    revealingTrueCellPositive]
+  exact revealing_posterior_true
+
+/-- The bridge is not confined to singleton cells: the coarse conditional law
+assigns the true event probability one half. -/
+theorem coarse_condOn_prob_true :
+    (fairPrior.condOn (coarse.cell true : Set Bool)
+      coarseTrueCellPositive).probOf ({true} : Set Bool) = 1 / 2 := by
+  have hevent : ({true} : Set Bool) = (({true} : Finset Bool) : Set Bool) := by
+    ext world
+    simp
+  rw [hevent]
+  rw [← posterior_eq_probOf_condOn fairPrior coarse {true} true
+    coarseTrueCellPositive]
+  exact coarse_posterior_true
+
+/-- A zero-mass information cell has no conditioning witness.  The bridge does
+not hide an arbitrary posterior at an impossible observation. -/
+theorem pureFalse_revealingTrueCell_not_positive :
+    ¬ ∃ world ∈ (revealing.cell true : Set Bool),
+      world ∈ (FinDist.pure false).support := by
+  simp [revealing]
+
 /-- If the singleton were common knowledge, the two constant reports on it
 would have to agree; their computed values `1` and `1/2` refute that claim. -/
 theorem true_not_commonKnowledgeAt :

@@ -35,6 +35,33 @@ def posterior [DecidableEq Ω] (prior : FinDist Ω)
   (∑ other ∈ partition.cell state ∩ event, prior.prob other) /
     ∑ other ∈ partition.cell state, prior.prob other
 
+/-- The raw finite-cell posterior is exactly `FinDist.condOn` probability when
+the current information cell has positive prior mass. -/
+theorem posterior_eq_probOf_condOn [DecidableEq Ω]
+    (prior : FinDist Ω) (partition : InfoPartition Ω)
+    (event : Finset Ω) (state : Ω)
+    (hcell :
+      ∃ other ∈ (partition.cell state : Set Ω), other ∈ prior.support) :
+    posterior prior partition event state =
+      (prior.condOn (partition.cell state : Set Ω) hcell).probOf
+        (event : Set Ω) := by
+  unfold posterior
+  rw [FinDist.probOf_condOn_eq_inter hcell]
+  rw [← Finset.coe_inter, FinDist.probOf_finset_eq_sum,
+    FinDist.probOf_finset_eq_sum]
+
+/-- Under full support, reflexivity supplies the positive-cell witness needed
+by the conditioning bridge. -/
+theorem posterior_eq_probOf_condOn_of_fullSupport [DecidableEq Ω]
+    (prior : FinDist Ω) (hfull : prior.FullSupport)
+    (partition : InfoPartition Ω) (event : Finset Ω) (state : Ω) :
+    posterior prior partition event state =
+      (prior.condOn (partition.cell state : Set Ω)
+        ⟨state, partition.reflexive state, hfull state⟩).probOf
+          (event : Set Ω) :=
+  posterior_eq_probOf_condOn prior partition event state
+    ⟨state, partition.reflexive state, hfull state⟩
+
 /-- States in one cell have the same posterior. -/
 theorem posterior_eq_of_mem_cell [DecidableEq Ω] (prior : FinDist Ω)
     (partition : InfoPartition Ω) (event : Finset Ω)

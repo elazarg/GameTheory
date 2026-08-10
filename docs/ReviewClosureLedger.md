@@ -202,7 +202,7 @@ The single-pass panel observations were re-derived separately before action:
 | E-05 | CCE welfare theorem was named as correlated. | closed | It is `coarseCorrelated_socialCost_le`. |
 | E-06 | Epistemic root advertised a common-prior object it did not define. | closed | It now describes explicit shared finite-prior assumptions and disclaims a separate common-prior structure. |
 | E-07 | Deferred-acceptance fixed point was called the first fixed point. | closed | Documentation says it selects a certified fixed iterate; it does not claim least/first without proof. |
-| E-08 | Raw epistemic posteriors and `FinDist.condOn` lack an equality bridge. | queued | Both semantics are honest and independently consumed. A positive-cell bridge is epistemic breadth; no current theorem assumes it silently. |
+| E-08 | Raw epistemic posteriors and `FinDist.condOn` lack an equality bridge. | closed | `posterior_eq_probOf_condOn` proves equality on every positive information cell, using the generic finite-set and conditional-intersection laws in `Probability.FinDist`. `Tests.Agreement` checks revealing and coarse cells and proves that a zero-mass cell supplies no conditioning witness. |
 | E-09 | Cooperative modules could be read as claiming missing hard converses/optimality. | closed | Headers and the delivery ledger state one-way balancedness, assumed bargaining uniqueness, and the exact matching scope; the hard converses are queued. |
 
 ## Language layers

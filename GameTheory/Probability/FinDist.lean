@@ -860,6 +860,26 @@ private theorem massOf_condOn {μ : FinDist α} {C D : Set α} (hC : ∃ a ∈ C
         fun _ => (PMF.apply_eq_zero_iff _ _).mpr hasupp, zero_mul]
   · rw [Set.indicator_of_notMem haD, Set.indicator_of_notMem haD, zero_mul]
 
+/-- Conditioning measures an event by intersecting it with the conditioning
+event and renormalizing. -/
+theorem probOf_condOn_eq_inter {μ : FinDist α} {C D : Set α}
+    (hC : ∃ a ∈ C, a ∈ μ.support) :
+    (μ.condOn C hC).probOf D = μ.probOf (C ∩ D) / μ.probOf C := by
+  have hmass :
+      massOf (μ.condOn C hC) D = massOf μ (C ∩ D) / massOf μ C := by
+    rw [massOf, massOf]
+    simp_rw [div_eq_mul_inv]
+    rw [← ENNReal.tsum_mul_right]
+    apply tsum_congr
+    intro a
+    show D.indicator (fun x => C.indicator μ.toPMF x / massOf μ C) a =
+      (C ∩ D).indicator μ.toPMF a * (massOf μ C)⁻¹
+    by_cases haC : a ∈ C <;> by_cases haD : a ∈ D <;>
+      simp [haC, haD, div_eq_mul_inv]
+  show (massOf (μ.condOn C hC) D).toReal = _
+  rw [hmass, ENNReal.toReal_div]
+  rfl
+
 /-- Conditioning keeps everything the event allows. -/
 theorem mem_support_condOn (μ : FinDist α) (S : Set α) (hmeet : ∃ a ∈ S, a ∈ μ.support)
     {a : α} (haS : a ∈ S) (ha : a ∈ μ.support) : a ∈ (μ.condOn S hmeet).support := by
@@ -919,6 +939,16 @@ theorem expect_indicator_eq_probOf (μ : FinDist α) (S : Set α) [DecidablePred
       exact PMF.apply_ne_top _ _
     · rw [Set.indicator_of_notMem haS]
       exact ENNReal.zero_ne_top
+
+/-- The probability of a finite set is the ordinary sum of its point masses. -/
+theorem probOf_finset_eq_sum [DecidableEq α] (μ : FinDist α) (S : Finset α) :
+    μ.probOf (S : Set α) = ∑ a ∈ S, μ.prob a := by
+  rw [← expect_indicator_eq_probOf]
+  unfold expect
+  rw [tsum_eq_sum (s := S)]
+  · simp
+  · intro a ha
+    simp [ha]
 
 /-- Conditioning rescales the expectation of an observable that vanishes off
 the conditioning event. -/

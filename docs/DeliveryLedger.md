@@ -33,7 +33,7 @@ Status labels:
 | Zero-sum and minimax | supported | matrix security, selected values, attained maximin--minimax equality | General security and measurable extensions. |
 | Welfare and smoothness | supported | IR/Pareto transport, Nash/CCE smoothness | Additional finite welfare consequences. |
 | Preferences and social choice | supported | rank foundations, finite vNM with automatic endpoint selection, Arrow, May, Gibbard–Satterthwaite | Axiom independence, Sen, median-voter results. |
-| Epistemic theory | complete | exact agreement plus a `p = 3/4` common-belief bound with unequal reports | Protocol bridge only with an explicit state-view premise. |
+| Epistemic theory | complete | finite-cell posterior/conditioning equality, exact agreement, and a `p = 3/4` common-belief bound with unequal reports | Protocol bridge only with an explicit state-view premise. |
 | Evolutionary stability | complete | carrier-parametric ESS/NSS, load-bearing second-order tie witness, Nash-but-not-ESS control, mixed Nash bridge | Population dynamics is a distinct future domain. |
 | Communication | supported | cheap talk, babbling, electronic mail | Conditional public randomization and zero-sum communication value. |
 
