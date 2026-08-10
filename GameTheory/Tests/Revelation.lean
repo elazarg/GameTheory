@@ -157,4 +157,16 @@ theorem twoPlayerRecommendation_isBayesCorrelatedEq :
   twoPlayerGame.isBayesCorrelatedEq_strategyRecommendationLaw_of_isNash
     twoPlayerPlan twoPlayerPlan_isNash
 
+/-- The reverse BCE foundation theorem reconstructs a private-action-signal
+game for this genuinely two-player recommendation law. -/
+theorem twoPlayerRecommendation_has_informationFoundation :
+    ∃ S : BayesianGame.InformationStructure twoPlayerGame twoPlayerGame.Act,
+      ∃ plan : Profile S.inducedBayesianGame.signature,
+        IsNash S.inducedBayesianGame.toForm
+            (euPreference S.inducedBayesianGame.utility) plan ∧
+          S.outcomeLaw plan =
+            twoPlayerGame.strategyRecommendationLaw twoPlayerPlan :=
+  BayesianGame.InformationStructure.exists_informationStructure_isNash_outcomeLaw
+    twoPlayerRecommendation_isBayesCorrelatedEq
+
 end GameTheory.Tests.Revelation
