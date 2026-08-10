@@ -2491,9 +2491,19 @@ admits a positive-absorption endpoint-Nash reset root, or one fixed underfloor
 coordinate recurs with the quantitative account
 `eventualAbsorption * floorDeficit ≤ phantomSurvival * boundarySlack`.
 The first alternative retains floor admissibility but does not identify the
-root's Bellman predecessor with the conditioned source state. The second
-alternative isolates strict plateau funding as the obstruction. Affine
-shrinkage supplies neither a state match nor a finite return.
+root's Bellman predecessor with the conditioned source state. Exact Nash does
+transport the floor from a target to its Bellman predecessor. Moreover,
+coordinatewise clipping at the punishment vector leaves a uniform singleton
+gap whenever the outsider's punishment value is strictly below its singleton
+reward. In that scalar branch, cofinally many selected dates therefore carry
+positive-absorption exact Nash--Bellman edges with both endpoints above the
+punishment floor. The complementary scalar condition is
+`singletonReward ≤ punishmentValue`. The independently constructed edges do
+not concatenate: each predecessor is generated from its clipped target rather
+than identified with another selected conditioned state. The funded-underfloor
+alternative remains an exact account for unmodified targets, while floor
+clipping reduces viability itself to the scalar sign and chronology problem.
+Affine shrinkage supplies neither a state match nor a finite return.
 
 Approximate root/continuation splicing does not require sure absorption. An
 `eta`-endpoint-Nash root against a target, followed by an actual terminal
@@ -2503,6 +2513,15 @@ separates the remaining task precisely: the conditioned proper-face suffix
 retains the persistent Quit defect, so it is not the required vanishing-error
 continuation, and an independently selected endpoint reset does not repair
 that defect or match the predecessor state.
+
+The direct own-marginal repair is quantitatively excluded. Changing only the
+outsider's marginal shifts its prescribed predecessor payoff by its Quit mass
+times the fixed endpoint gap. Approximate endpoint Nash therefore raises that
+coordinate by at least the gap minus the Nash tolerance; the conditioned
+source comparison subtracts only the vanishing diffuse joint-charge error.
+Hence vanishing Nash error and vanishing target displacement cannot coexist
+for a one-player activation. A viable reset must alter other marginals or
+match a distinct full-vector predecessor.
 
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.

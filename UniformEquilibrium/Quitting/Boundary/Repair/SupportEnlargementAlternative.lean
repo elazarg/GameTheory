@@ -23,6 +23,11 @@ continuation fixed.  Any exact repair must move to a sure-Quit face (or move
 the continuation/reward data enough to remove the strict defect).  This is a
 local collision/support alternative, not a producer theorem for a
 state-matched Bellman chronology.
+
+The quantitative lemmas below record the exact own-marginal tradeoff: changing
+one player's marginal shifts that player's prescribed root payoff by the
+played Quit mass times the fixed endpoint gap.  No simultaneous multi-player
+root replacement is covered here.
 -/
 
 noncomputable section
@@ -58,6 +63,102 @@ theorem quittingRootEndpointDifference_update_ownMarginal
   unfold quittingRootEndpointDifference quittingRootQuitPayoff
     quittingRootContinuePayoff
   simp
+
+/-! ## Exact own-marginal shift and the approximate tradeoff -/
+
+/-- Changing only `who`'s root marginal changes `who`'s prescribed root
+payoff by the change in Quit probability times the endpoint gap. -/
+theorem quittingRootExpectedPayoff_update_ownMarginal_sub
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (tail : Payoff ι) (root : ι → PMF Bool) (who : ι)
+    (marginal : PMF Bool) :
+    quittingRootExpectedPayoff reward tail
+        (Function.update root who marginal) who -
+        quittingRootExpectedPayoff reward tail root who =
+      ((marginal true).toReal - (root who true).toReal) *
+        quittingRootEndpointDifference reward tail root who := by
+  have hroot := quittingRootExpectedPayoff_update_eq_endpointMix
+    reward tail root who (root who)
+  have hroot' : quittingRootExpectedPayoff reward tail root who =
+      (root who true).toReal * quittingRootQuitPayoff reward tail root who +
+        (root who false).toReal * quittingRootContinuePayoff reward tail root who := by
+    simpa using hroot
+  rw [quittingRootExpectedPayoff_update_eq_endpointMix
+    reward tail root who marginal, hroot']
+  have hm : (marginal false).toReal + (marginal true).toReal = 1 := by
+    simpa [Fintype.sum_bool, add_comm] using pmf_toReal_sum_one marginal
+  have hr := quittingRoot_continueProbability_add_quitProbability root who
+  have hm' : (marginal false).toReal = 1 - (marginal true).toReal := by
+    linarith
+  have hr' : (root who false).toReal = 1 - (root who true).toReal := by
+    linarith
+  rw [hm', hr']
+  unfold quittingRootEndpointDifference
+  ring
+
+/-- Relative to pure Continue at `who`, an own-marginal repair gains exactly
+the played Quit probability times the endpoint gap. -/
+theorem quittingRootExpectedPayoff_update_ownMarginal_sub_pureContinue
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (tail : Payoff ι) (root : ι → PMF Bool) (who : ι)
+    (marginal : PMF Bool) :
+    quittingRootExpectedPayoff reward tail
+        (Function.update root who marginal) who -
+        quittingRootExpectedPayoff reward tail
+          (Function.update root who (PMF.pure false)) who =
+      (marginal true).toReal *
+        quittingRootEndpointDifference reward tail root who := by
+  rw [quittingRootExpectedPayoff_update_eq_endpointMix,
+    quittingRootExpectedPayoff_update_eq_endpointMix]
+  have hm : (marginal false).toReal + (marginal true).toReal = 1 := by
+    simpa [Fintype.sum_bool, add_comm] using pmf_toReal_sum_one marginal
+  have hfalse : (PMF.pure false true).toReal = 0 := by simp
+  have htrue : (PMF.pure false false).toReal = 1 := by simp
+  rw [hfalse, htrue]
+  have hm' : (marginal false).toReal = 1 - (marginal true).toReal := by
+    linarith
+  rw [hm']
+  unfold quittingRootEndpointDifference
+  ring
+
+/-- An approximate endpoint-Nash own-marginal repair pays the endpoint gap
+up to its Nash tolerance, measured relative to pure Continue. -/
+theorem quittingRootExpectedPayoff_update_ownMarginal_ge_pureContinue_add_gap_sub
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (tail : Payoff ι) (root : ι → PMF Bool) (who : ι)
+    (marginal : PMF Bool) {ε : ℝ}
+    (hnash : IsεQuittingRootEndpointNash reward tail ε
+      (Function.update root who marginal)) :
+    quittingRootExpectedPayoff reward tail
+        (Function.update root who marginal) who ≥
+      quittingRootExpectedPayoff reward tail
+        (Function.update root who (PMF.pure false)) who +
+        quittingRootEndpointDifference reward tail root who - ε := by
+  have hregret := (hnash who).1
+  rw [quittingRootEndpointDifference_update_ownMarginal] at hregret
+  have hregret' :
+      (marginal false).toReal *
+          quittingRootEndpointDifference reward tail root who ≤ ε := by
+    simpa using hregret
+  have hsum : (marginal false).toReal + (marginal true).toReal = 1 := by
+    simpa [Fintype.sum_bool, add_comm] using pmf_toReal_sum_one marginal
+  have hquitNonneg : 0 ≤ (marginal true).toReal := ENNReal.toReal_nonneg
+  have hcontinueNonneg : 0 ≤ (marginal false).toReal := ENNReal.toReal_nonneg
+  have hshift := quittingRootExpectedPayoff_update_ownMarginal_sub_pureContinue
+    reward tail root who marginal
+  have hdecomp :
+      (marginal true).toReal *
+          quittingRootEndpointDifference reward tail root who +
+        (marginal false).toReal *
+          quittingRootEndpointDifference reward tail root who =
+        quittingRootEndpointDifference reward tail root who := by
+    calc
+      _ = ((marginal false).toReal + (marginal true).toReal) *
+          quittingRootEndpointDifference reward tail root who := by ring
+      _ = quittingRootEndpointDifference reward tail root who := by
+        rw [hsum]
+        ring
+  nlinarith [hregret', hdecomp, hshift]
 
 /-- If a support-local approximate endpoint condition has tolerance strictly
 below a positive Quit-minus-Continue gap, Continue cannot remain supported.
