@@ -2278,6 +2278,19 @@ priced debt current and the retained boundary term into one of the item-4
 exits.  The nonlinear prefix-capacity potential still supplies only an upper
 account and does not force this face membership.
 
+The exact dynamics on the enriched coordinate sharpen this last sentence.
+At every date, the canonical flow is in the selected zero-source face now,
+is in it at the next edge, or the killed-capacity account has strict local
+dissipation.  Equivalently, avoiding the face across two adjacent edges makes
+the survival-scaled debt/capacity boundary mismatch strictly exceed its
+initial mismatch on every positive-length window.  Nonexpansion of that
+mismatch at arbitrarily late starts would therefore force face recurrence.
+The current account proves only the reverse weak inequality by nonnegative
+dissipation; persistent positive finite sources remain compatible with the
+positive harmonic debt boundary.  The precise open input in item 3 is now
+this late boundary-mismatch comparison (or a different theorem consuming its
+strict growth), not an unspecified recurrence principle.
+
 **Acceptance.** A game-facing utilization theorem, not another separator:
 every non-all-Continue counterexample tangent must either emit a positive raw
 seam priced by the compatible debt co-state and exhausted by a proved boundary

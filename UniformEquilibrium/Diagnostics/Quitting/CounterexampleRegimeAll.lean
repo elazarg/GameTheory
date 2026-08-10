@@ -11,6 +11,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCapCarrier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeCoalitionLocks
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtConservation
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceObstructionCarrier
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDebtSourceDynamicAlternative
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledCapacityPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeKilledTailPotential
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOneStageObstructionCarrier
@@ -185,6 +186,14 @@ transport equation.  Consecutive source coordinates fold to current debt
 minus survival-weighted terminal debt.  The theorem still does not force the
 canonical tail into that face, prove recurrence there, or decode a
 strategically realizable exit.
+The exact dynamic alternative shows why: at every date the selected tail flow
+is in the zero-source face now, is there at the next edge, or the canonical
+killed-capacity account dissipates strictly.  The latter is exactly strict
+growth of the survival-scaled debt/capacity boundary mismatch.  Face
+recurrence follows if that mismatch is nonexpanding on positive-length
+windows at arbitrarily late starts, but the current regime supplies only the
+reverse weak inequality.  Thus the remaining premise is a concrete boundary
+comparison, not compactness or co-state selection.
 
 Periodic attachment has a second, exact normalization fence.  For an
 absorbing exact Nash--Bellman word, the finite-stop and refusal branches of
