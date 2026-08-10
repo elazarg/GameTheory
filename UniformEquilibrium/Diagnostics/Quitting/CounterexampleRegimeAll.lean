@@ -36,6 +36,7 @@ import UniformEquilibrium.Quitting.AbsorptionPath.FiniteWindowRefusalReweighting
 import UniformEquilibrium.Quitting.AbsorptionPath.SurvivalWeightedObstructionAdapter
 import UniformEquilibrium.Quitting.Classification.SingletonPacketDefectAlgebra
 import UniformEquilibrium.Quitting.Cycles.PhantomBoundaryLimitGeometry
+import UniformEquilibrium.Quitting.Cycles.PeriodOneTangentAtlas
 import UniformEquilibrium.Quitting.Cycles.PeriodicNormalizedSeam
 import UniformEquilibrium.Quitting.Debt.Dynamic.DynamicDebtCapChargedAnchorCounterexample
 import UniformEquilibrium.Quitting.Debt.Dynamic.PeriodicDebtHolonomy
@@ -158,4 +159,13 @@ tail-derived singleton packet and a phantom plateau need not contradict one
 another even after occupation identification.  The isolated
 opponent-survival-one branch remains the separately classified negative-solo
 exception.
+For a repeated one-root word these coefficients have an exact mass atlas.
+Writing `A` for absorption, `mu` for the normalized singleton-owner mass,
+`C` for joint survival, and `rho` for opponent survival gives
+`rho-C=A*mu` and `1-rho=A*(1-mu)`.  The phase evaluator is
+`-C*tangent-phaseSlack`; on `mu<1` the refusal evaluator is
+`mu/(1-mu)*tangent-refusalSlack/(A*(1-mu))`.  At `mu=1` every opponent
+continues surely and the refusal denominator is genuinely zero.  This atlas
+does not identify an abstract packet with a one-stage root or remove the
+displayed strategic slacks.
 -/

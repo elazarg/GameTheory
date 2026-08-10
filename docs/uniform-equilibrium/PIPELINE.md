@@ -2623,6 +2623,15 @@ support enlargement for the active-positive branch.  Neither consumer may be
 replaced by unsigned recurrence or by an independently selected source
 packet.  The eventual all-Continue plateau remains a separate P0 branch.
 
+The one-stage coefficient algebra is now exact.  For total absorption `A`,
+joint survival `C`, opponent survival `rho`, and normalized singleton-owner
+mass `mu`, one has `rho-C=A*mu` and `1-rho=A*(1-mu)`.  The repeated-root phase
+and refusal evaluators become, respectively,
+`-C*tangent-phaseSlack` and, when `mu<1`,
+`mu/(1-mu)*tangent-refusalSlack/(A*(1-mu))`; `mu=1` is the isolated
+all-opponents-Continue boundary.  This settles the period-one readout but not
+the provenance or support-pivot consumer.
+
 `MATH-P0-12` records the intended near-term bridge from this sign information
 to a usable seam.  It works before normalization: actual window charges
 concatenate with survival weight, endpoint displacement remains an unweighted
