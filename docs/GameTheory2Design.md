@@ -1023,6 +1023,16 @@ the named weaker certificate remains available at selected sites. Exact
 positive and negative action controls prevent definition-only credit. This is
 a regret decomposition, not a cumulative CFR algorithm or convergence result.
 
+EXP-083/D46 supplies the next local learning layer without defining a second
+learner. `BehavioralPolicy.withLaw` installs the existing regret matcher's law
+at one information state through a transport-free coordinate split. A Protocol
+counterfactual-regret vector inherits the canonical finite and asymptotic
+regret-matching bounds after a pointwise realization equation. The hostile
+two-history fixture proves that equation for every current law, retains a
+positive-regret losing control, and checks that the actual update selects the
+profitable action. The scope remains local: a global CFR or exploitability
+claim still requires the across-information-set perfect-recall decomposition.
+
 A compiler may produce a protocol certificate and use generic theorems to
 derive strategic and incentive certificates. An NFG may construct strategic
 and incentive certificates directly without pretending to be a sequential

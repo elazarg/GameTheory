@@ -93,6 +93,7 @@ becomes difficult to scan.
 | EXP-080 | 2026-08-10 | D40 / independent rationalizability | Can canonical mixed profiles express product beliefs and exhibit the strict three-player separation from correlated rationalizability? | Supports; completes D40 product-belief package | [`decisions/D40-mixed-pure-rationalizability.md`](decisions/D40-mixed-pure-rationalizability.md); `GameTheory/Core/Rationalizability.lean`; `GameTheory/Tests/Rationalizability.lean` |
 | EXP-081 | 2026-08-10 | D44 / canonical counterfactual reach | Can counterfactual reach and continuation coefficients be derived from canonical finite history laws without restoring a native FOSG runner? | Complete; supports | `Analysis/Protocol/CounterfactualReach.lean`; `Analysis/Protocol/CounterfactualReachTest.lean` |
 | EXP-082 | 2026-08-10 | D45 / counterfactual regret decomposition | Can canonical counterfactual reach support a theorem-level deviation-gain decomposition without a parallel payoff, deviation, or CFR semantics? | Complete; supports | [`decisions/D45-canonical-counterfactual-regret.md`](decisions/D45-canonical-counterfactual-regret.md); `Analysis/Protocol/CounterfactualRegret{,Test}.lean` |
+| EXP-083 | 2026-08-10 | D46 / local CFR regret matching | Can the action-local D45 quantity drive an actual cumulative regret-matching trace with a finite or asymptotic regret theorem? | Complete; supports local CFR | [`decisions/D46-local-counterfactual-regret-matching.md`](decisions/D46-local-counterfactual-regret-matching.md); `Analysis/Protocol/CounterfactualRegretMatching{,Test}.lean` |
 
 ## Entry template
 
@@ -5123,3 +5124,56 @@ memory.
   action-local decompositions. This does not count as cumulative CFR or a
   convergence result. Next require a repeated update trace, an actual
   average-regret/exploitability theorem, and a discriminating failure control.
+
+### EXP-083: local CFR regret matching
+
+- **Date / revision:** 2026-08-10, reserved after `b94c7e7`
+- **Status:** complete; supports D46's local scope
+- **Decision / question:** D46; whether D45's pure-action counterfactual regret
+  can instantiate the existing external-regret-matching/approachability engine
+  as an actual cumulative local CFR update, without a second learner, history,
+  payoff, or regret-vector semantics.
+- **Prediction:** define the local regret vector coordinatewise from
+  `counterfactualActionRegret`; install `regretMatch`'s finite law at the
+  selected information state through a transport-free behavioral-policy
+  operation; and prove that the running average approaches the nonpositive
+  orthant. A finite bound is preferred. The generic bridge may state the exact
+  realization equation as a premise only if a hostile Protocol fixture
+  discharges it for every current action law.
+- **Representative slice:** reuse the two-history asymmetric-payoff site from
+  EXP-082, now with an arbitrary current action law rather than only the fully
+  mixed baseline. The update must favor the profitable action and the local
+  regret vector must be nonconstant; a fixed losing policy supplies the
+  positive-regret control.
+- **Competing designs:** reuse `Analysis.Approachability.regretMatch`; introduce
+  a CFR-specific regret matcher; compile the local continuation to a static
+  action game; or defer all local learning until a global extensive-form
+  exploitability proof is available.
+- **Kill conditions:** the cumulative theorem never mentions D45 action
+  regret; the realization premise merely assumes convergence; arbitrary action
+  laws cannot be installed without public transport/raw update; the hostile
+  fixture works only for one named distribution; or the result is described as
+  global CFR/exploitability despite proving only local regret matching.
+- **Artifacts / observations:** `BehavioralPolicy.withLaw` installs an
+  arbitrary finite law through the existing coordinate split and proves exact
+  self/other equations. `localCounterfactualRegretVector` is coordinatewise
+  D45 action regret. The generic adapter assumes only its pointwise equality to
+  ordinary `regretPayoff` for every current law and environment; it then reuses
+  the sole regret matcher. The hidden-information fixture discharges that
+  equality for every law, proves the finite bound
+  `t * infDist^2 <= 4`, and consumes the asymptotic theorem. A fixed false law
+  has true-action regret `1/2`, and `regretMatch` responds with probability one
+  on true.
+- **Validation:** narrow stable source/consumer build completed 2,448 jobs and
+  the Protocol-analysis aggregate completed 2,449 jobs warning-free. Fast
+  Phase 2 and Phase 3 expected audits both report `VERIFIED=1`. The full
+  `GameTheory` library target completed 3,585 jobs and the Analysis umbrella
+  completed 3,207 jobs warning-free. The promoted leaves contain no
+  placeholders, custom axioms, raw updates, stored `Fintype.ofFinite`,
+  `open Classical`, transport tokens, or lines over 100. Deep reachability mode
+  was deliberately not run.
+- **Outcome / next action:** supports local CFR regret matching and adopts D46.
+  Do not credit global CFR or exploitability. Next prove the
+  across-information-set deviation decomposition under perfect recall, then
+  connect all local learners to a root-regret or two-player zero-sum average
+  strategy theorem with a failed-learner control.

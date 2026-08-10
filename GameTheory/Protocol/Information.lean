@@ -1084,6 +1084,16 @@ def BehavioralPolicy.commit {i : ι} [DecidableEq (M.InfoState i)]
     (FinDist.pure choice, fun w => policy w.1)
 
 variable {M} in
+/-- The behavioral profile using a supplied law at one information state and
+the original laws everywhere else.  Like `commit`, this uses the coordinate
+split rather than a dependent pointwise update. -/
+def BehavioralPolicy.withLaw {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (info : M.InfoState i)
+    (law : FinDist (M.Choice i info)) : M.BehavioralPolicy i :=
+  (Equiv.piSplitAt info fun w => FinDist (M.Choice i w)).symm
+    (law, fun w => policy w.1)
+
+variable {M} in
 @[simp]
 theorem BehavioralPolicy.commit_self {i : ι} [DecidableEq (M.InfoState i)]
     (policy : M.BehavioralPolicy i) (info : M.InfoState i) (choice : M.Choice i info) :
@@ -1097,6 +1107,23 @@ theorem BehavioralPolicy.commit_of_ne {i : ι} [DecidableEq (M.InfoState i)]
     {other : M.InfoState i} (hne : other ≠ info) :
     policy.commit info choice other = policy other := by
   simp [commit, hne]
+
+variable {M} in
+@[simp]
+theorem BehavioralPolicy.withLaw_self {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (info : M.InfoState i)
+    (law : FinDist (M.Choice i info)) :
+    policy.withLaw info law info = law := by
+  simp [withLaw]
+
+variable {M} in
+@[simp]
+theorem BehavioralPolicy.withLaw_of_ne {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (info : M.InfoState i)
+    (law : FinDist (M.Choice i info))
+    {other : M.InfoState i} (hne : other ≠ info) :
+    policy.withLaw info law other = policy other := by
+  simp [withLaw, hne]
 
 variable {M} in
 /-- **Committing keeps the profile mixed.** Re-extending the rest of a drawn

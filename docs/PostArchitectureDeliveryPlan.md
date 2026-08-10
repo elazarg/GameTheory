@@ -120,14 +120,18 @@ Separate packages:
   exact scaled identity to canonical Bayes continuation deviation gain,
   perfect-recall and weaker-certificate sign theorems, and exact profitable and
   harmful controls; and
-- **next:** cumulative CFR updates and convergence consuming the action-local
-  decomposition.
+- **complete:** local cumulative regret matching at one information site,
+  including arbitrary-law installation, a pointwise Protocol realization
+  interface, the finite bound `t * infDist^2 <= (2M)^2`, asymptotic local
+  convergence, and an update that puts all mass on the profitable action; and
+- **next:** the across-information-set perfect-recall decomposition, followed
+  by root regret or two-player zero-sum exploitability convergence.
 
 Do not merge these packages into the FOSG syntax root or hide serialization
 order behind choice. The coefficient package counts because its continuation
 law is canonical and its recursive factorization has hostile consumers. It is
-not CFR convergence coverage until a cumulative update theorem uses the
-action-local decomposition and controls average regret or exploitability.
+not global CFR convergence coverage until an across-information-set theorem
+uses every local learner to control root regret or exploitability.
 
 ### E. Intrinsic selected-solution strategic form — resolved
 

@@ -94,6 +94,38 @@ theorem regretMatch_steering [Nonempty ι] (u : ι → Q → ℝ)
   · rw [expect_regretMatch_pos hz, div_mul_cancel₀ _ hz.ne']
     simp
 
+/-- Finite-time regret-matching estimate. The average regret vector has
+squared distance at most `(2M)^2 / t` from the nonpositive orthant. -/
+theorem regretMatch_sq_infDist_avg_le [Nonempty ι] (u : ι → Q → ℝ)
+    {M : ℝ} (hM0 : 0 ≤ M) (hM : ∀ p q, ‖regretPayoff u p q‖ ≤ M)
+    (qseq : ℕ → Q) (t : ℕ) :
+    Metric.infDist
+        (avgVec (regretPayoff u) regretMatch qseq t) nonposOrthant ^ 2 *
+      (t : ℝ) ≤ (2 * M) ^ 2 := by
+  have hraw := sq_infDist_avg_le (S := nonposOrthant) (C := 2 * M)
+    (avgVec_succ (regretPayoff u) regretMatch qseq) (fun n => by
+      refine ⟨orthantProj (avgVec (regretPayoff u) regretMatch qseq n),
+        orthantProj_mem _, (infDist_eq_norm_sub_orthantProj _).symm,
+        regretMatch_steering u _ (qseq n), ?_⟩
+      set current := avgVec (regretPayoff u) regretMatch qseq n
+      have hcurrent : ‖current‖ ≤ M :=
+        avgVec_norm_le (regretPayoff u) regretMatch qseq hM0 hM n
+      calc
+        ‖regretPayoff u (regretMatch current) (qseq n) -
+            orthantProj current‖ ≤
+          ‖regretPayoff u (regretMatch current) (qseq n)‖ +
+            ‖orthantProj current‖ := norm_sub_le _ _
+        _ ≤ M + ‖current‖ :=
+          add_le_add (hM _ _) (norm_orthantProj_le current)
+        _ ≤ 2 * M := by linarith) t
+  by_cases ht : t = 0
+  · subst t
+    simp [sq_nonneg]
+  · have htpos : (0 : ℝ) < t := by exact_mod_cast Nat.pos_of_ne_zero ht
+    nlinarith [sq_nonneg
+      (Metric.infDist (avgVec (regretPayoff u) regretMatch qseq t)
+        nonposOrthant)]
+
 /-- Regret matching drives the average external-regret vector to the
 nonpositive orthant against every environment sequence. -/
 theorem regretMatch_approaches [Nonempty ι] (u : ι → Q → ℝ)
