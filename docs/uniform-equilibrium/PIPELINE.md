@@ -2471,9 +2471,13 @@ Exact source Nash bounds a possible singleton-floor deficit by twice the
 source deleted clock; late clock comparison therefore raises the uniform Quit
 constant from `2M` to `6M` but removes the floor premise entirely. On the
 canonical summably absorbing seam, a diffuse positive-absorption tail must
-therefore have some strict coordinate `solo_i < boundary_i`. This strict
-phantom plateau is the remaining conditioned boundary regime and still
-requires a support- or delivery-changing reset rather than affine shrinkage.
+therefore have some strict coordinate `solo_i < boundary_i`. Such a player is
+eventually prescribed literal `Never`: arbitrarily late positive Quit hazards
+would pin its boundary back to the singleton payoff. Hence, after one common
+cutoff, the physical quitter support is a proper subset contained in the
+singleton-tight face. The remaining task is now an outsider problem: control
+the strict spectators' Quit deviations or enlarge the active support in a
+state-matched way. Affine shrinkage still cannot supply that reset.
 
 The receiving compilers are explicit.  A finite collision-aware product-root
 return with exact Nash and punishment admissibility is a solved exact cycle.

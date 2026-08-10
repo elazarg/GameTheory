@@ -113,6 +113,87 @@ theorem exists_singleton_lt_limitValue_of_diffuse
   · simpa [quittingSoloBaseline, quittingSoloReward,
       quittingSingletonTerminal] using seam.limit.soloReward_le_value who
 
+/-- A strict phantom-plateau coordinate can appear only if that player is
+eventually prescribed literal `Never` on the optimized source tail.  Indeed,
+positive Quit hazards at arbitrarily late dates would pin the limiting
+annotation to the singleton payoff. -/
+theorem eventually_pureContinue_of_singleton_lt_limitValue
+    (seam : QuittingCounterexampleSeamWitness regime) (who : ι)
+    (hstrict : quittingSoloBaseline reward who < seam.limit.value who) :
+    ∀ᶠ time : ℕ in atTop,
+      quittingDynamicDebtTailRoots seam.tail time who = PMF.pure false := by
+  rw [Filter.eventually_atTop]
+  by_contra hnot
+  push Not at hnot
+  choose selected hselected hnonzero using hnot
+  have hselectedTendsto : Tendsto selected atTop atTop :=
+    Filter.tendsto_atTop_mono hselected tendsto_id
+  have hpositive : ∀ index,
+      0 < (quittingDynamicDebtTailRoots seam.tail
+        (selected index) who true).toReal := by
+    intro index
+    have hnonneg : 0 ≤ (quittingDynamicDebtTailRoots seam.tail
+        (selected index) who true).toReal := ENNReal.toReal_nonneg
+    have hne : (quittingDynamicDebtTailRoots seam.tail
+        (selected index) who true).toReal ≠ 0 := by
+      intro hzero
+      apply hnonzero index
+      exact pmf_eq_pure_false_of_apply_true_toReal_eq_zero _ hzero
+    exact lt_of_le_of_ne hnonneg (Ne.symm hne)
+  have hpinned := quittingAnnotationBoundary_eq_singleton_of_activeSubsequence
+    reward (quittingDynamicDebtTailRoots seam.tail)
+      (fun time => (seam.tail time).1.1)
+      seam.isCanonicalExactNashBellmanSpine seam.limit.value
+      seam.value_tendsto
+      (by
+        change Summable (quittingDynamicDebtTailAbsorptionCharge seam.tail)
+        exact seam.jointAbsorption_summable)
+      who selected hselectedTendsto hpositive
+  have hbaseline : quittingSoloBaseline reward who =
+      reward (quittingSingletonTerminal who) who := rfl
+  rw [hbaseline, ← hpinned] at hstrict
+  exact (lt_irrefl _ hstrict)
+
+/-- After one common finite cutoff, every player present in the physical
+quitter support lies on a singleton-tight boundary coordinate. -/
+theorem eventually_active_implies_limitValue_eq_singleton
+    (seam : QuittingCounterexampleSeamWitness regime) :
+    ∀ᶠ time : ℕ in atTop, ∀ who,
+      quittingDynamicDebtTailRoots seam.tail time who ≠ PMF.pure false →
+        seam.limit.value who = quittingSoloBaseline reward who := by
+  rw [Filter.eventually_all]
+  intro who
+  by_cases htight : seam.limit.value who = quittingSoloBaseline reward who
+  · exact Filter.Eventually.of_forall fun _ _ => htight
+  · have hsoloLe : quittingSoloBaseline reward who ≤ seam.limit.value who := by
+      simpa [quittingSoloBaseline, quittingSoloReward,
+        quittingSingletonTerminal] using seam.limit.soloReward_le_value who
+    have hstrict : quittingSoloBaseline reward who < seam.limit.value who :=
+      lt_of_le_of_ne hsoloLe (Ne.symm htight)
+    filter_upwards [
+      seam.eventually_pureContinue_of_singleton_lt_limitValue who hstrict]
+      with time hpure hactive
+    exact (hactive hpure).elim
+
+/-- **Sharp diffuse support separation.**  Every positive diffuse
+counterexample seam contains a strict plateau player who is eventually absent
+from the physical quitter support.  The remaining active source support is
+therefore a proper subset of the player set and is singleton-tight. -/
+theorem exists_strictPlateau_eventually_pureContinue_of_diffuse
+    (seam : QuittingCounterexampleSeamWitness regime)
+    (hpositive : ∀ time, 0 < quittingTailEventualAbsorption
+      (quittingDynamicDebtTailRoots seam.tail) time)
+    (hmesh : Tendsto (quittingTailConditionedAbsorptionWeight
+      (quittingDynamicDebtTailRoots seam.tail)) atTop (nhds 0)) :
+    ∃ who,
+      quittingSoloBaseline reward who < seam.limit.value who ∧
+        ∀ᶠ time : ℕ in atTop,
+          quittingDynamicDebtTailRoots seam.tail time who = PMF.pure false := by
+  obtain ⟨who, hstrict⟩ :=
+    seam.exists_singleton_lt_limitValue_of_diffuse hpositive hmesh
+  exact ⟨who, hstrict,
+    seam.eventually_pureContinue_of_singleton_lt_limitValue who hstrict⟩
+
 end QuittingCounterexampleSeamWitness
 
 end GameTheory
