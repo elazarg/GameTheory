@@ -316,7 +316,8 @@ path to terminal Nash error
 
 Divergent total absorption is sufficient, and a finite witness-retaining cycle
 with one positive-absorption phase compiles to such a path. These are genuine
-consumer theorems, but not a producer for arbitrary games: support optimality,
+consumer theorems and they close the relaxed per-tolerance compiler
+(`MATH-P0-8`), but not the producer for arbitrary games: support optimality,
 all-time individual rationality, and divergent absorption (or the corresponding
 finite cycle) remain hypotheses. See
 [SupportWitnessCompiler.md](SupportWitnessCompiler.md).

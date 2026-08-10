@@ -1,6 +1,6 @@
 # Uniform-equilibrium project pipeline
 
-**Repository checkpoint:** `90a47784` (2026-08-10). The mathematical checkpoint
+**Repository checkpoint:** `dcbaa757` (2026-08-10). The mathematical checkpoint
 `50fac9c2` includes conditioned-tail chronology, exact atomic purification,
 approximate punishment completion, and the singleton-tight deleted-complete
 diffuse compiler. **This file revised 2026-08-10 after the automated external
@@ -39,8 +39,9 @@ Raw compactness, another separator, playerwise punishment tails, an unattached
 period-one gain, and a bounded-capacity scalar by themselves do not close any
 of these exits. The priority order is now explicit:
 
-1. `MATH-P0-8` is the primary positive lane: finish the per-tolerance
-   punish-at-a-clock compiler using the landed Q161 mathematics.
+1. `MATH-P0-9` is the primary positive lane: produce, at every accuracy, a
+   support-rational divergent path or finite witness-retaining cycle consumed
+   by the landed `MATH-P0-8` compiler.
 2. `MATH-P0-12` is the grounding lane: it may advance only by eliminating one
    of the three residues above or by producing the common state-matched word an
    existing compiler consumes. Another carrier, separator, or accounting
@@ -799,7 +800,7 @@ disjunct's status corrected either way.
 
 ### `NEG-P0-2` — the orbit-side counterexample criterion
 
-- **Status:** READY
+- **Status:** SOLVED — production Lean
 - **Lane:** P0 (negative lane, complements `NEG-P0-1`)
 - **Depends:** Simon 2007 Theorem 3 `(i)⇒(iii)` — whose one uncertified step
   (farm defect register №13, the survival-window landing) **is now repaired**
@@ -2049,38 +2050,33 @@ on one table.
 divergent quit mass whose consecutive values are `δ`-linked compiles to a
 `3ε`-equilibrium, via punish-at-a-clock.
 
-**State.** `ACTIVE`, and this is the primary positive lane. The four no-gos of this
-wave jointly force any closing proof into exactly this architecture: per-`ε`
-families of unbounded period, an off-path punishment component, deviation
-pricing in the deleted deficit, and no compactness/budget/projection shortcut.
-Component inventory: phase-switch wrapper landed; stopping index `i♯` landed;
-punishment floor landed; ε-bridge landed; reached-stage transfer landed where
-its hypotheses are available. **Landed:** ~~the cumulative-advantage ledger
-`W` and its index `i*`~~
-(**landed**, `UniformEquilibrium/Quitting/Debt/Ledger/PunishClock.lean` — summand pinned to the deleted
-normalization, clocks and combinator, Abel cash-out, the assembled cap
-consuming a ledger condition); Q161's abstract maximal inequality and the
-unrestricted live-chain deviation cap, in
-`Math/Probability/DecisionVariationMaximalInequality.lean` and
-`UniformEquilibrium/Quitting/Paths/LiveChainDominationCap.lean`; plus the small
-residuals, **ceiling-IR punishment attainment and Case-2 wiring**
-(`UniformEquilibrium/Quitting/Cycles/PhaseSwitchResiduals.lean`); the truncated-ledger transfer's
-premise is **false** — the seed discrepancy at the truncation back-propagates
-geometrically, leaving a survival-weighted correction at every prefix index —
-and its honest folding lemma in `TruncationLedgerFold.lean`.
+**State.** `SOLVED`. `SupportWitnessPathCompiler.lean` retains the support-local
+one-stage witness instead of forgetting it into a stochastic rank-one process.
+For a path with support error `δ`, continuation rationality error `r`, and
+divergent total absorption, it constructs a terminal approximate Nash profile
+with error
 
-**Exact remaining seam.** `RankOneCrossing.lean` is still an abstract
-consumer. The repository does not construct, from the proposed quitting plan,
-the adaptive decision-discrepancy process whose live histories imply a score
-crossing and whose expected decision variation has the required uniform
-budget. Nor is there yet one theorem packaging those Case-1 data, the Case-2
-clock, the floor-valid punishment continuation, and the per-tolerance chain
-into the terminal `ε`-Nash object. The old `M [reported]` wording overcredited
-the paper answer; this theorem inventory is authoritative.
+```text
+2δ + r + sqrt(δ) (2 + 7M).
+```
 
-**Acceptance.** The compiler as a theorem consuming a per-tolerance family and
-producing the terminal `ε`-Nash objects the selection theorem eats. Landing it
-replaces the exact-cycle branch wholesale.
+The theorem
+`exists_isThreeEpsilonAsymptoticNash_of_divergentAbsorption_supportRationalPath`
+is the direct `3ε` compiler. The all-errors capstone
+`quittingGame_exists_uniformEquilibriumPayoff_of_supportRationalDivergentPaths`
+feeds those profiles into terminal-to-uniform selection. Finite
+witness-retaining cycles with positive absorption are converted to the same
+divergent input by `SupportWitnessPeriodic.lean`.
+
+`RankOneCrossing.lean` remains an honest abstract alternative for the setting
+where support witnesses have been forgotten. Its game-specific stochastic
+process is not constructed, but that omission does not gate this compiler.
+Q161's maximal inequality and live-chain domination results therefore remain
+useful parallel mathematics rather than an unfinished premise of `MATH-P0-8`.
+
+**Acceptance.** Met. The remaining conjecture-level obligation is upstream:
+produce the support-rational divergent paths or finite cycles at every
+accuracy. That is `MATH-P0-9`, not compiler work.
 
 ### `MATH-P0-9` — the lock/unlock dichotomy for orbit variation
 
@@ -3377,9 +3373,9 @@ QuittingThreeBranchDisjunction (the trichotomy), machine-checked -------- [L]
         |             |                    |
         +-------------+--------------------+
                        |
-        MATH-P0-8: the relaxed compiler (formalize Proposition 3) --
+        MATH-P0-8: the relaxed compiler (formalize Proposition 3) -- [L]
                      converts the open core's unbounded-variation orbit
-                     families into terminal ε-Nash objects -------------- READY
+                     families into terminal ε-Nash objects
                        |
         n = 2 capstone: quittingGame_exists_uniformEquilibriumPayoff_twoPlayer
                      (UniformEquilibrium/Quitting/Classification/TwoPlayer/Existence.lean) -- branch
@@ -3395,8 +3391,8 @@ QuittingThreeBranchDisjunction (the trichotomy), machine-checked -------- [L]
 ```
 
 The two- and three-player capstones are unconditional and do not depend on
-`MATH-P0-8`. The relaxed compiler remains one route by which the trichotomy's
-open core (`MATH-P0-9`) could close the general case. The three-player proof
+`MATH-P0-8`. The landed relaxed compiler is the principal consumer for the
+trichotomy's open producer core (`MATH-P0-9`). The three-player proof
 also isolates the new frontier sharply: analytic extraction already produces
 the normalized singleton source, while dimensions four and above need a
 strategic decoder richer than the complementary-or-single-directed-cycle
@@ -3446,7 +3442,8 @@ alternative.
   multi-owner face-circulation certificate with a punishment-valid floor into
   a uniform-payoff existence result through compact chronological selection
   and the support-witness compiler. Arbitrary-weight certificate production
-  and the distinct relaxed compiler (`MATH-P0-8`) remain open.
+  remains open. The distinct support-witness relaxed compiler
+  (`MATH-P0-8`) is landed; it waits only for those producer objects.
 
 ## Handoff maintenance
 

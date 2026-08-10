@@ -693,6 +693,11 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.isUniformEquilibriumPayoff_soloReward_of_approximate_endpointNash
 #print axioms GameTheory.isUniformEquilibriumPayoff_of_approximate_punishmentAdmissibleCycles
 
+-- Support-witness relaxed compiler and its all-errors uniform-payoff capstone.
+#print axioms GameTheory.exists_isεAsymptoticNash_of_divergentAbsorption_supportRationalPath
+#print axioms GameTheory.exists_isThreeEpsilonAsymptoticNash_of_divergentAbsorption_supportRationalPath
+#print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_supportRationalDivergentPaths
+
 -- Solved exact-cycle strata and finite global reward-shift exactification.
 #print axioms GameTheory.isUniformEquilibriumPayoff_of_isSolvedExactQuittingCycle
 #print axioms GameTheory.HasSolvedExactQuittingCycle.exists_uniformEquilibriumPayoff

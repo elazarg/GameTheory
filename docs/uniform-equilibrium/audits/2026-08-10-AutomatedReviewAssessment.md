@@ -29,17 +29,21 @@ current pipeline remain authoritative.
 5. **Three-player claim sealing.** The unconditional `Fin 3` theorem now has a
    dedicated claim, exact scope, kernel anchor, attribution to the known 1999
    result, and a separate formalization-novelty statement.
-6. **P0 priority.** `MATH-P0-8` is the primary positive lane. `MATH-P0-12` is a
-   grounding/supporting lane with a consequence-based stop rule.
+6. **P0 priority.** The review correctly favored the per-tolerance architecture,
+   but underestimated the existing support-witness implementation. `MATH-P0-8`
+   is already landed; `MATH-P0-9`, the upstream path/cycle producer, is now the
+   primary positive lane. `MATH-P0-12` remains a grounding/supporting lane with
+   a consequence-based stop rule.
 
 ## Accepted diagnosis, with calibrated wording
 
 - Q161's abstract maximal inequality and unrestricted live-chain deviation
-  cap are formalized, as is the honest truncation fold. The relaxed compiler is
-  nevertheless incomplete: `RankOneCrossing.lean` still assumes the
-  quitting-plan decision process, its live-crossing implication, and its
-  variation budget. The previous `M [reported]` completion label was too
-  strong and has been removed.
+  cap are formalized, as is the honest truncation fold. A deeper source audit
+  found that `SupportWitnessPathCompiler.lean` already bypasses the abstract
+  rank-one route: it proves the quantitative `3ε` theorem and the all-errors
+  uniform-payoff capstone from support-rational divergent paths. The missing
+  game-specific `RankOneCrossing` process is therefore an optional
+  witness-forgetting route, not a compiler dependency.
 - The conditioned diffuse compiler is a real positive result but is
   conditional on singleton tightness, small uniform mesh, and every deleted
   clock being complete. “The branch compiles” must retain those hypotheses.
@@ -60,8 +64,9 @@ current pipeline remain authoritative.
 
 ## Next mathematical checkpoint
 
-Construct the game-specific rank-one decision-discrepancy object required by
-`RankOneCrossing.lean`, or prove that the proposed per-tolerance chain supplies
-an equivalent deterministic reach bound. The checkpoint is one theorem that
-feeds Case 1 and Case 2 into the same terminal `ε`-Nash producer. More local
-counterexample-carrier infrastructure is not a substitute.
+Construct the upstream objects consumed by the landed compiler: for every
+accuracy, a support-rational path with divergent absorption, or a finite
+witness-retaining cycle with positive absorption. The best next theorem should
+bundle the existing source-tail alternatives into a producer disjunction on
+one chronological object. More local counterexample-carrier infrastructure or
+a second compiler is not a substitute.
