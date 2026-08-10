@@ -148,6 +148,78 @@ theorem mwSelfPlay_timeAverage_isεCoarseCorrelatedEq {L : ℝ} (heta : 0 < eta)
         linarith
   exact mul_le_mul_of_nonneg_left hbound hwidth.le
 
+/-- **Square-root multiplicative-weights rate.** Choosing the learning rate
+`sqrt (L / T)` turns a common positive upper bound `L` on log action counts
+into the explicit average-regret rate `2 * width * sqrt (L * T) / T`. -/
+theorem mwSelfPlay_timeAverage_isεCoarseCorrelatedEq_sqrt {L : ℝ}
+    (T : ℕ) [NeZero T] (hLpos : 0 < L) (hLT : L ≤ (T : ℝ))
+    (hwidth : 0 < width)
+    (hband : ∀ who outcome, G.utility outcome who ∈ Set.Icc (lo who) (lo who + width))
+    (hL : ∀ who, Real.log (Fintype.card (G.form.sig.Strategy who)) ≤ L) :
+    IsεCoarseCorrelatedEq G.form G.utility
+      (width * (2 * Real.sqrt (L * T)) / T)
+      (G.form.timeAverage fun round : Fin T =>
+        FinDist.pi
+          (mwProfile G (Real.sqrt (L / T)) lo width (round : ℕ))) := by
+  apply G.selfPlay_timeAverage_isεCoarseCorrelatedEq
+  intro who action
+  let gain : ℕ → G.form.sig.Strategy who → ℝ :=
+    fun round => G.normGain lo width
+      (mwProfile G (Real.sqrt (L / T)) lo width round) who
+  have halgorithm :
+      (∑ round ∈ Finset.range T,
+        (mwProfile G (Real.sqrt (L / T)) lo width round who).expect
+          (gain round)) =
+        OnlineLearning.algorithmGain (Real.sqrt (L / T)) gain T := by
+    rw [OnlineLearning.algorithmGain]
+    apply Finset.sum_congr rfl
+    intro round _
+    rw [mwProfile_eq_multiplicativeWeights G (Real.sqrt (L / T)) lo width,
+      Probability.OnlineLearning.expect_multiplicativeWeights]
+  have hscale :
+      (∑ round : Fin T,
+        (expectedUtility G.utility who
+            (G.form.mixed.play
+              (Profile.update
+                (mwProfile G (Real.sqrt (L / T)) lo width (round : ℕ)) who
+                (FinDist.pure action))) -
+          expectedUtility G.utility who
+            (G.form.mixed.play
+              (mwProfile G (Real.sqrt (L / T)) lo width (round : ℕ))))) =
+        width * (OnlineLearning.cumGain gain T action -
+          OnlineLearning.algorithmGain (Real.sqrt (L / T)) gain T) := by
+    rw [Fin.sum_univ_eq_sum_range (fun round =>
+      expectedUtility G.utility who
+          (G.form.mixed.play
+            (Profile.update
+              (mwProfile G (Real.sqrt (L / T)) lo width round) who
+              (FinDist.pure action))) -
+        expectedUtility G.utility who
+          (G.form.mixed.play
+            (mwProfile G (Real.sqrt (L / T)) lo width round))) T]
+    rw [Finset.sum_congr rfl (fun round _ =>
+      G.expectedUtility_deviation_eq_width_mul_normGain hwidth
+        (mwProfile G (Real.sqrt (L / T)) lo width round) who action)]
+    rw [← Finset.mul_sum, Finset.sum_sub_distrib, halgorithm]
+    rfl
+  rw [hscale]
+  have hbound :
+      OnlineLearning.cumGain gain T action -
+          OnlineLearning.algorithmGain (Real.sqrt (L / T)) gain T ≤
+        2 * Real.sqrt (L * T) := by
+    calc
+      OnlineLearning.cumGain gain T action -
+          OnlineLearning.algorithmGain (Real.sqrt (L / T)) gain T ≤
+          OnlineLearning.externalRegret (Real.sqrt (L / T)) gain T :=
+        OnlineLearning.fixedActionRegret_le_externalRegret
+          (Real.sqrt (L / T)) gain T action
+      _ ≤ 2 * Real.sqrt (L * T) :=
+        OnlineLearning.externalRegret_le_sqrt hLpos T hLT (hL who)
+          (fun round candidate =>
+            G.normGain_mem_Icc hwidth hband
+              (mwProfile G (Real.sqrt (L / T)) lo width round) who candidate)
+  exact mul_le_mul_of_nonneg_left hbound hwidth.le
+
 /-- The finite MW trajectory exhibits a canonical approximate CCE at every
 positive horizon. -/
 theorem exists_mwSelfPlay_isεCoarseCorrelatedEq {L : ℝ} (heta : 0 < eta)

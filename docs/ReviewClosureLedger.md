@@ -140,7 +140,7 @@ The single-pass panel observations were re-derived separately before action:
 | M-04 | Generic dependent-product normalization facts polluted the public `FinDist` API. | closed | Those implementation lemmas and `pmfPi` are private; only the finite-law product API is public. |
 | M-05 | Orthant geometry was named as if it contained regret theory. | closed | It is `GameTheoryMath.OrthantProjection`; imports and root exports were updated. |
 | M-06 | The extensionality attribute exposed the hidden PMF representation. | closed | `@[ext]` is on `ext_of_prob`; representation equality remains an untagged implementation theorem. |
-| M-07 | Online learning lacks a standalone optimally tuned square-root corollary. | queued | The game-independent fixed-rate and quadratic bounds are stable and the arbitrary-ε tuning has a live game consumer. A general closed-form tuning theorem remains math breadth. |
+| M-07 | Online learning lacks a standalone optimally tuned square-root corollary. | closed | `GameTheoryMath.OnlineLearning.externalRegret_le_sqrt` selects rate `sqrt (L / T)` and proves the closed-form `2 * sqrt (L * T)` bound. `Analysis.Learning` transports it to approximate CCE, and the two-player coordination test consumes the horizon-four specialization. |
 
 ## Analysis, tests, and examples
 

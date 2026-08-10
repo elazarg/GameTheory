@@ -8,6 +8,7 @@ those coordinates into the canonical `FinDist` representation.
 -/
 
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
+import Mathlib.Analysis.Real.Sqrt
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 noncomputable section
@@ -269,6 +270,49 @@ theorem externalRegret_le_quadratic {eta : ℝ} (heta : 0 < eta)
       externalRegret_le heta hgain T
     _ ≤ Real.log (Fintype.card A) / eta + eta * T := by
       linarith
+
+/-- Optimally tuning the quadratic bound for a positive upper bound `L` on
+the log action count gives square-root regret.  The horizon premise is exactly
+what keeps the selected learning rate `sqrt (L / T)` in the proved range
+`(0, 1]`. -/
+theorem externalRegret_le_sqrt {L : ℝ} (hLpos : 0 < L) (T : ℕ)
+    (hLT : L ≤ (T : ℝ)) (hcard : Real.log (Fintype.card A) ≤ L)
+    {gain : ℕ → A → ℝ}
+    (hgain : ∀ s a, gain s a ∈ Set.Icc (0 : ℝ) 1) :
+    externalRegret (Real.sqrt (L / T)) gain T ≤
+      2 * Real.sqrt (L * T) := by
+  have hTpos : (0 : ℝ) < T := lt_of_lt_of_le hLpos hLT
+  have hratioPos : 0 < L / (T : ℝ) := div_pos hLpos hTpos
+  have hetaPos : 0 < Real.sqrt (L / T) := Real.sqrt_pos.2 hratioPos
+  have hetaOne : Real.sqrt (L / T) ≤ 1 := by
+    rw [Real.sqrt_le_one]
+    exact (div_le_one hTpos).2 hLT
+  have hquadratic := externalRegret_le_quadratic hetaPos hetaOne hgain T
+  have hfirst :
+      Real.log (Fintype.card A) / Real.sqrt (L / T) ≤
+        L / Real.sqrt (L / T) :=
+    (div_le_div_iff_of_pos_right hetaPos).2 hcard
+  have hetaSq : (Real.sqrt (L / T)) ^ 2 = L / (T : ℝ) :=
+    Real.sq_sqrt hratioPos.le
+  have hscaled : (Real.sqrt (L / T)) ^ 2 * (T : ℝ) = L := by
+    rw [hetaSq, div_mul_cancel₀ L hTpos.ne']
+  have hquotient : L / Real.sqrt (L / T) = Real.sqrt (L / T) * T := by
+    apply (div_eq_iff hetaPos.ne').2
+    nlinarith [hscaled]
+  have hsquare : L * (T : ℝ) = (Real.sqrt (L / T) * T) ^ 2 := by
+    nlinarith [hscaled]
+  have hsqrt : Real.sqrt (L * T) = Real.sqrt (L / T) * T :=
+    (Real.sqrt_eq_iff_eq_sq (mul_nonneg hLpos.le hTpos.le)
+      (mul_nonneg (Real.sqrt_nonneg _) hTpos.le)).2 hsquare
+  calc
+    externalRegret (Real.sqrt (L / T)) gain T ≤
+        Real.log (Fintype.card A) / Real.sqrt (L / T) +
+          Real.sqrt (L / T) * T := hquadratic
+    _ ≤ L / Real.sqrt (L / T) + Real.sqrt (L / T) * T := by
+      linarith
+    _ = 2 * Real.sqrt (L * T) := by
+      rw [hquotient, hsqrt]
+      ring
 
 theorem fixedActionRegret_le_externalRegret
     (eta : ℝ) (gain : ℕ → A → ℝ) (T : ℕ) (a : A) :
