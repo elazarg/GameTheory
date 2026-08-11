@@ -97,6 +97,8 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauLocalizedO
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPartialResetTransfer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectStratification
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauFractionalResetFloor
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauFractionalResetDropout
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPairDropoutConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedExitNashificationRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedResetCycleRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloSpineOccupation
@@ -125,7 +127,12 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetExcursionRet
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceReturn
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceCapReturn
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceRatio
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetSurfaceTension
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetFaceReprojection
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticIncidenceDebtRatioRegression
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticFixedTableDiffuseIncidenceRegression
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauNashMoat
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticTwoReservoirConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDynamicCostate
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtFlow
@@ -301,6 +308,12 @@ total root defect.  Any such attempted Nashification has a first unit-weight
 move; the original collision remains positive until that move and is then
 routed across the corresponding one-player Boolean edge.  This is a local
 finite stratum, not a chronological edge or return.
+Tracking the routed coalition through the full finite reset word identifies
+an exact positive-mass pair-to-singleton member dropout.  In a counterexample
+the surviving singleton owner is either in the isolated-negative punishment
+branch or has a distinct strict joiner whose pure-Quit update restores an
+overlapping positive-mass pair.  This remains a static root transition rather
+than a Nash--Bellman continuation.
 General exit-face Nashification cannot remove those defects while retaining
 the marked inequality: a two-player regression loses collision support and
 reverses the marked endpoint inequality even under approximate Nashification.
@@ -338,6 +351,24 @@ fixes the semantic point, even though the retained terminal law still has
 positive opponent incidence.  A half-reset regression shows that the primary
 debt/incidence quotient alone can be exactly flat; the secondary minimum and
 the positive global debt floor are load-bearing.
+A background-subtracted selector first minimizes debt on the closed reset
+face.  Either that face meets the global minimum fiber, or the separated
+excess density `(D-D*)/I`
+attains.  At a slope minimizer the exact prefix action gives the nonnegative
+identity `(D-D*)*fresh + (1-survival)*D* * I <= 0`, forcing every exact cap
+root to all-Continue.  For every fixed positive incidence threshold this
+unique root has a robust positive total-defect moat under cap perturbation.
+A fixed normalized three-player table nevertheless keeps incidence uniformly
+positive while its local total defect tends to zero, so no linear diffuse
+modulus follows.  The harmonic and finite positive-part reservoirs can be
+kept on one co-realized reset law and dispatched without contamination; the
+all-Continue cap face is the remaining branch.
+The slope support extends uniformly with arbitrary additive error to points
+of sufficiently small reset debt.  Exact quantitative reprojection splits
+into a global linear face penalty or positive off-face violations with
+unbounded violation-to-reset-debt ratio.  The latter is a normalized carrier
+obstruction with joint-law provenance; it furnishes neither a finite routed
+word nor a chronological tangent.
 
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common

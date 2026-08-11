@@ -2592,6 +2592,17 @@ routes it through one of the four cells above.  Later moves may destroy that
 routed cylinder, so the theorem isolates the first full transition rather
 than inferring a cycle.
 
+Tracking the routed coalition through the whole finite word identifies a
+sharper transition.  Any positive collision that ends at zero total root
+defect crosses a full member-Continue move from an exact two-player coalition
+to its singleton, with positive cylinder mass immediately before and after
+the move.  In a counterexample that singleton has a finite alternative: its
+owner is in the isolated-negative punishment branch, or a distinct outsider
+strictly gains by joining and a pure-Quit update gives positive mass to the
+overlapping pair.  These are literal product-root transitions.  They are not
+consecutive Nash--Bellman edges, so iterating the pair replacement still
+requires a chronology or a conserved routed account.
+
 Both questions now have sharp alternatives.  The same marked rows admit a
 compact shifted-tail cluster.  Either that cluster lies strictly above the
 minimum fiber, or it lies on the fiber and the sum of the *other players'*
@@ -2663,6 +2674,43 @@ all-Continue is its unique exact cap--Nash root and fixes its semantic pair.
 The second minimization is essential: a literal half-reset regression scales
 debt and total opponent incidence from one to one half with exactly constant
 ratio while its cap correspondence still contains only all-Continue.
+
+Background subtraction gives a sharper canonical phase.  Minimize debt on
+the closed reset face before dividing.  If that minimum equals the global
+minimum `D_*`, the reset face already contacts the minimum fiber.  Otherwise
+the excess density `(D-D_*)/I` attains at positive incidence.  For every exact
+cap--Nash prefix at this slope minimizer, the identities
+`D' = c*D` and `I' = F+c*I` reduce slope minimality to
+`(D-D_*)*F + (1-c)*D_* * I <= 0`; nonnegativity forces `F=0` and `c=1`.
+Hence all-Continue is the only exact cap root without a secondary
+minimization.  At every fixed positive incidence threshold, compactness and
+uniqueness also give a positive total-Nash-defect moat which persists for
+nearby caps.  The moat has no uniform modulus as incidence tends to zero, and
+nearby-cap topology does not identify the cap of an actual shifted tail.
+A fixed normalized three-player table realizes this limitation sharply:
+opponent incidence stays at least one half while total local Nash defect is
+`1/(n+2)`, and every exact root Nash against the displayed cap is
+all-Continue.  Thus even a constant depending on the fixed reward table
+cannot linearly charge diffuse incidence to local defect.
+Exact face support does extend nonlinearly: for every tolerance there is a
+reset-debt radius on which the surface-tension inequality loses only that
+tolerance.  The quantitative reprojection problem has a sharp alternative.
+Either one linear multiple of reset debt controls the tension violation on
+the whole joint carrier, or positive off-face violations have arbitrarily
+large violation-to-reset-debt ratio.  The second branch supplies the precise
+normalized tangent input; it does not by itself select a finite endpoint word
+or a Bellman successor.
+
+The harmonic and finite positive-part reservoirs can be kept on one limiting
+outcome law.  At an explicit positive minimum debt gate, either a strict
+singleton joiner is already present, or the punishment moat coexists with one
+joint reset law: the harmonic branch gives the quantitative negative/Never
+alternative, while the finite branch gives positive opponent incidence and
+feeds that same law into the fixed-law reset dispatch.  Its unresolved branch
+is precisely the separated all-Continue cap face above.  Thus the remaining
+synthesis is a reset-face reprojection theorem: produce a finite routed reset
+word or a state-matched chronology from that cap plateau, without replacing
+its law by an unrelated compact limit.
 
 Best-response reset gives a complementary global transfer law.  Resetting
 player `i` to asymptotic best response erases `d_i` and transfers at least
