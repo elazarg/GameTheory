@@ -83,6 +83,7 @@ import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
 import UniformEquilibrium.Diagnostics.Quitting.MinimalFinCounterexample
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStack
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticEqualityStratum
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloOwnerRefinement
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
 import UniformEquilibrium.Quitting.Root.TerminalSemanticMoment
 import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupation
@@ -162,9 +163,14 @@ coordinate: positive debt has unit deleted survival and zero endpoint premium.
 The minimum stratum is either an exact all-Continue semantic self-loop, or a
 unique positive-debt owner has positive hazard, is singleton-tight, and
 deters an otherwise-profitable outsider through exit/collision risk.  Every
-minimizing carrier point is the limit of executable literal semantic pairs.
-The residual is a state-matched inverse-limit/conditioned extraction or a
-direct consumer for this solo-owner deterrence face.
+such solo row either closes against the owner's singleton vector, forcing the
+quantitative isolated-negative obstruction, or has a concrete affine blocker.
+The non-atomic branch always has a strict collision cliff at the attractive
+outsider.  If that outsider is also the blocker, collision is below the
+owner-solo payoff, which is below the prescribed payoff and outsider singleton.
+Every minimizing carrier point is the limit of executable literal semantic
+pairs.  The residual is a state-matched inverse-limit/conditioned extraction
+or a direct consumer for this finite deterrence pattern.
 
 Every unaugmented value on the optimized tail already dominates the behavioral
 punishment floor, so every finite chronological tail segment reverses to a

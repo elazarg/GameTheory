@@ -2313,9 +2313,14 @@ debt coordinate.  Consequently every positive debtor has unit deleted
 survival and zero positive endpoint premium.  The minimum stratum is either an
 exact all-Continue semantic self-loop, or a unique positive-debt owner has
 positive hazard, is singleton-tight, and deters an otherwise-profitable
-outsider through exit/collision risk.  This closes the compact semantic-pair
-carrier and its equality stratum without asserting that its limiting pair is
-itself attained by one profile.
+outsider through exit/collision risk.  The solo row either closes against the
+owner's singleton vector, forcing the quantitative isolated-negative
+obstruction, or has a concrete affine blocker.  The non-atomic branch always
+has a strict collision cliff at the attractive outsider; if that outsider is
+also the blocker, collision is below the owner-solo payoff, which is below the
+prescribed payoff and outsider singleton.  This closes the
+compact semantic-pair carrier and its finite equality-stratum refinement
+without asserting that its limiting pair is itself attained by one profile.
 
 The remaining premise for this consumer is literal provenance: the endpoint
 gap supplied by conditioned geometry must occur at a positive-debt coordinate
