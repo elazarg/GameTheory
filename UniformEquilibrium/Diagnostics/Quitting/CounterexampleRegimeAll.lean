@@ -71,6 +71,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSuppor
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerExactRoot
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerPacketEdge
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerPacketDichotomy
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerOutsiderJetDichotomy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerApproxPunishment
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentTwoOwnerSupport
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentSupportLiftFarkas
@@ -83,6 +84,7 @@ import UniformEquilibrium.Diagnostics.Quitting.MinimalFinCounterexample
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStack
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticEqualityStratum
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
+import UniformEquilibrium.Quitting.Root.TerminalSemanticMoment
 import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupation
 import UniformEquilibrium.Quitting.AbsorptionPath.FiniteWindowRefusalReweighting
 import UniformEquilibrium.Quitting.AbsorptionPath.FlowCostateObstructionAdapter
@@ -157,11 +159,12 @@ finite-dimensional carrier invariant under every root prefix.  Total debt
 attains a minimum on this carrier, and in a counterexample the minimum is
 positive.  Every exact Nash prefix of a minimizing pair fixes every debt
 coordinate: positive debt has unit deleted survival and zero endpoint premium.
-One positive debtor leaves only its own marginal uncontrolled; two positive
-debtors force all displayed Quit masses to zero.  Every minimizing carrier
-point is the limit of executable literal semantic pairs.  The residual is to
-run conditioned geometry on such a realizing triangular family and produce a
-literal premium, or consume the exact solo-owner/all-Continue equality face.
+The minimum stratum is either an exact all-Continue semantic self-loop, or a
+unique positive-debt owner has positive hazard, is singleton-tight, and
+deters an otherwise-profitable outsider through exit/collision risk.  Every
+minimizing carrier point is the limit of executable literal semantic pairs.
+The residual is a state-matched inverse-limit/conditioned extraction or a
+direct consumer for this solo-owner deterrence face.
 
 Every unaugmented value on the optimized tail already dominates the behavioral
 punishment floor, so every finite chronological tail segment reverses to a
@@ -267,22 +270,22 @@ rather than requiring a second jet.  For arbitrary hazards below one, the
 Bellman-eliminated continuation has active coordinates
 `w_i=(z_i-p_j*r_i({j}))/(1-p_j)` and symmetrically; both active gains vanish,
 because a two-owner root has no triple or higher coalition.  If the inactive
-gain signs and continuation floor/upper-box bounds also hold, this packages
-one exact Nash--Bellman edge.  Those gates, and any reachable return, lasso,
-or cycle, remain separate.  Along the packet-selected ray
+gain signs hold, this packages one exact Nash--Bellman edge.  Artificial
+continuation floor and upper-box bounds can be recentered around the boundary
+and disappear from bare edge existence; the original bounds remain later
+viability obligations.  Any reachable return, lasso, or cycle is separate.
+Along the packet-selected ray
 `p_i=t*mass_i`, positive subunit hazards and survival are automatic.  Active
 continuation is exactly `boundary_i-t*tangent_i/(1-t*mass_j)`: nonnegative
 tangent makes its upper bound automatic, strict floor slack is stable for
 small `t`, and a tight floor with positive tangent fails at every positive
 scale.  Strict outsider singleton slack also gives eventual outsider Nash
-signs through an exact finite polynomial regression.  Tight outsider rows
-and inactive continuation bounds remain independent finite gates.
-Consequently either every sufficiently small positive scale supplies a
-positive-charge exact edge, or some punishment boundary, inactive singleton
-row, or upper-box coordinate is tight.  At an active positive-tangent
-coordinate, equality with the punishment value blocks the ray at every
-positive scale; it does not realize the min--max infimum.  A tight inactive
-singleton row is exactly the finite outsider regression starting from zero.
+signs through an exact finite polynomial regression.  A singleton-tight
+outsider has the exact form `t*(linear+t*quadratic)`.  Consequently either
+every sufficiently small positive scale supplies a positive-charge exact
+edge, or a tight inactive owner has positive linear coefficient, or zero
+linear coefficient followed by positive quadratic coefficient.  This is a
+finite support-entry pivot, not the enlarged-support root itself.
 The tight active punishment face is nevertheless asymptotically consumable
 at any fixed tolerance.  Its exact floor deficit tends to zero with the
 hazard scale, and approximate min--max supplies a player-specific

@@ -68,8 +68,30 @@ theorem sigmaValue_twoOwner_outside
     intro owner howner
     simp only [support, Finset.mem_insert, Finset.mem_singleton] at howner
     rcases howner with rfl | rfl
-    · simp [opponents, hwhoFirst, hwhoFirst.symm]
-    · simp [opponents, hwhoSecond, hwhoSecond.symm]
+    · simp [opponents, hwhoFirst.symm]
+    · simp [opponents, hwhoSecond.symm]
+  have hdiffFirst : support \ {first} = {second} := by
+    ext owner
+    simp only [support, Finset.mem_sdiff, Finset.mem_insert,
+      Finset.mem_singleton]
+    constructor
+    · rintro ⟨howner, hnotFirst⟩
+      exact howner.resolve_left hnotFirst
+    · intro hsecond
+      refine ⟨Or.inr hsecond, ?_⟩
+      intro hfirst
+      exact hne (hfirst.symm.trans hsecond)
+  have hdiffSecond : support \ {second} = {first} := by
+    ext owner
+    simp only [support, Finset.mem_sdiff, Finset.mem_insert,
+      Finset.mem_singleton]
+    constructor
+    · rintro ⟨howner, hnotSecond⟩
+      exact howner.resolve_right hnotSecond
+    · intro hfirst
+      refine ⟨Or.inl hfirst, ?_⟩
+      intro hsecond
+      exact hne (hfirst.symm.trans hsecond)
   have hsplit (J : Finset ι) (hJ : J ⊆ support) :
       opponents \ J = (support \ J) ∪ (opponents \ support) := by
     ext owner
@@ -149,8 +171,9 @@ theorem sigmaValue_twoOwner_outside
     hsurvival {second} (by simp [support]),
     hsurvival {first} (by simp [support]),
     hsurvival {first, second} (by simp [support])]
+  rw [hdiffFirst, hdiffSecond]
   simp [support, x, quittingTwoOwnerHazard, quittingTwoOwnerLeadingVariation,
-    hne, hne.symm, hwhoFirst, hwhoSecond, weightOfReward,
+    hne, hne.symm, weightOfReward,
     quittingSingletonTerminal, quittingPairJoinTerminal,
     quittingTripleJoinTerminal]
   ring

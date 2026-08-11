@@ -2304,24 +2304,28 @@ The attainable semantic closure supplies an exact finite-dimensional version
 of the same reduction.  Map every executable profile to its prescribed
 terminal payoff and all-behavior envelope.  The closure of these pairs is
 compact, is generated sequentially by executable profiles, and is invariant
-under every fixed root prefix.  Total nonnegative debt attains a minimum on
+under every fixed root prefix.  Its prescribed coordinate lies in the finite
+convex hull of zero and the terminal reward vectors, giving an exact rational
+carrier-realizability screen.  Total nonnegative debt attains a minimum on
 this carrier.  Nonexistence makes that minimum positive.  Exact Nash prefixing
 cannot lower the minimum and cannot increase a coordinate, so it fixes every
 debt coordinate.  Consequently every positive debtor has unit deleted
-survival and zero positive endpoint premium.  One positive debtor leaves only
-its own marginal uncontrolled; two positive debtors force every marginal Quit
-mass to vanish.  This closes the compact semantic-pair carrier and its equality
-stratum without asserting that its limiting pair is itself attained by one
-profile.
+survival and zero positive endpoint premium.  The minimum stratum is either an
+exact all-Continue semantic self-loop, or a unique positive-debt owner has
+positive hazard, is singleton-tight, and deters an otherwise-profitable
+outsider through exit/collision risk.  This closes the compact semantic-pair
+carrier and its equality stratum without asserting that its limiting pair is
+itself attained by one profile.
 
 The remaining premise for this consumer is literal provenance: the endpoint
 gap supplied by conditioned geometry must occur at a positive-debt coordinate
 of a realizing triangular family for the minimum carrier point.  A conditioned
 payoff or dynamic-debt annotation does not satisfy this premise without the
 triangular extraction.  Equivalently, the extraction may collapse to the exact
-solo-owner/all-Continue equality face, which requires an existing atomic or
-plateau consumer.  This is independent of chronological state return: each
-prefixed profile is used only as a global competitor.
+solo-owner deterrence face or all-Continue self-loop.  These require a
+state-matched inverse limit or an existing atomic/plateau consumer.  This is
+independent of chronological state return: each prefixed profile is used only
+as a global competitor.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules
@@ -3357,10 +3361,11 @@ w2 = (z2 - p1*r2({1})) / (1-p1).
 
 When `D12=D21=0`, both active Quit and Continue values equal the pinned
 boundary exactly for every such hazard pair.  Under explicit inactive-owner
-Nash signs and continuation floor/upper-box bounds, this is one exact
-Nash--Bellman edge.  It does not supply a reachable return, lasso, or cycle;
-those global gates, rather than a hidden second-order active equation, are
-the two-owner residue.
+Nash signs, this is one exact Nash--Bellman edge.  Auxiliary continuation
+floor and upper-box bounds can be recentered around the packet boundary and
+therefore do not obstruct bare edge existence; the original bounds remain
+later viability obligations.  The edge does not supply a reachable return,
+lasso, or cycle.
 
 The tail-derived packet selects a canonical scale ray
 `p_i=t*mass_i`.  For every `0<t<1`, its two active hazards are positive and
@@ -3371,26 +3376,22 @@ is
 w_i = boundary_i - t*tangent_i/(1-t*mass_j).
 ```
 
-Thus nonnegative tangent makes the active upper-box gate automatic, while
-active floor admissibility is exactly
+Thus nonnegative tangent makes the active upper-box estimate automatic, while
+admissibility for a prescribed floor is exactly
 `t*tangent_i ≤ (boundary_i-floor_i)(1-t*mass_j)`.  Strict floor slack
 therefore works at sufficiently small scale, but a tight floor with positive
 tangent fails at every positive scale.  For an inactive owner the gain is an
 explicit finite polynomial `sigma_i(t)-boundary_i`; strict singleton slack
-makes it negative eventually.  Tight outsider rows expose independent
-pair/higher coefficients, and inactive continuation floor/box bounds remain
-separate.  The packet ray now yields one exact edge precisely under those
-visible gates, still without a return.
-
-These gates form a finite dichotomy.  Either every sufficiently small
-positive scale gives a positive-charge exact Nash--Bellman edge, or at least
-one punishment boundary, inactive singleton row, or upper-box coordinate is
-tight.  Equality between an active positive-tangent boundary and its
-punishment value blocks the packet ray at every positive scale; it does not
-realize the min--max infimum, whose attainment is not known.  A tight inactive
-singleton row is exactly the finite outsider regression starting from zero,
-so its pair/higher coefficients are the next explicit data rather than a
-hidden continuity premise.
+makes it negative eventually.  For bare exact-edge existence, the only
+remaining local gate is an inactive singleton-tight row.  Its regression is
+exactly `t*(linear+t*quadratic)`, where the linear coefficient is
+mass-weighted pair pressure and the quadratic coefficient is the mixed triple
+correction.  Hence every small positive scale gives an exact positive-charge
+edge unless some tight outsider has positive linear coefficient, or zero
+linear coefficient followed by positive quadratic coefficient.  This
+positive jet is a finite support-entry pivot; it does not construct the
+enlarged-support root, restore the original floor/box viability, or supply a
+return.
 
 The tight active punishment face can be consumed approximately, but only
 with scale-dependent semantics.  Its exact deficit
