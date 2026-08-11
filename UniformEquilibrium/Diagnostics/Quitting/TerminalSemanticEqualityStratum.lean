@@ -312,6 +312,134 @@ theorem quittingTerminalSemantic_minimum_positiveDebt_opponents_quit_eq_zero
   rw [habs] at hle
   exact le_antisymm hle ENNReal.toReal_nonneg
 
+omit [Fintype ι] in
+/-- If every displayed opponent has zero Quit mass, forcing the selected
+player to Continue produces the all-Continue root. -/
+theorem quittingRoot_update_pureContinue_eq_allContinue_of_opponents_quit_eq_zero
+    (root : ι → PMF Bool) (who : ι)
+    (hzero : ∀ other, other ≠ who → (root other true).toReal = 0) :
+    Function.update root who (PMF.pure false) =
+      (quittingAllContinueRoot : ι → PMF Bool) := by
+  funext player
+  by_cases hplayer : player = who
+  · subst player
+    simp [quittingAllContinueRoot]
+  · rw [Function.update_of_ne hplayer]
+    exact (pmf_eq_pure_false_of_apply_true_toReal_eq_zero
+      (root player) (hzero player hplayer)).trans rfl
+
+/-- On the deleted all-Continue face, the selected player's two endpoints
+are exactly its singleton reward and its declared continuation coordinate.
+-/
+theorem quittingRoot_endpoints_eq_singleton_tail_of_opponents_quit_eq_zero
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (tail : Payoff ι) (root : ι → PMF Bool) (who : ι)
+    (hzero : ∀ other, other ≠ who → (root other true).toReal = 0) :
+    quittingRootQuitPayoff reward tail root who =
+        reward (quittingSingletonTerminal who) who ∧
+      quittingRootContinuePayoff reward tail root who = tail who := by
+  have hupdate :=
+    quittingRoot_update_pureContinue_eq_allContinue_of_opponents_quit_eq_zero
+      root who hzero
+  constructor
+  · unfold quittingRootQuitPayoff
+    have hroot : Function.update root who (PMF.pure true) =
+        Function.update (quittingAllContinueRoot : ι → PMF Bool) who
+          (PMF.pure true) := by
+      funext player
+      by_cases hplayer : player = who
+      · subst player
+        simp
+      · simp only [Function.update_of_ne hplayer]
+        have hpure := pmf_eq_pure_false_of_apply_true_toReal_eq_zero
+          (root player) (hzero player hplayer)
+        simpa [quittingAllContinueRoot] using hpure
+    rw [hroot]
+    exact quittingRootQuitPayoff_allContinueRoot reward tail who
+  · unfold quittingRootContinuePayoff
+    rw [hupdate]
+    have hself :
+        Function.update (quittingAllContinueRoot : ι → PMF Bool) who
+            (PMF.pure false) = quittingAllContinueRoot := by
+      exact Function.update_eq_self who quittingAllContinueRoot
+    rw [← hself]
+    simpa only [quittingRootContinuePayoff] using
+      (quittingRootContinuePayoff_allContinueRoot reward tail who)
+
+/-- A positive minimum-debt coordinate dominates its singleton quitting
+reward.  This conclusion uses the exact Nash root supplied at that semantic
+point; it does not extend to arbitrary carrier coordinates. -/
+theorem quittingTerminalSemantic_minimum_positiveDebt_singleton_le
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (pair : QuittingTerminalSemanticPair ι)
+    (root : ι → PMF Bool)
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hpair : pair ∈ quittingTerminalSemanticCarrier reward)
+    (hmin : ∀ candidate ∈ quittingTerminalSemanticCarrier reward,
+      quittingTerminalSemanticDebtSum pair ≤
+        quittingTerminalSemanticDebtSum candidate)
+    (hnash : IsεQuittingRootNash reward pair.1 0 root)
+    (who : ι) (hpositive : 0 < quittingTerminalSemanticDebt pair who) :
+    reward (quittingSingletonTerminal who) who ≤ pair.1 who := by
+  have hface := quittingTerminalSemantic_minimum_positiveDebt_face
+    reward pair root hM hreward hpair hmin hnash who hpositive
+  have hzero : ∀ other, other ≠ who →
+      (root other true).toReal = 0 := by
+    intro other hne
+    exact quittingTerminalSemantic_minimum_positiveDebt_opponents_quit_eq_zero
+      reward pair root hM hreward hpair hmin hnash hpositive hne
+  have hendpoints :=
+    quittingRoot_endpoints_eq_singleton_tail_of_opponents_quit_eq_zero
+      reward pair.1 root who hzero
+  have hpremium : quittingRootEndpointDifference reward pair.1 root who ≤ 0 :=
+    max_eq_left_iff.mp (by
+      simpa [quittingRootExercisePremium] using hface.2.symm)
+  simpa [quittingRootEndpointDifference, hendpoints.1, hendpoints.2] using
+    hpremium
+
+/-- If a positive minimum-debt coordinate itself Quits with positive mass at
+an exact Nash root, then its singleton reward equals its prescribed value.
+The root's only possible absorption is that player's singleton event. -/
+theorem quittingTerminalSemantic_minimum_positiveDebt_singleton_eq_of_quit_pos
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (pair : QuittingTerminalSemanticPair ι)
+    (root : ι → PMF Bool)
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hpair : pair ∈ quittingTerminalSemanticCarrier reward)
+    (hmin : ∀ candidate ∈ quittingTerminalSemanticCarrier reward,
+      quittingTerminalSemanticDebtSum pair ≤
+        quittingTerminalSemanticDebtSum candidate)
+    (hnash : IsεQuittingRootNash reward pair.1 0 root)
+    (who : ι) (hpositive : 0 < quittingTerminalSemanticDebt pair who)
+    (hquit : 0 < (root who true).toReal) :
+    reward (quittingSingletonTerminal who) who = pair.1 who := by
+  have hzero : ∀ other, other ≠ who →
+      (root other true).toReal = 0 := by
+    intro other hne
+    exact quittingTerminalSemantic_minimum_positiveDebt_opponents_quit_eq_zero
+      reward pair root hM hreward hpair hmin hnash hpositive hne
+  have hendpoints :=
+    quittingRoot_endpoints_eq_singleton_tail_of_opponents_quit_eq_zero
+      reward pair.1 root who hzero
+  have hendpoint : IsεQuittingRootEndpointNash reward pair.1 0 root :=
+    (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+      reward pair.1 root).mpr hnash
+  have hdiff_nonneg :
+      0 ≤ quittingRootEndpointDifference reward pair.1 root who := by
+    have hproduct := (hendpoint who).2
+    simp only [neg_zero] at hproduct
+    exact nonneg_of_mul_nonneg_left (by simpa [mul_comm] using hproduct) hquit
+  have hprescribed_le_singleton :
+      pair.1 who ≤ reward (quittingSingletonTerminal who) who := by
+    simpa [quittingRootEndpointDifference, hendpoints.1, hendpoints.2] using
+      hdiff_nonneg
+  exact le_antisymm
+    (quittingTerminalSemantic_minimum_positiveDebt_singleton_le
+      reward pair root hM hreward hpair hmin hnash who hpositive)
+    hprescribed_le_singleton
+
 /-- Two distinct positive debts at the semantic minimum force every displayed
 Quit mass to vanish. -/
 theorem quittingTerminalSemantic_minimum_twoPositiveDebt_all_quit_eq_zero
@@ -336,6 +464,136 @@ theorem quittingTerminalSemantic_minimum_twoPositiveDebt_all_quit_eq_zero
       reward pair root hM hreward hpair hmin hnash hsecond hdistinct
   · exact quittingTerminalSemantic_minimum_positiveDebt_opponents_quit_eq_zero
       reward pair root hM hreward hpair hmin hnash hfirst hplayer
+
+/-- **Minimum-stratum alternative.**  Given a positive debt coordinate and
+an exact Nash root at a minimum semantic pair, either all-Continue is itself
+an exact Nash semantic self-loop, or the positive-debt set has a unique owner
+and the selected root is a genuine solo-owner deterrence row.
+
+In the deterrence branch the owner Quits with positive mass and is exactly
+singleton-tight.  Every outsider Continues purely and satisfies the exact
+Quit-versus-Continue endpoint inequality.  At least one outsider has a
+singleton reward strictly above its declared continuation, so that inequality
+cannot be explained by the all-Continue row: the owner's possible exit and
+the associated collision outcomes are essential. -/
+theorem quittingTerminalSemantic_minimum_stratum_alternative
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (pair : QuittingTerminalSemanticPair ι)
+    (root : ι → PMF Bool)
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hpair : pair ∈ quittingTerminalSemanticCarrier reward)
+    (hmin : ∀ candidate ∈ quittingTerminalSemanticCarrier reward,
+      quittingTerminalSemanticDebtSum pair ≤
+        quittingTerminalSemanticDebtSum candidate)
+    (hnash : IsεQuittingRootNash reward pair.1 0 root)
+    (first : ι) (hfirst : 0 < quittingTerminalSemanticDebt pair first) :
+    (IsεQuittingRootNash reward pair.1 0
+          (quittingAllContinueRoot : ι → PMF Bool) ∧
+        quittingTerminalSemanticPrefix reward quittingAllContinueRoot pair =
+          pair) ∨
+      ∃ owner other,
+        0 < quittingTerminalSemanticDebt pair owner ∧
+        (∀ player, 0 < quittingTerminalSemanticDebt pair player →
+          player = owner) ∧
+        other ≠ owner ∧
+        pair.1 other < reward (quittingSingletonTerminal other) other ∧
+        0 < (root owner true).toReal ∧
+        reward (quittingSingletonTerminal owner) owner = pair.1 owner ∧
+        (∀ player, player ≠ owner → root player = PMF.pure false) ∧
+        ∀ player, player ≠ owner →
+          quittingRootQuitPayoff reward pair.1 root player ≤
+            quittingRootContinuePayoff reward pair.1 root player := by
+  have hdebt : ∀ who, 0 ≤ quittingTerminalSemanticDebt pair who :=
+    quittingTerminalSemanticDebt_nonneg_of_mem_carrier
+      reward hM hreward hpair
+  by_cases hsecond : ∃ second, second ≠ first ∧
+      0 < quittingTerminalSemanticDebt pair second
+  · obtain ⟨second, hdistinct, hsecondPositive⟩ := hsecond
+    have hzero :=
+      quittingTerminalSemantic_minimum_twoPositiveDebt_all_quit_eq_zero
+        reward pair root hM hreward hpair hmin hnash
+          (first := first) (second := second) hdistinct.symm hfirst
+            hsecondPositive
+    have hroot : root = (quittingAllContinueRoot : ι → PMF Bool) := by
+      funext player
+      have hpure := pmf_eq_pure_false_of_apply_true_toReal_eq_zero
+        (root player) (hzero player)
+      simpa [quittingAllContinueRoot] using hpure
+    have hnashAll : IsεQuittingRootNash reward pair.1 0
+        (quittingAllContinueRoot : ι → PMF Bool) := by
+      simpa [hroot] using hnash
+    exact Or.inl ⟨hnashAll,
+      quittingTerminalSemanticPrefix_allContinue_eq_of_isZeroNash
+        reward pair hdebt hnashAll⟩
+  · have hunique : ∀ player,
+        0 < quittingTerminalSemanticDebt pair player → player = first := by
+      intro player hplayer
+      by_contra hne
+      exact hsecond ⟨player, hne, hplayer⟩
+    by_cases hnashAll : IsεQuittingRootNash reward pair.1 0
+        (quittingAllContinueRoot : ι → PMF Bool)
+    · exact Or.inl ⟨hnashAll,
+        quittingTerminalSemanticPrefix_allContinue_eq_of_isZeroNash
+          reward pair hdebt hnashAll⟩
+    · have hnotDominate : ¬ ∀ player,
+          reward (quittingSingletonTerminal player) player ≤ pair.1 player :=
+        fun hdominate => hnashAll
+          ((isZeroQuittingRootNash_allContinue_iff_singleton_le
+            reward pair.1).mpr hdominate)
+      push Not at hnotDominate
+      obtain ⟨other, hotherGain⟩ := hnotDominate
+      have hfirstDominate :
+          reward (quittingSingletonTerminal first) first ≤ pair.1 first :=
+        quittingTerminalSemantic_minimum_positiveDebt_singleton_le
+          reward pair root hM hreward hpair hmin hnash first hfirst
+      have hotherNe : other ≠ first := by
+        intro heq
+        subst other
+        exact (not_lt_of_ge hfirstDominate) hotherGain
+      have hzeroOpponent : ∀ player, player ≠ first →
+          (root player true).toReal = 0 := by
+        intro player hne
+        exact
+          quittingTerminalSemantic_minimum_positiveDebt_opponents_quit_eq_zero
+            reward pair root hM hreward hpair hmin hnash hfirst hne
+      have hpureOpponent : ∀ player, player ≠ first →
+          root player = PMF.pure false := by
+        intro player hne
+        exact pmf_eq_pure_false_of_apply_true_toReal_eq_zero
+          (root player) (hzeroOpponent player hne)
+      have hownerQuit : 0 < (root first true).toReal := by
+        by_contra hnot
+        have hownerZero : (root first true).toReal = 0 :=
+          le_antisymm (le_of_not_gt hnot) ENNReal.toReal_nonneg
+        have hroot : root =
+            (quittingAllContinueRoot : ι → PMF Bool) := by
+          funext player
+          by_cases hplayer : player = first
+          · subst player
+            have hpure := pmf_eq_pure_false_of_apply_true_toReal_eq_zero
+              (root first) hownerZero
+            simpa [quittingAllContinueRoot] using hpure
+          · simpa [quittingAllContinueRoot] using
+              (hpureOpponent player hplayer)
+        apply hnashAll
+        simpa [hroot] using hnash
+      have hownerTight :=
+        quittingTerminalSemantic_minimum_positiveDebt_singleton_eq_of_quit_pos
+          reward pair root hM hreward hpair hmin hnash first hfirst hownerQuit
+      have houtsiderEndpoint : ∀ player, player ≠ first →
+          quittingRootQuitPayoff reward pair.1 root player ≤
+            quittingRootContinuePayoff reward pair.1 root player := by
+        intro player hne
+        have hendpoint : IsεQuittingRootEndpointNash reward pair.1 0 root :=
+          (isZeroQuittingRootEndpointNash_iff_isZeroQuittingRootNash
+            reward pair.1 root).mpr hnash
+        have hdiff :=
+          quittingRootEndpointDifference_nonpos_of_quitProbability_eq_zero
+            reward pair.1 root player hendpoint (hzeroOpponent player hne)
+        simpa [quittingRootEndpointDifference] using hdiff
+      exact Or.inr ⟨first, other, hfirst, hunique, hotherNe, hotherGain,
+        hownerQuit, hownerTight, hpureOpponent, houtsiderEndpoint⟩
 
 /-- In the absence of a uniform payoff, a minimum-total-debt semantic pair
 has a positive debt coordinate and every exact Nash root lies on that
