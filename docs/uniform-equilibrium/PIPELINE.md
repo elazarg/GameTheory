@@ -2335,6 +2335,15 @@ deleted survival is identically one on this spine, so the standard
 player-deleted-clock compiler is inapplicable; the live quantity is the
 owner's own hazard/occupation product.
 
+The plateau branch is finite at the reward-table level.  Its prescribed vector
+lies in the reward-moment polytope and dominates every player's own singleton
+reward.  At every positive-debt coordinate, however, either Never strictly
+beats the prescribed value or a coalition other than that player's singleton
+does.  The semantic carrier also supplies executable profiles converging
+jointly to this prescribed/envelope pair.  What remains is tightness of the
+terminal outcome laws: limiting reward-moment membership does not by itself
+select one profile realizing the limiting atom distribution.
+
 The remaining premise for a terminal consumer is strategic realization.  The
 semantic chronology is state-matched inside the compact closure, but a carrier
 pair need not itself be the terminal semantics of one behavior profile.  The
