@@ -18,11 +18,12 @@ points are therefore jointly realized.  The selected debt decrease and the
 opposite-coordinate transfer account are exact, while the original marked
 stage cylinder retains its `1 - lambda` fraction.
 
-The move does not automatically reach the selected player's zero-debt face.
-It reaches that face exactly when the one-row gain exhausts the player's
-entire source debt.  Nor does it preserve a pre-existing zero-debt coordinate
-of another player.  These are the two precise fences on iterating the bridge
-as a reset-face path.
+Every strict move stays off the selected player's zero-debt face: the full
+one-row gain is at most the player's source debt, so the remaining debt is at
+least its `1 - lambda` fraction.  Exact landing forces a unit move whose full
+gain exhausts the source debt.  Nor does the move preserve a pre-existing
+zero-debt coordinate of another player.  These are the two precise fences on
+iterating the bridge as a reset-face path.
 -/
 
 noncomputable section
@@ -126,6 +127,113 @@ theorem one_sub_mul_stageCoalitionMass_le_stagePartialBestEndpoint
       mul_le_mul_of_nonneg_left hroot
         (quittingLiveMass_nonneg reward profile stage)
 
+/-! ## The semantic-debt face barrier -/
+
+/-- A strict partial move cannot consume a larger fraction of the mover's
+global semantic debt than its interpolation weight.  This is the debt-side
+counterpart of marked-cylinder retention. -/
+theorem one_sub_mul_terminalSemanticDebt_le_stagePartialBestEndpoint
+    (profile : (quittingGame reward).BehaviorProfile)
+    (who : iota) (stage : ℕ) (lambda : ℝ)
+    (hlambda0 : 0 ≤ lambda) (hlambda1 : lambda ≤ 1)
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M) :
+    (1 - lambda) * quittingTerminalSemanticDebt
+        (quittingTerminalSemanticPair reward profile) who ≤
+      quittingTerminalSemanticDebt
+        (quittingTerminalSemanticPair reward
+          (Function.update profile who
+            (quittingStagePartialBestEndpointBehaviorDeviation
+              reward profile who stage lambda hlambda0 hlambda1))) who := by
+  let gain := quittingLiveMass reward profile stage *
+    quittingRootCoordinateNashDefect reward
+      (quittingTerminalSemanticPair reward
+        (quittingAllContinueProfileSpine reward profile (stage + 1))).1
+      (quittingProfileLiveRoot reward profile stage) who
+  have hgainLe : gain ≤ quittingTerminalSemanticDebt
+      (quittingTerminalSemanticPair reward profile) who := by
+    exact quittingLiveMass_mul_coordinateNashDefect_le_initialDebt
+      (reward := reward) profile who stage hM hreward
+  have hscaled : lambda * gain ≤ lambda *
+      quittingTerminalSemanticDebt
+        (quittingTerminalSemanticPair reward profile) who :=
+    mul_le_mul_of_nonneg_left hgainLe hlambda0
+  have hdecrease := quittingTerminalSemanticDebt_stagePartialBestEndpoint_eq
+    reward profile who stage lambda hlambda0 hlambda1
+  dsimp only at hdecrease
+  rw [hdecrease]
+  dsimp only [gain] at hscaled
+  nlinarith
+
+/-- Positive source debt remains positive after every strict fractional
+reached-row best-endpoint move. -/
+theorem terminalSemanticDebt_stagePartialBestEndpoint_pos
+    (profile : (quittingGame reward).BehaviorProfile)
+    (who : iota) (stage : ℕ) (lambda : ℝ)
+    (hlambda0 : 0 ≤ lambda) (hlambda1 : lambda < 1)
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hsource : 0 < quittingTerminalSemanticDebt
+      (quittingTerminalSemanticPair reward profile) who) :
+    0 < quittingTerminalSemanticDebt
+      (quittingTerminalSemanticPair reward
+        (Function.update profile who
+          (quittingStagePartialBestEndpointBehaviorDeviation
+            reward profile who stage lambda hlambda0 hlambda1.le))) who := by
+  have hbarrier :=
+    one_sub_mul_terminalSemanticDebt_le_stagePartialBestEndpoint
+      (reward := reward) profile who stage lambda hlambda0 hlambda1.le
+        hM hreward
+  exact (mul_pos (sub_pos.mpr hlambda1) hsource).trans_le hbarrier
+
+/-- **Exact zero-face landing forces the incidence-drop seam.**
+
+If a reached-row partial best-endpoint move starts with positive semantic debt
+and lands exactly on the mover's zero-debt face, its weight is `1`; moreover
+the full one-row gain exhausts the entire source debt.  Thus no strict
+fractional move can realize the tempting two-face landing while retaining a
+positive `1 - lambda` share of the marked atom. -/
+theorem eq_one_and_fullGain_of_stagePartialBestEndpoint_hits_zeroDebt
+    (profile : (quittingGame reward).BehaviorProfile)
+    (who : iota) (stage : ℕ) (lambda : ℝ)
+    (hlambda0 : 0 ≤ lambda) (hlambda1 : lambda ≤ 1)
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hsource : 0 < quittingTerminalSemanticDebt
+      (quittingTerminalSemanticPair reward profile) who)
+    (htarget : quittingTerminalSemanticDebt
+      (quittingTerminalSemanticPair reward
+        (Function.update profile who
+          (quittingStagePartialBestEndpointBehaviorDeviation
+            reward profile who stage lambda hlambda0 hlambda1))) who = 0) :
+    lambda = 1 ∧
+      quittingLiveMass reward profile stage *
+          quittingRootCoordinateNashDefect reward
+            (quittingTerminalSemanticPair reward
+              (quittingAllContinueProfileSpine reward profile (stage + 1))).1
+            (quittingProfileLiveRoot reward profile stage) who =
+        quittingTerminalSemanticDebt
+          (quittingTerminalSemanticPair reward profile) who := by
+  have hbarrier :=
+    one_sub_mul_terminalSemanticDebt_le_stagePartialBestEndpoint
+      (reward := reward) profile who stage lambda hlambda0 hlambda1 hM hreward
+  rw [htarget] at hbarrier
+  have hfactor : 0 ≤ 1 - lambda := sub_nonneg.mpr hlambda1
+  have hproduct : (1 - lambda) * quittingTerminalSemanticDebt
+      (quittingTerminalSemanticPair reward profile) who = 0 := by
+    exact le_antisymm hbarrier (mul_nonneg hfactor hsource.le)
+  have hlambda : lambda = 1 := by
+    rcases mul_eq_zero.mp hproduct with hzero | hzero
+    · linarith
+    · exact (hsource.ne' hzero).elim
+  refine ⟨hlambda, ?_⟩
+  have hdecrease := quittingTerminalSemanticDebt_stagePartialBestEndpoint_eq
+    reward profile who stage lambda hlambda0 hlambda1
+  dsimp only at hdecrease
+  rw [htarget, hlambda] at hdecrease
+  norm_num at hdecrease
+  linarith
+
 /-- **Same-profile two-face bridge.**  A concentrated marked row whose
 non-owner defect sum is positive supplies one actual fractional reset.
 
@@ -133,14 +241,16 @@ The semantic pair and complete terminal law on both sides come from the two
 displayed literal profiles.  The selected player's debt decreases by the
 legal reached-row gain; the changes on all other debt coordinates satisfy an
 exact balance identity and the minimum-reference lower bound; and the same
-marked stage cylinder remains positive.  The final equivalence records that
-the selected zero-debt face is reached only when this single row exhausts the
-whole source debt. -/
+marked stage cylinder remains positive.  The selected player's target debt
+also remains strictly positive.  Thus this state-preserving move cannot itself
+produce a second zero-debt face. -/
 theorem exists_concentrated_partialReset_sameProfile_twoFaceBridge
     (minimum : QuittingTerminalSemanticPair iota)
     (profile : (quittingGame reward).BehaviorProfile)
     (owner : iota) (stage : ℕ)
     (terminal : {S : Finset iota // S.Nonempty})
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
     (hminimum : ∀ candidate ∈ quittingTerminalSemanticCarrier reward,
       quittingTerminalSemanticDebtSum minimum ≤
         quittingTerminalSemanticDebtSum candidate)
@@ -186,6 +296,7 @@ theorem exists_concentrated_partialReset_sameProfile_twoFaceBridge
             quittingStageCoalitionMass reward profile stage terminal ≤
           quittingStageCoalitionMass reward targetProfile stage terminal ∧
         0 < quittingStageCoalitionMass reward targetProfile stage terminal ∧
+        0 < quittingTerminalSemanticDebt target other ∧
         (quittingTerminalSemanticDebt target other = 0 ↔
           quittingTerminalSemanticDebt source other = gain) := by
   let tail := quittingTerminalSemanticPair reward
@@ -214,6 +325,10 @@ theorem exists_concentrated_partialReset_sameProfile_twoFaceBridge
       (quittingStageCoalitionMass_le_liveMass reward profile stage terminal)
   have hgain : 0 < gain := by
     exact mul_pos (mul_pos hlambda0 hlive) hotherDefect
+  have hsourceDebt : 0 < quittingTerminalSemanticDebt source other := by
+    have hcollectable := quittingLiveMass_mul_coordinateNashDefect_le_initialDebt
+      (reward := reward) profile other stage hM hreward
+    exact (mul_pos hlive hotherDefect).trans_le hcollectable
   have hsourcePoint :
       (source, quittingTerminalOutcomeMass reward profile) ∈
         quittingTerminalSemanticLawCarrier reward := by
@@ -263,8 +378,12 @@ theorem exists_concentrated_partialReset_sameProfile_twoFaceBridge
         quittingStageCoalitionMass reward profile stage terminal :=
       mul_pos (sub_pos.mpr hlambda1) hstage
     exact hpositive.trans_le hretention
+  have htargetDebt : 0 < quittingTerminalSemanticDebt target other := by
+    exact terminalSemanticDebt_stagePartialBestEndpoint_pos
+      (reward := reward) profile other stage lambda hlambda0.le hlambda1
+        hM hreward hsourceDebt
   refine ⟨hsourcePoint, htargetPoint, hgain, hdecrease, htransferExact,
-    htransfer, hretention, htargetStage, ?_⟩
+    htransfer, hretention, htargetStage, htargetDebt, ?_⟩
   constructor <;> intro h
   · linarith
   · linarith
