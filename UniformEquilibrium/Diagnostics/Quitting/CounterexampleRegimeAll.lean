@@ -83,6 +83,7 @@ import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
 import UniformEquilibrium.Diagnostics.Quitting.MinimalFinCounterexample
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStack
 import UniformEquilibrium.Diagnostics.Quitting.TerminalEndpointGapTransport
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticConditionedEndpointRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticEqualityStratum
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloOwnerRefinement
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumSpine
@@ -90,6 +91,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAllContinuePlatea
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauTightness
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloSpineOccupation
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSupportEntry
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAtomicSupportBoundary
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
 import UniformEquilibrium.Quitting.Root.TerminalSemanticMoment
 import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupation
@@ -147,7 +149,8 @@ cap-only arguments.
 
 Literal exact-root prefixing supplies a separate global-minimality consumer:
 maximum terminal exploitability is nonincreasing, while a positive singleton
-gap strictly decreases total playerwise terminal debt.  This lexicographic
+gap strictly decreases total playerwise best-response debt (the unilateral
+exploitability gap).  This lexicographic
 descent removes both unique-maximal-debtor and fixed-player premises.  Its
 positive-part normal form is an action of the survival-weighted block monoid:
 opponent survival transports literal debt and the positive root endpoint
@@ -175,8 +178,14 @@ The non-atomic branch always has a strict collision cliff at the attractive
 outsider.  If that outsider is also the blocker, collision is below the
 owner-solo payoff, which is below the prescribed payoff and outsider singleton.
 Every minimizing carrier point is the limit of executable literal semantic
-pairs.  The residual is a state-matched inverse-limit/conditioned extraction
-or a direct consumer for this finite deterrence pattern.
+pairs.  Compact predecessor seriality and owner-occupation accounting reduce
+every counterexample to a positive minimum all-Continue plateau or a
+provenance-preserving atomic solo edge.  Plateau best responses retain a
+profitable Never, at-stop collision, or before-stop opponent-absorption atom
+and reset the selected player's debt while transferring the gap to another
+player.  The atomic edge has a sharp first support boundary, including at pure
+Quit.  The residual is time-local charging of the marked plateau atom or a
+nonlinear multi-outsider support-or-punishment theorem.
 
 Every unaugmented value on the optimized tail already dominates the behavioral
 punishment floor, so every finite chronological tail segment reverses to a

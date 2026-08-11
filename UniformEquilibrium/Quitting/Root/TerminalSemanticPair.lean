@@ -14,6 +14,11 @@ An actual behavior profile determines a finite-dimensional pair consisting of
 its prescribed terminal payoff and its all-behavior best-response envelope.
 The closure of these attainable pairs is compact under a uniform reward bound.
 
+Their difference is the playerwise **best-response debt**: equivalently, the
+unilateral regret or exploitability gap against the fixed opponents.  This is
+not online-learning regret.  The debt terminology reflects its exact
+survival/charge propagation law rather than a cumulative hindsight sum.
+
 Prefixing by any fixed product root is an explicit continuous map on semantic
 pairs.  The map agrees exactly with literal root/profile splicing and therefore
 preserves the attainable closure.  No conditioned payoff, stored Bellman
@@ -54,7 +59,8 @@ def quittingTerminalSemanticPrefix
         (quittingRootContinuePayoff reward
           (Function.update pair.1 who (pair.2 who)) root who))
 
-/-- Playerwise debt coordinate of a terminal semantic pair. -/
+/-- Playerwise best-response debt of a terminal semantic pair, equivalently
+its unilateral exploitability gap. -/
 def quittingTerminalSemanticDebt
     (pair : QuittingTerminalSemanticPair ι) (who : ι) : ℝ :=
   pair.2 who - pair.1 who

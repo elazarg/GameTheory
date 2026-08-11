@@ -11,8 +11,13 @@ import UniformEquilibrium.Quitting.Stationary.LiveMass
 /-!
 # Terminal deviation debt under an exact root prefix
 
-For a literal continuation profile, a player's terminal deviation debt is
-the all-behavior best-response supremum minus the prescribed terminal payoff.
+For a literal continuation profile, a player's **best-response debt** is the
+all-behavior best-response supremum minus the prescribed terminal payoff.  It
+is equivalently the player's unilateral regret or exploitability gap against
+the fixed opponents.  It is not online-learning regret: there is no cumulative
+comparison with a fixed action in hindsight.  The word `debt` records the
+dynamic accounting proved here—survival transports it, a positive exercise
+premium consumes it, and opponent absorption kills it.
 Prepending a finite root action admits an exact Bellman formula for this debt.
 If the root is an exact Nash action against the continuation's literal payoff,
 the formula implies coordinatewise debt monotonicity.
@@ -30,7 +35,9 @@ open Math.Probability Math.PMFProduct
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
-/-- Playerwise literal terminal deviation debt of a behavior profile. -/
+/-- Playerwise literal best-response debt of a behavior profile: the
+unilateral behavioral exploitability gap, not cumulative online-learning
+regret. -/
 def quittingTerminalDeviationDebt
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (profile : (quittingGame reward).BehaviorProfile) (who : ι) : ℝ :=

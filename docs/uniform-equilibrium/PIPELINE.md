@@ -2267,7 +2267,9 @@ plateau, or realize a product-root word.
 
 **Literal prefix descent.** For every executable suffix `σ`, choose an exact
 mixed Nash root against its literal terminal payoff and prepend it to `σ`.
-The playerwise all-behavior terminal debt has the exact positive-part form
+The playerwise best-response debt—the all-behavior unilateral regret or
+exploitability gap `bestResponseValue - prescribedPayoff`, not cumulative
+online-learning regret—has the exact positive-part form
 
 ```text
 d_i(root :: σ) = (c_i * d_i(σ) - a_i)₊,
@@ -2308,8 +2310,14 @@ least `min delta eta` minus the first-row opponent-collision error and the
 conditioned-endpoint approximation error, uniformly in `alpha`.  Hence this
 bridge feeds literal lexicographic descent as soon as the conditioned endpoint
 and positive-singleton witness are attached to the same actual profiles.  The
-current projective conditioned tail and semantic plateau do not supply that
-same-player co-realization automatically.
+current projective conditioned tail does not supply that same-player
+co-realization automatically.  More sharply, an all-Continue semantic
+plateau cannot supply it from its own realizing profiles: on a positive
+singleton coordinate the prescribed payoff converges above the singleton,
+and conditioning on absorption can only increase a nonnegative actual payoff.
+Thus every convergent canonical conditioned endpoint also lies above the
+singleton.  The plateau route must instead retain the selected pure stop and
+charge its before-stop, at-stop, or Never mass directly.
 
 The attainable semantic closure supplies an exact finite-dimensional version
 of the same reduction.  Map every executable profile to its prescribed
@@ -2357,15 +2365,21 @@ counterexample lies in exactly the two-form search regime: a positive minimum
 all-Continue semantic plateau, or a quantitative isolated-negative atomic
 solo row.
 
-The atomic branch retains its minimum-carrier prefix edge.  If the owner's
-hazard is interior, decrease the solo rate to the first value at which all
-inactive rows are weakly deterred.  Some outsider is exactly tight there.
-Activating an isolated tight outsider with neutral owner collision derivative
-would produce a genuine two-owner exact Nash root at the same minimum tail,
-contradicting unit deleted survival of the positive debt.  Therefore the
-interior atomic branch has a finite support boundary with either a nonzero
-owner reciprocal-collision increment or a second cotight outsider.  The pure-
-Quit atomic boundary remains separate.
+The atomic branch retains its minimum-carrier prefix edge.  Decrease the solo
+rate to the first value at which all inactive rows are weakly deterred; some
+outsider is exactly tight there.  Activating an isolated tight outsider with
+a neutral owner collision derivative would produce a genuine two-owner exact
+Nash root at the same minimum tail, contradicting unit deleted survival of
+the positive debt.  Below rate one, the finite boundary therefore has either
+a nonzero owner reciprocal-collision increment or a second cotight outsider.
+At rate one the one-sided complementarity condition sharpens this to a
+strictly negative increment or a cotight outsider.  In the negative branch
+the reverse entrant increment is zero, yet the entrant-alone payoff to the
+owner exceeds the owner singleton by at least the positive punishment gap
+`punishmentValue - solo`; the tight entrant is therefore provably not the
+missing punisher.  The remaining atomic theorem is a simultaneous
+multi-outsider active-set alternative: exact support enlargement, a product
+opponent row capping the owner at its singleton, or a compilable cycle.
 
 The plateau branch is finite at the reward-table level.  Its prescribed vector
 lies in the reward-moment polytope and dominates every player's own singleton
@@ -2375,17 +2389,22 @@ does.  The semantic carrier also supplies executable profiles converging
 jointly to this prescribed/envelope pair.  Pure-time best-response
 approximants have a subsequential terminal law whose reward moment is exactly
 the limiting envelope; a profitable Never or non-own-singleton atom retains
-uniformly positive mass along that subsequence.  Thus no probability-tightness
-premise remains.  The residual is strategic co-realization: the deviation law
-belongs to one player's varying best-response sequence, not to a common
-equilibrium chronology.
+uniformly positive mass along that subsequence.  The selected atom is now
+split literally into Never, a collision containing the debtor at its selected
+stop, or opponent absorption before that stop.  The same replacement drives
+the selected player's debt to zero, so the counterexample gap transfers to
+one fixed different player along a subsequence.  Iterating this statement
+cycles player labels only, not profiles or semantic states.  Thus no
+probability-tightness or witness-selection premise remains.  The residual is
+time disintegration and strategic co-realization: aggregate terminal mass
+must be charged to a survival-weighted stage of one executable chronology.
 
 The remaining premise for a terminal consumer is strategic realization.  The
 semantic chronology is state-matched inside the compact closure, but a carrier
 pair need not itself be the terminal semantics of one behavior profile.  The
 remaining task is to consume the all-Continue escape plateau or the
-isolated-negative atomic solo row's pure-Quit/nonzero-collision/cotight
-support strata; no compactness, state-matching, or diffuse solo-occupation
+isolated-negative atomic solo row's nonlinear multi-outsider support boundary;
+no compactness, state-matching, pure-Quit exception, or diffuse solo-occupation
 premise remains in this semantic-carrier route.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
