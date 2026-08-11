@@ -2319,6 +2319,48 @@ Thus every convergent canonical conditioned endpoint also lies above the
 singleton.  The plateau route must instead retain the selected pure stop and
 charge its before-stop, at-stop, or Never mass directly.
 
+Finite-window periodic renewal now realizes the canonical conditioned value
+literally, though on a different actual family.  Repeating the source window
+from `t` through `t+N` produces an ordinary product behavior profile whose
+payoff is exactly the normalized restart delivery; as `N` tends to infinity,
+these payoffs converge to the canonical value conditioned on eventual
+absorption.  Its full behavioral cap is the already-landed finite maximum of
+one-pass phase stops and periodic refusal.  Thus annotated-cap identification
+is unnecessary.  The remaining renewal premise is near-minimality: neither
+the maximum- nor total-debt infimum upper-bounds those periodic caps, and a
+cyclic shift may retain a fixed exercise or refusal excess.  A useful renewal
+consumer must charge that explicit excess or show an exact-prefix repair
+preserves the conditioned payoff and singleton gap.
+
+Cap--Nash endpoint transport gives the corresponding sharp statement on
+actual total-debt near-minimizers.  For an actual profile `sigma`, choose an
+exact mixed Nash root against its coordinatewise behavioral cap and execute
+`sigma` after joint Continue.  If `c` is the root's joint Continue mass, then
+every literal best-response debt, and therefore total debt, is multiplied
+exactly by `c`.  Writing `D_*` for the infimum of actual total debt, this gives
+a division-free absorption charge and, when `D_*>0`, a survival-odds bound by
+the relative excess above `D_*`.  A finite joining-loss constant then bounds
+each singleton-to-cap gap.  On the semantic carrier one may instead choose a
+root against `cap-q`: if the pair is within `epsilon` of the positive minimum
+`D`, the same root has
+
+`(D-q) * absorption <= epsilon`
+
+and simultaneously bounds every singleton-to-comparison gap by
+
+`D + epsilon - q + joiningLoss * epsilon/(D-q-epsilon)
+  + |prescribed-comparison|`.
+
+Thus a fixed conditioned singleton gap cannot survive on a co-realized
+near-minimizing family: first let `epsilon` vanish, then let `q` increase to
+`D`.  This is not a renewal-tightness theorem.  Periodized conditioned
+profiles need not be total-debt near-minimizers, and iterated cap--Nash roots
+may freeze at an all-Continue cap plateau.  This last obstruction is exact:
+once the shifted endpoint margin exceeds the two explicit joining-loss error
+terms, every exact Nash root against the unshifted cap is literally
+all-Continue.  A useful iterated construction therefore needs a separate
+nontrivial-root selector before first-order normalization.
+
 The attainable semantic closure supplies an exact finite-dimensional version
 of the same reduction.  Map every executable profile to its prescribed
 terminal payoff and all-behavior envelope.  The closure of these pairs is
@@ -2427,6 +2469,34 @@ as one unilateral deviation: diffuse rows may keep each individually
 selectable defect small while their survival-weighted sum stays positive.
 The required consumer must either force this occupation to vanish or extract
 one matching reset/debt-transfer label from it.
+
+The maximum-debt objective removes the artificial cost of changing that
+label.  Maximum semantic exploitability attains a minimum on the compact
+carrier, and every positive minimax point is again an all-Continue plateau.
+If a displayed pair is within `epsilon` of the minimax floor and every
+auxiliary shift stays `rho` inside the critical faces, exact Nash selection
+has absorption at most `epsilon/(rho+epsilon)`.  Along an actual profile,
+choose at each shifted state a player of maximal debt.  On the shared next
+state the next maximizer scores at least the old label, so the dynamic
+coordinate-costate switch has nonpositive loss.  The stopped telescope then
+charges selected-opponent absorption to the local defect of the same selected
+coordinate plus one `epsilon`; a rowwise floor estimate converts this to an
+unweighted clock at the positive minimax scale with only a factor two on the
+defect occupation.  If the old owner loses a fixed amount of tail debt, the
+new maximizer receives that amount on the same tail.  Thus label drift is now
+literal debt transfer rather than an unpriced error.
+
+Best-response reset gives a complementary global transfer law.  Resetting
+player `i` to asymptotic best response erases `d_i` and transfers at least
+that much total debt to the opposite simplex face.  On the same pure-time
+terminal law, either one opponent is both a positive transfer recipient and
+a positive quitting-incidence label, or two distinct opponents form an exact
+separator; the separator is impossible with at most two players.  For larger
+player sets no current theorem turns that separation alone into punishment or
+a cycle.  The live dynamic residual is therefore the occupation of defects
+on changing maximal-debt owners and the own-singleton events which their
+deleted clocks do not see.  The competing exit remains the negative/Never
+zero-slack vertex germ.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules

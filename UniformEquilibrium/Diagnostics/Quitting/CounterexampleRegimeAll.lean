@@ -93,6 +93,9 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloSpineOccupati
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSupportEntry
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAtomicSupportBoundary
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAuxiliaryNashBudget
+import UniformEquilibrium.Diagnostics.Quitting.TerminalCapNashEndpointTransport
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCapNashDebtSupport
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCapNashNearMinimum
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumDebtSimplex
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticWeightedAuxiliaryNashBudget
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumAggregateSurplus
@@ -104,6 +107,10 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauIncidence
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectCharge
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectTelescope
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPositivePartSplit
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDebtTransfer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDynamicCostate
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtConsumer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticNegativeVertexGerm
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloQuantitativePassport
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStackAllContinueRegression
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
@@ -125,6 +132,7 @@ import UniformEquilibrium.Quitting.Cycles.ConditionedDiffuseStrategicRescaling
 import UniformEquilibrium.Quitting.Cycles.ConditionedProductPurification
 import UniformEquilibrium.Quitting.Cycles.ConditionedSingletonStrategicPurification
 import UniformEquilibrium.Quitting.Cycles.ConditionedTangentSeam
+import UniformEquilibrium.Quitting.Cycles.ConditionedPeriodicRenewal
 import UniformEquilibrium.Quitting.Cycles.PeriodOneTangentAtlas
 import UniformEquilibrium.Quitting.Cycles.PeriodicNormalizedSeam
 import UniformEquilibrium.Quitting.Debt.Dynamic.DynamicDebtCapChargedAnchorCounterexample
@@ -218,6 +226,62 @@ occupation.  Uniform near-minimum tails reduce all excess terms to one
 epsilon, but diffuse defect occupation is not automatically one player's
 collectible regret.  A matched reset/debt-transfer theorem, or a direct bound
 on that occupation, is the remaining dynamic consumer.
+
+The maximum-debt objective gives a sharper dynamically aligned version.
+Maximum semantic exploitability attains its minimum on the same compact
+carrier, every positive minimax point is again an all-Continue plateau, and a
+root selected a fixed distance inside a near-minimax auxiliary moat has
+absorption bounded by the minimax excess divided by that distance.  Along an
+actual chronology, choose a player of maximal debt at every shifted state.
+Changing to the next maximizer has nonpositive switching cost on the shared
+tail, so one stopped telescope keeps opponent absorption and local defect on
+the same coordinate while paying only one near-minimality error.  It also
+converts the debt-weighted charge into an unweighted selected-opponent clock
+at the positive minimax scale.  Independently, a literal best-response reset
+transfers the erased debt to the opposite simplex face: its recipient either
+matches an opponent in the same terminal incidence law, or a genuine
+two-opponent separator remains.  The unresolved term is now the defect
+occupation of changing maximal-debt owners, together with the own-singleton
+vertex events invisible to their deleted clocks.
+
+Cap--Nash prefixing gives an actual-profile counterpart with no jointly
+realized cap premise.  Select an exact mixed Nash root against the common
+continuation profile's coordinatewise best-response cap, then execute that
+same profile after joint Continue.  Every literal debt coordinate and the
+uniform random-deviation audit loss are multiplied exactly by the root's
+joint Continue mass.  Hence positive total-debt infimum charges absorption
+and its survival odds to the displayed excess above that infimum.  The sharp
+joining-loss constant then transports every solo endpoint to the cap.  More
+strongly, selecting against `cap - q` at a near-minimum semantic pair gives a
+single root with a quantitative absorption moat and a simultaneous singleton
+floor on every prescribed or comparison coordinate.  Sending the excess to
+zero and then `q` to the positive minimum excludes a persistent conditioned
+singleton gap whenever the comparison value is co-realized by those same
+near-minimizers.  It does not make independently periodized renewal profiles
+near-minimal or identify a chronological owner occupation.  An explicit
+comparison of the two moat errors also forces every exact Nash root against
+the unshifted cap to be literally all-Continue.  Thus iterating arbitrary
+cap--Nash prefixes close to the minimum can freeze and supplies no automatic
+nonzero tangent.
+
+At a negative zero-slack debt vertex, stationary escape has an exact
+consumer.  If outsiders do not gain by joining the owner's singleton exit,
+any stationary semantic germ whose honest owner payoff approaches the
+singleton and whose owner debt vanishes forces the punishment value below
+that singleton and compiles the singleton vector.  A counterexample therefore
+has either a strict joiner or a fixed positive punishment moat separating all
+stationary caps from the singleton.  The same alternative is co-realized with
+the plateau's harmonic-Never/opponent-charge law; the remaining obstruction is
+genuinely nonstationary.
+
+Finite-window renewal closes one older provenance seam without identifying a
+stored cap.  Periodically repeating a longer source-tail window is an ordinary
+product behavior profile, its literal payoff is exactly the normalized
+restart delivery, and those payoffs converge to the canonical value
+conditioned on eventual absorption.  The full cap is already the exact finite
+maximum of refusal and first-pass phase stops.  What renewal does not preserve
+is minimax or lexicographic near-minimality; a counterexample must expose a
+stabilized refusal/phase-stop excess on these honest periodic profiles.
 
 Every unaugmented value on the optimized tail already dominates the behavioral
 punishment floor, so every finite chronological tail segment reverses to a
