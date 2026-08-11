@@ -2739,6 +2739,25 @@ defects on that fiber.  In the last branch one actual other player has a
 legal best-endpoint deviation with exact positive payoff gain, and the same
 coalition cylinder is routed without loss.  What remains is to turn changing
 selected players/actions into a return or punishment construction.
+Finite-label extraction freezes one non-owner player and Boolean best endpoint
+on a strict subsequence, together with a joint root/tail limit carrying
+positive coalition mass and quantitative positive defect.  That limit is
+provably not exact Nash, so it cannot be inserted directly into the cap-return
+or exact-cycle interfaces.  It is now a fixed local Nashification/transport
+problem rather than a player-varying occupation problem.
+If the concentrated coalition is a singleton opponent, the marked owner's
+positive Quit advantage vanishes.  The exact counterexample alternatives are
+a fixed third-player strict joiner, owner-side table gain canceled by other
+coalition states in the mixed row, or a fixed punishment moat.  Excluding
+owner table-joining removes the cancellation branch; positive singleton mass
+alone is not a stationary or conditioned singleton germ.
+In the strict tail-escape alternative, direction is not contradictory.  For
+an exact cap--Nash prefix of the escaped tail, absorption spends exactly
+`D(tail)-D(prefix)`; reaching the minimum within a tolerance is equivalent to
+spending the tail excess up to that tolerance.  When singleton rewards lie
+below the tail cap, all-Continue is exact and stalls with zero spend.  A return
+requires tail reset, sufficient absorption charge, and positive survival when
+incidence must be retained.
 In the linear branch, arbitrary fractional endpoint words retain incidence
 and satisfy the exact augmented floor
 `retention*initialExcess <= finalExcess + penalty*finalResetDebt`.

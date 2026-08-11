@@ -136,6 +136,9 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojection
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionWindow
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionTemporalSplit
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionConcentratedConsumer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionFixedLabel
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticConcentratedSingletonConsumer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticStrictTailEscapeReturn
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticLinearPenaltyResetConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticIncidenceDebtRatioRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticFixedTableDiffuseIncidenceRegression
@@ -433,7 +436,16 @@ actual shifted tails gives a singleton cylinder, strict escape above the
 minimum fiber, or a uniform positive defect on other players at the minimum
 fiber.  The latter selects a legal best-endpoint deviation with exact positive
 payoff gain and no-loss coalition routing; recurrence/punishment compilation
-is the remaining step.
+is the remaining step.  Finite-label extraction freezes one non-owner player,
+one best endpoint, and a joint root/tail limit with positive coalition mass
+and quantitative positive defect.  The limit is therefore provably non-Nash,
+so it cannot enter an exact reset or cycle compiler without Nashification.
+In the singleton-cylinder branch, owner defect control becomes vanishing
+positive Quit advantage and yields a third-player strict joiner, an
+owner-join gain canceled by other coalition states, or a punishment moat.
+The tail-escape branch is orientation-consistent: cap--Nash return is exactly
+equivalent to spending the tail's excess debt by absorption, while an
+all-Continue cap face can stall with zero spend.
 
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common
