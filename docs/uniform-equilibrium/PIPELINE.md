@@ -2335,6 +2335,17 @@ deleted survival is identically one on this spine, so the standard
 player-deleted-clock compiler is inapplicable; the live quantity is the
 owner's own hazard/occupation product.
 
+The occupation product closes that apparent third branch.  If owner survival
+vanishes, the first solo row is already an endpoint-Nash atom; in a
+counterexample its own singleton reward is at most minus the terminal gap and
+strictly below its punishment value.  If owner survival stays positive, the
+owner hazards tend to zero.  Compactness and closed endpoint-Nash constraints
+then produce a minimum-fiber all-Continue Nash cluster point, contradicting
+the global no-plateau certificate of the solo branch.  Hence every
+counterexample lies in exactly the two-form search regime: a positive minimum
+all-Continue semantic plateau, or a quantitative isolated-negative atomic
+solo row.
+
 The plateau branch is finite at the reward-table level.  Its prescribed vector
 lies in the reward-moment polytope and dominates every player's own singleton
 reward.  At every positive-debt coordinate, however, either Never strictly
@@ -2351,10 +2362,9 @@ equilibrium chronology.
 The remaining premise for a terminal consumer is strategic realization.  The
 semantic chronology is state-matched inside the compact closure, but a carrier
 pair need not itself be the terminal semantics of one behavior profile.  The
-exact extraction may collapse to the solo-owner deterrence spine or the
-all-Continue semantic plateau.  The remaining task is to consume one of these
-two strategic chronologies; no compactness or state-matching premise remains
-in this semantic-carrier route.
+remaining task is to consume the all-Continue escape plateau or the
+isolated-negative atomic solo row; no compactness, state-matching, or diffuse
+solo-occupation premise remains in this semantic-carrier route.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules

@@ -489,6 +489,13 @@ theorem exists_positiveMinimumPlateau_or_fixedOwnerSoloSemanticSpine_of_no_unifo
           (root time)) ∧
         (∀ time, ¬ IsεQuittingRootNash reward (pair time).1 0
           (quittingAllContinueRoot : ι → PMF Bool)) ∧
+        (¬ ∃ candidate : QuittingTerminalSemanticPair ι,
+          candidate ∈ quittingTerminalSemanticCarrier reward ∧
+          (∀ other ∈ quittingTerminalSemanticCarrier reward,
+            quittingTerminalSemanticDebtSum candidate ≤
+              quittingTerminalSemanticDebtSum other) ∧
+          IsεQuittingRootNash reward candidate.1 0
+            (quittingAllContinueRoot : ι → PMF Bool)) ∧
         (∀ time, quittingTerminalSemanticDebt (pair time) owner = debt) ∧
         (∀ time player, player ≠ owner →
           quittingTerminalSemanticDebt (pair time) player = 0) ∧
@@ -606,6 +613,17 @@ theorem exists_positiveMinimumPlateau_or_fixedOwnerSoloSemanticSpine_of_no_unifo
           (quittingAllContinueRoot : ι → PMF Bool) := by
       intro time hnashAll
       exact hplateau ⟨pair time, hpairCarrier time, hpairSum time, hnashAll⟩
+    have hnoMinimumPlateau : ¬ ∃ candidate : QuittingTerminalSemanticPair ι,
+        candidate ∈ quittingTerminalSemanticCarrier reward ∧
+        (∀ other ∈ quittingTerminalSemanticCarrier reward,
+          quittingTerminalSemanticDebtSum candidate ≤
+            quittingTerminalSemanticDebtSum other) ∧
+        IsεQuittingRootNash reward candidate.1 0
+          (quittingAllContinueRoot : ι → PMF Bool) := by
+      rintro ⟨candidate, hcandidate, hcandidateMin, hnashAll⟩
+      apply hplateau
+      refine ⟨candidate, hcandidate, ?_, hnashAll⟩
+      exact le_antisymm (hcandidateMin base hbase) (hmin candidate hcandidate)
     have hdeterrence : ∀ time,
         (∀ player, 0 < quittingTerminalSemanticDebt
           (pair (time + 1)) player → player = owner) ∧
@@ -663,7 +681,8 @@ theorem exists_positiveMinimumPlateau_or_fixedOwnerSoloSemanticSpine_of_no_unifo
       quittingOpponentSurvivalWeight_eq_one_of_fixedOwner_pureOutsiders
         root owner hpureAll
     refine Or.inr ⟨pair, root, owner, debt, hownerPositiveZero,
-      hpairCarrier, hpairMin, hprefix, hnash, hnoPlateauAt, hdebtConstant,
+      hpairCarrier, hpairMin, hprefix, hnash, hnoPlateauAt,
+      hnoMinimumPlateau, hdebtConstant,
       hotherDebtZero, ?_, hpureAll, hrootSolo, hownerSurvival, ?_, ?_⟩
     · intro time
       exact (hdeterrence time).2.1
