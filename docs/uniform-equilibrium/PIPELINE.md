@@ -2607,6 +2607,13 @@ two-player exact regression follows `pair -> singleton -> all-Continue` and
 ends at zero root defect, while the dropout player strictly prefers Quit at
 the pair row.  Routed mass therefore needs a same-row sign certificate before
 it can enter a strict-toggle or Boolean-curl consumer.
+Recomputed best-endpoint provenance gives precisely a weak certificate: at
+the forced full Continue overwrite, payoff gain equals the mover's local Nash
+defect.  A positive defect makes the dropout strict; zero defect is exact
+Quit/Continue indifference.  This tie is real, not a proof artifact: an exact
+two-player word uses only recomputed best endpoints, retains positive
+incidence and a negative singleton, and still reaches all-Continue through a
+neutral pair dropout.  The global proof must exclude or consume this tie.
 
 Both questions now have sharp alternatives.  The same marked rows admit a
 compact shifted-tail cluster.  Either that cluster lies strictly above the
@@ -2712,6 +2719,13 @@ in finite windows of those same profiles, and every moving row's
 survival-weighted owner defect is negligible relative to the tension scale.
 The window cutoffs can drift without bound: terminal-law compactness supplies
 neither a common absorption-normalized Bellman window nor a successor edge.
+There is nevertheless an exact exhaustive temporal split.  Either a fixed
+positive stage atom recurs along a subsequence, producing a literal semantic
+prefix with positive root-coalition mass and vanishing normalized owner
+defect, or the same finite windows normalize to unit coalition clocks whose
+largest atom tends to zero.  The diffuse clock is profile-owned but has no
+exact-Nash policy or common shifted-tail state, so it is not yet an instance
+of the conditioned-diffuse compiler.
 In the linear branch, arbitrary fractional endpoint words retain incidence
 and satisfy the exact augmented floor
 `retention*initialExcess <= finalExcess + penalty*finalResetDebt`.
@@ -2740,6 +2754,13 @@ stationary unilateral cap is zero, and the selected debt share is literal
 full behavioral regret.  The inequality `solo < punishment <= 0` is exactly
 opposite to the punishment-admissibility gate, excluding both the period-one
 completed-cycle compiler and arbitrary instant-punishment continuation.
+Independent rare-hazard scaling cannot preserve this punishment geometry.
+A fixed normalized three-player table has punishment value `-1`, attained by
+a sure two-opponent collision, but shrinking both opponents' independent Quit
+marginals to zero sends the owner's stationary cap to `1` and keeps it at
+least `1/3`.  Singleton leakage is first order while the punishing collision
+is quadratic.  Any viable rare route must retain correlated coalition phases
+or impose a singleton-mixture support hypothesis.
 
 The shared limiting law must not be confused with a shared strategic account.
 Fixed-law reset minimization preserves the prescribed reward moment and every

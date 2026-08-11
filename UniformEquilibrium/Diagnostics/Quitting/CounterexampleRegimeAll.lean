@@ -100,6 +100,8 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauFractional
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauFractionalResetDropout
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPairDropoutConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPairDropoutSignRegression
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSignedPairDropoutConsumer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticBestEndpointTieDropoutRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedExitNashificationRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedResetCycleRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloSpineOccupation
@@ -132,10 +134,12 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetSurfaceTensi
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetFaceReprojection
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionGerm
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionWindow
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionTemporalSplit
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticLinearPenaltyResetConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticIncidenceDebtRatioRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticFixedTableDiffuseIncidenceRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticFixedTableCapDefectRegression
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticRareHazardPunishmentScalingRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauNashMoat
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticTwoReservoirConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticHarmonicReservoirConsumer
@@ -323,7 +327,12 @@ than a Nash--Bellman continuation.  The dropout itself is unsigned: an exact
 two-player regression reaches a zero-defect all-Continue endpoint through a
 pair-to-singleton Continue overwrite which the dropout player strictly
 disfavors.  A strategic cycle requires a same-row sign invariant in addition
-to routed mass.
+to routed mass.  Recomputed best-endpoint provenance supplies the exact weak
+sign: the overwrite gain equals the mover's local Nash defect.  Positive
+defect is strict, while zero defect is literal endpoint indifference.  A
+second exact regression shows that best-endpoint routing, positive incidence,
+negative singleton reward, and a zero-defect endpoint can all coexist with
+this tie.  Global chronology must exclude or consume that neutral branch.
 General exit-face Nashification cannot remove those defects while retaining
 the marked inequality: a two-player regression loses collision support and
 reverses the marked endpoint inequality even under approximate Nashification.
@@ -379,6 +388,12 @@ locally exact, but its unique noncontracting owner has stationary cap zero and
 strictly fails punishment admissibility.  The harmonic reservoir therefore
 gives a quantitative obstruction to both period-one and instant punishment
 completion rather than a solo-payoff compiler.
+Coordinatewise rare scaling does not repair this branch.  A fixed normalized
+three-player regression has punishment value `-1`, attained by a sure
+two-opponent collision, while independently shrinking both opponent hazards
+to zero sends the owner's stationary cap to `1`.  Collision punishment is
+quadratic whereas singleton leakage is first order; any rare-hazard repair
+must preserve coalition phases or assume singleton-mixture support.
 The common limiting law is weaker than a common strategic account: fixed-law
 minimization can change the envelope and the realizing profiles, and it does
 not preserve the marked stopping time or live row.  Stored terminal incidence
@@ -403,7 +418,11 @@ The approach may be chosen through literal executable profiles.  One fixed
 opponent and terminal coalition then carry uniform positive mass in finite
 profile-dependent windows, while every moving row's survival-weighted owner
 defect is negligible at the tension scale.  The cutoff may drift, so this is
-not yet a bounded Bellman window or a chronological tangent.
+not yet a bounded Bellman window or a chronological tangent.  The exact
+temporal split is explicit: either a positive stage atom recurs and gives a
+literal concentrated prefix packet, or the same profiles carry a finite unit
+coalition clock whose mesh tends uniformly to zero.  The diffuse clock still
+lacks an exact-Nash policy and common shifted-tail state.
 
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common
