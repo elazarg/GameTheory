@@ -94,6 +94,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSupportEntry
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAtomicSupportBoundary
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAuxiliaryNashBudget
 import UniformEquilibrium.Diagnostics.Quitting.TerminalCapNashEndpointTransport
+import UniformEquilibrium.Diagnostics.Quitting.TerminalCapNashChronology
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCapNashDebtSupport
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCapNashNearMinimum
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumDebtSimplex
@@ -262,7 +263,16 @@ near-minimal or identify a chronological owner occupation.  An explicit
 comparison of the two moat errors also forces every exact Nash root against
 the unshifted cap to be literally all-Continue.  Thus iterating arbitrary
 cap--Nash prefixes close to the minimum can freeze and supplies no automatic
-nonzero tangent.
+nonzero tangent.  Iterating before that freeze does give literal finite
+backward cap chronologies of arbitrary depth, with every suffix executable
+and every root exact against the suffix's behavioral cap.  Their coordinate
+debts scale by the full survival product, while the positive total-debt
+infimum times the unweighted sum of all displayed absorption hazards is at
+most the terminal debt excess.  Near the infimum the whole stack therefore
+has vanishing total absorption, payoff and cap displacement are only linear
+in that absorption, and each finite block's survival remains uniformly
+positive.  Stacks selected at different depths need not be compatible, so no
+infinite Never path or renewal follows.
 
 At a negative zero-slack debt vertex, stationary escape has an exact
 consumer.  If outsiders do not gain by joining the owner's singleton exit,

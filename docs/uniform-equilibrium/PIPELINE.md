@@ -2359,7 +2359,21 @@ may freeze at an all-Continue cap plateau.  This last obstruction is exact:
 once the shifted endpoint margin exceeds the two explicit joining-loss error
 terms, every exact Nash root against the unshifted cap is literally
 all-Continue.  A useful iterated construction therefore needs a separate
-nontrivial-root selector before first-order normalization.
+nontrivial-root selector before first-order normalization.  Arbitrary-depth
+iteration can nevertheless be carried out exactly as a finite backward cap
+chronology: every remaining suffix is one actual profile and every displayed
+root is Nash against its behavioral cap.  If `a_t` are its root absorption
+hazards, exact folding gives
+
+`D_* * sum_t a_t <= D(terminal) - D(stack)`.
+
+Thus a terminal profile within `epsilon` of `D_*` has
+`D_* * sum_t a_t <= epsilon`, independently of stack depth, and the full
+survival product is at least `D_*/D(terminal)`.  Payoff return and cap return
+are bounded by `2M * sum a_t` and `4M * sum a_t`.  This is a genuine
+state-matched finite chronology at every supplied depth, but stacks at
+different depths need not be compatible.  Thus no infinite Never path
+follows, and the return error is linear rather than smaller than charge.
 
 The attainable semantic closure supplies an exact finite-dimensional version
 of the same reduction.  Map every executable profile to its prescribed
