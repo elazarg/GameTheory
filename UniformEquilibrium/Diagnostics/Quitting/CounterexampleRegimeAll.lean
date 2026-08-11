@@ -87,8 +87,12 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticConditionedEndpoi
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticEqualityStratum
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloOwnerRefinement
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumSpine
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumSpineTransferRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAllContinuePlateau
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauTightness
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedVariational
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedTailLocalization
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedExitNashificationRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloSpineOccupation
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSupportEntry
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAtomicSupportBoundary
@@ -111,10 +115,12 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectChar
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectTelescope
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPositivePartSplit
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDebtTransfer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetExcursionReturn
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDynamicCostate
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtFlow
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticNashDefectMobiusIncidence
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticNashDefectMobiusDeviation
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticNegativeVertexGerm
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloQuantitativePassport
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStackAllContinueRegression
@@ -261,6 +267,24 @@ singleton, pair, and higher coalition cylinders.  A finite-cutoff pigeonhole
 selects one fixed player/coalition/orientation label carrying a quantitative
 share of defect occupation, but positive-part cancellation and scattered
 states prevent reading that label as a legal deviation or cycle.
+
+The persistent collision branch has a more direct same-profile conclusion.
+At the selected pure-time Quit row, collision mass times the marked player's
+local root defect is bounded by reset debt, hence that defect vanishes.  The
+row's own shifted-tail cluster either stays strictly above the minimum fiber
+or, on the fiber, the other players carry a uniform positive defect sum.
+General exit-face Nashification cannot remove those defects while retaining
+the marked inequality: a two-player regression loses collision support and
+reverses the marked endpoint inequality even under approximate Nashification.
+
+Off-minimum reset excursions have an exact return account.  A cap--Nash
+prefix preserves the reset coordinate and opposite-face transfer, while its
+absorption pays exactly for the fall in excursion excess.  Minimizing total
+debt on the reset face produces either a return to the global minimum fiber
+or a canonical off-minimum point whose only cap--Nash root is all-Continue.
+This constrained minimization does not preserve the original terminal
+incidence law; transporting that law or consuming the localized other-player
+defect is the remaining dynamic step.
 
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common
