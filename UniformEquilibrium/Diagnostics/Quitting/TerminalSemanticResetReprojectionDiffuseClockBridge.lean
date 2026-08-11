@@ -71,6 +71,365 @@ theorem quittingStageOpponentAbsorptionMass_nonneg
     (quittingRootOpponentAbsorptionMass_nonneg
       (quittingProfileLiveRoot reward profile time) owner)
 
+/-- An exact coalition containing two distinct players is bounded by the
+product of their two Quit probabilities.  This is the fixed-label form of
+the product-law collision estimate and has no cardinality loss. -/
+theorem quittingRootCoalitionMass_le_mul_quitProbability_of_mem
+    (root : ι → PMF Bool) (coalition : Finset ι)
+    {first second : ι} (hne : first ≠ second)
+    (hfirst : first ∈ coalition) (hsecond : second ∈ coalition) :
+    quittingRootCoalitionMass root coalition ≤
+      (root first true).toReal * (root second true).toReal := by
+  let rate : ι → ℝ := fun who => (root who true).toReal
+  have hrate0 : ∀ who, 0 ≤ rate who := fun _ => ENNReal.toReal_nonneg
+  have hrate1 : ∀ who, rate who ≤ 1 := fun who =>
+    ENNReal.toReal_mono ENNReal.one_ne_top ((root who).coe_le_one true)
+  have hsecondErase : second ∈ coalition.erase first := by
+    exact Finset.mem_erase.mpr ⟨hne.symm, hsecond⟩
+  have hrest0 : 0 ≤ ∏ who ∈ (coalition.erase first).erase second, rate who :=
+    Finset.prod_nonneg fun who _ => hrate0 who
+  have hrest1 : (∏ who ∈ (coalition.erase first).erase second, rate who) ≤ 1 :=
+    Finset.prod_le_one
+      (fun who _ => hrate0 who)
+      (fun who _ => hrate1 who)
+  have hout0 : 0 ≤ ∏ who ∈ coalitionᶜ, (1 - rate who) :=
+    Finset.prod_nonneg fun who _ => sub_nonneg.mpr (hrate1 who)
+  have hout1 : (∏ who ∈ coalitionᶜ, (1 - rate who)) ≤ 1 :=
+    Finset.prod_le_one
+      (fun who _ => sub_nonneg.mpr (hrate1 who))
+      (fun who _ => by linarith [hrate0 who])
+  have hinside : (∏ who ∈ coalition, rate who) =
+      ((∏ who ∈ (coalition.erase first).erase second, rate who) *
+          rate second) * rate first := by
+    calc
+      (∏ who ∈ coalition, rate who) =
+          (∏ who ∈ coalition.erase first, rate who) * rate first := by
+            simpa using (Finset.prod_erase_mul coalition rate hfirst).symm
+      _ = ((∏ who ∈ (coalition.erase first).erase second, rate who) *
+          rate second) * rate first := by
+            rw [show (∏ who ∈ coalition.erase first, rate who) =
+              (∏ who ∈ (coalition.erase first).erase second, rate who) *
+                rate second by
+              simpa using (Finset.prod_erase_mul
+                (coalition.erase first) rate hsecondErase).symm]
+  have hinsideLe : (∏ who ∈ coalition, rate who) ≤
+      rate first * rate second := by
+    rw [hinside]
+    calc
+      ((∏ who ∈ (coalition.erase first).erase second, rate who) *
+          rate second) * rate first =
+          (∏ who ∈ (coalition.erase first).erase second, rate who) *
+            (rate first * rate second) := by ring
+      _ ≤ 1 * (rate first * rate second) :=
+        mul_le_mul_of_nonneg_right hrest1
+          (mul_nonneg (hrate0 first) (hrate0 second))
+      _ = rate first * rate second := one_mul _
+  unfold quittingRootCoalitionMass Math.PMFProduct.coalitionMass
+    quittingRootQuitRates
+  change (∏ who ∈ coalition, rate who) *
+      (∏ who ∈ coalitionᶜ, (1 - rate who)) ≤ rate first * rate second
+  exact (mul_le_of_le_one_right
+    (Finset.prod_nonneg fun who _ => hrate0 who) hout1).trans hinsideLe
+
+/-- One exact terminal cylinder is paid by the loss of live mass across the
+same finite suffix.  The statement is deliberately offset-indexed so that it
+can be applied after the first large raw opponent hazard. -/
+theorem sum_quittingStageCoalitionMass_add_le_liveMass
+    (profile : (quittingGame reward).BehaviorProfile)
+    (terminal : {S : Finset ι // S.Nonempty}) (start fuel : ℕ) :
+    ∑ offset ∈ Finset.range fuel,
+        quittingStageCoalitionMass reward profile (start + offset) terminal ≤
+      quittingLiveMass reward profile start := by
+  have hstep : ∀ time,
+      quittingStageCoalitionMass reward profile time terminal ≤
+        quittingLiveMass reward profile time -
+          quittingLiveMass reward profile (time + 1) := by
+    intro time
+    let root := quittingProfileLiveRoot reward profile time
+    have hrootMass : quittingRootCoalitionMass root terminal.val ≤
+        quittingRootAbsorptionMass root := by
+      unfold quittingRootAbsorptionMass
+      rw [← quittingRootCoalitionMass_sum_nonempty]
+      apply Finset.single_le_sum
+      · intro coalition _
+        exact MarkedAbsorptionCylinder.quittingRootCoalitionMass_nonneg
+          root coalition
+      · simp [terminal.property.ne_empty]
+    have hjoint : quittingJointContinueMass reward profile time =
+        quittingStationaryContinueMass root := by
+      rw [quittingJointContinueMass_eq_product,
+        quittingStationaryContinueMass_eq_prod_continueProbability]
+      rfl
+    rw [quittingStageCoalitionMass_eq_liveMass_mul_rootCoalitionMass,
+      quittingLiveMass_succ, hjoint]
+    calc
+      quittingLiveMass reward profile time *
+          quittingRootCoalitionMass
+            (quittingProfileLiveRoot reward profile time) terminal.val ≤
+        quittingLiveMass reward profile time *
+          quittingRootAbsorptionMass root :=
+            mul_le_mul_of_nonneg_left hrootMass
+              (quittingLiveMass_nonneg reward profile time)
+      _ = quittingLiveMass reward profile time -
+          quittingLiveMass reward profile time *
+            quittingStationaryContinueMass root := by
+        unfold quittingRootAbsorptionMass
+        ring
+  have htelescope : ∀ fuel,
+      (∑ offset ∈ Finset.range fuel,
+          quittingStageCoalitionMass reward profile (start + offset) terminal) ≤
+        quittingLiveMass reward profile start -
+          quittingLiveMass reward profile (start + fuel) := by
+    intro length
+    induction length with
+    | zero => simp
+    | succ length ih =>
+        rw [Finset.sum_range_succ]
+        have hlast := hstep (start + length)
+        norm_num [Nat.add_assoc] at hlast ⊢
+        linarith
+  have h := htelescope fuel
+  linarith [quittingLiveMass_nonneg reward profile (start + fuel)]
+
+omit [DecidableEq ι] in
+theorem quittingRoot_quitProbability_le_absorptionMass'
+    (root : ι → PMF Bool) (who : ι) :
+    (root who true).toReal ≤ quittingRootAbsorptionMass root := by
+  have hcontinue :=
+    quittingStationaryContinueMass_le_ownContinueProbability root who
+  have hprobability :=
+    quittingRoot_continueProbability_add_quitProbability root who
+  unfold quittingRootAbsorptionMass
+  linarith
+
+omit [DecidableEq ι] in
+/-- Total absorption in a finite suffix is at most the mass live at its
+entrance. -/
+theorem sum_quittingLiveMass_mul_rootAbsorptionMass_add_le_liveMass
+    (profile : (quittingGame reward).BehaviorProfile) (start fuel : ℕ) :
+    ∑ offset ∈ Finset.range fuel,
+        quittingLiveMass reward profile (start + offset) *
+          quittingRootAbsorptionMass
+            (quittingProfileLiveRoot reward profile (start + offset)) ≤
+      quittingLiveMass reward profile start := by
+  have hstep : ∀ time,
+      quittingLiveMass reward profile time *
+          quittingRootAbsorptionMass
+            (quittingProfileLiveRoot reward profile time) =
+        quittingLiveMass reward profile time -
+          quittingLiveMass reward profile (time + 1) := by
+    intro time
+    have hjoint : quittingJointContinueMass reward profile time =
+        quittingStationaryContinueMass
+          (quittingProfileLiveRoot reward profile time) := by
+      rw [quittingJointContinueMass_eq_product,
+        quittingStationaryContinueMass_eq_prod_continueProbability]
+      rfl
+    rw [quittingLiveMass_succ, hjoint]
+    unfold quittingRootAbsorptionMass
+    ring
+  have htelescope : ∀ fuel,
+      (∑ offset ∈ Finset.range fuel,
+          quittingLiveMass reward profile (start + offset) *
+            quittingRootAbsorptionMass
+              (quittingProfileLiveRoot reward profile (start + offset))) =
+        quittingLiveMass reward profile start -
+          quittingLiveMass reward profile (start + fuel) := by
+    intro length
+    induction length with
+    | zero => simp
+    | succ length ih =>
+        rw [Finset.sum_range_succ, ih, hstep]
+        norm_num [Nat.add_assoc]
+  rw [htelescope]
+  exact sub_le_self _
+    (quittingLiveMass_nonneg reward profile (start + fuel))
+
+theorem quittingFiniteWindowOpponentAbsorptionMass_le_one
+    (profile : (quittingGame reward).BehaviorProfile)
+    (owner : ι) (cutoff : ℕ) :
+    quittingFiniteWindowOpponentAbsorptionMass profile owner cutoff ≤ 1 := by
+  unfold quittingFiniteWindowOpponentAbsorptionMass
+    quittingStageOpponentAbsorptionMass
+  calc
+    (∑ time ∈ Finset.range cutoff,
+        quittingLiveMass reward profile time *
+          quittingRootOpponentAbsorptionMass
+            (quittingProfileLiveRoot reward profile time) owner) ≤
+        ∑ time ∈ Finset.range cutoff,
+          quittingLiveMass reward profile time *
+            quittingRootAbsorptionMass
+              (quittingProfileLiveRoot reward profile time) := by
+      apply Finset.sum_le_sum
+      intro time _
+      exact mul_le_mul_of_nonneg_left
+        (quittingRootOpponentAbsorptionMass_le_absorptionMass
+          (quittingProfileLiveRoot reward profile time) owner)
+        (quittingLiveMass_nonneg reward profile time)
+    _ ≤ quittingLiveMass reward profile 0 := by
+      simpa using
+        (sum_quittingLiveMass_mul_rootAbsorptionMass_add_le_liveMass
+          (reward := reward) profile 0 cutoff)
+    _ = 1 := by simp [quittingLiveMass]
+
+/-- **First-large-hazard estimate.**  Suppose a fixed exact coalition is
+bounded at every row by `gate * opponentHazard`, where `gate` is itself paid
+by joint absorption.  If every normalized survival-weighted opponent atom is
+smaller than `delta`, then the coalition's normalized finite-window mass is
+smaller than `eta / lower + delta / eta`.
+
+The raw opponent hazard need not be small.  At its first `eta`-large row the
+clock bound makes the remaining live mass small; the whole suffix is then
+paid by that live mass. -/
+theorem quittingFiniteWindowCoalitionMass_div_opponentAbsorptionMass_lt
+    (profile : (quittingGame reward).BehaviorProfile)
+    (owner : ι) (terminal : {S : Finset ι // S.Nonempty})
+    (cutoff : ℕ) (gate : ℕ → ℝ)
+    (hgate0 : ∀ time, 0 ≤ gate time)
+    (hgateAbsorption : ∀ time, gate time ≤
+      quittingRootAbsorptionMass
+        (quittingProfileLiveRoot reward profile time))
+    (hcoalition : ∀ time,
+      quittingRootCoalitionMass
+          (quittingProfileLiveRoot reward profile time) terminal.val ≤
+        gate time * quittingRootOpponentAbsorptionMass
+          (quittingProfileLiveRoot reward profile time) owner)
+    {lower delta eta : ℝ} (hlower : 0 < lower)
+    (hwindow : lower <
+      quittingFiniteWindowOpponentAbsorptionMass profile owner cutoff)
+    (hdelta : 0 ≤ delta) (heta : 0 < eta)
+    (hmesh : ∀ time < cutoff,
+      quittingFiniteWindowOpponentAbsorptionClock
+        profile owner cutoff time < delta) :
+    quittingFiniteWindowCoalitionMass profile terminal cutoff /
+        quittingFiniteWindowOpponentAbsorptionMass profile owner cutoff <
+      eta / lower + delta / eta := by
+  let live : ℕ → ℝ := fun time => quittingLiveMass reward profile time
+  let root : ℕ → ι → PMF Bool := fun time =>
+    quittingProfileLiveRoot reward profile time
+  let opponent : ℕ → ℝ := fun time =>
+    quittingRootOpponentAbsorptionMass (root time) owner
+  let total := quittingFiniteWindowOpponentAbsorptionMass
+    profile owner cutoff
+  have htotal : 0 < total := hlower.trans hwindow
+  have hlive0 : ∀ time, 0 ≤ live time := fun time =>
+    quittingLiveMass_nonneg reward profile time
+  have hopponent0 : ∀ time, 0 ≤ opponent time := fun time =>
+    quittingRootOpponentAbsorptionMass_nonneg (root time) owner
+  have hclock : ∀ time < cutoff,
+      live time * opponent time / total < delta := by
+    intro time htime
+    have h := hmesh time htime
+    simpa [quittingFiniteWindowOpponentAbsorptionClock,
+      quittingStageOpponentAbsorptionMass, live, root, opponent, total,
+      htime] using h
+  have hsmallPrefix : ∀ length ≤ cutoff,
+      (∀ time < length, opponent time < eta) →
+      (∑ time ∈ Finset.range length,
+          quittingStageCoalitionMass reward profile time terminal) ≤ eta := by
+    intro length hlength hsmall
+    have hgateSum :
+        (∑ time ∈ Finset.range length, live time * gate time) ≤ 1 := by
+      calc
+        (∑ time ∈ Finset.range length, live time * gate time) ≤
+            ∑ time ∈ Finset.range length,
+              live time * quittingRootAbsorptionMass (root time) := by
+          apply Finset.sum_le_sum
+          intro time _
+          exact mul_le_mul_of_nonneg_left (by
+            simpa [root] using hgateAbsorption time) (hlive0 time)
+        _ ≤ live 0 := by
+          simpa [live, root] using
+            (sum_quittingLiveMass_mul_rootAbsorptionMass_add_le_liveMass
+              (reward := reward) profile 0 length)
+        _ = 1 := by simp [live, quittingLiveMass]
+    calc
+      (∑ time ∈ Finset.range length,
+          quittingStageCoalitionMass reward profile time terminal) ≤
+          ∑ time ∈ Finset.range length,
+            live time * (gate time * opponent time) := by
+        apply Finset.sum_le_sum
+        intro time _
+        rw [quittingStageCoalitionMass_eq_liveMass_mul_rootCoalitionMass]
+        exact mul_le_mul_of_nonneg_left (by
+          simpa [root, opponent] using hcoalition time) (hlive0 time)
+      _ ≤ ∑ time ∈ Finset.range length,
+          eta * (live time * gate time) := by
+        apply Finset.sum_le_sum
+        intro time htime
+        have hopponentLt := hsmall time (Finset.mem_range.mp htime)
+        have hgateLive : 0 ≤ live time * gate time :=
+          mul_nonneg (hlive0 time) (hgate0 time)
+        calc
+          live time * (gate time * opponent time) =
+              (live time * gate time) * opponent time := by ring
+          _ ≤ (live time * gate time) * eta :=
+            mul_le_mul_of_nonneg_left hopponentLt.le hgateLive
+          _ = eta * (live time * gate time) := by ring
+      _ = eta * ∑ time ∈ Finset.range length,
+          live time * gate time := by rw [Finset.mul_sum]
+      _ ≤ eta * 1 := mul_le_mul_of_nonneg_left hgateSum heta.le
+      _ = eta := mul_one eta
+  by_cases hlarge : ∃ time < cutoff, eta ≤ opponent time
+  · let first := Nat.find hlarge
+    have hfirst := Nat.find_spec hlarge
+    have hfirstCutoff : first < cutoff := hfirst.1
+    have hfirstLarge : eta ≤ opponent first := hfirst.2
+    have hbefore : ∀ time < first, opponent time < eta := by
+      intro time htime
+      have htimeCutoff : time < cutoff := htime.trans hfirstCutoff
+      exact lt_of_not_ge fun hge => by
+        have hle : first ≤ time :=
+          Nat.find_min' hlarge ⟨htimeCutoff, hge⟩
+        omega
+    have hprefix :
+        (∑ time ∈ Finset.range first,
+          quittingStageCoalitionMass reward profile time terminal) ≤ eta :=
+      hsmallPrefix first hfirstCutoff.le hbefore
+    have htail :
+        (∑ offset ∈ Finset.range (cutoff - first),
+          quittingStageCoalitionMass reward profile (first + offset)
+            terminal) ≤ live first := by
+      simpa [live] using sum_quittingStageCoalitionMass_add_le_liveMass
+        (reward := reward) profile terminal first (cutoff - first)
+    have hliveRatio : live first / total < delta / eta := by
+      apply (div_lt_div_iff₀ htotal heta).2
+      have hstage := (div_lt_iff₀ htotal).1
+        (hclock first hfirstCutoff)
+      have hlowerStage : live first * eta ≤
+          live first * opponent first :=
+        mul_le_mul_of_nonneg_left hfirstLarge (hlive0 first)
+      nlinarith
+    have htotalSplit : quittingFiniteWindowCoalitionMass
+        profile terminal cutoff =
+        (∑ time ∈ Finset.range first,
+          quittingStageCoalitionMass reward profile time terminal) +
+        ∑ offset ∈ Finset.range (cutoff - first),
+          quittingStageCoalitionMass reward profile (first + offset)
+            terminal := by
+      unfold quittingFiniteWindowCoalitionMass
+      conv_lhs =>
+        rw [show cutoff = first + (cutoff - first) by omega,
+          Finset.sum_range_add]
+    rw [htotalSplit, add_div]
+    have hprefixRatio :
+        (∑ time ∈ Finset.range first,
+          quittingStageCoalitionMass reward profile time terminal) / total <
+            eta / lower := by
+      exact (div_le_div_of_nonneg_right hprefix htotal.le).trans_lt
+        ((div_lt_div_iff_of_pos_left heta htotal hlower).2 hwindow)
+    exact add_lt_add hprefixRatio
+      ((div_le_div_of_nonneg_right htail htotal.le).trans_lt hliveRatio)
+  · have hsmall : ∀ time < cutoff, opponent time < eta := by
+      intro time htime
+      exact lt_of_not_ge fun hge => hlarge ⟨time, htime, hge⟩
+    have hall := hsmallPrefix cutoff le_rfl hsmall
+    have hratio : quittingFiniteWindowCoalitionMass
+        profile terminal cutoff / total < eta / lower :=
+      (div_le_div_of_nonneg_right hall htotal.le).trans_lt
+        ((div_lt_div_iff_of_pos_left heta htotal hlower).2 hwindow)
+    exact hratio.trans_le (le_add_of_nonneg_right (div_nonneg hdelta heta.le))
+
 /-- The opponent-absorption hazard is the expectation of the literal
 opponent-quit indicator under the original product root.  No owner marginal
 is deleted from the realized action law. -/
@@ -380,6 +739,135 @@ theorem quittingFiniteWindowOpponentAbsorptionClock_nonneg
       (Finset.sum_nonneg fun stage _ =>
         quittingStageOpponentAbsorptionMass_nonneg profile owner stage)
   · exact le_rfl
+
+/-- **Diffuse deleted clocks force a fixed positive coalition to be one
+opponent singleton.**  Two opponent members are second order in the raw
+opponent hazard.  An owner--opponent coalition is bounded by the owner's Quit
+hazard times the opponent hazard.  The first-large-hazard estimate kills both
+possibilities while retaining the source packet's absolute positive window
+mass. -/
+theorem QuittingReprojectionDiffuseDeletedWindowPacket.terminal_eq_singleton
+    {profiles : ℕ → (quittingGame reward).BehaviorProfile}
+    {owner : ι} {terminal : {S : Finset ι // S.Nonempty}}
+    {cutoff : ℕ → ℕ} {scale : ℕ → ℝ} {lower : ℝ}
+    (packet : QuittingReprojectionDiffuseDeletedWindowPacket
+      reward profiles owner terminal cutoff scale lower)
+    (other : ι) (hother : other ∈ terminal.val) (hne : other ≠ owner) :
+    terminal.val = {other} := by
+  classical
+  let eta := lower ^ 2 / 4
+  let delta := eta * lower / 4
+  have heta : 0 < eta := by
+    dsimp only [eta]
+    exact div_pos (sq_pos_of_pos packet.source.lower_pos) (by norm_num)
+  have hdelta : 0 < delta := by
+    dsimp only [delta]
+    exact div_pos (mul_pos heta packet.source.lower_pos) (by norm_num)
+  have hparameter : eta / lower + delta / eta = lower / 2 := by
+    dsimp only [eta, delta]
+    field_simp [packet.source.lower_pos.ne']
+    ring
+  let ratio : ℕ → ℝ := fun n =>
+    quittingFiniteWindowCoalitionMass
+        (profiles n) terminal (cutoff n) /
+      quittingFiniteWindowOpponentAbsorptionMass
+        (profiles n) owner (cutoff n)
+  have impossible_of_upper :
+      (∀ᶠ n in atTop, ratio n < lower / 2) → False := by
+    intro hupper
+    obtain ⟨n, hcoalition, htotal, hnupper⟩ :=
+      (packet.source.windowMass.and
+        (packet.deletedMassLower.and hupper)).exists
+    have htotalPos : 0 < quittingFiniteWindowOpponentAbsorptionMass
+        (profiles n) owner (cutoff n) :=
+      packet.source.lower_pos.trans htotal
+    have htotalOne := quittingFiniteWindowOpponentAbsorptionMass_le_one
+      (reward := reward) (profiles n) owner (cutoff n)
+    have hnLower : lower < ratio n := by
+      apply (lt_div_iff₀ htotalPos).2
+      nlinarith [packet.source.lower_pos]
+    dsimp only [ratio] at hnupper
+    linarith [packet.source.lower_pos]
+  have hownerNot : owner ∉ terminal.val := by
+    intro howner
+    apply impossible_of_upper
+    filter_upwards [packet.deletedMassLower,
+      packet.clock_mesh delta hdelta] with n htotal hmesh
+    let root : ℕ → ι → PMF Bool := fun time =>
+      quittingProfileLiveRoot reward (profiles n) time
+    let gate : ℕ → ℝ := fun time => (root time owner true).toReal
+    have hbound :=
+      quittingFiniteWindowCoalitionMass_div_opponentAbsorptionMass_lt
+        (reward := reward) (profiles n) owner terminal (cutoff n) gate
+        (fun time => ENNReal.toReal_nonneg)
+        (fun time => by
+          simpa [gate, root] using
+            quittingRoot_quitProbability_le_absorptionMass'
+              (root time) owner)
+        (fun time => by
+          have hpair :=
+            quittingRootCoalitionMass_le_mul_quitProbability_of_mem
+              (root time) terminal.val hne.symm howner hother
+          have hotherRate :=
+            quittingRoot_quitProbability_le_opponentAbsorptionMass_of_ne
+              (root time) hne
+          exact hpair.trans (mul_le_mul_of_nonneg_left hotherRate
+            ENNReal.toReal_nonneg))
+        packet.source.lower_pos htotal hdelta.le heta
+        (fun time htime => hmesh time)
+    rw [hparameter] at hbound
+    exact hbound
+  apply Finset.Subset.antisymm
+  · intro player hplayer
+    simp only [Finset.mem_singleton]
+    by_contra hplayerOther
+    have hplayerOwner : player ≠ owner := by
+      intro heq
+      subst player
+      exact hownerNot hplayer
+    apply impossible_of_upper
+    filter_upwards [packet.deletedMassLower,
+      packet.clock_mesh delta hdelta] with n htotal hmesh
+    let root : ℕ → ι → PMF Bool := fun time =>
+      quittingProfileLiveRoot reward (profiles n) time
+    let gate : ℕ → ℝ := fun time =>
+      quittingRootOpponentAbsorptionMass (root time) owner
+    have hbound :=
+      quittingFiniteWindowCoalitionMass_div_opponentAbsorptionMass_lt
+        (reward := reward) (profiles n) owner terminal (cutoff n) gate
+        (fun time => quittingRootOpponentAbsorptionMass_nonneg
+          (root time) owner)
+        (fun time => quittingRootOpponentAbsorptionMass_le_absorptionMass
+          (root time) owner)
+        (fun time => by
+          have hpair :=
+            quittingRootCoalitionMass_le_mul_quitProbability_of_mem
+              (root time) terminal.val (Ne.symm hplayerOther) hother hplayer
+          have hotherRate :=
+            quittingRoot_quitProbability_le_opponentAbsorptionMass_of_ne
+              (root time) hne
+          have hplayerRate :=
+            quittingRoot_quitProbability_le_opponentAbsorptionMass_of_ne
+              (root time) hplayerOwner
+          have hfirst :
+              (root time other true).toReal *
+                  (root time player true).toReal ≤
+                gate time * (root time player true).toReal :=
+            mul_le_mul_of_nonneg_right hotherRate ENNReal.toReal_nonneg
+          have hsecond : gate time * (root time player true).toReal ≤
+              gate time * gate time :=
+            mul_le_mul_of_nonneg_left hplayerRate
+              (quittingRootOpponentAbsorptionMass_nonneg
+                (root time) owner)
+          exact hpair.trans (hfirst.trans hsecond))
+        packet.source.lower_pos htotal hdelta.le heta
+        (fun time htime => hmesh time)
+    rw [hparameter] at hbound
+    exact hbound
+  · intro player hplayer
+    simp only [Finset.mem_singleton] at hplayer
+    subst player
+    exact hother
 
 /-- If the actual deleted-player stage clock has no recurrent atom, then its
 normalization on the original windows is itself a complete diffuse clock.
