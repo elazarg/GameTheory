@@ -2357,6 +2357,16 @@ counterexample lies in exactly the two-form search regime: a positive minimum
 all-Continue semantic plateau, or a quantitative isolated-negative atomic
 solo row.
 
+The atomic branch retains its minimum-carrier prefix edge.  If the owner's
+hazard is interior, decrease the solo rate to the first value at which all
+inactive rows are weakly deterred.  Some outsider is exactly tight there.
+Activating an isolated tight outsider with neutral owner collision derivative
+would produce a genuine two-owner exact Nash root at the same minimum tail,
+contradicting unit deleted survival of the positive debt.  Therefore the
+interior atomic branch has a finite support boundary with either a nonzero
+owner reciprocal-collision increment or a second cotight outsider.  The pure-
+Quit atomic boundary remains separate.
+
 The plateau branch is finite at the reward-table level.  Its prescribed vector
 lies in the reward-moment polytope and dominates every player's own singleton
 reward.  At every positive-debt coordinate, however, either Never strictly
@@ -2374,8 +2384,9 @@ The remaining premise for a terminal consumer is strategic realization.  The
 semantic chronology is state-matched inside the compact closure, but a carrier
 pair need not itself be the terminal semantics of one behavior profile.  The
 remaining task is to consume the all-Continue escape plateau or the
-isolated-negative atomic solo row; no compactness, state-matching, or diffuse
-solo-occupation premise remains in this semantic-carrier route.
+isolated-negative atomic solo row's pure-Quit/nonzero-collision/cotight
+support strata; no compactness, state-matching, or diffuse solo-occupation
+premise remains in this semantic-carrier route.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules
