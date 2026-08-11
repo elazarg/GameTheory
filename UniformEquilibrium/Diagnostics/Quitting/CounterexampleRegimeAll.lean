@@ -95,6 +95,8 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedVari
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedTailLocalization
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauLocalizedOtherDefect
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPartialResetTransfer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectStratification
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauFractionalResetFloor
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedExitNashificationRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedResetCycleRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloSpineOccupation
@@ -122,6 +124,8 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDebtTransf
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetExcursionReturn
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceReturn
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceCapReturn
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceRatio
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticIncidenceDebtRatioRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDynamicCostate
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtFlow
@@ -288,6 +292,15 @@ complementary fraction of every terminal incidence atom.  Minimum-reference
 accounting charges the gain to opposite-face transfer plus the current
 prefixed source's exact excess over the minimum; marked localization puts the
 continuation, not automatically this source, on the minimum fiber.
+At a full best-endpoint move, every positive marked coalition is routed with
+no mass loss to exactly one of four cells: the coalition is preserved, a
+member is erased, an outsider is inserted, or the coalition is again
+preserved.  More generally, finitely many strict fractional moves cannot
+erase a positive collision over positive minimum debt while reaching zero
+total root defect.  Any such attempted Nashification has a first unit-weight
+move; the original collision remains positive until that move and is then
+routed across the corresponding one-player Boolean edge.  This is a local
+finite stratum, not a chronological edge or return.
 General exit-face Nashification cannot remove those defects while retaining
 the marked inequality: a two-player regression loses collision support and
 reverses the marked endpoint inequality even under approximate Nashification.
@@ -316,6 +329,15 @@ retained.  Otherwise all-Continue is the cap fixed point.  Positive incidence
 and a supported strict coalition toggle do not rule out the latter: a literal
 two-player semantic/law point has reset debt zero, unit collision incidence,
 and only the all-Continue cap--Nash root.
+There is also a canonical variational form of this residual.  On the positive
+total-opponent-incidence reset face, lexicographically minimize total debt per
+incidence and then total debt.  Every exact cap--Nash prefix at the selected
+point first creates zero fresh opponent incidence; secondary minimality then
+forces survival one.  Hence all-Continue is the unique exact cap root and
+fixes the semantic point, even though the retained terminal law still has
+positive opponent incidence.  A half-reset regression shows that the primary
+debt/incidence quotient alone can be exactly flat; the secondary minimum and
+the positive global debt floor are load-bearing.
 
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common

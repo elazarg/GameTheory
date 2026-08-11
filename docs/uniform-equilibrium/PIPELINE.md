@@ -2560,6 +2560,15 @@ defect is legally collectible; what is not preserved automatically is the
 collision incidence after taking that best response.  This does not make the
 selected tail near-minimal either.
 
+The lost local incidence is now classified exactly rather than discarded.
+Making the selected endpoint pure routes every positive marked coalition to
+the coalition prescribed by that action: Quit inserts the player and Continue
+erases it.  The old cylinder mass is its old selected-action probability
+times the routed pure cylinder mass, so the routed mass is never smaller.
+Together with the exact behavioral gain this gives four cells: member
+reinforcement, member dropout, outsider join, and outsider suppression.  It
+is still one live row, not a Nash--Bellman edge or a return chronology.
+
 A strict fractional reset keeps the missing geometry.  Moving a fraction
 `lambda` toward the better endpoint reduces the player's literal semantic
 debt by exactly `lambda * liveMass * defect`; every coalition and opponent-
@@ -2571,6 +2580,17 @@ total-debt excess.  This qualification matters: marked localization places
 the continuation tail on the minimum fiber, not the current root-prefix
 semantic point.  Fractional reset therefore preserves incidence but does not
 yet remove the stopped defect/excess term.
+
+Finite fractional mixing cannot avoid the Boolean boundary.  For any finite
+list of coordinatewise fractional endpoint moves, the product of the
+unmoved fractions times the original collision mass remains below the final
+collision mass.  Over a positive minimum debt, positive retention therefore
+forces positive final total Nash defect.  If the final defect is zero, there
+is a first unit-weight move; all earlier weights are strict, the original
+collision is still positive immediately before that move, and the full move
+routes it through one of the four cells above.  Later moves may destroy that
+routed cylinder, so the theorem isolates the first full transition rather
+than inferring a cycle.
 
 Both questions now have sharp alternatives.  The same marked rows admit a
 compact shifted-tail cluster.  Either that cluster lies strictly above the
@@ -2629,6 +2649,20 @@ every exact cap--Nash root is all-Continue.  Quantitatively, minimality only
 gives `absorption * D <= D - D_*`; a near return needs the reverse inequality
 up to tolerance.  Neither positive incidence nor positive `D_*` forces that
 near-saturation.
+
+A variational selector makes the all-Continue residual canonical.  On the
+joint reset face with positive total opponent incidence, first minimize total
+debt divided by that incidence.  Prefix debt and retained incidence both
+scale by survival, while fresh root incidence is added; quotient minimality
+therefore forces every exact cap root to create zero fresh opponent
+incidence, so all opponents of the reset owner Continue purely.  Minimize
+total debt once more on this ratio-minimum slice.  The same cap prefix stays
+on the slice, and secondary minimality forces survival one.  Thus the selected
+joint point retains positive opponent incidence in its terminal law, yet
+all-Continue is its unique exact cap--Nash root and fixes its semantic pair.
+The second minimization is essential: a literal half-reset regression scales
+debt and total opponent incidence from one to one half with exactly constant
+ratio while its cap correspondence still contains only all-Continue.
 
 Best-response reset gives a complementary global transfer law.  Resetting
 player `i` to asymptotic best response erases `d_i` and transfers at least
