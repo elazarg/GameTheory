@@ -80,6 +80,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
 import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
 import UniformEquilibrium.Diagnostics.Quitting.MinimalFinCounterexample
+import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtPrefixDescent
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
 import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupation
 import UniformEquilibrium.Quitting.AbsorptionPath.FiniteWindowRefusalReweighting
@@ -133,6 +134,14 @@ generate unbounded canonical prefix charge, linking the sure-exit and capacity
 screens.  The umbrella also exports the augmented-cap splice
 interface and the finite regressions delimiting singleton complementarity and
 cap-only arguments.
+
+Literal exact-root prefixing supplies a separate global-minimality consumer:
+maximum terminal exploitability is nonincreasing, while a positive singleton
+gap strictly decreases total playerwise terminal debt.  This lexicographic
+descent removes both unique-maximal-debtor and fixed-player premises.  Its
+counterexample input is an actual near-minimizing suffix family on which some
+positive-debt coordinate has a uniform singleton gap; conditioned values and
+stored Bellman annotations are not substituted for literal suffix payoffs.
 
 Every unaugmented value on the optimized tail already dominates the behavioral
 punishment floor, so every finite chronological tail segment reverses to a

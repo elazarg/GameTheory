@@ -2265,6 +2265,30 @@ transport finite co-states by the adjoint map, and retain the killed boundary
 remainder.  They do not identify a packet with occupation, erase the phantom
 plateau, or realize a product-root word.
 
+**Literal prefix descent.** For every executable suffix `σ`, choose an exact
+mixed Nash root against its literal terminal payoff and prepend it to `σ`.
+The playerwise all-behavior terminal debt has an exact Bellman recursion;
+every coordinate weakly decreases.  If player `i` has singleton gap `g>0`,
+its debt decreases by at least
+`min ((g/(8*M))*debt_i(σ)) (g/2)`.  Hence maximum exploitability is a monotone
+primary objective and total debt is a strict secondary objective, so tied
+maximal debtors need no separation assumption.  Lexicographic near-minimizers
+exist at every accuracy.  Nonexistence implies that the global literal
+exploitability infimum is positive, and the descent excludes any family of
+actual near-minimizing suffixes on which some positive-debt player has a
+uniform singleton gap; that player may vary with the accuracy.  The
+endpoint-gain bridge is
+quantitative: a root gain `δ` with opponent absorption at most `δ/(8*M)` gives
+an actual singleton gap at least `δ/2`.
+
+The remaining premise for this consumer is literal provenance: the endpoint
+gap supplied by the conditioned-tail reduction must occur on actual
+lexicographic near-minimizers at a positive-debt coordinate.  A conditioned payoff,
+dynamic-debt annotation,
+or compact boundary does not satisfy this premise without a co-realization
+theorem.  This is independent of chronological state return: the prefixed
+profile is used only as a global competitor.
+
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules
 out strict plateau slack, (b) solves enlarged-support state matching, or (c)
