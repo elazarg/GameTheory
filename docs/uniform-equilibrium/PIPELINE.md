@@ -2346,6 +2346,10 @@ positive minimum all-Continue semantic plateau.  Applying the same budget at
 `h=b-u` further shows that every exact Nash root against `u` is collision-free
 and is either all-Continue or a solo root whose owner carries all total debt.
 At most one coordinate of the minimum plateau can be singleton-tight.
+Summing the coordinate margins gives a finite common-outcome restriction:
+for every player subset `J`, one terminal outcome has aggregate reward surplus
+above those players' singleton rewards at least `(|J|-1)D`.  This is one
+common reward atom, not a collection of player-dependent best responses.
 
 The minimum fiber still has an exact state-matched inverse limit: joint
 continuity of root prefixing makes its exact-Nash edge graph compact and
@@ -2379,12 +2383,19 @@ realizing profile has not yet been identified with an exact Nash prefix row
 of the minimum semantic carrier, so its support and charge are not yet a
 legal debt-utilization edge.
 
-The remaining premise for a terminal consumer is strategic realization.  The
-semantic chronology is state-matched inside the compact closure, but a carrier
-pair need not itself be the terminal semantics of one behavior profile.  The
-remaining task is to couple the marked profitable atom's actual chronology to
-the plateau's exact prefix/debt action, or to derive the same legal packet from
-deep literal exact-prefix stacks.  No atomic minimum branch remains.
+The remaining premise for a terminal consumer is quantitative strategic
+realization.  Every actual live row of a realizing profile now has an exact
+carrier-owned prefix factorization, and its stage coalition mass is literally
+survival times the extracted root's coalition mass.  Thus profile provenance
+is not lost.  But a positive collision atom over an exact minimum tail proves
+that this actual root is not Nash.  The remaining task is to charge that local
+Nash defect, or the shifted tail's excess above minimum debt, strongly enough
+to produce a nontrivial legal minimum-prefix edge.  A packet already matched to the minimum
+prescribed boundary would be Dirac at one owner and would strictly underfund a
+distinct outsider, but boundary matching is not automatic.  Conversely,
+arbitrarily deep literal exact stacks can consist entirely of all-Continue
+roots and preserve the full semantic pair, so depth by itself is not the
+missing producer.  No atomic minimum branch remains.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules
