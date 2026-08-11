@@ -81,6 +81,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationColl
 import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
 import UniformEquilibrium.Diagnostics.Quitting.MinimalFinCounterexample
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStack
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticEqualityStratum
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
 import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupation
 import UniformEquilibrium.Quitting.AbsorptionPath.FiniteWindowRefusalReweighting
@@ -150,6 +151,17 @@ marginal close to Continue.  The remaining counterexample input is a literal
 positive premium or singleton gap at a positive-debt coordinate of these
 triangular stacks; conditioned values and stored Bellman annotations are not
 substituted for literal suffix payoffs.
+
+The closure of attainable literal prescribed/envelope pairs is a compact
+finite-dimensional carrier invariant under every root prefix.  Total debt
+attains a minimum on this carrier, and in a counterexample the minimum is
+positive.  Every exact Nash prefix of a minimizing pair fixes every debt
+coordinate: positive debt has unit deleted survival and zero endpoint premium.
+One positive debtor leaves only its own marginal uncontrolled; two positive
+debtors force all displayed Quit masses to zero.  Every minimizing carrier
+point is the limit of executable literal semantic pairs.  The residual is to
+run conditioned geometry on such a realizing triangular family and produce a
+literal premium, or consume the exact solo-owner/all-Continue equality face.
 
 Every unaugmented value on the optimized tail already dominates the behavioral
 punishment floor, so every finite chronological tail segment reverses to a

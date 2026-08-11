@@ -2300,13 +2300,28 @@ macroscopic debtors force every displayed marginal Quit probability to be
 small.  This is a finite triangular atomic/all-Continue rigidity theorem, not
 an infinite-profile or conditioned-value identification.
 
+The attainable semantic closure supplies an exact finite-dimensional version
+of the same reduction.  Map every executable profile to its prescribed
+terminal payoff and all-behavior envelope.  The closure of these pairs is
+compact, is generated sequentially by executable profiles, and is invariant
+under every fixed root prefix.  Total nonnegative debt attains a minimum on
+this carrier.  Nonexistence makes that minimum positive.  Exact Nash prefixing
+cannot lower the minimum and cannot increase a coordinate, so it fixes every
+debt coordinate.  Consequently every positive debtor has unit deleted
+survival and zero positive endpoint premium.  One positive debtor leaves only
+its own marginal uncontrolled; two positive debtors force every marginal Quit
+mass to vanish.  This closes the compact semantic-pair carrier and its equality
+stratum without asserting that its limiting pair is itself attained by one
+profile.
+
 The remaining premise for this consumer is literal provenance: the endpoint
 gap supplied by conditioned geometry must occur at a positive-debt coordinate
-of these literal triangular stacks.  A conditioned payoff, dynamic-debt
-annotation, or compact boundary does not satisfy this premise without a
-triangular extraction or attainable-semantic closure theorem.  This is
-independent of chronological state return: each prefixed profile is used only
-as a global competitor.
+of a realizing triangular family for the minimum carrier point.  A conditioned
+payoff or dynamic-debt annotation does not satisfy this premise without the
+triangular extraction.  Equivalently, the extraction may collapse to the exact
+solo-owner/all-Continue equality face, which requires an existing atomic or
+plateau consumer.  This is independent of chronological state return: each
+prefixed profile is used only as a global competitor.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules
