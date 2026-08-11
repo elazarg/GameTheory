@@ -2267,8 +2267,17 @@ plateau, or realize a product-root word.
 
 **Literal prefix descent.** For every executable suffix `σ`, choose an exact
 mixed Nash root against its literal terminal payoff and prepend it to `σ`.
-The playerwise all-behavior terminal debt has an exact Bellman recursion;
-every coordinate weakly decreases.  If player `i` has singleton gap `g>0`,
+The playerwise all-behavior terminal debt has the exact positive-part form
+
+```text
+d_i(root :: σ) = (c_i * d_i(σ) - a_i)₊,
+```
+
+where `c_i` is the opponents' Continue mass and `a_i` is the positive root
+Quit-minus-Continue premium.  These actions compose by the chronological
+survival-block law.  Debt loss is exactly opponent-killed debt plus the
+premium consumed from survived debt, and every coordinate weakly decreases.
+If player `i` has singleton gap `g>0`,
 its debt decreases by at least
 `min ((g/(8*M))*debt_i(σ)) (g/2)`.  Hence maximum exploitability is a monotone
 primary objective and total debt is a strict secondary objective, so tied
@@ -2281,13 +2290,23 @@ endpoint-gain bridge is
 quantitative: a root gain `δ` with opponent absorption at most `δ/(8*M)` gives
 an actual singleton gap at least `δ/2`.
 
+Finite literal stacks of arbitrary depth exist by repeated finite mixed Nash
+selection.  Every root is exact against the literal payoff of its remaining
+executable suffix.  Over a lexicographic near-minimizer, every displayed
+suffix stays in the same maximum-exploitability sublevel and every one-step
+total debt drop is below the common accuracy.  Consequently a macroscopic
+debtor has small opponent absorption and small positive endpoint premium; two
+macroscopic debtors force every displayed marginal Quit probability to be
+small.  This is a finite triangular atomic/all-Continue rigidity theorem, not
+an infinite-profile or conditioned-value identification.
+
 The remaining premise for this consumer is literal provenance: the endpoint
-gap supplied by the conditioned-tail reduction must occur on actual
-lexicographic near-minimizers at a positive-debt coordinate.  A conditioned payoff,
-dynamic-debt annotation,
-or compact boundary does not satisfy this premise without a co-realization
-theorem.  This is independent of chronological state return: the prefixed
-profile is used only as a global competitor.
+gap supplied by conditioned geometry must occur at a positive-debt coordinate
+of these literal triangular stacks.  A conditioned payoff, dynamic-debt
+annotation, or compact boundary does not satisfy this premise without a
+triangular extraction or attainable-semantic closure theorem.  This is
+independent of chronological state return: each prefixed profile is used only
+as a global competitor.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules

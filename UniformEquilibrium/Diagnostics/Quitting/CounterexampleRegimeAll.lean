@@ -80,7 +80,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeToggles
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeViolationCollapse
 import UniformEquilibrium.Diagnostics.Quitting.FourPlayerSingletonBlocker
 import UniformEquilibrium.Diagnostics.Quitting.MinimalFinCounterexample
-import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtPrefixDescent
+import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStack
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
 import UniformEquilibrium.Quitting.AbsorptionPath.NormalizedFiniteWindowOccupation
 import UniformEquilibrium.Quitting.AbsorptionPath.FiniteWindowRefusalReweighting
@@ -139,9 +139,17 @@ Literal exact-root prefixing supplies a separate global-minimality consumer:
 maximum terminal exploitability is nonincreasing, while a positive singleton
 gap strictly decreases total playerwise terminal debt.  This lexicographic
 descent removes both unique-maximal-debtor and fixed-player premises.  Its
-counterexample input is an actual near-minimizing suffix family on which some
-positive-debt coordinate has a uniform singleton gap; conditioned values and
-stored Bellman annotations are not substituted for literal suffix payoffs.
+positive-part normal form is an action of the survival-weighted block monoid:
+opponent survival transports literal debt and the positive root endpoint
+premium consumes it.  Arbitrarily deep finite stacks of exact roots exist over
+actual near-minimizing suffixes, every displayed semantic pair is co-realized,
+and every one-step total debt drop is bounded by the common lexicographic
+accuracy.  A macroscopic debtor therefore sees little opponent absorption and
+little positive endpoint premium; two macroscopic debtors force every root
+marginal close to Continue.  The remaining counterexample input is a literal
+positive premium or singleton gap at a positive-debt coordinate of these
+triangular stacks; conditioned values and stored Bellman annotations are not
+substituted for literal suffix payoffs.
 
 Every unaugmented value on the optimized tail already dominates the behavioral
 punishment floor, so every finite chronological tail segment reverses to a
