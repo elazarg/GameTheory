@@ -2614,6 +2614,11 @@ Quit/Continue indifference.  This tie is real, not a proof artifact: an exact
 two-player word uses only recomputed best endpoints, retains positive
 incidence and a negative singleton, and still reaches all-Continue through a
 neutral pair dropout.  The global proof must exclude or consume this tie.
+Neutral deletion does not preserve the minimum face.  In the same literal
+regression the pair profile is a global zero-debt semantic minimizer, but
+deleting the indifferent player preserves the mover's debt and raises the
+survivor's debt by exactly one.  A merge therefore needs cross-player debt
+control or a state-matched return, not merely mover indifference.
 
 Both questions now have sharp alternatives.  The same marked rows admit a
 compact shifted-tail cluster.  Either that cluster lies strictly above the
@@ -2726,6 +2731,14 @@ defect, or the same finite windows normalize to unit coalition clocks whose
 largest atom tends to zero.  The diffuse clock is profile-owned but has no
 exact-Nash policy or common shifted-tail state, so it is not yet an instance
 of the conditioned-diffuse compiler.
+The concentrated branch has a sharper consumer.  Positive stage mass removes
+the survival weight, so the marked owner's local defect tends to zero.  A
+compact shifted-tail subsequence then gives a singleton cylinder, strict
+escape above the minimum fiber, or a uniform positive sum of other-player
+defects on that fiber.  In the last branch one actual other player has a
+legal best-endpoint deviation with exact positive payoff gain, and the same
+coalition cylinder is routed without loss.  What remains is to turn changing
+selected players/actions into a return or punishment construction.
 In the linear branch, arbitrary fractional endpoint words retain incidence
 and satisfy the exact augmented floor
 `retention*initialExcess <= finalExcess + penalty*finalResetDebt`.

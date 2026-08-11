@@ -135,6 +135,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetFaceReprojec
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionGerm
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionWindow
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionTemporalSplit
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionConcentratedConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticLinearPenaltyResetConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticIncidenceDebtRatioRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticFixedTableDiffuseIncidenceRegression
@@ -333,6 +334,10 @@ defect is strict, while zero defect is literal endpoint indifference.  A
 second exact regression shows that best-endpoint routing, positive incidence,
 negative singleton reward, and a zero-defect endpoint can all coexist with
 this tie.  Global chronology must exclude or consume that neutral branch.
+The neutral deletion is not minimum-face safe: in the same literal regression
+the pair profile globally minimizes semantic debt at zero, but deleting the
+indifferent player preserves that player's debt while increasing the
+survivor's debt by one.  Mover neutrality alone gives no merge operation.
 General exit-face Nashification cannot remove those defects while retaining
 the marked inequality: a two-player regression loses collision support and
 reverses the marked endpoint inequality even under approximate Nashification.
@@ -422,7 +427,13 @@ not yet a bounded Bellman window or a chronological tangent.  The exact
 temporal split is explicit: either a positive stage atom recurs and gives a
 literal concentrated prefix packet, or the same profiles carry a finite unit
 coalition clock whose mesh tends uniformly to zero.  The diffuse clock still
-lacks an exact-Nash policy and common shifted-tail state.
+lacks an exact-Nash policy and common shifted-tail state.  In the concentrated
+branch, the owner defect becomes unweighted and vanishes.  Compactifying the
+actual shifted tails gives a singleton cylinder, strict escape above the
+minimum fiber, or a uniform positive defect on other players at the minimum
+fiber.  The latter selects a legal best-endpoint deviation with exact positive
+payoff gain and no-loss coalition routing; recurrence/punishment compilation
+is the remaining step.
 
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common
