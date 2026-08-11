@@ -2560,6 +2560,18 @@ defect is legally collectible; what is not preserved automatically is the
 collision incidence after taking that best response.  This does not make the
 selected tail near-minimal either.
 
+A strict fractional reset keeps the missing geometry.  Moving a fraction
+`lambda` toward the better endpoint reduces the player's literal semantic
+debt by exactly `lambda * liveMass * defect`; every coalition and opponent-
+incidence atom retains at least its `1-lambda` fraction.  If the actual
+prefixed source is `epsilon`-near the global minimum, all but `epsilon` of
+that reduction transfers to the other debt coordinates.  In the generally
+available minimum-reference form, the loss is exactly the prefixed source's
+total-debt excess.  This qualification matters: marked localization places
+the continuation tail on the minimum fiber, not the current root-prefix
+semantic point.  Fractional reset therefore preserves incidence but does not
+yet remove the stopped defect/excess term.
+
 Both questions now have sharp alternatives.  The same marked rows admit a
 compact shifted-tail cluster.  Either that cluster lies strictly above the
 minimum fiber, or it lies on the fiber and the sum of the *other players'*
@@ -2605,6 +2617,18 @@ incidence still positive.  The sharp residual is to produce such a cap--Nash
 root that spends the excursion excess and has positive survival, or to
 eliminate/compile the fixed all-Continue cap face.  Sure absorption can erase
 the old law completely and is a separate boundary case.
+
+At the fixed-law reset minimizer, positive minimum debt actually removes the
+sure-absorption ambiguity.  If some singleton exceeds the returned cap, exact
+Nash selection supplies a strict absorbing descent; minimality forces its
+joint survival to remain positive, so the old incidence survives.  Otherwise
+all-Continue is a cap--Nash fixed point.  This last branch is genuine: a
+literal two-player semantic/law point has reset debt zero, unit collision
+incidence, and a positive-mass coalition with a strict leave toggle, while
+every exact cap--Nash root is all-Continue.  Quantitatively, minimality only
+gives `absorption * D <= D - D_*`; a near return needs the reverse inequality
+up to tolerance.  Neither positive incidence nor positive `D_*` forces that
+near-saturation.
 
 Best-response reset gives a complementary global transfer law.  Resetting
 player `i` to asymptotic best response erases `d_i` and transfers at least

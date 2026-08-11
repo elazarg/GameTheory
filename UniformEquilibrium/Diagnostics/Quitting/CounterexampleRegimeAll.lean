@@ -94,6 +94,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauTightness
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedVariational
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedTailLocalization
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauLocalizedOtherDefect
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPartialResetTransfer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedExitNashificationRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedResetCycleRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloSpineOccupation
@@ -120,6 +121,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPositivePa
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDebtTransfer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetExcursionReturn
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceReturn
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceCapReturn
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDynamicCostate
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtFlow
@@ -280,6 +282,12 @@ or, on the fiber, the other players carry a uniform positive defect sum.
 Switching one such player to its better pure endpoint at that reached row and
 then resuming the original behavior is a legal unilateral deviation with
 exact gain equal to live mass times its coordinate defect.
+Moving only a strict fraction toward that endpoint reduces its semantic debt
+by the corresponding fraction of the defect and retains at least the
+complementary fraction of every terminal incidence atom.  Minimum-reference
+accounting charges the gain to opposite-face transfer plus the current
+prefixed source's exact excess over the minimum; marked localization puts the
+continuation, not automatically this source, on the minimum fiber.
 General exit-face Nashification cannot remove those defects while retaining
 the marked inequality: a two-player regression loses collision support and
 reverses the marked endpoint inequality even under approximate Nashification.
@@ -301,6 +309,13 @@ survival times the old law.  Therefore a positive-survival cap-return selection
 reaches near the minimum while retaining positive same-law incidence.  The
 remaining dynamic step is to produce that return selection, or eliminate or
 compile the constrained all-Continue cap face.
+At a fixed-law reset minimizer there is an unconditional exact dispatch.  A
+singleton cap violation yields an absorbing strict debt descent; positive
+global minimum debt forces its survival to be positive, so incidence is
+retained.  Otherwise all-Continue is the cap fixed point.  Positive incidence
+and a supported strict coalition toggle do not rule out the latter: a literal
+two-player semantic/law point has reset debt zero, unit collision incidence,
+and only the all-Continue cap--Nash root.
 
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common
