@@ -2300,6 +2300,17 @@ macroscopic debtors force every displayed marginal Quit probability to be
 small.  This is a finite triangular atomic/all-Continue rigidity theorem, not
 an infinite-profile or conditioned-value identification.
 
+Deconditioning is now exact on one actual profile.  Its literal payoff is
+`alpha` times its canonical payoff conditioned on eventual absorption.  If
+the same player has singleton payoff at least `delta` and singleton-minus-
+conditioned-endpoint gap at least `eta`, then its actual terminal debt is at
+least `min delta eta` minus the first-row opponent-collision error and the
+conditioned-endpoint approximation error, uniformly in `alpha`.  Hence this
+bridge feeds literal lexicographic descent as soon as the conditioned endpoint
+and positive-singleton witness are attached to the same actual profiles.  The
+current projective conditioned tail and semantic plateau do not supply that
+same-player co-realization automatically.
+
 The attainable semantic closure supplies an exact finite-dimensional version
 of the same reduction.  Map every executable profile to its prescribed
 terminal payoff and all-behavior envelope.  The closure of these pairs is
