@@ -2326,60 +2326,32 @@ compact, is generated sequentially by executable profiles, and is invariant
 under every fixed root prefix.  Its prescribed coordinate lies in the finite
 convex hull of zero and the terminal reward vectors, giving an exact rational
 carrier-realizability screen.  Total nonnegative debt attains a minimum on
-this carrier.  Nonexistence makes that minimum positive.  Exact Nash prefixing
-cannot lower the minimum and cannot increase a coordinate, so it fixes every
-debt coordinate.  Consequently every positive debtor has unit deleted
-survival and zero positive endpoint premium.  The minimum stratum is either an
-exact all-Continue semantic self-loop, or a unique positive-debt owner has
-positive hazard, is singleton-tight, and deters an otherwise-profitable
-outsider through exit/collision risk.  The solo row either closes against the
-owner's singleton vector, forcing the quantitative isolated-negative
-obstruction, or has a concrete affine blocker.  The non-atomic branch always
-has a strict collision cliff at the attractive outsider; if that outsider is
-also the blocker, collision is below the owner-solo payoff, which is below the
-prescribed payoff and outsider singleton.  This closes the
-compact semantic-pair carrier and its finite equality-stratum refinement
-without asserting that its limiting pair is itself attained by one profile.
+this carrier.  Nonexistence makes that minimum positive.  A stronger
+auxiliary-target comparison now identifies the whole minimum stratum.  Given
+a minimum pair `(u,b)`, total debt `D`, and any nonnegative vector `h`, choose
+an exact finite mixed-Nash root against the auxiliary continuation `b-h`, then
+prefix that root to the actual carrier pair.  If `c` is joint Continue mass,
+`alpha_i` is singleton-`i` absorption mass, and `kappa` is collision mass,
+minimum debt gives
 
-The minimum fiber also has an exact state-matched inverse limit.  Joint
+`D * kappa + sum_i alpha_i * (D - h_i) <= 0`.
+
+Taking every `h_i < D` forces the selected root to be all-Continue.  Varying
+one coordinate up to `D` proves `D <= b_i - reward_i({i})` for every player,
+and hence `reward_i({i}) <= u_i`.  Thus every positive minimum semantic pair
+is an exact all-Continue Nash self-loop.  The previously retained atomic solo
+alternative is globally impossible, although its local algebra remains useful
+as a search regression.  Every putative counterexample is now reduced to one
+positive minimum all-Continue semantic plateau.  Applying the same budget at
+`h=b-u` further shows that every exact Nash root against `u` is collision-free
+and is either all-Continue or a solo root whose owner carries all total debt.
+At most one coordinate of the minimum plateau can be singleton-tight.
+
+The minimum fiber still has an exact state-matched inverse limit: joint
 continuity of root prefixing makes its exact-Nash edge graph compact and
-predecessor-serial, hence it supports an infinite chronology whose full
-semantic debt vector is conserved at every edge.  In a counterexample this
-chronology has a sharp global split: either a positive-debt all-Continue
-semantic fixed plateau exists, or one fixed positive-debt owner quits alone
-with positive hazard at every date while all outsiders Continue purely.  In
-the latter branch the owner is singleton-tight against every next value and a
-strictly attractive but deterred outsider exists at every date.  The owner's
-deleted survival is identically one on this spine, so the standard
-player-deleted-clock compiler is inapplicable; the live quantity is the
-owner's own hazard/occupation product.
-
-The occupation product closes that apparent third branch.  If owner survival
-vanishes, the first solo row is already an endpoint-Nash atom; in a
-counterexample its own singleton reward is at most minus the terminal gap and
-strictly below its punishment value.  If owner survival stays positive, the
-owner hazards tend to zero.  Compactness and closed endpoint-Nash constraints
-then produce a minimum-fiber all-Continue Nash cluster point, contradicting
-the global no-plateau certificate of the solo branch.  Hence every
-counterexample lies in exactly the two-form search regime: a positive minimum
-all-Continue semantic plateau, or a quantitative isolated-negative atomic
-solo row.
-
-The atomic branch retains its minimum-carrier prefix edge.  Decrease the solo
-rate to the first value at which all inactive rows are weakly deterred; some
-outsider is exactly tight there.  Activating an isolated tight outsider with
-a neutral owner collision derivative would produce a genuine two-owner exact
-Nash root at the same minimum tail, contradicting unit deleted survival of
-the positive debt.  Below rate one, the finite boundary therefore has either
-a nonzero owner reciprocal-collision increment or a second cotight outsider.
-At rate one the one-sided complementarity condition sharpens this to a
-strictly negative increment or a cotight outsider.  In the negative branch
-the reverse entrant increment is zero, yet the entrant-alone payoff to the
-owner exceeds the owner singleton by at least the positive punishment gap
-`punishmentValue - solo`; the tight entrant is therefore provably not the
-missing punisher.  The remaining atomic theorem is a simultaneous
-multi-outsider active-set alternative: exact support enlargement, a product
-opponent row capping the owner at its singleton, or a compilable cycle.
+predecessor-serial.  The auxiliary-target theorem is stronger than this
+chronology, because it classifies every minimum point rather than only a
+selected orbit.
 
 The plateau branch is finite at the reward-table level.  Its prescribed vector
 lies in the reward-moment polytope and dominates every player's own singleton
@@ -2388,24 +2360,31 @@ beats the prescribed value or a coalition other than that player's singleton
 does.  The semantic carrier also supplies executable profiles converging
 jointly to this prescribed/envelope pair.  Pure-time best-response
 approximants have a subsequential terminal law whose reward moment is exactly
-the limiting envelope; a profitable Never or non-own-singleton atom retains
-uniformly positive mass along that subsequence.  The selected atom is now
-split literally into Never, a collision containing the debtor at its selected
-stop, or opponent absorption before that stop.  The same replacement drives
-the selected player's debt to zero, so the counterexample gap transfers to
-one fixed different player along a subsequence.  Iterating this statement
-cycles player labels only, not profiles or semantic states.  Thus no
-probability-tightness or witness-selection premise remains.  The residual is
-time disintegration and strategic co-realization: aggregate terminal mass
-must be charged to a survival-weighted stage of one executable chronology.
+the limiting envelope.  Finite averaging gives an atom with
+`mass * gain >= debt / card(outcomes)`; bounded rewards split this into
+explicit positive gain and mass floors.  The selected atom is literally
+Never, a collision containing the debtor at its selected stop, or opponent
+absorption before that stop.
+
+The terminal atom now has an exact time disintegration on that same actual
+deviated profile.  Every coalition mass is the sum of live-survival times its
+exact product-action mass at the live rows, while Never is the residual live
+mass.  For a finite pure stop, coalitions excluding the deviator occur before
+the stop and coalitions containing it occur exactly at the stop.  Positive
+waiting or collision mass therefore exposes actual opponent Quit support;
+at each fixed resolution, the mass is either concentrated at one stage or
+carried by a positive diffuse stage charge.  The remaining seam is no longer
+time bookkeeping.  It is strategic incidence: an actual live row in the
+realizing profile has not yet been identified with an exact Nash prefix row
+of the minimum semantic carrier, so its support and charge are not yet a
+legal debt-utilization edge.
 
 The remaining premise for a terminal consumer is strategic realization.  The
 semantic chronology is state-matched inside the compact closure, but a carrier
 pair need not itself be the terminal semantics of one behavior profile.  The
-remaining task is to consume the all-Continue escape plateau or the
-isolated-negative atomic solo row's nonlinear multi-outsider support boundary;
-no compactness, state-matching, pure-Quit exception, or diffuse solo-occupation
-premise remains in this semantic-carrier route.
+remaining task is to couple the marked profitable atom's actual chronology to
+the plateau's exact prefix/debt action, or to derive the same legal packet from
+deep literal exact-prefix stacks.  No atomic minimum branch remains.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules
