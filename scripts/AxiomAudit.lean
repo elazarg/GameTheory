@@ -1061,3 +1061,9 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.quittingInstantPunishmentWorks_iff
 #print axioms GameTheory.isUniformEquilibriumPayoff_soloReward_of_instantPunishment
 #print axioms GameTheory.isUniformEquilibriumPayoff_of_punishmentAdmissibleCycle
+
+-- Endpoint-defect polarity and finite coalition-atom accounting.
+#print axioms GameTheory.quittingRootCoordinateNashDefect_eq_polaritySum
+#print axioms GameTheory.quittingRootEndpointDifference_eq_sum_opponentCoalitionToggle
+#print axioms GameTheory.quittingRootQuitDirectedDefect_le_sum_atoms
+#print axioms GameTheory.quittingRootSuccessorPayoff_collector_sub_eq_continueDirectedDefect
