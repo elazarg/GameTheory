@@ -129,10 +129,12 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceCap
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceRatio
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetSurfaceTension
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetFaceReprojection
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionGerm
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticIncidenceDebtRatioRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticFixedTableDiffuseIncidenceRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauNashMoat
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticTwoReservoirConsumer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticHarmonicReservoirConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDynamicCostate
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtFlow
@@ -363,12 +365,23 @@ positive while its local total defect tends to zero, so no linear diffuse
 modulus follows.  The harmonic and finite positive-part reservoirs can be
 kept on one co-realized reset law and dispatched without contamination; the
 all-Continue cap face is the remaining branch.
+At the no-join harmonic endpoint, the sure-solo row is fully absorbing and
+locally exact, but its unique noncontracting owner has stationary cap zero and
+strictly fails punishment admissibility.  The harmonic reservoir therefore
+gives a quantitative obstruction to both period-one and instant punishment
+completion rather than a solo-payoff compiler.
 The slope support extends uniformly with arbitrary additive error to points
 of sufficiently small reset debt.  Exact quantitative reprojection splits
 into a global linear face penalty or positive off-face violations with
 unbounded violation-to-reset-debt ratio.  The latter is a normalized carrier
 obstruction with joint-law provenance; it furnishes neither a finite routed
 word nor a chronological tangent.
+In the unbounded branch, compactness selects one joint semantic/law contact
+and positive off-face approach points with reset debt negligible relative to
+tension.  The contact has zero tension and reset debt, retains strictly
+positive opponent incidence, and satisfies its exact reward-moment identity.
+The missing datum is a common absorption-normalized Bellman window relating
+those independently co-realized carrier points.
 
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common

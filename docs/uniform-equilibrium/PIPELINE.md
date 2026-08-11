@@ -2698,8 +2698,11 @@ tolerance.  The quantitative reprojection problem has a sharp alternative.
 Either one linear multiple of reset debt controls the tension violation on
 the whole joint carrier, or positive off-face violations have arbitrarily
 large violation-to-reset-debt ratio.  The second branch supplies the precise
-normalized tangent input; it does not by itself select a finite endpoint word
-or a Bellman successor.
+normalized carrier input.  Compactness selects a single joint semantic/law
+contact approached by positive violations with reset debt negligible relative
+to tension.  The contact retains positive opponent incidence and its exact
+reward moment.  The sequence contains no common absorption-normalized Bellman
+window, so it does not select a finite endpoint word or a successor edge.
 
 The harmonic and finite positive-part reservoirs can be kept on one limiting
 outcome law.  At an explicit positive minimum debt gate, either a strict
@@ -2711,6 +2714,15 @@ is precisely the separated all-Continue cap face above.  Thus the remaining
 synthesis is a reset-face reprojection theorem: produce a finite routed reset
 word or a state-matched chronology from that cap plateau, without replacing
 its law by an unrelated compact limit.
+
+The harmonic branch has an exact game-facing decoder, but it is a no-go
+certificate rather than a solo completion.  When no outsider gains by
+joining, the sure-solo row is fully absorbing and satisfies its endpoint-Nash
+successor equations.  The owner is the unique noncontracting coordinate, its
+stationary unilateral cap is zero, and the selected debt share is literal
+full behavioral regret.  The inequality `solo < punishment <= 0` is exactly
+opposite to the punishment-admissibility gate, excluding both the period-one
+completed-cycle compiler and arbitrary instant-punishment continuation.
 
 Best-response reset gives a complementary global transfer law.  Resetting
 player `i` to asymptotic best response erases `d_i` and transfers at least
