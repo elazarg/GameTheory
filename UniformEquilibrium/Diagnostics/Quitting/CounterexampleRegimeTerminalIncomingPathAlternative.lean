@@ -27,8 +27,6 @@ assert that the certificate rules out every product root.  In particular,
 the strict-interior support decoder does not cover the pure-Quit boundary.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

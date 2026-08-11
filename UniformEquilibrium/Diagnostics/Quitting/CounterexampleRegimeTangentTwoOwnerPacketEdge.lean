@@ -38,8 +38,6 @@ The capstone produces one exact Nash--Bellman edge only. It does not construct
 a return, lasso, or cycle.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -23,8 +23,6 @@ step and vertex-pinning data.  Pair-collision signs do not repair this
 singleton target-pinning failure.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

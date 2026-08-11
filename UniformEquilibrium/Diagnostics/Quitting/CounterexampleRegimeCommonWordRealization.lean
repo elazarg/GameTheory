@@ -30,8 +30,6 @@ separately constructed target-closed punishment tails, and it does not assert
 a return, a cycle, or a uniform-equilibrium payoff.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

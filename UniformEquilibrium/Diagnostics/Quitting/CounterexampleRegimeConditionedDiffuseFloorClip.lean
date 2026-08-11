@@ -26,8 +26,6 @@ fixed-target objects; no Bellman predecessor match or chronological splice is
 asserted.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -38,8 +38,6 @@ killed-capacity account is deliberately not made a flow coordinate, and no
 strategic realization, boundary exhaustion, or return is asserted.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

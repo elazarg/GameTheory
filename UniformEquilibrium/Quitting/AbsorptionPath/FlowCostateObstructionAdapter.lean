@@ -31,8 +31,6 @@ feasible set, select a co-state, establish boundary exhaustion, expose a face,
 or decode a strategic repair or return.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

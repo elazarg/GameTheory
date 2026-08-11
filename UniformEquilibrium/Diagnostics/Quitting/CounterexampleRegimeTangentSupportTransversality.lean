@@ -41,8 +41,6 @@ These are first-derivative statements.  They do not supply the projective
 gauge, strict outsider/floor inequalities, or a strategic realization.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

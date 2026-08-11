@@ -27,8 +27,6 @@ with the active tangent owner, but it is directly consumable by the terminal
 prefix pipeline.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -22,8 +22,6 @@ It does not yet prove the endpoint-Nash or punishment inequalities required by
 that strategic compiler.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

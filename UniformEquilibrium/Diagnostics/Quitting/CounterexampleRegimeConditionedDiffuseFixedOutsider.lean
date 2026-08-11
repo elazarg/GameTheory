@@ -18,8 +18,6 @@ at the selected dates the conditioned value lies uniformly below the player's
 singleton payoff.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

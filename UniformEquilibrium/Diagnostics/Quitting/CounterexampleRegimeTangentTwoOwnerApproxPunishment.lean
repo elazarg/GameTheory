@@ -37,8 +37,6 @@ actually attain the punishment infimum, and general quitting min--max theory
 does not provide such attainment.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

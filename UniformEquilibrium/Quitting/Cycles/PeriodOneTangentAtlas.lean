@@ -32,8 +32,6 @@ makes no dynamic-tail occupation, provenance, packet-identification, or
 one-stage realization claim.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

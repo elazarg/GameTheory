@@ -21,8 +21,6 @@ the result to a compactified or conditioned boundary requires a separate
 literal-payoff realization theorem.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

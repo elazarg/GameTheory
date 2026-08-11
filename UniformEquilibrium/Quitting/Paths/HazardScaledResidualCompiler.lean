@@ -23,8 +23,6 @@ coefficient is also the global deviation bound.  This module packages that
 calculation as a nonperiodic path compiler.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

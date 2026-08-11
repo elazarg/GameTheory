@@ -23,8 +23,6 @@ results do not identify a conditioned value, stored Bellman annotation, or
 compactified boundary with the payoff of an actual continuation profile.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

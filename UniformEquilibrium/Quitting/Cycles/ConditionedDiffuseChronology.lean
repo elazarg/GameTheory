@@ -32,8 +32,6 @@ pinning do not by themselves produce an essential-APS path: a strict boundary
 slack can subsidize a conditionally nonviable coordinate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

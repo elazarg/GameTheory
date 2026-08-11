@@ -23,8 +23,6 @@ to assert attainment of the infinite-horizon supremum.  The result is the exact
 finite near-maximality statement needed before any projective extraction.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

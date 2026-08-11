@@ -24,8 +24,6 @@ summable joint-absorption clock, while conditioned reward-box boundedness and
 singleton individual rationality follow from the canonical seam itself.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -28,8 +28,6 @@ need not produce a two-owner root.  No chronological return, punishment-
 admissible cycle, or equilibrium compiler is inferred.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

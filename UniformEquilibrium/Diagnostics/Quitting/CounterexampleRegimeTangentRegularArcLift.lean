@@ -54,8 +54,6 @@ needed before this interface can produce an arc.  No lifting, Puiseux
 resolution, or arbitrary-player conclusion is asserted here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

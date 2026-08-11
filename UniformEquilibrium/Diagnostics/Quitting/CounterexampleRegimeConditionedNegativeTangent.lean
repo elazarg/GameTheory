@@ -28,8 +28,6 @@ diagnostic payoff against the repeated root, not an attachment of that root
 to the varying canonical suffix.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

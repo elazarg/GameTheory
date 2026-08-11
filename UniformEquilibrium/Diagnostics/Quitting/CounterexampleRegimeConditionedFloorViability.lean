@@ -34,8 +34,6 @@ and when `a` tends to zero a fixed strict plateau slack can conceal an
 order-one conditioned deficit.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

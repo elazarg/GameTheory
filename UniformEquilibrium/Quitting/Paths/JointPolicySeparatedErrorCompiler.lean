@@ -29,8 +29,6 @@ complementarity is expected to leave a refusal error of the form
 `O(mesh) * opponent absorption`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

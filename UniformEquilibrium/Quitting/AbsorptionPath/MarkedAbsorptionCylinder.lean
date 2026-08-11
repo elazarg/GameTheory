@@ -23,8 +23,6 @@ There is no `Never` field.  Missing mass is an exit port; a completed infinite
 path must be a different type.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

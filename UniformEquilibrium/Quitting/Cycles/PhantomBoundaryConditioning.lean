@@ -29,8 +29,6 @@ payoff when its opponent-absorption mass is small relative to the remaining
 eventual-absorption scale.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

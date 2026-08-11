@@ -36,8 +36,6 @@ finite date.  Any finite repair must change absorbing deliveries or support,
 not merely transport a scalar boundary share.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

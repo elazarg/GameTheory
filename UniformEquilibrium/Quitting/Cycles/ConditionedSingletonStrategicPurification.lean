@@ -29,8 +29,6 @@ purification is ruled out by `ConditionedProductPurification` unless the
 phantom boundary was already absent.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

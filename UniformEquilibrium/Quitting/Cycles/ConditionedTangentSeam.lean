@@ -27,8 +27,6 @@ that a conditioned coalition law is an ordinary product root or turn an
 upward conditioned transition into a unilateral deviation.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -24,8 +24,6 @@ three-owner root.  In particular it does not supply the remaining outsider,
 floor, or box inequalities.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

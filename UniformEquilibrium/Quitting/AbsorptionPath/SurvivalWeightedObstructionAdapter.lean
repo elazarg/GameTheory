@@ -29,8 +29,6 @@ exhaustion.  Payoff delivery and refusal semantics remain in their existing
 game-facing modules.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

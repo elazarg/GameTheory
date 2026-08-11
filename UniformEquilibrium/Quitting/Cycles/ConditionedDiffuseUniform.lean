@@ -21,8 +21,6 @@ game supplies the certificates, that strict phantom slack can be removed, or
 that an incomplete deleted clock can be repaired.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

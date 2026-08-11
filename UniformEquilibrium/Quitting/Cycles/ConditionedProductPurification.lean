@@ -34,8 +34,6 @@ correlation argument that changes the coalition law approximately rather
 than an exact one-row replacement.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

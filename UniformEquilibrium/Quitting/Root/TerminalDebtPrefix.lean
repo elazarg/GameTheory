@@ -22,8 +22,6 @@ and deviation sides.  No stored boundary value, conditioned payoff, path
 return, or state-matching premise is identified with that literal payoff.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

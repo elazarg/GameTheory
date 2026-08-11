@@ -41,8 +41,6 @@ zero-face return word.  It does not claim support enlargement, punishment
 realization, or boundary exhaustion.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

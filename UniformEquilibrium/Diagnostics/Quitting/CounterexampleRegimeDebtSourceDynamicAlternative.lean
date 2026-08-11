@@ -31,8 +31,6 @@ surviving boundaries.  No absorption-normal argument, strategic repair, or
 boundary realization is asserted.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

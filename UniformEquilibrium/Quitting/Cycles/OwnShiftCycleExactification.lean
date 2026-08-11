@@ -39,8 +39,6 @@ exactification interface; it does not assert that the system is feasible or
 that own-set shifts exhaust general reward-table perturbations.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

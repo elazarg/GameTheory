@@ -22,8 +22,6 @@ roots that alter several marginals, and it does not provide state matching or
 an actual continuation profile.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

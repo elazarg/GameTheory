@@ -30,8 +30,6 @@ word.  Membership retains the exact source edge only existentially through
 the image witness.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

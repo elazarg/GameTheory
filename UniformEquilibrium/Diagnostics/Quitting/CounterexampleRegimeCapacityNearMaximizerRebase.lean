@@ -24,8 +24,6 @@ reward, its terminal mismatch vanishes identically.  Thus arbitrary-state
 rebasing can erase the terminal debt which carries the counterexample gap.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

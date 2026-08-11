@@ -25,8 +25,6 @@ concentration alone does not imply individual rationality for the exceptional
 owner.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

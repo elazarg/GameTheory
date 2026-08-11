@@ -23,8 +23,6 @@ punishment claim; those are the remaining strategic inputs to the approximate
 solo-cycle compiler.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

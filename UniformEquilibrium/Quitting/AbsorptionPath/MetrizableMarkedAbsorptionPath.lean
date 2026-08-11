@@ -31,8 +31,6 @@ projections.  Completed exact-seam composition is defined separately so that
 the semantic completion does not presume a binary operation or uniqueness of
 composition fibres.
 -/
-
-set_option autoImplicit false
 set_option maxRecDepth 4096
 set_option maxSynthPendingDepth 16
 set_option synthInstance.maxSize 2048

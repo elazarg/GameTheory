@@ -32,8 +32,6 @@ singleton roots; general product-root returns still require collision-aware
 strategic control.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

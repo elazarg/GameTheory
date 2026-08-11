@@ -28,8 +28,6 @@ strict subclass of `punishmentValue ≤ 0`; a quantitative incoming-path or
 same-state capacity premise is still genuinely required.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

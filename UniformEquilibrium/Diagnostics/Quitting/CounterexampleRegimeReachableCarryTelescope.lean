@@ -28,8 +28,6 @@ domination of that boundary the exact remaining premise; reachability and
 capacity alone do not provide it.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

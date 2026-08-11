@@ -33,8 +33,6 @@ finite normalized return from tangent compatibility or projective
 chronology.  That construction is the remaining global realization seam.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

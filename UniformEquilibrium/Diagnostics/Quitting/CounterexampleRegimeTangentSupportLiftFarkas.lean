@@ -49,8 +49,6 @@ A uniform certificate for the simultaneous nonlinear root search would need
 additional semialgebraic or monomial-consistency machinery.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

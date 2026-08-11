@@ -21,8 +21,6 @@ evaluator identity uses only the actual Nash--Bellman recurrence from
 `tail t` to `tail (t + 1)`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

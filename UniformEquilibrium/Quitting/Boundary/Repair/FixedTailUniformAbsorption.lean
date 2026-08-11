@@ -21,8 +21,6 @@ The result is local to one fixed target.  It does not select roots
 continuously or concatenate independently generated predecessor edges.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

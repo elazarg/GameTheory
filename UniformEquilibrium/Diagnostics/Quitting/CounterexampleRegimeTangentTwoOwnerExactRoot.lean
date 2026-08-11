@@ -24,8 +24,6 @@ gates. The results below supply one exact edge; they do not construct a
 return, a lasso, or a solved cycle.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -35,8 +35,6 @@ additional annihilation and sign conditions of a strategic Farkas
 certificate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

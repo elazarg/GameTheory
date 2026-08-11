@@ -23,8 +23,6 @@ inside each fixed-root slice, but failure of that restricted test does not
 certify exclusion from the full solved-cycle locus.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

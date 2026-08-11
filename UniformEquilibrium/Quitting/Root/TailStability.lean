@@ -21,8 +21,6 @@ perturbation; it does not claim that independently selected fixed-tail roots
 form a chronological path.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

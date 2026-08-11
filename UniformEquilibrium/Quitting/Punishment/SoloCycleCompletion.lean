@@ -24,8 +24,6 @@ strictly more flexible than the passive stationary solo compiler, whose
 Never deviation requires a nonnegative owner payoff.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

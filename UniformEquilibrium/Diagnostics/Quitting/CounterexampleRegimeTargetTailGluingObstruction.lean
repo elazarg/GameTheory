@@ -30,8 +30,6 @@ tails.  A common repair-zero premise, or a construction implying it, remains
 necessary.  No return or cycle is asserted here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

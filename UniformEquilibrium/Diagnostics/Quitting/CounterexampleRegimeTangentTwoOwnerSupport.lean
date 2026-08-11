@@ -35,8 +35,6 @@ does not by itself verify the strict outsider/floor cell.  The singular case
 does not imply a pure or sure-exit solution.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -34,8 +34,6 @@ particular, this module does not assert that a strategically defined packet
 or occupation realizes any prescribed boundary annotation.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 open scoped BigOperators

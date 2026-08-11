@@ -34,8 +34,6 @@ does not identify the phantom annotation with terminal semantics or rule out
 the resulting finite blocker pattern.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

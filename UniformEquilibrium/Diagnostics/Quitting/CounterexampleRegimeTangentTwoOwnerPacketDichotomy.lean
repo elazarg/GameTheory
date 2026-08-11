@@ -37,8 +37,6 @@ nearby positive-charge exact edges, or one of these gates is tight. No branch
 constructs a return, lasso, punishment plan, or solved cycle.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

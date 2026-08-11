@@ -40,8 +40,6 @@ join an absorbing coalition, and that terminal deviation cannot be punished
 after the fact.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -39,8 +39,6 @@ dissipation vanish, so the zero-face recurrence theorem still needs its
 displayed boundary-mismatch nonexpansion premise.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

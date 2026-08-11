@@ -19,8 +19,6 @@ witnesses with one common result.  No total splice theorem for arbitrary
 equal-anchor pairs, fibre uniqueness, or amalgamation of independently chosen
 completed splice witnesses is asserted here.
 -/
-
-set_option autoImplicit false
 set_option maxRecDepth 4096
 set_option maxSynthPendingDepth 16
 set_option synthInstance.maxSize 2048

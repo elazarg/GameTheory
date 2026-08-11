@@ -24,8 +24,6 @@ obstruction is the same nonvanishing immediate-Quit defect that appears in
 the deleted-complete proper-face compiler.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

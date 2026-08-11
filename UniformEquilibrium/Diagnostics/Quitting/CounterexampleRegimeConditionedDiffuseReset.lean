@@ -22,8 +22,6 @@ chronological word.  Those are the state-matching and viability obligations
 for a strategic reset.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -32,8 +32,6 @@ constants.  Strategic residual and exact policy repair are separate; they
 are consumed by the separated-error compiler.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

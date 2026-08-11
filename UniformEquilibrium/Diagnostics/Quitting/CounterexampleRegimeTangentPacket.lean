@@ -30,8 +30,6 @@ or a nonzero tangent packet is extracted from one-stage positive-absorption
 windows.  No periodic attachment or positive-charge return is inferred.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

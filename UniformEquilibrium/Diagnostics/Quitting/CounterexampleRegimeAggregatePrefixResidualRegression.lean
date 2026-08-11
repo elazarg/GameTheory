@@ -23,8 +23,6 @@ no equation capable of deleting the joint-Continue-carried debt term isolated
 in `prependResidual_le_jointContinue_mul_anchorDebt_add_charge`.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

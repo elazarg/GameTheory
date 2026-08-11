@@ -33,8 +33,6 @@ satisfies the two-owner reciprocal compatibility equations, or compile a
 punishment tail.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

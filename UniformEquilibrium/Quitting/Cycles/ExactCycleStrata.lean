@@ -31,8 +31,6 @@ This is a density consumer and a counterexample restriction.  It does not
 assert that solved-cycle strata are dense or manufacture a cycle.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

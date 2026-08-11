@@ -17,8 +17,6 @@ cap exceeds the target by `O(rate)`.  The existing approximate punishment
 completion then handles the owner's possible negative singleton payoff.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

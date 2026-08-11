@@ -23,8 +23,6 @@ an opponent-absorption factor and uses the exact source mixing equation; no
 such assertion is made here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

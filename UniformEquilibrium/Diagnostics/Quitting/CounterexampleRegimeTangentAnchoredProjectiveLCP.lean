@@ -29,8 +29,6 @@ Collision and higher-coalition terms belong to that unresolved lifting step,
 not to the singleton first-event identity proved here.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

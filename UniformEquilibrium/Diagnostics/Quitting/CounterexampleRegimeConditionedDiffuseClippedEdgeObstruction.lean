@@ -22,8 +22,6 @@ target must be selected with the preceding root simplex coordinate, rather
 than merely with a fresh all-Continue tail.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -26,8 +26,6 @@ the deleted clock for Continue deviations.  Boundary tightness is explicit;
 no assertion is made on a strict phantom-boundary coordinate.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

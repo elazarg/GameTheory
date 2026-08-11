@@ -48,8 +48,6 @@ compactness, and strategic realizability.  Clients choose the charge-channel
 type and supply any domain-specific adapters separately.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace Math

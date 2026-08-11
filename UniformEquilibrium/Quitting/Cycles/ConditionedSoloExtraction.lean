@@ -31,8 +31,6 @@ while summability of `β_owner` makes its tail sum vanish.  Thus the whole
 conditioned payoff vector converges to `owner`'s solo payoff vector.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

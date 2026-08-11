@@ -27,8 +27,6 @@ The theorem does not construct the enlarged root or turn the negative
 collision into a punishment cycle.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

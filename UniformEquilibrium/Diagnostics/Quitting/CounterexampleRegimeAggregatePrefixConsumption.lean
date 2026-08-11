@@ -29,8 +29,6 @@ relation nor the displayed objective comparison; changing a behavioral tail
 alone does not provide either fact.
 -/
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory
