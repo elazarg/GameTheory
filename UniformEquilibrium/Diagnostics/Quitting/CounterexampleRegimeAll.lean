@@ -99,6 +99,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectStra
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauFractionalResetFloor
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauFractionalResetDropout
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPairDropoutConsumer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPairDropoutSignRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedExitNashificationRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedResetCycleRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloSpineOccupation
@@ -130,8 +131,11 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceRat
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetSurfaceTension
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetFaceReprojection
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionGerm
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionWindow
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticLinearPenaltyResetConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticIncidenceDebtRatioRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticFixedTableDiffuseIncidenceRegression
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticFixedTableCapDefectRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauNashMoat
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticTwoReservoirConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticHarmonicReservoirConsumer
@@ -315,7 +319,11 @@ an exact positive-mass pair-to-singleton member dropout.  In a counterexample
 the surviving singleton owner is either in the isolated-negative punishment
 branch or has a distinct strict joiner whose pure-Quit update restores an
 overlapping positive-mass pair.  This remains a static root transition rather
-than a Nash--Bellman continuation.
+than a Nash--Bellman continuation.  The dropout itself is unsigned: an exact
+two-player regression reaches a zero-defect all-Continue endpoint through a
+pair-to-singleton Continue overwrite which the dropout player strictly
+disfavors.  A strategic cycle requires a same-row sign invariant in addition
+to routed mass.
 General exit-face Nashification cannot remove those defects while retaining
 the marked inequality: a two-player regression loses collision support and
 reverses the marked endpoint inequality even under approximate Nashification.
@@ -361,27 +369,41 @@ identity `(D-D*)*fresh + (1-survival)*D* * I <= 0`, forcing every exact cap
 root to all-Continue.  For every fixed positive incidence threshold this
 unique root has a robust positive total-defect moat under cap perturbation.
 A fixed normalized three-player table nevertheless keeps incidence uniformly
-positive while its local total defect tends to zero, so no linear diffuse
-modulus follows.  The harmonic and finite positive-part reservoirs can be
-kept on one co-realized reset law and dispatched without contamination; the
-all-Continue cap face is the remaining branch.
+positive while its local total defect at the displayed semantic cap tends to
+zero, so no linear diffuse modulus follows.  The harmonic and finite
+positive-part reservoirs can be kept on one co-realized reset law and
+dispatched without contamination; the all-Continue cap face is the remaining
+branch.
 At the no-join harmonic endpoint, the sure-solo row is fully absorbing and
 locally exact, but its unique noncontracting owner has stationary cap zero and
 strictly fails punishment admissibility.  The harmonic reservoir therefore
 gives a quantitative obstruction to both period-one and instant punishment
 completion rather than a solo-payoff compiler.
+The common limiting law is weaker than a common strategic account: fixed-law
+minimization can change the envelope and the realizing profiles, and it does
+not preserve the marked stopping time or live row.  Stored terminal incidence
+also differs from fresh incidence of the cap--Nash prefix.  The missing
+producer must co-realize these data at one reached row.
 The slope support extends uniformly with arbitrary additive error to points
 of sufficiently small reset debt.  Exact quantitative reprojection splits
 into a global linear face penalty or positive off-face violations with
 unbounded violation-to-reset-debt ratio.  The latter is a normalized carrier
 obstruction with joint-law provenance; it furnishes neither a finite routed
 word nor a chronological tangent.
+The linear branch gives an exact finite-word floor
+`retention * initialExcess <= finalExcess + penalty * finalResetDebt` and a
+matching opposite-face transfer bound.  Exact return to the minimum reset
+face forces a first unit-weight overwrite, but anchored support gives no
+stepwise Lyapunov descent and the forced overwrite has no payoff sign.
 In the unbounded branch, compactness selects one joint semantic/law contact
 and positive off-face approach points with reset debt negligible relative to
 tension.  The contact has zero tension and reset debt, retains strictly
 positive opponent incidence, and satisfies its exact reward-moment identity.
-The missing datum is a common absorption-normalized Bellman window relating
-those independently co-realized carrier points.
+The approach may be chosen through literal executable profiles.  One fixed
+opponent and terminal coalition then carry uniform positive mass in finite
+profile-dependent windows, while every moving row's survival-weighted owner
+defect is negligible at the tension scale.  The cutoff may drift, so this is
+not yet a bounded Bellman window or a chronological tangent.
 
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common

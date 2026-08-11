@@ -2602,6 +2602,11 @@ strictly gains by joining and a pure-Quit update gives positive mass to the
 overlapping pair.  These are literal product-root transitions.  They are not
 consecutive Nash--Bellman edges, so iterating the pair replacement still
 requires a chronology or a conserved routed account.
+The selected pair dropout is not automatically a better-response move.  A
+two-player exact regression follows `pair -> singleton -> all-Continue` and
+ends at zero root defect, while the dropout player strictly prefers Quit at
+the pair row.  Routed mass therefore needs a same-row sign certificate before
+it can enter a strict-toggle or Boolean-curl consumer.
 
 Both questions now have sharp alternatives.  The same marked rows admit a
 compact shifted-tail cluster.  Either that cluster lies strictly above the
@@ -2688,10 +2693,10 @@ uniqueness also give a positive total-Nash-defect moat which persists for
 nearby caps.  The moat has no uniform modulus as incidence tends to zero, and
 nearby-cap topology does not identify the cap of an actual shifted tail.
 A fixed normalized three-player table realizes this limitation sharply:
-opponent incidence stays at least one half while total local Nash defect is
-`1/(n+2)`, and every exact root Nash against the displayed cap is
-all-Continue.  Thus even a constant depending on the fixed reward table
-cannot linearly charge diffuse incidence to local defect.
+opponent incidence stays at least one half while total Nash defect against the
+displayed cap is `2q-q^2` for `q=1/(n+2)`, and every exact root Nash against
+that cap is all-Continue.  Thus even a constant depending on the fixed reward
+table cannot linearly charge diffuse incidence to cap-local defect.
 Exact face support does extend nonlinearly: for every tolerance there is a
 reset-debt radius on which the surface-tension inequality loses only that
 tolerance.  The quantitative reprojection problem has a sharp alternative.
@@ -2701,8 +2706,20 @@ large violation-to-reset-debt ratio.  The second branch supplies the precise
 normalized carrier input.  Compactness selects a single joint semantic/law
 contact approached by positive violations with reset debt negligible relative
 to tension.  The contact retains positive opponent incidence and its exact
-reward moment.  The sequence contains no common absorption-normalized Bellman
-window, so it does not select a finite endpoint word or a successor edge.
+reward moment.  The approach can be chosen through literal executable
+profiles.  A fixed opponent and coalition then carry uniformly positive mass
+in finite windows of those same profiles, and every moving row's
+survival-weighted owner defect is negligible relative to the tension scale.
+The window cutoffs can drift without bound: terminal-law compactness supplies
+neither a common absorption-normalized Bellman window nor a successor edge.
+In the linear branch, arbitrary fractional endpoint words retain incidence
+and satisfy the exact augmented floor
+`retention*initialExcess <= finalExcess + penalty*finalResetDebt`.
+The same account bounds opposite-face transfer with leakage from lost
+retention and final reset debt.  An exact return to the minimum reset face
+therefore contains a unit-weight move.  The supporting inequality is anchored
+at the selected surface-tension point, so it gives no consecutive-point
+Lyapunov descent; the forced full move also has no payoff sign.
 
 The harmonic and finite positive-part reservoirs can be kept on one limiting
 outcome law.  At an explicit positive minimum debt gate, either a strict
@@ -2723,6 +2740,16 @@ stationary unilateral cap is zero, and the selected debt share is literal
 full behavioral regret.  The inequality `solo < punishment <= 0` is exactly
 opposite to the punishment-admissibility gate, excluding both the period-one
 completed-cycle compiler and arbitrary instant-punishment continuation.
+
+The shared limiting law must not be confused with a shared strategic account.
+Fixed-law reset minimization preserves the prescribed reward moment and every
+terminal incidence coordinate, but it may change the envelope and the
+profiles which realize the joint carrier point.  It does not retain the
+marked pure stopping time, live row, or before/at-stop chronology.  Likewise,
+stored suffix-law incidence is not fresh incidence of the exact cap--Nash
+root priced by the Nash moat.  A strategic consumer needs a same-profile
+marked reprojection or a cap-provenance theorem attaching both quantities to
+one reached row.
 
 Best-response reset gives a complementary global transfer law.  Resetting
 player `i` to asymptotic best response erases `d_i` and transfers at least
