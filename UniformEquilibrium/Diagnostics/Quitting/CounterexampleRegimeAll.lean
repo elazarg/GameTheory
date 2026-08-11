@@ -34,6 +34,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOneStageObstr
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeExactCycleStrata
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeEventualAllContinuePlateau
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFiniteInstability
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeStrictToggleOrbit
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeFloorViolationBudget
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacket
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketDefect
@@ -92,7 +93,9 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAllContinuePlatea
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauTightness
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedVariational
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedTailLocalization
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauLocalizedOtherDefect
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedExitNashificationRegression
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMarkedResetCycleRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloSpineOccupation
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSupportEntry
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAtomicSupportBoundary
@@ -116,6 +119,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectTele
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPositivePartSplit
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDebtTransfer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetExcursionReturn
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetIncidenceReturn
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDynamicCostate
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtFlow
@@ -273,18 +277,30 @@ At the selected pure-time Quit row, collision mass times the marked player's
 local root defect is bounded by reset debt, hence that defect vanishes.  The
 row's own shifted-tail cluster either stays strictly above the minimum fiber
 or, on the fiber, the other players carry a uniform positive defect sum.
+Switching one such player to its better pure endpoint at that reached row and
+then resuming the original behavior is a legal unilateral deviation with
+exact gain equal to live mass times its coordinate defect.
 General exit-face Nashification cannot remove those defects while retaining
 the marked inequality: a two-player regression loses collision support and
 reverses the marked endpoint inequality even under approximate Nashification.
+Iterating exact endpoint resets is not a substitute: another two-player
+regression transfers the defect once, kills collision mass, and then reaches
+the zero-absorption all-Continue root.  A counterexample does have a finite
+closed strict membership-toggle orbit in the static coalition cube, but this
+does not supply Bellman chronology.
 
 Off-minimum reset excursions have an exact return account.  A cap--Nash
 prefix preserves the reset coordinate and opposite-face transfer, while its
 absorption pays exactly for the fall in excursion excess.  Minimizing total
 debt on the reset face produces either a return to the global minimum fiber
 or a canonical off-minimum point whose only cap--Nash root is all-Continue.
-This constrained minimization does not preserve the original terminal
-incidence law; transporting that law or consuming the localized other-player
-defect is the remaining dynamic step.
+The compact joint carrier of semantic pairs and complete terminal outcome laws
+repairs the incidence projection: fixed-law reset minimization retains every
+incidence coordinate, and literal prefixing acts by fresh root atoms plus joint
+survival times the old law.  Therefore a positive-survival cap-return selection
+reaches near the minimum while retaining positive same-law incidence.  The
+remaining dynamic step is to produce that return selection, or eliminate or
+compile the constrained all-Continue cap face.
 
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common

@@ -2552,11 +2552,13 @@ branch.  At the selected pure-time Quit date, the persistent collision atom
 mass times the marked player's local root defect is bounded by that reset
 profile's initial debt.  Since best-response reset drives the debt to zero,
 the marked player's defect tends to zero at those exact executable rows while
-the same coalition retains positive mass.  This does not Nashify the other
-coordinates or make the selected tail near-minimal.  The next finite theorem
-must Nashify the exit face while retaining the marked Quit inequality and
-opponent support, or emit a sure-exit/toggle/collision-repair certificate;
-independently, the marked shifted-tail excess must be localized or charged.
+the same coalition retains positive mass.  At any reached row, changing one
+player to its better pure endpoint and then resuming the original profile is
+an ordinary unilateral behavioral deviation whose exact gain is live mass
+times that player's local coordinate defect.  Thus a localized other-player
+defect is legally collectible; what is not preserved automatically is the
+collision incidence after taking that best response.  This does not make the
+selected tail near-minimal either.
 
 Both questions now have sharp alternatives.  The same marked rows admit a
 compact shifted-tail cluster.  Either that cluster lies strictly above the
@@ -2570,6 +2572,16 @@ by `epsilon` and reverses the marked inequality for `epsilon < 1/2`.  Minimum
 localization must therefore be used to consume or transfer the other-player
 defect, not merely to invoke a finite Nash correspondence.
 
+Naive iteration of those legal resets is now excluded as a closure argument.
+In an exact two-player regression the defect vector follows
+`(0,1) -> (1,0) -> (0,0)`: the first reset destroys the collision atom and the
+second reaches an exact all-Continue endpoint-Nash root with zero absorption.
+Finiteness of the changing player labels therefore supplies no absorbing
+cycle.  Counterexample geometry does independently supply a closed strict
+membership-toggle walk on the finite coalition cube, beginning with a solo
+exit and a two-player collision, but its vertices are static absorbing action
+profiles rather than a Bellman-compatible chronology.
+
 Reset excursions have a complementary exact account.  If `d_who=0` at the
 reset cluster, any exact cap--Nash prefix keeps that coordinate zero and
 scales all debts by joint Continue.  Its absorption pays precisely the drop
@@ -2578,9 +2590,21 @@ retained.  A singleton reward above the cluster cap forces an absorbing
 strict return.  On the remaining cap-dominating face, minimize total debt
 subject to `d_who=0`: either this constrained minimizer returns to the global
 minimum fiber, or it is a canonical off-minimum obstruction at which every
-cap--Nash root is all-Continue.  The constrained minimization does not retain
-the original terminal incidence law.  The remaining return theorem must
-transport that law, or eliminate/compile this constrained plateau.
+cap--Nash root is all-Continue.
+
+The lost-incidence issue can be repaired without pretending it solves the
+return selection.  The closure of literally co-realized semantic pairs and
+complete terminal outcome laws is compact, and the law determines the
+prescribed payoff by an exact reward moment.  Minimizing on `d_who=0` while
+holding the entire law fixed retains every incidence coordinate and the full
+opposite-face transfer account.  A literal prefix acts affinely on the law:
+new first-stage atoms are inserted and every old atom is multiplied by joint
+survival.  Hence any positive-survival cap return preserving the quantitative
+return-selection account reaches the minimum neighborhood with the same-law
+incidence still positive.  The sharp residual is to produce such a cap--Nash
+root that spends the excursion excess and has positive survival, or to
+eliminate/compile the fixed all-Continue cap face.  Sure absorption can erase
+the old law completely and is a separate boundary case.
 
 Best-response reset gives a complementary global transfer law.  Resetting
 player `i` to asymptotic best response erases `d_i` and transfers at least
