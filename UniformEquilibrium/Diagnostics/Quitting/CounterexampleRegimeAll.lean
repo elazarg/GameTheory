@@ -94,10 +94,12 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSupportEntry
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAtomicSupportBoundary
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAuxiliaryNashBudget
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumAggregateSurplus
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumAggregateSurplusConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumPlateauPacket
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauQuantitativePassport
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauTimeDisintegration
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauIncidence
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectCharge
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloQuantitativePassport
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStackAllContinueRegression
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
@@ -174,26 +176,30 @@ substituted for literal suffix payoffs.
 
 The closure of attainable literal prescribed/envelope pairs is a compact
 finite-dimensional carrier invariant under every root prefix.  Total debt
-attains a minimum on this carrier, and in a counterexample the minimum is
-positive.  Every exact Nash prefix of a minimizing pair fixes every debt
-coordinate: positive debt has unit deleted survival and zero endpoint premium.
-The minimum stratum is either an exact all-Continue semantic self-loop, or a
-unique positive-debt owner has positive hazard, is singleton-tight, and
-deters an otherwise-profitable outsider through exit/collision risk.  Every
-such solo row either closes against the owner's singleton vector, forcing the
-quantitative isolated-negative obstruction, or has a concrete affine blocker.
-The non-atomic branch always has a strict collision cliff at the attractive
-outsider.  If that outsider is also the blocker, collision is below the
-owner-solo payoff, which is below the prescribed payoff and outsider singleton.
-Every minimizing carrier point is the limit of executable literal semantic
-pairs.  Compact predecessor seriality and owner-occupation accounting reduce
-every counterexample to a positive minimum all-Continue plateau or a
-provenance-preserving atomic solo edge.  Plateau best responses retain a
-profitable Never, at-stop collision, or before-stop opponent-absorption atom
-and reset the selected player's debt while transferring the gap to another
-player.  The atomic edge has a sharp first support boundary, including at pure
-Quit.  The residual is time-local charging of the marked plateau atom or a
-nonlinear multi-outsider support-or-punishment theorem.
+attains a positive minimum in a counterexample.  Selecting an exact finite
+Nash root against an arbitrary auxiliary target `b-h` and prefixing it to the
+actual minimum pair gives the collision/singleton budget
+`D*kappa + sum_i alpha_i*(D-h_i) <= 0`.  Hence every positive minimum is an
+exact all-Continue semantic self-loop; the former provenance atomic branch is
+globally impossible.  The open auxiliary cube contains only all-Continue
+roots, while its critical face is collision-free and admits singleton mass
+only on a full-debt coordinate.
+
+Plateau best responses retain a quantitative Never, at-stop collision, or
+before-stop opponent-absorption atom.  Its terminal mass has an exact time
+disintegration, and every exposed actual live row is an exact carrier-owned
+semantic prefix edge.  A positive collision atom over a minimum tail proves
+that row is not exact Nash.  Arbitrary-root algebra now charges every observed
+opponent absorption to the tail's debt drop plus the row's local Nash defect;
+on pure-time response profiles the survival-weighted defect is bounded by the
+initial response debt.  The sharp remaining term is positive
+survival-weighted tail-debt drift.  Separately, every player subset has one
+positive-mass reward-moment outcome carrying its exact aggregate singleton
+surplus.  In a counterexample it is either Never or an absorbing coalition
+with a strict sure-exit toggle blocker.  The four-player negative control
+saturates this finite alternative, so the residual is a chronological
+defect/excess telescope or a negative/Never vertex-germ consumer, not another
+static reward inequality.
 
 Every unaugmented value on the optimized tail already dominates the behavioral
 punishment floor, so every finite chronological tail segment reverses to a

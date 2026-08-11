@@ -2397,6 +2397,18 @@ arbitrarily deep literal exact stacks can consist entirely of all-Continue
 roots and preserve the full semantic pair, so depth by itself is not the
 missing producer.  No atomic minimum branch remains.
 
+The arbitrary-root debt action now closes the local accounting seam.  If
+`delta_i` is player `i`'s one-stage Nash defect at an actual row, then
+`(1-c_-i)d_i(tail) <= d_i(tail)-d_i(current)+delta_i`.  Summing at the global
+minimum charges all opponent absorption to tail excess plus total local
+defect.  Along the selected pure-time response, live mass times the relevant
+defect is bounded by the initial response debt, so the defect term is
+collectable without summing unrelated local regrets.  The remaining term is
+survival-weighted positive tail-debt drift, and an exact pure-Continue
+regression shows it cannot be removed pointwise.  The next decisive theorem
+must telescope this drift compatibly with the stopping time, or dispatch the
+harmonic Never mass through the negative vertex/punishment route.
+
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules
 out strict plateau slack, (b) solves enlarged-support state matching, or (c)
