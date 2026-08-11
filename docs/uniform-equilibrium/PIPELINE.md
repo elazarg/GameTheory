@@ -2322,15 +2322,26 @@ prescribed payoff and outsider singleton.  This closes the
 compact semantic-pair carrier and its finite equality-stratum refinement
 without asserting that its limiting pair is itself attained by one profile.
 
-The remaining premise for this consumer is literal provenance: the endpoint
-gap supplied by conditioned geometry must occur at a positive-debt coordinate
-of a realizing triangular family for the minimum carrier point.  A conditioned
-payoff or dynamic-debt annotation does not satisfy this premise without the
-triangular extraction.  Equivalently, the extraction may collapse to the exact
-solo-owner deterrence face or all-Continue self-loop.  These require a
-state-matched inverse limit or an existing atomic/plateau consumer.  This is
-independent of chronological state return: each prefixed profile is used only
-as a global competitor.
+The minimum fiber also has an exact state-matched inverse limit.  Joint
+continuity of root prefixing makes its exact-Nash edge graph compact and
+predecessor-serial, hence it supports an infinite chronology whose full
+semantic debt vector is conserved at every edge.  In a counterexample this
+chronology has a sharp global split: either a positive-debt all-Continue
+semantic fixed plateau exists, or one fixed positive-debt owner quits alone
+with positive hazard at every date while all outsiders Continue purely.  In
+the latter branch the owner is singleton-tight against every next value and a
+strictly attractive but deterred outsider exists at every date.  The owner's
+deleted survival is identically one on this spine, so the standard
+player-deleted-clock compiler is inapplicable; the live quantity is the
+owner's own hazard/occupation product.
+
+The remaining premise for a terminal consumer is strategic realization.  The
+semantic chronology is state-matched inside the compact closure, but a carrier
+pair need not itself be the terminal semantics of one behavior profile.  The
+exact extraction may collapse to the solo-owner deterrence spine or the
+all-Continue semantic plateau.  The remaining task is to consume one of these
+two strategic chronologies; no compactness or state-matching premise remains
+in this semantic-carrier route.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules

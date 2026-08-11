@@ -74,6 +74,64 @@ theorem quittingSingletonCollisionReward_lt_soloReward_of_soloEndpoint
     linarith
   exact lt_of_mul_lt_mul_left hweightedCollision hquit.le
 
+omit [Fintype ι] in
+/-- An attractive singleton that is deterred at a positive solo-owner hazard
+has an exact positive support-entry rate no larger than the displayed rate.
+At that scalar rate the outsider is indifferent between Quit and Continue
+against the same declared tail.  No assertion is made about the other
+outsider rows at the selected rate. -/
+theorem exists_positive_soloRate_outsider_tight_of_endpoint
+    (owner outsider : ι) (hazard : PMF Bool) (tail : Payoff ι)
+    (hquit : 0 < (hazard true).toReal)
+    (hgain : tail outsider <
+      quittingSoloReward reward outsider outsider)
+    (hendpoint :
+      (hazard false).toReal *
+            quittingSoloReward reward outsider outsider +
+          (hazard true).toReal *
+            quittingSingletonCollisionReward reward owner outsider ≤
+        (hazard true).toReal *
+            quittingSoloReward reward owner outsider +
+          (hazard false).toReal * tail outsider) :
+    ∃ rate : ℝ, 0 < rate ∧ rate ≤ (hazard true).toReal ∧
+      (1 - rate) * quittingSoloReward reward outsider outsider +
+          rate * quittingSingletonCollisionReward reward owner outsider =
+        rate * quittingSoloReward reward owner outsider +
+          (1 - rate) * tail outsider := by
+  let gap : ℝ → ℝ := fun rate =>
+    (1 - rate) * quittingSoloReward reward outsider outsider +
+        rate * quittingSingletonCollisionReward reward owner outsider -
+      (rate * quittingSoloReward reward owner outsider +
+        (1 - rate) * tail outsider)
+  have hmass := quittingSoloHazardMass_add hazard
+  have hfalse : (hazard false).toReal = 1 - (hazard true).toReal := by
+    linarith
+  have hgapZero : 0 < gap 0 := by
+    dsimp only [gap]
+    norm_num
+    exact hgain
+  have hgapHazard : gap (hazard true).toReal ≤ 0 := by
+    dsimp only [gap]
+    rw [← hfalse]
+    exact sub_nonpos.mpr hendpoint
+  have hcontinuous : ContinuousOn gap
+      (Set.Icc 0 (hazard true).toReal) := by
+    dsimp only [gap]
+    fun_prop
+  obtain ⟨rate, hrate, hrateZero⟩ :=
+    (convex_Icc 0 (hazard true).toReal).isPreconnected.intermediate_value
+      (Set.right_mem_Icc.mpr hquit.le)
+      (Set.left_mem_Icc.mpr hquit.le) hcontinuous
+      ⟨hgapHazard, hgapZero.le⟩
+  have hratePositive : 0 < rate := by
+    rcases eq_or_lt_of_le hrate.1 with hzero | hpositive
+    · subst rate
+      exact absurd hrateZero (ne_of_gt hgapZero)
+    · exact hpositive
+  refine ⟨rate, hratePositive, hrate.2, ?_⟩
+  dsimp only [gap] at hrateZero
+  linarith
+
 /-- **Solo-owner closure refinement.**  At a positive minimum semantic-debt
 coordinate, either all-Continue is an exact semantic self-loop, or there is
 a unique positive-debt owner and an attractive-singleton outsider.  In the
