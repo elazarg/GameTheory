@@ -2340,9 +2340,13 @@ lies in the reward-moment polytope and dominates every player's own singleton
 reward.  At every positive-debt coordinate, however, either Never strictly
 beats the prescribed value or a coalition other than that player's singleton
 does.  The semantic carrier also supplies executable profiles converging
-jointly to this prescribed/envelope pair.  What remains is tightness of the
-terminal outcome laws: limiting reward-moment membership does not by itself
-select one profile realizing the limiting atom distribution.
+jointly to this prescribed/envelope pair.  Pure-time best-response
+approximants have a subsequential terminal law whose reward moment is exactly
+the limiting envelope; a profitable Never or non-own-singleton atom retains
+uniformly positive mass along that subsequence.  Thus no probability-tightness
+premise remains.  The residual is strategic co-realization: the deviation law
+belongs to one player's varying best-response sequence, not to a common
+equilibrium chronology.
 
 The remaining premise for a terminal consumer is strategic realization.  The
 semantic chronology is state-matched inside the compact closure, but a carrier
