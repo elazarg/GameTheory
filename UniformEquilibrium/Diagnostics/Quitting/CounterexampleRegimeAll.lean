@@ -137,7 +137,9 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojection
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionTemporalSplit
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionConcentratedConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionFixedLabel
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetReprojectionTwoFaceBridge
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticConcentratedSingletonConsumer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticConcentratedSingletonCancellation
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticStrictTailEscapeReturn
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticLinearPenaltyResetConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticIncidenceDebtRatioRegression
@@ -440,9 +442,16 @@ is the remaining step.  Finite-label extraction freezes one non-owner player,
 one best endpoint, and a joint root/tail limit with positive coalition mass
 and quantitative positive defect.  The limit is therefore provably non-Nash,
 so it cannot enter an exact reset or cycle compiler without Nashification.
+The corresponding same-profile partial reset is fully co-realized: it has
+exact positive gain, exact debt transfer, and retains the marked stage atom.
+It reaches the mover's zero-debt face exactly when the one-row gain pays the
+mover's entire source debt; it need not preserve the old owner's zero face.
 In the singleton-cylinder branch, owner defect control becomes vanishing
 positive Quit advantage and yields a third-player strict joiner, an
 owner-join gain canceled by other coalition states, or a punishment moat.
+The cancellation branch has a fixed finite label: either the shifted tail
+frequently rises by a fixed fraction of the singleton gain, or one fixed
+opponent coalition carries a quantitative loss when the owner joins it.
 The tail-escape branch is orientation-consistent: cap--Nash return is exactly
 equivalent to spending the tail's excess debt by absorption, while an
 all-Continue cap face can stall with zero spend.

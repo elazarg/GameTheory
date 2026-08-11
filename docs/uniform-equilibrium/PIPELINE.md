@@ -2745,12 +2745,25 @@ positive coalition mass and quantitative positive defect.  That limit is
 provably not exact Nash, so it cannot be inserted directly into the cap-return
 or exact-cycle interfaces.  It is now a fixed local Nashification/transport
 problem rather than a player-varying occupation problem.
+The same-profile partial reset at that row is nevertheless exact: it gives a
+joint semantic/law source and target, positive behavioral gain, exact debt
+balance and other-player transfer, and retention of the same marked stage
+atom.  It reaches the mover's zero-debt face iff the one-row gain exhausts the
+mover's source debt.  A different pre-existing zero-debt face is not preserved
+automatically, which is the two-face reprojection seam.
 If the concentrated coalition is a singleton opponent, the marked owner's
 positive Quit advantage vanishes.  The exact counterexample alternatives are
 a fixed third-player strict joiner, owner-side table gain canceled by other
 coalition states in the mixed row, or a fixed punishment moat.  Excluding
 owner table-joining removes the cancellation branch; positive singleton mass
 alone is not a stationary or conditioned singleton germ.
+The cancellation branch also has a finite strategic label.  Quantitatively,
+either the actual shifted tail frequently exceeds the owner singleton payoff
+by a fixed fraction of its table joining gap, or one fixed nonempty opponent
+coalition and Boolean action frequently carry a probability-weighted loss
+when the owner is inserted.  The former re-enters the strict tail-return
+problem; the latter is a real support-enlargement obstruction rather than an
+unsigned Mobius coefficient.
 In the strict tail-escape alternative, direction is not contradictory.  For
 an exact cap--Nash prefix of the escaped tail, absorption spends exactly
 `D(tail)-D(prefix)`; reaching the minimum within a tolerance is equivalent to
