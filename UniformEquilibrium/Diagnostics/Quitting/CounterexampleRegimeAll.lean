@@ -93,6 +93,8 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloSpineOccupati
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSupportEntry
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAtomicSupportBoundary
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAuxiliaryNashBudget
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumDebtSimplex
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticWeightedAuxiliaryNashBudget
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumAggregateSurplus
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumAggregateSurplusConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumPlateauPacket
@@ -100,6 +102,8 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauQuantitati
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauTimeDisintegration
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauIncidence
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectCharge
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDefectTelescope
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPositivePartSplit
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloQuantitativePassport
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStackAllContinueRegression
 import UniformEquilibrium.Quitting.AbsorptionPath.CollisionConcentration
@@ -200,6 +204,20 @@ with a strict sure-exit toggle blocker.  The four-player negative control
 saturates this finite alternative, so the residual is a chronological
 defect/excess telescope or a negative/Never vertex-germ consumer, not another
 static reward inequality.
+
+Normalized minimum debts form a probability simplex, with nonnegative
+singleton slack above its complementary base.  Singleton tightness is exactly
+a unique full-debt, zero-slack vertex gate; away from those gates every exact
+minimum root is all-Continue.  Positive costates give the same conclusion for
+weighted debt minima through an anisotropic auxiliary moat.  On one realizing
+pure-time law, positive-part accounting removes the terminal-outcome count:
+debt is paid either by quantitative harmonic Never mass or by quantitative
+opponent-containing chronological charge.  A finite Abel telescope consumes
+the latter up to endpoint/tail excess and survival-weighted local-defect
+occupation.  Uniform near-minimum tails reduce all excess terms to one
+epsilon, but diffuse defect occupation is not automatically one player's
+collectible regret.  A matched reset/debt-transfer theorem, or a direct bound
+on that occupation, is the remaining dynamic consumer.
 
 Every unaugmented value on the optimized tail already dominates the behavioral
 punishment floor, so every finite chronological tail segment reverses to a

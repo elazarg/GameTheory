@@ -2397,17 +2397,36 @@ arbitrarily deep literal exact stacks can consist entirely of all-Continue
 roots and preserve the full semantic pair, so depth by itself is not the
 missing producer.  No atomic minimum branch remains.
 
+Positive-part accounting on the same realizing pure-time law removes the
+exponential terminal-outcome loss.  For every positive debtor and every
+`theta` in `(0,1)`, either a `theta` fraction of its debt is harmonic Never
+mass, forcing a quantitative negative prescribed payoff and eventually the
+literal Never deviation, or the same deviated profiles carry at least
+`(1-theta)d_i/(2M)` total probability on opponent-containing outcomes.  That
+finite mass is exactly the sum of the chronological stage charges below.
+
 The arbitrary-root debt action now closes the local accounting seam.  If
 `delta_i` is player `i`'s one-stage Nash defect at an actual row, then
 `(1-c_-i)d_i(tail) <= d_i(tail)-d_i(current)+delta_i`.  Summing at the global
 minimum charges all opponent absorption to tail excess plus total local
 defect.  Along the selected pure-time response, live mass times the relevant
-defect is bounded by the initial response debt, so the defect term is
-collectable without summing unrelated local regrets.  The remaining term is
-survival-weighted positive tail-debt drift, and an exact pure-Continue
-regression shows it cannot be removed pointwise.  The next decisive theorem
-must telescope this drift compatibly with the stopping time, or dispatch the
-harmonic Never mass through the negative vertex/punishment route.
+one-row defect is bounded by the initial response debt, but its occupation sum
+is not automatically one player's collectible regret.  The other pointwise
+term is survival-weighted positive tail-debt drift, and an exact pure-Continue
+regression shows it cannot be removed locally.  The next decisive theorem must
+respect both the stopping time and player labels, or dispatch the harmonic
+Never mass through the negative vertex/punishment route.
+
+This finite telescope is now exact.  The sum of opponent-absorption debt
+charges through a cutoff is bounded by endpoint live excess,
+absorption-weighted shifted-tail excess, and survival-weighted local Nash
+defects, minus initial excess.  If every shifted tail through the cutoff is
+within `epsilon` of the minimum fiber, all excess terms together cost at most
+`epsilon`.  What remains is the defect occupation sum.  It cannot be treated
+as one unilateral deviation: diffuse rows may keep each individually
+selectable defect small while their survival-weighted sum stays positive.
+The required consumer must either force this occupation to vanish or extract
+one matching reset/debt-transfer label from it.
 
 **Diminishing-returns stop rule.** This row excludes extensions of the
 diagnostic ontology by themselves. Work advances the row only if it (a) rules
