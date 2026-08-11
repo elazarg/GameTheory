@@ -95,8 +95,10 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAtomicSupportBoun
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticAuxiliaryNashBudget
 import UniformEquilibrium.Diagnostics.Quitting.TerminalCapNashEndpointTransport
 import UniformEquilibrium.Diagnostics.Quitting.TerminalCapNashChronology
+import UniformEquilibrium.Diagnostics.Quitting.TerminalCapNashRenewalObstruction
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCapNashDebtSupport
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCapNashNearMinimum
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticDebtHomotopySelection
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumDebtSimplex
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticWeightedAuxiliaryNashBudget
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticMinimumAggregateSurplus
@@ -111,6 +113,8 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauPositivePa
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDebtTransfer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDynamicCostate
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtConsumer
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtFlow
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticNashDefectMobiusIncidence
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticNegativeVertexGerm
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloQuantitativePassport
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStackAllContinueRegression
@@ -245,6 +249,19 @@ two-opponent separator remains.  The unresolved term is now the defect
 occupation of changing maximal-debt owners, together with the own-singleton
 vertex events invisible to their deleted clocks.
 
+Fractional costates supported on a tied maximum-debt face add no power to a
+separable row objective: one maximal-debt coordinate always dominates.  A
+coupled finite reset/incidence flow does retain more structure.  Every such
+flow obeys exact player-subset Hall inequalities, strict cuts have a
+quantitative max-debt/surplus consumer, and positive flows contain a pure
+positive label path.  The weighted Hall converse and co-realized semantic
+state chronology are deliberately not inferred.  Independently, Boolean
+Möbius expansion charges coordinate Nash defect to explicit played
+singleton, pair, and higher coalition cylinders.  A finite-cutoff pigeonhole
+selects one fixed player/coalition/orientation label carrying a quantitative
+share of defect occupation, but positive-part cancellation and scattered
+states prevent reading that label as a legal deviation or cycle.
+
 Cap--Nash prefixing gives an actual-profile counterpart with no jointly
 realized cap premise.  Select an exact mixed Nash root against the common
 continuation profile's coordinatewise best-response cap, then execute that
@@ -273,6 +290,16 @@ has vanishing total absorption, payoff and cap displacement are only linear
 in that absorption, and each finite block's survival remains uniformly
 positive.  Stacks selected at different depths need not be compatible, so no
 infinite Never path or renewal follows.
+
+If a cap stack nevertheless reaches a distant debt target, it must spend a
+macroscopic absorption fraction.  Its exact conditional-delivery identity
+then isolates cancellation between absorbed delivery and the surviving
+terminal cap as the only payoff escape.  An honest period-one regression
+shows that exact cap--Nash selection may instead stall.  The cap-to-prescribed
+debt homotopy has the same sharp boundary: at a positive minimum every
+pre-endpoint exact root is all-Continue; a nontrivial endpoint is a unique
+solo debt gate with a joiner or punishment certificate, but the exact Nash
+selection can remain all-Continue on the whole closed homotopy.
 
 At a negative zero-slack debt vertex, stationary escape has an exact
 consumer.  If outsiders do not gain by joining the owner's singleton exit,
