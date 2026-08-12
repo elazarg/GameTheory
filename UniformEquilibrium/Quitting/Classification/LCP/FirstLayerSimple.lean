@@ -200,5 +200,20 @@ theorem exists_uniformEquilibriumPayoff_of_normalLayer_one_eq_empty
   exact ⟨quittingTerminalPayoff reward
     (quittingStationaryProfile reward root), huniform⟩
 
+/-- A counterexample cannot lie in the already-solved empty-first-layer
+subcase of the corrected all-abnormal regime.  This is the unconditional
+strategic restriction currently supplied by the all-abnormal producer: the
+stronger conclusion that the corrected normal core is nonempty still needs
+the later-layer construction described at the top of this file. -/
+theorem normalLayer_one_ne_empty_of_not_exists_uniformEquilibriumPayoff
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (hnot : ¬ ∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff) :
+    normalLayer (normalizedSoloMatrix reward) 1 ≠ ∅ := by
+  intro hempty
+  exact hnot
+    (exists_uniformEquilibriumPayoff_of_normalLayer_one_eq_empty
+      reward hempty)
+
 end QuittingLCPClassification
 end GameTheory

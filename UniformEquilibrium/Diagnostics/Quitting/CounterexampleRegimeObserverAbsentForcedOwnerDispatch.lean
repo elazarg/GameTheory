@@ -559,4 +559,66 @@ theorem QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategic
   · exact Or.inr ⟨packet, Or.inr (Or.inr (Or.inl hnegative))⟩
   · exact Or.inr ⟨packet, Or.inr (Or.inr (Or.inr hpositive))⟩
 
+/-- The orientation-preserving strategic output carried by one fixed
+rectangle packet.  Unlike the earlier consumer-only capstone, every branch
+retains the terminal membership, cardinality, and reward-sign data which
+selected its named consumer. -/
+def HasQuittingStoppingLawOrientationPreservingStrategicDispatch
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    {regime : QuittingCounterexampleRegime reward}
+    {frontier : QuittingCounterexampleStoppingLawFrontier regime}
+    (packet : QuittingStoppingLawVanishingDebtRectangleSequence frontier) :
+    Prop :=
+  (packet.observer ∉ packet.terminal.val ∧
+      HasQuittingStoppingLawObserverAbsentForcedOwnerDispatch packet
+        (quittingStoppingLawObserverAbsentMassLower packet)) ∨
+    HasQuittingStoppingLawSingletonStrategicOrientation packet ∨
+    (packet.observer ∈ packet.terminal.val ∧
+      1 < packet.terminal.val.card ∧
+      reward packet.terminal packet.observer < 0 ∧
+      HasQuittingStoppingLawNegativeCollisionAtomicDispatch packet
+        (quittingStoppingLawNegativeCollisionMassLower packet)) ∨
+    (packet.observer ∈ packet.terminal.val ∧
+      1 < packet.terminal.val.card ∧
+      0 < reward packet.terminal packet.observer ∧
+      HasQuittingStoppingLawPositiveCollisionMarkedTailDispatch packet
+        ((packet.charge / 4) /
+          ((Fintype.card (QuittingTerminalOutcome ι) : ℝ) *
+            quittingRewardBound reward)))
+
+/-- **Orientation-preserving exhaustive stopping-law capstone.**  A quitting
+counterexample frontier supplies either a prescribed-payoff atom sequence or
+one fixed rectangle packet in exactly one of the four terminal geometries.
+Each geometry is returned together with the strategic dispatch constructed
+from it, so downstream consumers do not have to recover discarded
+provenance. -/
+theorem
+    QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_orientationPreservingStrategicDispatch
+    {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+    {regime : QuittingCounterexampleRegime reward}
+    (frontier : QuittingCounterexampleStoppingLawFrontier regime) :
+    Nonempty (QuittingStoppingLawPrescribedAtomSequence frontier) ∨
+      ∃ packet : QuittingStoppingLawVanishingDebtRectangleSequence frontier,
+        HasQuittingStoppingLawOrientationPreservingStrategicDispatch packet := by
+  classical
+  rcases frontier.exists_prescribedAtomSequence_or_vanishingDebtRectangleSequence
+      with hprescribed | hrectangle
+  · exact Or.inl hprescribed
+  · obtain ⟨packet⟩ := hrectangle
+    refine Or.inr ⟨packet, ?_⟩
+    rcases packet.openOrientation_or_positiveTargetCollision with hopen |
+      ⟨hobserver, hcollision, hpositive⟩
+    · rcases packet.refineOpenOrientation hopen with habsent | hsingleton |
+        hnegative
+      · exact Or.inl ⟨habsent,
+          packet.observerAbsent_forcedOwnerDispatch habsent⟩
+      · exact Or.inr (Or.inl hsingleton)
+      · exact Or.inr (Or.inr (Or.inl ⟨hnegative.1, hnegative.2.1,
+          hnegative.2.2,
+          packet.negativeCollision_atomicDispatch hnegative.1
+            hnegative.2.1 hnegative.2.2⟩))
+    · exact Or.inr (Or.inr (Or.inr ⟨hobserver, hcollision, hpositive,
+        packet.positiveTargetCollision_markedTailDispatch hobserver hcollision
+          hpositive⟩))
+
 end GameTheory

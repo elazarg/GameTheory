@@ -3173,16 +3173,32 @@ case is constructive: if the first corrected layer is empty, an exact
 stationary terminal Nash profile exists and its terminal payoff is uniform.
 The exhaustive five-way theorem is only a matrix-regime partition.
 
-The later-layer all-abnormal construction, homogeneous and non-`Q` stationary
-producers, public-correlation semantics, the projective-`Q-bar` continuous-path
-producer, and the simple-case-qualified absorption-path-to-ordinary compiler
-remain open Lean obligations.
+The later-layer all-abnormal construction and the homogeneous and ordinary
+non-`Q` strategic producers are now complete.  The ordinary non-`Q` proof
+uses a forbidden projective direction and an analytic Bellman germ.  Its
+all-Continue endpoint preserves enough punctured support to contradict the
+corrected normal-core restriction.  At an absorbing endpoint, two positive
+hazards give unilateral contraction; a unique positive hazard exposes one
+nonpositive opponent singleton column by an opponent-first-event
+normalization and is repaired by a two-hazard terminal construction.
 
-**Acceptance.** Extend the first-layer result through the full corrected
-all-abnormal recursion, then attach concrete strategy or path constructors to
-the remaining matrix branches. Test whether the positive-debt residual is
-forced onto the still-hard standard-`Q`, non-projective-`Q-bar` side only after
-those implications are theorem-bearing.
+Public-correlation semantics, the projective-`Q-bar` continuous-path producer,
+and the simple-case-qualified absorption-path-to-ordinary compiler remain open
+Lean obligations.
+
+The counterexample-facing boundary is now theorem-bearing rather than left as
+an inference from the matrix partition.  Nonexistence of an ordinary uniform
+payoff unconditionally forces a nonempty corrected normal core, excludes the
+homogeneous simplex branch, and makes the corrected principal matrix a
+textbook standard-`Q` matrix.  The projective/simplex `Q` conclusion follows
+as a weaker corollary.  No literature axiom, general quitting-game conjecture,
+or strategic producer premise appears in either theorem.
+
+**Acceptance.** The ordinary counterexample-to-standard-`Q` restriction is
+closed.  Continue separately with concrete strategy or path constructors on
+the standard-`Q` branches; in particular, test whether the positive-debt
+residual is forced onto the non-projective-`Q-bar` side without weakening the
+ordinary-strategy or chronology requirements.
 
 ### `LIT-P2-1` — define the positive-recursive nonrectangular theorem's repository adapter
 

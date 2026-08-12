@@ -22,15 +22,15 @@
       "obstruction_class": "OB-ALIGN",
       "representative": "Nonempty (QuittingStoppingLawPrescribedAtomSequence frontier)",
       "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
-      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_orientationPreservingStrategicDispatch"
     },
     {
       "id": "SL-ABSENT-WALL",
       "status": "open",
       "obstruction_class": "OB-ALIGN",
-      "representative": "HasQuittingStoppingLawObserverAbsentForcedOwnerDispatch packet (quittingStoppingLawObserverAbsentMassLower packet)",
+      "representative": "packet.observer ∉ packet.terminal.val ∧ HasQuittingStoppingLawObserverAbsentForcedOwnerDispatch packet (quittingStoppingLawObserverAbsentMassLower packet)",
       "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
-      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_orientationPreservingStrategicDispatch"
     },
     {
       "id": "SL-SINGLETON",
@@ -38,26 +38,40 @@
       "obstruction_class": "OB-SINGLETON",
       "representative": "HasQuittingStoppingLawSingletonStrategicOrientation packet",
       "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
-      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_orientationPreservingStrategicDispatch"
     },
     {
       "id": "SL-NEG-COLLISION",
       "status": "open",
       "obstruction_class": "OB-ALIGN",
-      "representative": "HasQuittingStoppingLawNegativeCollisionAtomicDispatch packet (quittingStoppingLawNegativeCollisionMassLower packet)",
+      "representative": "packet.observer ∈ packet.terminal.val ∧ 1 < packet.terminal.val.card ∧ reward packet.terminal packet.observer < 0 ∧ HasQuittingStoppingLawNegativeCollisionAtomicDispatch packet (quittingStoppingLawNegativeCollisionMassLower packet)",
       "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
-      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_orientationPreservingStrategicDispatch"
     },
     {
       "id": "SL-POS-COLLISION",
       "status": "open",
       "obstruction_class": "OB-RETURN",
-      "representative": "HasQuittingStoppingLawPositiveCollisionMarkedTailDispatch packet ((packet.charge / 4) / (card outcomes * rewardBound))",
+      "representative": "packet.observer ∈ packet.terminal.val ∧ 1 < packet.terminal.val.card ∧ 0 < reward packet.terminal packet.observer ∧ HasQuittingStoppingLawPositiveCollisionMarkedTailDispatch packet ((packet.charge / 4) / (card outcomes * rewardBound))",
       "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
-      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_orientationPreservingStrategicDispatch"
     }
   ],
   "transitions": [
+    {
+      "id": "PRESERVE-RECTANGLE-ORIENTATION-PROVENANCE",
+      "kind": "maintenance",
+      "target_ids": [
+        "SL-ABSENT-WALL",
+        "SL-SINGLETON",
+        "SL-NEG-COLLISION",
+        "SL-POS-COLLISION"
+      ],
+      "summary": "The exhaustive capstone now retains, on the same rectangle packet, the observer-membership, coalition-cardinality, and reward-sign facts that select each strategic consumer; those facts are no longer discarded between producer and leaf.",
+      "evidence": [
+        "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean"
+      ]
+    },
     {
       "id": "FRONTIER-BASELINE",
       "kind": "census",
@@ -273,6 +287,22 @@
       "summary": "A literal two-player quitting reset square can have all four vertices on one common positive total-debt fiber while the same observer reset gains one on the target face and loses one on the parallel source face. Thus quitting semantics plus common-fiber equality do not source-match parallel edges. The witness has no positive global semantic-debt minimum, so positive global-minimum provenance is the exact remaining possible repair.",
       "evidence": [
         "experiments/quitting/MinimumFiberResetSquareCompatibility.lean"
+      ]
+    },
+    {
+      "id": "DROP-COUNTEREXAMPLE-PREFIX-CAPACITY-FIELD",
+      "kind": "hypothesis_dropped",
+      "target_ids": [
+        "SL-PRESCRIBED",
+        "SL-ABSENT-WALL",
+        "SL-SINGLETON",
+        "SL-NEG-COLLISION",
+        "SL-POS-COLLISION"
+      ],
+      "summary": "Canonical punishment-floor prefix-capacity finiteness is no longer a primitive field of the counterexample regime. The stored positive terminal exploitability gap already rules out a uniform payoff; the established finite-prefix closing dichotomy then forces finite canonical capacity, whose toReal remains the least nonnegative bound. Exact debt telescoping alone does not give a numerical bound because its logarithmic theorem still requires an actual behavioral realization of the prefix value and cap.",
+      "evidence": [
+        "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegime.lean",
+        "UniformEquilibrium/Quitting/Debt/Dynamic/PunishmentFloorCapSplice.lean"
       ]
     }
   ]

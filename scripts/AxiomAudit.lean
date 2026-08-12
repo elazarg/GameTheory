@@ -8,9 +8,14 @@ import Math.PMFProduct.CollisionMass
 import Math.SchauderFixedPoint
 import UniformEquilibrium.Quitting.Classification.SingletonPacketDefectAlgebra
 import UniformEquilibrium.Quitting.Classification.SingletonPacketEnergy
+import UniformEquilibrium.Quitting.Classification.LCP.CounterexampleNecessary
+import UniformEquilibrium.Quitting.Classification.LCP.LaterLayerAbnormal
+import UniformEquilibrium.Quitting.Classification.LCP.HomogeneousProducer
+import UniformEquilibrium.Quitting.Classification.LCP.NormalCoreStrictnessExample
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixConsumption
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixResidualRegression
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticLiteralSourceReturnNoGo
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAtomicOwner
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBoundaryProvenanceAlternative
@@ -338,8 +343,18 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 
 -- Terminal-to-uniform selection and the asymptotic-Nash bridge.
 #print axioms GameTheory.StochasticGame.isUniformεEquilibrium_of_isεAsymptoticNash_of_upperApproximation
+#print axioms GameTheory.quittingGame_hasUniformDeviationUpperApproximation
+#print axioms GameTheory.quittingGame_isUniformεEquilibrium_of_terminalNash_finite
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_of_terminalNash_all_errors
 #print axioms GameTheory.quittingGame_exists_uniformEquilibriumPayoff_iff_terminalNash_all_errors
+#print axioms GameTheory.not_exists_uniformEquilibriumPayoff_iff_exists_terminalExploitabilityGap
+
+-- The finite-dimensional semantic prefix is literal splicing, continuous,
+-- and acts on exact-root debt by the proved survival-block formula.
+#print axioms GameTheory.quittingTerminalSemanticPair_rootThenContinuation
+#print axioms GameTheory.continuous_quittingTerminalSemanticPrefix
+#print axioms GameTheory.quittingTerminalSemanticDebt_prefix_eq_blockAct
+#print axioms GameTheory.quittingTerminalSemanticDebt_prefix_le
 
 -- The admissible-cycle compiler and the three-branch trichotomy.
 #print axioms GameTheory.exists_uniformEquilibriumPayoff_of_admissible_quittingCyclicContinuationBlock
@@ -615,6 +630,7 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.quittingGame_uniformPayoff_or_punishmentFloorReachable_canonicalPotential
 #print axioms GameTheory.quittingPunishmentFloorSelected_potential_decrement
 #print axioms GameTheory.not_exists_uniformEquilibriumPayoff_iff_nonempty_counterexampleRegime
+#print axioms GameTheory.QuittingCounterexampleRegime.prefixChargeCapacity_ne_top
 #print axioms GameTheory.not_exists_uniformEquilibriumPayoff_iff_exists_gap_and_finiteChargeCapacity
 #print axioms GameTheory.punishmentFloorPrefixChargeCapacity_ne_top_iff
 #print axioms GameTheory.terminalExploitabilityGap_le_finiteMinMaxDynamicDebt
@@ -1212,6 +1228,19 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.observerAbsent_carrierMass_eq_clock
 #print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.observerAbsent_forcedOwnerDispatch
 #print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch
+#print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_orientationPreservingStrategicDispatch
+
+-- Exact counterexample-facing LCP boundary.  Corrected all-abnormal,
+-- homogeneous, and ordinary non-Q branches have unconditional strategic
+-- producers.  Therefore failure of an ordinary uniform-equilibrium payoff
+-- forces the nonhomogeneous textbook standard-Q side unconditionally.
+#print axioms GameTheory.QuittingLCPClassification.exists_uniformEquilibriumPayoff_of_allPlayersAbnormal
+#print axioms GameTheory.QuittingLCPClassification.exists_uniformEquilibriumPayoff_of_homogeneousMatrixBranch
+#print axioms GameTheory.QuittingLCPClassification.exists_uniformEquilibriumPayoff_of_ordinaryNonQMatrixBranch
+#print axioms GameTheory.QuittingLCPClassification.lcp_necessary_alternative_of_not_exists_uniformEquilibriumPayoff
+#print axioms GameTheory.QuittingLCPClassification.projectiveQ_of_not_exists_uniformEquilibriumPayoff
+#print axioms GameTheory.QuittingLCPClassification.standardQMatrixSide_of_not_exists_uniformEquilibriumPayoff
+#print axioms GameTheory.QuittingLCPClassification.NormalCoreStrictnessExample.reward_normalCore_ssubset_normalLayer_one
 
 -- The exhaustive singleton leaf has only the existing alignment obstruction:
 -- positive punishment and both recurrent cancellation outputs compress to the
@@ -1246,6 +1275,15 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.ownerQuit_mul_quittingOwnerOutsiderDeviationRectangle_eq
 #print axioms GameTheory.exists_sourceConsumer_or_continueFaceLoss_of_rectangleOccupation
 #print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.observerAbsent_finiteClock_faceLoss
+
+-- Literal positive reached rows cannot be inserted unchanged into the exact
+-- Nash--Bellman graph.  Root--tail complementarity forces their coordinate
+-- residual to zero, while the retained behavioral gain makes it positive;
+-- an approximate same-fiber repair must pay at least that gain.
+#print axioms GameTheory.QuittingLiteralPositiveActualRowPacket.gain_eq_liveMass_mul_complementarityResidual
+#print axioms GameTheory.QuittingLiteralPositiveActualRowPacket.not_exists_literalNashBellmanEmbedding
+#print axioms GameTheory.QuittingLiteralPositiveActualRowPacket.not_occurs_in_exactNashBellmanChronology
+#print axioms GameTheory.QuittingLiteralPositiveActualRowPacket.gain_le_nashError_of_literal_root_tail
 
 -- A vanishing-debt rectangle response has an unconditional semantic endpoint
 -- return: compactification lands on the exact observer-reset face, whose

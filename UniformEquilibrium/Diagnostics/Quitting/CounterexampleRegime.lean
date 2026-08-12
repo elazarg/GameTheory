@@ -17,12 +17,13 @@ game without a uniform-equilibrium payoff.
 * Every behavioral profile has a unilateral terminal improvement bounded below
   by one common positive gap.
 * The canonical extended-real capacity of all exact punishment-rational
-  Nash--Bellman prefixes is finite.
+  Nash--Bellman prefixes is finite; this is derived from the terminal gap and
+  the finite-prefix closing theorem rather than stored independently.
 
 The package is equivalent to nonexistence because the terminal gap already
-implies nonexistence, while the prefix bound is additional necessary structure.
-The real value of the capacity produces the canonical bounded potential on the
-punishment-floor reachable predecessor relation.
+implies nonexistence.  The real value of the derived capacity produces the
+canonical bounded potential on the punishment-floor reachable predecessor
+relation.
 
 Optimized exact dynamic debt is deliberately absent from the structure.  It is
 not a third independent assumption: terminal exploitability quantitatively
@@ -41,23 +42,43 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
 /-- A direct quantitative normal form for a finite quitting-game
 counterexample.
 
-The terminal margin is the only stored scalar.  Prefix absorption is recorded
-by finiteness of its canonical extended-real capacity; its least real upper
-bound is derived below. -/
+The terminal margin is the only stored scalar.  Prefix-capacity finiteness and
+its least real upper bound are theorems below, not additional fields. -/
 structure QuittingCounterexampleRegime
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι) where
   /-- Uniform positive terminal exploitability margin. -/
   terminalGap : ℝ
   terminalGap_pos : 0 < terminalGap
   terminalExploitability : HasTerminalExploitabilityGap reward terminalGap
-  /-- The canonical capacity of all exact punishment-floor prefixes is
-  finite. -/
-  prefixChargeCapacity_ne_top :
-    quittingPunishmentFloorPrefixChargeCapacity reward ≠ ⊤
 
 namespace QuittingCounterexampleRegime
 
 variable {reward : {S : Finset ι // S.Nonempty} → Payoff ι}
+
+/-- The terminal-gap witness itself forces the player type to be inhabited. -/
+private theorem nonemptyPlayers_of_terminalGap
+    (regime : QuittingCounterexampleRegime reward) : Nonempty ι := by
+  classical
+  obtain ⟨who, _, _⟩ :=
+    regime.terminalExploitability (quittingAlwaysContinueProfile reward)
+  exact ⟨who⟩
+
+/-- Finiteness of canonical prefix capacity is derivable from the stored
+terminal gap.  An infinite capacity would supply arbitrarily charged exact
+prefixes, hence a uniform-equilibrium payoff, contradicting the gap. -/
+theorem prefixChargeCapacity_ne_top
+    (regime : QuittingCounterexampleRegime reward) :
+    quittingPunishmentFloorPrefixChargeCapacity reward ≠ ⊤ := by
+  letI : Nonempty ι := regime.nonemptyPlayers_of_terminalGap
+  have hno : ¬ ∃ payoff : Payoff ι,
+      (quittingGame reward).IsUniformEquilibriumPayoff none payoff :=
+    quittingGame_not_exists_uniformEquilibriumPayoff_of_terminalExploitabilityGap
+      reward regime.terminalGap_pos regime.terminalExploitability
+  rcases quittingGame_uniformPayoff_or_bounded_floorPrefixCharge reward with
+    hpayoff | ⟨bound, hbound0, hbound⟩
+  · exact (hno hpayoff).elim
+  · exact punishmentFloorPrefixChargeCapacity_ne_top_iff.mpr
+      ⟨bound, hbound0, hbound⟩
 
 /-- Every exact punishment-floor prefix is controlled by the canonical least
 real charge bound. -/
@@ -165,8 +186,8 @@ end QuittingCounterexampleRegime
 /-! ## Exact characterization -/
 
 /-- Canonical construction of the regime forced by nonexistence.  Choice is
-used only for the terminal margin and for the real bound whose existence proves
-that the intrinsic prefix capacity is finite. -/
+used only for the terminal margin; intrinsic prefix-capacity finiteness is
+derived from that margin. -/
 noncomputable def quittingCounterexampleRegimeOfNoUniformPayoff
     [Nonempty ι]
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
@@ -180,19 +201,10 @@ noncomputable def quittingCounterexampleRegimeOfNoUniformPayoff
       reward).1 hno
   let terminalGap := Classical.choose terminalExists
   have terminalSpec := Classical.choose_spec terminalExists
-  have prefixBoundExists : ∃ chargeBound : ℝ, 0 ≤ chargeBound ∧
-      ∀ cert : QuittingPunishmentFloorFinitePrefix reward,
-        cert.charge ≤ chargeBound := by
-    rcases quittingGame_uniformPayoff_or_bounded_floorPrefixCharge reward with
-      hpayoff | hbound
-    · exact (hno hpayoff).elim
-    · exact hbound
   exact {
     terminalGap := terminalGap
     terminalGap_pos := terminalSpec.1
-    terminalExploitability := terminalSpec.2
-    prefixChargeCapacity_ne_top :=
-      punishmentFloorPrefixChargeCapacity_ne_top_iff.mpr prefixBoundExists }
+    terminalExploitability := terminalSpec.2 }
 
 /-- Every counterexample supplies a combined regime. -/
 theorem nonempty_counterexampleRegime_of_not_exists_uniformEquilibriumPayoff
@@ -243,14 +255,11 @@ theorem not_exists_uniformEquilibriumPayoff_iff_exists_gap_and_chargeBound
       regime.terminalGap_pos, regime.terminalExploitability,
       quittingPunishmentFloorPrefixChargeBound_nonneg reward,
       regime.prefixCharge_le⟩
-  · rintro ⟨gap, chargeBound, hgap, hexploit, hbound_nonneg, hbound⟩
+  · rintro ⟨gap, _chargeBound, hgap, hexploit, _hbound_nonneg, _hbound⟩
     exact ({
       terminalGap := gap
       terminalGap_pos := hgap
-      terminalExploitability := hexploit
-      prefixChargeCapacity_ne_top :=
-        punishmentFloorPrefixChargeCapacity_ne_top_iff.mpr
-          ⟨chargeBound, hbound_nonneg, hbound⟩ } :
+      terminalExploitability := hexploit } :
         QuittingCounterexampleRegime reward).not_exists_uniformEquilibriumPayoff
 
 /-- Canonical quantifier-expanded form.  The charge condition is finiteness of
@@ -270,12 +279,11 @@ theorem not_exists_uniformEquilibriumPayoff_iff_exists_gap_and_finiteChargeCapac
     let regime := quittingCounterexampleRegimeOfNoUniformPayoff reward hno
     exact ⟨regime.terminalGap, regime.terminalGap_pos,
       regime.terminalExploitability, regime.prefixChargeCapacity_ne_top⟩
-  · rintro ⟨gap, hgap, hexploit, hcapacity⟩
+  · rintro ⟨gap, hgap, hexploit, _hcapacity⟩
     exact ({
       terminalGap := gap
       terminalGap_pos := hgap
-      terminalExploitability := hexploit
-      prefixChargeCapacity_ne_top := hcapacity } :
+      terminalExploitability := hexploit } :
         QuittingCounterexampleRegime reward).not_exists_uniformEquilibriumPayoff
 
 end GameTheory

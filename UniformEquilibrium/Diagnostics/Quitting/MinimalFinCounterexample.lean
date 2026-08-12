@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import UniformEquilibrium.Quitting.Classification.PlayerReindexNaturality
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeSmallPlayers
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticConcentratedSingletonStrategicCompression
 
 /-!
 # Minimal finite counterexamples to quitting-game uniform equilibrium
@@ -152,6 +153,45 @@ theorem properRestriction_exists_uniformEquilibriumPayoff
   letI : Nonempty {i // i ∈ players} := hplayers.to_subtype
   apply minimal.exists_uniformEquilibriumPayoff_of_card_lt
   simpa using (Finset.card_lt_iff_ne_univ players).2 hproper
+
+/-- Exact deletion at the retained terminal gap is impossible in a
+cardinality-minimal counterexample.  The deleted table would have a positive
+terminal exploitability gap on a strictly smaller nonempty player type,
+where minimality supplies a uniform-equilibrium payoff. -/
+theorem not_hasQuittingExactPlayerDeletionAtGap
+    (minimal : MinimalFinQuittingCounterexample)
+    (owner : Fin minimal.playerCount) :
+    ¬ HasQuittingExactPlayerDeletionAtGap minimal.reward owner
+      minimal.regime.terminalGap := by
+  rintro ⟨hdeletedNonempty, hdeletedGap, hcard⟩
+  letI : Nonempty (QuittingDeletedPlayer owner) := hdeletedNonempty
+  have hcard' : Fintype.card (QuittingDeletedPlayer owner) <
+      minimal.playerCount := by
+    simpa using hcard
+  have hpayoff := minimal.exists_uniformEquilibriumPayoff_of_card_lt hcard'
+    (quittingDeletePlayerReward minimal.reward owner)
+  exact
+    (quittingGame_not_exists_uniformEquilibriumPayoff_of_terminalExploitabilityGap
+      (quittingDeletePlayerReward minimal.reward owner)
+      minimal.regime.terminalGap_pos hdeletedGap) hpayoff
+
+/-- On a cardinality-minimal counterexample, the stopping-law singleton
+orientation has only the common static atomic-toggle handoff.  The deletion
+arm of the general compression is eliminated by minimality rather than
+retained as a second leaf. -/
+theorem stoppingLawSingletonStrategicOrientation_atomicHandoff
+    (minimal : MinimalFinQuittingCounterexample)
+    {frontier : QuittingCounterexampleStoppingLawFrontier minimal.regime}
+    (packet : QuittingStoppingLawVanishingDebtRectangleSequence frontier)
+    (horientation :
+      HasQuittingStoppingLawSingletonStrategicOrientation packet) :
+    HasQuittingStaticAtomicToggleHandoff minimal.reward := by
+  rcases minimal.regime.stoppingLawSingletonStrategicOrientation_compress
+      packet horientation with hatomic | hdeletion
+  · exact hatomic
+  · exact False.elim
+      (minimal.not_hasQuittingExactPlayerDeletionAtGap packet.observer
+        hdeletion)
 
 end MinimalFinQuittingCounterexample
 
