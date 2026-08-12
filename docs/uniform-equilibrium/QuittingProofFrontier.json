@@ -120,6 +120,24 @@
         "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticConcentratedSingletonStrategicCompression.lean",
         "experiments/QuittingStoppingLawSingletonOrientationNoGo.lean"
       ]
+    },
+    {
+      "id": "NOGO-Q182-FIXED-LAW-PREMIUM-OWNER",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-PRESCRIBED", "SL-POS-COLLISION"],
+      "summary": "A positive gap between fixed-law and global reset-face minima can be carried entirely by a third player's debt, despite retained positive incidence and a strict toggle; it need not fund any reset-owner deviation.",
+      "evidence": [
+        "experiments/quitting/FixedLawGlobalMinimumPremiumNoGo.lean"
+      ]
+    },
+    {
+      "id": "NOGO-Q184-UNIQUE-ALLCONTINUE-IDENTITY",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-POS-COLLISION"],
+      "summary": "At a unique all-Continue cap plateau, every exact cap-prefix or punishment-prefix operation is the identity with zero charge, complete law preservation, and a compactness moat forcing approximate-root absorption to vanish.",
+      "evidence": [
+        "experiments/quitting/UniqueAllContinueCapStackNoGo.lean"
+      ]
     }
   ]
 }
