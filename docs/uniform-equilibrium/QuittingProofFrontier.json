@@ -157,6 +157,24 @@
       "evidence": [
         "experiments/quitting/CapChangingLawRetainedSquareNoGo.lean"
       ]
+    },
+    {
+      "id": "NOGO-CAP-CHANGING-APPROXIMATE-STACK-ERROR-BUDGET",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-PRESCRIBED", "SL-POS-COLLISION"],
+      "summary": "Arbitrary approximate cap-changing stacks are charged by the reset endpoint's ordinary debt excess plus their cumulative exact playerwise Nash defect; rowwise epsilon certificates cost card(I) times the summed error. Summable errors cannot create off-budget absorption.",
+      "evidence": [
+        "experiments/quitting/PaidNonexactCapStackAccount.lean"
+      ]
+    },
+    {
+      "id": "NOGO-SIGNED-TARGET-EDGE-SOURCE-MISMATCH",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-PRESCRIBED", "SL-POS-COLLISION"],
+      "summary": "Atom, positive collision, a profitable signed observer edge at the reset target, a commuting reset square, arbitrary exact-prefix depth, complete-law retention, and debt conservation still need not produce any profitable observer deviation at the original source.",
+      "evidence": [
+        "experiments/quitting/SignedResetCommonEdgeSourceMismatchNoGo.lean"
+      ]
     }
   ]
 }
