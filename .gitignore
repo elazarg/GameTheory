@@ -14,3 +14,8 @@ CLAUDE.md
 .codex
 *.pdf
 scripts/__pycache__
+
+# Local research experiments are intentionally outside version control.
+/experiments/
+/experiments.lean
+/.github/workflows/quitting-repair-cegis.yml
