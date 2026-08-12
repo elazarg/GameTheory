@@ -11,6 +11,7 @@ import UniformEquilibrium.Quitting.Classification.LCP.NormalCore
 import UniformEquilibrium.Quitting.Classification.LCP.NormalCoreStrictnessExample
 import UniformEquilibrium.Quitting.Classification.LCP.CyclicParametricQ
 import UniformEquilibrium.Quitting.Classification.LCP.StandardQSideExample
+import UniformEquilibrium.Quitting.Classification.LCP.ThreeByThreeZeroDiagonalQ
 import UniformEquilibrium.Quitting.Classification.LCP.Gate
 import UniformEquilibrium.Quitting.Classification.LCP.FirstLayerSimple
 import UniformEquilibrium.Quitting.Classification.LCP.LaterLayerAbnormal
@@ -38,6 +39,9 @@ This umbrella exports the theorem-bearing infrastructure proved in this folder:
   a witness whose corrected core is the full four-player set;
 * the exact nonhomogeneous standard-Q region `0 < a < b` for the
   two-parameter cyclic singleton-comparison family;
+* the complete zero-diagonal `3 × 3` classification: outside the homogeneous
+  branch, standard Q is exactly one of the two strict directed-cycle sign
+  orientations together with positive determinant;
 * the unconditional algebraic matrix-regime gate with its precise residual
   class; and
 * the complete corrected all-abnormal producer, including the later-layer

@@ -54,6 +54,47 @@ def HasStandardLCPSolution (M : ι → ι → ℝ) (q : ι → ℝ) : Prop :=
 def IsStandardQMatrix (M : ι → ι → ℝ) : Prop :=
   ∀ q : ι → ℝ, HasStandardLCPSolution M q
 
+section StandardReindex
+
+variable {k : Type} [Fintype k]
+
+/-- Transport a standard LCP solution along an equivalence of its coordinate
+type. -/
+def StandardLCPSolution.reindex (e : ι ≃ k) {M : ι → ι → ℝ}
+    {q : k → ℝ}
+    (solution : StandardLCPSolution M (fun i => q (e i))) :
+    StandardLCPSolution (reindexMatrix e M) q where
+  weight := fun i => solution.weight (e.symm i)
+  weight_nonneg := fun i => solution.weight_nonneg (e.symm i)
+  residual_nonneg := by
+    intro i
+    have h := solution.residual_nonneg (e.symm i)
+    change 0 ≤ q i + ∑ j : k,
+      solution.weight (e.symm j) * M (e.symm i) (e.symm j)
+    rw [Equiv.sum_comp e.symm
+      (fun j => solution.weight j * M (e.symm i) j)]
+    simpa using h
+  complementary := by
+    intro i
+    have h := solution.complementary (e.symm i)
+    change solution.weight (e.symm i) *
+      (q i + ∑ j : k,
+        solution.weight (e.symm j) * M (e.symm i) (e.symm j)) = 0
+    rw [Equiv.sum_comp e.symm
+      (fun j => solution.weight j * M (e.symm i) j)]
+    simpa using h
+
+omit [DecidableEq ι] in
+/-- Textbook standard Q is invariant under reindexing. -/
+theorem isStandardQMatrix_reindexMatrix (e : ι ≃ k) (M : ι → ι → ℝ)
+    (hQ : IsStandardQMatrix M) :
+    IsStandardQMatrix (reindexMatrix e M) := by
+  intro q
+  obtain ⟨solution⟩ := hQ (fun i => q (e i))
+  exact ⟨solution.reindex e⟩
+
+end StandardReindex
+
 /-- A solution of the normalized simplex/projective LCP
 `w = z₀ q + Mz`, with `z₀ + ∑ zᵢ = 1`. -/
 structure ProjectiveLCPSolution (M : ι → ι → ℝ) (q : ι → ℝ) where
@@ -128,6 +169,34 @@ def IsProjectiveQMatrix (M : ι → ι → ℝ) : Prop :=
 This is exactly the repository's existing normalized singleton LCP. -/
 abbrev HasHomogeneousSimplexSolution (M : ι → ι → ℝ) : Prop :=
   SingletonLCPFeasible M
+
+omit [DecidableEq ι] in
+/-- With zero diagonal, exclusion of the homogeneous simplex branch forces
+every column to contain a strictly negative entry. -/
+theorem exists_negative_entry_in_column_of_noHomogeneous
+    (M : ι → ι → ℝ) (hdiag : ∀ i, M i i = 0)
+    (hhom : ¬HasHomogeneousSimplexSolution M) (j : ι) :
+    ∃ i, M i j < 0 := by
+  by_contra hnone
+  apply hhom
+  exact singletonLCPFeasible_of_diag_eq_zero j (hdiag j) fun i =>
+    le_of_not_gt fun hneg => hnone ⟨i, hneg⟩
+
+omit [DecidableEq ι] in
+/-- Textbook standard Q forces every row to contain a strictly positive
+entry. -/
+theorem exists_positive_entry_in_row_of_standardQ
+    (M : ι → ι → ℝ) (hQ : IsStandardQMatrix M) (i : ι) :
+    ∃ j, 0 < M i j := by
+  classical
+  by_contra hnone
+  have hnonpos : ∀ j, M i j ≤ 0 := fun j => le_of_not_gt fun hpos =>
+    hnone ⟨j, hpos⟩
+  obtain ⟨solution⟩ := hQ (fun _ => -1)
+  have hsum : (∑ j, solution.weight j * M i j) ≤ 0 :=
+    Finset.sum_nonpos fun j _ =>
+      mul_nonpos_of_nonneg_of_nonpos (solution.weight_nonneg j) (hnonpos j)
+  linarith [solution.residual_nonneg i]
 
 /-- Solan--Solan's nontrivial zero-right-hand-side projective LCP branch:
 not all normalized mass is assigned to the artificial `q` coordinate. -/
