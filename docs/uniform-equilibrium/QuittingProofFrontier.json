@@ -208,6 +208,15 @@
       "evidence": [
         "experiments/quitting/TerminalSemanticGlobalDebtBarrierCertificate.lean"
       ]
+    },
+    {
+      "id": "NOGO-SINGLETON-MARKED-USE-DEBT-BUDGET",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-SINGLETON"],
+      "summary": "At every exact prescribed-payoff prefix, the source-matched usable part of a strict insertion atom—its incidence times gap, truncated by source debt and net exercise premium—is bounded by the owner's coordinate debt drop and hence by total debt drop. On the positive global minimum fiber it vanishes, with the sharper dichotomy that the atom has zero incidence or is exposed only on a zero-debt owner with zero net premium. The static atom therefore cannot fund a charged exact edge without a new marked face-exit or return producer.",
+      "evidence": [
+        "experiments/quitting/SingletonMarkedUseDebtBudgetNoGo.lean"
+      ]
     }
   ]
 }
