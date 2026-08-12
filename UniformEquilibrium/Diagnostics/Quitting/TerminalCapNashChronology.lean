@@ -474,6 +474,119 @@ theorem capNashStack_continueProduct_lowerBound
   apply (div_le_iff₀ hterminalPos).2
   simpa [mul_comm] using hscaled
 
+/-- Every row in a finite cap--Nash chronology has strictly positive joint
+Continue mass when the global literal debt infimum is positive. -/
+theorem capNashRootStack_continueMass_pos_of_debtSumInf_pos
+    (roots : List (ι → PMF Bool))
+    (terminal : (quittingGame reward).BehaviorProfile)
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hinf : 0 < quittingTerminalDebtSumInf reward)
+    (hstack : IsQuittingCapNashRootStack reward roots terminal) :
+    ∀ root ∈ roots, 0 < quittingStationaryContinueMass root := by
+  induction roots with
+  | nil => simp
+  | cons root roots ih =>
+      rw [isQuittingCapNashRootStack_cons_iff] at hstack
+      intro selected hselected
+      simp only [List.mem_cons] at hselected
+      rcases hselected with rfl | htail
+      · exact capNash_continueMass_pos_of_debtSumInf_pos
+          (reward := reward) selected
+          (quittingLiteralRootStackProfile reward roots terminal)
+          hM hreward hinf hstack.1
+      · exact ih hstack.2 selected htail
+
+omit [DecidableEq ι] in
+/-- Positivity of every row's joint Continue mass is equivalent to positivity
+of the folded survival product in the direction needed below. -/
+theorem quittingCapNashStackContinueProduct_pos
+    (roots : List (ι → PMF Bool))
+    (hpositive : ∀ root ∈ roots,
+      0 < quittingStationaryContinueMass root) :
+    0 < quittingCapNashStackContinueProduct roots := by
+  induction roots with
+  | nil => simp
+  | cons root roots ih =>
+      rw [quittingCapNashStackContinueProduct_cons]
+      exact mul_pos
+        (hpositive root (by simp))
+        (ih (fun selected hselected =>
+          hpositive selected (by simp [hselected])))
+
+omit [DecidableEq ι] in
+/-- The sum of the one-row absorption hazards of a finite cap--Nash
+chronology is bounded by minus the logarithm of its joint survival product.
+The positivity assumption is essential only to make the logarithm additive. -/
+theorem capNashStack_absorptionSum_le_neg_log_continueProduct
+    (roots : List (ι → PMF Bool))
+    (hpositive : ∀ root ∈ roots,
+      0 < quittingStationaryContinueMass root) :
+    quittingCapNashStackAbsorptionSum roots ≤
+      -Real.log (quittingCapNashStackContinueProduct roots) := by
+  induction roots with
+  | nil => simp
+  | cons root roots ih =>
+      have hroot : 0 < quittingStationaryContinueMass root :=
+        hpositive root (by simp)
+      have htailPositive : ∀ selected ∈ roots,
+          0 < quittingStationaryContinueMass selected := by
+        intro selected hselected
+        exact hpositive selected (by simp [hselected])
+      have htail := ih htailPositive
+      have htailProduct : 0 < quittingCapNashStackContinueProduct roots :=
+        quittingCapNashStackContinueProduct_pos roots htailPositive
+      have hrowLog := Real.log_le_sub_one_of_pos hroot
+      rw [quittingCapNashStackAbsorptionSum_cons,
+        quittingCapNashStackContinueProduct_cons,
+        Real.log_mul (ne_of_gt hroot) (ne_of_gt htailProduct)]
+      unfold quittingRootAbsorptionMass
+      linarith
+
+/-- **Sharp logarithmic absorption budget for finite cap--Nash words.**
+If the literal debt infimum is positive, the cumulative one-row absorption
+hazard is bounded by the logarithm of the terminal profile's debt ratio.
+This is stronger than the qualitative capacity theorem for ordinary
+Nash--Bellman rows, whose coordinatewise contraction factors are opponent
+Continue masses rather than joint Continue mass. -/
+theorem capNashStack_absorptionSum_le_log_debtRatio
+    (roots : List (ι → PMF Bool))
+    (terminal : (quittingGame reward).BehaviorProfile)
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ S player, |reward S player| ≤ M)
+    (hinf : 0 < quittingTerminalDebtSumInf reward)
+    (hstack : IsQuittingCapNashRootStack reward roots terminal) :
+    quittingCapNashStackAbsorptionSum roots ≤
+      Real.log (quittingTerminalDebtSum reward terminal /
+        quittingTerminalDebtSumInf reward) := by
+  have hterminalPos : 0 < quittingTerminalDebtSum reward terminal :=
+    hinf.trans_le
+      (quittingTerminalDebtSumInf_le (reward := reward) terminal hM hreward)
+  have hproductLower := capNashStack_continueProduct_lowerBound
+    (reward := reward) roots terminal hM hreward hinf hstack
+  have hproductPos : 0 < quittingCapNashStackContinueProduct roots := by
+    exact (div_pos hinf hterminalPos).trans_le hproductLower
+  have hlogMonotone :
+      Real.log (quittingTerminalDebtSumInf reward /
+          quittingTerminalDebtSum reward terminal) ≤
+        Real.log (quittingCapNashStackContinueProduct roots) :=
+    Real.strictMonoOn_log.monotoneOn
+      (div_pos hinf hterminalPos) hproductPos hproductLower
+  have hlogBudget :=
+    capNashStack_absorptionSum_le_neg_log_continueProduct roots
+      (capNashRootStack_continueMass_pos_of_debtSumInf_pos
+        (reward := reward) roots terminal hM hreward hinf hstack)
+  calc
+    quittingCapNashStackAbsorptionSum roots ≤
+        -Real.log (quittingCapNashStackContinueProduct roots) := hlogBudget
+    _ ≤ -Real.log (quittingTerminalDebtSumInf reward /
+        quittingTerminalDebtSum reward terminal) := neg_le_neg hlogMonotone
+    _ = Real.log (quittingTerminalDebtSum reward terminal /
+        quittingTerminalDebtSumInf reward) := by
+      rw [Real.log_div (ne_of_gt hinf) (ne_of_gt hterminalPos),
+        Real.log_div (ne_of_gt hterminalPos) (ne_of_gt hinf)]
+      ring
+
 /-- Arbitrarily deep exact cap chronologies over one near-minimal actual
 profile have a depth-independent absorption budget and a positive finite-block
 survival floor.  This is the sharp finite obstruction to reading cap--Nash iteration

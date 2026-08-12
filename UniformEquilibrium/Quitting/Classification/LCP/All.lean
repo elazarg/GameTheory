@@ -9,6 +9,7 @@ import UniformEquilibrium.Quitting.Classification.LCP.StrategicTransport
 import UniformEquilibrium.Quitting.Classification.LCP.MatrixClasses
 import UniformEquilibrium.Quitting.Classification.LCP.NormalCore
 import UniformEquilibrium.Quitting.Classification.LCP.NormalCoreStrictnessExample
+import UniformEquilibrium.Quitting.Classification.LCP.StandardQSideExample
 import UniformEquilibrium.Quitting.Classification.LCP.Gate
 import UniformEquilibrium.Quitting.Classification.LCP.FirstLayerSimple
 import UniformEquilibrium.Quitting.Classification.LCP.LaterLayerAbnormal
@@ -31,6 +32,8 @@ This umbrella exports the theorem-bearing infrastructure proved in this folder:
 * the audit of the printed normal-player recursion together with the corrected
   distinct-witness object and an explicit quitting table on which its
   stabilized core is strictly smaller than the one-step screen;
+* an exact four-player quitting table witnessing satisfiability of the
+  corrected-core standard-Q, nonhomogeneous necessary condition;
 * the unconditional algebraic matrix-regime gate with its precise residual
   class; and
 * the complete corrected all-abnormal producer, including the later-layer

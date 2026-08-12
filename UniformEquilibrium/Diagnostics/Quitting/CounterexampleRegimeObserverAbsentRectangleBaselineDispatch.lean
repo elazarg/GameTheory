@@ -228,6 +228,19 @@ theorem max_quittingRootDeviationGain_pure_true_eq_quitDirectedDefect
     (ENNReal.toReal_nonneg : 0 ≤ (root who false).toReal)
   simpa using h.symm
 
+/-- The positive-part atom account is only an upper account for the positive
+part of the legal pure-Quit deviation gain.  It is not itself a deviation
+payoff: negative coalition labels may cancel positive labels in the signed
+Quit-minus-Continue average, so no converse lower bound is asserted. -/
+theorem max_pureQuitDeviationGain_le_sum_quitDirectedAtoms
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (tail : Payoff ι) (root : ι → PMF Bool) (who : ι) :
+    max (quittingRootDeviationGain reward tail root who (PMF.pure true)) 0 ≤
+      ∑ coalition ∈ (Finset.univ.erase who).powerset,
+        quittingRootQuitDirectedAtom reward tail root who coalition := by
+  rw [max_quittingRootDeviationGain_pure_true_eq_quitDirectedDefect]
+  exact quittingRootQuitDirectedDefect_le_sum_atoms reward tail root who
+
 /-- A fixed pure-Continue source occupation is exactly the existing legal
 Continue collector's source-live occupation. -/
 theorem exists_behaviorDeviation_gain_ge_pureFalseSourceOccupation
