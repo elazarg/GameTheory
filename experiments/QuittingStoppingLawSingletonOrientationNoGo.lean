@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticConcentratedSingletonStrategicCompression
+import UniformEquilibrium.Diagnostics.Quitting.MinimalFinCounterexample
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauTimeDisintegration
 
 /-!
@@ -59,6 +60,42 @@ theorem hasQuittingStoppingLawSingletonStrategicOrientation_iff_terminal_eq
       simp
     · rw [hterminal]
       simp
+
+namespace MinimalFinQuittingCounterexample
+
+/-- **Common-object correction.**  The static atomic handoff is not specific
+to the singleton stopping-law leaf.  The compression theorem supplies it or
+exact player deletion for every owner of every counterexample regime, and
+cardinal minimality rules out the deletion disjunct.  Hence all five formal
+stopping-law leaves share this same game-wide object. -/
+theorem hasStaticAtomicToggleHandoff
+    (minimal : MinimalFinQuittingCounterexample) :
+    HasQuittingStaticAtomicToggleHandoff minimal.reward := by
+  have hcount : 0 < minimal.playerCount := by
+    exact lt_of_lt_of_le (by norm_num) minimal.four_le_playerCount
+  let owner : Fin minimal.playerCount :=
+    ⟨0, hcount⟩
+  rcases minimal.regime.singletonStaticStrategicDispatch_compress owner
+      (minimal.regime.singletonStaticStrategicDispatch owner) with
+    hatomic | hdelete
+  · exact hatomic
+  · obtain ⟨hnonempty, hgap, hcard⟩ := hdelete
+    letI : Nonempty (QuittingDeletedPlayer owner) := hnonempty
+    let reducedReward := quittingDeletePlayerReward minimal.reward owner
+    have hno : ¬ ∃ payoff : Payoff (QuittingDeletedPlayer owner),
+        (quittingGame reducedReward).IsUniformEquilibriumPayoff none payoff :=
+      (not_exists_uniformEquilibriumPayoff_iff_exists_terminalExploitabilityGap
+        reducedReward).2
+          ⟨minimal.regime.terminalGap,
+            minimal.regime.terminalGap_pos, hgap⟩
+    have hcard' : Fintype.card (QuittingDeletedPlayer owner) <
+        minimal.playerCount := by
+      simpa using hcard
+    exact False.elim
+      (hno (minimal.exists_uniformEquilibriumPayoff_of_card_lt
+        hcard' reducedReward))
+
+end MinimalFinQuittingCounterexample
 
 namespace StoppingLawSingletonOrientationNoGo
 
