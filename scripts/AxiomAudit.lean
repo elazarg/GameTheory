@@ -57,6 +57,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCommonWitnessPass
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPositiveSlopeCausalRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPositiveSlopeTargetEdgeStateMatchRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPositiveSlopeMarkedRowProvenance
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCausalCollisionMinimumTransfer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPureTimeRectangleDisintegration
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticStoppingLawFiniteSplice
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticStoppingLawFiniteSpliceMarkedLaw
@@ -1186,6 +1187,7 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 -- possible all-Continue stall, or produces a quantitative same-row defect
 -- consumed by one legal best-endpoint deviation with routed atom mass.
 #print axioms GameTheory.causalCollision_tailEscape_or_quantitativeBestEndpoint
+#print axioms GameTheory.causalCollision_tailEscape_or_quantitativeNearMinimumTransfer
 
 -- Counterfactual atom externality regression: even exact all-Continue prefix
 -- provenance can transfer rather than destroy debt, with no observer gain.
