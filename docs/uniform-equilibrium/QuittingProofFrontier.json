@@ -241,6 +241,15 @@
       "evidence": [
         "experiments/quitting/TerminalSemanticCoordinatewiseBoxBarrierNoGo.lean"
       ]
+    },
+    {
+      "id": "CORRECT-MINIMUM-FIBER-SQUARE-IS-CONDITIONAL",
+      "kind": "maintenance",
+      "target_ids": ["SL-PRESCRIBED", "SL-POS-COLLISION"],
+      "summary": "The reset-square theorem assumes both the positive target edge and the nonpositive parallel source edge, together with equality of all four total debts, and derives only the opponent-transfer account. It supplies no quitting-game witness where those hypotheses co-realize on a positive global-minimum fiber, so source matching on that fiber is not fenced and remains open.",
+      "evidence": [
+        "experiments/quitting/MinimumFiberResetSquareSourceMatchNoGo.lean"
+      ]
     }
   ]
 }

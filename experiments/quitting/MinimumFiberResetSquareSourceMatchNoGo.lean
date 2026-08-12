@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import experiments.quitting.CounterfactualAtomMinimumResetSquare
 
 /-!
-# A minimum-fiber reset square still does not source-match its signed edge
+# Conditional accounting on a minimum-fiber reset square
 
 Putting all four vertices of a commuting unilateral reset square on one
 total-semantic-debt fiber does not transport the sign of the second edge to
@@ -16,13 +16,12 @@ each face, the moving player's payoff gain is exactly its debt loss and,
 because total debt is fixed, exactly the aggregate debt transferred to the
 other players.
 
-Thus a positive target-side gain and a nonpositive source-side gain are
-algebraically compatible even on the positive global-minimum fiber.  A
-quitting-game realization whose fiber were genuinely global and positive
-would already be a counterexample by
-`no_uniformPayoff_of_positive_globalSemanticDebtMinimum`; the missing input
-is therefore a semantic/strategic restriction coupling the two parallel
-faces, not another scalar minimum argument.
+The theorem below assumes a positive target-side gain, a nonpositive
+source-side gain, and equality of the four total debts, and derives the exact
+opponent-transfer account.  It does **not** construct a quitting-game square
+satisfying those hypotheses.  In particular it is conditional bookkeeping,
+not an architectural no-go for source matching on the positive global
+minimum fiber.
 -/
 
 noncomputable section
@@ -44,9 +43,9 @@ sign on the source edge: under an explicitly positive target gain and
 nonpositive source gain, the two opponent-transport sums have those same
 opposite signs.
 
-No minimality premise beyond equality of the four debt totals is used.  In
-particular, declaring the common total to be a positive global minimum does
-not strengthen this algebraic conclusion. -/
+No minimality premise beyond equality of the four debt totals is used.  The
+joint realizability of the displayed sign hypotheses on a positive global
+minimum fiber remains open. -/
 theorem minimumFiber_resetSquare_sourceMismatch_eq_opponentTransport
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (source : (quittingGame reward).BehaviorProfile)
