@@ -35,10 +35,10 @@
     {
       "id": "SL-SINGLETON",
       "status": "open",
-      "obstruction_class": "OB-SINGLETON",
-      "representative": "HasQuittingStoppingLawSingletonStrategicOrientation packet",
-      "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
-      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+      "obstruction_class": "OB-ALIGN",
+      "representative": "HasQuittingStaticAtomicToggleHandoff reward ∨ HasQuittingExactPlayerDeletionAtGap reward packet.observer regime.terminalGap",
+      "source": "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticConcentratedSingletonStrategicCompression.lean",
+      "producer": "QuittingCounterexampleRegime.stoppingLawSingletonStrategicOrientation_compress"
     },
     {
       "id": "SL-NEG-COLLISION",
@@ -107,6 +107,17 @@
       "target_ids": ["SL-SINGLETON"],
       "summary": "The current singleton strategic orientation is equivalent to the singleton label alone; its ambient static handoff does not use the packet, and a literal quitting regression permits pure debt transfer with no target observer gain.",
       "evidence": [
+        "experiments/QuittingStoppingLawSingletonOrientationNoGo.lean"
+      ]
+    },
+    {
+      "id": "DROP-SINGLETON-PUNISHMENT-CANCELLATION-ARMS",
+      "kind": "hypothesis_dropped",
+      "target_ids": ["SL-SINGLETON"],
+      "summary": "Positive punishment, recurrent owner-tail escape, and fixed owner-join loss require no separate compiler: each nondeletion arm yields the existing static atomic-toggle handoff, leaving only its source-matched alignment problem.",
+      "evidence": [
+        "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeAll.lean",
+        "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticConcentratedSingletonStrategicCompression.lean",
         "experiments/QuittingStoppingLawSingletonOrientationNoGo.lean"
       ]
     }

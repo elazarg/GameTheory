@@ -61,6 +61,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCausalCollisionMi
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCausalCollisionRecipientAtom
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCausalCollisionAtomicOrientation
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticConcentratedSingletonStrategicDispatch
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticConcentratedSingletonStrategicCompression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPureTimeRectangleDisintegration
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticStoppingLawFiniteSplice
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticStoppingLawFiniteSpliceMarkedLaw
@@ -1211,6 +1212,13 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.observerAbsent_carrierMass_eq_clock
 #print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.observerAbsent_forcedOwnerDispatch
 #print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch
+
+-- The exhaustive singleton leaf has only the existing alignment obstruction:
+-- positive punishment and both recurrent cancellation outputs compress to the
+-- same static atomic handoff, while exact deletion is retained verbatim.
+#print axioms GameTheory.QuittingCounterexampleRegime.singletonStaticStrategicDispatch_compress
+#print axioms GameTheory.QuittingCounterexampleRegime.stoppingLawSingletonStrategicOrientation_compress
+#print axioms GameTheory.QuittingCounterexampleRegime.concentratedSingletonStrategicDispatch_compress
 
 -- A forced owner's positive refusal charge telescopes inside the semantic
 -- debt of one literal carrier profile and is collected by one legal behavior
