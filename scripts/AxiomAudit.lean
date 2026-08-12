@@ -1181,6 +1181,12 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.quittingContinuePrefix_atomEndpoints_are_unilateralUpdates
 #print axioms GameTheory.QuittingStoppingLawAtomExactPrefixChronology.continuePrefix_atomAlternative_eventually
 
+-- A positive nonsingleton suffix atom at an actual row either escapes the
+-- minimum-debt fiber, with the exact cap-return account still exposing the
+-- possible all-Continue stall, or produces a quantitative same-row defect
+-- consumed by one legal best-endpoint deviation with routed atom mass.
+#print axioms GameTheory.causalCollision_tailEscape_or_quantitativeBestEndpoint
+
 -- Counterfactual atom externality regression: even exact all-Continue prefix
 -- provenance can transfer rather than destroy debt, with no observer gain.
 #print axioms GameTheory.CounterfactualAtomExternalityRegression.exactPrefix_positiveAtom_but_no_observerGain
