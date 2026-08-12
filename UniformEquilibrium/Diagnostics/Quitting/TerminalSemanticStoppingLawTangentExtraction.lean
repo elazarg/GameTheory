@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticStoppingLawFlatTangentAlternative
 
 /-!
-# Common-base extraction of stopping-law debt tangents
+# Common-base extraction of stopping-law debt paratangent chords
 
 A single literal near-minimizing profile sequence is used for every active
 debtor.  At each index, every active debtor receives an approximate best
@@ -16,15 +16,18 @@ is uniformly bounded, so one common subsequence extracts all player columns.
 
 The rate hypotheses are explicit:
 
+* the reset scale tends to zero;
 * near-minimality error divided by the reset scale tends to zero;
 * on coordinates which vanish at the limiting base, source debt divided by
   the reset scale tends to zero.
 
-The extracted columns have a strictly negative mover diagonal, are
+The extracted normalized chord columns have a strictly negative mover diagonal, are
 nonnegative on base-inactive coordinates, and have nonnegative total slope.
 Thus either one column has positive total slope, or all columns are flat and
 the finite alternative in `TerminalSemanticStoppingLawFlatTangentAlternative`
-applies.  No minimum-face integration or chronology is asserted.
+applies.  Since the sources also move, these are common-limit paratangent
+chords, not automatically Bouligand tangents at the base.  No minimum-face
+integration or chronology is asserted.
 -/
 
 noncomputable section
@@ -62,7 +65,114 @@ def quittingStoppingLawNormalizedDebtDirection
         (quittingStoppingLawResetProfile reward profile who replacement
           lambda hlambda0 hlambda1)) observer / lambda
 
-/-- **Finite common-base stopping-law tangent extraction.** -/
+/-- A common square-root scale for finitely many nonnegative quantities
+vanishing at once.  The harmless reciprocal tail keeps the scale strictly
+positive even when every displayed quantity is already zero. -/
+theorem exists_commonVanishingResetScale
+    {κ : Type} [Fintype κ]
+    (error : ℕ → ℝ) (vanishing : κ → ℕ → ℝ)
+    (herrorNonneg : ∀ n, 0 ≤ error n)
+    (hvanishingNonneg : ∀ label n, 0 ≤ vanishing label n)
+    (herrorZero : Tendsto error atTop (nhds 0))
+    (hvanishingZero : ∀ label, Tendsto (vanishing label) atTop (nhds 0)) :
+    ∃ scale : ℕ → ℝ,
+      (∀ n, 0 < scale n) ∧
+      (∀ n, scale n ≤ 1) ∧
+      Tendsto scale atTop (nhds 0) ∧
+      Tendsto (fun n ↦ error n / scale n) atTop (nhds 0) ∧
+      ∀ label, Tendsto (fun n ↦ vanishing label n / scale n)
+        atTop (nhds 0) := by
+  let tail : ℕ → ℝ := fun n ↦ ((n : ℝ) + 1)⁻¹
+  let total : ℕ → ℝ := fun n ↦
+    error n + ∑ label, vanishing label n + tail n
+  let root : ℕ → ℝ := fun n ↦ Real.sqrt (total n)
+  let scale : ℕ → ℝ := fun n ↦ root n / (1 + root n)
+  have htailPos : ∀ n, 0 < tail n := by
+    intro n
+    dsimp only [tail]
+    positivity
+  have htailZero : Tendsto tail atTop (nhds 0) := by
+    dsimp only [tail]
+    simpa only [one_div] using
+      (tendsto_one_div_add_atTop_nhds_zero_nat :
+        Tendsto (fun n : ℕ ↦ (1 : ℝ) / ((n : ℝ) + 1)) atTop (nhds 0))
+  have hsumZero : Tendsto (fun n ↦ ∑ label, vanishing label n)
+      atTop (nhds 0) := by
+    simpa only [Finset.sum_const_zero] using
+      tendsto_finsetSum Finset.univ (fun label _ ↦ hvanishingZero label)
+  have htotalPos : ∀ n, 0 < total n := by
+    intro n
+    dsimp only [total]
+    have hsumNonneg : 0 ≤ ∑ label, vanishing label n :=
+      Finset.sum_nonneg fun label _ ↦ hvanishingNonneg label n
+    linarith [herrorNonneg n, htailPos n]
+  have htotalZero : Tendsto total atTop (nhds 0) := by
+    dsimp only [total]
+    convert (herrorZero.add hsumZero).add htailZero using 1
+    all_goals simp
+  have hrootPos : ∀ n, 0 < root n := by
+    intro n
+    exact Real.sqrt_pos.2 (htotalPos n)
+  have hrootZero : Tendsto root atTop (nhds 0) := by
+    simpa only [root, Real.sqrt_zero] using htotalZero.sqrt
+  have hscalePos : ∀ n, 0 < scale n := by
+    intro n
+    dsimp only [scale]
+    exact div_pos (hrootPos n) (by linarith [hrootPos n])
+  have hscaleLe : ∀ n, scale n ≤ 1 := by
+    intro n
+    dsimp only [scale]
+    exact (div_le_one (by positivity)).2 (by linarith [hrootPos n])
+  have hscaleZero : Tendsto scale atTop (nhds 0) := by
+    dsimp only [scale]
+    have hdenom : Tendsto (fun n ↦ 1 + root n) atTop (nhds (1 + 0)) :=
+      hrootZero.const_add 1
+    change Tendsto (root / fun n ↦ 1 + root n) atTop (nhds 0)
+    convert hrootZero.div hdenom (by norm_num) using 1
+    all_goals norm_num
+  have hcomponentRate : ∀ component : ℕ → ℝ,
+      (∀ n, 0 ≤ component n) →
+      (∀ n, component n ≤ total n) →
+      Tendsto (fun n ↦ component n / scale n) atTop (nhds 0) := by
+    intro component hcomponentNonneg hcomponentLe
+    have hupperZero : Tendsto (fun n ↦ root n * (1 + root n))
+        atTop (nhds 0) := by
+      convert hrootZero.mul (tendsto_const_nhds.add hrootZero) using 1
+      all_goals norm_num
+    apply squeeze_zero'
+    · exact Eventually.of_forall fun n ↦
+        div_nonneg (hcomponentNonneg n) (hscalePos n).le
+    · exact Eventually.of_forall fun n ↦ by
+        rw [div_le_iff₀ (hscalePos n)]
+        calc
+          component n ≤ total n := hcomponentLe n
+          _ = root n ^ 2 := (Real.sq_sqrt (htotalPos n).le).symm
+          _ = (root n * (1 + root n)) * scale n := by
+            dsimp only [scale]
+            field_simp [ne_of_gt (by linarith [hrootPos n] : 0 < 1 + root n)]
+    · exact hupperZero
+  refine ⟨scale, hscalePos, hscaleLe, hscaleZero, ?_, ?_⟩
+  · apply hcomponentRate error herrorNonneg
+    intro n
+    dsimp only [total]
+    have hsumNonneg : 0 ≤ ∑ label, vanishing label n :=
+      Finset.sum_nonneg fun label _ ↦ hvanishingNonneg label n
+    linarith [htailPos n]
+  · intro label
+    apply hcomponentRate (vanishing label) (hvanishingNonneg label)
+    intro n
+    dsimp only [total]
+    have hlabelLe : vanishing label n ≤ ∑ other, vanishing other n :=
+      Finset.single_le_sum (fun other _ ↦ hvanishingNonneg other n)
+        (Finset.mem_univ label)
+    linarith [herrorNonneg n, htailPos n]
+
+/-- **Finite common-base stopping-law normalized-chord extraction.**
+
+Because the literal sources move with `n`, the limiting columns are
+paratangent directions based at a common carrier limit.  They are not claimed
+to be Bouligand tangents at `base` without an additional source-distance over
+scale hypothesis. -/
 theorem exists_commonBase_stoppingLawDebtTangentFamily
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (base : QuittingTerminalSemanticPair ι)
@@ -86,6 +196,7 @@ theorem exists_commonBase_stoppingLawDebtTangentFamily
         quittingTerminalSemanticDebtSum candidate + epsilon n)
     (hlambdaPos : ∀ n, 0 < lambda n)
     (hlambdaLe : ∀ n, lambda n ≤ 1)
+    (hlambdaZero : Tendsto lambda atTop (nhds 0))
     (herrorRate : Tendsto (fun n ↦ epsilon n / lambda n)
       atTop (nhds 0))
     (hinactiveRate : ∀ who,
@@ -99,6 +210,7 @@ theorem exists_commonBase_stoppingLawDebtTangentFamily
       ∃ subseq : ℕ → ℕ,
       ∃ tangent : {who // who ∈ active} → ι → ℝ,
         StrictMono subseq ∧
+        Tendsto (fun rank ↦ lambda (subseq rank)) atTop (nhds 0) ∧
         (∀ mover observer,
           Tendsto (fun rank ↦
             quittingStoppingLawNormalizedDebtDirection reward
@@ -334,7 +446,8 @@ theorem exists_commonBase_stoppingLawDebtTangentFamily
       exact le_antisymm (le_of_not_gt (fun hgt ↦ hpos ⟨mover, hgt⟩))
         (hsumNonneg mover)
   refine ⟨fun mover n ↦ bestResponse n mover, subseq, tangent,
-    hsubseq, ?_, hdiagonal, hinactiveNonneg, hsumNonneg,
+    hsubseq, hlambdaZero.comp hsubseq.tendsto_atTop, ?_, hdiagonal,
+    hinactiveNonneg, hsumNonneg,
     hslopeAlternative⟩
   intro mover observer
   exact htangentCoordinate mover observer
@@ -348,15 +461,15 @@ def quittingActiveDebtTangentExtension
     (mover observer : ι) : ℝ :=
   if hmover : mover ∈ active then tangent ⟨mover, hmover⟩ observer else 0
 
-/-- The positive mover charge of an extracted active tangent is its negative
-diagonal coordinate. -/
+/-- The positive mover charge of an extracted active normalized chord is its
+negative diagonal coordinate. -/
 def quittingActiveDebtTangentGain
     (active : Finset ι) (tangent : {who // who ∈ active} → ι → ℝ)
     (mover : ι) : ℝ :=
   -quittingActiveDebtTangentExtension active tangent mover mover
 
-/-- Final finite alternative attached to one extracted common-base tangent
-family.  The first branch is a genuinely positive normalized total-debt
+/-- Final finite alternative attached to one extracted common-base
+paratangent family.  The first branch is a genuinely positive normalized total-debt
 slope.  All remaining branches use flat columns only. -/
 def IsQuittingStoppingLawTangentPipelineAlternative
     (base : QuittingTerminalSemanticPair ι) (active : Finset ι)
@@ -378,14 +491,16 @@ def IsQuittingStoppingLawTangentPipelineAlternative
         column mover mover = -gain mover ∧
         column mover other < 0
 
-/-- **Produced stopping-law tangent pipeline alternative.**
+/-- **Produced stopping-law normalized-chord pipeline alternative.**
 
 The hypotheses are the explicit common-scale conditions of
 `exists_commonBase_stoppingLawDebtTangentFamily`.  The output retains one
 subsequence and every literal approximate-best-response stopping-law ray.
-Its limiting family is then dispatched to positive total slope, zero-debt
-support entry, an infinitesimal positive charged circulation, or a
-nonnegative-potential same-column co-decrease. -/
+Its common-limit paratangent family is then dispatched to positive total
+slope, zero-debt support entry, a normalized positive charged balance, or a
+nonnegative-potential same-column co-decrease.  This statement does not claim
+that moving-source chords are based Bouligand tangents or that the charged
+balance integrates to a chronological circulation. -/
 theorem exists_commonBase_stoppingLawTangent_pipelineAlternative
     (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
     (base : QuittingTerminalSemanticPair ι)
@@ -409,6 +524,7 @@ theorem exists_commonBase_stoppingLawTangent_pipelineAlternative
         quittingTerminalSemanticDebtSum candidate + epsilon n)
     (hlambdaPos : ∀ n, 0 < lambda n)
     (hlambdaLe : ∀ n, lambda n ≤ 1)
+    (hlambdaZero : Tendsto lambda atTop (nhds 0))
     (herrorRate : Tendsto (fun n ↦ epsilon n / lambda n)
       atTop (nhds 0))
     (hinactiveRate : ∀ who,
@@ -422,6 +538,7 @@ theorem exists_commonBase_stoppingLawTangent_pipelineAlternative
       ∃ subseq : ℕ → ℕ,
       ∃ tangent : {who // who ∈ active} → ι → ℝ,
         StrictMono subseq ∧
+        Tendsto (fun rank ↦ lambda (subseq rank)) atTop (nhds 0) ∧
         (∀ mover observer,
           Tendsto (fun rank ↦
             quittingStoppingLawNormalizedDebtDirection reward
@@ -430,13 +547,14 @@ theorem exists_commonBase_stoppingLawTangent_pipelineAlternative
               (hlambdaPos (subseq rank)).le (hlambdaLe (subseq rank)) observer)
             atTop (nhds (tangent mover observer))) ∧
         IsQuittingStoppingLawTangentPipelineAlternative base active tangent := by
-  obtain ⟨bestResponse, subseq, tangent, hsubseq, htangent,
+  obtain ⟨bestResponse, subseq, tangent, hsubseq, hlambdaSubseqZero, htangent,
       hdiagonal, hinactiveNonneg, _hsumNonneg, hslope⟩ :=
     exists_commonBase_stoppingLawDebtTangentFamily
       reward base profiles active epsilon lambda hM hreward hbase
         hbasePositive hprofiles hactive hsourceActive hnear hlambdaPos
-        hlambdaLe herrorRate hinactiveRate
-  refine ⟨bestResponse, subseq, tangent, hsubseq, htangent, ?_⟩
+        hlambdaLe hlambdaZero herrorRate hinactiveRate
+  refine ⟨bestResponse, subseq, tangent, hsubseq, hlambdaSubseqZero,
+    htangent, ?_⟩
   rcases hslope with hpositiveSlope | hflat
   · exact Or.inl hpositiveSlope
   · right
