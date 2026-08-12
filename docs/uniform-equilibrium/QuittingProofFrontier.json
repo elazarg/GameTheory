@@ -175,6 +175,15 @@
       "evidence": [
         "experiments/quitting/SignedResetCommonEdgeSourceMismatchNoGo.lean"
       ]
+    },
+    {
+      "id": "NOGO-MINIMUM-FIBER-SQUARE-SOURCE-MISMATCH",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-PRESCRIBED", "SL-POS-COLLISION"],
+      "summary": "Even when all four vertices of a commuting reset square lie on one total-debt fiber, each parallel edge only equates the mover's payoff gain with its debt loss and aggregate opponent debt gain; a positive target edge does not source-match the parallel source edge.",
+      "evidence": [
+        "experiments/quitting/MinimumFiberResetSquareSourceMatchNoGo.lean"
+      ]
     }
   ]
 }
