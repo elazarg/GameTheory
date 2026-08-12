@@ -304,6 +304,16 @@
         "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegime.lean",
         "UniformEquilibrium/Quitting/Debt/Dynamic/PunishmentFloorCapSplice.lean"
       ]
+    },
+    {
+      "id": "RULE-OUT-POSITIVE-ATOM-AGGREGATION-BY-CAUSAL-QUIT-MIXING",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-PRESCRIBED"],
+      "summary": "Finite Continue-to-Quit modifications obey an exact causal signed-gain recursion, not an eventwise positive-part recursion. In a stationary two-player quitting table the first two reached rows have any prescribed nonnegative sum of positive Quit-directed atoms, yet every arbitrary infinite-horizon behavioral deviation of the marked player has exactly zero payoff. Thus positive atom aggregation by causal Quit mixing is invalid without an additional signed anti-cancellation hypothesis; the prescribed-atom leaf itself remains open.",
+      "evidence": [
+        "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticCausalQuitAggregation.lean",
+        "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticCausalQuitAggregationNoGo.lean"
+      ]
     }
   ]
 }

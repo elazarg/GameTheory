@@ -20,6 +20,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixConsumption
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixResidualRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticLiteralSourceReturnNoGo
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCausalQuitAggregationNoGo
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAtomicOwner
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBallisticity
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeBoundaryProvenanceAlternative
@@ -1317,6 +1318,16 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.QuittingLiteralPositiveActualRowPacket.not_exists_literalNashBellmanEmbedding
 #print axioms GameTheory.QuittingLiteralPositiveActualRowPacket.not_occurs_in_exactNashBellmanChronology
 #print axioms GameTheory.QuittingLiteralPositiveActualRowPacket.gain_le_nashError_of_literal_root_tail
+
+-- Chronologically supported Continue-to-Quit changes obey an exact finite
+-- causal payoff recursion. Positive eventwise atom accounts do not: a
+-- stationary two-player table has any prescribed nonnegative account on its
+-- first two reached rows while every arbitrary infinite-horizon behavioral
+-- deviation of the marked player has zero payoff.
+#print axioms GameTheory.quittingFiniteRootPayoff_sub_eq_causalQuitGain
+#print axioms GameTheory.CausalQuitAggregationCounterexample.bestReplyValue_observer_eq_zero
+#print axioms GameTheory.CausalQuitAggregationCounterexample.every_observer_deviation_payoff_eq_zero
+#print axioms GameTheory.CausalQuitAggregationCounterexample.arbitrary_behavior_cancellation_obstruction
 
 -- A vanishing-debt rectangle response has an unconditional semantic endpoint
 -- return: compactification lands on the exact observer-reset face, whose
