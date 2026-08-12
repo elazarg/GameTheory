@@ -105,6 +105,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeExhaustiveFro
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOffDiagonalSlopeFrontier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOffDiagonalAtomSequenceDispatch
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOffDiagonalStaticOrientationDispatch
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeNegativeCollisionAtomicDispatch
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDynamicDebtSemanticChronology
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAtomExactPrefixChronology
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAtomContinuePrefixAccess
@@ -1177,3 +1178,8 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 -- Counterfactual atom externality regression: even exact all-Continue prefix
 -- provenance can transfer rather than destroy debt, with no observer gain.
 #print axioms GameTheory.CounterfactualAtomExternalityRegression.exactPrefix_positiveAtom_but_no_observerGain
+
+-- Negative rectangle atoms carry persistent source-row mass and dispatch at
+-- that literal row to an outsider defect or an observer refusal certificate.
+#print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.negativeCollision_atomicDispatch
+#print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_absent_or_staticStrategicDispatch
