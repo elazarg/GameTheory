@@ -46,22 +46,6 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-! ## Finite corrected-layer algebra -/
 
-/-- Membership in a later corrected layer implies membership in every
-earlier layer. -/
-theorem normalLayer_antitone
-    (M : ι → ι → ℝ) {m n : ℕ} (hmn : m ≤ n) :
-    normalLayer M n ⊆ normalLayer M m := by
-  induction n generalizing m with
-  | zero =>
-      have hm : m = 0 := Nat.eq_zero_of_le_zero hmn
-      subst m
-      exact fun _ h => h
-  | succ n ih =>
-      rcases Nat.eq_or_lt_of_le hmn with rfl | hlt
-      · exact fun _ h => h
-      · exact (normalLayer_succ_subset M n).trans
-          (ih (Nat.le_of_lt_succ hlt))
-
 /-- If a receiver can use a player surviving to layer `n` as a nonpositive
 distinct witness, then the receiver itself survives to layer `n`. -/
 theorem mem_normalLayer_of_persistent_witness

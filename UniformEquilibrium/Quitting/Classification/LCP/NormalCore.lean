@@ -112,6 +112,15 @@ theorem normalLayer_succ_subset
   intro i hi
   exact (mem_normalLayer_succ M n i).mp hi |>.1
 
+/-- Corrected normality layers are antitone in their layer index. -/
+theorem normalLayer_antitone
+    (M : ι → ι → ℝ) {n m : ℕ} (hnm : n ≤ m) :
+    normalLayer M m ⊆ normalLayer M n := by
+  induction hnm with
+  | refl => exact Finset.Subset.rfl
+  | @step m hnm ih =>
+      exact fun _ hi => ih (normalLayer_succ_subset M m hi)
+
 /-- The corrected normal-player set `I* = ⋂ₙ Iₙ`. -/
 def normalCore (M : ι → ι → ℝ) : Finset ι := by
   classical
@@ -122,6 +131,47 @@ def normalCore (M : ι → ι → ℝ) : Finset ι := by
     i ∈ normalCore M ↔ ∀ n : ℕ, i ∈ normalLayer M n := by
   classical
   simp [normalCore]
+
+/-- Over a finite player set, the decreasing normality recursion reaches its
+intersection after finitely many layers. -/
+theorem exists_normalLayer_eq_normalCore (M : ι → ι → ℝ) :
+    ∃ n : ℕ, normalLayer M n = normalCore M := by
+  classical
+  have hmissing : ∀ i : ι, i ∉ normalCore M →
+      ∃ n : ℕ, i ∉ normalLayer M n := by
+    intro i hcore
+    rw [mem_normalCore] at hcore
+    simpa only [not_forall] using hcore
+  let firstMissing : ι → ℕ := fun i =>
+    if h : i ∈ normalCore M then 0 else Classical.choose (hmissing i h)
+  let cutoff : ℕ := ∑ i : ι, firstMissing i
+  refine ⟨cutoff, Finset.Subset.antisymm ?_ ?_⟩
+  · intro i hi
+    by_contra hcore
+    have hnot := Classical.choose_spec (hmissing i hcore)
+    have hfirst : i ∉ normalLayer M (firstMissing i) := by
+      rw [show firstMissing i = Classical.choose (hmissing i hcore) by
+        simp only [firstMissing, dif_neg hcore]]
+      exact hnot
+    have hle : firstMissing i ≤ cutoff := by
+      dsimp only [cutoff]
+      exact Finset.single_le_sum (fun _ _ => Nat.zero_le _)
+        (Finset.mem_univ i)
+    exact hfirst (normalLayer_antitone M hle hi)
+  · intro i hi
+    exact (mem_normalCore M i).1 hi cutoff
+
+/-- Every member of the stabilized corrected core has a distinct
+nonpositive comparison witness in that same core. -/
+theorem exists_core_blocker_of_mem_normalCore
+    (M : ι → ι → ℝ) {i : ι} (hi : i ∈ normalCore M) :
+    ∃ j ∈ normalCore M, j ≠ i ∧ M i j ≤ 0 := by
+  obtain ⟨n, hn⟩ := exists_normalLayer_eq_normalCore M
+  have hisucc : i ∈ normalLayer M (n + 1) :=
+    (mem_normalCore M i).1 hi (n + 1)
+  obtain ⟨_, j, hj, hne, hentry⟩ :=
+    (mem_normalLayer_succ M n i).1 hisucc
+  exact ⟨j, by simpa [hn] using hj, hne, hentry⟩
 
 /-- The exact principal matrix on corrected recursively normal players. -/
 def normalPlayerMatrix (M : ι → ι → ℝ) :
