@@ -1275,6 +1275,10 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.FourPlayerPairedSingleton.pairedSingletonMatrix_normalCore_eq_univ
 #print axioms GameTheory.FourPlayerPairedSingleton.pairedSingletonMatrix_standardQ
 #print axioms GameTheory.FourPlayerPairedSingleton.pairedSingletonMatrix_noHomogeneous
+#print axioms GameTheory.FourPlayerPairedSingleton.pairedSingletonMatrix_not_projectiveQBar
+#print axioms GameTheory.FourPlayerPairedSingleton.stationaryCompletion_residualHardClass
+#print axioms GameTheory.FourPlayerPairedSingleton.periodTwo_residualHardClass
+#print axioms GameTheory.FourPlayerPairedSingleton.periodTwo_residualHard_fullCore_nonstationary_but_uniform
 
 -- The exhaustive singleton leaf has only the existing alignment obstruction:
 -- positive punishment and both recurrent cancellation outputs compress to the
