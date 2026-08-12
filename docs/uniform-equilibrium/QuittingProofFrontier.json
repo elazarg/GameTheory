@@ -193,6 +193,21 @@
       "evidence": [
         "experiments/quitting/ObserverAbsentNegativeCollisionAtomicSourceNoGo.lean"
       ]
+    },
+    {
+      "id": "DROP-UNIFORM-FINITE-HORIZON-DEBT-CERTIFICATION",
+      "kind": "hypothesis_dropped",
+      "target_ids": [
+        "SL-PRESCRIBED",
+        "SL-ABSENT-WALL",
+        "SL-SINGLETON",
+        "SL-NEG-COLLISION",
+        "SL-POS-COLLISION"
+      ],
+      "summary": "A concrete positive global terminal-debt floor no longer requires a uniform finite-horizon cutoff: the semantic carrier is exactly the closure of finite prefix evaluations from the card(I)+2 elementary boundaries, and any inductive finite-dimensional barrier containing those boundaries proves a fixed terminal exploitability gap and nonexistence. The barrier schema is logically complete, but finding a finitely described semialgebraic barrier remains the candidate-specific obligation.",
+      "evidence": [
+        "experiments/quitting/TerminalSemanticGlobalDebtBarrierCertificate.lean"
+      ]
     }
   ]
 }
