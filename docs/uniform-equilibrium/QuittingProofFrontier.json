@@ -314,6 +314,24 @@
         "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticCausalQuitAggregation.lean",
         "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticCausalQuitAggregationNoGo.lean"
       ]
+    },
+    {
+      "id": "NOGO-FIXED-OPPONENT-OWN-STRATEGY-TRANSPORT",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-NEG-COLLISION", "SL-POS-COLLISION"],
+      "summary": "Arbitrary root and continuation changes by one marked player, with every opponent fixed, preserve that player's behavioral best-response envelope. The reached gain is therefore paid exactly by decrease of the marked player's bounded terminal debt plus the transported profile's residual error. This closes the fixed-opponent root/tail operation class but leaves opponent-changing transport open.",
+      "evidence": [
+        "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticOwnStrategyTransport.lean"
+      ]
+    },
+    {
+      "id": "NOGO-MINIMUM-FIBER-RESIDUAL-DISCHARGE-ACCOUNT",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-NEG-COLLISION", "SL-POS-COLLISION"],
+      "summary": "At a global minimum of total semantic debt, an exact error-plus-residual account satisfies residual discharge at most explicit Nash error. Hence exact positive residual discharge is impossible, approximate discharge spends at least the same charge as error, and a proper-subset debt drop transfers the charge to complementary players. Scalar residual-discharge accounting alone cannot close opponent-changing transport; independent error control or transported deviation-witness data is still required.",
+      "evidence": [
+        "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticOwnStrategyTransport.lean"
+      ]
     }
   ]
 }

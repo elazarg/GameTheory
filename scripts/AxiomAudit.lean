@@ -1319,6 +1319,19 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.QuittingLiteralPositiveActualRowPacket.not_occurs_in_exactNashBellmanChronology
 #print axioms GameTheory.QuittingLiteralPositiveActualRowPacket.gain_le_nashError_of_literal_root_tail
 
+-- With opponents fixed, arbitrary root/tail changes by the marked player
+-- preserve its behavioral best-response envelope, so prescribed-payoff gain
+-- is exactly bounded by decrease of its bounded debt plus the target error.
+-- At a global minimum, scalar residual discharge alone cannot improve this:
+-- every unit discharged is paid by at least one unit of explicit error, and
+-- exact positive discharge is impossible.
+#print axioms GameTheory.quittingTerminalSemanticDebt_update_self_eq_sub_payoffGain
+#print axioms GameTheory.gain_le_debtDrop_add_error_of_update_self
+#print axioms GameTheory.residualDischarge_le_error_of_minimumFiber
+#print axioms GameTheory.not_residual_le_minimum_sub_charge_of_exact_minimumFiber
+#print axioms GameTheory.charge_sub_excess_le_error_of_nearMinimum_paid_residual
+#print axioms GameTheory.complementPotential_increase_of_totalMinimum_and_subsetDrop
+
 -- Chronologically supported Continue-to-Quit changes obey an exact finite
 -- causal payoff recursion. Positive eventwise atom accounts do not: a
 -- stationary two-player table has any prescribed nonnegative account on its
