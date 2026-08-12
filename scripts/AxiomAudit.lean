@@ -86,6 +86,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDebtTransf
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauDynamicCostate
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPlateauMaxDebtConsumer
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticNegativeVertexGerm
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticCemeteryPairClockDecoder
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloQuantitativePassport
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStackAllContinueRegression
 import UniformEquilibrium.Quitting.Root.TerminalSemanticMoment
@@ -1098,3 +1099,10 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.quittingSimultaneousStoppingLawMixture_minimumFloor_slopeOrFlat_withUnilateralPassport
 #print axioms GameTheory.quittingSimultaneousStoppingLawMixture_minimum_strictOrSameFiber
 #print axioms GameTheory.exists_simultaneousStoppingLawMinimumResetFamily_withActivePassports
+
+-- Cemetery pair-clock decoder: two noncomplete clocks plus the honest
+-- reward-table alternative; the clock obstruction alone does not dispatch a
+-- strategic regime.
+#print axioms GameTheory.QuittingCemeteryPairClockWitness.replacement_not_complete
+#print axioms GameTheory.QuittingCemeteryPairClockWitness.pairClock_not_complete
+#print axioms GameTheory.QuittingCounterexampleRegime.cemeteryPairClock_strategicDispatcher
