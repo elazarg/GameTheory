@@ -35,10 +35,10 @@
     {
       "id": "SL-SINGLETON",
       "status": "open",
-      "obstruction_class": "OB-ALIGN",
-      "representative": "HasQuittingStaticAtomicToggleHandoff reward ∨ HasQuittingExactPlayerDeletionAtGap reward packet.observer regime.terminalGap",
-      "source": "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticConcentratedSingletonStrategicCompression.lean",
-      "producer": "QuittingCounterexampleRegime.stoppingLawSingletonStrategicOrientation_compress"
+      "obstruction_class": "OB-SINGLETON",
+      "representative": "HasQuittingStoppingLawSingletonStrategicOrientation packet",
+      "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
     },
     {
       "id": "SL-NEG-COLLISION",
@@ -137,6 +137,16 @@
       "summary": "At a unique all-Continue cap plateau, every exact cap-prefix or punishment-prefix operation is the identity with zero charge, complete law preservation, and a compactness moat forcing approximate-root absorption to vanish.",
       "evidence": [
         "experiments/quitting/UniqueAllContinueCapStackNoGo.lean"
+      ]
+    },
+    {
+      "id": "CORRECT-SINGLETON-COMPRESSION-IS-AMBIENT",
+      "kind": "maintenance",
+      "target_ids": ["SL-SINGLETON"],
+      "summary": "The atomic-or-deletion compression theorem is valid, but its static input is supplied by every counterexample regime independently of the singleton packet. It therefore does not replace, merge, or strategically consume the formal singleton leaf; the earlier representative change is reverted.",
+      "evidence": [
+        "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticConcentratedSingletonStrategicCompression.lean",
+        "experiments/QuittingStoppingLawSingletonOrientationNoGo.lean"
       ]
     }
   ]
