@@ -74,3 +74,12 @@ lean_lib GameTheoryTest where
 lean_lib Semantics where
   srcDir := "."
   leanOptions := gameTheoryLeanOptions
+
+/-- Curated research probes that remain outside the production import graph
+but are compiled on every full build.  `experiments.lean` is the explicit
+active-set ledger; archival experiments are intentionally not globbed. -/
+@[default_target]
+lean_lib ActiveExperiments where
+  srcDir := "."
+  roots := #[`experiments]
+  leanOptions := gameTheoryLeanOptions

@@ -1,12 +1,13 @@
 # Uniform-equilibrium research experiments
 
-This directory is deliberately isolated from the active Lean development. Its
-programs are small executable falsifiers, finite-model prototypes, or isolated
-Lean proof probes for research ideas. Lean probes may import active proof
-modules, but production modules never import this directory. A successful
-finite run is evidence only for its stated bounded claim; a successful Lean
-probe checks the theorem it declares without promoting that theorem into the
-production import graph.
+This directory is deliberately isolated from the production theorem graph.
+Its programs are small executable falsifiers, finite-model prototypes, or
+isolated Lean proof probes for research ideas. Lean probes may import active
+proof modules, but production modules never import this directory. A curated
+set of active Lean probes is imported by `experiments.lean` and compiled by
+the default `ActiveExperiments` target. A successful finite run is evidence
+only for its stated bounded claim; a successful Lean probe checks the theorem
+it declares without promoting that theorem into the production import graph.
 
 The signal-processing research interpretation and open questions are collected
 in `ideas/wild/README.md`.
@@ -30,6 +31,13 @@ in `ideas/wild/README.md`.
 
 Python caches, `*.olean`, screenshots, and logs are generated products rather
 than experiments and should not be stored here.
+
+An active Lean probe must be source-reproducible: force-add its source and all
+of its `experiments.*` dependencies, then import its top-level module from
+`experiments.lean`. The repository audit rejects missing or untracked sources,
+production imports of experiments, and tracked probes outside that curated
+root. Remove an abandoned probe from `experiments.lean`; do not rely on a
+stale local `.olean` to keep it compiling.
 
 Proposed adversarial searches that have not yet been implemented are specified
 in [`PROPOSALS.md`](PROPOSALS.md). Each proposal records its exact finite

@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "open_leaf_limit": 5,
+  "obstruction_classes": [
+    {
+      "id": "OB-ALIGN",
+      "description": "A counterfactual payoff/debt atom is not yet a source-matched strategic gain."
+    },
+    {
+      "id": "OB-RETURN",
+      "description": "A charged tail or retained law is not yet transported through an exact cap/state return."
+    },
+    {
+      "id": "OB-SINGLETON",
+      "description": "A static singleton certificate is not yet compiled into an exact chronology."
+    }
+  ],
+  "formal_leaves": [
+    {
+      "id": "SL-PRESCRIBED",
+      "status": "open",
+      "obstruction_class": "OB-ALIGN",
+      "representative": "Nonempty (QuittingStoppingLawPrescribedAtomSequence frontier)",
+      "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+    },
+    {
+      "id": "SL-ABSENT-WALL",
+      "status": "open",
+      "obstruction_class": "OB-ALIGN",
+      "representative": "HasQuittingStoppingLawObserverAbsentForcedOwnerDispatch packet (quittingStoppingLawObserverAbsentMassLower packet)",
+      "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+    },
+    {
+      "id": "SL-SINGLETON",
+      "status": "open",
+      "obstruction_class": "OB-SINGLETON",
+      "representative": "HasQuittingStoppingLawSingletonStrategicOrientation packet",
+      "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+    },
+    {
+      "id": "SL-NEG-COLLISION",
+      "status": "open",
+      "obstruction_class": "OB-ALIGN",
+      "representative": "HasQuittingStoppingLawNegativeCollisionAtomicDispatch packet (quittingStoppingLawNegativeCollisionMassLower packet)",
+      "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+    },
+    {
+      "id": "SL-POS-COLLISION",
+      "status": "open",
+      "obstruction_class": "OB-RETURN",
+      "representative": "HasQuittingStoppingLawPositiveCollisionMarkedTailDispatch packet ((packet.charge / 4) / (card outcomes * rewardBound))",
+      "source": "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean",
+      "producer": "QuittingCounterexampleStoppingLawFrontier.exists_prescribed_or_strategicDispatch"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "FRONTIER-BASELINE",
+      "kind": "census",
+      "target_ids": [
+        "SL-PRESCRIBED",
+        "SL-ABSENT-WALL",
+        "SL-SINGLETON",
+        "SL-NEG-COLLISION",
+        "SL-POS-COLLISION"
+      ],
+      "summary": "Initial mechanically exhaustive antichain: five formal leaves in three obstruction classes.",
+      "evidence": [
+        "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeExhaustiveFrontier.lean",
+        "UniformEquilibrium/Diagnostics/Quitting/CounterexampleRegimeObserverAbsentForcedOwnerDispatch.lean"
+      ]
+    },
+    {
+      "id": "NOGO-Q182-LOCAL-RECIPIENT-ATOM",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-PRESCRIBED"],
+      "summary": "The exact endpoint-recipient atom interface, arbitrary exact prefix depth, unit deleted survival, and semantic-pair preservation do not imply a source-matched recipient gain.",
+      "evidence": [
+        "experiments/quitting/Q182EndpointRecipientAtomInterfaceNoGo.lean"
+      ]
+    },
+    {
+      "id": "NOGO-Q182-RESET-FACE-CAP-GAUGE",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-PRESCRIBED", "SL-POS-COLLISION"],
+      "summary": "At the strongest positive-minimum reset-face/law selector, the unique exact cap root may be all-Continue and fix both the semantic pair and terminal law; exact cap-prefix iteration is then the identity.",
+      "evidence": [
+        "experiments/quitting/Q182EndpointRecipientAtomInterfaceNoGo.lean"
+      ]
+    },
+    {
+      "id": "NOGO-Q184-DEBT-BUDGETED-CAP-CHARGE",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-POS-COLLISION"],
+      "summary": "Changed-state maximal-cap roots form exact punishment-floor prefixes, but their cumulative charge is bounded by the semantic-debt excess and therefore cannot exhaust prefix capacity by iteration.",
+      "evidence": [
+        "experiments/quitting/CausalTailEscapeMaxAbsorptionDispatch.lean"
+      ]
+    },
+    {
+      "id": "NOGO-SINGLETON-AMBIENT-HANDOFF",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-SINGLETON"],
+      "summary": "The current singleton strategic orientation is equivalent to the singleton label alone; its ambient static handoff does not use the packet, and a literal quitting regression permits pure debt transfer with no target observer gain.",
+      "evidence": [
+        "experiments/QuittingStoppingLawSingletonOrientationNoGo.lean"
+      ]
+    }
+  ]
+}

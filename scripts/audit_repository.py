@@ -13,6 +13,9 @@ import re
 import subprocess
 import sys
 
+from check_frontier_ledger import load_worktree as load_frontier_ledger
+from check_frontier_ledger import validate as validate_frontier_ledger
+
 from check_lean_placeholders import TOKEN_RE, strip_comments_and_strings, tracked_lean_files
 
 
@@ -71,6 +74,7 @@ ROOT_AGGREGATORS = {
     "GameTheory",
     "UniformEquilibrium",
 }
+EXPERIMENT_ROOT = "experiments"
 
 
 def module_name_of(path: pathlib.Path) -> str:
@@ -288,10 +292,68 @@ def import_reachability_audit(
 
     orphaned = sorted(
         mod for mod in tracked_modules
-        if mod not in reachable and mod not in STANDALONE_LEAN_MODULES
+        if not (mod == EXPERIMENT_ROOT or mod.startswith(EXPERIMENT_ROOT + "."))
+        and mod not in reachable and mod not in STANDALONE_LEAN_MODULES
     )
     failures.extend(f"{tracked_modules[mod]}: tracked Lean module is not reachable from default targets"
                     for mod in orphaned)
+    return failures
+
+
+def active_experiment_audit(
+    tracked_modules: dict[str, pathlib.Path], imports: dict[str, list[str]]
+) -> list[str]:
+    """Build a separate, source-closed experimental import graph.
+
+    Production reachability is deliberately not allowed to flow through this
+    root.  This keeps active probes compiled without letting an experiment
+    hide a production orphan or leak into landed theorem dependencies.
+    """
+    failures: list[str] = []
+    if EXPERIMENT_ROOT not in tracked_modules:
+        return ["curated active-experiment root experiments.lean is not tracked"]
+
+    experiment_modules = {
+        mod for mod in tracked_modules
+        if mod == EXPERIMENT_ROOT or mod.startswith(EXPERIMENT_ROOT + ".")
+    }
+    reachable: set[str] = set()
+    stack = [EXPERIMENT_ROOT]
+    while stack:
+        mod = stack.pop()
+        if mod in reachable:
+            continue
+        reachable.add(mod)
+        for dep in imports.get(mod, []):
+            if dep.startswith(EXPERIMENT_ROOT + "."):
+                if dep not in tracked_modules:
+                    failures.append(
+                        f"{tracked_modules[mod]}: active experiment import {dep} "
+                        "has no tracked Lean source"
+                    )
+                else:
+                    stack.append(dep)
+
+    orphaned = sorted(experiment_modules - reachable)
+    failures.extend(
+        f"{tracked_modules[mod]}: tracked experiment is not reachable from experiments.lean"
+        for mod in orphaned
+    )
+
+    for mod, deps in imports.items():
+        if mod in experiment_modules:
+            continue
+        for dep in deps:
+            if dep == EXPERIMENT_ROOT or dep.startswith(EXPERIMENT_ROOT + "."):
+                failures.append(
+                    f"{tracked_modules[mod]}: production module imports active experiment {dep}"
+                )
+
+    for line_no in root_aggregator_non_import_lines(tracked_modules[EXPERIMENT_ROOT]):
+        failures.append(
+            f"{tracked_modules[EXPERIMENT_ROOT]}:{line_no}: active-experiment "
+            "root must be a pure import list"
+        )
     return failures
 
 
@@ -300,8 +362,12 @@ def main() -> int:
     failures, escape_hatch_notices = static_escape_hatch_audit()
     failures.extend(semantic_layer_audit(tracked_modules, imports))
     failures.extend(import_reachability_audit(tracked_modules, imports))
+    failures.extend(active_experiment_audit(tracked_modules, imports))
     failures.extend(leaf_invariant_audit(tracked_modules, imports))
     failures.extend(island_containment_audit(tracked_modules, imports))
+    failures.extend(validate_frontier_ledger(
+        load_frontier_ledger(), "docs/uniform-equilibrium/QuittingProofFrontier.json"
+    ))
     axiom_failures, axiom_output = run_axiom_audit()
     failures.extend(axiom_failures)
 
