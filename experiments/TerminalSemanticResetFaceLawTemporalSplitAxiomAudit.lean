@@ -1,0 +1,4 @@
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticResetFaceLawTemporalSplit
+
+#print axioms GameTheory.exists_resetFaceLaw_concentrated_or_diffuseWindowPacket
+#print axioms GameTheory.exists_resetFaceLaw_concentratedPacket_of_collision
