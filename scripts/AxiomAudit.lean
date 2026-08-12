@@ -14,6 +14,7 @@ import UniformEquilibrium.Quitting.Classification.LCP.HomogeneousProducer
 import UniformEquilibrium.Quitting.Classification.LCP.NormalCoreStrictnessExample
 import UniformEquilibrium.Quitting.Classification.LCP.StandardQSideExample
 import UniformEquilibrium.Quitting.Classification.LCP.CyclicParametricQ
+import UniformEquilibrium.Quitting.Examples.BlockPair.All
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimePacketEnergy
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixConsumption
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAggregatePrefixResidualRegression
@@ -1252,6 +1253,18 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.QuittingLCPClassification.CyclicParametricQ.cyclicMatrix_standardQ_iff
 #print axioms GameTheory.QuittingLCPClassification.CyclicParametricQ.cyclicMatrix_noHomogeneous_iff
 #print axioms GameTheory.QuittingLCPClassification.CyclicParametricQ.cyclicMatrix_standardQ_and_noHomogeneous_iff
+
+-- The paired-singleton calibration has an exact pure stationary completion,
+-- an exact absorbing period-two Bellman cycle, and a full-core standard-Q
+-- singleton matrix with no homogeneous simplex solution.
+#print axioms GameTheory.FourPlayerPairedSingleton.stationaryCompletion_isUniformEquilibriumPayoff
+#print axioms GameTheory.FourPlayerPairedSingleton.existsUnique_periodTwoParameter
+#print axioms GameTheory.FourPlayerPairedSingleton.periodTwoBlock_isQuittingCyclicContinuationBlock
+#print axioms GameTheory.FourPlayerPairedSingleton.periodTwoProfile_isExactTerminalNash
+#print axioms GameTheory.FourPlayerPairedSingleton.periodTwo_isUniformEquilibriumPayoff
+#print axioms GameTheory.FourPlayerPairedSingleton.pairedSingletonMatrix_normalCore_eq_univ
+#print axioms GameTheory.FourPlayerPairedSingleton.pairedSingletonMatrix_standardQ
+#print axioms GameTheory.FourPlayerPairedSingleton.pairedSingletonMatrix_noHomogeneous
 
 -- The exhaustive singleton leaf has only the existing alignment obstruction:
 -- positive punishment and both recurrent cancellation outputs compress to the
