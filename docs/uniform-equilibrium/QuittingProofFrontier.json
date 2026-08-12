@@ -265,6 +265,15 @@
       "evidence": [
         "experiments/quitting/TerminalSemanticDebtSaturatedBarrierNoGo.lean"
       ]
+    },
+    {
+      "id": "NOGO-COMMON-POSITIVE-FIBER-SOURCE-MATCH",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-PRESCRIBED", "SL-POS-COLLISION"],
+      "summary": "A literal two-player quitting reset square can have all four vertices on one common positive total-debt fiber while the same observer reset gains one on the target face and loses one on the parallel source face. Thus quitting semantics plus common-fiber equality do not source-match parallel edges. The witness has no positive global semantic-debt minimum, so positive global-minimum provenance is the exact remaining possible repair.",
+      "evidence": [
+        "experiments/quitting/MinimumFiberResetSquareCompatibility.lean"
+      ]
     }
   ]
 }
