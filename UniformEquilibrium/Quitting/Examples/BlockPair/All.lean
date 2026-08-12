@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import UniformEquilibrium.Quitting.Examples.BlockPair.FourPlayerPairedSingleton
 import UniformEquilibrium.Quitting.Examples.BlockPair.FourPlayerPairedSingletonPeriodTwo
+import UniformEquilibrium.Quitting.Examples.BlockPair.FourPlayerPairedSingletonPeriodTwoStationary
 import UniformEquilibrium.Quitting.Examples.BlockPair.FourPlayerPairedSingletonLCP
 import UniformEquilibrium.Quitting.Examples.BlockPair.K11DyadicPhaseGroupZeroTwo
 import UniformEquilibrium.Quitting.Examples.BlockPair.K11DyadicPhaseGroupThreeFive
