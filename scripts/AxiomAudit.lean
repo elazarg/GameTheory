@@ -110,6 +110,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeNegativeColli
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeObserverAbsentForcedOwnerDispatch
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticForcedOwnerRefusalCollector
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeObserverAbsentDefectPolarityDispatch
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeObserverAbsentRectangleBaselineDispatch
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDynamicDebtSemanticChronology
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAtomExactPrefixChronology
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAtomContinuePrefixAccess
@@ -1210,6 +1211,14 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.exists_fixedPlayer_behaviorDeviation_of_continueOccupation
 #print axioms GameTheory.exists_continueDeviation_or_fixedQuitAtom_or_fixedRectangle_of_forcedOwnerOccupation
 #print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.observerAbsent_finiteClock_defectPolarity
+
+-- A fixed positive same-witness rectangle is source gain minus its
+-- owner-forced-Continue baseline.  Source gain is legally collected or
+-- atomized; the sole residual is the negative Continue-face gain, requiring
+-- an action-support lower bound or a transport back to the actual source.
+#print axioms GameTheory.ownerQuit_mul_quittingOwnerOutsiderDeviationRectangle_eq
+#print axioms GameTheory.exists_sourceConsumer_or_continueFaceLoss_of_rectangleOccupation
+#print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.observerAbsent_finiteClock_faceLoss
 
 -- A vanishing-debt rectangle response has an unconditional semantic endpoint
 -- return: compactification lands on the exact observer-reset face, whose
