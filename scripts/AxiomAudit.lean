@@ -109,6 +109,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOffDiagonalSt
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeNegativeCollisionAtomicDispatch
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeObserverAbsentForcedOwnerDispatch
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticForcedOwnerRefusalCollector
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeObserverAbsentDefectPolarityDispatch
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDynamicDebtSemanticChronology
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAtomExactPrefixChronology
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeAtomContinuePrefixAccess
@@ -1199,6 +1200,16 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.sum_stageCoalitionMass_mul_forcedRefusal_le_initialSemanticDebt
 #print axioms GameTheory.exists_behaviorDeviation_gain_ge_sum_forcedRefusal_sub
 #print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.observerAbsent_finiteClock_strategicSplit
+
+-- The remaining observer-absent forced-outsider wall splits with literal
+-- chronology into a legal Continue deviation, a fixed valid Quit atom, or
+-- one fixed same-witness owner/outsider rectangle occupation.
+#print axioms GameTheory.forcedOwner_coordinateDefect_actual_or_rectangle
+#print axioms GameTheory.stageCoalitionMass_gap_actualDefect_or_rectangle
+#print axioms GameTheory.stageCoalitionMass_mul_forcedOwnerDefect_half_le_actual_add_rectangle
+#print axioms GameTheory.exists_fixedPlayer_behaviorDeviation_of_continueOccupation
+#print axioms GameTheory.exists_continueDeviation_or_fixedQuitAtom_or_fixedRectangle_of_forcedOwnerOccupation
+#print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.observerAbsent_finiteClock_defectPolarity
 
 -- A vanishing-debt rectangle response has an unconditional semantic endpoint
 -- return: compactification lands on the exact observer-reset face, whose
