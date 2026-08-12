@@ -219,13 +219,15 @@ theorem exists_prescribedAtom_or_deviationRectangleAtom_of_stoppingLawDebtSlope
       (Function.update profile observer deviation) observer (charge / 4)
       herror hrectangle⟩
 
-/-- **Total positive-slope decoder.**
+/-- **Total nonnegative-slope decoder with positive combined charge.**
 
-If the total debt rises at rate `sigma` while the mover's own coordinate is
-consumed at rate `gain`, one fixed opponent receives at least the average
-rate `(sigma + gain) / card (univ.erase mover)`.  The coordinate decoder then
+If the total debt rises at rate at least `sigma` while the mover's own
+coordinate is consumed at rate `gain`, and `sigma + gain` is positive, one
+fixed opponent receives at least the average rate
+`(sigma + gain) / card (univ.erase mover)`.  The coordinate decoder then
 exposes either a prescribed-law terminal atom or a same-deviation terminal
-rectangle atom at that quantitative scale.
+rectangle atom at that quantitative scale.  Allowing `sigma = 0` includes a
+charged reset along a flat total-debt fiber.
 
 In particular, the selected atom is not obtained from an independently
 chosen semantic or law point.  Every profile in the conclusion is one of the
@@ -236,7 +238,7 @@ theorem exists_opponent_prescribedAtom_or_deviationRectangleAtom_of_totalSlope
     (profile : (quittingGame reward).BehaviorProfile)
     (mover : ι) (target : (quittingGame reward).BehaviorStrategy mover)
     (lambda sigma gain : ℝ) (hlambda0 : 0 < lambda) (hlambda1 : lambda ≤ 1)
-    (hsigma : 0 < sigma) (hgain : 0 ≤ gain)
+    (htotalCharge : 0 < sigma + gain)
     {M : ℝ} (hM : 0 ≤ M)
     (hreward : ∀ terminal player, |reward terminal player| ≤ M)
     (htotalSlope : lambda * sigma ≤
@@ -300,7 +302,7 @@ theorem exists_opponent_prescribedAtom_or_deviationRectangleAtom_of_totalSlope
     rw [← htotalChange, ← hsplit, hmoverChange] at htotalSlope
     linarith
   have hpositiveScale : 0 < lambda * (sigma + gain) := by
-    exact mul_pos hlambda0 (by linarith)
+    exact mul_pos hlambda0 htotalCharge
   have hopponents : (Finset.univ.erase mover).Nonempty := by
     by_contra hempty
     rw [Finset.not_nonempty_iff_eq_empty.mp hempty] at hopponentLower
@@ -318,7 +320,7 @@ theorem exists_opponent_prescribedAtom_or_deviationRectangleAtom_of_totalSlope
   let charge := (sigma + gain) /
     ((Finset.univ.erase mover).card : ℝ)
   have hchargePositive : 0 < charge := by
-    exact div_pos (by linarith) hcardPositive
+    exact div_pos htotalCharge hcardPositive
   have hobserverSlope : lambda * charge ≤ debtChange observer := by
     dsimp only [charge]
     rw [← mul_div_assoc]
@@ -331,5 +333,60 @@ theorem exists_opponent_prescribedAtom_or_deviationRectangleAtom_of_totalSlope
           dsimp only [debtChange, mixedPair, sourcePair, mixed] at hobserverSlope
           exact hobserverSlope)
   exact ⟨observer, hobserver, hdecoded⟩
+
+/-- **A flat strategically oriented reset already reaches the positive-slope
+atom decoder.**
+
+If a complete stopping-law reset consumes the mover's debt at a strictly
+positive rate while preserving total semantic debt, some distinct observer's
+debt rises at the average compensating rate.  Hence the existing literal atom
+decoder applies on that same reset edge.  In particular, placing such edges in
+a recurrent reset word or a commuting reset cube creates no additional
+alternative: the atom/externality branch is already present on each flat
+charged edge. -/
+theorem exists_opponent_prescribedAtom_or_deviationRectangleAtom_of_flatReset
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι)
+    (profile : (quittingGame reward).BehaviorProfile)
+    (mover : ι) (target : (quittingGame reward).BehaviorStrategy mover)
+    (lambda gain : ℝ) (hlambda0 : 0 < lambda) (hlambda1 : lambda ≤ 1)
+    (hgain : 0 < gain)
+    {M : ℝ} (hM : 0 ≤ M)
+    (hreward : ∀ terminal player, |reward terminal player| ≤ M)
+    (hflat : quittingTerminalSemanticDebtSum
+          (quittingTerminalSemanticPair reward
+            (Function.update profile mover
+              (quittingStoppingLawMixtureBehaviorStrategy reward mover
+                (profile mover) target lambda hlambda0.le hlambda1))) =
+        quittingTerminalSemanticDebtSum
+          (quittingTerminalSemanticPair reward profile))
+    (hmover : quittingTerminalSemanticDebt
+          (quittingTerminalSemanticPair reward
+            (Function.update profile mover
+              (quittingStoppingLawMixtureBehaviorStrategy reward mover
+                (profile mover) target lambda hlambda0.le hlambda1))) mover =
+        quittingTerminalSemanticDebt
+            (quittingTerminalSemanticPair reward profile) mover -
+          lambda * gain) :
+    ∃ observer ∈ Finset.univ.erase mover,
+      let charge := gain / ((Finset.univ.erase mover).card : ℝ)
+      (∃ terminal : {S : Finset ι // S.Nonempty},
+        charge / 2 ≤
+          (Fintype.card (QuittingTerminalOutcome ι) : ℝ) *
+            quittingTerminalPayoffDifferenceAtom reward profile
+              (Function.update profile mover target) observer
+                (some terminal)) ∨
+      ∃ deviation : (quittingGame reward).BehaviorStrategy observer,
+        ∃ terminal : {S : Finset ι // S.Nonempty},
+          charge / 4 ≤
+            (Fintype.card (QuittingTerminalOutcome ι) : ℝ) *
+              quittingTerminalPayoffDifferenceAtom reward
+                (Function.update (Function.update profile mover target)
+                  observer deviation)
+                (Function.update profile observer deviation) observer
+                  (some terminal) := by
+  simpa only [zero_add] using
+    (exists_opponent_prescribedAtom_or_deviationRectangleAtom_of_totalSlope
+      reward profile mover target lambda 0 gain hlambda0 hlambda1
+        (by linarith) hM hreward (by simp [hflat]) hmover)
 
 end GameTheory

@@ -1131,6 +1131,7 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 -- Flat simultaneous-reset orientation localization and immediate positive-slope decoding.
 #print axioms GameTheory.quittingStoppingLawMixtureHybridProfile_insert
 #print axioms GameTheory.activePassport_flatSimultaneous_directed_or_localizedPositiveSlope
+#print axioms GameTheory.exists_opponent_prescribedAtom_or_deviationRectangleAtom_of_flatReset
 
 -- A flat joint recipient need not carry incidence; positive co-realized
 -- incidence is the exact additional bridge to the atomic-toggle consumer.
