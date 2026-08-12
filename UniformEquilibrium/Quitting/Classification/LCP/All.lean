@@ -21,6 +21,7 @@ import UniformEquilibrium.Quitting.Classification.LCP.OrdinaryNonQProducer
 import UniformEquilibrium.Quitting.Classification.LCP.SupportHierarchy
 import UniformEquilibrium.Quitting.Classification.LCP.OrdinaryNonQClosure
 import UniformEquilibrium.Quitting.Classification.LCP.CounterexampleNecessary
+import UniformEquilibrium.Quitting.Classification.LCP.ThreeCore.All
 
 /-!
 # LCP normalization and algebraic classification for finite quitting games
@@ -42,6 +43,8 @@ This umbrella exports the theorem-bearing infrastructure proved in this folder:
 * the complete zero-diagonal `3 × 3` classification: outside the homogeneous
   branch, standard Q is exactly one of the two strict directed-cycle sign
   orientations together with positive determinant;
+* the elimination of every quitting game whose corrected normal core has
+  exactly three players, so every four-player counterexample has full core;
 * the unconditional algebraic matrix-regime gate with its precise residual
   class; and
 * the complete corrected all-abnormal producer, including the later-layer

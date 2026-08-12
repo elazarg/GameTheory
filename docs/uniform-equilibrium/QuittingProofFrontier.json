@@ -59,6 +59,21 @@
   ],
   "transitions": [
     {
+      "id": "ELIMINATE-THREE-ELEMENT-CORRECTED-CORE",
+      "kind": "hypothesis_dropped",
+      "target_ids": [
+        "SL-PRESCRIBED",
+        "SL-ABSENT-WALL",
+        "SL-SINGLETON",
+        "SL-NEG-COLLISION",
+        "SL-POS-COLLISION"
+      ],
+      "summary": "Every finite quitting game whose corrected normal core has cardinality three has an ordinary uniform-equilibrium payoff. Hence a four-player counterexample must have full corrected core, and every remaining leaf may be studied under that table-level restriction.",
+      "evidence": [
+        "UniformEquilibrium/Quitting/Classification/LCP/ThreeCore/AmbientCarrierElimination.lean"
+      ]
+    },
+    {
       "id": "PRESERVE-RECTANGLE-ORIENTATION-PROVENANCE",
       "kind": "maintenance",
       "target_ids": [
