@@ -217,6 +217,30 @@
       "evidence": [
         "experiments/quitting/SingletonMarkedUseDebtBudgetNoGo.lean"
       ]
+    },
+    {
+      "id": "DROP-Q182-RECIPIENT-DEVIATION-SELECTION",
+      "kind": "hypothesis_dropped",
+      "target_ids": ["SL-PRESCRIBED"],
+      "summary": "At any near-minimum complete-law reset whose scaled mover gain exceeds the minimum error, the recipient, positive debt slope, and one approximate behavioral response no longer need to be supplied separately. One actual deviation is selected automatically, is exactly affine across source and endpoint, carries the quantitative rectangle charge, and is within 8*M*lambda+eta of the recipient's source debt. The remaining zero-source-debt branch still requires endpoint return or signed source transport.",
+      "evidence": [
+        "experiments/quitting/NearMinimumActualDeviationRectangle.lean"
+      ]
+    },
+    {
+      "id": "NOGO-COORDINATEWISE-SEMANTIC-BARRIER",
+      "kind": "architectural_nogo",
+      "target_ids": [
+        "SL-PRESCRIBED",
+        "SL-ABSENT-WALL",
+        "SL-SINGLETON",
+        "SL-NEG-COLLISION",
+        "SL-POS-COLLISION"
+      ],
+      "summary": "Any axis-aligned or coordinatewise order-compatible semantic barrier containing the required elementary boundary pairs also contains the diagonal formed by the positive parts of the singleton rewards. That diagonal has zero total semantic debt, so no such independently recombined barrier can certify a strictly positive global debt floor; a successful barrier must couple player coordinates.",
+      "evidence": [
+        "experiments/quitting/TerminalSemanticCoordinatewiseBoxBarrierNoGo.lean"
+      ]
     }
   ]
 }
