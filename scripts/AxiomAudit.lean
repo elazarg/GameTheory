@@ -1168,6 +1168,8 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 -- Exhaustive stopping-law frontier, its one-debt-owner off-diagonal atom
 -- alternative, and the exact dynamic-debt semantic chronology.
 #print axioms GameTheory.QuittingCounterexampleRegime.exists_stoppingLaw_exhaustiveFrontier
+#print axioms GameTheory.not_exists_uniformEquilibriumPayoff_iff_nonempty_stoppingLawFrontier
+#print axioms GameTheory.exists_uniformEquilibriumPayoff_iff_no_stoppingLawFrontier
 #print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.exists_fixedAtomAlternative
 #print axioms GameTheory.QuittingCounterexampleRegime.exists_stoppingLaw_fixedAtomAlternative
 #print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.oneDebtOwner_dichotomy

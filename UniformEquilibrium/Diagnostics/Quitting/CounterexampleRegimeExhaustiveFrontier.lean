@@ -450,4 +450,48 @@ theorem QuittingCounterexampleRegime.exists_stoppingLaw_exhaustiveFrontier
     exhaustive_branch := hfrontierBranch
     alternative := halternative }⟩
 
+/-! ## Conjecture-level frontier anchor -/
+
+/-- The maintained stopping-law residual, bundled without choosing a
+counterexample regime separately.  Refinements of the branch predicate may
+change the internal frontier, while the equivalence below remains the
+conjecture-level bookkeeping target. -/
+def QuittingUniformExistenceFrontier
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :=
+  Σ regime : QuittingCounterexampleRegime reward,
+    QuittingCounterexampleStoppingLawFrontier regime
+
+/-- Nonexistence of a uniform-equilibrium payoff is exactly inhabitation of
+the maintained exhaustive stopping-law frontier. -/
+theorem not_exists_uniformEquilibriumPayoff_iff_nonempty_stoppingLawFrontier
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    (¬ ∃ payoff : Payoff ι,
+        (quittingGame reward).IsUniformEquilibriumPayoff none payoff) ↔
+      Nonempty (QuittingUniformExistenceFrontier reward) := by
+  constructor
+  · intro hno
+    let regime := quittingCounterexampleRegimeOfNoUniformPayoff reward hno
+    obtain ⟨frontier⟩ := regime.exists_stoppingLaw_exhaustiveFrontier
+    exact ⟨⟨regime, frontier⟩⟩
+  · rintro ⟨⟨regime, _frontier⟩⟩
+    exact regime.not_exists_uniformEquilibriumPayoff
+
+/-- Equivalently, the quitting-game conjecture for this reward table is the
+assertion that the maintained exhaustive frontier is empty. -/
+theorem exists_uniformEquilibriumPayoff_iff_no_stoppingLawFrontier
+    (reward : {S : Finset ι // S.Nonempty} → Payoff ι) :
+    (∃ payoff : Payoff ι,
+        (quittingGame reward).IsUniformEquilibriumPayoff none payoff) ↔
+      ¬ Nonempty (QuittingUniformExistenceFrontier reward) := by
+  constructor
+  · intro hexists hfrontier
+    exact
+      (not_exists_uniformEquilibriumPayoff_iff_nonempty_stoppingLawFrontier
+        reward).mpr hfrontier hexists
+  · intro hfrontier
+    by_contra hno
+    exact hfrontier
+      ((not_exists_uniformEquilibriumPayoff_iff_nonempty_stoppingLawFrontier
+        reward).mp hno)
+
 end GameTheory
