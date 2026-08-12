@@ -1093,3 +1093,8 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 
 -- Simultaneous mixture witness switching capstone.
 #print axioms GameTheory.simultaneousMixtureSwitchEnvelope_normalized_gap
+
+-- Simultaneous stopping-law minimum-reset dichotomy and unilateral passports.
+#print axioms GameTheory.quittingSimultaneousStoppingLawMixture_minimumFloor_slopeOrFlat_withUnilateralPassport
+#print axioms GameTheory.quittingSimultaneousStoppingLawMixture_minimum_strictOrSameFiber
+#print axioms GameTheory.exists_simultaneousStoppingLawMinimumResetFamily_withActivePassports
