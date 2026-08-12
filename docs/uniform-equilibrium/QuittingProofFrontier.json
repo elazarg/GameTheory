@@ -250,6 +250,21 @@
       "evidence": [
         "experiments/quitting/MinimumFiberResetSquareSourceMatchNoGo.lean"
       ]
+    },
+    {
+      "id": "NOGO-DEBT-SATURATED-SEMANTIC-BARRIER",
+      "kind": "architectural_nogo",
+      "target_ids": [
+        "SL-PRESCRIBED",
+        "SL-ABSENT-WALL",
+        "SL-SINGLETON",
+        "SL-NEG-COLLISION",
+        "SL-POS-COLLISION"
+      ],
+      "summary": "No positive four-player global-debt certificate can use a barrier whose membership depends only on envelope minus prescribed payoff. Debt saturation supplies a calibrated point on the Never debt fiber, and one rational symmetric product-root prefix multiplies every debt coordinate by its arbitrarily small joint Continue mass, contradicting the floor. Debt-only polyhedral, semialgebraic, and max-plus cylinders are therefore excluded; a successful barrier must retain absolute semantic level.",
+      "evidence": [
+        "experiments/quitting/TerminalSemanticDebtSaturatedBarrierNoGo.lean"
+      ]
     }
   ]
 }
