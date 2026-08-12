@@ -104,6 +104,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTargetTailGlu
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeExhaustiveFrontier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOffDiagonalSlopeFrontier
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOffDiagonalAtomSequenceDispatch
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOffDiagonalEndpointReturn
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOffDiagonalStaticOrientationDispatch
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeNegativeCollisionAtomicDispatch
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeObserverAbsentForcedOwnerDispatch
@@ -1197,3 +1198,12 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.sum_stageCoalitionMass_mul_forcedRefusal_le_initialSemanticDebt
 #print axioms GameTheory.exists_behaviorDeviation_gain_ge_sum_forcedRefusal_sub
 #print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.observerAbsent_finiteClock_strategicSplit
+
+-- A vanishing-debt rectangle response has an unconditional semantic endpoint
+-- return: compactification lands on the exact observer-reset face, whose
+-- minimizer either reaches the global minimum fiber or has all-Continue as
+-- its unique exact cap--Nash root.  The atom remains literal only along the
+-- selected input subsequence, not at the constrained semantic minimizer.
+#print axioms GameTheory.QuittingStoppingLawRectangleResetFaceDispatch.atom_bound
+#print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.nonempty_resetFaceDispatch
+#print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.exists_prescribedAtomSequence_or_rectangleResetFaceDispatch
