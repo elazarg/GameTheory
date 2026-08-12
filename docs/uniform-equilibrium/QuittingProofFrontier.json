@@ -184,6 +184,15 @@
       "evidence": [
         "experiments/quitting/MinimumFiberResetSquareSourceMatchNoGo.lean"
       ]
+    },
+    {
+      "id": "NOGO-ATOMIC-FORCED-ROW-SOURCE-MISMATCH",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-ABSENT-WALL", "SL-NEG-COLLISION"],
+      "summary": "The shared forced-owner atomic barrier does not merge these leaves: the negative-collision barrier is on its actual source row, whereas the observer-absent barrier is counterfactual. Positive forced-row defect, action support, and face loss can coexist with zero gain for both actual-source pure actions and exact endpoint Nash; adding a positive global minimum or terminal gap to this two-player regression would itself assert a counterexample.",
+      "evidence": [
+        "experiments/quitting/ObserverAbsentNegativeCollisionAtomicSourceNoGo.lean"
+      ]
     }
   ]
 }
