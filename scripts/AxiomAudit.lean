@@ -65,6 +65,7 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPositiveSlopeRect
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticPositiveSlopeRectangleAlignmentRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticStoppingLawMinimumTangent
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSimultaneousResetOrientationLocalization
+import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSimultaneousRecipientIncidenceRegression
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticStoppingLawFlatTangentAlternative
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticStoppingLawTangentExtraction
 import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloOwnerRefinement
@@ -1112,6 +1113,11 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 -- Flat simultaneous-reset orientation localization and immediate positive-slope decoding.
 #print axioms GameTheory.quittingStoppingLawMixtureHybridProfile_insert
 #print axioms GameTheory.activePassport_flatSimultaneous_directed_or_localizedPositiveSlope
+
+-- A flat joint recipient need not carry incidence; positive co-realized
+-- incidence is the exact additional bridge to the atomic-toggle consumer.
+#print axioms GameTheory.FlatRecipientIncidenceRegression.simultaneous_flatPassport_recipient_without_incidence
+#print axioms GameTheory.QuittingCounterexampleRegime.activePassport_flatSimultaneous_atomicRecipient_or_localizedPositiveSlope
 
 -- Cemetery pair-clock decoder: two noncomplete clocks plus the honest
 -- reward-table alternative; the clock obstruction alone does not dispatch a
