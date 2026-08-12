@@ -100,6 +100,9 @@ import UniformEquilibrium.Diagnostics.Quitting.TerminalSemanticSoloQuantitativeP
 import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtLiteralStackAllContinueRegression
 import UniformEquilibrium.Quitting.Root.TerminalSemanticMoment
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTargetTailGluingObstruction
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeExhaustiveFrontier
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeOffDiagonalSlopeFrontier
+import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeDynamicDebtSemanticChronology
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentPacket
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentAnchoredProjectiveLCP
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeTangentMixingCompatibility
@@ -1141,3 +1144,13 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 -- Common-suffix curvature regression: a face-level no-go for inferring
 -- same-face return from debt height and literal suffix agreement.
 #print axioms GameTheory.QuittingCommonSuffixCurvatureRegression.lambda_le_activeEnvelopeDistance_of_faceMinimum
+
+-- Exhaustive stopping-law frontier, its one-debt-owner off-diagonal atom
+-- alternative, and the exact dynamic-debt semantic chronology.
+#print axioms GameTheory.QuittingCounterexampleRegime.exists_stoppingLaw_exhaustiveFrontier
+#print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.exists_fixedAtomAlternative
+#print axioms GameTheory.QuittingCounterexampleRegime.exists_stoppingLaw_fixedAtomAlternative
+#print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.oneDebtOwner_dichotomy
+#print axioms GameTheory.quittingDynamicDebtEdge_semanticPrefixChronology
+#print axioms GameTheory.QuittingCounterexampleSeamWitness.dynamicDebtSemanticPair_tail_mem_carrier
+#print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.baseDebtSum_le_seamLimitDebtSum
