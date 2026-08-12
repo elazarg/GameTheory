@@ -148,6 +148,15 @@
         "UniformEquilibrium/Diagnostics/Quitting/TerminalSemanticConcentratedSingletonStrategicCompression.lean",
         "experiments/QuittingStoppingLawSingletonOrientationNoGo.lean"
       ]
+    },
+    {
+      "id": "NOGO-CAP-CHANGING-EXACT-STACK-DEBT-BUDGET",
+      "kind": "architectural_nogo",
+      "target_ids": ["SL-PRESCRIBED", "SL-POS-COLLISION"],
+      "summary": "After any literal unilateral reset, an arbitrary finite stack of exact cap-Nash prefixes remains fully charged by the reset endpoint's ordinary debt excess. At a minimum-fiber endpoint every row is all-Continue and the semantic pair and complete retained law are unchanged.",
+      "evidence": [
+        "experiments/quitting/CapChangingLawRetainedSquareNoGo.lean"
+      ]
     }
   ]
 }
