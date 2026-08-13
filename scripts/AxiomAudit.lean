@@ -1296,6 +1296,10 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms Math.Interval.RationalPolynomial.hasFDerivAt_evalReal
 #print axioms Math.Interval.RationalPolynomial.lipschitzOnWith_evalRealVector_of_evalDualDyadic_absRowSum
 
+-- A square finite-dimensional Krawczyk derivative bound certifies that the
+-- preconditioner is injective, discharging the bridge's algebraic hypothesis.
+#print axioms Math.preconditioner_injective_of_norm_one_sub_comp_lt_one
+
 -- The exhaustive singleton leaf has only the existing alignment obstruction:
 -- positive punishment and both recurrent cancellation outputs compress to the
 -- same static atomic handoff, while exact deletion is retained verbatim.

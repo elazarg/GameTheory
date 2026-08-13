@@ -4,7 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import Mathlib.Analysis.Normed.Module.Basic
+import Mathlib.Analysis.Normed.Operator.Basic
+import Mathlib.LinearAlgebra.FiniteDimensional.Basic
 import Mathlib.Topology.MetricSpace.Contracting
 
 /-!
@@ -27,6 +28,53 @@ namespace Math
 open Function Metric Set
 
 open scoped NNReal
+
+/-- If a square preconditioned derivative is within operator norm one of the
+identity, then the preconditioner is injective.
+
+The finite-dimensional hypothesis is essential for this conclusion.  The
+norm bound first makes `preconditioner.comp derivative` injective.  In finite
+dimension that composite is therefore surjective, so `preconditioner` is
+surjective and hence injective.  Without finite dimensionality, a surjective
+noninjective bounded operator can have a bounded right inverse, making the
+composite exactly the identity. -/
+theorem preconditioner_injective_of_norm_one_sub_comp_lt_one
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+    [FiniteDimensional ℝ E]
+    (preconditioner derivative : E →L[ℝ] E)
+    (hnear : ‖1 - preconditioner.comp derivative‖ < 1) :
+    Injective preconditioner := by
+  have hcompInjective : Injective (preconditioner.comp derivative) := by
+    intro first second heq
+    have hzero :
+        (preconditioner.comp derivative) (first - second) = 0 := by
+      rw [map_sub, heq, sub_self]
+    have hfixed :
+        (1 - preconditioner.comp derivative) (first - second) =
+          first - second := by
+      change (first - second) -
+          (preconditioner.comp derivative) (first - second) = first - second
+      rw [hzero, sub_zero]
+    have hopNorm :=
+      (1 - preconditioner.comp derivative).le_opNorm (first - second)
+    rw [hfixed] at hopNorm
+    by_cases hdifference : first - second = 0
+    · exact sub_eq_zero.mp hdifference
+    · have hnormPositive : 0 < ‖first - second‖ :=
+        norm_pos_iff.mpr hdifference
+      have hstrict :
+          ‖1 - preconditioner.comp derivative‖ * ‖first - second‖ <
+            ‖first - second‖ :=
+        (mul_lt_iff_lt_one_left hnormPositive).mpr hnear
+      exact False.elim (not_lt_of_ge hopNorm hstrict)
+  have hcompSurjective : Surjective (preconditioner.comp derivative) :=
+    LinearMap.injective_iff_surjective.mp hcompInjective
+  have hpreconditionerSurjective : Surjective preconditioner := by
+    intro target
+    obtain ⟨source, hsource⟩ := hcompSurjective target
+    change preconditioner (derivative source) = target at hsource
+    exact ⟨derivative source, hsource⟩
+  exact LinearMap.injective_iff_surjective.mpr hpreconditionerSurjective
 
 /-- A contracting preconditioned residual map whose center correction fits
 inside a closed ball has an exact residual zero in that ball.
