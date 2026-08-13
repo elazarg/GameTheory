@@ -1377,3 +1377,10 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.QuittingStoppingLawRectangleResetFaceDispatch.atom_bound
 #print axioms GameTheory.QuittingStoppingLawVanishingDebtRectangleSequence.nonempty_resetFaceDispatch
 #print axioms GameTheory.QuittingCounterexampleStoppingLawFrontier.exists_prescribedAtomSequence_or_rectangleResetFaceDispatch
+
+-- Scalar K11 opponent summaries are exactly the value projections of the
+-- phase-local cached-dual nodes, and those nodes lift to canonical polynomial
+-- evaluation without introducing additional assumptions.
+#print axioms GameTheory.BlockPairK11.LocalValue.buildLocalOpponentQuitValue_value
+#print axioms GameTheory.BlockPairK11.LocalValue.buildLocalOpponentAbsorbingContribution_value
+#print axioms GameTheory.BlockPairK11.LocalInterval.lift_buildLocalOpponentSurvival_eq_evalCachedDyadic

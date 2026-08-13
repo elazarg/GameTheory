@@ -36,6 +36,20 @@ def product : {count : ℕ} →
       product (fun index ↦ factor index.castSucc) |>.mul
         (factor (Fin.last count))
 
+/-- Pointwise equality transports through the scalar finite sum. -/
+theorem sum_congr {count : ℕ}
+    {first second : Fin count → Value precision}
+    (h : ∀ index, first index = second index) :
+    sum first = sum second := by
+  exact congrArg sum (funext h)
+
+/-- Pointwise equality transports through the scalar finite product. -/
+theorem product_congr {count : ℕ}
+    {first second : Fin count → Value precision}
+    (h : ∀ index, first index = second index) :
+    product first = product second := by
+  exact congrArg product (funext h)
+
 def root (box : HazardIndex → Value precision)
     (phase : Phase) (player : Player) : Value precision :=
   LocalInterval.localBox box phase player
