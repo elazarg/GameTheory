@@ -1289,6 +1289,13 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.FourPlayerPairedSingleton.periodTwo_residualHardClass
 #print axioms GameTheory.FourPlayerPairedSingleton.periodTwo_residualHard_fullCore_nonstationary_but_uniform
 
+-- A maximum Jacobian row-sum bound in the finite-product sup norm turns the
+-- exact dyadic automatic-differentiation enclosure into a Lipschitz
+-- certificate for a reflected polynomial system.
+#print axioms Math.continuousLinearMap_norm_le_of_entrywise_rowSum
+#print axioms Math.Interval.RationalPolynomial.hasFDerivAt_evalReal
+#print axioms Math.Interval.RationalPolynomial.lipschitzOnWith_evalRealVector_of_evalDualDyadic_absRowSum
+
 -- The exhaustive singleton leaf has only the existing alignment obstruction:
 -- positive punishment and both recurrent cancellation outputs compress to the
 -- same static atomic handoff, while exact deletion is retained verbatim.
