@@ -270,6 +270,34 @@ theorem convex_dyadicBoxSet
       (mul_le_mul_of_nonneg_left hfirstCoordinate.2 ha)
       (mul_le_mul_of_nonneg_left hsecondCoordinate.2 hb)
 
+/-- If both coordinate endpoints of a closed sup-norm ball lie in each
+coordinate interval, then the whole ball lies in the represented dyadic box.
+-/
+theorem closedBall_subset_dyadicBoxSet_of_endpoints_mem
+    (box : Fin variableCount → DyadicInterval precision)
+    (center : Fin variableCount → ℝ) (radius : ℝ)
+    (hendpoints : ∀ coordinate,
+      (box coordinate).Contains (center coordinate - radius) ∧
+        (box coordinate).Contains (center coordinate + radius)) :
+    closedBall center radius ⊆ dyadicBoxSet box := by
+  intro point hpoint coordinate
+  have hcoordinate : |point coordinate - center coordinate| ≤ radius := by
+    calc
+      |point coordinate - center coordinate| =
+          ‖(point - center) coordinate‖ := by
+        rw [Real.norm_eq_abs]
+        rfl
+      _ ≤ ‖point - center‖ := norm_le_pi_norm (point - center) coordinate
+      _ = dist point center := by rw [dist_eq_norm]
+      _ ≤ radius := hpoint
+  have hlowerPoint : center coordinate - radius ≤ point coordinate := by
+    linarith [abs_le.mp hcoordinate |>.1]
+  have hpointUpper : point coordinate ≤ center coordinate + radius := by
+    linarith [abs_le.mp hcoordinate |>.2]
+  rw [DyadicInterval.Contains, RationalInterval.Contains]
+  exact ⟨(hendpoints coordinate).1.1.trans hlowerPoint,
+    hpointUpper.trans (hendpoints coordinate).2.2⟩
+
 /-- Applying the formal differential to a standard coordinate direction
 recovers the corresponding formal partial. -/
 theorem differential_piBasisVector
@@ -376,6 +404,31 @@ theorem lipschitzOnWith_evalRealVector_of_evalDualDyadic_absRowSum
     exact le_max_left _ _
   · intro output input
     exact le_max_right _ _
+
+/-- A dyadic automatic-differentiation row-sum certificate on a box restricts
+to any closed sup-norm ball whose coordinate endpoints lie in that box. -/
+theorem lipschitzOnWith_evalRealVector_closedBall_of_evalDualDyadic_absRowSum
+    (expressions : Fin variableCount →
+      RationalPolynomial variableCount)
+    (box : Fin variableCount → DyadicInterval precision)
+    (center : Fin variableCount → ℝ) (radius : ℝ)
+    (contraction : ℝ≥0)
+    (hendpoints : ∀ coordinate,
+      (box coordinate).Contains (center coordinate - radius) ∧
+        (box coordinate).Contains (center coordinate + radius))
+    (hrow : ∀ output,
+      ∑ input,
+          dyadicAbsBound
+            ((evalDualDyadic box
+              (expressions output)).derivative input) ≤
+        (contraction : ℝ)) :
+    LipschitzOnWith contraction
+      (fun point output ↦ evalReal point (expressions output))
+      (closedBall center radius) := by
+  exact (lipschitzOnWith_evalRealVector_of_evalDualDyadic_absRowSum
+    expressions box contraction hrow).mono
+      (closedBall_subset_dyadicBoxSet_of_endpoints_mem
+        box center radius hendpoints)
 
 end Interval.RationalPolynomial
 

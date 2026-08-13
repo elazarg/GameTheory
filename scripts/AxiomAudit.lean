@@ -1295,6 +1295,9 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms Math.continuousLinearMap_norm_le_of_entrywise_rowSum
 #print axioms Math.Interval.RationalPolynomial.hasFDerivAt_evalReal
 #print axioms Math.Interval.RationalPolynomial.lipschitzOnWith_evalRealVector_of_evalDualDyadic_absRowSum
+#print axioms Math.Interval.RationalPolynomial.closedBall_subset_dyadicBoxSet_of_endpoints_mem
+#print axioms Math.Interval.RationalPolynomial.lipschitzOnWith_evalRealVector_closedBall_of_evalDualDyadic_absRowSum
+#print axioms Math.Interval.RationalPolynomial.exists_zero_in_closedBall_of_evalDualDyadic_absRowSum
 
 -- A square finite-dimensional Krawczyk derivative bound certifies that the
 -- preconditioner is injective, discharging the bridge's algebraic hypothesis.

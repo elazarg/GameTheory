@@ -16,6 +16,7 @@ import Math.Interval.RationalPolynomial
 import Math.Interval.DyadicPolynomial
 import Math.Interval.CachedDyadicDual
 import Math.Interval.PolynomialLipschitz
+import Math.Interval.PolynomialKrawczyk
 import Math.KrawczykBridge
 import Math.LinearAlgebra.CyclicSchur
 import Math.Minimax.DiscountedShapleyIdealObstruction
