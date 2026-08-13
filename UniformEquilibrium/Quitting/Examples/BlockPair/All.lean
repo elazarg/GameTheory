@@ -17,6 +17,7 @@ import UniformEquilibrium.Quitting.Examples.BlockPair.K11DyadicPhaseTenRootZero
 import UniformEquilibrium.Quitting.Examples.BlockPair.K11DyadicPhaseTenRootOne
 import UniformEquilibrium.Quitting.Examples.BlockPair.K11LocalValue
 import UniformEquilibrium.Quitting.Examples.BlockPair.K11OpponentLocalValue
+import UniformEquilibrium.Quitting.Examples.BlockPair.K11ActiveEquationInterval
 import UniformEquilibrium.Quitting.Examples.BlockPair.PredecessorComposition
 
 /-!

@@ -1384,3 +1384,12 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.BlockPairK11.LocalValue.buildLocalOpponentQuitValue_value
 #print axioms GameTheory.BlockPairK11.LocalValue.buildLocalOpponentAbsorbingContribution_value
 #print axioms GameTheory.BlockPairK11.LocalInterval.lift_buildLocalOpponentSurvival_eq_evalCachedDyadic
+
+-- Named derivative-preserving K11 active equations agree with canonical
+-- cached rational-polynomial evaluation, both phasewise and in the public
+-- 31-equation order.
+#print axioms GameTheory.BlockPairK11.LocalInterval.buildCycleData_opponentQuitValue_eq_evalCachedDyadic
+#print axioms GameTheory.BlockPairK11.LocalInterval.buildCycleData_opponentAbsorbingContribution_eq_evalCachedDyadic
+#print axioms GameTheory.BlockPairK11.LocalInterval.buildCycleData_opponentSurvival_eq_evalCachedDyadic
+#print axioms GameTheory.BlockPairK11.LocalInterval.activeEquationAt_buildCycleData_eq_evalCachedDyadic
+#print axioms GameTheory.BlockPairK11.LocalInterval.activeEquation_buildCycleData_eq_evalCachedDyadic
