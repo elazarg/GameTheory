@@ -35,6 +35,7 @@ import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedDi
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedDiffuseClippedEdgeObstruction
 import UniformEquilibrium.Quitting.Root.ApproximateFirstBranch
 import UniformEquilibrium.Quitting.Root.TailStability
+import UniformEquilibrium.Quitting.Root.TerminalSemanticPrefixMetric
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedNegativeTangent
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeConditionedSlackThreshold
 import UniformEquilibrium.Diagnostics.Quitting.CounterexampleRegimeExactCycleStrata
@@ -1401,3 +1402,12 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.BlockPairK11.evalReal_numeratorAux_eq_realNumeratorAux
 #print axioms GameTheory.BlockPairK11.realCycleNumerator_recurrence
 #print axioms GameTheory.BlockPairK11.evalReal_cyclicValueNumerator_recurrence
+
+-- Metric/tube stability of the terminal semantic prefix.  This is reusable
+-- representation infrastructure; it does not assert semialgebraic barrier
+-- completeness.
+#print axioms GameTheory.quittingTerminalSemanticPrefix_within
+#print axioms GameTheory.quittingTerminalSemanticPrefix_mapsTo_tube
+#print axioms GameTheory.quittingTerminalSemanticCarrier_mapsTo_tube
+#print axioms GameTheory.abs_semanticDebtSum_sub_le_of_within
+#print axioms GameTheory.semanticDebtSum_pos_of_mem_tube_of_floor_pos
