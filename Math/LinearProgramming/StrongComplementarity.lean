@@ -1033,5 +1033,76 @@ theorem exists_strong_complementary_pair
 
 end FinColumns
 
+/-- Strong complementarity for an arbitrary finite column type, obtained by
+transporting the finite-column theorem along `Fintype.equivFin`. -/
+theorem exists_strong_complementary_pair_fintype
+    (A : Row → Col → ℝ) (b : Row → ℝ) (c : Col → ℝ) (v : ℝ)
+    (hN_pos : (0 : ℝ) < ((Fintype.card Row + Fintype.card Col : ℕ) : ℝ))
+    {x₀ : Col → ℝ} (hx₀ : MinPrimalFeasible A b x₀)
+    (hx₀_val : minPrimalValue c x₀ = v)
+    {y₀ : Row → ℝ} (hy₀ : MaxDualFeasible A c y₀)
+    (hy₀_val : maxDualValue b y₀ = v) :
+    ∃ (x : Col → ℝ) (y : Row → ℝ), IsStrongComplementaryPair A b c x y := by
+  classical
+  let e := Fintype.equivFin Col
+  let AFin : Row → Fin (Fintype.card Col) → ℝ := fun i j => A i (e.symm j)
+  let cFin : Fin (Fintype.card Col) → ℝ := fun j => c (e.symm j)
+  let x₀Fin : Fin (Fintype.card Col) → ℝ := fun j => x₀ (e.symm j)
+  have hx₀A : ∀ i, b i ≤ ∑ j, AFin i j * x₀Fin j := by
+    intro i
+    calc
+      b i ≤ ∑ j : Col, A i j * x₀ j := by simpa [rowEval] using hx₀.2 i
+      _ = ∑ j, AFin i j * x₀Fin j := by
+        simpa [AFin, x₀Fin] using
+          (e.symm.sum_comp (fun j : Col => A i j * x₀ j)).symm
+  have hx₀nn : ∀ j, 0 ≤ x₀Fin j := fun j => hx₀.1 (e.symm j)
+  have hx₀Fin_val : ∑ j, cFin j * x₀Fin j = v := by
+    rw [show (∑ j, cFin j * x₀Fin j) = ∑ j : Col, c j * x₀ j by
+      simpa [cFin, x₀Fin] using
+        (e.symm.sum_comp (fun j : Col => c j * x₀ j))]
+    exact hx₀_val
+  have hy₀Fin : MaxDualFeasible AFin cFin y₀ := by
+    refine ⟨hy₀.1, ?_⟩
+    intro j
+    simpa [AFin, cFin, colEval] using hy₀.2 (e.symm j)
+  have hy₀Fin_val : ∑ i, y₀ i * b i = v := by
+    simpa [maxDualValue, dot, mul_comm] using hy₀_val
+  obtain ⟨xFin, y, hxA, hxnn, hy, hxval, hyval, hrow, hcol⟩ :=
+    exists_strong_complementary_pair AFin b cFin v hN_pos
+      hx₀A hx₀nn hx₀Fin_val hy₀Fin hy₀Fin_val
+  let x : Col → ℝ := fun j => xFin (e j)
+  refine ⟨x, y, ?_, ?_, ?_, ?_, ?_⟩
+  · refine ⟨?_, ?_⟩
+    · intro j
+      exact hxnn (e j)
+    · intro i
+      calc
+        b i ≤ ∑ k, AFin i k * xFin k := hxA i
+        _ = ∑ j : Col, A i j * x j := by
+          simpa [AFin, x] using
+            (e.symm.sum_comp (fun j : Col => A i j * xFin (e j)))
+  · refine ⟨hy.1, ?_⟩
+    intro j
+    simpa [AFin, cFin, colEval] using hy.2 (e j)
+  · change (∑ j, c j * x j) = ∑ i, b i * y i
+    have hxval' : (∑ j : Col, c j * x j) = v := by
+      rw [show (∑ j : Col, c j * x j) = ∑ k, cFin k * xFin k by
+        simpa [cFin, x] using
+          (e.sum_comp (fun k : Fin (Fintype.card Col) => cFin k * xFin k))]
+      exact hxval
+    have hyval' : (∑ i, b i * y i) = v := by
+      simpa [mul_comm] using hyval
+    exact hxval'.trans hyval'.symm
+  · intro i
+    have hsum :
+        (∑ k, AFin i k * xFin k) = ∑ j : Col, A i j * x j := by
+      simpa [AFin, x] using
+        (e.symm.sum_comp (fun j : Col => A i j * xFin (e j)))
+    have hi := hrow i
+    rw [hsum] at hi
+    simpa [minPrimalSlack, rowEval, x] using hi
+  · intro j
+    simpa [maxDualSlack, colEval, AFin, cFin, x] using hcol (e j)
+
 end LinearProgramming
 end Math

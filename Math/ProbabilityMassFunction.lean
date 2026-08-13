@@ -698,6 +698,26 @@ theorem expect_le_of_le_on_support
     · simp [ha]
   simpa using Math.Probability.expect_mono μ _ (fun _ => B) hle
 
+/-- A lower bound holding on the support bounds the expectation below. -/
+theorem le_expect_of_le_on_support
+    {Ω : Type*} [Finite Ω] (μ : PMF Ω) (f : Ω → ℝ) {B : ℝ}
+    (hfB : ∀ a, a ∈ μ.support → B ≤ f a) :
+    B ≤ Math.Probability.expect μ f := by
+  classical
+  have hcongr : Math.Probability.expect μ f =
+      Math.Probability.expect μ (fun a => if a ∈ μ.support then f a else B) :=
+    expect_congr_on_support μ _ _ (fun a ha => by simp [ha])
+  rw [hcongr]
+  have hge : ∀ a, B ≤ (if a ∈ μ.support then f a else B) := by
+    intro a
+    by_cases ha : a ∈ μ.support
+    · simpa [ha] using hfB a ha
+    · simp [ha]
+  calc
+    B = Math.Probability.expect μ (fun _ => B) :=
+      (Math.Probability.expect_const _ _).symm
+    _ ≤ _ := Math.Probability.expect_mono μ _ _ hge
+
 theorem expect_pushforward
     {Ω Ξ : Type*} [Finite Ξ]
     (μ : PMF Ω) (f : Ω → Ξ) (φ : Ξ → ℝ) :

@@ -154,6 +154,135 @@ theorem exists_maxDualFeasible_of_minPrimal_lower_bound
       _ = maxDualValue b y := by
         simp [maxDualValue, dot, y, mul_comm]
 
+/-- Every upper bound on the standard-form dual objective has a feasible
+primal certificate reaching at most that bound.  This is the transposed,
+sign-reversed form of
+`exists_maxDualFeasible_of_minPrimal_lower_bound`. -/
+theorem exists_minPrimalFeasible_of_maxDual_upper_bound
+    {A : Row → Col → ℝ} {b : Row → ℝ} {c : Col → ℝ} {d : ℝ}
+    (hfeas : ∃ y, MaxDualFeasible A c y)
+    (hbound : ∀ y, MaxDualFeasible A c y → maxDualValue b y ≤ d) :
+    ∃ x, MinPrimalFeasible A b x ∧ minPrimalValue c x ≤ d := by
+  let dualA : Col → Row → ℝ := fun j i => -A i j
+  let dualB : Col → ℝ := fun j => -c j
+  let dualC : Row → ℝ := fun i => -b i
+  have hfeas' : ∃ y, MinPrimalFeasible dualA dualB y := by
+    obtain ⟨y, hy⟩ := hfeas
+    refine ⟨y, hy.1, ?_⟩
+    intro j
+    calc
+      dualB j = -c j := rfl
+      _ ≤ -(colEval A y j) := neg_le_neg (hy.2 j)
+      _ = rowEval dualA y j := by
+        unfold colEval rowEval dualA
+        rw [← Finset.sum_neg_distrib]
+        apply Finset.sum_congr rfl
+        intro i _
+        ring
+  have hbound' : ∀ y, MinPrimalFeasible dualA dualB y →
+      -d ≤ minPrimalValue dualC y := by
+    intro y hy
+    have hyOriginal : MaxDualFeasible A c y := by
+      refine ⟨hy.1, ?_⟩
+      intro j
+      have hj := hy.2 j
+      have hrow : rowEval dualA y j = -(colEval A y j) := by
+        unfold rowEval colEval dualA
+        rw [← Finset.sum_neg_distrib]
+        apply Finset.sum_congr rfl
+        intro i _
+        ring
+      dsimp only [dualB] at hj
+      rw [hrow] at hj
+      linarith
+    have hvalue := hbound y hyOriginal
+    have hnegValue :
+        minPrimalValue dualC y = -(maxDualValue b y) := by
+      unfold minPrimalValue maxDualValue dot dualC
+      rw [← Finset.sum_neg_distrib]
+      apply Finset.sum_congr rfl
+      intro i _
+      ring
+    rw [hnegValue]
+    linarith
+  obtain ⟨x, hx, hxValue⟩ :=
+    exists_maxDualFeasible_of_minPrimal_lower_bound
+      (A := dualA) (b := dualB) (c := dualC)
+      (d := -d) hfeas' hbound'
+  have hxOriginal : MinPrimalFeasible A b x := by
+    refine ⟨hx.1, ?_⟩
+    intro i
+    have hi := hx.2 i
+    have hcol : colEval dualA x i = -(rowEval A x i) := by
+      unfold colEval rowEval dualA
+      rw [← Finset.sum_neg_distrib]
+      apply Finset.sum_congr rfl
+      intro j _
+      ring
+    dsimp only [dualC] at hi
+    rw [hcol] at hi
+    linarith
+  refine ⟨x, hxOriginal, ?_⟩
+  have hvalue :
+      maxDualValue dualB x = -(minPrimalValue c x) := by
+    unfold maxDualValue minPrimalValue dot dualB
+    rw [← Finset.sum_neg_distrib]
+    apply Finset.sum_congr rfl
+    intro j _
+    ring
+  rw [hvalue] at hxValue
+  linarith
+
+omit [Fintype Row] in
+/-- A nonempty finite standard-form primal whose objective is bounded below
+attains its minimum.  The proof uses the infimum only to obtain an optimal
+dual certificate, then the transposed Farkas theorem above produces an
+actual primal optimizer. -/
+theorem exists_minPrimalOptimal_of_feasible_of_bounded [Finite Row]
+    {A : Row → Col → ℝ} {b : Row → ℝ} {c : Col → ℝ}
+    (hfeas : ∃ x, MinPrimalFeasible A b x)
+    (hbounded : ∃ lower : ℝ,
+      ∀ x, MinPrimalFeasible A b x → lower ≤ minPrimalValue c x) :
+    ∃ x, MinPrimalFeasible A b x ∧
+      ∀ z, MinPrimalFeasible A b z →
+        minPrimalValue c x ≤ minPrimalValue c z := by
+  letI := Fintype.ofFinite Row
+  let values : Set ℝ :=
+    {value | ∃ x, MinPrimalFeasible A b x ∧
+      minPrimalValue c x = value}
+  have hvaluesNonempty : values.Nonempty := by
+    obtain ⟨x, hx⟩ := hfeas
+    exact ⟨minPrimalValue c x, x, hx, rfl⟩
+  have hvaluesBddBelow : BddBelow values := by
+    obtain ⟨lower, hlower⟩ := hbounded
+    refine ⟨lower, ?_⟩
+    rintro value ⟨x, hx, rfl⟩
+    exact hlower x hx
+  let optimum : ℝ := sInf values
+  have hoptimumLower : ∀ x, MinPrimalFeasible A b x →
+      optimum ≤ minPrimalValue c x := by
+    intro x hx
+    exact csInf_le hvaluesBddBelow ⟨x, hx, rfl⟩
+  obtain ⟨y, hy, hoptimum_le_y⟩ :=
+    exists_maxDualFeasible_of_minPrimal_lower_bound
+      (A := A) (b := b) (c := c) (d := optimum)
+      hfeas hoptimumLower
+  have hyOptimal : ∀ z, MaxDualFeasible A c z →
+      maxDualValue b z ≤ maxDualValue b y := by
+    intro z hz
+    have hz_le_optimum : maxDualValue b z ≤ optimum := by
+      apply le_csInf hvaluesNonempty
+      intro value hvalue
+      obtain ⟨x, hx, rfl⟩ := hvalue
+      exact min_weak_duality hx hz
+    exact hz_le_optimum.trans hoptimum_le_y
+  obtain ⟨x, hx, hx_le_y⟩ :=
+    exists_minPrimalFeasible_of_maxDual_upper_bound
+      (A := A) (b := b) (c := c)
+      ⟨y, hy⟩ hyOptimal
+  exact ⟨x, hx, fun z hz =>
+    hx_le_y.trans (min_weak_duality hz hy)⟩
+
 /-- Strong duality for a standard-form finite LP, stated from an optimal primal
 solution: an optimal primal point has a feasible dual point with the same
 objective value. -/

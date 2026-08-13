@@ -129,6 +129,17 @@ theorem expect_eq_sum {Ω : Type*} [Fintype Ω] (d : PMF Ω) (f : Ω → ℝ) :
     expect d f = (∑ ω : Ω, (d ω).toReal * f ω) := by
   simp [expect]
 
+/-- The expectation of a coordinate unit vector is the corresponding
+real-valued PMF mass. -/
+theorem expect_pi_single {Ω : Type*} [Finite Ω] [DecidableEq Ω]
+    (d : PMF Ω) (ω : Ω) :
+    expect d (Pi.single ω 1) = (d ω).toReal := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [expect_eq_sum, Fintype.sum_eq_single ω]
+  · simp
+  · intro other hne
+    simp [hne]
+
 theorem pmf_apply_toReal_tendsto_of_tendsto {Ω : Type*}
     {μs : ℕ → PMF Ω} {μ : PMF Ω} {ω : Ω}
     (h : Tendsto (fun n : ℕ => μs n ω) atTop (nhds (μ ω))) :
@@ -513,6 +524,29 @@ theorem expect_const_mul {Ω : Type*} (d : PMF Ω) (c : ℝ) (f : Ω → ℝ) :
   unfold expect
   rw [← tsum_mul_left]
   exact tsum_congr fun ω => by ring
+
+/-- Negation commutes with expectation. -/
+theorem expect_neg {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ) :
+    expect d (fun ω => -f ω) = -expect d f := by
+  simpa using expect_const_mul d (-1) f
+
+/-- A PMF coordinate is the expectation of its singleton indicator. -/
+theorem apply_toReal_eq_expect_indicator
+    {Ω : Type*} [Finite Ω] [DecidableEq Ω]
+    (distribution : PMF Ω) (point : Ω) :
+    (distribution point).toReal =
+      expect distribution (fun other => if other = point then 1 else 0) := by
+  classical
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [expect_eq_sum]
+  simp
+
+/-- A point mass has zero real weight away from its atom. -/
+theorem pure_apply_toReal_of_ne {α : Type*} (atom point : α)
+    (hne : point ≠ atom) :
+    ((PMF.pure atom) point).toReal = 0 := by
+  rw [PMF.pure_apply, if_neg hne]
+  simp
 
 /-- A nonnegative integrand has nonnegative expectation. -/
 theorem expect_nonneg {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ)

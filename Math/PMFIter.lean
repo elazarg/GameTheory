@@ -27,6 +27,7 @@ namespace Math
 namespace PMFIter
 
 open Math.ProbabilityMassFunction
+open Math.Probability
 
 variable {B : Type*}
 
@@ -191,7 +192,28 @@ theorem iter_map_of_hom {f : B → A}
     (h : IsKernelHom f step₁ step₂) (n : Nat) (b : B) :
     iter step₁ n (f b) = (iter step₂ n b).map f :=
   hasCoupling_proj_iff_map_eq.mp
-    ⟨iter_HasCoupling_of_bisim (KernelBisim.ofKernelHom h) (f b) b rfl n⟩
+  ⟨iter_HasCoupling_of_bisim (KernelBisim.ofKernelHom h) (f b) b rfl n⟩
+
+/-- The expectation of a harmonic observable is invariant under iteration
+of a finite PMF kernel. -/
+theorem expect_iter_of_harmonic {S : Type*} [Finite S] (κ : S → PMF S)
+    (observable : S → ℝ)
+    (harmonic : ∀ state, expect (κ state) observable = observable state)
+    (time : ℕ) (initial : S) :
+    expect (iter κ time initial) observable = observable initial := by
+  letI : Fintype S := Fintype.ofFinite S
+  induction time generalizing initial with
+  | zero => simp [iter]
+  | succ time ih =>
+      rw [iter_succ, expect_bind]
+      simp_rw [ih, harmonic]
+
+/-- One-step unfolding of an iterated kernel in expectation form. -/
+theorem expect_iter_succ {S : Type*} [Finite S] (κ : S → PMF S)
+    (observable : S → ℝ) (time : ℕ) (initial : S) :
+    expect (iter κ time initial) (fun state => expect (κ state) observable) =
+      expect (iter κ (time + 1) initial) observable := by
+  rw [iter_succ', expect_bind]
 
 end PMFIter
 end Math
