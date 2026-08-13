@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import UniformEquilibrium.Quitting.Punishment.OwnerSoloCertification
 import UniformEquilibrium.Quitting.Classification.LCP.Normalization
+import UniformEquilibrium.Diagnostics.Quitting.TerminalDebtPrefixDescent
 
 /-!
 # The four-player paired-singleton family
@@ -132,6 +133,57 @@ theorem stationaryPureProfile_isExactTerminalNash :
       simp [quittingSoloReward, stationaryCompletionReward_singleton_set,
         pairedSingletonReward, pairedSingletonMatrix] at hother ⊢
     all_goals norm_num
+
+/-- The displayed stationary exact Nash profile is a literal zero-debt
+carrier for the canonical maximum all-behavior terminal exploitability. -/
+theorem stationaryPureProfile_terminalExploitability_eq_zero :
+    quittingTerminalExploitability stationaryCompletionReward
+      (quittingStationaryProfile stationaryCompletionReward
+        stationaryPureRoot) = 0 := by
+  apply le_antisymm
+  · unfold quittingTerminalExploitability
+    apply QuittingBoundaryHolonomy.finitePlayerMax_le
+    intro who
+    apply max_le
+    · exact le_rfl
+    · have hbest : quittingContinuationBestResponseValue
+          stationaryCompletionReward
+          (quittingStationaryProfile stationaryCompletionReward
+            stationaryPureRoot) who ≤
+        quittingTerminalPayoff stationaryCompletionReward
+          (quittingStationaryProfile stationaryCompletionReward
+            stationaryPureRoot) who := by
+        unfold quittingContinuationBestResponseValue
+        apply csSup_le
+        · exact ⟨_,
+            (quittingStationaryProfile stationaryCompletionReward
+              stationaryPureRoot) who, rfl⟩
+        · rintro value ⟨deviation, rfl⟩
+          simpa using stationaryPureProfile_isExactTerminalNash who deviation
+      linarith
+  · exact quittingTerminalExploitability_nonneg _ _
+
+/-- The stationary completion has zero canonical semantic min-max
+exploitability: the infimum over all behavior profiles of maximum positive
+unilateral terminal gain is exactly zero. -/
+theorem stationaryCompletion_terminalExploitabilityInf_eq_zero :
+    quittingTerminalExploitabilityInf stationaryCompletionReward = 0 := by
+  apply le_antisymm
+  · exact (quittingTerminalExploitabilityInf_le
+      stationaryCompletionReward
+      (quittingStationaryProfile stationaryCompletionReward
+        stationaryPureRoot)).trans_eq
+      stationaryPureProfile_terminalExploitability_eq_zero
+  · unfold quittingTerminalExploitabilityInf
+    have hprofiles : Set.Nonempty
+        (Set.range fun profile :
+            (quittingGame stationaryCompletionReward).BehaviorProfile ↦
+          quittingTerminalExploitability stationaryCompletionReward profile) :=
+      ⟨_, quittingStationaryProfile stationaryCompletionReward
+        stationaryPureRoot, rfl⟩
+    apply le_csInf hprofiles
+    rintro value ⟨profile, rfl⟩
+    exact quittingTerminalExploitability_nonneg _ _
 
 /-- The pure stationary profile's terminal payoff is the first singleton
 column `(0,3,-1,-1)`. -/

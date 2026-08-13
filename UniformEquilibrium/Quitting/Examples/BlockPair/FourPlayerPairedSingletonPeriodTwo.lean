@@ -78,6 +78,19 @@ theorem periodTwoPolynomial_three_quarters :
     periodTwoPolynomial ((3 : ℝ) / 4) = 3 / 32 := by
   norm_num [periodTwoPolynomial]
 
+/-- Substituting the rational expression for the secondary continuation
+probability into the first active equation exposes the selecting quartic,
+including the extraneous all-Continue factor `a - 1`. -/
+theorem periodTwo_secondary_substitution_factorization
+    {a : ℝ} (ha : a ≠ 0) :
+    let b := (4 * a ^ 2 - 1) / (3 * a ^ 2)
+    b * (1 - a + 3 * b - 2 * a * b) - 1 =
+      -(a - 1) * periodTwoPolynomial a / (9 * a ^ 4) := by
+  dsimp
+  unfold periodTwoPolynomial
+  field_simp [ha]
+  ring
+
 /-- The derivative has the displayed cubic form. -/
 theorem deriv_periodTwoPolynomial (x : ℝ) :
     deriv periodTwoPolynomial x =
@@ -155,11 +168,12 @@ theorem periodTwoPolynomial_neg_of_half_lt_of_le_seven_tenths
   norm_num at hbound ⊢
   linarith
 
-/-- There is exactly one quartic root in `(1/2,1)`; in fact it lies in the
-rational isolating interval `(37/50,3/4)`. -/
-theorem existsUnique_periodTwoParameter :
-    ∃! a : ℝ,
-      a ∈ Set.Ioo ((1 : ℝ) / 2) 1 ∧ periodTwoPolynomial a = 0 := by
+/-- The selecting quartic has a root in the explicit rational isolation
+interval `(37/50,3/4)`. -/
+theorem exists_periodTwoParameter_mem_isolatingInterval :
+    ∃ a : ℝ,
+      a ∈ Set.Ioo ((37 : ℝ) / 50) (3 / 4) ∧
+        periodTwoPolynomial a = 0 := by
   have hleft : periodTwoPolynomial ((37 : ℝ) / 50) < 0 := by
     rw [periodTwoPolynomial_thirtySeven_fiftieths]
     norm_num
@@ -174,14 +188,21 @@ theorem existsUnique_periodTwoParameter :
     intermediate_value_Icc
       (by norm_num : (37 : ℝ) / 50 ≤ 3 / 4)
       hcontinuous ⟨hleft.le, hright.le⟩
-  have haOpen : a ∈ Set.Ioo ((37 : ℝ) / 50) (3 / 4) := by
-    constructor
-    · exact lt_of_le_of_ne haIcc.1 fun h ↦ by
-        subst a
-        linarith
-    · exact lt_of_le_of_ne haIcc.2 fun h ↦ by
-        subst a
-        linarith
+  refine ⟨a, ⟨?_, ?_⟩, haroot⟩
+  · exact lt_of_le_of_ne haIcc.1 fun h ↦ by
+      subst a
+      linarith
+  · exact lt_of_le_of_ne haIcc.2 fun h ↦ by
+      subst a
+      linarith
+
+/-- There is exactly one quartic root in `(1/2,1)`; in fact it lies in the
+rational isolating interval `(37/50,3/4)`. -/
+theorem existsUnique_periodTwoParameter :
+    ∃! a : ℝ,
+      a ∈ Set.Ioo ((1 : ℝ) / 2) 1 ∧ periodTwoPolynomial a = 0 := by
+  obtain ⟨a, haOpen, haroot⟩ :=
+    exists_periodTwoParameter_mem_isolatingInterval
   refine ⟨a, ⟨⟨by norm_num at haOpen ⊢; linarith,
       by norm_num at haOpen ⊢; linarith⟩, haroot⟩, ?_⟩
   intro y hy
@@ -219,26 +240,25 @@ theorem periodTwoParameter_pos : 0 < periodTwoParameter :=
 theorem periodTwoParameter_lt_one : periodTwoParameter < 1 :=
   periodTwoParameter_mem.2
 
+/-- The chosen parameter retains the full rational isolation certificate. -/
+theorem periodTwoParameter_mem_isolatingInterval :
+    periodTwoParameter ∈ Set.Ioo ((37 : ℝ) / 50) (3 / 4) := by
+  obtain ⟨a, haInterval, haroot⟩ :=
+    exists_periodTwoParameter_mem_isolatingInterval
+  have haMem : a ∈ Set.Ioo ((1 : ℝ) / 2) 1 := by
+    constructor <;> norm_num at haInterval ⊢ <;> linarith
+  have heq : a = periodTwoParameter :=
+    (Classical.choose_spec existsUnique_periodTwoParameter).2 a
+      ⟨haMem, haroot⟩
+  rwa [← heq]
+
+theorem periodTwoParameter_lt_three_quarters :
+    periodTwoParameter < (3 : ℝ) / 4 :=
+  periodTwoParameter_mem_isolatingInterval.2
+
 theorem thirtySeven_fiftieths_lt_periodTwoParameter :
     (37 : ℝ) / 50 < periodTwoParameter := by
-  have haSeven : (7 : ℝ) / 10 < periodTwoParameter := by
-    by_contra h
-    have hneg := periodTwoPolynomial_neg_of_half_lt_of_le_seven_tenths
-      periodTwoParameter_mem.1 (le_of_not_gt h)
-    linarith [periodTwoParameter_root]
-  by_contra h
-  have haLe : periodTwoParameter ≤ (37 : ℝ) / 50 := le_of_not_gt h
-  by_cases heq : periodTwoParameter = (37 : ℝ) / 50
-  · have hroot := periodTwoParameter_root
-    rw [heq, periodTwoPolynomial_thirtySeven_fiftieths] at hroot
-    norm_num at hroot
-  · have hlt : periodTwoParameter < (37 : ℝ) / 50 := lt_of_le_of_ne haLe heq
-    have hmono := periodTwoPolynomial_strictMonoOn
-      ⟨haSeven.le, periodTwoParameter_lt_one.le⟩
-      ⟨by norm_num, by norm_num⟩ hlt
-    rw [periodTwoParameter_root,
-      periodTwoPolynomial_thirtySeven_fiftieths] at hmono
-    norm_num at hmono
+  exact periodTwoParameter_mem_isolatingInterval.1
 
 /-- The second exact continuation probability. -/
 def periodTwoSecondary : ℝ :=
@@ -291,17 +311,27 @@ theorem periodTwo_active_identity_first :
       (1 - periodTwoParameter + 3 * periodTwoSecondary -
         2 * periodTwoParameter * periodTwoSecondary) = 1 := by
   apply sub_eq_zero.mp
-  calc
+  rw [show periodTwoSecondary =
+      (4 * periodTwoParameter ^ 2 - 1) /
+        (3 * periodTwoParameter ^ 2) by rfl]
+  rw [periodTwo_secondary_substitution_factorization
+    periodTwoParameter_pos.ne']
+  rw [periodTwoParameter_root]
+  ring
+
+/-- At the selected parameters, the first active equation is equivalent to
+the vanishing of the all-Continue factor times the selecting quartic. -/
+theorem periodTwo_active_first_iff_elimination_factor_zero :
     periodTwoSecondary *
-          (1 - periodTwoParameter + 3 * periodTwoSecondary -
-            2 * periodTwoParameter * periodTwoSecondary) - 1 =
-        -(periodTwoParameter - 1) *
-            periodTwoPolynomial periodTwoParameter /
-              (9 * periodTwoParameter ^ 4) := by
-      unfold periodTwoSecondary periodTwoPolynomial
-      field_simp [periodTwoParameter_pos.ne']
-      ring
-    _ = 0 := by rw [periodTwoParameter_root]; ring
+        (1 - periodTwoParameter + 3 * periodTwoSecondary -
+          2 * periodTwoParameter * periodTwoSecondary) = 1 ↔
+      (periodTwoParameter - 1) *
+        periodTwoPolynomial periodTwoParameter = 0 := by
+  constructor
+  · intro _
+    rw [periodTwoParameter_root, mul_zero]
+  · intro _
+    exact periodTwo_active_identity_first
 
 /-- The Boolean law whose continuation probability is `a`. -/
 def primaryCoin : PMF Bool :=
@@ -362,6 +392,26 @@ def oddValue : Payoff Player := ![
 /-- Conditional payoff at the even phase. -/
 def evenValue : Payoff Player := ![
   1 / periodTwoSecondary, 1, 1 / periodTwoParameter, 1]
+
+/-- The two displayed product roots are genuinely different: player `0`
+has a positive Quit hazard in the odd phase and surely continues in the even
+phase. -/
+theorem oddRoot_ne_evenRoot : oddRoot ≠ evenRoot := by
+  intro h
+  have hprob := congrArg
+    (fun root : Player → PMF Bool ↦ (root 0 true).toReal) h
+  simp [oddRoot, evenRoot] at hprob
+  linarith [periodTwoParameter_lt_one]
+
+/-- The phase values are also different. -/
+theorem oddValue_ne_evenValue : oddValue ≠ evenValue := by
+  intro h
+  have hcoordinate := congrFun h 0
+  change (1 : ℝ) = 1 / periodTwoSecondary at hcoordinate
+  have hsecondary : periodTwoSecondary = 1 := by
+    have hmul := (eq_div_iff periodTwoSecondary_pos.ne').mp hcoordinate
+    simpa using hmul
+  exact (ne_of_lt periodTwoSecondary_lt_one) hsecondary
 
 /-- Fubini expansion of a product of four Boolean mixed actions. -/
 theorem expect_pmfPi_fin4_bool (sigma : Player → PMF Bool)
@@ -727,6 +777,46 @@ theorem periodTwoProfile_isExactTerminalNash :
     periodTwoReward oddValue 1 periodTwoBlock
       periodTwoBlock_isQuittingCyclicContinuationBlock
       periodTwoBlockCycle_isAdmissible 0
+
+/-- The exact alternating profile is a literal zero-debt carrier for the
+canonical maximum all-behavior terminal exploitability. -/
+theorem periodTwoProfile_terminalExploitability_eq_zero :
+    quittingTerminalExploitability periodTwoReward periodTwoProfile = 0 := by
+  apply le_antisymm
+  · unfold quittingTerminalExploitability
+    apply QuittingBoundaryHolonomy.finitePlayerMax_le
+    intro who
+    apply max_le
+    · exact le_rfl
+    · have hbest : quittingContinuationBestResponseValue
+          periodTwoReward periodTwoProfile who ≤
+        quittingTerminalPayoff periodTwoReward periodTwoProfile who := by
+        unfold quittingContinuationBestResponseValue
+        apply csSup_le
+        · exact ⟨_, periodTwoProfile who, rfl⟩
+        · rintro value ⟨deviation, rfl⟩
+          simpa using periodTwoProfile_isExactTerminalNash who deviation
+      linarith
+  · exact quittingTerminalExploitability_nonneg _ _
+
+/-- The period-two completion has zero canonical semantic min-max
+exploitability: the infimum over all behavior profiles of maximum positive
+unilateral terminal gain is exactly zero. -/
+theorem periodTwo_terminalExploitabilityInf_eq_zero :
+    quittingTerminalExploitabilityInf periodTwoReward = 0 := by
+  apply le_antisymm
+  · exact (quittingTerminalExploitabilityInf_le
+      periodTwoReward periodTwoProfile).trans_eq
+      periodTwoProfile_terminalExploitability_eq_zero
+  · unfold quittingTerminalExploitabilityInf
+    have hprofiles : Set.Nonempty
+        (Set.range fun profile :
+            (quittingGame periodTwoReward).BehaviorProfile ↦
+          quittingTerminalExploitability periodTwoReward profile) :=
+      ⟨_, periodTwoProfile, rfl⟩
+    apply le_csInf hprofiles
+    rintro value ⟨profile, rfl⟩
+    exact quittingTerminalExploitability_nonneg _ _
 
 theorem periodTwoProfile_terminalPayoff :
     quittingTerminalPayoff periodTwoReward periodTwoProfile = oddValue :=
