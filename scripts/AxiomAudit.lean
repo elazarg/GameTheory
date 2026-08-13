@@ -1413,6 +1413,7 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 -- representation infrastructure; it does not assert semialgebraic barrier
 -- completeness.
 #print axioms GameTheory.quittingTerminalSemanticPrefix_within
+#print axioms GameTheory.quittingTerminalSemanticPrefix_within_of_opponentContinueMass_le
 #print axioms GameTheory.quittingTerminalSemanticPrefix_mapsTo_tube
 #print axioms GameTheory.quittingTerminalSemanticCarrier_mapsTo_tube
 #print axioms GameTheory.abs_semanticDebtSum_sub_le_of_within
