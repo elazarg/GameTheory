@@ -1393,3 +1393,11 @@ import UniformEquilibrium.Quitting.Terminal.TailCompression.SummableTailBestResp
 #print axioms GameTheory.BlockPairK11.LocalInterval.buildCycleData_opponentSurvival_eq_evalCachedDyadic
 #print axioms GameTheory.BlockPairK11.LocalInterval.activeEquationAt_buildCycleData_eq_evalCachedDyadic
 #print axioms GameTheory.BlockPairK11.LocalInterval.activeEquation_buildCycleData_eq_evalCachedDyadic
+
+-- The canonical K11 numerator has a named real scalar fold.  Its evaluated
+-- one-phase recurrence follows from first/last fold nodes and cyclic product
+-- reindexing, without expanding the eleven phases.
+#print axioms GameTheory.BlockPairK11.realNumeratorAux_prepend
+#print axioms GameTheory.BlockPairK11.evalReal_numeratorAux_eq_realNumeratorAux
+#print axioms GameTheory.BlockPairK11.realCycleNumerator_recurrence
+#print axioms GameTheory.BlockPairK11.evalReal_cyclicValueNumerator_recurrence

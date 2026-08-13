@@ -5,7 +5,10 @@ Authors: GameTheory contributors
 -/
 
 import Math.Interval.RationalPolynomial
+import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Data.Fin.VecNotation
+import Mathlib.Logic.Equiv.Fin.Rotate
+import Mathlib.Tactic.Ring
 
 /-!
 # The reduced 31-variable block-pair period-eleven system
@@ -22,6 +25,7 @@ namespace GameTheory
 namespace BlockPairK11
 
 open Math.Interval
+open scoped BigOperators
 
 abbrev Player := Fin 4
 abbrev Phase := Fin 11
@@ -148,6 +152,217 @@ def numeratorAux (phase : Phase) (who : Player) :
 `V_i^k = N_i^k / (1 - ρ)`. -/
 def cyclicValueNumerator (phase : Phase) (who : Player) : Expression :=
   (numeratorAux phase who 11).1
+
+/-! ## Real semantics of the named numerator recurrence -/
+
+/-- Real scalar version of the canonical ordered numerator recurrence. -/
+def realNumeratorAux (immediate survival : ℕ → ℝ) : ℕ → ℝ × ℝ
+  | 0 => (0, 1)
+  | fuel + 1 =>
+      let previous := realNumeratorAux immediate survival fuel
+      (previous.1 + previous.2 * immediate fuel,
+        previous.2 * survival fuel)
+
+@[simp] theorem realNumeratorAux_succ
+    (immediate survival : ℕ → ℝ) (fuel : ℕ) :
+    realNumeratorAux immediate survival (fuel + 1) =
+      let previous := realNumeratorAux immediate survival fuel
+      (previous.1 + previous.2 * immediate fuel,
+        previous.2 * survival fuel) := by
+  rfl
+
+/-- An ordered scalar numerator fold decomposes at its first phase without
+expanding the remaining prefix. -/
+theorem realNumeratorAux_prepend
+    (immediate survival : ℕ → ℝ) (fuel : ℕ) :
+    realNumeratorAux immediate survival (fuel + 1) =
+      let tail := realNumeratorAux
+        (fun offset ↦ immediate (offset + 1))
+        (fun offset ↦ survival (offset + 1)) fuel
+      (immediate 0 + survival 0 * tail.1,
+        survival 0 * tail.2) := by
+  induction fuel with
+  | zero => simp [realNumeratorAux]
+  | succ fuel inductionHypothesis =>
+      rw [realNumeratorAux_succ, inductionHypothesis]
+      simp only [realNumeratorAux]
+      ring_nf
+
+/-- The survival component of an ordered scalar numerator is the ordered
+product of its survival inputs. -/
+theorem realNumeratorAux_survival_eq_prod
+    (immediate survival : ℕ → ℝ) (fuel : ℕ) :
+    (realNumeratorAux immediate survival fuel).2 =
+      ∏ index : Fin fuel, survival index.val := by
+  induction fuel with
+  | zero => simp [realNumeratorAux]
+  | succ fuel inductionHypothesis =>
+      rw [realNumeratorAux_succ]
+      simp only
+      rw [Fin.prod_univ_castSucc, inductionHypothesis]
+      rfl
+
+/-- Real evaluation commutes with the canonical expression product. -/
+theorem evalReal_expressionProduct_eq_prod {count : ℕ}
+    (x : HazardIndex → ℝ) (factor : Fin count → Expression) :
+    RationalPolynomial.evalReal x (expressionProduct factor) =
+      ∏ index, RationalPolynomial.evalReal x (factor index) := by
+  induction count with
+  | zero => simp [expressionProduct, RationalPolynomial.evalReal]
+  | succ count inductionHypothesis =>
+      simp only [expressionProduct, RationalPolynomial.evalReal]
+      rw [inductionHypothesis, Fin.prod_univ_castSucc]
+
+/-- Evaluating the canonical expression numerator yields the matching named
+scalar recurrence at every ordered prefix. -/
+theorem evalReal_numeratorAux_eq_realNumeratorAux
+    (x : HazardIndex → ℝ) (phase : Phase) (who : Player) (fuel : ℕ) :
+    (RationalPolynomial.evalReal x (numeratorAux phase who fuel).1,
+      RationalPolynomial.evalReal x (numeratorAux phase who fuel).2) =
+      realNumeratorAux
+        (fun offset ↦ RationalPolynomial.evalReal x
+          (immediateReward (phaseAdd phase offset) who))
+        (fun offset ↦ RationalPolynomial.evalReal x
+          (phaseSurvival (phaseAdd phase offset))) fuel := by
+  induction fuel with
+  | zero =>
+      norm_num [numeratorAux, realNumeratorAux,
+        RationalPolynomial.evalReal]
+  | succ fuel inductionHypothesis =>
+      simp only [numeratorAux, realNumeratorAux]
+      change
+        (RationalPolynomial.evalReal x (numeratorAux phase who fuel).1 +
+            RationalPolynomial.evalReal x (numeratorAux phase who fuel).2 *
+              RationalPolynomial.evalReal x
+                (immediateReward (phaseAdd phase fuel) who),
+          RationalPolynomial.evalReal x (numeratorAux phase who fuel).2 *
+            RationalPolynomial.evalReal x
+              (phaseSurvival (phaseAdd phase fuel))) = _
+      have hfirst := congrArg Prod.fst inductionHypothesis
+      have hsecond := congrArg Prod.snd inductionHypothesis
+      simp only at hfirst hsecond
+      rw [hfirst, hsecond]
+
+theorem phaseAdd_nextPhase (phase : Phase) (offset : ℕ) :
+    phaseAdd (nextPhase phase) offset = phaseAdd phase (offset + 1) := by
+  apply Fin.ext
+  simp [phaseAdd, nextPhase, Fin.ofNat, Nat.add_mod]
+  omega
+
+theorem phaseAdd_nextPhase_ten (phase : Phase) :
+    phaseAdd (nextPhase phase) 10 = phase := by
+  apply Fin.ext
+  simp [phaseAdd, nextPhase, Fin.ofNat, Nat.add_mod]
+  omega
+
+theorem phaseAdd_eq_addLeft (phase offset : Phase) :
+    phaseAdd phase offset.val = Equiv.addLeft phase offset := by
+  apply Fin.ext
+  simp [phaseAdd, Fin.ofNat, Fin.add_def]
+
+/-- Eleven-step scalar numerator fold beginning at a named phase. -/
+def realCycleNumerator (immediate survival : Phase → ℝ)
+    (phase : Phase) : ℝ × ℝ :=
+  realNumeratorAux (fun offset ↦ immediate (phaseAdd phase offset))
+    (fun offset ↦ survival (phaseAdd phase offset)) 11
+
+/-- Rotation identity for the named eleven-step numerator fold.  The proof
+uses only the first and last recurrence nodes. -/
+theorem realCycleNumerator_recurrence
+    (immediate survival : Phase → ℝ) (phase : Phase) :
+    (realCycleNumerator immediate survival phase).1 =
+      (1 - (realCycleNumerator immediate survival phase).2) *
+          immediate phase +
+        survival phase *
+          (realCycleNumerator immediate survival (nextPhase phase)).1 := by
+  let tail := realNumeratorAux
+    (fun offset ↦ immediate (phaseAdd phase (offset + 1)))
+    (fun offset ↦ survival (phaseAdd phase (offset + 1))) 10
+  have hphase := realNumeratorAux_prepend
+    (fun offset ↦ immediate (phaseAdd phase offset))
+    (fun offset ↦ survival (phaseAdd phase offset)) 10
+  have hnext := realNumeratorAux_succ
+    (fun offset ↦ immediate (phaseAdd (nextPhase phase) offset))
+    (fun offset ↦ survival (phaseAdd (nextPhase phase) offset)) 10
+  have htailNext :
+      realNumeratorAux
+          (fun offset ↦ immediate (phaseAdd (nextPhase phase) offset))
+          (fun offset ↦ survival (phaseAdd (nextPhase phase) offset)) 10 =
+        tail := by
+    apply congrArg₂ (fun first second ↦
+      realNumeratorAux first second 10)
+    · funext offset
+      rw [phaseAdd_nextPhase]
+    · funext offset
+      rw [phaseAdd_nextPhase]
+  simp only [realCycleNumerator]
+  rw [hphase]
+  change
+    immediate (phaseAdd phase 0) + survival (phaseAdd phase 0) * tail.1 =
+      (1 - survival (phaseAdd phase 0) * tail.2) * immediate phase +
+        survival phase *
+          (realNumeratorAux
+            (fun offset ↦ immediate (phaseAdd (nextPhase phase) offset))
+            (fun offset ↦ survival (phaseAdd (nextPhase phase) offset))
+            11).1
+  rw [hnext, htailNext]
+  simp only [phaseAdd_nextPhase_ten]
+  have hzero : phaseAdd phase 0 = phase := by
+    apply Fin.ext
+    simp [phaseAdd, Fin.ofNat]
+  rw [hzero]
+  ring_nf
+
+/-- The survival component of every rotated real cycle numerator is the
+evaluation of the canonical full-cycle survival expression. -/
+theorem realCycleNumerator_survival_eq_evalReal_jointCycleSurvival
+    (x : HazardIndex → ℝ) (immediate : Phase → ℝ) (phase : Phase) :
+    (realCycleNumerator immediate
+      (fun current ↦ RationalPolynomial.evalReal x
+        (phaseSurvival current)) phase).2 =
+      RationalPolynomial.evalReal x jointCycleSurvival := by
+  unfold realCycleNumerator jointCycleSurvival
+  rw [realNumeratorAux_survival_eq_prod,
+    evalReal_expressionProduct_eq_prod]
+  have hrotate := Equiv.prod_comp (Equiv.addLeft phase)
+    (fun current : Phase ↦ RationalPolynomial.evalReal x
+      (phaseSurvival current))
+  simpa only [phaseAdd_eq_addLeft] using hrotate
+
+/-- Real evaluation of a canonical cyclic numerator is the corresponding
+named scalar cycle fold. -/
+theorem evalReal_cyclicValueNumerator_eq_realCycleNumerator
+    (x : HazardIndex → ℝ) (phase : Phase) (who : Player) :
+    RationalPolynomial.evalReal x (cyclicValueNumerator phase who) =
+      (realCycleNumerator
+        (fun current ↦ RationalPolynomial.evalReal x
+          (immediateReward current who))
+        (fun current ↦ RationalPolynomial.evalReal x
+          (phaseSurvival current)) phase).1 := by
+  unfold cyclicValueNumerator realCycleNumerator
+  exact congrArg Prod.fst
+    (evalReal_numeratorAux_eq_realNumeratorAux x phase who 11)
+
+/-- The evaluated canonical cyclic numerator satisfies its one-phase
+denominator-cleared Bellman recurrence. -/
+theorem evalReal_cyclicValueNumerator_recurrence
+    (x : HazardIndex → ℝ) (phase : Phase) (who : Player) :
+    RationalPolynomial.evalReal x (cyclicValueNumerator phase who) =
+      (1 - RationalPolynomial.evalReal x jointCycleSurvival) *
+          RationalPolynomial.evalReal x (immediateReward phase who) +
+        RationalPolynomial.evalReal x (phaseSurvival phase) *
+          RationalPolynomial.evalReal x
+            (cyclicValueNumerator (nextPhase phase) who) := by
+  rw [evalReal_cyclicValueNumerator_eq_realCycleNumerator,
+    evalReal_cyclicValueNumerator_eq_realCycleNumerator]
+  have hrecurrence := realCycleNumerator_recurrence
+    (fun current ↦ RationalPolynomial.evalReal x
+      (immediateReward current who))
+    (fun current ↦ RationalPolynomial.evalReal x
+      (phaseSurvival current)) phase
+  rw [realCycleNumerator_survival_eq_evalReal_jointCycleSurvival]
+    at hrecurrence
+  exact hrecurrence
 
 def maskWithPlayer (mask : QuitterMask) (who : Player) : QuitterMask :=
   Fin.ofNat 16 (mask.val + 2 ^ who.val)
