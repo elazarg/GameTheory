@@ -661,6 +661,25 @@ theorem buildCycleData_jointSurvival_eq_evalCachedDyadic
       RationalPolynomial.evalCachedDyadic box jointCycleSurvival := by
   exact jointCycleSurvivalFromPhases_eq_evalCachedDyadic box
 
+/-- One ordered derivative-preserving numerator step.  The first component
+accumulates the absorbing reward and the second carries the survival
+prefix. -/
+def numeratorStep (data : CycleData precision)
+    (phase : Phase) (who : Player) (offset : ℕ)
+    (previous : GlobalDual precision × GlobalDual precision) :
+    GlobalDual precision × GlobalDual precision :=
+  let cyclePhase := phaseAdd phase offset
+  let phaseData := data.phases.get cyclePhase
+  (previous.1.add (previous.2.mul (phaseData.immediate.get who)),
+    previous.2.mul phaseData.survival)
+
+/-- The matching node in the canonical rational-polynomial recurrence. -/
+def expressionNumeratorStep (phase : Phase) (who : Player) (offset : ℕ)
+    (previous : Expression × Expression) : Expression × Expression :=
+  let cyclePhase := phaseAdd phase offset
+  (previous.1 + previous.2 * immediateReward cyclePhase who,
+    previous.2 * phaseSurvival cyclePhase)
+
 def numeratorAux (data : CycleData precision)
     (phase : Phase) (who : Player) :
     ℕ → GlobalDual precision × GlobalDual precision
@@ -673,9 +692,102 @@ def numeratorAux (data : CycleData precision)
           (previous.2.mul (phaseData.immediate.get who)),
         previous.2.mul phaseData.survival)
 
+/-- The recursive cached numerator exposes one named ordered step. -/
+theorem numeratorAux_succ (data : CycleData precision)
+    (phase : Phase) (who : Player) (fuel : ℕ) :
+    numeratorAux data phase who (fuel + 1) =
+      numeratorStep data phase who fuel
+        (numeratorAux data phase who fuel) := by
+  rfl
+
+/-- The recursive canonical numerator exposes the matching named ordered
+step. -/
+theorem expression_numeratorAux_succ (phase : Phase) (who : Player)
+    (fuel : ℕ) :
+    BlockPairK11.numeratorAux phase who (fuel + 1) =
+      expressionNumeratorStep phase who fuel
+        (BlockPairK11.numeratorAux phase who fuel) := by
+  rfl
+
+/-- Built phase data exposes the canonical immediate-reward node without
+re-evaluating its expression tree. -/
+theorem buildCycleData_phase_immediate_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) (who : Player) :
+    ((buildCycleData box).phases.get phase).immediate.get who =
+      RationalPolynomial.evalCachedDyadic box
+        (immediateReward phase who) := by
+  simp only [buildCycleData, liftCyclePhases, buildLocalCyclePhases,
+    Vector.get_ofFn, liftPhaseData]
+  exact lift_buildLocalPhaseData_immediate box phase who
+
+/-- Built phase data exposes the canonical survival node without
+re-evaluating its expression tree. -/
+theorem buildCycleData_phase_survival_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision) (phase : Phase) :
+    ((buildCycleData box).phases.get phase).survival =
+      RationalPolynomial.evalCachedDyadic box (phaseSurvival phase) := by
+  simp only [buildCycleData, liftCyclePhases, buildLocalCyclePhases,
+    Vector.get_ofFn, liftPhaseData]
+  exact lift_buildLocalPhaseData_survival box phase
+
+/-- Cached evaluation commutes with one named numerator step. -/
+theorem numeratorStep_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) (who : Player) (offset : ℕ)
+    (cachedPrevious : GlobalDual precision × GlobalDual precision)
+    (expressionPrevious : Expression × Expression)
+    (hfirst : cachedPrevious.1 =
+      RationalPolynomial.evalCachedDyadic box expressionPrevious.1)
+    (hsecond : cachedPrevious.2 =
+      RationalPolynomial.evalCachedDyadic box expressionPrevious.2) :
+    numeratorStep (buildCycleData box) phase who offset cachedPrevious =
+      (RationalPolynomial.evalCachedDyadic box
+          (expressionNumeratorStep phase who offset expressionPrevious).1,
+        RationalPolynomial.evalCachedDyadic box
+          (expressionNumeratorStep phase who offset expressionPrevious).2) := by
+  simp only [numeratorStep, expressionNumeratorStep]
+  rw [hfirst, hsecond,
+    buildCycleData_phase_immediate_eq_evalCachedDyadic,
+    buildCycleData_phase_survival_eq_evalCachedDyadic]
+  rfl
+
+/-- Every ordered prefix node agrees with direct cached evaluation of the
+matching canonical expression prefix. -/
+theorem numeratorAux_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) (who : Player) (fuel : ℕ) :
+    numeratorAux (buildCycleData box) phase who fuel =
+      (RationalPolynomial.evalCachedDyadic box
+          (BlockPairK11.numeratorAux phase who fuel).1,
+        RationalPolynomial.evalCachedDyadic box
+          (BlockPairK11.numeratorAux phase who fuel).2) := by
+  induction fuel with
+  | zero => rfl
+  | succ fuel inductionHypothesis =>
+      rw [numeratorAux_succ, expression_numeratorAux_succ]
+      exact numeratorStep_eq_evalCachedDyadic box phase who fuel
+        (numeratorAux (buildCycleData box) phase who fuel)
+        (BlockPairK11.numeratorAux phase who fuel)
+        (congrArg Prod.fst inductionHypothesis)
+        (congrArg Prod.snd inductionHypothesis)
+
 def cyclicValueNumerator (data : CycleData precision)
     (phase : Phase) (who : Player) : GlobalDual precision :=
   (numeratorAux data phase who 11).1
+
+/-- The derivative-preserving eleven-step recurrence is exactly canonical
+cached evaluation of the cyclic-value numerator. -/
+theorem cyclicValueNumerator_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision)
+    (phase : Phase) (who : Player) :
+    cyclicValueNumerator (buildCycleData box) phase who =
+      RationalPolynomial.evalCachedDyadic box
+        (BlockPairK11.cyclicValueNumerator phase who) := by
+  have hagreement := congrArg Prod.fst
+    (numeratorAux_eq_evalCachedDyadic box phase who 11)
+  simpa only [cyclicValueNumerator,
+    BlockPairK11.cyclicValueNumerator] using hagreement
 
 def localOpponentQuitValue (data : LocalPhaseData precision)
     (who : Player) : LocalDual precision :=
