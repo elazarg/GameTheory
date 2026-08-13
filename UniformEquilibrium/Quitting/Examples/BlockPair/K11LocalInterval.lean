@@ -612,15 +612,54 @@ structure CycleData (precision : ℕ) where
   phases : Vector (GlobalPhaseData precision) 11
   jointSurvival : GlobalDual precision
 
+/-- Build each phase-local summary once, before lifting derivatives into the
+31-coordinate active-slot order. -/
+def buildLocalCyclePhases
+    (box : HazardIndex → DyadicInterval precision) :
+    Vector (LocalPhaseData precision) 11 :=
+  Vector.ofFn fun phase ↦ buildLocalPhaseData box phase
+
+/-- Lift a vector of phase-local summaries into global derivative
+coordinates. -/
+def liftCyclePhases
+    (localPhases : Vector (LocalPhaseData precision) 11) :
+    Vector (GlobalPhaseData precision) 11 :=
+  Vector.ofFn fun phase ↦ liftPhaseData phase (localPhases.get phase)
+
+/-- Derivative-preserving ordered product of the eleven phase survivals. -/
+def jointCycleSurvivalFromPhases
+    (phases : Vector (GlobalPhaseData precision) 11) :
+    GlobalDual precision :=
+  cachedProduct fun phase : Phase ↦ (phases.get phase).survival
+
 def buildCycleData (box : HazardIndex → DyadicInterval precision) :
     CycleData precision :=
-  let localPhases : Vector (LocalPhaseData precision) 11 :=
-    Vector.ofFn fun phase => buildLocalPhaseData box phase
-  let phases : Vector (GlobalPhaseData precision) 11 :=
-    Vector.ofFn fun phase => liftPhaseData phase (localPhases.get phase)
-  let jointSurvival := cachedProduct fun phase : Phase =>
-    (phases.get phase).survival
+  let localPhases := buildLocalCyclePhases box
+  let phases := liftCyclePhases localPhases
+  let jointSurvival := jointCycleSurvivalFromPhases phases
   ⟨localPhases, phases, jointSurvival⟩
+
+/-- The named global cycle-survival node agrees exactly with reflected
+evaluation of the public cycle-survival polynomial. -/
+theorem jointCycleSurvivalFromPhases_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision) :
+    jointCycleSurvivalFromPhases
+        (liftCyclePhases (buildLocalCyclePhases box)) =
+      RationalPolynomial.evalCachedDyadic box jointCycleSurvival := by
+  rw [jointCycleSurvivalFromPhases, jointCycleSurvival,
+    evalCachedDyadic_expressionProduct]
+  apply congrArg cachedProduct
+  funext phase
+  simp only [liftCyclePhases, buildLocalCyclePhases, Vector.get_ofFn,
+    liftPhaseData]
+  exact lift_buildLocalPhaseData_survival box phase
+
+/-- `CycleData` exposes the same sound joint-survival node. -/
+theorem buildCycleData_jointSurvival_eq_evalCachedDyadic
+    (box : HazardIndex → DyadicInterval precision) :
+    (buildCycleData box).jointSurvival =
+      RationalPolynomial.evalCachedDyadic box jointCycleSurvival := by
+  exact jointCycleSurvivalFromPhases_eq_evalCachedDyadic box
 
 def numeratorAux (data : CycleData precision)
     (phase : Phase) (who : Player) :
