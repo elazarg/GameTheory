@@ -1,4 +1,5 @@
 import Math.Probability
+import Math.Probability.GeneratorRecurrentReduction
 import Math.Fin
 import Math.Fintype
 import Math.Fintype.Transport
@@ -27,6 +28,7 @@ import Math.SchauderFixedPoint
 import Math.SimplexApproximation
 import Math.Simplex
 import Math.OnlineLearning
+import Math.OnlineLearning.FixedShare
 import Math.OnlineAlgorithms
 import Math.MeasureTheory.UnitInterval
 import Math.FixedPoint.KKM
