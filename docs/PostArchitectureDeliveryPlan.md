@@ -284,6 +284,21 @@ redirects recognizable v1 workflows to their successor owners, queues useful
 missing mathematics, and records deliberate retirements. It is not a source
 compatibility promise.
 
+Before moving `main`, run a bounded **potential-client usefulness gate**. This
+is not a port of any known client and it does not preserve v1 declarations.
+Known research clients may supply hostile proof patterns, but the artifacts
+must state field-standard mathematics over the canonical v2 owners and remain
+useful to an unrelated caller. Cover both individual fields and the bridges
+that real developments need: language-to-semantics compilation,
+execution-to-equilibrium, learning-to-static solution, and
+algorithm-to-certificate. Each hostile slice must include a nontrivial positive
+consumer, a falsifying or boundary control, and a count of representation
+bookkeeping exposed in the public proof. A successful slice may justify a thin
+proved-equivalent proof view; it never justifies a second runner, probability
+semantics, or solution predicate. Record design competitions and kill
+conditions in `ExperimentLog.md`, and graduate an interface only after the
+experiment identifies a stable invariant rather than a single client's syntax.
+
 Recovery proceeds in three dependency-gated waves:
 
 1. **Established-owner recovery:** secure equilibrium and constant-sum

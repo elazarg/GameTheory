@@ -5661,3 +5661,93 @@ memory.
   abstraction. Do not generalize the explicit four-coordinate scheduler yet:
   the next distinct seams are reusable schedule synthesis, arbitrary
   behavioral replacements, and unequal-depth information fibers.
+
+### EXP-092: potential-client stochastic proof interface
+
+- **Date / revision:** 2026-08-14, reserved after `bb03599`
+- **Status:** completed; narrows the stochastic proof-view requirement without
+  freezing a public API
+- **Decision / question:** whether an unrelated caller can state and prove a
+  public-history-dependent stochastic continuation or whole-policy deviation
+  through the canonical Protocol execution and equilibrium stack without
+  exposing Protocol's legal-choice encoding throughout the mathematical proof.
+  This tests usefulness across the stochastic/process, Protocol/execution, and
+  Core/equilibrium boundary; it is not a compatibility exercise for a named
+  client.
+- **Prediction:** a thin proof-facing view of public stochastic policies can be
+  losslessly compiled to the existing perfect-monitoring Protocol model. It
+  should commute with profile replacement, retain the canonical runner and
+  payoff/equilibrium predicates, and let the hostile consumer reason primarily
+  about actions, public histories, conditioning, and continuation payoffs.
+- **Representative slice:** first prove a lossless equivalence between a
+  public-history strategy `PublicHistory -> FinDist Action` and the canonical
+  perfect-monitoring behavioral policy, including profile-update laws. Then
+  use it in a two-player finite stochastic game where a public random transition
+  makes a genuinely history-dependent second-stage splice strictly outperform
+  a constant policy. Compute the exact whole-horizon payoff difference and
+  discharge the result through the canonical strategic form and `IsεNash` or
+  its negation. The witness must depend on the observed history; an absorbing
+  zero-payoff or strategy-independent example does not count.
+- **Competing designs:** use the Protocol policy and legal-choice subtype
+  directly; add a thin proved-equivalent stochastic proof view compiled into
+  Protocol; or, only if both fail, reconsider a second stochastic runner. The
+  second runner is presumed rejected because it would duplicate execution
+  truth.
+- **Measurements:** record public statement, proof, and support lines; direct
+  references to Protocol histories, legal-choice subtypes, `Option`, casts, or
+  fallback choices in the consumer; compilation/profile-update laws needed;
+  and focused build time. Separately record whether the view admits a clean
+  restart/continuation statement rather than merely hiding constructors.
+- **Kill conditions:** reject the proof view if it is not lossless, cannot
+  commute propositionally with `Profile.update`, exposes fallback or legal-menu
+  witnesses to ordinary stochastic proofs, duplicates the runner or equilibrium
+  semantics, or merely relocates more bookkeeping than it removes. Reject the
+  current Protocol-only surface as sufficient if the hostile consumer requires
+  pervasive unfolding of legal choices or Protocol trace constructors to state
+  recognizable stochastic mathematics.
+- **Planned validation:** build the experimental leaf after the generic
+  equivalence, then after the hostile consumer; build the narrow stochastic and
+  Protocol owners if imports change. Use fast source checks only during the
+  loop. Do not run deep reachability locally.
+- **Artifacts / observations:**
+  `Experimental.PostArchitecture.StochasticProofView` defines ordinary
+  `PublicHistory -> FinDist Action` policies and proves both policy and profile
+  equivalences with perfect-monitoring behavioral Protocol policies. Both round
+  trips are propositional equalities, the translation commutes with
+  `Profile.update`, and a named one-step theorem exposes native simultaneous
+  action laws and `Game.transition` while continuing with the sole Protocol
+  runner. `StochasticProofViewTest` draws a fair public bit before the second
+  action. The constant profile ignores it; the unilateral replacement chooses
+  opposite actions after the two possible histories. Both signals have positive
+  probability. Canonical finite-average payoff is exactly `1/2` before the
+  replacement and `1` after it, so the exact improvement is `1/2` and the
+  original profile fails canonical zero-tolerance `IsεHorizonNash`.
+  The known paper branches provide two useful controls rather than APIs to
+  preserve: `paper/k-implementation` consumes v1 equilibrium, mixed,
+  correlation, informational, and mechanism layers extensively, while
+  `paper/strategic-proxy-voting` defines its own `IsPNE`/better-response
+  vocabulary despite proving equilibrium results. The latter is a real bypass
+  pattern that the usefulness gate must detect.
+- **Measurements:** the generic view is 284 lines and the hostile consumer 355
+  lines. Against the already-built identical v2 dependency tree, warning-clean
+  elaboration takes about 9.5 and 11.5 seconds respectively. The hostile file
+  contains no legal-choice subtype, `Legal`, fallback, cast, or `Eq.ndrec`
+  reference. It still contains 12 `toExecution`, 12 `runBehavioral`, seven
+  `canonicalJoint`, and seven `canonicalRealized` references, concentrated in
+  continuation/payoff support. The final policy, payoff, exact-improvement, and
+  non-Nash statements expose none of that bookkeeping, but the proof burden is
+  too large to call the history/restart surface client-grade. Deep reachability
+  was not run locally. The first hosted migration build compiled all Lean
+  sources successfully; its later deep-audit step failed before any probe
+  because the Windows workflow had not propagated Elan's `lake` shim to the
+  PowerShell audit steps, an independent CI wiring defect.
+- **Outcome / next action:** the policy/profile half of the prediction survives
+  and the Protocol-only policy surface is rejected as unnecessarily encoded.
+  The broader proof view does **not** graduate: it passes losslessness and exact
+  strategic usefulness, but hits the bookkeeping kill condition for public
+  continuation proofs. Do not add a second runner. Retain the artifacts as an
+  experimental specification and next test a derived public-history
+  projection/decomposition theorem over the canonical runner, with an explicit
+  reduction target for execution-scaffolding references. Only the smallest
+  invariant that survives a second topology may move into
+  `Stochastic.PerfectMonitoring`.
