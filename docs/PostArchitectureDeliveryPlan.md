@@ -271,3 +271,39 @@ Every completed package records:
 
 Support claims must never rest only on `True`, `Iff.rfl`, an impossible
 premise, an elaboration-only declaration, or Experimental evidence.
+
+## 5. V2 branch cutover and v1 capability recovery
+
+The successor is published from the canonical `GameTheory` repository as a
+history-preserving `v2` branch. The original main tree is retained at the
+`v1-final` tag. Main is not moved until a clean hosted build and the release
+reachability gates pass on `v2`.
+
+The public transition is capability-based. [`V1CapabilityMap.md`](V1CapabilityMap.md)
+redirects recognizable v1 workflows to their successor owners, queues useful
+missing mathematics, and records deliberate retirements. It is not a source
+compatibility promise.
+
+Recovery proceeds in three dependency-gated waves:
+
+1. **Established-owner recovery:** secure equilibrium and constant-sum
+   correlation; Sen and median voter; convex-game core and cost of stability;
+   matching optimality, rural hospitals, lattice, and strategyproofness;
+   alternative bargaining solutions; envy-cycle EF1 and maximin share.
+2. **Bounded analytic/domain experiments:** Myerson envelope identities;
+   divisible cake cutting; monitored public randomization; absent-minded
+   values; delegation/liquid democracy; and finite-game flow decomposition.
+3. **Research frontier:** OpenGame admission only after a representative
+   composition theorem and external semantic comparison. The v1 hierarchy is
+   not imported wholesale.
+
+For each workflow, port the proof idea rather than the old declaration graph.
+Name the canonical owner, verify the mathematical scope, exercise a hostile
+positive witness and a nondegenerate control, and update the owning ledger and
+capability row with the compiled consumer. Stop rather than introduce a
+second runner, solution predicate, probability hierarchy, compatibility alias,
+or abstraction without another consumer.
+
+Iteration uses narrow builds and the fast structural audits. A full build is
+required at each recovered family gate; compiler reachability remains a hosted
+CI/release check rather than part of the local implementation loop.

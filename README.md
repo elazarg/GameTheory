@@ -11,6 +11,9 @@ and recognizable public workflows in
 [`docs/CapabilityMatrix.md`](docs/CapabilityMatrix.md). The disposition of the
 repository-wide review is indexed in
 [`docs/ReviewClosureLedger.md`](docs/ReviewClosureLedger.md).
+Readers coming from the original library can find workflow-level redirects,
+queued recoveries, and deliberate retirements in
+[`docs/V1CapabilityMap.md`](docs/V1CapabilityMap.md).
 
 ```text
 GameTheory/Probability   finite-support probability laws (FinDist)
