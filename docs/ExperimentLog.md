@@ -109,6 +109,7 @@ becomes difficult to scan.
 | EXP-096 | 2026-08-14 | D12 / hosted reachability maintenance | Does `Polynomial` still identify an Analysis leak from stable Repeated? | Refutes proxy; boundary narrowed to direct probes | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 | EXP-097 | 2026-08-14 | post-review client gate / implementation theory | Can profile-observed transfers induce target sets through canonical dominance semantics? | Supports; decides D54 | [`decisions/D54-profile-transfer-implementation.md`](decisions/D54-profile-transfer-implementation.md); `GameTheory/Mechanism/Implementation.lean`; `GameTheory/Tests/Implementation.lean` |
 | EXP-098 | 2026-08-14 | hosted reachability maintenance | Did review-time namespace and import cleanup leave positive probes stale? | Four stale expectations and probe exit state repaired; hosted rerun pending | [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
+| EXP-099 | 2026-08-14 | D12 / hosted sequential-boundary maintenance | Does the broad Analysis.Protocol umbrella still represent the sequential-equilibrium leaf's dependency budget? | Refutes proxy; probe narrowed to owning leaf | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase3-audit.ps1`](../scripts/phase3-audit.ps1) |
 
 ## Entry template
 
@@ -6126,3 +6127,28 @@ memory.
   has been validated.
   Namespace or import cleanup must update its positive reachability probes in
   the same commit. Require hosted Phase 2 and Phase 3 success before cutover.
+
+### EXP-099: probe the sequential-equilibrium owner directly
+
+- **Date / revision:** 2026-08-14, hosted run at `be80a437`
+- **Status:** locally completed; hosted rerun pending
+- **Decision / question:** D12 maintenance; whether the public
+  `GameTheory.Analysis.Protocol` umbrella still measures the dependency budget
+  of its `Sequential` leaf after counterfactual learning graduated into the
+  same analytic family.
+- **Representative slice:** compare every hosted Phase 3 aggregate with its
+  expected value, inspect the umbrella's authored imports, and probe the
+  sequential-equilibrium owner rather than weakening its two geometry
+  rejections.
+- **Evidence / observations:** the full build, Phase 1, and repaired Phase 2
+  passed. Exactly one Phase 3 aggregate differed: the broad Protocol-analysis
+  umbrella reached `stdSimplex` and `Polynomial`. This is legitimate because
+  it now imports counterfactual regret matching, whose engine is
+  approachability. `Analysis.Protocol.Sequential` itself imports only the
+  finite-law convergence bridge and stable behavioral assessments, matching
+  D12's original semantic budget.
+- **Outcome / next action:** retain both geometry rejections but attach them to
+  `GameTheory.Analysis.Protocol.Sequential`. Give Phase 3 the same exact
+  root/declaration diagnostics and expected-native-exit normalization as
+  Phase 2. Require a hosted Phase 3 pass and clean-worktree check before
+  cutover.

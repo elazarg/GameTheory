@@ -194,12 +194,21 @@ if ($DeepReachability) {
         throw "Reachability probe for $Root did not inspect $constant`n$text"
       }
     }
-    return $text
+    # Unknown constants are the expected evidence for negative probes. Do not
+    # let Lean's corresponding native exit code make a verified audit fail.
+    $global:LASTEXITCODE = 0
+    return [pscustomobject]@{
+      Root = $Root
+      Text = $text
+    }
   }
-  function Is-Unreachable([string] $Output, [string] $Constant) {
+  function Is-Unreachable([pscustomobject] $Probe, [string] $Constant) {
     $escaped = [regex]::Escape($Constant)
-    return ($Output -match
+    $unreachable = ($Probe.Text -match
       "(?im)unknown (identifier|constant)[^\r\n]*$escaped(?![A-Za-z0-9_.])")
+    $status = if ($unreachable) { 'REJECTED' } else { 'REACHED' }
+    Write-Host "REACHABILITY_PROBE root=$($Probe.Root) constant=$Constant status=$status"
+    return $unreachable
   }
   $unreachable = 0
   $reachable = @()
@@ -326,7 +335,7 @@ if ($DeepReachability) {
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyRational',
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsBayesConsistent',
       'GameTheory.Analysis.FinDistConvergesPointwise')
-  $sequentialOutput = Run-Probe 'GameTheory.Analysis.Protocol' `
+  $sequentialOutput = Run-Probe 'GameTheory.Analysis.Protocol.Sequential' `
     ($sequentialBridgeConstants + @('stdSimplex', 'Polynomial'))
   foreach ($constant in $sequentialBridgeConstants) {
     if (-not (Is-Unreachable $sequentialOutput $constant)) {

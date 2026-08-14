@@ -229,6 +229,13 @@ checks therefore name project declarations and are two-sided:
 | `PROTOCOL_ANALYSIS_PROBES_REJECTED` | 2 |
 | `SEQUENTIAL_BRIDGE_INPUTS_REACHED` | 3 |
 | `SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED` | 2 |
+
+EXP-099 keeps the last two checks attached to the actual
+`GameTheory.Analysis.Protocol.Sequential` owner. The broader
+`GameTheory.Analysis.Protocol` umbrella now also coordinates counterfactual
+regret matching, whose approachability engine legitimately reaches simplex and
+polynomial geometry; using that umbrella as a proxy would no longer test the
+sequential-equilibrium dependency budget.
 | `PROTOCOL_FORBIDDEN_IMPORTS` | 0 |
 | `TRANSPORT_PROTOCOL` | 0 |
 
