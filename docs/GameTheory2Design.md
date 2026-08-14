@@ -1440,9 +1440,11 @@ and trigger-incentive theorems remain in `GameTheory.Repeated`; feasible-payoff
 geometry, opponent minmax, and the discounted folk theorem live in the one-way
 `GameTheory.Analysis.Repeated` bridge; generic denominator clearing lives in
 the separate `GameTheoryMath` target. The stable root retains negative
-`stdSimplex`/`Polynomial` probes, while positive bridge probes require the
-trigger, minmax, and generic approximation sides to remain reachable. Protocol
-is deliberately unreachable from this bridge.
+`stdSimplex`/`kakutani_fixed_point` probes, while positive bridge probes require
+the trigger, minmax, and generic approximation sides to remain reachable.
+`Polynomial` is not a boundary sentinel there: public-monitoring rank reaches
+it legitimately through Mathlib matrix rank. Protocol is deliberately
+unreachable from the repeated-analysis bridge.
 
 EXP-032 fixes the complementary bridge direction needed by sequential
 consistency. Stable `GameTheory.Protocol` owns behavioral assessments,

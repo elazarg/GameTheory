@@ -998,15 +998,23 @@ if ($DeepReachability) {
   Report 'RATIONALIZABILITY_BOUNDARY_PROBES_REJECTED' `
     $rationalizabilityBoundaryRejected
 
+  # `Polynomial` was an effective proxy for the fixed-point dependency when
+  # EXP-031 ran, but public-monitoring rank now reaches it legitimately through
+  # Mathlib's matrix-rank implementation. Probe the actual forbidden theorem
+  # instead, while retaining `stdSimplex` as the convex-analysis sentinel.
+  $repeatedAnalysisConstants = @('stdSimplex', 'kakutani_fixed_point')
   $repeatedAnalysisRejected = 0
   foreach ($root in @(
       'GameTheory.Repeated.Basic',
       'GameTheory.Repeated.Discounted',
       'GameTheory.Repeated')) {
-    $output = Run-Probe $root @('stdSimplex', 'Polynomial')
-    foreach ($constant in @('stdSimplex', 'Polynomial')) {
+    $output = Run-Probe $root $repeatedAnalysisConstants
+    foreach ($constant in $repeatedAnalysisConstants) {
       if (Is-Unreachable $output $constant) {
         $repeatedAnalysisRejected++
+      } else {
+        Write-Output `
+          "REPEATED_ANALYSIS_REACHABLE_UNEXPECTED=$root reaches $constant"
       }
     }
   }

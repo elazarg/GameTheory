@@ -10,7 +10,8 @@ post-decision boundary stresses [EXP-030](../ExperimentLog.md) and
 [EXP-031](../ExperimentLog.md); Protocol amendments
 [EXP-032](../ExperimentLog.md), [EXP-033](../ExperimentLog.md), and
 [EXP-034](../ExperimentLog.md), with the Bayes-fiber correction measured by
-[EXP-077](../ExperimentLog.md).
+[EXP-077](../ExperimentLog.md); reachability-proxy maintenance
+[EXP-096](../ExperimentLog.md).
 
 ## Hypothesis
 
@@ -166,6 +167,25 @@ vector, and residual-floor counts. Thus the bridge is known to consume each
 side it was created to connect, while the negative probes show that
 `GameTheory.Repeated`, Protocol, and the independent mathematics target have
 not silently changed roles.
+
+## Public-monitoring rank amendment
+
+EXP-096 narrows the repeated-root proxy without changing the boundary. When
+EXP-031 ran, both `stdSimplex` and `Polynomial` were absent from Basic,
+Discounted, and the public Repeated umbrella. The later, stable
+public-monitoring rank family necessarily imports Mathlib matrix rank, whose
+ordinary linear-algebra closure exposes `Polynomial`. That does not import
+`GameTheory.Analysis`, `FixedPointTheorems`, feasible-payoff geometry, or the
+folk-theorem bridge.
+
+The live six-probe check therefore rejects `stdSimplex` and the actual
+`kakutani_fixed_point` declaration from each of Basic, Discounted, and the
+public umbrella. The authored-import gate still rejects every Analysis or
+fixed-point import outside Analysis. This combination checks the intended
+one-way dependency directly while allowing stable repeated-game mathematics
+to use general linear algebra. A failed aggregate also prints the exact root
+and declaration, so the hosted deep audit no longer hides a single mismatch
+behind only a count.
 
 ## Sequential-equilibrium amendment
 

@@ -99,6 +99,14 @@ becomes difficult to scan.
 | EXP-086 | 2026-08-10 | D48 / bounded root decomposition | Can common-depth local replacements bridge exactly to root gain and telescope without a second evaluator? | Complete; supports scoped D48 | [`decisions/D48-global-counterfactual-decomposition-gate.md`](decisions/D48-global-counterfactual-decomposition-gate.md); `Analysis/Protocol/Counterfactual{Decomposition,RootBridgeTest}.lean` |
 | EXP-087 | 2026-08-11 | D49 / finite root-regret aggregation | Can every local D46 process jointly control a canonical D48 root deviation? | Complete; supports fixed finite deviations | [`decisions/D49-finite-root-regret-aggregation.md`](decisions/D49-finite-root-regret-aggregation.md); `Analysis/Protocol/CounterfactualRootRegret{,Test}.lean` |
 | EXP-088 | 2026-08-11 | D50 / uniform root external regret | Can one local CFR family uniformly control every certified pure plan and reach canonical strategic external regret? | Complete; supports decomposition-certified families | [`decisions/D50-uniform-root-external-regret.md`](decisions/D50-uniform-root-external-regret.md); `Analysis/Protocol/CounterfactualRootRegret{,Test}.lean` |
+| EXP-089 | 2026-08-11 | D51 / zero-sum learning | Does canonical external regret cancel exactly to the empirical saddle gap? | Supports scoped D51 | [`decisions/D51-zero-sum-regret-cancellation.md`](decisions/D51-zero-sum-regret-cancellation.md); `GameTheory/Analysis/Learning.lean` |
+| EXP-090 | 2026-08-11 | D52 / Protocol learning | Can two local learners share one actual zero-sum Protocol trace? | Supports scoped D52 | [`decisions/D52-same-trace-protocol-zero-sum-learning.md`](decisions/D52-same-trace-protocol-zero-sum-learning.md); `GameTheory/Analysis/Protocol/CounterfactualZeroSumLearningTest.lean` |
+| EXP-091 | 2026-08-11 | D53 / Bayesian Protocol learning | Can several information-site learners yield a useful complete-plan equilibrium result? | Supports scoped D53 | [`decisions/D53-multisite-bayesian-protocol-learning.md`](decisions/D53-multisite-bayesian-protocol-learning.md); `GameTheory/Analysis/Protocol/BayesianZeroSumLearningTest.lean` |
+| EXP-092 | 2026-08-14 | post-review client gate / stochastic games | Can a client prove a nonstationary stochastic result through public proof views? | Narrows; public policy/profile layer passes | `GameTheory/Experimental/PostArchitecture/StochasticClientAdequacy.lean` |
+| EXP-093 | 2026-08-14 | post-review client gate / transformations | Can executable trace payoffs survive heterogeneous relabeling and canonical Nash transport? | Supports existing transformation surface | `GameTheory/Experimental/PostArchitecture/ExecutableClientAdequacy.lean` |
+| EXP-094 | 2026-08-14 | post-review client gate / probability | Can finite-law Markov bounds feed canonical approximate equilibrium and posterior arguments? | Supports; promotes bounds facade | `GameTheory/Probability/Bounds.lean`; `GameTheory/Experimental/PostArchitecture/ProbabilityTailAdequacy.lean` |
+| EXP-095 | 2026-08-14 | post-review client gate / sequential games | Can EFG clients prove history-dependent SPE without support-proof transport? | Supports after one helper | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Experimental/PostArchitecture/SequentialClientAdequacy.lean` |
+| EXP-096 | 2026-08-14 | D12 / hosted reachability maintenance | Does `Polynomial` still identify an Analysis leak from stable Repeated? | Refutes proxy; boundary narrowed to direct probes | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 
 ## Entry template
 
@@ -5993,3 +6001,30 @@ memory.
   bounded adversarial consumer categories; next reconcile the resulting
   evidence with the cutover checklist and require the hosted build plus deep
   audits before moving `main`.
+
+### EXP-096: direct repeated-analysis reachability sentinels
+
+- **Date / revision:** 2026-08-14, hosted run at `15cc51b9`
+- **Decision / question:** D12 maintenance; whether `Polynomial` still
+  distinguishes a forbidden Analysis/fixed-point dependency from legitimate
+  stable repeated-game mathematics.
+- **Representative slice:** the hosted deep Phase 2 gate imported
+  `GameTheory.Repeated.Basic`, `GameTheory.Repeated.Discounted`, and the public
+  `GameTheory.Repeated` umbrella, probing `stdSimplex` and `Polynomial` from
+  each. It expected six rejections and observed five after the monitoring-rank
+  family had graduated.
+- **Evidence / observations:** Basic and Discounted still have the original
+  topology-free closure. The umbrella now intentionally imports
+  `Repeated.MonitoringRank`, which imports Mathlib `Matrix.Rank`; that ordinary
+  linear-algebra closure exposes `Polynomial` without importing
+  `GameTheory.Analysis`, `FixedPointTheorems`, or repeated-analysis geometry.
+  Authored-import checks remain zero. A focused three-root local probe exceeded
+  a 60-second interactive bound before producing grouped output, independently
+  confirming that deep reachability does not belong in the implementation
+  loop.
+- **Outcome / next action:** the `Polynomial` proxy is refuted for the public
+  Repeated umbrella. Preserve the historical EXP-031 measurement, but enforce
+  the live boundary with `stdSimplex` and the actual `kakutani_fixed_point`
+  declaration at all three roots. Emit the exact root/declaration on mismatch.
+  Keep fast audits local and require the amended six-probe result from hosted
+  deep CI before cutover.
