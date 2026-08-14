@@ -108,7 +108,7 @@ becomes difficult to scan.
 | EXP-095 | 2026-08-14 | post-review client gate / sequential games | Can EFG clients prove history-dependent SPE without support-proof transport? | Supports after one helper | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Experimental/PostArchitecture/SequentialClientAdequacy.lean` |
 | EXP-096 | 2026-08-14 | D12 / hosted reachability maintenance | Does `Polynomial` still identify an Analysis leak from stable Repeated? | Refutes proxy; boundary narrowed to direct probes | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 | EXP-097 | 2026-08-14 | post-review client gate / implementation theory | Can profile-observed transfers induce target sets through canonical dominance semantics? | Supports; decides D54 | [`decisions/D54-profile-transfer-implementation.md`](decisions/D54-profile-transfer-implementation.md); `GameTheory/Mechanism/Implementation.lean`; `GameTheory/Tests/Implementation.lean` |
-| EXP-098 | 2026-08-14 | hosted reachability maintenance | Did review-time namespace and import cleanup leave positive probes stale? | Four stale expectations repaired; hosted rerun pending | [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
+| EXP-098 | 2026-08-14 | hosted reachability maintenance | Did review-time namespace and import cleanup leave positive probes stale? | Four stale expectations and probe exit state repaired; hosted rerun pending | [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 
 ## Entry template
 
@@ -6115,9 +6115,14 @@ memory.
   declarations require the `GameTheoryMath.OrthantProjection` root; and the
   Learning facade intentionally stopped importing the unrelated
   approachability theorem. All other reported deep counts matched, including
-  EXP-096's six direct repeated-analysis rejections.
+  EXP-096's six direct repeated-analysis rejections. The first repaired hosted
+  run then reported every per-symbol result and `VERIFIED=1`, but the shell
+  step exited `1`: the final deliberately unknown Lean constant had left
+  PowerShell's native-process exit state uncleared.
 - **Outcome / next action:** repair declaration paths and the orthant root,
   remove the phantom Learning input rather than restoring an unused import,
-  and make every deep probe print its root, declaration, and observed status.
+  make every deep probe print its root, declaration, and observed status, and
+  clear an expected negative probe's native exit state only after its output
+  has been validated.
   Namespace or import cleanup must update its positive reachability probes in
   the same commit. Require hosted Phase 2 and Phase 3 success before cutover.

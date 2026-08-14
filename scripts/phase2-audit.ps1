@@ -441,6 +441,9 @@ if ($DeepReachability) {
         throw "Reachability probe for $Root did not inspect $constant`n$text"
       }
     }
+    # Unknown constants are the expected evidence for negative probes. Do not
+    # let Lean's corresponding native exit code make a verified audit fail.
+    $global:LASTEXITCODE = 0
     return [pscustomobject]@{
       Root = $Root
       Text = $text
