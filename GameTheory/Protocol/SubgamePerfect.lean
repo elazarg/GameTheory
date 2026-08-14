@@ -116,6 +116,36 @@ theorem historyStepValue_congr
   intro target realized
   simp [heq target realized]
 
+/-- A point-mass transition evaluates a support-dependent continuation at its
+unique successor. The theorem constructs the support witness internally, so a
+client can use a deterministic step law without rewriting under a dependent
+continuation or exposing proof-irrelevance plumbing. -/
+theorem historyStepValue_of_step_eq_pure
+    {history : E.History}
+    {chosen : {joint : ∀ i, Option (E.Action i) // E.Legal history.state joint}}
+    {target : E.State}
+    (hstep : E.step history.state chosen = FinDist.pure target)
+    (continuation : ∀ next, next ∈ (E.step history.state chosen).support → ℝ) :
+    E.historyStepValue history chosen continuation =
+      continuation target (by
+        rw [hstep]
+        exact FinDist.mem_support_pure.mpr rfl) := by
+  let realized : target ∈ (E.step history.state chosen).support := by
+    rw [hstep]
+    exact FinDist.mem_support_pure.mpr rfl
+  unfold historyStepValue
+  rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
+      (g := fun _ => FinDist.pure (continuation target realized)) (by
+        intro next hnext
+        have hpure : next ∈ (FinDist.pure target).support := by
+          rw [← hstep]
+          exact hnext
+        have hnextTarget := FinDist.mem_support_pure.mp hpure
+        subst next
+        congr),
+    FinDist.bind_const, FinDist.expect_pure]
+  rfl
+
 open Classical in
 /-- Terminal payoff induced by a fixed history-dependent chooser. This is the
 history-preserving analogue of `backwardValue`, using the same transition law

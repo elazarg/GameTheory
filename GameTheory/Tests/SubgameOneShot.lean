@@ -511,33 +511,12 @@ theorem continuationValue_prescribed_second
         twoStage.Legal (.second hidden firstAction) joint} :=
     ⟨moveJoint prescribedSecond,
       moveJoint_legal_second hidden firstAction prescribedSecond⟩
-  calc
-    twoStage.historyStepValue (secondHistory hidden firstAction) chosen
-        (fun target realized =>
-          twoStage.historyBackwardValue wellFoundedPlay
-            (information.historyChooser
-              (profileOf (prescribedPolicy prescribedFirst prescribedSecond)))
-            (fun outcome => utility outcome ())
-            ((secondHistory hidden firstAction).extend chosen.2 realized)) =
-      twoStage.historyStepValue (secondHistory hidden firstAction) chosen
-        (fun _target _realized =>
-          if firstAction && prescribedSecond then 1 else 0) := by
-            apply ExecutionProtocol.historyStepValue_congr
-            intro target realized
-            have htarget :
-                target = .done hidden firstAction prescribedSecond := by
-              have hpure : target ∈
-                  (FinDist.pure
-                    (.done hidden firstAction prescribedSecond)).support :=
-                realized
-              exact FinDist.mem_support_pure.mp hpure
-            subst target
-            rw [twoStage.historyBackwardValue_of_terminal]
-            · cases firstAction <;> cases prescribedSecond <;>
-                norm_num [utility]
-            · simp [State.isTerminal]
-    _ = if firstAction && prescribedSecond then 1 else 0 := by
-      simp [ExecutionProtocol.historyStepValue]
+  have hstep :
+      twoStage.step (.second hidden firstAction) chosen =
+        FinDist.pure (.done hidden firstAction prescribedSecond) := rfl
+  rw [twoStage.historyStepValue_of_step_eq_pure hstep _,
+    twoStage.historyBackwardValue_of_terminal (by simp [State.isTerminal])]
+  cases firstAction <;> cases prescribedSecond <;> norm_num [utility]
 
 theorem continuationValue_prescribed_first
     (hidden prescribedFirst prescribedSecond : Bool) :

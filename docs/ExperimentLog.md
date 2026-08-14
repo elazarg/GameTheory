@@ -5905,3 +5905,91 @@ memory.
   Markov bounds to that module. Continue the potential-client gate with the
   remaining history-dependent sequential surface rather than adding more
   concentration inequalities without a consumer.
+
+### EXP-095: history-dependent sequential client adequacy
+
+- **Date / revision:** 2026-08-14, reserved after `142c1804`
+- **Status:** completed; promotes deterministic history-step evaluation and
+  validates the EFG historywise/SPE consumer
+- **Decision / question:** whether a client who already has a typed
+  perfect-recall EFG can prove a concrete, history-dependent contingent plan
+  optimal after every continuation and hence subgame perfect without reopening
+  execution construction or carrying legality/support proofs through the
+  public mathematical statement.
+- **Prediction:** the canonical historywise one-shot deviation theorem should
+  reduce the strategic proof to local continuation comparisons. The existing
+  history backward-value algebra may need one small terminal-payoff bound, but
+  no new runner, EFG evaluator, policy type, or sequential solution predicate.
+- **Representative slice:** reuse the existing two-decision, one-player
+  perfect-recall EFG. Define a plan that chooses an initial vote and, at the
+  second information state, conditions on the remembered first vote and
+  matches it. Give terminal histories utility one exactly for matching votes.
+  Prove the plan historywise optimal and therefore subgame perfect. Also define
+  a plan that deliberately mismatches after one branch and prove a profitable
+  continuation or failure of the relevant local optimality condition. A
+  one-move game, constant payoff, or theorem with an assumed optimality premise
+  does not count.
+- **Competing designs:** use EFG's canonical historywise/one-shot surface;
+  add a derived history-value bound or deterministic-continuation lemma if it
+  is independently reusable; or define a language-local subtree evaluator and
+  SPE predicate. The last design is presumed rejected as duplicate semantics.
+- **Measurements:** record client definitions, support proof, and final theorem
+  lines; direct references to Protocol histories, traces, legal joints,
+  support witnesses, `historyBackwardValue`, and `historyStepValue`; casts,
+  tactic `change`, and dependent transports; implementation definitions
+  unfolded; and warm elaboration time. Separate existing fixture construction
+  from new theorem-author burden.
+- **Kill conditions:** reject the current EFG proof surface as client-grade if
+  the proof must reconstruct the runner, expose legality/support certificates
+  persistently, case-analyze trace proof objects rather than mathematical
+  histories, or materially exceed a direct finite-tree induction. Reject any
+  helper that merely packages this one game's computation or introduces a
+  second evaluation/equilibrium truth.
+- **Planned validation:** reserve before code; first prove exact incumbent
+  continuation values and a chooser-independent payoff bound, then use the
+  canonical one-shot/historywise/SPE chain and refuted control; build only the
+  experimental leaf and any promoted narrow owner; run fast source audits and
+  `git diff --check`; do not run deep reachability locally.
+- **Artifacts / observations:**
+  `Experimental.PostArchitecture.SequentialClientAdequacy` reuses the existing
+  two-decision perfect-recall EFG and defines only client plans and payoff. The
+  incumbent starts with `up` and at its second information state returns the
+  remembered first vote; its two second-stage actions are proved distinct, so
+  the plan is genuinely history dependent. Terminal utility is one exactly
+  when the votes match. A generic terminal-payoff induction bounds every
+  alternative chooser by one, exact continuation calculations give the
+  incumbent value one after every nonterminal history, and the canonical EFG
+  theorem yields historywise optimality and subgame perfection. The control
+  starts `up` and then chooses `down`; replacing it by the matching plan after
+  the first action raises continuation value from zero to one, refuting
+  historywise optimality.
+  The first attempted proof exposed a real API defect: rewriting a point-mass
+  transition beneath `historyStepValue` had no type-correct dependent motive
+  because continuation values consume support witnesses. The promoted
+  `ExecutionProtocol.historyStepValue_of_step_eq_pure` constructs that witness
+  internally. The older imperfect-information `Tests.SubgameOneShot` contained
+  the same manual point-mass/proof-irrelevance block; replacing it with the new
+  theorem supplies an independent topology and removes 27 net proof lines.
+- **Measurements:** the hostile theorem-author leaf is 281 source lines / 246
+  nonblank, excluding the pre-existing EFG construction. It contains 22 typed
+  `History` and six `Trace` references, 19 `historyBackwardValue` and eight
+  `historyStepValue` references, three canonical `Profile.update` references,
+  and one implementation unfolding inside the generic terminal-bound proof.
+  It contains zero `Legal` or support references, and no cast, `Eq.ndrec`,
+  tactic `change`, or `Function.update`. The promoted semantic helper adds 30
+  source lines to `Protocol.SubgamePerfect`; its first independent reuse makes
+  `Tests.SubgameOneShot` 27 lines shorter net. Warning-clean elaboration takes
+  about 12.2 seconds for the Protocol owner, 11.0 for the hostile leaf, and 13.0
+  for the refactored older test against warm identical v2 dependencies. Fast
+  Phase 1, Phase 2, and Phase 3 audits report `VERIFIED=1` in 0.3, 9.6, and 4.7
+  seconds. Deep reachability was not run locally.
+- **Outcome / next action:** the original deterministic continuation surface
+  hit the dependent-rewrite kill condition; the smallest correction survives
+  two different sequential topologies and therefore graduates. After that
+  correction, clients can state and prove the final historywise/SPE results in
+  EFG vocabulary without legality, support, transport, or a second evaluator.
+  Keep the chooser-independent terminal bound experimental until a second
+  topology needs it. Together with EXP-092 through EXP-094, this closes the
+  bounded adversarial consumer categories; next reconcile the resulting
+  evidence with the cutover checklist and require the hosted build plus deep
+  audits before moving `main`.
