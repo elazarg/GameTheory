@@ -16,6 +16,7 @@ import GameTheory.Mechanism.FeasiblePosteriors
 import GameTheory.Mechanism.FairDivision
 import GameTheory.Mechanism.Groves
 import GameTheory.Mechanism.InformationDesign
+import GameTheory.Mechanism.Implementation
 import GameTheory.Mechanism.JointFeasiblePosteriors
 import GameTheory.Mechanism.Knapsack
 import GameTheory.Mechanism.PrincipalAgent

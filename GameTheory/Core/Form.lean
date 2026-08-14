@@ -97,6 +97,26 @@ theorem outcomeLaw_mapOutcome (F : GameForm ι) {O : Type uo'} (f : F.sig.Outcom
     (F.mapOutcome f).outcomeLaw μ = (F.outcomeLaw μ).map f := by
   simp only [outcomeLaw, mapOutcome, FinDist.map_eq_bind, FinDist.bind_bind]
 
+/-! ## Recording the chosen profile -/
+
+/-- Record the chosen strategy profile alongside every realized outcome.
+
+The strategy carriers are definitionally unchanged. This is useful when a
+downstream evaluator depends on both the selected profile and stochastic
+outcome, for example a profile-observed transfer scheme. The construction does
+not assert that any player observes the profile. -/
+abbrev recordProfile (F : GameForm ι) : GameForm ι where
+  sig :=
+    { Strategy := F.sig.Strategy
+      Outcome := Profile F.sig × F.sig.Outcome }
+  play profile := F.play profile |>.map fun outcome => (profile, outcome)
+
+@[simp]
+theorem recordProfile_play (F : GameForm ι) (profile : Profile F.sig) :
+    F.recordProfile.play profile =
+      (F.play profile).map fun outcome => (profile, outcome) :=
+  rfl
+
 /-- The outcome law is affine in the law over profiles. -/
 theorem outcomeLaw_mix (F : GameForm ι) (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
     (first second : FinDist (Profile F.sig)) :

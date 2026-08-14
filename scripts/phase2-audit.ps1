@@ -353,8 +353,9 @@ Report 'FIXED_POINT_IMPORTERS' $fixedPointNamers
 
 $Concepts = @('IsEquilibrium', 'IsNash', 'IsCoarseCorrelatedEq', 'IsCorrelatedEq',
   'IsStrongNash', 'IsBestResponse', 'WeaklyDominates', 'StrictlyDominatesOn',
-  'IsDominant', 'IsCorrelatedRationalizable', 'SurvivesAllPureEliminationRounds',
-  'IsParetoEfficient')
+  'IsDominant', 'IsWeaklyUndominated', 'IsWeaklyUndominatedProfile',
+  'IsCorrelatedRationalizable', 'SurvivesAllPureEliminationRounds',
+  'IsParetoEfficient', 'IsUndominatedImplementation')
 $duplicates = 0
 foreach ($concept in $Concepts) {
   $pattern = '(?m)^\s*(?:@\[[^]]*\]\s*)?(?:noncomputable\s+)?def\s+' +

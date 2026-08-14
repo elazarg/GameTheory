@@ -683,6 +683,15 @@ rationalizability remain separate proof-semantic iterations; the latter uses
 the canonical mixed-profile product law. Either needs a separate executable
 certificate gate before entering the finite algorithm layer.
 
+EXP-097/D54 exercises that response family from mechanism design without
+restoring the retired universal hub. `GameForm.recordProfile` transparently
+retains a chosen profile beside a stochastic outcome;
+`UtilityGame.withProfileTransfer` derives the additive utility; and the opt-in
+implementation predicate states explicitly that its surviving set is defined
+by canonical `IsWeaklyUndominatedProfile`. Mixed, correlated, informational,
+VCG, price, and attainment results require separate consumers rather than a
+higher-order solution-set hierarchy.
+
 #### Validation spike
 
 Implement all five rows above and prove:

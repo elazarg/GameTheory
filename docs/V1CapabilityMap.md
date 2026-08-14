@@ -34,6 +34,7 @@ Status labels:
 | Repeated games, public monitoring, PPE, self-generation, uniform equilibrium, and the folk theorem | `GameTheory.Repeated` and `GameTheory.Analysis.Repeated` | supported; public randomization remains queued |
 | Finite stochastic games and discounted stationary values | `GameTheory.Stochastic` and `GameTheory.Analysis.Stochastic` | supported; no general uniform-existence claim |
 | Bayesian games, BCE, revelation, information design, Groves, auctions, and knapsack | `GameTheory.Core.Bayesian`, `GameTheory.Mechanism`, and `GameTheory.Languages.Bayesian` | supported in the finite/algebraic scopes recorded by the capability matrix |
+| Monderer--Tennenholtz-style target implementation by profile transfers | `GameTheory.Mechanism.Implementation` | supported for canonical weak undominance and finite surviving-budget bounds; mixed, correlated, informational, VCG, price, and attainment extensions remain consumer-gated |
 | Indivisible-goods EF1 and two-agent EFX | `GameTheory.Mechanism.FairDivision` | supported |
 | Coalitional games, Shapley/Banzhaf/Shapley--Shubik values, bargaining, and matching | `GameTheory.Core.Coalitional` and `GameTheory.Cooperative` | supported or partial as recorded in the delivery ledger |
 | Congestion games and affine price of anarchy | `GameTheory.Congestion` | supported |

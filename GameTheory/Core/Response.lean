@@ -59,6 +59,16 @@ def WeaklyDominates (who : ι)
         (F.play (Profile.update profile who preferred))
         (F.play (Profile.update profile who alternative))
 
+/-- A strategy is weakly undominated when no alternative weakly dominates it
+in the textbook sense of being weakly better everywhere and strictly better
+somewhere. -/
+def IsWeaklyUndominated (who : ι) (strategy : F.sig.Strategy who) : Prop :=
+  ∀ alternative, ¬ WeaklyDominates F weaklyPrefers who alternative strategy
+
+/-- Every coordinate of a profile is weakly undominated. -/
+def IsWeaklyUndominatedProfile (profile : Profile F.sig) : Prop :=
+  ∀ who, IsWeaklyUndominated F weaklyPrefers who (profile who)
+
 /-- `preferred` strictly dominates `alternative` for `who` at every profile
 whose coordinates lie in `allowed`.
 

@@ -224,12 +224,21 @@ Independent packages:
 
 - analytic envelope identities above the stable single-parameter algebra;
 - monotonicity and critical payments for any truthful knapsack approximation;
+- mixed, correlated, informational, VCG, price, and attainment extensions of
+  the stable weak-undominance implementation surface;
 - envy-cycle and maximin-share fair division; and
 - richer contract or information-design timing only with a typed consumer.
 
 The general Groves theory now lives in `Mechanism.Groves`, with a non-auction
 public-choice consumer and a canonical DSIC bridge. The remaining second-price
 presentations document and test their distinct tie-breaking scopes.
+
+EXP-097/D54 adds the smallest implementation-theory seam justified by a real
+cross-domain client pattern: `GameForm.recordProfile`, additive profile
+transfers, and target implementation under canonical weak undominance. It does
+not restore `KernelGame` or parameterize over arbitrary solution sets. Each
+additional solution concept or analytic price theorem remains an independent
+consumer-gated package.
 
 The present greedy knapsack approximation is not a mechanism. All-pay support
 is arithmetic, not an auction model.
@@ -244,6 +253,8 @@ is arithmetic, not an auction model.
   solution concepts.
 - `GameTheory.Finite` owns executable finite algorithms; correctness connects
   them to real-valued proof semantics.
+- `GameTheory.Mechanism` owns coordinated incentive and transfer domains over
+  canonical forms, utilities, responses, and equilibrium predicates.
 - `GameTheory.Repeated` and `GameTheory.Stochastic` use finite histories and
   finite-support transitions without claiming an infinite path law.
 - `GameTheory.Analysis` imports stable semantic roots in one direction for

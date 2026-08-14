@@ -107,6 +107,7 @@ becomes difficult to scan.
 | EXP-094 | 2026-08-14 | post-review client gate / probability | Can finite-law Markov bounds feed canonical approximate equilibrium and posterior arguments? | Supports; promotes bounds facade | `GameTheory/Probability/Bounds.lean`; `GameTheory/Experimental/PostArchitecture/ProbabilityTailAdequacy.lean` |
 | EXP-095 | 2026-08-14 | post-review client gate / sequential games | Can EFG clients prove history-dependent SPE without support-proof transport? | Supports after one helper | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Experimental/PostArchitecture/SequentialClientAdequacy.lean` |
 | EXP-096 | 2026-08-14 | D12 / hosted reachability maintenance | Does `Polynomial` still identify an Analysis leak from stable Repeated? | Refutes proxy; boundary narrowed to direct probes | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
+| EXP-097 | 2026-08-14 | post-review client gate / implementation theory | Can profile-observed transfers induce target sets through canonical dominance semantics? | Supports; decides D54 | [`decisions/D54-profile-transfer-implementation.md`](decisions/D54-profile-transfer-implementation.md); `GameTheory/Mechanism/Implementation.lean`; `GameTheory/Tests/Implementation.lean` |
 
 ## Entry template
 
@@ -6028,3 +6029,71 @@ memory.
   declaration at all three roots. Emit the exact root/declaration on mismatch.
   Keep fast audits local and require the amended six-probe result from hosted
   deep CI before cutover.
+
+### EXP-097: implementation theory over canonical solution concepts
+
+- **Date / revision:** 2026-08-14, reserved after `f7c6c1b8`
+- **Status:** completed; promotes the D54 weak-undominance seam
+- **Decision / question:** potential-client usefulness gate; whether v2 can
+  express implementation theory as a relationship between profile-observed
+  transfers, canonical utility games, and an existing solution concept rather
+  than rebuilding a kernel-game hub or a parallel equilibrium vocabulary.
+- **Client evidence:** `paper/k-implementation` is a successful 19,379-line v1
+  extension with more than 1,200 direct references across dominance,
+  mixed/correlated equilibrium, informational games, LP certificates, and VCG.
+  In contrast, `paper/strategic-proxy-voting` is a 15,154-line bypass that
+  defines local `IsPNE` and better-response notions. These are positive and
+  negative workflow evidence, not APIs to preserve.
+- **Representative slice:** record a chosen strategy profile alongside the
+  form's realized outcome, add a nonnegative profile-contingent transfer to
+  canonical expected utility, and define target implementation through
+  canonical weak-undominance. In a two-player Boolean game, a nonzero transfer
+  must make one target profile the unique undominated profile with an exact
+  finite budget; zero transfer must fail on a concrete surviving off-target
+  profile.
+- **Competing designs:** a generic profile-observation transformation plus a
+  mechanism-domain implementation predicate; restrict immediately to
+  deterministic NFGs; restore v1's bundled `KernelGame`; or parameterize a
+  generic implementation operator by arbitrary solution-set predicates. The
+  kernel hub and premature higher-order hierarchy are presumed rejected.
+- **Measurements:** record definitions/theorem burden, profile transport,
+  outcome/utility duplication, direct uses of canonical response semantics,
+  finite/nonempty assumptions, implementation unfolding in the client, and
+  narrow elaboration time. Search Mathlib before promoting general set/infimum
+  facts.
+- **Kill conditions:** reject the generic transformation if it cannot preserve
+  strategy profiles definitionally, if ordinary payoff reasoning must expose
+  paired outcomes persistently, or if it needs a second game/equilibrium truth.
+  Do not promote an implementation predicate unless both the positive budget
+  witness and off-target control consume a canonical solution concept. Stop at
+  the experimental leaf if only this paper's restricted transfer language
+  makes the abstraction useful.
+- **Artifacts / observations:** the experimental transformation preserved
+  strategy profiles definitionally once its outcome-only construction was made
+  transparent. `GameForm.recordProfile` and
+  `UtilityGame.withProfileTransfer` therefore graduated, together with the
+  general Core predicates `IsWeaklyUndominated` and
+  `IsWeaklyUndominatedProfile`. The stable mechanism predicate names its exact
+  solution concept rather than pretending to be a universal implementation
+  hierarchy. The Boolean witness proves exact budget-four singleton
+  implementation, derives implementation of a non-singleton target cylinder,
+  and refutes both targets under zero transfer using the concrete surviving
+  all-false profile.
+- **Measurements:** `Core.Form` adds 20 source lines and `Core.Response` 10.
+  The mechanism facade is 93 source lines / 75 nonblank and its stable hostile
+  test 172 / 139. The facade's two paired-outcome projections are confined to
+  the transfer utility definition; the test has none. Neither file contains
+  `Profile.update`, cast, `Eq.ndrec`, tactic `change`, or `Function.update`.
+  The test unfolds only the concrete transfer and directly consumes canonical
+  `WeaklyDominates` in its positive and negative cases. Warning-clean narrow
+  elaboration took about 10--11 seconds for each changed owner and test against
+  warm v2 artifacts. The mechanism umbrella compiled warning-clean; fast Phase
+  1, Phase 2, and Phase 3 audits reported `VERIFIED=1`. Phase 2 now also checks
+  that the two weak-undominance predicates and the implementation predicate are
+  each defined exactly once.
+- **Outcome / next action:** supports and adopts D54. The general invariant is
+  profile recording plus additive evaluation, not v1's kernel hub and not an
+  arbitrary solution-set parameter. Keep mixed, correlated, informational,
+  VCG, restricted-transfer, price, and attainment families gated by their own
+  field-standard consumers. Add the public redirect and require fast audits
+  locally plus the hosted full/deep gate before cutover.

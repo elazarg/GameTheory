@@ -59,6 +59,7 @@ Status labels:
 | Intrinsic | supported | native closed-loop semantics, selected solution, fixed-nature pure strategic compilation, and canonical Nash with downstream re-solving | Nature lotteries, temporal compilation, and behavioral/mixed strategy are separate gates. |
 | Bayesian mechanisms and information design | supported | direct/Protocol Nash transfer, multi-player revelation, posterior splitting construction and feasibility | Analytic envelope theory. |
 | Auctions, Groves, and knapsack | supported | general Groves public-choice truthfulness/DSIC, Vickrey/reserve/VCG, zero-reserve payoff bridge, combinatorial allocation, exact and zero-weight-compatible approximate solvers | Truthful approximation still requires monotonicity and payments. |
+| Implementation by transfers | supported | profile recording, additive profile transfers, canonical weak-undominance implementation, exact two-player budget witness, non-singleton target, and zero-transfer controls | Mixed, correlated, informational, VCG, implementation-price, and attainment theorems are separate consumer-gated packages. |
 | Fair division | supported | finite EF1 and two-agent EFX | Envy cycles and maximin share. |
 | Congestion | complete | Rosenthal, Nash existence, affine PoA, Pigou/Braess | None for current scope. |
 | Coalitional theory | partial | asymmetric Shapley witness, Banzhaf swing-count identity, bundled simple-game Shapley--Shubik, core-to-balancedness | Balancedness converse and convex-game core result. |
