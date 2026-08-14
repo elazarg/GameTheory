@@ -5751,3 +5751,81 @@ memory.
   reduction target for execution-scaffolding references. Only the smallest
   invariant that survives a second topology may move into
   `Stochastic.PerfectMonitoring`.
+
+### EXP-093: executable client transformation adequacy
+
+- **Date / revision:** 2026-08-14, reserved after `309e0e50`
+- **Status:** completed; validates the existing composition surface without a
+  new public abstraction
+- **Decision / question:** whether a potential client can retain useful
+  executable/domain-facing actions and realized traces while delegating
+  strategic semantics to the canonical finite game and equilibrium stack,
+  even when the bridge changes heterogeneous strategy carriers, player
+  indexing, and outcomes. This is a general usefulness test, not a migration
+  adapter for any known client.
+- **Prediction:** the existing executable `TableGame` refinement plus the
+  canonical outcome-map, strategy-relabel, and player-reindex theorems should
+  compose into an exact Nash transport theorem. A caller should need only
+  equivalences and proved runtime laws, not a second game form, preference, or
+  equilibrium predicate.
+- **Representative slice:** define a two-player executable rational table game
+  with heterogeneous actions and nonconstant payoffs. Compile it to the
+  canonical deterministic form, map realized profiles to a structured runtime
+  trace, nontrivially relabel both action carriers, swap the players, and prove
+  that executable Nash recognition is equivalent to canonical `IsNash` in the
+  transformed domain vocabulary. Include a positive equilibrium, a refuted
+  profile, exact realized-trace laws, and a lossy-summary counterexample showing
+  why an arbitrary outcome projection cannot preserve all utility semantics.
+- **Competing designs:** compose the existing canonical transformations; add a
+  small named composition theorem only if the same proof plumbing repeats; or
+  add a domain-specific game/equilibrium wrapper. The last design is presumed
+  rejected because it would duplicate semantics rather than improve access to
+  them.
+- **Measurements:** record support and consumer lines; explicit casts,
+  `Eq.ndrec`, tactic `change`, and manual profile transports; theorem-chain
+  length; which equalities are definitional versus propositional; narrow build
+  time; and whether the final public theorem mentions only the client's action,
+  trace, and executable-game vocabulary plus canonical `IsNash`.
+- **Kill conditions:** reject the current composition surface as client-grade
+  if the exact theorem requires user-visible casts or transport modules,
+  depends on unfolding representation internals at every transformation, only
+  works for homogeneous actions or constant/trivial outcomes, or needs a
+  duplicate form, utility, or equilibrium definition. Reject any proposed
+  helper whose only evidence is this single topology or whose statement hides
+  a lossy outcome map.
+- **Planned validation:** reserve before implementation; build the experimental
+  leaf after the executable bridge and after the complete transformation chain;
+  run fast architecture source checks and `git diff --check`; do not run deep
+  reachability locally.
+- **Artifacts / observations:**
+  `Experimental.PostArchitecture.RuntimeTransformAdequacy` defines an exact
+  rational `TableGame` in which the two players use `Bool` and `Fin 3`, and both
+  receive nonconstant payoffs through a structured realized runtime trace. Its
+  client form maps outcomes to that trace, replaces both action types with
+  distinct command structures through nonidentity equivalences, swaps player
+  coordinates, and reindexes utilities with their owners. The final theorem
+  proves executable `TableGame.isNash = true` equivalent to canonical `IsNash`
+  on the fully transformed form. A concrete equilibrium and a concrete failed
+  profile consume the theorem. The exact play law proves that the transformed
+  runtime emits the original structured trace. As a negative control, the two
+  profiles share the same one-bit coordination summary while player `true` has
+  payoffs zero and three, proving that an attractive lossy projection cannot
+  carry the utility semantics.
+- **Measurements:** the leaf is 204 source lines, 167 nonblank. The strategic
+  proof composes four existing equivalences: player reindexing, strategy
+  relabeling, outcome/utility pullback, and executable finite-game correctness.
+  It contains no `cast`, `Eq.ndrec`, tactic `change`, `Function.update`, or
+  manual dependent-profile transport. The only definitional bridge is the
+  deliberately shared rational trace payoff; all representation changes are
+  handled propositionally by the named public theorems. Warning-clean direct
+  elaboration against the identical v2 dependency artifacts takes about 9.9
+  seconds on a warm tree. Fast Phase 1, Phase 2, and Phase 3 audits report
+  `VERIFIED=1` in 0.3, 9.2, and 4.5 seconds. Deep reachability was not run.
+- **Outcome / next action:** the prediction survives, including the
+  heterogeneous and nontrivial-outcome kill conditions. The existing finite
+  correctness and concrete transformation APIs are already client-grade for
+  this topology; do not add a composite morphism, wrapper game, or parallel
+  equilibrium vocabulary. Retain the hostile leaf as evidence. The next
+  independent usefulness test should cross a probability argument not already
+  shaped as a direct `FinDist` calculation, rather than retesting static
+  representation transport.
