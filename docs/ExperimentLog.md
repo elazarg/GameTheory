@@ -5829,3 +5829,79 @@ memory.
   independent usefulness test should cross a probability argument not already
   shaped as a direct `FinDist` calculation, rather than retesting static
   representation transport.
+
+### EXP-094: high-probability equilibrium certification
+
+- **Date / revision:** 2026-08-14, reserved after `15cc51b9`
+- **Status:** completed; promotes a small public probability-bounds facade
+- **Decision / question:** whether a client can prove a finite-probability
+  tail bound that the `FinDist` API was not specifically shaped around, then
+  use it across the probability, mixed-game, and approximate-equilibrium
+  layers without opening the PMF representation or creating a parallel
+  probability/equilibrium calculus.
+- **Prediction:** the public real-valued `probOf`, `expect`, indicator,
+  linearity, and monotonicity interface suffices for a Markov-style event
+  bound. Combined with canonical `UtilityGame.mixedImprovement`, it should show
+  that a law with small expected improvement assigns correspondingly small
+  probability to profiles that fail canonical `IsεNash`.
+- **Representative slice:** prove for an arbitrary finite-support law that a
+  nonnegative observable whose value is at least a positive threshold on an
+  event bounds that event's probability by expectation divided by threshold.
+  Consume it with a law over mixed profiles: expected aggregate positive
+  deviation gain at most `δ` must bound the probability of sampling a profile
+  that is not `ε`-Nash by `δ / ε`. Add an exact finite witness with a genuinely
+  nontrivial event and observable; a zero event or constant observable does not
+  count.
+- **Competing designs:** prove the inequality through the public finite-law
+  algebra; bridge to Mathlib PMF/measure inequalities; or add a second finite
+  sum probability presentation. Representation escape and parallel
+  presentation are presumed rejected unless the public proof is materially
+  worse or impossible.
+- **Measurements:** record generic proof, game-consumer, and witness lines;
+  `toPMF`, `PMF`, `ENNReal`, measure, support-proof, subtype, cast, and tactic
+  `change` references; public foundational lemmas added; elaboration time; and
+  whether the mathematical Markov decomposition remains visible in the proof.
+- **Kill conditions:** reopen the opaque-boundary policy if the proof needs a
+  repeated representation escape hatch or PMF-specific theorem; reject the
+  current public algebra as sufficient if the theorem requires persistent
+  support/subtype bookkeeping, a bespoke event-mass definition, or materially
+  more machinery than the standard finite-sum argument. Reject a game bridge
+  that introduces a second improvement or approximate-equilibrium predicate.
+- **Planned validation:** reserve before code; build the generic inequality,
+  then the mixed-equilibrium consumer and exact witness; run fast source audits
+  and `git diff --check`; do not run deep reachability locally.
+- **Artifacts / observations:** `Probability.Bounds` proves the generalized
+  finite-support event bound through public indicator expectation, monotonicity,
+  and scalar linearity, and exposes ordinary `FinDist.markov_inequality` as the
+  recognizable specialization. `Tests.ProbabilityBounds` uses a proper event
+  of probability `1/4` and an observable equal to four on that event and zero
+  elsewhere; expectation is one and the bound is exact. The independent
+  `Experimental.PostArchitecture.ProbabilityTailAdequacy` consumers then cross
+  two different domain seams. First, expected canonical mixed improvement at
+  most `δ` bounds by `δ / ε` the probability of sampling a profile that fails
+  canonical `IsεNash`; a one-player mixed-profile law puts positive mass on
+  both an exact equilibrium and a profile with exact improvement two. Second,
+  Bayes plausibility plus Markov bounds how often a posterior can assign a
+  named state probability above a threshold; full revelation of a fair Boolean
+  state supplies the concrete consumer.
+- **Measurements:** the promoted facade is 49 source lines / 41 nonblank, its
+  tight stable regression is 47 / 34, and the two-domain hostile consumer is
+  196 / 162. The stable proof has seven textual support references, confined
+  to the general premises and its pointwise proof; both domain consumers have
+  zero support references. Authored declarations contain no `toPMF`, `PMF`,
+  `ENNReal`, measure, subtype, cast, `Eq.ndrec`, or tactic `change` reference.
+  Two public theorems were added in the new small facade; no existing
+  foundational file grew. Warning-clean elaboration against identical v2
+  dependency artifacts takes about 9.7 seconds for the facade, 9.8 for the
+  stable test, and 11.0 for the cross-domain consumer on a warm tree. Fast
+  Phase 1, Phase 2, and Phase 3 audits report `VERIFIED=1` in 0.2, 9.8, and 5.1
+  seconds. Deep reachability was not run locally.
+- **Outcome / next action:** the public finite-law algebra survives the
+  representation kill condition and the standard finite-sum decomposition
+  remains visible. The same smallest invariant is reused by equilibrium and
+  posterior arguments, so it graduates to `GameTheory.Probability.Bounds`;
+  do not add a PMF escape policy, alternate finite-sum law, or probability
+  hierarchy. The capability matrix now redirects clients looking for event or
+  Markov bounds to that module. Continue the potential-client gate with the
+  remaining history-dependent sequential surface rather than adding more
+  concentration inequalities without a consumer.
