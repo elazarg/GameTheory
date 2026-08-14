@@ -1,30 +1,20 @@
 /-
-Copyright (c) 2025 GameTheory contributors. All rights reserved.
-Released under the MIT license as described in the file LICENSE.
-Authors: GameTheory contributors
+# Rosenthal potential for congestion games
+
+Rosenthal's finite-player congestion games admit an exact potential: the
+negative sum of every occupied resource's cumulative delays.  The canonical
+potential theory then supplies pure Nash existence, finite improvement, and
+weak acyclicity under exactly the finite-profile assumptions those conclusions
+need.
+
+Primary reference: R. W. Rosenthal, “A Class of Games Possessing Pure-Strategy
+Nash Equilibria,” *International Journal of Game Theory* 2 (1973).
 -/
+
 import GameTheory.Congestion.Basic
-import GameTheory.Concepts.Potential.PotentialFIP
-import GameTheory.Concepts.Potential.PotentialWellFounded
+import GameTheory.Core.Potential
 
-/-!
-# Rosenthal's potential
-
-Rosenthal (1973): every congestion game admits an exact potential — the
-negated sum, over the occupied resources, of the cumulative delays up to the
-current load. The potential identity holds with no finiteness beyond the
-model itself; through the library's potential-game cluster, finite strategy
-sets then yield pure Nash existence, the finite improvement property, and
-weak acyclicity of better-response dynamics.
-
-## Main results
-
-* `CongestionGame.isExactPotential` — Rosenthal's theorem
-* `CongestionGame.nash_exists` — pure Nash equilibria exist
-* `CongestionGame.no_infinite_improving_path` — the finite improvement property
-* `CongestionGame.weaklyAcyclic` — better-response dynamics reach a Nash
-  equilibrium from every profile
--/
+noncomputable section
 
 open scoped BigOperators
 
@@ -32,49 +22,40 @@ namespace GameTheory
 
 namespace CongestionGame
 
-variable {ι : Type} [Fintype ι]
+variable {ι : Type*}
 
-open Classical in
-/-- Rosenthal's potential function: negated sum, over the occupied resources,
-of the cumulative delays up to the current load. -/
-noncomputable def potential (C : CongestionGame ι) (σ : C.Profile) : ℝ :=
+/-- Rosenthal's potential: the negative cumulative delay over occupied
+resources. -/
+def potential [Fintype ι] (C : CongestionGame ι) (σ : C.Profile) : ℝ :=
   - ∑ r ∈ C.usedResources σ,
       ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1)
 
 open Classical in
-/-- Rosenthal's theorem: the potential function is an exact potential
-    for the congestion game. -/
-theorem isExactPotential (C : CongestionGame ι) :
-    C.toKernelGame.IsExactPotential C.potential := by
-  classical
-  intro who (σ : C.Profile) (s' : C.StrategySet who)
-  simp only [toKernelGame, KernelGame.eu_ofPureEU, playerCost, potential,
-    Function.update_self]
-  set σ' := Function.update σ who s' with hσ'
+/-- Rosenthal's exact-potential identity over the canonical deterministic
+game form and negative-cost utility. -/
+theorem isExactPotential [Fintype ι] [DecidableEq ι] (C : CongestionGame ι) :
+    IsExactPotential C.toGameForm C.utility C.potential := by
+  intro who (σ : C.Profile) s'
+  simp only [toGameForm, utility, expectedUtility_pure, playerCost, potential,
+    Profile.update_same]
+  set σ' := GameTheory.Profile.update (sig := C.toGameForm.sig) σ who s' with hσ'
   suffices h : ∑ r ∈ C.resources who (σ who), C.delay r (C.congestion σ r) -
       ∑ r ∈ C.resources who s', C.delay r (C.congestion σ' r) =
       ∑ r ∈ C.usedResources σ,
         ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1) -
       ∑ r ∈ C.usedResources σ',
         ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1) by
-    change -(∑ r ∈ C.resources who s', C.delay r (C.congestion σ' r)) -
-          -(∑ r ∈ C.resources who (σ who), C.delay r (C.congestion σ r)) =
-        -(∑ r ∈ C.usedResources σ',
-            ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1)) -
-          -(∑ r ∈ C.usedResources σ,
-            ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1))
     linarith
-  -- extend both potential sums to the common support
   have hPσ : ∑ r ∈ C.usedResources σ,
-      ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1)
-      = ∑ r ∈ C.usedResources σ ∪ C.usedResources σ',
+      ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1) =
+      ∑ r ∈ C.usedResources σ ∪ C.usedResources σ',
           ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1) :=
     Finset.sum_subset Finset.subset_union_left fun r _ hr => by
       rw [congestion_eq_zero_of_not_mem_usedResources hr]
       simp
   have hPσ' : ∑ r ∈ C.usedResources σ',
-      ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1)
-      = ∑ r ∈ C.usedResources σ ∪ C.usedResources σ',
+      ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1) =
+      ∑ r ∈ C.usedResources σ ∪ C.usedResources σ',
           ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1) :=
     Finset.sum_subset Finset.subset_union_right fun r _ hr => by
       rw [congestion_eq_zero_of_not_mem_usedResources hr]
@@ -85,12 +66,11 @@ theorem isExactPotential (C : CongestionGame ι) :
   have hsub2 : C.resources who s' ⊆ C.usedResources σ ∪ C.usedResources σ' := by
     have h2 := (C.resources_subset_usedResources σ' who).trans
       (Finset.subset_union_right (s₁ := C.usedResources σ))
-    rwa [hσ', Function.update_self] at h2
+    rwa [hσ', GameTheory.Profile.update_same] at h2
   have h_sum_eq : ∀ (S : Finset C.Resource) (f : C.Resource → ℝ),
       S ⊆ C.usedResources σ ∪ C.usedResources σ' →
-      ∑ r ∈ S, f r
-        = ∑ r ∈ C.usedResources σ ∪ C.usedResources σ',
-            if r ∈ S then f r else 0 := by
+      ∑ r ∈ S, f r =
+        ∑ r ∈ C.usedResources σ ∪ C.usedResources σ', if r ∈ S then f r else 0 := by
     intro S f hS
     conv_rhs => rw [Finset.sum_ite_mem, Finset.inter_eq_right.mpr hS]
   rw [h_sum_eq (C.resources who (σ who)) _ hsub1,
@@ -100,40 +80,41 @@ theorem isExactPotential (C : CongestionGame ι) :
   intro r _
   set n := C.congestionWithout σ who r
   rw [C.congestion_decompose σ who r, C.congestion_update σ who s' r]
-  by_cases hold : r ∈ C.resources who (σ who) <;> by_cases hnew : r ∈ C.resources who s'
+  by_cases hold : r ∈ C.resources who (σ who) <;>
+    by_cases hnew : r ∈ C.resources who s'
   · simp [hold, hnew]
   · simp only [hold, hnew, ite_true, ite_false, add_zero]
-    rw [Finset.sum_range_succ]; ring
+    rw [Finset.sum_range_succ]
+    ring
   · simp only [hold, hnew, ite_true, ite_false, add_zero]
-    rw [Finset.sum_range_succ]; ring
+    rw [Finset.sum_range_succ]
+    ring
   · simp [hold, hnew]
 
-open Classical in
-/-- Congestion games have Nash equilibria (via Rosenthal's potential). -/
-theorem nash_exists (C : CongestionGame ι) [∀ i, Finite (C.StrategySet i)]
-    [∀ i, Nonempty (C.StrategySet i)] :
-    ∃ σ : C.Profile, C.toKernelGame.IsNash σ := by
-  haveI : ∀ i, Finite (C.toKernelGame.Strategy i) := ‹∀ i, Finite (C.StrategySet i)›
-  haveI : ∀ i, Nonempty (C.toKernelGame.Strategy i) := ‹∀ i, Nonempty (C.StrategySet i)›
-  exact C.isExactPotential.nash_exists
+/-- Finite congestion games with nonempty strategy carriers have a pure Nash
+equilibrium, by maximizing Rosenthal's potential. -/
+theorem nash_exists [Fintype ι] [DecidableEq ι] (C : CongestionGame ι)
+    [Finite C.Profile] [Nonempty C.Profile] :
+    ∃ σ : C.Profile, IsNash C.toGameForm (euPreference C.utility) σ := by
+  letI : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
+  letI : Nonempty (GameTheory.Profile C.toGameForm.sig) := ‹Nonempty C.Profile›
+  exact C.isExactPotential.exists_isNash
 
-open Classical in
-/-- Congestion games have the finite improvement property. -/
-theorem no_infinite_improving_path (C : CongestionGame ι)
-    [∀ i, Finite (C.StrategySet i)] :
-    ¬ ∃ (path : ℕ → C.Profile),
-        ∀ n, C.toKernelGame.ImprovingStep (path n) (path (n + 1)) := by
-  haveI : ∀ i, Finite (C.toKernelGame.Strategy i) := ‹∀ i, Finite (C.StrategySet i)›
+/-- A finite congestion profile space has no infinite chain of strict
+unilateral utility improvements. -/
+theorem no_infinite_improving_path [Fintype ι] [DecidableEq ι]
+    (C : CongestionGame ι) [Finite C.Profile] :
+    ¬ ∃ path : ℕ → C.Profile,
+        ∀ n, ImprovingStep C.toGameForm C.utility (path n) (path (n + 1)) := by
+  letI : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
   exact C.isExactPotential.no_infinite_improving_path
 
-open Classical in
-/-- Better-response dynamics in a congestion game reach a Nash equilibrium
-from every starting profile. -/
-theorem weaklyAcyclic (C : CongestionGame ι)
-    [∀ i, Finite (C.StrategySet i)] :
-    C.toKernelGame.WeaklyAcyclic := by
-  haveI : ∀ i, Finite (C.toKernelGame.Strategy i) := ‹∀ i, Finite (C.StrategySet i)›
-  haveI : Finite (KernelGame.Profile C.toKernelGame) := Pi.finite
+/-- Every finite congestion game is weakly acyclic under strict unilateral
+expected-utility improvements. -/
+theorem weaklyAcyclic [Fintype ι] [DecidableEq ι]
+    (C : CongestionGame ι) [Finite C.Profile] :
+    WeaklyAcyclic C.toGameForm C.utility := by
+  letI : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
   exact C.isExactPotential.weaklyAcyclic
 
 end CongestionGame

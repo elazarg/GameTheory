@@ -1,0 +1,148 @@
+/-
+Hostile finite consumer for the fictitious-play trajectory interface.
+
+The alternating history gives non-point-mass empirical beliefs, while the
+constant coordination history proves the best-response recurrence through the
+canonical pure-to-mixed Nash bridge.
+-/
+
+import GameTheory.Core.FictitiousPlay
+
+noncomputable section
+
+namespace GameTheory.Tests.FictitiousPlay
+
+open Probability
+
+@[reducible]
+def signature : GameSignature (Fin 2) where
+  Strategy _ := Bool
+  Outcome := Bool × Bool
+
+@[reducible]
+def form : GameForm (Fin 2) :=
+  GameForm.deterministic signature fun profile => (profile 0, profile 1)
+
+def utility (outcome : Bool × Bool) (_who : Fin 2) : ℝ :=
+  if outcome.1 = outcome.2 then 1 else 0
+
+@[reducible]
+def game : UtilityGame (Fin 2) where
+  form := form
+  utility := utility
+
+def coordinated : Profile signature := fun _ => false
+
+def constantHistory (_round : ℕ) : Profile signature := coordinated
+
+def alternatingHistory (round : ℕ) : Profile signature :=
+  fun _ => round % 2 = 1
+
+def trueValue (action : Bool) : ℝ := if action then 1 else 0
+
+/-- Two alternating observations produce a genuinely mixed empirical law. -/
+theorem alternating_prob_true :
+    (game.form.empiricalMarginal alternatingHistory 0 2).prob true = 1 / 2 := by
+  rw [game.form.empiricalMarginal_prob]
+  have hcard :
+      ((Finset.univ.filter fun round : Fin 2 => round.val % 2 = 1).card) = 1 := by
+    decide
+  simp [alternatingHistory, hcard]
+
+/-- The running-average recurrence sees the new false observation: after
+`false, true, false`, the expected Boolean value is `1/3`. -/
+theorem alternating_expect_three :
+    (game.form.empiricalMarginal alternatingHistory 0 3).expect trueValue = 1 / 3 := by
+  rw [game.form.empiricalMarginal_expect]
+  rw [Fin.sum_univ_succ, Fin.sum_univ_succ, Fin.sum_univ_one]
+  norm_num [alternatingHistory, trueValue]
+
+/-- The successor theorem specializes to the nonconstant alternating trace. -/
+theorem alternating_successor_identity :
+    (game.form.empiricalMarginal alternatingHistory 0 3).expect trueValue =
+      ((1 + 1 : ℝ) / (1 + 2 : ℝ)) *
+          (game.form.empiricalMarginal alternatingHistory 0 2).expect trueValue +
+        (1 / (1 + 2 : ℝ)) * trueValue (alternatingHistory 2 0) :=
+  by
+    convert game.form.empiricalMarginal_succ_expect alternatingHistory 0 1 trueValue using 1
+    all_goals norm_num
+
+/-- Coordinating on `false` is a pure Nash profile. -/
+theorem coordinated_isNash :
+    IsNash game.form (euPreference game.utility) coordinated := by
+  rw [isNash_iff]
+  intro who replacement
+  rw [euPreference_apply]
+  simp only [game, form, expectedUtility_pure, coordinated]
+  unfold utility
+  split <;> norm_num
+
+/-- Every positive-horizon empirical belief of the constant history is the
+canonical pure embedding of the coordinated profile. -/
+theorem constant_empiricalBelief (t : ℕ) :
+    game.form.empiricalBelief constantHistory (t + 1) = game.form.purify coordinated := by
+  funext who
+  simpa only [GameForm.empiricalBelief, GameForm.empiricalMarginal,
+    constantHistory, coordinated, GameForm.purify] using
+      FinDist.map_const (FinDist.uniformFin (t + 1)) false
+
+/-- The constant coordination path is genuine fictitious play.  The proof does
+not unfold a second payoff comparison: it consumes the canonical mixed Nash
+best-response theorem. -/
+theorem constant_isFictitiousPlay : game.IsFictitiousPlay constantHistory := by
+  intro t who
+  have hmixed := coordinated_isNash.purify
+  rw [isNash_iff_isBestResponse] at hmixed
+  rw [constant_empiricalBelief]
+  have hplayed : FinDist.pure (constantHistory (t + 1) who) =
+      game.form.purify coordinated who := rfl
+  rw [hplayed]
+  exact hmixed who
+
+/-- The general finite existence theorem constructs a fictitious-play history
+without assuming that a Nash equilibrium or constant best-response path is
+already known. -/
+theorem exists_generatedFictitiousPlay :
+    ∃ history : ℕ → Profile game.form.sig, game.IsFictitiousPlay history :=
+  game.exists_isFictitiousPlay
+
+/-- Alternating away from the initially coordinated action is not fictitious
+play: in round one, `true` is not a best response to the empirical all-false
+profile. -/
+theorem alternating_not_isFictitiousPlay :
+    ¬ game.IsFictitiousPlay alternatingHistory := by
+  intro hplay
+  have hempirical :
+      game.form.empiricalBelief alternatingHistory 1 =
+        game.form.purify coordinated := by
+    funext who
+    show FinDist.map (fun round : Fin 1 => alternatingHistory round who)
+        (FinDist.uniformFin 1) = FinDist.pure false
+    rw [show (fun round : Fin 1 => alternatingHistory round who) =
+        fun _ => false by
+      funext round
+      have hround : round = 0 := Subsingleton.elim _ _
+      subst round
+      rfl]
+    exact FinDist.map_const (FinDist.uniformFin 1) false
+  have hbest := hplay 0 0 (FinDist.pure false)
+  rw [hempirical] at hbest
+  have hplayed : alternatingHistory 1 0 = true := by
+    norm_num [alternatingHistory]
+  rw [hplayed] at hbest
+  have hbest' :
+      expectedUtility game.utility 0
+          (game.form.mixed.play
+            (Profile.update (game.form.purify coordinated) 0
+              (FinDist.pure false))) ≤
+        expectedUtility game.utility 0
+          (game.form.mixed.play
+            (Profile.update (game.form.purify coordinated) 0
+              (FinDist.pure true))) := by
+    simpa only [euPreference_apply] using hbest
+  rw [purify_update, purify_update,
+    GameForm.mixed_play_purify, GameForm.mixed_play_purify,
+    expectedUtility_pure, expectedUtility_pure] at hbest'
+  norm_num [game, form, utility, coordinated, Profile.update] at hbest'
+
+end GameTheory.Tests.FictitiousPlay

@@ -4,31 +4,8 @@ open Lake DSL
 
 abbrev gameTheoryLeanOptions : Array LeanOption := #[
   ⟨`pp.unicode.fun, true⟩,
+  ⟨`warningAsError, true⟩,
   ⟨`relaxedAutoImplicit, false⟩,
-  ⟨`weak.linter.flexible, true⟩,
-  ⟨`weak.linter.hashCommand, true⟩,
-  ⟨`weak.linter.oldObtain, true⟩,
-  ⟨`weak.linter.privateModule, true⟩,
-  ⟨`weak.linter.style.cases, true⟩,
-  ⟨`weak.linter.style.induction, true⟩,
-  ⟨`weak.linter.style.refine, true⟩,
-  ⟨`weak.linter.style.cdot, true⟩,
-  ⟨`weak.linter.style.docString, true⟩,
-  ⟨`weak.linter.style.dollarSyntax, true⟩,
-  ⟨`weak.linter.style.emptyLine, true⟩,
-  ⟨`weak.linter.style.lambdaSyntax, true⟩,
-  ⟨`weak.linter.style.longLine, true⟩,
-  ⟨`weak.linter.style.longFile, true⟩,
-  ⟨`weak.linter.style.multiGoal, true⟩,
-  ⟨`weak.linter.style.nativeDecide, true⟩,
-  ⟨`weak.linter.style.openClassical, true⟩,
-  ⟨`weak.linter.style.maxHeartbeats, true⟩,
-  ⟨`weak.linter.style.missingEnd, true⟩,
-  ⟨`weak.linter.style.setOption, true⟩,
-  ⟨`weak.linter.style.show, true⟩,
-  ⟨`weak.linter.style.whitespace, true⟩,
-  ⟨`weak.linter.unusedDecidableInType, true⟩,
-  ⟨`weak.linter.unusedFintypeInType, true⟩,
   ⟨`maxSynthPendingDepth, .ofNat 3⟩
 ]
 
@@ -38,28 +15,24 @@ package GameTheory where
   fixedToolchain := true
 
 require "leanprover-community" / "mathlib" @ git "v4.32.2"
-require FixedPointTheorems from "fixed-point-theorems-lean4"
 
+/-- Brouwer's and Kakutani's fixed-point theorems, which Mathlib does not carry.
+Only the analytic root may import from it; the semantic core and the sequential
+layer are kept free of it, and that separation is checked rather than trusted. -/
+require «fixed-point-theorems» from git
+  "https://github.com/elazarg/fixed-point-theorems-lean4" @
+    "9571dd7e0ff0af9c9e9becb2738a309cf48387c1"
+
+/-- The public library target. `andSubmodules` makes `lake build` a real phase
+gate: examples, architecture tests, and experiments must compile too. -/
 @[default_target]
 lean_lib GameTheory where
+  globs := #[.andSubmodules `GameTheory]
   leanOptions := gameTheoryLeanOptions
 
+/-- Game-independent mathematics extracted by validated library slices. This
+target must remain importable without importing game semantics. -/
 @[default_target]
-lean_lib Math where
-  srcDir := "."
-  leanOptions := gameTheoryLeanOptions
-
-@[default_target]
-lean_lib GameTheoryExamples where
-  srcDir := "."
-  leanOptions := gameTheoryLeanOptions
-
-@[default_target]
-lean_lib GameTheoryTest where
-  srcDir := "."
-  leanOptions := gameTheoryLeanOptions
-
-@[default_target]
-lean_lib Semantics where
-  srcDir := "."
+lean_lib GameTheoryMath where
+  globs := #[.andSubmodules `GameTheoryMath]
   leanOptions := gameTheoryLeanOptions

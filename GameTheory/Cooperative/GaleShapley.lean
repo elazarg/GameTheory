@@ -1,572 +1,571 @@
 /-
-Copyright (c) 2025 GameTheory contributors. All rights reserved.
-Released under the MIT license as described in the file LICENSE.
-Authors: GameTheory contributors
+# Gale--Shapley deferred acceptance
+
+The algorithm is an inflationary rejection process.  Its data are finite only
+at this operation layer; the underlying ordinal market remains capability-free
+and uses relation-valued rankings directly.
+
+Primary reference: D. Gale and L. S. Shapley, “College Admissions and the
+Stability of Marriage,” *American Mathematical Monthly* 69 (1962).
+
+This module proves stable matching existence and balanced perfectness.
+Proposer optimality, lattice structure, rural-hospitals results, and
+strategyproofness remain separate theorem packages.
 -/
+
 import GameTheory.Cooperative.Matching
-
-/-!
-# Gale–Shapley deferred acceptance and stable-matching existence
-
-The men-proposing deferred-acceptance algorithm, formalized as an **inflationary
-rejection operator** on `R : α → Finset β` (the women who have rejected each man).
-Iterating from `∅` reaches a fixed point (a bounded, strictly-increasing measure
-forces termination), and the fixed-point matching is stable.
-
-Assumes finitely many agents and **strict preferences** (each agent's preference
-function is injective).
-
-## Main result
-
-* `MatchingMarket.exists_stable` — every finite market with strict preferences has a
-  stable matching.
--/
-
-open scoped BigOperators
+import Mathlib.Data.Fintype.Card
+import Mathlib.Data.Fintype.BigOperators
+import Mathlib.Logic.Equiv.Fintype
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
 
 namespace GameTheory
 
+open scoped BigOperators
+
 namespace MatchingMarket
 
-variable {α β : Type} [Fintype α] [Fintype β] (M : MatchingMarket α β)
+universe uLeft uRight
 
-/-- Woman `b` is acceptable to man `a`. -/
-abbrev accW (a : α) (b : β) : Prop := M.reserveA a ≤ M.prefA a b
+variable {Left : Type uLeft} {Right : Type uRight}
 
-/-- Man `a` is acceptable to woman `b`. -/
-abbrev accM (b : β) (a : α) : Prop := M.reserveB b ≤ M.prefB b a
+/-- The order laws needed by deferred acceptance, kept as a theorem-level
+certificate rather than stored in the market. -/
+structure HasLinearPreferences (market : MatchingMarket Left Right) : Prop where
+  left : Preference.Linear market.prefersLeft
+  right : Preference.Linear market.prefersRight
 
-open Classical in
-/-- Women acceptable to `a` who have not yet rejected him. -/
-noncomputable def available (R : α → Finset β) (a : α) : Finset β :=
-  Finset.univ.filter (fun b => b ∉ R a ∧ M.accW a b)
+variable [Fintype Left] [Fintype Right]
+  (market : MatchingMarket Left Right)
 
-open Classical in
-/-- Man `a`'s most-preferred available woman, if any. -/
-noncomputable def topChoice (R : α → Finset β) (a : α) : Option β :=
-  if h : (M.available R a).Nonempty then
-    some (Finset.exists_max_image (M.available R a) (M.prefA a) h).choose
-  else none
+/-- A right-side agent is acceptable to a left-side agent. -/
+abbrev AcceptableToLeft (left : Left) (right : Right) : Prop :=
+  market.prefersLeft left (some right) none
 
-open Classical in
-/-- Men currently proposing to `b` whom she finds acceptable. -/
-noncomputable def suitors (R : α → Finset β) (b : β) : Finset α :=
-  Finset.univ.filter (fun a => M.topChoice R a = some b ∧ M.accM b a)
+/-- A left-side agent is acceptable to a right-side agent. -/
+abbrev AcceptableToRight (right : Right) (left : Left) : Prop :=
+  market.prefersRight right (some left) none
 
 open Classical in
-/-- The man `b` currently holds: her favorite acceptable suitor, if any. -/
-noncomputable def holder (R : α → Finset β) (b : β) : Option α :=
-  if h : (M.suitors R b).Nonempty then
-    some (Finset.exists_max_image (M.suitors R b) (M.prefB b) h).choose
-  else none
+/-- Acceptable partners who have not rejected `left`. -/
+noncomputable def available
+    (rejected : Left → Finset Right) (left : Left) : Finset Right :=
+  Finset.univ.filter fun right =>
+    right ∉ rejected left ∧ market.AcceptableToLeft left right
 
-open Classical in
-/-- One deferred-acceptance round: each woman rejects every current proposer she
-does not hold. -/
-noncomputable def daStep (R : α → Finset β) : α → Finset β := fun a =>
-  R a ∪ Finset.univ.filter (fun b => M.topChoice R a = some b ∧ M.holder R b ≠ some a)
-
-/-! ### Specifications of `topChoice` and `holder` -/
-
-omit [Fintype α] in
-theorem mem_available {R : α → Finset β} {a : α} {b : β} :
-    b ∈ M.available R a ↔ b ∉ R a ∧ M.accW a b := by
+omit [Fintype Left] in
+theorem mem_available
+    {rejected : Left → Finset Right} {left : Left} {right : Right} :
+    right ∈ market.available rejected left ↔
+      right ∉ rejected left ∧ market.AcceptableToLeft left right := by
   classical
   simp [available]
 
-omit [Fintype α] in
-/-- If `a`'s top choice is `b`, then `b` is available and weakly preferred to every
-available woman. -/
-theorem topChoice_spec {R : α → Finset β} {a : α} {b : β}
-    (h : M.topChoice R a = some b) :
-    b ∈ M.available R a ∧ ∀ b' ∈ M.available R a, M.prefA a b' ≤ M.prefA a b := by
+omit [Fintype Left] in
+private theorem exists_best_available
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {left : Left}
+    (hne : (market.available rejected left).Nonempty) :
+    ∃ best ∈ market.available rejected left,
+      ∀ alternative ∈ market.available rejected left,
+        market.prefersLeft left (some best) (some alternative) := by
+  exact Rank.exists_best_finset
+    (fun first middle last h₁ h₂ =>
+      (linear.left left).2.1 (some first) (some middle) (some last) h₁ h₂)
+    (fun first second =>
+      (linear.left left).2.2.1 (some first) (some second)) hne
+
+open Classical in
+/-- The best currently available partner, if one exists. -/
+noncomputable def topChoice
+    (linear : market.HasLinearPreferences)
+    (rejected : Left → Finset Right) (left : Left) : Option Right :=
+  if hne : (market.available rejected left).Nonempty then
+    some (Classical.choose (market.exists_best_available linear hne))
+  else
+    none
+
+omit [Fintype Left] in
+theorem topChoice_spec
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {left : Left} {right : Right}
+    (hchoice : market.topChoice linear rejected left = some right) :
+    right ∈ market.available rejected left ∧
+      ∀ alternative ∈ market.available rejected left,
+        market.prefersLeft left (some right) (some alternative) := by
   classical
-  unfold topChoice at h
-  split_ifs at h with hne
-  obtain ⟨hmem, hmax⟩ := (Finset.exists_max_image (M.available R a) (M.prefA a) hne).choose_spec
-  have hb : (Finset.exists_max_image (M.available R a) (M.prefA a) hne).choose = b :=
-    Option.some.inj h
-  rw [hb] at hmem hmax
-  exact ⟨hmem, hmax⟩
+  unfold topChoice at hchoice
+  split at hchoice
+  next hne =>
+    have hspec := Classical.choose_spec (market.exists_best_available linear hne)
+    have heq : Classical.choose (market.exists_best_available linear hne) = right :=
+      Option.some.inj hchoice
+    simpa [heq] using hspec
+  next hne => simp at hchoice
 
-omit [Fintype α] in
-theorem topChoice_mem {R : α → Finset β} {a : α} {b : β}
-    (h : M.topChoice R a = some b) : b ∈ M.available R a :=
-  (M.topChoice_spec h).1
+omit [Fintype Left] in
+theorem topChoice_mem
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {left : Left} {right : Right}
+    (hchoice : market.topChoice linear rejected left = some right) :
+    right ∈ market.available rejected left :=
+  (market.topChoice_spec linear hchoice).1
 
-omit [Fintype α] in
-/-- A man's top choice is acceptable to him. -/
-theorem accW_of_topChoice {R : α → Finset β} {a : α} {b : β}
-    (h : M.topChoice R a = some b) : M.accW a b :=
-  (M.mem_available.mp (M.topChoice_mem h)).2
+omit [Fintype Left] in
+theorem acceptableToLeft_of_topChoice
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {left : Left} {right : Right}
+    (hchoice : market.topChoice linear rejected left = some right) :
+    market.AcceptableToLeft left right :=
+  (market.mem_available.mp (market.topChoice_mem linear hchoice)).2
 
-theorem mem_suitors {R : α → Finset β} {a : α} {b : β} :
-    a ∈ M.suitors R b ↔ M.topChoice R a = some b ∧ M.accM b a := by
+open Classical in
+/-- Acceptable left-side agents currently proposing to `right`. -/
+noncomputable def suitors
+    (linear : market.HasLinearPreferences)
+    (rejected : Left → Finset Right) (right : Right) : Finset Left :=
+  Finset.univ.filter fun left =>
+    market.topChoice linear rejected left = some right ∧
+      market.AcceptableToRight right left
+
+theorem mem_suitors
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {left : Left} {right : Right} :
+    left ∈ market.suitors linear rejected right ↔
+      market.topChoice linear rejected left = some right ∧
+        market.AcceptableToRight right left := by
   classical
   simp [suitors]
 
-/-- If `b` holds `a`, then `a` is a suitor she weakly prefers to every suitor. -/
-theorem holder_spec {R : α → Finset β} {b : β} {a : α}
-    (h : M.holder R b = some a) :
-    a ∈ M.suitors R b ∧ ∀ a' ∈ M.suitors R b, M.prefB b a' ≤ M.prefB b a := by
-  classical
-  unfold holder at h
-  split_ifs at h with hne
-  obtain ⟨hmem, hmax⟩ := (Finset.exists_max_image (M.suitors R b) (M.prefB b) hne).choose_spec
-  have ha : (Finset.exists_max_image (M.suitors R b) (M.prefB b) hne).choose = a :=
-    Option.some.inj h
-  rw [ha] at hmem hmax
-  exact ⟨hmem, hmax⟩
+private theorem exists_best_suitor
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {right : Right}
+    (hne : (market.suitors linear rejected right).Nonempty) :
+    ∃ best ∈ market.suitors linear rejected right,
+      ∀ alternative ∈ market.suitors linear rejected right,
+        market.prefersRight right (some best) (some alternative) := by
+  exact Rank.exists_best_finset
+    (fun first middle last h₁ h₂ =>
+      (linear.right right).2.1 (some first) (some middle) (some last) h₁ h₂)
+    (fun first second =>
+      (linear.right right).2.2.1 (some first) (some second)) hne
 
-/-- If `b` has any acceptable suitor, she holds someone. -/
-theorem holder_isSome_of_suitors {R : α → Finset β} {b : β}
-    (h : (M.suitors R b).Nonempty) : (M.holder R b).isSome := by
-  classical
-  simp only [holder, dif_pos h, Option.isSome_some]
+open Classical in
+/-- The best acceptable suitor currently held by `right`, if any. -/
+noncomputable def holder
+    (linear : market.HasLinearPreferences)
+    (rejected : Left → Finset Right) (right : Right) : Option Left :=
+  if hne : (market.suitors linear rejected right).Nonempty then
+    some (Classical.choose (market.exists_best_suitor linear hne))
+  else
+    none
 
-/-- The deferred-acceptance operator is inflationary: it only ever adds rejections. -/
-theorem subset_daStep (R : α → Finset β) (a : α) : R a ⊆ M.daStep R a := by
+theorem holder_spec
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {right : Right} {left : Left}
+    (hholder : market.holder linear rejected right = some left) :
+    left ∈ market.suitors linear rejected right ∧
+      ∀ alternative ∈ market.suitors linear rejected right,
+        market.prefersRight right (some left) (some alternative) := by
+  classical
+  unfold holder at hholder
+  split at hholder
+  next hne =>
+    have hspec := Classical.choose_spec (market.exists_best_suitor linear hne)
+    have heq : Classical.choose (market.exists_best_suitor linear hne) = left :=
+      Option.some.inj hholder
+    simpa [heq] using hspec
+  next hne => simp at hholder
+
+theorem holder_isSome_of_suitors
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {right : Right}
+    (hne : (market.suitors linear rejected right).Nonempty) :
+    (market.holder linear rejected right).isSome := by
+  classical
+  simp [holder, hne]
+
+/-- A specified greatest suitor is the uniquely held suitor. -/
+theorem holder_eq_of_isBest
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {right : Right} {left : Left}
+    (hmem : left ∈ market.suitors linear rejected right)
+    (hbest : ∀ alternative ∈ market.suitors linear rejected right,
+      market.prefersRight right (some left) (some alternative)) :
+    market.holder linear rejected right = some left := by
+  classical
+  have hne : (market.suitors linear rejected right).Nonempty := ⟨left, hmem⟩
+  obtain ⟨held, hheld⟩ :
+      ∃ held, market.holder linear rejected right = some held := by
+    unfold holder
+    rw [dif_pos hne]
+    exact ⟨_, rfl⟩
+  obtain ⟨hheldMem, hheldBest⟩ := market.holder_spec linear hheld
+  have heq : held = left := Option.some.inj <|
+    (linear.right right).2.2.2 (some held) (some left)
+      (hheldBest left hmem) (hbest held hheldMem)
+  simpa [heq] using hheld
+
+open Classical in
+/-- One simultaneous deferred-acceptance round. -/
+noncomputable def daStep
+    (linear : market.HasLinearPreferences)
+    (rejected : Left → Finset Right) : Left → Finset Right :=
+  fun left => rejected left ∪ Finset.univ.filter fun right =>
+    market.topChoice linear rejected left = some right ∧
+      market.holder linear rejected right ≠ some left
+
+theorem subset_daStep
+    (linear : market.HasLinearPreferences)
+    (rejected : Left → Finset Right) (left : Left) :
+    rejected left ⊆ market.daStep linear rejected left := by
   classical
   exact Finset.subset_union_left
 
-/-! ### Termination to a fixed point -/
+/-! ## Termination -/
 
-/-- The total number of rejections accrued so far. -/
-noncomputable def daMeasure (R : α → Finset β) : ℕ := ∑ a, (R a).card
+/-- Total rejections accrued by a state. -/
+noncomputable def daMeasure (rejected : Left → Finset Right) : ℕ :=
+  ∑ left, (rejected left).card
 
-theorem daMeasure_mono (R : α → Finset β) :
-    daMeasure R ≤ daMeasure (M.daStep R) := by
+theorem daMeasure_mono
+    (linear : market.HasLinearPreferences)
+    (rejected : Left → Finset Right) :
+    daMeasure rejected ≤ daMeasure (market.daStep linear rejected) := by
   unfold daMeasure
-  exact Finset.sum_le_sum fun a _ => Finset.card_le_card (M.subset_daStep R a)
+  exact Finset.sum_le_sum fun left _ =>
+    Finset.card_le_card (market.subset_daStep linear rejected left)
 
-theorem daMeasure_le (R : α → Finset β) :
-    daMeasure R ≤ Fintype.card α * Fintype.card β := by
+theorem daMeasure_le (rejected : Left → Finset Right) :
+    daMeasure rejected ≤ Fintype.card Left * Fintype.card Right := by
   classical
   unfold daMeasure
-  calc ∑ a, (R a).card ≤ ∑ _a : α, Fintype.card β :=
-        Finset.sum_le_sum fun a _ => by
-          simpa using Finset.card_le_card (Finset.subset_univ (R a))
-    _ = Fintype.card α * Fintype.card β := by
-        rw [Finset.sum_const, Finset.card_univ, smul_eq_mul]
+  calc
+    ∑ left, (rejected left).card ≤ ∑ _left : Left, Fintype.card Right :=
+      Finset.sum_le_sum fun left _ =>
+        Finset.card_le_card (Finset.subset_univ (rejected left))
+    _ = Fintype.card Left * Fintype.card Right := by
+      rw [Finset.sum_const, Finset.card_univ, Nat.nsmul_eq_mul]
 
-/-- **Deferred acceptance terminates.** Iterating the round operator from the empty
-rejection state reaches a fixed point — exposed here as a specific iterate, so the
-deferred-acceptance invariant can be transported to it. -/
-theorem exists_daStep_iterate_fixed :
-    ∃ n : ℕ, M.daStep (M.daStep^[n] (fun _ => ∅)) = M.daStep^[n] (fun _ => ∅) := by
+/-- Iteration from the empty rejection state reaches a fixed point. -/
+theorem exists_daStep_iterate_fixed
+    (linear : market.HasLinearPreferences) :
+    ∃ rounds : ℕ,
+      market.daStep linear
+          ((market.daStep linear)^[rounds] (fun _ => ∅)) =
+        (market.daStep linear)^[rounds] (fun _ => ∅) := by
   classical
-  set f := M.daStep with hf
-  set R₀ : α → Finset β := fun _ => ∅ with hR0
-  set B := Fintype.card α * Fintype.card β with hB
-  have hmono : ∀ n, daMeasure (f^[n] R₀) ≤ daMeasure (f^[n + 1] R₀) := by
-    intro n
+  let step := market.daStep linear
+  let initial : Left → Finset Right := fun _ => ∅
+  let bound := Fintype.card Left * Fintype.card Right
+  have hmono : ∀ rounds,
+      daMeasure (step^[rounds] initial) ≤
+        daMeasure (step^[rounds + 1] initial) := by
+    intro rounds
     rw [Function.iterate_succ_apply']
-    exact M.daMeasure_mono _
-  have hbdd : ∀ n, daMeasure (f^[n] R₀) ≤ B := fun n => daMeasure_le _
-  have hstop : ∃ n, daMeasure (f^[n + 1] R₀) = daMeasure (f^[n] R₀) := by
-    by_contra hcon
-    have hcon' : ∀ n, daMeasure (f^[n + 1] R₀) ≠ daMeasure (f^[n] R₀) := not_exists.mp hcon
-    have hstrict : ∀ n, daMeasure (f^[n] R₀) < daMeasure (f^[n + 1] R₀) := fun n =>
-      lt_of_le_of_ne (hmono n) (fun he => hcon' n he.symm)
-    have hge : ∀ n, n ≤ daMeasure (f^[n] R₀) := by
-      intro n
-      induction n with
+    exact market.daMeasure_mono linear _
+  have hbounded : ∀ rounds, daMeasure (step^[rounds] initial) ≤ bound :=
+    fun rounds => daMeasure_le _
+  have hstop : ∃ rounds,
+      daMeasure (step^[rounds + 1] initial) =
+        daMeasure (step^[rounds] initial) := by
+    by_contra hnever
+    push Not at hnever
+    have hstrict : ∀ rounds,
+        daMeasure (step^[rounds] initial) <
+          daMeasure (step^[rounds + 1] initial) := fun rounds =>
+      lt_of_le_of_ne (hmono rounds) (fun heq => hnever rounds heq.symm)
+    have hlower : ∀ rounds, rounds ≤ daMeasure (step^[rounds] initial) := by
+      intro rounds
+      induction rounds with
       | zero => exact Nat.zero_le _
-      | succ k ih => have := hstrict k; omega
-    have h1 := hge (B + 1)
-    have h2 := hbdd (B + 1)
+      | succ previous ih =>
+          have := hstrict previous
+          omega
+    have := hlower (bound + 1)
+    have := hbounded (bound + 1)
     omega
-  obtain ⟨n, hn⟩ := hstop
-  refine ⟨n, ?_⟩
-  have hsub : ∀ a, (f^[n] R₀) a ⊆ f (f^[n] R₀) a := fun a => M.subset_daStep _ a
-  have hle : ∀ a ∈ (Finset.univ : Finset α),
-      ((f^[n] R₀) a).card ≤ (f (f^[n] R₀) a).card :=
-    fun a _ => Finset.card_le_card (hsub a)
-  have hmeq : ∑ a, ((f^[n] R₀) a).card = ∑ a, (f (f^[n] R₀) a).card := by
-    have h := hn
-    rw [Function.iterate_succ_apply'] at h
-    simpa only [daMeasure] using h.symm
-  have hcardeq := (Finset.sum_eq_sum_iff_of_le hle).mp hmeq
-  funext a
-  exact (Finset.eq_of_subset_of_card_le (hsub a)
-    (le_of_eq (hcardeq a (Finset.mem_univ a)).symm)).symm
+  obtain ⟨rounds, hmeasure⟩ := hstop
+  refine ⟨rounds, ?_⟩
+  have hsubset : ∀ left,
+      (step^[rounds] initial) left ⊆ step (step^[rounds] initial) left :=
+    fun left => market.subset_daStep linear _ left
+  have hcard : ∀ left ∈ (Finset.univ : Finset Left),
+      ((step^[rounds] initial) left).card ≤
+        (step (step^[rounds] initial) left).card :=
+    fun left _ => Finset.card_le_card (hsubset left)
+  have hsums :
+      ∑ left, ((step^[rounds] initial) left).card =
+        ∑ left, (step (step^[rounds] initial) left).card := by
+    rw [Function.iterate_succ_apply'] at hmeasure
+    simpa only [daMeasure] using hmeasure.symm
+  have hcards := (Finset.sum_eq_sum_iff_of_le hcard).mp hsums
+  funext left
+  exact (Finset.eq_of_subset_of_card_le (hsubset left)
+    (le_of_eq (hcards left (Finset.mem_univ left)).symm)).symm
 
-/-! ### The fixed-point matching is a matching and is individually rational -/
+/-! ## Fixed-point structure -/
 
-/-- At a fixed point, if `a` proposes to `b` then `b` holds `a`: the proposal is
-not rejected. -/
-theorem fixedPoint_holder {R : α → Finset β} (hR : M.daStep R = R) {a : α} {b : β}
-    (h : M.topChoice R a = some b) : M.holder R b = some a := by
+theorem fixedPoint_holder
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right}
+    (hfixed : market.daStep linear rejected = rejected)
+    {left : Left} {right : Right}
+    (hchoice : market.topChoice linear rejected left = some right) :
+    market.holder linear rejected right = some left := by
   classical
-  by_contra hne
-  have hb_notin : b ∉ R a := (M.mem_available.mp (M.topChoice_mem h)).1
-  have hb_in : b ∈ M.daStep R a := by
-    simp only [daStep, Finset.mem_union, Finset.mem_filter, Finset.mem_univ, true_and]
-    exact Or.inr ⟨h, hne⟩
-  rw [hR] at hb_in
-  exact hb_notin hb_in
+  by_contra hholder
+  have hnotRejected : right ∉ rejected left :=
+    (market.mem_available.mp (market.topChoice_mem linear hchoice)).1
+  have hnew : right ∈ market.daStep linear rejected left := by
+    simp [daStep, hchoice, hholder]
+  have heq := congrFun hfixed left
+  rw [heq] at hnew
+  exact hnotRejected hnew
 
-/-- The fixed-point matching: each man is assigned his top remaining choice. -/
-theorem fixedPoint_isMatching {R : α → Finset β} (hR : M.daStep R = R) :
-    IsMatching (fun a => M.topChoice R a) := by
-  intro a₁ a₂ b h₁ h₂
-  have e1 := M.fixedPoint_holder hR h₁
-  have e2 := M.fixedPoint_holder hR h₂
-  rw [e1] at e2
-  exact Option.some.inj e2
+theorem fixedPoint_isMatching
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right}
+    (hfixed : market.daStep linear rejected = rejected) :
+    IsMatching (fun left => market.topChoice linear rejected left) := by
+  intro left₁ left₂ right h₁ h₂
+  have hh₁ := market.fixedPoint_holder linear hfixed h₁
+  have hh₂ := market.fixedPoint_holder linear hfixed h₂
+  rw [hh₁] at hh₂
+  exact Option.some.inj hh₂
 
-/-- The fixed-point matching is individually rational. -/
-theorem fixedPoint_ir {R : α → Finset β} (hR : M.daStep R = R) (a : α) (b : β)
-    (h : M.topChoice R a = some b) :
-    M.prefA a b ≥ M.reserveA a ∧ M.prefB b a ≥ M.reserveB b := by
-  refine ⟨M.accW_of_topChoice h, ?_⟩
-  have hhold := M.fixedPoint_holder hR h
-  exact (M.mem_suitors.mp (M.holder_spec hhold).1).2
+theorem fixedPoint_individuallyRational
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right}
+    (hfixed : market.daStep linear rejected = rejected) :
+    market.IsIndividuallyRational
+      (fun left => market.topChoice linear rejected left) := by
+  intro left right hchoice
+  refine ⟨market.acceptableToLeft_of_topChoice linear hchoice, ?_⟩
+  have hholder := market.fixedPoint_holder linear hfixed hchoice
+  exact (market.mem_suitors linear).mp (market.holder_spec linear hholder).1 |>.2
 
-/-! ### The deferred-acceptance improvement invariant (needs strict preferences) -/
-
-omit [Fintype α] in
-/-- Under strict preferences the top choice is the *unique* maximizer of `prefA a`
-over the available women. -/
-theorem topChoice_eq_of_isMax {R : α → Finset β} {a : α} {b : β}
-    (hinj : Function.Injective (M.prefA a)) (hb : b ∈ M.available R a)
-    (hmax : ∀ b' ∈ M.available R a, M.prefA a b' ≤ M.prefA a b) :
-    M.topChoice R a = some b := by
+theorem available_daStep_subset
+    (linear : market.HasLinearPreferences)
+    (rejected : Left → Finset Right) (left : Left) :
+    market.available (market.daStep linear rejected) left ⊆
+      market.available rejected left := by
   classical
-  have hne : (M.available R a).Nonempty := ⟨b, hb⟩
-  obtain ⟨b', hb'⟩ : ∃ b', M.topChoice R a = some b' := by
-    unfold topChoice; rw [dif_pos hne]; exact ⟨_, rfl⟩
-  obtain ⟨hmem', hmax'⟩ := M.topChoice_spec hb'
-  have : b' = b := hinj (le_antisymm (hmax b' hmem') (hmax' b hb))
-  rw [hb', this]
+  intro right hright
+  rw [mem_available] at hright ⊢
+  exact ⟨fun h => hright.1 (market.subset_daStep linear rejected left h), hright.2⟩
 
-/-- A deferred-acceptance round only removes women from a man's available set. -/
-theorem available_daStep_subset (R : α → Finset β) (a : α) :
-    M.available (M.daStep R) a ⊆ M.available R a := by
+omit [Fintype Left] in
+theorem topChoice_eq_of_isBest
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {left : Left} {right : Right}
+    (hmem : right ∈ market.available rejected left)
+    (hbest : ∀ alternative ∈ market.available rejected left,
+      market.prefersLeft left (some right) (some alternative)) :
+    market.topChoice linear rejected left = some right := by
   classical
-  intro b hb
-  rw [mem_available] at hb ⊢
-  exact ⟨fun h => hb.1 (M.subset_daStep R a h), hb.2⟩
+  have hne : (market.available rejected left).Nonempty := ⟨right, hmem⟩
+  obtain ⟨chosen, hchosen⟩ :
+      ∃ chosen, market.topChoice linear rejected left = some chosen := by
+    unfold topChoice
+    rw [dif_pos hne]
+    exact ⟨_, rfl⟩
+  obtain ⟨hchosenMem, hchosenBest⟩ := market.topChoice_spec linear hchosen
+  have heq : chosen = right := Option.some.inj <|
+    (linear.left left).2.2.2 (some chosen) (some right)
+      (hchosenBest right hmem) (hbest chosen hchosenMem)
+  simpa [heq] using hchosen
 
-/-- A woman never rejects the man she holds: the holder keeps proposing to her after
-a round (using strict preferences to pin his top choice). -/
-theorem holder_remains_suitor {R : α → Finset β} {b : β} {a'' : α}
-    (hinj : Function.Injective (M.prefA a'')) (h : M.holder R b = some a'') :
-    a'' ∈ M.suitors (M.daStep R) b := by
+theorem holder_remains_suitor
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {right : Right} {left : Left}
+    (hholder : market.holder linear rejected right = some left) :
+    left ∈ market.suitors linear (market.daStep linear rejected) right := by
   classical
-  obtain ⟨htop, hacc⟩ := M.mem_suitors.mp (M.holder_spec h).1
-  have hb_avail_R : b ∈ M.available R a'' := M.topChoice_mem htop
-  have hb_notin_step : b ∉ M.daStep R a'' := by
-    simp only [daStep, Finset.mem_union, Finset.mem_filter, Finset.mem_univ, true_and, not_or]
-    exact ⟨(M.mem_available.mp hb_avail_R).1, fun hcon => hcon.2 h⟩
-  have hb_avail_step : b ∈ M.available (M.daStep R) a'' :=
-    M.mem_available.mpr ⟨hb_notin_step, (M.mem_available.mp hb_avail_R).2⟩
-  have htop_step : M.topChoice (M.daStep R) a'' = some b :=
-    M.topChoice_eq_of_isMax hinj hb_avail_step
-      (fun b' hb' => (M.topChoice_spec htop).2 b' (M.available_daStep_subset R a'' hb'))
-  exact M.mem_suitors.mpr ⟨htop_step, hacc⟩
+  obtain ⟨hchoice, hacceptable⟩ :=
+    (market.mem_suitors linear).mp (market.holder_spec linear hholder).1
+  have havailable : right ∈ market.available rejected left :=
+    market.topChoice_mem linear hchoice
+  have hnotRejected : right ∉ market.daStep linear rejected left := by
+    simp only [daStep, Finset.mem_union, Finset.mem_filter, Finset.mem_univ,
+      true_and, not_or]
+    exact ⟨(market.mem_available.mp havailable).1,
+      fun hnew => hnew.2 hholder⟩
+  have havailableStep :
+      right ∈ market.available (market.daStep linear rejected) left :=
+    market.mem_available.mpr
+      ⟨hnotRejected, (market.mem_available.mp havailable).2⟩
+  have hchoiceStep :
+      market.topChoice linear (market.daStep linear rejected) left = some right :=
+    market.topChoice_eq_of_isBest linear havailableStep fun alternative halt =>
+      (market.topChoice_spec linear hchoice).2 alternative
+        (market.available_daStep_subset linear rejected left halt)
+  exact (market.mem_suitors linear).mpr ⟨hchoiceStep, hacceptable⟩
 
-/-- A woman's held partner only improves across rounds. -/
-theorem holder_improve {R : α → Finset β} {b : β} {a'' : α}
-    (hinj : Function.Injective (M.prefA a'')) (h : M.holder R b = some a'') :
-    ∃ a''', M.holder (M.daStep R) b = some a''' ∧ M.prefB b a'' ≤ M.prefB b a''' := by
+theorem holder_improves
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right} {right : Right} {left : Left}
+    (hholder : market.holder linear rejected right = some left) :
+    ∃ next,
+      market.holder linear (market.daStep linear rejected) right = some next ∧
+        market.prefersRight right (some next) (some left) := by
   classical
-  have hsuit : a'' ∈ M.suitors (M.daStep R) b := M.holder_remains_suitor hinj h
-  obtain ⟨a''', ha'''⟩ : ∃ a''', M.holder (M.daStep R) b = some a''' :=
-    Option.isSome_iff_exists.mp (M.holder_isSome_of_suitors ⟨a'', hsuit⟩)
-  exact ⟨a''', ha''', (M.holder_spec ha''').2 a'' hsuit⟩
+  have hsuitor := market.holder_remains_suitor linear hholder
+  obtain ⟨next, hnext⟩ : ∃ next,
+      market.holder linear (market.daStep linear rejected) right = some next :=
+    Option.isSome_iff_exists.mp
+      (market.holder_isSome_of_suitors linear ⟨left, hsuitor⟩)
+  exact ⟨next, hnext, (market.holder_spec linear hnext).2 left hsuitor⟩
 
-/-- The **deferred-acceptance invariant**: every woman who has rejected a man either
-finds him unacceptable, or currently holds a man she strictly prefers to him. -/
-def Inv (R : α → Finset β) : Prop :=
-  ∀ a b, b ∈ R a →
-    ¬ M.accM b a ∨ ∃ a'', M.holder R b = some a'' ∧ M.prefB b a < M.prefB b a''
+/-! ## The rejection invariant and stability -/
 
-theorem inv_empty : M.Inv (fun _ => ∅) := by
-  intro a b hb; simp at hb
+/-- Every rejection is justified by unacceptability or a strictly better
+currently held suitor. -/
+def DeferredAcceptanceInvariant
+    (linear : market.HasLinearPreferences)
+    (rejected : Left → Finset Right) : Prop :=
+  ∀ left right, right ∈ rejected left →
+    ¬ market.AcceptableToRight right left ∨
+      ∃ held, market.holder linear rejected right = some held ∧
+        Preference.strict market.prefersRight right (some held) (some left)
 
-/-- The invariant is preserved by a deferred-acceptance round. -/
-theorem inv_step (hA : ∀ a, Function.Injective (M.prefA a))
-    (hB : ∀ b, Function.Injective (M.prefB b)) {R : α → Finset β}
-    (hInv : M.Inv R) : M.Inv (M.daStep R) := by
+theorem invariant_empty (linear : market.HasLinearPreferences) :
+    market.DeferredAcceptanceInvariant linear (fun _ => ∅) := by
+  intro left right h
+  simp at h
+
+theorem invariant_step
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right}
+    (invariant : market.DeferredAcceptanceInvariant linear rejected) :
+    market.DeferredAcceptanceInvariant linear
+      (market.daStep linear rejected) := by
   classical
-  intro a b hb
-  simp only [daStep, Finset.mem_union, Finset.mem_filter, Finset.mem_univ, true_and] at hb
-  rcases hb with hb_old | ⟨htop, hne⟩
-  · rcases hInv a b hb_old with hunacc | ⟨a'', hhold, hlt⟩
-    · exact Or.inl hunacc
-    · obtain ⟨a''', ha''', hle⟩ := M.holder_improve (hA a'') hhold
-      exact Or.inr ⟨a''', ha''', lt_of_lt_of_le hlt hle⟩
-  · by_cases hacc : M.accM b a
-    · have ha_suit : a ∈ M.suitors R b := M.mem_suitors.mpr ⟨htop, hacc⟩
-      obtain ⟨a₀, ha₀⟩ : ∃ a₀, M.holder R b = some a₀ :=
-        Option.isSome_iff_exists.mp (M.holder_isSome_of_suitors ⟨a, ha_suit⟩)
-      have ha₀_ne : a₀ ≠ a := fun he => hne (he ▸ ha₀)
-      have hlt : M.prefB b a < M.prefB b a₀ :=
-        lt_of_le_of_ne ((M.holder_spec ha₀).2 a ha_suit) (fun he => ha₀_ne (hB b he).symm)
-      obtain ⟨a''', ha''', hle⟩ := M.holder_improve (hA a₀) ha₀
-      exact Or.inr ⟨a''', ha''', lt_of_lt_of_le hlt hle⟩
-    · exact Or.inl hacc
+  intro left right hreject
+  simp only [daStep, Finset.mem_union, Finset.mem_filter, Finset.mem_univ,
+    true_and] at hreject
+  rcases hreject with hold | ⟨hchoice, hnotHeld⟩
+  · rcases invariant left right hold with hunacceptable | ⟨held, hheld, hstrict⟩
+    · exact Or.inl hunacceptable
+    · obtain ⟨next, hnext, himproves⟩ := market.holder_improves linear hheld
+      exact Or.inr ⟨next, hnext,
+        Rank.trans_strict (linear.right right).2.1 himproves hstrict⟩
+  · by_cases hacceptable : market.AcceptableToRight right left
+    · have hsuitor : left ∈ market.suitors linear rejected right :=
+        (market.mem_suitors linear).mpr ⟨hchoice, hacceptable⟩
+      obtain ⟨held, hheld⟩ : ∃ held,
+          market.holder linear rejected right = some held :=
+        Option.isSome_iff_exists.mp
+          (market.holder_isSome_of_suitors linear ⟨left, hsuitor⟩)
+      have hne : held ≠ left := fun heq => by
+        subst held
+        exact hnotHeld hheld
+      have hstrict :
+          Preference.strict market.prefersRight right (some held) (some left) :=
+        Rank.strict_of_le_of_ne (linear.right right).2.2.2
+          ((market.holder_spec linear hheld).2 left hsuitor)
+          (fun heq => hne (Option.some.inj heq))
+      obtain ⟨next, hnext, himproves⟩ := market.holder_improves linear hheld
+      exact Or.inr ⟨next, hnext,
+        Rank.trans_strict (linear.right right).2.1 himproves hstrict⟩
+    · exact Or.inl hacceptable
 
-theorem inv_iterate (hA : ∀ a, Function.Injective (M.prefA a))
-    (hB : ∀ b, Function.Injective (M.prefB b)) (n : ℕ) :
-    M.Inv (M.daStep^[n] (fun _ => ∅)) := by
-  induction n with
-  | zero => exact M.inv_empty
-  | succ k ih =>
-    rw [Function.iterate_succ_apply']
-    exact M.inv_step hA hB ih
+theorem invariant_iterate
+    (linear : market.HasLinearPreferences) (rounds : ℕ) :
+    market.DeferredAcceptanceInvariant linear
+      ((market.daStep linear)^[rounds] (fun _ => ∅)) := by
+  induction rounds with
+  | zero => exact market.invariant_empty linear
+  | succ previous ih =>
+      rw [Function.iterate_succ_apply']
+      exact market.invariant_step linear ih
 
-/-- Any fixed point satisfying the deferred-acceptance invariant has no blocking
-pair. (Strict preferences are used only to establish the invariant, not here.) -/
-theorem no_blocking {R : α → Finset β}
-    (hR : M.daStep R = R) (hInv : M.Inv R) :
-    ¬ ∃ a b, M.IsBlockingPair (fun a => M.topChoice R a) a b := by
+theorem no_blocking_at_fixedPoint
+    (linear : market.HasLinearPreferences)
+    {rejected : Left → Finset Right}
+    (hfixed : market.daStep linear rejected = rejected)
+    (invariant : market.DeferredAcceptanceInvariant linear rejected) :
+    ¬ ∃ left right,
+      market.IsBlockingPair
+        (fun agent => market.topChoice linear rejected agent) left right := by
   classical
-  rintro ⟨a, b, hApref, hAnone, hBpref, hBnone⟩
-  -- (1) `a` finds `b` acceptable.
-  have haccW : M.accW a b := by
-    cases hμa : M.topChoice R a with
-    | none => exact le_of_lt (hAnone hμa)
-    | some b' =>
-        exact le_of_lt (lt_of_le_of_lt (M.fixedPoint_ir hR a b' hμa).1 (hApref b' hμa))
-  -- (2) `b` has already rejected `a`.
-  have hb_in : b ∈ R a := by
-    by_contra hb_notin
-    have hb_avail : b ∈ M.available R a := M.mem_available.mpr ⟨hb_notin, haccW⟩
-    obtain ⟨b', hb'⟩ : ∃ b', M.topChoice R a = some b' := by
-      unfold topChoice; rw [dif_pos ⟨b, hb_avail⟩]; exact ⟨_, rfl⟩
-    have h1 := (M.topChoice_spec hb').2 b hb_avail
-    have h2 := hApref b' hb'
-    omega
-  -- (3) but then `b` holds someone she prefers to `a` — contradicting the block.
-  rcases hInv a b hb_in with hunacc | ⟨a'', hhold, hlt⟩
-  · apply hunacc
-    by_cases hbm : ∃ a', M.topChoice R a' = some b
-    · obtain ⟨a', ha'⟩ := hbm
-      exact le_of_lt (lt_of_le_of_lt (M.fixedPoint_ir hR a' b ha').2 (hBpref a' ha'))
-    · exact le_of_lt (hBnone (not_exists.mp hbm))
-  · have hmatch : M.topChoice R a'' = some b := (M.mem_suitors.mp (M.holder_spec hhold).1).1
-    have := hBpref a'' hmatch
-    omega
+  rintro ⟨left, right, hleft, hrightMatched, hrightNone⟩
+  have hacceptableLeft : market.AcceptableToLeft left right := by
+    cases hchoice : market.topChoice linear rejected left with
+    | none =>
+        have hleftNone :
+            Preference.strict market.prefersLeft left (some right) none := by
+          simpa [hchoice] using hleft
+        exact hleftNone.1
+    | some current =>
+        have hleftCurrent : Preference.strict market.prefersLeft left
+            (some right) (some current) := by
+          simpa [hchoice] using hleft
+        exact (linear.left left).2.1 (some right) (some current) none hleftCurrent.1
+          (market.fixedPoint_individuallyRational linear hfixed left current hchoice).1
+  have hrejected : right ∈ rejected left := by
+    by_contra hnotRejected
+    have havailable : right ∈ market.available rejected left :=
+      market.mem_available.mpr ⟨hnotRejected, hacceptableLeft⟩
+    obtain ⟨current, hcurrent⟩ : ∃ current,
+        market.topChoice linear rejected left = some current := by
+      unfold topChoice
+      rw [dif_pos ⟨right, havailable⟩]
+      exact ⟨_, rfl⟩
+    have hleftCurrent : Preference.strict market.prefersLeft left
+        (some right) (some current) := by
+      simpa [hcurrent] using hleft
+    exact hleftCurrent.2
+      ((market.topChoice_spec linear hcurrent).2 right havailable)
+  rcases invariant left right hrejected with hunacceptable | ⟨held, hheld, hstrict⟩
+  · apply hunacceptable
+    by_cases hmatched : ∃ current,
+        market.topChoice linear rejected current = some right
+    · obtain ⟨current, hcurrent⟩ := hmatched
+      exact (linear.right right).2.1 (some left) (some current) none
+        (hrightMatched current hcurrent).1
+        (market.fixedPoint_individuallyRational linear hfixed current right hcurrent).2
+    · exact (hrightNone (not_exists.mp hmatched)).1
+  · have hmatched : market.topChoice linear rejected held = some right :=
+      (market.mem_suitors linear).mp (market.holder_spec linear hheld).1 |>.1
+    exact (hrightMatched held hmatched).2 hstrict.1
 
-/-! ### The deferred-acceptance matching -/
+/-! ## Public deferred-acceptance result -/
 
-/-- The rejection state at the deferred-acceptance fixed point (iterating the round
-operator from `∅`). -/
-noncomputable def daFixedPoint : α → Finset β :=
-  M.daStep^[Classical.choose M.exists_daStep_iterate_fixed] (fun _ => ∅)
+/-- Rejection state at a classically selected fixed iterate. -/
+noncomputable def daFixedPoint
+    (linear : market.HasLinearPreferences) : Left → Finset Right :=
+  (market.daStep linear)^[Classical.choose
+    (market.exists_daStep_iterate_fixed linear)] (fun _ => ∅)
 
-theorem daStep_daFixedPoint : M.daStep M.daFixedPoint = M.daFixedPoint :=
-  Classical.choose_spec M.exists_daStep_iterate_fixed
+theorem daStep_daFixedPoint (linear : market.HasLinearPreferences) :
+    market.daStep linear (market.daFixedPoint linear) =
+      market.daFixedPoint linear :=
+  Classical.choose_spec (market.exists_daStep_iterate_fixed linear)
 
-/-- The matching produced by men-proposing deferred acceptance: each man is assigned
-his top remaining choice at the fixed point. -/
-noncomputable def daMatching : α → Option β := fun a => M.topChoice M.daFixedPoint a
+/-- The matching produced by left-proposing deferred acceptance. -/
+noncomputable def deferredAcceptance
+    (linear : market.HasLinearPreferences) : Matching Left Right :=
+  fun left => market.topChoice linear (market.daFixedPoint linear) left
 
-/-- **The deferred-acceptance matching is stable.** -/
-theorem daMatching_isStable (hA : ∀ a, Function.Injective (M.prefA a))
-    (hB : ∀ b, Function.Injective (M.prefB b)) : M.IsStable M.daMatching :=
-  ⟨M.fixedPoint_isMatching M.daStep_daFixedPoint,
-    fun a b h => M.fixedPoint_ir M.daStep_daFixedPoint a b h,
-    M.no_blocking M.daStep_daFixedPoint (M.inv_iterate hA hB _)⟩
+/-- Deferred acceptance produces a stable matching. -/
+theorem deferredAcceptance_isStable
+    (linear : market.HasLinearPreferences) :
+    market.IsStable (market.deferredAcceptance linear) := by
+  refine ⟨market.fixedPoint_isMatching linear
+      (market.daStep_daFixedPoint linear),
+    market.fixedPoint_individuallyRational linear
+      (market.daStep_daFixedPoint linear), ?_⟩
+  exact market.no_blocking_at_fixedPoint linear
+    (market.daStep_daFixedPoint linear) (market.invariant_iterate linear _)
 
-omit [Fintype α] [Fintype β] in
-/-- **Gale–Shapley: stable matchings exist.** Every finite two-sided market with
-strict preferences admits a stable matching, produced by men-proposing deferred
-acceptance. -/
-theorem exists_stable [Finite α] [Finite β] (hA : ∀ a, Function.Injective (M.prefA a))
-    (hB : ∀ b, Function.Injective (M.prefB b)) :
-    ∃ μ : α → Option β, M.IsStable μ := by
-  letI := Fintype.ofFinite α
-  letI := Fintype.ofFinite β
-  exact ⟨M.daMatching, M.daMatching_isStable hA hB⟩
-
-/-! ### Man-optimality
-
-Men-proposing deferred acceptance is *man-optimal*: whenever a man is matched in
-some stable matching, deferred acceptance matches him to a woman he weakly prefers
-to that partner. (This is the substantive content in the outside-option model, where
-a man may be unmatched in a given stable matching; a man unmatched everywhere is left
-unmatched by deferred acceptance too.) The classical argument is that no man is ever
-rejected by a woman who is *achievable* for him (paired with him in some stable
-matching). Besides strict preferences, this needs that no man is exactly indifferent
-between an acceptable woman and remaining single (`hAne`), so that an achievable
-block is a *strict* block. -/
-
-/-- Woman `b` is *achievable* for man `a` if some stable matching pairs them. -/
-def IsAchievable (a : α) (b : β) : Prop :=
-  ∃ μ : α → Option β, M.IsStable μ ∧ μ a = some b
-
-/-- **Man-optimality invariant.** No woman who has rejected `a` is achievable for
-him: deferred acceptance never discards a stable partner. -/
-def MAchInv (R : α → Finset β) : Prop :=
-  ∀ a b, b ∈ R a → ¬ M.IsAchievable a b
-
-omit [Fintype α] [Fintype β] in
-theorem machInv_empty : M.MAchInv (fun _ => ∅) := by
-  intro a b hb; simp at hb
-
-/-- The man-optimality invariant is preserved by a deferred-acceptance round. The
-heart is a blocking-pair contradiction: if `b` rejects `a` in favour of the man `a'`
-she holds, and `b` were achievable for `a` via a stable `μ'`, then `(a', b)` blocks
-`μ'` — `a'` prefers `b` to his (achievable, hence still-available) `μ'`-partner, and
-`b` prefers `a'` to her `μ'`-partner `a`. -/
-theorem machInv_step (hA : ∀ a, Function.Injective (M.prefA a))
-    (hB : ∀ b, Function.Injective (M.prefB b))
-    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b) {R : α → Finset β}
-    (hInv : M.MAchInv R) : M.MAchInv (M.daStep R) := by
-  classical
-  intro a b hb
-  simp only [daStep, Finset.mem_union, Finset.mem_filter, Finset.mem_univ, true_and] at hb
-  rcases hb with hb_old | ⟨htop, hne⟩
-  · exact hInv a b hb_old
-  · rintro ⟨μ', hstable, hμ'⟩
-    by_cases hacc : M.accM b a
-    · have ha_suit : a ∈ M.suitors R b := M.mem_suitors.mpr ⟨htop, hacc⟩
-      obtain ⟨a', ha'⟩ : ∃ a', M.holder R b = some a' :=
-        Option.isSome_iff_exists.mp (M.holder_isSome_of_suitors ⟨a, ha_suit⟩)
-      have ha'_ne : a' ≠ a := fun he => hne (he ▸ ha')
-      have hpref_a' : M.prefB b a < M.prefB b a' :=
-        lt_of_le_of_ne ((M.holder_spec ha').2 a ha_suit) (fun he => ha'_ne (hB b he).symm)
-      obtain ⟨htop_a', _⟩ := M.mem_suitors.mp (M.holder_spec ha').1
-      apply hstable.2.2
-      refine ⟨a', b, ?_, ?_, ?_, ?_⟩
-      · intro b'' hb''
-        have hb''_notin : b'' ∉ R a' := fun hin => hInv a' b'' hin ⟨μ', hstable, hb''⟩
-        have hb''_avail : b'' ∈ M.available R a' :=
-          M.mem_available.mpr ⟨hb''_notin, (hstable.2.1 a' b'' hb'').1⟩
-        have hle : M.prefA a' b'' ≤ M.prefA a' b := (M.topChoice_spec htop_a').2 b'' hb''_avail
-        have hbne : b'' ≠ b := fun he => ha'_ne (hstable.1 a' a b'' hb'' (he ▸ hμ'))
-        exact lt_of_le_of_ne hle (fun he => hbne (hA a' he))
-      · intro _
-        exact lt_of_le_of_ne (M.accW_of_topChoice htop_a') (hAne a' b)
-      · intro a'' ha''
-        have hmatch : a'' = a := hstable.1 a'' a b ha'' hμ'
-        rw [hmatch]; exact hpref_a'
-      · intro hcon
-        exact absurd hμ' (hcon a)
-    · exact hacc (hstable.2.1 a b hμ').2
-
-theorem machInv_iterate (hA : ∀ a, Function.Injective (M.prefA a))
-    (hB : ∀ b, Function.Injective (M.prefB b))
-    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b) (n : ℕ) :
-    M.MAchInv (M.daStep^[n] (fun _ => ∅)) := by
-  induction n with
-  | zero => exact M.machInv_empty
-  | succ k ih =>
-    rw [Function.iterate_succ_apply']
-    exact M.machInv_step hA hB hAne ih
-
-/-- **Gale–Shapley is man-optimal.** Under strict preferences, with no man exactly
-indifferent between an acceptable woman and remaining single: whenever a man `a` is
-matched in *some* stable matching `μ'` (to `b'`), his deferred-acceptance partner
-exists and is weakly preferred — `a`'s `daMatching` partner `b` satisfies
-`prefA a b' ≤ prefA a b`. (A man unmatched in `μ'` imposes no constraint, the honest
-content of man-optimality in this outside-option model.) -/
-theorem daMatching_man_optimal (hA : ∀ a, Function.Injective (M.prefA a))
-    (hB : ∀ b, Function.Injective (M.prefB b))
-    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
-    {μ' : α → Option β} (hμ'stable : M.IsStable μ') {a : α} {b' : β}
-    (h : μ' a = some b') :
-    ∃ b, M.daMatching a = some b ∧ M.prefA a b' ≤ M.prefA a b := by
-  classical
-  have hInv : M.MAchInv M.daFixedPoint := M.machInv_iterate hA hB hAne _
-  have hb'_notin : b' ∉ M.daFixedPoint a := fun hin => hInv a b' hin ⟨μ', hμ'stable, h⟩
-  have hb'_avail : b' ∈ M.available M.daFixedPoint a :=
-    M.mem_available.mpr ⟨hb'_notin, (hμ'stable.2.1 a b' h).1⟩
-  obtain ⟨b, hb⟩ : ∃ b, M.topChoice M.daFixedPoint a = some b := by
-    unfold topChoice; rw [dif_pos ⟨b', hb'_avail⟩]; exact ⟨_, rfl⟩
-  exact ⟨b, hb, (M.topChoice_spec hb).2 b' hb'_avail⟩
-
-/-! ### Woman-pessimality
-
-The dual of man-optimality: men-proposing deferred acceptance is *woman-pessimal*.
-Conditionally, if a woman `b` is matched in another stable matching, her partner
-there is at least as good for her as her deferred-acceptance partner. With the
-additional non-indifference assumption that no woman is exactly indifferent between
-any man and remaining unmatched, a DA-matched woman is matched in every stable
-matching, giving the usual unconditional existential statement. -/
-
-/-- **Conditional woman-pessimality.** Under strict preferences (with no man
-indifferent between an acceptable woman and remaining single): if woman `b` is
-matched to `a` by deferred acceptance and is also matched to `a'` in some stable
-matching `μ'`, then `b` weakly prefers her stable partner `a'` to her
-deferred-acceptance partner `a`. -/
-theorem daMatching_woman_pessimal_of_matched (hA : ∀ a, Function.Injective (M.prefA a))
-    (hB : ∀ b, Function.Injective (M.prefB b))
-    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
-    {μ' : α → Option β} (hμ'stable : M.IsStable μ')
-    {a a' : α} {b : β} (hab : M.daMatching a = some b) (ha'b : μ' a' = some b) :
-    M.prefB b a ≤ M.prefB b a' := by
-  classical
-  by_contra hlt
-  push Not at hlt
-  -- `(a, b)` would block the stable matching `μ'`
-  apply hμ'stable.2.2
-  refine ⟨a, b, ?_, ?_, ?_, ?_⟩
-  · -- `a` strictly prefers `b` to his `μ'`-partner `b''`
-    intro b'' hb''
-    obtain ⟨b0, hb0, hle⟩ := M.daMatching_man_optimal hA hB hAne hμ'stable hb''
-    have hbeq : b0 = b := by rw [hab] at hb0; exact (Option.some.inj hb0).symm
-    rw [hbeq] at hle
-    rcases eq_or_ne b'' b with hbb | hbne
-    · -- `b'' = b` makes `a` and `a'` the same man, contradicting `hlt`
-      have haa : a' = a := hμ'stable.1 a' a b ha'b (hbb ▸ hb'')
-      rw [haa] at hlt; exact absurd hlt (lt_irrefl _)
-    · exact lt_of_le_of_ne hle (fun he => hbne (hA a he))
-  · -- `a` is unmatched in `μ'`: he still prefers his stable DA partner `b` to staying single
-    intro _
-    exact lt_of_le_of_ne ((M.daMatching_isStable hA hB).2.1 a b hab).1 (hAne a b)
-  · -- `b` strictly prefers `a` to her `μ'`-partner `a'`
-    intro a'' ha''
-    have ha'' : a'' = a' := hμ'stable.1 a'' a' b ha'' ha'b
-    rw [ha'']; exact hlt
-  · -- `b` is matched in `μ'` (to `a'`), so this case is vacuous
-    intro hcon
-    exact absurd ha'b (hcon a')
-
-/-- A woman matched by deferred acceptance is also matched in every stable matching,
-provided neither side is exactly indifferent between any possible partner and the
-outside option. -/
-theorem daMatching_woman_matched_in_stable (hA : ∀ a, Function.Injective (M.prefA a))
-    (hB : ∀ b, Function.Injective (M.prefB b))
-    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
-    (hBne : ∀ b a, M.reserveB b ≠ M.prefB b a)
-    {μ' : α → Option β} (hμ'stable : M.IsStable μ')
-    {a : α} {b : β} (hab : M.daMatching a = some b) :
-    ∃ a', μ' a' = some b := by
-  classical
-  by_contra hnone
-  apply hμ'stable.2.2
-  refine ⟨a, b, ?_, ?_, ?_, ?_⟩
-  · intro b'' hb''
-    obtain ⟨b0, hb0, hle⟩ := M.daMatching_man_optimal hA hB hAne hμ'stable hb''
-    have hbeq : b0 = b := by rw [hab] at hb0; exact (Option.some.inj hb0).symm
-    rw [hbeq] at hle
-    have hbne : b'' ≠ b := fun hbb => hnone ⟨a, hbb ▸ hb''⟩
-    exact lt_of_le_of_ne hle (fun he => hbne (hA a he))
-  · intro _
-    exact lt_of_le_of_ne ((M.daMatching_isStable hA hB).2.1 a b hab).1 (hAne a b)
-  · intro a'' ha''
-    exact False.elim (hnone ⟨a'', ha''⟩)
-  · intro _
-    exact lt_of_le_of_ne ((M.daMatching_isStable hA hB).2.1 a b hab).2 (hBne b a)
-
-/-- **Gale-Shapley is woman-pessimal, strong form.** Under strict preferences and no
-outside-option indifference on either side: if woman `b` is matched to `a` by
-deferred acceptance, then in every stable matching `b` is matched to some `a'` whom
-she weakly prefers to her deferred-acceptance partner `a`. -/
-theorem daMatching_woman_pessimal (hA : ∀ a, Function.Injective (M.prefA a))
-    (hB : ∀ b, Function.Injective (M.prefB b))
-    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
-    (hBne : ∀ b a, M.reserveB b ≠ M.prefB b a)
-    {μ' : α → Option β} (hμ'stable : M.IsStable μ')
-    {a : α} {b : β} (hab : M.daMatching a = some b) :
-    ∃ a', μ' a' = some b ∧ M.prefB b a ≤ M.prefB b a' := by
-  obtain ⟨a', ha'b⟩ :=
-    M.daMatching_woman_matched_in_stable hA hB hAne hBne hμ'stable hab
-  exact ⟨a', ha'b, M.daMatching_woman_pessimal_of_matched hA hB hAne hμ'stable hab ha'b⟩
+/-- **Gale--Shapley.** Every finite two-sided market with linear ordinal
+preferences over optional partners admits a stable matching. -/
+theorem exists_stable
+    (linear : market.HasLinearPreferences) :
+    ∃ matching : Matching Left Right, market.IsStable matching := by
+  exact ⟨market.deferredAcceptance linear,
+    market.deferredAcceptance_isStable linear⟩
 
 end MatchingMarket
 

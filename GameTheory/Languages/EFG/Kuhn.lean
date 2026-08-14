@@ -1,328 +1,321 @@
 /-
-Copyright (c) 2025 GameTheory contributors. All rights reserved.
-Released under the MIT license as described in the file LICENSE.
-Authors: GameTheory contributors
+# Kuhn correspondence for extensive-form games
+
+The substantive behavioral/mixed equivalence lives on the accepted
+`InformationModel`. This module gives an EFG-facing surface without introducing
+another evaluator, strategy representation, or equilibrium notion.
+
+The two directions deliberately retain their sharp hypotheses. Predrawing a
+behavioral plan needs no repeated nontrivial information state; reading a mixed
+plan behaviorally needs recall, used through the weaker constraint-locality
+fact it implies. The protocol layer proves unilateral realization while
+holding every opponent coordinate fixed; this EFG surface uses those laws to
+transfer Nash equilibria in both directions.
 -/
 
-import Math.PMFProduct
-import GameTheory.Languages.EFG.CompileObsFacts
-import GameTheory.Languages.Kuhn
+import GameTheory.Languages.EFG.Strategic
+import GameTheory.Core.Utility
 
-/-!
-# Kuhn's Theorem for EFG — via ObsModelCore
+noncomputable section
 
-Kuhn's theorem (behavioral ↔ mixed strategy equivalence) for extensive-form
-games, derived as a corollary of the generic Kuhn development on
-`ObsModelCore`.
+namespace GameTheory.Languages.EFG
 
-The EFG-specific compiled-model structure, adequacy, and recall obligations live
-in `GameTheory.Languages.EFG.CompileObsFacts`. This file is the theorem-facing
-assembly layer.
--/
+open GameTheory.Protocol Probability
 
-namespace EFG
+universe uι us ua up uq uk uo
 
-open GameTheory Math.PMFProduct
+namespace Game
 
-variable {S : InfoStructure} {Outcome : Type}
+variable {ι : Type uι} (G : Game.{uι, us, ua, up, uq, uk} ι)
 
--- ============================================================================
--- B→M via the central ObsModelCore theorem
--- ============================================================================
+/-- A behavioral EFG plan randomizes locally at each information state. -/
+abbrev BehavioralPlan (who : ι) :=
+  G.information.BehavioralPolicy who
 
-/-- **Kuhn B→M for EFG via the central theorem.**
-The `runDist` of the lifted behavioral profile equals the product mixed strategy
-bound to `runDistPure`, provided the tree has no info-set repeats. -/
-theorem kuhn_behavioral_to_mixed_runDist
-    (σ : BehavioralProfile S) (t : GameTree S Outcome)
-    (hnr : NoInfoSetRepeat t) (k : Nat) :
-    let O := compiledCoreObs t
-    O.runDist k (GameTheory.EFG.liftBehavioralProfileCore t σ) =
-      (O.behavioralToMixedJoint (GameTheory.EFG.liftBehavioralProfileCore t σ)).bind
-        (fun π => O.runDistPure k π) :=
-  ObsModelCore.kuhn_behavioral_to_mixed
-    (noNontrivialInfoStateRepeat_compiledCore t hnr)
-    (GameTheory.EFG.liftBehavioralProfileCore t σ) k
+/-- A mixed EFG plan draws one information-local contingent plan once. -/
+abbrev MixedPlan (who : ι) :=
+  G.information.MixedPolicy who
 
-/-- **Kuhn B→M for EFG at the `evalDist` level, via the central theorem.**
-For any behavioral profile on a tree with no info-set repeats,
-the `evalDist` equals the expected `evalDist` under the product mixed strategy. -/
-theorem kuhn_behavioral_to_mixed_evalDist
-    (σ : BehavioralProfile S) (t : GameTree S Outcome)
-    (hnr : NoInfoSetRepeat t) :
-    let O := compiledCoreObs t
-    t.evalDist σ =
-      (O.behavioralToMixedJoint
-        (GameTheory.EFG.liftBehavioralProfileCore t σ)).bind
-        (fun π => t.evalDist
-          (pureToBehavioral
-            (GameTheory.EFG.descendPureProfileCore t π))) := by
-  let O := compiledCoreObs t
-  let k := treeHeight t
-  let β' := GameTheory.EFG.liftBehavioralProfileCore t σ
-  have hrun := kuhn_behavioral_to_mixed_runDist σ t hnr k
-  -- Apply adequacy to both sides
-  have hleft :
-      (O.runDist k β').bind (fun ss => (O.lastState ss).evalDist σ) =
-        t.evalDist σ :=
-    runDist_bind_evalDist_core t σ k
-  have hper_pure :
-      ∀ π, (O.runDistPure k π).bind (fun ss => (O.lastState ss).evalDist σ) =
-        t.evalDist (pureToBehavioral (GameTheory.EFG.descendPureProfileCore t π)) := by
-    intro π
-    have hadq := runDistPure_bind_evalDist_core t π k
-    -- Both sides agree on terminal states, and all reachable states are terminal
-    calc
-      (O.runDistPure k π).bind (fun ss => (O.lastState ss).evalDist σ)
-        = (O.runDistPure k π).bind (fun ss =>
-            (O.lastState ss).evalDist
-              (pureToBehavioral (GameTheory.EFG.descendPureProfileCore t π))) := by
-          refine Math.ProbabilityMassFunction.bind_congr_on_support
-            (O.runDistPure k π) _ _ ?_
-          intro ss hss
-          have hss' :=
-            lastState_terminal_of_pureRun_height t
-              (by simpa [O, k, ObsModelCore.runDistPure_eq_pureRun] using hss)
-          obtain ⟨z, hz⟩ := hss'
-          simp [O, hz]
-      _ = t.evalDist
-            (pureToBehavioral (GameTheory.EFG.descendPureProfileCore t π)) := hadq
-  have hright :
-      ((O.behavioralToMixedJoint β').bind (O.runDistPure k)).bind
-          (fun ss => (O.lastState ss).evalDist σ) =
-        (O.behavioralToMixedJoint β').bind
-          (fun π => t.evalDist
-            (pureToBehavioral
-              (GameTheory.EFG.descendPureProfileCore t π))) := by
-    rw [PMF.bind_bind]
-    refine Math.ProbabilityMassFunction.bind_congr_on_support
-      (O.behavioralToMixedJoint β') _ _ ?_
-    intro π _hπ
-    exact hper_pure π
-  calc
-    t.evalDist σ =
-      (O.runDist k β').bind (fun ss => (O.lastState ss).evalDist σ) :=
-        hleft.symm
-    _ = ((O.behavioralToMixedJoint β').bind (O.runDistPure k)).bind
-        (fun ss => (O.lastState ss).evalDist σ) := by
-      rw [hrun]
-    _ = (O.behavioralToMixedJoint β').bind
-        (fun π => t.evalDist
-          (pureToBehavioral
-            (GameTheory.EFG.descendPureProfileCore t π))) :=
-      hright
+/-- The EFG behavioral signature is the accepted information-model signature. -/
+abbrev behavioralSignature : GameSignature ι :=
+  G.information.behavioralSignature
 
--- ============================================================================
--- Tree-level Kuhn theorems (bridge from ObsModel to evalDist)
--- ============================================================================
+variable [Fintype ι]
 
-/-- Kuhn's theorem (behavioral → mixed direction):
-    For any behavioral profile σ and tree with no info-set repeats,
-    there exists a distribution over flat profiles
-    that induces the same outcome distribution.
+/-- Present behavioral EFG plans through the canonical behavioral runner. -/
+@[reducible]
+def toBehavioralGameForm (horizon : ℕ) : GameForm ι :=
+  G.information.toBehavioralGameForm horizon
 
-Delegates to `kuhn_behavioral_to_mixed_evalDist` (the central ObsModel proof)
-and transports the witness through `flatProfileEquivPureProfile`. -/
-theorem kuhn_behavioral_to_mixed (σ : BehavioralProfile S) (t : GameTree S Outcome)
-    (hnr : NoInfoSetRepeat t) :
-    ∃ μ : PMF (FlatProfile S),
-      μ.bind (fun s => t.evalDist (flatToBehavioral s)) = t.evalDist σ := by
-  let O := compiledCoreObs t
-  let β' := GameTheory.EFG.liftBehavioralProfileCore t σ
-  have heval := kuhn_behavioral_to_mixed_evalDist σ t hnr
-  let μ : PMF (FlatProfile S) :=
-    (O.behavioralToMixedJoint β').map
-      (fun π => flatProfileEquivPureProfile.symm
-        (GameTheory.EFG.descendPureProfileCore t π))
-  refine ⟨μ, ?_⟩
-  simp only [μ, PMF.bind_map]
-  have : (fun s => t.evalDist (flatToBehavioral s)) ∘
-      (fun π => flatProfileEquivPureProfile.symm
-        (GameTheory.EFG.descendPureProfileCore t π)) =
-      fun π => t.evalDist (pureToBehavioral
-        (GameTheory.EFG.descendPureProfileCore t π)) := by
-    ext π; congr 1
-  rw [this]
-  exact heval.symm
+/-- The behavioral EFG compiler has no language-specific evaluator. -/
+@[simp]
+theorem toBehavioralGameForm_play (horizon : ℕ)
+    (behavioral : Profile G.behavioralSignature) :
+    (G.toBehavioralGameForm horizon).play behavioral =
+      G.information.runBehavioral behavioral horizon :=
+  InformationModel.toBehavioralGameForm_play G.information horizon behavioral
 
-/-- `kuhn_behavioral_to_mixed` under the original `PerfectRecall` assumption. -/
-theorem kuhn_behavioral_to_mixed_pr (σ : BehavioralProfile S) (t : GameTree S Outcome)
-    (hpr : PerfectRecall t) :
-    ∃ μ : PMF (FlatProfile S),
-      μ.bind (fun s => t.evalDist (flatToBehavioral s)) = t.evalDist σ :=
-  kuhn_behavioral_to_mixed σ t (PerfectRecall_implies_NoInfoSetRepeat t hpr)
+section Unilateral
 
-open GameTheory in
-/-- Kuhn's theorem lifted to utility distributions (behavioral → mixed). -/
-theorem kuhn_behavioral_to_mixed_udist (G : EFGGame)
-    (σ : BehavioralProfile G.inf) (hpr : PerfectRecall G.tree) :
-    ∃ μ : PMF (FlatProfile G.inf),
-      μ.bind (fun s => G.toKernelGame.udist (flatToBehavioral s)) =
-      G.toKernelGame.udist σ := by
-  obtain ⟨μ, hμ⟩ := kuhn_behavioral_to_mixed_pr σ G.tree hpr
-  exact ⟨μ, by
-    simp only [KernelGame.udist, EFGGame.toKernelGame]
-    rw [← hμ, PMF.bind_bind]⟩
+variable [DecidableEq ι]
 
-private theorem kuhn_mixed_to_behavioral_core
-    (t : GameTree S Outcome)
-    (hpr : PerfectRecall t)
-    (muP : MixedProfile S) :
-    ∃ β : (compiledCoreObs t).BehavioralProfile,
-      let O := compiledCoreObs t
-      let k := treeHeight t
-      let μ := GameTheory.EFG.liftMixedProfileCore t muP
-      O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
-  let O := compiledCoreObs t
-  let k := treeHeight t
-  let μ := GameTheory.EFG.liftMixedProfileCore t muP
-  have hMass :
-      ObsModelCore.StepMassInvariant O := by
-    intro ss u π₁ π₂ h₁ h₂
-    exact stepMassInvariant_compiledCore t π₁ π₂ h₁ h₂
-  have hFactor :
-      ObsModelCore.StepSupportFactorization O := by
-    intro ss u π₀ π h₀
-    exact stepSupportFactorization_compiledCore t π₀ π h₀
-  obtain ⟨β, hβ⟩ :=
-    ObsModelCore.kuhn_mixed_to_behavioral_semantic (O := O)
-      hMass hFactor
-      (fun i =>
-        ObsModelCore.actionPosteriorLocal_of_obsLocalFeasibility (O := O)
-          hMass i
-          (by
-            simpa [O] using
-              obsLocalFeasibility_compiledCore t hpr i))
-      μ k
-  exact ⟨β, hβ⟩
+/-- Behavioral Nash of the extracted EFG is exactly the native behavioral
+deviation inequality. -/
+theorem isNash_toBehavioralGameForm_iff
+    (utility : G.History → ι → ℝ)
+    (behavioral : Profile G.behavioralSignature) (horizon : ℕ) :
+    IsNash (G.toBehavioralGameForm horizon) (euPreference utility) behavioral ↔
+      ∀ who replacement,
+        expectedUtility utility who
+            (G.information.runBehavioral
+              (Profile.update behavioral who replacement) horizon) ≤
+          expectedUtility utility who
+            (G.information.runBehavioral behavioral horizon) := by
+  rw [isNash_iff]
+  rfl
 
-private theorem compiledCore_runEq_to_evalDistEq
-    (t : GameTree S Outcome)
-    (muP : MixedProfile S)
-    {β : (compiledCoreObs t).BehavioralProfile}
-    (hβ :
-      let O := compiledCoreObs t
-      let k := treeHeight t
-      let μ := GameTheory.EFG.liftMixedProfileCore t muP
-      O.runDist k β = (pmfPi μ).bind (O.runDistPure k)) :
-    let σ := GameTheory.EFG.descendBehavioralProfileCore t β
-    t.evalDist σ =
-      (mixedProfileJoint muP).bind
-        (fun pi => t.evalDist (pureToBehavioral pi)) := by
-  let O := compiledCoreObs t
-  let k := treeHeight t
-  let μ := GameTheory.EFG.liftMixedProfileCore t muP
-  let σ : BehavioralProfile S :=
-    GameTheory.EFG.descendBehavioralProfileCore t β
-  have hleft :
-      (O.runDist k β).bind (fun ss => (O.lastState ss).evalDist σ) = t.evalDist σ := by
-    simpa [O, k, σ, GameTheory.EFG.liftBehavioralProfileCore_descendBehavioralProfileCore] using
-      runDist_bind_evalDist_core t σ k
-  have hright :
-      ((pmfPi μ).bind (O.runDistPure k)).bind
-          (fun ss => (O.lastState ss).evalDist σ) =
-        (mixedProfileJoint muP).bind
-          (fun pi => t.evalDist (pureToBehavioral pi)) := by
-    rw [PMF.bind_bind]
-    calc
-      (pmfPi μ).bind
-          (fun π => (O.runDistPure k π).bind (fun ss => (O.lastState ss).evalDist σ))
-        =
-      (pmfPi μ).bind
-          (fun π =>
-            (O.runDistPure k π).bind
-              (fun ss =>
-                (O.lastState ss).evalDist
-                  (pureToBehavioral
-                    (GameTheory.EFG.descendPureProfileCore
-                      t π)))) := by
-            refine Math.ProbabilityMassFunction.bind_congr_on_support (pmfPi μ) _ _ ?_
-            intro π _hπ
-            refine Math.ProbabilityMassFunction.bind_congr_on_support (O.runDistPure k π) _ _ ?_
-            intro ss hss
-            have hss' :
-                Math.ParameterizedChain.pureRun (O.pureStep) O.init k π ss ≠ 0 := by
-              simpa [O, k, ObsModelCore.runDistPure_eq_pureRun] using hss
-            obtain ⟨z, hz⟩ :=
-              lastState_terminal_of_pureRun_height
-                t
-                (by simpa [O, k] using hss')
-            simp [O, hz]
-      _ =
-        (pmfPi μ).bind
-          (fun π =>
-            t.evalDist
-              (pureToBehavioral
-                (GameTheory.EFG.descendPureProfileCore
-                  t π))) := by
-          refine Math.ProbabilityMassFunction.bind_congr_on_support (pmfPi μ) _ _ ?_
-          intro π _hπ
-          simpa [O, k] using
-            runDistPure_bind_evalDist_core t π k
-      _ =
-        (Math.ProbabilityMassFunction.pushforward
-          (mixedProfileJoint muP)
-          (GameTheory.EFG.liftPureProfileCore t)).bind
-            (fun π =>
-              t.evalDist
-                (pureToBehavioral
-                  (GameTheory.EFG.descendPureProfileCore
-                    t π))) := by
-          rw [liftMixedProfileCore_joint t muP]
-      _ =
-        (mixedProfileJoint muP).bind
-          (fun pi => t.evalDist (pureToBehavioral pi)) := by
-          rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
-          refine Math.ProbabilityMassFunction.bind_congr_on_support
-            (mixedProfileJoint muP) _ _ ?_
-          intro pi _hpi
-          simp
-  calc
-    t.evalDist σ =
-      (O.runDist k β).bind (fun ss => (O.lastState ss).evalDist σ) := by
-        symm
-        exact hleft
-    _ =
-      ((pmfPi μ).bind (O.runDistPure k)).bind
-        (fun ss => (O.lastState ss).evalDist σ) := by
-          simpa [O, k, μ] using congrArg
-            (fun d => d.bind (fun ss => (O.lastState ss).evalDist σ)) hβ
-    _ =
-      (mixedProfileJoint muP).bind
-        (fun pi => t.evalDist (pureToBehavioral pi)) := hright
+/-- A player's mixed strategy may be read behaviorally and redrawn as mixed
+without changing the history law against the other players' fixed mixed
+strategies. This EFG-facing theorem specializes the protocol-level unilateral
+realization law. -/
+theorem kuhn_mixed_roundTrip_update
+    [∀ i, Fintype (G.information.InfoState i)]
+    [∀ i, DecidableEq (G.information.InfoState i)]
+    (hrecall : G.information.PerfectRecall)
+    (mixed : Profile G.strategicSignature.mixed) (who : ι)
+    (replacement : G.MixedPlan who) (horizon : ℕ) :
+    G.information.runMixed
+        (Profile.update mixed who
+          (InformationModel.MixedPolicy.toBehavioral
+            (M := G.information) replacement).toMixed) horizon =
+      G.information.runMixed
+        (Profile.update mixed who replacement) horizon :=
+  G.information.kuhn_mixed_roundTrip_update
+    hrecall mixed who replacement horizon
 
-/-- **Kuhn's theorem (mixed → behavioral direction).**
-    For any game tree with perfect recall and any mixed strategy profile,
-    there exists a behavioral strategy profile that induces the same
-    outcome distribution. -/
+end Unilateral
+
+/-- **Behavioral-to-mixed Kuhn direction.** Predrawing every local choice gives
+an explicit mixed contingent-plan profile with exactly the same history law. -/
+theorem kuhn_behavioral_to_mixed
+    [∀ who, Fintype (G.information.InfoState who)]
+    [∀ who, DecidableEq (G.information.InfoState who)]
+    (hactsOnce : G.information.ActsOnceWhereItMatters)
+    (behavioral : Profile G.behavioralSignature) (horizon : ℕ) :
+    ∃ mixed : Profile G.strategicSignature.mixed,
+      G.information.runMixed mixed horizon =
+        G.information.runBehavioral behavioral horizon :=
+  ⟨fun who => (behavioral who).toMixed,
+    G.information.runMixed_toMixed hactsOnce behavioral horizon⟩
+
+/-- **Mixed-to-behavioral Kuhn direction.** Under perfect recall, the canonical
+behavioral reading of a mixed contingent plan has exactly the same history
+law. -/
 theorem kuhn_mixed_to_behavioral
-    (t : GameTree S Outcome)
-    (hpr : PerfectRecall t)
-    (muP : MixedProfile S) :
-    ∃ sigma : BehavioralProfile S,
-      t.evalDist sigma =
-      (mixedProfileJoint muP).bind
-        (fun pi => t.evalDist
-          (pureToBehavioral pi)) := by
-  obtain ⟨β, hβ⟩ :=
-    kuhn_mixed_to_behavioral_core t hpr muP
-  let σ : BehavioralProfile S :=
-    GameTheory.EFG.descendBehavioralProfileCore t β
-  refine ⟨σ, ?_⟩
-  simpa [σ] using
-    compiledCore_runEq_to_evalDistEq t muP hβ
+    (hrecall : G.information.PerfectRecall)
+    (mixed : Profile G.strategicSignature.mixed) (horizon : ℕ) :
+    ∃ behavioral : Profile G.behavioralSignature,
+      G.information.runBehavioral behavioral horizon =
+        G.information.runMixed mixed horizon :=
+  ⟨fun who =>
+      InformationModel.MixedPolicy.toBehavioral
+        (M := G.information) (mixed who),
+    (G.information.runMixed_toBehavioral
+      (InformationModel.constrainsAlike_of_perfectRecall hrecall)
+      horizon mixed).symm⟩
 
-open GameTheory in
-/-- Kuhn's theorem lifted to utility distributions (mixed → behavioral). -/
-theorem kuhn_mixed_to_behavioral_udist (G : EFGGame)
-    (hpr : PerfectRecall G.tree) (muP : MixedProfile G.inf) :
-    ∃ σ : BehavioralProfile G.inf,
-      G.toKernelGame.udist σ =
-      (mixedProfileJoint (S := G.inf) muP).bind
-        (fun pi => G.toKernelGame.udist (pureToBehavioral pi)) := by
-  obtain ⟨σ, hσ⟩ := kuhn_mixed_to_behavioral G.tree hpr muP
-  exact ⟨σ, by
-    simp only [KernelGame.udist, EFGGame.toKernelGame]
-    rw [hσ, PMF.bind_bind]⟩
+/-- Under perfect recall, behavioral and mixed EFG profiles realize exactly the
+same history laws. Perfect recall supplies the no-revisit consequence used in
+the behavioral-to-mixed direction. -/
+theorem kuhn_historyLaws
+    [∀ who, Fintype (G.information.InfoState who)]
+    [∀ who, DecidableEq (G.information.InfoState who)]
+    (hrecall : G.information.PerfectRecall) (horizon : ℕ) :
+    { law | ∃ behavioral : Profile G.behavioralSignature,
+        G.information.runBehavioral behavioral horizon = law } =
+      { law | ∃ mixed : Profile G.strategicSignature.mixed,
+        G.information.runMixed mixed horizon = law } :=
+  G.information.runBehavioral_image_eq_runMixed_image
+    (G.information.actsOnceWhereItMatters_of_perfectRecall hrecall)
+    (InformationModel.constrainsAlike_of_perfectRecall hrecall) horizon
 
-end EFG
+section UnilateralTransfers
+
+variable [DecidableEq ι]
+
+/-- A behavioral policy and its behavioral-to-mixed-to-behavioral round trip
+are realization-equivalent for one player while every other behavioral policy
+is held fixed. -/
+theorem kuhn_behavioral_roundTrip_update
+    [∀ i, Fintype (G.information.InfoState i)]
+    [∀ i, DecidableEq (G.information.InfoState i)]
+    (hrecall : G.information.PerfectRecall)
+    (behavioral : Profile G.behavioralSignature) (who : ι)
+    (replacement : G.BehavioralPlan who) (horizon : ℕ) :
+    G.information.runBehavioral
+        (Profile.update behavioral who
+          (InformationModel.MixedPolicy.toBehavioral
+            (M := G.information) replacement.toMixed)) horizon =
+      G.information.runBehavioral
+        (Profile.update behavioral who replacement) horizon :=
+  G.information.kuhn_behavioral_roundTrip_update
+    hrecall behavioral who replacement horizon
+
+/-- **Unilateral mixed-to-behavioral realization.** Replacing one player's
+mixed strategy by an arbitrary behavioral strategy commutes with Kuhn's
+reading while every nondeviator keeps its induced behavior. -/
+theorem kuhn_mixed_update_toBehavioral
+    [∀ i, Fintype (G.information.InfoState i)]
+    [∀ i, DecidableEq (G.information.InfoState i)]
+    (hrecall : G.information.PerfectRecall)
+    (mixed : Profile G.strategicSignature.mixed) (who : ι)
+    (replacement : G.BehavioralPlan who) (horizon : ℕ) :
+    G.information.runBehavioral
+        (Profile.update (sig := G.information.behavioralSignature)
+          (fun i => InformationModel.MixedPolicy.toBehavioral
+            (M := G.information) (mixed i)) who replacement) horizon =
+      G.information.runMixed
+        (Profile.update (sig := G.information.strategicSignature.mixed)
+          mixed who replacement.toMixed) horizon :=
+  G.information.kuhn_mixed_update_toBehavioral
+    hrecall mixed who replacement horizon
+
+/-- **Unilateral behavioral-to-mixed realization.** Starting from a behavioral
+profile, an arbitrary mixed deviation is realized by its behavioral reading
+without changing any nondeviator's behavioral policy. -/
+theorem kuhn_behavioral_update_toMixed
+    [∀ i, Fintype (G.information.InfoState i)]
+    [∀ i, DecidableEq (G.information.InfoState i)]
+    (hrecall : G.information.PerfectRecall)
+    (behavioral : Profile G.behavioralSignature) (who : ι)
+    (replacement : G.MixedPlan who) (horizon : ℕ) :
+    G.information.runMixed
+        (Profile.update (sig := G.information.strategicSignature.mixed)
+          (fun i => (behavioral i).toMixed) who replacement) horizon =
+      G.information.runBehavioral
+        (Profile.update (sig := G.information.behavioralSignature)
+          behavioral who
+            (InformationModel.MixedPolicy.toBehavioral
+              (M := G.information) replacement)) horizon :=
+  G.information.kuhn_behavioral_update_toMixed
+    hrecall behavioral who replacement horizon
+
+/-- A behavioral Nash equilibrium becomes a mixed Nash equilibrium by
+predrawing every local choice. The proof uses the unilateral law, so arbitrary
+mixed deviations—not only converted behavioral deviations—are covered. -/
+theorem isNash_toMixed_of_isNash_behavioral
+    [∀ i, Fintype (G.information.InfoState i)]
+    [∀ i, DecidableEq (G.information.InfoState i)]
+    (hrecall : G.information.PerfectRecall)
+    (utility : G.History → ι → ℝ)
+    (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
+    (hnash : IsNash (G.toBehavioralGameForm horizon)
+      (euPreference utility) behavioral) :
+    IsNash (G.toGameForm horizon).mixed (euPreference utility)
+      (fun i => (behavioral i).toMixed) := by
+  rw [G.isNash_mixed_toGameForm_iff]
+  rw [G.isNash_toBehavioralGameForm_iff] at hnash
+  intro who replacement
+  have hdeviation := G.kuhn_behavioral_update_toMixed
+    hrecall behavioral who replacement horizon
+  have hbaseline := G.information.runMixed_toMixed
+    (G.information.actsOnceWhereItMatters_of_perfectRecall hrecall)
+    behavioral horizon
+  rw [hdeviation, hbaseline]
+  exact hnash who
+    (InformationModel.MixedPolicy.toBehavioral
+      (M := G.information) replacement)
+
+/-- A mixed Nash equilibrium becomes a behavioral Nash equilibrium under the
+canonical conditional behavioral reading. Arbitrary behavioral deviations are
+covered by unilateral realization with the nondeviators fixed. -/
+theorem isNash_toBehavioral_of_isNash_mixed
+    [∀ i, Fintype (G.information.InfoState i)]
+    [∀ i, DecidableEq (G.information.InfoState i)]
+    (hrecall : G.information.PerfectRecall)
+    (utility : G.History → ι → ℝ)
+    (mixed : Profile G.strategicSignature.mixed) (horizon : ℕ)
+    (hnash : IsNash (G.toGameForm horizon).mixed
+      (euPreference utility) mixed) :
+    IsNash (G.toBehavioralGameForm horizon) (euPreference utility)
+      (fun i => InformationModel.MixedPolicy.toBehavioral
+        (M := G.information) (mixed i)) := by
+  rw [G.isNash_toBehavioralGameForm_iff]
+  rw [G.isNash_mixed_toGameForm_iff] at hnash
+  intro who replacement
+  have hdeviation := G.kuhn_mixed_update_toBehavioral
+    hrecall mixed who replacement horizon
+  have hbaseline := G.information.runMixed_toBehavioral
+    (InformationModel.constrainsAlike_of_perfectRecall hrecall)
+    horizon mixed
+  rw [hdeviation, ← hbaseline]
+  exact hnash who replacement.toMixed
+
+end UnilateralTransfers
+
+/-- Pushing a behavioral history law through any outcome map preserves the
+behavioral-to-mixed correspondence. This is the utility-distribution theorem
+with utility generalized to arbitrary retained outcome data. -/
+theorem kuhn_behavioral_to_mixed_outcomeLaw
+    [∀ who, Fintype (G.information.InfoState who)]
+    [∀ who, DecidableEq (G.information.InfoState who)]
+    (hactsOnce : G.information.ActsOnceWhereItMatters)
+    (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
+    {Outcome : Type uo} (outcome : G.History → Outcome) :
+    ∃ mixed : Profile G.strategicSignature.mixed,
+      FinDist.map outcome (G.information.runMixed mixed horizon) =
+        FinDist.map outcome (G.information.runBehavioral behavioral horizon) := by
+  obtain ⟨mixed, hmixed⟩ :=
+    G.kuhn_behavioral_to_mixed hactsOnce behavioral horizon
+  exact ⟨mixed, congrArg (FinDist.map outcome) hmixed⟩
+
+/-- Pushing a mixed history law through any outcome map preserves the
+mixed-to-behavioral correspondence. -/
+theorem kuhn_mixed_to_behavioral_outcomeLaw
+    (hrecall : G.information.PerfectRecall)
+    (mixed : Profile G.strategicSignature.mixed) (horizon : ℕ)
+    {Outcome : Type uo} (outcome : G.History → Outcome) :
+    ∃ behavioral : Profile G.behavioralSignature,
+      FinDist.map outcome (G.information.runBehavioral behavioral horizon) =
+        FinDist.map outcome (G.information.runMixed mixed horizon) := by
+  obtain ⟨behavioral, hbehavioral⟩ :=
+    G.kuhn_mixed_to_behavioral hrecall mixed horizon
+  exact ⟨behavioral, congrArg (FinDist.map outcome) hbehavioral⟩
+
+/-- The behavioral-to-mixed witness preserves every player's expected utility. -/
+theorem kuhn_behavioral_to_mixed_expectedUtility
+    [∀ who, Fintype (G.information.InfoState who)]
+    [∀ who, DecidableEq (G.information.InfoState who)]
+    (hactsOnce : G.information.ActsOnceWhereItMatters)
+    (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
+    (utility : G.History → ι → ℝ) :
+    ∃ mixed : Profile G.strategicSignature.mixed,
+      ∀ who,
+        expectedUtility utility who
+            (G.information.runMixed mixed horizon) =
+          expectedUtility utility who
+            (G.information.runBehavioral behavioral horizon) := by
+  obtain ⟨mixed, hmixed⟩ :=
+    G.kuhn_behavioral_to_mixed hactsOnce behavioral horizon
+  exact ⟨mixed, fun who => congrArg (expectedUtility utility who) hmixed⟩
+
+/-- The mixed-to-behavioral witness preserves every player's expected utility. -/
+theorem kuhn_mixed_to_behavioral_expectedUtility
+    (hrecall : G.information.PerfectRecall)
+    (mixed : Profile G.strategicSignature.mixed) (horizon : ℕ)
+    (utility : G.History → ι → ℝ) :
+    ∃ behavioral : Profile G.behavioralSignature,
+      ∀ who,
+        expectedUtility utility who
+            (G.information.runBehavioral behavioral horizon) =
+          expectedUtility utility who
+            (G.information.runMixed mixed horizon) := by
+  obtain ⟨behavioral, hbehavioral⟩ :=
+    G.kuhn_mixed_to_behavioral hrecall mixed horizon
+  exact
+    ⟨behavioral,
+      fun who => congrArg (expectedUtility utility who) hbehavioral⟩
+
+end Game
+
+end GameTheory.Languages.EFG

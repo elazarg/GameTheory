@@ -1,14 +1,15 @@
 /-
-Copyright (c) 2026 GameTheory contributors. All rights reserved.
-Released under the MIT license as described in the file LICENSE.
-Authors: GameTheory contributors
+# Finite fair division
+
+Public opt-in surface for finite indivisible-goods fairness, certified choice
+round-robin, and two-agent EFX existence.  Measurable cake-cutting theory is
+intentionally absent.
 -/
 
-import GameTheory.Mechanism.FairDivision.Indivisible
-import GameTheory.Mechanism.FairDivision.Divisible
+import GameTheory.Mechanism.FairDivision.Basic
+import GameTheory.Mechanism.FairDivision.RoundRobin
+import GameTheory.Mechanism.FairDivision.TwoAgentEFX
 
-/-!
-# Fair Division
+namespace GameTheory.Mechanism.FairDivision
 
-Fair-division theorem packages.
--/
+end GameTheory.Mechanism.FairDivision

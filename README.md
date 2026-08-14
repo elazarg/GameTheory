@@ -1,205 +1,161 @@
-# GameTheory (Lean 4)
+# GameTheory
 
-`GameTheory` is a Lean 4/mathlib library for finite and discrete game theory.
-It formalizes strategic-form games, sequential games, mechanism design,
-auctions, social choice, fair division, cooperative games, and the mathematical
-infrastructure needed to connect them.
+Greenfield Lean 4 game-theory library built on Mathlib.
 
-The main organizing idea is a common semantic target, `KernelGame`: strategy
-spaces for each player, a stochastic outcome kernel, and utilities on outcomes.
-Concrete representations such as normal-form games, extensive-form games,
-multi-agent influence diagrams, multi-round games, factored-observation
-stochastic games, intrinsic-form games, and canonical open-game shapes compile
-into this target. Solution concepts are then stated once on the semantic core
-and reused across languages.
-
-## Highlights
-
-The library contains mechanized versions of several standard finite-game
-theory results.
-
-**Equilibrium and zero-sum games**
-
-- Mixed Nash equilibrium existence for finite games, via Brouwer on product
-  simplices.
-- Correlated and coarse-correlated equilibrium existence.
-- Von Neumann minimax for finite two-player zero-sum games.
-- Security levels, saddle-point vocabulary, zero-sum and constant-sum structure.
-
-**Sequential games**
-
-- Zermelo/backward induction for finite perfect-information extensive games.
-- The one-shot deviation principle for subgame-perfect equilibrium.
-- Kuhn's behavioral/mixed equivalence, proved on an observation-model layer and
-  instantiated for several concrete game representations.
-- Perfect-recall preservation results for language bridges such as MAID to EFG.
-- A deterministic open-game calculus with sequential/tensor laws up to
-  boundary isomorphism, context-parametric Nash recovery, explicit
-  subgame-conditioning, and CE/CCE recovery for closed recommendation devices.
-
-**Learning and repeated games**
-
-- Multiplicative weights with an explicit finite-horizon regret bound.
-- No-regret play implies approximate coarse correlated equilibrium.
-- Blackwell approachability and regret matching.
-- Fictitious-play convergence facts, including the exact-potential-game route.
-- An approximate discounted Nash folk theorem for strictly individually
-  rational feasible payoffs in observable mixed-action repeated games.
-
-**Mechanism design, auctions, and social choice**
-
-- Bayesian games, finite information-design primitives, and a finite revelation
-  principle.
-- Dominant-strategy implementability: weak monotonicity, affine maximizers, and
-  VCG as the canonical case.
-- Single-parameter Myerson payments: monotonicity, envelope payments, DSIC, and
-  uniqueness for zero-normalized continuous-slice payments.
-- Vickrey, reserve Vickrey, first-price, all-pay, VCG, and knapsack auctions.
-- Arrow, Gibbard-Satterthwaite, May's theorem, Condorcet, median voter, and
-  Sen's liberal paradox.
-
-**Fair division**
-
-- Indivisible-goods EF, EF1, EFX, proportionality, and maximin-share
-  definitions and existence results.
-- EF1 allocations via round-robin rules.
-- Two-agent EFX for indivisible goods.
-- Divisible cake-cutting on `[0,1]`: cut-and-choose, Dubins-Spanier
-  proportionality, and Stromquist envy-free existence via KKM.
-
-**Cooperative game theory and matching**
-
-- TU coalitional games, the Shapley value, and Shapley uniqueness through the
-  unanimity-game basis.
-- Banzhaf and Shapley-Shubik power indices, convex games, core facts, cost of
-  stability, and the easy direction of Bondareva-Shapley.
-- Nash, egalitarian, and Kalai-Smorodinsky bargaining solutions.
-- Gale-Shapley stable matching via deferred acceptance, proposer optimality,
-  receiver pessimality, rural-hospitals invariants, and the lattice of stable
-  matchings.
-
-**Expected utility and mathematical support**
-
-- A finite von Neumann-Morgenstern expected-utility representation theorem.
-- Discrete probability support for `PMF`, products, conditioning, couplings, and
-  bounded expected utility.
-- Finite combinatorics, DAGs, finite-carrier transport, KKM covers, unit
-  interval measure/cut lemmas, online learning, and fixed-point support.
-
-## Architecture
-
-The non-cooperative part of the library is organized as:
+The governing architecture is
+[`docs/GameTheory2Design.md`](docs/GameTheory2Design.md). Current delivery
+status is recorded in [`docs/DeliveryLedger.md`](docs/DeliveryLedger.md), the
+next dependency-gated work in
+[`docs/PostArchitectureDeliveryPlan.md`](docs/PostArchitectureDeliveryPlan.md),
+and recognizable public workflows in
+[`docs/CapabilityMatrix.md`](docs/CapabilityMatrix.md). The disposition of the
+repository-wide review is indexed in
+[`docs/ReviewClosureLedger.md`](docs/ReviewClosureLedger.md).
+Readers coming from the original library can find workflow-level redirects,
+queued recoveries, and deliberate retirements in
+[`docs/V1CapabilityMap.md`](docs/V1CapabilityMap.md).
 
 ```text
-Languages  ──compile──▶  KernelGame / GameForm  ──theorems──▶  solution concepts
+GameTheory/Probability   finite-support probability laws (FinDist)
+GameTheory/Core          signatures, profiles, forms, preferences, utility,
+                         deviations, equilibrium and response concepts, static
+                         game theory, strict-dominance solvability, approximate
+                         Nash, correlated and pure rationalizability, Bayesian
+                         recommendation/obedience, correlated conditional
+                         obedience and relative dominated-support exclusion,
+                         finite no-regret learning, concrete reindexing and
+                         relabeling laws, utility-scale invariance, profile
+                         individual rationality, social
+                         welfare, robust CCE smoothness, zero-sum matrix
+                         security, May's majority characterization,
+                         Arrow and Gibbard--Satterthwaite impossibility, and
+                         foundational social/coalitional theory
+GameTheory/Protocol      execution, histories, information, assessment,
+                         randomization, well-founded subgame perfection, and
+                         static-form compilation
+GameTheory/Epistemic     finite information partitions, posteriors, exact and
+                         approximate common knowledge, and agreement
+GameTheory/Evolutionary  static ESS/NSS and the canonical symmetric-Nash bridge
+GameTheory/Finite        executable rational frontend and its correctness layer
+GameTheory/Analysis      stable, opt-in fixed-point, minimax and matrix values,
+                         existence, trembling-hand refinement,
+                         approachability, and learning-convergence theory
+  /Protocol              analytic behavioral-assessment consistency bridge
+  /Repeated              analytic repeated-game bridge and discounted folk theorem
+  /Stochastic            normalized Shapley values and stationary statewise saddles
+GameTheory/Repeated      stable public histories, finite public monitoring,
+                         finite-average uniform equilibrium, discounting,
+                         cycles, and triggers
+GameTheory/Stochastic    opt-in finite-support stochastic games, perfect-public
+                         Protocol play, finite-horizon payoff, and uniformity
+GameTheory/Congestion    opt-in load calculus, Rosenthal potential, pure and
+                         coarse-correlated affine PoA, and canonical
+                         Pigou/Braess examples
+GameTheory/Cooperative   opt-in bargaining, ordinal matching, balancedness,
+                         and voting power, including core-to-balancedness,
+                         Nash-product affine invariance, finite
+                         deferred-acceptance stability, balanced perfect
+                         matchings, and Banzhaf/Shapley--Shubik indices
+GameTheory/Mechanism     opt-in coordinated mechanisms, finite auctions,
+                         combinatorial allocations, finite round-robin EF1,
+                         two-agent EFX existence, all-pay arithmetic, and
+                         exact/VCG and checked half-approximate finite knapsack
+GameTheory/Languages     scoped language encodings and truthful Bayesian
+                         mechanism compilation with recorded limitations
+  /NFG                   deterministic normal-form syntax compiling directly
+                         to the canonical static form, with no second Nash API
+  /FOSG                  transparent Protocol execution/information
+                         specialization with simultaneous actions; Values and
+                         Kuhn are intentional explicit opt-in leaves, not
+                         syntax-root imports
+  /Bridges/NFGFOSG       exact one-shot source-to-target outcome and utility
+                         laws through the actual Protocol history runner
+  /EFG                   transparent extensive-form specialization; finite
+                         capabilities are supplied explicitly; strategic
+                         extraction exposes exact pure/mixed Nash iff laws and
+                         both Kuhn directions preserve canonical history laws;
+                         well-founded one-shot/SPE is a transparent specialization
+  /MAID                  typed acyclic influence diagrams with site-local
+                         policies, order-free frontier evaluation, explicit
+                         EFG compilation, order independence, and exact
+                         source-owner behavioral Nash transfer
+  /Intrinsic             capability-light closed-loop configurations,
+                         information-local pure rules, solvability, and
+                         configuration-dependent causality before compilation;
+                         Solution is an intentional explicit opt-in leaf, not
+                         a syntax-root import
+  /MultiRound            finite imperfect-monitoring games with remembered own
+                         actions, canonical perfect recall, and direct
+                         Protocol/FOSG compilation
+GameTheory/Examples      reader-facing examples with silent #guard checks
+GameTheory/Tests         architecture and locality tests
+GameTheory/Experimental  architecture spikes, never re-exported
+GameTheoryMath           independently reusable, game-free mathematics,
+                         including online-learning and approachability engines
 ```
 
-`GameForm` is the utility-free protocol layer. `KernelGame` adds utilities and
-expected-utility solution concepts. Preference-parametric versions of the
-solution concepts live on `GameForm`; expected-utility specializations live on
-`KernelGame`.
+The root `GameTheory` import re-exports Core, Protocol, Epistemic,
+Evolutionary, and Finite. Epistemic is deliberately independent of Protocol:
+Protocol information is history-local, whereas epistemic cells partition a
+state space. Evolutionary keeps ESS/NSS static and imports Core only in its
+one-way Nash bridge; population dynamics remain reserved for a future opt-in
+Analysis root. Analysis is stable but deliberately opt-in so its fixed-point
+and topology dependencies cannot leak across the audited boundary. Repeated is
+also opt-in: its stable root remains analysis-light, while
+`GameTheory.Analysis.Repeated` is the one-way bridge for feasible-payoff
+geometry and the discounted folk theorem.
+`GameTheory.Analysis.Protocol` is the separate one-way bridge for pointwise
+Kreps-Wilson consistency over stable behavioral assessments; its EFG adapter
+supplies finite history instances and canonical continuation contexts without
+moving solution concepts into stable syntax.
+`GameTheoryMath` is a separate Lake target and cannot import game semantics.
+The supported finite stochastic-game domain is also opt-in. Its native object
+stores only state, actions, finite-support transitions, and stage utility; a
+named perfect-monitoring bridge reuses Protocol's sole behavioral runner, and
+each finite horizon reuses canonical approximate Nash. The one-way
+`GameTheory.Analysis.Stochastic` bridge proves the normalized two-player
+zero-sum Shapley contraction, unique discounted value, and stationary
+statewise saddle selectors. Neither root contains an infinite-path law or a
+general uniform-equilibrium existence claim.
+Congestion, Cooperative, and coordinated Mechanism domains are stable but
+opt-in, so their specialized APIs do not enlarge the main root. Languages and Experimental also
+stay outside the root for the separate reasons recorded in their modules.
+The intrinsic language is likewise opt-in: its native product and closed-loop
+semantics precede any temporal compiler, while mixed strategies, utility,
+perfect recall, and Kuhn equivalence remain separately gated.
+`GameTheory.Languages.FOSG.Values`, `GameTheory.Languages.FOSG.Kuhn`, and
+`GameTheory.Languages.Intrinsic.Solution` are intentional explicit opt-in
+leaves. They are therefore not imported by their language syntax roots.
+Examples and Tests compile in the default library target but are not
+public-root imports.
 
-The dependency is directional: `GameTheory.Basic → GameForm → KernelGame →
-Concepts`. Utility-independent constructors originate on `GameForm`; a
-`KernelGame` version is a utility-preserving lift of that constructor. For
-example, mixed extension is defined by `GameForm.mixedExtension`, while
-`KernelGame.mixedExtension` reattaches the original utility. The repository
-audit rejects imports from `GameTheory/Core` into downstream layers and keeps
-the raw `GameForm` module independent of `KernelGame`.
+## Environment
 
-The language layer treats concrete presentations as syntax plus semantics:
+- Lean: `v4.32.2`
+- Mathlib: `v4.32.2`
+- Lake package, public library, and public Lean namespace: `GameTheory`
 
-| Layer | Presentation |
-|---|---|
-| NFG | Simultaneous strategic choice |
-| EFG | Extensive-form games with information sets |
-| MAID | Graph-structured decisions and utilities |
-| MultiRound | Protocol-based sequential and repeated games |
-| FOSG | Factored-observation stochastic games |
-| Intrinsic | Witsenhausen-style intrinsic information structures |
-| OpenGame | Compositional games with forward play and backward cooutcomes |
+Use `lake update` to resolve dependencies and `lake exe cache get` to fetch
+Mathlib build artifacts.
 
-The OpenGame layer combines deterministic wiring with finite simultaneous,
-sequential, and sparse-DAG shapes. Shared ownership and deviation-family cores
-avoid representation-specific solution concepts, while exact NFG, EFG, and
-MAID bridges reuse the library's existing semantics. In particular,
-conditioned finite sequential equilibrium coincides with induced-EFG SPE under
-the stated perfect-information hypotheses. Backward values are called
-*cooutcomes* (also *coutilities* in the literature).
+## Checks
 
-Finite extensions cover correlation devices, evolutionary stability,
-hidden-state coend contexts, and `FinPMF`-based probabilistic composition. DAG
-evaluation delegates to the MAID/Bayesian-network factorization rather than
-introducing a second stochastic evaluator.
-
-The probabilistic development also records scoped falsifications: checked
-finite witnesses show that the tested independent-law relational lifting does
-not satisfy the claimed category laws, and that convex closing does not repair
-associativity. This concerns that particular equilibrium lifting—not
-probabilistic open games generally—and motivates retaining causal or coupling
-witnesses through composition.
-
-The cooperative branch is intentionally separate. Coalitional games, bargaining,
-and matching do not compile to `KernelGame`; their primitives are coalition
-values, feasible payoff sets, and preference rankings rather than strategic
-profiles.
-
-## Scope
-
-The library is finite/discrete by design.
-
-- Probability is represented by mathlib's `PMF`.
-- Major existence theorems typically assume finite player and strategy/action
-  carriers.
-- Many expected-utility lemmas also have bounded-utility versions that do not
-  require finite outcome types.
-- Continuous strategy spaces, measure-theoretic mixed strategies, and
-  continuous auction models are outside the current scope.
-- Existence theorems using Brouwer or classical choice are generally
-  `noncomputable`; this is a theorem library, not an equilibrium solver.
-
-## Build
-
-Requires Lean 4 (`v4.32.0`) and Mathlib (`v4.32.0`). The project also depends on
-the pinned [`fixed-point-theorems-lean4`](https://github.com/elazarg/fixed-point-theorems-lean4)
-fork for Brouwer/Kakutani-style fixed-point support.
-
-```bash
-git submodule update --init
-lake exe cache get
+```text
 lake build
-python scripts/test_check_lean_placeholders.py
-python scripts/check_lean_placeholders.py
-python scripts/audit_repository.py
+pwsh -NoProfile -File scripts/phase1-audit.ps1 -VerifyExpected
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 ```
 
-## Repository Map
+`lake build` compiles every module, including examples, tests, and experiments.
+The default structural audits are fast, source-level implementation-loop
+checks. Release and CI gates additionally run the compiler reachability suite:
 
 ```text
-GameTheory/Core/          semantic structures, morphisms, simulations
-GameTheory/Concepts/      solution concepts, welfare, learning, knowledge
-GameTheory/Languages/     NFG, EFG, MAID, MultiRound, FOSG, Intrinsic, OpenGame
-GameTheory/Theorems/      high-level theorem packages
-GameTheory/Mechanism/     mechanisms; Bayesian, SocialChoice, FairDivision, Contracts
-GameTheory/Auctions/      auction formats and truthfulness results
-GameTheory/Cooperative/   coalitional games, bargaining, matching
-Math/                     project-local mathematical infrastructure
-Semantics/                generic transition-system and trace infrastructure
-latex/                    paper and definitional supplement
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected -DeepReachability
+pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected -DeepReachability
 ```
 
-## Relation to EconCSLib
-
-Several theorem packages are ports from
-[`EconCSLib`](https://github.com/gametheoryinlean/EconCSLib), reworked against
-this library's APIs and sometimes generalized or moved under `Math/` when the
-result is not game-theoretic. Important examples include KKM covers, reserve
-Vickrey auctions, zero-sum matrix games, the stable-matching lattice,
-single-parameter Myerson payments, finite VNM representation, fair division, and
-knapsack auctions.
-
-## Paper
-
-The `latex/` directory contains the paper source and definitional supplement.
-The paper gives the narrative and proof architecture; the supplement is the
-declaration-level map of the main definitions and theorems.
+The deep mode launches many independent Lean processes and is intentionally
+not part of routine iteration. Hosted CI runs it after the full build on a
+clean checkout.

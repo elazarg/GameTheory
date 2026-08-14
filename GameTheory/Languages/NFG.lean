@@ -1,29 +1,55 @@
 /-
-Copyright (c) 2025 GameTheory contributors. All rights reserved.
-Released under the MIT license as described in the file LICENSE.
-Authors: GameTheory contributors
+# Deterministic normal-form syntax
+
+`NFG.Game` is utility-free syntax for a deterministic normal-form game. It
+compiles directly to the canonical `GameForm`; utility, finiteness, executable
+algorithms, deviations, and solution concepts remain in the layers that own
+them.
+
+This syntax module imports no Protocol, utility, preference, equilibrium,
+finite algorithm, or Analysis module.
 -/
 
-import GameTheory.Languages.NFG.Syntax
-import GameTheory.Languages.NFG.Compile
-import GameTheory.Languages.NFG.PublicGoods
-import GameTheory.Languages.NFG.Stackelberg
+import GameTheory.Core.Form
 
-/-!
-# GameTheory.Languages.NFG
+noncomputable section
 
-Public entrypoint for the normal-form game language layer.
+namespace GameTheory.Languages.NFG
 
-- `Syntax` defines the `NFGGame` structure, strategy profiles, and pure solution concepts
-- `Compile` maps the language into `KernelGame` and provides mixed strategy support
-- `PublicGoods` models voluntary contribution games
-- `Stackelberg` models leader-follower games
+open GameTheory GameTheory.Probability
 
-Congestion games live in the dedicated `GameTheory.Congestion` directory.
+universe uι ua uo
 
-Example instantiations (Prisoner's Dilemma, Matching Pennies, mixed Matching
-Pennies, cheap-talk babbling) live in the separate `GameTheoryExamples` target.
+set_option linter.checkUnivs false in
+/-- Utility-free deterministic normal-form syntax. Capabilities such as
+finiteness and utilities belong to the operations that need them. -/
+structure Game (ι : Type uι) where
+  /-- Each player's action carrier. -/
+  Action : ι → Type ua
+  /-- The outcome carrier. -/
+  Outcome : Type uo
+  /-- The outcome selected by a pure action profile. -/
+  outcome : (∀ i, Action i) → Outcome
 
-Non-strategic-form models (coalitional games, axiomatic bargaining,
-matching markets) live under `GameTheory.Cooperative`.
--/
+namespace Game
+
+variable {ι : Type uι} (G : Game ι)
+
+/-- The canonical static signature of a normal-form game. -/
+abbrev signature : GameSignature ι where
+  Strategy := G.Action
+  Outcome := G.Outcome
+
+/-- Deterministic normal-form syntax compiles directly to the canonical static
+form. It introduces no language-specific deviation or equilibrium predicate. -/
+@[reducible]
+def toGameForm : GameForm ι :=
+  GameForm.deterministic G.signature G.outcome
+
+@[simp]
+theorem toGameForm_play (profile : Profile G.signature) :
+    G.toGameForm.play profile = FinDist.pure (G.outcome profile) := rfl
+
+end Game
+
+end GameTheory.Languages.NFG
