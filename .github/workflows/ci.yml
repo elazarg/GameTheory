@@ -35,6 +35,19 @@ jobs:
           lint: false
           use-mathlib-cache: true
 
+      # lean-action's internal Bash steps can see Elan, but on Windows its
+      # shim directory is not currently propagated to later PowerShell steps.
+      # The deep audits invoke `lake env lean`, so expose the pinned shims once
+      # and fail here with a useful message if the action layout changes.
+      - name: Expose pinned Lean toolchain to audit steps
+        run: |
+          $elanBin = Join-Path $env:USERPROFILE '.elan\bin'
+          $lake = Join-Path $elanBin 'lake.exe'
+          if (-not (Test-Path -LiteralPath $lake -PathType Leaf)) {
+            throw "lean-action did not install the Lake shim at $lake"
+          }
+          $elanBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       # Source-level checks stay fast for local iteration. CI additionally
       # exercises the intentionally expensive compiler reachability probes.
       - name: Verify Phase 1 architecture measurements
