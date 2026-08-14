@@ -1,17 +1,16 @@
 /-
-# EXP-092: a proof-facing view of public stochastic policies
+# Proof-facing public stochastic policies
 
-This experimental leaf asks whether callers can reason with ordinary actions
-and proof-free public histories while the existing perfect-monitoring Protocol
-model remains the sole execution semantics.  The view is admitted only if the
-translation is lossless and respects unilateral profile replacement.
+Callers can reason with ordinary actions and proof-free public histories while
+the perfect-monitoring Protocol model remains the sole execution semantics.
+The translation is lossless and respects unilateral profile replacement.
 -/
 
-import GameTheory.Stochastic.Uniform
+import GameTheory.Stochastic.FiniteHorizon
 
 noncomputable section
 
-namespace GameTheory.Experimental.PostArchitecture.StochasticProofView
+namespace GameTheory.Stochastic
 
 open Probability Stochastic Protocol
 
@@ -36,6 +35,37 @@ abbrev publicSignature (initial : G.State) [∀ i, Nonempty (G.Action i)] :
 /-- Profiles of ordinary public-history policies. -/
 abbrev PublicProfile (initial : G.State) [∀ i, Nonempty (G.Action i)] :=
   Profile (publicSignature G initial)
+
+namespace PublicPolicy
+
+/-- Shift one ordinary public policy past an already observed
+reverse-chronological prefix. -/
+def after {G : Stochastic.Game ι} {i : ι}
+    (policy : PublicPolicy G i) (observed : G.PublicHistory) :
+    PublicPolicy G i :=
+  fun continuation => policy (continuation ++ observed)
+
+end PublicPolicy
+
+namespace PublicProfile
+
+/-- Shift every ordinary public policy past an already observed prefix. -/
+def after {G : Stochastic.Game ι} {initial restart : G.State}
+    [∀ i, Nonempty (G.Action i)]
+    (profile : PublicProfile G initial) (observed : G.PublicHistory) :
+    PublicProfile G restart :=
+  fun i => PublicPolicy.after (profile i) observed
+
+@[simp]
+theorem after_apply {G : Stochastic.Game ι} {initial restart : G.State}
+    [∀ i, Nonempty (G.Action i)]
+    (profile : PublicProfile G initial) (observed continuation : G.PublicHistory)
+    (i : ι) :
+    (after (restart := restart) profile observed) i continuation =
+      profile i (continuation ++ observed) :=
+  rfl
+
+end PublicProfile
 
 /-- The all-active perfect-monitoring menu is equivalent to the underlying
 action carrier.  In particular, the translation does not choose a fallback. -/
@@ -282,4 +312,4 @@ theorem toBehaviorProfile_update [DecidableEq ι]
 
 end Game
 
-end GameTheory.Experimental.PostArchitecture.StochasticProofView
+end GameTheory.Stochastic

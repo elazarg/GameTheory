@@ -110,6 +110,7 @@ becomes difficult to scan.
 | EXP-097 | 2026-08-14 | post-review client gate / implementation theory | Can profile-observed transfers induce target sets through canonical dominance semantics? | Supports; decides D54 | [`decisions/D54-profile-transfer-implementation.md`](decisions/D54-profile-transfer-implementation.md); `GameTheory/Mechanism/Implementation.lean`; `GameTheory/Tests/Implementation.lean` |
 | EXP-098 | 2026-08-14 | hosted reachability maintenance | Did review-time namespace and import cleanup leave positive probes stale? | Four stale expectations and probe exit state repaired; hosted gate passes | [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 | EXP-099 | 2026-08-14 | D12 / hosted sequential-boundary maintenance | Does the broad Analysis.Protocol umbrella still represent the sequential-equilibrium leaf's dependency budget? | Refutes proxy; owning-leaf probe passes hosted gate | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase3-audit.ps1`](../scripts/phase3-audit.ps1) |
+| EXP-100 | 2026-08-14 | pre-cutover stochastic client gate | Can canonical Protocol play expose chronological finite histories and restart laws without a second runner? | Complete; supports and graduates | `GameTheory/Stochastic/PublicPolicy.lean`; `GameTheory/Stochastic/History.lean`; `GameTheory/Tests/StochasticContinuation.lean` |
 
 ## Entry template
 
@@ -5762,6 +5763,11 @@ memory.
   reduction target for execution-scaffolding references. Only the smallest
   invariant that survives a second topology may move into
   `Stochastic.PerfectMonitoring`.
+- **Later evidence:** EXP-100 supplied that second topology and a generic
+  arbitrary-horizon restart theorem.  The lossless policy/profile view therefore
+  graduated as `Stochastic.PublicPolicy`; the history and restart surface is a
+  separate `Stochastic.History` facade rather than an expansion of the
+  foundational monitoring module.
 
 ### EXP-093: executable client transformation adequacy
 
@@ -6155,3 +6161,72 @@ memory.
   root/declaration diagnostics and expected-native-exit normalization as
   Phase 2. Hosted run `31801118321` passed Phase 3 and the clean-worktree
   check, together with the full build and preceding architecture gates.
+
+### EXP-100: chronological stochastic histories and restart calculus
+
+- **Date / revision:** 2026-08-14, reserved after `f52f6836`
+- **Status:** completed; supports the projected proof view and graduates the
+  smallest client-facing policy/history/restart surface
+- **Decision / question:** pre-cutover potential-client usefulness gate;
+  whether finite stochastic-game proofs can use chronological `Fin`-indexed
+  histories, horizon laws, average payoffs, and continuation/restart identities
+  while canonical execution remains the sole Protocol runner.
+- **Client evidence:** the independent `UniformEquilibrium` development uses
+  chronological `Fin t` histories, first-stage law disintegration, shifted
+  behavior profiles, and finite-average-payoff recursion throughout. Treat
+  these as field-standard proof patterns, not declarations to preserve.
+- **Representative slice:** a two-player, two-state game whose next-state law
+  genuinely depends on the joint action. Project canonical realized Protocol
+  histories to a proof-free chronological view; identify its horizon law and
+  finite-average payoff; restart after a nonempty realized prefix; and consume
+  the existing uniform deviation-cap interface without defining another
+  equilibrium predicate.
+- **Competing designs:** a transparent chronological view projected from
+  Protocol histories; a second direct recursive history runner; a total
+  equivalence with arbitrary reverse-list information states; or leaving all
+  projection and restart reasoning to clients. The direct runner and false
+  total equivalence are presumed rejected.
+- **Measurements:** public definitions and support theorems, proof-dependent
+  transport or casts exposed to the client, definitions unfolded in the
+  hostile proof, action-dependence actually used, narrow elaboration time, and
+  whether law/payoff/restart results reduce to canonical `runBehavioralFrom`
+  composition.
+- **Kill conditions:** reject the view if fixed-horizon use requires public
+  proof casts, if it duplicates execution or probability semantics, if
+  continuation requires a second strategy carrier, or if the action-dependent
+  fixture can pass while ignoring the chosen action. Do not graduate a
+  UE-named adapter or a specialized quitting-game restart API.
+- **Artifacts / observations:** `Stochastic.PublicPolicy` exposes ordinary
+  `PublicHistory -> FinDist Action` policies, lossless policy/profile
+  equivalences, unilateral-update transport, and a source-shaped one-step law.
+  `Stochastic.History` adds the exact list/`Sigma (fun t => Fin t ->
+  StageRecord)` equivalence, a support-checked fixed-horizon chronological law,
+  proof-free public-history laws, exact public/canonical finite-average payoff
+  equality, a public-history characterization of the existing uniform
+  deviation-cap constructor, policy shifting, and arbitrary-horizon restart.
+  The source-facing successor theorem disintegrates restart laws through
+  ordinary joint actions and `Game.transition`; it remains a theorem over the
+  sole canonical runner.
+- **Hostile result:** `Tests.StochasticContinuation` uses two players and two
+  states with `transition _ actions = pure (actions false)`.  It proves the
+  true-action and false-action transition laws differ, changes the prescribed
+  action after the first observed record, computes the exact two-stage public
+  law `[secondRecord, firstRecord]`, maps the fixed `Fin 2` chronological law
+  back to it, and independently consumes the arbitrary-horizon restart theorem
+  from a realized nonempty prefix.  The source-facing law computation exposes
+  no Protocol choice, legality, or support bookkeeping; the separate theorem
+  testing continuation from a realized trace has four canonical-construction
+  references concentrated in that boundary.
+- **Measurements:** the stable policy facade is 315 source lines, the stable
+  history/restart facade is 575 lines, and the hostile test is 150 lines at the
+  recorded revision.  Source scans find no `cast`, `Eq.ndrec`, direct
+  `Function.update`, or new runner definition in those files.  Narrow builds
+  of both facades and the hostile test are warning-clean; the final incremental
+  hostile build took about 26 seconds on the migration workstation.  The
+  fixed-horizon transport uses one generic Protocol support-length invariant;
+  all public conversion statements are proof-free.
+- **Outcome / next action:** none of the kill conditions fired.  Graduate the
+  two facades and the action-dependent test.  Do not add a direct recursive
+  stochastic runner, an alternative equilibrium predicate, UE names, or
+  quitting-game-specific restart machinery.  Further continuation lemmas are
+  consumer-gated algebra over this surface.

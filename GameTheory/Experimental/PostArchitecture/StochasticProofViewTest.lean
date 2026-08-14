@@ -7,7 +7,7 @@ player's whole two-stage payoff over a constant policy.  The final comparison
 uses the canonical Protocol runner and canonical approximate-Nash predicate.
 -/
 
-import GameTheory.Experimental.PostArchitecture.StochasticProofView
+import GameTheory.Stochastic.History
 import Mathlib.Tactic.NormNum
 
 noncomputable section

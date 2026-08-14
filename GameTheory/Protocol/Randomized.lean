@@ -96,6 +96,33 @@ theorem runRandomizedFor_add (chooser : E.RandomizedChooser)
         exact FinDist.bindOnSupport_congr fun reached realized =>
           ih (history.extend draw.2 realized)
 
+/-- In a protocol that never terminates, every history in a `fuel`-step run
+has gained exactly `fuel` transitions.  This is the support invariant used by
+fixed-horizon proof views; it does not define another runner. -/
+theorem trace_length_eq_of_mem_support_runRandomizedFor
+    (chooser : E.RandomizedChooser)
+    (neverTerminal : ∀ state : E.State, ¬ E.terminal state) :
+    ∀ (fuel : ℕ) (start result : E.History),
+      result ∈ (E.runRandomizedFor chooser fuel start).support →
+        result.trace.length = start.trace.length + fuel := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro start result hresult
+      rw [runRandomizedFor_zero, FinDist.mem_support_pure] at hresult
+      subst result
+      simp
+  | succ fuel ih =>
+      intro start result hresult
+      rw [runRandomizedFor_succ_of_not_terminal chooser fuel
+          (neverTerminal start.state), FinDist.support_bind] at hresult
+      obtain ⟨draw, hdraw, hresult⟩ := Set.mem_iUnion₂.mp hresult
+      rw [FinDist.support_bindOnSupport] at hresult
+      obtain ⟨target, realized, hresult⟩ := Set.mem_iUnion₂.mp hresult
+      have hlength := ih (start.extend draw.2 realized) result hresult
+      simpa only [History.extend, Trace.length, Nat.add_assoc,
+        Nat.add_comm, Nat.add_left_comm] using hlength
+
 /-- **Deterministic play is the degenerate case.** A chooser that answers with
 point masses induces exactly the law the deterministic runner induces, so
 randomizing is an extension of committing rather than a rival account of it. -/

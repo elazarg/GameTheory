@@ -32,7 +32,7 @@ Status labels:
 | Multi-round imperfect monitoring | `GameTheory.Languages.MultiRound` | supported |
 | Intrinsic-form closed loops and pure strategic analysis | `GameTheory.Languages.Intrinsic` | supported through explicit opt-in solution/strategic leaves |
 | Repeated games, public monitoring, PPE, self-generation, uniform equilibrium, and the folk theorem | `GameTheory.Repeated` and `GameTheory.Analysis.Repeated` | supported; public randomization remains queued |
-| Finite stochastic games and discounted stationary values | `GameTheory.Stochastic` and `GameTheory.Analysis.Stochastic` | supported; no general uniform-existence claim |
+| Finite stochastic games, chronological histories, continuation/restart, uniform payoffs, and discounted stationary values | `GameTheory.Stochastic` and `GameTheory.Analysis.Stochastic` | supported through ordinary public policies projected onto the canonical runner; no infinite-path law or general uniform-existence claim |
 | Bayesian games, BCE, revelation, information design, Groves, auctions, and knapsack | `GameTheory.Core.Bayesian`, `GameTheory.Mechanism`, and `GameTheory.Languages.Bayesian` | supported in the finite/algebraic scopes recorded by the capability matrix |
 | Monderer--Tennenholtz-style target implementation by profile transfers | `GameTheory.Mechanism.Implementation` | supported for canonical weak undominance and finite surviving-budget bounds; mixed, correlated, informational, VCG, price, and attainment extensions remain consumer-gated |
 | Indivisible-goods EF1 and two-agent EFX | `GameTheory.Mechanism.FairDivision` | supported |

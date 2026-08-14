@@ -46,7 +46,7 @@ Status labels:
 | Zermelo backward induction | complete | constructive Bellman profile, explicit exit/reward fixture, infinite unreachable-menu witness, pure SPE | A total fallback is structural because contingent plans are total; finiteness is required only at genuine decision histories. |
 | Behavioral assessment and sequential equilibrium | supported | decision-fiber antichain contract, perfect-recall certificate, positive/falsifying hidden-state assessments | Broader refinement families. |
 | Repeated games | supported | deterministic Protocol prefixes; native public-signal histories; deviation-signal rank; discounting, triggers, PPE, bounded APS self-generation, deterministic uniform equilibrium, folk theorem | Public randomization and monitored uniformity are separate breadth; native monitoring is not claimed as a Protocol runner. |
-| Stochastic games | supported | finite horizon, nonconstant transient uniform-payoff certificate, discounted values, stationary Bellman equilibrium | No general uniform-existence claim. |
+| Stochastic games | supported | ordinary public-policy equivalence, chronological fixed-horizon laws, exact proof-free/canonical average-payoff transport, uniform-cap characterization, arbitrary-horizon restart, action-dependent migration fixture, nonconstant transient uniform-payoff certificate, discounted values, stationary Bellman equilibrium | No infinite-path law or general uniform-existence claim; further specialized continuation algebra is consumer-gated. |
 
 ## Languages, mechanisms, and parallel domains
 
