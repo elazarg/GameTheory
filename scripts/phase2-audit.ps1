@@ -441,12 +441,18 @@ if ($DeepReachability) {
         throw "Reachability probe for $Root did not inspect $constant`n$text"
       }
     }
-    return $text
+    return [pscustomobject]@{
+      Root = $Root
+      Text = $text
+    }
   }
-  function Is-Unreachable([string] $Output, [string] $Constant) {
+  function Is-Unreachable([pscustomobject] $Probe, [string] $Constant) {
     $escaped = [regex]::Escape($Constant)
-    return ($Output -match
+    $unreachable = ($Probe.Text -match
       "(?im)unknown (identifier|constant)[^\r\n]*$escaped(?![A-Za-z0-9_.])")
+    $status = if ($unreachable) { 'REJECTED' } else { 'REACHED' }
+    Write-Host "REACHABILITY_PROBE root=$($Probe.Root) constant=$Constant status=$status"
+    return $unreachable
   }
   $unreachable = 0
   $reachable = @()
@@ -1079,7 +1085,7 @@ if ($DeepReachability) {
   # reachable there, while the shared convergence vocabulary and Protocol
   # stay above or beside it.
   $coreFictitiousInputs = @(
-    'GameTheory.UtilityGame.empiricalMarginal_succ_expect',
+    'GameTheory.GameForm.empiricalMarginal_succ_expect',
     'GameTheory.UtilityGame.IsFictitiousPlay.isBestResponse')
   $coreFictitiousBoundary = @(
     'GameTheory.Analysis.FinDistConvergesPointwise',
@@ -1104,7 +1110,7 @@ if ($DeepReachability) {
     $coreFictitiousBoundaryRejected
 
   $coreMixedPotentialInputs = @(
-    'GameTheory.UtilityGame.mixedPotential_update',
+    'GameTheory.GameForm.mixedPotential_update',
     'GameTheory.UtilityGame.IsExactPotential.mixed')
   $coreMixedPotentialBoundary = @(
     'GameTheory.Analysis.FinDistConvergesPointwise',
@@ -1217,7 +1223,7 @@ if ($DeepReachability) {
     'GameTheory.UtilityGame',
     'GameTheory.Probability.FinDist')
   $mathApproachabilityOutput =
-    Run-Probe 'GameTheoryMath.Approachability' `
+    Run-Probe 'GameTheoryMath.OrthantProjection' `
       ($mathApproachabilityInputs + $mathApproachabilityBoundary)
   $mathApproachabilityInputsReached = 0
   foreach ($constant in $mathApproachabilityInputs) {
@@ -1302,8 +1308,7 @@ if ($DeepReachability) {
     'GameTheory.Analysis.FinDistConvergesPointwise.expect',
     'GameTheory.UtilityGame.IsFictitiousPlay.limit_isNash',
     'GameTheory.UtilityGame.eventually_isεNash_of_mixedImprovement_tendsto_zero',
-    'GameTheory.UtilityGame.IsExactPotential.eventually_isεNash_of_isFictitiousPlay',
-    'GameTheory.Analysis.Approachability.regretMatch_approaches')
+    'GameTheory.UtilityGame.IsExactPotential.eventually_isεNash_of_isFictitiousPlay')
   $learningBridgeBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
     'kakutani_fixed_point')
@@ -1845,7 +1850,7 @@ if ($VerifyExpected) {
     $Expected['APPROACHABILITY_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['FICTITIOUS_POTENTIAL_ANALYSIS_INPUT_PROBES_REACHED'] = 4
     $Expected['FICTITIOUS_POTENTIAL_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
-    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 9
+    $Expected['LEARNING_BRIDGE_INPUT_PROBES_REACHED'] = 8
     $Expected['LEARNING_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['PROTOCOL_FINITE_LAW_INPUT_PROBES_REACHED'] = 2
     $Expected['PROTOCOL_FINITE_LAW_BOUNDARY_PROBES_REJECTED'] = 1

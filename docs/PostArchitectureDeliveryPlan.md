@@ -270,7 +270,11 @@ During iteration, run the narrowest relevant Lean file or Lake target. Run a
 full warning-clean build when imports, package configuration, public roots, or
 a delivery gate changes. The Phase 2 and Phase 3 audits default to fast
 source-level checks; their `-DeepReachability` mode is reserved for CI and
-release gates because it launches many independent Lean processes.
+release gates because it launches many independent Lean processes. A namespace
+or import change must update affected positive reachability declarations and
+probe roots in the same commit. Deep probes report each root/declaration result
+in addition to aggregate expectations so integration failures can be audited
+as a complete set rather than one serial mismatch at a time.
 
 Every completed package records:
 

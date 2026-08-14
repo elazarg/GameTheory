@@ -108,6 +108,7 @@ becomes difficult to scan.
 | EXP-095 | 2026-08-14 | post-review client gate / sequential games | Can EFG clients prove history-dependent SPE without support-proof transport? | Supports after one helper | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Experimental/PostArchitecture/SequentialClientAdequacy.lean` |
 | EXP-096 | 2026-08-14 | D12 / hosted reachability maintenance | Does `Polynomial` still identify an Analysis leak from stable Repeated? | Refutes proxy; boundary narrowed to direct probes | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 | EXP-097 | 2026-08-14 | post-review client gate / implementation theory | Can profile-observed transfers induce target sets through canonical dominance semantics? | Supports; decides D54 | [`decisions/D54-profile-transfer-implementation.md`](decisions/D54-profile-transfer-implementation.md); `GameTheory/Mechanism/Implementation.lean`; `GameTheory/Tests/Implementation.lean` |
+| EXP-098 | 2026-08-14 | hosted reachability maintenance | Did review-time namespace and import cleanup leave positive probes stale? | Four stale expectations repaired; hosted rerun pending | [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 
 ## Entry template
 
@@ -6097,3 +6098,26 @@ memory.
   VCG, restricted-transfer, price, and attainment families gated by their own
   field-standard consumers. Add the public redirect and require fast audits
   locally plus the hosted full/deep gate before cutover.
+
+### EXP-098: reconcile positive reachability after review cleanup
+
+- **Date / revision:** 2026-08-14, hosted run at `52adac51`
+- **Status:** locally completed; hosted rerun pending
+- **Decision / question:** process maintenance; whether the review's namespace
+  corrections and removal of unused imports left positive deep-reachability
+  probes describing the old declaration graph.
+- **Representative slice:** compare every reported deep Phase 2 count with its
+  expected value, then inspect the exact import root and declaration for every
+  mismatch rather than repairing only the first aggregate failure.
+- **Evidence / observations:** the full hosted Lean build and Phase 1 passed;
+  deep Phase 2 found four stale positive expectations. Two Core declarations
+  had always belonged to `GameForm`, not `UtilityGame`; the reusable orthant
+  declarations require the `GameTheoryMath.OrthantProjection` root; and the
+  Learning facade intentionally stopped importing the unrelated
+  approachability theorem. All other reported deep counts matched, including
+  EXP-096's six direct repeated-analysis rejections.
+- **Outcome / next action:** repair declaration paths and the orthant root,
+  remove the phantom Learning input rather than restoring an unused import,
+  and make every deep probe print its root, declaration, and observed status.
+  Namespace or import cleanup must update its positive reachability probes in
+  the same commit. Require hosted Phase 2 and Phase 3 success before cutover.
