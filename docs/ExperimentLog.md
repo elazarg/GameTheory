@@ -108,8 +108,8 @@ becomes difficult to scan.
 | EXP-095 | 2026-08-14 | post-review client gate / sequential games | Can EFG clients prove history-dependent SPE without support-proof transport? | Supports after one helper | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Experimental/PostArchitecture/SequentialClientAdequacy.lean` |
 | EXP-096 | 2026-08-14 | D12 / hosted reachability maintenance | Does `Polynomial` still identify an Analysis leak from stable Repeated? | Refutes proxy; boundary narrowed to direct probes | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 | EXP-097 | 2026-08-14 | post-review client gate / implementation theory | Can profile-observed transfers induce target sets through canonical dominance semantics? | Supports; decides D54 | [`decisions/D54-profile-transfer-implementation.md`](decisions/D54-profile-transfer-implementation.md); `GameTheory/Mechanism/Implementation.lean`; `GameTheory/Tests/Implementation.lean` |
-| EXP-098 | 2026-08-14 | hosted reachability maintenance | Did review-time namespace and import cleanup leave positive probes stale? | Four stale expectations and probe exit state repaired; hosted rerun pending | [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
-| EXP-099 | 2026-08-14 | D12 / hosted sequential-boundary maintenance | Does the broad Analysis.Protocol umbrella still represent the sequential-equilibrium leaf's dependency budget? | Refutes proxy; probe narrowed to owning leaf | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase3-audit.ps1`](../scripts/phase3-audit.ps1) |
+| EXP-098 | 2026-08-14 | hosted reachability maintenance | Did review-time namespace and import cleanup leave positive probes stale? | Four stale expectations and probe exit state repaired; hosted gate passes | [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
+| EXP-099 | 2026-08-14 | D12 / hosted sequential-boundary maintenance | Does the broad Analysis.Protocol umbrella still represent the sequential-equilibrium leaf's dependency budget? | Refutes proxy; owning-leaf probe passes hosted gate | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase3-audit.ps1`](../scripts/phase3-audit.ps1) |
 
 ## Entry template
 
@@ -6103,7 +6103,8 @@ memory.
 ### EXP-098: reconcile positive reachability after review cleanup
 
 - **Date / revision:** 2026-08-14, hosted run at `52adac51`
-- **Status:** locally completed; hosted rerun pending
+- **Status:** completed; hosted gate passed at `e3b5e506` in run
+  `31801118321`
 - **Decision / question:** process maintenance; whether the review's namespace
   corrections and removal of unused imports left positive deep-reachability
   probes describing the old declaration graph.
@@ -6126,12 +6127,14 @@ memory.
   clear an expected negative probe's native exit state only after its output
   has been validated.
   Namespace or import cleanup must update its positive reachability probes in
-  the same commit. Require hosted Phase 2 and Phase 3 success before cutover.
+  the same commit. Hosted run `31801118321` passed the full build, Phase 1,
+  deep Phase 2, deep Phase 3, and the clean-worktree guard.
 
 ### EXP-099: probe the sequential-equilibrium owner directly
 
 - **Date / revision:** 2026-08-14, hosted run at `be80a437`
-- **Status:** locally completed; hosted rerun pending
+- **Status:** completed; hosted gate passed at `e3b5e506` in run
+  `31801118321`
 - **Decision / question:** D12 maintenance; whether the public
   `GameTheory.Analysis.Protocol` umbrella still measures the dependency budget
   of its `Sequential` leaf after counterfactual learning graduated into the
@@ -6150,5 +6153,5 @@ memory.
 - **Outcome / next action:** retain both geometry rejections but attach them to
   `GameTheory.Analysis.Protocol.Sequential`. Give Phase 3 the same exact
   root/declaration diagnostics and expected-native-exit normalization as
-  Phase 2. Require a hosted Phase 3 pass and clean-worktree check before
-  cutover.
+  Phase 2. Hosted run `31801118321` passed Phase 3 and the clean-worktree
+  check, together with the full build and preceding architecture gates.
