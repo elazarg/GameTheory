@@ -316,7 +316,7 @@ theorem afterPublicHistory_nil
     (profile : G.BehaviorProfile initial) :
     G.afterPublicHistory (restart := restart) profile [] = profile := by
   funext i continuation
-  change profile i (continuation ++ []) = profile i continuation
+  unfold afterPublicHistory
   rw [List.append_nil]
 
 omit [Fintype ι] in
@@ -333,8 +333,7 @@ theorem afterPublicHistory_afterPublicHistory
       G.afterPublicHistory (restart := secondRestart) profile
         (secondPrefix ++ firstPrefix) := by
   funext i continuation
-  change profile i ((continuation ++ secondPrefix) ++ firstPrefix) =
-    profile i (continuation ++ (secondPrefix ++ firstPrefix))
+  unfold afterPublicHistory
   rw [List.append_assoc]
 
 omit [Fintype ι] in
@@ -493,25 +492,27 @@ theorem publicHistoryLawFrom_eq_restartedFullHistoryLaw
       let freshNext : (G.toExecution start.state).History :=
         (G.toExecution start.state).initHistory.extend draw.2 realized
       conv_rhs => rw [← FinDist.map_comp]
-      change G.publicHistoryLawFrom initial profile fuel originalNext =
-        FinDist.map (G.splicePrefix (G.publicHistoryOfTrace initial start.trace))
-          (G.publicHistoryLawFrom start.state
-            (G.afterPublicHistory (restart := start.state) profile
-              (G.publicHistoryOfTrace initial start.trace)) fuel freshNext)
-      rw [ih profile originalNext]
-      rw [ih
-        (G.afterPublicHistory (restart := start.state) profile
-          (G.publicHistoryOfTrace initial start.trace)) freshNext]
-      unfold restartedFullHistoryLaw restartHistoryLaw
-      simp only [originalNext, freshNext, History.extend,
-        ExecutionProtocol.initHistory, publicHistoryOfTrace]
-      rw [G.afterPublicHistory_afterPublicHistory, FinDist.map_comp]
-      apply congrArg (fun relabel => FinDist.map relabel _)
-      funext continuation
-      simp only [Function.comp_apply, splicePrefix]
-      rw [List.append_assoc]
-      rw [List.singleton_append]
-      rfl
+      have hcontinuation :
+          G.publicHistoryLawFrom initial profile fuel originalNext =
+            FinDist.map (G.splicePrefix (G.publicHistoryOfTrace initial start.trace))
+              (G.publicHistoryLawFrom start.state
+                (G.afterPublicHistory (restart := start.state) profile
+                  (G.publicHistoryOfTrace initial start.trace)) fuel freshNext) := by
+        rw [ih profile originalNext]
+        rw [ih
+          (G.afterPublicHistory (restart := start.state) profile
+            (G.publicHistoryOfTrace initial start.trace)) freshNext]
+        unfold restartedFullHistoryLaw restartHistoryLaw
+        simp only [originalNext, freshNext, History.extend,
+          ExecutionProtocol.initHistory, publicHistoryOfTrace]
+        rw [G.afterPublicHistory_afterPublicHistory, FinDist.map_comp]
+        apply congrArg (fun relabel => FinDist.map relabel _)
+        funext continuation
+        simp only [Function.comp_apply, splicePrefix]
+        rw [List.append_assoc]
+        rw [List.singleton_append]
+        rfl
+      exact hcontinuation
 
 /-- One restarted stage is exposed entirely in ordinary simultaneous actions
 and native stochastic transitions.  Its continuation is another named restart
@@ -550,11 +551,6 @@ theorem restartHistoryLaw_succ_toPublicProfile
       (G.toExecution restart).initHistory.extend
         (G.canonicalJoint restart restart actions).2
         (G.canonicalRealized restart realized)
-    change G.publicHistoryLawFrom restart (G.toBehaviorProfile restart shifted)
-        fuel first = _
-    rw [G.publicHistoryLawFrom_eq_restartedFullHistoryLaw
-      (G.toBehaviorProfile restart shifted) first fuel]
-    unfold restartedFullHistoryLaw
     have hfirst : G.publicHistoryOfTrace restart first.trace =
         [{ source := restart, joint := actions, target := target }] := by
       unfold first
@@ -562,11 +558,15 @@ theorem restartHistoryLaw_succ_toPublicProfile
         publicHistoryOfTrace]
       apply congrArg (fun record => [record])
       rfl
-    rw [hfirst]
-    rw [← hcompiled]
-    rw [G.restartHistoryLaw_afterPublicHistory]
+    have hcontinuation :=
+      G.publicHistoryLawFrom_eq_restartedFullHistoryLaw
+        (G.toBehaviorProfile restart shifted) first fuel
+    unfold restartedFullHistoryLaw at hcontinuation
+    rw [hfirst, ← hcompiled, G.restartHistoryLaw_afterPublicHistory]
+      at hcontinuation
     unfold restartHistoryLaw publicHistoryLaw InformationModel.runBehavioral
-    rfl
+      at hcontinuation
+    exact hcontinuation
 
 end FinitePlayers
 

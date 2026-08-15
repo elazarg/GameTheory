@@ -121,10 +121,10 @@ theorem publicHistoryLaw_two_steps :
     simp_rw [publicProfile_initial]
     rw [FinDist.pi_pure firstActions, FinDist.pure_bind]
     simp only [actionGame, FinDist.pure_bindOnSupport]
-    change FinDist.map (fun continuation => continuation ++ [firstRecord])
-      (actionGame.restartHistoryLaw canonicalProfile [firstRecord] true 1) = _
-    rw [restart_one_step, FinDist.map_pure]
-    rfl
+    have hrestarted := congrArg
+      (FinDist.map (fun continuation => continuation ++ [firstRecord]))
+      restart_one_step
+    simpa [firstActions, firstRecord, canonicalProfile] using hrestarted
   simpa only [Game.restartHistoryLaw, Game.afterPublicHistory_nil] using hrestart
 
 /-- The fixed `Fin 2` chronological law maps back to that exact public law. -/
@@ -143,8 +143,9 @@ theorem continuation_from_first_one_step :
   rw [actionGame.publicHistoryLawFrom_eq_restartedFullHistoryLaw
     canonicalProfile firstHistory 1]
   rw [publicHistoryOfTrace_firstHistory]
-  change actionGame.restartedFullHistoryLaw canonicalProfile [firstRecord] true 1 = _
-  rw [Game.restartedFullHistoryLaw, restart_one_step, FinDist.map_pure]
-  rfl
+  unfold Game.restartedFullHistoryLaw
+  have hrestarted := congrArg
+    (FinDist.map (actionGame.splicePrefix [firstRecord])) restart_one_step
+  simpa [firstHistory, Game.splicePrefix] using hrestarted
 
 end GameTheory.Tests.StochasticContinuation
