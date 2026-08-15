@@ -203,7 +203,7 @@ trigger incentives are reusable stable repeated theory. Convex feasibility,
 the opponent-minmax construction, and the existence theorem form the one-way
 `GameTheory.Analysis.Repeated` bridge. Residual-floor denominator clearing is
 game-independent and therefore lives in the separately audited
-`GameTheoryMath` target. The 255-line unused ambient geometry and 328-line
+`GameTheory.Math` target. The 255-line unused ambient geometry and 328-line
 general security hierarchy in the apparent the baseline support closure were not ported.
 
 The probes make the split physical. Basic, Discounted, and the public Repeated
@@ -221,9 +221,10 @@ three. Thus the hypotheses are not merely a polished empty interface.
 
 Recorded as [EXP-032](ExperimentLog.md). The predicted D12 collision is now
 measured rather than hypothetical. Stable Protocol owns a topology-free limit
-schema; `GameTheory.Analysis.Protocol` specializes it to pointwise convergence
-of fully mixed, Bayes-consistent behavioral assessments. Protocol cannot reach
-the specialization, while positive probes show that the bridge still consumes
+schema; `GameTheory.Math.Probability` owns finite-law pointwise convergence;
+`GameTheory.Analysis.Protocol` specializes the two to fully mixed,
+Bayes-consistent behavioral assessments. Protocol cannot reach the
+specialization, while positive probes show that the bridge still consumes
 stable rationality and Bayes consistency. It also rejects the fixed-point
 geometry used by the static existence layer.
 

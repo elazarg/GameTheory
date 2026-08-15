@@ -12,7 +12,7 @@ noncomputable section
 
 namespace GameTheory.Tests.FeasiblePosteriors
 
-open Probability
+open GameTheory.Math.Probability
 
 def prior : FinDist Bool :=
   FinDist.mix (1 / 2) (by norm_num) (by norm_num)

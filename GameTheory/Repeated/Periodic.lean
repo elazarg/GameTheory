@@ -6,7 +6,7 @@ convergence to cycle averages as the discount factor tends to one, using
 explicit payoff bounds and canonical list-history paths.
 -/
 
-import Mathlib.Analysis.SumOverResidueClass
+import GameTheory.Math.FinRotation
 import GameTheory.Repeated.Discounted
 
 noncomputable section
@@ -25,56 +25,6 @@ namespace UtilityGame
 def cycleAveragePayoff (G : UtilityGame ι) {n : ℕ} [NeZero n]
     (cycle : Fin n → Profile G.form.sig) (who : ι) : ℝ :=
   (n : ℝ)⁻¹ * ∑ t : Fin n, G.stagePayoff (cycle t) who
-
-/-- Equivalence between residues modulo a positive natural and `Fin n`. -/
-def zmodFinEquiv (n : ℕ) [NeZero n] : ZMod n ≃ Fin n where
-  toFun j := ⟨j.val, j.val_lt⟩
-  invFun k := (k.val : ZMod n)
-  left_inv j := by
-    apply ZMod.val_injective n
-    simp
-  right_inv k := by
-    ext
-    simp [Nat.mod_eq_of_lt k.isLt]
-
-theorem finRotate_injective (n : ℕ) [NeZero n] (start : ℕ) :
-    Function.Injective (fun j : Fin n => Fin.ofNat n (start + j)) := by
-  intro j k h
-  apply Fin.ext
-  have hval : (start + (j : ℕ)) % n = (start + (k : ℕ)) % n := by
-    simpa [Fin.ofNat] using congrArg Fin.val h
-  have hz : ((j : ℕ) : ZMod n) = ((k : ℕ) : ZMod n) := by
-    have hsum : ((start + (j : ℕ) : ℕ) : ZMod n) =
-        ((start + (k : ℕ) : ℕ) : ZMod n) := by
-      rw [ZMod.natCast_eq_natCast_iff']
-      exact hval
-    have hsum' :
-        ((start : ZMod n) + ((j : ℕ) : ZMod n)) =
-          ((start : ZMod n) + ((k : ℕ) : ZMod n)) := by
-      simpa using hsum
-    exact add_left_cancel hsum'
-  have hmod : (j : ℕ) % n = (k : ℕ) % n := by
-    rw [← ZMod.natCast_eq_natCast_iff']
-    exact hz
-  simpa [Nat.mod_eq_of_lt j.isLt, Nat.mod_eq_of_lt k.isLt] using hmod
-
-/-- Rotation by `start` permutes the phases of a nonempty cycle. -/
-def finRotateEquiv (n : ℕ) [NeZero n] (start : ℕ) : Fin n ≃ Fin n :=
-  Equiv.ofBijective (fun j : Fin n => Fin.ofNat n (start + j))
-    ⟨finRotate_injective n start,
-      Finite.injective_iff_surjective.mp (finRotate_injective n start)⟩
-
-@[simp]
-theorem finRotateEquiv_apply (n : ℕ) [NeZero n] (start : ℕ) (j : Fin n) :
-    finRotateEquiv n start j = Fin.ofNat n (start + j) :=
-  rfl
-
-/-- Rotation does not change a finite cycle sum. -/
-theorem sum_finRotate {n : ℕ} [NeZero n] (start : ℕ) (f : Fin n → ℝ) :
-    (∑ j : Fin n, f (Fin.ofNat n (start + j))) = ∑ j : Fin n, f j := by
-  exact Fintype.sum_equiv (finRotateEquiv n start)
-    (fun j : Fin n => f (Fin.ofNat n (start + j))) f
-    (fun j => by simp)
 
 /-- Exact normalized discounted payoff of a periodic repeated profile. -/
 theorem discountedPayoff_periodicRepeatedProfile_eq
@@ -160,7 +110,7 @@ theorem discountedPayoff_periodicRepeatedProfile_eq
             G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) =
         ∑ j : Fin n,
           discount ^ (j : ℕ) * G.stagePayoff (cycle j) who := by
-    exact Fintype.sum_equiv (zmodFinEquiv n)
+    exact Fintype.sum_equiv (GameTheory.Math.zmodFinEquiv n)
       (fun j : ZMod n =>
         discount ^ j.val *
           G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who)
@@ -173,7 +123,7 @@ theorem discountedPayoff_periodicRepeatedProfile_eq
           (discount ^ j.val *
             G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) *
               (1 - discount ^ n)⁻¹) := by
-      simp only [discountedPayoff, GameTheoryMath.normalizedDiscountedSum]
+      simp only [discountedPayoff, GameTheory.Math.normalizedDiscountedSum]
       rw [show G.periodicRepeatedProfile cycle = profile from rfl, hsplit]
       congr 1
       exact Finset.sum_congr rfl fun j _ => hinner j
@@ -211,7 +161,7 @@ theorem discountedContinuationPayoff_periodicPath_eq
         G.discountedPayoff discount
           (G.periodicRepeatedProfile rotated) who := by
     simp only [discountedContinuationPayoff, discountedPayoff,
-      GameTheoryMath.normalizedDiscountedSum]
+      GameTheory.Math.normalizedDiscountedSum]
     congr 1
     apply tsum_congr
     intro k
@@ -322,7 +272,8 @@ theorem exists_discountFactor_threshold_periodicContinuation
       (∑ j : Fin n,
           G.stagePayoff (cycle (Fin.ofNat n (start + j))) who) =
         ∑ j : Fin n, G.stagePayoff (cycle j) who :=
-    sum_finRotate start fun j : Fin n => G.stagePayoff (cycle j) who
+    GameTheory.Math.sum_finRotate start fun j : Fin n =>
+      G.stagePayoff (cycle j) who
   rw [hrotate] at hclose
   rw [G.discountedContinuationPayoff_periodicPath_eq
     hdiscount0 hdiscount1 cycle start who hbound]
@@ -366,7 +317,7 @@ theorem exists_discountFactor_threshold_periodicAllContinuations
           (fun t => cycle (Fin.ofNat n t))
           ((Fin.ofNat n start).val) who := by
     simp only [discountedContinuationPayoff,
-      GameTheoryMath.normalizedDiscountedSum]
+      GameTheory.Math.normalizedDiscountedSum]
     congr 1
     apply tsum_congr
     intro k

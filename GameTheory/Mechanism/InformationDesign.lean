@@ -8,13 +8,13 @@ sender value directly through `FinDist`, without a second probability or
 equilibrium layer.
 -/
 
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uω um ua
 

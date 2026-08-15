@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Languages
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 
 universe uι us
 

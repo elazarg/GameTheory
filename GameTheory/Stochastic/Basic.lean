@@ -6,11 +6,11 @@ transition law, and stage utility. Initial states, discount factors,
 finiteness, and nonemptiness belong to the consumers that need them.
 -/
 
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 namespace GameTheory.Stochastic
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι us ua
 

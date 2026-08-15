@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Welfare
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 
 /-- A genuinely stochastic outcome law. -/
 def fair : FinDist Bool :=

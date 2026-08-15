@@ -16,11 +16,11 @@ means that `agent` weakly prefers `preferred` to `alternative`.
 -/
 
 import GameTheory.Core.Rank
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe ua uα uo uo'
 

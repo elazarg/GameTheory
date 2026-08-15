@@ -16,7 +16,7 @@ import Mathlib.Tactic.Ring
 
 open scoped BigOperators
 
-namespace GameTheoryMath
+namespace GameTheory.Math
 
 /-- The positive-part adjustment identity and a zero weighted mean force all
 gains to be nonpositive. -/
@@ -66,4 +66,4 @@ theorem all_nonpos_of_weighted_positivePart_fixedPoint
   rw [max_eq_left hgain.le] at this
   nlinarith
 
-end GameTheoryMath
+end GameTheory.Math

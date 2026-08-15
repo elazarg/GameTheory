@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.CheapTalk
 
-open GameTheory GameTheory.Examples GameTheory.Finite GameTheory.Probability
+open GameTheory GameTheory.Examples GameTheory.Finite GameTheory.Math.Probability
 
 universe uι us uo um
 

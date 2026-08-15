@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Protocol
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 
 universe uι us ua up uq uk
 

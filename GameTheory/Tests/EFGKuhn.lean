@@ -15,7 +15,7 @@ noncomputable section
 namespace GameTheory.Tests.EFGKuhn
 
 open GameTheory GameTheory.Languages GameTheory.Protocol
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol
 open GameTheory.Tests.Randomized
 
@@ -139,7 +139,7 @@ end GameTheory.Tests.EFGKuhn
 namespace GameTheory.Tests.EFGKuhn
 
 open GameTheory GameTheory.Languages GameTheory.Protocol
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 /-- The EFG wrapper exposes the constructive behavioral-to-mixed direction on
 the two-decision perfect-recall game. -/

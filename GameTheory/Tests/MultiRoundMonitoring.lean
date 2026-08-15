@@ -16,7 +16,7 @@ noncomputable section
 
 namespace GameTheory.Tests.MultiRoundMonitoring
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Languages.MultiRound
 open MonitoringGame
 open ExecutionProtocol

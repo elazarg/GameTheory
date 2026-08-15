@@ -16,11 +16,11 @@ noncomputable section
 
 namespace GameTheory.Analysis.Protocol.CounterfactualZeroSumLearningTest
 
-open Filter GameTheory Probability Protocol
+open Filter GameTheory GameTheory.Math.Probability Protocol
 open GameTheory.Languages GameTheory.Languages.NFG.OneShotFOSG
 open GameTheory.Protocol.InformationModel
 open GameTheory.Analysis.Approachability
-open GameTheoryMath.Approachability GameTheoryMath.OrthantProjection
+open GameTheory.Math.Approachability GameTheory.Math.OrthantProjection
 
 abbrev source := GameTheory.Examples.FOSG.twoBit
 abbrev execution := source.execution

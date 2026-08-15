@@ -10,7 +10,7 @@ from `Basic`. The only infinite object is an ordinary real series; there is no
 import Mathlib.Analysis.Normed.Group.InfiniteSum
 import Mathlib.Analysis.SpecificLimits.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Module
-import GameTheoryMath.Discounted
+import GameTheory.Math.Discounted
 import GameTheory.Repeated.Basic
 
 noncomputable section
@@ -28,7 +28,7 @@ namespace UtilityGame
 /-- Normalized discounted expected payoff of a repeated profile. -/
 def discountedPayoff (G : UtilityGame ι) (discount : ℝ)
     (profile : G.RepeatedProfile) (who : ι) : ℝ :=
-  GameTheoryMath.normalizedDiscountedSum discount fun t =>
+  GameTheory.Math.normalizedDiscountedSum discount fun t =>
     G.stagePayoff (G.repeatedPlay profile t) who
 
 /-- Discounted utility on the existing repeated form. -/
@@ -40,7 +40,7 @@ def discountedUtility (G : UtilityGame ι) (discount : ℝ) :
 path, starting at `start`. -/
 def discountedContinuationPayoff (G : UtilityGame ι) (discount : ℝ)
     (path : ℕ → Profile G.form.sig) (start : ℕ) (who : ι) : ℝ :=
-  GameTheoryMath.normalizedDiscountedSum discount fun k =>
+  GameTheory.Math.normalizedDiscountedSum discount fun k =>
     G.stagePayoff (path (start + k)) who
 
 /-- A repeated profile's discounted payoff is its zero-start continuation. -/
@@ -51,7 +51,7 @@ theorem discountedPayoff_eq_discountedContinuationPayoff_zero
       G.discountedContinuationPayoff discount
         (fun t => G.repeatedPlay profile t) 0 who := by
   simp [discountedPayoff, discountedContinuationPayoff,
-    GameTheoryMath.normalizedDiscountedSum]
+    GameTheory.Math.normalizedDiscountedSum]
 
 /-- Bounded stage payoffs give a summable discounted series whenever the
 discount factor lies in `[0, 1)`. -/
@@ -244,7 +244,7 @@ theorem discountedPayoff_le_of_forall_stagePayoff_le
     hdiscount0 hdiscount1 who hbound (profile := first)
   have hsecond := G.summable_discounted_stagePayoff_of_abs_bound
     hdiscount0 hdiscount1 who hbound (profile := second)
-  exact GameTheoryMath.normalizedDiscountedSum_le hdiscount0 hdiscount1
+  exact GameTheory.Math.normalizedDiscountedSum_le hdiscount0 hdiscount1
     hfirst hsecond hle
 
 /-- Stationary repetition has the same normalized discounted payoff as its
@@ -256,7 +256,7 @@ theorem discountedPayoff_stationaryRepeatedProfile
     G.discountedPayoff discount (G.stationaryRepeatedProfile profile) who =
       G.stagePayoff profile who := by
   have hne : 1 - discount ≠ 0 := by linarith
-  simp [discountedPayoff, GameTheoryMath.normalizedDiscountedSum, tsum_mul_right,
+  simp [discountedPayoff, GameTheory.Math.normalizedDiscountedSum, tsum_mul_right,
     tsum_geometric_of_lt_one hdiscount0 hdiscount1, hne]
 
 /-- Stationary repetition of a bounded stage Nash profile is ordinary Nash in

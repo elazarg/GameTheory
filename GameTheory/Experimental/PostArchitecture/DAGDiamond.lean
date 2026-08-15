@@ -1,12 +1,12 @@
 /-
 # EXP-039: arbitrary-carrier finite DAG
 
-The diamond has two incomparable middle vertices. It checks that the extracted
-game-independent DAG substrate derives an order without storing one and proves
-both direct and transitive predecessors occur earlier.
+The diamond has two incomparable middle vertices. It checks that the DAG
+substrate derives an order without storing one and proves both direct and
+transitive predecessors occur earlier.
 -/
 
-import GameTheoryMath.DAG
+import GameTheory.Math.DAG
 import Mathlib.Data.Fintype.OfMap
 
 namespace GameTheory.Experimental.DAGDiamond
@@ -40,7 +40,7 @@ theorem rank_lt_of_predecessor {first second : Vertex}
   cases first <;> cases second <;> simp_all [predecessors, rank]
 
 theorem acyclic :
-    GameTheoryMath.DAG.Acyclic
+    GameTheory.Math.DAG.Acyclic
       (fun first second => first ∈ predecessors second) := by
   intro vertex hcycle
   have rank_lt_of_path : ∀ {first second : Vertex},
@@ -58,9 +58,9 @@ theorem acyclic :
   exact Nat.lt_irrefl _ hrank
 
 noncomputable def topological :
-    GameTheoryMath.DAG.TopologicalOrder predecessors :=
+    GameTheory.Math.DAG.TopologicalOrder predecessors :=
   Classical.choice
-    (GameTheoryMath.DAG.topologicalOrder_of_acyclic acyclic)
+    (GameTheory.Math.DAG.topologicalOrder_of_acyclic acyclic)
 
 theorem middle_vertices_incomparable :
     .left ∉ predecessors .right ∧

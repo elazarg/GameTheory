@@ -16,7 +16,7 @@ noncomputable section
 namespace GameTheory.Experimental.FOSGToEFGGenericWitnesses
 
 open GameTheory.Languages.Bridges
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Experimental.FOSGToEFGTwoRound
 open GameTheory.Experimental.FOSGToEFGTwoRound.Witnesses
 

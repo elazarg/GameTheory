@@ -10,13 +10,13 @@ elsewhere against this one object.
 -/
 
 import GameTheory.Core.Signature
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι us uo uo'
 

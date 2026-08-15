@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.MatrixGame.ZeroSumLearningTest
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 
 def matchingPayoff (row col : Bool) : ℝ :=
   if row = col then 1 else -1

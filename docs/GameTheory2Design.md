@@ -1431,7 +1431,7 @@ GameTheory.Frontier      unstable open-game and repeated-monitoring research
 GameTheory.Challenges    untrusted, opt-in formal targets and open problems
 GameTheory.Tests         compilation and architecture tests
 GameTheory.Examples      reader-facing examples
-GameTheoryMath           independently reusable mathematical infrastructure
+GameTheory.Math           independently reusable mathematical infrastructure
 ```
 
 The exact number of Lake packages/targets is an implementation question, but
@@ -1448,7 +1448,7 @@ EXP-031 fixes one instance of the last two rules. Continuation, periodic-path,
 and trigger-incentive theorems remain in `GameTheory.Repeated`; feasible-payoff
 geometry, opponent minmax, and the discounted folk theorem live in the one-way
 `GameTheory.Analysis.Repeated` bridge; generic denominator clearing lives in
-the separate `GameTheoryMath` target. The stable root retains negative
+the separate `GameTheory.Math` target. The stable root retains negative
 `stdSimplex`/`kakutani_fixed_point` probes, while positive bridge probes require
 the trigger, minmax, and generic approximation sides to remain reachable.
 `Polynomial` is not a boundary sentinel there: public-monitoring rank reaches
@@ -1458,19 +1458,20 @@ unreachable from the repeated-analysis bridge.
 EXP-032 fixes the complementary bridge direction needed by sequential
 consistency. Stable `GameTheory.Protocol` owns behavioral assessments,
 history-supported beliefs, finite positive-mass Bayes consistency, and a topology-free limit
-schema. `GameTheory.Analysis.Protocol` owns pointwise convergence and the
+schema. `GameTheory.Math.Probability` owns pointwise convergence of finite
+laws; `GameTheory.Analysis.Protocol` applies it coordinatewise in the
 Kreps-Wilson specialization. Protocol rejects both analytic declarations;
 positive bridge probes reach stable rationality, stable Bayes consistency, and
-the analytic convergence definition; the bridge rejects `stdSimplex` and
+the finite-law convergence definition; the bridge rejects `stdSimplex` and
 `Polynomial`. Basic topology names are already transitively reachable through
 Mathlib, so project-declaration probes, not vocabulary probes, enforce this
 boundary.
 
 EXP-049/D21 applies the same enforced split to finite online learning. Core
 owns only product-law, normalization, and finite regret-to-CCE identities.
-`GameTheoryMath.OnlineLearning` proves multiplicative-weights regret over a
+`GameTheory.Math.OnlineLearning` proves multiplicative-weights regret over a
 normalized real vector without importing either game semantics or `FinDist`;
-`GameTheory.Probability.OnlineLearning` alone packages that vector as the
+`GameTheory.Math.Probability.OnlineLearning` alone packages that vector as the
 canonical finite law; `GameTheory.Analysis.Learning` composes the two sides.
 Negative probes keep the algorithm and adapter unreachable from Core, while
 positive probes require the bridge to reach both and the stable self-play
@@ -1508,7 +1509,7 @@ games.  The stable stochastic carrier remains unchanged.  Analysis constructs
 one product of the canonical mixed-action polytope and a bounded continuation-
 value cube, applies the already-admitted Brouwer dependency, and decodes the
 fixed point as canonical mixed Nash in every statewise auxiliary
-`UtilityGame`.  `GameTheoryMath` owns only the game-independent positive-part
+`UtilityGame`.  `GameTheory.Math` owns only the game-independent positive-part
 fixed-point identity used to verify the Nash adjustment.  The promoted surface
 uses `FinDist`, `Profile.update`, and `IsNash` exclusively; it adds no PMF,
 infinite-path, stored-discount, or parallel equilibrium layer.  Uniform
@@ -1595,7 +1596,7 @@ These decisions are cheap when made at the beginning and expensive later.
 
 - All public declarations live below `GameTheory`.
 - Languages live below `GameTheory.Languages.NFG`, `.EFG`, `.MAID`, and so on.
-- Generic support code uses `GameTheory.Probability`,
+- Generic support code uses `GameTheory.Math.Probability`,
   `GameTheory.Semantics`, or a separate package namespace—not global `Math` or
   `Semantics`.
 - Foundational carrier types are universe-polymorphic.

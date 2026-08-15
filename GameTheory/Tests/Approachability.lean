@@ -6,13 +6,13 @@ nonpositive orthant.  This discharges the public B-set hypothesis and consumes
 the response, finite-time, and convergence entry points directly.
 -/
 
-import GameTheoryMath.Approachability
+import GameTheory.Math.Approachability
 
 noncomputable section
 
 namespace GameTheory.Tests.Approachability
 
-open GameTheoryMath.Approachability
+open GameTheory.Math.Approachability
 open scoped InnerProductSpace
 
 /-- The one-dimensional nonpositive orthant. -/

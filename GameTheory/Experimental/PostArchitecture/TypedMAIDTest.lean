@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.TypedMAIDTest
 
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Languages.MAID
 
 /-! ## A heterogeneous diamond -/
@@ -43,7 +43,7 @@ def rank : Node → Nat
   | .sink => 2
 
 theorem acyclic :
-    GameTheoryMath.DAG.Acyclic
+    GameTheory.Math.DAG.Acyclic
       (fun first second => first ∈ parents second) := by
   have rank_lt_of_predecessor : ∀ {first second : Node},
       first ∈ parents second → rank first < rank second := by
@@ -131,7 +131,7 @@ def rank : Node → Nat
   | .leftDecision | .rightDecision => 1
 
 theorem acyclic :
-    GameTheoryMath.DAG.Acyclic
+    GameTheory.Math.DAG.Acyclic
       (fun first second => first ∈ parents second) := by
   have rank_lt_of_predecessor : ∀ {first second : Node},
       first ∈ parents second → rank first < rank second := by

@@ -49,7 +49,7 @@ grouped by their source owner. -/
 abbrev ReducedOwnerPolicy (pruning : Pruning diagram) (owner : Player) :=
   (site : DecisionSite diagram owner) →
     Config diagram (pruning.kept site.1) →
-      Probability.FinDist (diagram.Value site.1)
+      GameTheory.Math.Probability.FinDist (diagram.Value site.1)
 
 /-- A complete profile over the pruned observation domains. -/
 abbrev ReducedPolicy (pruning : Pruning diagram) :=
@@ -94,7 +94,7 @@ def reducedNativeGameForm (pruning : Pruning diagram)
 @[reducible]
 def reducedCompiledGameForm (pruning : Pruning diagram)
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [DecidableEq Node] (semantics : Semantics diagram) : GameForm Player where
   sig := reducedBehavioralSignature pruning
@@ -125,7 +125,7 @@ policy domain. -/
 theorem reducedNative_play_eq_reducedCompiled_play
     (pruning : Pruning diagram)
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : ReducedPolicy pruning) :
@@ -150,7 +150,7 @@ law, for every accepted topological serialization. -/
 theorem compiled_play_eq_reducedCompiled_play_of_expands
     (pruning : Pruning diagram)
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [DecidableEq Node] (semantics : Semantics diagram)
     (full : Policy diagram) (reduced : ReducedPolicy pruning)
@@ -188,7 +188,7 @@ predicate. -/
 theorem isNash_reducedNative_iff_reducedCompiled
     (pruning : Pruning diagram)
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : ReducedPolicy pruning) :

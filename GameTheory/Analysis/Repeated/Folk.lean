@@ -21,7 +21,7 @@ noncomputable section
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι
 
@@ -139,7 +139,7 @@ theorem discounted_folk_theorem_approx
       mixedCycle hboundH' haccuracy
   have hgain : 0 ≤ 2 * bound := by positivity
   obtain ⟨patienceThreshold, hpatience0, hpatience1, hpatience⟩ :=
-    GameTheoryMath.exists_discountFactor_threshold_oneStep
+    GameTheory.Math.exists_discountFactor_threshold_oneStep
       (gain := 2 * bound) (margin := punishmentMargin)
       hgain hpunishmentMargin
   let threshold : ℝ := max continuationThreshold patienceThreshold

@@ -47,7 +47,7 @@ equivalence, explicitly witnessing both directions of deviation reflection.
 | axiom profile | `propext`, `Classical.choice`, `Quot.sound` only |
 | deviation transport | Nash and CE are both iff theorems; CE response maps are conjugated in both directions |
 | mixed lifting | exact equality of actual play laws for the heterogeneous player swap |
-| probability reuse | exact forward and inverse dependent-product laws live together in `Probability.FinDist`; the forward law replaces the MAID-local proof |
+| probability reuse | exact forward and inverse dependent-product laws live together in `GameTheory.Math.Probability.FinDist`; the forward law replaces the MAID-local proof |
 
 ## Kill condition
 

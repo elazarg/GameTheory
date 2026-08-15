@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 namespace GameForm.MatchingPenniesLike
 

@@ -17,7 +17,7 @@ noncomputable section
 
 namespace GameTheory.Finite
 
-open Probability
+open GameTheory.Math.Probability
 
 universe u v
 

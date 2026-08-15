@@ -15,7 +15,7 @@ noncomputable section
 
 namespace GameTheory.Tests.MonitoringSelfGeneration
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 open UtilityGame.PublicMonitoring.SelfGenerating
 
 abbrev Player := Bool

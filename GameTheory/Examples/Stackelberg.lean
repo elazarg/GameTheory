@@ -14,7 +14,7 @@ import Mathlib.Tactic.DeriveFintype
 
 namespace GameTheory.Examples.Stackelberg
 
-open GameTheory GameTheory.Finite GameTheory.Probability GameTheory.Protocol
+open GameTheory GameTheory.Finite GameTheory.Math.Probability GameTheory.Protocol
 
 /-- A maximizing commitment beats any comparison whose recorded response is
 the response function's value there. -/

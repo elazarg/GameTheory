@@ -1,19 +1,17 @@
 /-
 # Finite aggregation of local regret bounds
 
-This module contains the game-independent step from finitely many local
-regret-vector averages to uniform bounds on scalar gains that decompose through
-their coordinates. Protocol semantics are responsible for proving such an
-upper decomposition; this file only supplies the finite-sum geometry.
+Pass from finitely many local regret-vector averages to uniform bounds on
+scalar gains that decompose through their coordinates.
 -/
 
-import GameTheoryMath.OrthantProjection
+import GameTheory.Math.OrthantProjection
 
 noncomputable section
 
-namespace GameTheoryMath.RegretAggregation
+namespace GameTheory.Math.RegretAggregation
 
-open Filter GameTheoryMath.OrthantProjection
+open Filter GameTheory.Math.OrthantProjection
 
 variable {κ : Type*}
 variable {Action : κ → Type*} [∀ site, Fintype (Action site)]
@@ -265,4 +263,4 @@ theorem positiveAverageGains_tendsto_zero
           (fun current round _ => hgain current round) deviation
   exact squeeze_zero (fun t => le_max_right _ _) hupper hsum
 
-end GameTheoryMath.RegretAggregation
+end GameTheory.Math.RegretAggregation

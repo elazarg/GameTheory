@@ -11,7 +11,8 @@ post-decision boundary stresses [EXP-030](../ExperimentLog.md) and
 [EXP-032](../ExperimentLog.md), [EXP-033](../ExperimentLog.md), and
 [EXP-034](../ExperimentLog.md), with the Bayes-fiber correction measured by
 [EXP-077](../ExperimentLog.md); reachability-proxy maintenance
-[EXP-096](../ExperimentLog.md).
+[EXP-096](../ExperimentLog.md); mathematics-root consolidation
+[EXP-101](../ExperimentLog.md).
 
 ## Hypothesis
 
@@ -142,10 +143,10 @@ greenfield proof.
 None fired. Stable continuation, periodic paths, and trigger incentives live
 under `GameTheory.Repeated`; convex feasibility, opponent minmax, and the
 flagship live under `GameTheory.Analysis.Repeated`; residual-floor denominator
-clearing lives in the independent `GameTheoryMath` Lake target. The 2,324-line
+clearing lives in the independent `GameTheory.Math` Lake target. The 2,324-line
 apparent the baseline support closure narrowed to 1,468 nonblank lines in stable Repeated,
 783 in the analytic repeated subtree including its concrete witness and root,
-and 185 in `GameTheoryMath` (177 in the approximation module plus its root). In
+and 185 in `GameTheory.Math` (177 in the approximation module plus its root). In
 particular, the old 255-line unused
 ambient/interior geometry and 328-line general security hierarchy did not
 survive the dependency test.
@@ -157,10 +158,11 @@ The enforcement is again two-sided:
 | `REPEATED_ANALYSIS_PROBES_REJECTED` | 6 |
 | `REPEATED_BRIDGE_PROBES_REACHED` | 3 |
 | `REPEATED_BRIDGE_PROTOCOL_REJECTED` | 1 |
-| `GAMETHEORYMATH_GAME_REJECTED` | 1 |
+| `MATH_GAME_REJECTED` | 1 |
+| `MATH_FORBIDDEN_IMPORTS` | 0 |
 | `TRANSPORT_REPEATED_SOURCE` | 0 |
 | `TRANSPORT_ANALYSIS_SOURCE` | 0 |
-| `TRANSPORT_GAMETHEORYMATH_SOURCE` | 0 |
+| `TRANSPORT_MATH_SOURCE` | 1 |
 
 The three positive bridge probes reach a trigger profile, the opponent-minmax
 vector, and residual-floor counts. Thus the bridge is known to consume each
@@ -213,8 +215,9 @@ policy. A current-information-set deviation becomes equivalent only through a
 separately proved one-shot-deviation theorem. Thus the amendment adds no
 parallel policy, state-belief, runner, or equilibrium semantics.
 
-The analytic bridge defines pointwise convergence of finite laws and the
-Kreps-Wilson limit of fully mixed, finite-Bayes-consistent assessments. A
+`GameTheory.Math.Probability` defines pointwise convergence of finite laws. The
+analytic bridge applies it to the Kreps-Wilson limit of fully mixed,
+finite-Bayes-consistent assessments. A
 vanishing Boolean tremble proves that fully mixed approximants may converge to
 a non-fully-mixed target. This needs only finite coordinate topology, not a
 measurable law on infinite execution paths and not the fixed-point geometry

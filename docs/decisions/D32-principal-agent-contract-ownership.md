@@ -43,7 +43,7 @@ claim and forces the public theorem to expose an acceptable fallback.
 
 | Measure | EXP-065 result |
 |---|---|
-| direct import | only `GameTheory.Probability.FinDist` |
+| direct import | only `GameTheory.Math.Probability.FinDist` |
 | candidate artifact | 167 nonblank lines; 37 declarations including witnesses |
 | promoted leaf / fixture | 171 / 107 nonblank lines; 23/23 pinned declarations classified |
 | probability capability | finite support belongs to each action law; no finite outcome carrier |

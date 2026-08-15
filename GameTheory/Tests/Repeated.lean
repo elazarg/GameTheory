@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Repeated
 
-open GameTheory GameTheory.Probability
+open GameTheory GameTheory.Math.Probability
 open GameTheory.Repeated
 
 /-- A deterministic two-player coordination form. -/

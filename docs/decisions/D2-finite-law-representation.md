@@ -95,7 +95,7 @@ is one application of a scheme morphism.
 Representation leakage was measured at the public surface. `FinDist` exposes
 `prob : FinDist α → α → ℝ` and `expect`, and no Core, Finite, Examples, or Tests
 module mentions `ENNReal` or `toReal`; those tokens occur only inside
-`GameTheory/Probability/FinDist.lean`. The single source-level transport token
+`GameTheory/Math/Probability/FinDist.lean`. The single source-level transport token
 in Phase 2 source is one `change` in `FinDist.mix`.
 
 The measured cost is a *dependency* one, not an API one. Mathlib's

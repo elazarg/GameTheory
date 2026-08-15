@@ -14,9 +14,9 @@ noncomputable section
 
 namespace GameTheory.Protocol
 
-open Filter GameTheory Probability Protocol
+open Filter GameTheory GameTheory.Math.Probability Protocol
 open GameTheory.Analysis.Approachability
-open GameTheoryMath.Approachability GameTheoryMath.OrthantProjection
+open GameTheory.Math.Approachability GameTheory.Math.OrthantProjection
 
 universe uι us ua up uq uk
 

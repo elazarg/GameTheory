@@ -15,7 +15,7 @@ noncomputable section
 
 namespace GameTheory.Examples.NFG
 
-open GameTheory GameTheory.Languages GameTheory.Probability
+open GameTheory GameTheory.Languages GameTheory.Math.Probability
 
 /-- Two players choose natural numbers; only `(0, 0)` has positive utility. -/
 abbrev natChoose : NFG.Game (Fin 2) where

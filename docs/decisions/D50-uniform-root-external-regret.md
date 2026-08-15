@@ -72,12 +72,12 @@ outside D48 and D50.
 
 ## Validation
 
-- `lake build GameTheoryMath.RegretAggregation`
+- `lake build GameTheory.Math.RegretAggregation`
 - `lake build GameTheory.Analysis.Approachability`
 - `lake build GameTheory.Analysis.Protocol.CounterfactualRegret`
 - `lake build GameTheory.Analysis.Protocol.CounterfactualRootRegret`
 - `lake build GameTheory.Analysis.Protocol.CounterfactualRootRegretTest`
-- `lake build GameTheoryMath GameTheory.Analysis.Protocol`
+- `lake build GameTheory.Math GameTheory.Analysis.Protocol`
 - `lake build GameTheory`
 - `scripts/phase2-audit.ps1 -VerifyExpected`
 - `scripts/phase3-audit.ps1 -VerifyExpected`

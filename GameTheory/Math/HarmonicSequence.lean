@@ -9,7 +9,7 @@ that recurrence to convergence to zero.
 
 import Mathlib.Analysis.PSeries
 
-namespace GameTheoryMath
+namespace GameTheory.Math
 
 open Filter
 
@@ -238,4 +238,4 @@ theorem tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le
     have hpos : 0 < ε / (16 * (q : ℝ)) := by positivity
     nlinarith
 
-end GameTheoryMath
+end GameTheory.Math

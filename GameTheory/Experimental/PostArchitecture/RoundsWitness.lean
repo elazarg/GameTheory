@@ -23,7 +23,7 @@ noncomputable section
 
 namespace GameTheory.Languages
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 
 /-- Play proceeds through two simultaneous rounds and then stops. The middle
 state carries the first round's outcome, which is what lets the second round

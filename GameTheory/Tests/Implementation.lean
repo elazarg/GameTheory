@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Implementation
 
-open Probability
+open GameTheory.Math.Probability
 
 abbrev Player := Fin 2
 

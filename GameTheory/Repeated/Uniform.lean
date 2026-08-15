@@ -15,7 +15,7 @@ For the uniform-equilibrium tradition, see J.-F. Mertens and A. Neyman,
 
 import GameTheory.Core.Approximate
 import GameTheory.Repeated.Basic
-import GameTheoryMath.Eventually
+import GameTheory.Math.Eventually
 
 noncomputable section
 
@@ -53,7 +53,7 @@ theorem isεFiniteRepeatedNash_iff
 longer truncation. -/
 abbrev IsUniformεEquilibrium (G : UtilityGame ι) [DecidableEq ι]
     (epsilon : ℝ) (profile : G.RepeatedProfile) : Prop :=
-  GameTheoryMath.EventuallyAtAll fun horizon =>
+  GameTheory.Math.EventuallyAtAll fun horizon =>
     G.IsεFiniteRepeatedNash horizon epsilon profile
 
 /-- A uniform equilibrium has a long-run average and satisfies every positive
@@ -79,7 +79,7 @@ theorem IsUniformεEquilibrium.mono
     (h : G.IsUniformεEquilibrium epsilon profile)
     (hle : epsilon ≤ epsilon') :
     G.IsUniformεEquilibrium epsilon' profile :=
-  GameTheoryMath.EventuallyAtAll.mono h fun _ hhorizon => hhorizon.mono hle
+  GameTheory.Math.EventuallyAtAll.mono h fun _ hhorizon => hhorizon.mono hle
 
 /-- Stationary repetition of a stage Nash equilibrium is uniform: every
 nonempty finite truncation is exact Nash and its average payoff is constant. -/

@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Analysis.Protocol.Examples
 
-open Filter GameTheory Probability
+open Filter GameTheory GameTheory.Math.Probability
 
 /-- A vanishing but strictly positive tremble. -/
 def trembleWeight (n : ℕ) : ℝ :=

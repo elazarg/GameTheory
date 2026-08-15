@@ -13,7 +13,7 @@ import GameTheory.Core.Preference
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe ua uo
 

@@ -211,7 +211,7 @@ fixed:
 - egalitarian and Kalai–Smorodinsky bargaining.
 
 Each package needs its own theorem-level consumer. Shared general mathematics
-belongs in Mathlib when available, otherwise in `GameTheoryMath` only after a
+belongs in Mathlib when available, otherwise in `GameTheory.Math` only after a
 live game-theoretic consumer exists.
 
 Independent rationalizability is complete through the existing mixed-product
@@ -259,7 +259,7 @@ is arithmetic, not an auction model.
   finite-support transitions without claiming an infinite path law.
 - `GameTheory.Analysis` imports stable semantic roots in one direction for
   topology, convexity, fixed points, and convergence.
-- `GameTheoryMath` contains independently reusable mathematics justified by a
+- `GameTheory.Math` contains independently reusable mathematics justified by a
   live consumer.
 - Frontier may import stable modules; stable modules never import Frontier or
   Challenges.

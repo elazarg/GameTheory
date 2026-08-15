@@ -17,7 +17,7 @@ namespace GameTheory.Examples.FOSG
 
 open GameTheory.Languages
 open GameTheory.Languages.Bridges
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 /-- Two players choose Boolean actions simultaneously; the terminal outcome
 records both actions.  An external utility can turn this syntax into matching

@@ -16,7 +16,7 @@ Status labels:
 | Gate | Status | Evidence | Remainder |
 |---|---|---|---|
 | Static core and deviation locality | complete | `GameTheory.Core`; locality tests; full Nash/CCE/CE outcome, player, and strategy transformation squares; mixed-play commutation | None for the common equilibrium waist. |
-| Finite-support probability | complete | `GameTheory.Probability.FinDist`, `GameTheory.Probability.Bounds`, probability tests | Infinite laws require a measurable layer. |
+| Reusable mathematics and finite-support probability | complete | separate `GameTheory.Math` target; `GameTheory.Math.Probability.FinDist`; simplex and pointwise-convergence interfaces; finite-index rotations; probability tests; D55/EXP-101 boundary probes | Infinite laws require a measurable layer; extract further domain mathematics only when a consumer justifies the abstraction. |
 | Analysis dependency boundary | complete | importable `GameTheory.Analysis` root, one-way imports, structural audits | Keep fixed-point/topology dependencies out of semantic roots. |
 | Execution and information | complete | `GameTheory.Protocol`, execution/information tests | No second runner or universal semantic hub. |
 | Proper imperfect-information subgames | complete | `Protocol.SubgamePerfect`, crossed-root fixture, EXP-078 complementarity counterexample | Whole-policy deviations are essential; no general single-information-state iff exists under perfect recall. |

@@ -17,7 +17,7 @@ import Mathlib.Tactic.Ring
 
 namespace GameTheory.Examples
 
-open GameTheory GameTheory.Finite GameTheory.Probability
+open GameTheory GameTheory.Finite GameTheory.Math.Probability
 
 /-! ## Prisoner's Dilemma -/
 
@@ -394,7 +394,7 @@ Pennies. This is the concrete consumer of the general mixed-Nash-to-CE bridge.
 -/
 theorem matchingPennies_fair_isCorrelatedEq :
     IsCorrelatedEq matchingPennies.toForm
-      (euPreference matchingPennies.utility) (Probability.FinDist.pi fairPennies) :=
+      (euPreference matchingPennies.utility) (GameTheory.Math.Probability.FinDist.pi fairPennies) :=
   fairPennies_isNash.isCorrelatedEq_pi
 
 private theorem matchingPenniesLike_fairProfile_eq_fairPennies :

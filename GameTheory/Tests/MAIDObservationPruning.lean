@@ -14,7 +14,7 @@ noncomputable section
 namespace GameTheory.Tests.MAIDObservationPruning
 
 open GameTheory
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Languages.MAID
 open GameTheory.Languages.MAID.ObservationPruning
 open GameTheory.Languages.MAID.Strategic
@@ -33,7 +33,7 @@ def observedParents : Node → Finset Node
   | .signal => ∅
   | .decision => {.signal}
 
-def topologicalParents : GameTheoryMath.DAG.TopologicalOrder parents where
+def topologicalParents : GameTheory.Math.DAG.TopologicalOrder parents where
   order := [.signal, .decision]
   nodup := by decide
   complete node := by cases node <;> simp
@@ -57,10 +57,10 @@ def diagram : Structure Unit Node where
   observed_sub node := by cases node <;> simp [parents, observedParents]
   observed_eq_of_chance node hchance := by
     cases node <;> simp [parents, observedParents] at hchance ⊢
-  acyclic := GameTheoryMath.DAG.acyclic_of_topologicalOrder
+  acyclic := GameTheory.Math.DAG.acyclic_of_topologicalOrder
     topologicalParents
 
-def topological : GameTheoryMath.DAG.TopologicalOrder diagram.parents :=
+def topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents :=
   topologicalParents
 
 @[reducible]

@@ -18,13 +18,13 @@ normalized by construction and no proof obligation is stored in the
 constructor.
 -/
 
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
 namespace GameTheory.Protocol
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι ua uo
 

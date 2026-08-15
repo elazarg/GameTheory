@@ -23,7 +23,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Randomized
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol (Trace History)
 
 /-- The player's two options. -/

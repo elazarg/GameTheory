@@ -291,7 +291,7 @@ if ($DeepReachability) {
   # must positively consume both stable halves and its analytic definition.
   $protocolAnalysisRejected = 0
   $protocolAnalysisConstants = @(
-      'GameTheory.Analysis.FinDistConvergesPointwise',
+      'GameTheory.Math.Probability.FinDistConvergesPointwise',
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyConsistent')
   $protocolOutput = Run-Probe 'GameTheory.Protocol' $protocolAnalysisConstants
   foreach ($constant in $protocolAnalysisConstants) {
@@ -334,7 +334,7 @@ if ($DeepReachability) {
   $sequentialBridgeConstants = @(
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyRational',
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsBayesConsistent',
-      'GameTheory.Analysis.FinDistConvergesPointwise')
+      'GameTheory.Math.Probability.FinDistConvergesPointwise')
   $sequentialOutput = Run-Probe 'GameTheory.Analysis.Protocol.Sequential' `
     ($sequentialBridgeConstants + @('stdSimplex', 'Polynomial'))
   foreach ($constant in $sequentialBridgeConstants) {
@@ -357,7 +357,7 @@ if ($DeepReachability) {
   $efgSyntaxRejected = 0
   $efgSyntaxConstants = @(
       'GameTheory.IsNash',
-      'GameTheory.Analysis.FinDistConvergesPointwise',
+      'GameTheory.Math.Probability.FinDistConvergesPointwise',
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyConsistent')
   $efgSyntaxOutput = Run-Probe 'GameTheory.Languages.EFG' `
     ($efgSyntaxConstants + @(
@@ -393,8 +393,8 @@ if ($DeepReachability) {
     'GameTheory.Protocol.InformationModel')
   $maidBasicInputs = @(
     'GameTheory.Languages.MAID.Structure',
-    'GameTheoryMath.DAG.Acyclic',
-    'GameTheory.Probability.FinDist')
+    'GameTheory.Math.DAG.Acyclic',
+    'GameTheory.Math.Probability.FinDist')
   $maidBasicOutput = Run-Probe 'GameTheory.Languages.MAID.Basic' `
     ($maidBasicConstants + $maidBasicInputs)
   foreach ($constant in $maidBasicConstants) {
@@ -493,7 +493,7 @@ if ($DeepReachability) {
     'GameTheory.Languages.MultiRound.MonitoringGame.toGameForm')
   $multiRoundBoundary = @(
     'GameTheory.IsNash',
-    'GameTheory.Analysis.FinDistConvergesPointwise',
+    'GameTheory.Math.Probability.FinDistConvergesPointwise',
     'GameTheory.Stochastic.Game',
     'GameTheory.Repeated.informationModel')
   $multiRoundOutput = Run-Probe 'GameTheory.Languages.MultiRound' `

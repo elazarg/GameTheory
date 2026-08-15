@@ -24,7 +24,7 @@ noncomputable section
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι us uo ud ud' udv
 

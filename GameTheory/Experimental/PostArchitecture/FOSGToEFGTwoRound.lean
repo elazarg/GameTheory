@@ -16,7 +16,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.FOSGToEFGTwoRound
 
-open GameTheory.Languages GameTheory.Probability GameTheory.Protocol
+open GameTheory.Languages GameTheory.Math.Probability GameTheory.Protocol
 open GameTheory.Protocol.ExecutionProtocol
 
 theorem map_pi_bool {α : Bool → Type*}

@@ -22,8 +22,8 @@ Status labels:
 |---|---|---|
 | Strategic forms, preferences, deviations, Nash, CE, CCE, welfare, and transformations | `GameTheory.Core` | supported; solution concepts share the canonical deviation waist |
 | Finite mixed Nash, correlated-equilibrium existence, minimax, and refinements | `GameTheory.Analysis` | supported, opt-in analytic root |
-| Finite-support probability | `GameTheory.Probability.FinDist` | supported; the finite core does not expose a parallel `PMF` wrapper hierarchy |
-| Executable finite pure-Nash search | `GameTheory.Finite` | supported; rational execution is separated from real-valued correctness |
+| Finite-support probability and finite pointwise convergence | `GameTheory.Math.Probability.FinDist`, `.Bounds`, and `.Convergence` | supported; the finite core does not expose a parallel `PMF` wrapper hierarchy |
+| Executable finite pure-Nash search | `GameTheory.Finite.Algorithm` and `GameTheory.Finite.Correctness` | supported; rational execution is separated from real-valued correctness |
 | Protocol execution, histories, information, assessment, SPE, and backward induction | `GameTheory.Protocol` | supported; one runner and one policy semantics |
 | NFG syntax | `GameTheory.Languages.NFG` | supported; compiles directly to the canonical static form |
 | EFG strategic extraction, Kuhn correspondence, and Zermelo | `GameTheory.Languages.EFG` and its explicit `Strategic`, `Kuhn`, and `Zermelo` leaves | supported |

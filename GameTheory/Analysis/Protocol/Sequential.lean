@@ -8,14 +8,14 @@ remain in stable Protocol; only convergence and the resulting specialization
 live behind this one-way bridge.
 -/
 
-import GameTheory.Analysis.FiniteLaw
+import GameTheory.Math.Probability.Convergence
 import GameTheory.Protocol.BehavioralAssessment
 
 noncomputable section
 
 namespace GameTheory.Protocol
 
-open GameTheory GameTheory.Analysis Probability
+open GameTheory GameTheory.Math.Probability
 
 universe uι
 

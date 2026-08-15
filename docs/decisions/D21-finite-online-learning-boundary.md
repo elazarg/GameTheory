@@ -1,31 +1,34 @@
 # D21: finite online learning uses law-free mathematics and an analytic bridge
 
 - **Status:** adopted and promoted
-- **Date:** 2026-08-02
-- **Experiment IDs:** EXP-049
+- **Date:** 2026-08-02, amended 2026-08-16
+- **Experiment IDs:** EXP-049, EXP-101
 
 ## Decision / question
 
 Where the pinned finite multiplicative-weights algorithm and its game-theoretic
-self-play consumer belong without weakening either the canonical `FinDist`
-representation or the enforced independence of `GameTheoryMath` and Core.
+self-play consumer belong without coupling its vector theorem to the canonical
+`FinDist` representation or adding analytic dependencies to Core.
 
 ## Competing designs
 
 1. Put a `FinDist`-valued multiplicative-weights implementation directly in
-   `GameTheoryMath`.
+   `GameTheory.Math.OnlineLearning`.
 2. Prove the normalized finite-vector algorithm and regret theorem in
-   `GameTheoryMath`, package the vector as `FinDist` in a thin Probability
+   `GameTheory.Math`, package the vector as `FinDist` in a thin Probability
    adapter, and compose it with finite self-play in `GameTheory.Analysis.Learning`.
 3. Put the algorithm and self-play capstone in `GameTheory.Core.Learning`.
 4. Retain the predecessor's direct `PMF` implementation or leave the
    quantitative family deferred.
 
-Design 2 is adopted. Design 1 violates the audited rule that `GameTheoryMath`
-imports no `GameTheory.*` module. Design 3 would make Core own exponential and
-logarithmic analysis solely for one algorithm. The `PMF` variant in design 4
-would expose a second law-facing API next to `FinDist`; deferral is unnecessary
-once the smaller vector/adapter split succeeds.
+Design 2 is adopted. Design 1 couples a reusable vector theorem to one law
+representation and prevents the focused online-learning module from being used
+without probability. After EXP-101 the adapter is a sibling below
+`GameTheory.Math`, so this is a module-level boundary rather than a top-level
+namespace boundary. Design 3 would make Core own exponential and logarithmic
+analysis solely for one algorithm. The `PMF` variant in design 4 would expose a
+second law-facing API next to `FinDist`; deferral is unnecessary once the
+smaller vector/adapter split succeeds.
 
 ## Representative hostile slice
 
@@ -66,14 +69,14 @@ evaluator or custom axiom, if finiteness must be stored in game data, or if the
 bridge reaches Protocol or the fixed-point dependency.
 
 No kill condition fired. The original expectation that reusable online
-learning itself should be `FinDist`-valued was narrowed by the already-enforced
-`GameTheoryMath` boundary: probability coordinates are the reusable object,
-and `FinDist` appears exactly once in the adapter above it.
+learning itself should be `FinDist`-valued was narrowed by the module-level
+boundary: probability coordinates are the algorithmic object, and `FinDist`
+appears exactly once in the sibling adapter.
 
 ## Result
 
-`GameTheoryMath.OnlineLearning` owns finite vector algebra and the quantitative
-regret theorem. `GameTheory.Probability.OnlineLearning` is the sole
+`GameTheory.Math.OnlineLearning` owns finite vector algebra and the quantitative
+regret theorem. `GameTheory.Math.Probability.OnlineLearning` is the sole
 representation adapter. `GameTheory.Core.Learning` owns topology-free finite
 self-play and regret-to-CCE identities. `GameTheory.Analysis.Learning` is the
 one-way consumer that mentions `Real.exp`, `Real.log`, and the quantitative
@@ -93,11 +96,16 @@ learning requires topology or fixed points.
 
 ## Promotion evidence
 
-The phase-2 audit rejects both game semantics and `FinDist` from
-`GameTheoryMath.OnlineLearning`, rejects the MW theorem and law adapter from
-`GameTheory.Core.Learning`, positively reaches Core averaging, the independent
+The phase-2 audit rejects `FinDist` from
+`GameTheory.Math.OnlineLearning`, rejects the MW theorem and law adapter from
+`GameTheory.Core.Learning`, positively reaches Core averaging, the vector
 regret theorem, the adapter, and the game capstone from
 `GameTheory.Analysis.Learning`, and rejects Protocol and
 `kakutani_fixed_point` from that bridge. Focused builds and both declaration
 ledgers pass; the headline mathematical and representation theorems retain the
 standard Mathlib axiom profile.
+
+EXP-101 moved the adapter from `GameTheory.Probability` to
+`GameTheory.Math.Probability` and validated the whole `GameTheory.Math` subtree
+as a separate Lake target. It did not merge the two modules or change the
+algorithmic interface.

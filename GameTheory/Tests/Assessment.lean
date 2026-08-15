@@ -20,7 +20,7 @@ noncomputable section
 
 namespace GameTheory.Tests
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol (Context)
 
 /-- Two hidden states and a stopping state. -/

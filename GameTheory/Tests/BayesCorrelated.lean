@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Tests.BayesCorrelated
 
-open Probability
+open GameTheory.Math.Probability
 
 abbrev Player := Fin 1
 

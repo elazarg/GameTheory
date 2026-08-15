@@ -16,7 +16,7 @@ noncomputable section
 namespace GameTheory.Tests.EFG
 
 open GameTheory GameTheory.Languages GameTheory.Protocol
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 /-- One player is enough to make the hidden-information test discriminating. -/
 inductive Player

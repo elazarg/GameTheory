@@ -12,7 +12,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Transform
 
-open Probability
+open GameTheory.Math.Probability
 
 /-- Outcome relabeling exercises the generic preference pullback, not only the
 expected-utility specialization. -/

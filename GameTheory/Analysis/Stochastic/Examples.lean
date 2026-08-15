@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Stochastic.Examples
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 open scoped NNReal
 
 private def transition (state : Bool) (action : Fin 2 → Bool) : FinDist Bool :=

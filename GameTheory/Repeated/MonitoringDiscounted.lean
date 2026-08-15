@@ -9,7 +9,7 @@ one-shot-deviation sufficiency argument lives separately.
 
 import GameTheory.Repeated.MonitoringPayoff
 import GameTheory.Core.Approximate
-import GameTheoryMath.Discounted
+import GameTheory.Math.Discounted
 import Mathlib.Analysis.Normed.Group.InfiniteSum
 import Mathlib.Analysis.SpecificLimits.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Module
@@ -20,7 +20,7 @@ open scoped BigOperators
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι us uo uy
 
@@ -39,7 +39,7 @@ def monitoredForm (M : G.PublicMonitoring) : GameForm ι where
 /-- Normalized discounted expected payoff under public monitoring. -/
 def discountedPayoff (M : G.PublicMonitoring) (discount : ℝ)
     (profile : M.MonitoredProfile) (who : ι) : ℝ :=
-  GameTheoryMath.normalizedDiscountedSum discount fun t =>
+  GameTheory.Math.normalizedDiscountedSum discount fun t =>
     M.monitoredStagePayoff profile t who
 
 /-- Discounted payoff after a specified, possibly off-path, public history. -/
@@ -85,7 +85,7 @@ theorem discountedPayoff_le_of_forall_monitoredStagePayoff_le
     hdiscount0 hdiscount1 who hfirst
   have hsSecond := M.summable_discounted_monitoredStagePayoff_of_abs_bound
     hdiscount0 hdiscount1 who hsecond
-  exact GameTheoryMath.normalizedDiscountedSum_le hdiscount0 hdiscount1
+  exact GameTheory.Math.normalizedDiscountedSum_le hdiscount0 hdiscount1
     hsFirst hsSecond hle
 
 theorem abs_discountedPayoff_le_of_abs_stagePayoff_bound
@@ -113,7 +113,7 @@ theorem abs_discountedPayoff_le_of_abs_stagePayoff_bound
   have hgeom : Summable fun t : ℕ => bound * discount ^ t :=
     (summable_geometric_of_lt_one hdiscount0 hdiscount1).mul_left bound
   have hne : 1 - discount ≠ 0 := by linarith
-  unfold discountedPayoff GameTheoryMath.normalizedDiscountedSum
+  unfold discountedPayoff GameTheory.Math.normalizedDiscountedSum
   rw [abs_mul, abs_of_nonneg (sub_nonneg.mpr hdiscount1.le)]
   calc
     (1 - discount) * |∑' t : ℕ, discount ^ t * M.monitoredStagePayoff profile t who| ≤
@@ -220,7 +220,7 @@ theorem discountedPayoff_eq_head_add_expected
       _ = discount * ∑' n : ℕ, discount ^ n *
           M.monitoredStagePayoff profile (n + 1) who := by rw [tsum_mul_left]
       _ = _ := by rw [hinterchange]
-  unfold discountedPayoff GameTheoryMath.normalizedDiscountedSum
+  unfold discountedPayoff GameTheory.Math.normalizedDiscountedSum
   rw [show (∑' n : ℕ,
       discount ^ n * M.monitoredStagePayoff profile n who) =
       ∑' n : ℕ, term n by rfl]
@@ -252,7 +252,7 @@ theorem discountedPayoff_stationaryMonitoredProfile (M : G.PublicMonitoring)
     M.discountedPayoff discount (M.stationaryMonitoredProfile profile) who =
       G.stagePayoff profile who := by
   have hne : 1 - discount ≠ 0 := by linarith
-  simp [discountedPayoff, GameTheoryMath.normalizedDiscountedSum, tsum_mul_right,
+  simp [discountedPayoff, GameTheory.Math.normalizedDiscountedSum, tsum_mul_right,
     tsum_geometric_of_lt_one hdiscount0 hdiscount1, hne]
 
 /-- Exact discounted Nash equilibrium in public strategies. -/

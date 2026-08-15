@@ -7,13 +7,13 @@ probability dependency.
 -/
 
 import GameTheory.Evolutionary.Basic
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
 namespace GameTheory.Evolutionary
 
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 universe uS
 

@@ -18,7 +18,7 @@ noncomputable section
 
 namespace GameTheory.Mechanism.Auction
 
-open Probability
+open GameTheory.Math.Probability
 
 /-- The common real-bid signature for a finite-bidder sealed-bid auction. -/
 @[reducible]

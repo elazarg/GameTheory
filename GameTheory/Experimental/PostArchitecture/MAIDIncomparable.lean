@@ -18,7 +18,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.MAIDIncomparable
 
-open GameTheory.Protocol GameTheory.Probability
+open GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol
 
 inductive Agent

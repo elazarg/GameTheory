@@ -20,7 +20,7 @@ noncomputable section
 
 namespace GameTheory.Tests
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 
 /-- Always take, as a state policy. -/
 def takeState : coinThenMove.StatePolicy () := fun _ _ => ⟨.take, Set.mem_univ _⟩

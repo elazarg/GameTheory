@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Analysis.Protocol.CounterfactualRegretTest
 
-open GameTheory Probability Protocol
+open GameTheory GameTheory.Math.Probability Protocol
 open GameTheory.Protocol.InformationModel
 open GameTheory.Tests.EFG
 

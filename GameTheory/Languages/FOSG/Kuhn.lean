@@ -18,7 +18,7 @@ noncomputable section
 
 namespace GameTheory.Languages.FOSG
 
-open GameTheory.Protocol Probability
+open GameTheory.Protocol GameTheory.Math.Probability
 
 universe uι us ua up uq uk uo
 

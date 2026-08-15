@@ -14,7 +14,7 @@ noncomputable section
 namespace GameTheory.Tests.MAID
 
 open GameTheory
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Languages.MAID
 open GameTheory.Languages.MAID.Strategic
 open GameTheory.Languages.MAID.ToEFG
@@ -32,7 +32,7 @@ instance : Fintype Node :=
 def parents (_ : Node) : Finset Node := ∅
 
 private theorem acyclic :
-    GameTheoryMath.DAG.Acyclic
+    GameTheory.Math.DAG.Acyclic
       (fun first second => first ∈ parents second) := by
   have noEdge : ∀ {first second : Node}, first ∈ parents second → False := by
     intro first second hedge
@@ -54,7 +54,7 @@ def diagram : Structure Unit Node where
     simp at hkind
   acyclic := acyclic
 
-def topological : GameTheoryMath.DAG.TopologicalOrder diagram.parents where
+def topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents where
   order := [.decision]
   nodup := by decide
   complete := by
@@ -183,7 +183,7 @@ end GameTheory.Tests.MAID
 namespace GameTheory.Tests.MAID.MultiOwner
 
 open GameTheory
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Languages.MAID
 open GameTheory.Languages.MAID.Strategic
 open GameTheory.Languages.MAID.ToEFG
@@ -198,7 +198,7 @@ inductive Node
 def parents (_ : Node) : Finset Node := ∅
 
 private theorem acyclic :
-    GameTheoryMath.DAG.Acyclic
+    GameTheory.Math.DAG.Acyclic
       (fun source target => source ∈ parents target) := by
   have noEdge : ∀ {source target : Node}, source ∈ parents target → False := by
     intro source target hedge
@@ -220,7 +220,7 @@ def diagram : Structure Bool Node where
     cases node <;> simp at hkind
   acyclic := acyclic
 
-def topological : GameTheoryMath.DAG.TopologicalOrder diagram.parents where
+def topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents where
   order := [.first, .second, .rival]
   nodup := by decide
   complete := by

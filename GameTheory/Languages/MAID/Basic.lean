@@ -8,14 +8,14 @@ frontier by one dependent finite product. The public laws validate this
 representation and its exact compiled-EFG semantics.
 -/
 
-import GameTheory.Probability.FinDist
-import GameTheoryMath.DAG
+import GameTheory.Math.Probability.FinDist
+import GameTheory.Math.DAG
 
 noncomputable section
 
 namespace GameTheory.Languages.MAID
 
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 universe uPlayer uNode uValue
 
@@ -34,7 +34,7 @@ structure Structure (Player : Type uPlayer) (Node : Type uNode) where
   observed_sub : ∀ node, observedParents node ⊆ parents node
   observed_eq_of_chance : ∀ node, kind node = .chance →
     observedParents node = parents node
-  acyclic : GameTheoryMath.DAG.Acyclic
+  acyclic : GameTheory.Math.DAG.Acyclic
     (fun first second => first ∈ parents second)
 
 variable {Player : Type uPlayer} {Node : Type uNode}

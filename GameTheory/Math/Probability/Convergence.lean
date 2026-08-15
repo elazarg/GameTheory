@@ -1,20 +1,18 @@
 /-
 # Pointwise convergence of finite-support laws
 
-This is the shared analytic interface for canonical `FinDist` laws.  It sits
-above the probability representation and below game- or protocol-specific
-consumers.  On finite carriers, pointwise mass convergence commutes with
-expectation and finite independent products.
+On finite carriers, pointwise mass convergence commutes with expectation and
+finite independent products.
 -/
 
 import Mathlib.Topology.Instances.Real.Lemmas
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
-namespace GameTheory.Analysis
+namespace GameTheory.Math.Probability
 
-open Filter GameTheory Probability
+open Filter
 
 /-- Pointwise convergence of finite-support laws through their real-valued
 probability weights. -/
@@ -50,4 +48,4 @@ theorem FinDistConvergesPointwise.pi {ι : Type*} [Fintype ι]
   simp_rw [FinDist.prob_pi]
   simpa using tendsto_finsetProd Finset.univ fun i _ => h i (profile i)
 
-end GameTheory.Analysis
+end GameTheory.Math.Probability

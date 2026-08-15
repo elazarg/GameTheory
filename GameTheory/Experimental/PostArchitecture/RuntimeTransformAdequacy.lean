@@ -15,7 +15,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.RuntimeTransformAdequacy
 
-open Probability
+open GameTheory.Math.Probability
 
 /-! ## An executable domain game with heterogeneous actions -/
 

@@ -23,7 +23,7 @@ noncomputable section
 
 namespace GameTheory.Tests
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 
 /-- Outcomes of a one-shot matching game. -/
 inductive Pair | opening | agreed | split

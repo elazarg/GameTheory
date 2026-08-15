@@ -134,7 +134,7 @@ theorem toUtilityGame_play_truthful [Fintype ι] [DecidableEq ι]
     (trueTypes : V.ReportProfile) :
     (V.toUtilityGame trueTypes).form.play
         (fun i => V.truthfulStrategy i (trueTypes i)) =
-      Probability.FinDist.pure trueTypes := by
+      GameTheory.Math.Probability.FinDist.pure trueTypes := by
   rfl
 
 /-- Truthful reporting is an ex-post equilibrium: for every true-type profile,

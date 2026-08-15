@@ -1,8 +1,7 @@
 /-
 # Normalized discounted real series
 
-Game-free algebra for the normalized geometric sums used by deterministic and
-monitored repeated-payoff semantics.
+Algebra for normalized geometric sums and discounted real series.
 -/
 
 import Mathlib.Analysis.Normed.Group.InfiniteSum
@@ -10,7 +9,7 @@ import Mathlib.Analysis.SpecificLimits.Basic
 
 noncomputable section
 
-namespace GameTheoryMath
+namespace GameTheory.Math
 
 /-- The normalized discounted sum of a real sequence. -/
 abbrev normalizedDiscountedSum (discount : ℝ) (payoff : ℕ → ℝ) : ℝ :=
@@ -48,4 +47,4 @@ theorem exists_discountFactor_threshold_oneStep
       (div_lt_iff₀ hdenominator).1 hdiscount
     nlinarith
 
-end GameTheoryMath
+end GameTheory.Math

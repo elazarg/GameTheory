@@ -326,7 +326,7 @@ theorem triggerRepeatedProfile_isNash
   let deviatingPath : ℕ → Profile G.form.sig :=
     fun t => G.repeatedPlay deviatingProfile t
   by_cases hnever : ∀ t, deviatingPath t = path t
-  · unfold discountedPayoff GameTheoryMath.normalizedDiscountedSum
+  · unfold discountedPayoff GameTheory.Math.normalizedDiscountedSum
     apply mul_le_mul_of_nonneg_left _ (sub_nonneg.mpr hdiscount1.le)
     apply le_of_eq
     apply tsum_congr

@@ -21,7 +21,7 @@ open scoped BigOperators
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι us uo uy
 

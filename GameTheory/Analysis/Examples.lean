@@ -44,7 +44,7 @@ theorem matchingPennies_exists_isNash_mixed :
 consumer is intentionally existential: it witnesses the general theorem on a
 game whose pure-equilibrium set was just proved empty. -/
 theorem matchingPennies_exists_isCorrelatedEq :
-    ∃ law : Probability.FinDist (Profile matchingPennies.sig),
+    ∃ law : GameTheory.Math.Probability.FinDist (Profile matchingPennies.sig),
       IsCorrelatedEq matchingPennies.toForm
         (euPreference matchingPennies.utility) law := by
   haveI : ∀ i, Nonempty (matchingPennies.toForm.sig.Strategy i) := fun _ => ⟨Side.heads⟩
@@ -105,8 +105,8 @@ theorem securityMatrix_pure_isNash :
 theorem securityMatrix_pure_isSaddlePoint :
     IsSaddlePoint (F := MatrixGame.form (Fin 2) (Fin 2))
       (MatrixGame.utility securityMatrix)
-      (MatrixGame.mixedProfile (Probability.FinDist.pure 1)
-        (Probability.FinDist.pure 1)) := by
+      (MatrixGame.mixedProfile (GameTheory.Math.Probability.FinDist.pure 1)
+        (GameTheory.Math.Probability.FinDist.pure 1)) := by
   rw [MatrixGame.mixedProfile_pure]
   exact securityMatrix_pure_isNash.purify.isSaddlePoint
     (MatrixGame.utility_isZeroSum securityMatrix)
@@ -114,7 +114,8 @@ theorem securityMatrix_pure_isSaddlePoint :
 @[simp]
 theorem securityMatrix_pure_expectedPayoff :
     MatrixGame.expectedPayoff securityMatrix
-      (Probability.FinDist.pure 1) (Probability.FinDist.pure 1) = 1 := by
+      (GameTheory.Math.Probability.FinDist.pure 1)
+      (GameTheory.Math.Probability.FinDist.pure 1) = 1 := by
   rw [MatrixGame.expectedPayoff, MatrixGame.mixedProfile_pure,
     GameForm.mixed_play_purify]
   simp [MatrixGame.form, MatrixGame.pureProfile, MatrixGame.utility,
@@ -122,17 +123,17 @@ theorem securityMatrix_pure_expectedPayoff :
 
 /-- The bottom row guarantees the nonzero value against every mixed column. -/
 theorem securityMatrix_row_guarantees :
-    MatrixGame.RowGuarantees securityMatrix (Probability.FinDist.pure 1) 1 := by
+    MatrixGame.RowGuarantees securityMatrix (GameTheory.Math.Probability.FinDist.pure 1) 1 := by
   have h := (MatrixGame.isSaddlePoint_iff_guarantees_caps securityMatrix
-    (Probability.FinDist.pure 1) (Probability.FinDist.pure 1)).1
+    (GameTheory.Math.Probability.FinDist.pure 1) (GameTheory.Math.Probability.FinDist.pure 1)).1
     securityMatrix_pure_isSaddlePoint
   simpa only [securityMatrix_pure_expectedPayoff] using h.1
 
 /-- The right column caps the row payoff at the same nonzero value. -/
 theorem securityMatrix_column_caps :
-    MatrixGame.ColumnCaps securityMatrix (Probability.FinDist.pure 1) 1 := by
+    MatrixGame.ColumnCaps securityMatrix (GameTheory.Math.Probability.FinDist.pure 1) 1 := by
   have h := (MatrixGame.isSaddlePoint_iff_guarantees_caps securityMatrix
-    (Probability.FinDist.pure 1) (Probability.FinDist.pure 1)).1
+    (GameTheory.Math.Probability.FinDist.pure 1) (GameTheory.Math.Probability.FinDist.pure 1)).1
     securityMatrix_pure_isSaddlePoint
   simpa only [securityMatrix_pure_expectedPayoff] using h.2
 
@@ -141,7 +142,7 @@ security certificate. -/
 theorem securityMatrix_value_eq_one : MatrixGame.value securityMatrix = 1 := by
   symm
   exact MatrixGame.common_guarantee_eq_value securityMatrix
-    ⟨Probability.FinDist.pure 1, securityMatrix_row_guarantees⟩
-    ⟨Probability.FinDist.pure 1, securityMatrix_column_caps⟩
+    ⟨GameTheory.Math.Probability.FinDist.pure 1, securityMatrix_row_guarantees⟩
+    ⟨GameTheory.Math.Probability.FinDist.pure 1, securityMatrix_column_caps⟩
 
 end GameTheory.Examples

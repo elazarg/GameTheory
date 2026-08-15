@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Rationalizability
 
-open GameTheory GameTheory.Finite Probability
+open GameTheory GameTheory.Finite GameTheory.Math.Probability
 
 /-- Row payoffs for the hostile three-action game. -/
 def rowPayoff (row column : Fin 3) : ℚ :=

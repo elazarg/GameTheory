@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Tests.SubgamePerfect
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol
 
 inductive State

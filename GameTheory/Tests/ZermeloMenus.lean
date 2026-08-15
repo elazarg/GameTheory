@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Tests.ZermeloMenus
 
-open GameTheory.Protocol GameTheory.Probability
+open GameTheory.Protocol GameTheory.Math.Probability
 
 @[reducible] def execution : ExecutionProtocol Unit where
   State := Bool

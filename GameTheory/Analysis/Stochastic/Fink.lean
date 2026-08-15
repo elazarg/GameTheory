@@ -12,7 +12,7 @@ Primary reference: A. M. Fink, “Equilibrium in a Stochastic n-Person Game,”
 import GameTheory.Analysis.Nash
 import GameTheory.Core.MixedImprovement
 import GameTheory.Stochastic.Basic
-import GameTheoryMath.PositivePartFixedPoint
+import GameTheory.Math.PositivePartFixedPoint
 
 noncomputable section
 
@@ -20,7 +20,7 @@ open scoped BigOperators
 
 namespace GameTheory.Stochastic.Game
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι us ua
 
@@ -444,7 +444,7 @@ theorem isDiscountedStationaryBellmanEq_of_finkMap_fixedPoint
     rw [(G.discountedAuxGame β (G.finkValue point) state).isNash_iff_mixedGain_nonpos]
     intro who action
     rw [← G.finkGain_eq_mixedGain β point state who action]
-    apply GameTheoryMath.all_nonpos_of_weighted_positivePart_fixedPoint
+    apply GameTheory.Math.all_nonpos_of_weighted_positivePart_fixedPoint
       (weight := fun candidate => (G.finkProfile point state who).prob candidate)
       (gain := fun candidate => G.finkGain β point state who candidate)
     · intro candidate

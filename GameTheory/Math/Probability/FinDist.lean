@@ -22,7 +22,7 @@ noncomputable section
 
 open scoped BigOperators NNReal ENNReal
 
-namespace GameTheory.Probability
+namespace GameTheory.Math.Probability
 
 universe u v w z
 
@@ -1671,4 +1671,4 @@ end Pi
 
 end FinDist
 
-end GameTheory.Probability
+end GameTheory.Math.Probability

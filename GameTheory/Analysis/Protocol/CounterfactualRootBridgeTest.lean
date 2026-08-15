@@ -11,7 +11,7 @@ noncomputable section
 
 namespace GameTheory.Analysis.Protocol.CounterfactualRootBridgeTest
 
-open GameTheory Probability Protocol
+open GameTheory GameTheory.Math.Probability Protocol
 open GameTheory.Protocol.InformationModel
 open GameTheory.Analysis.Protocol.CounterfactualRegretLinearityTest
 open GameTheory.Analysis.Protocol.CounterfactualDecompositionTest

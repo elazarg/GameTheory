@@ -16,7 +16,7 @@ noncomputable section
 namespace GameTheory.Languages.MAID.Strategic
 
 open GameTheory
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Protocol
 open GameTheory.Languages.MAID.ToEFG
 open GameTheory.Languages.MAID.FrontierEquivalence
@@ -60,7 +60,7 @@ their typed assignments. -/
 @[reducible]
 def compiledBehavioralGameForm
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [DecidableEq Node]
     (semantics : Semantics diagram) : GameForm Player :=
@@ -73,7 +73,7 @@ def compiledBehavioralGameForm
 profile. -/
 theorem native_play_eq_compiled_play
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram)
@@ -87,7 +87,7 @@ theorem native_play_eq_compiled_play
 information state. -/
 def actingChoiceValue
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : Semantics diagram)
     {owner : Player} (site : DecisionSite diagram owner)
@@ -100,7 +100,7 @@ def actingChoiceValue
 
 theorem actingChoiceValue_spec
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : Semantics diagram)
     {owner : Player} (site : DecisionSite diagram owner)
@@ -116,7 +116,7 @@ theorem actingChoiceValue_spec
 /-- Forget the compiled menu wrapper from one owner's behavioral policy. -/
 def sourceOwnerPolicy
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : Semantics diagram)
     (owner : Player)
@@ -132,7 +132,7 @@ def sourceOwnerPolicy
 identity. -/
 theorem sourceOwnerPolicy_ownerBehavioralPolicy
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : Semantics diagram)
     (owner : Player) (policy : OwnerPolicy diagram owner) :
@@ -157,7 +157,7 @@ theorem sourceOwnerPolicy_ownerBehavioralPolicy
 the identity, including its necessarily unique inactive choice. -/
 theorem ownerBehavioralPolicy_sourceOwnerPolicy
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : Semantics diagram)
     (owner : Player)
@@ -225,7 +225,7 @@ theorem ownerBehavioralPolicy_sourceOwnerPolicy
 equivalent coordinate by coordinate. -/
 def ownerPolicyEquiv
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : Semantics diagram) (owner : Player) :
     OwnerPolicy diagram owner ≃
@@ -243,7 +243,7 @@ def ownerPolicyEquiv
 source-owner policy profiles and compiled EFG behavioral profiles. -/
 def behavioralProfileEquiv
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : Semantics diagram) :
     Profile (nativeBehavioralSignature diagram) ≃
@@ -263,7 +263,7 @@ def behavioralProfileEquiv
 @[simp]
 theorem behavioralProfileEquiv_apply
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : Semantics diagram)
     (policy : Profile (nativeBehavioralSignature diagram)) :
@@ -276,7 +276,7 @@ that same source owner in the compiled EFG. Decision sites never become
 deviator coordinates. -/
 theorem behavioralProfileEquiv_update
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : Semantics diagram)
     (policy : Profile (nativeBehavioralSignature diagram))
@@ -299,7 +299,7 @@ theorem behavioralProfileEquiv_update
 equivalence. -/
 theorem native_play_eq_compiled_play_equiv
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram)
@@ -313,7 +313,7 @@ theorem native_play_eq_compiled_play_equiv
 whole site-local policy family. -/
 theorem native_play_update_eq_compiled_play_update
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram)
@@ -341,7 +341,7 @@ theorem native_play_update_eq_compiled_play_update
 deviation. -/
 theorem native_play_update_symm_eq_compiled_play_update
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram)
@@ -366,7 +366,7 @@ theorem native_play_update_symm_eq_compiled_play_update
 profile, and its assignment law is the native law of that inverse image. -/
 theorem native_play_symm_eq_compiled_play
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram)
@@ -387,7 +387,7 @@ to typed assignments. Deviations range over source players; one deviation
 replaces all and only that owner's site-local rules. -/
 theorem isNash_native_iff_compiled
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram)

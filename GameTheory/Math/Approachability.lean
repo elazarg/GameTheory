@@ -1,9 +1,8 @@
 /-
 # Blackwell approachability
 
-The game-independent squared-distance argument behind Blackwell
-approachability.  A strategic layer only has to provide the steering and
-bounded-residual hypotheses below.
+The squared-distance argument behind Blackwell approachability, stated from
+steering and bounded-residual hypotheses.
 
 Primary reference: D. Blackwell, “An Analog of the Minimax Theorem for Vector
 Payoffs,” *Pacific Journal of Mathematics* 6 (1956).
@@ -13,7 +12,7 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.InnerProductSpace.Projection.Minimal
 import Mathlib.Topology.MetricSpace.HausdorffDistance
 
-namespace GameTheoryMath.Approachability
+namespace GameTheory.Math.Approachability
 
 open scoped InnerProductSpace
 
@@ -218,4 +217,4 @@ theorem blackwell_approaches [ProperSpace E] (payoff : P → Q → E) (S : Set E
   refine ⟨br, fun qseq => ?_⟩
   exact infDist_avg_tendsto_zero (avgVec_succ payoff br qseq) (hbr qseq)
 
-end GameTheoryMath.Approachability
+end GameTheory.Math.Approachability

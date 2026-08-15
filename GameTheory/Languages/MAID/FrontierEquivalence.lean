@@ -12,7 +12,7 @@ noncomputable section
 
 namespace GameTheory.Languages.MAID.FrontierEquivalence
 
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Languages.MAID.ToEFG
 open GameTheory.Languages.MAID.Order
 
@@ -340,7 +340,7 @@ theorem map_values_step_eq_assignmentRun
 /-- The nodes of a topological order that are not yet resolved. -/
 def unresolvedOrder
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Node]
     (state : GameTheory.Languages.MAID.FrontierState diagram) : List Node :=
   topological.order.filter fun node => node ∉ state.resolved
@@ -348,7 +348,7 @@ def unresolvedOrder
 /-- The nodes left after resolving the state's entire current frontier. -/
 def remainingOrder
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
     (state : GameTheory.Languages.MAID.FrontierState diagram) : List Node :=
   topological.order.filter fun node =>
@@ -356,7 +356,7 @@ def remainingOrder
 
 theorem unresolvedOrder_nodup
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Node]
     (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (unresolvedOrder topological state).Nodup :=
@@ -364,7 +364,7 @@ theorem unresolvedOrder_nodup
 
 theorem unresolvedOrder_pairwise
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Node]
     (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (unresolvedOrder topological state).Pairwise
@@ -373,7 +373,7 @@ theorem unresolvedOrder_pairwise
 
 theorem remainingOrder_nodup
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
     (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (remainingOrder topological state).Nodup :=
@@ -381,7 +381,7 @@ theorem remainingOrder_nodup
 
 theorem remainingOrder_pairwise
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
     (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (remainingOrder topological state).Pairwise
@@ -392,7 +392,7 @@ theorem remainingOrder_pairwise
 is the unresolved-order list of every possible extended state. -/
 theorem unresolvedOrder_extend
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
     (state : GameTheory.Languages.MAID.FrontierState diagram)
     (draw : (node : {node // node ∈ state.frontier}) →
@@ -405,7 +405,7 @@ theorem unresolvedOrder_extend
 a duplicate-free permutation of the current unresolved topological order. -/
 theorem frontier_append_remaining_perm
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
     (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (state.frontier.toList ++ remainingOrder topological state).Perm
@@ -456,7 +456,7 @@ theorem frontier_append_remaining_perm
 
 theorem frontier_append_remaining_pairwise
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
     (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (state.frontier.toList ++ remainingOrder topological state).Pairwise
@@ -522,7 +522,7 @@ theorem assignmentRun_append [DecidableEq Node]
 and the nodes remaining after that frontier. -/
 theorem assignmentRun_unresolved_eq_frontier_bind_remaining
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
@@ -548,7 +548,7 @@ has exactly the assignment law of serialized evaluation over every unresolved
 node in any supplied topological order. -/
 theorem map_values_run_eq_assignmentRun_unresolved
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :
@@ -649,7 +649,7 @@ theorem map_values_run_eq_assignmentRun_unresolved
 assignment execution at any topological order. -/
 theorem map_values_nativeRun_eq_assignmentRun
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :
@@ -669,7 +669,7 @@ theorem map_values_nativeRun_eq_assignmentRun
 produce the same complete typed-assignment law. -/
 theorem nativeRun_eq_serialRun
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
@@ -692,7 +692,7 @@ the compiled EFG's actual behavioral runner have the same complete
 typed-assignment law. -/
 theorem nativeRun_eq_compiledBehavioralRun
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)

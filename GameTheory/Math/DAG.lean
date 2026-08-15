@@ -1,16 +1,15 @@
 /-
 # Finite directed acyclic graphs
 
-Game-independent relation and topological-order facts over arbitrary vertex
-types. Finiteness and decidable equality are required only by order
-construction.
+Relation and topological-order facts over arbitrary vertex types. Finiteness
+and decidable equality are required only by order construction.
 -/
 
 import Mathlib.Data.Fintype.Card
 import Mathlib.Data.List.Nodup
 import Mathlib.Order.WellFoundedSet
 
-namespace GameTheoryMath.DAG
+namespace GameTheory.Math.DAG
 
 variable {α : Type*}
 
@@ -209,4 +208,4 @@ theorem topologicalOrder_of_acyclic [Fintype α] [DecidableEq α]
           fun ⟨index, hindex⟩ =>
             absurd hindex (by simp)⟩
 
-end GameTheoryMath.DAG
+end GameTheory.Math.DAG

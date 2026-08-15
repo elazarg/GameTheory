@@ -12,7 +12,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.EvolutionaryOwnership
 
-open GameTheory GameTheory.Probability
+open GameTheory GameTheory.Math.Probability
 
 universe uS
 

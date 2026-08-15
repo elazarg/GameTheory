@@ -12,7 +12,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.D8Transformations
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι uκ us us' uo
 

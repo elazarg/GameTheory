@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Tests.MonitoringRank
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 
 abbrev Player := Bool
 

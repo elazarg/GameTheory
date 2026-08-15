@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Evolutionary
 
-open GameTheory.Evolutionary GameTheory.Probability
+open GameTheory.Evolutionary GameTheory.Math.Probability
 
 /-! ## The second-order clause is load-bearing -/
 

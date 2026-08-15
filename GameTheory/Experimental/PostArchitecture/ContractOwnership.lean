@@ -6,13 +6,13 @@ finite-support outcome laws.  It deliberately does not manufacture strategic
 players or reuse auction-specific allocation data.
 -/
 
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.ContractOwnership
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uAction uOutcome
 

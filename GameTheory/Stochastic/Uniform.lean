@@ -10,7 +10,7 @@ profile. No general existence theorem is claimed here.
 
 import GameTheory.Stochastic.FiniteHorizon
 import GameTheory.Core.Approximate
-import GameTheoryMath.Eventually
+import GameTheory.Math.Eventually
 
 noncomputable section
 
@@ -57,7 +57,7 @@ theorem IsεHorizonNash.mono [DecidableEq ι] {initial : G.State}
 abbrev IsUniformεEquilibrium [DecidableEq ι] (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (epsilon : ℝ)
     (profile : G.BehaviorProfile initial) : Prop :=
-  GameTheoryMath.EventuallyAtAll fun horizon =>
+  GameTheory.Math.EventuallyAtAll fun horizon =>
     G.IsεHorizonNash initial horizon epsilon profile
 
 /-- A uniform equilibrium payoff is approximated by one long-horizon
@@ -77,7 +77,7 @@ theorem IsUniformεEquilibrium.mono [DecidableEq ι] {initial : G.State}
     (h : G.IsUniformεEquilibrium initial epsilon profile)
     (hepsilon : epsilon ≤ epsilon') :
     G.IsUniformεEquilibrium initial epsilon' profile :=
-  GameTheoryMath.EventuallyAtAll.mono h fun horizon hhorizon =>
+  GameTheory.Math.EventuallyAtAll.mono h fun horizon hhorizon =>
     IsεNash.mono (F := G.horizonForm initial horizon)
       (utility := G.horizonUtility initial horizon)
       hhorizon hepsilon

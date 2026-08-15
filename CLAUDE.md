@@ -11,7 +11,7 @@ Lean namespace are named `GameTheory`.
 
 Phases 0 through 3 of the RFC spike have passed, so every architecture decision
 D0–D10 is now recorded rather than open. The static semantic core lives under
-`GameTheory/Core`, the finite-support law type under `GameTheory/Probability`,
+`GameTheory/Core`, the finite-support law type under `GameTheory/Math/Probability`,
 the sequential layer under `GameTheory/Protocol`, native encodings under
 `GameTheory/Languages`, the executable rational frontend under
 `GameTheory/Finite`, everything needing convexity or topology under

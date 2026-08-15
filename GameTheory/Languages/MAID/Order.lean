@@ -12,7 +12,7 @@ noncomputable section
 
 namespace GameTheory.Languages.MAID.Order
 
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Protocol
 open GameTheory.Protocol.ExecutionProtocol
 open GameTheory.Languages.MAID.ToEFG
@@ -327,7 +327,7 @@ theorem assignmentRun_eq_of_perm
 
 theorem topological_pairwise
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents) :
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents) :
     topological.order.Pairwise
       (fun earlier later => later ∉ diagram.parents earlier) := by
   rw [List.pairwise_iff_getElem]
@@ -352,7 +352,7 @@ theorem assignmentRun_topological_order_independent
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (first second :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (assignment : GameTheory.Languages.MAID.Assignment diagram) :
     assignmentRun semantics policy first.order assignment =
       assignmentRun semantics policy second.order assignment := by
@@ -368,7 +368,7 @@ theorem assignmentRun_topological_order_independent
 
 theorem serialNodeLaw_eq_assignmentNodeLaw
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
@@ -406,7 +406,7 @@ theorem serialNodeLaw_eq_assignmentNodeLaw
 
 theorem assignment_advance
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological)
@@ -420,7 +420,7 @@ theorem assignment_advance
 
 theorem map_assignment_serialStep
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
@@ -447,7 +447,7 @@ theorem map_assignment_serialStep
 executing the remaining explicit node list. -/
 theorem map_assignment_serialRun
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :
@@ -506,7 +506,7 @@ theorem serialRun_topological_order_independent
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (first second :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents) :
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents) :
     FinDist.map (Stage.assignment first semantics)
         (serialRun first semantics policy first.order.length
           (Stage.initial first)) =
@@ -526,7 +526,7 @@ joint law for arbitrary finite source-player carriers. -/
 theorem behavioralJoint_eq_serialJointLaw
     [Fintype Player] [DecidableEq Player] [DecidableEq Node]
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
@@ -648,7 +648,7 @@ step for arbitrary finite source-player carriers. -/
 theorem behavioralJoint_bind_transition
     [Fintype Player] [DecidableEq Player] [DecidableEq Node]
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
@@ -672,7 +672,7 @@ serialized stage runner for arbitrary finite source-player carriers. -/
 theorem map_state_runBehavioralFrom_eq_serialRun
     [Fintype Player] [DecidableEq Player] [DecidableEq Node]
     (topological :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :
     ∀ (fuel : ℕ)
@@ -744,7 +744,7 @@ theorem behavioralRun_topological_order_independent
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (first second :
-      GameTheoryMath.DAG.TopologicalOrder diagram.parents) :
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents) :
     FinDist.map
         (fun history =>
           Stage.assignment first semantics history.state)

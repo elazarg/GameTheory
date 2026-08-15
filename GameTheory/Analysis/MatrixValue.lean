@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.MatrixGame
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 
 universe u
 

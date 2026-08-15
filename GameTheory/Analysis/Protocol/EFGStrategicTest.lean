@@ -17,7 +17,7 @@ noncomputable section
 namespace GameTheory.Tests.EFGStrategic
 
 open GameTheory GameTheory.Languages GameTheory.Protocol
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Tests.EFG
 
 /-- The finite hidden-bit EFG has a genuinely enumerable contingent-plan

@@ -18,7 +18,7 @@ noncomputable section
 
 namespace GameTheory.Languages.Intrinsic.Model
 
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 universe uAgent uNature uDecision
 

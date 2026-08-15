@@ -2,7 +2,7 @@
 # Finite local CFR bounds control root deviations
 
 This module combines the D46 local regret-matching processes through the
-game-independent finite aggregation theorem. Its semantic premise is a D48
+finite aggregation theorem. Its semantic premise is a D48
 scalar root-gain decomposition or upper decomposition for a family of
 deviations; bounded common-depth topological chains supply that premise. No
 second runner or regret semantics is introduced here.
@@ -10,16 +10,16 @@ second runner or regret semantics is introduced here.
 
 import GameTheory.Analysis.Protocol.CounterfactualDecomposition
 import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
-import GameTheoryMath.RegretAggregation
+import GameTheory.Math.RegretAggregation
 
 noncomputable section
 
 namespace GameTheory.Protocol
 
-open Filter GameTheory Probability Protocol
+open Filter GameTheory GameTheory.Math.Probability Protocol
 open GameTheory.Analysis.Approachability
-open GameTheoryMath.Approachability GameTheoryMath.OrthantProjection
-open GameTheoryMath.RegretAggregation
+open GameTheory.Math.Approachability GameTheory.Math.OrthantProjection
+open GameTheory.Math.RegretAggregation
 
 universe uι us ua up uq uk uv
 

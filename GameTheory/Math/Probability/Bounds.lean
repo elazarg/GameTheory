@@ -7,11 +7,11 @@ representation.  The first consumers are high-probability approximate-Nash
 certification and Bayes-plausible posterior concentration (EXP-094).
 -/
 
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
-namespace GameTheory.Probability.FinDist
+namespace GameTheory.Math.Probability.FinDist
 
 universe u
 
@@ -46,4 +46,4 @@ theorem markov_inequality {α : Type u} (law : FinDist α) (observable : α → 
   law.probOf_le_expect_div _ observable hthreshold hnonnegative
     (fun _ _ hlower => hlower)
 
-end GameTheory.Probability.FinDist
+end GameTheory.Math.Probability.FinDist

@@ -17,7 +17,7 @@ noncomputable section
 
 open scoped BigOperators
 
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 namespace GameTheory.CongestionGame
 

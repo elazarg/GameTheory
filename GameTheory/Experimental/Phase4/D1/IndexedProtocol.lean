@@ -22,7 +22,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.Phase4.D1
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 
 universe uι us ua
 

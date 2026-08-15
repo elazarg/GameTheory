@@ -1,10 +1,9 @@
 /-
 # Finite multiplicative weights
 
-The exponential-potential argument is game-independent.  This module exposes
-it as finite real-vector mathematics: probabilities are coordinates summing
-to one, not a second probability-law type.  `GameTheory.Probability` may turn
-those coordinates into the canonical `FinDist` representation.
+The exponential-potential argument in finite real-vector form. Probabilities
+are coordinates summing to one; `GameTheory.Math.Probability.OnlineLearning`
+packages those coordinates as `FinDist` laws.
 -/
 
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
@@ -13,7 +12,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 noncomputable section
 
-namespace GameTheoryMath.OnlineLearning
+namespace GameTheory.Math.OnlineLearning
 
 variable {A : Type*}
 
@@ -250,8 +249,7 @@ theorem exp_sub_one_sub_self_le_sq {eta : ℝ} (hzero : 0 ≤ eta) (hone : eta �
   nlinarith [hb, le_abs_self (Real.exp eta - (1 + eta)), sq_nonneg eta]
 
 /-- On the usual learning-rate range, the exponential remainder is at most
-quadratic. This game-independent form is the convenient input for choosing a
-horizon-dependent rate in downstream learning reductions. -/
+quadratic, which permits a horizon-dependent learning rate. -/
 theorem externalRegret_le_quadratic {eta : ℝ} (heta : 0 < eta)
     (hetaOne : eta ≤ 1) {gain : ℕ → A → ℝ}
     (hgain : ∀ s a, gain s a ∈ Set.Icc (0 : ℝ) 1) (T : ℕ) :
@@ -322,4 +320,4 @@ theorem fixedActionRegret_le_externalRegret
   rw [externalRegret]
   linarith
 
-end GameTheoryMath.OnlineLearning
+end GameTheory.Math.OnlineLearning

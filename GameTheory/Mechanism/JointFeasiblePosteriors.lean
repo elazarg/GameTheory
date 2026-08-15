@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe up us
 

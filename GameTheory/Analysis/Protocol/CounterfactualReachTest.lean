@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Analysis.Protocol.CounterfactualReachTest
 
-open GameTheory.Languages GameTheory.Probability GameTheory.Protocol
+open GameTheory.Languages GameTheory.Math.Probability GameTheory.Protocol
 
 namespace Simultaneous
 

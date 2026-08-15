@@ -22,13 +22,13 @@ A protocol therefore cannot declare a legality relation inconsistent with its ow
 `active` and `available`.
 -/
 
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
 namespace GameTheory.Protocol
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι us ua
 

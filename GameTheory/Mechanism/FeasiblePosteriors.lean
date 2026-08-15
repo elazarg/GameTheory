@@ -6,13 +6,13 @@ prior.  Both levels use the canonical finite-support distribution, and the
 canonical coupling draws a posterior and then a state from that posterior.
 -/
 
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe us
 

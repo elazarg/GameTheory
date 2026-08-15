@@ -53,7 +53,7 @@ and experiments, because the library target globs submodules. The audit ends in
 
 | Measure | Value |
 |---|---:|
-| `GameTheory/Probability` nonblank lines | 409 |
+| `GameTheory/Math/Probability` nonblank lines | 409 |
 | `GameTheory/Core` nonblank lines | 1017 |
 | `GameTheory/Finite` nonblank lines | 326 |
 | `GameTheory/Examples` nonblank lines | 199 |

@@ -12,7 +12,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.NFGFOSGTest
 
-open GameTheory GameTheory.Languages GameTheory.Probability
+open GameTheory GameTheory.Languages GameTheory.Math.Probability
 open GameTheory.Languages.NFG.OneShotFOSG
 
 inductive Player

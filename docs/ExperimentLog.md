@@ -28,7 +28,7 @@ becomes difficult to scan.
 | EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
 | EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
 | EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Supports | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Randomized.lean` |
-| EXP-018 | 2026-07-29 | D6 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | Supports | `GameTheory/Probability/FinDist.lean`; `GameTheory/Protocol/Information.lean` |
+| EXP-018 | 2026-07-29 | D6 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | Supports | `GameTheory/Math/Probability/FinDist.lean`; `GameTheory/Protocol/Information.lean` |
 | EXP-019 | 2026-07-29 | D7 / the recall direction | Can the recall direction be restated over reach-mass conditions, stated transport-free, with recall demoted to a sufficient condition? | Narrows; closes D7 again | `GameTheory/Experimental/Phase4/ReachMassStatements.lean`; [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md) |
 | EXP-020 | 2026-07-29 | D1 / Phase 4 | Should carrier-bearing structures keep storing their carriers, now that the reducibility cost has been paid across a whole layer? | Decides D1 | [`decisions/D1-signature-ownership.md`](decisions/D1-signature-ownership.md); `GameTheory/Experimental/Phase4/D1/` |
 | EXP-021 | 2026-07-29 | D6 / Phase 3 close-out | Does the one-shot deviation principle hold on the accepted sequential interface, and does the certificate already in hand carry it? | Supports | `GameTheory/Protocol/Backward.lean`; `GameTheory/Tests/OneShot.lean` |
@@ -41,7 +41,7 @@ becomes difficult to scan.
 | EXP-028 | 2026-07-30 | D0 / Phase 5 | Is the parallel `CoalitionalGame` primitive rich enough for the Shapley value and its four-axiom characterization? | Supports the parallel primitive | `GameTheory/Core/Shapley.lean`; `GameTheory/Tests/Shapley.lean` |
 | EXP-029 | 2026-07-30 | D0/D5/D6 / Phase 5 | Does the EXP-008 interim theorem survive as stable API and compile through the accepted `InformationModel` without duplicating equilibrium semantics? | Supports; fixes the static/information split | `GameTheory/Core/Bayesian*.lean`; `GameTheory/Languages/Bayesian.lean`; `GameTheory/Tests/Bayesian.lean` |
 | EXP-030 | 2026-07-30 | D0/D2/D6/D11/D12 / Phase 5 | Can repeated play reuse Protocol for finite prefixes and ordinary `IsNash` for discounting without inventing an infinite `FinDist` path law? | Supports; narrows public histories to lists | `GameTheory/Repeated/*.lean`; `GameTheory/Tests/Repeated.lean` |
-| EXP-031 | 2026-07-30 | D11/D12 / Phase 5 | Does the full discounted folk theorem belong in stable Repeated, under Analysis, or behind a new repeated-analysis bridge? | Supports one-way Analysis bridge | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Analysis/Repeated/`; `GameTheoryMath/` |
+| EXP-031 | 2026-07-30 | D11/D12 / Phase 5 | Does the full discounted folk theorem belong in stable Repeated, under Analysis, or behind a new repeated-analysis bridge? | Supports one-way Analysis bridge | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Analysis/Repeated/`; `GameTheory/Math/` |
 | EXP-032 | 2026-07-30 | D6/D12 / Phase 5 | Where should Kreps-Wilson limit consistency live when its topology is on Protocol policies and beliefs? | Supports one-way Analysis bridge; narrows beliefs to reachable sites | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Protocol/BehavioralAssessment.lean`; `GameTheory/Analysis/Protocol/` |
 | EXP-033 | 2026-07-30 | D6/D12 / Phase 5 | Can a finite EFG adapter instantiate behavioral assessments and sequential consistency without importing solution concepts into syntax or duplicating Protocol semantics? | Supports transparent specialization; corrects the assessment interface | `GameTheory/Languages/EFG.lean`; `GameTheory/Analysis/Protocol/EFG.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
 | EXP-034 | 2026-07-30 | D6/D12 / finite EFG theorem | Can the hostile hidden-information EFG carry an actual sequential-equilibrium witness rather than only the proposition? | Supports; concrete consistency and equilibrium witness | `GameTheory/Protocol/BehavioralAssessment.lean`; `GameTheory/Analysis/Protocol/Sequential.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
@@ -49,7 +49,7 @@ becomes difficult to scan.
 | EXP-036 | 2026-07-30 | D6 / sequential theory | Does well-founded information-local one-shot optimality characterize SPE, including off-path histories? | Supports; completes W1-B | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Tests/SubgamePerfect.lean` |
 | EXP-037 | 2026-07-30 | D6/D14 / MAID gate | Can incomparable MAID decisions compile without asserting a false order? | Supports frontier batching; unlocks general MAID work | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDIncomparable.lean` |
 | EXP-038 | 2026-07-30 | D6/D14 / T3 strategy gate | Does per-player frontier batching preserve locality when one player owns incomparable decisions? | Refutes combined-view policies; narrows D14 | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDSameOwner.lean` |
-| EXP-039 | 2026-07-30 | D9/D14 / general MAID substrate | Can the pinned finite-DAG mathematics be recovered without storing finiteness in semantic data or tying it to `Fin n`? | Supports; generalizes the pinned DAG proof | `GameTheoryMath/DAG.lean`; `GameTheory/Experimental/PostArchitecture/DAGDiamond.lean` |
+| EXP-039 | 2026-07-30 | D9/D14 / general MAID substrate | Can the pinned finite-DAG mathematics be recovered without storing finiteness in semantic data or tying it to `Fin n`? | Supports; generalizes the pinned DAG proof | `GameTheory/Math/DAG.lean`; `GameTheory/Experimental/PostArchitecture/DAGDiamond.lean` |
 | EXP-040 | 2026-07-30 | D2/D9/D14 / typed MAID semantics | Can heterogeneous site-local MAID semantics evaluate unresolved frontiers without dependent transport or stored finite capabilities? | Supports; promoted after EXP-041 | `GameTheory/Languages/MAID/Basic.lean`; `GameTheory/Experimental/PostArchitecture/TypedMAIDTest.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
 | EXP-041 | 2026-07-30 | D6/D14 / T3 serialization | Can an explicit topological order compile the typed MAID to an EFG without exposing serialized incomparable decisions? | Supports; native frontier, serialized, and actual compiled-EFG assignment laws are equal for arbitrary finite typed diagrams | `GameTheory/Languages/MAID/{ToEFG,Order,FrontierEquivalence}.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
 | EXP-042 | 2026-07-30 | D0/D4/D6 / T4 | Can a one-shot NFG compile through FOSG and the actual Protocol history runner with exact outcome and utility laws? | Supports; closes T4 | [`decisions/D15-nfg-fosg.md`](decisions/D15-nfg-fosg.md); `GameTheory/Languages/{NFG,FOSG,Bridges/NFGFOSG}.lean` |
@@ -59,11 +59,11 @@ becomes difficult to scan.
 | EXP-046 | 2026-07-30 | D0/D5/D6 / communication ownership | Is observable pre-play cheap talk a static `GameForm` construction, or must even the babbling theorem use Protocol timing? | Supports static ownership; decides D18; promoted | [`decisions/D18-communication-ownership.md`](decisions/D18-communication-ownership.md); `GameTheory/Experimental/PostArchitecture/CheapTalk.lean`; `GameTheory/Core/CheapTalk.lean`; `GameTheory/Examples/CheapTalk.lean` |
 | EXP-047 | 2026-07-30 | D8/D18 / public randomization | Does mixed play of the static cheap-talk extension induce a base correlated equilibrium without Protocol timing or a second equilibrium predicate? | Supports static bridge; decides D19; promoted | [`decisions/D19-cheap-talk-public-randomization.md`](decisions/D19-cheap-talk-public-randomization.md); `GameTheory/Experimental/PostArchitecture/CheapTalkPublicRandomness.lean`; `GameTheory/Core/CheapTalkRandomization.lean` |
 | EXP-048 | 2026-07-30 | D16/D18 / Electronic Mail ownership | Do the finite Electronic Mail theorems integrate as a static Bayesian/Epistemic example, or do their message rounds require Protocol execution? | Supports static Examples bridge; decides D20; promoted | [`decisions/D20-electronic-mail-ownership.md`](decisions/D20-electronic-mail-ownership.md); `GameTheory/Experimental/PostArchitecture/ElectronicMail.lean`; `GameTheory/Examples/ElectronicMail.lean` |
-| EXP-049 | 2026-08-02 | D0/D2/D12 / online learning | Can the pinned multiplicative-weights regret engine be recovered as independent `GameTheoryMath` over `FinDist` and feed stable self-play without importing analysis into Core? | Narrows to law-free vectors plus a canonical-law adapter; decides D21 | [`decisions/D21-finite-online-learning-boundary.md`](decisions/D21-finite-online-learning-boundary.md); `GameTheoryMath/OnlineLearning.lean`; `GameTheory/{Probability,Analysis}/OnlineLearning.lean` |
+| EXP-049 | 2026-08-02 | D0/D2/D12 / online learning | Can the pinned multiplicative-weights regret engine be recovered as independent `GameTheory.Math` over `FinDist` and feed stable self-play without importing analysis into Core? | Narrows to law-free vectors plus a canonical-law adapter; decides D21 | [`decisions/D21-finite-online-learning-boundary.md`](decisions/D21-finite-online-learning-boundary.md); `GameTheory/Math/OnlineLearning.lean`; `GameTheory/{Probability,Analysis}/OnlineLearning.lean` |
 | EXP-050 | 2026-08-02 | D0/D4/D6/D9/D11/D12 / finite stochastic games | Can the active uniform-existence branch's basic stochastic-game and uniform-payoff definitions survive the accepted finite-law, Protocol, and equilibrium boundaries? | Supports native data plus named Protocol bridge; decides and promotes D22 | [`decisions/D22-stochastic-protocol-boundary.md`](decisions/D22-stochastic-protocol-boundary.md); `GameTheory/Stochastic/**`; `GameTheory/Examples/StochasticUniform.lean` |
 | EXP-051 | 2026-08-02 | D2/D4/D9/D12/D22 / discounted stochastic games | Can the canonical finite stochastic data and existing minimax layer support a Shapley contraction and stationary value without importing a parallel matrix-game stack? | Supports one-way normalized Analysis bridge; decides D23 | [`decisions/D23-discounted-stochastic-value-boundary.md`](decisions/D23-discounted-stochastic-value-boundary.md); `GameTheory/Analysis/{MatrixValue,Stochastic}/`; `GameTheory/Stochastic/ZeroSum.lean` |
 | EXP-052 | 2026-08-02 | D0/D4/D5/D9 / welfare and congestion | Does generic smoothness belong in Core, a separate stable welfare root, or the congestion domain? | Supports Core ownership; decides D24 | [`decisions/D24-welfare-smoothness-boundary.md`](decisions/D24-welfare-smoothness-boundary.md); `GameTheory/Core/Welfare.lean`; `GameTheory/Congestion/{AffinePoA,Examples}.lean` |
-| EXP-053 | 2026-08-02 | D2/D4/D5/D9/D24 / robust smoothness | Can canonical `FinDist` expected welfare lift smoothness from pure Nash to epsilon/exact CCE without another semantic layer or import cycle? | Supports; narrows to theorem-only Core bridge | `GameTheory/Probability/FinDist.lean`; `GameTheory/Core/{Welfare,RobustWelfare}.lean`; `GameTheory/Congestion/AffinePoA.lean` |
+| EXP-053 | 2026-08-02 | D2/D4/D5/D9/D24 / robust smoothness | Can canonical `FinDist` expected welfare lift smoothness from pure Nash to epsilon/exact CCE without another semantic layer or import cycle? | Supports; narrows to theorem-only Core bridge | `GameTheory/Math/Probability/FinDist.lean`; `GameTheory/Core/{Welfare,RobustWelfare}.lean`; `GameTheory/Congestion/AffinePoA.lean` |
 | EXP-054 | 2026-08-02 | D4/D9/D10 / executable knapsack auction | Where is the boundary between knapsack mechanism semantics, executable dynamic programming/greedy algorithms, and correctness? | Narrows to an explicit-list exact natural solver; decides D25; mechanism and approximation remain gated | [`decisions/D25-knapsack-execution-boundary.md`](decisions/D25-knapsack-execution-boundary.md); `GameTheory/{Experimental/PostArchitecture,Mechanism}/Knapsack*` |
 | EXP-055 | 2026-08-02 | D4/D5/D9/D25 / real knapsack mechanism | Can explicit finite-set real knapsack semantics instantiate canonical VCG truthfulness without restoring the predecessor's single-parameter wrapper stack? | Supports; decides D26 | [`decisions/D26-real-knapsack-vcg-boundary.md`](decisions/D26-real-knapsack-vcg-boundary.md); `GameTheory/Mechanism/Knapsack/{Aggregate,Basic,Mechanism}.lean`; hostile witness |
 | EXP-056 | 2026-08-02 | D9/D10/D25/D26 / knapsack approximation | Can a certified executable ratio order support an actual feasible half-approximate allocation after repairing the representative theorem's overweight-singleton defect? | Supports after narrowing to a direct integral exchange proof; decides D27 | [`decisions/D27-executable-knapsack-half-approximation.md`](decisions/D27-executable-knapsack-half-approximation.md); `GameTheory/Mechanism/Knapsack/Approximation*.lean`; hostile witness |
@@ -82,7 +82,7 @@ becomes difficult to scan.
 | EXP-069 | 2026-08-09 | D36 / bargaining | Can topology-free bargaining semantics remain independent of existence analysis? | Supports; decides D36 | [`decisions/D36-native-bargaining.md`](decisions/D36-native-bargaining.md); `GameTheory/Cooperative/Bargaining.lean` |
 | EXP-070 | 2026-08-09 | D37 / multi-round monitoring | Can imperfect monitoring compile directly to Protocol/FOSG without a second runner? | Supports; decides D37 | [`decisions/D37-canonical-multi-round-monitoring.md`](decisions/D37-canonical-multi-round-monitoring.md); `GameTheory/Languages/MultiRound/` |
 | EXP-071 | 2026-08-09 | D38 / equilibrium refinements | Does trembling-hand perfection belong in one-way Analysis over canonical mixed Nash? | Supports; decides D38 | [`decisions/D38-trembling-hand-boundary.md`](decisions/D38-trembling-hand-boundary.md); `GameTheory/Analysis/TremblingHand.lean` |
-| EXP-072 | 2026-08-09 | D12/D22/D23 / general-sum discounted stochastic games | Can finite Fink existence use the canonical stochastic, probability, equilibrium, and fixed-point owners without the sibling's legacy closure? | Supports one-way Analysis bridge; decides D39 | [`decisions/D39-general-sum-discounted-stochastic-equilibrium.md`](decisions/D39-general-sum-discounted-stochastic-equilibrium.md); `GameTheory/Analysis/Stochastic/Fink.lean`; `GameTheoryMath/PositivePartFixedPoint.lean` |
+| EXP-072 | 2026-08-09 | D12/D22/D23 / general-sum discounted stochastic games | Can finite Fink existence use the canonical stochastic, probability, equilibrium, and fixed-point owners without the sibling's legacy closure? | Supports one-way Analysis bridge; decides D39 | [`decisions/D39-general-sum-discounted-stochastic-equilibrium.md`](decisions/D39-general-sum-discounted-stochastic-equilibrium.md); `GameTheory/Analysis/Stochastic/Fink.lean`; `GameTheory/Math/PositivePartFixedPoint.lean` |
 | EXP-073 | 2026-08-09 | D40 / rationalizability | What survivor notion does joint-opponent mixed dominance compute? | Narrows; terminology corrected by EXP-076 | [`decisions/D40-mixed-pure-rationalizability.md`](decisions/D40-mixed-pure-rationalizability.md); `GameTheory/Core/Response.lean` |
 | EXP-074 | 2026-08-09 | D2/D4 / finite-law VNM | Can binary mixture independence yield the finite-outcome representation theorem through public `FinDist` alone? | Supports after rejecting zero-weight independence; decides D41 | [`decisions/D41-finite-law-vnm.md`](decisions/D41-finite-law-vnm.md); `GameTheory/Experimental/PostArchitecture/VNMFiniteSupport.lean`; `GameTheory/Core/VNM.lean`; `GameTheory/Tests/VNM.lean` |
 | EXP-075 | 2026-08-09 | D6 / imperfect-information subgames | Does the existing historywise optimality predicate coincide with textbook SPE when an information set crosses a candidate subtree? | Rejects the old name; decides D42 | [`decisions/D42-imperfect-information-subgames.md`](decisions/D42-imperfect-information-subgames.md); `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Tests/SubgameRoots.lean` |
@@ -104,13 +104,14 @@ becomes difficult to scan.
 | EXP-091 | 2026-08-11 | D53 / Bayesian Protocol learning | Can several information-site learners yield a useful complete-plan equilibrium result? | Supports scoped D53 | [`decisions/D53-multisite-bayesian-protocol-learning.md`](decisions/D53-multisite-bayesian-protocol-learning.md); `GameTheory/Analysis/Protocol/BayesianZeroSumLearningTest.lean` |
 | EXP-092 | 2026-08-14 | post-review client gate / stochastic games | Can a client prove a nonstationary stochastic result through public proof views? | Narrows; public policy/profile layer passes | `GameTheory/Experimental/PostArchitecture/StochasticClientAdequacy.lean` |
 | EXP-093 | 2026-08-14 | post-review client gate / transformations | Can executable trace payoffs survive heterogeneous relabeling and canonical Nash transport? | Supports existing transformation surface | `GameTheory/Experimental/PostArchitecture/ExecutableClientAdequacy.lean` |
-| EXP-094 | 2026-08-14 | post-review client gate / probability | Can finite-law Markov bounds feed canonical approximate equilibrium and posterior arguments? | Supports; promotes bounds facade | `GameTheory/Probability/Bounds.lean`; `GameTheory/Experimental/PostArchitecture/ProbabilityTailAdequacy.lean` |
+| EXP-094 | 2026-08-14 | post-review client gate / probability | Can finite-law Markov bounds feed canonical approximate equilibrium and posterior arguments? | Supports; promotes bounds facade | `GameTheory/Math/Probability/Bounds.lean`; `GameTheory/Experimental/PostArchitecture/ProbabilityTailAdequacy.lean` |
 | EXP-095 | 2026-08-14 | post-review client gate / sequential games | Can EFG clients prove history-dependent SPE without support-proof transport? | Supports after one helper | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Experimental/PostArchitecture/SequentialClientAdequacy.lean` |
 | EXP-096 | 2026-08-14 | D12 / hosted reachability maintenance | Does `Polynomial` still identify an Analysis leak from stable Repeated? | Refutes proxy; boundary narrowed to direct probes | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 | EXP-097 | 2026-08-14 | post-review client gate / implementation theory | Can profile-observed transfers induce target sets through canonical dominance semantics? | Supports; decides D54 | [`decisions/D54-profile-transfer-implementation.md`](decisions/D54-profile-transfer-implementation.md); `GameTheory/Mechanism/Implementation.lean`; `GameTheory/Tests/Implementation.lean` |
 | EXP-098 | 2026-08-14 | hosted reachability maintenance | Did review-time namespace and import cleanup leave positive probes stale? | Four stale expectations and probe exit state repaired; hosted gate passes | [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 | EXP-099 | 2026-08-14 | D12 / hosted sequential-boundary maintenance | Does the broad Analysis.Protocol umbrella still represent the sequential-equilibrium leaf's dependency budget? | Refutes proxy; owning-leaf probe passes hosted gate | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase3-audit.ps1`](../scripts/phase3-audit.ps1) |
 | EXP-100 | 2026-08-14 | pre-cutover stochastic client gate | Can canonical Protocol play expose chronological finite histories and restart laws without a second runner? | Complete; supports and graduates | `GameTheory/Stochastic/PublicPolicy.lean`; `GameTheory/Stochastic/History.lean`; `GameTheory/Tests/StochasticContinuation.lean` |
+| EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
 
 ## Entry template
 
@@ -987,7 +988,7 @@ memory.
   some arbitrary value there. That is already known to be unobservable: the
   congruences say a profile is seen only through the histories a run can pass
   through.
-- **Evidence so far:** `GameTheory/Probability/FinDist.lean`, the conditioning
+- **Evidence so far:** `GameTheory/Math/Probability/FinDist.lean`, the conditioning
   section; the reachability probe run against
   `Mathlib.Probability.ProbabilityMassFunction.Constructions`
 - **Observation so far:** the prediction is confirmed on *what* is needed and
@@ -1567,7 +1568,7 @@ memory.
 - **Evidence:** `GameTheory/Protocol/Strategic.lean`,
   `GameTheory/Protocol/Assessment.lean`,
   `GameTheory/Protocol/Information.lean`,
-  `GameTheory/Probability/FinDist.lean`,
+  `GameTheory/Math/Probability/FinDist.lean`,
   `GameTheory/Tests/Strategic.lean`, and
   `GameTheory/Tests/Assessment.lean`. Validation:
   `lake build GameTheory.Protocol.Strategic`,
@@ -1705,7 +1706,7 @@ memory.
   relation algebra still lived physically in `Preference.lean`. Moving that
   algebra to probability-free `Core/Rank.lean` reduced the Arrow target from
   1,715 to 842 jobs. After the repair, both `SocialChoice` and `Arrow` reject a
-  `GameTheory.Probability.FinDist` probe.
+  `GameTheory.Math.Probability.FinDist` probe.
 - **Outcome:** supports D4 with a physical-layer refinement. None of the
   semantic kill conditions fired, and the import-closure defect found by the
   stress test is repaired rather than documented away.
@@ -1906,7 +1907,7 @@ memory.
   the punishment value rather than remove duplication. Stable Repeated rejects
   all four `stdSimplex`/`Polynomial` probes; `Analysis.Payoff` reaches both.
 - **Selection tested:** place general denominator clearing in the
-  independent `GameTheoryMath` target; keep continuation, periodic-path, and
+  independent `GameTheory.Math` target; keep continuation, periodic-path, and
   trigger incentive results in stable Repeated; place feasible-payoff convex
   geometry, opponent-minmax construction, and the existence/approximation
   theorem under `GameTheory.Analysis.Repeated`. Reject
@@ -1914,7 +1915,7 @@ memory.
   audited stable root own the analytic surface. The bridge must import
   Basic/Discounted directly, not the Repeated umbrella, and must not import
   Protocol.
-- **Artifacts / commands:** `GameTheoryMath/SimplexApproximation.lean`;
+- **Artifacts / commands:** `GameTheory/Math/SimplexApproximation.lean`;
   `GameTheory/Repeated/{Discounted,Periodic,Trigger}.lean`;
   `GameTheory/Analysis/Repeated/{Feasible,Folk,Examples}.lean`;
   `GameTheory/Analysis/Repeated.lean`; `lake build
@@ -1925,13 +1926,13 @@ memory.
   `scripts/phase2-audit.ps1 -VerifyExpected`.
 - **Observations / measurements:** the resulting stable Repeated root is 1,468
   nonblank lines, the analytic repeated subtree including its witness and root
-  is 783, and independent `GameTheoryMath` is 185. All three source buckets
-  contain zero transport tokens; `GameTheoryMath` imports no game or
+  is 783, and independent `GameTheory.Math` is 185. All three source buckets
+  contain zero transport tokens; `GameTheory.Math` imports no game or
   fixed-point module. `GameTheory.Repeated` still rejects both `stdSimplex` and
   `Polynomial` (six negative probes across Basic, Discounted, and the public
   root). The bridge positively reaches the trigger profile, opponent-minmax
   vector, and residual-floor counts, while rejecting `ExecutionProtocol`;
-  `GameTheoryMath.SimplexApproximation` rejects `UtilityGame`. No second mixed
+  `GameTheory.Math.SimplexApproximation` rejects `UtilityGame`. No second mixed
   form, payoff evaluator, security hierarchy, equilibrium predicate, or
   infinite-path law was needed. The Prisoner's Dilemma witness proves mutual
   cooperation feasible, permanent defection bounds every mixed best response
@@ -1939,7 +1940,7 @@ memory.
   trigger theorem, cycle approximation, and witness use only `propext`,
   `Classical.choice`, and `Quot.sound`.
 - **Outcome:** supports the one-way `GameTheory.Analysis.Repeated` bridge and
-  the independent `GameTheoryMath` target. None of the kill conditions fired.
+  the independent `GameTheory.Math` target. None of the kill conditions fired.
   The unused ambient/interior geometry and general security hierarchy were not
   ported.
 - **Next action:** treat the deterministic discounted folk-theorem axis as
@@ -2492,7 +2493,7 @@ memory.
   `Fin n`; a custom axiom; or inability to recover parent-before-child and
   ancestor-before-descendant facts on the diamond.
 - **Evidence:**
-  1. `GameTheoryMath/DAG.lean` is 194 nonblank lines and eight declarations. It
+  1. `GameTheory/Math/DAG.lean` is 194 nonblank lines and eight declarations. It
      defines relation acyclicity and a list topological-order certificate for
      an arbitrary carrier. Neither object stores a finite-carrier capability;
      only `topologicalOrder_of_acyclic` assumes `Fintype` and `DecidableEq`.
@@ -2505,7 +2506,7 @@ memory.
      four-constructor carrier, proves the middle vertices incomparable, and
      exercises direct and transitive predecessor ordering.
   4. Focused builds complete in 1,666 jobs. The reusable module has no
-     GameTheory import or project dependency, and `GameTheoryMath` continues to
+     GameTheory import or project dependency, and `GameTheory.Math` continues to
      import no game module.
   5. Both files have zero placeholder, native-decision, direct-update, or
      source transport tokens. Axiom checks use at most `propext`,
@@ -2853,7 +2854,7 @@ memory.
   overlap. Aumann's theorem should instead use an explicit finite-cell
   epistemic partition and the canonical `FinDist` prior in a separate stable
   branch. Game-free view-induced S5 lemmas may later be extracted to
-  `GameTheoryMath` if the epistemic consumer needs them.
+  `GameTheory.Math` if the epistemic consumer needs them.
 - **Representative slice:** construct a one-player merging protocol whose two
   simultaneous actions reach the same terminal execution state while the
   player remembers which action it took. Prove that terminal state lies in two
@@ -2863,10 +2864,10 @@ memory.
 - **Competing designs:** define epistemic events directly from Protocol
   `InfoSet`; add a tree-shaped/unique-history premise and derive partitions
   only there; adopt a parallel epistemic partition object; or place the entire
-  development in `GameTheoryMath`.
+  development in `GameTheory.Math`.
 - **Measurements:** the 287-nonblank-line, 22-declaration spike imports only
   `GameTheory.Protocol.Information`; its positive theorem uses the existing
-  `Probability.FinDist`, with `DecidableEq` and full support requested only by
+  `GameTheory.Math.Probability.FinDist`, with `DecidableEq` and full support requested only by
   the operations and theorem that need them. The focused build completes in
   1,718 jobs and the full build in 3,342. Source scans find zero placeholders,
   native decisions, custom axioms, direct updates, transports, `HEq`, tactic
@@ -2894,7 +2895,7 @@ memory.
   finite-cell `Epistemic.InfoPartition` using the canonical `FinDist` prior and
   rejects both adding partition laws to Protocol and duplicating Protocol
   histories inside the epistemic API. The theorem is game-theoretic domain
-  semantics, so moving it wholesale to `GameTheoryMath` is not earned.
+  semantics, so moving it wholesale to `GameTheory.Math` is not earned.
 - **Promotion:** `GameTheory.Epistemic.Basic` and
   `GameTheory.Epistemic.Agreement` now contain the positive slice without a
   Protocol import; the public root re-exports their umbrella. Full Phase 2/3
@@ -3035,7 +3036,7 @@ memory.
 - **Next action:** promote the accepted declarations, replace MAID's local
   probability proof with the shared theorem, add reachability/source audits,
   and close W1-H only after focused and full builds pass.
-- **Promotion:** `Probability.FinDist` now owns exact forward and inverse
+- **Promotion:** `GameTheory.Math.Probability.FinDist` now owns exact forward and inverse
   dependent-product reindexing laws; `Core.Transform` owns the transparent
   player/strategy operations and Nash/CE/mixed preservation theorems; MAID
   uses the shared forward law. The stable module and regression test contain
@@ -3239,7 +3240,7 @@ memory.
   decides and promotes D21
 - **Decision / question:** D0/D2/D12 and D-LEARN; whether the missing pinned
   `Math.OnlineLearning` dependency should be recovered as reusable
-  `GameTheoryMath` over exact finite laws, or whether multiplicative-weights
+  `GameTheory.Math` over exact finite laws, or whether multiplicative-weights
   self-play remains deferred.
 - **Prediction:** the finite action algorithm, exponential-potential argument,
   and explicit external-regret bound are game-independent. They should use
@@ -3249,7 +3250,7 @@ memory.
   finite action carrier, prove the fixed-learning-rate regret bound, then use
   the existing finite self-play bridge to obtain the pinned explicit
   approximate-CCE capstone.
-- **Competing designs:** port the proof spine to `GameTheoryMath`; find an
+- **Competing designs:** port the proof spine to `GameTheory.Math`; find an
   equivalent Mathlib theorem and adapt it; or leave the quantitative MW rows
   deferred while retaining only the finite self-play identities.
 - **Measurements to collect:** Mathlib overlap; imports and closure cost;
@@ -3265,7 +3266,7 @@ memory.
   `mw_externalRegret_le`; no equivalent current repository declaration exists.
 - **Observation:** Mathlib supplies the exponential convexity and logarithm
   facts but no multiplicative-weights/regret engine. Direct `FinDist` use in
-  `GameTheoryMath` is rejected by the existing forbidden-import check. The
+  `GameTheory.Math` is rejected by the existing forbidden-import check. The
   successful split proves normalized finite-vector mathematics independently,
   packages it with `FinDist.ofWeights` in Probability, and composes it only in
   `Analysis.Learning`; the original direct-`FinDist` prediction is therefore
@@ -3402,7 +3403,7 @@ memory.
   equation for `0 ≤ beta < 1`.
 - **Competing designs:** define the statewise value from the existing
   `Analysis.Minimax` saddle point; extract reusable matrix-value mathematics
-  into `GameTheoryMath`; or port the active sibling branch's separate
+  into `GameTheory.Math`; or port the active sibling branch's separate
   `Math.Minimax`/Shapley stack.
 - **Measurements to collect:** Mathlib overlap and import closure; the size of
   any reusable value layer; whether saddle points prove value independence and
@@ -4110,7 +4111,7 @@ memory.
   build, trust, reachability, and coverage gates remain unchanged.
 - **Representative slice:** resolve the full manifest, fetch the matching
   Mathlib cache, build the two fixed-point modules first, then compile every
-  GameTheory/GameTheoryMath submodule and run the complete phase and bootstrap
+  GameTheory/GameTheory.Math submodule and run the complete phase and bootstrap
   coverage audits.
 - **Kill conditions:** dependency resolution retains or introduces a second
   Mathlib revision; the fixed-point dependency fails on `v4.32.2`; any trusted
@@ -5401,7 +5402,7 @@ memory.
   convergence assumed rather than obtained from every D46 process; a second
   runner or payoff semantics; or a consumer that never bounds a canonical
   root deviation.
-- **Artifacts / observations:** `GameTheoryMath.Approachability` proves the
+- **Artifacts / observations:** `GameTheory.Math.Approachability` proves the
   exact Cesaro identity for `avgVec`; `OrthantProjection` bounds each positive
   coordinate by orthant distance; and `RegretAggregation` proves the finite
   weighted-coordinate and positive-average-gain bounds. The Protocol leaf
@@ -5427,7 +5428,7 @@ memory.
   the final leaf rebuilds in about 8.4 seconds when cached.
 - **Validation:** narrow stable and hostile targets build warning-free;
   `CounterfactualRootRegretTest` completes 2,447 jobs in 8.4 seconds cached.
-  The promoted `GameTheoryMath` and Protocol-analysis aggregates complete
+  The promoted `GameTheory.Math` and Protocol-analysis aggregates complete
   2,463 jobs in 10.8 seconds. Fast expected Phase 2/3 audits both report
   `VERIFIED=1`, with Analysis transport still zero and no source hazards. The
   first package build crossed the 30-second process guard; its exact build tree
@@ -5472,7 +5473,7 @@ memory.
   narrow builds, fast expected Phase 2/3 audits, and a package gate only after
   promotion. Deep reachability remains excluded from the implementation loop.
 - **Artifacts / observations:**
-  `GameTheoryMath.RegretAggregation.positiveAverageGains_le_sum_infDist`
+  `GameTheory.Math.RegretAggregation.positiveAverageGains_le_sum_infDist`
   gives every deviation the same local-distance right-hand side and accepts an
   upper decomposition, so false-first plans use zero later-site reach rather
   than a fictional learner. Its asymptotic companion derives every root limit
@@ -5887,7 +5888,7 @@ memory.
 - **Planned validation:** reserve before code; build the generic inequality,
   then the mixed-equilibrium consumer and exact witness; run fast source audits
   and `git diff --check`; do not run deep reachability locally.
-- **Artifacts / observations:** `Probability.Bounds` proves the generalized
+- **Artifacts / observations:** `GameTheory.Math.Probability.Bounds` proves the generalized
   finite-support event bound through public indicator expectation, monotonicity,
   and scalar linearity, and exposes ordinary `FinDist.markov_inequality` as the
   recognizable specialization. `Tests.ProbabilityBounds` uses a proper event
@@ -5916,7 +5917,7 @@ memory.
 - **Outcome / next action:** the public finite-law algebra survives the
   representation kill condition and the standard finite-sum decomposition
   remains visible. The same smallest invariant is reused by equilibrium and
-  posterior arguments, so it graduates to `GameTheory.Probability.Bounds`;
+  posterior arguments, so it graduates to `GameTheory.Math.Probability.Bounds`;
   do not add a PMF escape policy, alternate finite-sum law, or probability
   hierarchy. The capability matrix now redirects clients looking for event or
   Markov bounds to that module. Continue the potential-client gate with the
@@ -6120,7 +6121,7 @@ memory.
 - **Evidence / observations:** the full hosted Lean build and Phase 1 passed;
   deep Phase 2 found four stale positive expectations. Two Core declarations
   had always belonged to `GameForm`, not `UtilityGame`; the reusable orthant
-  declarations require the `GameTheoryMath.OrthantProjection` root; and the
+  declarations require the `GameTheory.Math.OrthantProjection` root; and the
   Learning facade intentionally stopped importing the unrelated
   approachability theorem. All other reported deep counts matched, including
   EXP-096's six direct repeated-analysis rejections. The first repaired hosted
@@ -6230,3 +6231,46 @@ memory.
   stochastic runner, an alternative equilibrium predicate, UE names, or
   quitting-game-specific restart machinery.  Further continuation lemmas are
   consumer-gated algebra over this surface.
+
+### EXP-101: consolidate reusable mathematics under `GameTheory.Math`
+
+- **Date / revision:** 2026-08-16, post-cutover `main`
+- **Status:** completed; supports D55
+- **Decision / question:** whether one public `GameTheory.Math` subtree can own
+  the reusable mathematical support, including finite probability, while a
+  dotted Lake target and source audit continue to enforce its dependency
+  boundary.
+- **Competing designs:** retain the unrelated-looking `GameTheoryMath` and
+  `GameTheory.Probability` roots; rename without an independently buildable
+  target; consolidate under an audited `GameTheory.Math` target; or split a new
+  external package immediately. The audited subtree is the smallest design
+  that gives clients a coherent namespace and keeps the boundary executable.
+- **Representative slice:** move the full former mathematics tree and finite
+  probability tree; extract the finite-law/standard-simplex correspondence from
+  game analysis, finite-law convergence from the analytic root, and cyclic
+  finite-index lemmas from repeated games; retain the law-free vector theorem
+  and finite-law adapter as separate sibling modules; rebuild representative
+  downstream roots.
+- **Measurements:** `lake build GameTheory.Math` passed 2,436 jobs in 66.7
+  seconds on a cold local build. Phase 2 reported
+  `MATH_FORBIDDEN_IMPORTS=0`, `MATH_GAME_REJECTED=1`, and
+  `TRANSPORT_MATH_SOURCE=1` (the accepted internal `FinDist` `change`). The
+  subtree contains 3,261 nonblank lines, including 1,633 in finite probability.
+  Core passed at 1,753 jobs; Protocol, analytic simplex, Epistemic,
+  Evolutionary, and Stochastic passed together at 2,367 jobs.
+- **Kill conditions:** reject or narrow if the dotted target conflicts with the
+  main target, probability creates a cycle, the math target reaches game
+  semantics or fixed points, a second law representation appears, or aliases
+  and public transports are required.
+- **Outcome / next action:** no kill condition fired. Adopt D55, remove the old
+  public roots without compatibility aliases, keep the D21 internal
+  vector/finite-law split, and require the target plus authored-import and
+  negative-reachability checks at architecture gates. The initial cold
+  namespace rebuild passed all 3,610 jobs in 450.1 seconds; after the final
+  extractions the default build passed all 3,611 jobs. Deep Phase 2 and Phase 3 passed with
+  `VERIFIED=1` in 686.5 and 209.3 seconds respectively. Their runtime confirms
+  that compiled reachability belongs at release/CI gates; the ordinary fast
+  audits remain the implementation-loop checks. After the convergence and
+  finite-rotation extractions, focused umbrella builds passed and targeted
+  compiled probes reached finite-law convergence from Math, Analysis learning,
+  and sequential consistency while rejecting it from Core and Protocol.

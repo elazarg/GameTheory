@@ -17,8 +17,7 @@ noncomputable section
 
 namespace GameTheory
 
-open Filter Probability
-open Analysis
+open Filter GameTheory.Math.Probability
 
 universe uι us uo
 
@@ -188,7 +187,7 @@ theorem IsTremblingHandPerfect.isNash
     unfold perturbationMass
     simpa using tendsto_finsetSum Finset.univ fun action _ => hzero who action
   have hrepairedConverges :
-      Analysis.FinDistConvergesPointwise repaired replacement := by
+      FinDistConvergesPointwise repaired replacement := by
     intro action
     have hone : Tendsto (fun _ : ℕ => (1 : ℝ)) atTop (nhds 1) :=
       tendsto_const_nhds
@@ -196,7 +195,7 @@ theorem IsTremblingHandPerfect.isNash
       ((hone.sub hmassZero).mul_const (replacement.prob action))
     simpa [repaired, weight, FinDist.prob_ofWeights] using hlimit
   have hupdatedConverges (other : ι) :
-      Analysis.FinDistConvergesPointwise
+      FinDistConvergesPointwise
         (fun n => Profile.update (approximating n) who (repaired n) other)
         (Profile.update profile who replacement other) := by
     by_cases hother : other = who

@@ -17,7 +17,7 @@ noncomputable section
 
 namespace GameTheory.Analysis.TremblingHandTest
 
-open Filter GameTheory GameTheory.Finite GameTheory.Probability GameTheory.Examples
+open Filter GameTheory GameTheory.Finite GameTheory.Math.Probability GameTheory.Examples
 
 /-- Both actions receive strictly positive probability at the fair profile. -/
 theorem fairPennies_fullSupport (who : Fin 2) :

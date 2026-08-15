@@ -47,7 +47,7 @@ noncomputable section
 namespace GameTheory.Tests
 
 open GameTheory GameTheory.Protocol GameTheory.Protocol.ExecutionProtocol
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 /-! ## Structural test: the policy type has no execution state
 

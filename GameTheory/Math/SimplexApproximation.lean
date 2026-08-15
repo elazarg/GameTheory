@@ -10,7 +10,7 @@ noncomputable section
 
 open scoped BigOperators
 
-namespace GameTheoryMath.SimplexApproximation
+namespace GameTheory.Math.SimplexApproximation
 
 variable {κ : Type*} [Fintype κ] [DecidableEq κ]
 
@@ -185,4 +185,4 @@ theorem residualFloorCounts_abs_error_le_card
         (Fintype.card_pos_iff.mpr ⟨base⟩ : 0 < Fintype.card κ)
     exact hone.trans hcard
 
-end GameTheoryMath.SimplexApproximation
+end GameTheory.Math.SimplexApproximation

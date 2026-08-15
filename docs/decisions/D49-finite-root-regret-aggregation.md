@@ -13,7 +13,7 @@ coefficients in `[0,1]`, then positive average root gain is bounded by the sum
 of the local vectors' distances from their nonpositive orthants.
 
 The finite-family inequality is game-independent and lives in
-`GameTheoryMath.RegretAggregation`. The Protocol layer owns only the named
+`GameTheory.Math.RegretAggregation`. The Protocol layer owns only the named
 local average, its exact Cesaro identity, and the specialization whose premise
 is an actual scalar root-gain decomposition. It introduces neither a second
 runner nor a parallel regret definition.

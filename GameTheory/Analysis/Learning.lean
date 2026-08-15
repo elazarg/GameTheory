@@ -1,10 +1,10 @@
 /-
 # Multiplicative-weights self-play
 
-This opt-in analytic consumer assembles the game-independent finite
-multiplicative-weights bound with Core's finite independent-self-play bridge.
-`GameTheoryMath.OnlineLearning` owns the exponential-potential algebra and
-`GameTheory.Probability.OnlineLearning` is the sole adapter that turns its
+This opt-in analytic consumer assembles the finite multiplicative-weights bound
+with Core's finite independent-self-play bridge.
+`GameTheory.Math.OnlineLearning` owns the exponential-potential algebra and
+`GameTheory.Math.Probability.OnlineLearning` is the sole adapter that turns its
 normalized vectors into canonical `FinDist` laws.  No second regret or CCE
 predicate is introduced here. The module also supplies the finite-law limit
 theorem taking convergent fictitious-play empirical beliefs to mixed Nash.
@@ -13,17 +13,17 @@ theorem taking convergent fictitious-play empirical beliefs to mixed Nash.
 import GameTheory.Core.Learning
 import GameTheory.Core.FictitiousPlay
 import GameTheory.Analysis.FictitiousPlayPotential
-import GameTheory.Analysis.FiniteLaw
+import GameTheory.Math.Probability.Convergence
 import GameTheory.Analysis.ExpectedUtility
-import GameTheory.Probability.OnlineLearning
-import GameTheoryMath.OnlineLearning
+import GameTheory.Math.Probability.OnlineLearning
+import GameTheory.Math.OnlineLearning
 
 noncomputable section
 
 namespace GameTheory
 
-open Probability
-open GameTheoryMath
+open GameTheory.Math.Probability
+open GameTheory.Math
 open Filter
 
 universe uι us uo
@@ -46,7 +46,7 @@ noncomputable def mwScore (G : UtilityGame.{uι, us, uo} ι)
   | t + 1 => fun i action =>
       mwScore G eta lo width t i action +
         G.normGain lo width
-          (fun j => Probability.OnlineLearning.exponentialWeights eta
+          (fun j => GameTheory.Math.Probability.OnlineLearning.exponentialWeights eta
             (mwScore G eta lo width t j)) i action
 
 /-- The independent profile played at a round: each player applies the
@@ -54,11 +54,10 @@ canonical finite-law exponential-weights adapter to their score. -/
 noncomputable def mwProfile (G : UtilityGame.{uι, us, uo} ι)
     [∀ i, Fintype (G.form.sig.Strategy i)] [∀ i, Nonempty (G.form.sig.Strategy i)]
     (eta : ℝ) (lo : ι → ℝ) (width : ℝ) (t : ℕ) : Profile G.form.sig.mixed :=
-  fun i => Probability.OnlineLearning.exponentialWeights eta
+  fun i => GameTheory.Math.Probability.OnlineLearning.exponentialWeights eta
     (mwScore G eta lo width t i)
 
-/-- The structural score is the game-independent cumulative gain of the
-trajectory it induces. -/
+/-- The structural score is the cumulative gain of the trajectory it induces. -/
 theorem mwScore_eq_cumGain (t : ℕ) (who : ι) (action : G.form.sig.Strategy who) :
     mwScore G eta lo width t who action =
       OnlineLearning.cumGain
@@ -74,10 +73,11 @@ theorem mwScore_eq_cumGain (t : ℕ) (who : ι) (action : G.form.sig.Strategy wh
 law on the normalized-gain sequence. -/
 theorem mwProfile_eq_multiplicativeWeights (t : ℕ) (who : ι) :
     mwProfile G eta lo width t who =
-      Probability.OnlineLearning.multiplicativeWeights eta
+      GameTheory.Math.Probability.OnlineLearning.multiplicativeWeights eta
         (fun round => G.normGain lo width
           (mwProfile G eta lo width round) who) t := by
-  rw [mwProfile, Probability.OnlineLearning.multiplicativeWeights_eq_exponentialWeights]
+  rw [mwProfile,
+    GameTheory.Math.Probability.OnlineLearning.multiplicativeWeights_eq_exponentialWeights]
   congr 1
   funext action
   exact mwScore_eq_cumGain G eta lo width t who action
@@ -106,7 +106,7 @@ theorem mwSelfPlay_timeAverage_isεCoarseCorrelatedEq {L : ℝ} (heta : 0 < eta)
     apply Finset.sum_congr rfl
     intro round _
     rw [mwProfile_eq_multiplicativeWeights G eta lo width,
-      Probability.OnlineLearning.expect_multiplicativeWeights]
+      GameTheory.Math.Probability.OnlineLearning.expect_multiplicativeWeights]
   have hscale :
       (∑ round : Fin T,
         (expectedUtility G.utility who
@@ -175,7 +175,7 @@ theorem mwSelfPlay_timeAverage_isεCoarseCorrelatedEq_sqrt {L : ℝ}
     apply Finset.sum_congr rfl
     intro round _
     rw [mwProfile_eq_multiplicativeWeights G (Real.sqrt (L / T)) lo width,
-      Probability.OnlineLearning.expect_multiplicativeWeights]
+      GameTheory.Math.Probability.OnlineLearning.expect_multiplicativeWeights]
   have hscale :
       (∑ round : Fin T,
         (expectedUtility G.utility who
@@ -304,7 +304,7 @@ mass, that action occurs in infinitely many positive-index rounds. -/
 theorem frequently_play_eq_of_empiricalMarginal_converges
     (history : ℕ → Profile G.form.sig) (who : ι)
     (action : G.form.sig.Strategy who) (target : FinDist (G.form.sig.Strategy who))
-    (hconverges : Analysis.FinDistConvergesPointwise
+    (hconverges : FinDistConvergesPointwise
       (fun t => G.form.empiricalMarginal history who (t + 1)) target)
     (haction : action ∈ target.support) :
     ∃ᶠ t in atTop, history (t + 1) who = action := by
@@ -359,7 +359,7 @@ limit by finite-law continuity. -/
 theorem IsFictitiousPlay.limit_isNash
     {history : ℕ → Profile G.form.sig} (hplay : G.IsFictitiousPlay history)
     {target : Profile G.form.sig.mixed}
-    (hconverges : ∀ i, Analysis.FinDistConvergesPointwise
+    (hconverges : ∀ i, FinDistConvergesPointwise
       (fun t => G.form.empiricalBelief history (t + 1) i) (target i)) :
     IsNash G.form.mixed (euPreference G.utility) target := by
   have hbest : ∀ (who : ι) (action : G.form.sig.Strategy who),
@@ -371,7 +371,7 @@ theorem IsFictitiousPlay.limit_isNash
             (G.form.mixed.play
               (Profile.update target who (FinDist.pure action))) := by
     intro who action haction alternative
-    have hcoordinate : Analysis.FinDistConvergesPointwise
+    have hcoordinate : FinDistConvergesPointwise
         (fun t => G.form.empiricalMarginal history who (t + 1)) (target who) := by
       simpa only [GameForm.empiricalBelief] using hconverges who
     have hfrequent : ∃ᶠ t in atTop, history (t + 1) who = action :=

@@ -126,7 +126,7 @@ docs/CapabilityMatrix.md        recognizable public workflows
 docs/ExperimentLog.md           concise chronological evidence ledger
 docs/decisions/                 measured architecture decisions
 GameTheory/                     current public and opt-in Lean modules
-GameTheoryMath/                 independently reusable mathematics
+GameTheory/Math/                 independently reusable mathematics
 lakefile.lean                   package and `GameTheory` library targets
 lean-toolchain                  pinned Lean toolchain
 ```

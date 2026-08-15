@@ -227,20 +227,20 @@ def falseSignalChoice (view : Source.View) :
     | done => simp [falseSignalAction, Source.menu]⟩
 
 def falseSignalPolicy : Source.information.BehavioralPolicy false :=
-  fun view => Probability.FinDist.pure (falseSignalChoice view)
+  fun view => GameTheory.Math.Probability.FinDist.pure (falseSignalChoice view)
 
 def falseSignalOptionLaw (view : Source.View) :
-    Probability.FinDist (Option Bool) :=
-  Probability.FinDist.map Subtype.val (falseSignalPolicy view)
+    GameTheory.Math.Probability.FinDist (Option Bool) :=
+  GameTheory.Math.Probability.FinDist.map Subtype.val (falseSignalPolicy view)
 
 theorem pure_some_false_ne_true :
-    Probability.FinDist.pure (some false) ≠
-      Probability.FinDist.pure (some true) := by
+    GameTheory.Math.Probability.FinDist.pure (some false) ≠
+      GameTheory.Math.Probability.FinDist.pure (some true) := by
   intro hequal
   have hprob := congrArg
-    (fun law : Probability.FinDist (Option Bool) =>
+    (fun law : GameTheory.Math.Probability.FinDist (Option Bool) =>
       law.prob (some false)) hequal
-  norm_num [Probability.FinDist.prob_pure_eq_ite] at hprob
+  norm_num [GameTheory.Math.Probability.FinDist.prob_pure_eq_ite] at hprob
 
 theorem false_signal_policy_reads_public :
     falseSignalOptionLaw (.round2 false false none false) ≠

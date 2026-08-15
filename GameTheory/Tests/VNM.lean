@@ -15,7 +15,7 @@ noncomputable section
 
 namespace GameTheory.Tests.VNM
 
-open Probability
+open GameTheory.Math.Probability
 
 def utility : Fin 3 → Unit → ℝ := fun outcome _ =>
   if outcome = 0 then 3 else if outcome = 1 then 1 else -1

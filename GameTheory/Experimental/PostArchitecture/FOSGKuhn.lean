@@ -66,10 +66,10 @@ example : ¬forgetfulGame.information.ActsOnceWhereItMatters :=
   Randomized.not_actsOnceWhereItMatters
 
 example :
-    Probability.FinDist.map (fun history => history.state)
+    GameTheory.Math.Probability.FinDist.map (fun history => history.state)
         (forgetfulGame.information.runBehavioral
           (fun _ => Randomized.coinPolicy) 2) ≠
-      Probability.FinDist.map (fun history => history.state)
+      GameTheory.Math.Probability.FinDist.map (fun history => history.state)
         (forgetfulGame.information.runMixed
           (fun _ => Randomized.coinPolicy.toMixed) 2) := by
   simpa [forgetfulGame] using Randomized.runBehavioral_ne_runMixed
@@ -128,9 +128,9 @@ theorem recalling_outcomeLaw
     (behavioral : Profile recallingGame.behavioralSignature) (horizon : ℕ)
     {Outcome : Type} (outcome : recallingGame.History → Outcome) :
     ∃ mixed : Profile recallingGame.information.strategicSignature.mixed,
-      Probability.FinDist.map outcome
+      GameTheory.Math.Probability.FinDist.map outcome
           (recallingGame.information.runMixed mixed horizon) =
-        Probability.FinDist.map outcome
+        GameTheory.Math.Probability.FinDist.map outcome
           (recallingGame.information.runBehavioral behavioral horizon) :=
   recallingGame.kuhn_behavioral_to_mixed_outcomeLaw
     recallingActsOnce behavioral horizon outcome

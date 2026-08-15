@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.KnowledgeOwnership
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open ExecutionProtocol
 
 universe uι uΩ

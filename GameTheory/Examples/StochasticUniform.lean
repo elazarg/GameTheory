@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Examples.StochasticUniform
 
-open Probability Stochastic Protocol Protocol.ExecutionProtocol
+open GameTheory.Math.Probability Stochastic Protocol Protocol.ExecutionProtocol
 
 namespace Game
 

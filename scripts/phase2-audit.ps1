@@ -46,10 +46,8 @@ function Remove-LeanCommentsAndStrings([string] $Source) {
 $AllFiles = Get-ChildItem -Path (Join-Path $RepoRoot 'GameTheory') -Filter '*.lean' -Recurse |
   ForEach-Object { $_.FullName.Substring($RepoRoot.Length + 1).Replace('\', '/') }
 $AllFiles += 'GameTheory.lean'
-$MathFiles = @(Get-ChildItem -Path (Join-Path $RepoRoot 'GameTheoryMath') -Filter '*.lean' -Recurse |
-  ForEach-Object { $_.FullName.Substring($RepoRoot.Length + 1).Replace('\', '/') })
-$MathFiles += 'GameTheoryMath.lean'
-$TrustedFiles = @($AllFiles + $MathFiles)
+$MathFiles = @($AllFiles | Where-Object { $_.StartsWith('GameTheory/Math') })
+$TrustedFiles = @($AllFiles)
 $CodeCache = @{}
 
 function Get-Code([string] $Relative) {
@@ -102,7 +100,7 @@ $Phase1Files = @(Select-Files 'GameTheory/Experimental/Phase1')
 $Phase2ProbeFiles = @(Select-Files 'GameTheory/Experimental/Phase2')
 $Phase4Files = @(Select-Files 'GameTheory/Experimental/Phase4')
 $PostArchitectureFiles = @(Select-Files 'GameTheory/Experimental/PostArchitecture')
-$Phase2Owned = @('GameTheory/Probability', 'GameTheory/Core', 'GameTheory/Finite',
+$Phase2Owned = @('GameTheory/Core', 'GameTheory/Finite',
   'GameTheory/Examples', 'GameTheory/Tests/Locality.lean', 'GameTheory.lean')
 $Phase2Files = @($OutsideProfile | Where-Object {
   $candidate = $_
@@ -123,7 +121,7 @@ $CooperativeFiles = @(@(Select-Files 'GameTheory/Cooperative') +
   @('GameTheory/Cooperative.lean') | Sort-Object -Unique)
 $StochasticFiles = @(@(Select-Files 'GameTheory/Stochastic') +
   @('GameTheory/Stochastic.lean') | Sort-Object -Unique)
-Report 'TRANSPORT_GAMETHEORYMATH_SOURCE' (Count-Pattern $MathFiles $TransportPattern)
+Report 'TRANSPORT_MATH_SOURCE' (Count-Pattern $MathFiles $TransportPattern)
 Report 'TRANSPORT_ANALYSIS_SOURCE' (Count-Pattern $AnalysisFiles $TransportPattern)
 Report 'TRANSPORT_REPEATED_SOURCE' (Count-Pattern $RepeatedFiles $TransportPattern)
 Report 'TRANSPORT_EPISTEMIC_SOURCE' (Count-Pattern $EpistemicFiles $TransportPattern)
@@ -172,13 +170,13 @@ Report 'TRANSPORT_POST_ARCHITECTURE' `
 $Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $PostArchitectureFiles +
   $Phase2Files + $Phase3Files + $AnalysisFiles + $RepeatedFiles + $EpistemicFiles +
   $EvolutionaryFiles + $CongestionFiles + $MechanismFiles + $StochasticFiles +
-  $CooperativeFiles +
+  $CooperativeFiles + $MathFiles +
   @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
 Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
 # `PMF`, and `toPMF` must not appear outside the representation module; the
 # frozen Phase 1 candidates are evidence and are excluded.
-$RepresentationModule = 'GameTheory/Probability/FinDist.lean'
+$RepresentationModule = 'GameTheory/Math/Probability/FinDist.lean'
 $Phase1Prefix = 'GameTheory/Experimental/Phase1'
 $NonRepresentation = @($AllFiles | Where-Object {
   ($_ -ne $RepresentationModule) -and (-not $_.StartsWith($Phase1Prefix)) })
@@ -208,15 +206,14 @@ Report 'CUSTOM_AXIOM' (Count-Pattern $TrustedFiles '(?m)^\s*axiom\s')
 # evaluation commands make successful incremental builds noisy and hide real
 # diagnostics; executable examples use silent `#guard` assertions instead.
 Report 'BUILD_OUTPUT_COMMANDS' `
-  (Count-Pattern @($AllFiles + $MathFiles) `
+  (Count-Pattern $AllFiles `
     '(?m)^\s*#(eval|print|check|reduce)\b')
 
 # --------------------------------------------------------------------------
 # 2. Authored-import audit (RFC 7.1, D12)
 # --------------------------------------------------------------------------
 
-$CoreFiles = @(Select-Files 'GameTheory/Core') + @('GameTheory/Core.lean') +
-  @(Select-Files 'GameTheory/Probability')
+$CoreFiles = @(Select-Files 'GameTheory/Core') + @('GameTheory/Core.lean')
 $CoreForbidden = 'GameTheory\.Finite|GameTheory\.Languages|GameTheory\.Protocol|' +
   'GameTheory\.Frontier|' +
   'GameTheory\.Challenges|GameTheory\.Experimental|Mathlib\.Analysis|Mathlib\.Topology|' +
@@ -227,7 +224,7 @@ foreach ($f in $CoreFiles) {
 }
 Report 'CORE_FORBIDDEN_IMPORTS' $coreBad
 
-$AlgorithmForbidden = 'GameTheory\.Probability|GameTheory\.Core\.Form|GameTheory\.Core\.' +
+$AlgorithmForbidden = 'GameTheory\.Math\.Probability|GameTheory\.Core\.Form|GameTheory\.Core\.' +
   'Deviation|Mathlib\.Probability|Mathlib\.Analysis|Mathlib\.Topology|Mathlib\.MeasureTheory|' +
   'Mathlib\.Data\.Real'
 $algBad = 0
@@ -270,7 +267,7 @@ Report 'KNAPSACK_BASIC_FORBIDDEN_IMPORTS' $knapsackBasicBad
 
 $sigBad = 0
 foreach ($imp in Get-Imports 'GameTheory/Core/Signature.lean') {
-  if ($imp -match 'GameTheory\.Probability|Mathlib\.Probability') { $sigBad++ }
+  if ($imp -match 'GameTheory\.Math\.Probability|Mathlib\.Probability') { $sigBad++ }
 }
 Report 'SIGNATURE_PROBABILITY_IMPORTS' $sigBad
 
@@ -325,10 +322,12 @@ Report 'STOCHASTIC_FORBIDDEN_IMPORTS' $stochasticBad
 $mathBad = 0
 foreach ($f in $MathFiles) {
   foreach ($imp in Get-Imports $f) {
-    if ($imp -match '^(GameTheory(\.|$)|FixedPointTheorems)') { $mathBad++ }
+    if (($imp -match '^GameTheory\.' -and
+        $imp -notmatch '^GameTheory\.Math(\.|$)') -or
+        $imp -match '^FixedPointTheorems') { $mathBad++ }
   }
 }
-Report 'GAMETHEORYMATH_FORBIDDEN_IMPORTS' $mathBad
+Report 'MATH_FORBIDDEN_IMPORTS' $mathBad
 
 # The fixed-point dependency is not part of Mathlib and reaches the whole of
 # convexity and topology when imported. Both facts are tolerable only while it
@@ -379,7 +378,7 @@ function Measure-Nonblank([string[]] $Files) {
   return $total
 }
 
-Report 'NONBLANK_PROBABILITY' (Measure-Nonblank (Select-Files 'GameTheory/Probability'))
+Report 'NONBLANK_PROBABILITY' (Measure-Nonblank (Select-Files 'GameTheory/Math/Probability'))
 Report 'NONBLANK_CORE' `
   (Measure-Nonblank (@(Select-Files 'GameTheory/Core') + @('GameTheory/Core.lean')))
 Report 'NONBLANK_FINITE' (Measure-Nonblank (Select-Files 'GameTheory/Finite'))
@@ -389,7 +388,7 @@ Report 'NONBLANK_ANALYSIS' (Measure-Nonblank $AnalysisFiles)
 Report 'NONBLANK_REPEATED' (Measure-Nonblank $RepeatedFiles)
 Report 'NONBLANK_EPISTEMIC' (Measure-Nonblank $EpistemicFiles)
 Report 'NONBLANK_EVOLUTIONARY' (Measure-Nonblank $EvolutionaryFiles)
-Report 'NONBLANK_GAMETHEORYMATH' (Measure-Nonblank $MathFiles)
+Report 'NONBLANK_MATH' (Measure-Nonblank $MathFiles)
 Report 'NONBLANK_PHASE2_PROBE' `
   (Measure-Nonblank (Select-Files 'GameTheory/Experimental/Phase2'))
 
@@ -613,7 +612,7 @@ if ($DeepReachability) {
     'GameTheory.Mechanism.FairDivision.exists_efx_two_agents',
     'GameTheory.Mechanism.FairDivision.ef_impossible_two_agents_one_good')
   $fairDivisionBoundary = @(
-    'GameTheory.Probability.FinDist',
+    'GameTheory.Math.Probability.FinDist',
     'GameTheory.IsNash',
     'GameTheory.Protocol.ExecutionProtocol',
     'MeasureTheory.Measure')
@@ -646,7 +645,7 @@ if ($DeepReachability) {
     'GameTheory.MatchingMarket.exists_perfect_stable')
   $matchingBoundary = @(
     'GameTheory.IsNash',
-    'GameTheory.Probability.FinDist',
+    'GameTheory.Math.Probability.FinDist',
     'GameTheory.Protocol.ExecutionProtocol',
     'MeasureTheory.Measure')
   $matchingOutput = Run-Probe 'GameTheory.Cooperative' `
@@ -675,7 +674,7 @@ if ($DeepReachability) {
     'GameTheory.BargainingProblem.IsNashSolution.positiveAffineMap')
   $bargainingBoundary = @(
     'GameTheory.IsNash',
-    'GameTheory.Probability.FinDist',
+    'GameTheory.Math.Probability.FinDist',
     'GameTheory.Protocol.ExecutionProtocol',
     'MeasureTheory.Measure')
   $bargainingOutput = Run-Probe 'GameTheory.Cooperative' `
@@ -708,7 +707,7 @@ if ($DeepReachability) {
     'GameTheory.IsInCore.isBalanced')
   $balancednessBoundary = @(
     'GameTheory.GameForm',
-    'GameTheory.Probability.FinDist',
+    'GameTheory.Math.Probability.FinDist',
     'GameTheory.Protocol.ExecutionProtocol',
     'MeasureTheory.Measure',
     'stdSimplex')
@@ -915,7 +914,7 @@ if ($DeepReachability) {
     'GameTheory.Aggregator',
     'GameTheory.GibbardSatterthwaite.impossibility')
   $gibbardBoundary = @(
-    'GameTheory.Probability.FinDist',
+    'GameTheory.Math.Probability.FinDist',
     'GameTheory.GameForm',
     'GameTheory.IsNash',
     'GameTheory.Protocol.ExecutionProtocol',
@@ -943,7 +942,7 @@ if ($DeepReachability) {
   # focused leaf must not acquire games, protocols, or analytic geometry.
   $vnmInputs = @(
     'GameTheory.Rank.Indifferent',
-    'GameTheory.Probability.FinDist.mix_swap',
+    'GameTheory.Math.Probability.FinDist.mix_swap',
     'GameTheory.Preference.MixtureIndependent',
     'GameTheory.Preference.MixtureContinuous',
     'GameTheory.Preference.RepresentsExpectedUtility',
@@ -1034,7 +1033,7 @@ if ($DeepReachability) {
   $bridgeConstants = @(
       'GameTheory.UtilityGame.triggerRepeatedProfile',
       'GameTheory.UtilityGame.opponentMinmaxVector',
-      'GameTheoryMath.SimplexApproximation.residualFloorCounts')
+      'GameTheory.Math.SimplexApproximation.residualFloorCounts')
   $bridgeOutput = Run-Probe 'GameTheory.Analysis.Repeated' `
     ($bridgeConstants + @('GameTheory.Protocol.ExecutionProtocol'))
   foreach ($constant in $bridgeConstants) {
@@ -1046,10 +1045,10 @@ if ($DeepReachability) {
   $bridgeProtocolRejected = Is-Unreachable $bridgeOutput `
     'GameTheory.Protocol.ExecutionProtocol'
   Report 'REPEATED_BRIDGE_PROTOCOL_REJECTED' ([int] $bridgeProtocolRejected)
-  $mathOutput = Run-Probe 'GameTheoryMath' `
+  $mathOutput = Run-Probe 'GameTheory.Math' `
     @('GameTheory.UtilityGame')
   $mathGameRejected = Is-Unreachable $mathOutput 'GameTheory.UtilityGame'
-  Report 'GAMETHEORYMATH_GAME_REJECTED' ([int] $mathGameRejected)
+  Report 'MATH_GAME_REJECTED' ([int] $mathGameRejected)
 
   # EXP-049/D21 keeps the exponential-potential proof independent of both
   # game semantics and the canonical law representation. Core owns only the
@@ -1057,9 +1056,9 @@ if ($DeepReachability) {
   # allowed to reach all three inputs at once.
   $mathLearningBoundary = @(
     'GameTheory.UtilityGame',
-    'GameTheory.Probability.FinDist')
+    'GameTheory.Math.Probability.FinDist')
   $mathLearningOutput =
-    Run-Probe 'GameTheoryMath.OnlineLearning' $mathLearningBoundary
+    Run-Probe 'GameTheory.Math.OnlineLearning' $mathLearningBoundary
   $mathLearningBoundaryRejected = 0
   foreach ($constant in $mathLearningBoundary) {
     if (Is-Unreachable $mathLearningOutput $constant) {
@@ -1070,8 +1069,8 @@ if ($DeepReachability) {
     $mathLearningBoundaryRejected
 
   $coreLearningBoundary = @(
-    'GameTheoryMath.OnlineLearning.externalRegret_le',
-    'GameTheory.Probability.OnlineLearning.multiplicativeWeights')
+    'GameTheory.Math.OnlineLearning.externalRegret_le',
+    'GameTheory.Math.Probability.OnlineLearning.multiplicativeWeights')
   $coreLearningOutput =
     Run-Probe 'GameTheory.Core.Learning' $coreLearningBoundary
   $coreLearningBoundaryRejected = 0
@@ -1091,7 +1090,7 @@ if ($DeepReachability) {
     'GameTheory.GameForm.empiricalMarginal_succ_expect',
     'GameTheory.UtilityGame.IsFictitiousPlay.isBestResponse')
   $coreFictitiousBoundary = @(
-    'GameTheory.Analysis.FinDistConvergesPointwise',
+    'GameTheory.Math.Probability.FinDistConvergesPointwise',
     'GameTheory.Protocol.ExecutionProtocol')
   $coreFictitiousOutput = Run-Probe 'GameTheory.Core.FictitiousPlay' `
     ($coreFictitiousInputs + $coreFictitiousBoundary)
@@ -1116,7 +1115,7 @@ if ($DeepReachability) {
     'GameTheory.GameForm.mixedPotential_update',
     'GameTheory.UtilityGame.IsExactPotential.mixed')
   $coreMixedPotentialBoundary = @(
-    'GameTheory.Analysis.FinDistConvergesPointwise',
+    'GameTheory.Math.Probability.FinDistConvergesPointwise',
     'GameTheory.Protocol.ExecutionProtocol')
   $coreMixedPotentialOutput = Run-Probe 'GameTheory.Core.MixedPotential' `
     ($coreMixedPotentialInputs + $coreMixedPotentialBoundary)
@@ -1192,12 +1191,12 @@ if ($DeepReachability) {
     $coreFictitiousPotentialBoundaryRejected
 
   $harmonicSequenceInputs = @(
-    'GameTheoryMath.frequently_lt_of_summable_one_div_mul',
-    'GameTheoryMath.tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le')
+    'GameTheory.Math.frequently_lt_of_summable_one_div_mul',
+    'GameTheory.Math.tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le')
   $harmonicSequenceBoundary = @(
     'GameTheory.UtilityGame',
-    'GameTheory.Probability.FinDist')
-  $harmonicSequenceOutput = Run-Probe 'GameTheoryMath.HarmonicSequence' `
+    'GameTheory.Math.Probability.FinDist')
+  $harmonicSequenceOutput = Run-Probe 'GameTheory.Math.HarmonicSequence' `
     ($harmonicSequenceInputs + $harmonicSequenceBoundary)
   $harmonicSequenceInputsReached = 0
   foreach ($constant in $harmonicSequenceInputs) {
@@ -1219,14 +1218,14 @@ if ($DeepReachability) {
   # Approachability's reusable B-set and orthant geometry must remain
   # independent of both game semantics and the canonical law adapter.
   $mathApproachabilityInputs = @(
-    'GameTheoryMath.Approachability.sq_infDist_avg_le',
-    'GameTheoryMath.OrthantProjection.orthantProj',
-    'GameTheoryMath.OrthantProjection.infDist_eq_norm_sub_orthantProj')
+    'GameTheory.Math.Approachability.sq_infDist_avg_le',
+    'GameTheory.Math.OrthantProjection.orthantProj',
+    'GameTheory.Math.OrthantProjection.infDist_eq_norm_sub_orthantProj')
   $mathApproachabilityBoundary = @(
     'GameTheory.UtilityGame',
-    'GameTheory.Probability.FinDist')
+    'GameTheory.Math.Probability.FinDist')
   $mathApproachabilityOutput =
-    Run-Probe 'GameTheoryMath.OrthantProjection' `
+    Run-Probe 'GameTheory.Math.OrthantProjection' `
       ($mathApproachabilityInputs + $mathApproachabilityBoundary)
   $mathApproachabilityInputsReached = 0
   foreach ($constant in $mathApproachabilityInputs) {
@@ -1276,7 +1275,7 @@ if ($DeepReachability) {
     $approachabilityAnalysisBoundaryRejected
 
   $fictitiousPotentialAnalysisInputs = @(
-    'GameTheoryMath.tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le',
+    'GameTheory.Math.tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le',
     'GameTheory.UtilityGame.IsExactPotential.summable_harmonic_aggregatePlayedGain',
     'GameTheory.UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero',
     'GameTheory.UtilityGame.IsExactPotential.eventually_isεNash_of_isFictitiousPlay')
@@ -1305,10 +1304,10 @@ if ($DeepReachability) {
 
   $learningBridgeInputs = @(
     'GameTheory.UtilityGame.selfPlay_timeAverage_isεCoarseCorrelatedEq',
-    'GameTheoryMath.OnlineLearning.externalRegret_le',
-    'GameTheory.Probability.OnlineLearning.multiplicativeWeights',
+    'GameTheory.Math.OnlineLearning.externalRegret_le',
+    'GameTheory.Math.Probability.OnlineLearning.multiplicativeWeights',
     'GameTheory.UtilityGame.mwSelfPlay_timeAverage_isεCoarseCorrelatedEq',
-    'GameTheory.Analysis.FinDistConvergesPointwise.expect',
+    'GameTheory.Math.Probability.FinDistConvergesPointwise.expect',
     'GameTheory.UtilityGame.IsFictitiousPlay.limit_isNash',
     'GameTheory.UtilityGame.eventually_isεNash_of_mixedImprovement_tendsto_zero',
     'GameTheory.UtilityGame.IsExactPotential.eventually_isεNash_of_isFictitiousPlay')
@@ -1337,7 +1336,7 @@ if ($DeepReachability) {
   # Protocol's analytic consumer must use the same generic finite-law
   # convergence leaf without acquiring the learning theorem family.
   $protocolFiniteLawInputs = @(
-    'GameTheory.Analysis.FinDistConvergesPointwise',
+    'GameTheory.Math.Probability.FinDistConvergesPointwise',
     'GameTheory.Protocol.InformationModel.BehavioralAssessmentConvergesPointwise')
   $protocolFiniteLawBoundary = @(
     'GameTheory.UtilityGame.IsFictitiousPlay.limit_isNash')
@@ -1364,7 +1363,7 @@ if ($DeepReachability) {
   # D16's epistemic branch consumes the canonical finite law but remains
   # independent of static, sequential, and analytic game semantics.
   $epistemicInputs = @(
-    'GameTheory.Probability.FinDist',
+    'GameTheory.Math.Probability.FinDist',
     'GameTheory.Epistemic.InfoPartition',
     'GameTheory.Epistemic.aumann_full_agreement',
     'GameTheory.Epistemic.CommonKnowledgeAt.idem',
@@ -1373,7 +1372,7 @@ if ($DeepReachability) {
   $epistemicBoundary = @(
     'GameTheory.IsNash',
     'GameTheory.Protocol.InformationModel',
-    'GameTheory.Analysis.FinDistConvergesPointwise',
+    'GameTheory.Math.Probability.FinDistConvergesPointwise',
     'stdSimplex',
     'Polynomial')
   $epistemicOutput =
@@ -1583,12 +1582,12 @@ if ($DeepReachability) {
   Report 'TRANSFORM_INPUT_PROBES_REACHED' $transformInputsReached
 
   $probabilityReindexInputs = @(
-    'GameTheory.Probability.FinDist.pi_reindex',
-    'GameTheory.Probability.FinDist.pi_unreindex')
+    'GameTheory.Math.Probability.FinDist.pi_reindex',
+    'GameTheory.Math.Probability.FinDist.pi_unreindex')
   $probabilityReindexBoundary = @(
     'GameTheory.GameForm',
     'GameTheory.IsNash')
-  $probabilityReindexOutput = Run-Probe 'GameTheory.Probability.FinDist' `
+  $probabilityReindexOutput = Run-Probe 'GameTheory.Math.Probability.FinDist' `
     ($probabilityReindexInputs + $probabilityReindexBoundary)
   $probabilityReindexInputsReached = 0
   foreach ($constant in $probabilityReindexInputs) {
@@ -1712,10 +1711,10 @@ if ($DeepReachability) {
     'GameTheory.Stochastic.Game.auxiliaryUtility_one_eq',
     'GameTheory.MatrixGame.abs_value_sub_le_of_entrywise_abs_le',
     'GameTheory.Stochastic.Game.IsZeroSum',
-    'GameTheory.Probability.FinDist',
+    'GameTheory.Math.Probability.FinDist',
     'GameTheory.Stochastic.Game.IsDiscountedStationaryBellmanEq',
     'GameTheory.Stochastic.Game.exists_isDiscountedStationaryBellmanEq_bounded',
-    'GameTheoryMath.all_nonpos_of_weighted_positivePart_fixedPoint',
+    'GameTheory.Math.all_nonpos_of_weighted_positivePart_fixedPoint',
     'kakutani_fixed_point')
   $stochasticAnalysisBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
@@ -1751,7 +1750,7 @@ if ($VerifyExpected) {
     # The one dependent transport implementing singleton subprofiles remains
     # confined to the designated profile implementation module.
     TRANSPORT_IN_PROFILE_MODULE = 1
-    TRANSPORT_PHASE2_SOURCE = 1
+    TRANSPORT_PHASE2_SOURCE = 0
     TRANSPORT_PHASE3_SOURCE = 0
     TRANSPORT_PHASE2_PROBE = 0
     # The indexed round-trip experiment deliberately records the transport
@@ -1765,7 +1764,8 @@ if ($VerifyExpected) {
     TRANSPORT_MECHANISM_SOURCE = 0
     TRANSPORT_COOPERATIVE_SOURCE = 0
     TRANSPORT_STOCHASTIC_SOURCE = 0
-    TRANSPORT_GAMETHEORYMATH_SOURCE = 0
+    # D2's single representation-internal `change` now belongs to Math.
+    TRANSPORT_MATH_SOURCE = 1
     TRANSPORT_POST_ARCHITECTURE = 0
     ANALYSIS_IMPORTED_OUTSIDE_ROOT = 0
     # One: the module that applies the fixed-point theorem, and nothing else.
@@ -1786,7 +1786,7 @@ if ($VerifyExpected) {
     EPISTEMIC_FORBIDDEN_IMPORTS = 0
     EVOLUTIONARY_FORBIDDEN_IMPORTS = 0
     STOCHASTIC_FORBIDDEN_IMPORTS = 0
-    GAMETHEORYMATH_FORBIDDEN_IMPORTS = 0
+    MATH_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
     REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
     TOPMF_OUTSIDE_FINDIST = 0
@@ -1834,7 +1834,7 @@ if ($VerifyExpected) {
     $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
     $Expected['REPEATED_BRIDGE_PROTOCOL_REJECTED'] = 1
-    $Expected['GAMETHEORYMATH_GAME_REJECTED'] = 1
+    $Expected['MATH_GAME_REJECTED'] = 1
     $Expected['MATH_LEARNING_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['CORE_LEARNING_MW_PROBES_REJECTED'] = 2
     $Expected['CORE_FICTITIOUS_INPUT_PROBES_REACHED'] = 2

@@ -21,7 +21,7 @@ under the rewrite's accepted boundaries.
 1. Add a small Analysis-owned matrix adapter over the existing canonical
    `GameForm`, mixed extension, minimax theorem, and saddle-point uniqueness;
    put only two-player structural vocabulary below Analysis.
-2. Extract a new game-independent matrix-value stack into `GameTheoryMath`.
+2. Extract a new game-independent matrix-value stack into `GameTheory.Math`.
 3. Port the sibling branch's `Math.Minimax` and Shapley stack, retaining its
    simplex/PMF presentation.
 4. Put contraction and fixed-point data directly under `GameTheory.Stochastic`.

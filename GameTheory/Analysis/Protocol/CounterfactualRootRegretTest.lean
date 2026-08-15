@@ -16,14 +16,14 @@ noncomputable section
 
 namespace GameTheory.Analysis.Protocol.CounterfactualRootRegretTest
 
-open Filter GameTheory Probability Protocol
+open Filter GameTheory GameTheory.Math.Probability Protocol
 open GameTheory.Analysis.Approachability
 open GameTheory.Protocol.InformationModel
 open GameTheory.Analysis.Protocol.CounterfactualRegretLinearityTest
 open GameTheory.Analysis.Protocol.CounterfactualDecompositionTest
 open GameTheory.Analysis.Protocol.CounterfactualRootBridgeTest
 open GameTheory.Tests.SubgameOneShot
-open GameTheoryMath.Approachability GameTheoryMath.OrthantProjection
+open GameTheory.Math.Approachability GameTheory.Math.OrthantProjection
 
 /-- The two topologically relevant sites of the hostile deviation. -/
 @[reducible]

@@ -1,61 +1,22 @@
 /-
-# Laws on a finite carrier as points of the standard simplex
+# Mixed profiles as a product of standard simplices
 
-A finite-support law is presented to the core through its real expectation, and
-that presentation hides the representation on purpose. Topology cannot work with
-a hidden representation: a fixed-point argument needs an honest compact convex
-subset of a finite-dimensional vector space, with the law recoverable from a
-point of it.
-
-This module supplies that correspondence and nothing else. It is where the
-convexity and topology dependencies enter, and everything that follows from them
-stays above it.
-
-The vector space is not a bare pi type but a profile over a derived signature
-whose strategies are real weight vectors. The point is to reuse the profile
-vocabulary — in particular the sanctioned pointwise update — rather than to
-introduce a second one that happens to be defeq.
+Finite-law/simplex correspondence is provided by
+`GameTheory.Math.Probability.Simplex`. This module presents mixed profiles as a
+product of simplices over a game signature.
 -/
 
 import GameTheory.Core.Form
-import Mathlib.Analysis.Convex.StdSimplex
+import GameTheory.Math.Probability.Simplex
 import Mathlib.Analysis.Normed.Module.FiniteDimension
 
 noncomputable section
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι us uo
-
-namespace Probability.FinDist
-
-variable {α : Type*} [Fintype α]
-
-/-- A law's probability vector is a point of the standard simplex. -/
-theorem prob_mem_stdSimplex (μ : FinDist α) : μ.prob ∈ stdSimplex ℝ α :=
-  ⟨fun a => μ.prob_nonneg a, μ.sum_prob⟩
-
-/-- And every point of the standard simplex is one, so the correspondence loses
-nothing in either direction. -/
-def ofSimplex {x : α → ℝ} (hx : x ∈ stdSimplex ℝ α) : FinDist α :=
-  ofWeights x hx.1 hx.2
-
-@[simp]
-theorem prob_ofSimplex {x : α → ℝ} (hx : x ∈ stdSimplex ℝ α) : (ofSimplex hx).prob = x := by
-  funext _
-  exact prob_ofWeights ..
-
-@[simp]
-theorem ofSimplex_prob (μ : FinDist α) : ofSimplex μ.prob_mem_stdSimplex = μ :=
-  ext_of_prob fun _ => prob_ofWeights ..
-
-/-- A nonempty finite carrier has a nonempty simplex: a point mass is in it. -/
-theorem stdSimplex_nonempty [Nonempty α] : (stdSimplex ℝ α).Nonempty :=
-  ⟨(pure (Classical.arbitrary α)).prob, prob_mem_stdSimplex _⟩
-
-end Probability.FinDist
 
 /-! ## The polytope of mixed profiles
 

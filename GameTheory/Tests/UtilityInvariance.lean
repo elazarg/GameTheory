@@ -11,7 +11,7 @@ noncomputable section
 
 namespace GameTheory.Tests.UtilityInvariance
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 
 /-- The sole player chooses the observed Boolean outcome. -/
 @[reducible]

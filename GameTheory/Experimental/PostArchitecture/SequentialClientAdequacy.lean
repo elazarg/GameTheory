@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.SequentialClientAdequacy
 
-open GameTheory Languages Protocol Probability
+open GameTheory Languages Protocol GameTheory.Math.Probability
 open Protocol.ExecutionProtocol
 open GameTheory.Tests.Randomized
 open GameTheory.Tests.EFGKuhn

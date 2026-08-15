@@ -6,13 +6,13 @@ that event and zero elsewhere.  Markov's inequality is exact, so the public
 bound cannot pass through a zero event or an inflated expectation.
 -/
 
-import GameTheory.Probability.Bounds
+import GameTheory.Math.Probability.Bounds
 
 noncomputable section
 
 namespace GameTheory.Tests.ProbabilityBounds
 
-open Probability
+open GameTheory.Math.Probability
 
 def witnessLaw : FinDist Bool :=
   FinDist.mix (1 / 4) (by norm_num) (by norm_num)

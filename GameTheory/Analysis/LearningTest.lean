@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Learning
 
-open Probability
+open GameTheory.Math.Probability
 
 /-- The quantitative bridge is non-vacuous on the concrete two-player game:
 for every positive tolerance, its finite multiplicative-weights trajectory

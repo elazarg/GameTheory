@@ -15,7 +15,7 @@ noncomputable section
 
 namespace GameTheory.Tests.EFGZermelo
 
-open GameTheory.Languages GameTheory.Protocol GameTheory.Probability
+open GameTheory.Languages GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol
 
 inductive State

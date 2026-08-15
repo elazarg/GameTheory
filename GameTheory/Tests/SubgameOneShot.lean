@@ -15,7 +15,7 @@ noncomputable section
 namespace GameTheory.Tests.SubgameOneShot
 
 open GameTheory GameTheory.Protocol GameTheory.Protocol.ExecutionProtocol
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 inductive Stage
   | opening

@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Examples
 
-open GameTheory GameTheory.Finite GameTheory.Probability
+open GameTheory GameTheory.Finite GameTheory.Math.Probability
 
 instance choiceNonempty : Nonempty Choice :=
   ⟨.cooperate⟩

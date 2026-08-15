@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.StochasticProofView.Hostile
 
-open Probability Stochastic Protocol Protocol.ExecutionProtocol
+open GameTheory.Math.Probability Stochastic Protocol Protocol.ExecutionProtocol
 
 /-- A fair public signal represented as the next stochastic-game state. -/
 def fairSignal : FinDist (Option Bool) :=

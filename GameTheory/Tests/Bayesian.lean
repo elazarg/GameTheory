@@ -15,7 +15,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Bayesian
 
-open GameTheory GameTheory.Probability
+open GameTheory GameTheory.Math.Probability
 open GameTheory.Languages.Bayesian
 
 /-- A fair private bit. -/

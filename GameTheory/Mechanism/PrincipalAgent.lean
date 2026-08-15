@@ -6,13 +6,13 @@ finite-support outcome laws, outcome-contingent payments, and explicit outside
 options.
 -/
 
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
 namespace GameTheory.Mechanism
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uAction uOutcome
 

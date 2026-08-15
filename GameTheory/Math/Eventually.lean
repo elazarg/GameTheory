@@ -8,7 +8,7 @@ making these definitions depend on the topology-facing filter API.
 
 import Mathlib.Data.Nat.Basic
 
-namespace GameTheoryMath
+namespace GameTheory.Math
 
 /-- `property` holds at every natural index beyond one explicit threshold. -/
 def EventuallyAtAll (property : ℕ → Prop) : Prop :=
@@ -22,4 +22,4 @@ theorem EventuallyAtAll.mono {property property' : ℕ → Prop}
   obtain ⟨threshold, hthreshold⟩ := h
   exact ⟨threshold, fun index hindex => hmono index (hthreshold index hindex)⟩
 
-end GameTheoryMath
+end GameTheory.Math

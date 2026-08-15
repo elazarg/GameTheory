@@ -16,7 +16,7 @@ namespace GameTheory.Experimental.TypedMAID.ToEFGTest
 open GameTheory.Languages.MAID
 open GameTheory.Languages.MAID.Order
 open GameTheory.Languages.MAID.ToEFG
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 namespace SameOwner
 
@@ -25,7 +25,7 @@ abbrev Node := TypedMAIDTest.SameOwner.Node
 open TypedMAIDTest.SameOwner
 
 def leftFirst :
-    GameTheoryMath.DAG.TopologicalOrder diagram.parents where
+    GameTheory.Math.DAG.TopologicalOrder diagram.parents where
   order :=
     [.leftChance, .leftDecision, .rightChance, .rightDecision]
   nodup := by decide
@@ -40,7 +40,7 @@ def leftFirst :
       exact ⟨⟨2, by decide⟩, by decide, rfl⟩
 
 def rightFirst :
-    GameTheoryMath.DAG.TopologicalOrder diagram.parents where
+    GameTheory.Math.DAG.TopologicalOrder diagram.parents where
   order :=
     [.rightChance, .rightDecision, .leftChance, .leftDecision]
   nodup := by decide

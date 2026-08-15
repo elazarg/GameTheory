@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Monitoring
 
-open Probability
+open GameTheory.Math.Probability
 
 @[reducible]
 def signature : GameSignature Unit where

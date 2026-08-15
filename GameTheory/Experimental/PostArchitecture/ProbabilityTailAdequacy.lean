@@ -9,13 +9,13 @@ introduce another probability, regret, or equilibrium definition.
 
 import GameTheory.Core.MixedImprovement
 import GameTheory.Mechanism.FeasiblePosteriors
-import GameTheory.Probability.Bounds
+import GameTheory.Math.Probability.Bounds
 
 noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.ProbabilityTailAdequacy
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι us uo
 

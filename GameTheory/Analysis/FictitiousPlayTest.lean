@@ -18,7 +18,7 @@ namespace GameTheory.Tests.FictitiousPlay
 /-- Every coordinate of the constant history's empirical belief converges to
 the corresponding pure mixed strategy. -/
 theorem constant_empiricalBelief_converges (who : Fin 2) :
-    Analysis.FinDistConvergesPointwise
+    GameTheory.Math.Probability.FinDistConvergesPointwise
       (fun t => game.form.empiricalBelief constantHistory (t + 1) who)
       (game.form.purify coordinated who) := by
   have hsequence :
@@ -27,7 +27,7 @@ theorem constant_empiricalBelief_converges (who : Fin 2) :
     funext t
     exact congrFun (constant_empiricalBelief t) who
   rw [hsequence]
-  exact Analysis.finDistConvergesPointwise_const _
+  exact GameTheory.Math.Probability.finDistConvergesPointwise_const _
 
 /-- The analytic theorem returns the sole canonical mixed Nash predicate on
 the concrete fictitious-play trajectory. -/
@@ -72,47 +72,49 @@ theorem cycling_isFictitiousPlay :
   simp only [cyclingGame, cyclingForm, expectedUtility_bind, expectedUtility_pure]
   fin_cases who
   · show
-      (Probability.FinDist.pi (Profile.update
+      (GameTheory.Math.Probability.FinDist.pi (Profile.update
         (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 0 alternative)).expect
           (fun profile => (profile 1 : ℝ)) ≤
-        (Probability.FinDist.pi (Profile.update
+        (GameTheory.Math.Probability.FinDist.pi (Profile.update
           (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 0
-            (Probability.FinDist.pure (cyclingHistory (t + 1) 0)))).expect
+            (GameTheory.Math.Probability.FinDist.pure (cyclingHistory (t + 1) 0)))).expect
           (fun profile => (profile 1 : ℝ))
-    rw [← Probability.FinDist.expect_map (fun profile => profile 1)
-        (Probability.FinDist.pi (Profile.update
+    rw [← GameTheory.Math.Probability.FinDist.expect_map (fun profile => profile 1)
+        (GameTheory.Math.Probability.FinDist.pi (Profile.update
           (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 0 alternative))
         (fun action : Fin 2 => (action : ℝ)),
-      ← Probability.FinDist.expect_map (fun profile => profile 1)
-        (Probability.FinDist.pi (Profile.update
+      ← GameTheory.Math.Probability.FinDist.expect_map (fun profile => profile 1)
+        (GameTheory.Math.Probability.FinDist.pi (Profile.update
           (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 0
-            (Probability.FinDist.pure (cyclingHistory (t + 1) 0))))
+            (GameTheory.Math.Probability.FinDist.pure (cyclingHistory (t + 1) 0))))
         (fun action : Fin 2 => (action : ℝ)),
-      Probability.FinDist.map_apply_pi, Probability.FinDist.map_apply_pi]
+      GameTheory.Math.Probability.FinDist.map_apply_pi,
+      GameTheory.Math.Probability.FinDist.map_apply_pi]
     simp
   · show
-      (Probability.FinDist.pi (Profile.update
+      (GameTheory.Math.Probability.FinDist.pi (Profile.update
         (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 1 alternative)).expect
           (fun profile => (profile 0 : ℝ)) ≤
-        (Probability.FinDist.pi (Profile.update
+        (GameTheory.Math.Probability.FinDist.pi (Profile.update
           (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 1
-            (Probability.FinDist.pure (cyclingHistory (t + 1) 1)))).expect
+            (GameTheory.Math.Probability.FinDist.pure (cyclingHistory (t + 1) 1)))).expect
           (fun profile => (profile 0 : ℝ))
-    rw [← Probability.FinDist.expect_map (fun profile => profile 0)
-        (Probability.FinDist.pi (Profile.update
+    rw [← GameTheory.Math.Probability.FinDist.expect_map (fun profile => profile 0)
+        (GameTheory.Math.Probability.FinDist.pi (Profile.update
           (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 1 alternative))
         (fun action : Fin 2 => (action : ℝ)),
-      ← Probability.FinDist.expect_map (fun profile => profile 0)
-        (Probability.FinDist.pi (Profile.update
+      ← GameTheory.Math.Probability.FinDist.expect_map (fun profile => profile 0)
+        (GameTheory.Math.Probability.FinDist.pi (Profile.update
           (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 1
-            (Probability.FinDist.pure (cyclingHistory (t + 1) 1))))
+            (GameTheory.Math.Probability.FinDist.pure (cyclingHistory (t + 1) 1))))
         (fun action : Fin 2 => (action : ℝ)),
-      Probability.FinDist.map_apply_pi, Probability.FinDist.map_apply_pi]
+      GameTheory.Math.Probability.FinDist.map_apply_pi,
+      GameTheory.Math.Probability.FinDist.map_apply_pi]
     simp
 
 /-- The long-run empirical target of the alternating path. -/
 def cyclingTarget : Profile cyclingSignature.mixed :=
-  fun _ => Probability.FinDist.uniformFin 2
+  fun _ => GameTheory.Math.Probability.FinDist.uniformFin 2
 
 private theorem cycling_filter_card_eq_count (T : ℕ) (who action : Fin 2) :
     ((Finset.univ.filter fun round : Fin T =>
@@ -173,12 +175,12 @@ private theorem cycling_empirical_prob_error
 /-- Every coordinate of the forever-alternating trajectory converges to the
 uniform law on its two actions. -/
 theorem cycling_empiricalBelief_converges (who : Fin 2) :
-    Analysis.FinDistConvergesPointwise
+    GameTheory.Math.Probability.FinDistConvergesPointwise
       (fun t => cyclingForm.empiricalBelief cyclingHistory (t + 1) who)
       (cyclingTarget who) := by
   intro action
   rw [show (cyclingTarget who).prob action = 1 / 2 by
-    simp [cyclingTarget, Probability.FinDist.prob_uniformFin]]
+    simp [cyclingTarget, GameTheory.Math.Probability.FinDist.prob_uniformFin]]
   rw [tendsto_iff_dist_tendsto_zero]
   refine squeeze_zero (g := fun t : ℕ => 1 / ((t + 1 : ℕ) : ℝ))
     (fun _ => dist_nonneg) (fun t => ?_) ?_

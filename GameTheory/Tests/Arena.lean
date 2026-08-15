@@ -17,7 +17,7 @@ noncomputable section
 
 namespace GameTheory.Tests
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol (Trace)
 
 /-- The state a history arrived from, if any. Reading this out of a `Trace` is

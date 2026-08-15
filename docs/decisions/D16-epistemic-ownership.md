@@ -17,7 +17,7 @@ branch, or game-free mathematics.
    unique-history or state-view premise.
 3. Give epistemic games their own finite-cell partition object, sharing only
    the canonical finite probability law.
-4. Put the whole development under `GameTheoryMath`.
+4. Put the whole development under `GameTheory.Math`.
 
 Design 3 is adopted. Design 2 remains available as a future named bridge when
 a real Protocol consumer supplies its missing premise. Design 1 is refuted.
@@ -51,7 +51,7 @@ partitions, and constant posterior reports.
 | authored import | `GameTheory.Protocol.Information` only |
 | focused build | 1,718 jobs |
 | full build | 3,342 jobs |
-| probability representation | existing `Probability.FinDist`; no second law type |
+| probability representation | existing `GameTheory.Math.Probability.FinDist`; no second law type |
 | data-level capabilities | no stored `Fintype`, `Finite`, or `DecidableEq` |
 | source trust/audit tokens | 0 placeholders, native decisions, custom axioms, direct updates, transports, `HEq`, tactic `change`, or `open Classical` |
 | repository audits | Phase 2/3 expected source measurements and declaration coverage pass |
@@ -77,7 +77,7 @@ directly reject the Protocol-as-partition design.
 Adopt a stable `GameTheory.Epistemic` branch. Its foundational object is an
 explicit finite-cell `InfoPartition`; it owns event knowledge, common
 knowledge, posteriors, and agreement results. It shares
-`GameTheory.Probability.FinDist`, but it does not import Protocol, static game
+`GameTheory.Math.Probability.FinDist`, but it does not import Protocol, static game
 forms, solution concepts, or Analysis.
 
 `Protocol.InformationModel.InfoState` remains history-local. No new law is

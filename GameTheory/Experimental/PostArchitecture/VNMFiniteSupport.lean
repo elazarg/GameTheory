@@ -10,7 +10,7 @@ import GameTheory.Core.Preference
 
 namespace GameTheory.Experimental.PostArchitecture.VNMFiniteSupport
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 
 universe u
 

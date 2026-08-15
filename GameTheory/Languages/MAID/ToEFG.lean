@@ -17,7 +17,7 @@ noncomputable section
 namespace GameTheory.Languages.MAID.ToEFG
 
 open GameTheory.Languages
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Protocol
 open GameTheory.Protocol.ExecutionProtocol
 
@@ -32,7 +32,7 @@ abbrev TaggedValue (diagram : GameTheory.Languages.MAID.Structure Player Node) :
 /-- A serialized state is exactly a resolved prefix of the selected order.
 The values retain their dependent node indices. -/
 structure Stage (diagram : GameTheory.Languages.MAID.Structure Player Node)
-    (topological : GameTheoryMath.DAG.TopologicalOrder diagram.parents) where
+    (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents) where
   path : List (TaggedValue diagram)
   length_le : path.length ≤ topological.order.length
   follows :
@@ -41,7 +41,7 @@ structure Stage (diagram : GameTheory.Languages.MAID.Structure Player Node)
 namespace Stage
 
 variable
-  (topological : GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+  (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
 
 def initial : Stage diagram topological where
   path := []
@@ -171,7 +171,7 @@ def Action (diagram : GameTheory.Languages.MAID.Structure Player Node) (owner : 
     diagram.Value site.1
 
 variable
-  (topological : GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+  (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
 
 def Active (state : Stage diagram topological) (owner : Player) : Prop :=
   ∃ node, state.pending topological = some node ∧

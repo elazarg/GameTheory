@@ -2,7 +2,7 @@ import GameTheory.Protocol.Backward
 
 noncomputable section
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 
 /-!
 # Backward-induction regression fixture

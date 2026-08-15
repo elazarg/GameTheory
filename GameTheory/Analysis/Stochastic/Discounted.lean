@@ -23,7 +23,7 @@ noncomputable section
 
 namespace GameTheory.Stochastic.Game
 
-open Probability MatrixGame
+open GameTheory.Math.Probability MatrixGame
 open scoped NNReal
 
 variable (G : Game (Fin 2))

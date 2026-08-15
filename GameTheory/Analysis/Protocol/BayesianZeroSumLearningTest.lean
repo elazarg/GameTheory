@@ -16,11 +16,11 @@ noncomputable section
 
 namespace GameTheory.Analysis.Protocol.BayesianZeroSumLearningTest
 
-open Filter GameTheory Probability Protocol
+open Filter GameTheory GameTheory.Math.Probability Protocol
 open GameTheory.Languages.Bayesian
 open GameTheory.Protocol.InformationModel
 open GameTheory.Analysis.Approachability
-open GameTheoryMath.Approachability GameTheoryMath.OrthantProjection
+open GameTheory.Math.Approachability GameTheory.Math.OrthantProjection
 
 def fairBit : FinDist Bool :=
   FinDist.mix (1 / 2) (by norm_num) (by norm_num)

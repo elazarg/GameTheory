@@ -8,13 +8,13 @@ certificate then yields eventual approximate Nash equilibrium.
 -/
 
 import GameTheory.Core.FictitiousPlayPotential
-import GameTheoryMath.HarmonicSequence
+import GameTheory.Math.HarmonicSequence
 
 noncomputable section
 
 namespace GameTheory
 
-open Probability Filter GameTheoryMath
+open GameTheory.Math.Probability Filter GameTheory.Math
 
 universe uι us uo
 
@@ -117,7 +117,7 @@ theorem IsExactPotential.frequently_aggregatePlayedGain_lt
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) {ε : ℝ} (hε : 0 < ε) :
     ∃ᶠ t in atTop, G.aggregatePlayedGain history t < ε :=
-  GameTheoryMath.frequently_lt_of_summable_one_div_mul
+  GameTheory.Math.frequently_lt_of_summable_one_div_mul
     (UtilityGame.IsExactPotential.summable_harmonic_aggregatePlayedGain
       (G := G) hpotential hbound hplay) hε
 
@@ -135,7 +135,7 @@ theorem IsExactPotential.aggregatePlayedGain_tendsto_zero
   have hC : 0 ≤ C := by
     have hprofile := hbound (history 0)
     exact (abs_nonneg _).trans hprofile
-  refine GameTheoryMath.tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le
+  refine GameTheory.Math.tendsto_zero_of_summable_one_div_mul_of_succ_abs_sub_le
     (fun t => UtilityGame.IsFictitiousPlay.aggregatePlayedGain_nonneg
       (G := G) hplay t)
     (UtilityGame.IsExactPotential.summable_harmonic_aggregatePlayedGain

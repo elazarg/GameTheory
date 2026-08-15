@@ -1,19 +1,19 @@
 /-
 # Finite online-learning laws
 
-This is the representation adapter for `GameTheoryMath.OnlineLearning`.
+This is the representation adapter for `GameTheory.Math.OnlineLearning`.
 The reusable theorem speaks about a normalized real vector; this module alone
 packages that vector as the library's canonical finite law.
 -/
 
-import GameTheory.Probability.FinDist
-import GameTheoryMath.OnlineLearning
+import GameTheory.Math.Probability.FinDist
+import GameTheory.Math.OnlineLearning
 
 noncomputable section
 
-namespace GameTheory.Probability.OnlineLearning
+namespace GameTheory.Math.Probability.OnlineLearning
 
-open GameTheoryMath
+open GameTheory.Math
 
 variable {A : Type*} [Fintype A] [Nonempty A]
 
@@ -59,4 +59,4 @@ theorem multiplicativeWeights_eq_exponentialWeights
   rw [prob_multiplicativeWeights, prob_exponentialWeights]
   exact congrFun (OnlineLearning.probability_eq_scoreProbability eta gain t) a
 
-end GameTheory.Probability.OnlineLearning
+end GameTheory.Math.Probability.OnlineLearning

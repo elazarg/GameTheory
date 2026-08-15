@@ -19,7 +19,7 @@ namespace GameTheory.Tests.FOSGStrategic
 open GameTheory.Languages
 open GameTheory.Languages.Bridges
 open GameTheory.Languages.NFG.OneShotFOSG
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Protocol
 
 abbrev source := GameTheory.Examples.FOSG.twoBit

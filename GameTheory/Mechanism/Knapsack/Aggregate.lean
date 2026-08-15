@@ -2,7 +2,7 @@
 Scalar-generic finite-set aggregation for knapsack allocations.
 
 This leaf is shared by the executable natural-number solver and the
-real-valued mechanism semantics.  It deliberately imports no game semantics.
+real-valued mechanism semantics.
 -/
 
 import Mathlib.Algebra.BigOperators.Ring.Finset

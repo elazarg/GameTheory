@@ -30,9 +30,8 @@ lean_lib GameTheory where
   globs := #[.andSubmodules `GameTheory]
   leanOptions := gameTheoryLeanOptions
 
-/-- Game-independent mathematics extracted by validated library slices. This
-target must remain importable without importing game semantics. -/
+/-- Mathematical infrastructure used throughout the library. -/
 @[default_target]
-lean_lib GameTheoryMath where
-  globs := #[.andSubmodules `GameTheoryMath]
+lean_lib GameTheory.Math where
+  globs := #[.andSubmodules `GameTheory.Math]
   leanOptions := gameTheoryLeanOptions

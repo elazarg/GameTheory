@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Agreement
 
-open GameTheory.Epistemic GameTheory.Probability
+open GameTheory.Epistemic GameTheory.Math.Probability
 
 def fairPrior : FinDist Bool :=
   FinDist.mix (1 / 2) (by norm_num) (by norm_num)
@@ -134,7 +134,7 @@ end GameTheory.Tests.Agreement
 
 namespace GameTheory.Tests.ApproximateAgreement
 
-open GameTheory.Epistemic GameTheory.Probability
+open GameTheory.Epistemic GameTheory.Math.Probability
 
 /-- Three worlds supporting common `p`-belief without exact common knowledge. -/
 inductive World

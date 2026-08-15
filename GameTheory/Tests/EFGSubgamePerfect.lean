@@ -14,7 +14,7 @@ noncomputable section
 namespace GameTheory.Tests.EFGSubgamePerfect
 
 open GameTheory GameTheory.Languages GameTheory.Protocol
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol
 open GameTheory.Tests.Randomized
 

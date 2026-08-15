@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Repeated
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open ExecutionProtocol
 
 universe uι

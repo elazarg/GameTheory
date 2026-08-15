@@ -22,7 +22,7 @@ noncomputable section
 
 namespace GameTheory
 
-open Probability
+open GameTheory.Math.Probability
 
 universe uι us uo
 
@@ -188,9 +188,8 @@ product of players' mixed actions.  This section keeps that bridge at the
 same finite-support layer: it neither installs an algorithm nor assumes that
 the strategy carriers themselves are finite.
 
-The multiplicative-weights recurrence deliberately does not live here. Its
-quantitative regret theorem belongs to the game-independent online-learning
-layer, while this section exposes only the finite-law bridge.
+The multiplicative-weights recurrence is provided by
+`GameTheory.Math.OnlineLearning`; this section exposes the finite-law bridge.
 -/
 
 variable [Fintype ι]

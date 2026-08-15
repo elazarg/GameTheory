@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Tests.CorrelatedDominance
 
-open Probability
+open GameTheory.Math.Probability
 
 @[reducible]
 def boolForm : GameForm Bool where

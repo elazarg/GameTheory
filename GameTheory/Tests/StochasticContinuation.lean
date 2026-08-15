@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Tests.StochasticContinuation
 
-open Probability Stochastic Protocol Protocol.ExecutionProtocol
+open GameTheory.Math.Probability Stochastic Protocol Protocol.ExecutionProtocol
 open Stochastic.Game
 
 /-- Two players, two states, and a transition controlled by player `false`'s

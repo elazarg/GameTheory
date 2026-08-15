@@ -48,7 +48,7 @@ theorem rather than a hand-solved certificate.
 | direct game imports | `Analysis.Nash`, `Core.MixedImprovement`, `Stochastic.Basic` |
 | fixed-point dependency | reached transitively through the sole `Analysis.Nash` package import; no second direct package importer |
 | probability and equilibrium owners | `FinDist`; canonical `IsNash` on `UtilityGame.mixed` |
-| reusable extracted mathematics | one finite positive-part fixed-point theorem in `GameTheoryMath` |
+| reusable extracted mathematics | one finite positive-part fixed-point theorem in `GameTheory.Math` |
 | focused promoted build | `Analysis.Stochastic.Fink`, root, and hostile example: 3,115 jobs, warning-clean |
 | source hazards | zero raw `Function.update`, `PMF`/`toPMF`, transports, `Fintype.ofFinite`, placeholders, or custom axioms |
 | headline axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
@@ -80,7 +80,7 @@ existence theorem.
 `GameTheory.Analysis.Stochastic.Fink` owns the general-sum discounted
 stationary Bellman certificate and existence theorem.  The certificate is not
 a parallel equilibrium predicate: its strategic half is canonical mixed Nash
-in each auxiliary finite game.  `GameTheoryMath.PositivePartFixedPoint` owns
+in each auxiliary finite game.  `GameTheory.Math.PositivePartFixedPoint` owns
 the independently reusable algebraic lemma.  The analytic stochastic root
 exports Fink and Shapley side by side; the stable stochastic root remains
 topology-free.

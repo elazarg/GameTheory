@@ -4,13 +4,13 @@
 This is the analytic side of repeated play. Feasibility is the convex hull of
 stage payoff vectors; opponent minmax is an order-theoretic punishment value.
 The finite-cycle approximation uses the independent denominator-clearing lemma
-from `GameTheoryMath`. The construction needs neither ambient/interior geometry
+from `GameTheory.Math`. The construction needs neither ambient/interior geometry
 nor a separate general security hierarchy.
 -/
 
 import Mathlib.Analysis.Convex.Combination
 import GameTheory.Repeated.Periodic
-import GameTheoryMath.SimplexApproximation
+import GameTheory.Math.SimplexApproximation
 
 noncomputable section
 
@@ -22,7 +22,7 @@ universe uι
 
 variable {ι : Type uι}
 
-open Probability
+open GameTheory.Math.Probability
 
 /-- A real payoff coordinate for every player. -/
 abbrev PayoffVector (ι : Type uι) := ι → ℝ
@@ -329,13 +329,13 @@ theorem exists_cycleAveragePayoff_close_of_mem_feasibleSet
     (div_lt_iff₀ hε).1 hdenominator
   let base : κ := Classical.choice hκ
   let count : κ → ℕ :=
-    GameTheoryMath.SimplexApproximation.residualFloorCounts
+    GameTheory.Math.SimplexApproximation.residualFloorCounts
       base weight denominator
   let n : ℕ := Fintype.card (Sigma fun k => Fin (count k))
   have hn : n = denominator := by
     dsimp [n, count]
     rw [Fintype.card_sigma]
-    simp [GameTheoryMath.SimplexApproximation.sum_residualFloorCounts
+    simp [GameTheory.Math.SimplexApproximation.sum_residualFloorCounts
       base hnonneg hsum denominator]
   have hn0 : n ≠ 0 := by
     rw [hn]
@@ -390,7 +390,7 @@ theorem exists_cycleAveragePayoff_close_of_mem_feasibleSet
         intro k _
         rw [abs_mul]
         exact mul_le_mul
-          (GameTheoryMath.SimplexApproximation.residualFloorCounts_abs_error_le_card
+          (GameTheory.Math.SimplexApproximation.residualFloorCounts_abs_error_le_card
             base hnonneg hsum denominator k)
           (hbound (profile k) who)
           (abs_nonneg (payoff k))

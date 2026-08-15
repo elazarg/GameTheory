@@ -12,7 +12,7 @@ noncomputable section
 
 namespace GameTheory.Epistemic
 
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 universe uι uΩ
 

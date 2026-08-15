@@ -15,7 +15,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.ElectronicMail
 
-open GameTheory GameTheory.Probability GameTheory.Epistemic
+open GameTheory GameTheory.Math.Probability GameTheory.Epistemic
 
 /-- Finite endpoint worlds for the email exchange. -/
 inductive EmailWorld where

@@ -22,7 +22,7 @@ noncomputable section
 namespace GameTheory.Languages.Bridges.FOSGToEFG
 
 open GameTheory.Languages
-open GameTheory.Probability
+open GameTheory.Math.Probability
 open GameTheory.Protocol
 
 universe uι us ua up uq uk

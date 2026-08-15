@@ -19,7 +19,7 @@ expected-utility representation directly on the canonical
 - compound substitution, standard lotteries, and certainty equivalents are
   private proof machinery;
 - affine real utility and risk neutrality live in game-independent
-  `GameTheoryMath`.
+  `GameTheory.Math`.
 
 ## Competing designs
 

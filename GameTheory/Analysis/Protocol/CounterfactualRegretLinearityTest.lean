@@ -15,11 +15,11 @@ noncomputable section
 
 namespace GameTheory.Analysis.Protocol.CounterfactualRegretLinearityTest
 
-open Filter GameTheory Probability Protocol
+open Filter GameTheory GameTheory.Math.Probability Protocol
 open GameTheory.Analysis.Approachability
 open GameTheory.Protocol.InformationModel
 open GameTheory.Tests.SubgameOneShot
-open GameTheoryMath.Approachability GameTheoryMath.OrthantProjection
+open GameTheory.Math.Approachability GameTheory.Math.OrthantProjection
 
 /-- The first decision site, shared by the two hidden nature branches. -/
 @[reducible]

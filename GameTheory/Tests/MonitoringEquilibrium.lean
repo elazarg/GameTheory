@@ -12,7 +12,7 @@ noncomputable section
 
 namespace GameTheory.Tests.MonitoringEquilibrium
 
-open GameTheory Probability
+open GameTheory GameTheory.Math.Probability
 
 @[reducible]
 def coordinationForm : GameForm (Fin 2) where

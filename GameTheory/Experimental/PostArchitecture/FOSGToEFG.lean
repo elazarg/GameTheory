@@ -15,7 +15,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.FOSGToEFG
 
-open GameTheory.Languages GameTheory.Probability GameTheory.Protocol
+open GameTheory.Languages GameTheory.Math.Probability GameTheory.Protocol
 open GameTheory.Protocol.ExecutionProtocol
 
 abbrev Outcome := Bool × Bool × Bool

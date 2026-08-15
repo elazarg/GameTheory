@@ -14,12 +14,12 @@ noncomputable section
 
 namespace GameTheory.Analysis.Protocol.CounterfactualRegretMatchingTest
 
-open Filter GameTheory Probability Protocol
+open Filter GameTheory GameTheory.Math.Probability Protocol
 open GameTheory.Analysis.Approachability
 open GameTheory.Analysis.Protocol.CounterfactualRegretTest
 open GameTheory.Protocol.InformationModel
 open GameTheory.Tests.EFG
-open GameTheoryMath.Approachability GameTheoryMath.OrthantProjection
+open GameTheory.Math.Approachability GameTheory.Math.OrthantProjection
 
 local instance : Fintype execution.History := game.historyFintype
 

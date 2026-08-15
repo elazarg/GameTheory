@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Evolutionary
 
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 universe uS
 

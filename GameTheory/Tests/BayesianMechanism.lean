@@ -15,7 +15,7 @@ noncomputable section
 
 namespace GameTheory.Tests.BayesianMechanism
 
-open Probability
+open GameTheory.Math.Probability
 open Languages
 
 def falseTypes : Unit → Bool := fun _ => false

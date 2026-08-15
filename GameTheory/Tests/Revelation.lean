@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Revelation
 
-open Probability Languages
+open GameTheory.Math.Probability Languages
 
 def falseTypes : Unit → Bool := fun _ => false
 

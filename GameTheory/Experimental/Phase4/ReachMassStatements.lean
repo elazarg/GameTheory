@@ -38,7 +38,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.Phase4
 
-open GameTheory GameTheory.Protocol GameTheory.Probability
+open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol (Trace History)
 
 universe uι

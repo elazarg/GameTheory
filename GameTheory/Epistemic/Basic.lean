@@ -6,13 +6,13 @@ does not reuse Protocol information states: those are history-local and need
 not partition execution states.
 -/
 
-import GameTheory.Probability.FinDist
+import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
 namespace GameTheory.Epistemic
 
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 universe uΩ
 

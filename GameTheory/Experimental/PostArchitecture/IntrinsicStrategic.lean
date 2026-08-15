@@ -16,7 +16,7 @@ namespace GameTheory.Experimental.IntrinsicStrategic
 
 open GameTheory.Languages.Intrinsic
 open GameTheory.Examples.Intrinsic
-open GameTheory.Probability
+open GameTheory.Math.Probability
 
 namespace Candidate
 

@@ -6,22 +6,22 @@ behind the Hart--Mas-Colell external-regret rule with the library's canonical
 finite law.  The coordinates are unconditional (Hannan) regrets against fixed
 actions, not action-pair conditional regrets, so this module makes no
 correlated-equilibrium claim.  It also does not claim almost-sure convergence
-of sampled realized regrets.  The Euclidean and Blackwell arguments remain
-game-independent in `GameTheoryMath.Approachability`.
+of sampled realized regrets.  The Euclidean and Blackwell arguments are in
+`GameTheory.Math.Approachability`.
 
 Primary reference: S. Hart and A. Mas-Colell, “A General Class of Adaptive
 Strategies,” *Journal of Economic Theory* 98 (2001), 26--54.
 -/
 
-import GameTheory.Probability.FinDist
-import GameTheoryMath.OrthantProjection
+import GameTheory.Math.Probability.FinDist
+import GameTheory.Math.OrthantProjection
 
 noncomputable section
 
 namespace GameTheory.Analysis.Approachability
 
-open Filter GameTheory.Probability GameTheoryMath.Approachability
-  GameTheoryMath.OrthantProjection
+open Filter GameTheory.Math.Probability GameTheory.Math.Approachability
+  GameTheory.Math.OrthantProjection
 
 variable {ι Q : Type*}
 

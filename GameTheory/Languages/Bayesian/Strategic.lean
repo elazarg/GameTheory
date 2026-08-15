@@ -15,7 +15,7 @@ noncomputable section
 
 namespace GameTheory.Languages.Bayesian
 
-open GameTheory GameTheory.Probability
+open GameTheory GameTheory.Math.Probability
 
 universe uι
 

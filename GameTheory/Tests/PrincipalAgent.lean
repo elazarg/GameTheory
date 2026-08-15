@@ -12,7 +12,7 @@ noncomputable section
 
 namespace GameTheory.Tests.PrincipalAgent
 
-open GameTheory GameTheory.Mechanism GameTheory.Probability
+open GameTheory GameTheory.Mechanism GameTheory.Math.Probability
 
 def fairCoin : FinDist Bool :=
   FinDist.mix (1 / 2) (by norm_num) (by norm_num)

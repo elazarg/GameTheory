@@ -45,7 +45,7 @@ noncomputable section
 
 namespace GameTheory.Languages.MAID
 
-open GameTheory.Protocol GameTheory.Probability
+open GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol (Trace StepEvent)
 
 /-! ## Native syntax

@@ -13,7 +13,7 @@ noncomputable section
 
 namespace GameTheory.Tests.Learning
 
-open Probability
+open GameTheory.Math.Probability
 
 @[reducible]
 def signature : GameSignature (Fin 2) where

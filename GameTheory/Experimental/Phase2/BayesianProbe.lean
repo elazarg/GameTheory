@@ -34,7 +34,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.Phase2
 
-open GameTheory GameTheory.Probability
+open GameTheory GameTheory.Math.Probability
 
 universe u v w
 
