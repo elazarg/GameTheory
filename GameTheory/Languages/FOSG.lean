@@ -20,7 +20,6 @@ open GameTheory GameTheory.Protocol
 
 universe uι us ua up uq uk
 
-set_option linter.checkUnivs false in
 /-- A factored-observation stochastic game uses the accepted execution object
 and its information model directly. It owns no second runner or history type. -/
 structure Game (ι : Type uι) where
@@ -28,6 +27,9 @@ structure Game (ι : Type uι) where
   execution : ExecutionProtocol.{uι, us, ua} ι
   /-- Public/private observations, local information, and legal local menus. -/
   information : InformationModel.{uι, us, ua, up, uq, uk} execution
+
+-- Execution states, actions, and information carriers retain the protocol's
+-- independent universes; the linter sees them only through this wrapper.
 
 namespace Game
 

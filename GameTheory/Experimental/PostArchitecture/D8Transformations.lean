@@ -332,7 +332,6 @@ private theorem finDist_pi_reindex {ι : Type uι} {κ : Type uκ}
   funext target
   exact profileEquiv.apply_symm_apply target
 
-set_option maxHeartbeats 800000 in
 /-- Player reindexing commutes with the independent mixed extension at the
 actual play law. -/
 theorem mixed_reindexPlayers_play {ι : Type uι} {κ : Type uκ}

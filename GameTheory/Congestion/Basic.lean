@@ -22,7 +22,6 @@ namespace GameTheory
 
 universe uι ur us
 
-set_option linter.checkUnivs false in
 /-- A congestion game.  The data itself makes no finiteness or decidable-
 equality commitment: those capabilities belong only to operations that count
 players or compare resource membership. -/
@@ -35,6 +34,9 @@ structure CongestionGame (ι : Type uι) where
   resources : ∀ i, Strategy i → Finset Resource
   /-- The delay imposed by a resource at a given load. -/
   delay : Resource → ℕ → ℝ
+
+-- Resources and strategies intentionally have independent universes; the linter
+-- sees them only through this record's combined result universe.
 
 namespace CongestionGame
 

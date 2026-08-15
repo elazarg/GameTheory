@@ -20,7 +20,6 @@ universe u
 abbrev Action (I J : Type u) : Fin 2 → Type u :=
   Fin.cons I (Fin.cons J fun k : Fin 0 => k.elim0)
 
-set_option linter.checkUnivs false in
 /-- A matrix game as the canonical deterministic game form. -/
 @[reducible]
 def form (I J : Type u) : GameForm (Fin 2) where
@@ -28,6 +27,9 @@ def form (I J : Type u) : GameForm (Fin 2) where
     { Strategy := Action I J
       Outcome := I × J }
   play profile := FinDist.pure (profile 0, profile 1)
+
+-- The row and column carriers remain universe-polymorphic even though the linter
+-- sees their universe only through the resulting bundled form.
 
 /-- Turn the row payoff into a zero-sum two-player utility. -/
 def utility {I J : Type u} (A : I → J → ℝ) : I × J → Fin 2 → ℝ :=

@@ -21,7 +21,6 @@ open GameTheory.Math.Probability
 
 universe uι ut ua
 
-set_option linter.checkUnivs false in
 /-- A common-prior Bayesian game. Payoffs may depend on the full realized type
 and action profiles, but a strategy below receives only its owner's type. -/
 structure BayesianGame (ι : Type uι) where
@@ -33,6 +32,9 @@ structure BayesianGame (ι : Type uι) where
   prior : FinDist (∀ i, Ty i)
   /-- Realized payoff as a function of types, actions, and the player paid. -/
   payoff : (∀ i, Ty i) → (∀ i, Act i) → ι → ℝ
+
+-- Private types and actions intentionally have independent universes; the linter
+-- sees them only through this record's combined result universe.
 
 namespace BayesianGame
 

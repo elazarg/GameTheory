@@ -42,7 +42,6 @@ def IsLegalJoint {Action : ι → Type ua} (active : ι → Prop)
     | some a => active i ∧ a ∈ available i
     | none => ¬ active i
 
-set_option linter.checkUnivs false in
 /-- Legal actions, stochastic transitions, and terminality. State and action
 universes stay independent. -/
 structure ExecutionProtocol (ι : Type uι) where
@@ -69,6 +68,9 @@ structure ExecutionProtocol (ι : Type uι) where
   /-- Every non-terminal state has something legal to do. -/
   progress : ∀ state, ¬ terminal state →
     ∃ joint, IsLegalJoint (active state) (available state) joint
+
+-- State and action universes are independent by design; the linter sees them
+-- together only because the transition law relates both carriers.
 
 namespace ExecutionProtocol
 
@@ -254,7 +256,6 @@ theorem runFor_eq_of_stopsWithin_le {chooser : E.Chooser} {horizon fuel : ℕ}
 /-! ## Realized transitions and histories -/
 
 variable (E) in
-set_option linter.checkUnivs false in
 /-- One realized legal transition. -/
 structure StepEvent where
   /-- The state the transition leaves. -/
@@ -267,6 +268,9 @@ structure StepEvent where
   target : E.State
   /-- The target has positive probability under the transition law. -/
   realized : target ∈ (E.step source ⟨joint, isLegal⟩).support
+
+-- A realized event must retain its protocol's independent state and action
+-- universes; the linter sees both only through this dependent record.
 
 variable (E) in
 /-- A history: the *data* of a run from `init` ending at a state. Because this

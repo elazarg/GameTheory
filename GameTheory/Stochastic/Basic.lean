@@ -14,7 +14,6 @@ open GameTheory.Math.Probability
 
 universe uι us ua
 
-set_option linter.checkUnivs false in
 /-- A stochastic game with simultaneous pure actions and finite-support state
 transitions. -/
 structure Game (ι : Type uι) where
@@ -27,11 +26,13 @@ structure Game (ι : Type uι) where
   /-- One-stage utility before the transition is realized. -/
   stageUtility : State → (∀ i, Action i) → ι → ℝ
 
+-- State and action carriers intentionally have independent universes; the
+-- transition and utility fields merely relate them in this record.
+
 namespace Game
 
 variable {ι : Type uι} (G : Game ι)
 
-set_option linter.checkUnivs false in
 /-- The proof-free public data of one completed stochastic-game stage. -/
 structure StageRecord where
   /-- State before the simultaneous action. -/
@@ -40,6 +41,9 @@ structure StageRecord where
   joint : ∀ i, G.Action i
   /-- State reached after the stochastic transition. -/
   target : G.State
+
+-- A stage record inherits the game's independent state and action universes;
+-- the linter sees both only through this dependent record.
 
 /-- Reverse-chronological perfect-public-monitoring history. -/
 abbrev PublicHistory := List G.StageRecord

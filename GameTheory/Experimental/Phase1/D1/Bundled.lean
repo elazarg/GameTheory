@@ -10,12 +10,14 @@ open D2.FiniteSupportPMF
 
 universe uι uκ us uo up
 
-set_option linter.checkUnivs false in
 /-- Strategy and outcome universes stay independent intentionally; the universe
 linter otherwise suggests collapsing them because both occur under one `max`. -/
 structure Signature (ι : Type uι) where
   Strategy : ι → Type us
   Outcome : Type uo
+
+-- EXP-002 deliberately tests independent strategy and outcome universes; the
+-- declaration docstring records why the linter's proposed collapse is invalid.
 
 abbrev Profile {ι : Type uι} (sig : Signature ι) := ∀ i, sig.Strategy i
 
@@ -38,7 +40,6 @@ theorem update_of_ne {ι : Type uι} {sig : Signature ι} [DecidableEq ι]
 
 end Profile
 
-set_option linter.checkUnivs false in
 /-- Candidate B stores the signature as a form field. Its `us` and `uo`
 universes are not inferable from `Form ι` and occur only through the stored
 signature, so this declaration intentionally pays one universe level over the
@@ -46,6 +47,9 @@ indexed form; EXP-002 records that cost. -/
 structure Form (ι : Type uι) where
   sig : Signature.{uι, us, uo} ι
   play : Profile sig → Law sig.Outcome
+
+-- EXP-002 measures the extra universe paid by storing the signature; collapsing
+-- its levels here would invalidate the experiment described in the docstring.
 
 def Signature.reindex {ι : Type uι} {κ : Type uκ} (sig : Signature ι) (e : ι ≃ κ) :
     Signature κ where

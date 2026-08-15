@@ -22,7 +22,6 @@ universe uι us uo uo'
 
 variable {ι : Type uι}
 
-set_option linter.checkUnivs false in
 /-- The utility-free semantics of a game. Storing the signature makes `us` and
 `uo` non-inferable from `GameForm ι`, which is the measured cost of storing the
 signature rather than indexing by it. -/
@@ -31,6 +30,9 @@ structure GameForm (ι : Type uι) where
   sig : GameSignature.{uι, us, uo} ι
   /-- The stochastic outcome law of each profile. -/
   play : Profile sig → FinDist sig.Outcome
+
+-- Storing the signature must preserve its independent strategy and outcome
+-- universes, although the linter sees both only through `GameForm`'s result.
 
 namespace GameForm
 

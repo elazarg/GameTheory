@@ -385,7 +385,6 @@ theorem mixed_relabelStrategies_play {ι : Type uι} [Fintype ι]
   rw [FinDist.pi_map, FinDist.bind_map]
   rfl
 
-set_option maxHeartbeats 800000 in
 /-- Player reindexing commutes with the independent mixed extension at the
 actual play law. -/
 theorem mixed_reindexPlayers_play {ι : Type uι} {κ : Type uκ}

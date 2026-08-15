@@ -20,7 +20,6 @@ open GameTheory GameTheory.Math.Probability
 
 universe uι ut ur uo
 
-set_option linter.checkUnivs false in
 /-- A direct mechanism with an explicit truthful report for each private type
 and utility evaluated at the true type profile. -/
 structure BayesianMechanism (ι : Type uι) where
@@ -36,6 +35,9 @@ structure BayesianMechanism (ι : Type uι) where
   choose : (∀ i, Report i) → Outcome
   /-- Utility at the true type profile and chosen outcome. -/
   utility : (∀ i, Ty i) → Outcome → ι → ℝ
+
+-- Types, reports, and outcomes intentionally have independent universes; the
+-- linter sees those levels only through this record's combined result.
 
 namespace BayesianMechanism
 

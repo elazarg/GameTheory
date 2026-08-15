@@ -40,7 +40,6 @@ universe u v w
 
 variable {ι : Type u} [Fintype ι] [DecidableEq ι]
 
-set_option linter.checkUnivs false in
 /-- A finite Bayesian game with a common prior. Type and action universes stay
 independent by design. -/
 structure BayesianGame (ι : Type u) [Fintype ι] [DecidableEq ι] where
@@ -56,6 +55,9 @@ structure BayesianGame (ι : Type u) [Fintype ι] [DecidableEq ι] where
   prior : FinDist (∀ i, Ty i)
   /-- Payoffs depend on the realized types and the realized actions. -/
   payoff : (∀ i, Ty i) → (∀ i, Act i) → ι → ℝ
+
+-- This probe tests independently sized private-type and action carriers; the
+-- linter sees their levels only through the record's combined result universe.
 
 namespace BayesianGame
 

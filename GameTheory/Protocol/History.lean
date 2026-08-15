@@ -34,13 +34,15 @@ variable {ι : Type uι} {E : ExecutionProtocol ι}
 namespace ExecutionProtocol
 
 variable (E) in
-set_option linter.checkUnivs false in
 /-- A state together with a history that reached it. -/
 structure History where
   /-- The state the history reached. -/
   state : E.State
   /-- The history itself. -/
   trace : Trace E state
+
+-- A history inherits the protocol's independent state and action universes
+-- through `Trace`; collapsing them would restrict the accepted protocol API.
 
 /-- A history *is* evidence that the state it reached is reachable, so nothing
 about the history runner needs the induction the state runner needed. -/

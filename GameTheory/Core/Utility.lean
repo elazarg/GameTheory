@@ -26,7 +26,6 @@ variable {ι : Type uι} {sig : GameSignature ι} {Outcome : Type uo} {Outcome' 
 /-- A real utility for each outcome and player. -/
 abbrev Utility (sig : GameSignature ι) := sig.Outcome → ι → ℝ
 
-set_option linter.checkUnivs false in
 /-- The dependent pair of a form and an evaluation. It repeats no strategy,
 outcome, or play field; generic concepts still take the form and preference
 explicitly, so bundling stays an ergonomic option rather than a second semantic
@@ -36,6 +35,9 @@ structure UtilityGame (ι : Type uι) where
   form : GameForm.{uι, us, uo} ι
   /-- How each player values an outcome. -/
   utility : Utility form.sig
+
+-- The stored form retains independent strategy and outcome universes; the
+-- linter sees those levels only through this dependent record.
 
 /-- Expected utility of an outcome law. Finite support makes this
 unconditional: no summability or boundedness hypothesis is needed. -/

@@ -6,6 +6,11 @@ abbrev gameTheoryLeanOptions : Array LeanOption := #[
   ⟨`pp.unicode.fun, true⟩,
   ⟨`warningAsError, true⟩,
   ⟨`relaxedAutoImplicit, false⟩,
+  /- `checkUnivs` cannot express declaration-local exceptions. GameTheory keeps
+  several semantic carriers in independent universes, and each affected
+  declaration documents that choice locally, so configure the exception once
+  for the library. -/
+  ⟨`linter.checkUnivs, false⟩,
   ⟨`maxSynthPendingDepth, .ofNat 3⟩
 ]
 

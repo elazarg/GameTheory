@@ -23,7 +23,6 @@ namespace GameTheory
 
 universe uι us uo
 
-set_option linter.checkUnivs false in
 /-- Strategy and outcome carriers. Strategy and outcome universes stay
 independent by design, so a signature may pair small strategies with large
 outcomes; the universe linter would otherwise suggest collapsing them. -/
@@ -32,6 +31,9 @@ structure GameSignature (ι : Type uι) where
   Strategy : ι → Type us
   /-- The shared outcome carrier. -/
   Outcome : Type uo
+
+-- Strategy and outcome universes are independent by design; the declaration
+-- docstring explains why collapsing them would reject valid signatures.
 
 variable {ι : Type uι} {sig : GameSignature ι}
 

@@ -19,8 +19,6 @@ so.
 
 import GameTheory.Core.Utility
 
-set_option autoImplicit false
-
 noncomputable section
 
 namespace GameTheory

@@ -20,7 +20,6 @@ open GameTheory GameTheory.Math.Probability
 
 universe uι ua uo
 
-set_option linter.checkUnivs false in
 /-- Utility-free deterministic normal-form syntax. Capabilities such as
 finiteness and utilities belong to the operations that need them. -/
 structure Game (ι : Type uι) where
@@ -30,6 +29,9 @@ structure Game (ι : Type uι) where
   Outcome : Type uo
   /-- The outcome selected by a pure action profile. -/
   outcome : (∀ i, Action i) → Outcome
+
+-- Action and outcome carriers intentionally have independent universes; the
+-- linter sees their levels only through this record's combined result.
 
 namespace Game
 

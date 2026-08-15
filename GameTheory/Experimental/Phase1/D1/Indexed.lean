@@ -10,12 +10,14 @@ open D2.FiniteSupportPMF
 
 universe uι uκ us ut uo up
 
-set_option linter.checkUnivs false in
 /-- Strategy and outcome universes stay independent intentionally; the universe
 linter otherwise suggests collapsing them because both occur under one `max`. -/
 structure Signature (ι : Type uι) where
   Strategy : ι → Type us
   Outcome : Type uo
+
+-- EXP-002 deliberately tests independent strategy and outcome universes; the
+-- declaration docstring records why the linter's proposed collapse is invalid.
 
 abbrev Profile {ι : Type uι} (sig : Signature ι) := ∀ i, sig.Strategy i
 

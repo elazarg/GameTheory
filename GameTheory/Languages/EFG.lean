@@ -25,7 +25,6 @@ open GameTheory.Protocol
 
 universe uι us ua up uq uk
 
-set_option linter.checkUnivs false in
 /-- A Protocol presentation satisfying the structural laws of an
 extensive-form game. -/
 structure Game (ι : Type uι) where
@@ -41,6 +40,9 @@ structure Game (ι : Type uι) where
       execution.active state first →
       execution.active state second →
       first = second
+
+-- Execution states, actions, and information carriers retain the protocol's
+-- independent universes; the linter sees them only through this wrapper.
 
 namespace Game
 

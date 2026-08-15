@@ -124,7 +124,6 @@ theorem LegalOption.exists_eq_some_of_active {state : E.State} {i : ι}
 
 /-! ## Observations and information states -/
 
-set_option linter.checkUnivs false in
 /-- What each player observes, and how it is remembered. The signal alphabets,
 the initial views, the per-transition signals, and the possibly compressed
 player-local information state — everything except the legality promise, which
@@ -154,6 +153,9 @@ structure InfoSignals (E : ExecutionProtocol ι) where
   contribution to the joint action and from the signals it received. -/
   pushInfo : (i : ι) → InfoState i → Option (E.Action i) → PrivateSignal i →
     PublicSignal → InfoState i
+
+-- Public signals, private signals, information states, and protocol actions are
+-- independently sized; the linter sees them only through this combined record.
 
 namespace InfoSignals
 
@@ -335,7 +337,6 @@ theorem PerfectRecall.actsOnceAtEachInfoState (hrecall : S.PerfectRecall) :
 
 end InfoSignals
 
-set_option linter.checkUnivs false in
 /-- An information model: observations, information states, and the legal menu
 each information state determines.
 
@@ -356,6 +357,9 @@ structure InformationModel (E : ExecutionProtocol ι) extends InfoSignals E wher
   menu_adequate : ∀ (i : ι) {state : E.State} (trace : Trace E state)
       (choice : Option (E.Action i)),
     choice ∈ menu i (toInfoSignals.infoOf i trace) ↔ LegalOption E state i choice
+
+-- The model preserves every independent universe inherited from `InfoSignals`
+-- and `ExecutionProtocol`; the linter sees them only through this extension.
 
 namespace InformationModel
 

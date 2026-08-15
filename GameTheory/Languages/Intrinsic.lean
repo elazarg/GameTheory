@@ -23,7 +23,6 @@ structure Config (Nature : Type uNature) (Agent : Type uAgent)
   nature : Nature
   decision : (agent : Agent) → Decision agent
 
-set_option linter.checkUnivs false in
 /-- An intrinsic model provides decision agents, nature, decision carriers,
 and each agent's information equivalence relation on complete configurations.
 No finite or decidable-equality capability is stored in the syntax. -/
@@ -32,6 +31,9 @@ structure Model where
   Nature : Type uNature
   Decision : Agent → Type uDecision
   info : (agent : Agent) → Setoid (Config Nature Agent Decision)
+
+-- Agents, nature, and dependent decisions intentionally have independent
+-- universes; the linter sees them only through `Config` inside this record.
 
 namespace Model
 

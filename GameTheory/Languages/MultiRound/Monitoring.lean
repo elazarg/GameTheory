@@ -28,7 +28,6 @@ open ExecutionProtocol
 
 universe uι ua up uq
 
-set_option linter.checkUnivs false in
 /-- A finite-horizon game whose observations are emitted after each joint
 action.  The signal law may depend on the complete prior joint-action history.
 No finiteness, decidable equality, utility, or equilibrium data is stored. -/
@@ -43,6 +42,9 @@ structure MonitoringGame (ι : Type uι) where
     List ((i : ι) → Action i) →
       ((i : ι) → Action i) →
         FinDist (PublicSignal × ((i : ι) → PrivateSignal i))
+
+-- Actions and public/private signals intentionally have independent universes;
+-- the linter sees their levels only through the combined signal law.
 
 namespace MonitoringGame
 
