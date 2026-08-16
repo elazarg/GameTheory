@@ -93,29 +93,7 @@ private theorem bind_tagged_prob
       (kernel candidate).map fun value => (candidate, value)).prob
         (first, second) =
       outer.prob first * (kernel first).prob second := by
-  classical
-  rw [FinDist.prob_bind]
-  calc
-    outer.expect (fun candidate =>
-        ((kernel candidate).map fun value => (candidate, value)).prob
-          (first, second)) =
-        outer.expect (fun candidate =>
-          if first = candidate then (kernel first).prob second else 0) := by
-      apply FinDist.expect_congr
-      intro candidate _
-      by_cases heq : first = candidate
-      · subst candidate
-        rw [if_pos rfl]
-        exact FinDist.prob_map_of_injective
-          (fun value => (first, value)) (fun _ _ h => (Prod.mk.inj h).2)
-          (kernel first) second
-      · rw [if_neg heq, FinDist.prob_eq_zero_iff]
-        intro hsupport
-        rw [FinDist.support_map] at hsupport
-        obtain ⟨value, _, hvalue⟩ := hsupport
-        exact heq (congrArg Prod.fst hvalue).symm
-    _ = outer.prob first * (kernel first).prob second := by
-      rw [FinDist.expect_ite_eq]
+  exact FinDist.prob_bind_map_prod outer kernel first second
 
 private theorem nested_bind_tagged_prob
     {Full Action Term Kept : Type*}
@@ -144,8 +122,8 @@ private theorem nested_bind_tagged_prob
     intro chosen _
     rw [FinDist.map_comp]
     rfl
-  rw [hrepacked, bind_tagged_prob]
-  rw [bind_tagged_prob]
+  rw [hrepacked, FinDist.prob_bind_map_prod]
+  rw [FinDist.prob_bind_map_prod]
   ring
 
 private theorem augmented_joint_eq_native_joint

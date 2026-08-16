@@ -27,10 +27,8 @@ theorem map_prob_eq_probOf_atom (law : FinDist Ω) (observable : Ω → Full)
     (value : Full) :
     (law.map observable).prob value = law.probOf (atom observable value) := by
   classical
-  rw [FinDist.prob_map, ← FinDist.expect_indicator_eq_probOf]
-  apply FinDist.expect_congr
-  intro omega _
-  simp [atom, eq_comm]
+  rw [← FinDist.probOf_singleton, FinDist.probOf_map]
+  rfl
 
 /-- The same point-mass bridge for a pair of observables. -/
 theorem map_pair_prob_eq_probOf_pairAtom (law : FinDist Ω)
@@ -39,11 +37,10 @@ theorem map_pair_prob_eq_probOf_pairAtom (law : FinDist Ω)
     (law.map fun omega => (first omega, second omega)).prob
         (firstValue, secondValue) =
       law.probOf (pairAtom first second firstValue secondValue) := by
-  rw [map_prob_eq_probOf_atom law
-    (fun omega => (first omega, second omega)) (firstValue, secondValue)]
+  rw [← FinDist.probOf_singleton, FinDist.probOf_map]
   congr 1
   ext omega
-  simp [atom, pairAtom]
+  simp [pairAtom]
 
 /-- Condition the law of `(kept context, term)` on its kept coordinate and
 project away that coordinate.  `condOnFibre` supplies a total fallback at
@@ -101,29 +98,7 @@ private theorem bind_mapped_pair_prob (outer : FinDist Full)
         (kernel candidate).map fun value => (candidate, value)).prob
         (full, termValue) =
       outer.prob full * (kernel full).prob termValue := by
-  classical
-  rw [FinDist.prob_bind]
-  calc
-    outer.expect (fun candidate =>
-        ((kernel candidate).map fun value => (candidate, value)).prob
-          (full, termValue)) =
-        outer.expect (fun candidate =>
-          if full = candidate then (kernel full).prob termValue else 0) := by
-      apply FinDist.expect_congr
-      intro candidate _
-      by_cases heq : full = candidate
-      · subst candidate
-        rw [if_pos rfl]
-        exact FinDist.prob_map_of_injective
-          (fun value => (full, value)) (fun _ _ h => (Prod.mk.inj h).2)
-          (kernel full) termValue
-      · rw [if_neg heq, FinDist.prob_eq_zero_iff]
-        intro hsupport
-        rw [FinDist.support_map] at hsupport
-        obtain ⟨value, _, hvalue⟩ := hsupport
-        exact heq (congrArg Prod.fst hvalue).symm
-    _ = outer.prob full * (kernel full).prob termValue := by
-      rw [FinDist.expect_ite_eq]
+  exact FinDist.prob_bind_map_prod outer kernel full termValue
 
 /-- Conditional independence of the full context and term given the retained
 context makes the canonical conditional continuation an exact factorization

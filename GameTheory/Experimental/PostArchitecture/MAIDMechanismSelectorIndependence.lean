@@ -426,29 +426,7 @@ private theorem bind_tagged_prob
       (kernel candidate).map fun value => (candidate, value)).prob
         (first, second) =
       outer.prob first * (kernel first).prob second := by
-  classical
-  rw [FinDist.prob_bind]
-  calc
-    outer.expect (fun candidate =>
-        ((kernel candidate).map fun value => (candidate, value)).prob
-          (first, second)) =
-        outer.expect (fun candidate =>
-          if first = candidate then (kernel first).prob second else 0) := by
-      apply FinDist.expect_congr
-      intro candidate _
-      by_cases hequal : first = candidate
-      · subst candidate
-        rw [if_pos rfl]
-        exact FinDist.prob_map_of_injective
-          (fun value => (first, value))
-          (fun _ _ hvalue => (Prod.mk.inj hvalue).2) (kernel first) second
-      · rw [if_neg hequal, FinDist.prob_eq_zero_iff]
-        intro hsupport
-        rw [FinDist.support_map] at hsupport
-        obtain ⟨value, _, hvalue⟩ := hsupport
-        exact hequal (congrArg Prod.fst hvalue).symm
-    _ = outer.prob first * (kernel first).prob second := by
-      rw [FinDist.expect_ite_eq]
+  exact FinDist.prob_bind_map_prod outer kernel first second
 
 /-- Point masses of selector-tagged observables expose exactly one component
 and its fair selector weight. -/
@@ -540,10 +518,11 @@ private theorem map_selector_fullTerm_prob_eq_triple
         (selectorValue, (fullValue, termValue)) =
       law.probOf
         (tripleAtom selector term full selectorValue termValue fullValue) := by
-  rw [map_prob_eq_probOf_atom]
+  rw [← FinDist.probOf_singleton, FinDist.probOf_map]
   congr 1
   ext state
-  simp only [atom, tripleAtom, Set.mem_setOf_eq, Prod.mk.injEq]
+  simp only [tripleAtom, Set.mem_setOf_eq, Set.mem_preimage,
+    Set.mem_singleton_iff, Prod.mk.injEq]
   tauto
 
 private theorem map_fullTerm_prob_eq_pair
@@ -553,10 +532,11 @@ private theorem map_fullTerm_prob_eq_pair
     (law.map fun state => (full state, term state)).prob
         (fullValue, termValue) =
       law.probOf (pairAtom term full termValue fullValue) := by
-  rw [map_prob_eq_probOf_atom]
+  rw [← FinDist.probOf_singleton, FinDist.probOf_map]
   congr 1
   ext state
-  simp only [atom, pairAtom, Set.mem_setOf_eq, Prod.mk.injEq]
+  simp only [pairAtom, Set.mem_setOf_eq, Set.mem_preimage,
+    Set.mem_singleton_iff, Prod.mk.injEq]
   tauto
 
 /-- Division-free component comparison.  At any full target context/action and

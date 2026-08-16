@@ -574,6 +574,8 @@ theorem prob_bind (μ : FinDist α) (f : α → FinDist β) (b : β) :
       ENNReal.mul_ne_top (PMF.apply_ne_top μ.toPMF a) (PMF.apply_ne_top (f a).toPMF b)]
   exact tsum_congr fun a => ENNReal.toReal_mul
 
+/-! ## Event probabilities under the finite-law operations -/
+
 /-- Averaging point masses recovers the averaging law. -/
 theorem expect_prob_pure (μ : FinDist α) (b : α) :
     (μ.expect fun a => (pure a).prob b) = μ.prob b := by
@@ -702,6 +704,37 @@ theorem prob_product [DecidableEq α] [DecidableEq β] (μ : FinDist α) (ν : F
         show (fun b => if p = (a, b) then (1:ℝ) else 0) = fun _ => (0:ℝ) from
           funext fun b => if_neg fun hcontra => h (congrArg Prod.fst hcontra),
         expect_const]
+
+/-- Tagging the output of a dependent kernel retains exactly the selected
+outer point mass and its conditional point mass. -/
+theorem prob_bind_map_prod
+    (outer : FinDist α) (kernel : α → FinDist β) (a : α) (b : β) :
+    (outer.bind fun candidate =>
+      (kernel candidate).map fun value => (candidate, value)).prob (a, b) =
+      outer.prob a * (kernel a).prob b := by
+  classical
+  rw [prob_bind]
+  calc
+    outer.expect (fun candidate =>
+        ((kernel candidate).map fun value => (candidate, value)).prob
+          (a, b)) =
+        outer.expect (fun candidate =>
+          if a = candidate then (kernel a).prob b else 0) := by
+      apply expect_congr
+      intro candidate _
+      by_cases h : a = candidate
+      · subst candidate
+        rw [if_pos rfl]
+        exact prob_map_of_injective
+          (fun value => (a, value)) (fun _ _ hxy => (Prod.mk.inj hxy).2)
+          (kernel a) b
+      · rw [if_neg h, prob_eq_zero_iff]
+        intro hsupport
+        rw [support_map] at hsupport
+        obtain ⟨value, _, hvalue⟩ := hsupport
+        exact h (congrArg Prod.fst hvalue).symm
+    _ = outer.prob a * (kernel a).prob b := by
+      rw [expect_ite_eq]
 
 /-- Pushing a product forward coordinatewise is the product of the
 pushforwards. -/
@@ -939,6 +972,25 @@ theorem expect_indicator_eq_probOf (μ : FinDist α) (S : Set α) [DecidablePred
       exact PMF.apply_ne_top _ _
     · rw [Set.indicator_of_notMem haS]
       exact ENNReal.zero_ne_top
+
+/-- Event probability on a singleton is the corresponding point mass. -/
+theorem probOf_singleton (μ : FinDist α) (a : α) :
+    μ.probOf ({a} : Set α) = μ.prob a := by
+  classical
+  rw [← expect_indicator_eq_probOf]
+  unfold expect
+  rw [tsum_eq_single a]
+  · simp
+  · intro b hba
+    simp [hba]
+
+/-- A pushforward assigns an event the mass of its preimage. -/
+theorem probOf_map (f : α → β) (μ : FinDist α) (S : Set β) :
+    (map f μ).probOf S = μ.probOf (f ⁻¹' S) := by
+  classical
+  rw [← expect_indicator_eq_probOf, ← expect_indicator_eq_probOf, expect_map]
+  exact expect_congr fun a _ => by
+    by_cases h : f a ∈ S <;> simp [h]
 
 /-- The probability of a finite set is the ordinary sum of its point masses. -/
 theorem probOf_finset_eq_sum [DecidableEq α] (μ : FinDist α) (S : Finset α) :
