@@ -182,7 +182,7 @@ whose sender-only deviation changes the receiver downstream.
 Nature lotteries, temporal execution, and behavioral/mixed strategy are
 separate gates. Do not add them merely to make Intrinsic resemble Protocol.
 
-### F. MAID strategic relevance
+### F. MAID information reduction
 
 The promoted MAID compiler now has a multi-player, multi-site deviation and
 Nash witness. The semantic target of relevance pruning is now complete:
@@ -193,19 +193,21 @@ against the full deviation space. A fair chance-signal witness must show both
 the safe payoff-irrelevant removal and the nearby value-of-information failure;
 mere non-factorization of a policy is not a safety test.
 
-The exact local-utility graph view, the one-site
-continuation-factorization-to-coverage bridge and canonical division-free
-finite global-Markov soundness now survive hostile heterogeneous,
-collider/descendant-evidence, and zero-evidence consumers. The next
-same-language gate augments canonical play with finite configuration-valued
-utility leaves, proves the mapped law factorizes, and establishes replacement
-and non-descendant invariance. Complete that utility-facing layer before
-claiming the Koller--Milch graphical criterion discharges full-deviation
-coverage. Keep requisite observation
-(whether a realized parent value is needed by a rule) separate from strategic
-relevance (whether another decision's rule is strategically live). Do not
-report either graphical package as complete merely because the semantic
-pruning target or graph-free bridge exists.
+The exact local-utility graph view, canonical division-free finite
+global-Markov soundness, finite configuration-valued utility augmentation, and
+replacement-invariant term laws now assemble end to end. Under an explicit
+one-site pruning shape, set-valued Koller--Milch graphical ignorability
+constructs `ReplacementInvariantUtilityLawAt`, `LocalUtilityFactorsAt`, and the
+existing full-deviation coverage certificate. The hostile relay consumer
+accepts the signal-blind graph with exact Nash transfer and rejects the live
+signal-copying graph with an explicit coverage counterexample.
+
+The next information-reduction gate is the global safe-pruning fixpoint under
+the source's sufficient-recall condition. Do not infer simultaneous same-owner
+pruning from the one-site theorem. Keep requisite observation (whether a
+realized parent value is needed by a rule) separate from strategic relevance
+(whether another decision's rule is strategically live); strategic relevance
+remains a separate later package.
 
 ### G. Static mature-family rotation
 

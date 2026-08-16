@@ -6552,8 +6552,8 @@ memory.
 ### EXP-105: finite utility leaves and replacement-invariant continuations
 
 - **Date / revision:** 2026-08-16, `main` at `6a0717bb`
-- **Status:** in progress; relevant continuation and nonrelevant marginal
-  invariance validated; final assembly and hostile relay consumer active
+- **Status:** complete; one-site graphical ignorability constructs
+  full-deviation coverage and the safe/live relay consumer is validated
 - **Decision / question:** whether the experiment-only additive `UtilityView`
   can augment canonical native MAID play with distinct finite
   configuration-valued utility leaves, inherit the proved finite-BN
@@ -6679,13 +6679,26 @@ memory.
   `Structure.{uPlayer, uNode, max uNode uValue}` explicitly. The combined
   five-target build completed 1769 jobs warning-free, and the final
   nonrelevant target rebuilt in 1764 jobs with all hazard counts zero.
-- **Outcome / next action:** the finite augmentation, mapped-law
-  factorization, graph translation, and non-circular distributional assembly
-  survive, and the exact fixed-policy global-Markov consequence is now proved.
-  The shared context and replacement-uniform relevant continuation laws are
-  now constructed canonically, and nonrelevant term marginals are invariant
-  under every unique-site owner replacement. Next assemble the complete
-  utility-law certificate and connect it to `LocalUtilityFactorsAt` and
-  `CoversFullDeviationsAt`. The final hostile relay consumer must still accept
-  the signal-blind rival and reject the signal-copying rival before this
-  experiment can close.
+
+  The final gate is a 100-line generic assembly from set-valued graphical
+  ignorability to `ReplacementInvariantUtilityLawAt`, then to
+  `LocalUtilityFactorsAt`, and finally to `CoversFullDeviationsAt` under the
+  explicit one-site pruning shape. Relevant terms use one replacement-uniform
+  continuation; nonrelevant terms use the parent-closed kernel-invariant
+  marginal. The 802-line hostile consumer proves coverage and exact Nash
+  transfer when the rival is signal-blind. When the rival relays the signal,
+  the observation is requisite and not graphically ignorable, and a copying
+  full deviation earns `3/2` while every blind reduced replacement earns `1`,
+  so semantic coverage is explicitly false. The focused consumer build passed
+  warning-free; source audits found no option, lint suppression, placeholder,
+  axiom, direct update, visible transport, representation leak, or compatibility
+  shim.
+- **Outcome / next action:** supported for one unique pruned decision site.
+  Finite utility augmentation, mapped-law factorization, set-valued graphical
+  separation, replacement-uniform relevant continuations, nonrelevant marginal
+  invariance, and graph-free utility-law assembly now discharge the existing
+  semantic coverage certificate on the hostile safe case without certifying
+  the live relay. The graphical package remains experimental. This result does
+  not imply simultaneous same-owner pruning or strategic reliance. The next
+  information-reduction gate is the global safe-pruning fixpoint under its
+  sufficient-recall condition; strategic reliance remains a separate package.

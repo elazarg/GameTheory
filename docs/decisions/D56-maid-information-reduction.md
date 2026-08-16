@@ -1,9 +1,9 @@
 # D56: MAID information reduction uses semantic deviation coverage
 
-- **Status:** adopted for the semantic seam; graphical discharge remains
-  experiment-gated
+- **Status:** adopted for the semantic seam; experiment-only one-site
+  graphical discharge validated
 - **Date:** 2026-08-16
-- **Experiment IDs:** EXP-102, EXP-103, EXP-104
+- **Experiment IDs:** EXP-102, EXP-103, EXP-104, EXP-105
 
 ## Decision and result
 
@@ -31,8 +31,9 @@ the existing graph alone can safely distinguish them.
 
 An experiment-only proved `UtilityView` survives as a possible graph front end.
 It enumerates distinct owner-indexed additive utility terms and proves their
-sum equals canonical utility. It is not a public API and currently supplies no
-graph-to-coverage theorem.
+sum equals canonical utility. It is not a public API. EXP-105 uses it to
+construct the existing semantic coverage certificate for one unique pruned
+decision site without changing stable MAID syntax.
 
 ## Independent criterion and terminology
 
@@ -92,8 +93,8 @@ ones; safety is only reduced-Nash-to-full-Nash inclusion.
 
 Design 1 hit the graph-opacity kill condition. Design 3 is premature because
 the consumer does not justify changing D14's validated syntax. Design 4 is
-adopted. Design 2 remains experimental and may graduate only by constructing
-coverage on a hostile semantic consumer.
+adopted. Design 2 passes the hostile one-site semantic consumer but remains an
+optional experimental front end rather than a stable API.
 
 ## Representative experiment
 
@@ -143,6 +144,18 @@ the same native evaluator and effective kernels. Heterogeneous chain,
 collider/descendant-evidence, and zero-mass evidence consumers pass without
 positivity, faithfulness, nontriviality, or an alternate evaluator.
 
+EXP-105 augments canonical play with distinct finite configuration-valued
+utility leaves and proves the mapped law factorizes. Set-valued graphical
+ignorability constructs one replacement-invariant utility-law certificate:
+relevant terms share a continuation chosen independently of the replacement,
+while nonrelevant terms have an exact parent-closed invariant marginal. This
+feeds the existing `LocalUtilityFactorsAt` bridge and then
+`CoversFullDeviationsAt` under an explicit one-site pruning shape. The hostile
+consumer accepts the signal-blind rival and transfers Nash, while a
+signal-relaying rival makes the observation requisite and not ignorable; its
+copying full deviation earns `3/2` against the blind reduced value `1`, so
+coverage is false.
+
 ## Measurements and kill conditions
 
 The stable certificate is 11 source lines. The 445-line semantic consumer
@@ -168,10 +181,21 @@ finiteness capability and adds no positivity, nontriviality, or inhabitedness
 premise; a default dependent assignment is selected from the input law's
 nonempty support.
 
+The EXP-105 close-out adds a 100-line generic graphical assembly and an
+802-line safe/live relay consumer after the measured augmentation,
+factorization, conditional-independence, continuation, and kernel-invariance
+modules. The focused consumer build passes warning-free, and the source audit
+finds no option, lint suppression, placeholder, axiom, direct update, visible
+transport, representation leak, or compatibility shim.
+
 Reject or narrow the graph route if it becomes a second evaluator, cannot
 construct full owner-deviation coverage, assumes faithfulness of the current
 parameterization, or certifies the live signal as removable. Do not add utility
 nodes to stable syntax merely to make the experiment pass.
+
+The hostile relay control satisfies the final one-site kill condition: the
+same theorem that certifies the signal-blind graph does not certify the live
+relay, and semantic coverage is independently refuted there.
 
 Before any completeness theorem, add constant-utility and singleton-domain
 controls. Before global pruning, prove the required recall/fixpoint theorem.
@@ -182,11 +206,13 @@ The semantic seam is public. Graphical ignorability, requisite observation,
 strategic reliance, and s-reachability remain experimental and separate.
 Canonical MAID point-mass factorization and division-free finite global-Markov
 soundness are now validated experimentally through arbitrary dependent query
-configurations, including impossible evidence. The next gate adds finite
-configuration-valued utility leaves as a mapped proof view of canonical play,
-proves their augmented law factorizes, and establishes the replacement and
-non-descendant invariance needed before local-utility d-separation may construct
-`CoversFullDeviationsAt` on the multi-agent hostile consumer.
+configurations, including impossible evidence. Finite utility-leaf
+augmentation and replacement invariance now let local graphical ignorability
+construct `CoversFullDeviationsAt` for one unique pruned site, and the hostile
+safe/live relay consumer validates both sides. This does not promote the graph
+view to a public API or justify simultaneous pruning. The next gate is the
+global safe-pruning fixpoint under sufficient recall; strategic reliance
+remains separate.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a
 hostile consumer finds the coverage quantifiers, utility view, or graph witness
