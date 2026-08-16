@@ -14,7 +14,7 @@ namespace GameTheory
 
 open GameTheory.Math.Probability
 
-universe uι us uo
+universe uι us uo usSource uoSource usTarget uoTarget
 
 variable {ι : Type uι}
 
@@ -38,6 +38,82 @@ theorem isεNash_iff {ε : ℝ} {profile : Profile F.sig} :
           expectedUtility utility who (F.play profile) + ε := by
   rw [IsεNash, isNash_iff]
   rfl
+
+/-- Approximate Nash is invariant under a profile equivalence that reflects
+unilateral updates in both directions and preserves every player's expected
+utility. -/
+theorem isεNash_iff_of_profileEquiv_of_expectedUtility_eq
+    (source : GameForm.{uι, usSource, uoSource} ι)
+    (target : GameForm.{uι, usTarget, uoTarget} ι)
+    (sourceUtility : source.sig.Outcome → ι → ℝ)
+    (targetUtility : target.sig.Outcome → ι → ℝ)
+    (profileEquiv : Profile source.sig ≃ Profile target.sig)
+    (hforward :
+      ∀ (sourceProfile : Profile source.sig) (who : ι)
+        (replacement : source.sig.Strategy who),
+        ∃ targetReplacement : target.sig.Strategy who,
+          profileEquiv (Profile.update sourceProfile who replacement) =
+            Profile.update (profileEquiv sourceProfile) who targetReplacement)
+    (hbackward :
+      ∀ (sourceProfile : Profile source.sig) (who : ι)
+        (targetReplacement : target.sig.Strategy who),
+        ∃ replacement : source.sig.Strategy who,
+          profileEquiv (Profile.update sourceProfile who replacement) =
+            Profile.update (profileEquiv sourceProfile) who targetReplacement)
+    (expectedUtility_eq :
+      ∀ (targetProfile : Profile target.sig) (who : ι),
+        expectedUtility targetUtility who (target.play targetProfile) =
+          expectedUtility sourceUtility who
+            (source.play (profileEquiv.symm targetProfile)))
+    (ε : ℝ) (profile : Profile source.sig) :
+    IsεNash target targetUtility ε (profileEquiv profile) ↔
+      IsεNash source sourceUtility ε profile := by
+  have expectedUtility_apply
+      (sourceProfile : Profile source.sig) (who : ι) :
+      expectedUtility targetUtility who
+          (target.play (profileEquiv sourceProfile)) =
+        expectedUtility sourceUtility who (source.play sourceProfile) := by
+    simpa using expectedUtility_eq (profileEquiv sourceProfile) who
+  rw [isεNash_iff, isεNash_iff]
+  constructor
+  · intro htarget who replacement
+    obtain ⟨targetReplacement, hupdate⟩ :=
+      hforward profile who replacement
+    calc
+      expectedUtility sourceUtility who
+          (source.play (Profile.update profile who replacement)) =
+          expectedUtility targetUtility who
+            (target.play
+              (profileEquiv (Profile.update profile who replacement))) :=
+        (expectedUtility_apply (Profile.update profile who replacement) who).symm
+      _ = expectedUtility targetUtility who
+          (target.play
+            (Profile.update (profileEquiv profile) who targetReplacement)) := by
+        rw [hupdate]
+      _ ≤ expectedUtility targetUtility who
+          (target.play (profileEquiv profile)) + ε :=
+        htarget who targetReplacement
+      _ = expectedUtility sourceUtility who (source.play profile) + ε := by
+        rw [expectedUtility_apply profile who]
+  · intro hsource who targetReplacement
+    obtain ⟨replacement, hupdate⟩ :=
+      hbackward profile who targetReplacement
+    calc
+      expectedUtility targetUtility who
+          (target.play
+            (Profile.update (profileEquiv profile) who targetReplacement)) =
+          expectedUtility targetUtility who
+            (target.play
+              (profileEquiv (Profile.update profile who replacement))) := by
+        rw [hupdate]
+      _ = expectedUtility sourceUtility who
+          (source.play (Profile.update profile who replacement)) :=
+        expectedUtility_apply (Profile.update profile who replacement) who
+      _ ≤ expectedUtility sourceUtility who (source.play profile) + ε :=
+        hsource who replacement
+      _ = expectedUtility targetUtility who
+          (target.play (profileEquiv profile)) + ε := by
+        rw [expectedUtility_apply profile who]
 
 /-- Every Nash equilibrium is an `ε`-Nash equilibrium when `ε` is nonnegative. -/
 theorem IsεNash.of_isNash {profile : Profile F.sig}

@@ -9,6 +9,7 @@ ordinary `GameForm`s over those source-player coordinates.
 
 import GameTheory.Languages.MAID.FrontierEquivalence
 import GameTheory.Protocol.Strategic
+import GameTheory.Core.Approximate
 import GameTheory.Core.Utility
 
 noncomputable section
@@ -381,6 +382,63 @@ theorem native_play_symm_eq_compiled_play
     ((behavioralProfileEquiv topological semantics).apply_symm_apply
       behavioral)
 
+/-- Native and compiled MAID forms preserve approximate Nash equilibrium at
+the same slack. A unilateral deviation remains replacement of one source
+owner's complete family of site-local rules. -/
+theorem isεNash_native_iff_compiled
+    (topological :
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
+    [Fintype Player] [DecidableEq Player]
+    [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (ε : ℝ)
+    (policy : Profile (nativeBehavioralSignature diagram)) :
+    IsεNash (nativeBehavioralGameForm semantics)
+        (fun assignment owner => semantics.utility owner assignment)
+        ε policy ↔
+      IsεNash (compiledBehavioralGameForm topological semantics)
+        (fun assignment owner => semantics.utility owner assignment)
+        ε (behavioralProfileEquiv topological semantics policy) := by
+  apply
+    (isεNash_iff_of_profileEquiv_of_expectedUtility_eq
+      (nativeBehavioralGameForm semantics)
+      (compiledBehavioralGameForm topological semantics)
+      (fun assignment owner => semantics.utility owner assignment)
+      (fun assignment owner => semantics.utility owner assignment)
+      (behavioralProfileEquiv topological semantics)
+      (fun sourceProfile owner replacement =>
+        ⟨ownerPolicyEquiv topological semantics owner replacement,
+          behavioralProfileEquiv_update topological semantics
+            sourceProfile owner replacement⟩)
+      (fun sourceProfile owner targetReplacement =>
+        ⟨(ownerPolicyEquiv topological semantics owner).symm
+            targetReplacement,
+          by
+            funext other
+            have hupdate := congrFun
+              (behavioralProfileEquiv_update topological semantics
+                sourceProfile owner
+                ((ownerPolicyEquiv topological semantics owner).symm
+                  targetReplacement))
+              other
+            calc
+              _ = Profile.update
+                  (behavioralProfileEquiv topological semantics sourceProfile)
+                  owner
+                  (ownerPolicyEquiv topological semantics owner
+                    ((ownerPolicyEquiv topological semantics owner).symm
+                      targetReplacement)) other := hupdate
+              _ = _ := by
+                rw [(ownerPolicyEquiv topological semantics owner).apply_symm_apply]
+                rfl⟩)
+      (fun targetProfile owner =>
+        congrArg
+          (expectedUtility
+            (fun assignment owner => semantics.utility owner assignment)
+            owner)
+          (native_play_symm_eq_compiled_play topological semantics
+            targetProfile).symm)
+      ε policy).symm
+
 /-- Native behavioral Nash equilibrium is exactly
 behavioral Nash equilibrium of the compiled EFG after histories are forgotten
 to typed assignments. Deviations range over source players; one deviation
@@ -400,25 +458,7 @@ theorem isNash_native_iff_compiled
         (euPreference fun assignment owner =>
           semantics.utility owner assignment)
         (behavioralProfileEquiv topological semantics policy) := by
-  rw [isNash_iff, isNash_iff]
-  constructor
-  · intro hnash owner replacement
-    have hdeviation :=
-      hnash owner
-        ((ownerPolicyEquiv topological semantics owner).symm replacement)
-    rw [native_play_update_symm_eq_compiled_play_update
-        topological semantics policy owner replacement,
-      native_play_eq_compiled_play_equiv topological semantics policy]
-      at hdeviation
-    exact hdeviation
-  · intro hnash owner replacement
-    have hdeviation :=
-      hnash owner
-        (ownerPolicyEquiv topological semantics owner replacement)
-    rw [← native_play_update_eq_compiled_play_update
-        topological semantics policy owner replacement,
-      ← native_play_eq_compiled_play_equiv topological semantics policy]
-      at hdeviation
-    exact hdeviation
+  rw [isNash_iff_isεNash_zero, isNash_iff_isεNash_zero]
+  exact isεNash_native_iff_compiled topological semantics 0 policy
 
 end GameTheory.Languages.MAID.Strategic

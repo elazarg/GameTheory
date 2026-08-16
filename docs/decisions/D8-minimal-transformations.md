@@ -2,7 +2,7 @@
 
 - **Status:** adopted and promoted; W1-H complete
 - **Date:** 2026-07-30
-- **Experiment IDs:** EXP-020, EXP-045
+- **Experiment IDs:** EXP-020, EXP-045, EXP-106
 
 ## Decision / question
 
@@ -21,6 +21,10 @@ certificates and the named language transfers were proved directly.
 Design 2 is adopted. Design 1 has no composition consumer and would recreate
 the abstraction cost rejected by D7. Design 3 already duplicates the same
 finite-product coordinate theorem in mixed extension and MAID serialization.
+EXP-106 narrows design 2's theorem-only surface: an ordinary profile
+equivalence may feed a generic equilibrium theorem when same-player update
+reflection in both directions and payoff preservation are explicit theorem
+hypotheses rather than fields of a new transformation certificate.
 
 ## Representative hostile slice
 
@@ -33,6 +37,14 @@ A second fixture flips both Boolean strategy carriers. Nash transport maps
 constant deviations through the coordinate equivalence. Correlated-equilibrium
 transport conjugates every recommendation-dependent response by that
 equivalence, explicitly witnessing both directions of deviation reflection.
+
+EXP-106 uses two independent consumers with different policy shapes. FOSG
+serialization erases administrative microsteps and transports arbitrary
+serialized behavioral profiles. MAID compilation maps one source player's
+whole family of site-local rules. A hostile player-coordinate swap preserves
+payoffs at every conjugated profile but changes which player can deviate: the
+target profile is zero-slack Nash, the source profile is not, and forward
+same-player update reflection is machine-refuted.
 
 ## Measurements
 
@@ -48,6 +60,12 @@ equivalence, explicitly witnessing both directions of deviation reflection.
 | deviation transport | Nash and CE are both iff theorems; CE response maps are conjugated in both directions |
 | mixed lifting | exact equality of actual play laws for the heterogeneous player swap |
 | probability reuse | exact forward and inverse dependent-product laws live together in `GameTheory.Math.Probability.FinDist`; the forward law replaces the MAID-local proof |
+
+EXP-106 promotes one theorem to `GameTheory.Core.Approximate`, with stable
+FOSG and MAID consumers and a separate negative test. The combined four-target
+build completes in 1,738 jobs warning-free. It adds no transformation
+structure, equilibrium predicate, stored capability, or equality-transport
+surface.
 
 ## Kill condition
 
@@ -79,6 +97,14 @@ generic equilibrium-transport certificate. A future noninvertible
 transformation must name its deviation-reflection hypothesis directly. A new
 structure still requires two independent consumers and a theorem unavailable
 from these concrete operations.
+
+Explicitly allow
+`isεNash_iff_of_profileEquiv_of_expectedUtility_eq`: it is a direct theorem
+over an ordinary profile equivalence, forward and backward same-player update
+reflection, and arbitrary-profile expected-utility equality. Its conclusion
+preserves the same real epsilon. This permission does not extend to a bundled
+transformation, certificate hierarchy, or an inference from profile/payoff
+equivalence without update reflection.
 
 Promotion is complete. `GameTheory.Core.Transform` contains 246 nonblank lines
 and `GameTheory.Tests.Transform` contains 67. The focused regression target

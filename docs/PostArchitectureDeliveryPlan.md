@@ -105,9 +105,10 @@ strategic-transfer slice separate from the counterfactual/CFR package.
 Separate packages:
 
 - **complete:** strategic/utility transfer through explicit-order
-  serialization; the two-player simultaneous witness transports behavioral
-  Nash through both player orders and transports a profitable-deviation
-  control;
+  serialization; the public bridge preserves canonical behavioral
+  `IsεNash` at unchanged epsilon in target- and source-facing forms, exact
+  Nash is its zero-slack corollary, and the two-player simultaneous witness
+  crosses both player orders and transports a profitable-deviation control;
 - **complete:** whole-round boundary support, exact continuation laws from an
   arbitrary supplied boundary, support-by-erasure, and terminal-support
   equivalence; the simultaneous witness has a positive terminal history and
@@ -184,8 +185,10 @@ separate gates. Do not add them merely to make Intrinsic resemble Protocol.
 
 ### F. MAID information reduction
 
-The promoted MAID compiler now has a multi-player, multi-site deviation and
-Nash witness. The semantic target of relevance pruning is now complete:
+The promoted MAID compiler now has multi-player, multi-site deviation support
+and preserves canonical native/compiled `IsεNash` at unchanged epsilon;
+exact Nash is its zero-slack corollary. The semantic target of relevance
+pruning is now complete:
 `ObservationPruning` defines a smaller site-local policy domain, expands it by
 source owner, preserves native and compiled laws under every accepted order,
 and exposes the profile-local certificate under which reduced Nash remains Nash

@@ -6702,3 +6702,56 @@ memory.
   not imply simultaneous same-owner pruning or strategic reliance. The next
   information-reduction gate is the global safe-pruning fixpoint under its
   sufficient-recall condition; strategic reliance remains a separate package.
+
+### EXP-106: exact approximate-Nash transport across policy equivalences
+
+- **Date / revision:** 2026-08-16, `main` at `b4aee27f`
+- **Status:** complete; supports a theorem with direct hypotheses and rejects
+  profile equivalence plus payoff conjugacy alone
+- **Decision / question:** whether exact profile-policy equivalences,
+  two-way unilateral-update reflection, and arbitrary-profile expected-payoff
+  equality suffice to transport canonical `IsεNash` without reviving the
+  transformation or semantic-certificate hierarchies rejected by D7 and D8.
+- **Competing designs:** one theorem parameterized by an ordinary profile
+  equivalence and explicit hypotheses; direct language-local proofs; or a new
+  form/runner/equilibrium transport structure with composition laws.
+- **Representative slice:** first consume explicit-order FOSG serialization,
+  where target histories contain administrative microsteps and payoff equality
+  requires erasure. Independently consume native/compiled MAID play, where one
+  owner replacement changes its complete family of site-local rules. Both must
+  preserve the same epsilon through the canonical `IsεNash` predicate; exact
+  expected-utility Nash may appear only as the zero-slack corollary.
+- **Kill conditions:** reject a second equilibrium predicate, a transport
+  certificate hierarchy, hidden deviation reflection, equality only at the
+  baseline profile, a stored finiteness capability, direct function update,
+  visible equality transport, an option or lint suppression, placeholder,
+  custom axiom, or a claim that pointwise horizon transport automatically
+  preserves eventual uniform equilibrium or long-run payoff.
+- **Measurements / observations:**
+  [`Core/Approximate.lean`](../GameTheory/Core/Approximate.lean) now exposes
+  `isεNash_iff_of_profileEquiv_of_expectedUtility_eq` with only an ordinary
+  profile equivalence, named same-player update reflection in both directions,
+  and expected-utility equality at every target profile. The stable
+  [`FOSGToEFGStrategic.lean`](../GameTheory/Languages/Bridges/FOSGToEFGStrategic.lean)
+  consumer preserves the same real epsilon for arbitrary serialized target
+  profiles and for translated source profiles. The independent stable
+  [`MAID/Strategic.lean`](../GameTheory/Languages/MAID/Strategic.lean) consumer
+  preserves the same epsilon while one deviation replaces one source owner's
+  complete site-local policy family. Both exact-Nash theorems are now the
+  zero-slack corollaries.
+
+  The hostile
+  [`ApproximateEquilibriumTransport.lean`](../GameTheory/Tests/ApproximateEquilibriumTransport.lean)
+  test swaps two player coordinates and conjugates payoffs exactly at every
+  profile. Its target base profile is zero-slack Nash while the source base
+  profile is not, and the same-player forward update-reflection premise is
+  explicitly false. Thus a profile bijection plus payoff equality cannot
+  silently replace deviation reflection. The combined command
+  `lake build GameTheory.Core.Approximate GameTheory.Languages.Bridges.FOSGToEFGStrategic GameTheory.Languages.MAID.Strategic GameTheory.Tests.ApproximateEquilibriumTransport`
+  completed 1,738 jobs warning-free.
+- **Outcome / next action:** support and promote the direct theorem, not a
+  transformation structure or equilibrium-transport certificate. The result
+  is pointwise in one form, profile, utility, and real epsilon. It neither
+  quantifies over horizons nor transports eventual uniform equilibrium,
+  infinite-path laws, or long-run payoffs. Reconsider a structure only after
+  two independent composition consumers require one.
