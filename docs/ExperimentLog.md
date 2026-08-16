@@ -6547,7 +6547,8 @@ memory.
 ### EXP-105: finite utility leaves and replacement-invariant continuations
 
 - **Date / revision:** 2026-08-16, `main` at `6a0717bb`
-- **Status:** in progress; utility-leaf augmentation gate reserved
+- **Status:** in progress; finite utility-leaf augmentation validated;
+  mapped-law factorization active
 - **Decision / question:** whether the experiment-only additive `UtilityView`
   can augment canonical native MAID play with distinct finite
   configuration-valued utility leaves, inherit the proved finite-BN
@@ -6568,6 +6569,18 @@ memory.
   selected separately for each replacement, a stored player/node/value
   finiteness capability, or a theorem that silently generalizes one-site safety
   to simultaneous same-owner pruning.
-- **Outcome / next action:** pending. First validate the finite augmentation and
-  payoff-recovery theorem; then prove context, mechanism, and non-descendant
-  invariance before attempting graphical ignorability to coverage.
+- **Measurements:** the first 115-line gate defines dependent graph values with
+  canonical base fibers and exact finite parent-configuration utility fibers,
+  an injective deterministic augmentation with a base projection, and the
+  summed owner payoff. The payoff on every augmented canonical assignment is
+  proved equal to `Semantics.utility` from the additive `UtilityView`
+  certificate. The existing split reward/signal fixture consumes the theorem,
+  so distinct terms are not silently merged. Its 1716-job focused build passed
+  warning-free with no finiteness, decidable-equality, positivity, alternate
+  evaluator, real-valued BN carrier, transport, or compatibility assumption.
+- **Outcome / next action:** the finite augmentation and payoff-recovery seam
+  survives. Next give the augmented graph operation-local enumeration,
+  deterministic leaf kernels, a leaves-last topological order, and a
+  point-mass factorization theorem for the mapped canonical law. Then prove
+  context, mechanism, and non-descendant invariance before attempting
+  graphical ignorability to coverage.
