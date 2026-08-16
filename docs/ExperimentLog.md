@@ -113,7 +113,7 @@ becomes difficult to scan.
 | EXP-100 | 2026-08-14 | pre-cutover stochastic client gate | Can canonical Protocol play expose chronological finite histories and restart laws without a second runner? | Complete; supports and graduates | `GameTheory/Stochastic/PublicPolicy.lean`; `GameTheory/Stochastic/History.lean`; `GameTheory/Tests/StochasticContinuation.lean` |
 | EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
 | EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | In progress; graph and site-local semantic foundations support, source-shaped hostile fixture rejected and negative gate narrowed | Experimental hybrid graph, site-local surgery, and source audit |
-| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; conditional separation schema compiles, concrete oscillating sequence remains open; does not change EXP-107 or current verdicts | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); cyclic quitting continuation slice; independent sibling evidence; no API adoption |
+| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; conditional separation schema and concrete endpoint estimates compile, filter-level oscillation remains open; does not change current verdicts | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); cyclic quitting continuation slice; no API adoption |
 
 ## Entry template
 
@@ -6803,6 +6803,7 @@ memory.
   [`MAIDPruningSiteReduction.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningSiteReduction.lean),
   [`MAIDPruningRecallOrder.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningRecallOrder.lean),
   [`MAIDMechanismSelectorFactorization.lean`](../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorFactorization.lean),
+  [`MAIDMechanismSelectorIndependence.lean`](../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorIndependence.lean),
   [`MAIDSitePolicySurgery.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSitePolicySurgery.lean),
   [`MAIDSiteReplacementContext.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteReplacementContext.lean),
   [`MAIDSiteOptimality.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteOptimality.lean),
@@ -6820,11 +6821,13 @@ memory.
   module supplies reduced-site surgery, fully mixed initialization, and the
   source-first owner order. The mechanism-selector module proves that a fair
   mixture of the baseline and one source-rule surgery factorizes over the
-  exact dummy-root graph used by s-reachability. The foundation set contains
-  thirteen artifacts, and the two consumer audits are separate.
-  The aggregate `lake build` over all fifteen EXP-107 modules completed
-  warning-free with 1,784 jobs, and the repository-wide `lake build` completed
-  with 3,671 jobs. `phase1-audit.ps1 -VerifyExpected`,
+  exact dummy-root graph used by s-reachability. Its independence companion
+  derives selector/utility conditional independence and the division-free
+  baseline-versus-changed component cross-product identity. The foundation
+  set contains fourteen artifacts, and the two consumer audits are separate.
+  The aggregate `lake build` over all sixteen EXP-107 modules completed
+  warning-free with 1,785 jobs, and the repository-wide `lake build` completed
+  with 3,673 jobs. `phase1-audit.ps1 -VerifyExpected`,
   `phase2-audit.ps1 -VerifyExpected -DeepReachability`, and
   `phase3-audit.ps1 -VerifyExpected -DeepReachability` each reported
   `VERIFIED=1`. The source audit found no option, lint suppression,
@@ -6845,9 +6848,9 @@ memory.
   narrows the hostile negative gate. The experiment remains in progress. The
   next gate is the load-bearing semantic soundness/optimality transport for
   changes at non-s-reachable same-owner sites under a fully mixed reference
-  rule (Koller--Milch Lemmas 6.1--6.2 style). The next proof slice uses the
-  selector factorization to derive a division-free component cross-law
-  identity and score comparison; after that, prove the same-owner
+  rule (Koller--Milch Lemmas 6.1--6.2 style). The selector cross-law now
+  compiles; the next proof slice derives the score comparison and fully mixed
+  support transport. After that, prove the same-owner
   relevance-order induction that assembles a global reduced whole-owner best
   response and `CoversFullDeviationsAt` from the site-local endpoint. Do not
   claim a semantic unsafe control unless a genuinely different larger graph
@@ -6905,13 +6908,17 @@ memory.
   complement. It proves every finite expected Cesàro average is `1/2` and,
   from four explicit endpoint hypotheses, proves expected pathwise liminf is
   `0` while expected pathwise limsup is `1`. The focused target builds
-  warning-free with 1,713 jobs; the 3,671-job full build and deep Phase 1--3
+  warning-free with 1,713 jobs; the 3,673-job full build and deep Phase 1--3
   audits pass. The schema introduces no runner, measure, equilibrium predicate,
-  or coercion. It does not prove that the required oscillating sequence exists.
+  or coercion. The 238-line
+  [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean)
+  constructs squaring block endpoints and alternating `0`/`1` stages, proves
+  exact block sums, global Cesàro bounds, and the even/odd endpoint estimates.
+  It does not yet prove the filter-level liminf/limsup identities.
 - **Outcome / next action:** supports the distinct-signature/order-of-limits
-  boundary but does not complete the hostile slice. Next prove the concrete
-  rapidly growing alternating-block endpoint estimates, then test the
-  finite-marginal infinite-play layer. Keep EXP-107 as the current MAID
-  experiment, preserve current `supported`/`opt-in` statuses, and prototype
+  boundary but does not complete the hostile slice. Next prove endpoint
+  cofinality, ratio convergence, and the filter-level liminf/limsup identities,
+  then test the finite-marginal infinite-play layer. Keep EXP-107 as the current
+  MAID experiment, preserve current `supported`/`opt-in` statuses, and prototype
   only under `Experimental` until the hostile slices and a follow-up decision
   record determine the dependency and public API boundary.
