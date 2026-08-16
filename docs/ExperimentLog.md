@@ -114,6 +114,7 @@ becomes difficult to scan.
 | EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
 | EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | Complete experiment-only result; source-first transport and global `CoversFullDeviationsAt` compile, while the source-shaped hostile fixture remains a recall-cycle sentinel rather than an unsafe consumer | Experimental hybrid graph, site-local surgery, global reduction, positive consumer, and source audit |
 | EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; a concrete finite-law sequence separates all three payoff orders, while the infinite-play and cyclic-uniform interfaces remain open; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); cyclic quitting continuation slice; no API adoption |
+| EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | In progress; explicit directed closure and MAID graph-node deciders validated, full checker and hostile controls pending | Explicit node enumeration, Boolean/propositional equivalence, existing safe/live/fixpoint consumers |
 
 ## Entry template
 
@@ -6958,3 +6959,46 @@ memory.
   `supported`/`opt-in` statuses, and prototype only under `Experimental` until
   those hostile slices and a follow-up decision record determine the dependency
   and public API boundary.
+
+### EXP-109: executable MAID edge-addition fixpoint checker
+
+- **Date / revision:** 2026-08-16, `main` at `cb4fce62`
+- **Status:** in progress; experiment-only; no public API adopted
+- **Decision / question:** whether a caller-supplied topological node list and
+  finite utility-site enumeration can decide `IsEdgeAdditionStableAt` and
+  `IsEdgeAdditionFixpoint` without storing `Fintype`, invoking classical graph
+  construction, or claiming a unique/minimal pruning.
+- **Representative slice:** executable directed ancestry, ancestral-moral
+  adjacency, and reachability over explicit node lists; Boolean checkers with
+  iff the existing propositions; the existing positive multi-site fixpoint,
+  safe/live relay, split/merged utility, empty-utility, and recall-cycle
+  controls; plus one order-sensitive two-observation fixture.
+- **Competing designs:** an explicit-list checker over the current experimental
+  graph; a proof-only decidability instance over `Fintype`; or an executable
+  Add-Edges constructor that also claims minimality. Prefer the checker. Reject
+  stored/global finiteness and defer construction/minimality until termination,
+  order dependence, and confluence are measured.
+- **Measurements:** source-level classical/transport/finiteness tokens;
+  checker/proposition equivalence; graph enumeration size; focused build;
+  whether setwise restore-all checks agree with one-at-a-time deletion; and
+  whether any order-independent minimality theorem is actually provable.
+- **First checkpoint:**
+  [`FiniteDirectedReachability.lean`](../GameTheory/Experimental/PostArchitecture/FiniteDirectedReachability.lean)
+  proves an explicit-list Warshall checker equivalent to canonical
+  `Relation.ReflTransGen` and exercises directed, disconnected, reflexive, and
+  cyclic controls.
+  [`MAIDGraphDeciders.lean`](../GameTheory/Experimental/PostArchitecture/MAIDGraphDeciders.lean)
+  enumerates one owner's base and utility graph nodes from the supplied causal
+  topological order and decides directed and ancestral-moral one-step edges.
+  `lake build GameTheory.Experimental.PostArchitecture.FiniteDirectedReachability
+  GameTheory.Experimental.PostArchitecture.MAIDGraphDeciders` passed 1,741
+  jobs warning-free. Both files contain zero forbidden execution, transport,
+  placeholder, option, or lint-suppression tokens; no line exceeds 100 columns.
+- **Kill conditions:** a second graph semantics, `Fintype.ofFinite` or
+  `open Classical` in executable code, a constructor without a returned
+  fixpoint certificate, silently treating setwise and singleton removal as
+  interchangeable, or claiming maximal removal/minimal kept edges without a
+  hostile confluence proof.
+- **Outcome / next action:** pending. First validate the Boolean checker against
+  the existing predicate and controls; only then test an ordered restoration
+  procedure. Keep EXP-107's semantic theorem experiment-only meanwhile.
