@@ -16,6 +16,7 @@ noncomputable section
 namespace GameTheory.Experimental.PostArchitecture.FiniteBNMoralComponents
 
 open GameTheory.Experimental.PostArchitecture.FiniteBNFactorScopes
+open GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
 open GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
 
 universe uNode
@@ -77,6 +78,25 @@ theorem mem_ancestralFactors_iff [Fintype Node] [DecidableEq Node]
       InAncestralClosure parents first second evidence node := by
   classical
   simp [ancestralFactors]
+
+/-- The finite ancestral factor set is closed under the original parent
+relation, so all nonancestral factors can be marginalized away. -/
+theorem ancestralFactors_parentClosed [Fintype Node] [DecidableEq Node]
+    (parents : Node → Finset Node) (first second evidence : Finset Node) :
+    ParentClosed parents (ancestralFactors parents first second evidence) := by
+  intro child hchild parent hparent
+  rw [mem_ancestralFactors_iff] at hchild ⊢
+  exact parent_mem_ancestralClosure hchild hparent
+
+/-- Every queried or evidence coordinate belongs to the ancestral factor
+set. -/
+theorem queryRoots_subset_ancestralFactors [Fintype Node] [DecidableEq Node]
+    (parents : Node → Finset Node) (first second evidence : Finset Node) :
+    queryRoots first second evidence ⊆
+      ancestralFactors parents first second evidence := by
+  intro node hnode
+  rw [mem_ancestralFactors_iff]
+  exact ⟨node, hnode, Relation.ReflTransGen.refl⟩
 
 theorem mem_openAncestralRegion_iff [Fintype Node] [DecidableEq Node]
     (parents : Node → Finset Node) (first second evidence : Finset Node)

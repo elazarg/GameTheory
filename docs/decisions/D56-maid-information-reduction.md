@@ -172,11 +172,11 @@ strategic reliance, and s-reachability remain experimental and separate.
 Canonical MAID point-mass factorization, a division-free finite-law
 conditional-independence surface, cast-free dependent-complement enumeration,
 one-pivot Fubini, reverse-topological parent-closed marginalization, generic
-ancestral-moral separation, factor-scope confinement, and rank-one cross
-multiplication are now validated experimentally. The next gate is the finite
-score adapter connecting the validated moral factor partition and nested
-latent sums to the rank-one tables. Only then may local-utility d-separation
-construct
+ancestral-moral separation, factor-scope confinement, retained-cylinder
+decomposition, and dependent rank-one score assembly are now validated
+experimentally. The next gate connects moral factor partitions to those scores
+and identifies their table marginals with the four cylinder masses. Only then
+may local-utility d-separation construct
 `CoversFullDeviationsAt` on the multi-agent hostile consumer.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a

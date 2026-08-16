@@ -197,11 +197,11 @@ The exact local-utility graph view, the one-site
 continuation-factorization-to-coverage bridge, canonical effective-parent
 point-mass factorization, division-free finite conditional independence,
 cast-free dependent enumeration, parent-closed cylinder marginalization,
-ancestral-moral separation, factor-scope confinement, and rank-one algebra now
-survive their hostile experiments. The next same-language gate is finite moral
-component score assembly: combine the validated factor partition and
-carrier-relative latent sums into the rank-one tables. Complete that finite-BN
-global-Markov layer before claiming the
+ancestral-moral factor partitions, explicit-retained latent sums, and dependent
+rank-one score assembly now survive their hostile experiments. The next
+same-language gate identifies the moral scores and their table marginals with
+the four query cylinder masses. Complete that finite-BN global-Markov layer
+before claiming the
 Koller--Milch graphical criterion discharges full-deviation coverage. Keep
 requisite observation
 (whether a realized parent value is needed by a rule) separate from strategic

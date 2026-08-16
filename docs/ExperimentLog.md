@@ -6397,8 +6397,8 @@ memory.
 ### EXP-104: finite-BN global-Markov semantics
 
 - **Date / revision:** 2026-08-16, `main` at `8e93046f`
-- **Status:** in progress; moral components and latent-sum reindexing validated;
-  score-to-rank-one assembly active
+- **Status:** in progress; retained-cylinder and score-to-rank-one assembly
+  validated; graph-to-cylinder composition active
 - **Decision / question:** whether the canonical typed MAID assignment law can
   support a reusable finite global-Markov theorem without a second evaluator,
   positivity or faithfulness assumptions, stored value-domain finiteness, or
@@ -6486,6 +6486,26 @@ memory.
   jobs), with no casts, alternate evaluators, positivity, or hidden
   conditioning convention. The integrated 3627-job build and phase-3
   architecture verification passed with all expected zero counts.
+
+  The first real global-Markov composition exposed a bad boundary in the
+  whole-node latent partition: using it after ancestor marginalization would
+  require transporting every dependent configuration and factor score through
+  an ancestral-node subtype. The greenfield API was changed directly. The
+  148-line latent module now partitions an explicit retained set, requires no
+  node enumeration, and rejects overlapping latent blocks while accepting
+  empty blocks and singleton value domains. The 253-line retained-cylinder
+  module partitions a query cylinder into exact retained cylinders and, for a
+  parent-closed retained set, rewrites each term to the canonical local-factor
+  product. The 601-line score adapter assembles arbitrary disjoint query
+  configurations, preserves every typed coordinate, consumes scope-derived
+  `DependsOnlyOn` certificates, and proves rank-one cross multiplication; a
+  nonconstant product score passes while a diagonal table is rejected. The
+  65-line MAID bridge also packages the canonical native law as the same
+  `Factorizes` interface and transports the causal topological order to
+  effective parents. Focused builds passed warning-free (1719, 1722, and 1742
+  jobs), without a second evaluator, subtype transport, stored finiteness,
+  positivity, or compatibility shim. The integrated 3630-job build and phase-3
+  architecture verification passed with all expected zero counts.
 - **Kill conditions:** reject a second authoritative MAID evaluator, custom
   axiom, positivity or faithfulness premise, `Fintype.ofFinite` in executable
   code, or conditional law equality that is undefined on zero evidence; keep
@@ -6493,9 +6513,10 @@ memory.
   unproved normalization or representation theorem.
 - **Interim outcome / next action:** canonical factorization, division-free CI,
   parent-closed marginalization, ancestral-moral components, factor-scope
-  partitions, MAID cylinder bridges, carrier-relative latent Fubini, and
-  rank-one algebra survive. The remaining global-Markov step is now only the
-  score adapter: assemble arbitrary first/second/evidence configurations using
-  an explicit default, prove the left score ignores right variables and the
-  right score ignores left variables from their `DependsOnlyOn` certificates,
-  and feed the resulting pointwise rank-one table to `crossMul_of_rankOne`.
+  partitions, explicit-retained latent Fubini, and dependent rank-one score
+  assembly survive. Next construct `ScorePartition` and its two scores from
+  moral separation, identify its joint table with retained cylinder masses,
+  identify row, column, and total sums with the three marginal cylinders, and
+  conclude arbitrary-configuration coordinate CI. Then exercise the result on
+  chain, fork, collider, descendant-evidence, and zero-evidence controls before
+  connecting the canonical MAID law.
