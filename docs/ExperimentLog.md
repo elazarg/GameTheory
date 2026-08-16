@@ -6543,3 +6543,31 @@ memory.
   canonical law factorizes, then add the replacement-invariance lemmas needed
   to turn local graphical ignorability into the existing non-circular
   continuation certificate and `CoversFullDeviationsAt`.
+
+### EXP-105: finite utility leaves and replacement-invariant continuations
+
+- **Date / revision:** 2026-08-16, `main` at `6a0717bb`
+- **Status:** in progress; utility-leaf augmentation gate reserved
+- **Decision / question:** whether the experiment-only additive `UtilityView`
+  can augment canonical native MAID play with distinct finite
+  configuration-valued utility leaves, inherit the proved finite-BN
+  factorization/global-Markov theorem, and construct a replacement-independent
+  local continuation certificate without adding utility nodes to stable syntax
+  or defining another evaluator.
+- **Competing designs:** map canonical play to base assignments plus one finite
+  parent-configuration leaf per utility term; use one merged owner sink; store
+  utility nodes in canonical `Structure`; or bypass the distributional seam
+  with a direct expected-utility hypothesis.
+- **Representative slice:** preserve distinct coordination and background
+  utility terms; prove the mapped law factorizes with deterministic leaf
+  kernels; then test the two-player relay path where a rival either ignores or
+  copies the removed signal. The safe case must construct the existing
+  `LocalUtilityFactorsAt`/coverage seam, while the relay case must remain live.
+- **Kill conditions:** reject a second play evaluator, an `ℝ`-valued finite BN
+  node, a merged utility sink that introduces false moral edges, a continuation
+  selected separately for each replacement, a stored player/node/value
+  finiteness capability, or a theorem that silently generalizes one-site safety
+  to simultaneous same-owner pruning.
+- **Outcome / next action:** pending. First validate the finite augmentation and
+  payoff-recovery theorem; then prove context, mechanism, and non-descendant
+  invariance before attempting graphical ignorability to coverage.
