@@ -6964,7 +6964,9 @@ memory.
   `lake build GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure`
   passed 3,011 jobs warning-free. The construction introduces no second
   runner or payoff notion; its discrete bridge assumes finite players,
-  nonempty action fibers, and countable canonical histories.
+  nonempty action fibers, and countable canonical histories. The phase-2
+  boundary audit counts its 13 representation tokens and 7 `toPMF` uses
+  separately from the stable zero-leak bucket.
 - **Measured payoff-interface slice:** the 311-line
   [`StochasticAsymptoticPayoffs.lean`](../GameTheory/Experimental/PostArchitecture/StochasticAsymptoticPayoffs.lean)
   defines `E[liminf Aₙ]`, `E[limsup Aₙ]`, and convergence of `E[Aₙ]`
@@ -7083,6 +7085,9 @@ memory.
   passed 2,492 jobs warning-free. No stable finite module imports the
   experiment, and source audits found no coercion, classical execution,
   transport, placeholder, option, or lint-suppression token.
+  The phase-2 boundary audit counts 19 representation tokens and 1 `toPMF`
+  token in this file; the three-file countable/infinite-path boundary is
+  reported separately from the stable zero-leak bucket.
 - **Outcome / next action:** the direct-`PMF` design survives, and replacing
   `FinDist` or adding a third probability wrapper is rejected. EXP-112
   validates the bounded analytic bridge; require an infinite-play payoff
@@ -7174,6 +7179,9 @@ memory.
   passed 2,509 jobs warning-free. Source audits found no duplicate expectation
   wrapper, coercion, hidden convergence premise, transport, placeholder,
   option, or lint suppression.
+  The phase-2 boundary audit counts 7 representation tokens and 2 `toPMF`
+  tokens in this file; its representation use remains confined to the
+  explicitly measured experiment boundary.
 - **Outcome / next action:** Mathlib's Bochner integral is the surviving
   countable expectation design; a new expectation wrapper is rejected. The
   EXP-108 measured two-point payoff consumer now uses the explicit

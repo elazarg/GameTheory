@@ -178,15 +178,32 @@ Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $
 # frozen Phase 1 candidates are evidence and are excluded.
 $RepresentationModule = 'GameTheory/Math/Probability/FinDist.lean'
 $Phase1Prefix = 'GameTheory/Experimental/Phase1'
+$RepresentationBoundary = @(
+  'GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean',
+  'GameTheory/Experimental/PostArchitecture/CountablePMFExpectation.lean',
+  'GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayMeasure.lean')
 $NonRepresentation = @($AllFiles | Where-Object {
-  ($_ -ne $RepresentationModule) -and (-not $_.StartsWith($Phase1Prefix)) })
+  $candidate = $_
+  ($_ -ne $RepresentationModule) -and (-not $_.StartsWith($Phase1Prefix)) -and
+    ($RepresentationBoundary -notcontains $candidate) })
+$RepresentationBoundaryFiles = @($AllFiles | Where-Object {
+  $RepresentationBoundary -contains $_ })
+Report 'REPRESENTATION_EXPERIMENT_BOUNDARY_FILES' $RepresentationBoundaryFiles.Count
 Report 'REPRESENTATION_TOKENS_OUTSIDE_FINDIST' `
   (Count-Pattern $NonRepresentation `
     '(?<![A-Za-z0-9_])(ENNReal|toReal|toPMF|PMF)(?![A-Za-z0-9_])')
-# Keep the representation escape hatch independently visible: a future
-# broadening of the aggregate token check must not silently permit it.
 Report 'TOPMF_OUTSIDE_FINDIST' `
   (Count-Pattern $NonRepresentation '(?<![A-Za-z0-9_])toPMF(?![A-Za-z0-9_])')
+# These three experiment-only files are the explicit, measured boundary for
+# the opt-in countable/infinite-path layer. Keep their representation use
+# visible separately so excluding them from the stable D2 bucket cannot hide
+# a later broadening of that boundary.
+Report 'REPRESENTATION_TOKENS_EXPERIMENT_BOUNDARY' `
+  (Count-Pattern $RepresentationBoundaryFiles `
+    '(?<![A-Za-z0-9_])(ENNReal|toReal|toPMF|PMF)(?![A-Za-z0-9_])')
+Report 'TOPMF_EXPERIMENT_BOUNDARY' `
+  (Count-Pattern $RepresentationBoundaryFiles `
+    '(?<![A-Za-z0-9_])toPMF(?![A-Za-z0-9_])')
 Report 'VNM_REPRESENTATION_TOKENS' `
   (Count-Pattern @('GameTheory/Core/VNM.lean') `
     '(?<![A-Za-z0-9_])(ENNReal|toReal|toPMF|PMF|Fintype\.ofFinite)(?![A-Za-z0-9_])')
@@ -1788,8 +1805,11 @@ if ($VerifyExpected) {
     STOCHASTIC_FORBIDDEN_IMPORTS = 0
     MATH_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
+    REPRESENTATION_EXPERIMENT_BOUNDARY_FILES = 3
     REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
     TOPMF_OUTSIDE_FINDIST = 0
+    REPRESENTATION_TOKENS_EXPERIMENT_BOUNDARY = 39
+    TOPMF_EXPERIMENT_BOUNDARY = 10
     VNM_REPRESENTATION_TOKENS = 0
   }
   # RFC 7.3 states a budget, not a target, so this one is a bound.
