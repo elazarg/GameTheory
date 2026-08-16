@@ -1,0 +1,151 @@
+# D56: MAID information reduction uses semantic deviation coverage
+
+- **Status:** adopted for the semantic seam; graphical discharge remains
+  experiment-gated
+- **Date:** 2026-08-16
+- **Experiment IDs:** EXP-102
+
+## Decision and result
+
+Use `ObservationPruning.CoversFullDeviationsAt` as the boundary between
+canonical MAID semantics and any graphical information-reduction package. At
+a reduced profile `p`, it requires every full owner-policy replacement to be
+weakly dominated, for that owner, by some reduced replacement against the same
+opposing profile:
+
+```text
+EU_a(expand(p)[a := full]) ≤ EU_a(expand(p[a := reduced])).
+```
+
+This is the exact missing obligation at one profile. Full Nash implies both
+reduced Nash and coverage; reduced Nash plus coverage implies full Nash. The
+same certificate serves native and compiled execution through the existing law
+equivalence. It introduces no second policy, utility, evaluator, or equilibrium
+predicate.
+
+The graph-only design is rejected. `Structure` stores chance and decision
+nodes, while `Semantics.utility` is an arbitrary function of a completed
+assignment. Two semantics can share the same graph and chance laws while one
+utility ignores a signal and the other rewards matching it. No predicate of
+the existing graph alone can safely distinguish them.
+
+An experiment-only proved `UtilityView` survives as a possible graph front end.
+It is not a public API and currently supplies no graph-to-coverage theorem.
+
+## Independent criterion and terminology
+
+The independent sources are Koller and Milch,
+[*Multi-Agent Influence Diagrams for Representing and Solving
+Games*](https://people.csail.mit.edu/milch/papers/geb-maid.pdf) (2003,
+Definitions 5.1--5.4 and Theorems 5.1--5.2), and Milch and Koller,
+[*Ignorable Information in Multi-Agent
+Scenarios*](https://people.csail.mit.edu/milch/papers/tr08-irrelevance.pdf)
+(2008, Definition 3.3 and Theorems 3.4 and 5.3).
+
+For decision `D` owned by `a`, let `RelUtils_G(D)` be `a`'s descendant utility
+nodes. A set `X ⊆ Pa_G(D)` is graphically ignorable when
+
+```text
+d-sep_G(X, RelUtils_G(D) | (Pa_G(D) ∪ {D}) \ X).
+```
+
+The source calls this *ignorable*. This repository may call a singleton parent
+*requisite* only for the complementary condition. The removed set must remain
+set-valued internally because the conditioning set removes all of `X` at once.
+
+Strategic reliance is different. It asks whether changing another decision
+`D'`'s rule can change which rule is optimal at `D`, ignoring behavior only at
+parent contexts that originally had zero probability. Its graph test adds a
+dummy mechanism parent `M[D'] -> D'` and tests an active path to
+`RelUtils_G(D)` conditional on `Pa_G(D) ∪ {D}`. A realized observation can be
+requisite even when the generating rule is not strategically relevant. The
+2003 relevance-graph direction is `D' -> D` when `D` relies on `D'`.
+
+Neither notion is the paper's intermediate *requisite probability node*.
+
+The theorem scopes must also remain separate:
+
+- d-separation gives the sound local ignorability direction without a
+  faithfulness assumption;
+- s-non-reachability gives absence of reliance in the current parameterized
+  MAID;
+- s-reachability completeness is existential over parameterizations with the
+  same skeleton, not a claim about the current numeric utility; and
+- completeness needs nontrivial variable domains. Singleton observations are
+  always ignorable and singleton decisions cannot witness reliance.
+
+Local soundness does not require recall. Combining local removals into the
+2008 global safe-pruning fixpoint needs its sufficient-recall condition. Even a
+safe reduction may discard original equilibria, including Pareto-preferred
+ones; safety is only reduced-Nash-to-full-Nash inclusion.
+
+## Competing designs
+
+1. Infer safety from the existing chance/decision graph alone.
+2. Attach a proved utility-dependence view and run d-separation on an augmented
+   graph.
+3. Change stable MAID syntax to store owned local utility nodes.
+4. Adopt semantic full-deviation coverage and let an optional graph package
+   construct it later.
+
+Design 1 hit the graph-opacity kill condition. Design 3 is premature because
+the consumer does not justify changing D14's validated syntax. Design 4 is
+adopted. Design 2 remains experimental and may graduate only by constructing
+coverage on a hostile semantic consumer.
+
+## Representative experiment
+
+`Tests.MAIDSafeReduction` removes a genuinely fair Boolean signal from one
+decision. When payoff rewards the action alone, the always-true reduced policy
+attains the pointwise upper bound, covers every full signal-contingent
+deviation, and lifts reduced Nash to full Nash. With identical execution and
+pruning but payoff for `decision = signal`, every signal-blind policy is worth
+`1/2`, the full copying rule is worth `1`, reduced Nash fails after expansion,
+and coverage is false.
+
+`Experimental.PostArchitecture.MAIDRequisiteObservation` adds a proved utility
+view and a reward node. In
+`signal -> decision -> reward -> utility`, conditioning on `decision` blocks
+the observation. Adding only `signal -> reward` leaves an active path and makes
+the observation requisite. The owner utility must be a descendant of the
+decision; omitting that guard falsely marks payoffs unaffected by the decision
+as relevant.
+
+The spike uses one synthetic sink per owner. That representation is
+conservative: moralizing a combined sink can join parents belonging to distinct
+local utility terms. An exact future view should enumerate owned local utility
+terms and prove their sum equals canonical `Semantics.utility`.
+
+## Measurements and kill conditions
+
+The stable certificate is 11 source lines. The 445-line semantic consumer
+unfolds the canonical assignment runner once and reuses canonical
+`expectedUtility`, `euPreference`, and `IsNash`. The 479-line graph spike keeps
+effective chance parents and observed decision parents distinct, and supplies
+set-valued removal/conditioning plus ancestral-moral d-connection.
+
+Focused builds passed warning-free: the semantic test built 1735 jobs with a
+6.9-second final module build; the graph spike built 1715 jobs with a
+7.2-second final module build. The new artifacts contain no `set_option`,
+`nolint`, `sorry`, `admit`, direct `Function.update`, stored finite capability,
+or user-visible equality transport.
+
+Reject or narrow the graph route if it becomes a second evaluator, cannot
+construct full owner-deviation coverage, assumes faithfulness of the current
+parameterization, or certifies the live signal as removable. Do not add utility
+nodes to stable syntax merely to make the experiment pass.
+
+Before any completeness theorem, add constant-utility and singleton-domain
+controls. Before global pruning, prove the required recall/fixpoint theorem.
+
+## Consequences and compatibility posture
+
+The semantic seam is public. Graphical ignorability, requisite observation,
+strategic reliance, and s-reachability remain experimental and separate. The
+next gate is a local-utility d-separation theorem that constructs
+`CoversFullDeviationsAt` on a multi-agent hostile consumer.
+
+There is no backward-compatibility obligation in this greenfield rewrite. If a
+hostile consumer finds the coverage quantifiers, utility view, or graph witness
+poorly modeled, change or remove them directly. Do not add aliases, adapters,
+deprecated constructors, duplicate predicates, or theorem shims.

@@ -6,10 +6,11 @@ reduced policy domain remains grouped by source owner and expands canonically
 to the accepted site-local MAID policy by restricting each full observation.
 
 This is the semantic target for later graphical requisite tests.  It does not
-call a parent irrelevant merely because a graph predicate says so: a concrete
-reduced policy must expand to the full policy being analyzed.  Native and
-compiled laws, and the one-way full-Nash-to-reduced-Nash consequence, are then
-proved against the canonical forms.
+call a parent irrelevant merely because a graph predicate says so.  Exact law
+transfer uses literal policy representation; safe equilibrium reduction uses
+the stronger certificate that every omitted full deviation is weakly covered
+by a reduced deviation.  Both directions are proved against the canonical
+native and compiled forms.
 -/
 
 import GameTheory.Languages.MAID.Strategic
@@ -160,9 +161,76 @@ theorem compiled_play_eq_reducedCompiled_play_of_expands
       (pruning.reducedCompiledGameForm topological semantics).play reduced := by
   rw [← hexpands]
 
-/-- Nash against the full site-local policy space implies Nash after pruning.
-The converse is intentionally absent: a removed observation may enable a
-profitable full-space deviation. -/
+/-! ## Safe reduction -/
+
+/-- A reduced profile covers the original full deviation space when every full
+owner-policy replacement is weakly dominated, for that owner, by some reduced
+replacement.  This is the semantic certificate needed for safe information
+removal: unlike `Represents`, it constrains deviations that are not themselves
+in the image of `expandPolicy`.
+
+The certificate is profile-local because a removed observation may be
+irrelevant against one fixed collection of opposing policies and strategically
+live against another.  A graphical requisite-information theorem can discharge
+this condition uniformly when its stronger structural hypotheses hold. -/
+def CoversFullDeviationsAt (pruning : Pruning diagram)
+    [DecidableEq Player] [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : ReducedPolicy pruning) : Prop :=
+  ∀ owner (fullReplacement : OwnerPolicy diagram owner),
+    ∃ reducedReplacement : ReducedOwnerPolicy pruning owner,
+      euPreference (fun assignment who => semantics.utility who assignment)
+        owner
+        ((pruning.reducedNativeGameForm semantics).play
+          (Profile.update policy owner reducedReplacement))
+        ((nativeBehavioralGameForm semantics).play
+          (Profile.update (pruning.expandPolicy policy) owner fullReplacement))
+
+/-- Deviation coverage gives the load-bearing safe-reduction direction: Nash
+in the smaller policy space remains Nash against every original full-policy
+deviation after expansion. -/
+theorem isNash_expanded_of_isNash_reduced
+    (pruning : Pruning diagram)
+    [Fintype Player] [DecidableEq Player]
+    [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : ReducedPolicy pruning)
+    (hcover : pruning.CoversFullDeviationsAt semantics policy)
+    (hnash : IsNash (pruning.reducedNativeGameForm semantics)
+      (euPreference fun assignment owner => semantics.utility owner assignment)
+      policy) :
+    IsNash (nativeBehavioralGameForm semantics)
+      (euPreference fun assignment owner => semantics.utility owner assignment)
+      (pruning.expandPolicy policy) := by
+  rw [isNash_iff] at hnash ⊢
+  intro owner fullReplacement
+  obtain ⟨reducedReplacement, hcovered⟩ :=
+    hcover owner fullReplacement
+  have hreduced := hnash owner reducedReplacement
+  rw [euPreference_apply] at hcovered hreduced ⊢
+  exact hcovered.trans hreduced
+
+/-- Every expanded full-space Nash profile covers all full deviations: choose
+the owner's current reduced policy as the covering replacement.  Thus coverage
+is not merely a convenient sufficient certificate; together with reduced Nash
+it is the exact missing obligation at one reduced profile. -/
+theorem coversFullDeviationsAt_of_isNash_expanded
+    (pruning : Pruning diagram)
+    [Fintype Player] [DecidableEq Player]
+    [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : ReducedPolicy pruning)
+    (hnash : IsNash (nativeBehavioralGameForm semantics)
+      (euPreference fun assignment owner =>
+        semantics.utility owner assignment)
+      (pruning.expandPolicy policy)) :
+    pruning.CoversFullDeviationsAt semantics policy := by
+  rw [isNash_iff] at hnash
+  intro owner fullReplacement
+  refine ⟨policy owner, ?_⟩
+  simpa only [Profile.update_eq_self] using
+    hnash owner fullReplacement
+
+/-- Nash against the full site-local policy space implies Nash after pruning
+without any coverage premise.  The converse above needs deviation coverage: a
+removed observation may otherwise enable a profitable full-space deviation. -/
 theorem isNash_reducedNative_of_isNash_expanded
     (pruning : Pruning diagram)
     [Fintype Player] [DecidableEq Player]
@@ -182,6 +250,53 @@ theorem isNash_reducedNative_of_isNash_expanded
   rw [← pruning.expandPolicy_update policy owner replacement]
     at hdeviation
   exact hdeviation
+
+/-- At a profile whose reduced deviations cover the full deviation space,
+expansion identifies the full and reduced native Nash questions exactly. -/
+theorem isNash_expanded_iff_reducedNative_of_covers
+    (pruning : Pruning diagram)
+    [Fintype Player] [DecidableEq Player]
+    [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : ReducedPolicy pruning)
+    (hcover : pruning.CoversFullDeviationsAt semantics policy) :
+    IsNash (nativeBehavioralGameForm semantics)
+        (euPreference fun assignment owner =>
+          semantics.utility owner assignment)
+        (pruning.expandPolicy policy) ↔
+      IsNash (pruning.reducedNativeGameForm semantics)
+        (euPreference fun assignment owner =>
+          semantics.utility owner assignment)
+        policy := by
+  constructor
+  · exact pruning.isNash_reducedNative_of_isNash_expanded semantics policy
+  · exact pruning.isNash_expanded_of_isNash_reduced semantics policy hcover
+
+/-- Full native Nash is exactly reduced native Nash plus coverage of the
+deviations removed from the policy domain. -/
+theorem isNash_expanded_iff_reducedNative_and_covers
+    (pruning : Pruning diagram)
+    [Fintype Player] [DecidableEq Player]
+    [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : ReducedPolicy pruning) :
+    IsNash (nativeBehavioralGameForm semantics)
+        (euPreference fun assignment owner =>
+          semantics.utility owner assignment)
+        (pruning.expandPolicy policy) ↔
+      IsNash (pruning.reducedNativeGameForm semantics)
+          (euPreference fun assignment owner =>
+            semantics.utility owner assignment)
+          policy ∧
+        pruning.CoversFullDeviationsAt semantics policy := by
+  constructor
+  · intro hnash
+    exact ⟨
+      pruning.isNash_reducedNative_of_isNash_expanded
+        semantics policy hnash,
+      pruning.coversFullDeviationsAt_of_isNash_expanded
+        semantics policy hnash⟩
+  · rintro ⟨hnash, hcover⟩
+    exact pruning.isNash_expanded_of_isNash_reduced
+      semantics policy hcover hnash
 
 /-- The reduced native and compiled forms have exactly the same canonical Nash
 predicate. -/
@@ -218,6 +333,30 @@ theorem isNash_reducedNative_iff_reducedCompiled
           (Profile.update policy owner replacement))]
       at hdeviation
     exact hdeviation
+
+/-- Deviation coverage also identifies full native Nash with reduced compiled
+Nash; no second equilibrium or utility semantics is introduced at the compiler
+boundary. -/
+theorem isNash_expanded_iff_reducedCompiled_of_covers
+    (pruning : Pruning diagram)
+    (topological :
+      GameTheory.Math.DAG.TopologicalOrder diagram.parents)
+    [Fintype Player] [DecidableEq Player]
+    [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : ReducedPolicy pruning)
+    (hcover : pruning.CoversFullDeviationsAt semantics policy) :
+    IsNash (nativeBehavioralGameForm semantics)
+        (euPreference fun assignment owner =>
+          semantics.utility owner assignment)
+        (pruning.expandPolicy policy) ↔
+      IsNash (pruning.reducedCompiledGameForm topological semantics)
+        (euPreference fun assignment owner =>
+          semantics.utility owner assignment)
+        policy :=
+  (pruning.isNash_expanded_iff_reducedNative_of_covers
+      semantics policy hcover).trans
+    (pruning.isNash_reducedNative_iff_reducedCompiled
+      topological semantics policy)
 
 end Pruning
 

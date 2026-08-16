@@ -236,11 +236,15 @@ observed-parent configuration while retaining one strategic coordinate per
 source owner. Expansion back to the accepted policy type commutes with owner
 updates; reduced native and compiled forms have exact assignment laws and the
 same canonical Nash predicate. Full-space Nash implies reduced-space Nash,
-while the converse is deliberately absent.
+while the converse requires a named full-deviation coverage certificate at the
+reduced profile.
 
 The hostile chance-signal fixture separates the policy domains: a constant
 decision factors through the empty observation set and keeps its compiled law,
 whereas a signal-reading policy is outside every reduced expansion. This does
 not by itself complete Koller--Milch graphical strategic relevance. A future
-graph criterion must produce the semantic representation certificate rather
-than introducing another policy or equilibrium semantics.
+graph criterion must show that every full unilateral deviation is weakly
+covered by a reduced deviation, rather than claiming that arbitrary
+signal-reading policies factor through the smaller domain. It must not
+introduce another policy or equilibrium semantics. EXP-102 records the
+distinction and the hostile value-of-information control.

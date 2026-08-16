@@ -6274,3 +6274,54 @@ memory.
   finite-rotation extractions, focused umbrella builds passed and targeted
   compiled probes reached finite-law convergence from Math, Analysis learning,
   and sequential consistency while rejecting it from Core and Protocol.
+
+### EXP-102: MAID graphical information reduction
+
+- **Date / revision:** 2026-08-16, post-cutover `main`
+- **Status:** completed; narrowed, with semantic seam adopted and graphical
+  discharge retained as an experiment
+- **Decision / question:** whether a graph-derived requisite-information
+  certificate can make observation pruning safe in the Koller--Milch sense:
+  every Nash equilibrium of the reduced policy space remains a Nash equilibrium
+  against the original full policy space.
+- **Client evidence:** Milch--Koller safe reduction is the independent target;
+  the existing `MAID.ObservationPruning` consumer supplies exact native and
+  compiled laws but currently proves only full-space Nash implies reduced-space
+  Nash.
+- **Competing designs:** derive safety from the existing graph alone; attach a
+  proved utility-dependence view to the canonical global utility; store utility
+  nodes in MAID syntax; or stop at a semantic full-deviation coverage
+  certificate and leave graphical discharge to a later package.
+- **Representative slice:** `Tests.MAIDSafeReduction` removes a genuinely fair
+  Boolean signal from one decision. When payoff rewards the action alone, the
+  always-true reduced profile covers every full deviation and reduced Nash
+  lifts to full Nash. With identical execution and pruning but payoff for
+  matching the signal, every reduced profile earns `1/2`, copying earns `1`,
+  reduced Nash fails after expansion, and coverage is false. The experimental
+  graph pair proves nonrequisite `signal -> decision -> reward -> utility` and
+  requisite after adding only `signal -> reward`.
+- **Measurements:** `ObservationPruning` adds the 11-line
+  `CoversFullDeviationsAt` certificate and proves reduced-Nash sufficiency,
+  full-Nash necessity, the exact native characterization, and compiled reuse.
+  The 445-line semantic consumer unfolds the canonical assignment runner once;
+  it adds no evaluator, policy, utility, or equilibrium predicate. The
+  479-line graph spike supplies a proved canonical-utility view, effective
+  parent graph, set-valued removal/conditioning, ancestral-moral d-connection,
+  and two hand-checked controls, but deliberately no semantic soundness claim.
+  Focused builds passed warning-free: safe-reduction test 1735 jobs with a
+  6.9-second final module build; graph spike 1715 jobs with a 7.2-second final
+  module build. Source audit found no `set_option`, `nolint`, `sorry`, `admit`,
+  direct `Function.update`, or user-visible transport in the new artifacts.
+- **Kill conditions:** reject any graph-only theorem that cannot see utility
+  dependence; reject a duplicate evaluator, equilibrium predicate, or policy
+  hierarchy; narrow the result if arbitrary full deviations cannot be matched
+  by reduced deviations; and change the current pruning API rather than add a
+  compatibility layer if the independent safety direction exposes the wrong
+  semantic boundary.
+- **Outcome / next action:** the graph-only design is killed because canonical
+  utility is graph-opaque. Adopt profile-local deviation coverage as the exact
+  missing semantic obligation. Retain the one-sink `UtilityView` as a
+  conservative experiment: before promotion, replace it with local utility
+  terms and prove d-separation constructs coverage on a hostile multi-agent
+  consumer. Keep strategic reliance, local observation ignorability, and
+  global safe-pruning fixpoints as separate theorem packages.

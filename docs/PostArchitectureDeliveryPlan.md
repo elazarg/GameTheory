@@ -188,14 +188,17 @@ The promoted MAID compiler now has a multi-player, multi-site deviation and
 Nash witness. The semantic target of relevance pruning is now complete:
 `ObservationPruning` defines a smaller site-local policy domain, expands it by
 source owner, preserves native and compiled laws under every accepted order,
-and inherits Nash from the full deviation space. A chance-signal witness shows
-that constant policies factor through the smaller domain while a signal-reading
-policy does not.
+and exposes the profile-local certificate under which reduced Nash remains Nash
+against the full deviation space. A fair chance-signal witness must show both
+the safe payoff-irrelevant removal and the nearby value-of-information failure;
+mere non-factorization of a policy is not a safety test.
 
-The next same-language package is the Koller--Milch graphical
-strategic-relevance/requisite criterion that discharges the semantic
-representation certificate. Do not report graphical strategic relevance as
-complete merely because the pruning target exists.
+The next same-language package is the Koller--Milch graphical criterion that
+discharges full-deviation coverage. Keep requisite observation (whether a
+realized parent value is needed by a rule) separate from strategic relevance
+(whether another decision's rule is strategically live). Do not report either
+graphical package as complete merely because the semantic pruning target
+exists.
 
 ### G. Static mature-family rotation
 
