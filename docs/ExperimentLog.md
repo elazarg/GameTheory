@@ -6547,8 +6547,8 @@ memory.
 ### EXP-105: finite utility leaves and replacement-invariant continuations
 
 - **Date / revision:** 2026-08-16, `main` at `6a0717bb`
-- **Status:** in progress; fixed-policy utility conditional independence and
-  parent-closed kernel invariance validated; target surgery active
+- **Status:** in progress; shared context law and fixed-policy continuation
+  validated; nonrelevant marginal invariance and target surgery active
 - **Decision / question:** whether the experiment-only additive `UtilityView`
   can augment canonical native MAID play with distinct finite
   configuration-valued utility leaves, inherit the proved finite-BN
@@ -6629,11 +6629,28 @@ memory.
   removed observation is already an ancestor of the conditioned decision, so
   the larger query adds no ancestral-moral vertices. The combined 1759-job
   build remained warning-free with all hazard counts zero.
+
+  The fourth gate reaches both sides of the replacement-uniform boundary
+  without crossing it prematurely. A 247-line canonical-execution proof
+  splits the accepted topological serialization at the target decision,
+  proves that a unique-site owner replacement cannot alter the prefix, and
+  constructs one `ReplacementContextLawAt`: for every replacement the target
+  context has the same law and its action is drawn from exactly that
+  replacement kernel. It uses no conditional probability and no finite or
+  decidable value-fibre assumption. Separately, a 510-line cast-free recoding
+  identifies the removed graph configuration, utility singleton, and
+  decision-plus-kept evidence with their exact typed MAID configurations.
+  This turns the set-valued graph CI into full-context/action independence and
+  feeds the probability-only theorem to recover the exact fixed-policy joint
+  continuation law. It explicitly stops short of choosing a continuation per
+  replacement. The combined 1765-job build passed warning-free with all
+  hazard counts zero.
 - **Outcome / next action:** the finite augmentation, mapped-law
   factorization, graph translation, and non-circular distributional assembly
   survive, and the exact fixed-policy global-Markov consequence is now proved.
-  Next use parent-closed kernel invariance to construct shared context and
-  nonrelevant-term marginals, then prove the target-kernel surgery identity
-  that makes relevant-term continuation laws uniform across all owner
-  replacements. Only after that result passes should graphical ignorability
-  be connected to `LocalUtilityFactorsAt` and `CoversFullDeviationsAt`.
+  The shared context law is now constructed canonically. Next finish the
+  parent-closed nonrelevant-term marginal and prove the target-kernel surgery
+  identity that makes relevant-term continuation laws uniform across all
+  owner replacements. Only after that result passes should graphical
+  ignorability be connected to `LocalUtilityFactorsAt` and
+  `CoversFullDeviationsAt`.
