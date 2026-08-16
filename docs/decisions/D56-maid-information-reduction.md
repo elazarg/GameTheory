@@ -241,15 +241,18 @@ EXP-107's site-local closeout adds the nonrelevant-term marginal certificate,
 the edge-addition-stable site-local factor/optimality endpoint, the fully mixed
 owner-order machinery, and canonical mechanism-selector factorization. The
 selector conditional-independence/cross-law bridge also compiles. The
-fourteen-artifact foundation set plus the two hostile consumers has a warning-
+fifteen-artifact foundation set plus the two hostile consumers has a warning-
 free aggregate targeted Lake build (1,785 jobs), full repository build (3,673
 jobs), and deep Phase 1--3 audit (`VERIFIED=1` for each phase). The remaining
 load-bearing global step is semantic soundness/optimality transport for
 changes at non-s-reachable same-owner sites under a fully mixed reference rule
 (Koller--Milch Lemmas 6.1--6.2 style). The remaining score comparison and
-fully mixed support transport must establish that result. Once it is established, the
-same-owner relevance-order induction must combine the local optimality rules
-into one reduced whole-owner rule and then discharge full-deviation coverage.
+fully mixed support transport now compile as division-free term-score and
+changed-to-reference support theorems, without chance positivity. The next
+proof must use those results to transport site optimality. Once it is
+established, the same-owner relevance-order induction must combine the local
+optimality rules into one reduced whole-owner rule and then discharge
+full-deviation coverage.
 
 Reject or narrow the graph route if it becomes a second evaluator, cannot
 construct full owner-deviation coverage, assumes faithfulness of the current
@@ -281,7 +284,8 @@ not promote the graph view to a public API, derive either stage's certificate,
 or justify coordinated same-owner graphical pruning. The next graphical gate
 is semantic soundness/optimality transport for changes at non-s-reachable
 same-owner sites under a fully mixed reference rule (Koller--Milch Lemmas
-6.1--6.2 style). The sufficient-recall relevance-order induction then
+6.1--6.2 style); the prerequisite division-free score and fully mixed support
+lemmas now compile. The sufficient-recall relevance-order induction then
 constructs a reduced whole-owner best response at an edge-addition fixpoint
 from the completed site-local endpoints, yielding global coverage. Requisite
 observation and strategic reliance remain distinct notions despite that

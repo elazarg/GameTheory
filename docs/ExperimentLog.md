@@ -6804,6 +6804,7 @@ memory.
   [`MAIDPruningRecallOrder.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningRecallOrder.lean),
   [`MAIDMechanismSelectorFactorization.lean`](../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorFactorization.lean),
   [`MAIDMechanismSelectorIndependence.lean`](../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorIndependence.lean),
+  [`MAIDMechanismSelectorScores.lean`](../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorScores.lean),
   [`MAIDSitePolicySurgery.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSitePolicySurgery.lean),
   [`MAIDSiteReplacementContext.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteReplacementContext.lean),
   [`MAIDSiteOptimality.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteOptimality.lean),
@@ -6823,8 +6824,11 @@ memory.
   mixture of the baseline and one source-rule surgery factorizes over the
   exact dummy-root graph used by s-reachability. Its independence companion
   derives selector/utility conditional independence and the division-free
-  baseline-versus-changed component cross-product identity. The foundation
-  set contains fourteen artifacts, and the two consumer audits are separate.
+  baseline-versus-changed component cross-product identity. The score layer
+  sums that identity against each finite term payoff and proves that a changed
+  source cannot create a target full-action atom outside the fully mixed
+  reference support, without assuming chance positivity. The foundation set
+  contains fifteen artifacts, and the two consumer audits are separate.
   The aggregate `lake build` over all sixteen EXP-107 modules completed
   warning-free with 1,785 jobs, and the repository-wide `lake build` completed
   with 3,673 jobs. `phase1-audit.ps1 -VerifyExpected`,
@@ -6849,10 +6853,12 @@ memory.
   next gate is the load-bearing semantic soundness/optimality transport for
   changes at non-s-reachable same-owner sites under a fully mixed reference
   rule (Koller--Milch Lemmas 6.1--6.2 style). The selector cross-law now
-  compiles; the next proof slice derives the score comparison and fully mixed
-  support transport. After that, prove the same-owner
-  relevance-order induction that assembles a global reduced whole-owner best
-  response and `CoversFullDeviationsAt` from the site-local endpoint. Do not
+  compiles, and its division-free finite term-score comparison plus
+  changed-to-reference full-action support theorem now compile without chance
+  positivity. The next proof transports site optimality across one
+  non-s-reachable source change, then proves the same-owner relevance-order
+  induction that assembles a global reduced whole-owner best response and
+  `CoversFullDeviationsAt` from the site-local endpoint. Do not
   claim a semantic unsafe control unless a genuinely different larger graph
   passes explicit reduced-Nash and profitable-full-deviation checks. No stable
   syntax change or executable pruning pass is authorized yet.
