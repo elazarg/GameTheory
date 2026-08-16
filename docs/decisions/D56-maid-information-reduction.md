@@ -169,11 +169,12 @@ controls. Before global pruning, prove the required recall/fixpoint theorem.
 
 The semantic seam is public. Graphical ignorability, requisite observation,
 strategic reliance, and s-reachability remain experimental and separate.
-Canonical MAID point-mass factorization and a division-free finite-law
-conditional-independence surface are now validated experimentally. The next
-gate is cast-free dependent-assignment complement enumeration, followed by
-parent-closed cylinder marginalization and ancestral-moral factor-scope
-elimination. Only then may local-utility d-separation construct
+Canonical MAID point-mass factorization, a division-free finite-law
+conditional-independence surface, cast-free dependent-complement enumeration,
+one-pivot Fubini, and rank-one cross multiplication are now validated
+experimentally. The next gate is reverse-topological parent-closed cylinder
+marginalization followed by ancestral-moral factor-scope elimination. Only
+then may local-utility d-separation construct
 `CoversFullDeviationsAt` on the multi-agent hostile consumer.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a

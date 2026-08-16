@@ -6397,8 +6397,8 @@ memory.
 ### EXP-104: finite-BN global-Markov semantics
 
 - **Date / revision:** 2026-08-16, `main` at `8e93046f`
-- **Status:** in progress; canonical factorization and conditional-independence
-  surface validated, reverse elimination narrowed to dependent enumeration
+- **Status:** in progress; canonical factorization, dependent enumeration, and
+  rank-one algebra validated; reverse-topological iteration active
 - **Decision / question:** whether the canonical typed MAID assignment law can
   support a reusable finite global-Markov theorem without a second evaluator,
   positivity or faithfulness assumptions, stored value-domain finiteness, or
@@ -6441,17 +6441,30 @@ memory.
   `scripts/phase3-audit.ps1 -VerifyExpected` passed with all forbidden-import,
   transport, direct sequential-update, placeholder, and custom-axiom counts at
   their expected zero values.
+
+  The next 258-line dependent-enumeration increment makes `AgreeOn` the single
+  lower-layer definition, constructs a cast-free equivalence from agreeing
+  total assignments to complement configurations, reindexes filtered sums,
+  and proves the one-pivot nested-sum/Fubini law with a Boolean bijection
+  control. The 229-line coordinate module is a transparent specialization of
+  the existing observable CI predicate, not a parallel notion; it gives exact
+  cylinder forms and a dependent zero-evidence control. The 122-line rank-one
+  module proves all marginal-sum and cross-product identities over any
+  commutative semiring, accepts `[[3,4],[6,8]]`, and rejects the diagonal
+  matrix. Their focused builds passed warning-free (1714, 1716, and 924 jobs,
+  respectively), again without options, lint suppressions, placeholders,
+  casts, positivity, or nonempty assumptions. The integrated 3622-job build and
+  phase-3 architecture verification also passed with all expected zero counts.
 - **Kill conditions:** reject a second authoritative MAID evaluator, custom
   axiom, positivity or faithfulness premise, `Fintype.ofFinite` in executable
   code, or conditional law equality that is undefined on zero evidence; keep
   the result experimental if ancestral-moral elimination still depends on an
   unproved normalization or representation theorem.
 - **Interim outcome / next action:** canonical point-mass factorization,
-  division-free conditional independence, and atomic normalization survive.
-  The full parent-closed cylinder theorem remains experiment-gated. Its exact
-  missing prerequisite is a cast-free equivalence between total assignments
-  satisfying `AgreeOn A` and dependent configurations on `Aᶜ`, together with
-  a nested-sum/Fubini reindexing theorem along a reverse topological list.
-  Prove that reusable dependent enumeration result next; then iterate
-  `sum_factorProduct_setOne`, partition factor scopes in the ancestral moral
-  graph, and derive the rank-one cross-product identity.
+  division-free conditional independence, atomic normalization, cast-free
+  complement enumeration, one-pivot Fubini, and rank-one cross multiplication
+  survive. The full parent-closed cylinder theorem remains experiment-gated,
+  but its dependent-enumeration prerequisite is now discharged. Iterate
+  `sum_ite_agrees_eq_sum_insert` with `sum_factorProduct_setOne` along reverse
+  topological order next; then partition factor scopes in the ancestral moral
+  graph and construct the rank-one component tables.

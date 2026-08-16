@@ -14,6 +14,7 @@ independence.
 
 import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
 import GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
+import GameTheory.Experimental.PostArchitecture.DependentAssignmentEnumeration
 import GameTheory.Math.DAG
 
 noncomputable section
@@ -24,20 +25,11 @@ namespace GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
 
 open GameTheory.Math.Probability
 open GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+open GameTheory.Experimental.PostArchitecture.DependentAssignmentEnumeration
 
 universe uNode uValue
 
 variable {Node : Type uNode} (Value : Node → Type uValue)
-
-/-- Two complete assignments agree on the selected node coordinates. -/
-def AgreeOn (nodes : Finset Node) (first second : Assignment Value) : Prop :=
-  ∀ node ∈ nodes, first node = second node
-
-instance [DecidableEq Node] [∀ node, DecidableEq (Value node)]
-    (nodes : Finset Node) (first second : Assignment Value) :
-    Decidable (AgreeOn Value nodes first second) := by
-  unfold AgreeOn
-  infer_instance
 
 /-- The probability mass of the cylinder fixed by `witness` on `nodes`. -/
 def cylinderMass (law : FinDist (Assignment Value))

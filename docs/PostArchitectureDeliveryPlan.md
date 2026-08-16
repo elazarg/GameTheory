@@ -195,12 +195,13 @@ mere non-factorization of a policy is not a safety test.
 
 The exact local-utility graph view, the one-site
 continuation-factorization-to-coverage bridge, canonical effective-parent
-point-mass factorization, and division-free finite conditional independence
-now survive their hostile experiments. The next same-language gate is
-cast-free dependent cylinder enumeration, followed by parent-closed
-marginalization and ancestral-moral factor-scope elimination. Complete that
-finite-BN global-Markov layer before claiming the Koller--Milch graphical
-criterion discharges full-deviation coverage. Keep requisite observation
+point-mass factorization, division-free finite conditional independence,
+cast-free dependent enumeration, one-pivot Fubini, and rank-one algebra now
+survive their hostile experiments. The next same-language gate is to iterate
+the proved Fubini and atomic elimination steps into parent-closed cylinder
+marginalization, then perform ancestral-moral factor-scope elimination.
+Complete that finite-BN global-Markov layer before claiming the Koller--Milch
+graphical criterion discharges full-deviation coverage. Keep requisite observation
 (whether a realized parent value is needed by a rule) separate from strategic
 relevance (whether another decision's rule is strategically live). Do not
 report either graphical package as complete merely because the semantic
