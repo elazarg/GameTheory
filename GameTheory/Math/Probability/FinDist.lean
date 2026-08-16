@@ -750,6 +750,42 @@ theorem map_fst_product (μ : FinDist α) (ν : FinDist β) : map Prod.fst (prod
   rw [map_comp]
   exact bind_const ν (pure a)
 
+/-! Product algebra. -/
+
+/-- Forgetting the first coordinate of a product returns the second factor. -/
+@[simp]
+theorem map_snd_product (μ : FinDist α) (ν : FinDist β) :
+    map Prod.snd (product μ ν) = ν := by
+  rw [product, map_bind]
+  refine Eq.trans (bind_congr fun a _ => ?_) (bind_const μ ν)
+  rw [map_comp]
+  rw [show Prod.snd ∘ (fun b => (a, b)) = id from by funext b; rfl, map_id]
+
+/-- Pairing a law with a point mass is the corresponding graph pushforward. -/
+@[simp]
+theorem product_pure_right (μ : FinDist α) (b : β) :
+    product μ (pure b) = map (fun a => (a, b)) μ := by
+  rw [product, map_eq_bind]
+  apply bind_congr
+  intro a _
+  rw [map_eq_bind, pure_bind]
+
+/-- Reassociating a left-nested independent product gives a right-nested one. -/
+theorem map_assoc_product (μ : FinDist α) (ν : FinDist β) (ξ : FinDist γ) :
+    map (fun p : (α × β) × γ => (p.1.1, (p.1.2, p.2)))
+        (product (product μ ν) ξ) = product μ (product ν ξ) := by
+  rw [product, map_bind]
+  simp only [map_comp, Function.comp_def]
+  rw [product, bind_bind]
+  rw [product, product]
+  simp only [map_bind, map_comp]
+  apply bind_congr
+  intro a _
+  rw [bind_map]
+  apply bind_congr
+  intro b _
+  rfl
+
 /-! ## Conditioning
 
 A law restricted to an event it gives positive mass, renormalized. This is built
