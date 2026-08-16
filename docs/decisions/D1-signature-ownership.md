@@ -31,7 +31,7 @@ lake env lean '-Dtrace.profiler=true' GameTheory/Experimental/Phase1/D1/Stress.l
 
 | Metric | Indexed | Bundled |
 |---|---:|---:|
-| Core nonblank lines | 95 | 99 |
+| Core nonblank lines | 96 | 101 |
 | Raw transport tokens in core code | 2 | 2 |
 | Allowed transports inside `Profile` implementation | 1 | 1 |
 | Candidate-specific downstream stress transports | 0 | 2 |
@@ -50,11 +50,13 @@ using the “at least half” ratio. Reindexed compiler adequacy is `rfl` in bot
 designs. The indexed six-composition theorem also exposes seven signature
 parameters; the bundled theorem exposes only seven forms.
 
-Universe linting was rerun without the former file-wide suppression. Both
-`Signature` declarations intentionally keep independent strategy and outcome
-universes and use a declaration-local suppression. The bundled `Form ι` needs
-a second, documented suppression: storing the signature makes `us` and `uo`
-non-inferable from `Form ι`, and its universe is
+Universe linting's proposed collapses were reviewed before disabling
+`linter.checkUnivs` for the library, because that linter cannot express the
+declaration-local exceptions this experiment needs. Both `Signature`
+declarations document their intentionally independent strategy and outcome
+universes locally. The bundled `Form ι` also documents a second universe cost:
+storing the signature makes `us` and `uo` non-inferable from `Form ι`, and its
+universe is
 `max uι (us + 1) (uo + 1)` rather than the indexed form's `max uι us uo`.
 This is negative evidence against bundling, though it does not outweigh the
 measured downstream signature advantage in this miniature.

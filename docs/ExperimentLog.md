@@ -168,6 +168,11 @@ but should not erase their evidence.
 - **Observation:** the original regex undercounted bundled downstream transport, changing the comparable D1 tally from the recorded 1/1 to 1/3. Bundled forms also pay a higher, non-inferable universe boundary. Candidate B's dependent product was confirmed to route through Candidate A rather than independently implement Finsupp products. The winning PMF law initially lacked affine preservation; `Law.mix`, `expect_mix`, and `simplexEquiv_mix_apply` now close that gap. A direct-elaboration failure in the first pure-vertex proof was exposed by the timed audit and fixed before the gate rerun.
 - **Outcome:** narrows — neither decision flips, but D1 remains explicitly provisional and D2 now names its downstream kill tests; the original measurement defect is retained here rather than hidden
 - **Next action:** begin Phase 2 depth-first with the bundled form and PMF-subtype law, reopening either decision immediately if the named transformation or semantic slices trigger a kill condition
+- **2026-08-16 maintenance:** removing the declaration-local `set_option`
+  wrappers and replacing them with explanatory comments changed only D1's
+  nonblank-line measurements, from 95/99 to 96/101. Transport counts and every
+  decision-bearing comparison are unchanged; the audit baseline and D1 record
+  now reflect the current measured sources.
 
 ### EXP-005: One local deviation predicate for five equilibria
 
