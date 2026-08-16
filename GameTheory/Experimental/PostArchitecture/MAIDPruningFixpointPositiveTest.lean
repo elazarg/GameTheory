@@ -10,6 +10,7 @@ canonical play rather than assumed from a future graphical theorem.
 -/
 
 import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
+import GameTheory.Experimental.PostArchitecture.MAIDPruningGlobalReduction
 import GameTheory.Languages.MAID.ObservationPruning
 
 noncomputable section
@@ -916,6 +917,12 @@ theorem coversFullDeviations :
   rw [euPreference_apply, Profile.update_eq_self,
     expanded_expectedUtility]
   exact expectedUtility_le_one _
+
+theorem generic_coversFullDeviations :
+    pruning.CoversFullDeviationsAt semantics reducedPolicy :=
+  MAIDPruningGlobalReduction.coversFullDeviationsAt_of_edgeAdditionFixpoint
+    pruning topological semantics reducedPolicy view sReachAcyclic
+    edgeAdditionFixpoint
 
 theorem reduced_isNash :
     IsNash (pruning.reducedNativeGameForm semantics)

@@ -1,7 +1,7 @@
 # D56: MAID information reduction uses semantic deviation coverage
 
-- **Status:** adopted for the semantic seam; experiment-only one-site
-  graphical discharge validated
+- **Status:** adopted for the semantic seam; experiment-only sufficient-recall
+  global discharge validated
 - **Date:** 2026-08-16
 - **Experiment IDs:** EXP-102, EXP-103, EXP-104, EXP-105, EXP-107
 
@@ -92,7 +92,7 @@ the certificates rather than assume them. Even a safe reduction may discard
 original equilibria, including Pareto-preferred ones; safety is only
 reduced-Nash-to-full-Nash inclusion.
 
-EXP-107 keeps the global theorem experiment-gated. Its hybrid restore-all
+EXP-107 keeps the graphical construction experiment-only. Its hybrid restore-all
 graph, original-graph mechanism-node s-reachability, candidate/hybrid
 factorization, fixed-law global-Markov conditional independence, exact
 hybrid-to-site policy adapter, multi-site target-rule surgery, and
@@ -115,7 +115,21 @@ transport theorem under a fully mixed reference rule (Koller--Milch Lemmas
 6.1--6.2 style) now compile in
 [`MAIDStrategicNonreachability.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDStrategicNonreachability.lean).
 Finite-list transport, same-owner relevance-order induction, and the global
-coverage theorem remain open.
+coverage theorem now compile in
+[`MAIDPruningGlobalReduction.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningGlobalReduction.lean).
+The chain starts from `SReachAcyclic` and `IsEdgeAdditionFixpoint`, constructs
+a source-first fully mixed site order, transports site optimality across
+non-s-reachable later-source changes, and obtains a reduced whole-owner policy
+dominating every full owner replacement. The exact focused build of the
+global theorem and positive consumer completed warning-free with 1,789/1,789
+jobs.
+The positive consumer keeps its independent direct `CoversFullDeviationsAt`
+proof and also consumes the generic theorem. No positivity premise or
+`Fintype Player` requirement is introduced; finite node/value enumeration is
+local to the finite execution operation. The final full repository build
+passes warning-free with 3,678 jobs, and the deep Phase 1--3 architecture
+audits each report `VERIFIED=1`, including
+`TRANSPORT_POST_ARCHITECTURE=0`.
 The paper's
 qualitative Forgetful Movie Star profile is not accepted as negative evidence:
 under an explicit `2 * avoid + consistency` instantiation, its described
@@ -249,12 +263,13 @@ a warning-free aggregate targeted Lake build (1,785 jobs), full repository
 build (3,673 jobs), and deep Phase 1--3 audit (`VERIFIED=1` for each phase).
 Two further focused modules add division-free term-score comparison,
 changed-to-reference support without chance positivity, policy-surgery
-algebra, and exact expected-utility score decomposition. The focused target
-`lake build GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachability`
-passes warning-free with 1,783 jobs and includes the one-source
-non-s-reachability optimality-transport theorem. Finite-list transport,
-same-owner relevance-order induction, and assembling one reduced whole-owner
-rule that discharges full-deviation coverage remain open.
+algebra, and exact expected-utility score decomposition. The global
+source-first reduction module adds finite-list transport, same-owner
+relevance-order induction, and the reduced whole-owner domination theorem;
+the exact global-theorem/positive-consumer build completes warning-free with
+1,789/1,789 jobs. The positive consumer retains direct coverage and also consumes
+the generic theorem. No positivity premise or `Fintype Player` requirement
+is introduced.
 
 Reject or narrow the graph route if it becomes a second evaluator, cannot
 construct full owner-deviation coverage, assumes faithfulness of the current
@@ -265,11 +280,13 @@ The hostile relay control satisfies the final one-site kill condition: the
 same theorem that certifies the signal-blind graph does not certify the live
 relay, and semantic coverage is independently refuted there.
 
-Before any completeness theorem, add constant-utility and singleton-domain
-controls. Nonrelevant-term invariance and site-local utility-factor assembly
-are now complete at the experiment-only endpoint. Before the global graphical
-theorem, prove the sufficient-recall relevance-order induction for the
-edge-addition fixpoint.
+The constant-utility and singleton-domain controls remain part of the hostile
+scope. Nonrelevant-term invariance, site-local utility-factor assembly,
+one-source transport, and the sufficient-recall relevance-order induction are
+now complete at the experiment-only endpoint. The next consumer is an
+executable edge-addition fixpoint/minimality workflow, or a separately gated
+strategic-reliance/public-promotion decision when an independent consumer
+requires it.
 
 ## Consequences and compatibility posture
 
@@ -283,14 +300,13 @@ construct `CoversFullDeviationsAt` for one unique pruned site, and the hostile
 safe/live relay consumer validates both sides. Stable relative coverage now
 composes already-certified nested reductions without a recall premise. It does
 not promote the graph view to a public API, derive either stage's certificate,
-or justify coordinated same-owner graphical pruning. One-source semantic
+or justify a stable executable coordinated-pruning pass. One-source semantic
 soundness/optimality transport for changes at non-s-reachable same-owner sites
-under a fully mixed reference rule now compiles; finite-list transport remains
-the next graphical gate. The sufficient-recall relevance-order induction then
-constructs a reduced whole-owner best response at an edge-addition fixpoint
-from the completed site-local endpoints, yielding global coverage. Requisite
-observation and strategic reliance remain distinct notions despite that
-dependency.
+under a fully mixed reference rule and the sufficient-recall relevance-order
+induction now compile, yielding global coverage at an edge-addition fixpoint.
+Requisite observation and strategic reliance remain distinct notions despite
+that dependency. This experiment uses finite-support execution only; it does
+not alter the separate countable/infinite-path boundary reserved by EXP-108.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a
 hostile consumer finds the coverage quantifiers, utility view, or graph witness

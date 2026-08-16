@@ -229,19 +229,23 @@ accepts the signal-blind graph with exact Nash transfer and rejects the live
 signal-copying graph with an explicit coverage counterexample.
 
 The hybrid restore-at-site graph and the s-reachability/strategic-relevance
-graph now express the source's sufficient-recall boundary, and the site-local
-nonrelevant-term and factor/optimality endpoints compile under
-edge-addition stability. The next graphical gate is semantic
-soundness/optimality transport for changes at non-s-reachable same-owner sites
-under a fully mixed reference rule (Koller--Milch Lemmas 6.1--6.2 style).
-The same-owner relevance-order induction then combines those local rules into
-a reduced whole-owner best response and discharges `CoversFullDeviationsAt`
-for the less-conservative edge-addition fixpoint. Do not infer that theorem
-from either the one-site graphical result or semantic composition of assumed
-coverage certificates. Keep requisite observation (whether a realized parent
-value is needed by a rule) separate from strategic relevance (whether another
-decision's rule is strategically live), even though the latter graph is
-needed to formulate sufficient recall.
+graph now express the source's sufficient-recall boundary. The site-local
+nonrelevant-term and factor/optimality endpoints, one-source
+non-s-reachability transport under a fully mixed reference rule
+(Koller--Milch Lemmas 6.1--6.2 style), and the same-owner relevance-order
+induction now combine into a reduced whole-owner best response and discharge
+`CoversFullDeviationsAt` for the less-conservative edge-addition fixpoint.
+The exact focused global-theorem/positive-consumer build is warning-free at
+1,789/1,789 jobs; the positive consumer retains an independent direct coverage proof
+and also consumes the generic theorem. This remains experiment-only: do not
+promote the graph predicates or add an executable pruning pass from this
+result. The next MAID seam is an executable fixpoint/minimality consumer, or a
+separately gated strategic-reliance/public-promotion decision when an
+independent consumer requires it. Keep requisite observation (whether a
+realized parent value is needed by a rule) separate from strategic relevance
+(whether another decision's rule is strategically live), even though the
+latter graph is needed to formulate sufficient recall. Finite-support
+execution remains separate from the countable/infinite-path EXP-108 gate.
 
 ### G. Static mature-family rotation
 

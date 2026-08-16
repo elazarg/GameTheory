@@ -112,7 +112,7 @@ becomes difficult to scan.
 | EXP-099 | 2026-08-14 | D12 / hosted sequential-boundary maintenance | Does the broad Analysis.Protocol umbrella still represent the sequential-equilibrium leaf's dependency budget? | Refutes proxy; owning-leaf probe passes hosted gate | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase3-audit.ps1`](../scripts/phase3-audit.ps1) |
 | EXP-100 | 2026-08-14 | pre-cutover stochastic client gate | Can canonical Protocol play expose chronological finite histories and restart laws without a second runner? | Complete; supports and graduates | `GameTheory/Stochastic/PublicPolicy.lean`; `GameTheory/Stochastic/History.lean`; `GameTheory/Tests/StochasticContinuation.lean` |
 | EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
-| EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | In progress; graph and site-local semantic foundations support, source-shaped hostile fixture rejected and negative gate narrowed | Experimental hybrid graph, site-local surgery, and source audit |
+| EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | Complete experiment-only result; source-first transport and global `CoversFullDeviationsAt` compile, while the source-shaped hostile fixture remains a recall-cycle sentinel rather than an unsafe consumer | Experimental hybrid graph, site-local surgery, global reduction, positive consumer, and source audit |
 | EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; a concrete finite-law sequence separates all three payoff orders, while the infinite-play and cyclic-uniform interfaces remain open; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); cyclic quitting continuation slice; no API adoption |
 
 ## Entry template
@@ -6760,9 +6760,9 @@ memory.
 
 ### EXP-107: sufficient-recall MAID pruning fixpoint
 
-- **Date / revision:** 2026-08-16, `main` at `ca1e59d2` plus the active
-  EXP-107 working tree
-- **Status:** in progress
+- **Date / revision:** 2026-08-16, `main` at `454198dc` plus the active
+  EXP-107 global working tree
+- **Status:** complete (experiment-only; no stable/public promotion)
 - **Decision / question:** whether a pruning that is stable under restoring all
   original observations at each queried decision can construct
   `CoversFullDeviationsAt` when each owner's induced relevance graph is
@@ -6853,26 +6853,42 @@ memory.
   combination of deterministic reduced whole-owner plans against the fixed
   robot law. The paper's qualitative profile therefore cannot serve as the
   requested unsafe behavioral consumer.
+- **Measurements / observations (continued):** the selector cross-law,
+  division-free finite term-score comparison, and changed-to-reference
+  full-action support theorem compile without chance positivity. The global
+  chain is complete: `SReachAcyclic` and `IsEdgeAdditionFixpoint` give a
+  source-first fully mixed initialization; one-source non-s-reachability
+  transport preserves each site optimum while later source rules are
+  installed; the source-first induction produces an existential reduced
+  whole-owner policy dominating every full owner replacement; and the final
+  theorem discharges `CoversFullDeviationsAt`. The positive consumer retains
+  its independent direct coverage proof and additionally consumes the generic
+  theorem. The exact focused build for the global theorem and positive
+  consumer completed warning-free with 1,789/1,789 jobs. The theorem has no
+  positivity premise and no `Fintype Player` requirement; finite node/value
+  enumerations remain local to the finite execution operation. The
+  source-shaped Forgetful Movie Star audit remains a recall-cycle sentinel,
+  not an unsafe coverage consumer: its explicit `2 * avoid + consistency`
+  profile is beaten by a legal reduced whole-owner deviation. All listed kill
+  conditions are therefore discharged for this experiment, while the result
+  remains experiment-only and makes no simultaneous claim beyond the stated
+  theorem. The final full repository build passed warning-free with 3,678
+  jobs, and the deep Phase 1--3 architecture audits each reported
+  `VERIFIED=1`; in particular `TRANSPORT_POST_ARCHITECTURE=0`.
 - **Outcome / next action:** supports the hybrid graph, factorization,
-  nonrelevant-term invariance, and site-local utility-factor foundations;
-  narrows the hostile negative gate. The experiment remains in progress. The
-  The selector cross-law now compiles, and its division-free finite term-score
-  comparison plus changed-to-reference full-action support theorem now compile
-  without chance positivity. The focused target
-  `lake build GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachability`
-  passes warning-free with 1,783 jobs and proves one-source site-optimality
-  transport across a non-s-reachable source change under a fully mixed
-  reference rule (Koller--Milch Lemmas 6.1--6.2 style). Finite-list transport,
-  same-owner relevance-order induction, and the global reduced whole-owner
-  best-response/`CoversFullDeviationsAt` theorem remain open. Do not
-  claim a semantic unsafe control unless a genuinely different larger graph
-  passes explicit reduced-Nash and profitable-full-deviation checks. No stable
-  syntax change or executable pruning pass is authorized yet.
+  nonrelevant-term invariance, site-local optimality, non-s-reachability
+  transport, and sufficient-recall global coverage chain. Do not promote the
+  experimental graph predicates or add an executable pruning pass yet. The
+  next MAID seam is an executable edge-addition fixpoint/minimality consumer,
+  or a separate strategic-reliance/public-promotion decision only when an
+  independent consumer requires it. Preserve the finite-support/countable-
+  layer separation; EXP-108 remains the distinct future gate for infinite-path
+  laws and cyclic uniformity.
 
 ### EXP-108: infinite-path order of limits and cyclic subgame-perfect uniformity
 
-- **Date / revision:** 2026-08-16, post-cutover working tree; reserved while
-  EXP-107 remains the current MAID gate
+- **Date / revision:** 2026-08-16, post-cutover working tree; reserved after
+  the EXP-107 MAID gate close-out
 - **Status:** in progress; future architecture gate; no public API adopted
 - **Decision / question:** whether an opt-in measurable infinite-play layer can
   state and keep separate the three payoff aggregations
@@ -6938,7 +6954,7 @@ memory.
   boundary and completes its finite-law hostile witness, but does not validate
   an infinite-play runner or cyclic uniform-equilibrium interface. Next test the
   finite-marginal infinite-play layer, then the all-phase cyclic continuation
-  condition. Keep EXP-107 as the current MAID experiment, preserve current
+  condition. Keep EXP-107's graph result experiment-only, preserve current
   `supported`/`opt-in` statuses, and prototype only under `Experimental` until
   those hostile slices and a follow-up decision record determine the dependency
   and public API boundary.
