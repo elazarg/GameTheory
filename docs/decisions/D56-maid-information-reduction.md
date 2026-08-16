@@ -107,10 +107,12 @@ also compile as
 [`MAIDPruningRecallOrder.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningRecallOrder.lean)
 and
 [`MAIDMechanismSelectorFactorization.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorFactorization.lean).
-The selector conditional-independence/score argument, semantic
-soundness/optimality transport under a fully mixed reference rule
-(Koller--Milch Lemmas 6.1--6.2 style), same-owner relevance-order induction,
-and global coverage theorem do not.
+The selector conditional-independence and division-free component cross-law
+also compile in
+[`MAIDMechanismSelectorIndependence.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorIndependence.lean).
+The score/support argument, semantic soundness/optimality transport under a
+fully mixed reference rule (Koller--Milch Lemmas 6.1--6.2 style), same-owner
+relevance-order induction, and global coverage theorem do not.
 The paper's
 qualitative Forgetful Movie Star profile is not accepted as negative evidence:
 under an explicit `2 * avoid + consistency` instantiation, its described
@@ -238,13 +240,14 @@ transport, representation leak, or compatibility shim.
 EXP-107's site-local closeout adds the nonrelevant-term marginal certificate,
 the edge-addition-stable site-local factor/optimality endpoint, the fully mixed
 owner-order machinery, and canonical mechanism-selector factorization. The
-thirteen-artifact foundation set plus the two hostile consumers has a warning-
-free aggregate targeted Lake build (1,784 jobs), full repository build (3,671
+selector conditional-independence/cross-law bridge also compiles. The
+fourteen-artifact foundation set plus the two hostile consumers has a warning-
+free aggregate targeted Lake build (1,785 jobs), full repository build (3,673
 jobs), and deep Phase 1--3 audit (`VERIFIED=1` for each phase). The remaining
 load-bearing global step is semantic soundness/optimality transport for
 changes at non-s-reachable same-owner sites under a fully mixed reference rule
-(Koller--Milch Lemmas 6.1--6.2 style). The remaining selector-CI cross-law and
-score comparison must establish that transport. Once it is established, the
+(Koller--Milch Lemmas 6.1--6.2 style). The remaining score comparison and
+fully mixed support transport must establish that result. Once it is established, the
 same-owner relevance-order induction must combine the local optimality rules
 into one reduced whole-owner rule and then discharge full-deviation coverage.
 
