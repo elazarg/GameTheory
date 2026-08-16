@@ -132,14 +132,16 @@ parent-closed component products depend only on their own coordinates and
 split multiplicatively across a disjoint partition. It deliberately does not
 define a second joint law or assert conditional independence.
 
-EXP-104 proves that the canonical native MAID assignment law has exactly the
-effective-parent local-factor point masses, including a typed three-node
-consumer. A separate finite-law surface states conditional independence by the
-division-free atom cross-product identity and validates impossible-evidence and
-dependent controls. Cylinder marginalization is proved through one normalized
-reverse-elimination step. The full parent-closed theorem remains blocked only
-on cast-free dependent-complement enumeration and nested-sum reindexing; no
-positivity, faithfulness, or alternate evaluator was needed.
+EXP-104 proves finite global-Markov soundness end to end. The canonical native
+MAID assignment law has exactly the effective-parent local-factor point masses.
+Reverse-topological elimination marginalizes every factor outside a
+parent-closed ancestral set; ancestral-moral components partition the retained
+factor scopes; dependent latent sums produce a rank-one table; and point, row,
+column, and total identities rewrite that table to the four cylinder masses of
+division-free conditional independence. The canonical MAID corollary reuses
+the same native evaluator and effective kernels. Heterogeneous chain,
+collider/descendant-evidence, and zero-mass evidence consumers pass without
+positivity, faithfulness, nontriviality, or an alternate evaluator.
 
 ## Measurements and kill conditions
 
@@ -157,6 +159,15 @@ a 7.4-second final module build. The new artifacts contain no `set_option`,
 `nolint`, `sorry`, `admit`, axiom, direct `Function.update`, stored value-domain
 finiteness, positivity, faithfulness, or user-visible equality transport.
 
+The completed EXP-104 path adds a 249-line generic global-Markov theorem and a
+57-line canonical MAID corollary after the measured factorization,
+marginalization, moral-component, retained-cylinder, and rank-one modules. Its
+153-line heterogeneous chain, 268-line collider/descendant, and 159-line
+zero-evidence consumers compile warning-free. The final theorem stores no
+finiteness capability and adds no positivity, nontriviality, or inhabitedness
+premise; a default dependent assignment is selected from the input law's
+nonempty support.
+
 Reject or narrow the graph route if it becomes a second evaluator, cannot
 construct full owner-deviation coverage, assumes faithfulness of the current
 parameterization, or certifies the live signal as removable. Do not add utility
@@ -169,14 +180,12 @@ controls. Before global pruning, prove the required recall/fixpoint theorem.
 
 The semantic seam is public. Graphical ignorability, requisite observation,
 strategic reliance, and s-reachability remain experimental and separate.
-Canonical MAID point-mass factorization, a division-free finite-law
-conditional-independence surface, cast-free dependent-complement enumeration,
-one-pivot Fubini, reverse-topological parent-closed marginalization, generic
-ancestral-moral separation, factor-scope confinement, retained-cylinder
-decomposition, and dependent rank-one score assembly are now validated
-experimentally. The next gate connects moral factor partitions to those scores
-and identifies their table marginals with the four cylinder masses. Only then
-may local-utility d-separation construct
+Canonical MAID point-mass factorization and division-free finite global-Markov
+soundness are now validated experimentally through arbitrary dependent query
+configurations, including impossible evidence. The next gate adds finite
+configuration-valued utility leaves as a mapped proof view of canonical play,
+proves their augmented law factorizes, and establishes the replacement and
+non-descendant invariance needed before local-utility d-separation may construct
 `CoversFullDeviationsAt` on the multi-agent hostile consumer.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a

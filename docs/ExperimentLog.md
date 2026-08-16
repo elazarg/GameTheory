@@ -6397,8 +6397,8 @@ memory.
 ### EXP-104: finite-BN global-Markov semantics
 
 - **Date / revision:** 2026-08-16, `main` at `8e93046f`
-- **Status:** in progress; retained-cylinder and score-to-rank-one assembly
-  validated; graph-to-cylinder composition active
+- **Status:** complete; finite global-Markov soundness and canonical MAID
+  application validated
 - **Decision / question:** whether the canonical typed MAID assignment law can
   support a reusable finite global-Markov theorem without a second evaluator,
   positivity or faithfulness assumptions, stored value-domain finiteness, or
@@ -6506,17 +6506,40 @@ memory.
   jobs), without a second evaluator, subtype transport, stored finiteness,
   positivity, or compatibility shim. The integrated 3630-job build and phase-3
   architecture verification passed with all expected zero counts.
+
+  The final composition adds 223 lines of moral-component-to-score plumbing,
+  420 lines of probability-only query-cylinder Fubini, and a 60-line exact
+  identification of the retained factor table with canonical cylinder mass.
+  The 249-line soundness theorem selects a default assignment from the law's
+  nonempty support, assembles arbitrary dependent query configurations, applies
+  rank-one cross multiplication, and rewrites its point, row, column, and total
+  terms to the four division-free cylinder masses. The 57-line MAID corollary
+  uses the existing native law, effective kernels, and causal topological order.
+
+  Three hostile consumers close the gate. A 153-line canonical all-chance MAID
+  sends a fair Boolean root through a `Fin 3` middle coordinate and proves
+  endpoint CI for arbitrary typed configurations when the middle is observed,
+  while rejecting the unconditioned graph. A 268-line explicit collider law
+  proves factorization, accepts independent roots without evidence, and rejects
+  conditioning on either the collider or its descendant. A 159-line
+  deterministic chain proves an unsupported `middle = true` evidence cylinder
+  has mass zero and instantiates the final cross-product theorem at that exact
+  configuration. Focused builds passed warning-free (1726, 1723, 1754, 1756,
+  and 1732 jobs), with no positivity, faithfulness, nontriviality, stored
+  capability, second evaluator, or conditional-law convention. The integrated
+  3638-job build and phase-3 architecture verification passed with all expected
+  zero counts.
 - **Kill conditions:** reject a second authoritative MAID evaluator, custom
   axiom, positivity or faithfulness premise, `Fintype.ofFinite` in executable
   code, or conditional law equality that is undefined on zero evidence; keep
   the result experimental if ancestral-moral elimination still depends on an
   unproved normalization or representation theorem.
-- **Interim outcome / next action:** canonical factorization, division-free CI,
-  parent-closed marginalization, ancestral-moral components, factor-scope
-  partitions, explicit-retained latent Fubini, and dependent rank-one score
-  assembly survive. Next construct `ScorePartition` and its two scores from
-  moral separation, identify its joint table with retained cylinder masses,
-  identify row, column, and total sums with the three marginal cylinders, and
-  conclude arbitrary-configuration coordinate CI. Then exercise the result on
-  chain, fork, collider, descendant-evidence, and zero-evidence controls before
-  connecting the canonical MAID law.
+- **Outcome / next action:** supported. Every finite dependent-domain law that
+  factorizes over normalized local kernels satisfies coordinate conditional
+  independence when its disjoint query blocks are separated in the ancestral
+  moral graph. Canonical native MAID play inherits the theorem through its
+  proved effective-parent factorization. Keep the result experimental while
+  building finite configuration-valued utility leaves; next prove their mapped
+  canonical law factorizes, then add the replacement-invariance lemmas needed
+  to turn local graphical ignorability into the existing non-circular
+  continuation certificate and `CoversFullDeviationsAt`.

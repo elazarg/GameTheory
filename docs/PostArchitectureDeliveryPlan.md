@@ -194,16 +194,14 @@ the safe payoff-irrelevant removal and the nearby value-of-information failure;
 mere non-factorization of a policy is not a safety test.
 
 The exact local-utility graph view, the one-site
-continuation-factorization-to-coverage bridge, canonical effective-parent
-point-mass factorization, division-free finite conditional independence,
-cast-free dependent enumeration, parent-closed cylinder marginalization,
-ancestral-moral factor partitions, explicit-retained latent sums, and dependent
-rank-one score assembly now survive their hostile experiments. The next
-same-language gate identifies the moral scores and their table marginals with
-the four query cylinder masses. Complete that finite-BN global-Markov layer
-before claiming the
-Koller--Milch graphical criterion discharges full-deviation coverage. Keep
-requisite observation
+continuation-factorization-to-coverage bridge and canonical division-free
+finite global-Markov soundness now survive hostile heterogeneous,
+collider/descendant-evidence, and zero-evidence consumers. The next
+same-language gate augments canonical play with finite configuration-valued
+utility leaves, proves the mapped law factorizes, and establishes replacement
+and non-descendant invariance. Complete that utility-facing layer before
+claiming the Koller--Milch graphical criterion discharges full-deviation
+coverage. Keep requisite observation
 (whether a realized parent value is needed by a rule) separate from strategic
 relevance (whether another decision's rule is strategically live). Do not
 report either graphical package as complete merely because the semantic
