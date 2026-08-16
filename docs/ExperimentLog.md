@@ -113,7 +113,7 @@ becomes difficult to scan.
 | EXP-100 | 2026-08-14 | pre-cutover stochastic client gate | Can canonical Protocol play expose chronological finite histories and restart laws without a second runner? | Complete; supports and graduates | `GameTheory/Stochastic/PublicPolicy.lean`; `GameTheory/Stochastic/History.lean`; `GameTheory/Tests/StochasticContinuation.lean` |
 | EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
 | EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | In progress; graph and site-local semantic foundations support, source-shaped hostile fixture rejected and negative gate narrowed | Experimental hybrid graph, site-local surgery, and source audit |
-| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; reserved and experiment-gated; does not change EXP-107 or the current stochastic/repeated verdicts | Complementary-sequence order-of-limits slice; cyclic quitting continuation slice; independent sibling evidence; no API adoption |
+| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; conditional separation schema compiles, concrete oscillating sequence remains open; does not change EXP-107 or current verdicts | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); cyclic quitting continuation slice; independent sibling evidence; no API adoption |
 
 ## Entry template
 
@@ -6899,8 +6899,19 @@ memory.
   phasewise Nash--Bellman/absorption pattern, but does not itself establish a
   cyclic SPE predicate. Current `GameTheory` remains finite-law only; this
   entry authorizes investigation, not promotion.
-- **Outcome / next action:** reserve the gate and record the hostile slices;
-  keep EXP-107 as the current MAID experiment, preserve current
-  `supported`/`opt-in` statuses, and prototype only under `Experimental` until
-  the hostile slices and a follow-up decision record determine the dependency
-  and public API boundary.
+- **Observations:** the 143-line
+  [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean)
+  uses one fair two-point `FinDist` over a stage sequence and its unit
+  complement. It proves every finite expected Cesàro average is `1/2` and,
+  from four explicit endpoint hypotheses, proves expected pathwise liminf is
+  `0` while expected pathwise limsup is `1`. The focused target builds
+  warning-free with 1,713 jobs; the 3,671-job full build and deep Phase 1--3
+  audits pass. The schema introduces no runner, measure, equilibrium predicate,
+  or coercion. It does not prove that the required oscillating sequence exists.
+- **Outcome / next action:** supports the distinct-signature/order-of-limits
+  boundary but does not complete the hostile slice. Next prove the concrete
+  rapidly growing alternating-block endpoint estimates, then test the
+  finite-marginal infinite-play layer. Keep EXP-107 as the current MAID
+  experiment, preserve current `supported`/`opt-in` statuses, and prototype
+  only under `Experimental` until the hostile slices and a follow-up decision
+  record determine the dependency and public API boundary.
