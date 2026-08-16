@@ -117,7 +117,7 @@ becomes difficult to scan.
 | EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | Complete checker-only result; executable stable-at/fixpoint checks are exact, while construction, minimality, and confluence remain unclaimed | [`MAIDPruningFixpointChecker.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointChecker.lean); [`MAIDPruningFixpointCheckerTest.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointCheckerTest.lean) |
 | EXP-110 | 2026-08-16 | D2 / countable discrete probability | Can an opt-in direct-`PMF` layer recover a genuinely infinite-support stopping law without weakening the finite-support `FinDist` core or introducing another probability abstraction? | Complete; direct PMF stopping law validates the separate countable layer, while bounded expectation remains a distinct analytic gate | [`CountableDiscreteStopping.lean`](../GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean) |
 | EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete hostile result; forged-history agreement preserves laws/payoffs and a realizable-history change alters both, with promotion still consumer-gated | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean); [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherenceTest.lean) |
-| EXP-112 | 2026-08-16 | D2 / countable PMF expectation | Can the countable layer expose bounded real expectations and preserve finite-law expectations without duplicating `FinDist.expect` or hiding summability? | In progress; Mathlib API audit and geometric stopping-law expectation pending | Direct PMF integral/sum, bounded observable, `FinDist.toPMF` preservation |
+| EXP-112 | 2026-08-16 | D2 / countable PMF expectation | Can the countable layer expose bounded real expectations and preserve finite-law expectations without duplicating `FinDist.expect` or hiding summability? | Complete experiment-only result; bounded Bochner integration preserves `FinDist.expect` and computes the geometric consumer | [`CountablePMFExpectation.lean`](../GameTheory/Experimental/PostArchitecture/CountablePMFExpectation.lean) |
 
 ## Entry template
 
@@ -7121,7 +7121,7 @@ memory.
 ### EXP-112: bounded expectation for countable PMFs
 
 - **Date / revision:** 2026-08-16, `main` at `95737acd`
-- **Status:** in progress; experiment-only; no public API adopted
+- **Status:** complete experiment-only result; no public API adopted
 - **Decision / question:** whether the direct countable `PMF` layer can expose
   real-valued bounded expectation with explicit totality hypotheses and agree
   exactly with canonical `FinDist.expect` on finite-support laws.
@@ -7140,5 +7140,22 @@ memory.
   countable observables, hidden convergence, a coercion-based FinDist bridge,
   duplicated map/bind semantics, or promotion before the geometric consumer
   and finite-law preservation both compile.
-- **Outcome / next action:** pending. Keep all work experimental and independent
-  of stable stochastic syntax until the analytic boundary is measured.
+- **Observations:**
+  [`CountablePMFExpectation.lean`](../GameTheory/Experimental/PostArchitecture/CountablePMFExpectation.lean)
+  is a 96-line direct Mathlib integration slice. For a countable discrete
+  measurable carrier and a pointwise norm bound, it rewrites the Bochner
+  integral against `PMF.toMeasure` as the explicit probability-weighted
+  `tsum`. The same theorem specializes exactly to `FinDist.expect` through the
+  explicit `toPMF` boundary. On EXP-110's non-finitely-supported stopping law,
+  the nonconstant bounded observable `none ↦ 0`, `some n ↦ 2⁻ⁿ` has integral
+  `2 / 3`. Integrability is discharged explicitly with
+  `Integrable.of_bound`; no unconditional unbounded expectation is stated.
+  `lake build GameTheory.Experimental.PostArchitecture.CountablePMFExpectation`
+  passed 2,509 jobs warning-free. Source audits found no duplicate expectation
+  wrapper, coercion, hidden convergence premise, transport, placeholder,
+  option, or lint suppression.
+- **Outcome / next action:** Mathlib's Bochner integral is the surviving
+  countable expectation design; a new expectation wrapper is rejected. Keep
+  the bridge experimental until the finite-marginal infinite-play measure uses
+  it, then decide whether the minimal PMF/FinDist preservation theorem belongs
+  in a stable opt-in interop module.
