@@ -6760,7 +6760,8 @@ memory.
 
 ### EXP-107: sufficient-recall MAID pruning fixpoint
 
-- **Date / revision:** 2026-08-16, `main` at `564709c5`
+- **Date / revision:** 2026-08-16, `main` at `ca1e59d2` plus the active
+  EXP-107 working tree
 - **Status:** in progress
 - **Decision / question:** whether a pruning that is stable under restoring all
   original observations at each queried decision can construct
@@ -6855,15 +6856,15 @@ memory.
 - **Outcome / next action:** supports the hybrid graph, factorization,
   nonrelevant-term invariance, and site-local utility-factor foundations;
   narrows the hostile negative gate. The experiment remains in progress. The
-  next gate is the load-bearing semantic soundness/optimality transport for
-  changes at non-s-reachable same-owner sites under a fully mixed reference
-  rule (Koller--Milch Lemmas 6.1--6.2 style). The selector cross-law now
-  compiles, and its division-free finite term-score comparison plus
-  changed-to-reference full-action support theorem now compile without chance
-  positivity. The next proof transports site optimality across one
-  non-s-reachable source change, then proves the same-owner relevance-order
-  induction that assembles a global reduced whole-owner best response and
-  `CoversFullDeviationsAt` from the site-local endpoint. Do not
+  The selector cross-law now compiles, and its division-free finite term-score
+  comparison plus changed-to-reference full-action support theorem now compile
+  without chance positivity. The focused target
+  `lake build GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachability`
+  passes warning-free with 1,783 jobs and proves one-source site-optimality
+  transport across a non-s-reachable source change under a fully mixed
+  reference rule (Koller--Milch Lemmas 6.1--6.2 style). Finite-list transport,
+  same-owner relevance-order induction, and the global reduced whole-owner
+  best-response/`CoversFullDeviationsAt` theorem remain open. Do not
   claim a semantic unsafe control unless a genuinely different larger graph
   passes explicit reduced-Nash and profitable-full-deviation checks. No stable
   syntax change or executable pruning pass is authorized yet.

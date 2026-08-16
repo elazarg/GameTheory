@@ -110,9 +110,12 @@ and
 The selector conditional-independence and division-free component cross-law
 also compile in
 [`MAIDMechanismSelectorIndependence.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorIndependence.lean).
-The score/support argument, semantic soundness/optimality transport under a
-fully mixed reference rule (Koller--Milch Lemmas 6.1--6.2 style), same-owner
-relevance-order induction, and global coverage theorem do not.
+The score/support argument and the one-source semantic soundness/optimality
+transport theorem under a fully mixed reference rule (Koller--Milch Lemmas
+6.1--6.2 style) now compile in
+[`MAIDStrategicNonreachability.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDStrategicNonreachability.lean).
+Finite-list transport, same-owner relevance-order induction, and the global
+coverage theorem remain open.
 The paper's
 qualitative Forgetful Movie Star profile is not accepted as negative evidence:
 under an explicit `2 * avoid + consistency` instantiation, its described
@@ -246,12 +249,12 @@ a warning-free aggregate targeted Lake build (1,785 jobs), full repository
 build (3,673 jobs), and deep Phase 1--3 audit (`VERIFIED=1` for each phase).
 Two further focused modules add division-free term-score comparison,
 changed-to-reference support without chance positivity, policy-surgery
-algebra, and exact expected-utility score decomposition. The remaining
-load-bearing global step is semantic soundness/optimality transport for
-changes at non-s-reachable same-owner sites under a fully mixed reference rule
-(Koller--Milch Lemmas 6.1--6.2 style). Once it is established, the same-owner
-relevance-order induction must combine the local optimality rules into one
-reduced whole-owner rule and then discharge full-deviation coverage.
+algebra, and exact expected-utility score decomposition. The focused target
+`lake build GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachability`
+passes warning-free with 1,783 jobs and includes the one-source
+non-s-reachability optimality-transport theorem. Finite-list transport,
+same-owner relevance-order induction, and assembling one reduced whole-owner
+rule that discharges full-deviation coverage remain open.
 
 Reject or narrow the graph route if it becomes a second evaluator, cannot
 construct full owner-deviation coverage, assumes faithfulness of the current
@@ -280,11 +283,10 @@ construct `CoversFullDeviationsAt` for one unique pruned site, and the hostile
 safe/live relay consumer validates both sides. Stable relative coverage now
 composes already-certified nested reductions without a recall premise. It does
 not promote the graph view to a public API, derive either stage's certificate,
-or justify coordinated same-owner graphical pruning. The next graphical gate
-is semantic soundness/optimality transport for changes at non-s-reachable
-same-owner sites under a fully mixed reference rule (Koller--Milch Lemmas
-6.1--6.2 style); the prerequisite division-free score and fully mixed support
-lemmas now compile. The sufficient-recall relevance-order induction then
+or justify coordinated same-owner graphical pruning. One-source semantic
+soundness/optimality transport for changes at non-s-reachable same-owner sites
+under a fully mixed reference rule now compiles; finite-list transport remains
+the next graphical gate. The sufficient-recall relevance-order induction then
 constructs a reduced whole-owner best response at an edge-addition fixpoint
 from the completed site-local endpoints, yielding global coverage. Requisite
 observation and strategic reliance remain distinct notions despite that
