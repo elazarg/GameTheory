@@ -213,16 +213,20 @@ existing full-deviation coverage certificate. The hostile relay consumer
 accepts the signal-blind graph with exact Nash transfer and rejects the live
 signal-copying graph with an explicit coverage counterexample.
 
-The next graphical gate is to construct the hybrid restore-at-site graph and
-the s-reachability/strategic-relevance graph, without which the source's
-sufficient-recall condition is not yet expressible. That certificate then
-gates the less-conservative edge-addition fixpoint and coordinated same-owner
-graphical safety theorem. Do not infer that theorem from either the one-site
-graphical result or semantic composition of assumed coverage certificates.
-Keep requisite observation (whether a realized parent value is needed by a
-rule) separate from strategic relevance (whether another decision's rule is
-strategically live), even though the latter graph is needed to formulate
-sufficient recall.
+The hybrid restore-at-site graph and the s-reachability/strategic-relevance
+graph now express the source's sufficient-recall boundary, and the site-local
+nonrelevant-term and factor/optimality endpoints compile under
+edge-addition stability. The next graphical gate is semantic
+soundness/optimality transport for changes at non-s-reachable same-owner sites
+under a fully mixed reference rule (Koller--Milch Lemmas 6.1--6.2 style).
+The same-owner relevance-order induction then combines those local rules into
+a reduced whole-owner best response and discharges `CoversFullDeviationsAt`
+for the less-conservative edge-addition fixpoint. Do not infer that theorem
+from either the one-site graphical result or semantic composition of assumed
+coverage certificates. Keep requisite observation (whether a realized parent
+value is needed by a rule) separate from strategic relevance (whether another
+decision's rule is strategically live), even though the latter graph is
+needed to formulate sufficient recall.
 
 ### G. Static mature-family rotation
 

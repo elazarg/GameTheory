@@ -3,7 +3,7 @@
 - **Status:** adopted for the semantic seam; experiment-only one-site
   graphical discharge validated
 - **Date:** 2026-08-16
-- **Experiment IDs:** EXP-102, EXP-103, EXP-104, EXP-105
+- **Experiment IDs:** EXP-102, EXP-103, EXP-104, EXP-105, EXP-107
 
 ## Decision and result
 
@@ -91,6 +91,27 @@ coordinated same-owner graphical safety theorem: those results must construct
 the certificates rather than assume them. Even a safe reduction may discard
 original equilibria, including Pareto-preferred ones; safety is only
 reduced-Nash-to-full-Nash inclusion.
+
+EXP-107 keeps the global theorem experiment-gated. Its hybrid restore-all
+graph, original-graph mechanism-node s-reachability, candidate/hybrid
+factorization, fixed-law global-Markov conditional independence, exact
+hybrid-to-site policy adapter, multi-site target-rule surgery, and
+replacement-uniform relevant-term continuation now compile. The
+nonrelevant-term marginal certificate and site-local factor/optimality
+endpoints now compile as
+[`MAIDPruningNonrelevantInvariance.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningNonrelevantInvariance.lean)
+and
+[`MAIDPruningSiteReduction.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningSiteReduction.lean);
+the semantic soundness/optimality transport for changes at non-s-reachable
+same-owner sites under a fully mixed reference rule (Koller--Milch Lemmas
+6.1--6.2 style), the same-owner relevance-order induction, and the global
+coverage theorem do not.
+The paper's
+qualitative Forgetful Movie Star profile is not accepted as negative evidence:
+under an explicit `2 * avoid + consistency` instantiation, its described
+independent-uniform behavioral profile earns `3/2` while a legal reduced
+whole-owner constant-equal deviation earns `2`. The graph remains a valid
+fixpoint and recall-cycle sentinel, but not an unsafe reduced-Nash consumer.
 
 ## Competing designs
 
@@ -209,6 +230,17 @@ modules. The focused consumer build passes warning-free, and the source audit
 finds no option, lint suppression, placeholder, axiom, direct update, visible
 transport, representation leak, or compatibility shim.
 
+EXP-107's site-local closeout adds the nonrelevant-term marginal certificate
+and the edge-addition-stable site-local factor/optimality endpoint. The
+eleven-artifact foundation set plus the two hostile consumers has a warning-
+free aggregate targeted Lake build (1,782 jobs), full repository build (3,668
+jobs), and deep Phase 1--3 audit (`VERIFIED=1` for each phase). The remaining
+load-bearing global step is semantic soundness/optimality transport for
+changes at non-s-reachable same-owner sites under a fully mixed reference rule
+(Koller--Milch Lemmas 6.1--6.2 style). Once that is established, the same-owner
+relevance-order induction must combine the local optimality rules into one
+reduced whole-owner rule and then discharge full-deviation coverage.
+
 Reject or narrow the graph route if it becomes a second evaluator, cannot
 construct full owner-deviation coverage, assumes faithfulness of the current
 parameterization, or certifies the live signal as removable. Do not add utility
@@ -219,9 +251,10 @@ same theorem that certifies the signal-blind graph does not certify the live
 relay, and semantic coverage is independently refuted there.
 
 Before any completeness theorem, add constant-utility and singleton-domain
-controls. Before the global graphical theorem, construct the hybrid
-restore-at-site graph and the s-reachability/strategic-reliance graph needed to
-state sufficient recall, then prove the edge-addition fixpoint theorem.
+controls. Nonrelevant-term invariance and site-local utility-factor assembly
+are now complete at the experiment-only endpoint. Before the global graphical
+theorem, prove the sufficient-recall relevance-order induction for the
+edge-addition fixpoint.
 
 ## Consequences and compatibility posture
 
@@ -236,10 +269,13 @@ safe/live relay consumer validates both sides. Stable relative coverage now
 composes already-certified nested reductions without a recall premise. It does
 not promote the graph view to a public API, derive either stage's certificate,
 or justify coordinated same-owner graphical pruning. The next graphical gate
-is the hybrid restore-at-site graph together with s-reachability/strategic
-reliance; only then is the source's sufficient-recall condition expressible
-for the edge-addition fixpoint theorem. Requisite observation and strategic
-reliance remain distinct notions despite that dependency.
+is semantic soundness/optimality transport for changes at non-s-reachable
+same-owner sites under a fully mixed reference rule (Koller--Milch Lemmas
+6.1--6.2 style). The sufficient-recall relevance-order induction then
+constructs a reduced whole-owner best response at an edge-addition fixpoint
+from the completed site-local endpoints, yielding global coverage. Requisite
+observation and strategic reliance remain distinct notions despite that
+dependency.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a
 hostile consumer finds the coverage quantifiers, utility view, or graph witness

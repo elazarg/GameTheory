@@ -112,6 +112,7 @@ becomes difficult to scan.
 | EXP-099 | 2026-08-14 | D12 / hosted sequential-boundary maintenance | Does the broad Analysis.Protocol umbrella still represent the sequential-equilibrium leaf's dependency budget? | Refutes proxy; owning-leaf probe passes hosted gate | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase3-audit.ps1`](../scripts/phase3-audit.ps1) |
 | EXP-100 | 2026-08-14 | pre-cutover stochastic client gate | Can canonical Protocol play expose chronological finite histories and restart laws without a second runner? | Complete; supports and graduates | `GameTheory/Stochastic/PublicPolicy.lean`; `GameTheory/Stochastic/History.lean`; `GameTheory/Tests/StochasticContinuation.lean` |
 | EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
+| EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | In progress; graph and site-local semantic foundations support, source-shaped hostile fixture rejected and negative gate narrowed | Experimental hybrid graph, site-local surgery, and source audit |
 
 ## Entry template
 
@@ -6755,3 +6756,91 @@ memory.
   quantifies over horizons nor transports eventual uniform equilibrium,
   infinite-path laws, or long-run payoffs. Reconsider a structure only after
   two independent composition consumers require one.
+
+### EXP-107: sufficient-recall MAID pruning fixpoint
+
+- **Date / revision:** 2026-08-16, `main` at `564709c5`
+- **Status:** in progress
+- **Decision / question:** whether a pruning that is stable under restoring all
+  original observations at each queried decision can construct
+  `CoversFullDeviationsAt` when each owner's induced relevance graph is
+  acyclic, with edges witnessed by original-graph s-reachability, matching the
+  sufficient-recall boundary of Milch--Koller rather than causal DAG
+  acyclicity or Protocol perfect recall.
+- **Competing designs:** an experiment-only parent-map view with a hybrid
+  restore-at-site graph and mechanism-node s-reachability; iterating the
+  one-site theorem; or assuming relative semantic coverage at every step.
+- **Representative slice:** one owner with early and late Boolean decisions.
+  The positive fixture removes the same signal at both sites while retaining
+  the early-to-late recall edge. Separately instantiate the source's Forgetful
+  Movie Star graph and rational payoffs, checking its fixpoint, relevance
+  cycle, and paper-described uniform profile under that explicit payoff
+  instantiation through canonical execution.
+- **Kill conditions:** reject tests performed only in the final reduced graph,
+  one-missing-edge-at-a-time restoration, causal acyclicity mislabeled as
+  sufficient recall, reuse of the unique-site theorem as a multi-site proof,
+  a second evaluator or equilibrium predicate, hidden semantic coverage,
+  positivity or faithfulness, stored finiteness, compatibility aliases,
+  source options or unexplained lint suppressions, placeholders, custom
+  axioms, direct function update, or visible equality transport.
+- **Measurements / observations:** the experimental graph layer now restores
+  the whole missing set at one target, leaves other decisions at the candidate
+  pruning, adds a genuine dummy mechanism root for original-graph
+  s-reachability, and states same-owner acyclicity with the source's edge
+  orientation. Canonical candidate and hybrid laws factorize over those exact
+  graphs. Multi-site site surgery, one shared target-context law, exact
+  behavioral-rule multilinearity, finite site-rule optimality, and the
+  graph-free kept-context averaging theorem compile without `target_unique`.
+  The under-graph global-Markov consumer is division-free and fixed-law only.
+  The foundation artifacts are
+  [`MAIDPruningFixpointGraph.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointGraph.lean),
+  [`MAIDPruningFactorizationBridge.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFactorizationBridge.lean),
+  [`MAIDPruningHybridFactorization.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningHybridFactorization.lean),
+  [`MAIDPruningConditionalIndependence.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningConditionalIndependence.lean),
+  [`MAIDPruningRelevantContinuation.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningRelevantContinuation.lean),
+  [`MAIDPruningNonrelevantInvariance.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningNonrelevantInvariance.lean),
+  [`MAIDPruningSiteReduction.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningSiteReduction.lean),
+  [`MAIDSitePolicySurgery.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSitePolicySurgery.lean),
+  [`MAIDSiteReplacementContext.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteReplacementContext.lean),
+  [`MAIDSiteOptimality.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteOptimality.lean),
+  and
+  [`MAIDSiteLocalReduction.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteLocalReduction.lean).
+  `MAIDPruningRelevantContinuation` constructs the relevant utility term's
+  replacement-uniform continuation for arbitrary target rules. The independent
+  [`MAIDPruningFixpointPositiveTest.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointPositiveTest.lean)
+  proves the edge-addition fixpoint, acyclic owner relevance graph, direct
+  semantic coverage, and reduced/expanded Nash; it does not consume an
+  unfinished global theorem. `MAIDPruningSiteReduction` now assembles
+  `siteLocalUtilityFactorsAt_of_edgeAdditionStableAt` and proves
+  `exists_reduced_isOptimalSiteRule_of_edgeAdditionStableAt`; these are
+  site-local endpoints, not the unfinished global induction. The foundation
+  set contains eleven artifacts, and the two consumer audits are separate.
+  The aggregate `lake build` over all thirteen EXP-107 modules completed
+  warning-free with 1,782 jobs, and the repository-wide `lake build` completed
+  with 3,668 jobs. `phase1-audit.ps1 -VerifyExpected`,
+  `phase2-audit.ps1 -VerifyExpected -DeepReachability`, and
+  `phase3-audit.ps1 -VerifyExpected -DeepReachability` each reported
+  `VERIFIED=1`. The source audit found no option, lint suppression,
+  placeholder, custom axiom, direct update, or visible transport.
+
+  [`MAIDForgetfulMovieStarAudit.lean`](../GameTheory/Experimental/PostArchitecture/MAIDForgetfulMovieStarAudit.lean)
+  validates the source-shaped edge-addition fixpoint and the two-way
+  s-reachability cycle. With star utility `2 * avoid + consistency`, canonical
+  execution gives the proposed independent-uniform reduced profile utility
+  `3/2`, while the legal reduced whole-owner constant-equal deviation gives
+  `2`; thus that profile is not reduced Nash. More generally, in this exact
+  dependency class every sponsorship-contingent full deviation is a convex
+  combination of deterministic reduced whole-owner plans against the fixed
+  robot law. The paper's qualitative profile therefore cannot serve as the
+  requested unsafe behavioral consumer.
+- **Outcome / next action:** supports the hybrid graph, factorization,
+  nonrelevant-term invariance, and site-local utility-factor foundations;
+  narrows the hostile negative gate. The experiment remains in progress. The
+  next gate is the load-bearing semantic soundness/optimality transport for
+  changes at non-s-reachable same-owner sites under a fully mixed reference
+  rule (Koller--Milch Lemmas 6.1--6.2 style). After that, prove the same-owner
+  relevance-order induction that assembles a global reduced whole-owner best
+  response and `CoversFullDeviationsAt` from the site-local endpoint. Do not
+  claim a semantic unsafe control unless a genuinely different larger graph
+  passes explicit reduced-Nash and profitable-full-deviation checks. No stable
+  syntax change or executable pruning pass is authorized yet.
