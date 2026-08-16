@@ -6325,3 +6325,71 @@ memory.
   terms and prove d-separation constructs coverage on a hostile multi-agent
   consumer. Keep strategic reliance, local observation ignorability, and
   global safe-pruning fixpoints as separate theorem packages.
+
+### EXP-103: local-utility d-separation discharge
+
+- **Date / revision:** 2026-08-16, `main` after `47b1c3dc`
+- **Status:** completed; representation and semantic bridge validated, graphical
+  soundness narrowed to an explicit finite-BN gate
+- **Decision / question:** whether an opt-in finite family of owned local
+  utility terms plus d-separation can construct
+  `ObservationPruning.CoversFullDeviationsAt` for one observation removal,
+  without changing stable MAID syntax or restating the semantic conclusion as
+  a graph certificate.
+- **Client evidence:** the Koller--Milch local ignorability theorem is the
+  independent specification. No independent Lean consumer exists; the
+  representative proxy is a fair-signal multi-agent value-of-information pair
+  in which relevance can flow through another player's signal-dependent rule.
+- **Competing designs:** enumerate additive local utility leaves in a proved
+  view; use only an extensional dependence certificate for global utility;
+  assume a semantic conditional-independence theorem directly; or add utility
+  nodes to stable `MAID.Structure`.
+- **Representative slice:** remove signal `X` from owner `A`'s decision `D_A`.
+  In the live case, rival policy `D_B := X` and payoff `D_A = D_B` make every
+  `X`-blind replacement worth at most `1/2` while copying earns `1`, despite no
+  direct `X` utility input. The one-edge control removes `X -> D_B`, where
+  conditioning on `D_A` blocks the only route to relevant utility. Scope the
+  first theorem to one removed site; do not infer simultaneous global pruning.
+- **Measurements:** the 821-line requisite-observation spike now uses an exact
+  owner-indexed list of additive local utility terms, distinct utility leaves,
+  strict decision-descendant relevance, and set-valued conditioning. It retains
+  the one-edge chain/live pair and adds two proved decompositions of the same
+  canonical utility: split leaves make the signal nonrequisite, while one
+  merged leaf creates a conservative false-positive route. The 237-line
+  kernel experiment constructs the reduced rule by conditional-fibre
+  averaging and proves exact kept-context/action joint-law and expectation
+  preservation, including zero-mass fibres. The 190-line MAID bridge packages
+  a uniform continuation factorization that mentions neither a reduced
+  witness nor an inequality, then constructs
+  `CoversFullDeviationsAt` for one unique target site; every untouched owner's
+  full policy has an exact reduced preimage. The 149-line finite-BN increment
+  proves dependent-value local-factor confinement and multiplicative splitting
+  across disjoint parent-closed components, without defining a second joint
+  law or conditional-independence predicate.
+
+  Focused builds passed warning-free: requisite observation 1715 jobs with an
+  8.1-second final module build; kernel marginalization 1713 jobs; local
+  reduction 1736 jobs with a 7.9-second final module build; and finite-BN
+  factors 1713 jobs with a 7.4-second final module build. Source audits found
+  no `set_option`, `nolint`, `sorry`, `admit`, axiom, direct
+  `Function.update`, stored value-domain finiteness, positivity, faithfulness,
+  or user-visible equality transport. The full 3616-job build and
+  `scripts/phase3-audit.ps1 -VerifyExpected` passed; forbidden imports,
+  Protocol/language transport, direct sequential `Function.update`, and
+  sequential placeholders/custom axioms remained zero.
+- **Kill conditions:** reject a local-utility view that becomes a second payoff
+  evaluator; reject any graph hypothesis equivalent by definition to coverage;
+  stop before public promotion if the proof needs an unproved global-Markov
+  theorem; reject a direct-payoff-only test that misses the rival-policy path;
+  and keep the result local if multiple removals require recall or a proved
+  elimination sequence.
+- **Outcome / next action:** retain the exact local-term view and the
+  factorization-to-coverage theorem as experiments. The graph-to-semantics
+  claim stopped at its stated kill condition: the repository has no finite-BN
+  global-Markov theorem. The next dependency gate is to prove that canonical
+  MAID assignment point masses equal the effective-parent local-factor
+  product, select a division-free finite-law conditional-independence surface,
+  and prove ancestral-moral separation by variable elimination. Only then
+  discharge the continuation factorization on the multi-agent rival-policy
+  consumer. Do not promote the graphical API or infer simultaneous pruning in
+  the meantime.

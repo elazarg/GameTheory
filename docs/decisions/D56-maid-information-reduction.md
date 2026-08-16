@@ -3,7 +3,7 @@
 - **Status:** adopted for the semantic seam; graphical discharge remains
   experiment-gated
 - **Date:** 2026-08-16
-- **Experiment IDs:** EXP-102
+- **Experiment IDs:** EXP-102, EXP-103
 
 ## Decision and result
 
@@ -30,7 +30,9 @@ utility ignores a signal and the other rewards matching it. No predicate of
 the existing graph alone can safely distinguish them.
 
 An experiment-only proved `UtilityView` survives as a possible graph front end.
-It is not a public API and currently supplies no graph-to-coverage theorem.
+It enumerates distinct owner-indexed additive utility terms and proves their
+sum equals canonical utility. It is not a public API and currently supplies no
+graph-to-coverage theorem.
 
 ## Independent criterion and terminology
 
@@ -104,31 +106,47 @@ pruning but payoff for `decision = signal`, every signal-blind policy is worth
 and coverage is false.
 
 `Experimental.PostArchitecture.MAIDRequisiteObservation` adds a proved utility
-view and a reward node. In
+view with distinct local utility leaves and a reward node. In
 `signal -> decision -> reward -> utility`, conditioning on `decision` blocks
 the observation. Adding only `signal -> reward` leaves an active path and makes
 the observation requisite. The owner utility must be a descendant of the
 decision; omitting that guard falsely marks payoffs unaffected by the decision
 as relevant.
 
-The spike uses one synthetic sink per owner. That representation is
-conservative: moralizing a combined sink can join parents belonging to distinct
-local utility terms. An exact future view should enumerate owned local utility
-terms and prove their sum equals canonical `Semantics.utility`.
+The exact-term representation is load-bearing. Two views prove the same
+canonical utility `reward + signal`: with separate leaves the signal-only term
+is not a descendant of the decision and the signal is nonrequisite; merging the
+terms into one leaf creates a moral-graph route and marks it requisite. A
+single synthetic sink per owner is therefore conservatively imprecise.
+
+`MAIDKernelMarginalization` constructs the reduced rule by conditionally
+averaging an arbitrary full-context rule over removed observations and proves
+that the kept-context/action joint law is unchanged. `MAIDLocalReduction` then
+shows that a uniform continuation factorization constructs the existing
+full-deviation coverage certificate for one unique pruned site, while every
+untouched owner's policy is represented exactly. The factorization premise
+contains neither a reduced witness nor a preference inequality.
+
+`FiniteBNGlobalMarkov` proves the first representation-neutral factor algebra:
+parent-closed component products depend only on their own coordinates and
+split multiplicatively across a disjoint partition. It deliberately does not
+define a second joint law or assert conditional independence.
 
 ## Measurements and kill conditions
 
 The stable certificate is 11 source lines. The 445-line semantic consumer
 unfolds the canonical assignment runner once and reuses canonical
-`expectedUtility`, `euPreference`, and `IsNash`. The 479-line graph spike keeps
-effective chance parents and observed decision parents distinct, and supplies
-set-valued removal/conditioning plus ancestral-moral d-connection.
+`expectedUtility`, `euPreference`, and `IsNash`. The exact-term graph spike is
+821 lines; kernel marginalization is 237 lines; the graph-free MAID coverage
+bridge is 190 lines; and the initial finite-BN factor algebra is 149 lines.
 
 Focused builds passed warning-free: the semantic test built 1735 jobs with a
-6.9-second final module build; the graph spike built 1715 jobs with a
-7.2-second final module build. The new artifacts contain no `set_option`,
-`nolint`, `sorry`, `admit`, direct `Function.update`, stored finite capability,
-or user-visible equality transport.
+6.9-second final module build; the graph spike built 1715 jobs with an
+8.1-second final module build; the local reduction bridge built 1736 jobs with
+a 7.9-second final module build; and the finite-BN factors built 1713 jobs with
+a 7.4-second final module build. The new artifacts contain no `set_option`,
+`nolint`, `sorry`, `admit`, axiom, direct `Function.update`, stored value-domain
+finiteness, positivity, faithfulness, or user-visible equality transport.
 
 Reject or narrow the graph route if it becomes a second evaluator, cannot
 construct full owner-deviation coverage, assumes faithfulness of the current
@@ -142,8 +160,11 @@ controls. Before global pruning, prove the required recall/fixpoint theorem.
 
 The semantic seam is public. Graphical ignorability, requisite observation,
 strategic reliance, and s-reachability remain experimental and separate. The
-next gate is a local-utility d-separation theorem that constructs
-`CoversFullDeviationsAt` on a multi-agent hostile consumer.
+next gate is finite-BN global-Markov soundness: prove canonical MAID assignment
+point masses equal the effective-parent factor product, choose a division-free
+finite-law conditional-independence surface, and prove ancestral-moral
+separation. Only then may local-utility d-separation construct
+`CoversFullDeviationsAt` on the multi-agent hostile consumer.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a
 hostile consumer finds the coverage quantifiers, utility view, or graph witness
