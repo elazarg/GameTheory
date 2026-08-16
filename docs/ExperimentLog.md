@@ -116,7 +116,7 @@ becomes difficult to scan.
 | EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; a concrete finite-law sequence separates all three payoff orders, while the infinite-play and cyclic-uniform interfaces remain open; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); cyclic quitting continuation slice; no API adoption |
 | EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | Complete checker-only result; executable stable-at/fixpoint checks are exact, while construction, minimality, and confluence remain unclaimed | [`MAIDPruningFixpointChecker.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointChecker.lean); [`MAIDPruningFixpointCheckerTest.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointCheckerTest.lean) |
 | EXP-110 | 2026-08-16 | D2 / countable discrete probability | Can an opt-in direct-`PMF` layer recover a genuinely infinite-support stopping law without weakening the finite-support `FinDist` core or introducing another probability abstraction? | Complete; direct PMF stopping law validates the separate countable layer, while bounded expectation remains a distinct analytic gate | [`CountableDiscreteStopping.lean`](../GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean) |
-| EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete experiment-only positive result; canonical-image agreement yields exact law/payoff congruence, while the live semantic rejection remains a promotion gate | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean) |
+| EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete hostile result; forged-history agreement preserves laws/payoffs and a realizable-history change alters both, with promotion still consumer-gated | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean); [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherenceTest.lean) |
 | EXP-112 | 2026-08-16 | D2 / countable PMF expectation | Can the countable layer expose bounded real expectations and preserve finite-law expectations without duplicating `FinDist.expect` or hiding summability? | In progress; Mathlib API audit and geometric stopping-law expectation pending | Direct PMF integral/sum, bounded observable, `FinDist.toPMF` preservation |
 
 ## Entry template
@@ -7072,7 +7072,7 @@ memory.
 ### EXP-111: realizable stochastic public histories
 
 - **Date / revision:** 2026-08-16, `main` at `5be6d923`
-- **Status:** complete experiment-only positive result; no public API adopted
+- **Status:** complete hostile result; experiment-only; no public API adopted
 - **Decision / question:** whether the proof-free stochastic `PublicHistory`
   should expose realizability as the image of canonical protocol traces, and
   whether profile agreement on that image suffices for canonical runner and
@@ -7102,16 +7102,21 @@ memory.
   finite-average-payoff equality. In the independent continuation fixture, a
   record with the correct source/action but a zero-support target is formally
   unrealizable; changing policy only there preserves every finite-horizon law
-  and payoff. The nearby live profile is proved to differ at the initial
-  reachable history, but a distinct runner/payoff computation was not forced.
+  and payoff.
+  [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherenceTest.lean)
+  closes the nearby rejection in 114 lines: the empty history is canonically
+  realizable, the live policy fails agreement there, its one-step public law
+  differs from the canonical law, and player `false`'s one-step finite-average
+  payoff changes from `0` to `1`.
   `lake build GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence`
-  passed 1,736 jobs warning-free. Source audits found no second runner,
-  duplicated execution induction, transport, placeholder, option, or
-  lint-suppression token.
+  passed 1,736 jobs warning-free; the focused hostile-test build passed 1,737
+  jobs warning-free. Source audits found no second runner, duplicated execution
+  induction, transport, placeholder, option, or lint-suppression token.
 - **Outcome / next action:** the transparent canonical-image design survives
   and a bundled history carrier is rejected. Keep it experimental until a
-  second consumer proves the live law/payoff rejection and shows that a stable
-  public-history agreement API materially reduces downstream bridge work.
+  second independent domain consumer shows that a stable public-history
+  agreement API materially reduces downstream bridge work; the required
+  forged/live polarity is no longer open.
 
 ### EXP-112: bounded expectation for countable PMFs
 
