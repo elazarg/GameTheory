@@ -6552,8 +6552,8 @@ memory.
 ### EXP-105: finite utility leaves and replacement-invariant continuations
 
 - **Date / revision:** 2026-08-16, `main` at `6a0717bb`
-- **Status:** in progress; replacement-uniform relevant continuation validated;
-  nonrelevant marginal invariance active
+- **Status:** in progress; relevant continuation and nonrelevant marginal
+  invariance validated; final assembly and hostile relay consumer active
 - **Decision / question:** whether the experiment-only additive `UtilityView`
   can augment canonical native MAID play with distinct finite
   configuration-valued utility leaves, inherit the proved finite-BN
@@ -6664,12 +6664,28 @@ memory.
   after seeing a replacement, and no division, positivity, or additional
   value-fibre assumption beyond global Markov enters. The combined 1767-job
   build passed warning-free with all hazard counts zero.
+
+  The sixth gate closes the nonrelevant branch. A 357-line theorem package
+  restricts two canonical augmented laws to the parent-closed ancestors of a
+  nonrelevant utility leaf, proves their kernels agree there when the owner has
+  one decision site, and maps the resulting law equality back to the term's
+  exact base-parent configuration. The expanded policy supplies the reference
+  marginal, so no default or inhabitance choice enters the certificate. A
+  hostile universe instantiation also exposed an honest scope condition:
+  transparent configuration-valued leaves live in `Type (max uNode uValue)`.
+  Supporting a strictly lower base-value universe would require `ULift` and
+  transport, so the augmentation and its sole proof-only graph wrapper now
+  state the no-transport signature
+  `Structure.{uPlayer, uNode, max uNode uValue}` explicitly. The combined
+  five-target build completed 1769 jobs warning-free, and the final
+  nonrelevant target rebuilt in 1764 jobs with all hazard counts zero.
 - **Outcome / next action:** the finite augmentation, mapped-law
   factorization, graph translation, and non-circular distributional assembly
   survive, and the exact fixed-policy global-Markov consequence is now proved.
   The shared context and replacement-uniform relevant continuation laws are
-  now constructed canonically. Next finish the parent-closed nonrelevant-term
-  marginal, assemble the complete utility-law certificate, and connect it to
-  `LocalUtilityFactorsAt` and `CoversFullDeviationsAt`. The final hostile relay
-  consumer must still accept the signal-blind rival and reject the signal-
-  copying rival before this experiment can close.
+  now constructed canonically, and nonrelevant term marginals are invariant
+  under every unique-site owner replacement. Next assemble the complete
+  utility-law certificate and connect it to `LocalUtilityFactorsAt` and
+  `CoversFullDeviationsAt`. The final hostile relay consumer must still accept
+  the signal-blind rival and reject the signal-copying rival before this
+  experiment can close.

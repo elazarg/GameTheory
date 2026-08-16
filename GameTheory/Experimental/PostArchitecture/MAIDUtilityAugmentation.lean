@@ -4,6 +4,11 @@
 Utility leaves carry their exact typed parent configurations.  Augmentation is
 a deterministic view of a canonical MAID assignment, not another evaluator or
 probability semantics.
+
+The transparent-fiber experiment keeps the node universe below the value
+family universe, expressed by `Structure.{uPlayer, uNode, max uNode uValue}`.
+Supporting a lower value universe would require lifting base fibers and is
+outside this transport-free slice.
 -/
 
 import GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
@@ -20,7 +25,8 @@ open GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
 universe uPlayer uNode uValue
 
 variable {Player : Type uPlayer} {Node : Type uNode}
-variable {diagram : Structure Player Node} {semantics : Semantics diagram}
+variable {diagram : Structure.{uPlayer, uNode, max uNode uValue} Player Node}
+variable {semantics : Semantics diagram}
 
 /-- The typed value stored at a proof-side augmented graph node.  A utility
 leaf stores exactly the configuration read by its utility term, never `ℝ`. -/

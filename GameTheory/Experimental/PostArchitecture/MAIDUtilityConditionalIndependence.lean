@@ -24,10 +24,11 @@ open GameTheory.Experimental.PostArchitecture.MAIDUtilityFactorization
 open GameTheory.Experimental.PostArchitecture.MAIDUtilityGraphFinite
 open GameTheory.Experimental.PostArchitecture.MAIDUtilitySeparationBridge
 
-universe uPlayer uNode
+universe uPlayer uNode uValue
 
 variable {Player : Type uPlayer} {Node : Type uNode}
-variable {diagram : Structure Player Node} {semantics : Semantics diagram}
+variable {diagram : Structure.{uPlayer, uNode, max uNode uValue} Player Node}
+variable {semantics : Semantics diagram}
 
 /-- A proof-only `Structure` presentation of the canonical augmented parent
 graph.  Every node is marked as chance because only `parents`, `Value`, and
@@ -36,11 +37,14 @@ acyclicity are consumed by generic finite-BN soundness. -/
 def utilityGraphStructure [DecidableEq Node]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (view : UtilityView semantics) (owner : Player) :
-    Structure Unit (view.GraphNode owner) where
+    Structure.{0, uNode, max uNode uValue} Unit
+      (@UtilityView.GraphNode.{uPlayer, uNode, max uNode uValue}
+        Player Node diagram semantics view owner) where
   kind _ := .chance
-  parents := view.graphParents
-  observedParents := view.graphParents
-  Value := graphValue view
+  parents := UtilityView.graphParents (diagram := diagram) view
+  observedParents := UtilityView.graphParents (diagram := diagram) view
+  Value := @graphValue.{uPlayer, uNode, uValue}
+    Player Node diagram semantics view owner
   observed_sub _ := Finset.Subset.rfl
   observed_eq_of_chance _ _ := rfl
   acyclic := GameTheory.Math.DAG.acyclic_of_topologicalOrder
