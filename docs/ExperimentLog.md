@@ -113,7 +113,7 @@ becomes difficult to scan.
 | EXP-100 | 2026-08-14 | pre-cutover stochastic client gate | Can canonical Protocol play expose chronological finite histories and restart laws without a second runner? | Complete; supports and graduates | `GameTheory/Stochastic/PublicPolicy.lean`; `GameTheory/Stochastic/History.lean`; `GameTheory/Tests/StochasticContinuation.lean` |
 | EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
 | EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | In progress; graph and site-local semantic foundations support, source-shaped hostile fixture rejected and negative gate narrowed | Experimental hybrid graph, site-local surgery, and source audit |
-| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; conditional separation schema and concrete endpoint estimates compile, filter-level oscillation remains open; does not change current verdicts | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); cyclic quitting continuation slice; no API adoption |
+| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; a concrete finite-law sequence separates all three payoff orders, while the infinite-play and cyclic-uniform interfaces remain open; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); cyclic quitting continuation slice; no API adoption |
 
 ## Entry template
 
@@ -6910,15 +6910,23 @@ memory.
   `0` while expected pathwise limsup is `1`. The focused target builds
   warning-free with 1,713 jobs; the 3,673-job full build and deep Phase 1--3
   audits pass. The schema introduces no runner, measure, equilibrium predicate,
-  or coercion. The 238-line
+  or coercion. The 438-line
   [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean)
   constructs squaring block endpoints and alternating `0`/`1` stages, proves
-  exact block sums, global Cesàro bounds, and the even/odd endpoint estimates.
-  It does not yet prove the filter-level liminf/limsup identities.
+  exact block sums and global Cesàro bounds, proves the endpoint ratio tends to
+  zero, and squeezes cofinal even and odd endpoint subsequences to `0` and `1`.
+  The resulting filter theorem proves the sequence and its complement both
+  have Cesàro liminf `0` and limsup `1`, and instantiates the generic fair
+  two-point theorem: expected pathwise liminf is `0`, every finite expected
+  average and its limit are `1/2`, and expected pathwise limsup is `1`. The
+  focused target builds warning-free with 1,714 jobs and the source audit finds
+  no option, lint suppression, placeholder, axiom, direct update, visible
+  transport, runner, measure, equilibrium predicate, or coercion.
 - **Outcome / next action:** supports the distinct-signature/order-of-limits
-  boundary but does not complete the hostile slice. Next prove endpoint
-  cofinality, ratio convergence, and the filter-level liminf/limsup identities,
-  then test the finite-marginal infinite-play layer. Keep EXP-107 as the current
-  MAID experiment, preserve current `supported`/`opt-in` statuses, and prototype
-  only under `Experimental` until the hostile slices and a follow-up decision
-  record determine the dependency and public API boundary.
+  boundary and completes its finite-law hostile witness, but does not validate
+  an infinite-play runner or cyclic uniform-equilibrium interface. Next test the
+  finite-marginal infinite-play layer, then the all-phase cyclic continuation
+  condition. Keep EXP-107 as the current MAID experiment, preserve current
+  `supported`/`opt-in` statuses, and prototype only under `Experimental` until
+  those hostile slices and a follow-up decision record determine the dependency
+  and public API boundary.

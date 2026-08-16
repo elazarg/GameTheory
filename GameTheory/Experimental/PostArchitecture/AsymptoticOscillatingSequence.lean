@@ -13,6 +13,9 @@ import GameTheory.Experimental.PostArchitecture.AsymptoticPayoffSeparation
 noncomputable section
 
 open scoped BigOperators
+open scoped Topology
+open Filter
+open GameTheory.Math.Probability
 
 namespace GameTheory.Experimental.PostArchitecture
 
@@ -227,12 +230,209 @@ theorem alternatingCesaro_bounded (n : ℕ) :
         field_simp [hpos.ne']
         norm_num
 
-/-
-The remaining bridge is a filter argument: the even and odd endpoint
-subsequences must be shown cofinal in `atTop`, and their endpoint bounds must
-be combined with the global bounds to identify the corresponding `liminf` and
-`limsup`.  The finite endpoint estimates above do not by themselves prove
-those filter statements.
--/
+def evenEndpoint (k : ℕ) : ℕ := blockEndpoint (2 * k + 1) - 1
+
+def oddEndpoint (k : ℕ) : ℕ := blockEndpoint (2 * k + 2) - 1
+
+theorem evenEndpoint_ge (k : ℕ) : k ≤ evenEndpoint k := by
+  unfold evenEndpoint
+  have h := blockEndpoint_ge (2 * k + 1)
+  omega
+
+theorem oddEndpoint_ge (k : ℕ) : k ≤ oddEndpoint k := by
+  unfold oddEndpoint
+  have h := blockEndpoint_ge (2 * k + 2)
+  omega
+
+theorem tendsto_evenEndpoint :
+    Tendsto evenEndpoint atTop atTop := by
+  exact tendsto_atTop_mono' atTop
+    (Eventually.of_forall evenEndpoint_ge) tendsto_id
+
+theorem tendsto_oddEndpoint :
+    Tendsto oddEndpoint atTop atTop := by
+  exact tendsto_atTop_mono' atTop
+    (Eventually.of_forall oddEndpoint_ge) tendsto_id
+
+theorem tendsto_blockEndpoint_ratio :
+    Tendsto (fun k => (blockEndpoint k : ℝ) /
+      blockEndpoint (k + 1)) atTop (𝓝 0) := by
+  have hendpoint : Tendsto blockEndpoint atTop atTop :=
+    tendsto_atTop_mono' atTop (f₁ := id) (f₂ := blockEndpoint)
+      (Eventually.of_forall (fun k : ℕ => by
+        dsimp
+        have h := blockEndpoint_ge k
+        omega)) tendsto_id
+  have hinv : Tendsto (fun k => (1 : ℝ) / blockEndpoint k)
+      atTop (𝓝 0) :=
+    tendsto_const_div_atTop_nhds_zero_nat (C := (1 : ℝ)) |>.comp hendpoint
+  apply hinv.congr'
+  filter_upwards with k
+  simp only [blockEndpoint, Nat.cast_pow]
+  have hpos : (0 : ℝ) < blockEndpoint k := by
+    have h : 0 < blockEndpoint k := by
+      have h' := blockEndpoint_two_le k
+      omega
+    exact_mod_cast h
+  field_simp
+
+theorem tendsto_evenEndpoint_cesaro :
+    Tendsto (fun k => cesaroAverage alternatingBlockStage (evenEndpoint k))
+      atTop (𝓝 0) := by
+  have hratio := tendsto_blockEndpoint_ratio
+  have hupper : ∀ k, cesaroAverage alternatingBlockStage (evenEndpoint k) ≤
+      (blockEndpoint (2 * k : ℕ) : ℝ) /
+        blockEndpoint (2 * k + 1) := by
+    intro k
+    unfold evenEndpoint
+    simpa [evenEndpoint] using
+      (alternatingCesaro_endpoint_even (k := 2 * k) (by omega))
+  have hupper_tendsto : Tendsto (fun k =>
+      (blockEndpoint (2 * k : ℕ) : ℝ) / blockEndpoint (2 * k + 1))
+      atTop (𝓝 0) := by
+    convert hratio.comp (tendsto_atTop_mono' atTop
+      (f₁ := id) (f₂ := fun k : ℕ => 2 * k)
+      (Eventually.of_forall (fun k : ℕ => by dsimp; omega)) tendsto_id) using 1
+    funext k
+    congr 2
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le
+    tendsto_const_nhds hupper_tendsto
+    (fun k => (alternatingCesaro_bounded (evenEndpoint k)).1)
+    hupper
+
+theorem tendsto_oddEndpoint_cesaro :
+    Tendsto (fun k => cesaroAverage alternatingBlockStage (oddEndpoint k))
+      atTop (𝓝 1) := by
+  have hratio := tendsto_blockEndpoint_ratio
+  have hlower : ∀ k, 1 - (blockEndpoint (2 * k + 1 : ℕ) : ℝ) /
+        blockEndpoint (2 * k + 2) ≤
+      cesaroAverage alternatingBlockStage (oddEndpoint k) := by
+    intro k
+    unfold oddEndpoint
+    simpa [oddEndpoint] using
+      (alternatingCesaro_endpoint_odd (k := 2 * k + 1) (by omega))
+  have hratio_tendsto : Tendsto (fun k =>
+      (blockEndpoint (2 * k + 1 : ℕ) : ℝ) /
+        blockEndpoint (2 * k + 2)) atTop (𝓝 0) := by
+    convert hratio.comp (tendsto_atTop_mono' atTop
+      (f₁ := id) (f₂ := fun k : ℕ => 2 * k + 1)
+      (Eventually.of_forall (fun k : ℕ => by dsimp; omega)) tendsto_id) using 1
+    funext k
+    congr 2
+  have hlower_tendsto : Tendsto (fun k => 1 -
+      (blockEndpoint (2 * k + 1 : ℕ) : ℝ) /
+      blockEndpoint (2 * k + 2)) atTop (𝓝 1) :=
+    by simpa using
+      (tendsto_const_nhds : Tendsto (fun _ : ℕ => (1 : ℝ)) atTop (𝓝 1)).sub
+        hratio_tendsto
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le
+    hlower_tendsto tendsto_const_nhds hlower
+    (fun k => (alternatingCesaro_bounded (oddEndpoint k)).2)
+
+theorem cesaroAverage_alternating_liminf_limsup :
+    Filter.liminf (fun n => cesaroAverage alternatingBlockStage n) atTop = 0 ∧
+    Filter.limsup (fun n => cesaroAverage alternatingBlockStage n) atTop = 1 := by
+  let u : ℕ → ℝ := fun n => cesaroAverage alternatingBlockStage n
+  have hlow : ∀ n, 0 ≤ u n := fun n => (alternatingCesaro_bounded n).1
+  have hhigh : ∀ n, u n ≤ 1 := fun n => (alternatingCesaro_bounded n).2
+  have hzero : MapClusterPt 0 atTop u := by
+    apply MapClusterPt.of_comp tendsto_evenEndpoint
+    simpa [u, Function.comp_def] using tendsto_evenEndpoint_cesaro.mapClusterPt
+  have hone : MapClusterPt 1 atTop u := by
+    apply MapClusterPt.of_comp tendsto_oddEndpoint
+    simpa [u, Function.comp_def] using tendsto_oddEndpoint_cesaro.mapClusterPt
+  have hlow' : (0 : ℝ) ≤ Filter.liminf u atTop :=
+    le_liminf_of_le
+      (isCoboundedUnder_ge_of_eventually_le atTop (Eventually.of_forall hhigh))
+      (Eventually.of_forall hlow)
+  have hhigh' : Filter.limsup u atTop ≤ (1 : ℝ) :=
+    limsup_le_of_le
+      (isCoboundedUnder_le_of_eventually_le atTop (Eventually.of_forall hlow))
+      (Eventually.of_forall hhigh)
+  have hliminf_le : Filter.liminf u atTop ≤ (0 : ℝ) :=
+    hzero.liminf_le (isBoundedUnder_of_eventually_ge
+      (Eventually.of_forall hlow))
+  have hlimsup_ge : (1 : ℝ) ≤ Filter.limsup u atTop :=
+    hone.le_limsup (isBoundedUnder_of_eventually_le
+      (Eventually.of_forall hhigh))
+  exact ⟨le_antisymm hliminf_le hlow', le_antisymm hhigh' hlimsup_ge⟩
+
+theorem cesaroAverage_complement_alternating_liminf_limsup :
+    Filter.liminf (fun n => cesaroAverage
+      (complementSequence alternatingBlockStage) n) atTop = 0 ∧
+    Filter.limsup (fun n => cesaroAverage
+      (complementSequence alternatingBlockStage) n) atTop = 1 := by
+  have hlow : ∀ n, 0 ≤ cesaroAverage
+      (complementSequence alternatingBlockStage) n := by
+    intro n
+    rw [cesaroAverage_complement]
+    linarith [(alternatingCesaro_bounded n).2]
+  have hhigh : ∀ n, cesaroAverage
+      (complementSequence alternatingBlockStage) n ≤ 1 := by
+    intro n
+    rw [cesaroAverage_complement]
+    linarith [(alternatingCesaro_bounded n).1]
+  have hzero : Tendsto (fun k => cesaroAverage
+      (complementSequence alternatingBlockStage) (evenEndpoint k)) atTop (𝓝 1) := by
+    rw [show (fun k => cesaroAverage
+      (complementSequence alternatingBlockStage) (evenEndpoint k)) =
+      (fun k => 1 - cesaroAverage alternatingBlockStage (evenEndpoint k)) by
+        funext k; rw [cesaroAverage_complement]]
+    simpa using
+      (tendsto_const_nhds : Tendsto (fun _ : ℕ => (1 : ℝ)) atTop (𝓝 1)).sub
+        tendsto_evenEndpoint_cesaro
+  have hone : Tendsto (fun k => cesaroAverage
+      (complementSequence alternatingBlockStage) (oddEndpoint k)) atTop (𝓝 0) := by
+    rw [show (fun k => cesaroAverage
+      (complementSequence alternatingBlockStage) (oddEndpoint k)) =
+      (fun k => 1 - cesaroAverage alternatingBlockStage (oddEndpoint k)) by
+        funext k; rw [cesaroAverage_complement]]
+    simpa using
+      (tendsto_const_nhds : Tendsto (fun _ : ℕ => (1 : ℝ)) atTop (𝓝 1)).sub
+        tendsto_oddEndpoint_cesaro
+  let u : ℕ → ℝ := fun n => cesaroAverage
+    (complementSequence alternatingBlockStage) n
+  have hzero' : MapClusterPt 0 atTop u := by
+    apply MapClusterPt.of_comp tendsto_oddEndpoint
+    simpa [u, Function.comp_def] using hone.mapClusterPt
+  have hone' : MapClusterPt 1 atTop u := by
+    apply MapClusterPt.of_comp tendsto_evenEndpoint
+    simpa [u, Function.comp_def] using hzero.mapClusterPt
+  have hlow' : (0 : ℝ) ≤ Filter.liminf u atTop :=
+    le_liminf_of_le
+      (isCoboundedUnder_ge_of_eventually_le atTop (Eventually.of_forall hhigh))
+      (Eventually.of_forall hlow)
+  have hhigh' : Filter.limsup u atTop ≤ (1 : ℝ) :=
+    limsup_le_of_le
+      (isCoboundedUnder_le_of_eventually_le atTop (Eventually.of_forall hlow))
+      (Eventually.of_forall hhigh)
+  have hliminf_le : Filter.liminf u atTop ≤ (0 : ℝ) :=
+    hzero'.liminf_le (isBoundedUnder_of_eventually_ge
+      (Eventually.of_forall hlow))
+  have hlimsup_ge : (1 : ℝ) ≤ Filter.limsup u atTop :=
+    hone'.le_limsup (isBoundedUnder_of_eventually_le
+      (Eventually.of_forall hhigh))
+  exact ⟨le_antisymm hliminf_le hlow', le_antisymm hhigh' hlimsup_ge⟩
+
+theorem alternatingBlockStage_separates_asymptotic_payoffs :
+    FinDist.expect (fairTwoPointLaw alternatingBlockStage)
+        (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop) = 0 ∧
+    (∀ n, FinDist.expect (fairTwoPointLaw alternatingBlockStage)
+      (fun path => cesaroAverage path n) = (1 / 2 : ℝ)) ∧
+    Tendsto (fun n => FinDist.expect (fairTwoPointLaw alternatingBlockStage)
+      (fun path => cesaroAverage path n)) atTop (𝓝 (1 / 2 : ℝ)) ∧
+    FinDist.expect (fairTwoPointLaw alternatingBlockStage)
+        (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop) = 1 ∧
+    FinDist.expect (fairTwoPointLaw alternatingBlockStage)
+        (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop) ≠
+      (1 / 2 : ℝ) ∧
+    FinDist.expect (fairTwoPointLaw alternatingBlockStage)
+        (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop) ≠
+      (1 / 2 : ℝ) := by
+  exact fair_two_point_order_limits alternatingBlockStage
+    cesaroAverage_alternating_liminf_limsup.1
+    cesaroAverage_alternating_liminf_limsup.2
+    cesaroAverage_complement_alternating_liminf_limsup.1
+    cesaroAverage_complement_alternating_liminf_limsup.2
 
 end GameTheory.Experimental.PostArchitecture
