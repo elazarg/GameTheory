@@ -261,6 +261,188 @@ theorem sum_factorProduct_setOne
   rw [sum_localFactor_setOne Value changed parents topological kernels assignment,
     one_mul]
 
+private theorem cylinderMass_eq_factorProduct_of_pending
+    [Fintype Node] [DecidableEq Node]
+    [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
+    (law : FinDist (Assignment Value))
+    (parents : Node → Finset Node)
+    (topological : GameTheory.Math.DAG.TopologicalOrder parents)
+    (kernels : LocalKernels Value parents)
+    (hfactor : Factorizes Value law parents kernels) :
+    ∀ pending : List Node,
+      pending.Nodup →
+      pending.Pairwise (fun earlier later => later ∉ parents earlier) →
+      ∀ (retained : Finset Node) (witness : Assignment Value),
+        (∀ node ∈ pending, node ∉ retained) →
+        retained ∪ pending.toFinset = Finset.univ →
+        ParentClosed parents retained →
+        cylinderMass Value law retained witness =
+          factorProduct Value parents kernels retained witness := by
+  intro pending
+  induction pending with
+  | nil =>
+      intro _ _ retained witness _ hcover _
+      have hretained : retained = Finset.univ := by
+        simpa using hcover
+      subst retained
+      let emptyConfiguration : ComplementConfiguration Value Finset.univ :=
+        fun node => False.elim (node.2 (Finset.mem_univ node.1))
+      letI : Unique (ComplementConfiguration Value Finset.univ) :=
+        { default := emptyConfiguration
+          uniq := fun configuration => by
+            funext node
+            exact False.elim (node.2 (Finset.mem_univ node.1)) }
+      rw [cylinderMass_eq_sum_factorProduct Value law parents kernels hfactor]
+      rw [sum_ite_agrees_eq_sum_complement]
+      rw [Fintype.sum_unique]
+      apply congrArg (factorProduct Value parents kernels Finset.univ)
+      funext node
+      exact fillComplement_of_mem Value Finset.univ witness default
+        (Finset.mem_univ node)
+  | cons head tail ih =>
+      intro hnodup hordered retained witness houtside hcover hclosed
+      have hheadOutside : head ∉ retained :=
+        houtside head (by simp)
+      have htailNodup : tail.Nodup :=
+        (List.nodup_cons.mp hnodup).2
+      have hheadTail : head ∉ tail :=
+        (List.nodup_cons.mp hnodup).1
+      have hheadOrdered : ∀ later ∈ tail, later ∉ parents head :=
+        (List.pairwise_cons.mp hordered).1
+      have htailOrdered :
+          tail.Pairwise (fun earlier later => later ∉ parents earlier) :=
+        (List.pairwise_cons.mp hordered).2
+      have htailOutside : ∀ node ∈ tail, node ∉ insert head retained := by
+        intro node hnode
+        simp only [Finset.mem_insert, not_or]
+        exact ⟨fun heq => hheadTail (heq ▸ hnode),
+          houtside node (by simp [hnode])⟩
+      have hcoverTail : insert head retained ∪ tail.toFinset = Finset.univ := by
+        apply Finset.eq_univ_of_forall
+        intro node
+        have hcovered : node ∈ retained ∪ (head :: tail).toFinset := by
+          rw [hcover]
+          exact Finset.mem_univ node
+        rcases Finset.mem_union.mp hcovered with hretained | hpending
+        · exact Finset.mem_union_left _ (Finset.mem_insert_of_mem hretained)
+        · have hcases : node = head ∨ node ∈ tail := by
+            simpa using hpending
+          rcases hcases with heq | htail
+          · subst node
+            exact Finset.mem_union_left _ (Finset.mem_insert_self head retained)
+          · exact Finset.mem_union_right _ (by simpa using htail)
+      have hclosedTail : ParentClosed parents (insert head retained) := by
+        intro node hnode parent hparent
+        rcases Finset.mem_insert.mp hnode with heq | hnode
+        · subst node
+          have hcovered : parent ∈ retained ∪ (head :: tail).toFinset := by
+            rw [hcover]
+            exact Finset.mem_univ parent
+          rcases Finset.mem_union.mp hcovered with hretained | hpending
+          · exact Finset.mem_insert_of_mem hretained
+          · have hcases : parent = head ∨ parent ∈ tail := by
+              simpa using hpending
+            rcases hcases with heq | htail
+            · subst parent
+              exact False.elim
+                ((GameTheory.Math.DAG.acyclic_of_topologicalOrder
+                    topological head) (Relation.TransGen.single hparent))
+            · exact False.elim (hheadOrdered parent htail hparent)
+        · exact Finset.mem_insert_of_mem (hclosed node hnode hparent)
+      have hinduction (value : Value head) :=
+        ih htailNodup htailOrdered (insert head retained)
+          (FinDist.DependentAssignment.setOne witness ⟨head, value⟩)
+          htailOutside hcoverTail hclosedTail
+      have hnotRead : ∀ node ∈ (insert head retained).erase head,
+          head ∉ parents node := by
+        intro node hnode hparent
+        apply hheadOutside
+        apply hclosed node
+        · simpa [hheadOutside] using hnode
+        · exact hparent
+      calc
+        cylinderMass Value law retained witness =
+            ∑ assignment : Assignment Value,
+              if AgreeOn Value retained assignment witness then
+                factorProduct Value parents kernels Finset.univ assignment
+              else 0 :=
+          cylinderMass_eq_sum_factorProduct Value law parents kernels
+            hfactor retained witness
+        _ = ∑ value : Value head,
+              ∑ assignment : Assignment Value,
+                if AgreeOn Value (insert head retained) assignment
+                    (FinDist.DependentAssignment.setOne witness ⟨head, value⟩)
+                then factorProduct Value parents kernels Finset.univ assignment
+                else 0 :=
+          sum_ite_agrees_eq_sum_insert Value retained hheadOutside witness
+            (factorProduct Value parents kernels Finset.univ)
+        _ = ∑ value : Value head,
+              cylinderMass Value law (insert head retained)
+                (FinDist.DependentAssignment.setOne witness ⟨head, value⟩) := by
+          apply Finset.sum_congr rfl
+          intro value _
+          symm
+          exact cylinderMass_eq_sum_factorProduct Value law parents kernels
+            hfactor (insert head retained)
+              (FinDist.DependentAssignment.setOne witness ⟨head, value⟩)
+        _ = ∑ value : Value head,
+              factorProduct Value parents kernels (insert head retained)
+                (FinDist.DependentAssignment.setOne witness ⟨head, value⟩) := by
+          apply Finset.sum_congr rfl
+          intro value _
+          exact hinduction value
+        _ = factorProduct Value parents kernels retained witness := by
+          simpa [hheadOutside] using
+            sum_factorProduct_setOne Value head parents topological kernels
+              (insert head retained) witness (by simp) hnotRead
+
+/-- Marginalizing every coordinate outside a parent-closed set leaves exactly
+the product of the retained local factors.  No positivity hypothesis is
+needed: the statement is about cylinder masses, including zero-mass ones. -/
+theorem cylinderMass_eq_factorProduct_of_parentClosed
+    [Fintype Node] [DecidableEq Node]
+    [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
+    (law : FinDist (Assignment Value))
+    (parents : Node → Finset Node)
+    (topological : GameTheory.Math.DAG.TopologicalOrder parents)
+    (kernels : LocalKernels Value parents)
+    (hfactor : Factorizes Value law parents kernels)
+    (retained : Finset Node) (witness : Assignment Value)
+    (hclosed : ParentClosed parents retained) :
+    cylinderMass Value law retained witness =
+      factorProduct Value parents kernels retained witness := by
+  let pending := topological.order.filter (fun node => node ∉ retained)
+  have horderedFull : topological.order.Pairwise
+      (fun earlier later => later ∉ parents earlier) := by
+    rw [List.pairwise_iff_getElem]
+    intro firstIndex laterIndex hfirstBound hlaterBound hlt hedge
+    obtain ⟨parentIndex, hparentLt, hparent⟩ :=
+      topological.respects ⟨firstIndex, hfirstBound⟩
+        topological.order[laterIndex] hedge
+    have hindexEq : parentIndex = ⟨laterIndex, hlaterBound⟩ :=
+      topological.nodup.get_inj_iff.mp hparent
+    have hvalueEq : parentIndex.val = laterIndex := by
+      simpa using congrArg Fin.val hindexEq
+    rw [hvalueEq] at hparentLt
+    exact (Nat.not_lt_of_ge (Nat.le_of_lt hlt)) hparentLt
+  have hnodup : pending.Nodup := by
+    exact topological.nodup.filter _
+  have hordered : pending.Pairwise
+      (fun earlier later => later ∉ parents earlier) := by
+    exact horderedFull.filter _
+  have houtside : ∀ node ∈ pending, node ∉ retained := by
+    intro node hnode
+    exact of_decide_eq_true (List.mem_filter.mp hnode).2
+  have hcover : retained ∪ pending.toFinset = Finset.univ := by
+    apply Finset.eq_univ_of_forall
+    intro node
+    by_cases hnode : node ∈ retained
+    · exact Finset.mem_union_left _ hnode
+    · apply Finset.mem_union_right
+      simpa [pending, hnode] using topological.complete node
+  exact cylinderMass_eq_factorProduct_of_pending Value law parents topological
+    kernels hfactor pending hnodup hordered retained witness houtside hcover hclosed
+
 /-! ## A finite normalization control -/
 
 namespace BoolControl
@@ -325,6 +507,60 @@ theorem true_cylinderMass :
   unfold falseLaw
   rw [← FinDist.expect_indicator_eq_probOf, FinDist.expect_pure]
   simp [falseAssignment]
+
+namespace TwoNode
+
+inductive ChainNode
+  | root
+  | leaf
+  deriving DecidableEq, Fintype
+
+abbrev ChainValue (_ : ChainNode) := Bool
+
+def parents : ChainNode → Finset ChainNode
+  | .root => ∅
+  | .leaf => {.root}
+
+def topological : GameTheory.Math.DAG.TopologicalOrder parents where
+  order := [.root, .leaf]
+  nodup := by decide
+  complete node := by cases node <;> simp
+  respects := by
+    intro index parent hparent
+    fin_cases index
+    · simp [parents] at hparent
+    · have hroot : parent = .root := by
+        simpa [parents] using hparent
+      subst parent
+      exact ⟨0, by decide, rfl⟩
+
+def kernels : LocalKernels ChainValue parents :=
+  fun _ _ => FinDist.pure false
+
+def law : FinDist (Assignment ChainValue) :=
+  FinDist.pi fun _ => FinDist.pure false
+
+def allFalse : Assignment ChainValue := fun _ => false
+
+def retained : Finset ChainNode := {.root}
+
+theorem factorizes : Factorizes ChainValue law parents kernels := by
+  intro assignment
+  rw [law, FinDist.prob_pi]
+  simp [factorProduct, localFactor, kernels]
+
+theorem retained_parentClosed : ParentClosed parents retained := by
+  intro node hnode
+  cases node <;> simp [retained, parents] at hnode ⊢
+
+/-- Eliminating the Boolean leaf leaves the normalized root factor. -/
+theorem root_cylinderMass :
+    cylinderMass ChainValue law retained allFalse = 1 := by
+  rw [cylinderMass_eq_factorProduct_of_parentClosed ChainValue law parents
+    topological kernels factorizes retained allFalse retained_parentClosed]
+  simp [factorProduct, localFactor, kernels, retained, allFalse]
+
+end TwoNode
 
 end BoolControl
 

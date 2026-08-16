@@ -171,10 +171,11 @@ The semantic seam is public. Graphical ignorability, requisite observation,
 strategic reliance, and s-reachability remain experimental and separate.
 Canonical MAID point-mass factorization, a division-free finite-law
 conditional-independence surface, cast-free dependent-complement enumeration,
-one-pivot Fubini, and rank-one cross multiplication are now validated
-experimentally. The next gate is reverse-topological parent-closed cylinder
-marginalization followed by ancestral-moral factor-scope elimination. Only
-then may local-utility d-separation construct
+one-pivot Fubini, reverse-topological parent-closed marginalization, generic
+ancestral-moral separation, factor-scope confinement, and rank-one cross
+multiplication are now validated experimentally. The next gate is the finite
+component partition and latent-sum assembly connecting moral separation to the
+rank-one tables. Only then may local-utility d-separation construct
 `CoversFullDeviationsAt` on the multi-agent hostile consumer.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a
