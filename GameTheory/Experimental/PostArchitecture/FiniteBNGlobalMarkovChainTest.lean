@@ -59,15 +59,15 @@ def model : Structure Unit Node where
 
 instance valueFintype (node : Node) : Fintype (model.Value node) := by
   cases node with
-  | left => change Fintype Bool; infer_instance
-  | middle => change Fintype (Fin 3); infer_instance
-  | right => change Fintype Bool; infer_instance
+  | left => exact inferInstanceAs (Fintype Bool)
+  | middle => exact inferInstanceAs (Fintype (Fin 3))
+  | right => exact inferInstanceAs (Fintype Bool)
 
 instance valueDecidableEq (node : Node) : DecidableEq (model.Value node) := by
   cases node with
-  | left => change DecidableEq Bool; infer_instance
-  | middle => change DecidableEq (Fin 3); infer_instance
-  | right => change DecidableEq Bool; infer_instance
+  | left => exact inferInstanceAs (DecidableEq Bool)
+  | middle => exact inferInstanceAs (DecidableEq (Fin 3))
+  | right => exact inferInstanceAs (DecidableEq Bool)
 
 def fairBool : FinDist Bool :=
   FinDist.mix (1 / 2) (by norm_num) (by norm_num)

@@ -212,7 +212,7 @@ theorem localUtilityFactorsAt_of_replacementInvariantUtilityLawAt
                 certificate term result.1 result.2) := by
                 simp [joint, fullJoint, termContinuationValue, hrelevant,
                   termLaw, FinDist.expect_const]
-  change law.expect (fun assignment => semantics.utility owner assignment) = _
+  show law.expect (fun assignment => semantics.utility owner assignment) = _
   calc
     law.expect (fun assignment => semantics.utility owner assignment) =
         law.expect (fun assignment => ∑ term : view.UtilitySite owner,

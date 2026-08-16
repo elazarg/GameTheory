@@ -76,11 +76,11 @@ def agreeingAssignmentsEquivComplement [DecidableEq Node]
     apply Subtype.ext
     funext node
     by_cases hnode : node ∈ nodes
-    · change fillComplement Value nodes witness
+    · show fillComplement Value nodes witness
           (fun complement => assignment.1 complement.1) node = assignment.1 node
       rw [fillComplement_of_mem Value nodes witness _ hnode]
       exact (assignment.2 node hnode).symm
-    · change fillComplement Value nodes witness
+    · show fillComplement Value nodes witness
           (fun complement => assignment.1 complement.1) node = assignment.1 node
       rw [fillComplement_of_notMem Value nodes witness _ hnode]
   right_inv configuration := by
@@ -245,11 +245,11 @@ theorem filtered_sum_eq_one :
       symm
       apply Fintype.sum_equiv freeConfigurationEquiv
       intro free
-      change (if free then 1 else 0) =
+      show (if free then 1 else 0) =
         if fillComplement value fixed witness (freeConfiguration free) true
         then 1 else 0
       rw [fillComplement_of_notMem value fixed witness _ (by simp [fixed])]
-      change (if free then 1 else 0) = if free then 1 else 0
+      show (if free then 1 else 0) = if free then 1 else 0
       rfl
     _ = 1 := by decide
 

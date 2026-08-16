@@ -76,7 +76,7 @@ private theorem condOnFibre_fst_map_snd_prob
         (FinDist.support_condOn joint (Prod.fst ⁻¹' {kept}) hfibre hpair).1
       have heq : pair.1 = kept := by simpa using hfirst
       rcases pair with ⟨first, second⟩
-      change first = kept at heq
+      have hfirstEq : first = kept := by simpa only using heq
       subst first
       simp
     _ = conditional.prob (kept, termValue) := by
@@ -151,8 +151,7 @@ theorem contextTermLaw_eq_bind_continuation
       law.map fun state => (keep (context state), term state)
     have hkeptTerm :
         (keep full, term omega) ∈ keptTermLaw.support := by
-      change (keep full, term omega) ∈
-        (law.map fun state => (keep (context state), term state)).support
+      unfold keptTermLaw
       rw [FinDist.support_map]
       exact ⟨omega, homega, by simp [hcontext]⟩
     have hfibre :
@@ -163,30 +162,25 @@ theorem contextTermLaw_eq_bind_continuation
       condOnFibre_fst_map_snd_prob keptTermLaw (keep full) termValue hfibre
     have hfirstMap :
         keptTermLaw.map Prod.fst = law.map (keep ∘ context) := by
-      change (law.map fun state =>
-          (keep (context state), term state)).map Prod.fst =
-        law.map (keep ∘ context)
+      unfold keptTermLaw
       rw [FinDist.map_comp]
       rfl
     have hkeptPair :
         keptTermLaw.prob (keep full, termValue) =
-          law.probOf
+      law.probOf
             (pairAtom term (keep ∘ context) termValue (keep full)) := by
-      change (law.map fun state =>
-          (keep (context state), term state)).prob (keep full, termValue) = _
+      unfold keptTermLaw
       rw [map_pair_prob_eq_probOf_pairAtom]
       congr 1
       ext state
-      change (keep (context state) = keep full ∧ term state = termValue) ↔
-        (term state = termValue ∧ keep (context state) = keep full)
+      simp only [pairAtom, Set.mem_setOf_eq, Function.comp_apply]
       exact and_comm
     have hcontinuation' :
         (continuation law context term keep (keep full)).prob termValue =
           law.probOf
               (pairAtom term (keep ∘ context) termValue (keep full)) /
             law.probOf (atom (keep ∘ context) (keep full)) := by
-      change ((keptTermLaw.condOnFibre Prod.fst (keep full)).map
-        Prod.snd).prob termValue = _
+      unfold continuation
       rw [hcontinuation, hkeptPair, hfirstMap,
         map_prob_eq_probOf_atom]
     rw [hcontinuation']
@@ -207,10 +201,9 @@ theorem contextTermLaw_eq_bind_continuation
         exact ⟨hstate, hterm, by simp [hstate]⟩
     have hcontextEvidence :
         pairAtom context (keep ∘ context) full (keep full) =
-          atom context full := by
+      atom context full := by
       ext state
-      change (context state = full ∧ keep (context state) = keep full) ↔
-        context state = full
+      simp only [pairAtom, atom, Set.mem_setOf_eq, Function.comp_apply]
       constructor
       · exact fun hstate => hstate.1
       · intro hstate

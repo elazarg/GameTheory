@@ -56,8 +56,7 @@ instance graphValueFintype
   cases node with
   | base baseNode => exact inferInstanceAs (Fintype (diagram.Value baseNode))
   | utility site =>
-      change Fintype (Config diagram (view.term site).parents)
-      unfold Config
+      unfold graphValue Config
       infer_instance
 
 instance graphValueDecidableEq
@@ -70,8 +69,7 @@ instance graphValueDecidableEq
   | base baseNode =>
       exact inferInstanceAs (DecidableEq (diagram.Value baseNode))
   | utility site =>
-      change DecidableEq (Config diagram (view.term site).parents)
-      unfold Config
+      unfold graphValue Config
       infer_instance
 
 private theorem baseParent_mem [DecidableEq Node]

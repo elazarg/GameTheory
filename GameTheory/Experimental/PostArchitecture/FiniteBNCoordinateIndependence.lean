@@ -220,7 +220,7 @@ theorem impossibleEvidenceCylinder_mass_zero :
         {node // node ∈ evidenceCoordinates})
     simp [Assignment.restrict, controlAssignment,
       impossibleEvidenceConfiguration] at hvalue
-  change (FinDist.pure controlAssignment).probOf
+  show (FinDist.pure controlAssignment).probOf
     (cylinder evidenceCoordinates impossibleEvidenceConfiguration) = 0
   classical
   rw [← FinDist.expect_indicator_eq_probOf, FinDist.expect_pure]

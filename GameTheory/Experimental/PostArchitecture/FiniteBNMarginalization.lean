@@ -108,7 +108,7 @@ theorem cylinderMass_eq_zero_mono
 
 /-! ## The local normalization step used by variable elimination -/
 
-/-- Updating a coordinate outside a node's parent set does not change that
+/-- Updating a coordinate outside a node's parent set preserves that
 node's parent configuration. -/
 theorem parentConfiguration_setOne_of_notMem
     [DecidableEq Node]
@@ -128,7 +128,7 @@ theorem parentConfiguration_setOne_of_notMem
   apply FinDist.DependentAssignment.resolve_of_notMem
   simpa only [Finset.mem_singleton] using hparentNe
 
-/-- Updating a node does not change the configuration of its parents in an
+/-- Updating a node preserves the configuration of its parents in an
 acyclic network. -/
 theorem parentConfiguration_setOne_self
     [DecidableEq Node]
@@ -182,7 +182,8 @@ theorem factorProduct_setOne_of_not_read
   apply Finset.prod_congr rfl
   intro node hnode
   exact localFactor_setOne_of_ne_of_notParent Value parents kernels assignment value
-    (fun heq => hchanged (heq ▸ hnode)) (hnotParent node hnode)
+    (fun heq => hchanged (by simpa only [heq] using hnode))
+    (hnotParent node hnode)
 
 /-- The local factor at a node sums to one when that coordinate varies and all
 other coordinates remain fixed.  This is the atomic reverse-elimination step;
@@ -315,7 +316,7 @@ private theorem cylinderMass_eq_factorProduct_of_pending
       have htailOutside : ∀ node ∈ tail, node ∉ insert head retained := by
         intro node hnode
         simp only [Finset.mem_insert, not_or]
-        exact ⟨fun heq => hheadTail (heq ▸ hnode),
+        exact ⟨fun heq => hheadTail (by simpa only [heq] using hnode),
           houtside node (by simp [hnode])⟩
       have hcoverTail : insert head retained ∪ tail.toFinset = Finset.univ := by
         apply Finset.eq_univ_of_forall
@@ -500,8 +501,8 @@ theorem true_cylinderMass :
     · intro hagrees
       exact hagrees () (Finset.mem_univ ())
     · intro hat node _
-      change assignment () = true at hat
-      simpa only [Unit.ext node] using hat
+      have hatUnit : assignment () = true := hat
+      simpa only [Unit.ext node] using hatUnit
   rw [hset]
   classical
   unfold falseLaw

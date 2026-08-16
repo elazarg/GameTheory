@@ -71,8 +71,13 @@ theorem IsConditionallyIndependent.symm
 /-- Event mass is nonnegative. -/
 theorem probOf_nonneg (law : FinDist Ω) (event : Set Ω) :
     0 ≤ law.probOf event := by
-  unfold FinDist.probOf
-  exact ENNReal.toReal_nonneg
+  letI : DecidablePred (· ∈ event) := Classical.decPred _
+  rw [← FinDist.expect_indicator_eq_probOf]
+  have hnonneg := FinDist.expect_mono
+    (μ := law) (u := fun _ : Ω => 0)
+    (v := fun omega => if omega ∈ event then 1 else 0)
+    (by intro omega _; split <;> simp_all)
+  simpa using hnonneg
 
 /-- Finite-law event mass is monotone. -/
 theorem probOf_mono (law : FinDist Ω) {smaller larger : Set Ω}

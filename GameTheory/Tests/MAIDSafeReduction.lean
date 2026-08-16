@@ -168,7 +168,7 @@ theorem native_play_eq (matchSignal : Bool) (policy : Policy diagram) :
   rw [nativeBehavioralGameForm_play,
     map_values_nativeRun_eq_assignmentRun topological
       (testSemantics matchSignal) policy]
-  change assignmentRun (testSemantics matchSignal) policy
+  show assignmentRun (testSemantics matchSignal) policy
       [.signal, .decision] (testSemantics matchSignal).defaultValue = _
   rw [assignmentRun, assignmentStep, assignmentNodeLaw_signal,
     FinDist.bind_map]
@@ -303,7 +303,7 @@ theorem irrelevant_reduced_true_isNash :
   rw [isNash_iff]
   intro owner replacement
   rw [euPreference_apply]
-  change expectedUtility
+  show expectedUtility
       (fun assignment owner => irrelevantSemantics.utility owner assignment)
       () ((nativeBehavioralGameForm irrelevantSemantics).play
         (pruning.expandPolicy
@@ -322,7 +322,7 @@ theorem irrelevant_true_coversFullDeviations :
   intro owner fullReplacement
   refine ⟨(reducedPure true) owner, ?_⟩
   rw [euPreference_apply, Profile.update_eq_self]
-  change expectedUtility
+  show expectedUtility
       (fun assignment owner => irrelevantSemantics.utility owner assignment)
       () ((nativeBehavioralGameForm irrelevantSemantics).play
         (Profile.update (pruning.expandPolicy (reducedPure true))
@@ -368,7 +368,7 @@ theorem matching_reduced_isNash (policy : pruning.ReducedPolicy) :
   rw [isNash_iff]
   intro owner replacement
   rw [euPreference_apply]
-  change expectedUtility
+  show expectedUtility
       (fun assignment owner => matchingSemantics.utility owner assignment)
       () ((nativeBehavioralGameForm matchingSemantics).play
         (pruning.expandPolicy (Profile.update policy owner replacement))) ≤

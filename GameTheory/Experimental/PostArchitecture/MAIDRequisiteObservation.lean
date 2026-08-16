@@ -348,10 +348,10 @@ theorem signal_not_requisite :
               simp [UtilityView.DirectedEdge, UtilityView.graphParents,
                 effectiveParents, parents] at hforward
       | utility owner =>
-          change (.base .signal) ∈
-            (utilityView.term owner).parents.image UtilityView.GraphNode.base
-            at hforward
-          obtain ⟨node, hnode, equality⟩ := Finset.mem_image.mp hforward
+          have hforward' : (.base .signal) ∈
+              (utilityView.term owner).parents.image
+                UtilityView.GraphNode.base := hforward
+          obtain ⟨node, hnode, equality⟩ := Finset.mem_image.mp hforward'
           fin_cases owner
           have hreward : node = ExampleNode.reward := by
             simpa [UtilityView.term, utilityView, rewardTerm] using hnode
@@ -393,10 +393,11 @@ theorem signal_not_requisite :
               simp [UtilityView.DirectedEdge, UtilityView.graphParents,
                 effectiveParents, parents] at hsignalParent
       | utility owner =>
-          change (.base .signal) ∈
-            (utilityView.term owner).parents.image UtilityView.GraphNode.base
-            at hsignalParent
-          obtain ⟨node, hnode, equality⟩ := Finset.mem_image.mp hsignalParent
+          have hsignalParent' : (.base .signal) ∈
+              (utilityView.term owner).parents.image
+                UtilityView.GraphNode.base := hsignalParent
+          obtain ⟨node, hnode, equality⟩ :=
+            Finset.mem_image.mp hsignalParent'
           fin_cases owner
           have hreward : node = ExampleNode.reward := by
             simpa [UtilityView.term, utilityView, rewardTerm] using hnode
@@ -492,7 +493,7 @@ theorem signal_requisite :
       effectiveParents, parents]
   have rewardUtility : utilityView.DirectedEdge
       (.base .reward) (.utility rewardSite) := by
-    change (.base .reward : UtilityView.GraphNode utilityView ()) ∈
+    show (.base .reward : UtilityView.GraphNode utilityView ()) ∈
       (utilityView.term rewardSite).parents.image UtilityView.GraphNode.base
     have hterm : utilityView.term rewardSite = rewardTerm := by
       rfl
@@ -616,16 +617,16 @@ signal. -/
 theorem split_signal_term_not_relevant :
     ¬ splitView.IsRelevantUtilityTerm decisionSite splitSignalSite := by
   intro relevant
-  change Relation.TransGen splitView.DirectedEdge
-    (.base decisionSite.1) (.utility splitSignalSite) at relevant
-  rw [Relation.TransGen.tail'_iff] at relevant
-  obtain ⟨before, path, lastEdge⟩ := relevant
-  change before ∈
-    (splitView.term splitSignalSite).parents.image UtilityView.GraphNode.base
-    at lastEdge
+  have relevant' : Relation.TransGen splitView.DirectedEdge
+      (.base decisionSite.1) (.utility splitSignalSite) := relevant
+  rw [Relation.TransGen.tail'_iff] at relevant'
+  obtain ⟨before, path, lastEdge⟩ := relevant'
+  have lastEdge' : before ∈
+      (splitView.term splitSignalSite).parents.image
+        UtilityView.GraphNode.base := lastEdge
   have hterm : splitView.term splitSignalSite = signalTerm := by rfl
-  rw [hterm] at lastEdge
-  obtain ⟨node, hnode, equality⟩ := Finset.mem_image.mp lastEdge
+  rw [hterm] at lastEdge'
+  obtain ⟨node, hnode, equality⟩ := Finset.mem_image.mp lastEdge'
   have hsignal : node = ExampleNode.signal := by
     simpa [signalTerm] using hnode
   subst node
@@ -647,15 +648,16 @@ private theorem split_signal_utility_not_in_reward_closure :
     intro next edge
     cases next with
     | base node =>
-        change (.utility splitSignalSite) ∈
-          (effectiveParents Nonrequisite.model node).image
-            UtilityView.GraphNode.base at edge
-        obtain ⟨_, _, equality⟩ := Finset.mem_image.mp edge
+        have edge' : (.utility splitSignalSite) ∈
+            (effectiveParents Nonrequisite.model node).image
+              UtilityView.GraphNode.base := edge
+        obtain ⟨_, _, equality⟩ := Finset.mem_image.mp edge'
         cases equality
     | utility term =>
-        change (.utility splitSignalSite) ∈
-          (splitView.term term).parents.image UtilityView.GraphNode.base at edge
-        obtain ⟨_, _, equality⟩ := Finset.mem_image.mp edge
+        have edge' : (.utility splitSignalSite) ∈
+            (splitView.term term).parents.image
+              UtilityView.GraphNode.base := edge
+        obtain ⟨_, _, equality⟩ := Finset.mem_image.mp edge'
         cases equality
   rintro ⟨root, hroot, path⟩
   rcases Relation.ReflTransGen.cases_head path with equality | ⟨next, edge, _⟩
@@ -689,11 +691,12 @@ theorem split_signal_not_requisite :
                 simp [UtilityView.DirectedEdge, UtilityView.graphParents,
                   effectiveParents, Nonrequisite.parents] at hforward
         | utility utilitySite =>
-            change (.base .signal) ∈
-              (splitView.term utilitySite).parents.image
-                UtilityView.GraphNode.base at hforward
+            have hforward' : (.base .signal) ∈
+                (splitView.term utilitySite).parents.image
+                  UtilityView.GraphNode.base := hforward
             fin_cases utilitySite
-            · obtain ⟨node, hnode, equality⟩ := Finset.mem_image.mp hforward
+            · obtain ⟨node, hnode, equality⟩ :=
+                Finset.mem_image.mp hforward'
               have hreward : node = ExampleNode.reward := by
                 simpa [UtilityView.term, splitView, rewardTerm] using hnode
               subst node
@@ -735,22 +738,23 @@ theorem split_signal_not_requisite :
                 simp [UtilityView.DirectedEdge, UtilityView.graphParents,
                   effectiveParents, Nonrequisite.parents] at hsignalParent
         | utility utilitySite =>
-            change (.base .signal) ∈
-              (splitView.term utilitySite).parents.image
-                UtilityView.GraphNode.base at hsignalParent
-            change next ∈
-              (splitView.term utilitySite).parents.image
-                UtilityView.GraphNode.base at hnextParent
+            have hsignalParent' : (.base .signal) ∈
+                (splitView.term utilitySite).parents.image
+                  UtilityView.GraphNode.base := hsignalParent
+            have hnextParent' : next ∈
+                (splitView.term utilitySite).parents.image
+                  UtilityView.GraphNode.base := hnextParent
             fin_cases utilitySite
             · obtain ⟨node, hnode, equality⟩ :=
-                Finset.mem_image.mp hsignalParent
+                Finset.mem_image.mp hsignalParent'
               have hreward : node = ExampleNode.reward := by
                 simpa [UtilityView.term, splitView, rewardTerm] using hnode
               subst node
               have hnode : ExampleNode.reward = .signal :=
                 UtilityView.GraphNode.base.inj equality
               cases hnode
-            · obtain ⟨node, hnode, equality⟩ := Finset.mem_image.mp hnextParent
+            · obtain ⟨node, hnode, equality⟩ :=
+                Finset.mem_image.mp hnextParent'
               have hsignal : node = ExampleNode.signal := by
                 simpa [UtilityView.term, splitView, signalTerm] using hnode
               subst node
@@ -771,7 +775,7 @@ theorem merged_signal_requisite :
       effectiveParents, Nonrequisite.parents]
   have rewardUtility : mergedView.DirectedEdge
       (.base .reward) (.utility mergedSite) := by
-    change (.base .reward) ∈
+    show (.base .reward) ∈
       (mergedView.term mergedSite).parents.image UtilityView.GraphNode.base
     have hterm : mergedView.term mergedSite = mergedTerm := by rfl
     rw [hterm]
@@ -779,7 +783,7 @@ theorem merged_signal_requisite :
     exact ⟨.reward, by simp [mergedTerm], rfl⟩
   have signalUtility : mergedView.DirectedEdge
       (.base .signal) (.utility mergedSite) := by
-    change (.base .signal) ∈
+    show (.base .signal) ∈
       (mergedView.term mergedSite).parents.image UtilityView.GraphNode.base
     have hterm : mergedView.term mergedSite = mergedTerm := by rfl
     rw [hterm]

@@ -83,11 +83,7 @@ private theorem localFactor_utility_augmentAssignment
   unfold localFactor
   rw [augmentedKernels_utility,
     utilityParentConfiguration_augmentAssignment]
-  change
-    (FinDist.pure
-      (Assignment.restrict diagram assignment (view.term site).parents)).prob
-        (Assignment.restrict diagram assignment (view.term site).parents) = 1
-  rw [FinDist.prob_pure_eq_ite, if_pos rfl]
+  exact FinDist.prob_pure_self _
 
 /-- Augmenting a canonical assignment adds only unit-mass deterministic
 utility factors. -/
@@ -101,15 +97,7 @@ theorem factorProduct_augmentAssignment
         (augmentAssignment view (owner := owner) assignment) =
       factorProduct diagram.Value (effectiveParents diagram)
         (effectiveKernels semantics policy) Finset.univ assignment := by
-  change
-    (∏ node : UtilityView.GraphNode view owner,
-      localFactor (graphValue view (owner := owner))
-        (view.graphParents (owner := owner))
-        (augmentedKernels view (owner := owner) policy)
-        (augmentAssignment view (owner := owner) assignment) node) =
-    ∏ node : Node,
-      localFactor diagram.Value (effectiveParents diagram)
-        (effectiveKernels semantics policy) assignment node
+  simp only [factorProduct]
   calc
     _ = ∏ node : Node ⊕ view.UtilitySite owner,
         Sum.elim
@@ -177,12 +165,7 @@ private theorem localFactor_utility_eq_zero_of_mismatch
       Assignment.restrict diagram
         (projectBase view (owner := owner) assignment)
           (view.term site).parents := hmismatch
-  change
-    (FinDist.pure
-      (Assignment.restrict diagram
-        (projectBase view (owner := owner) assignment)
-        (view.term site).parents)).prob actual = 0
-  rw [FinDist.prob_pure_eq_ite, if_neg hactual]
+  exact FinDist.prob_pure_of_ne hactual
 
 /-- An augmented assignment outside the canonical image has a zero utility
 factor and therefore zero total local-factor product. -/

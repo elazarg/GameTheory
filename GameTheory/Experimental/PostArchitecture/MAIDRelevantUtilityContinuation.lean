@@ -49,8 +49,7 @@ def pruningKeptAction [DecidableEq Node] (pruning : Pruning diagram)
       have hnotRemoved := (Finset.mem_sdiff.mp node.2).2
       by_contra hnotKept
       apply hnotRemoved
-      change node.1 ∈ diagram.observedParents target.1 \
-        pruning.kept target.1
+      unfold removedObservations
       exact Finset.mem_sdiff.mpr ⟨hobserved, hnotKept⟩⟩),
     action)
 
@@ -378,7 +377,7 @@ def relevantTermContinuationLawAt_of_unique_site
       Config.restrict (pruning.kept_sub_observed target.1) full)
     (constantActionContinuation pruning semantics policy owner target
       hunique view term) full action termValue
-  change
+  show
     ((replacementLaw pruning semantics policy owner replacement).map
       (contextActionTermProjection view target term)).prob
         (full, (action, termValue)) = _

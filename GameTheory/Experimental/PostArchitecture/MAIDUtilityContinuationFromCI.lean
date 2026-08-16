@@ -297,7 +297,8 @@ private def conditioningConfigurationEquiv
       have hne : node.1 ≠ site.1 := by
         intro heq
         have hobserved := (Finset.mem_sdiff.mp node.2).1
-        exact site_not_observed site (heq ▸ hobserved)
+        apply site_not_observed site
+        simpa only [heq] using hobserved
       simp [hne]
     · simp
 
