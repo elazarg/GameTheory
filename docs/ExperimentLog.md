@@ -6801,6 +6801,8 @@ memory.
   [`MAIDPruningRelevantContinuation.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningRelevantContinuation.lean),
   [`MAIDPruningNonrelevantInvariance.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningNonrelevantInvariance.lean),
   [`MAIDPruningSiteReduction.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningSiteReduction.lean),
+  [`MAIDPruningRecallOrder.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningRecallOrder.lean),
+  [`MAIDMechanismSelectorFactorization.lean`](../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorFactorization.lean),
   [`MAIDSitePolicySurgery.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSitePolicySurgery.lean),
   [`MAIDSiteReplacementContext.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteReplacementContext.lean),
   [`MAIDSiteOptimality.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteOptimality.lean),
@@ -6814,11 +6816,15 @@ memory.
   unfinished global theorem. `MAIDPruningSiteReduction` now assembles
   `siteLocalUtilityFactorsAt_of_edgeAdditionStableAt` and proves
   `exists_reduced_isOptimalSiteRule_of_edgeAdditionStableAt`; these are
-  site-local endpoints, not the unfinished global induction. The foundation
-  set contains eleven artifacts, and the two consumer audits are separate.
-  The aggregate `lake build` over all thirteen EXP-107 modules completed
-  warning-free with 1,782 jobs, and the repository-wide `lake build` completed
-  with 3,668 jobs. `phase1-audit.ps1 -VerifyExpected`,
+  site-local endpoints, not the unfinished global induction. The recall-order
+  module supplies reduced-site surgery, fully mixed initialization, and the
+  source-first owner order. The mechanism-selector module proves that a fair
+  mixture of the baseline and one source-rule surgery factorizes over the
+  exact dummy-root graph used by s-reachability. The foundation set contains
+  thirteen artifacts, and the two consumer audits are separate.
+  The aggregate `lake build` over all fifteen EXP-107 modules completed
+  warning-free with 1,784 jobs, and the repository-wide `lake build` completed
+  with 3,671 jobs. `phase1-audit.ps1 -VerifyExpected`,
   `phase2-audit.ps1 -VerifyExpected -DeepReachability`, and
   `phase3-audit.ps1 -VerifyExpected -DeepReachability` each reported
   `VERIFIED=1`. The source audit found no option, lint suppression,
@@ -6839,7 +6845,9 @@ memory.
   narrows the hostile negative gate. The experiment remains in progress. The
   next gate is the load-bearing semantic soundness/optimality transport for
   changes at non-s-reachable same-owner sites under a fully mixed reference
-  rule (Koller--Milch Lemmas 6.1--6.2 style). After that, prove the same-owner
+  rule (Koller--Milch Lemmas 6.1--6.2 style). The next proof slice uses the
+  selector factorization to derive a division-free component cross-law
+  identity and score comparison; after that, prove the same-owner
   relevance-order induction that assembles a global reduced whole-owner best
   response and `CoversFullDeviationsAt` from the site-local endpoint. Do not
   claim a semantic unsafe control unless a genuinely different larger graph

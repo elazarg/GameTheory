@@ -102,10 +102,15 @@ endpoints now compile as
 [`MAIDPruningNonrelevantInvariance.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningNonrelevantInvariance.lean)
 and
 [`MAIDPruningSiteReduction.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningSiteReduction.lean);
-the semantic soundness/optimality transport for changes at non-s-reachable
-same-owner sites under a fully mixed reference rule (Koller--Milch Lemmas
-6.1--6.2 style), the same-owner relevance-order induction, and the global
-coverage theorem do not.
+the proof-side fully mixed owner order and mechanism-selector factorization
+also compile as
+[`MAIDPruningRecallOrder.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningRecallOrder.lean)
+and
+[`MAIDMechanismSelectorFactorization.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorFactorization.lean).
+The selector conditional-independence/score argument, semantic
+soundness/optimality transport under a fully mixed reference rule
+(Koller--Milch Lemmas 6.1--6.2 style), same-owner relevance-order induction,
+and global coverage theorem do not.
 The paper's
 qualitative Forgetful Movie Star profile is not accepted as negative evidence:
 under an explicit `2 * avoid + consistency` instantiation, its described
@@ -230,16 +235,18 @@ modules. The focused consumer build passes warning-free, and the source audit
 finds no option, lint suppression, placeholder, axiom, direct update, visible
 transport, representation leak, or compatibility shim.
 
-EXP-107's site-local closeout adds the nonrelevant-term marginal certificate
-and the edge-addition-stable site-local factor/optimality endpoint. The
-eleven-artifact foundation set plus the two hostile consumers has a warning-
-free aggregate targeted Lake build (1,782 jobs), full repository build (3,668
+EXP-107's site-local closeout adds the nonrelevant-term marginal certificate,
+the edge-addition-stable site-local factor/optimality endpoint, the fully mixed
+owner-order machinery, and canonical mechanism-selector factorization. The
+thirteen-artifact foundation set plus the two hostile consumers has a warning-
+free aggregate targeted Lake build (1,784 jobs), full repository build (3,671
 jobs), and deep Phase 1--3 audit (`VERIFIED=1` for each phase). The remaining
 load-bearing global step is semantic soundness/optimality transport for
 changes at non-s-reachable same-owner sites under a fully mixed reference rule
-(Koller--Milch Lemmas 6.1--6.2 style). Once that is established, the same-owner
-relevance-order induction must combine the local optimality rules into one
-reduced whole-owner rule and then discharge full-deviation coverage.
+(Koller--Milch Lemmas 6.1--6.2 style). The remaining selector-CI cross-law and
+score comparison must establish that transport. Once it is established, the
+same-owner relevance-order induction must combine the local optimality rules
+into one reduced whole-owner rule and then discharge full-deviation coverage.
 
 Reject or narrow the graph route if it becomes a second evaluator, cannot
 construct full owner-deviation coverage, assumes faithfulness of the current
