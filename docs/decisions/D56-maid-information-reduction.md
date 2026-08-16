@@ -174,8 +174,9 @@ conditional-independence surface, cast-free dependent-complement enumeration,
 one-pivot Fubini, reverse-topological parent-closed marginalization, generic
 ancestral-moral separation, factor-scope confinement, and rank-one cross
 multiplication are now validated experimentally. The next gate is the finite
-component partition and latent-sum assembly connecting moral separation to the
-rank-one tables. Only then may local-utility d-separation construct
+score adapter connecting the validated moral factor partition and nested
+latent sums to the rank-one tables. Only then may local-utility d-separation
+construct
 `CoversFullDeviationsAt` on the multi-agent hostile consumer.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a

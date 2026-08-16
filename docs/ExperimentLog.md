@@ -6397,8 +6397,8 @@ memory.
 ### EXP-104: finite-BN global-Markov semantics
 
 - **Date / revision:** 2026-08-16, `main` at `8e93046f`
-- **Status:** in progress; parent-closed marginalization and ancestral-moral
-  graph validated; component-to-rank-one assembly active
+- **Status:** in progress; moral components and latent-sum reindexing validated;
+  score-to-rank-one assembly active
 - **Decision / question:** whether the canonical typed MAID assignment law can
   support a reusable finite global-Markov theorem without a second evaluator,
   positivity or faithfulness assumptions, stored value-domain finiteness, or
@@ -6471,16 +6471,31 @@ memory.
   stored finiteness, alternate evaluator, option, lint suppression, placeholder,
   cast, positivity, or faithfulness premise. The integrated 3624-job build and
   phase-3 architecture verification passed with all expected zero counts.
+
+  The 288-line component module uses operation-local node finiteness to turn
+  separation into explicit left/right open ancestral regions, assign neutral
+  components deterministically, partition ancestral factor indices, and prove
+  every factor scope lies on its side plus evidence. The 196-line MAID bridge
+  identifies typed one-, two-, and three-restriction cylinders with generic
+  `AgreeOn` cylinders on coordinate unions and rewrites coordinate CI to the
+  four generic cylinder masses. The 114-line carrier-relative latent module
+  splits complement configurations into left/right dependent configurations
+  and reindexes filtered cylinder sums as nested sums. Its partition
+  certificate stores no finite capability; `[Fintype Node]` occurs only on the
+  summation theorem. Focused builds passed warning-free (1717, 1720, and 1715
+  jobs), with no casts, alternate evaluators, positivity, or hidden
+  conditioning convention. The integrated 3627-job build and phase-3
+  architecture verification passed with all expected zero counts.
 - **Kill conditions:** reject a second authoritative MAID evaluator, custom
   axiom, positivity or faithfulness premise, `Fintype.ofFinite` in executable
   code, or conditional law equality that is undefined on zero evidence; keep
   the result experimental if ancestral-moral elimination still depends on an
   unproved normalization or representation theorem.
-- **Interim outcome / next action:** canonical point-mass factorization,
-  division-free conditional independence, cast-free enumeration,
-  reverse-topological parent-closed marginalization, generic ancestral-moral
-  separation, factor-scope confinement, and rank-one algebra survive. The
-  remaining global-Markov step is to turn relational moral separation into a
-  disjoint factor-index partition, sum latent coordinates inside each side,
-  and supply the resulting rank-one tables to `crossMul_of_rankOne`. Keep the
-  needed `Fintype Node` only on that component/enumeration operation.
+- **Interim outcome / next action:** canonical factorization, division-free CI,
+  parent-closed marginalization, ancestral-moral components, factor-scope
+  partitions, MAID cylinder bridges, carrier-relative latent Fubini, and
+  rank-one algebra survive. The remaining global-Markov step is now only the
+  score adapter: assemble arbitrary first/second/evidence configurations using
+  an explicit default, prove the left score ignores right variables and the
+  right score ignores left variables from their `DependsOnlyOn` certificates,
+  and feed the resulting pointwise rank-one table to `crossMul_of_rankOne`.
