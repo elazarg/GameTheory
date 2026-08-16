@@ -196,6 +196,14 @@ against the full deviation space. A fair chance-signal witness must show both
 the safe payoff-irrelevant removal and the nearby value-of-information failure;
 mere non-factorization of a policy is not a safety test.
 
+Nested semantic pruning is also complete. `Pruning.Refines` supports staged
+expansion, source-owner updates, and exact canonical-law comparison, while
+relative fine-to-coarse coverage composes with coarse-to-full coverage. The
+two-signal consumer exercises both nonconstant coverage inequalities. Its
+nearby matching-payoff control keeps coarse-to-full coverage while refuting
+fine-to-coarse coverage and Nash transfer. No recall premise is needed once
+each relative coverage step has already been certified.
+
 The exact local-utility graph view, canonical division-free finite
 global-Markov soundness, finite configuration-valued utility augmentation, and
 replacement-invariant term laws now assemble end to end. Under an explicit
@@ -205,12 +213,16 @@ existing full-deviation coverage certificate. The hostile relay consumer
 accepts the signal-blind graph with exact Nash transfer and rejects the live
 signal-copying graph with an explicit coverage counterexample.
 
-The next information-reduction gate is the global safe-pruning fixpoint under
-the source's sufficient-recall condition. Do not infer simultaneous same-owner
-pruning from the one-site theorem. Keep requisite observation (whether a
-realized parent value is needed by a rule) separate from strategic relevance
-(whether another decision's rule is strategically live); strategic relevance
-remains a separate later package.
+The next graphical gate is to construct the hybrid restore-at-site graph and
+the s-reachability/strategic-relevance graph, without which the source's
+sufficient-recall condition is not yet expressible. That certificate then
+gates the less-conservative edge-addition fixpoint and coordinated same-owner
+graphical safety theorem. Do not infer that theorem from either the one-site
+graphical result or semantic composition of assumed coverage certificates.
+Keep requisite observation (whether a realized parent value is needed by a
+rule) separate from strategic relevance (whether another decision's rule is
+strategically live), even though the latter graph is needed to formulate
+sufficient recall.
 
 ### G. Static mature-family rotation
 

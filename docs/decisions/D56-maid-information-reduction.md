@@ -23,6 +23,13 @@ same certificate serves native and compiled execution through the existing law
 equivalence. It introduces no second policy, utility, evaluator, or equilibrium
 predicate.
 
+Nested semantic reductions compose. `Pruning.Refines` records that a finer
+reduction keeps no more observations than a coarser one, while
+`CoversReducedDeviationsAt` covers the coarser replacement space from a finer
+profile. Relative coverage followed by full-deviation coverage constructs
+`CoversFullDeviationsAt` for the finer profile. This result assumes the two
+coverage certificates; it does not infer either certificate from a graph.
+
 The graph-only design is rejected. `Structure` stores chance and decision
 nodes, while `Semantics.utility` is an arbitrary function of a completed
 assignment. Two semantics can share the same graph and chance laws while one
@@ -77,10 +84,13 @@ The theorem scopes must also remain separate:
 - completeness needs nontrivial variable domains. Singleton observations are
   always ignorable and singleton decisions cannot witness reliance.
 
-Local soundness does not require recall. Combining local removals into the
-2008 global safe-pruning fixpoint needs its sufficient-recall condition. Even a
-safe reduction may discard original equilibria, including Pareto-preferred
-ones; safety is only reduced-Nash-to-full-Nash inclusion.
+Local soundness does not require recall, and neither does composition of
+already-certified relative coverage steps. The sufficient-recall condition is
+load-bearing for the less-conservative 2008 edge-addition fixpoint and its
+coordinated same-owner graphical safety theorem: those results must construct
+the certificates rather than assume them. Even a safe reduction may discard
+original equilibria, including Pareto-preferred ones; safety is only
+reduced-Nash-to-full-Nash inclusion.
 
 ## Competing designs
 
@@ -105,6 +115,17 @@ deviation, and lifts reduced Nash to full Nash. With identical execution and
 pruning but payoff for `decision = signal`, every signal-blind policy is worth
 `1/2`, the full copying rule is worth `1`, reduced Nash fails after expansion,
 and coverage is false.
+
+`Tests.MAIDPruningComposition` uses one decision that originally observes two
+Boolean signals. A coarser reduction retains one signal and a finer reduction
+retains none. The stable API proves refinement, staged policy expansion,
+unilateral-update compatibility, and equality of the canonical native laws;
+relative fine-to-coarse coverage then composes with coarse-to-full coverage.
+A nonconstant action-reward case exercises both coverage inequalities and
+transfers Nash through both stages. In the matching-payoff control,
+coarse-to-full coverage survives while fine-to-coarse coverage fails; the fine
+profile remains reduced Nash but its expansion admits the signal-copying
+deviation.
 
 `Experimental.PostArchitecture.MAIDRequisiteObservation` adds a proved utility
 view with distinct local utility leaves and a reward node. In
@@ -198,7 +219,9 @@ same theorem that certifies the signal-blind graph does not certify the live
 relay, and semantic coverage is independently refuted there.
 
 Before any completeness theorem, add constant-utility and singleton-domain
-controls. Before global pruning, prove the required recall/fixpoint theorem.
+controls. Before the global graphical theorem, construct the hybrid
+restore-at-site graph and the s-reachability/strategic-reliance graph needed to
+state sufficient recall, then prove the edge-addition fixpoint theorem.
 
 ## Consequences and compatibility posture
 
@@ -209,10 +232,14 @@ soundness are now validated experimentally through arbitrary dependent query
 configurations, including impossible evidence. Finite utility-leaf
 augmentation and replacement invariance now let local graphical ignorability
 construct `CoversFullDeviationsAt` for one unique pruned site, and the hostile
-safe/live relay consumer validates both sides. This does not promote the graph
-view to a public API or justify simultaneous pruning. The next gate is the
-global safe-pruning fixpoint under sufficient recall; strategic reliance
-remains separate.
+safe/live relay consumer validates both sides. Stable relative coverage now
+composes already-certified nested reductions without a recall premise. It does
+not promote the graph view to a public API, derive either stage's certificate,
+or justify coordinated same-owner graphical pruning. The next graphical gate
+is the hybrid restore-at-site graph together with s-reachability/strategic
+reliance; only then is the source's sufficient-recall condition expressible
+for the edge-addition fixpoint theorem. Requisite observation and strategic
+reliance remain distinct notions despite that dependency.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a
 hostile consumer finds the coverage quantifiers, utility view, or graph witness

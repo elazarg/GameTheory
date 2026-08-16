@@ -56,6 +56,33 @@ abbrev ReducedOwnerPolicy (pruning : Pruning diagram) (owner : Player) :=
 abbrev ReducedPolicy (pruning : Pruning diagram) :=
   (owner : Player) → ReducedOwnerPolicy pruning owner
 
+/-- `fine` retains no more information than `coarse`. -/
+def Refines (fine coarse : Pruning diagram) : Prop :=
+  ∀ node, fine.kept node ⊆ coarse.kept node
+
+theorem Refines.refl (pruning : Pruning diagram) : pruning.Refines pruning :=
+  fun _ _ hmember => hmember
+
+theorem Refines.trans {fine middle coarse : Pruning diagram}
+    (hfirst : fine.Refines middle) (hsecond : middle.Refines coarse) :
+    fine.Refines coarse :=
+  fun node _ hmember => hsecond node (hfirst node hmember)
+
+/-- Expand one owner's policy from a finer pruning to a coarser pruning by
+forgetting the additional observations available in the coarser domain. -/
+def expandOwnerPolicyTo (fine coarse : Pruning diagram)
+    (hrefines : fine.Refines coarse) (owner : Player)
+    (policy : fine.ReducedOwnerPolicy owner) :
+    coarse.ReducedOwnerPolicy owner :=
+  fun site observed =>
+    policy site (Config.restrict (hrefines site.1) observed)
+
+/-- Expand a profile from a finer pruning to a coarser pruning. -/
+def expandPolicyTo (fine coarse : Pruning diagram)
+    (hrefines : fine.Refines coarse) (policy : fine.ReducedPolicy) :
+    coarse.ReducedPolicy :=
+  fun owner => fine.expandOwnerPolicyTo coarse hrefines owner (policy owner)
+
 /-- Expand a pruned owner policy by forgetting the removed observations. -/
 def expandOwnerPolicy (pruning : Pruning diagram) (owner : Player)
     (policy : ReducedOwnerPolicy pruning owner) : OwnerPolicy diagram owner :=
@@ -67,6 +94,17 @@ def expandOwnerPolicy (pruning : Pruning diagram) (owner : Player)
 def expandPolicy (pruning : Pruning diagram)
     (policy : ReducedPolicy pruning) : Policy diagram :=
   fun owner => pruning.expandOwnerPolicy owner (policy owner)
+
+/-- Expanding first to a coarser pruning and then to the original information
+domain is the same as expanding directly. -/
+theorem expandPolicy_expandPolicyTo (fine coarse : Pruning diagram)
+    (hrefines : fine.Refines coarse) (policy : fine.ReducedPolicy) :
+    coarse.expandPolicy (fine.expandPolicyTo coarse hrefines policy) =
+      fine.expandPolicy policy := by
+  funext owner site observed
+  apply congrArg (policy owner site)
+  funext node
+  rfl
 
 /-- A full policy is represented by the proposed pruning when it is literally
 the expansion of some reduced policy. -/
@@ -80,6 +118,23 @@ abbrev reducedBehavioralSignature (pruning : Pruning diagram) :
   Strategy := ReducedOwnerPolicy pruning
   Outcome := Assignment diagram
 
+/-- Expansion between nested prunings commutes with a unilateral update. -/
+theorem expandPolicyTo_update (fine coarse : Pruning diagram)
+    (hrefines : fine.Refines coarse) [DecidableEq Player]
+    (policy : fine.ReducedPolicy) (owner : Player)
+    (replacement : fine.ReducedOwnerPolicy owner) :
+    fine.expandPolicyTo coarse hrefines
+        (Profile.update (sig := fine.reducedBehavioralSignature)
+          policy owner replacement) =
+      Profile.update (sig := coarse.reducedBehavioralSignature)
+        (fine.expandPolicyTo coarse hrefines policy) owner
+        (fine.expandOwnerPolicyTo coarse hrefines owner replacement) := by
+  funext other
+  by_cases howner : other = owner
+  · subst other
+    simp [expandPolicyTo]
+  · simp [expandPolicyTo, howner]
+
 /-- Native frontier evaluation restricted to policies that use only the kept
 observations. -/
 @[reducible]
@@ -90,6 +145,17 @@ def reducedNativeGameForm (pruning : Pruning diagram)
   play policy :=
     (nativeBehavioralGameForm semantics).play
       (pruning.expandPolicy policy)
+
+/-- A policy and its expansion to any coarser pruning induce the same native
+assignment law. -/
+theorem reducedNative_play_expandPolicyTo (fine coarse : Pruning diagram)
+    (hrefines : fine.Refines coarse) [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : fine.ReducedPolicy) :
+    (coarse.reducedNativeGameForm semantics).play
+        (fine.expandPolicyTo coarse hrefines policy) =
+      (fine.reducedNativeGameForm semantics).play policy := by
+  exact congrArg (nativeBehavioralGameForm semantics).play
+    (fine.expandPolicy_expandPolicyTo coarse hrefines policy)
 
 /-- Compiled EFG evaluation on the same reduced source-owner policy domain. -/
 @[reducible]
@@ -184,6 +250,45 @@ def CoversFullDeviationsAt (pruning : Pruning diagram)
           (Profile.update policy owner reducedReplacement))
         ((nativeBehavioralGameForm semantics).play
           (Profile.update (pruning.expandPolicy policy) owner fullReplacement))
+
+/-- A finer reduced profile covers the deviations available at a coarser
+pruning when every coarser owner replacement is weakly dominated by a finer
+replacement.  This is the graph-free semantic seam for composing nested
+information reductions. -/
+def CoversReducedDeviationsAt (fine coarse : Pruning diagram)
+    (hrefines : fine.Refines coarse)
+    [DecidableEq Player] [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : fine.ReducedPolicy) : Prop :=
+  ∀ owner (coarseReplacement : coarse.ReducedOwnerPolicy owner),
+    ∃ fineReplacement : fine.ReducedOwnerPolicy owner,
+      euPreference (fun assignment who => semantics.utility who assignment)
+        owner
+        ((fine.reducedNativeGameForm semantics).play
+          (Profile.update policy owner fineReplacement))
+        ((coarse.reducedNativeGameForm semantics).play
+          (Profile.update
+            (fine.expandPolicyTo coarse hrefines policy)
+            owner coarseReplacement))
+
+/-- A covered step to a coarser pruning composes with coverage from that
+coarser profile to the original full deviation space. -/
+theorem CoversReducedDeviationsAt.coversFull
+    (fine coarse : Pruning diagram) (hrefines : fine.Refines coarse)
+    [DecidableEq Player] [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : fine.ReducedPolicy)
+    (hstep : fine.CoversReducedDeviationsAt coarse hrefines semantics policy)
+    (hcoarse : coarse.CoversFullDeviationsAt semantics
+      (fine.expandPolicyTo coarse hrefines policy)) :
+    fine.CoversFullDeviationsAt semantics policy := by
+  intro owner fullReplacement
+  obtain ⟨coarseReplacement, hcoarseReplacement⟩ :=
+    hcoarse owner fullReplacement
+  obtain ⟨fineReplacement, hfineReplacement⟩ :=
+    hstep owner coarseReplacement
+  refine ⟨fineReplacement, ?_⟩
+  exact euPreference_transitive
+    (fun assignment who => semantics.utility who assignment)
+    owner _ _ _ hfineReplacement hcoarseReplacement
 
 /-- Deviation coverage gives the load-bearing safe-reduction direction: Nash
 in the smaller policy space remains Nash against every original full-policy
