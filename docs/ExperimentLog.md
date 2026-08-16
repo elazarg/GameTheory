@@ -6547,8 +6547,8 @@ memory.
 ### EXP-105: finite utility leaves and replacement-invariant continuations
 
 - **Date / revision:** 2026-08-16, `main` at `6a0717bb`
-- **Status:** in progress; finite utility-leaf augmentation validated;
-  mapped-law factorization active
+- **Status:** in progress; mapped utility-leaf factorization and the graph-free
+  continuation assembly validated; replacement invariance active
 - **Decision / question:** whether the experiment-only additive `UtilityView`
   can augment canonical native MAID play with distinct finite
   configuration-valued utility leaves, inherit the proved finite-BN
@@ -6578,9 +6578,34 @@ memory.
   so distinct terms are not silently merged. Its 1716-job focused build passed
   warning-free with no finiteness, decidable-equality, positivity, alternate
   evaluator, real-valued BN carrier, transport, or compatibility assumption.
-- **Outcome / next action:** the finite augmentation and payoff-recovery seam
-  survives. Next give the augmented graph operation-local enumeration,
-  deterministic leaf kernels, a leaves-last topological order, and a
-  point-mass factorization theorem for the mapped canonical law. Then prove
-  context, mechanism, and non-descendant invariance before attempting
-  graphical ignorability to coverage.
+
+  The second gate adds 373 lines of operation-local graph enumeration,
+  cast-free base and utility parent configurations, deterministic leaf
+  kernels tied to the same certified semantics, and a leaves-last topological
+  order that stores no finite-carrier capability. A 279-line mapped-law proof
+  covers both canonical augmented assignments and hostile inconsistent
+  targets: the latter have zero mapped mass and a witnessed zero Dirac utility
+  factor. The resulting `Factorizes` theorem needs node finiteness only where
+  canonical native play and the finite product need it, and no value-domain
+  finiteness or decidable equality. The distinct split-term consumer passes.
+
+  Two downstream seams also compile independently. The 180-line graph bridge
+  identifies MAID `DConnected` exactly with singleton generic ancestral-moral
+  connectivity, derives `Separates` from the existing set-valued ignorability
+  predicate, and proves the three query/evidence disjointness premises from
+  acyclicity. The 241-line distributional bundle stores one replacement-
+  invariant context law, shared relevant-term continuation kernels, and exact
+  nonrelevant-term marginals, then assembles them into the existing
+  `LocalUtilityFactorsAt` without mentioning a reduced witness, preference, or
+  coverage inequality. Its assembly needs no value finiteness and no one-site
+  shape. The four-module 1749-job build passed warning-free, with no
+  `set_option`, `nolint`, placeholder, axiom, direct function update, visible
+  transport, alternate evaluator, positivity premise, or compatibility shim.
+- **Outcome / next action:** the finite augmentation, mapped-law
+  factorization, graph translation, and non-circular distributional assembly
+  survive. Next prove that equal kernels on a parent-closed ancestor set give
+  equal canonical marginals, then prove the target-kernel surgery identity
+  that makes the context and continuation laws uniform across all owner
+  replacements. Only after those replacement-invariance results pass should
+  graphical ignorability be connected to `LocalUtilityFactorsAt` and
+  `CoversFullDeviationsAt`.
