@@ -2,7 +2,8 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-08-02
-- **Experiment IDs:** EXP-050
+- **Experiment IDs:** EXP-050; follow-up gate EXP-108 (in progress; does not
+  alter D22's adopted boundary)
 
 ## Decision / question
 

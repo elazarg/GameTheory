@@ -113,6 +113,7 @@ becomes difficult to scan.
 | EXP-100 | 2026-08-14 | pre-cutover stochastic client gate | Can canonical Protocol play expose chronological finite histories and restart laws without a second runner? | Complete; supports and graduates | `GameTheory/Stochastic/PublicPolicy.lean`; `GameTheory/Stochastic/History.lean`; `GameTheory/Tests/StochasticContinuation.lean` |
 | EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
 | EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | In progress; graph and site-local semantic foundations support, source-shaped hostile fixture rejected and negative gate narrowed | Experimental hybrid graph, site-local surgery, and source audit |
+| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; reserved and experiment-gated; does not change EXP-107 or the current stochastic/repeated verdicts | Complementary-sequence order-of-limits slice; cyclic quitting continuation slice; independent sibling evidence; no API adoption |
 
 ## Entry template
 
@@ -6844,3 +6845,54 @@ memory.
   claim a semantic unsafe control unless a genuinely different larger graph
   passes explicit reduced-Nash and profitable-full-deviation checks. No stable
   syntax change or executable pruning pass is authorized yet.
+
+### EXP-108: infinite-path order of limits and cyclic subgame-perfect uniformity
+
+- **Date / revision:** 2026-08-16, post-cutover working tree; reserved while
+  EXP-107 remains the current MAID gate
+- **Status:** in progress; future architecture gate; no public API adopted
+- **Decision / question:** whether an opt-in measurable infinite-play layer can
+  state and keep separate the three payoff aggregations
+  `E[liminf_T A_T]`, `E[limsup_T A_T]`, and `lim_T E[A_T]`, and whether a
+  phase-indexed quitting-game interface can state cyclic subgame-perfect
+  uniform equilibrium without identifying it with terminal or
+  limiting-average equilibrium.
+- **Representative slice:** first, a one-state one-player Boolean-action
+  process whose randomized first action selects complementary bounded action
+  sequences with Cesàro liminf `0` and limsup `1`; every finite-horizon expected
+  average is `1/2`, while the expected pathwise liminf is `0` and expected
+  pathwise limsup is `1`. Second, a two-player two-phase quitting/cyclic
+  continuation fixture in which the initial phase passes a terminal check but
+  a profitable deviation exists after the other phase, so a cyclic interface
+  must quantify every phase/subgame root.
+- **Competing designs:** add an infinite-play measure above the existing finite
+  laws and retain one canonical runner; add a second recursive stochastic
+  runner; or leave pathwise/order-of-limits semantics to clients. For cyclic
+  play, compare an all-phase continuation certificate with an initial-phase
+  terminal check. The second runner and the initial-only cyclic check are
+  presumed rejected.
+- **Measurements:** exact pathwise and expected definitions for all three
+  aggregations; finite-marginal projection to the existing horizon laws;
+  presence or absence of expectation/limit interchange assumptions; whether
+  terminal, limiting-average, and uniform predicates remain separate at the
+  type/signature level; and whether every cyclic phase is covered by the
+  subgame condition.
+- **Kill conditions:** silently identify any two aggregations; infer an
+  expectation/liminf or expectation/limsup interchange without boundedness and
+  the required convergence direction; duplicate Protocol/stochastic running
+  semantics; let an initial-phase certificate stand for cyclic
+  subgame-perfection; or add coercions between terminal, limiting-average, and
+  uniform equilibrium concepts.
+- **Evidence / boundary:** the independent sibling consumer's
+  `InfinitePlayMeasure.lean` and `LiminfAverageBridge.lean` provide a measured
+  reference for Ionescu--Tulcea construction, finite-marginal projection,
+  pathwise averages, Fatou/reverse-Fatou directionality, and the extra
+  almost-sure-convergence hypothesis. Its quitting cyclic compiler supplies a
+  phasewise Nash--Bellman/absorption pattern, but does not itself establish a
+  cyclic SPE predicate. Current `GameTheory` remains finite-law only; this
+  entry authorizes investigation, not promotion.
+- **Outcome / next action:** reserve the gate and record the hostile slices;
+  keep EXP-107 as the current MAID experiment, preserve current
+  `supported`/`opt-in` statuses, and prototype only under `Experimental` until
+  the hostile slices and a follow-up decision record determine the dependency
+  and public API boundary.

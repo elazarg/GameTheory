@@ -97,6 +97,21 @@ self-generating characterization of PPE payoffs. It does not claim the
 constrained-efficiency or bang-bang results of Abreu--Pearce--Stacchetti, and
 public lotteries are not silently folded into the decomposition operator.
 
+#### C.1. Infinite-path and cyclic asymptotic gate — EXP-108 in progress
+
+This future gate keeps three payoff aggregations first-class and distinct:
+`E[liminf_T A_T]`, `E[limsup_T A_T]`, and `lim_T E[A_T]`. Its hostile slice is
+the complementary-sequence construction (constant expected finite averages,
+pathwise liminf `0`, pathwise limsup `1`) followed by a two-phase quitting
+continuation whose initial phase is credible but whose other phase has a
+profitable deviation. The gate must add an opt-in infinite-play measure with
+finite-marginal projection to the existing laws, without a second runner, and
+must quantify every phase/subgame root for cyclic subgame-perfect uniformity.
+Terminal, limiting-average, and uniform equilibrium concepts remain separate
+signatures; no coercion or expectation/limit interchange is admitted without
+its explicit hypotheses. EXP-108 is reserved and does not change the current
+repeated or stochastic statuses or displace EXP-107.
+
 ### D. FOSG strategic and counterfactual analysis — transfer/support resolved
 
 Priority: eligible now that B fixes the strategic-transfer boundary; keep its
