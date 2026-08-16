@@ -6547,8 +6547,8 @@ memory.
 ### EXP-105: finite utility leaves and replacement-invariant continuations
 
 - **Date / revision:** 2026-08-16, `main` at `6a0717bb`
-- **Status:** in progress; shared context law and fixed-policy continuation
-  validated; nonrelevant marginal invariance and target surgery active
+- **Status:** in progress; replacement-uniform relevant continuation validated;
+  nonrelevant marginal invariance active
 - **Decision / question:** whether the experiment-only additive `UtilityView`
   can augment canonical native MAID play with distinct finite
   configuration-valued utility leaves, inherit the proved finite-BN
@@ -6645,12 +6645,26 @@ memory.
   continuation law. It explicitly stops short of choosing a continuation per
   replacement. The combined 1765-job build passed warning-free with all
   hazard counts zero.
+
+  The fifth gate closes the relevant-term replacement boundary. A 381-line
+  canonical target-surgery proof shows pointwise that an arbitrary target rule
+  contributes exactly its selected action mass times the corresponding
+  constant-action intervention mass; the prefix and action-indexed suffix are
+  shared, including at unsupported contexts. A 392-line constructor then
+  chooses each action's continuation from that constant-action augmented law,
+  applies the fixed-policy graphical CI result, and uses the surgery identity
+  to prove one `TermContinuationLawAt` works for every owner replacement. The
+  kept index is the actual pruning-kept configuration paired with the target
+  action, and the removal remains set-valued. No continuation is selected
+  after seeing a replacement, and no division, positivity, or additional
+  value-fibre assumption beyond global Markov enters. The combined 1767-job
+  build passed warning-free with all hazard counts zero.
 - **Outcome / next action:** the finite augmentation, mapped-law
   factorization, graph translation, and non-circular distributional assembly
   survive, and the exact fixed-policy global-Markov consequence is now proved.
-  The shared context law is now constructed canonically. Next finish the
-  parent-closed nonrelevant-term marginal and prove the target-kernel surgery
-  identity that makes relevant-term continuation laws uniform across all
-  owner replacements. Only after that result passes should graphical
-  ignorability be connected to `LocalUtilityFactorsAt` and
-  `CoversFullDeviationsAt`.
+  The shared context and replacement-uniform relevant continuation laws are
+  now constructed canonically. Next finish the parent-closed nonrelevant-term
+  marginal, assemble the complete utility-law certificate, and connect it to
+  `LocalUtilityFactorsAt` and `CoversFullDeviationsAt`. The final hostile relay
+  consumer must still accept the signal-blind rival and reject the signal-
+  copying rival before this experiment can close.
