@@ -238,14 +238,19 @@ induction now combine into a reduced whole-owner best response and discharge
 The exact focused global-theorem/positive-consumer build is warning-free at
 1,789/1,789 jobs; the positive consumer retains an independent direct coverage proof
 and also consumes the generic theorem. This remains experiment-only: do not
-promote the graph predicates or add an executable pruning pass from this
-result. The next MAID seam is an executable fixpoint/minimality consumer, or a
-separately gated strategic-reliance/public-promotion decision when an
-independent consumer requires it. Keep requisite observation (whether a
-realized parent value is needed by a rule) separate from strategic relevance
-(whether another decision's rule is strategically live), even though the
-latter graph is needed to formulate sufficient recall. Finite-support
-execution remains separate from the countable/infinite-path EXP-108 gate.
+promote the graph predicates from this result. EXP-109 now supplies an
+executable explicit-enumeration checker exactly equivalent to the experimental
+site-stability and fixpoint predicates, with nonconstant safe and recall-cycle
+consumers. It does not construct a pruning or prove minimality, maximal removal,
+or confluence. Those are no longer the default next MAID task: reopen them only
+for an independent automatic-pruning consumer, or separately gate a
+strategic-reliance/public-promotion decision. Keep requisite observation
+(whether a realized parent value is needed by a rule) separate from strategic
+relevance (whether another decision's rule is strategically live), even though
+the latter graph is needed to formulate sufficient recall. Rotate current
+delivery toward the countable-probability, realizable-history, and long-run
+payoff gates; finite-support execution remains distinct from EXP-110 and
+EXP-108.
 
 ### G. Static mature-family rotation
 

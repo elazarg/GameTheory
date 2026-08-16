@@ -283,10 +283,12 @@ relay, and semantic coverage is independently refuted there.
 The constant-utility and singleton-domain controls remain part of the hostile
 scope. Nonrelevant-term invariance, site-local utility-factor assembly,
 one-source transport, and the sufficient-recall relevance-order induction are
-now complete at the experiment-only endpoint. The next consumer is an
-executable edge-addition fixpoint/minimality workflow, or a separately gated
-strategic-reliance/public-promotion decision when an independent consumer
-requires it.
+now complete at the experiment-only endpoint. EXP-109 also provides an
+executable explicit-enumeration checker exactly equivalent to the existing
+site-stability and fixpoint predicates. It does not construct a pruning or
+establish minimality, maximal removal, or confluence. Those claims and any
+strategic-reliance/public promotion remain separately gated by an independent
+consumer.
 
 ## Consequences and compatibility posture
 
@@ -305,8 +307,11 @@ soundness/optimality transport for changes at non-s-reachable same-owner sites
 under a fully mixed reference rule and the sufficient-recall relevance-order
 induction now compile, yielding global coverage at an edge-addition fixpoint.
 Requisite observation and strategic reliance remain distinct notions despite
-that dependency. This experiment uses finite-support execution only; it does
-not alter the separate countable/infinite-path boundary reserved by EXP-108.
+that dependency. The experiment-only fixpoint predicate is now decidable from
+caller-supplied causal and player enumerations, with exact Boolean/proposition
+equivalence; there is still no stable automatic pruning pass. This experiment
+uses finite-support execution only and does not alter the separate countable
+or infinite-path boundaries tested by EXP-110 and EXP-108.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a
 hostile consumer finds the coverage quantifiers, utility view, or graph witness

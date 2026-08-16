@@ -114,7 +114,7 @@ becomes difficult to scan.
 | EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
 | EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | Complete experiment-only result; source-first transport and global `CoversFullDeviationsAt` compile, while the source-shaped hostile fixture remains a recall-cycle sentinel rather than an unsafe consumer | Experimental hybrid graph, site-local surgery, global reduction, positive consumer, and source audit |
 | EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; a concrete finite-law sequence separates all three payoff orders, while the infinite-play and cyclic-uniform interfaces remain open; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); cyclic quitting continuation slice; no API adoption |
-| EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | In progress; explicit directed closure and MAID graph-node deciders validated, full checker and hostile controls pending | Explicit node enumeration, Boolean/propositional equivalence, existing safe/live/fixpoint consumers |
+| EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | Complete checker-only result; executable stable-at/fixpoint checks are exact, while construction, minimality, and confluence remain unclaimed | [`MAIDPruningFixpointChecker.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointChecker.lean); [`MAIDPruningFixpointCheckerTest.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointCheckerTest.lean) |
 | EXP-110 | 2026-08-16 | D2 / countable discrete probability | Can an opt-in direct-`PMF` layer recover a genuinely infinite-support stopping law without weakening the finite-support `FinDist` core or introducing another probability abstraction? | Complete; direct PMF stopping law validates the separate countable layer, while bounded expectation remains a distinct analytic gate | [`CountableDiscreteStopping.lean`](../GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean) |
 | EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete experiment-only positive result; canonical-image agreement yields exact law/payoff congruence, while the live semantic rejection remains a promotion gate | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean) |
 
@@ -6881,12 +6881,13 @@ memory.
 - **Outcome / next action:** supports the hybrid graph, factorization,
   nonrelevant-term invariance, site-local optimality, non-s-reachability
   transport, and sufficient-recall global coverage chain. Do not promote the
-  experimental graph predicates or add an executable pruning pass yet. The
-  next MAID seam is an executable edge-addition fixpoint/minimality consumer,
-  or a separate strategic-reliance/public-promotion decision only when an
-  independent consumer requires it. Preserve the finite-support/countable-
-  layer separation; EXP-108 remains the distinct future gate for infinite-path
-  laws and cyclic uniformity.
+  experimental graph predicates or add an executable pruning pass yet.
+  EXP-109 subsequently validated exact executable fixpoint checking but not
+  pruning construction or minimality; reopen those or a
+  strategic-reliance/public-promotion decision only when an independent
+  consumer requires it. Preserve the finite-support/countable-layer
+  separation; EXP-108 remains the distinct gate for infinite-path laws and
+  cyclic uniformity.
 
 ### EXP-108: infinite-path order of limits and cyclic subgame-perfect uniformity
 
@@ -6965,7 +6966,7 @@ memory.
 ### EXP-109: executable MAID edge-addition fixpoint checker
 
 - **Date / revision:** 2026-08-16, `main` at `cb4fce62`
-- **Status:** in progress; experiment-only; no public API adopted
+- **Status:** complete checker-only result; experiment-only; no public API adopted
 - **Decision / question:** whether a caller-supplied topological node list and
   finite utility-site enumeration can decide `IsEdgeAdditionStableAt` and
   `IsEdgeAdditionFixpoint` without storing `Fintype`, invoking classical graph
@@ -7001,9 +7002,31 @@ memory.
   fixpoint certificate, silently treating setwise and singleton removal as
   interchangeable, or claiming maximal removal/minimal kept edges without a
   hostile confluence proof.
-- **Outcome / next action:** pending. First validate the Boolean checker against
-  the existing predicate and controls; only then test an ordered restoration
-  procedure. Keep EXP-107's semantic theorem experiment-only meanwhile.
+- **Final observations:**
+  [`MAIDPruningFixpointChecker.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointChecker.lean)
+  is a 417-line executable composition of the existing graph. It proves exact
+  iff theorems for directed relevance, ancestral-moral connectivity,
+  `DConnectedUnder`, site stability, and the full fixpoint. Callers supply a
+  causal topological order and a complete player list; no `Fintype Player` or
+  stored carrier enumeration is introduced. Filtering the supplied causal
+  order over each missing-observation `Finset` avoids the sole noncomputable
+  `Finset.toList` route, and a compiled one-decision control reduces to `true`.
+  [`MAIDPruningFixpointCheckerTest.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointCheckerTest.lean)
+  is a 68-line independent consumer: both the nonconstant two-site positive
+  fixture and the Movie Star recall-cycle fixture pass the checker through the
+  exact proposition equivalence, and each result extracts the canonical
+  `IsEdgeAdditionFixpoint` certificate. The focused consumer build passed
+  1,794 jobs warning-free. Source audits found no second graph, stored
+  finiteness, classical execution, transport, placeholder, option, or
+  lint-suppression token.
+- **Outcome / next action:** the explicit checker design survives; the
+  proof-only `Fintype` route and a premature Add-Edges constructor are rejected.
+  No ordered construction, maximal-removal, minimal-kept, or confluence claim
+  follows. The planned order-sensitive two-observation constructor fixture was
+  deliberately not completed, so those questions remain a separate gate only
+  if an independent consumer demands an automatic pruning pass. Keep EXP-107's
+  graph semantics and EXP-109's checker experimental; rotate delivery to the
+  general probability, history, and long-run interfaces meanwhile.
 
 ### EXP-110: opt-in countable discrete probability
 
