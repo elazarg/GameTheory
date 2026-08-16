@@ -193,11 +193,13 @@ against the full deviation space. A fair chance-signal witness must show both
 the safe payoff-irrelevant removal and the nearby value-of-information failure;
 mere non-factorization of a policy is not a safety test.
 
-The exact local-utility graph view and the one-site
-continuation-factorization-to-coverage bridge now survive their hostile
-experiments. The next same-language gate is the finite-BN global-Markov layer:
-prove the canonical assignment law's effective-parent factor product and
-ancestral-moral separation before claiming the Koller--Milch graphical
+The exact local-utility graph view, the one-site
+continuation-factorization-to-coverage bridge, canonical effective-parent
+point-mass factorization, and division-free finite conditional independence
+now survive their hostile experiments. The next same-language gate is
+cast-free dependent cylinder enumeration, followed by parent-closed
+marginalization and ancestral-moral factor-scope elimination. Complete that
+finite-BN global-Markov layer before claiming the Koller--Milch graphical
 criterion discharges full-deviation coverage. Keep requisite observation
 (whether a realized parent value is needed by a rule) separate from strategic
 relevance (whether another decision's rule is strategically live). Do not

@@ -6393,3 +6393,65 @@ memory.
   discharge the continuation factorization on the multi-agent rival-policy
   consumer. Do not promote the graphical API or infer simultaneous pruning in
   the meantime.
+
+### EXP-104: finite-BN global-Markov semantics
+
+- **Date / revision:** 2026-08-16, `main` at `8e93046f`
+- **Status:** in progress; canonical factorization and conditional-independence
+  surface validated, reverse elimination narrowed to dependent enumeration
+- **Decision / question:** whether the canonical typed MAID assignment law can
+  support a reusable finite global-Markov theorem without a second evaluator,
+  positivity or faithfulness assumptions, stored value-domain finiteness, or
+  division by zero-probability evidence.
+- **Client evidence:** the Koller--Milch local ignorability theorem is the
+  independent specification. Its required soundness direction is graphical
+  d-separation to probabilistic conditional independence for every
+  parameterization; the existing `LocalUtilityFactorsAt` bridge is the target
+  consumer once that probability theorem exists.
+- **Competing designs:** prove point-mass factorization directly for canonical
+  native MAID execution; expose only a proved factorization view; introduce a
+  generic finite Bayesian-network joint evaluator; or formulate the Markov
+  result recursively over the existing serialized assignment runner.
+- **Representative slice:** establish effective-parent point-mass products for
+  a typed three-node chain, then exercise division-free conditional
+  independence on independent, chain, and collider controls including
+  zero-mass conditioning events. The eventual hostile MAID remains the
+  multi-agent rival-policy path from EXP-103.
+- **Measurements:** the 347-line canonical factorization module defines typed
+  effective-parent kernels, identifies them with the existing assignment node
+  laws, and proves by a nodup dependency-compatible list invariant that every
+  accepted topological serialization has the local-factor point masses. The
+  order-free native evaluator inherits the exact `Finset.univ` factorization;
+  a typed signal/decision/reward MAID consumes the generic theorem. No second
+  evaluator is introduced.
+
+  The 232-line finite-law module defines conditional independence by the
+  division-free atom identity `P(x,y,z)P(z)=P(x,z)P(y,z)`, proves symmetry and
+  zero-mass subevent closure, accepts deterministic and impossible-evidence
+  controls, and rejects a fair shared-diagonal bit. The 339-line cylinder
+  module connects an explicitly factorizing law to finite cylinder sums,
+  proves one-coordinate parent/local/product invariance and normalized reverse
+  elimination, and exercises both factor normalization and an impossible
+  Boolean cylinder. Focused builds passed warning-free: canonical MAID
+  factorization 1736 jobs with a 7.3-second final module build; conditional
+  independence 1713 jobs with a 10-second final module build; cylinder
+  marginalization 1716 jobs. Source audits found no `set_option`, `nolint`,
+  placeholder, axiom, direct `Function.update`, public cast, positivity, or
+  faithfulness premise. The full 3619-job build and
+  `scripts/phase3-audit.ps1 -VerifyExpected` passed with all forbidden-import,
+  transport, direct sequential-update, placeholder, and custom-axiom counts at
+  their expected zero values.
+- **Kill conditions:** reject a second authoritative MAID evaluator, custom
+  axiom, positivity or faithfulness premise, `Fintype.ofFinite` in executable
+  code, or conditional law equality that is undefined on zero evidence; keep
+  the result experimental if ancestral-moral elimination still depends on an
+  unproved normalization or representation theorem.
+- **Interim outcome / next action:** canonical point-mass factorization,
+  division-free conditional independence, and atomic normalization survive.
+  The full parent-closed cylinder theorem remains experiment-gated. Its exact
+  missing prerequisite is a cast-free equivalence between total assignments
+  satisfying `AgreeOn A` and dependent configurations on `Aᶜ`, together with
+  a nested-sum/Fubini reindexing theorem along a reverse topological list.
+  Prove that reusable dependent enumeration result next; then iterate
+  `sum_factorProduct_setOne`, partition factor scopes in the ancestral moral
+  graph, and derive the rank-one cross-product identity.

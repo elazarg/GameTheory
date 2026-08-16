@@ -3,7 +3,7 @@
 - **Status:** adopted for the semantic seam; graphical discharge remains
   experiment-gated
 - **Date:** 2026-08-16
-- **Experiment IDs:** EXP-102, EXP-103
+- **Experiment IDs:** EXP-102, EXP-103, EXP-104
 
 ## Decision and result
 
@@ -132,6 +132,15 @@ parent-closed component products depend only on their own coordinates and
 split multiplicatively across a disjoint partition. It deliberately does not
 define a second joint law or assert conditional independence.
 
+EXP-104 proves that the canonical native MAID assignment law has exactly the
+effective-parent local-factor point masses, including a typed three-node
+consumer. A separate finite-law surface states conditional independence by the
+division-free atom cross-product identity and validates impossible-evidence and
+dependent controls. Cylinder marginalization is proved through one normalized
+reverse-elimination step. The full parent-closed theorem remains blocked only
+on cast-free dependent-complement enumeration and nested-sum reindexing; no
+positivity, faithfulness, or alternate evaluator was needed.
+
 ## Measurements and kill conditions
 
 The stable certificate is 11 source lines. The 445-line semantic consumer
@@ -159,11 +168,12 @@ controls. Before global pruning, prove the required recall/fixpoint theorem.
 ## Consequences and compatibility posture
 
 The semantic seam is public. Graphical ignorability, requisite observation,
-strategic reliance, and s-reachability remain experimental and separate. The
-next gate is finite-BN global-Markov soundness: prove canonical MAID assignment
-point masses equal the effective-parent factor product, choose a division-free
-finite-law conditional-independence surface, and prove ancestral-moral
-separation. Only then may local-utility d-separation construct
+strategic reliance, and s-reachability remain experimental and separate.
+Canonical MAID point-mass factorization and a division-free finite-law
+conditional-independence surface are now validated experimentally. The next
+gate is cast-free dependent-assignment complement enumeration, followed by
+parent-closed cylinder marginalization and ancestral-moral factor-scope
+elimination. Only then may local-utility d-separation construct
 `CoversFullDeviationsAt` on the multi-agent hostile consumer.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a
