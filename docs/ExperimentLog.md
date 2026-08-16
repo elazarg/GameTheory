@@ -117,6 +117,7 @@ becomes difficult to scan.
 | EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | Complete checker-only result; executable stable-at/fixpoint checks are exact, while construction, minimality, and confluence remain unclaimed | [`MAIDPruningFixpointChecker.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointChecker.lean); [`MAIDPruningFixpointCheckerTest.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointCheckerTest.lean) |
 | EXP-110 | 2026-08-16 | D2 / countable discrete probability | Can an opt-in direct-`PMF` layer recover a genuinely infinite-support stopping law without weakening the finite-support `FinDist` core or introducing another probability abstraction? | Complete; direct PMF stopping law validates the separate countable layer, while bounded expectation remains a distinct analytic gate | [`CountableDiscreteStopping.lean`](../GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean) |
 | EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete experiment-only positive result; canonical-image agreement yields exact law/payoff congruence, while the live semantic rejection remains a promotion gate | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean) |
+| EXP-112 | 2026-08-16 | D2 / countable PMF expectation | Can the countable layer expose bounded real expectations and preserve finite-law expectations without duplicating `FinDist.expect` or hiding summability? | In progress; Mathlib API audit and geometric stopping-law expectation pending | Direct PMF integral/sum, bounded observable, `FinDist.toPMF` preservation |
 
 ## Entry template
 
@@ -7111,3 +7112,28 @@ memory.
   and a bundled history carrier is rejected. Keep it experimental until a
   second consumer proves the live law/payoff rejection and shows that a stable
   public-history agreement API materially reduces downstream bridge work.
+
+### EXP-112: bounded expectation for countable PMFs
+
+- **Date / revision:** 2026-08-16, `main` at `95737acd`
+- **Status:** in progress; experiment-only; no public API adopted
+- **Decision / question:** whether the direct countable `PMF` layer can expose
+  real-valued bounded expectation with explicit totality hypotheses and agree
+  exactly with canonical `FinDist.expect` on finite-support laws.
+- **Representative slice:** reuse EXP-110's geometric first-stop law on
+  `Option ℕ`; compute the expectation of at least one nonconstant bounded
+  observable, then prove preservation for `FinDist.toPMF` without exposing the
+  finite representation elsewhere.
+- **Competing designs:** use Mathlib's PMF/measure integral directly; define a
+  theorem-local absolutely summable series; or duplicate the finite
+  `FinDist.expect` API. Prefer the existing Mathlib analytic notion if it has
+  the required laws. Reject a duplicate probability or expectation wrapper.
+- **Measurements:** summability/integrability premises, ENNReal-to-real surface,
+  finite-law preservation proof size, reusable map/bind laws, and imports
+  pulled into the experiment.
+- **Kill conditions:** an unconditional real expectation for unbounded
+  countable observables, hidden convergence, a coercion-based FinDist bridge,
+  duplicated map/bind semantics, or promotion before the geometric consumer
+  and finite-law preservation both compile.
+- **Outcome / next action:** pending. Keep all work experimental and independent
+  of stable stochastic syntax until the analytic boundary is measured.
