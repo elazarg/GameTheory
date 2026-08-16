@@ -115,6 +115,7 @@ becomes difficult to scan.
 | EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | Complete experiment-only result; source-first transport and global `CoversFullDeviationsAt` compile, while the source-shaped hostile fixture remains a recall-cycle sentinel rather than an unsafe consumer | Experimental hybrid graph, site-local surgery, global reduction, positive consumer, and source audit |
 | EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; a concrete finite-law sequence separates all three payoff orders, while the infinite-play and cyclic-uniform interfaces remain open; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); cyclic quitting continuation slice; no API adoption |
 | EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | In progress; explicit directed closure and MAID graph-node deciders validated, full checker and hostile controls pending | Explicit node enumeration, Boolean/propositional equivalence, existing safe/live/fixpoint consumers |
+| EXP-110 | 2026-08-16 | D2 / countable discrete probability | Can an opt-in direct-`PMF` layer recover a genuinely infinite-support stopping law without weakening the finite-support `FinDist` core or introducing another probability abstraction? | Complete; direct PMF stopping law validates the separate countable layer, while bounded expectation remains a distinct analytic gate | [`CountableDiscreteStopping.lean`](../GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean) |
 
 ## Entry template
 
@@ -7002,3 +7003,43 @@ memory.
 - **Outcome / next action:** pending. First validate the Boolean checker against
   the existing predicate and controls; only then test an ordered restoration
   procedure. Keep EXP-107's semantic theorem experiment-only meanwhile.
+
+### EXP-110: opt-in countable discrete probability
+
+- **Date / revision:** 2026-08-16, `main` at `938fb907`
+- **Status:** complete; supports an opt-in countable layer; no public API adopted
+- **Decision / question:** whether a small direct-`PMF` layer can support
+  countably supported stochastic objects while `FinDist` remains the canonical
+  finite-support law and its representation remains private.
+- **Representative slice:** a constant-half discrete hazard whose first-stop
+  law lives on `Option ℕ`, has positive mass at every finite stopping date, and
+  therefore cannot be a `FinDist`; prove its point masses and one bounded
+  expectation decomposition. Reuse Mathlib `PMF` directly and include only an
+  explicit `FinDist.toPMF` boundary where a finite law enters the countable
+  layer.
+- **Competing designs:** replace finite semantics with `PMF`; add an opt-in
+  countable discrete module; or create a new probability wrapper. Prefer the
+  opt-in direct-`PMF` module. Preserve `FinDist` for finite executable algebra
+  and reject a third abstraction.
+- **Measurements:** required summability/boundedness premises; authored PMF and
+  `toPMF` surface; whether the stopping law has provably infinite support;
+  focused build; and downstream imports added to stable finite modules.
+- **Kill conditions:** a coercion from `FinDist` to `PMF`, PMF fields added to
+  existing finite game syntax solely for compatibility, hidden
+  summability/integrability obligations, a duplicate expectation API, or an
+  allegedly countable layer that only works because the carrier is finite.
+- **Observations:**
+  [`CountableDiscreteStopping.lean`](../GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean)
+  is a 133-line direct Mathlib `PMF` consumer. The constant-half first-stop law
+  on `Option ℕ` has mass `2⁻⁽ⁿ⁺¹⁾` at every `some n`, zero mass at `none`, and
+  infinite support; consequently no `FinDist` has the same underlying PMF.
+  `lake build GameTheory.Experimental.PostArchitecture.CountableDiscreteStopping`
+  passed 2,492 jobs warning-free. No stable finite module imports the
+  experiment, and source audits found no coercion, classical execution,
+  transport, placeholder, option, or lint-suppression token.
+- **Outcome / next action:** the direct-`PMF` design survives, and replacing
+  `FinDist` or adding a third probability wrapper is rejected. The requested
+  bounded-expectation decomposition was intentionally not asserted: it needs a
+  measured PMF expectation/summability bridge. Build that analytic bridge next,
+  then use an actual countable-transition or quitting-game consumer to decide
+  whether a distinct countable stochastic syntax is earned.
