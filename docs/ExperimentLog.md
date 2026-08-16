@@ -6547,8 +6547,8 @@ memory.
 ### EXP-105: finite utility leaves and replacement-invariant continuations
 
 - **Date / revision:** 2026-08-16, `main` at `6a0717bb`
-- **Status:** in progress; mapped utility-leaf factorization and the graph-free
-  continuation assembly validated; replacement invariance active
+- **Status:** in progress; fixed-policy utility conditional independence and
+  parent-closed kernel invariance validated; target surgery active
 - **Decision / question:** whether the experiment-only additive `UtilityView`
   can augment canonical native MAID play with distinct finite
   configuration-valued utility leaves, inherit the proved finite-BN
@@ -6601,11 +6601,26 @@ memory.
   shape. The four-module 1749-job build passed warning-free, with no
   `set_option`, `nolint`, placeholder, axiom, direct function update, visible
   transport, alternate evaluator, positivity premise, or compatibility shim.
+
+  The third gate proves two exact prerequisites without strengthening the
+  semantic conclusion. A 142-line generic theorem shows that two factorizing
+  finite dependent laws have the same retained-coordinate pushforward when
+  the retained set is parent-closed and their kernels agree there; its
+  fallback assignment comes from the first law's nonempty support. An 84-line
+  MAID theorem then combines mapped-law factorization, the leaves-last order,
+  singleton separation, and finite global Markov to prove division-free
+  conditional independence between one removed observation and one relevant
+  utility-configuration leaf for any fixed canonical policy. Because the
+  EXP-104 public wrapper still uses `Structure` only to name its dependent
+  assignment fibers, the latter theorem records one reducible all-chance
+  proof view of the already-canonical augmented graph; it defines no runner or
+  law. The combined 1759-job build passed warning-free with the same zero
+  hazard counts.
 - **Outcome / next action:** the finite augmentation, mapped-law
   factorization, graph translation, and non-circular distributional assembly
-  survive. Next prove that equal kernels on a parent-closed ancestor set give
-  equal canonical marginals, then prove the target-kernel surgery identity
-  that makes the context and continuation laws uniform across all owner
-  replacements. Only after those replacement-invariance results pass should
-  graphical ignorability be connected to `LocalUtilityFactorsAt` and
-  `CoversFullDeviationsAt`.
+  survive, and the exact fixed-policy global-Markov consequence is now proved.
+  Next use parent-closed kernel invariance to construct shared context and
+  nonrelevant-term marginals, then prove the target-kernel surgery identity
+  that makes relevant-term continuation laws uniform across all owner
+  replacements. Only after that result passes should graphical ignorability
+  be connected to `LocalUtilityFactorsAt` and `CoversFullDeviationsAt`.
