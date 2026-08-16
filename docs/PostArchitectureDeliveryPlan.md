@@ -104,11 +104,12 @@ This gate keeps three payoff aggregations first-class and distinct:
 the complementary-sequence construction (constant expected finite averages,
 pathwise liminf `0`, pathwise limsup `1`) followed by a two-phase quitting
 continuation whose initial phase is credible but whose other phase has a
-profitable deviation. The opt-in infinite-play measure and its exact
-finite-marginal projection to the existing canonical laws are now validated
-experimentally, without a second runner. The remaining gate must define the
-three payoff interfaces and quantify every phase/subgame root for cyclic
-subgame-perfect uniformity.
+profitable deviation. The opt-in infinite-play measure, its exact
+finite-marginal projection to the existing canonical laws, and three distinct
+total-integral/limit payoff signatures with a bounded hostile consumer are now
+validated experimentally, without a second runner. The remaining gate must
+connect a nonconstant canonical game-path payoff and quantify every
+phase/subgame root for cyclic subgame-perfect uniformity.
 Terminal, limiting-average, and uniform equilibrium concepts remain separate
 signatures; no coercion or expectation/limit interchange is admitted without
 its explicit hypotheses. EXP-108 does not change the current repeated or

@@ -113,7 +113,7 @@ becomes difficult to scan.
 | EXP-100 | 2026-08-14 | pre-cutover stochastic client gate | Can canonical Protocol play expose chronological finite histories and restart laws without a second runner? | Complete; supports and graduates | `GameTheory/Stochastic/PublicPolicy.lean`; `GameTheory/Stochastic/History.lean`; `GameTheory/Tests/StochasticContinuation.lean` |
 | EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
 | EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | Complete experiment-only result; source-first transport and global `CoversFullDeviationsAt` compile, while the source-shaped hostile fixture remains a recall-cycle sentinel rather than an unsafe consumer | Experimental hybrid graph, site-local surgery, global reduction, positive consumer, and source audit |
-| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; the order separation and canonical infinite-play measure with exact finite marginals are validated, while the payoff interfaces and cyclic-uniform layer remain open; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); [`StochasticInfinitePlayMeasure.lean`](../GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayMeasure.lean); no API adoption |
+| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; order separation, canonical finite-marginal path measure, and distinct measured payoff signatures compile, while a canonical game-path payoff consumer and cyclic-uniform layer remain open; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); [`StochasticInfinitePlayMeasure.lean`](../GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayMeasure.lean); [`StochasticAsymptoticPayoffs.lean`](../GameTheory/Experimental/PostArchitecture/StochasticAsymptoticPayoffs.lean); no API adoption |
 | EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | Complete checker-only result; executable stable-at/fixpoint checks are exact, while construction, minimality, and confluence remain unclaimed | [`MAIDPruningFixpointChecker.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointChecker.lean); [`MAIDPruningFixpointCheckerTest.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointCheckerTest.lean) |
 | EXP-110 | 2026-08-16 | D2 / countable discrete probability | Can an opt-in direct-`PMF` layer recover a genuinely infinite-support stopping law without weakening the finite-support `FinDist` core or introducing another probability abstraction? | Complete; direct PMF stopping law validates the separate countable layer, and EXP-112 subsequently validates bounded expectation | [`CountableDiscreteStopping.lean`](../GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean) |
 | EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete hostile result; forged-history agreement preserves laws/payoffs and a realizable-history change alters both, with promotion still consumer-gated | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean); [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherenceTest.lean) |
@@ -6965,11 +6965,22 @@ memory.
   passed 3,011 jobs warning-free. The construction introduces no second
   runner or payoff notion; its discrete bridge assumes finite players,
   nonempty action fibers, and countable canonical histories.
+- **Measured payoff-interface slice:** the 311-line
+  [`StochasticAsymptoticPayoffs.lean`](../GameTheory/Experimental/PostArchitecture/StochasticAsymptoticPayoffs.lean)
+  defines `E[liminf Aₙ]`, `E[limsup Aₙ]`, and convergence of `E[Aₙ]`
+  separately as total Bochner-integral/filter expressions. Its countable
+  bridge requires an explicit pointwise bound, and the concrete alternating
+  block consumer proves the three values `0`, `1 / 2`, and `1` for those exact
+  definitions. `lake build
+  GameTheory.Experimental.PostArchitecture.StochasticAsymptoticPayoffs`
+  passed 3,016 jobs warning-free. No expectation/limit interchange, coercion,
+  equilibrium notion, or unconditional unbounded expectation is asserted.
 - **Outcome / next action:** supports the distinct-signature/order-of-limits
   boundary, completes its finite-law hostile witness, and validates an
-  experiment-only infinite-play measure whose finite marginals are canonical.
-  Next define and separate the three payoff interfaces over this measure, then
-  test the all-phase cyclic continuation condition. Preserve current
+  experiment-only infinite-play measure whose finite marginals are canonical,
+  plus distinct measured payoff signatures with a bounded hostile consumer.
+  Next connect a nonconstant stage payoff on the canonical game-path measure,
+  then test the all-phase cyclic continuation condition. Preserve current
   `supported`/`opt-in` statuses and prototype only under `Experimental` until
   those hostile slices and a follow-up decision record determine the dependency
   and public API boundary.
@@ -7165,8 +7176,7 @@ memory.
   option, or lint suppression.
 - **Outcome / next action:** Mathlib's Bochner integral is the surviving
   countable expectation design; a new expectation wrapper is rejected. The
-  EXP-108 finite-marginal path measure now validates the explicit
-  `FinDist.toPMF.toMeasure` boundary. Keep the expectation bridge experimental
-  until an infinite-play payoff consumer needs it, then decide whether the
-  minimal PMF/FinDist preservation theorem belongs in a stable opt-in interop
-  module.
+  EXP-108 measured two-point payoff consumer now uses the explicit
+  `FinDist.toPMF.toMeasure` boundary. Keep the bridge experimental until a
+  canonical game-path payoff consumer needs it, then decide whether the minimal
+  PMF/FinDist preservation theorem belongs in a stable opt-in interop module.
