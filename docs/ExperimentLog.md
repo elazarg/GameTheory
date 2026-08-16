@@ -6805,6 +6805,7 @@ memory.
   [`MAIDMechanismSelectorFactorization.lean`](../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorFactorization.lean),
   [`MAIDMechanismSelectorIndependence.lean`](../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorIndependence.lean),
   [`MAIDMechanismSelectorScores.lean`](../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorScores.lean),
+  [`MAIDSiteOptimalityScores.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteOptimalityScores.lean),
   [`MAIDSitePolicySurgery.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSitePolicySurgery.lean),
   [`MAIDSiteReplacementContext.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteReplacementContext.lean),
   [`MAIDSiteOptimality.lean`](../GameTheory/Experimental/PostArchitecture/MAIDSiteOptimality.lean),
@@ -6827,11 +6828,15 @@ memory.
   baseline-versus-changed component cross-product identity. The score layer
   sums that identity against each finite term payoff and proves that a changed
   source cannot create a target full-action atom outside the fully mixed
-  reference support, without assuming chance positivity. The foundation set
-  contains fifteen artifacts, and the two consumer audits are separate.
-  The aggregate `lake build` over all sixteen EXP-107 modules completed
-  warning-free with 1,785 jobs, and the repository-wide `lake build` completed
-  with 3,673 jobs. `phase1-audit.ps1 -VerifyExpected`,
+  reference support, without assuming chance positivity. The site-score layer
+  adds exact off-target surgery algebra, shared context marginals, zero-mass
+  collapse, and a finite expected-utility decomposition into unnormalised
+  context/action/term scores. The foundation set now contains sixteen
+  artifacts, and the two consumer audits are separate. Before the two score
+  modules landed, the aggregate `lake build` over the original fourteen
+  artifacts plus those consumers completed warning-free with 1,785 jobs, and
+  the repository-wide `lake build` completed with 3,673 jobs.
+  `phase1-audit.ps1 -VerifyExpected`,
   `phase2-audit.ps1 -VerifyExpected -DeepReachability`, and
   `phase3-audit.ps1 -VerifyExpected -DeepReachability` each reported
   `VERIFIED=1`. The source audit found no option, lint suppression,

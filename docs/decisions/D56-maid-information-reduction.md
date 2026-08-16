@@ -241,18 +241,17 @@ EXP-107's site-local closeout adds the nonrelevant-term marginal certificate,
 the edge-addition-stable site-local factor/optimality endpoint, the fully mixed
 owner-order machinery, and canonical mechanism-selector factorization. The
 selector conditional-independence/cross-law bridge also compiles. The
-fifteen-artifact foundation set plus the two hostile consumers has a warning-
-free aggregate targeted Lake build (1,785 jobs), full repository build (3,673
-jobs), and deep Phase 1--3 audit (`VERIFIED=1` for each phase). The remaining
+original fourteen-artifact foundation set plus the two hostile consumers has
+a warning-free aggregate targeted Lake build (1,785 jobs), full repository
+build (3,673 jobs), and deep Phase 1--3 audit (`VERIFIED=1` for each phase).
+Two further focused modules add division-free term-score comparison,
+changed-to-reference support without chance positivity, policy-surgery
+algebra, and exact expected-utility score decomposition. The remaining
 load-bearing global step is semantic soundness/optimality transport for
 changes at non-s-reachable same-owner sites under a fully mixed reference rule
-(Koller--Milch Lemmas 6.1--6.2 style). The remaining score comparison and
-fully mixed support transport now compile as division-free term-score and
-changed-to-reference support theorems, without chance positivity. The next
-proof must use those results to transport site optimality. Once it is
-established, the same-owner relevance-order induction must combine the local
-optimality rules into one reduced whole-owner rule and then discharge
-full-deviation coverage.
+(Koller--Milch Lemmas 6.1--6.2 style). Once it is established, the same-owner
+relevance-order induction must combine the local optimality rules into one
+reduced whole-owner rule and then discharge full-deviation coverage.
 
 Reject or narrow the graph route if it becomes a second evaluator, cannot
 construct full owner-deviation coverage, assumes faithfulness of the current
