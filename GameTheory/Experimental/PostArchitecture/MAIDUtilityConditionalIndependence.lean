@@ -47,10 +47,10 @@ def utilityGraphStructure [DecidableEq Node]
     (augmentedTopologicalOrder view owner topological)
 
 /-- For one fixed policy, graphical ignorability gives division-free
-conditional independence between a removed base observation and a relevant
-typed utility-configuration leaf, conditional on the decision and every kept
-observation. -/
-theorem utilityTerm_conditionallyIndependent_of_graphicallyIgnorable
+conditional independence between the entire removed base-coordinate set and a
+relevant typed utility-configuration leaf, conditional on the decision and
+every kept observation. -/
+theorem removed_conditionallyIndependent_of_graphicallyIgnorable
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
@@ -59,26 +59,24 @@ theorem utilityTerm_conditionallyIndependent_of_graphicallyIgnorable
     (site : DecisionSite diagram owner) (removed : Finset Node)
     (hignore : view.AreGraphicallyIgnorable site removed)
     (term : view.UtilitySite owner)
-    (hrelevant : view.IsRelevantUtilityTerm site term)
-    (observation : Node) (hremoved : observation ∈ removed) :
+    (hrelevant : view.IsRelevantUtilityTerm site term) :
     CoordinatesConditionallyIndependent
       (diagram := utilityGraphStructure topological view owner)
       (augmentedLaw view owner policy)
-      {.base observation} {.utility term}
+      (removedGraphNodes view owner removed) {.utility term}
       (view.observationConditioningSet site removed) := by
   obtain ⟨hfirstSecond, hfirstEvidence, hsecondEvidence⟩ :=
-    singleton_query_disjointness view site removed observation term hremoved
-      hignore.1
+    removed_query_disjointness view site removed term hignore.1
   exact coordinatesConditionallyIndependent_of_factorizes_of_separates
     (diagram := utilityGraphStructure topological view owner)
     (augmentedLaw view owner policy) view.graphParents
     (augmentedTopologicalOrder view owner topological)
     (augmentedKernels view policy)
     (augmentedLaw_factorizes topological view owner policy)
-    {.base observation} {.utility term}
+    (removedGraphNodes view owner removed) {.utility term}
     (view.observationConditioningSet site removed)
     hfirstSecond hfirstEvidence hsecondEvidence
-    (separates_of_areGraphicallyIgnorable view site removed hignore term
-      hrelevant observation hremoved)
+    (separates_removedGraphNodes_of_areGraphicallyIgnorable view site removed
+      hignore term hrelevant)
 
 end GameTheory.Experimental.PostArchitecture.MAIDUtilityConditionalIndependence

@@ -6608,14 +6608,27 @@ memory.
   the retained set is parent-closed and their kernels agree there; its
   fallback assignment comes from the first law's nonempty support. An 84-line
   MAID theorem then combines mapped-law factorization, the leaves-last order,
-  singleton separation, and finite global Markov to prove division-free
-  conditional independence between one removed observation and one relevant
-  utility-configuration leaf for any fixed canonical policy. Because the
-  EXP-104 public wrapper still uses `Structure` only to name its dependent
+  setwise separation, and finite global Markov to prove division-free
+  conditional independence between the whole removed-observation coordinate
+  set and one relevant utility-configuration leaf for any fixed canonical
+  policy. Because the EXP-104 public wrapper still uses `Structure` only to
+  name its dependent
   assignment fibers, the latter theorem records one reducible all-chance
   proof view of the already-canonical augmented graph; it defines no runner or
   law. The combined 1759-job build passed warning-free with the same zero
   hazard counts.
+
+  A further 239-line probability-only theorem constructs a canonical
+  continuation by conditioning the `(kept context, term)` law on its kept
+  fibre. Division-free conditional independence of full context and term given
+  kept context then reconstructs their exact joint law by binding that
+  continuation after the context marginal. The public equality contains no
+  division, and its proof shows that the arbitrary `condOnFibre` fallback is
+  never observed on a zero-mass kept fibre. The set-valued graph proof was also
+  strengthened directly rather than combining singleton CI claims: every
+  removed observation is already an ancestor of the conditioned decision, so
+  the larger query adds no ancestral-moral vertices. The combined 1759-job
+  build remained warning-free with all hazard counts zero.
 - **Outcome / next action:** the finite augmentation, mapped-law
   factorization, graph translation, and non-circular distributional assembly
   survive, and the exact fixed-policy global-Markov consequence is now proved.
