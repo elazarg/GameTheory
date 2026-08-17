@@ -97,7 +97,7 @@ self-generating characterization of PPE payoffs. It does not claim the
 constrained-efficiency or bang-bang results of Abreu--Pearce--Stacchetti, and
 public lotteries are not silently folded into the decomposition operator.
 
-#### C.1. Infinite-path and cyclic asymptotic gate — EXP-108 in progress
+#### C.1. Infinite-path and cyclic asymptotic gate — EXP-108/113 validated; cyclic gate open
 
 This gate keeps three payoff aggregations first-class and distinct:
 `E[liminf_T A_T]`, `E[limsup_T A_T]`, and `lim_T E[A_T]`. Its hostile slice is
@@ -107,13 +107,19 @@ continuation whose initial phase is credible but whose other phase has a
 profitable deviation. The opt-in infinite-play measure, its exact
 finite-marginal projection to the existing canonical laws, and three distinct
 total-integral/limit payoff signatures with a bounded hostile consumer are now
-validated experimentally, without a second runner. The remaining gate must
-connect a nonconstant canonical game-path payoff and quantify every
-phase/subgame root for cyclic subgame-perfect uniformity.
+validated experimentally, without a second runner. EXP-113 additionally
+connects a genuinely nonconstant canonical stochastic game: its exact expected
+finite averages converge to `1/2`, while expected pathwise liminf and limsup
+are independently proved equal to `1/2` from almost-everywhere path
+convergence. The remaining gate is cyclic subgame-perfect uniformity quantified
+at every phase/subgame root.
 Terminal, limiting-average, and uniform equilibrium concepts remain separate
 signatures; no coercion or expectation/limit interchange is admitted without
 its explicit hypotheses. EXP-108 does not change the current repeated or
-stochastic statuses; no stable infinite-path API has been promoted.
+stochastic statuses; no stable infinite-path API has been promoted. EXP-114's
+provisional all-phase predicate still lacks its hostile off-phase deviation
+consumer because the public event API erases the joint action needed for the
+transition-support congruence.
 
 ### D. FOSG strategic and counterfactual analysis — transfer/support resolved
 

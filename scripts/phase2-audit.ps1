@@ -181,7 +181,8 @@ $Phase1Prefix = 'GameTheory/Experimental/Phase1'
 $RepresentationBoundary = @(
   'GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean',
   'GameTheory/Experimental/PostArchitecture/CountablePMFExpectation.lean',
-  'GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayMeasure.lean')
+  'GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayMeasure.lean',
+  'GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayCoherence.lean')
 $NonRepresentation = @($AllFiles | Where-Object {
   $candidate = $_
   ($_ -ne $RepresentationModule) -and (-not $_.StartsWith($Phase1Prefix)) -and
@@ -194,7 +195,7 @@ Report 'REPRESENTATION_TOKENS_OUTSIDE_FINDIST' `
     '(?<![A-Za-z0-9_])(ENNReal|toReal|toPMF|PMF)(?![A-Za-z0-9_])')
 Report 'TOPMF_OUTSIDE_FINDIST' `
   (Count-Pattern $NonRepresentation '(?<![A-Za-z0-9_])toPMF(?![A-Za-z0-9_])')
-# These three experiment-only files are the explicit, measured boundary for
+# These four experiment-only files are the explicit, measured boundary for
 # the opt-in countable/infinite-path layer. Keep their representation use
 # visible separately so excluding them from the stable D2 bucket cannot hide
 # a later broadening of that boundary.
@@ -1805,11 +1806,11 @@ if ($VerifyExpected) {
     STOCHASTIC_FORBIDDEN_IMPORTS = 0
     MATH_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
-    REPRESENTATION_EXPERIMENT_BOUNDARY_FILES = 3
+    REPRESENTATION_EXPERIMENT_BOUNDARY_FILES = 4
     REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
     TOPMF_OUTSIDE_FINDIST = 0
-    REPRESENTATION_TOKENS_EXPERIMENT_BOUNDARY = 39
-    TOPMF_EXPERIMENT_BOUNDARY = 10
+    REPRESENTATION_TOKENS_EXPERIMENT_BOUNDARY = 42
+    TOPMF_EXPERIMENT_BOUNDARY = 12
     VNM_REPRESENTATION_TOKENS = 0
   }
   # RFC 7.3 states a budget, not a target, so this one is a bound.

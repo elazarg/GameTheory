@@ -113,11 +113,13 @@ becomes difficult to scan.
 | EXP-100 | 2026-08-14 | pre-cutover stochastic client gate | Can canonical Protocol play expose chronological finite histories and restart laws without a second runner? | Complete; supports and graduates | `GameTheory/Stochastic/PublicPolicy.lean`; `GameTheory/Stochastic/History.lean`; `GameTheory/Tests/StochasticContinuation.lean` |
 | EXP-101 | 2026-08-16 | D2/D12 / reusable mathematics ownership | Can `GameTheory.Math` own reusable support, including finite probability, while remaining independently buildable and unable to reach game semantics? | Supports; adopted as D55 | `GameTheory/Math/**`; [`decisions/D55-independent-mathematics-root.md`](decisions/D55-independent-mathematics-root.md) |
 | EXP-107 | 2026-08-16 | D56 / global MAID information reduction | Can hybrid restore-at-site ignorability and same-owner s-reachability construct global safe pruning under sufficient recall? | Complete experiment-only result; source-first transport and global `CoversFullDeviationsAt` compile, while the source-shaped hostile fixture remains a recall-cycle sentinel rather than an unsafe consumer | Experimental hybrid graph, site-local surgery, global reduction, positive consumer, and source audit |
-| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; order separation, canonical finite-marginal path measure, and distinct measured payoff signatures compile, while a canonical game-path payoff consumer and cyclic-uniform layer remain open; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); [`StochasticInfinitePlayMeasure.lean`](../GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayMeasure.lean); [`StochasticAsymptoticPayoffs.lean`](../GameTheory/Experimental/PostArchitecture/StochasticAsymptoticPayoffs.lean); no API adoption |
+| EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; EXP-113 closes the canonical nonconstant game-path consumer, while EXP-114's hostile cyclic-uniform test remains blocked at public event/transition congruence; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); [`StochasticInfinitePlayMeasure.lean`](../GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayMeasure.lean); [`StochasticAsymptoticPayoffs.lean`](../GameTheory/Experimental/PostArchitecture/StochasticAsymptoticPayoffs.lean); no API adoption |
 | EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | Complete checker-only result; executable stable-at/fixpoint checks are exact, while construction, minimality, and confluence remain unclaimed | [`MAIDPruningFixpointChecker.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointChecker.lean); [`MAIDPruningFixpointCheckerTest.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointCheckerTest.lean) |
 | EXP-110 | 2026-08-16 | D2 / countable discrete probability | Can an opt-in direct-`PMF` layer recover a genuinely infinite-support stopping law without weakening the finite-support `FinDist` core or introducing another probability abstraction? | Complete; direct PMF stopping law validates the separate countable layer, and EXP-112 subsequently validates bounded expectation | [`CountableDiscreteStopping.lean`](../GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean) |
 | EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete hostile result; forged-history agreement preserves laws/payoffs and a realizable-history change alters both, with promotion still consumer-gated | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean); [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherenceTest.lean) |
 | EXP-112 | 2026-08-16 | D2 / countable PMF expectation | Can the countable layer expose bounded real expectations and preserve finite-law expectations without duplicating `FinDist.expect` or hiding summability? | Complete experiment-only result; bounded Bochner integration preserves `FinDist.expect` and computes the geometric consumer | [`CountablePMFExpectation.lean`](../GameTheory/Experimental/PostArchitecture/CountablePMFExpectation.lean) |
+| EXP-113 | 2026-08-17 | future stochastic asymptotic gate | Can a genuinely nonconstant canonical stochastic game path consume the EXP-108 infinite-play and asymptotic-payoff interfaces without a second runner or expectation/limit interchange? | Complete experiment-only result; canonical fair absorbing game validates all three distinct asymptotic payoff orders | [`StochasticGamePathPayoff.lean`](../GameTheory/Experimental/PostArchitecture/StochasticGamePathPayoff.lean) |
+| EXP-114 | 2026-08-17 | cyclic stochastic uniformity | Can uniform equilibrium be required at every canonical restart phase without identifying it with terminal SPE or limiting-average payoff? | In progress; canonical all-phase predicate and positive cyclic control compile, hostile off-phase rejection pending | [`CyclicUniformInterface.lean`](../GameTheory/Experimental/PostArchitecture/CyclicUniformInterface.lean) |
 
 ## Entry template
 
@@ -6981,11 +6983,14 @@ memory.
   boundary, completes its finite-law hostile witness, and validates an
   experiment-only infinite-play measure whose finite marginals are canonical,
   plus distinct measured payoff signatures with a bounded hostile consumer.
-  Next connect a nonconstant stage payoff on the canonical game-path measure,
-  then test the all-phase cyclic continuation condition. Preserve current
-  `supported`/`opt-in` statuses and prototype only under `Experimental` until
-  those hostile slices and a follow-up decision record determine the dependency
-  and public API boundary.
+  EXP-113 now connects a nonconstant canonical game path and proves its exact
+  expected-average limit and both pathwise order-limit expectations. EXP-114
+  is the remaining cyclic gate: its provisional all-phase predicate compiles,
+  but the hostile off-phase test requires a public event/transition congruence
+  theorem that retains the joint action after unilateral profile update.
+  Preserve current `supported`/`opt-in` statuses and prototype only under
+  `Experimental` until that hostile slice and a follow-up decision record
+  determine the dependency and public API boundary.
 
 ### EXP-109: executable MAID edge-addition fixpoint checker
 
@@ -7188,3 +7193,96 @@ memory.
   `FinDist.toPMF.toMeasure` boundary. Keep the bridge experimental until a
   canonical game-path payoff consumer needs it, then decide whether the minimal
   PMF/FinDist preservation theorem belongs in a stable opt-in interop module.
+
+### EXP-113: canonical stochastic game-path asymptotic payoff
+
+- **Date / revision:** 2026-08-17, implementation on the post-EXP-112 working tree
+- **Status:** complete experiment-only result; no public API adopted
+- **Decision / question:** can the EXP-108 infinite canonical path measure and
+  asymptotic payoff signatures consume a genuinely nonconstant stochastic game
+  path without adding a second runner or an expectation/limit interchange?
+- **Representative slice:** one-player Boolean-state game with a fair initial
+  transition and absorbing Boolean states; use the canonical infinite path law
+  and a bounded path payoff selected by its first realized transition.
+- **Competing designs:** consume the canonical path coordinates directly, add a
+  second recursive path evaluator, or leave game-path payoffs unconnected.
+  Reject the second evaluator and any unproved interchange.
+- **Measurements:** exact canonical finite-marginal projection, pathwise
+  liminf/limsup and finite-average-limit values, explicit bounded-integrability
+  hypotheses, and focused warning-free build.
+- **Kill conditions:** duplicate running semantics, constant/trivial game law,
+  hidden measurability or integrability, expectation/limit interchange, or
+  coercion between terminal, limiting-average, and uniform concepts.
+- **Evidence / outcome:** `ProtocolHistoryCountable.lean` derives countability
+  of canonical histories from finite players and countable state/action
+  carriers, without requiring a finite state space.
+  `StochasticInfinitePlayCoherence.lean` compiles a
+  support-preserving one-step path theorem and its countable all-stage
+  almost-everywhere form. It also derives an almost-everywhere exact
+  `History.extend` witness for every adjacent pair, using the existing
+  `Kernel.traj`/`partialTraj` APIs. Validation:
+  `lake env lean GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayCoherence.lean`.
+  `StochasticInfinitePlayPayoffBridge.lean` defines the canonical stage/path
+  averages and transports their integrals to existing finite-horizon laws.
+  `StochasticInfinitePlayPayoffConsistency.lean` now compiles the bounded
+  finite-horizon pathwise stagewise-consistency and integral bridge, validated
+  with `lake build
+  GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffConsistency`.
+  `StochasticGamePathPayoff.lean` supplies the genuinely nonconstant
+  one-player `Option Bool` consumer with an explicit axiom-free countable
+  canonical-history instance, positive fair branches, canonical behavioral
+  joint-action reduction, exact `finiteAveragePayoff` horizon-2 value `1/4`,
+  and the canonical path integral at horizon 2 equal to `1/4`. The same
+  integral is transported to `expectedFiniteAverage` at index 1 through
+  `pathwiseAverage_canonicalStageUtility`. Almost-everywhere path coherence
+  then yields the exact formula `n / (n + 1) * (1 / 2)` for every expected
+  finite average, convergence to `1/2`, and expected pathwise liminf and
+  limsup both equal to `1/2`. The latter two use almost-everywhere convergence
+  of each pathwise average to its selected bit; no expectation/limit
+  interchange occurs. A public extension-stage lemma removes the dependent
+  chronological-index transport that blocked the first proof attempt.
+  `lake build
+  GameTheory.Experimental.PostArchitecture.StochasticGamePathPayoff` passed
+  3,021 jobs warning-free. Source, width, and diff audits are clean.
+- **Outcome / next action:** the canonical finite-marginal infinite-play law
+  and all three deliberately separate long-run payoff orders survive a
+  nonconstant canonical game consumer. Keep them experiment-only: the direct
+  PMF/measure crossing remains an explicitly measured boundary and has only
+  one domain consumer. The next stochastic gate is EXP-114's cyclic all-phase
+  uniformity and its hostile off-phase deviation, not an automatic coercion
+  among terminal, limiting-average, and uniform equilibrium.
+
+### EXP-114: cyclic all-phase uniform equilibrium
+
+- **Date / revision:** 2026-08-17, reservation on the EXP-113 working tree
+- **Status:** in progress; experiment-only; no public API adopted
+- **Decision / question:** can stochastic uniform equilibrium quantify every
+  canonical restart phase without importing the well-founded terminal SPE
+  interface or coercing between terminal, limiting-average, and uniform
+  equilibrium notions?
+- **Representative slice:** define all-phase uniform epsilon equilibrium by
+  applying the existing finite-horizon uniform predicate to canonical
+  `afterPublicHistory` continuations, prove that it implies initial-phase
+  uniformity, and test a two-phase cyclic quitting game whose initial phase is
+  credible while another phase admits a profitable deviation.
+- **Competing designs:** quantify canonical finite histories and reuse restart
+  semantics; reuse well-founded Protocol subgames; or add a cyclic runner.
+  Reject the latter two because the game is cyclic and the canonical stochastic
+  runner/restart calculus already exists.
+- **Measurements:** quantifier and assumption surface, runner reuse, exact
+  hostile positive/negative controls, focused build, and source hazards.
+- **Kill conditions:** a second runner, terminal/SPE coercion, inference from
+  only the chosen initial phase, hidden infinite-path assumptions, or a bundled
+  hierarchy before the hostile consumer compiles.
+- **Evidence / outcome:** `CyclicUniformInterface.lean` currently compiles the
+  transparent all-phase predicate, its initial-phase consequence, and a cyclic
+  unit-action positive control over the existing `afterPublicHistory`
+  semantics. This is provisional evidence only. The attempted two-phase
+  quitting control exposed a public canonical-runner gap: after a unilateral
+  profile update, `stageRecordOfEvent_joint` provides an existentially erased
+  stage record but no rewrite that preserves the joint action in the
+  transition-support term. Proving that the unchanged opponent action keeps
+  the initial phase absorbing would therefore require private `jointAction`
+  plumbing or visible transports. The broken fixture was deleted. The next
+  action is a general public event/transition congruence seam, followed by the
+  same hostile test; do not adopt the all-phase interface before it passes.
