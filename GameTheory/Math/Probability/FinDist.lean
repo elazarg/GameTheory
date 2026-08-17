@@ -560,6 +560,12 @@ theorem expect_map (f : α → β) (μ : FinDist α) (u : β → ℝ) :
   rw [map_eq_bind, expect_bind]
   simp
 
+/-- Expectation under an independent product, for an arbitrary observable. -/
+theorem expect_product (μ : FinDist α) (ν : FinDist β) (u : α × β → ℝ) :
+    expect (product μ ν) u = expect μ (fun a => expect ν (fun b => u (a, b))) := by
+  rw [product, expect_bind]
+  exact expect_congr fun a _ => by rw [expect_map]
+
 theorem expect_mul_const (μ : FinDist α) (u : α → ℝ) (c : ℝ) :
     expect μ (fun a => u a * c) = expect μ u * c := by
   unfold expect
@@ -1027,6 +1033,11 @@ theorem probOf_map (f : α → β) (μ : FinDist α) (S : Set β) :
   rw [← expect_indicator_eq_probOf, ← expect_indicator_eq_probOf, expect_map]
   exact expect_congr fun a _ => by
     by_cases h : f a ∈ S <;> simp [h]
+
+/-- A pushforward's point mass is the source mass of its singleton preimage. -/
+theorem prob_map_eq_probOf_preimage_singleton (f : α → β) (μ : FinDist α) (b : β) :
+    (map f μ).prob b = μ.probOf (f ⁻¹' ({b} : Set β)) := by
+  rw [← probOf_singleton, probOf_map]
 
 /-- The probability of a finite set is the ordinary sum of its point masses. -/
 theorem probOf_finset_eq_sum [DecidableEq α] (μ : FinDist α) (S : Finset α) :
