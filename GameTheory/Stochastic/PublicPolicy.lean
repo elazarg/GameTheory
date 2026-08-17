@@ -225,6 +225,47 @@ theorem stageRecordOfCanonicalEvent_joint
     simpa only [canonicalEvent, canonicalJoint] using hjoint
   exact (Option.some.inj hjoint').symm
 
+theorem event_joint_eq_some_stageRecordOfEvent_joint
+    (initial : G.State) [∀ i, Nonempty (G.Action i)]
+    (event : (G.toExecution initial).StepEvent) :
+    event.joint = fun i => some ((G.stageRecordOfEvent initial event).joint i) := by
+  funext i
+  exact G.stageRecordOfEvent_joint initial event i
+
+theorem stageRecordOfEvent_target_mem_transition_support
+    (initial : G.State) [∀ i, Nonempty (G.Action i)]
+    (event : (G.toExecution initial).StepEvent) :
+    event.target ∈
+      (G.transition (G.stageRecordOfEvent initial event).source
+        (G.stageRecordOfEvent initial event).joint).support := by
+  let joint : ∀ i, Option (G.Action i) := fun i =>
+    some ((G.stageRecordOfEvent initial event).joint i)
+  let legal : (G.toExecution initial).Legal event.source joint := by
+    constructor
+    · simp
+    · intro i
+      simp [joint]
+  let chosen : {joint : ∀ i, Option (G.Action i) //
+      (G.toExecution initial).Legal event.source joint} := ⟨joint, legal⟩
+  have hjoint : event.joint = joint :=
+    event_joint_eq_some_stageRecordOfEvent_joint G initial event
+  have hchosen : (⟨event.joint, event.isLegal⟩ :
+      {joint : ∀ i, Option (G.Action i) //
+        (G.toExecution initial).Legal event.source joint}) = chosen := by
+    apply Subtype.ext
+    exact hjoint
+  have hrealized : event.target ∈
+      ((G.toExecution initial).step event.source chosen).support := by
+    rw [← hchosen]
+    exact event.realized
+  have hstep : (G.toExecution initial).step event.source chosen =
+      G.transition event.source ((G.stageRecordOfEvent initial event).joint) := by
+    rw [show chosen = ⟨joint, legal⟩ by rfl]
+    simpa [joint] using G.toExecution_step_some initial event.source
+      (G.stageRecordOfEvent initial event).joint
+  rw [G.stageRecordOfEvent_source, ← hstep]
+  exact hrealized
+
 @[simp]
 theorem eventUtility_canonicalEvent
     (initial : G.State) [∀ i, Nonempty (G.Action i)]
