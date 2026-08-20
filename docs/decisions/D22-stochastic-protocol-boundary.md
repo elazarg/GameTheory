@@ -2,8 +2,9 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-08-02
-- **Experiment IDs:** EXP-050; follow-up gates EXP-108 (in progress) and
-  EXP-116 (complete; bounded Kuhn specialization)
+- **Experiment IDs:** EXP-050; follow-up gates EXP-108 (in progress),
+  EXP-116 (complete; bounded Kuhn specialization), and EXP-117 (complete;
+  infinite-product policy law)
 
 ## Decision / question
 
@@ -123,7 +124,18 @@ fixed horizon. Generic Protocol finite-site predrawing then yields exact
 whole-profile, unilateral updated-law, and Nash transfers between proof-free
 behavioral and mixed public policies without finite states or a
 `Fintype PublicHistory` assumption. This adds neither a runner nor an
-equilibrium predicate and makes no infinite-horizon policy-measure claim.
+equilibrium predicate.
+
+EXP-117/D57 closes that separately gated forward policy-measure claim without
+changing the stochastic carrier. Mathlib's ordinary infinite product gives
+one ex-ante probability law over total pure Protocol policies, independent of
+horizon. Its finite marginals are the EXP-116 predraws, so the sole Protocol
+runner yields every finite-prefix law and the corresponding law after an
+arbitrary behavioral unilateral replacement. Countable states and finite
+actions give regularity; bounded stage utility and a discount in `[0, 1)` give
+summability and normalized discounted-payoff equality. This is not the
+EXP-108 infinite-play outcome measure and adds no reverse conditionalization
+or equilibrium predicate.
 
 The umbrella `GameTheory.Stochastic` is public and opt-in. At this decision it
 remained provisional until the Shapley gate; EXP-051/D23 subsequently closed

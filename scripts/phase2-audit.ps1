@@ -173,10 +173,13 @@ $Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $PostArchitectur
   $CooperativeFiles + $MathFiles +
   @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
 Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
-# D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
-# `PMF`, and `toPMF` must not appear outside the representation module; the
-# frozen Phase 1 candidates are evidence and are excluded.
-$RepresentationModule = 'GameTheory/Math/Probability/FinDist.lean'
+# D2 requires the finite-law representation to stay hidden. D57 adds exactly
+# one representation-owner bridge from `FinDist` to ordinary `Measure`.
+# `ENNReal`, `toReal`, `PMF`, and `toPMF` must not appear outside those two
+# modules; the frozen Phase 1 candidates are evidence and are excluded.
+$RepresentationModules = @(
+  'GameTheory/Math/Probability/FinDist.lean',
+  'GameTheory/Math/Probability/Measure.lean')
 $Phase1Prefix = 'GameTheory/Experimental/Phase1'
 $RepresentationBoundary = @(
   'GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean',
@@ -185,15 +188,16 @@ $RepresentationBoundary = @(
   'GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayCoherence.lean')
 $NonRepresentation = @($AllFiles | Where-Object {
   $candidate = $_
-  ($_ -ne $RepresentationModule) -and (-not $_.StartsWith($Phase1Prefix)) -and
+  ($RepresentationModules -notcontains $_) -and
+    (-not $_.StartsWith($Phase1Prefix)) -and
     ($RepresentationBoundary -notcontains $candidate) })
 $RepresentationBoundaryFiles = @($AllFiles | Where-Object {
   $RepresentationBoundary -contains $_ })
 Report 'REPRESENTATION_EXPERIMENT_BOUNDARY_FILES' $RepresentationBoundaryFiles.Count
-Report 'REPRESENTATION_TOKENS_OUTSIDE_FINDIST' `
+Report 'REPRESENTATION_TOKENS_OUTSIDE_OWNERS' `
   (Count-Pattern $NonRepresentation `
     '(?<![A-Za-z0-9_])(ENNReal|toReal|toPMF|PMF)(?![A-Za-z0-9_])')
-Report 'TOPMF_OUTSIDE_FINDIST' `
+Report 'TOPMF_OUTSIDE_OWNERS' `
   (Count-Pattern $NonRepresentation '(?<![A-Za-z0-9_])toPMF(?![A-Za-z0-9_])')
 # These four experiment-only files are the explicit, measured boundary for
 # the opt-in countable/infinite-path layer. Keep their representation use
@@ -1684,7 +1688,7 @@ if ($DeepReachability) {
   Report 'TREMBLING_ANALYSIS_BOUNDARY_PROBES_REJECTED' `
     $tremblingAnalysisBoundaryRejected
 
-  # D22, D23, and D39 keep the stable stochastic root
+  # D22, D23, D39, and D57 keep the stable stochastic root
   # analysis-light. It must positively reach the four semantic layers,
   # canonical approximate Nash, and the structural zero-sum surface, while
   # rejecting Repeated and both analytic fixed-point routes.
@@ -1695,12 +1699,17 @@ if ($DeepReachability) {
     'GameTheory.Stochastic.Game.perfectMonitoring',
     'GameTheory.Stochastic.Game.horizonGame_expectedUtility',
     'GameTheory.Stochastic.Game.IsUniformEquilibriumPayoff',
-    'GameTheory.IsεNash')
+    'GameTheory.IsεNash',
+    'GameTheory.Stochastic.Game.protocolPureProfileMeasure',
+    'GameTheory.Stochastic.Game.protocolPureProfileMeasure_regular',
+    'GameTheory.Stochastic.Game.kuhn_policyMeasure_allFinitePrefixes',
+    'GameTheory.Stochastic.Game.kuhn_policyMeasure_discountedPayoff')
   $stochasticBoundary = @(
     'GameTheory.UtilityGame.repeatedForm',
     'GameTheory.Stochastic.Game.shapleyOperator',
     'GameTheory.Stochastic.Game.exists_isDiscountedStationaryBellmanEq_bounded',
-    'kakutani_fixed_point')
+    'kakutani_fixed_point',
+    'GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure.Game.infinitePlayMeasure')
   $stochasticOutput = Run-Probe 'GameTheory.Stochastic' `
     ($stochasticInputs + $stochasticBoundary)
   $stochasticInputsReached = 0
@@ -1807,8 +1816,8 @@ if ($VerifyExpected) {
     MATH_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
     REPRESENTATION_EXPERIMENT_BOUNDARY_FILES = 4
-    REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
-    TOPMF_OUTSIDE_FINDIST = 0
+    REPRESENTATION_TOKENS_OUTSIDE_OWNERS = 0
+    TOPMF_OUTSIDE_OWNERS = 0
     REPRESENTATION_TOKENS_EXPERIMENT_BOUNDARY = 42
     TOPMF_EXPERIMENT_BOUNDARY = 12
     VNM_REPRESENTATION_TOKENS = 0
@@ -1900,8 +1909,8 @@ if ($VerifyExpected) {
     $Expected['TREMBLING_CORE_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['TREMBLING_ANALYSIS_INPUT_PROBES_REACHED'] = 5
     $Expected['TREMBLING_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 4
-    $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 7
-    $Expected['STOCHASTIC_BOUNDARY_PROBES_REJECTED'] = 4
+    $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 11
+    $Expected['STOCHASTIC_BOUNDARY_PROBES_REJECTED'] = 5
     $Expected['STOCHASTIC_ANALYSIS_INPUT_PROBES_REACHED'] = 11
     $Expected['STOCHASTIC_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2
   }

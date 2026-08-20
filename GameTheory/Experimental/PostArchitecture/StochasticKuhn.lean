@@ -24,7 +24,7 @@ def offPathGame : Game Unit where
   State := Bool
   Action := fun _ => Bool
   transition _ action := FinDist.pure (action ())
-  stageUtility _ _ _ := 0
+  stageUtility _ action _ := if action () then 1 else 0
 
 local instance actionNonempty :
     ∀ i, Nonempty (offPathGame.Action i) :=

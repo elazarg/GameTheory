@@ -301,6 +301,32 @@ if ($DeepReachability) {
   }
   Report 'PROTOCOL_ANALYSIS_PROBES_REJECTED' $protocolAnalysisRejected
 
+  # D57's ordinary product law is stable Protocol API, while EXP-108's path
+  # outcome measure remains behind the experimental boundary.
+  $policyMeasureInputs = @(
+    'GameTheory.Protocol.InformationModel.behavioralProfileMeasure',
+    'GameTheory.Protocol.InformationModel.runPureMeasure_eq_runBehavioral',
+    'GameTheory.Protocol.InformationModel.runPureMeasure_update_eq_runBehavioral_update',
+    'GameTheory.Protocol.InformationModel.normalizedDiscountedPureMeasure_eq_behavioral',
+    'GameTheory.Protocol.InformationModel.behavioralProfileMeasure_regular')
+  $experimentalPathMeasure =
+    'GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure.Game.infinitePlayMeasure'
+  $policyMeasureOutput = Run-Probe 'GameTheory.Protocol' `
+    ($policyMeasureInputs + @($experimentalPathMeasure))
+  $policyMeasureInputsReached = 0
+  foreach ($constant in $policyMeasureInputs) {
+    if (-not (Is-Unreachable $policyMeasureOutput $constant)) {
+      $policyMeasureInputsReached++
+    }
+  }
+  Report 'POLICY_MEASURE_INPUT_PROBES_REACHED' $policyMeasureInputsReached
+  $policyMeasurePathBoundaryRejected = 0
+  if (Is-Unreachable $policyMeasureOutput $experimentalPathMeasure) {
+    $policyMeasurePathBoundaryRejected++
+  }
+  Report 'POLICY_MEASURE_PATH_BOUNDARY_REJECTED' `
+    $policyMeasurePathBoundaryRejected
+
   # Protocol information is history-local, while D16's epistemic cells are a
   # separate state-partition branch. Neither stable root imports the other.
   $protocolEpistemicRejected = 0
@@ -599,6 +625,8 @@ if ($VerifyExpected) {
     $Expected['REPEATED_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_INPUT_PROBES_REACHED'] = 2
     $Expected['PROTOCOL_ANALYSIS_PROBES_REJECTED'] = 2
+    $Expected['POLICY_MEASURE_INPUT_PROBES_REACHED'] = 5
+    $Expected['POLICY_MEASURE_PATH_BOUNDARY_REJECTED'] = 1
     $Expected['PROTOCOL_EPISTEMIC_PROBES_REJECTED'] = 2
     $Expected['PROTOCOL_EVOLUTIONARY_PROBES_REJECTED'] = 2
     $Expected['SEQUENTIAL_BRIDGE_INPUTS_REACHED'] = 3

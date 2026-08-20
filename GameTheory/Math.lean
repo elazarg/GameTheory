@@ -1,8 +1,8 @@
 /-
 # `GameTheory.Math`
 
-Finite probability, learning, discrete structures, discounted sums, and
-geometric tools used throughout the library.
+Finite probability and its narrow ordinary-measure bridge, learning, discrete
+structures, discounted sums, and geometric tools used throughout the library.
 -/
 
 import GameTheory.Math.DAG
@@ -14,6 +14,7 @@ import GameTheory.Math.HarmonicSequence
 import GameTheory.Math.OnlineLearning
 import GameTheory.Math.Probability.Bounds
 import GameTheory.Math.Probability.Convergence
+import GameTheory.Math.Probability.Measure
 import GameTheory.Math.Probability.OnlineLearning
 import GameTheory.Math.Probability.Simplex
 import GameTheory.Math.PositivePartFixedPoint

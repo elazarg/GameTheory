@@ -122,6 +122,7 @@ becomes difficult to scan.
 | EXP-114 | 2026-08-17 | cyclic stochastic uniformity | Can uniform equilibrium be required at every canonical restart phase without identifying it with terminal SPE or limiting-average payoff? | In progress; canonical all-phase predicate and positive cyclic control compile, hostile off-phase rejection pending | [`CyclicUniformInterface.lean`](../GameTheory/Experimental/PostArchitecture/CyclicUniformInterface.lean) |
 | EXP-115 | 2026-08-20 | D6 / horizon-relative Kuhn realization | Can a bounded behavioral run be realized by a finite-support mixed profile without requiring the ambient information-state carriers to be finite? | Supports; promoted | `GameTheory/Experimental/PostArchitecture/KuhnFiniteSupport.lean`; `GameTheory/Protocol/Information.lean`; EFG/FOSG Kuhn leaves |
 | EXP-116 | 2026-08-20 | D6/D22 / bounded stochastic Kuhn | Can finite counterfactual site coverage strengthen EXP-115 to updated-law and Nash transfer for bounded perfect-monitoring stochastic play without `Fintype PublicHistory`? | Complete; supports and promoted | `GameTheory/Protocol/{Information,Strategic}.lean`; `GameTheory/Stochastic/{History,Kuhn}.lean`; `GameTheory/Experimental/PostArchitecture/StochasticKuhn.lean` |
+| EXP-117 | 2026-08-20 | D6/D22/D57 / infinite-policy Kuhn | Can one regular probability law over pure policies reproduce every finite-prefix behavioral and unilateral-deviation law and hence discounted payoff, without misusing `FinDist` or the behavioral path measure? | Complete; supports and promoted | `GameTheory/Math/Probability/Measure.lean`; `GameTheory/Protocol/PolicyMeasure.lean`; `GameTheory/Stochastic/Kuhn.lean`; hostile infinite-carrier discounted consumer |
 
 ## Entry template
 
@@ -7385,3 +7386,64 @@ memory.
   `BehavioralPolicy.toMixed` finiteness requirement. Gate infinite-horizon
   Kuhn separately on a regular probability measure over policy products and
   finite-prefix marginal/deviation laws; a `FinDist` witness is not expected.
+
+### EXP-117: infinite regular-probability Kuhn
+
+- **Date / revision:** 2026-08-20, reservation after `808e2fda`
+- **Status:** complete; supports D57 and the promoted stable API
+- **Decision / question:** whether Mathlib's infinite product probability
+  measure can provide one ex-ante law over total pure policies whose every
+  finite-coordinate marginal is the existing finite predraw, whose induced
+  finite-prefix laws agree with behavioral play before and after unilateral
+  deviations, and whose discounted expected payoff therefore agrees.
+- **Representative slice:** a finite-action perfect-monitoring stochastic game
+  with countably infinite public histories, an off-baseline unilateral branch,
+  and a bounded nonconstant discounted stage utility.
+- **Competing designs:** misuse a horizon-indexed family of `FinDist` witnesses;
+  reuse the behavioral infinite-path measure; add a regular product measure
+  over pure-policy coordinates at Protocol and expose thin stochastic
+  corollaries; or introduce a new universal probability abstraction. Prefer
+  the product measure with direct `Measure` statements and no new abstraction.
+- **Measurements:** exact finite marginals; regularity/countability assumptions;
+  one-law-for-all-horizons quantifier order; unilateral coordinate stability;
+  discounted sum interchange; runner reuse; source hazards; and focused/full
+  builds.
+- **Kill conditions:** one witness per horizon rather than one measure; a path
+  law presented as a policy law; loss of arbitrary unilateral deviations; a
+  second runner or equilibrium predicate; hidden global finiteness; custom
+  probability abstraction; placeholder; visible transport; or discounted
+  equality asserted without boundedness/summability hypotheses.
+- **Artifacts / commands:** `GameTheory/Math/Probability/Measure.lean`;
+  `GameTheory/Protocol/PolicyMeasure.lean`;
+  `GameTheory/Stochastic/Kuhn.lean`;
+  `GameTheory/Experimental/PostArchitecture/StochasticInfiniteKuhn.lean`;
+  focused builds of the math bridge (2,990 jobs), Protocol layer (3,001 jobs),
+  stochastic specialization (3,018 jobs), and hostile consumer (3,020 jobs).
+  The integrated Math/Protocol/Stochastic/hostile target passed 3,048 jobs;
+  the full default target passed all 3,995 jobs. Deep Phase 2 and Phase 3
+  architecture/reachability audits both reported `VERIFIED=1`.
+- **Observations / measurements:** `behavioralProfileMeasure` is selected
+  before the horizon quantifier and is an ordinary probability measure over
+  total pure Protocol policies. Mapping it to any finite site family is exactly
+  the existing nested `FinDist.pi` predraw. Covered execution factors through
+  that restriction and the sole Protocol runner, giving all finite-prefix
+  laws. The same theorem consumes an arbitrary behavioral unilateral
+  replacement. Regularity is inferred only under countable indices and the
+  standard Borel, second-countable, completely-pseudometrizable factor
+  hypotheses; the perfect-monitoring stochastic corollary discharges these
+  for finite actions and countable states. Discounted equality assumes
+  summability generically and derives it from a uniform stage bound with
+  `0 ≤ discount < 1` in the stochastic layer. The hostile Boolean game has
+  countably infinite public histories, an off-baseline deviation, and
+  action-dependent utilities `0` and `1`. Source audits report zero forbidden
+  transports, raw updates, `Fintype.ofFinite`, placeholders, or custom axioms;
+  all eight flagship axiom prints use only `propext`, `Classical.choice`, and
+  `Quot.sound`. Stable Protocol and Stochastic roots positively reach the new
+  policy-law declarations while rejecting the experimental path measure.
+- **Outcome / next action:** support and adopt D57. Promote the narrow
+  `FinDist.toMeasure` bridge, the Protocol infinite-product policy law with
+  finite marginals/all-prefix/unilateral/discounted consequences, and thin
+  stochastic corollaries. No kill condition fired. Keep the unbounded
+  `FinDist` convenience finite. A reverse theorem conditionalizing an
+  arbitrary regular pure-policy law into behavior, and any infinite-path
+  outcome semantics, require separate consumers and gates.

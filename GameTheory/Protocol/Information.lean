@@ -385,8 +385,9 @@ theorem subsingleton_choice_of_menu_subsingleton {i : ι} (info : M.InfoState i)
   ⟨fun first second => Subtype.ext (hmenu first.2 second.2)⟩
 
 /-- A player's policy: a choice from its own menu, given only its own
-information state. -/
-def Policy (i : ι) : Type _ := (info : M.InfoState i) → M.Choice i info
+information state.  This is a transparent presentation so generic product
+constructions can reuse the canonical dependent-function instances. -/
+abbrev Policy (i : ι) : Type _ := (info : M.InfoState i) → M.Choice i info
 
 variable {M}
 
@@ -666,12 +667,14 @@ whether play can return a player to an information state it has already acted
 at. A behavioral policy draws afresh on the second visit; a mixed policy is
 committed by its single draw. -/
 
-/-- Local randomization: one law over its own menu at each information state. -/
-def BehavioralPolicy (i : ι) : Type _ :=
+/-- Local randomization: one law over its own menu at each information state.
+This is transparent for the same reason as `Policy`: coordinatewise product
+constructions should inherit the canonical dependent-function API. -/
+abbrev BehavioralPolicy (i : ι) : Type _ :=
   (info : M.InfoState i) → FinDist (M.Choice i info)
 
 /-- Global randomization: one law over deterministic policies. -/
-def MixedPolicy (i : ι) : Type _ := FinDist (M.Policy i)
+abbrev MixedPolicy (i : ι) : Type _ := FinDist (M.Policy i)
 
 variable {M} in
 /-- A deterministic policy read as a behavioral one that never really
@@ -1597,6 +1600,14 @@ private noncomputable def BehavioralPolicy.restrictRandomization {i : ι}
   exact fun info =>
     if info ∈ sites then policy info else FinDist.pure (fallback info)
 
+/-- Assemble a total policy from draws on finitely many information states and
+a deterministic fallback elsewhere. -/
+noncomputable def Policy.assembleWithin {i : ι} (fallback : M.Policy i)
+    (sites : Finset (M.InfoState i))
+    (draws : (info : sites) → M.Choice i info) : M.Policy i := by
+  classical
+  exact FinDist.DependentAssignment.resolve fallback sites draws
+
 variable {M} in
 /-- Predraw exactly the supplied finite sites after making the behavioral law
 deterministic at every omitted coordinate. The fallback is observable only
@@ -1607,6 +1618,28 @@ noncomputable def BehavioralPolicy.toMixedWithin {i : ι}
   classical
   exact (BehavioralPolicy.restrictRandomization M policy sites fallback).toMixedOn
     sites fallback
+
+/-- Finite-site predrawing is the independent finite coordinate law mapped
+through the canonical total-policy assembly. -/
+theorem BehavioralPolicy.toMixedWithin_eq_map_pi {i : ι}
+    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
+    (fallback : M.Policy i) :
+    policy.toMixedWithin sites fallback =
+      FinDist.map (Policy.assembleWithin M fallback sites)
+        (FinDist.pi fun info : sites => policy info) := by
+  classical
+  unfold BehavioralPolicy.toMixedWithin BehavioralPolicy.toMixedOn
+    Policy.assembleWithin
+  rw [FinDist.runDependent_eq_pi_subtype _ sites.toList
+      sites.nodup_toList fallback,
+    sites.toList_toFinset]
+  have hlaws :
+      (fun info : sites =>
+        BehavioralPolicy.restrictRandomization M policy sites fallback info) =
+      (fun info : sites => policy info) := by
+    funext info
+    simp [BehavioralPolicy.restrictRandomization, info.2]
+  rw [hlaws]
 
 /-- Finite-site predrawing sends a deterministic behavioral policy back to
 the point mass at that same total policy when it is also used as fallback. -/

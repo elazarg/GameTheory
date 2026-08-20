@@ -25,6 +25,12 @@ introducing a second evaluator.
 pure and behavioral policies into static `GameForm`s. The ordinary mixed
 extension of the information-local pure form is exactly the existing mixed
 history runner, so compilation introduces no parallel evaluator.
+`PolicyMeasure` gives an unbounded behavioral policy its ordinary product
+probability law over total pure policies. Its finite marginals reconnect to
+the executable predraws, so the same law realizes every covered finite prefix,
+including behavioral unilateral replacements, and their summable discounted
+consequences. Regularity is operation-local to the standard countable-product
+topological hypotheses.
 `BehavioralAssessment` pairs local randomization with history-supported beliefs
 at reached decision sites, states finite Bayes consistency without importing
 topology, and forms continuation contexts from whole replacement policies.
@@ -50,4 +56,5 @@ import GameTheory.Protocol.Assessment
 import GameTheory.Protocol.SubgamePerfect
 import GameTheory.Protocol.Zermelo
 import GameTheory.Protocol.Strategic
+import GameTheory.Protocol.PolicyMeasure
 import GameTheory.Protocol.BehavioralAssessment

@@ -56,7 +56,7 @@ optimality, finite assessment-local optimality, and proper-subgame SPE retain
 their distinct scopes. A future restricted theorem needs a named consumer and
 a premise that explicitly excludes the EXP-078 counterexample.
 
-### B. Unilateral Kuhn realization and Nash transfer — resolved
+### B. Unilateral and infinite-product Kuhn realization — resolved
 
 `Protocol.Strategic` now owns the exact updated-law theorems at the lowest
 sufficient semantic layer. They realize either an arbitrary behavioral or
@@ -74,9 +74,19 @@ EXP-115 separately removes ambient information-state finiteness from bounded
 whole-profile realization. Its hostile `Nat`-information model reaches two
 distinct decision sites, and the promoted Protocol theorem predraws only the
 finite support exposed by the supplied profile and horizon. The full-product
-`BehavioralPolicy.toMixed` convenience and the counterfactual unilateral/Nash
-surface remain finite; this refinement does not weaken those stronger
-contracts.
+`BehavioralPolicy.toMixed` convenience remains finite.
+
+EXP-116 adds finite counterfactual coverage, preserving arbitrary unilateral
+updated laws and Nash transfer through one bounded horizon on infinite
+information carriers. EXP-117/D57 closes the distinct unbounded forward gate:
+one ordinary product measure over total pure policies has every executable
+finite predraw as a marginal, realizes every covered finite prefix through the
+sole Protocol runner, and continues to do so after arbitrary behavioral
+unilateral replacement. Standard countable-product hypotheses make the law
+regular, and explicit summability gives normalized discounted-payoff equality.
+The reverse construction from an arbitrary regular pure-policy law to a
+behavioral policy remains separate; no infinite-path outcome evaluator is
+introduced.
 
 ### C. Repeated public-monitoring breadth — core resolved
 

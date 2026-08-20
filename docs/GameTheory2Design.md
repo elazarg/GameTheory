@@ -837,10 +837,21 @@ finite-site predrawing then preserves updated history laws for arbitrary
 one-player replacements while holding every opponent fixed and transfers Nash
 in both directions, without ambient `Fintype InfoState`. Perfect-monitoring
 finite-action stochastic games construct such a cover from one fully supported
-run, despite their infinite public-history carrier. No infinite-horizon policy
-measure or discounted Kuhn theorem is implied. A bare execution protocol also
-compiles state-indexed policies to a perfect-information or
-controller-supplied `GameForm`.
+run, despite their infinite public-history carrier.
+
+EXP-117/D57 adds the separately gated unbounded layer. A behavioral profile
+induces one ordinary infinite-product probability measure over total pure
+Protocol policies, with no horizon in the selected measure. Every finite
+coordinate marginal is the existing executable predraw, so integrating the
+sole Protocol runner against that same measure realizes every covered finite
+prefix. The statement also survives arbitrary behavioral unilateral
+replacement. Under countable-product topological hypotheses the policy law is
+regular; under explicit summability, equality of all prefix expectations gives
+normalized discounted-payoff equality. This is a policy law, not the
+experimental infinite-play outcome measure, and it does not supply the reverse
+conditionalization of an arbitrary regular pure-policy law into behavior. A
+bare execution protocol also compiles state-indexed policies to a
+perfect-information or controller-supplied `GameForm`.
 
 The finite-horizon information-local theorem remains the forward adapter from
 one-shot optimality at every history to whole-policy optimality and ordinary
@@ -1494,7 +1505,13 @@ Protocol execution, proof-free public history, and behavioral runner; each
 finite horizon then uses canonical expected utility and approximate Nash.
 `GameTheory.Stochastic` is opt-in and positively probes all four promoted
 layers while rejecting Repeated and the fixed-point dependency. It contains no
-infinite-path law or general uniform-equilibrium existence claim.
+infinite-path outcome law or general uniform-equilibrium existence claim.
+EXP-117/D57 does add a regular ex-ante law over total pure Protocol policies
+for countable-state finite-action perfect monitoring. Thin stochastic
+corollaries identify every finite-prefix law, including arbitrary behavioral
+unilateral replacements, and bounded discounted payoffs. These consequences
+are derived from the one policy law and the existing bounded runner; they do
+not define an infinite-path evaluator.
 
 EXP-051/D23 closes the mature discounted-value gate without reversing that
 dependency. `GameTheory.Stochastic.ZeroSum` adds only pointwise zero-sum data
@@ -1845,8 +1862,11 @@ EXP-050/D22 is the corresponding mature-blind-spot gate. It admits a separate
 stochastic root through canonical Protocol and approximate-equilibrium
 surfaces. EXP-051/D23 completes that gate through the normalized discounted
 two-player zero-sum Shapley contraction/value slice and a one-way Analysis
-bridge, without admitting an infinite-path law or the open uniform-existence
-claim.
+bridge, without admitting an infinite-path outcome law or the open
+uniform-existence claim. EXP-117/D57 subsequently admits the distinct
+infinite-product law over total pure policies and derives all finite-prefix and
+bounded discounted Kuhn consequences without turning that law into a path
+semantics.
 
 The RFC continues to govern architecture and disproof conditions. Mutable
 delivery order, obligation status, mature missing subfields, and the isolated
