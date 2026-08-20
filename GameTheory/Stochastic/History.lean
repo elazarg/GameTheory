@@ -91,6 +91,58 @@ theorem perfectMonitoring_infoOf_eq_publicHistoryOfTrace
         publicHistoryOfTrace]
       rw [perfectMonitoring_infoOf_eq_publicHistoryOfTrace initial who prior]
 
+/-- Recover one player's Protocol own-play record from the proof-free public
+history alone. -/
+private def ownPlayOfPublicHistory (who : ι) :
+    G.PublicHistory → List (G.PublicHistory × G.Action who)
+  | [] => []
+  | event :: prior =>
+      (prior, event.joint who) ::
+        ownPlayOfPublicHistory who prior
+
+private theorem perfectMonitoring_ownPlay_eq_ownPlayOfPublicHistory
+    (initial : G.State) [∀ i, Nonempty (G.Action i)] (who : ι) :
+    ∀ {state : G.State} (trace : (G.toExecution initial).Trace state),
+      (G.perfectMonitoring initial).ownPlay who trace =
+        ownPlayOfPublicHistory G who
+          (G.publicHistoryOfTrace initial trace)
+  | _, .start => rfl
+  | _, .extend prior joint isLegal realized => by
+      have hjoint :
+          joint who = some
+            ((G.stageRecordOfEvent initial
+              ⟨_, joint, isLegal, _, realized⟩).joint who) :=
+        G.stageRecordOfEvent_joint initial
+          ⟨_, joint, isLegal, _, realized⟩ who
+      rw [InfoSignals.ownPlay_extend,
+        G.publicHistoryOfTrace_extend]
+      simp only [ownPlayOfPublicHistory]
+      rw [hjoint,
+        G.perfectMonitoring_infoOf_eq_publicHistoryOfTrace initial who prior]
+      simp only
+      rw [perfectMonitoring_ownPlay_eq_ownPlayOfPublicHistory initial who prior]
+
+/-- Full public monitoring remembers every player's own past information and
+actions, hence satisfies Protocol perfect recall. -/
+theorem perfectMonitoring_perfectRecall
+    (initial : G.State) [∀ i, Nonempty (G.Action i)] :
+    (G.perfectMonitoring initial).PerfectRecall := by
+  intro who first second traceFirst traceSecond hinfo
+  rw [G.perfectMonitoring_infoOf_eq_publicHistoryOfTrace initial who traceFirst,
+    G.perfectMonitoring_infoOf_eq_publicHistoryOfTrace initial who traceSecond]
+    at hinfo
+  rw [perfectMonitoring_ownPlay_eq_ownPlayOfPublicHistory G initial who traceFirst,
+    perfectMonitoring_ownPlay_eq_ownPlayOfPublicHistory G initial who traceSecond,
+    hinfo]
+
+/-- Perfect monitoring therefore supplies the no-revisit premise used by the
+behavioral-to-mixed Kuhn direction. -/
+theorem perfectMonitoring_actsOnceWhereItMatters
+    (initial : G.State) [∀ i, Nonempty (G.Action i)] :
+    (G.perfectMonitoring initial).ActsOnceWhereItMatters :=
+  (G.perfectMonitoring initial).actsOnceWhereItMatters_of_perfectRecall
+    (G.perfectMonitoring_perfectRecall initial)
+
 /-- The chronological tuple represented by a reverse-chronological list of a
 known length.  The equality proof is erased behind the construction. -/
 def chronologicalOfPublicHistory {horizon : ℕ}

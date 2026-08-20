@@ -131,10 +131,16 @@ EXP-115 sharpens the forward direction's capability boundary. For one supplied
 profile and finite horizon, only finitely many information states occur in the
 support tree, so a finite dependent product realizes the complete behavioral
 history law without `Fintype InfoState`. This is exposed as an existential
-bounded theorem and a finite-site `BehavioralPolicy.toMixedOn` operation. The
-context-independent `BehavioralPolicy.toMixed` still draws every information
-coordinate and therefore remains finite, as do the stronger unilateral and
-Nash surfaces that must cover counterfactual deviations.
+bounded theorem and finite-site predrawing operations. EXP-116 supplies the
+stronger counterfactual premise: one finite site family covers every legal
+prefix through the horizon, independently of a selected profile. Under that
+premise, `BehavioralPolicy.toMixedWithin` gives fixed whole-profile and
+unilateral updated-law witnesses, and exact Nash transfer no longer needs
+ambient information-state finiteness. The perfect-monitoring stochastic
+specialization constructs the cover from a fully supported finite-action run,
+even though its `List StageRecord` public-history carrier is infinite. The
+unbounded convenience `BehavioralPolicy.toMixed` still draws every information
+coordinate and therefore retains its `Fintype InfoState` requirement.
 
 The composed compiler is now present too. `InformationModel.toGameForm`
 compiles pure information-local policies with full histories as outcomes;

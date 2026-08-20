@@ -2,8 +2,8 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-08-02
-- **Experiment IDs:** EXP-050; follow-up gate EXP-108 (in progress; does not
-  alter D22's adopted boundary)
+- **Experiment IDs:** EXP-050; follow-up gates EXP-108 (in progress) and
+  EXP-116 (complete; bounded Kuhn specialization)
 
 ## Decision / question
 
@@ -115,6 +115,15 @@ accuracy, one eventual profile is close to a proposed value and caps every
 unilateral deviation. Applying the certificate at half accuracy is exactly
 equivalent to `IsUniformEquilibriumPayoff`; this is a checked construction
 waist, not an existence assertion.
+
+EXP-116 adds `Stochastic.Kuhn` at the same bridge boundary. Perfect monitoring
+has perfect recall, and a fully supported finite-action behavioral run exposes
+a finite set of all counterfactually reachable public-history sites through a
+fixed horizon. Generic Protocol finite-site predrawing then yields exact
+whole-profile, unilateral updated-law, and Nash transfers between proof-free
+behavioral and mixed public policies without finite states or a
+`Fintype PublicHistory` assumption. This adds neither a runner nor an
+equilibrium predicate and makes no infinite-horizon policy-measure claim.
 
 The umbrella `GameTheory.Stochastic` is public and opt-in. At this decision it
 remained provisional until the Shapley gate; EXP-051/D23 subsequently closed

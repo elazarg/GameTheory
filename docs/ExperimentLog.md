@@ -121,6 +121,7 @@ becomes difficult to scan.
 | EXP-113 | 2026-08-17 | future stochastic asymptotic gate | Can a genuinely nonconstant canonical stochastic game path consume the EXP-108 infinite-play and asymptotic-payoff interfaces without a second runner or expectation/limit interchange? | Complete experiment-only result; canonical fair absorbing game validates all three distinct asymptotic payoff orders | [`StochasticGamePathPayoff.lean`](../GameTheory/Experimental/PostArchitecture/StochasticGamePathPayoff.lean) |
 | EXP-114 | 2026-08-17 | cyclic stochastic uniformity | Can uniform equilibrium be required at every canonical restart phase without identifying it with terminal SPE or limiting-average payoff? | In progress; canonical all-phase predicate and positive cyclic control compile, hostile off-phase rejection pending | [`CyclicUniformInterface.lean`](../GameTheory/Experimental/PostArchitecture/CyclicUniformInterface.lean) |
 | EXP-115 | 2026-08-20 | D6 / horizon-relative Kuhn realization | Can a bounded behavioral run be realized by a finite-support mixed profile without requiring the ambient information-state carriers to be finite? | Supports; promoted | `GameTheory/Experimental/PostArchitecture/KuhnFiniteSupport.lean`; `GameTheory/Protocol/Information.lean`; EFG/FOSG Kuhn leaves |
+| EXP-116 | 2026-08-20 | D6/D22 / bounded stochastic Kuhn | Can finite counterfactual site coverage strengthen EXP-115 to updated-law and Nash transfer for bounded perfect-monitoring stochastic play without `Fintype PublicHistory`? | Complete; supports and promoted | `GameTheory/Protocol/{Information,Strategic}.lean`; `GameTheory/Stochastic/{History,Kuhn}.lean`; `GameTheory/Experimental/PostArchitecture/StochasticKuhn.lean` |
 
 ## Entry template
 
@@ -7333,3 +7334,54 @@ memory.
   exact updated-law and Nash-transfer surfaces finite until a separately
   validated counterfactual predrawability certificate justifies weakening
   them.
+
+### EXP-116: bounded stochastic Kuhn under counterfactual site coverage
+
+- **Date / revision:** 2026-08-20, reservation after `a2f09b63`
+- **Status:** complete; supports the stable bounded API
+- **Decision / question:** whether a finite family of information sites that
+  covers every legal prefix through one horizon is the right operation-local
+  premise for fixed mixed witnesses, unilateral updated laws, and Nash
+  transfer when the ambient information carrier is infinite.
+- **Representative slice:** a finite-action perfect-monitoring stochastic game
+  where a unilateral deviation reaches a positive-support public history that
+  the baseline behavioral profile never reaches.
+- **Competing designs:** retain global `Fintype InfoState`; add a generic
+  Protocol counterfactual-site certificate consumed by a thin stochastic
+  specialization; or prove a stochastic-only duplicate of Kuhn. Prefer the
+  generic certificate and theorem with stochastic ownership limited to recall,
+  finite coverage, and transparent corollaries.
+- **Measurements:** public assumptions; whether one mixed baseline works
+  against every deviation; new semantic/evaluator count; proof and import
+  cost; focused builds; source hazards; and whether the stochastic theorem
+  needs finite states or only finite branching through the selected horizon.
+- **Kill conditions:** an omitted off-path history changes an updated law;
+  global `Fintype PublicHistory`; a second runner or equilibrium predicate;
+  stored finiteness; direct `Function.update`; visible transport; or a
+  stochastic theorem whose proof does not factor through the canonical
+  Protocol runner.
+- **Artifacts / commands:** `GameTheory/Math/Probability/FinDist.lean`;
+  `GameTheory/Protocol/{Information,Strategic}.lean`;
+  `GameTheory/Stochastic/{History,Kuhn}.lean`;
+  `GameTheory/Experimental/PostArchitecture/StochasticKuhn.lean`;
+  `lake build GameTheory.Protocol.Strategic GameTheory.Stochastic.Kuhn
+  GameTheory.Experimental.PostArchitecture.StochasticKuhn GameTheory.Stochastic`;
+  full `lake build` (3,990 jobs).
+- **Observations / measurements:** `CoversInformationSites` is independent of
+  the selected profile and is therefore stable under unilateral updates.
+  Perfect monitoring proves perfect recall directly from public-history own
+  play. A locally uniform finite-action profile assigns positive mass to every
+  legal choice, so its bounded support sites cover every legal prefix. The
+  resulting public whole-profile, unilateral, and expected-utility Nash laws
+  require finite players and actions, but neither finite states nor
+  `Fintype PublicHistory`. The hostile Boolean game proves its list-history
+  carrier infinite, excludes action `true` from the baseline's initial
+  support, proves the resulting one-step information state is nevertheless in
+  the common bounded cover, and consumes both unilateral and Nash transfer.
+  No new runner, equilibrium predicate, or probability carrier was added.
+- **Outcome / next action:** promote finite counterfactual coverage,
+  `BehavioralPolicy.toMixedWithin`, the generic bounded unilateral laws, and
+  the thin stochastic public-policy corollaries. Retain the global
+  `BehavioralPolicy.toMixed` finiteness requirement. Gate infinite-horizon
+  Kuhn separately on a regular probability measure over policy products and
+  finite-prefix marginal/deviation laws; a `FinDist` witness is not expected.

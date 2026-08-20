@@ -341,6 +341,29 @@ theorem prob_ofWeights [Fintype α] (weight : α → ℝ) (hnonneg : ∀ a, 0 �
     (ofWeights weight hnonneg hsum).prob a = weight a :=
   ENNReal.toReal_ofReal (hnonneg a)
 
+/-- The uniform law on an arbitrary nonempty finite carrier. -/
+noncomputable def uniformOfFintype [Fintype α] [Nonempty α] : FinDist α :=
+  ofWeights (fun _ => (Fintype.card α : ℝ)⁻¹)
+    (fun _ => inv_nonneg.mpr (Nat.cast_nonneg _)) (by
+      rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+      exact mul_inv_cancel₀ (by
+        exact_mod_cast (Fintype.card_ne_zero : Fintype.card α ≠ 0)))
+
+@[simp]
+theorem prob_uniformOfFintype [Fintype α] [Nonempty α] (a : α) :
+    (uniformOfFintype : FinDist α).prob a =
+      (Fintype.card α : ℝ)⁻¹ :=
+  prob_ofWeights ..
+
+/-- Every point of a nonempty finite carrier is possible under its uniform
+law. -/
+theorem mem_support_uniformOfFintype [Fintype α] [Nonempty α] (a : α) :
+    a ∈ (uniformOfFintype : FinDist α).support := by
+  rw [← prob_pos_iff, prob_uniformOfFintype]
+  exact inv_pos.mpr (by
+    exact_mod_cast (Fintype.card_pos_iff.mpr
+      (inferInstance : Nonempty α)))
+
 /-- The uniform finite-support law on a nonempty finite ordinal. -/
 def uniformFin (n : ℕ) [NeZero n] : FinDist (Fin n) :=
   ofWeights (fun _ => (n : ℝ)⁻¹)
@@ -1866,6 +1889,18 @@ theorem setOne_apply_of_ne [DecidableEq ι]
   simp [setOne, resolve, hne]
 
 end DependentAssignment
+
+/-- Sequentially drawing point masses at any finite list of coordinates leaves
+the supplied dependent assignment unchanged. -/
+theorem runDependent_pure [DecidableEq ι]
+    (assignment : (index : ι) → A index) (indices : List ι) :
+    runDependent (fun index => pure (assignment index)) indices assignment =
+      pure assignment := by
+  induction indices generalizing assignment with
+  | nil => rfl
+  | cons index rest ih =>
+      rw [runDependent, pure_bind,
+        DependentAssignment.setOne_eq_self, ih]
 
 /-- A finite dependent product can be factored at any coordinate it draws. -/
 theorem runDependent_factor_of_mem [DecidableEq ι]

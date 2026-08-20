@@ -830,12 +830,17 @@ compilation in both directions under its respective no-revisit and recall-like
 hypotheses. In the bounded whole-profile forward direction, EXP-115 predraws
 only the finite support exposed by the supplied profile and horizon, so ambient
 information-state carriers may be infinite. The context-independent full
-product still requires finite information carriers. Under perfect recall the
-protocol layer also preserves history laws for an arbitrary one-player
-replacement while holding every opponent's induced policy fixed; this stronger
-counterfactual surface remains finite, and the EFG leaf uses it to transfer
-Nash in both directions. A bare execution protocol also compiles state-indexed
-policies to a perfect-information or controller-supplied `GameForm`.
+product still requires finite information carriers. EXP-116 adds the
+operation-local alternative needed for counterfactual claims: a finite site
+family covering every legal prefix through one horizon. Under perfect recall,
+finite-site predrawing then preserves updated history laws for arbitrary
+one-player replacements while holding every opponent fixed and transfers Nash
+in both directions, without ambient `Fintype InfoState`. Perfect-monitoring
+finite-action stochastic games construct such a cover from one fully supported
+run, despite their infinite public-history carrier. No infinite-horizon policy
+measure or discounted Kuhn theorem is implied. A bare execution protocol also
+compiles state-indexed policies to a perfect-information or
+controller-supplied `GameForm`.
 
 The finite-horizon information-local theorem remains the forward adapter from
 one-shot optimality at every history to whole-policy optimality and ordinary

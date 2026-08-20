@@ -717,6 +717,30 @@ theorem behavioralJoint_congr {first second : (i : ι) → M.BehavioralPolicy i}
   rw [behavioralJoint, behavioralJoint]
   exact congrArg _ (congrArg FinDist.pi (funext hagree))
 
+/-- A legal joint action belongs to the behavioral joint support whenever each
+of its local choices belongs to the corresponding behavioral support. -/
+theorem mem_support_behavioralJoint
+    (policies : (i : ι) → M.BehavioralPolicy i)
+    {state : E.State} (trace : Trace E state)
+    (hterm : ¬ E.terminal state)
+    (joint : ∀ i, Option (E.Action i)) (isLegal : E.Legal state joint)
+    (hsupport : ∀ i,
+      (⟨joint i, (M.menu_adequate i trace (joint i)).mpr
+        (E.legalOption_of_legal isLegal i)⟩ :
+        M.Choice i (M.infoOf i trace)) ∈
+          (policies i (M.infoOf i trace)).support) :
+    (⟨joint, isLegal⟩ : { action : ∀ i, Option (E.Action i) //
+      E.Legal state action }) ∈
+        (M.behavioralJoint policies trace hterm).support := by
+  let draws : (i : ι) → M.Choice i (M.infoOf i trace) :=
+    fun i => ⟨joint i, (M.menu_adequate i trace (joint i)).mpr
+      (E.legalOption_of_legal isLegal i)⟩
+  rw [behavioralJoint, FinDist.support_map]
+  refine ⟨draws, FinDist.mem_support_pi.mpr ?_, ?_⟩
+  · exact hsupport
+  · apply Subtype.ext
+    rfl
+
 section SingleMoverBehavioralJoint
 
 variable [DecidableEq ι]
@@ -843,6 +867,47 @@ theorem runBehavioralFrom_succ_of_not_terminal
 /-- The law over histories a behavioral profile induces from the start. -/
 def runBehavioral (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) : FinDist E.History :=
   M.runBehavioralFrom policies fuel E.initHistory
+
+/-- A behavioral profile with full local support reaches every semantically
+possible bounded history at some elapsed time within the same fuel budget. -/
+theorem exists_mem_support_runBehavioralFrom_of_reachesWithin
+    (policies : (i : ι) → M.BehavioralPolicy i)
+    (hfull : ∀ i info (choice : M.Choice i info),
+      choice ∈ (policies i info).support)
+    {fuel : ℕ} {start later : E.History}
+    (hreach : E.ReachesWithin fuel start later) :
+    ∃ elapsed, elapsed ≤ fuel ∧
+      later ∈ (M.runBehavioralFrom policies elapsed start).support := by
+  induction hreach with
+  | refl fuel history =>
+      refine ⟨0, Nat.zero_le _, ?_⟩
+      simp [runBehavioralFrom]
+  | @step fuel history target joint isLegal reached realized rest ih =>
+      obtain ⟨elapsed, helapsed, hlater⟩ := ih
+      have hterm : ¬ E.terminal history.state := isLegal.1
+      have hdraw :
+          (⟨joint, isLegal⟩ : { action : ∀ i, Option (E.Action i) //
+            E.Legal history.state action }) ∈
+            (M.behavioralJoint policies history.trace hterm).support :=
+        M.mem_support_behavioralJoint policies history.trace hterm joint
+          isLegal fun i => hfull i _ _
+      let next := history.extend isLegal realized
+      have hnext :
+          next ∈ (M.runBehavioralFrom policies 1 history).support := by
+        rw [M.runBehavioralFrom_succ_of_not_terminal policies 0 hterm,
+          FinDist.support_bind]
+        refine Set.mem_iUnion₂.mpr ⟨⟨joint, isLegal⟩, hdraw, ?_⟩
+        rw [FinDist.support_bindOnSupport]
+        refine Set.mem_iUnion₂.mpr ⟨reached, realized, ?_⟩
+        simp [next, runBehavioralFrom]
+      refine ⟨1 + elapsed, by omega, ?_⟩
+      rw [show M.runBehavioralFrom policies (1 + elapsed) history =
+          (M.runBehavioralFrom policies 1 history).bind
+            (M.runBehavioralFrom policies elapsed) from
+        E.runRandomizedFor_add (M.randomizedChooser policies)
+          1 elapsed history,
+        FinDist.support_bind]
+      exact Set.mem_iUnion₂.mpr ⟨next, hnext, hlater⟩
 
 /-- Behavioral play composes across adjacent fuel blocks. -/
 theorem runBehavioralFrom_add
@@ -1328,6 +1393,22 @@ theorem commit_agree_of_actsOnce [∀ i, DecidableEq (M.InfoState i)]
 
 /-! ### Finite partial predrawing -/
 
+/-- A finite family of information sites covers every legal history that can
+be reached from `start` within the supplied fuel. Unlike the support-local
+construction below, this premise is independent of a particular policy and
+therefore remains valid under unilateral deviations. -/
+def CoversInformationSitesFrom
+    (sites : (i : ι) → Finset (M.InfoState i))
+    (fuel : ℕ) (start : E.History) : Prop :=
+  ∀ later, E.ReachesWithin fuel start later →
+    ¬ E.terminal later.state → ∀ i,
+      M.infoOf i later.trace ∈ sites i
+
+/-- Counterfactual finite-site coverage from the canonical initial history. -/
+def CoversInformationSites
+    (sites : (i : ι) → Finset (M.InfoState i)) (fuel : ℕ) : Prop :=
+  M.CoversInformationSitesFrom sites fuel E.initHistory
+
 private theorem toMixedOn_factor {i : ι} [DecidableEq (M.InfoState i)]
     (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
     (fallback : M.Policy i)
@@ -1504,7 +1585,8 @@ theorem runMixedFrom_toMixedOn (hactsOnce : M.ActsOnceWhereItMatters) :
 
 end FiniteSupportEquivalence
 
-private noncomputable def BehavioralPolicy.supportFallback {i : ι}
+/-- Select one legal fallback choice from every local behavioral support. -/
+noncomputable def BehavioralPolicy.supportFallback {i : ι}
     (policy : M.BehavioralPolicy i) : M.Policy i :=
   fun info => (policy info).support_nonempty.choose
 
@@ -1515,7 +1597,78 @@ private noncomputable def BehavioralPolicy.restrictRandomization {i : ι}
   exact fun info =>
     if info ∈ sites then policy info else FinDist.pure (fallback info)
 
-private noncomputable def behavioralSupportSitesFrom [Fintype ι]
+variable {M} in
+/-- Predraw exactly the supplied finite sites after making the behavioral law
+deterministic at every omitted coordinate. The fallback is observable only
+outside the covered sites. -/
+noncomputable def BehavioralPolicy.toMixedWithin {i : ι}
+    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
+    (fallback : M.Policy i) : M.MixedPolicy i := by
+  classical
+  exact (BehavioralPolicy.restrictRandomization M policy sites fallback).toMixedOn
+    sites fallback
+
+/-- Finite-site predrawing sends a deterministic behavioral policy back to
+the point mass at that same total policy when it is also used as fallback. -/
+theorem Policy.toBehavioral_toMixedWithin {i : ι}
+    (policy : M.Policy i) (sites : Finset (M.InfoState i)) :
+    policy.toBehavioral.toMixedWithin sites policy = FinDist.pure policy := by
+  classical
+  have hrestrict :
+      BehavioralPolicy.restrictRandomization M policy.toBehavioral
+          sites policy =
+        policy.toBehavioral := by
+    funext info
+    simp [BehavioralPolicy.restrictRandomization, Policy.toBehavioral]
+  rw [BehavioralPolicy.toMixedWithin, hrestrict,
+    BehavioralPolicy.toMixedOn]
+  exact FinDist.runDependent_pure policy sites.toList
+
+/-- Explicit counterfactual site coverage turns finite predrawing into a fixed
+mixed witness valid for every behavioral profile, not merely for the support
+of one selected profile. -/
+theorem runMixedFrom_toMixedWithin [Fintype ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (sites : (i : ι) → Finset (M.InfoState i))
+    (policy : (i : ι) → M.BehavioralPolicy i)
+    (fallback : (i : ι) → M.Policy i) (fuel : ℕ)
+    (start : E.History)
+    (hcover : M.CoversInformationSitesFrom sites fuel start) :
+    M.runMixedFrom
+        (fun i => (policy i).toMixedWithin (sites i) (fallback i))
+        fuel start =
+      M.runBehavioralFrom policy fuel start := by
+  classical
+  let finitePolicy : (i : ι) → M.BehavioralPolicy i :=
+    fun i => BehavioralPolicy.restrictRandomization M (policy i)
+      (sites i) (fallback i)
+  have hfinite : ∀ i info, info ∉ sites i →
+      finitePolicy i info = FinDist.pure (fallback i info) := by
+    intro i info hinfo
+    simp [finitePolicy, BehavioralPolicy.restrictRandomization, hinfo]
+  refine (M.runMixedFrom_toMixedOn hactsOnce fuel finitePolicy
+    sites fallback start hfinite).trans ?_
+  apply M.runBehavioralFrom_congr
+  intro later hreach hterm i
+  have hmem := hcover later hreach hterm i
+  simp [finitePolicy, BehavioralPolicy.restrictRandomization, hmem]
+
+/-- Initial-history form of counterfactual finite-site realization. -/
+theorem runMixed_toMixedWithin [Fintype ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (sites : (i : ι) → Finset (M.InfoState i))
+    (policy : (i : ι) → M.BehavioralPolicy i)
+    (fallback : (i : ι) → M.Policy i) (fuel : ℕ)
+    (hcover : M.CoversInformationSites sites fuel) :
+    M.runMixed
+        (fun i => (policy i).toMixedWithin (sites i) (fallback i)) fuel =
+      M.runBehavioral policy fuel :=
+  M.runMixedFrom_toMixedWithin hactsOnce sites policy fallback fuel
+    E.initHistory hcover
+
+/-- The finite information sites exposed by every intermediate support of one
+bounded behavioral run. -/
+noncomputable def behavioralSupportSitesFrom [Fintype ι]
     (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
     (start : E.History) (i : ι) : Finset (M.InfoState i) := by
   classical
@@ -1523,7 +1676,7 @@ private noncomputable def behavioralSupportSitesFrom [Fintype ι]
     (M.runBehavioralFrom policy elapsed start).supportFinset.image
       (fun later => M.infoOf i later.trace)
 
-private theorem mem_behavioralSupportSitesFrom [Fintype ι]
+theorem mem_behavioralSupportSitesFrom [Fintype ι]
     (policy : (i : ι) → M.BehavioralPolicy i) (fuel elapsed : ℕ)
     (helapsed : elapsed ≤ fuel) (start later : E.History)
     (hlater : later ∈ (M.runBehavioralFrom policy elapsed start).support)
@@ -1536,6 +1689,22 @@ private theorem mem_behavioralSupportSitesFrom [Fintype ι]
   refine ⟨elapsed, Finset.mem_range.mpr (by omega), ?_⟩
   apply Finset.mem_image.mpr
   exact ⟨later, FinDist.mem_supportFinset.mpr hlater, rfl⟩
+
+/-- The support sites of a locally full-support behavioral profile cover every
+legal counterfactual history through the same bounded horizon. -/
+theorem behavioralSupportSitesFrom_covers_of_fullSupport [Fintype ι]
+    (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
+    (start : E.History)
+    (hfull : ∀ i info (choice : M.Choice i info),
+      choice ∈ (policy i info).support) :
+    M.CoversInformationSitesFrom
+      (behavioralSupportSitesFrom M policy fuel start) fuel start := by
+  intro later hreach _ i
+  obtain ⟨elapsed, helapsed, hlater⟩ :=
+    M.exists_mem_support_runBehavioralFrom_of_reachesWithin
+      policy hfull hreach
+  exact mem_behavioralSupportSitesFrom M policy fuel elapsed helapsed
+    start later hlater i
 
 /-- **Bounded behavioral-to-mixed realization without ambient information
 finiteness.** Only the information states in the finite supports of this
