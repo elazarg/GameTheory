@@ -123,6 +123,7 @@ becomes difficult to scan.
 | EXP-115 | 2026-08-20 | D6 / horizon-relative Kuhn realization | Can a bounded behavioral run be realized by a finite-support mixed profile without requiring the ambient information-state carriers to be finite? | Supports; promoted | `GameTheory/Experimental/PostArchitecture/KuhnFiniteSupport.lean`; `GameTheory/Protocol/Information.lean`; EFG/FOSG Kuhn leaves |
 | EXP-116 | 2026-08-20 | D6/D22 / bounded stochastic Kuhn | Can finite counterfactual site coverage strengthen EXP-115 to updated-law and Nash transfer for bounded perfect-monitoring stochastic play without `Fintype PublicHistory`? | Complete; supports and promoted | `GameTheory/Protocol/{Information,Strategic}.lean`; `GameTheory/Stochastic/{History,Kuhn}.lean`; `GameTheory/Experimental/PostArchitecture/StochasticKuhn.lean` |
 | EXP-117 | 2026-08-20 | D6/D22/D57 / infinite-policy Kuhn | Can one regular probability law over pure policies reproduce every finite-prefix behavioral and unilateral-deviation law and hence discounted payoff, without misusing `FinDist` or the behavioral path measure? | Complete; supports and promoted | `GameTheory/Math/Probability/Measure.lean`; `GameTheory/Protocol/PolicyMeasure.lean`; `GameTheory/Stochastic/Kuhn.lean`; hostile infinite-carrier discounted consumer |
+| EXP-118 | 2026-08-20 | D6/D22/D58 / reverse infinite-policy Kuhn | Can independent regular probability laws over total pure policies be read as one behavioral profile preserving every finite-prefix, unilateral-deviation, and discounted law under perfect recall? | Complete; supports and promoted | finite discrete measure bridge; own-record cylinder conditioning; hostile correlated within-policy law on infinite public histories |
 
 ## Entry template
 
@@ -7447,3 +7448,69 @@ memory.
   `FinDist` convenience finite. A reverse theorem conditionalizing an
   arbitrary regular pure-policy law into behavior, and any infinite-path
   outcome semantics, require separate consumers and gates.
+
+### EXP-118: reverse infinite regular-probability Kuhn
+
+- **Date / revision:** 2026-08-20, reservation after `fd6d19b0`
+- **Status:** complete; supports D58 and the promoted stable API
+- **Decision / question:** whether a profile of independent ordinary
+  probability measures over total pure policies has one behavioral reading
+  that preserves every finite-prefix law under perfect recall, including
+  arbitrary unilateral replacement measures and bounded discounted payoff.
+- **Representative slice:** countably infinite perfect-monitoring public
+  histories with a single player's pure-policy measure correlating its actions
+  across information states, a positive-probability own-record conditioning
+  event, a zero-probability off-path fallback, and a unilateral replacement
+  measure that is not the forward independent-coordinate construction.
+- **Competing designs:** require a regular conditional-probability kernel over
+  the entire policy space; condition directly on the finite own-record
+  cylinders used by perfect recall; reduce separately at each horizon without
+  producing one behavioral object; or accept an arbitrary correlated joint
+  player-profile law. Prefer finite-cylinder conditioning of independent
+  per-player policy measures. A correlated joint player law has no behavioral
+  profile representation without an additional public correlating device.
+- **Measurements:** exact conversion of finite discrete probability measures
+  to `FinDist`; measurability of own-record and answer cylinders; equality with
+  the existing finite-support behavioral reading; one behavioral object before
+  the horizon quantifier; arbitrary unilateral replacement; discounted
+  summability; regularity assumptions actually used; runner reuse; source
+  hazards; focused/full builds; and axiom profile.
+- **Kill conditions:** silently treating a correlated joint law as independent;
+  a horizon-indexed behavioral witness; global information-state finiteness;
+  an unnecessary disintegration/standard-Borel hypothesis when finite
+  cylinders suffice; a second runner or equilibrium predicate; loss of
+  arbitrary unilateral replacement measures; a moving off-path fallback;
+  placeholder; visible transport; or discounted equality without convergence
+  hypotheses.
+- **Observations / measurements:** finite discrete probability measures convert
+  to `FinDist` and back exactly. `ConsistentAt` is a measurable finite cylinder,
+  so the behavioral reading uses ordinary finite-event conditioning and needs
+  neither disintegration nor regular conditional probabilities. The reading
+  agrees definitionally at the law level with the existing finite-support
+  conditional construction. Closing any finite prefix cover under the finitely
+  many own-record coordinates reduces arbitrary policy measures to the existing
+  mixed runner, while the resulting behavioral object remains outside the
+  horizon quantifier. The generic theorem accepts every probability measure;
+  regularity is therefore sufficient but not necessary. Arbitrary correlated
+  joint player-profile laws remain excluded because ordinary behavioral
+  profiles provide no public correlation device.
+- **Artifacts / commands:** `GameTheory/Math/Probability/Measure.lean` owns the
+  finite-discrete and conditioning bridge;
+  `GameTheory/Protocol/PolicyMeasure.lean` owns own-record conditioning,
+  all-prefix, unilateral-replacement, and discounted laws;
+  `GameTheory/Stochastic/Kuhn.lean` provides thin perfect-monitoring corollaries;
+  `GameTheory/Experimental/PostArchitecture/StochasticReverseInfiniteKuhn.lean`
+  pushes an infinite product law through a measurable transformation forcing
+  two policy coordinates to agree while retaining all other coordinates, and
+  consumes all-prefix, unilateral, and discounted theorems. Focused builds
+  compiled 2,990, 3,001, 3,018, and 3,021 jobs for the measure bridge,
+  Protocol layer, stochastic specialization, and hostile consumer. The full
+  library build passed 3,996 jobs. Standard and deep Phase 2 and Phase 3 audits
+  all reported `VERIFIED=1`; the roots reached all 14 stochastic and all eight
+  Protocol policy-measure probes while rejecting the experimental path
+  measure. Ten representative axiom prints use only `propext`,
+  `Classical.choice`, and `Quot.sound`.
+- **Outcome / next action:** support and adopt D58. Promote the reverse
+  arbitrary-policy-measure layer at Protocol and its thin stochastic
+  specialization. No kill condition fired. Keep general correlated joint
+  player laws and infinite-path outcome semantics outside this API.

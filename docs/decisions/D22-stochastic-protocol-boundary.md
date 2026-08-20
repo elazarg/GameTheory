@@ -4,7 +4,8 @@
 - **Date:** 2026-08-02
 - **Experiment IDs:** EXP-050; follow-up gates EXP-108 (in progress),
   EXP-116 (complete; bounded Kuhn specialization), and EXP-117 (complete;
-  infinite-product policy law)
+  infinite-product policy law), EXP-118 (complete; reverse arbitrary-policy-law
+  conditioning)
 
 ## Decision / question
 
@@ -134,8 +135,16 @@ runner yields every finite-prefix law and the corresponding law after an
 arbitrary behavioral unilateral replacement. Countable states and finite
 actions give regularity; bounded stage utility and a discount in `[0, 1)` give
 summability and normalized discounted-payoff equality. This is not the
-EXP-108 infinite-play outcome measure and adds no reverse conditionalization
-or equilibrium predicate.
+EXP-108 infinite-play outcome measure and adds no equilibrium predicate.
+
+EXP-118/D58 closes the reverse gate at the same boundary. Independent
+arbitrary probability measures over total pure Protocol policies are
+conditioned only on finite measurable own-record cylinders, yielding one
+behavioral profile before the horizon quantifier. Perfect monitoring supplies
+perfect recall; the existing bounded cover and runner give all finite-prefix,
+unilateral replacement, and bounded discounted stochastic corollaries. The
+generic result does not require regularity, and it does not represent a
+correlated joint player law or define an infinite-path outcome measure.
 
 The umbrella `GameTheory.Stochastic` is public and opt-in. At this decision it
 remained provisional until the Shapley gate; EXP-051/D23 subsequently closed

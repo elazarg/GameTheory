@@ -84,9 +84,12 @@ finite predraw as a marginal, realizes every covered finite prefix through the
 sole Protocol runner, and continues to do so after arbitrary behavioral
 unilateral replacement. Standard countable-product hypotheses make the law
 regular, and explicit summability gives normalized discounted-payoff equality.
-The reverse construction from an arbitrary regular pure-policy law to a
-behavioral policy remains separate; no infinite-path outcome evaluator is
-introduced.
+EXP-118/D58 closes the reverse gate: independent arbitrary probability measures
+over total pure policies are conditioned on finite own-record cylinders to
+produce one behavioral profile preserving all covered prefixes, unilateral
+measure replacements, and discounted consequences. The reverse theorem needs
+no regularity premise. Correlated joint player laws and infinite-path outcome
+semantics remain separate.
 
 ### C. Repeated public-monitoring breadth — core resolved
 

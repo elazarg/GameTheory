@@ -88,9 +88,10 @@ countability/regularity and exposes all-prefix and bounded discounted
 corollaries. `Math.Probability.Measure` is only the reusable finite-law bridge.
 
 The unbounded `BehavioralPolicy.toMixed : FinDist _` convenience remains
-finite. This decision does not create an infinite-path outcome law and does
-not prove the reverse construction from an arbitrary regular pure-policy law
-to a behavioral policy. Either extension needs its own consumer and gate.
+finite. This decision does not create an infinite-path outcome law. The
+reverse construction from arbitrary per-player pure-policy measures was a
+separate gate, subsequently closed by EXP-118/D58 through finite own-record
+conditioning.
 
 Deep Phase 2 and Phase 3 reachability gates positively require the new
 stochastic and Protocol declarations while rejecting EXP-108's experimental

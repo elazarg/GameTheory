@@ -308,7 +308,10 @@ if ($DeepReachability) {
     'GameTheory.Protocol.InformationModel.runPureMeasure_eq_runBehavioral',
     'GameTheory.Protocol.InformationModel.runPureMeasure_update_eq_runBehavioral_update',
     'GameTheory.Protocol.InformationModel.normalizedDiscountedPureMeasure_eq_behavioral',
-    'GameTheory.Protocol.InformationModel.behavioralProfileMeasure_regular')
+    'GameTheory.Protocol.InformationModel.behavioralProfileMeasure_regular',
+    'GameTheory.Protocol.InformationModel.runPolicyMeasure_eq_runBehavioralWith',
+    'GameTheory.Protocol.InformationModel.runPolicyMeasure_update_eq_runBehavioral_update',
+    'GameTheory.Protocol.InformationModel.normalizedDiscountedPolicyMeasure_eq_behavioralWith')
   $experimentalPathMeasure =
     'GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure.Game.infinitePlayMeasure'
   $policyMeasureOutput = Run-Probe 'GameTheory.Protocol' `
@@ -625,7 +628,7 @@ if ($VerifyExpected) {
     $Expected['REPEATED_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_INPUT_PROBES_REACHED'] = 2
     $Expected['PROTOCOL_ANALYSIS_PROBES_REJECTED'] = 2
-    $Expected['POLICY_MEASURE_INPUT_PROBES_REACHED'] = 5
+    $Expected['POLICY_MEASURE_INPUT_PROBES_REACHED'] = 8
     $Expected['POLICY_MEASURE_PATH_BOUNDARY_REJECTED'] = 1
     $Expected['PROTOCOL_EPISTEMIC_PROBES_REJECTED'] = 2
     $Expected['PROTOCOL_EVOLUTIONARY_PROBES_REJECTED'] = 2

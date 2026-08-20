@@ -1703,7 +1703,10 @@ if ($DeepReachability) {
     'GameTheory.Stochastic.Game.protocolPureProfileMeasure',
     'GameTheory.Stochastic.Game.protocolPureProfileMeasure_regular',
     'GameTheory.Stochastic.Game.kuhn_policyMeasure_allFinitePrefixes',
-    'GameTheory.Stochastic.Game.kuhn_policyMeasure_discountedPayoff')
+    'GameTheory.Stochastic.Game.kuhn_policyMeasure_discountedPayoff',
+    'GameTheory.Stochastic.Game.kuhn_arbitraryPolicyMeasure_allFinitePrefixes',
+    'GameTheory.Stochastic.Game.kuhn_arbitraryPolicyMeasure_update_allFinitePrefixes',
+    'GameTheory.Stochastic.Game.kuhn_arbitraryPolicyMeasure_discountedPayoff')
   $stochasticBoundary = @(
     'GameTheory.UtilityGame.repeatedForm',
     'GameTheory.Stochastic.Game.shapleyOperator',
@@ -1909,7 +1912,7 @@ if ($VerifyExpected) {
     $Expected['TREMBLING_CORE_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['TREMBLING_ANALYSIS_INPUT_PROBES_REACHED'] = 5
     $Expected['TREMBLING_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 4
-    $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 11
+    $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 14
     $Expected['STOCHASTIC_BOUNDARY_PROBES_REJECTED'] = 5
     $Expected['STOCHASTIC_ANALYSIS_INPUT_PROBES_REACHED'] = 11
     $Expected['STOCHASTIC_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2

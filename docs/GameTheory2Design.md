@@ -849,8 +849,14 @@ replacement. Under countable-product topological hypotheses the policy law is
 regular; under explicit summability, equality of all prefix expectations gives
 normalized discounted-payoff equality. This is a policy law, not the
 experimental infinite-play outcome measure, and it does not supply the reverse
-conditionalization of an arbitrary regular pure-policy law into behavior. A
-bare execution protocol also compiles state-indexed policies to a
+conditionalization of an arbitrary regular pure-policy law into behavior.
+EXP-118/D58 subsequently supplies that reverse layer more generally for every
+independent per-player probability measure: finite own-record cylinder
+conditioning defines one behavioral profile, and finite closure of bounded
+covers proves all prefix, unilateral-measure-replacement, and discounted laws.
+No regularity or disintegration premise is needed. Correlated joint player laws
+still require an additional public correlating device. A bare execution
+protocol also compiles state-indexed policies to a
 perfect-information or controller-supplied `GameForm`.
 
 The finite-horizon information-local theorem remains the forward adapter from
@@ -1512,6 +1518,11 @@ corollaries identify every finite-prefix law, including arbitrary behavioral
 unilateral replacements, and bounded discounted payoffs. These consequences
 are derived from the one policy law and the existing bounded runner; they do
 not define an infinite-path evaluator.
+EXP-118/D58 adds the converse thin bridge: arbitrary independent pure-policy
+probability measures have one perfect-recall behavioral conditional reading
+with the same finite-prefix, unilateral replacement, and bounded discounted
+laws. It does not identify arbitrary correlated joint player laws with
+ordinary behavioral profiles.
 
 EXP-051/D23 closes the mature discounted-value gate without reversing that
 dependency. `GameTheory.Stochastic.ZeroSum` adds only pointwise zero-sum data
@@ -1866,7 +1877,9 @@ bridge, without admitting an infinite-path outcome law or the open
 uniform-existence claim. EXP-117/D57 subsequently admits the distinct
 infinite-product law over total pure policies and derives all finite-prefix and
 bounded discounted Kuhn consequences without turning that law into a path
-semantics.
+semantics. EXP-118/D58 admits the reverse arbitrary-policy-measure reading by
+finite own-record conditioning, again without adding path semantics or a
+correlated-strategy device.
 
 The RFC continues to govern architecture and disproof conditions. Mutable
 delivery order, obligation status, mature missing subfields, and the isolated
