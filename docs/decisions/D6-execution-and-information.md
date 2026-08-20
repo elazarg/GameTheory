@@ -127,6 +127,15 @@ history-law level, under their distinct no-revisit and recall-like conditions,
 and the one-shot principle for state-indexed choosers is an equivalence under
 `WellFoundedPlay`.
 
+EXP-115 sharpens the forward direction's capability boundary. For one supplied
+profile and finite horizon, only finitely many information states occur in the
+support tree, so a finite dependent product realizes the complete behavioral
+history law without `Fintype InfoState`. This is exposed as an existential
+bounded theorem and a finite-site `BehavioralPolicy.toMixedOn` operation. The
+context-independent `BehavioralPolicy.toMixed` still draws every information
+coordinate and therefore remains finite, as do the stronger unilateral and
+Nash surfaces that must cover counterfactual deviations.
+
 The composed compiler is now present too. `InformationModel.toGameForm`
 compiles pure information-local policies with full histories as outcomes;
 `toBehavioralGameForm` compiles local randomization; and the ordinary static

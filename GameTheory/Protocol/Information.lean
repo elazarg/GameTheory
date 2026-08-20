@@ -879,6 +879,62 @@ theorem runBehavioralFrom_congr {first second : (i : ι) → M.BehavioralPolicy 
       refine FinDist.bind_congr fun draw _ => FinDist.bindOnSupport_congr fun target realized => ?_
       exact ih _ fun h' hreach hterm' i => hagree h' (.step _ _ realized hreach) hterm' i
 
+/-- Behavioral runner congruence on the finite supports actually exposed by one
+bounded run. Unlike `runBehavioralFrom_congr`, this does not quantify over every
+legally reachable counterfactual history. -/
+theorem runBehavioralFrom_congr_on_support
+    {first second : (i : ι) → M.BehavioralPolicy i} :
+    ∀ (fuel : ℕ) (start : E.History),
+      (∀ elapsed, elapsed ≤ fuel → ∀ later,
+        later ∈ (M.runBehavioralFrom first elapsed start).support →
+        ¬ E.terminal later.state → ∀ i,
+          first i (M.infoOf i later.trace) =
+            second i (M.infoOf i later.trace)) →
+      M.runBehavioralFrom first fuel start =
+        M.runBehavioralFrom second fuel start := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro start _
+      rfl
+  | succ fuel ih =>
+      intro start hagree
+      by_cases hterm : E.terminal start.state
+      · rw [M.runBehavioralFrom_of_terminal first _ hterm,
+          M.runBehavioralFrom_of_terminal second _ hterm]
+      · have hstart :
+            start ∈ (M.runBehavioralFrom first 0 start).support := by
+          simp [runBehavioralFrom]
+        have hhere : M.behavioralJoint first start.trace hterm =
+            M.behavioralJoint second start.trace hterm :=
+          M.behavioralJoint_congr start.trace hterm fun i =>
+            hagree 0 (by omega) start hstart hterm i
+        rw [M.runBehavioralFrom_succ_of_not_terminal first fuel hterm,
+          M.runBehavioralFrom_succ_of_not_terminal second fuel hterm,
+          hhere]
+        refine FinDist.bind_congr fun draw hdraw =>
+          FinDist.bindOnSupport_congr fun target realized => ?_
+        let next := start.extend draw.2 realized
+        have hdrawFirst :
+            draw ∈ (M.behavioralJoint first start.trace hterm).support := by
+          rw [hhere]
+          exact hdraw
+        have hnext :
+            next ∈ (M.runBehavioralFrom first 1 start).support := by
+          rw [M.runBehavioralFrom_succ_of_not_terminal first 0 hterm,
+            FinDist.support_bind]
+          refine Set.mem_iUnion₂.mpr ⟨draw, hdrawFirst, ?_⟩
+          rw [FinDist.support_bindOnSupport]
+          refine Set.mem_iUnion₂.mpr ⟨target, realized, ?_⟩
+          simp [next, runBehavioralFrom]
+        apply ih next
+        intro elapsed helapsed later hlater hlaterTerm i
+        apply hagree (1 + elapsed) (by omega) later
+        rw [M.runBehavioralFrom_add first 1 elapsed start,
+          FinDist.support_bind]
+        exact Set.mem_iUnion₂.mpr ⟨next, hnext, hlater⟩
+        exact hlaterTerm
+
 /-- The law a mixed profile induces: draw a deterministic profile once, then
 play it. The single draw is the whole difference from the behavioral case. -/
 def runMixedFrom (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) (h : E.History) :
@@ -1066,12 +1122,22 @@ state in advance, independently. Whether the two laws agree is exactly the
 question above, and this construction is where it is asked.
 
 Scope: this draws for *every* information state, so it asks the player's
-information states to be finite in number. Play with a bounded horizon visits
-only finitely many of them whether or not the rest are finite, so the weaker
-hypothesis would suffice; it is not taken here, because nothing yet needs it. -/
+information states to be finite in number. Use `BehavioralPolicy.toMixedOn`
+when only a supplied finite set should be predrawn, or the existential bounded
+runner theorems below when the ambient information carrier may be infinite. -/
 def BehavioralPolicy.toMixed {i : ι} [Fintype (M.InfoState i)]
     (policy : M.BehavioralPolicy i) : M.MixedPolicy i :=
   FinDist.pi policy
+
+variable {M} in
+/-- Predraw a behavioral policy on a supplied finite set of information states.
+The fallback supplies a deterministic answer everywhere else. Unlike
+`toMixed`, this operation does not require the ambient information-state
+carrier to be finite. -/
+def BehavioralPolicy.toMixedOn {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
+    (fallback : M.Policy i) : M.MixedPolicy i :=
+  FinDist.runDependent policy sites.toList fallback
 
 variable {M} in
 /-- The behavioral profile that has committed to one choice at one information
@@ -1259,6 +1325,263 @@ theorem commit_agree_of_actsOnce [∀ i, DecidableEq (M.InfoState i)]
       rw [hne, BehavioralPolicy.commit_self]
       exact (FinDist.eq_pure_of_subsingleton _ (draw i)).symm
   · exact M.behavioral_eq_of_not_active _ _ later.trace hactiveLater
+
+/-! ### Finite partial predrawing -/
+
+private theorem toMixedOn_factor {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
+    (fallback : M.Policy i)
+    (hfinite : ∀ info, info ∉ sites →
+      policy info = FinDist.pure (fallback info))
+    (info : M.InfoState i) :
+    policy.toMixedOn sites fallback =
+      FinDist.map
+        (fun pair => FinDist.DependentAssignment.setOne pair.2
+          ⟨info, pair.1⟩)
+        (FinDist.product (policy info)
+          (policy.toMixedOn (sites.erase info) fallback)) := by
+  by_cases hinfo : info ∈ sites
+  · exact FinDist.runDependent_factor_of_mem policy sites fallback info hinfo
+  · exact FinDist.runDependent_factor_of_not_mem policy sites fallback info hinfo
+      (hfinite info hinfo)
+
+private theorem toMixedOn_commit_erase {i : ι}
+    [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
+    (fallback : M.Policy i) (info : M.InfoState i)
+    (choice : M.Choice i info) :
+    FinDist.map
+        (fun rest => FinDist.DependentAssignment.setOne rest ⟨info, choice⟩)
+        (policy.toMixedOn (sites.erase info) fallback) =
+      (policy.commit info choice).toMixedOn (sites.erase info)
+        (FinDist.DependentAssignment.setOne fallback ⟨info, choice⟩) := by
+  have hnot : info ∉ (sites.erase info).toList := by simp
+  rw [BehavioralPolicy.toMixedOn, BehavioralPolicy.toMixedOn,
+    ← FinDist.runDependent_setOne_of_not_mem policy _ fallback info choice hnot]
+  apply FinDist.runDependent_congr_laws
+  intro other hother
+  apply (BehavioralPolicy.commit_of_ne policy info choice ?_).symm
+  intro heq
+  subst other
+  exact hnot hother
+
+private theorem commit_finiteSupport {i : ι}
+    [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
+    (fallback : M.Policy i)
+    (hfinite : ∀ other, other ∉ sites →
+      policy other = FinDist.pure (fallback other))
+    (info : M.InfoState i) (choice : M.Choice i info) :
+    ∀ other, other ∉ sites.erase info →
+      policy.commit info choice other =
+        FinDist.pure
+          (FinDist.DependentAssignment.setOne fallback ⟨info, choice⟩ other) := by
+  intro other hother
+  by_cases heq : other = info
+  · subst other
+    rw [BehavioralPolicy.commit_self,
+      FinDist.DependentAssignment.setOne_apply_self]
+  · rw [BehavioralPolicy.commit_of_ne _ _ _ heq,
+      FinDist.DependentAssignment.setOne_apply_of_ne _ _ heq]
+    apply hfinite
+    intro hmem
+    exact hother (Finset.mem_erase.mpr ⟨heq, hmem⟩)
+
+section FiniteSupportEquivalence
+
+variable [Fintype ι] [∀ i, DecidableEq (M.InfoState i)]
+
+/-- Finite predrawing induces the same bounded history law as behavioral play
+when all off-list local laws are already deterministic. This is the explicit
+finite-site counterpart of `runMixedFrom_toMixed`. -/
+theorem runMixedFrom_toMixedOn (hactsOnce : M.ActsOnceWhereItMatters) :
+    ∀ (fuel : ℕ) (policy : (i : ι) → M.BehavioralPolicy i)
+      (sites : (i : ι) → Finset (M.InfoState i))
+      (fallback : (i : ι) → M.Policy i) (history : E.History),
+      (∀ i info, info ∉ sites i →
+        policy i info = FinDist.pure (fallback i info)) →
+      M.runMixedFrom
+          (fun i => (policy i).toMixedOn (sites i) (fallback i))
+          fuel history =
+        M.runBehavioralFrom policy fuel history := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro policy sites fallback history _
+      exact FinDist.bind_const _ _
+  | succ fuel ih =>
+      intro policy sites fallback history hfinite
+      by_cases hterm : E.terminal history.state
+      · rw [runMixedFrom, runBehavioralFrom,
+          ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm]
+        refine Eq.trans (FinDist.bind_congr fun policies _ => ?_)
+          (FinDist.bind_const _ _)
+        rw [runFrom, ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm]
+      · set info : (i : ι) → M.InfoState i :=
+          fun i => M.infoOf i history.trace with hinfo
+        set remaining : (i : ι) → Finset (M.InfoState i) :=
+          fun i => (sites i).erase (info i) with hremaining
+        set assemble : (i : ι) →
+            M.Choice i (info i) × M.Policy i → M.Policy i :=
+          fun i pair =>
+            FinDist.DependentAssignment.setOne pair.2 ⟨info i, pair.1⟩
+          with hassemble
+        set elsewhere : (i : ι) → M.MixedPolicy i :=
+          fun i => (policy i).toMixedOn (remaining i) (fallback i)
+          with helsewhere
+        have hfactor :
+            (FinDist.pi fun i =>
+              (policy i).toMixedOn (sites i) (fallback i)) =
+              FinDist.map
+                (fun pair i => assemble i (pair.1 i, pair.2 i))
+                (FinDist.product
+                  (FinDist.pi fun i => policy i (info i))
+                  (FinDist.pi elsewhere)) := by
+          rw [show (fun i =>
+                (policy i).toMixedOn (sites i) (fallback i)) =
+              (fun i => FinDist.map (assemble i)
+                (FinDist.product (policy i (info i)) (elsewhere i))) from
+            funext fun i => toMixedOn_factor M (policy i) (sites i)
+              (fallback i) (hfinite i) (info i),
+            FinDist.pi_map, FinDist.pi_product, FinDist.map_comp]
+          rfl
+        rw [runMixedFrom, hfactor, FinDist.bind_map,
+          FinDist.product, FinDist.bind_bind,
+          M.runBehavioralFrom_succ_of_not_terminal policy fuel hterm,
+          behavioralJoint, FinDist.bind_map]
+        refine FinDist.bind_congr fun draw _ => ?_
+        rw [FinDist.bind_map]
+        let chosen :
+            { joint : (i : ι) → Option (E.Action i) //
+              E.Legal history.state joint } :=
+          ⟨fun i => (draw i).1,
+            ExecutionProtocol.legal_of_legalOption hterm fun i =>
+              (M.menu_adequate i history.trace (draw i).1).mp
+                (draw i).2⟩
+        let predrawn : ((i : ι) → M.Policy i) → (i : ι) → M.Policy i :=
+          fun rest i => assemble i (draw i, rest i)
+        have hchosen : ∀ rest : (i : ι) → M.Policy i,
+            M.historyChooser (predrawn rest) history hterm = chosen := by
+          intro rest
+          refine Subtype.ext (funext fun i => ?_)
+          show (predrawn rest i (info i)).1 = (draw i).1
+          simp [predrawn, assemble]
+        rw [show (fun rest =>
+              M.runFrom (predrawn rest) (fuel + 1) history) =
+            (fun rest =>
+              (E.step history.state chosen).bindOnSupport fun _ realized =>
+                M.runFrom (predrawn rest) fuel
+                  (history.extend chosen.2 realized)) from
+          funext fun rest =>
+            M.runFrom_succ_of_chooser_eq
+              (predrawn rest) hterm chosen (hchosen rest) fuel,
+          FinDist.bind_bindOnSupport_comm]
+        refine FinDist.bindOnSupport_congr fun target realized => ?_
+        let committed : (i : ι) → M.BehavioralPolicy i :=
+          fun i => (policy i).commit (info i) (draw i)
+        let committedFallback : (i : ι) → M.Policy i :=
+          fun i => FinDist.DependentAssignment.setOne (fallback i)
+            ⟨info i, draw i⟩
+        rw [show (FinDist.pi elsewhere).bind (fun rest =>
+              M.runFrom (predrawn rest) fuel _) =
+            M.runMixedFrom
+              (fun i => (committed i).toMixedOn (remaining i)
+                (committedFallback i)) fuel _ from by
+          rw [runMixedFrom,
+            show (fun i => (committed i).toMixedOn (remaining i)
+                (committedFallback i)) =
+              (fun i => FinDist.map
+                (fun rest => assemble i (draw i, rest)) (elsewhere i)) from
+              funext fun i => (toMixedOn_commit_erase M (policy i)
+                (sites i) (fallback i) (info i) (draw i)).symm,
+            FinDist.pi_map, FinDist.bind_map],
+          ih committed remaining committedFallback _
+            (fun i => commit_finiteSupport M (policy i) (sites i)
+              (fallback i) (hfinite i) (info i) (draw i))]
+        refine M.runBehavioralFrom_congr fuel _ fun later hreach hlater i => ?_
+        exact M.commit_agree_of_actsOnce hactsOnce policy draw _ realized
+          later hreach hlater i
+
+end FiniteSupportEquivalence
+
+private noncomputable def BehavioralPolicy.supportFallback {i : ι}
+    (policy : M.BehavioralPolicy i) : M.Policy i :=
+  fun info => (policy info).support_nonempty.choose
+
+private noncomputable def BehavioralPolicy.restrictRandomization {i : ι}
+    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
+    (fallback : M.Policy i) : M.BehavioralPolicy i := by
+  classical
+  exact fun info =>
+    if info ∈ sites then policy info else FinDist.pure (fallback info)
+
+private noncomputable def behavioralSupportSitesFrom [Fintype ι]
+    (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
+    (start : E.History) (i : ι) : Finset (M.InfoState i) := by
+  classical
+  exact (Finset.range (fuel + 1)).biUnion fun elapsed =>
+    (M.runBehavioralFrom policy elapsed start).supportFinset.image
+      (fun later => M.infoOf i later.trace)
+
+private theorem mem_behavioralSupportSitesFrom [Fintype ι]
+    (policy : (i : ι) → M.BehavioralPolicy i) (fuel elapsed : ℕ)
+    (helapsed : elapsed ≤ fuel) (start later : E.History)
+    (hlater : later ∈ (M.runBehavioralFrom policy elapsed start).support)
+    (i : ι) :
+    M.infoOf i later.trace ∈
+      behavioralSupportSitesFrom M policy fuel start i := by
+  classical
+  rw [behavioralSupportSitesFrom]
+  apply Finset.mem_biUnion.mpr
+  refine ⟨elapsed, Finset.mem_range.mpr (by omega), ?_⟩
+  apply Finset.mem_image.mpr
+  exact ⟨later, FinDist.mem_supportFinset.mpr hlater, rfl⟩
+
+/-- **Bounded behavioral-to-mixed realization without ambient information
+finiteness.** Only the information states in the finite supports of this
+profile's bounded run are predrawn. The witness is profile- and horizon-local;
+use the full `BehavioralPolicy.toMixed` construction when one fixed mixed
+policy must cover every counterfactual context. -/
+theorem exists_mixed_runMixedFrom_eq_runBehavioralFrom [Fintype ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
+    (start : E.History) :
+    ∃ mixed : (i : ι) → M.MixedPolicy i,
+      M.runMixedFrom mixed fuel start =
+        M.runBehavioralFrom policy fuel start := by
+  classical
+  let sites : (i : ι) → Finset (M.InfoState i) :=
+    fun i => behavioralSupportSitesFrom M policy fuel start i
+  let fallback : (i : ι) → M.Policy i :=
+    fun i => (policy i).supportFallback
+  let finitePolicy : (i : ι) → M.BehavioralPolicy i :=
+    fun i => BehavioralPolicy.restrictRandomization M (policy i)
+      (sites i) (fallback i)
+  let mixed : (i : ι) → M.MixedPolicy i :=
+    fun i => (finitePolicy i).toMixedOn (sites i) (fallback i)
+  refine ⟨mixed, ?_⟩
+  have hfinite : ∀ i info, info ∉ sites i →
+      finitePolicy i info = FinDist.pure (fallback i info) := by
+    intro i info hinfo
+    simp [finitePolicy, BehavioralPolicy.restrictRandomization, hinfo]
+  have hpredraw := M.runMixedFrom_toMixedOn hactsOnce fuel finitePolicy
+    sites fallback start hfinite
+  refine hpredraw.trans ?_
+  apply (M.runBehavioralFrom_congr_on_support fuel start ?_).symm
+  intro elapsed helapsed later hlater _ i
+  have hmem : M.infoOf i later.trace ∈ sites i :=
+    mem_behavioralSupportSitesFrom M policy fuel elapsed helapsed start later
+      hlater i
+  simp [finitePolicy, BehavioralPolicy.restrictRandomization, hmem]
+
+/-- The from-start form of bounded finite-support behavioral realization. -/
+theorem exists_mixed_runMixed_eq_runBehavioral [Fintype ι]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) :
+    ∃ mixed : (i : ι) → M.MixedPolicy i,
+      M.runMixed mixed fuel = M.runBehavioral policy fuel :=
+  M.exists_mixed_runMixedFrom_eq_runBehavioralFrom
+    hactsOnce policy fuel E.initHistory
 
 section Equivalence
 
@@ -1593,6 +1916,7 @@ theorem runMixed_toBehavioral (hconstrain : M.ConstrainsAlike) (fuel : ℕ)
     M.runMixed mixed fuel = M.runBehavioral (fun i => (mixed i).toBehavioral) fuel :=
   M.runMixed_toBehavioralWith hconstrain (fun i => (mixed i).support_nonempty.choose) fuel mixed
 
+omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
 /-- **The two randomizations describe the same laws over plays.** Every law a
 profile of locally randomizing players induces is induced by a single draw over
 policies, and conversely. -/
@@ -1603,7 +1927,7 @@ theorem runBehavioral_image_eq_runMixed_image (hactsOnce : M.ActsOnceWhereItMatt
   ext law
   constructor
   · rintro ⟨β, rfl⟩
-    exact ⟨fun i => (β i).toMixed, M.runMixed_toMixed hactsOnce β fuel⟩
+    exact M.exists_mixed_runMixed_eq_runBehavioral hactsOnce β fuel
   · rintro ⟨mixed, rfl⟩
     exact ⟨fun i => (mixed i).toBehavioral, (M.runMixed_toBehavioral hconstrain fuel mixed).symm⟩
 

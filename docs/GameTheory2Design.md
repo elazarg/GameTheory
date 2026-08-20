@@ -827,11 +827,15 @@ without a second evaluator, and the ordinary mixed extension of the pure form
 is definitionally the existing mixed-policy runner. Point-mass theorems recover
 deterministic play, and the behavioral/mixed correspondence commutes with
 compilation in both directions under its respective no-revisit and recall-like
-hypotheses. Under perfect recall the protocol layer also preserves history laws
-for an arbitrary one-player replacement while holding every opponent's induced
-policy fixed; the EFG leaf uses this stronger statement to transfer Nash in
-both directions. A bare execution protocol also compiles state-indexed policies
-to a perfect-information or controller-supplied `GameForm`.
+hypotheses. In the bounded whole-profile forward direction, EXP-115 predraws
+only the finite support exposed by the supplied profile and horizon, so ambient
+information-state carriers may be infinite. The context-independent full
+product still requires finite information carriers. Under perfect recall the
+protocol layer also preserves history laws for an arbitrary one-player
+replacement while holding every opponent's induced policy fixed; this stronger
+counterfactual surface remains finite, and the EFG leaf uses it to transfer
+Nash in both directions. A bare execution protocol also compiles state-indexed
+policies to a perfect-information or controller-supplied `GameForm`.
 
 The finite-horizon information-local theorem remains the forward adapter from
 one-shot optimality at every history to whole-policy optimality and ordinary

@@ -95,18 +95,18 @@ theorem kuhn_mixed_roundTrip_update
 
 end Unilateral
 
-/-- **Behavioral-to-mixed Kuhn direction.** Predrawing every local choice gives
-an explicit mixed contingent-plan profile with exactly the same history law. -/
+/-- **Behavioral-to-mixed Kuhn direction.** Predrawing the finitely many local
+choices exposed by this bounded behavioral run gives a mixed contingent-plan
+profile with exactly the same history law, even when the ambient information
+carriers are infinite. -/
 theorem kuhn_behavioral_to_mixed
-    [∀ who, Fintype (G.information.InfoState who)]
-    [∀ who, DecidableEq (G.information.InfoState who)]
     (hactsOnce : G.information.ActsOnceWhereItMatters)
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ) :
     ∃ mixed : Profile G.strategicSignature.mixed,
       G.information.runMixed mixed horizon =
         G.information.runBehavioral behavioral horizon :=
-  ⟨fun who => (behavioral who).toMixed,
-    G.information.runMixed_toMixed hactsOnce behavioral horizon⟩
+  G.information.exists_mixed_runMixed_eq_runBehavioral
+    hactsOnce behavioral horizon
 
 /-- **Mixed-to-behavioral Kuhn direction.** Under perfect recall, the canonical
 behavioral reading of a mixed contingent plan has exactly the same history
@@ -125,11 +125,10 @@ theorem kuhn_mixed_to_behavioral
       horizon mixed).symm⟩
 
 /-- Under perfect recall, behavioral and mixed EFG profiles realize exactly the
-same history laws. Perfect recall supplies the no-revisit consequence used in
-the behavioral-to-mixed direction. -/
+same bounded history laws. Perfect recall supplies the no-revisit consequence
+used in the behavioral-to-mixed direction; no ambient information-state
+finiteness is required. -/
 theorem kuhn_historyLaws
-    [∀ who, Fintype (G.information.InfoState who)]
-    [∀ who, DecidableEq (G.information.InfoState who)]
     (hrecall : G.information.PerfectRecall) (horizon : ℕ) :
     { law | ∃ behavioral : Profile G.behavioralSignature,
         G.information.runBehavioral behavioral horizon = law } =
@@ -257,8 +256,6 @@ end UnilateralTransfers
 behavioral-to-mixed correspondence. This is the utility-distribution theorem
 with utility generalized to arbitrary retained outcome data. -/
 theorem kuhn_behavioral_to_mixed_outcomeLaw
-    [∀ who, Fintype (G.information.InfoState who)]
-    [∀ who, DecidableEq (G.information.InfoState who)]
     (hactsOnce : G.information.ActsOnceWhereItMatters)
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
     {Outcome : Type uo} (outcome : G.History → Outcome) :
@@ -284,8 +281,6 @@ theorem kuhn_mixed_to_behavioral_outcomeLaw
 
 /-- The behavioral-to-mixed witness preserves every player's expected utility. -/
 theorem kuhn_behavioral_to_mixed_expectedUtility
-    [∀ who, Fintype (G.information.InfoState who)]
-    [∀ who, DecidableEq (G.information.InfoState who)]
     (hactsOnce : G.information.ActsOnceWhereItMatters)
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
     (utility : G.History → ι → ℝ) :

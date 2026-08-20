@@ -70,6 +70,14 @@ changes the terminal law, and a coordination equilibrium crosses both Nash
 transfer directions. No-revisit remains an internal consequence of perfect
 recall rather than a duplicated public premise.
 
+EXP-115 separately removes ambient information-state finiteness from bounded
+whole-profile realization. Its hostile `Nat`-information model reaches two
+distinct decision sites, and the promoted Protocol theorem predraws only the
+finite support exposed by the supplied profile and horizon. The full-product
+`BehavioralPolicy.toMixed` convenience and the counterfactual unilateral/Nash
+surface remain finite; this refinement does not weaken those stronger
+contracts.
+
 ### C. Repeated public-monitoring breadth — core resolved
 
 Recover, in order:

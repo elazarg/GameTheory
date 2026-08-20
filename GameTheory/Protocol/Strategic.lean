@@ -223,7 +223,6 @@ theorem toGameForm_mixed_play_toBehavioral
 /-- Under both sharp hypotheses, behavioral profiles and static mixed profiles
 describe exactly the same set of compiled history laws. -/
 theorem toBehavioralGameForm_play_image_eq_mixed_play_image
-    [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
     (hactsOnce : M.ActsOnceWhereItMatters) (hconstrain : M.ConstrainsAlike)
     (horizon : ℕ) :
     { law | ∃ behavioral : Profile M.behavioralSignature,

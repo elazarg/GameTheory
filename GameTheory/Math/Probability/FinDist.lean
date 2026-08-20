@@ -1768,6 +1768,147 @@ theorem runDependent_eq_pi [DecidableEq ι] (laws : (index : ι) → FinDist (A 
 
 end Pi
 
+/-! ## Finite partial dependent products -/
+
+variable {ι : Type*} {A : ι → Type*}
+
+/-- A duplicate-free dependent draw depends only on the finite set of
+coordinates drawn, not on the list used to enumerate it. -/
+theorem runDependent_eq_of_toFinset_eq [DecidableEq ι]
+    (laws : (index : ι) → FinDist (A index))
+    (first second : List ι) (hfirst : first.Nodup) (hsecond : second.Nodup)
+    (hindices : first.toFinset = second.toFinset)
+    (assignment : (index : ι) → A index) :
+    runDependent laws first assignment = runDependent laws second assignment := by
+  rw [runDependent_eq_pi_subtype laws first hfirst assignment,
+    runDependent_eq_pi_subtype laws second hsecond assignment, hindices]
+
+/-- Dependent draws are congruent when their coordinate laws agree everywhere
+the supplied list asks for a draw. -/
+theorem runDependent_congr_laws [DecidableEq ι]
+    {first second : (index : ι) → FinDist (A index)}
+    (indices : List ι) (assignment : (index : ι) → A index)
+    (hagree : ∀ index ∈ indices, first index = second index) :
+    runDependent first indices assignment =
+      runDependent second indices assignment := by
+  induction indices generalizing assignment with
+  | nil => rfl
+  | cons head tail ih =>
+      rw [runDependent, runDependent, hagree head (by simp)]
+      refine bind_congr fun value _ => ?_
+      exact ih _ fun index hindex => hagree index (by simp [hindex])
+
+/-- Writing a coordinate that the remaining dependent draw never visits
+commutes through that draw. -/
+theorem runDependent_setOne_of_not_mem [DecidableEq ι]
+    (laws : (index : ι) → FinDist (A index)) (indices : List ι)
+    (assignment : (index : ι) → A index) (index : ι) (value : A index)
+    (hindex : index ∉ indices) :
+    runDependent laws indices (DependentAssignment.setOne assignment ⟨index, value⟩) =
+      map (fun rest => DependentAssignment.setOne rest ⟨index, value⟩)
+        (runDependent laws indices assignment) := by
+  induction indices generalizing assignment with
+  | nil =>
+      simp [runDependent]
+  | cons head tail ih =>
+      have hne : index ≠ head := by
+        intro heq
+        subst head
+        exact hindex (by simp)
+      have htail : index ∉ tail := by
+        intro hmem
+        exact hindex (by simp [hmem])
+      rw [runDependent, runDependent, map_bind]
+      refine bind_congr fun headValue _ => ?_
+      have hcommute :
+          DependentAssignment.setOne
+              (DependentAssignment.setOne assignment ⟨index, value⟩)
+              ⟨head, headValue⟩ =
+            DependentAssignment.setOne
+              (DependentAssignment.setOne assignment ⟨head, headValue⟩)
+              ⟨index, value⟩ := by
+        funext other
+        by_cases hotherIndex : other = index
+        · subst other
+          simp [DependentAssignment.setOne, DependentAssignment.resolve, hne]
+        · by_cases hotherHead : other = head
+          · subst other
+            simp [DependentAssignment.setOne, DependentAssignment.resolve,
+              hotherIndex]
+          · simp [DependentAssignment.setOne, DependentAssignment.resolve,
+              hotherIndex, hotherHead]
+      rw [hcommute, ih _ htail]
+
+namespace DependentAssignment
+
+/-- Reinstalling the value already stored at one dependent coordinate changes
+nothing. -/
+theorem setOne_eq_self [DecidableEq ι]
+    (assignment : (index : ι) → A index) (index : ι) :
+    setOne assignment ⟨index, assignment index⟩ = assignment := by
+  funext other
+  by_cases hother : other = index
+  · subst other
+    simp [setOne, resolve]
+  · simp [setOne, resolve, hother]
+
+@[simp]
+theorem setOne_apply_self [DecidableEq ι]
+    (assignment : (index : ι) → A index) (index : ι) (value : A index) :
+    setOne assignment ⟨index, value⟩ index = value := by
+  simp [setOne, resolve]
+
+@[simp]
+theorem setOne_apply_of_ne [DecidableEq ι]
+    (assignment : (index : ι) → A index) {index other : ι}
+    (value : A index) (hne : other ≠ index) :
+    setOne assignment ⟨index, value⟩ other = assignment other := by
+  simp [setOne, resolve, hne]
+
+end DependentAssignment
+
+/-- A finite dependent product can be factored at any coordinate it draws. -/
+theorem runDependent_factor_of_mem [DecidableEq ι]
+    (laws : (index : ι) → FinDist (A index)) (sites : Finset ι)
+    (assignment : (index : ι) → A index) (index : ι)
+    (hindex : index ∈ sites) :
+    runDependent laws sites.toList assignment =
+      map
+        (fun pair => DependentAssignment.setOne pair.2 ⟨index, pair.1⟩)
+        (product (laws index)
+          (runDependent laws (sites.erase index).toList assignment)) := by
+  have hrest : index ∉ (sites.erase index).toList := by simp
+  have horder :
+      runDependent laws sites.toList assignment =
+        runDependent laws (index :: (sites.erase index).toList) assignment := by
+    apply runDependent_eq_of_toFinset_eq laws
+    · exact sites.nodup_toList
+    · exact List.nodup_cons.mpr ⟨hrest, (sites.erase index).nodup_toList⟩
+    · simp [hindex]
+  rw [horder, runDependent, product, map_bind]
+  refine bind_congr fun value _ => ?_
+  rw [runDependent_setOne_of_not_mem laws _ assignment index value hrest,
+    map_comp]
+  rfl
+
+/-- A coordinate omitted from the finite draw can still be factored when its
+law is the point mass supplied by the fallback assignment. -/
+theorem runDependent_factor_of_not_mem [DecidableEq ι]
+    (laws : (index : ι) → FinDist (A index)) (sites : Finset ι)
+    (assignment : (index : ι) → A index) (index : ι)
+    (hindex : index ∉ sites) (hlaw : laws index = pure (assignment index)) :
+    runDependent laws sites.toList assignment =
+      map
+        (fun pair => DependentAssignment.setOne pair.2 ⟨index, pair.1⟩)
+        (product (laws index)
+          (runDependent laws (sites.erase index).toList assignment)) := by
+  have hlist : index ∉ sites.toList := by simpa
+  have hset := runDependent_setOne_of_not_mem laws sites.toList assignment
+    index (assignment index) hlist
+  rw [DependentAssignment.setOne_eq_self assignment index] at hset
+  rw [Finset.erase_eq_self.mpr hindex, hlaw, product, pure_bind, map_comp]
+  exact hset
+
 end FinDist
 
 end GameTheory.Math.Probability

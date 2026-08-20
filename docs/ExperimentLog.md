@@ -120,6 +120,7 @@ becomes difficult to scan.
 | EXP-112 | 2026-08-16 | D2 / countable PMF expectation | Can the countable layer expose bounded real expectations and preserve finite-law expectations without duplicating `FinDist.expect` or hiding summability? | Complete experiment-only result; bounded Bochner integration preserves `FinDist.expect` and computes the geometric consumer | [`CountablePMFExpectation.lean`](../GameTheory/Experimental/PostArchitecture/CountablePMFExpectation.lean) |
 | EXP-113 | 2026-08-17 | future stochastic asymptotic gate | Can a genuinely nonconstant canonical stochastic game path consume the EXP-108 infinite-play and asymptotic-payoff interfaces without a second runner or expectation/limit interchange? | Complete experiment-only result; canonical fair absorbing game validates all three distinct asymptotic payoff orders | [`StochasticGamePathPayoff.lean`](../GameTheory/Experimental/PostArchitecture/StochasticGamePathPayoff.lean) |
 | EXP-114 | 2026-08-17 | cyclic stochastic uniformity | Can uniform equilibrium be required at every canonical restart phase without identifying it with terminal SPE or limiting-average payoff? | In progress; canonical all-phase predicate and positive cyclic control compile, hostile off-phase rejection pending | [`CyclicUniformInterface.lean`](../GameTheory/Experimental/PostArchitecture/CyclicUniformInterface.lean) |
+| EXP-115 | 2026-08-20 | D6 / horizon-relative Kuhn realization | Can a bounded behavioral run be realized by a finite-support mixed profile without requiring the ambient information-state carriers to be finite? | Supports; promoted | `GameTheory/Experimental/PostArchitecture/KuhnFiniteSupport.lean`; `GameTheory/Protocol/Information.lean`; EFG/FOSG Kuhn leaves |
 
 ## Entry template
 
@@ -7286,3 +7287,49 @@ memory.
   plumbing or visible transports. The broken fixture was deleted. The next
   action is a general public event/transition congruence seam, followed by the
   same hostile test; do not adopt the all-phase interface before it passes.
+
+### EXP-115: horizon-relative Kuhn realization
+
+- **Date / revision:** 2026-08-20, reservation on the current working tree
+- **Status:** complete; supports stable bounded realization
+- **Decision / question:** whether the behavioral-to-mixed Kuhn direction can
+  construct a finite-support mixed witness from the finite support actually
+  exposed by one bounded behavioral run, while `BehavioralPolicy.toMixed`
+  remains the finite full-product convenience.
+- **Representative slice:** an acts-once protocol with an infinite ambient
+  information-state carrier and a bounded behavioral profile that reaches more
+  than one information state with positive probability.
+- **Competing designs:** retain ambient `Fintype InfoState`; construct a
+  horizon/profile-relative mixed witness over the finite support tree; or widen
+  `MixedPolicy` beyond `FinDist`. Prefer the relative witness and keep the
+  canonical finite law unchanged.
+- **Measurements:** public assumptions; second-runner or duplicated-semantics
+  count; transport/update hazards; focused builds; and whether EFG/FOSG
+  whole-profile laws generalize without weakening unilateral/Nash contracts.
+- **Kill conditions:** a second evaluator, direct `Function.update`, visible
+  transport in Protocol/language code, a hidden global finiteness assumption,
+  changing `MixedPolicy`, or claiming finiteness-free unilateral/Nash transfer
+  without a counterfactual predrawability certificate.
+- **Artifacts / commands:** `GameTheory/Math/Probability/FinDist.lean`;
+  `GameTheory/Protocol/Information.lean`;
+  `GameTheory/Experimental/PostArchitecture/KuhnFiniteSupport.lean`;
+  `GameTheory/Languages/{EFG,FOSG}/Kuhn.lean`;
+  `lake build GameTheory.Protocol.Strategic GameTheory.Languages.EFG.Kuhn
+  GameTheory.Languages.FOSG.Kuhn
+  GameTheory.Experimental.PostArchitecture.KuhnFiniteSupport
+  GameTheory.Tests.EFGKuhn GameTheory.Tests.EFGKuhnNash
+  GameTheory.Experimental.PostArchitecture.FOSGKuhn` (1,735 jobs).
+- **Observations / measurements:** `Nat` is the hostile information carrier,
+  and the two-round behavioral support reaches both decision states `0` and
+  `1`. A finite dependent product over the support sites realizes its complete
+  history law. The Protocol, EFG, and FOSG bounded whole-profile theorems now
+  require no `Fintype` or `DecidableEq` on information states. The change adds
+  no runner or probability carrier; the focused build is warning-clean, and
+  added-source scans find no placeholder, raw update, visible transport,
+  `Fintype.ofFinite`, `open Classical`, or custom axiom.
+- **Outcome / next action:** promote the finite-site `toMixedOn` operation and
+  the profile/horizon-local existential realization theorem. Keep
+  `BehavioralPolicy.toMixed` as the finite full-product convenience. Keep the
+  exact updated-law and Nash-transfer surfaces finite until a separately
+  validated counterfactual predrawability certificate justifies weakening
+  them.

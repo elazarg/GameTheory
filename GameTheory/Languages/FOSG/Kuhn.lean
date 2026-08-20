@@ -52,17 +52,17 @@ theorem toBehavioralGameForm_play (horizon : ℕ)
       G.information.runBehavioral behavioral horizon :=
   InformationModel.toBehavioralGameForm_play G.information horizon behavioral
 
-/-- Predrawing every local choice preserves the complete FOSG history law. -/
+/-- Predrawing the finite support exposed by this bounded behavioral run
+preserves the complete FOSG history law without ambient information-state
+finiteness. -/
 theorem kuhn_behavioral_to_mixed
-    [∀ who, Fintype (G.information.InfoState who)]
-    [∀ who, DecidableEq (G.information.InfoState who)]
     (hactsOnce : G.information.ActsOnceWhereItMatters)
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ) :
     ∃ mixed : Profile G.information.strategicSignature.mixed,
       G.information.runMixed mixed horizon =
         G.information.runBehavioral behavioral horizon :=
-  ⟨fun who => (behavioral who).toMixed,
-    G.information.runMixed_toMixed hactsOnce behavioral horizon⟩
+  G.information.exists_mixed_runMixed_eq_runBehavioral
+    hactsOnce behavioral horizon
 
 /-- Under perfect recall, the behavioral reading of a mixed FOSG plan
 preserves the complete history law. -/
@@ -80,11 +80,10 @@ theorem kuhn_mixed_to_behavioral
       horizon mixed).symm⟩
 
 /-- Under perfect recall, behavioral and mixed FOSG profiles realize the same
-complete-history laws. Perfect recall supplies the no-revisit consequence used
-in the behavioral-to-mixed direction. -/
+bounded complete-history laws. Perfect recall supplies the no-revisit
+consequence used in the behavioral-to-mixed direction; no ambient
+information-state finiteness is required. -/
 theorem kuhn_historyLaws
-    [∀ who, Fintype (G.information.InfoState who)]
-    [∀ who, DecidableEq (G.information.InfoState who)]
     (hrecall : G.information.PerfectRecall) (horizon : ℕ) :
     { law | ∃ behavioral : Profile G.behavioralSignature,
         G.information.runBehavioral behavioral horizon = law } =
@@ -97,8 +96,6 @@ theorem kuhn_historyLaws
 /-- Every outcome projection of the behavioral history law is preserved by
 the predrawn mixed witness. -/
 theorem kuhn_behavioral_to_mixed_outcomeLaw
-    [∀ who, Fintype (G.information.InfoState who)]
-    [∀ who, DecidableEq (G.information.InfoState who)]
     (hactsOnce : G.information.ActsOnceWhereItMatters)
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
     {Outcome : Type uo} (outcome : G.History → Outcome) :

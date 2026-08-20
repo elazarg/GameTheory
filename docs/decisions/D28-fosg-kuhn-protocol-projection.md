@@ -2,7 +2,7 @@
 
 - **Status:** adopted
 - **Date:** 2026-08-02
-- **Experiment IDs:** EXP-057
+- **Experiment IDs:** EXP-057, EXP-115
 
 ## Decision / question
 
@@ -39,6 +39,12 @@ A one-move model separately satisfies acts-once while refuting perfect recall,
 so the behavioral-to-mixed result is not made artificially conditional on the
 stronger recall hypothesis.
 
+EXP-115 adds a post-decision hostile slice with `Nat` information states. Its
+two-round behavioral support reaches two distinct decision sites, yet the
+Protocol theorem constructs a finite-support mixed witness for the complete
+bounded history law without ambient information-state finiteness. The FOSG
+leaf inherits that generalized whole-profile theorem directly.
+
 This slice matters because the same execution supports failure and success:
 recall is owned by observation design, not by an FOSG-native runner or a stored
 property of the transition graph.
@@ -50,6 +56,7 @@ property of the transition graph.
 | pinned scope | 39 declarations in `Native/History.lean` and `Native/HistoryMarginal.lean` |
 | stable surface | transparent behavioral/mixed plan and behavioral-signature abbreviations; five named theorem families; zero new runner/history/strategy data |
 | named hypotheses | behavioral-to-mixed uses `ActsOnceWhereItMatters`; the familiar recall-facing mixed-to-behavioral theorem uses `PerfectRecall` through the weaker `ConstrainsAlike` premise |
+| bounded forward assumptions | EXP-115 removes `Fintype` and `DecidableEq` on ambient information states from whole-profile history/outcome laws; full-product and unilateral surfaces remain finite |
 | retained law | equality of canonical `FinDist ExecutionProtocol.History` laws, plus arbitrary `FinDist.map` outcome projections |
 | removed machinery | `ObsModelCore`, PMF product bridges, native execution states, history-machine conversion, semantic step invariant hierarchy, strategy lifts, list-chain/`SeenBefore` coefficient induction |
 | pinned dispositions | 13 adapt / 7 subsumed / 19 retired; L-FOSG becomes 372/776 reviewed with 404 queued |
@@ -82,6 +89,11 @@ spine.
 the mature EFG-facing vocabulary where the mathematics is genuinely shared,
 without importing EFG or routing simultaneous FOSGs through single-mover
 syntax.
+
+For bounded whole-profile laws, that projection now uses the EXP-115
+profile/horizon-local finite-support witness and permits infinite ambient
+information carriers. It does not redefine the full-product `toMixed`
+operation or claim a finiteness-free counterfactual/unilateral theorem.
 
 The old native execution and marginal layers are adapted, subsumed, or retired
 row by row.  A named serialization comparison from simultaneous FOSG to EFG is
