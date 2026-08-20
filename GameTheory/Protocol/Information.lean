@@ -1185,6 +1185,21 @@ theorem MixedPolicy.toBehavioral_pure {i : ι} (policy : M.Policy i) :
     rfl
 
 variable {M} in
+/-- Reading a deterministic policy with that same policy as the zero-mass
+fallback recovers its pointwise deterministic behavioral policy. -/
+theorem MixedPolicy.toBehavioralWith_pure_self {i : ι}
+    (policy : M.Policy i) :
+    MixedPolicy.toBehavioralWith (M := M) (FinDist.pure policy) policy =
+      policy.toBehavioral := by
+  classical
+  funext info
+  rw [MixedPolicy.toBehavioralWith]
+  split
+  · rw [FinDist.condOn_pure, FinDist.map_pure]
+    rfl
+  · rfl
+
+variable {M} in
 /-- A behavioral policy as a mixed one: draw the action for every information
 state in advance, independently. Whether the two laws agree is exactly the
 question above, and this construction is where it is asked.

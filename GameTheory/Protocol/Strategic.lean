@@ -595,6 +595,76 @@ private theorem kuhn_mixed_roundTripWithin_against_pure
   rw [hpureProfile] at hroundTrip
   simpa [roundTrip] using hroundTrip
 
+private theorem kuhn_mixed_roundTripWithinWith_against_pure
+    (hrecall : M.PerfectRecall)
+    (sites : (i : ι) → Finset (M.InfoState i))
+    (horizon : ℕ)
+    (hcover : M.CoversInformationSites sites horizon)
+    (who : ι) (replacement : M.MixedPolicy who)
+    (replacementFallback : M.Policy who)
+    (opponents : ∀ other : {other // other ≠ who}, M.Policy other.1) :
+    (((InformationModel.MixedPolicy.toBehavioralWith (M := M)
+        replacement replacementFallback).toMixedWithin
+          (sites who) replacementFallback).bind fun policy =>
+        M.run
+          ((Equiv.piSplitAt who fun i => M.Policy i).symm
+            (policy, opponents)) horizon) =
+      (replacement.bind fun policy =>
+        M.run
+          ((Equiv.piSplitAt who fun i => M.Policy i).symm
+            (policy, opponents)) horizon) := by
+  let pureProfile : Profile M.strategicSignature :=
+    (Equiv.piSplitAt who fun i => M.Policy i).symm
+      (replacement.support_nonempty.choose, opponents)
+  let fallbackProfile : Profile M.strategicSignature :=
+    Profile.update pureProfile who replacementFallback
+  let pureMixed : Profile M.strategicSignature.mixed :=
+    fun i => FinDist.pure (pureProfile i)
+  let roundTrip : M.MixedPolicy who :=
+    (InformationModel.MixedPolicy.toBehavioralWith (M := M)
+      replacement replacementFallback).toMixedWithin
+      (sites who) replacementFallback
+  let mixedProfile : Profile M.strategicSignature.mixed :=
+    Profile.update (sig := M.strategicSignature.mixed)
+      pureMixed who replacement
+  let behavioral : Profile M.behavioralSignature :=
+    fun i => InformationModel.MixedPolicy.toBehavioralWith
+      (M := M) (mixedProfile i) (fallbackProfile i)
+  have hroundTrip :=
+    (M.runMixed_toMixedWithin
+      (M.actsOnceWhereItMatters_of_perfectRecall hrecall)
+      sites behavioral fallbackProfile horizon hcover).trans
+      (M.runMixed_toBehavioralWith
+        (InformationModel.constrainsAlike_of_perfectRecall hrecall)
+        fallbackProfile horizon mixedProfile).symm
+  have hroundProfile :
+      (fun i => (InformationModel.MixedPolicy.toBehavioralWith
+        (M := M) (mixedProfile i) (fallbackProfile i)).toMixedWithin
+          (sites i) (fallbackProfile i)) =
+        Profile.update (sig := M.strategicSignature.mixed)
+          pureMixed who roundTrip := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      simp [mixedProfile, fallbackProfile, roundTrip]
+    · simp [mixedProfile, fallbackProfile, pureMixed, roundTrip, hi,
+        InformationModel.MixedPolicy.toBehavioralWith_pure_self,
+        InformationModel.Policy.toBehavioral_toMixedWithin]
+  have hpureProfile :
+      (fun other : {other // other ≠ who} => pureProfile other.1) =
+        opponents := by
+    funext other
+    simp [pureProfile, other.2]
+  rw [hroundProfile,
+    runMixed_update_eq_opponents_bind (M := M)
+      pureMixed who roundTrip horizon,
+    runMixed_update_eq_opponents_bind (M := M)
+      pureMixed who replacement horizon,
+    FinDist.pi_pure] at hroundTrip
+  simp only [FinDist.pure_bind] at hroundTrip
+  rw [hpureProfile] at hroundTrip
+  simpa [roundTrip] using hroundTrip
+
 /-- A finite counterfactual site cover makes the mixed–behavioral–mixed
 round trip realization-equivalent for one player against arbitrary fixed
 mixed opponents. -/
@@ -624,6 +694,36 @@ theorem kuhn_mixed_roundTrip_updateWithin
   exact kuhn_mixed_roundTripWithin_against_pure
     (M := M) hrecall sites horizon hcover who replacement replacementFallback
       opponents
+
+/-- A fixed zero-mass fallback can be retained while a finite
+mixed–behavioral–mixed round trip replaces one player against arbitrary mixed
+opponents. -/
+theorem kuhn_mixed_roundTrip_updateWithinWith
+    (hrecall : M.PerfectRecall)
+    (sites : (i : ι) → Finset (M.InfoState i))
+    (horizon : ℕ)
+    (hcover : M.CoversInformationSites sites horizon)
+    (mixed : Profile M.strategicSignature.mixed) (who : ι)
+    (replacement : M.MixedPolicy who)
+    (replacementFallback : M.Policy who) :
+    M.runMixed
+        (Profile.update (sig := M.strategicSignature.mixed) mixed who
+          ((InformationModel.MixedPolicy.toBehavioralWith (M := M)
+            replacement replacementFallback).toMixedWithin
+            (sites who) replacementFallback)) horizon =
+      M.runMixed
+        (Profile.update (sig := M.strategicSignature.mixed)
+          mixed who replacement) horizon := by
+  rw [runMixed_update_eq_opponents_bind (M := M)
+      mixed who ((InformationModel.MixedPolicy.toBehavioralWith (M := M)
+        replacement replacementFallback).toMixedWithin
+          (sites who) replacementFallback) horizon,
+    runMixed_update_eq_opponents_bind (M := M)
+      mixed who replacement horizon]
+  refine FinDist.bind_congr fun opponents _ => ?_
+  exact kuhn_mixed_roundTripWithinWith_against_pure
+    (M := M) hrecall sites horizon hcover who replacement
+      replacementFallback opponents
 
 omit [Fintype ι] in
 private theorem toMixedWithin_update
@@ -687,6 +787,192 @@ theorem kuhn_behavioral_roundTrip_updateWithin
       replacementMixed replacementFallback
   have hresult := hleft.symm.trans (hlocal.trans hright)
   simpa [replacementMixed, roundTrip] using hresult
+
+/-- A behavioral policy and its finite-site predraw read with the same fixed
+fallback are realization-equivalent under arbitrary fixed behavioral
+opponents. -/
+theorem kuhn_behavioral_roundTrip_updateWithinWith
+    (hrecall : M.PerfectRecall)
+    (sites : (i : ι) → Finset (M.InfoState i))
+    (horizon : ℕ)
+    (hcover : M.CoversInformationSites sites horizon)
+    (behavioral : Profile M.behavioralSignature)
+    (fallback : Profile M.strategicSignature) (who : ι)
+    (replacement : M.BehavioralPolicy who)
+    (replacementFallback : M.Policy who) :
+    M.runBehavioral
+        (Profile.update behavioral who
+          (InformationModel.MixedPolicy.toBehavioralWith (M := M)
+            (replacement.toMixedWithin
+              (sites who) replacementFallback)
+            replacementFallback)) horizon =
+      M.runBehavioral
+        (Profile.update behavioral who replacement) horizon := by
+  let replacementMixed : M.MixedPolicy who :=
+    replacement.toMixedWithin (sites who) replacementFallback
+  let roundTrip : M.BehavioralPolicy who :=
+    InformationModel.MixedPolicy.toBehavioralWith
+      (M := M) replacementMixed replacementFallback
+  let updatedFallback : Profile M.strategicSignature :=
+    Profile.update fallback who replacementFallback
+  have hleft := M.runMixed_toMixedWithin
+    (M.actsOnceWhereItMatters_of_perfectRecall hrecall)
+    sites (Profile.update behavioral who roundTrip) updatedFallback
+      horizon hcover
+  have hright := M.runMixed_toMixedWithin
+    (M.actsOnceWhereItMatters_of_perfectRecall hrecall)
+    sites (Profile.update behavioral who replacement) updatedFallback
+      horizon hcover
+  rw [toMixedWithin_update (M := M) sites behavioral fallback who
+      roundTrip replacementFallback] at hleft
+  rw [toMixedWithin_update (M := M) sites behavioral fallback who
+      replacement replacementFallback] at hright
+  have hlocal := M.kuhn_mixed_roundTrip_updateWithinWith
+    hrecall sites horizon hcover
+    (fun i => (behavioral i).toMixedWithin (sites i) (fallback i)) who
+      replacementMixed replacementFallback
+  have hresult := hleft.symm.trans (hlocal.trans hright)
+  simpa [replacementMixed, roundTrip] using hresult
+
+/-- Replacing one player's mixed policy by an arbitrary behavioral policy
+commutes with a fixed-fallback behavioral reading of every nondeviator. -/
+theorem kuhn_mixed_update_toBehavioralWithinWith
+    (hrecall : M.PerfectRecall)
+    (sites : (i : ι) → Finset (M.InfoState i))
+    (horizon : ℕ)
+    (hcover : M.CoversInformationSites sites horizon)
+    (mixed : Profile M.strategicSignature.mixed)
+    (fallback : Profile M.strategicSignature) (who : ι)
+    (replacement : M.BehavioralPolicy who)
+    (replacementFallback : M.Policy who) :
+    M.runBehavioral
+        (Profile.update (sig := M.behavioralSignature)
+          (fun i => InformationModel.MixedPolicy.toBehavioralWith
+            (M := M) (mixed i) (fallback i))
+          who replacement) horizon =
+      M.runMixed
+        (Profile.update (sig := M.strategicSignature.mixed)
+          mixed who (replacement.toMixedWithin
+            (sites who) replacementFallback)) horizon := by
+  let behavioral : Profile M.behavioralSignature :=
+    fun i => InformationModel.MixedPolicy.toBehavioralWith
+      (M := M) (mixed i) (fallback i)
+  let replacementMixed : M.MixedPolicy who :=
+    replacement.toMixedWithin (sites who) replacementFallback
+  let updatedFallback : Profile M.strategicSignature :=
+    Profile.update fallback who replacementFallback
+  have hback := M.runMixed_toBehavioralWith
+    (InformationModel.constrainsAlike_of_perfectRecall hrecall)
+    updatedFallback horizon
+    (Profile.update (sig := M.strategicSignature.mixed)
+      mixed who replacementMixed)
+  have hprofile :
+      (fun i => InformationModel.MixedPolicy.toBehavioralWith (M := M)
+        ((Profile.update
+          (sig := M.strategicSignature.mixed) mixed who replacementMixed) i)
+        (updatedFallback i)) =
+        Profile.update (sig := M.behavioralSignature) behavioral who
+          (InformationModel.MixedPolicy.toBehavioralWith (M := M)
+            replacementMixed replacementFallback) := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      simp [updatedFallback]
+    · simp [behavioral, updatedFallback, hi]
+  rw [hprofile] at hback
+  have hround := M.kuhn_behavioral_roundTrip_updateWithinWith
+    hrecall sites horizon hcover behavioral fallback who replacement
+      replacementFallback
+  exact hround.symm.trans hback.symm
+
+/-- Starting from a behavioral profile, an arbitrary mixed deviation is read
+with a caller-supplied zero-mass fallback while every nondeviator keeps its
+original behavioral policy. -/
+theorem kuhn_behavioral_update_toMixedWithinWith
+    (hrecall : M.PerfectRecall)
+    (sites : (i : ι) → Finset (M.InfoState i))
+    (horizon : ℕ)
+    (hcover : M.CoversInformationSites sites horizon)
+    (behavioral : Profile M.behavioralSignature)
+    (fallback : Profile M.strategicSignature) (who : ι)
+    (replacement : M.MixedPolicy who)
+    (replacementFallback : M.Policy who) :
+    M.runMixed
+        (Profile.update (sig := M.strategicSignature.mixed)
+          (fun i => (behavioral i).toMixedWithin
+            (sites i) (fallback i)) who replacement) horizon =
+      M.runBehavioral
+        (Profile.update (sig := M.behavioralSignature)
+          behavioral who
+            (InformationModel.MixedPolicy.toBehavioralWith
+              (M := M) replacement replacementFallback)) horizon := by
+  let deviation : M.BehavioralPolicy who :=
+    InformationModel.MixedPolicy.toBehavioralWith
+      (M := M) replacement replacementFallback
+  let baselineMixed : Profile M.strategicSignature.mixed :=
+    fun i => (behavioral i).toMixedWithin (sites i) (fallback i)
+  let roundBehavioral : Profile M.behavioralSignature :=
+    fun i => InformationModel.MixedPolicy.toBehavioralWith
+      (M := M) (baselineMixed i) (fallback i)
+  let deviationMixed : M.MixedPolicy who :=
+    deviation.toMixedWithin (sites who) replacementFallback
+  let updatedFallback : Profile M.strategicSignature :=
+    Profile.update fallback who replacementFallback
+  have hforward := M.runMixed_toMixedWithin
+    (M.actsOnceWhereItMatters_of_perfectRecall hrecall)
+    sites (Profile.update behavioral who deviation) updatedFallback
+      horizon hcover
+  rw [toMixedWithin_update (M := M) sites behavioral fallback who
+      deviation replacementFallback] at hforward
+  have hbackBase := M.runMixed_toBehavioralWith
+    (InformationModel.constrainsAlike_of_perfectRecall hrecall)
+    updatedFallback horizon
+    (Profile.update (sig := M.strategicSignature.mixed)
+      baselineMixed who deviationMixed)
+  have hbackBaseProfile :
+      (fun i => InformationModel.MixedPolicy.toBehavioralWith (M := M)
+        ((Profile.update (sig := M.strategicSignature.mixed)
+          baselineMixed who deviationMixed) i) (updatedFallback i)) =
+        Profile.update (sig := M.behavioralSignature) roundBehavioral who
+          (InformationModel.MixedPolicy.toBehavioralWith
+            (M := M) deviationMixed replacementFallback) := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      simp [updatedFallback]
+    · simp [roundBehavioral, updatedFallback, hi]
+  rw [hbackBaseProfile] at hbackBase
+  have hbaseToRound :
+      M.runBehavioral (Profile.update behavioral who deviation) horizon =
+        M.runBehavioral
+          (Profile.update roundBehavioral who
+            (InformationModel.MixedPolicy.toBehavioralWith
+              (M := M) deviationMixed replacementFallback)) horizon :=
+    hforward.symm.trans hbackBase
+  have hplayer := M.kuhn_behavioral_roundTrip_updateWithinWith
+    hrecall sites horizon hcover roundBehavioral fallback who deviation
+      replacementFallback
+  have hbaseToDeviation := hbaseToRound.trans hplayer
+  have hbackDeviation := M.runMixed_toBehavioralWith
+    (InformationModel.constrainsAlike_of_perfectRecall hrecall)
+    updatedFallback horizon
+    (Profile.update (sig := M.strategicSignature.mixed)
+      baselineMixed who replacement)
+  have hbackDeviationProfile :
+      (fun i => InformationModel.MixedPolicy.toBehavioralWith (M := M)
+        ((Profile.update (sig := M.strategicSignature.mixed)
+          baselineMixed who replacement) i) (updatedFallback i)) =
+        Profile.update (sig := M.behavioralSignature) roundBehavioral who
+          deviation := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      simp [deviation, updatedFallback]
+    · simp [roundBehavioral, updatedFallback, hi]
+  rw [hbackDeviationProfile] at hbackDeviation
+  have hresult := hbackDeviation.trans hbaseToDeviation.symm
+  simpa [deviation, baselineMixed, roundBehavioral, deviationMixed] using
+    hresult
 
 /-- Replacing one player's mixed policy by an arbitrary behavioral policy
 commutes with conditional behavioral reading when the finite sites cover every

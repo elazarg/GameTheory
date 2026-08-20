@@ -587,6 +587,33 @@ noncomputable def toMixedWithin {i : ι} (law : M.PolicyMeasure i)
   exact FinDist.map (Policy.assembleWithin M fallback sites)
     (FinDist.ofMeasure restricted)
 
+/-- Taking a finite marginal of the independent total-policy law induced by a
+behavioral policy recovers its canonical finite predraw exactly. -/
+theorem toMixedWithin_toPureMeasure {i : ι}
+    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
+    (fallback : M.Policy i) :
+    PolicyMeasure.toMixedWithin (M := M) policy.toPureMeasure sites fallback =
+      policy.toMixedWithin sites fallback := by
+  classical
+  letI (info : sites) : Fintype (M.Choice i info) := inferInstance
+  letI : IsProbabilityMeasure (policy.toPureMeasure.map sites.restrict) :=
+    Measure.isProbabilityMeasure_map
+      (Finset.measurable_restrict sites).aemeasurable
+  unfold PolicyMeasure.toMixedWithin
+  show FinDist.map (Policy.assembleWithin M fallback sites)
+      (FinDist.ofMeasure (policy.toPureMeasure.map sites.restrict)) =
+    policy.toMixedWithin sites fallback
+  have hmarginal := BehavioralPolicy.toPureMeasure_map_restrict
+    (M := M) policy sites
+  have hdraw : FinDist.ofMeasure
+      (policy.toPureMeasure.map sites.restrict) =
+        FinDist.pi fun info : sites => policy info := by
+    apply FinDist.ext_of_prob
+    intro draw
+    rw [GameTheory.Math.Probability.FinDist.prob_ofMeasure, hmarginal,
+      GameTheory.Math.Probability.FinDist.toMeasure_real_singleton]
+  rw [hdraw, BehavioralPolicy.toMixedWithin_eq_map_pi]
+
 /-- The finite approximation is precisely the pushforward that forgets all
 coordinates outside `sites` and fills them from `fallback`. -/
 theorem toMixedWithin_toMeasure {i : ι} (law : M.PolicyMeasure i)
@@ -996,6 +1023,233 @@ theorem runPolicyMeasure_update_eq_runBehavioral_update
       congrArg (fun profile => (M.runBehavioral profile horizon).toMeasure)
         hprofile
 
+/-- **Hybrid unilateral Kuhn, behavioral deviation.** Arbitrary independent
+policy laws remain fixed for every opponent while the focal player deviates
+with an arbitrary behavioral policy. The original deviation appears on the
+behavioral side, rather than its policy-law round trip. -/
+theorem runPolicyMeasure_update_toPureMeasure_eq_runBehavioral_update
+    [DecidableEq ι] (hrecall : M.PerfectRecall)
+    (laws : Profile M.policyMeasureSignature)
+    [∀ i, IsProbabilityMeasure (laws i)]
+    [MeasurableSpace E.History]
+    (fallback : Profile M.strategicSignature) (who : ι)
+    (replacement : M.BehavioralPolicy who)
+    (sites : (i : ι) → Finset (M.InfoState i)) (horizon : ℕ)
+    (hcover : M.CoversInformationSites sites horizon) :
+    M.runPolicyMeasure
+        (Profile.update (sig := M.policyMeasureSignature)
+          laws who replacement.toPureMeasure) horizon =
+      (M.runBehavioral
+        (Profile.update (sig := M.behavioralSignature)
+          (M.policyMeasureBehavioralWith laws fallback) who replacement)
+        horizon).toMeasure := by
+  classical
+  let replacementFallback : M.Policy who := replacement.supportFallback
+  let closedSites : (i : ι) → Finset (M.InfoState i) := fun i =>
+    PolicyMeasure.recordClosure (M := M) (sites i)
+  let finiteMixed : Profile M.strategicSignature.mixed := fun i =>
+    PolicyMeasure.toMixedWithin (M := M) (laws i)
+      (closedSites i) (fallback i)
+  let updatedLaws : Profile M.policyMeasureSignature :=
+    Profile.update (sig := M.policyMeasureSignature)
+      laws who replacement.toPureMeasure
+  let updatedFallback : Profile M.strategicSignature :=
+    Profile.update (sig := M.strategicSignature)
+      fallback who replacementFallback
+  letI : ∀ i, IsProbabilityMeasure (updatedLaws i) := fun i => by
+    by_cases hi : i = who
+    · subst i
+      simpa only [updatedLaws, Profile.update_same] using
+        (inferInstanceAs (IsProbabilityMeasure replacement.toPureMeasure))
+    · simpa only [updatedLaws, Profile.update_of_ne _ _ hi] using
+        (inferInstanceAs (IsProbabilityMeasure (laws i)))
+  have hclosedCover : M.CoversInformationSites closedSites horizon := by
+    intro later hreach hterm i
+    exact PolicyMeasure.mem_recordClosure (M := M) (sites i)
+      (hcover later hreach hterm i)
+  have hfiniteProfile :
+      (fun i => PolicyMeasure.toMixedWithin (M := M) (updatedLaws i)
+        (closedSites i) (updatedFallback i)) =
+        Profile.update (sig := M.strategicSignature.mixed)
+          finiteMixed who
+            (replacement.toMixedWithin (closedSites who)
+              replacementFallback) := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      simp only [updatedLaws, updatedFallback, Profile.update_same]
+      exact PolicyMeasure.toMixedWithin_toPureMeasure
+        (M := M) replacement (closedSites who) replacementFallback
+    · simp only [updatedLaws, updatedFallback, finiteMixed,
+        Profile.update_of_ne _ _ hi]
+  have hbehavioral :
+      M.runBehavioral
+          (Profile.update (sig := M.behavioralSignature)
+            (fun i => InformationModel.MixedPolicy.toBehavioralWith
+              (M := M) (finiteMixed i) (fallback i)) who replacement)
+          horizon =
+        M.runBehavioral
+          (Profile.update (sig := M.behavioralSignature)
+            (M.policyMeasureBehavioralWith laws fallback) who replacement)
+          horizon := by
+    apply M.runBehavioralFrom_congr horizon E.initHistory
+    intro later hreach hterm i
+    by_cases hi : i = who
+    · subst i
+      simp only [Profile.update_same]
+    · simp only [Profile.update_of_ne _ _ hi, finiteMixed,
+        policyMeasureBehavioralWith]
+      have hinfo : M.infoOf i later.trace ∈ sites i :=
+        hcover later hreach hterm i
+      exact PolicyMeasure.toMixedWithin_toBehavioralWith (M := M)
+        (laws i) (closedSites i) (fallback i) (M.infoOf i later.trace)
+        (PolicyMeasure.mem_recordClosure (M := M) (sites i) hinfo)
+        (fun step hstep =>
+          PolicyMeasure.record_mem_recordClosure (M := M) (sites i)
+            hinfo hstep)
+  have hfiniteKuhn := M.kuhn_mixed_update_toBehavioralWithinWith
+    hrecall closedSites horizon hclosedCover finiteMixed fallback who
+      replacement replacementFallback
+  calc
+    M.runPolicyMeasure
+        (Profile.update (sig := M.policyMeasureSignature)
+          laws who replacement.toPureMeasure) horizon =
+        (M.runMixed
+          (fun i => PolicyMeasure.toMixedWithin (M := M) (updatedLaws i)
+            (closedSites i) (updatedFallback i)) horizon).toMeasure :=
+      M.runPolicyMeasure_eq_runMixedWithin updatedLaws closedSites
+        updatedFallback horizon hclosedCover
+    _ = (M.runMixed
+          (Profile.update (sig := M.strategicSignature.mixed)
+            finiteMixed who (replacement.toMixedWithin (closedSites who)
+              replacementFallback)) horizon).toMeasure :=
+      congrArg (fun profile => (M.runMixed profile horizon).toMeasure)
+        hfiniteProfile
+    _ = (M.runBehavioral
+          (Profile.update (sig := M.behavioralSignature)
+            (fun i => InformationModel.MixedPolicy.toBehavioralWith
+              (M := M) (finiteMixed i) (fallback i)) who replacement)
+          horizon).toMeasure := congrArg _ hfiniteKuhn.symm
+    _ = (M.runBehavioral
+          (Profile.update (sig := M.behavioralSignature)
+            (M.policyMeasureBehavioralWith laws fallback) who replacement)
+          horizon).toMeasure := congrArg _ hbehavioral
+
+/-- **Hybrid unilateral Kuhn, policy-law deviation.** Behavioral opponents
+remain fixed while the focal player deviates with an arbitrary probability law
+over total pure policies. The arbitrary law appears unchanged on the policy
+side and its fixed-fallback conditional reading appears on the behavioral
+side. -/
+theorem runPolicyMeasure_toPureMeasure_update_eq_runBehavioral_update
+    [DecidableEq ι] (hrecall : M.PerfectRecall)
+    (behavioral : Profile M.behavioralSignature)
+    [MeasurableSpace E.History]
+    (who : ι) (replacement : M.PolicyMeasure who)
+    [IsProbabilityMeasure replacement]
+    (replacementFallback : M.Policy who)
+    (sites : (i : ι) → Finset (M.InfoState i)) (horizon : ℕ)
+    (hcover : M.CoversInformationSites sites horizon) :
+    M.runPolicyMeasure
+        (Profile.update (sig := M.policyMeasureSignature)
+          (fun i => (behavioral i).toPureMeasure) who replacement) horizon =
+      (M.runBehavioral
+        (Profile.update (sig := M.behavioralSignature) behavioral who
+          (PolicyMeasure.toBehavioralWith (M := M) replacement
+            replacementFallback)) horizon).toMeasure := by
+  classical
+  let fallback : Profile M.strategicSignature := fun i =>
+    (behavioral i).supportFallback
+  let closedSites : (i : ι) → Finset (M.InfoState i) := fun i =>
+    PolicyMeasure.recordClosure (M := M) (sites i)
+  let replacementMixed : M.MixedPolicy who :=
+    PolicyMeasure.toMixedWithin (M := M) replacement
+      (closedSites who) replacementFallback
+  let updatedLaws : Profile M.policyMeasureSignature :=
+    Profile.update (sig := M.policyMeasureSignature)
+      (fun i => (behavioral i).toPureMeasure) who replacement
+  let updatedFallback : Profile M.strategicSignature :=
+    Profile.update (sig := M.strategicSignature)
+      fallback who replacementFallback
+  letI : ∀ i, IsProbabilityMeasure (updatedLaws i) := fun i => by
+    by_cases hi : i = who
+    · subst i
+      simpa only [updatedLaws, Profile.update_same] using
+        (inferInstanceAs (IsProbabilityMeasure replacement))
+    · simpa only [updatedLaws, Profile.update_of_ne _ _ hi] using
+        (inferInstanceAs
+          (IsProbabilityMeasure (behavioral i).toPureMeasure))
+  have hclosedCover : M.CoversInformationSites closedSites horizon := by
+    intro later hreach hterm i
+    exact PolicyMeasure.mem_recordClosure (M := M) (sites i)
+      (hcover later hreach hterm i)
+  have hfiniteProfile :
+      (fun i => PolicyMeasure.toMixedWithin (M := M) (updatedLaws i)
+        (closedSites i) (updatedFallback i)) =
+        Profile.update (sig := M.strategicSignature.mixed)
+          (fun i => (behavioral i).toMixedWithin
+            (closedSites i) (fallback i)) who replacementMixed := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      simp only [updatedLaws, updatedFallback, replacementMixed,
+        Profile.update_same]
+    · simp only [updatedLaws, updatedFallback, Profile.update_of_ne _ _ hi]
+      exact PolicyMeasure.toMixedWithin_toPureMeasure
+        (M := M) (behavioral i) (closedSites i) (fallback i)
+  have hbehavioral :
+      M.runBehavioral
+          (Profile.update (sig := M.behavioralSignature) behavioral who
+            (InformationModel.MixedPolicy.toBehavioralWith
+              (M := M) replacementMixed replacementFallback)) horizon =
+        M.runBehavioral
+          (Profile.update (sig := M.behavioralSignature) behavioral who
+            (PolicyMeasure.toBehavioralWith (M := M) replacement
+              replacementFallback)) horizon := by
+    apply M.runBehavioralFrom_congr horizon E.initHistory
+    intro later hreach hterm i
+    by_cases hi : i = who
+    · subst i
+      simp only [Profile.update_same, replacementMixed]
+      have hinfo : M.infoOf who later.trace ∈ sites who :=
+        hcover later hreach hterm who
+      exact PolicyMeasure.toMixedWithin_toBehavioralWith (M := M)
+        replacement (closedSites who) replacementFallback
+        (M.infoOf who later.trace)
+        (PolicyMeasure.mem_recordClosure (M := M) (sites who) hinfo)
+        (fun step hstep =>
+          PolicyMeasure.record_mem_recordClosure (M := M) (sites who)
+            hinfo hstep)
+    · simp only [Profile.update_of_ne _ _ hi]
+  have hfiniteKuhn := M.kuhn_behavioral_update_toMixedWithinWith
+    hrecall closedSites horizon hclosedCover behavioral fallback who
+      replacementMixed replacementFallback
+  calc
+    M.runPolicyMeasure
+        (Profile.update (sig := M.policyMeasureSignature)
+          (fun i => (behavioral i).toPureMeasure) who replacement) horizon =
+        (M.runMixed
+          (fun i => PolicyMeasure.toMixedWithin (M := M) (updatedLaws i)
+            (closedSites i) (updatedFallback i)) horizon).toMeasure :=
+      M.runPolicyMeasure_eq_runMixedWithin updatedLaws closedSites
+        updatedFallback horizon hclosedCover
+    _ = (M.runMixed
+          (Profile.update (sig := M.strategicSignature.mixed)
+            (fun i => (behavioral i).toMixedWithin
+              (closedSites i) (fallback i)) who replacementMixed)
+          horizon).toMeasure :=
+      congrArg (fun profile => (M.runMixed profile horizon).toMeasure)
+        hfiniteProfile
+    _ = (M.runBehavioral
+          (Profile.update (sig := M.behavioralSignature) behavioral who
+            (InformationModel.MixedPolicy.toBehavioralWith
+              (M := M) replacementMixed replacementFallback))
+          horizon).toMeasure := congrArg _ hfiniteKuhn
+    _ = (M.runBehavioral
+          (Profile.update (sig := M.behavioralSignature) behavioral who
+            (PolicyMeasure.toBehavioralWith (M := M) replacement
+              replacementFallback)) horizon).toMeasure :=
+      congrArg _ hbehavioral
+
 /-- Expected value of a finite-prefix observable after independently drawing
 one total pure policy from each player's arbitrary policy measure. -/
 def policyMeasurePrefixExpectation [MeasurableSpace E.History]
@@ -1022,6 +1276,57 @@ theorem policyMeasurePrefixExpectation_eq_behavioralWith
   unfold policyMeasurePrefixExpectation behavioralPrefixExpectation
   rw [M.runPolicyMeasure_eq_runBehavioralWith hconstrain laws (sites time)
     fallback (time + 1) (hcover time)]
+
+/-- Every finite-prefix observable preserves the hybrid deviation with
+arbitrary policy-law opponents and a behavioral focal strategy. -/
+theorem policyMeasurePrefixExpectation_update_toPureMeasure_eq_behavioral_update
+    [DecidableEq ι] (hrecall : M.PerfectRecall)
+    (laws : Profile M.policyMeasureSignature)
+    [∀ i, IsProbabilityMeasure (laws i)]
+    [MeasurableSpace E.History]
+    (fallback : Profile M.strategicSignature) (who : ι)
+    (replacement : M.BehavioralPolicy who)
+    (sites : ℕ → (i : ι) → Finset (M.InfoState i))
+    (hcover : ∀ time,
+      M.CoversInformationSites (sites time) (time + 1))
+    (observable : ℕ → E.History → ℝ) (time : ℕ) :
+    M.policyMeasurePrefixExpectation
+        (Profile.update (sig := M.policyMeasureSignature)
+          laws who replacement.toPureMeasure) observable time =
+      M.behavioralPrefixExpectation
+        (Profile.update (sig := M.behavioralSignature)
+          (M.policyMeasureBehavioralWith laws fallback) who replacement)
+        observable time := by
+  unfold policyMeasurePrefixExpectation behavioralPrefixExpectation
+  rw [M.runPolicyMeasure_update_toPureMeasure_eq_runBehavioral_update
+    hrecall laws fallback who replacement (sites time) (time + 1)
+      (hcover time)]
+
+/-- Every finite-prefix observable preserves the reverse hybrid deviation with
+behavioral opponents and an arbitrary focal total-policy law. -/
+theorem policyMeasurePrefixExpectation_toPureMeasure_update_eq_behavioral_update
+    [DecidableEq ι] (hrecall : M.PerfectRecall)
+    (behavioral : Profile M.behavioralSignature)
+    [MeasurableSpace E.History]
+    (who : ι) (replacement : M.PolicyMeasure who)
+    [IsProbabilityMeasure replacement]
+    (replacementFallback : M.Policy who)
+    (sites : ℕ → (i : ι) → Finset (M.InfoState i))
+    (hcover : ∀ time,
+      M.CoversInformationSites (sites time) (time + 1))
+    (observable : ℕ → E.History → ℝ) (time : ℕ) :
+    M.policyMeasurePrefixExpectation
+        (Profile.update (sig := M.policyMeasureSignature)
+          (fun i => (behavioral i).toPureMeasure) who replacement)
+        observable time =
+      M.behavioralPrefixExpectation
+        (Profile.update (sig := M.behavioralSignature) behavioral who
+          (PolicyMeasure.toBehavioralWith (M := M) replacement
+            replacementFallback)) observable time := by
+  unfold policyMeasurePrefixExpectation behavioralPrefixExpectation
+  rw [M.runPolicyMeasure_toPureMeasure_update_eq_runBehavioral_update
+    hrecall behavioral who replacement replacementFallback (sites time)
+      (time + 1) (hcover time)]
 
 /-- Discounted payoff equality for the reverse infinite-policy-measure Kuhn
 law. The explicit summability premise separates the probabilistic equivalence
@@ -1053,6 +1358,100 @@ theorem normalizedDiscountedPolicyMeasure_eq_behavioralWith
     funext time
     exact M.policyMeasurePrefixExpectation_eq_behavioralWith hconstrain
       laws sites fallback hcover observable time
+  rw [hpointwise]
+  exact ⟨hsummable, rfl⟩
+
+/-- Summable discounted observables preserve the hybrid deviation with
+arbitrary policy-law opponents and a behavioral focal strategy. -/
+theorem normalizedDiscountedPolicyMeasure_update_toPureMeasure_eq_behavioral_update
+    [DecidableEq ι] (hrecall : M.PerfectRecall)
+    (laws : Profile M.policyMeasureSignature)
+    [∀ i, IsProbabilityMeasure (laws i)]
+    [MeasurableSpace E.History]
+    (fallback : Profile M.strategicSignature) (who : ι)
+    (replacement : M.BehavioralPolicy who)
+    (sites : ℕ → (i : ι) → Finset (M.InfoState i))
+    (hcover : ∀ time,
+      M.CoversInformationSites (sites time) (time + 1))
+    (observable : ℕ → E.History → ℝ) (discount : ℝ)
+    (hsummable : Summable fun time => discount ^ time *
+      M.behavioralPrefixExpectation
+        (Profile.update (sig := M.behavioralSignature)
+          (M.policyMeasureBehavioralWith laws fallback) who replacement)
+        observable time) :
+    Summable (fun time => discount ^ time *
+        M.policyMeasurePrefixExpectation
+          (Profile.update (sig := M.policyMeasureSignature)
+            laws who replacement.toPureMeasure) observable time) ∧
+      GameTheory.Math.normalizedDiscountedSum discount
+          (M.policyMeasurePrefixExpectation
+            (Profile.update (sig := M.policyMeasureSignature)
+              laws who replacement.toPureMeasure) observable) =
+        GameTheory.Math.normalizedDiscountedSum discount
+          (M.behavioralPrefixExpectation
+            (Profile.update (sig := M.behavioralSignature)
+              (M.policyMeasureBehavioralWith laws fallback) who replacement)
+            observable) := by
+  have hpointwise :
+      M.policyMeasurePrefixExpectation
+          (Profile.update (sig := M.policyMeasureSignature)
+            laws who replacement.toPureMeasure) observable =
+        M.behavioralPrefixExpectation
+          (Profile.update (sig := M.behavioralSignature)
+            (M.policyMeasureBehavioralWith laws fallback) who replacement)
+          observable := by
+    funext time
+    exact M.policyMeasurePrefixExpectation_update_toPureMeasure_eq_behavioral_update
+      hrecall laws fallback who replacement sites hcover observable time
+  rw [hpointwise]
+  exact ⟨hsummable, rfl⟩
+
+/-- Summable discounted observables preserve the reverse hybrid deviation with
+behavioral opponents and an arbitrary focal total-policy law. -/
+theorem normalizedDiscountedPolicyMeasure_toPureMeasure_update_eq_behavioral_update
+    [DecidableEq ι] (hrecall : M.PerfectRecall)
+    (behavioral : Profile M.behavioralSignature)
+    [MeasurableSpace E.History]
+    (who : ι) (replacement : M.PolicyMeasure who)
+    [IsProbabilityMeasure replacement]
+    (replacementFallback : M.Policy who)
+    (sites : ℕ → (i : ι) → Finset (M.InfoState i))
+    (hcover : ∀ time,
+      M.CoversInformationSites (sites time) (time + 1))
+    (observable : ℕ → E.History → ℝ) (discount : ℝ)
+    (hsummable : Summable fun time => discount ^ time *
+      M.behavioralPrefixExpectation
+        (Profile.update (sig := M.behavioralSignature) behavioral who
+          (PolicyMeasure.toBehavioralWith (M := M) replacement
+            replacementFallback)) observable time) :
+    Summable (fun time => discount ^ time *
+        M.policyMeasurePrefixExpectation
+          (Profile.update (sig := M.policyMeasureSignature)
+            (fun i => (behavioral i).toPureMeasure) who replacement)
+          observable time) ∧
+      GameTheory.Math.normalizedDiscountedSum discount
+          (M.policyMeasurePrefixExpectation
+            (Profile.update (sig := M.policyMeasureSignature)
+              (fun i => (behavioral i).toPureMeasure) who replacement)
+            observable) =
+        GameTheory.Math.normalizedDiscountedSum discount
+          (M.behavioralPrefixExpectation
+            (Profile.update (sig := M.behavioralSignature) behavioral who
+              (PolicyMeasure.toBehavioralWith (M := M) replacement
+                replacementFallback)) observable) := by
+  have hpointwise :
+      M.policyMeasurePrefixExpectation
+          (Profile.update (sig := M.policyMeasureSignature)
+            (fun i => (behavioral i).toPureMeasure) who replacement)
+          observable =
+        M.behavioralPrefixExpectation
+          (Profile.update (sig := M.behavioralSignature) behavioral who
+            (PolicyMeasure.toBehavioralWith (M := M) replacement
+              replacementFallback)) observable := by
+    funext time
+    exact M.policyMeasurePrefixExpectation_toPureMeasure_update_eq_behavioral_update
+      hrecall behavioral who replacement replacementFallback sites hcover
+        observable time
   rw [hpointwise]
   exact ⟨hsummable, rfl⟩
 

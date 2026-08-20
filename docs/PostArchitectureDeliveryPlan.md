@@ -88,8 +88,13 @@ EXP-118/D58 closes the reverse gate: independent arbitrary probability measures
 over total pure policies are conditioned on finite own-record cylinders to
 produce one behavioral profile preserving all covered prefixes, unilateral
 measure replacements, and discounted consequences. The reverse theorem needs
-no regularity premise. Correlated joint player laws and infinite-path outcome
-semantics remain separate.
+no regularity premise. EXP-119/D59 closes the two heterogeneous unilateral
+squares required by a Nash deviation quantifier: arbitrary policy-law
+opponents plus a behavioral focal deviation, and behavioral opponents plus an
+arbitrary policy-law focal deviation. Both preserve every prefix and summable
+discounted payoff without replacing the focal object by a round trip.
+Correlated joint player laws and infinite-path outcome semantics remain
+separate.
 
 ### C. Repeated public-monitoring breadth — core resolved
 

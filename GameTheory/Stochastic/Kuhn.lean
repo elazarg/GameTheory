@@ -727,6 +727,280 @@ theorem kuhn_arbitraryPolicyMeasure_update_allFinitePrefixes
   rw [G.publicHorizonForm_play, G.toBehaviorProfile_update,
     hbaseline, hreplacement]
 
+/-- **Hybrid unilateral stochastic Kuhn, behavioral deviation.** Opponents
+retain arbitrary laws over total certified public policies while the focal
+player uses an arbitrary behavioral public-policy deviation. -/
+theorem kuhn_arbitraryPolicyMeasure_opponents_behavioralDeviation_allFinitePrefixes
+    (initial : G.State)
+    [MeasurableSpace (G.toExecution initial).History]
+    (laws : G.ProtocolPolicyMeasureProfile initial)
+    [∀ i, IsProbabilityMeasure (laws i)]
+    (fallback : G.PurePublicProfile) (who : ι)
+    (replacement : G.PublicPolicy who) :
+    ∀ horizon,
+      G.protocolPolicyMeasureRun initial
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+            laws who
+              (G.toBehavioralPolicy initial replacement).toPureMeasure)
+          horizon =
+        ((G.publicHorizonForm initial horizon).play
+          (Profile.update
+            (G.policyMeasuresToPublicBehavioralWith initial laws fallback)
+            who replacement)).toMeasure := by
+  intro horizon
+  let protocolFallback : Profile
+      (G.perfectMonitoring initial).strategicSignature := fun i =>
+    (G.purePolicyEquiv initial i).symm (fallback i)
+  have hbaseline : G.toBehaviorProfile initial
+      (G.policyMeasuresToPublicBehavioralWith initial laws fallback) =
+      (G.perfectMonitoring initial).policyMeasureBehavioralWith laws
+        protocolFallback :=
+    G.toBehaviorProfile_ofBehaviorProfile initial _
+  unfold protocolPolicyMeasureRun
+  rw [(G.perfectMonitoring initial).runPolicyMeasure_update_toPureMeasure_eq_runBehavioral_update
+      (G.perfectMonitoring_perfectRecall initial) laws protocolFallback who
+      (G.toBehavioralPolicy initial replacement)
+      (G.boundedInformationSites initial horizon) horizon
+      (G.boundedInformationSites_cover initial horizon)]
+  rw [G.publicHorizonForm_play, G.toBehaviorProfile_update, hbaseline]
+
+/-- **Hybrid unilateral stochastic Kuhn, total-policy-law deviation.** Every
+opponent retains its original behavioral public policy while the focal player
+uses an arbitrary probability law over total certified public policies. -/
+theorem kuhn_behavioral_opponents_arbitraryPolicyMeasureDeviation_allFinitePrefixes
+    (initial : G.State)
+    [MeasurableSpace (G.toExecution initial).History]
+    (behavioral : G.PublicProfile initial) (who : ι)
+    (replacement : G.ProtocolPolicyMeasure initial who)
+    [IsProbabilityMeasure replacement]
+    (replacementFallback : G.PurePublicPolicy who) :
+    ∀ horizon,
+      G.protocolPolicyMeasureRun initial
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+            (fun i =>
+              (G.toBehavioralPolicy initial (behavioral i)).toPureMeasure)
+            who replacement) horizon =
+        ((G.publicHorizonForm initial horizon).play
+          (Profile.update behavioral who
+            (G.ofBehavioralPolicy initial
+              (Protocol.InformationModel.PolicyMeasure.toBehavioralWith
+                (M := G.perfectMonitoring initial) replacement
+                ((G.purePolicyEquiv initial who).symm
+                  replacementFallback))))).toMeasure := by
+  intro horizon
+  let protocolBehavioral := G.toBehaviorProfile initial behavioral
+  let protocolReplacementFallback :=
+    (G.purePolicyEquiv initial who).symm replacementFallback
+  have hreplacement : G.toBehavioralPolicy initial
+      (G.ofBehavioralPolicy initial
+        (Protocol.InformationModel.PolicyMeasure.toBehavioralWith
+          (M := G.perfectMonitoring initial) replacement
+          protocolReplacementFallback)) =
+      Protocol.InformationModel.PolicyMeasure.toBehavioralWith
+        (M := G.perfectMonitoring initial) replacement
+        protocolReplacementFallback :=
+    G.toBehavioralPolicy_ofBehavioralPolicy initial _
+  unfold protocolPolicyMeasureRun
+  show (G.perfectMonitoring initial).runPolicyMeasure
+      (Profile.update
+        (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+        (fun i => (protocolBehavioral i).toPureMeasure) who replacement)
+      horizon = _
+  rw [(G.perfectMonitoring initial).runPolicyMeasure_toPureMeasure_update_eq_runBehavioral_update
+      (G.perfectMonitoring_perfectRecall initial) protocolBehavioral who
+      replacement protocolReplacementFallback
+      (G.boundedInformationSites initial horizon) horizon
+      (G.boundedInformationSites_cover initial horizon)]
+  rw [G.publicHorizonForm_play, G.toBehaviorProfile_update, hreplacement]
+
+/-- Bounded discounted payoffs preserve arbitrary total-policy-law opponents
+and an unchanged behavioral focal deviation. -/
+theorem kuhn_arbitraryPolicyMeasure_opponents_behavioralDeviation_discountedPayoff
+    (initial : G.State)
+    [MeasurableSpace (G.toExecution initial).History]
+    {discount bound : ℝ} (hdiscount0 : 0 ≤ discount)
+    (hdiscount1 : discount < 1)
+    (laws : G.ProtocolPolicyMeasureProfile initial)
+    [∀ i, IsProbabilityMeasure (laws i)]
+    (fallback : G.PurePublicProfile) (who : ι)
+    (replacement : G.PublicPolicy who)
+    (hbound : ∀ state actions,
+      |G.stageUtility state actions who| ≤ bound) :
+    Summable (fun time => discount ^ time *
+        G.arbitraryPolicyMeasureStageExpectation initial
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+            laws who
+              (G.toBehavioralPolicy initial replacement).toPureMeasure)
+          who time) ∧
+      G.arbitraryPolicyMeasureDiscountedPayoff initial discount
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+            laws who
+              (G.toBehavioralPolicy initial replacement).toPureMeasure)
+          who =
+        G.behavioralDiscountedPayoff initial discount
+          (Profile.update
+            (G.policyMeasuresToPublicBehavioralWith initial laws fallback)
+            who replacement) who := by
+  let publicBehavioral := Profile.update
+    (G.policyMeasuresToPublicBehavioralWith initial laws fallback)
+    who replacement
+  let protocolFallback : Profile
+      (G.perfectMonitoring initial).strategicSignature := fun i =>
+    (G.purePolicyEquiv initial i).symm (fallback i)
+  let protocolReplacement := G.toBehavioralPolicy initial replacement
+  have hbaseline : G.toBehaviorProfile initial
+      (G.policyMeasuresToPublicBehavioralWith initial laws fallback) =
+      (G.perfectMonitoring initial).policyMeasureBehavioralWith laws
+        protocolFallback :=
+    G.toBehaviorProfile_ofBehaviorProfile initial _
+  have hprofile : G.toBehaviorProfile initial publicBehavioral =
+      Profile.update (sig := (G.perfectMonitoring initial).behavioralSignature)
+        ((G.perfectMonitoring initial).policyMeasureBehavioralWith laws
+          protocolFallback) who protocolReplacement := by
+    dsimp only [publicBehavioral]
+    rw [G.toBehaviorProfile_update, hbaseline]
+  have hsummablePublic :=
+    G.summable_discounted_behavioralStageExpectation initial
+      hdiscount0 hdiscount1 publicBehavioral who hbound
+  have hsummableProtocol : Summable fun time => discount ^ time *
+      (G.perfectMonitoring initial).behavioralPrefixExpectation
+        (Profile.update
+          (sig := (G.perfectMonitoring initial).behavioralSignature)
+          ((G.perfectMonitoring initial).policyMeasureBehavioralWith laws
+            protocolFallback) who protocolReplacement)
+        (fun _ => G.latestStageUtility initial who) time := by
+    simpa only [behavioralStageExpectation, hprofile] using hsummablePublic
+  have hresult :=
+    let protocolModel := G.perfectMonitoring initial
+    protocolModel.normalizedDiscountedPolicyMeasure_update_toPureMeasure_eq_behavioral_update
+      (G.perfectMonitoring_perfectRecall initial) laws protocolFallback who
+      protocolReplacement
+      (fun time => G.boundedInformationSites initial (time + 1))
+      (fun time => G.boundedInformationSites_cover initial (time + 1))
+      (fun _ => G.latestStageUtility initial who) discount hsummableProtocol
+  refine ⟨?_, ?_⟩
+  · simpa only [arbitraryPolicyMeasureStageExpectation,
+      protocolReplacement] using hresult.1
+  · unfold arbitraryPolicyMeasureDiscountedPayoff behavioralDiscountedPayoff
+    rw [show G.arbitraryPolicyMeasureStageExpectation initial
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+            laws who protocolReplacement.toPureMeasure) who =
+        (G.perfectMonitoring initial).policyMeasurePrefixExpectation
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+            laws who protocolReplacement.toPureMeasure)
+          (fun _ => G.latestStageUtility initial who) from rfl,
+      show G.behavioralStageExpectation initial publicBehavioral who =
+        (G.perfectMonitoring initial).behavioralPrefixExpectation
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).behavioralSignature)
+            ((G.perfectMonitoring initial).policyMeasureBehavioralWith laws
+              protocolFallback) who protocolReplacement)
+          (fun _ => G.latestStageUtility initial who) by
+      unfold behavioralStageExpectation
+      rw [hprofile]]
+    exact hresult.2
+
+/-- Bounded discounted payoffs preserve behavioral opponents and an unchanged
+arbitrary total-policy-law focal deviation. -/
+theorem kuhn_behavioral_opponents_arbitraryPolicyMeasureDeviation_discountedPayoff
+    (initial : G.State)
+    [MeasurableSpace (G.toExecution initial).History]
+    {discount bound : ℝ} (hdiscount0 : 0 ≤ discount)
+    (hdiscount1 : discount < 1)
+    (behavioral : G.PublicProfile initial) (who : ι)
+    (replacement : G.ProtocolPolicyMeasure initial who)
+    [IsProbabilityMeasure replacement]
+    (replacementFallback : G.PurePublicPolicy who)
+    (hbound : ∀ state actions,
+      |G.stageUtility state actions who| ≤ bound) :
+    Summable (fun time => discount ^ time *
+        G.arbitraryPolicyMeasureStageExpectation initial
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+            (fun i =>
+              (G.toBehavioralPolicy initial (behavioral i)).toPureMeasure)
+            who replacement) who time) ∧
+      G.arbitraryPolicyMeasureDiscountedPayoff initial discount
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+            (fun i =>
+              (G.toBehavioralPolicy initial (behavioral i)).toPureMeasure)
+            who replacement) who =
+        G.behavioralDiscountedPayoff initial discount
+          (Profile.update behavioral who
+            (G.ofBehavioralPolicy initial
+              (Protocol.InformationModel.PolicyMeasure.toBehavioralWith
+                (M := G.perfectMonitoring initial) replacement
+                ((G.purePolicyEquiv initial who).symm
+                  replacementFallback)))) who := by
+  let protocolBehavioral := G.toBehaviorProfile initial behavioral
+  let protocolReplacementFallback :=
+    (G.purePolicyEquiv initial who).symm replacementFallback
+  let protocolReplacement :=
+    Protocol.InformationModel.PolicyMeasure.toBehavioralWith
+      (M := G.perfectMonitoring initial) replacement
+      protocolReplacementFallback
+  let publicBehavioral := Profile.update behavioral who
+    (G.ofBehavioralPolicy initial protocolReplacement)
+  have hreplacement : G.toBehavioralPolicy initial
+      (G.ofBehavioralPolicy initial protocolReplacement) =
+        protocolReplacement :=
+    G.toBehavioralPolicy_ofBehavioralPolicy initial _
+  have hprofile : G.toBehaviorProfile initial publicBehavioral =
+      Profile.update (sig := (G.perfectMonitoring initial).behavioralSignature)
+        protocolBehavioral who protocolReplacement := by
+    dsimp only [publicBehavioral]
+    rw [G.toBehaviorProfile_update, hreplacement]
+  have hsummablePublic :=
+    G.summable_discounted_behavioralStageExpectation initial
+      hdiscount0 hdiscount1 publicBehavioral who hbound
+  have hsummableProtocol : Summable fun time => discount ^ time *
+      (G.perfectMonitoring initial).behavioralPrefixExpectation
+        (Profile.update
+          (sig := (G.perfectMonitoring initial).behavioralSignature)
+          protocolBehavioral who protocolReplacement)
+        (fun _ => G.latestStageUtility initial who) time := by
+    simpa only [behavioralStageExpectation, hprofile] using hsummablePublic
+  have hresult :=
+    let protocolModel := G.perfectMonitoring initial
+    protocolModel.normalizedDiscountedPolicyMeasure_toPureMeasure_update_eq_behavioral_update
+      (G.perfectMonitoring_perfectRecall initial) protocolBehavioral who
+      replacement protocolReplacementFallback
+      (fun time => G.boundedInformationSites initial (time + 1))
+      (fun time => G.boundedInformationSites_cover initial (time + 1))
+      (fun _ => G.latestStageUtility initial who) discount hsummableProtocol
+  refine ⟨?_, ?_⟩
+  · simpa only [arbitraryPolicyMeasureStageExpectation,
+      protocolBehavioral, toBehaviorProfile] using hresult.1
+  · unfold arbitraryPolicyMeasureDiscountedPayoff behavioralDiscountedPayoff
+    rw [show G.arbitraryPolicyMeasureStageExpectation initial
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+            (fun i => (G.toBehavioralPolicy initial
+              (behavioral i)).toPureMeasure) who replacement) who =
+        (G.perfectMonitoring initial).policyMeasurePrefixExpectation
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).policyMeasureSignature)
+            (fun i => (protocolBehavioral i).toPureMeasure)
+            who replacement)
+          (fun _ => G.latestStageUtility initial who) by
+        rfl,
+      show G.behavioralStageExpectation initial publicBehavioral who =
+        (G.perfectMonitoring initial).behavioralPrefixExpectation
+          (Profile.update
+            (sig := (G.perfectMonitoring initial).behavioralSignature)
+            protocolBehavioral who protocolReplacement)
+          (fun _ => G.latestStageUtility initial who) by
+      unfold behavioralStageExpectation
+      rw [hprofile]]
+    exact hresult.2
+
 /-- Discounted equality is stable under an arbitrary public behavioral
 deviation, with the same bounded stage-utility hypothesis. -/
 theorem kuhn_policyMeasure_update_discountedPayoff (initial : G.State)

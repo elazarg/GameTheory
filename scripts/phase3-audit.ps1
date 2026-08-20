@@ -301,8 +301,9 @@ if ($DeepReachability) {
   }
   Report 'PROTOCOL_ANALYSIS_PROBES_REJECTED' $protocolAnalysisRejected
 
-  # D57's ordinary product law is stable Protocol API, while EXP-108's path
-  # outcome measure remains behind the experimental boundary.
+  # D57--D59's ordinary policy-law and hybrid unilateral APIs are stable
+  # Protocol inputs, while EXP-108's path outcome measure remains behind the
+  # experimental boundary.
   $policyMeasureInputs = @(
     'GameTheory.Protocol.InformationModel.behavioralProfileMeasure',
     'GameTheory.Protocol.InformationModel.runPureMeasure_eq_runBehavioral',
@@ -311,7 +312,14 @@ if ($DeepReachability) {
     'GameTheory.Protocol.InformationModel.behavioralProfileMeasure_regular',
     'GameTheory.Protocol.InformationModel.runPolicyMeasure_eq_runBehavioralWith',
     'GameTheory.Protocol.InformationModel.runPolicyMeasure_update_eq_runBehavioral_update',
-    'GameTheory.Protocol.InformationModel.normalizedDiscountedPolicyMeasure_eq_behavioralWith')
+    'GameTheory.Protocol.InformationModel.normalizedDiscountedPolicyMeasure_eq_behavioralWith',
+    'GameTheory.Protocol.InformationModel.PolicyMeasure.toMixedWithin_toPureMeasure',
+    'GameTheory.Protocol.InformationModel.kuhn_mixed_update_toBehavioralWithinWith',
+    'GameTheory.Protocol.InformationModel.kuhn_behavioral_update_toMixedWithinWith',
+    'GameTheory.Protocol.InformationModel.runPolicyMeasure_update_toPureMeasure_eq_runBehavioral_update',
+    'GameTheory.Protocol.InformationModel.runPolicyMeasure_toPureMeasure_update_eq_runBehavioral_update',
+    'GameTheory.Protocol.InformationModel.normalizedDiscountedPolicyMeasure_update_toPureMeasure_eq_behavioral_update',
+    'GameTheory.Protocol.InformationModel.normalizedDiscountedPolicyMeasure_toPureMeasure_update_eq_behavioral_update')
   $experimentalPathMeasure =
     'GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure.Game.infinitePlayMeasure'
   $policyMeasureOutput = Run-Probe 'GameTheory.Protocol' `
@@ -628,7 +636,7 @@ if ($VerifyExpected) {
     $Expected['REPEATED_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_INPUT_PROBES_REACHED'] = 2
     $Expected['PROTOCOL_ANALYSIS_PROBES_REJECTED'] = 2
-    $Expected['POLICY_MEASURE_INPUT_PROBES_REACHED'] = 8
+    $Expected['POLICY_MEASURE_INPUT_PROBES_REACHED'] = 15
     $Expected['POLICY_MEASURE_PATH_BOUNDARY_REJECTED'] = 1
     $Expected['PROTOCOL_EPISTEMIC_PROBES_REJECTED'] = 2
     $Expected['PROTOCOL_EVOLUTIONARY_PROBES_REJECTED'] = 2

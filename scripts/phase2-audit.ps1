@@ -1688,7 +1688,7 @@ if ($DeepReachability) {
   Report 'TREMBLING_ANALYSIS_BOUNDARY_PROBES_REJECTED' `
     $tremblingAnalysisBoundaryRejected
 
-  # D22, D23, D39, and D57 keep the stable stochastic root
+  # D22, D23, D39, and D57--D59 keep the stable stochastic root
   # analysis-light. It must positively reach the four semantic layers,
   # canonical approximate Nash, and the structural zero-sum surface, while
   # rejecting Repeated and both analytic fixed-point routes.
@@ -1706,7 +1706,11 @@ if ($DeepReachability) {
     'GameTheory.Stochastic.Game.kuhn_policyMeasure_discountedPayoff',
     'GameTheory.Stochastic.Game.kuhn_arbitraryPolicyMeasure_allFinitePrefixes',
     'GameTheory.Stochastic.Game.kuhn_arbitraryPolicyMeasure_update_allFinitePrefixes',
-    'GameTheory.Stochastic.Game.kuhn_arbitraryPolicyMeasure_discountedPayoff')
+    'GameTheory.Stochastic.Game.kuhn_arbitraryPolicyMeasure_discountedPayoff',
+    'GameTheory.Stochastic.Game.kuhn_arbitraryPolicyMeasure_opponents_behavioralDeviation_allFinitePrefixes',
+    'GameTheory.Stochastic.Game.kuhn_behavioral_opponents_arbitraryPolicyMeasureDeviation_allFinitePrefixes',
+    'GameTheory.Stochastic.Game.kuhn_arbitraryPolicyMeasure_opponents_behavioralDeviation_discountedPayoff',
+    'GameTheory.Stochastic.Game.kuhn_behavioral_opponents_arbitraryPolicyMeasureDeviation_discountedPayoff')
   $stochasticBoundary = @(
     'GameTheory.UtilityGame.repeatedForm',
     'GameTheory.Stochastic.Game.shapleyOperator',
@@ -1912,7 +1916,7 @@ if ($VerifyExpected) {
     $Expected['TREMBLING_CORE_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['TREMBLING_ANALYSIS_INPUT_PROBES_REACHED'] = 5
     $Expected['TREMBLING_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 4
-    $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 14
+    $Expected['STOCHASTIC_INPUT_PROBES_REACHED'] = 18
     $Expected['STOCHASTIC_BOUNDARY_PROBES_REJECTED'] = 5
     $Expected['STOCHASTIC_ANALYSIS_INPUT_PROBES_REACHED'] = 11
     $Expected['STOCHASTIC_ANALYSIS_BOUNDARY_PROBES_REJECTED'] = 2

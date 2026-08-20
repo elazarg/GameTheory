@@ -854,8 +854,14 @@ EXP-118/D58 subsequently supplies that reverse layer more generally for every
 independent per-player probability measure: finite own-record cylinder
 conditioning defines one behavioral profile, and finite closure of bounded
 covers proves all prefix, unilateral-measure-replacement, and discounted laws.
-No regularity or disintegration premise is needed. Correlated joint player laws
-still require an additional public correlating device. A bare execution
+No regularity or disintegration premise is needed. EXP-119/D59 closes the
+remaining heterogeneous unilateral squares needed by the Nash deviation
+quantifier: arbitrary policy-law opponents may be held fixed under a
+behavioral focal deviation, and behavioral opponents may be held fixed under
+an arbitrary policy-law focal deviation. The corresponding all-prefix and
+summable discounted laws preserve the focal object literally, rather than only
+up to a homogeneous round trip. Correlated joint player laws still require an
+additional public correlating device. A bare execution
 protocol also compiles state-indexed policies to a
 perfect-information or controller-supplied `GameForm`.
 
@@ -1522,7 +1528,11 @@ EXP-118/D58 adds the converse thin bridge: arbitrary independent pure-policy
 probability measures have one perfect-recall behavioral conditional reading
 with the same finite-prefix, unilateral replacement, and bounded discounted
 laws. It does not identify arbitrary correlated joint player laws with
-ordinary behavioral profiles.
+ordinary behavioral profiles. EXP-119/D59 adds both hybrid unilateral forms,
+holding arbitrary policy-law opponents fixed under behavioral deviation and
+holding behavioral opponents fixed under arbitrary policy-law deviation.
+These are the exact law equalities required to transport the deviation
+quantifier; no stochastic-specific equilibrium predicate is introduced.
 
 EXP-051/D23 closes the mature discounted-value gate without reversing that
 dependency. `GameTheory.Stochastic.ZeroSum` adds only pointwise zero-sum data
@@ -1879,7 +1889,9 @@ infinite-product law over total pure policies and derives all finite-prefix and
 bounded discounted Kuhn consequences without turning that law into a path
 semantics. EXP-118/D58 admits the reverse arbitrary-policy-measure reading by
 finite own-record conditioning, again without adding path semantics or a
-correlated-strategy device.
+correlated-strategy device. EXP-119/D59 completes the heterogeneous unilateral
+squares and their discounted consequences without adding a third strategy or
+equilibrium layer.
 
 The RFC continues to govern architecture and disproof conditions. Mutable
 delivery order, obligation status, mature missing subfields, and the isolated

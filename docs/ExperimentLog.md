@@ -124,6 +124,7 @@ becomes difficult to scan.
 | EXP-116 | 2026-08-20 | D6/D22 / bounded stochastic Kuhn | Can finite counterfactual site coverage strengthen EXP-115 to updated-law and Nash transfer for bounded perfect-monitoring stochastic play without `Fintype PublicHistory`? | Complete; supports and promoted | `GameTheory/Protocol/{Information,Strategic}.lean`; `GameTheory/Stochastic/{History,Kuhn}.lean`; `GameTheory/Experimental/PostArchitecture/StochasticKuhn.lean` |
 | EXP-117 | 2026-08-20 | D6/D22/D57 / infinite-policy Kuhn | Can one regular probability law over pure policies reproduce every finite-prefix behavioral and unilateral-deviation law and hence discounted payoff, without misusing `FinDist` or the behavioral path measure? | Complete; supports and promoted | `GameTheory/Math/Probability/Measure.lean`; `GameTheory/Protocol/PolicyMeasure.lean`; `GameTheory/Stochastic/Kuhn.lean`; hostile infinite-carrier discounted consumer |
 | EXP-118 | 2026-08-20 | D6/D22/D58 / reverse infinite-policy Kuhn | Can independent regular probability laws over total pure policies be read as one behavioral profile preserving every finite-prefix, unilateral-deviation, and discounted law under perfect recall? | Complete; supports and promoted | finite discrete measure bridge; own-record cylinder conditioning; hostile correlated within-policy law on infinite public histories |
+| EXP-119 | 2026-08-20 | D6/D22/D59 / hybrid infinite-policy Kuhn | Do the two infinite-policy directions preserve heterogeneous unilateral deviations strongly enough to transport the Nash deviation quantifier? | Complete; supports and promoted | Protocol hybrid update/discounted laws; stochastic corollaries; two-player hostile infinite-history consumer |
 
 ## Entry template
 
@@ -7514,3 +7515,58 @@ memory.
   arbitrary-policy-measure layer at Protocol and its thin stochastic
   specialization. No kill condition fired. Keep general correlated joint
   player laws and infinite-path outcome semantics outside this API.
+
+### EXP-119: hybrid unilateral infinite-policy Kuhn
+
+- **Date / revision:** 2026-08-20, reservation after `e6cdb3ad`
+- **Status:** complete; supports D59 and the promoted stable API
+- **Decision / question:** whether the forward and reverse total-policy-law
+  constructions preserve both heterogeneous unilateral deviation forms:
+  arbitrary policy-law opponents with a behavioral focal deviation, and
+  behavioral opponents with an arbitrary policy-law focal deviation.
+- **Representative slice:** a perfect-monitoring stochastic game on countably
+  infinite public histories, using a within-policy correlated law on one side
+  and an off-baseline behavioral deviation on the other.
+- **Competing designs:** expose explicit hybrid run-law theorems; rely on the
+  homogeneous update theorems and an implicit round trip; or introduce a new
+  equilibrium predicate over measures. Prefer explicit laws derived through
+  the existing bounded mixed/behavioral unilateral correspondence.
+- **Measurements:** exact preservation of the focal strategy in both
+  directions; opponent profile preservation; one measure/behavioral object
+  before the horizon quantifier; arbitrary finite-prefix horizon; stochastic
+  specialization; source hazards; focused/full builds; architecture audits;
+  and axiom profile.
+- **Kill conditions:** replacing the quantified focal deviation by its
+  behavioral or policy-law round trip; assuming global information-state
+  finiteness; weakening counterfactual coverage to baseline support; a second
+  runner or equilibrium predicate; placeholder; visible transport; or an API
+  that proves only homogeneous profile updates.
+- **Observations / measurements:** a behavioral product law restricted to any
+  finite site set converts exactly to the existing `toMixedWithin` predraw.
+  Fixed-fallback finite round-trip and unilateral theorems retain the one
+  horizon-independent conditional reading of arbitrary opponent laws. Record
+  closure then lets both heterogeneous measure profiles factor through the
+  existing bounded mixed runner while preserving the original focal object
+  literally. Both all-prefix laws extend pointwise to prefix expectations and,
+  under summability, normalized discounted payoffs. The two-player hostile
+  game keeps a real opponent, uses a correlated within-policy law, and consumes
+  both all-prefix and both bounded discounted directions.
+- **Artifacts / commands:** `GameTheory/Protocol/{Information,Strategic,
+  PolicyMeasure}.lean`; `GameTheory/Stochastic/Kuhn.lean`;
+  `GameTheory/Experimental/PostArchitecture/StochasticHybridInfiniteKuhn.lean`;
+  `docs/decisions/D59-hybrid-unilateral-infinite-kuhn.md`. Focused builds
+  compiled 1,717 jobs for Information, 1,720 for Strategic, 3,001 for Protocol
+  policy measures, 3,018 for stochastic Kuhn, and 3,019 for the hostile
+  consumer. The full default target passed all 3,997 jobs. Standard and deep
+  Phase 2 and Phase 3 audits all reported `VERIFIED=1`; stable roots reached
+  all 15 Protocol policy-measure probes and all 18 stochastic probes while
+  rejecting the experimental path measure. Source audits report zero raw
+  updates, forbidden transports, `Fintype.ofFinite`, placeholders, or custom
+  axioms. Twelve representative axiom prints use only `propext`,
+  `Classical.choice`, and `Quot.sound`.
+- **Outcome / next action:** support and adopt D59. Promote both hybrid
+  all-prefix and discounted unilateral squares at Protocol, plus thin
+  perfect-monitoring stochastic corollaries. No kill condition fired. These
+  laws now support transport of the Nash deviation quantifier without adding
+  another equilibrium predicate. Keep correlated joint player laws and
+  infinite-path outcome semantics outside this API.
