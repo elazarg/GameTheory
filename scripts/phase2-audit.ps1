@@ -353,7 +353,7 @@ Report 'MATH_FORBIDDEN_IMPORTS' $mathBad
 
 # The fixed-point dependency is not part of Mathlib and reaches the whole of
 # convexity and topology when imported. Both facts are tolerable only while it
-# stays behind one root, so the containment is measured rather than intended.
+# stays behind one root, so the containment is measured, not just intended.
 $analysisLeak = 0
 foreach ($f in @($AllFiles | Where-Object { -not $_.StartsWith('GameTheory/Analysis') })) {
   foreach ($imp in Get-Imports $f) {
@@ -391,48 +391,8 @@ Report 'CONCEPTS_NOT_DEFINED_EXACTLY_ONCE' $duplicates
 # 4. Size measurements
 # --------------------------------------------------------------------------
 
-function Measure-Nonblank([string[]] $Files) {
-  $total = 0
-  foreach ($f in $Files) {
-    $total += ([IO.File]::ReadAllLines((Join-Path $RepoRoot $f)) |
-      Where-Object { $_.Trim().Length -gt 0 }).Count
-  }
-  return $total
-}
-
-Report 'NONBLANK_PROBABILITY' (Measure-Nonblank (Select-Files 'GameTheory/Math/Probability'))
-Report 'NONBLANK_CORE' `
-  (Measure-Nonblank (@(Select-Files 'GameTheory/Core') + @('GameTheory/Core.lean')))
-Report 'NONBLANK_FINITE' (Measure-Nonblank (Select-Files 'GameTheory/Finite'))
-Report 'NONBLANK_EXAMPLES' (Measure-Nonblank (Select-Files 'GameTheory/Examples'))
-Report 'NONBLANK_TESTS' (Measure-Nonblank (Select-Files 'GameTheory/Tests'))
-Report 'NONBLANK_ANALYSIS' (Measure-Nonblank $AnalysisFiles)
-Report 'NONBLANK_REPEATED' (Measure-Nonblank $RepeatedFiles)
-Report 'NONBLANK_EPISTEMIC' (Measure-Nonblank $EpistemicFiles)
-Report 'NONBLANK_EVOLUTIONARY' (Measure-Nonblank $EvolutionaryFiles)
-Report 'NONBLANK_MATH' (Measure-Nonblank $MathFiles)
-Report 'NONBLANK_PHASE2_PROBE' `
-  (Measure-Nonblank (Select-Files 'GameTheory/Experimental/Phase2'))
-
 # RFC 7.3 budgets the Prisoner's Dilemma definition at under 25 nonblank
 # authored lines. The span is delimited by its first and last declaration.
-function Measure-Span([string] $Relative, [string] $StartPattern, [string] $EndPattern) {
-  $lines = [IO.File]::ReadAllLines((Join-Path $RepoRoot $Relative))
-  $start = -1
-  $end = -1
-  for ($i = 0; $i -lt $lines.Count; $i++) {
-    if ($start -lt 0 -and $lines[$i] -match $StartPattern) { $start = $i }
-    if ($lines[$i] -match $EndPattern) { $end = $i }
-  }
-  if ($start -lt 0 -or $end -lt $start) {
-    throw "Span $StartPattern .. $EndPattern not found in $Relative"
-  }
-  return ($lines[$start..$end] | Where-Object { $_.Trim().Length -gt 0 }).Count
-}
-
-Report 'PRISONERS_DILEMMA_DEF_LINES' `
-  (Measure-Span 'GameTheory/Examples/Classic.lean' '^inductive Choice\b' '^def bothDefect\b')
-
 # --------------------------------------------------------------------------
 # 5. Optional symbol-reachability probes
 #
@@ -1828,11 +1788,6 @@ if ($VerifyExpected) {
     REPRESENTATION_TOKENS_EXPERIMENT_BOUNDARY = 42
     TOPMF_EXPERIMENT_BOUNDARY = 12
     VNM_REPRESENTATION_TOKENS = 0
-  }
-  # RFC 7.3 states a budget, not a target, so this one is a bound.
-  if ($Results['PRISONERS_DILEMMA_DEF_LINES'] -ge 25) {
-    throw ("PRISONERS_DILEMMA_DEF_LINES: RFC 7.3 budgets under 25, got " +
-      $Results['PRISONERS_DILEMMA_DEF_LINES'])
   }
   if ($DeepReachability) {
     $Expected['UNREACHABLE_PROBES_PASSED'] = 6

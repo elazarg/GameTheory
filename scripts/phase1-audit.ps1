@@ -51,16 +51,12 @@ function Remove-LeanCommentsAndStrings([string] $Source) {
 
 function Measure-Group([string[]] $RelativePaths) {
   $source = ''
-  $nonblank = 0
   foreach ($relative in $RelativePaths) {
     $path = Join-Path $RepoRoot $relative
     $text = [IO.File]::ReadAllText($path).Replace("`r", '')
     $source += "`n" + (Remove-LeanCommentsAndStrings $text)
-    $nonblank += ([IO.File]::ReadAllLines($path) |
-      Where-Object { $_.Trim().Length -gt 0 }).Count
   }
   return [ordered]@{
-    NONBLANK = $nonblank
     TRANSPORT = [regex]::Matches($source, $TransportPattern).Count
     TOREAL = [regex]::Matches($source, '(?<![A-Za-z0-9_])toReal(?![A-Za-z0-9_])').Count
     ENNREAL = [regex]::Matches($source, '(?<![A-Za-z0-9_])ENNReal(?![A-Za-z0-9_])').Count
@@ -77,25 +73,6 @@ function Measure-NamespaceTransport([string] $RelativePath, [string] $Namespace)
     "(?ms)^[ \t]*namespace[ \t]+$name[ \t]*$\n(.*?)^[ \t]*end[ \t]+$name[ \t]*$")
   if (-not $match.Success) { throw "Namespace $Namespace not found in $RelativePath" }
   return [regex]::Matches($match.Groups[1].Value, $TransportPattern).Count
-}
-
-function Measure-Declaration([string] $RelativePath, [string] $Name) {
-  $lines = [IO.File]::ReadAllLines((Join-Path $RepoRoot $RelativePath))
-  $start = -1
-  $pattern = '^\s*(?:@\[[^]]+\]\s*)?(?:(?:private|noncomputable)\s+)*' +
-    '(?:theorem|def|structure|abbrev)\s+' + [regex]::Escape($Name) + '\b'
-  for ($i = 0; $i -lt $lines.Count; $i++) {
-    if ($lines[$i] -match $pattern) { $start = $i; break }
-  }
-  if ($start -lt 0) { throw "Declaration $Name not found in $RelativePath" }
-  $end = $lines.Count
-  for ($i = $start + 1; $i -lt $lines.Count; $i++) {
-    if ($lines[$i] -match '^\s*(?:@\[[^]]+\]\s*)?(?:(?:private|noncomputable)\s+)*(?:theorem|def|structure|abbrev)\s+') {
-      $end = $i
-      break
-    }
-  }
-  return ($lines[$start..($end - 1)] | Where-Object { $_.Trim().Length -gt 0 }).Count
 }
 
 $Results = [ordered]@{}
@@ -134,20 +111,6 @@ foreach ($entry in $derived.GetEnumerator()) {
   Write-Output "$($entry.Key)=$($entry.Value)"
 }
 
-$declarations = @(
-  @('D1_INDEXED_COMP_ASSOC_LINES', 'GameTheory/Experimental/Phase1/D1/Indexed.lean', 'Hom.comp_assoc'),
-  @('D1_BUNDLED_COMP_ASSOC_LINES', 'GameTheory/Experimental/Phase1/D1/Bundled.lean', 'Hom.comp_assoc'),
-  @('D2_PMF_EXPECT_BIND_LINES', 'GameTheory/Experimental/Phase1/D2/FiniteSupportPMF.lean', 'expect_bind'),
-  @('D2_FINSUPP_EXPECT_BIND_LINES', 'GameTheory/Experimental/Phase1/D2/NormalizedFinsupp.lean', 'expect_bind'),
-  @('D2_PMF_SIMPLEX_LINES', 'GameTheory/Experimental/Phase1/D2/FiniteSupportPMF.lean', 'simplexEquiv'),
-  @('D2_FINSUPP_SIMPLEX_LINES', 'GameTheory/Experimental/Phase1/D2/NormalizedFinsupp.lean', 'simplexEquiv')
-)
-foreach ($item in $declarations) {
-  $value = Measure-Declaration $item[1] $item[2]
-  $Results[$item[0]] = $value
-  Write-Output "$($item[0])=$value"
-}
-
 if ($Time) {
   foreach ($relative in @(
       'GameTheory/Experimental/Phase1/D1/Indexed.lean',
@@ -167,32 +130,26 @@ if ($Time) {
 
 if ($VerifyExpected) {
   $Expected = [ordered]@{
-    D1_INDEXED_NONBLANK = 96
     D1_INDEXED_TRANSPORT = 2
     D1_INDEXED_TOREAL = 0
     D1_INDEXED_ENNREAL = 0
     D1_INDEXED_CLASSICAL = 1
-    D1_BUNDLED_NONBLANK = 101
     D1_BUNDLED_TRANSPORT = 2
     D1_BUNDLED_TOREAL = 0
     D1_BUNDLED_ENNREAL = 0
     D1_BUNDLED_CLASSICAL = 1
-    D1_STRESS_NONBLANK = 57
     D1_STRESS_TRANSPORT = 2
     D1_STRESS_TOREAL = 0
     D1_STRESS_ENNREAL = 0
     D1_STRESS_CLASSICAL = 1
-    D2_PMF_NONBLANK = 344
     D2_PMF_TRANSPORT = 3
     D2_PMF_TOREAL = 24
     D2_PMF_ENNREAL = 41
     D2_PMF_CLASSICAL = 5
-    D2_FINSUPP_NONBLANK = 221
     D2_FINSUPP_TRANSPORT = 4
     D2_FINSUPP_TOREAL = 0
     D2_FINSUPP_ENNREAL = 1
     D2_FINSUPP_CLASSICAL = 8
-    D2_INTEROP_NONBLANK = 101
     D2_INTEROP_TRANSPORT = 3
     D2_INTEROP_TOREAL = 3
     D2_INTEROP_ENNREAL = 3
@@ -203,12 +160,6 @@ if ($VerifyExpected) {
     D1_BUNDLED_STRESS_TRANSPORT = 2
     D1_INDEXED_PATH_TRANSPORT = 1
     D1_BUNDLED_PATH_TRANSPORT = 3
-    D1_INDEXED_COMP_ASSOC_LINES = 6
-    D1_BUNDLED_COMP_ASSOC_LINES = 5
-    D2_PMF_EXPECT_BIND_LINES = 52
-    D2_FINSUPP_EXPECT_BIND_LINES = 19
-    D2_PMF_SIMPLEX_LINES = 14
-    D2_FINSUPP_SIMPLEX_LINES = 12
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

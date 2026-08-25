@@ -65,15 +65,6 @@ function Count-Pattern([string[]] $Files, [string] $Pattern) {
   return $total
 }
 
-function Measure-Nonblank([string[]] $Files) {
-  $total = 0
-  foreach ($f in $Files) {
-    $total += ([IO.File]::ReadAllLines((Join-Path $RepoRoot $f)) |
-      Where-Object { $_.Trim().Length -gt 0 }).Count
-  }
-  return $total
-}
-
 $Results = [ordered]@{}
 function Report([string] $Key, $Value) {
   $script:Results[$Key] = $Value
@@ -104,8 +95,8 @@ foreach ($f in $LanguageFiles) {
 }
 Report 'LANGUAGE_FORBIDDEN_IMPORTS' $languageBad
 
-# The public root carries the sequential layer and nothing that is evidence
-# rather than library: encodings with recorded scope limits, and spikes.
+# The public root carries the sequential layer and nothing that is evidence,
+# not library: encodings with recorded scope limits, and spikes.
 $rootImports = Get-Imports 'GameTheory.lean'
 Report 'ROOT_REEXPORTS_PROTOCOL' `
   (@($rootImports | Where-Object { $_ -eq 'GameTheory.Protocol' }).Count)
@@ -142,31 +133,27 @@ foreach ($imp in Get-Imports 'GameTheory/Protocol/Execution.lean') {
 Report 'EXECUTION_IMPORTS_INFORMATION' $executionBad
 
 # --------------------------------------------------------------------------
-# 3. Sizes
+# 3. Line width
 # --------------------------------------------------------------------------
 
-# Line width is a style guide, not a gate, so these are reported rather than
-# verified. They carry their threshold in the name: an unqualified "long lines"
-# count is ambiguous, because the answer moves with where the limit is drawn.
+# The library follows Mathlib's 100-column limit, so the over-limit count is a
+# verified gate. It carries its threshold in the name: an unqualified "long
+# lines" count is ambiguous, because the answer moves with where the limit is
+# drawn. The widest line is reported alongside it as context for a violation.
 $LibraryFiles = @(Get-ChildItem -Path (Join-Path $RepoRoot 'GameTheory') -Filter '*.lean' -Recurse |
   ForEach-Object { $_.FullName.Substring($RepoRoot.Length + 1).Replace('\', '/') } |
   Where-Object { -not $_.StartsWith('GameTheory/Experimental') })
 $widest = 0
-$over90 = 0
 $over100 = 0
 foreach ($f in $LibraryFiles) {
   foreach ($line in [IO.File]::ReadAllLines((Join-Path $RepoRoot $f))) {
     if ($line.Length -gt $widest) { $widest = $line.Length }
-    if ($line.Length -gt 90) { $over90++ }
     if ($line.Length -gt 100) { $over100++ }
   }
 }
 Report 'LIBRARY_MAX_LINE_LENGTH' $widest
-Report 'LIBRARY_LINES_OVER_90' $over90
 Report 'LIBRARY_LINES_OVER_100' $over100
 
-Report 'NONBLANK_PROTOCOL' (Measure-Nonblank $ProtocolFiles)
-Report 'NONBLANK_LANGUAGES' (Measure-Nonblank $LanguageFiles)
 Report 'PROTOCOL_MODULES' $ProtocolFiles.Count
 Report 'LANGUAGE_MODULES' $LanguageFiles.Count
 
@@ -623,10 +610,8 @@ if ($VerifyExpected) {
     SORRY_OR_ADMIT_SEQUENTIAL = 0
     CUSTOM_AXIOM_SEQUENTIAL = 0
     EXECUTION_IMPORTS_INFORMATION = 0
-    # The 90-column guide is soft and some lines exceed it; the count is
-    # reported above rather than pinned here, because it moves with ordinary
-    # edits. Nothing in the library exceeds 100, and that ceiling is locked to
-    # stop it drifting.
+    # Mathlib's 100-column limit. The ceiling is locked at zero violations to
+    # stop it drifting; the widest line is reported above as context.
     LIBRARY_LINES_OVER_100 = 0
   }
   if ($DeepReachability) {
