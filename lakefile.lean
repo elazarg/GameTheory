@@ -16,7 +16,13 @@ abbrev gameTheoryLeanOptions : Array LeanOption := #[
 
 package GameTheory where
   version := v!"0.1.0"
+  description :=
+    "Formalized game theory: static forms, sequential execution protocols, \
+    information models, mechanisms, and the standard equilibrium concepts."
   keywords := #["math", "game-theory"]
+  homepage := "https://github.com/elazarg/GameTheory"
+  license := "Apache-2.0"
+  licenseFiles := #["LICENSE", "NOTICE"]
   fixedToolchain := true
 
 require "leanprover-community" / "mathlib" @ git "v4.33.1"

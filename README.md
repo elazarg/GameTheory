@@ -143,4 +143,4 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 
 The architecture and contribution rules are documented in
 [`docs/GameTheory2Design.md`](docs/GameTheory2Design.md) and [`AGENTS.md`](AGENTS.md).
-The project is licensed under the [MIT License](LICENSE).
+The project is licensed under the [Apache License 2.0](LICENSE).
