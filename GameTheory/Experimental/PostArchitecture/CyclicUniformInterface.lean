@@ -84,7 +84,7 @@ private theorem unitAction_profile_update_eq
     (profile : G.BehaviorProfile initial) (who : ι)
     (replacement : (G.perfectMonitoring initial).BehavioralPolicy who) :
     Profile.update profile who replacement = profile := by
-  letI : Subsingleton ((G.perfectMonitoring initial).BehavioralPolicy who) :=
+  let : Subsingleton ((G.perfectMonitoring initial).BehavioralPolicy who) :=
     behavioralPolicy_subsingleton G initial who
   rw [show replacement = profile who from
     Subsingleton.elim _ _]

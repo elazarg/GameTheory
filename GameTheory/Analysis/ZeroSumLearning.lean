@@ -127,7 +127,6 @@ theorem expectedPayoff_eq_expect_rows {I J : Type u} (A : I → J → ℝ)
   apply FinDist.expect_congr
   intro current _
   rw [mixedProfile_update_zero]
-  rfl
 
 /-- Matrix payoff is affine in the column law. -/
 theorem expectedPayoff_eq_expect_columns {I J : Type u} (A : I → J → ℝ)
@@ -148,7 +147,6 @@ theorem expectedPayoff_eq_expect_columns {I J : Type u} (A : I → J → ℝ)
   apply FinDist.expect_congr
   intro current _
   rw [mixedProfile_update_one]
-  rfl
 
 /-- Expected payoff of a separable zero-sum matrix is the difference of the
 two marginal expectations. -/

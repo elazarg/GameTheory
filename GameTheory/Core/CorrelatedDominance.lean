@@ -55,7 +55,7 @@ theorem IsCorrelatedEq.conditional_obedience
     hrecommended hglobal (by
       intro profile _ hnot
       have hne : profile who ≠ recommended := by
-        simpa only [Set.mem_setOf_eq] using hnot
+        simpa only [Set.mem_ofPred_eq] using hnot
       simp [respond, hne, Profile.update_eq_self])
   have hdeviation :
       (law.condOn {profile | profile who = recommended} hrecommended).expect
@@ -70,7 +70,7 @@ theorem IsCorrelatedEq.conditional_obedience
       (FinDist.support_condOn law {profile | profile who = recommended}
         hrecommended hprofile).1
     have hreco' : profile who = recommended := by
-      simpa only [Set.mem_setOf_eq] using hreco
+      simpa only [Set.mem_ofPred_eq] using hreco
     simp [respond, hreco']
   rwa [hdeviation] at hconditional
 
@@ -132,7 +132,7 @@ theorem isCorrelatedEq_iff_conditional_obedience
           (FinDist.support_condOn law {profile | profile who = witness who}
             hrecommended hprofile).1
         have hrecommended' : profile who = witness who := by
-          simpa only [Set.mem_setOf_eq] using hrecommended
+          simpa only [Set.mem_ofPred_eq] using hrecommended
         rw [hrecommended']
       _ ≤ (law.condOn {profile | profile who = witness who} hrecommended).expect
             (fun profile => expectedUtility utility who (F.play profile)) :=

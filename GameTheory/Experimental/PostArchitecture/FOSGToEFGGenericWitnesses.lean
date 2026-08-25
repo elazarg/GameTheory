@@ -88,7 +88,7 @@ theorem later_view_hides_hidden_activity
           (Source.round2History left right publicBit true)).advance
             (by simp [trueFirst])
             ⟨some false, by
-              exact ⟨by simp [Source.round2History, Source.active],
+              exact ⟨by simp [Source.active],
                 Set.mem_univ _⟩⟩))).source := by
   simpa only [FOSGToEFG.viewOfState, FOSGToEFG.State.history] using
     Source.false_does_not_observe_hidden_activity left right publicBit

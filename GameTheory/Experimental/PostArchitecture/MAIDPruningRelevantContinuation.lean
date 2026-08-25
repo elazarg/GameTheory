@@ -70,7 +70,7 @@ private theorem conditionallyIndependent_map_equiv
           (secondEquiv.symm secondValue)
           (evidenceEquiv.symm evidenceValue) := by
     ext omega
-    simp only [tripleAtom, Set.mem_setOf_eq, Function.comp_apply]
+    simp only [tripleAtom, Set.mem_ofPred_eq, Function.comp_apply]
     constructor
     · rintro ⟨hfirst, hsecond, hevidence⟩
       exact ⟨by simpa using congrArg firstEquiv.symm hfirst,
@@ -84,7 +84,7 @@ private theorem conditionallyIndependent_map_equiv
       atom (evidenceEquiv ∘ evidence) evidenceValue =
         atom evidence (evidenceEquiv.symm evidenceValue) := by
     ext omega
-    simp only [atom, Set.mem_setOf_eq, Function.comp_apply]
+    simp only [atom, Set.mem_ofPred_eq, Function.comp_apply]
     constructor
     · exact fun heq => by simpa using congrArg evidenceEquiv.symm heq
     · exact fun heq => by simpa using congrArg evidenceEquiv heq
@@ -94,7 +94,7 @@ private theorem conditionallyIndependent_map_equiv
         pairAtom first evidence (firstEquiv.symm firstValue)
           (evidenceEquiv.symm evidenceValue) := by
     ext omega
-    simp only [pairAtom, Set.mem_setOf_eq, Function.comp_apply]
+    simp only [pairAtom, Set.mem_ofPred_eq, Function.comp_apply]
     constructor
     · rintro ⟨hfirst, hevidence⟩
       exact ⟨by simpa using congrArg firstEquiv.symm hfirst,
@@ -108,7 +108,7 @@ private theorem conditionallyIndependent_map_equiv
         pairAtom second evidence (secondEquiv.symm secondValue)
           (evidenceEquiv.symm evidenceValue) := by
     ext omega
-    simp only [pairAtom, Set.mem_setOf_eq, Function.comp_apply]
+    simp only [pairAtom, Set.mem_ofPred_eq, Function.comp_apply]
     constructor
     · rintro ⟨hsecond, hevidence⟩
       exact ⟨by simpa using congrArg secondEquiv.symm hsecond,
@@ -137,14 +137,14 @@ private theorem conditionallyIndependent_adjoin_evidence
           tripleAtom first second evidence firstValue secondValue
             evidenceValue := by
       ext omega
-      simp only [tripleAtom, Set.mem_setOf_eq, Prod.mk.injEq]
+      simp only [tripleAtom, Set.mem_ofPred_eq, Prod.mk.injEq]
       tauto
     have hpair :
         pairAtom (fun omega => (first omega, evidence omega)) evidence
             (firstValue, evidenceValue) evidenceValue =
           pairAtom first evidence firstValue evidenceValue := by
       ext omega
-      simp only [pairAtom, Set.mem_setOf_eq, Prod.mk.injEq]
+      simp only [pairAtom, Set.mem_ofPred_eq, Prod.mk.injEq]
       tauto
     rw [htriple, hpair]
     exact hindependent firstValue secondValue evidenceValue
@@ -152,7 +152,7 @@ private theorem conditionallyIndependent_adjoin_evidence
         tripleAtom (fun omega => (first omega, evidence omega)) second evidence
             (firstValue, carriedEvidence) secondValue evidenceValue = ∅ := by
       ext omega
-      simp only [tripleAtom, Set.mem_setOf_eq, Prod.mk.injEq,
+      simp only [tripleAtom, Set.mem_ofPred_eq, Prod.mk.injEq,
         Set.mem_empty_iff_false, iff_false]
       rintro ⟨⟨_, hcarried⟩, _, hactual⟩
       exact hevidence (hcarried.symm.trans hactual)
@@ -160,7 +160,7 @@ private theorem conditionallyIndependent_adjoin_evidence
         pairAtom (fun omega => (first omega, evidence omega)) evidence
             (firstValue, carriedEvidence) evidenceValue = ∅ := by
       ext omega
-      simp only [pairAtom, Set.mem_setOf_eq, Prod.mk.injEq,
+      simp only [pairAtom, Set.mem_ofPred_eq, Prod.mk.injEq,
         Set.mem_empty_iff_false, iff_false]
       rintro ⟨⟨_, hcarried⟩, hactual⟩
       exact hevidence (hcarried.symm.trans hactual)

@@ -26,11 +26,13 @@ open GameTheory.Experimental.PostArchitecture.MAIDGraphicalReduction
 open GameTheory.Experimental.PostArchitecture.MAIDLocalReduction
 open GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Player
   | owner
   | rival
   deriving DecidableEq, Fintype
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Node
   | signal
   | ownerDecision

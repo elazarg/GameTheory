@@ -234,7 +234,7 @@ theorem integral_canonicalPathAverage_eq_marginal_sum
     · congr 1
       apply Finset.sum_congr rfl
       intro n hn
-      letI : Countable (G.ChronologicalHistory (n + 1)) :=
+      let : Countable (G.ChronologicalHistory (n + 1)) :=
         countableChronological (n + 1)
       exact integral_canonicalStageUtility_eq_expect G initial profile who n
         hstage_measurable hstage_bound

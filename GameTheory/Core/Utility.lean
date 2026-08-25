@@ -243,6 +243,7 @@ theorem isCoarseCorrelatedEq_randomized {statusQuo : FinDist (Profile F.sig)}
     IsEquilibrium F (euPreference utility) statusQuo
       (DeviationScheme.unilateralRandomized F.sig) := by
   intro who replacement
+  simp only [DeviationScheme.unilateralRandomized_Dev] at replacement
   have key : ∀ s : F.sig.Strategy who,
       statusQuo.expect
           (fun profile =>

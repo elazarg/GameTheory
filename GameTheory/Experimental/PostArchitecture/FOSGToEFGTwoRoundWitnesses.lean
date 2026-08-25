@@ -143,7 +143,7 @@ theorem false_later_view_hides_true_activity
     (Serial.viewOfState (first := true) false
       (.afterFirst (Source.round2History left right publicBit true)
         ⟨some false, by
-          exact ⟨by simp [Source.round2History, Source.active], Set.mem_univ _⟩⟩)).source := by
+          exact ⟨by simp [Source.active], Set.mem_univ _⟩⟩)).source := by
   simpa only [Serial.viewOfState, Serial.State.history] using
     Source.false_does_not_observe_hidden_activity left right publicBit
 
@@ -152,11 +152,11 @@ theorem false_later_view_hides_true_action
     (Serial.viewOfState (first := true) false
       (.afterFirst (Source.round2History left right publicBit true)
         ⟨some false, by
-          exact ⟨by simp [Source.round2History, Source.active], Set.mem_univ _⟩⟩)).source =
+          exact ⟨by simp [Source.active], Set.mem_univ _⟩⟩)).source =
     (Serial.viewOfState (first := true) false
       (.afterFirst (Source.round2History left right publicBit true)
         ⟨some true, by
-          exact ⟨by simp [Source.round2History, Source.active], Set.mem_univ _⟩⟩)).source := rfl
+          exact ⟨by simp [Source.active], Set.mem_univ _⟩⟩)).source := rfl
 
 theorem false_policy_view_hides_true_activity
     (left right publicBit : Bool) :
@@ -176,7 +176,7 @@ theorem false_policy_view_hides_true_activity
             show ¬ Source.terminal (.round2 publicBit true)
             simp [Source.terminal])
           ⟨some false, by
-            exact ⟨by simp [Source.round2History, Source.active],
+            exact ⟨by simp [Source.active],
               Set.mem_univ _⟩⟩) := by
   rw [Serial.infoOf_eq_viewOfState, Serial.infoOf_eq_viewOfState]
   unfold Serial.viewOfState
@@ -196,7 +196,7 @@ theorem false_policy_view_hides_true_action
             show ¬ Source.terminal (.round2 publicBit true)
             simp [Source.terminal])
           ⟨some false, by
-            exact ⟨by simp [Source.round2History, Source.active],
+            exact ⟨by simp [Source.active],
               Set.mem_univ _⟩⟩) =
       (Serial.information true).infoOf false
         (afterFirstTrace true
@@ -205,7 +205,7 @@ theorem false_policy_view_hides_true_action
             show ¬ Source.terminal (.round2 publicBit true)
             simp [Source.terminal])
           ⟨some true, by
-            exact ⟨by simp [Source.round2History, Source.active],
+            exact ⟨by simp [Source.active],
               Set.mem_univ _⟩⟩) := by
   rw [Serial.infoOf_eq_viewOfState, Serial.infoOf_eq_viewOfState]
   rfl

@@ -212,6 +212,7 @@ theorem mixed_play_eq_map (beliefs : Profile sig.mixed) :
     form.mixed.play beliefs = (FinDist.pi beliefs).map realizedOutcome :=
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Overwriting the focal marginal exposes exactly the independent product of
 the two opponent laws. -/
 theorem mixed_play_update_focal (beliefs : Profile sig.mixed)
@@ -246,7 +247,11 @@ theorem mixed_play_update_focal (beliefs : Profile sig.mixed)
       rw [FinDist.map_eq_bind, FinDist.bind_bind]
       apply FinDist.bind_congr
       intro opponents _
-      simp [opponentProfileEquiv, opponentEquiv, realizedOutcome]
+      have hsymm : ∀ bit : Bool,
+          opponentProfileEquiv opponents bit = opponents (opponentEquiv bit) :=
+        fun bit => Equiv.piCongrLeft_symm_apply (P := OpponentStrategy)
+          (e := opponentEquiv) opponents bit
+      simp [realizedOutcome, hsymm, opponentEquiv]
     _ = _ := congrArg
       (fun law => law.bind fun opponents =>
         FinDist.pure (action, opponents false, opponents true)) hreindex

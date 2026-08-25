@@ -96,8 +96,8 @@ equilibrium, by maximizing Rosenthal's potential. -/
 theorem nash_exists [Fintype ι] [DecidableEq ι] (C : CongestionGame ι)
     [Finite C.Profile] [Nonempty C.Profile] :
     ∃ σ : C.Profile, IsNash C.toGameForm (euPreference C.utility) σ := by
-  letI : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
-  letI : Nonempty (GameTheory.Profile C.toGameForm.sig) := ‹Nonempty C.Profile›
+  let : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
+  let : Nonempty (GameTheory.Profile C.toGameForm.sig) := ‹Nonempty C.Profile›
   exact C.isExactPotential.exists_isNash
 
 /-- A finite congestion profile space has no infinite chain of strict
@@ -106,7 +106,7 @@ theorem no_infinite_improving_path [Fintype ι] [DecidableEq ι]
     (C : CongestionGame ι) [Finite C.Profile] :
     ¬ ∃ path : ℕ → C.Profile,
         ∀ n, ImprovingStep C.toGameForm C.utility (path n) (path (n + 1)) := by
-  letI : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
+  let : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
   exact C.isExactPotential.no_infinite_improving_path
 
 /-- Every finite congestion game is weakly acyclic under strict unilateral
@@ -114,7 +114,7 @@ expected-utility improvements. -/
 theorem weaklyAcyclic [Fintype ι] [DecidableEq ι]
     (C : CongestionGame ι) [Finite C.Profile] :
     WeaklyAcyclic C.toGameForm C.utility := by
-  letI : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
+  let : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
   exact C.isExactPotential.weaklyAcyclic
 
 end CongestionGame

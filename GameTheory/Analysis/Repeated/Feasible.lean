@@ -124,7 +124,7 @@ theorem exists_fintype_weighted_profiles_of_mem_feasibleSet
   rcases (mem_convexHull_iff_exists_fintype (R := ℝ)
       (s := G.purePayoffSet) (x := value)).1 hvalue with
     ⟨κ, hκ, weight, point, hnonneg, hsum, hpoint, hweighted⟩
-  letI : Fintype κ := hκ
+  let : Fintype κ := hκ
   choose profile hprofile using
     fun k => (G.mem_purePayoffSet (point k)).1 (hpoint k)
   refine ⟨κ, hκ, weight, profile, hnonneg, hsum, ?_⟩
@@ -147,7 +147,7 @@ theorem exists_fintype_weighted_profiles_apply_of_mem_feasibleSet
             value who := by
   rcases G.exists_fintype_weighted_profiles_of_mem_feasibleSet hvalue with
     ⟨κ, hκ, weight, profile, hnonneg, hsum, hweighted⟩
-  letI : Fintype κ := hκ
+  let : Fintype κ := hκ
   refine ⟨κ, hκ, weight, profile, hnonneg, hsum, ?_⟩
   intro who
   have happly := congrArg (fun payoff : PayoffVector ι => payoff who)
@@ -233,7 +233,7 @@ theorem exists_pos_margin_of_mem_strictReservationSet
     ∃ margin : ℝ, 0 < margin ∧
       ∀ who, reservation who + margin ≤ value who := by
   by_cases hplayers : Nonempty ι
-  · letI : Nonempty ι := hplayers
+  · let : Nonempty ι := hplayers
     let minimum : ℝ :=
       Finset.univ.inf' Finset.univ_nonempty
         (fun who : ι => value who - reservation who)
@@ -305,12 +305,12 @@ theorem exists_cycleAveragePayoff_close_of_mem_feasibleSet
   rcases G.exists_fintype_weighted_profiles_apply_of_mem_feasibleSet
       hvalue with
     ⟨κ, hκ, weight, profile, hnonneg, hsum, hvalueSum⟩
-  letI : Fintype κ := hκ
+  let : Fintype κ := hκ
   have hκ : Nonempty κ := by
     by_contra hempty
-    haveI : IsEmpty κ := not_nonempty_iff.mp hempty
+    have : IsEmpty κ := not_nonempty_iff.mp hempty
     simp at hsum
-  letI : Nonempty κ := hκ
+  let : Nonempty κ := hκ
   let errorBound : ℝ :=
     (Fintype.card κ : ℝ) * ((Fintype.card κ : ℝ) * bound)
   have herrorBound : 0 ≤ errorBound :=
@@ -340,7 +340,7 @@ theorem exists_cycleAveragePayoff_close_of_mem_feasibleSet
   have hn0 : n ≠ 0 := by
     rw [hn]
     exact Nat.ne_of_gt hdenominatorPos
-  letI : NeZero n := ⟨hn0⟩
+  let : NeZero n := ⟨hn0⟩
   let cycle : Fin n → Profile G.form.sig := by
     dsimp [n]
     exact G.cycleOfCounts count profile

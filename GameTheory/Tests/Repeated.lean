@@ -77,12 +77,14 @@ theorem alternating_stage_zero :
   funext i
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem alternating_stage_one :
     coordination.repeatedPlay alternating 1 = allTrue := by
   rw [UtilityGame.repeatedPlay]
   funext i
   simp [alternating, alternating_stage_zero, allFalse, allTrue]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem alternating_stage_two :
     coordination.repeatedPlay alternating 2 = allFalse := by
   rw [UtilityGame.repeatedPlay]
@@ -103,6 +105,7 @@ theorem alternating_protocol_three :
   rw [alternating_stage_zero, alternating_stage_one, alternating_stage_two]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Coordinating on `true` is a stage Nash equilibrium. -/
 theorem allTrue_isNash :
     IsNash coordination.form (euPreference coordination.utility) allTrue := by

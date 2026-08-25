@@ -28,8 +28,7 @@ theorem selected_solution_eq_identity :
     noInformation.solution noInformation_isSolvable identityProfile () =
       fun agent => agent := by
   funext agent
-  rw [Model.solution_apply]
-  rfl
+  exact Model.solution_apply noInformation noInformation_isSolvable identityProfile () agent
 
 /-- In particular, the selector preserves the distinction between the two
 decision coordinates. -/

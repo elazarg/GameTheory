@@ -850,6 +850,7 @@ def matrixPayoff (row : ContingentChoice 0) (col : ContingentChoice 1) : ℝ :=
   (1 / 2) * stagePayoff (actionPlan 0 row false) (actionPlan 1 col false) +
     (1 / 2) * stagePayoff (actionPlan 0 row true) (actionPlan 1 col true)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The matrix carrier is not a surrogate game: on every pair of complete
 contingent choices, its payoff is the direct Bayesian game's ex-ante payoff. -/
 theorem matrixPayoff_eq_direct_expectedUtility

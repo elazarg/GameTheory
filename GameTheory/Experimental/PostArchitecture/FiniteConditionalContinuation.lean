@@ -148,7 +148,7 @@ theorem contextTermLaw_eq_bind_continuation
       rw [map_pair_prob_eq_probOf_pairAtom]
       congr 1
       ext state
-      simp only [pairAtom, Set.mem_setOf_eq, Function.comp_apply]
+      simp only [pairAtom, Set.mem_ofPred_eq, Function.comp_apply]
       exact and_comm
     have hcontinuation' :
         (continuation law context term keep (keep full)).prob termValue =
@@ -178,7 +178,7 @@ theorem contextTermLaw_eq_bind_continuation
         pairAtom context (keep ∘ context) full (keep full) =
       atom context full := by
       ext state
-      simp only [pairAtom, atom, Set.mem_setOf_eq, Function.comp_apply]
+      simp only [pairAtom, atom, Set.mem_ofPred_eq, Function.comp_apply]
       constructor
       · exact fun hstate => hstate.1
       · intro hstate

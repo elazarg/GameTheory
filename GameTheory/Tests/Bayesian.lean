@@ -28,6 +28,7 @@ def bitPrior : FinDist (∀ _ : Unit, Bool) :=
   fairBit.map fun bit _ => bit
 
 /-- Guess one's private bit. -/
+@[reducible]
 def bitGame : BayesianGame Unit where
   Ty _ := Bool
   Act _ := Bool
@@ -95,6 +96,7 @@ def commonBitPrior : FinDist (∀ _ : Bool, Bool) :=
 
 /-- Both players are rewarded exactly when both reports match their respective
 types.  This makes a unilateral deviation by either source player observable. -/
+@[reducible]
 def coordinationGame : BayesianGame Bool where
   Ty _ := Bool
   Act _ := Bool

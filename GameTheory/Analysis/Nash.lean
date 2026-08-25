@@ -197,7 +197,7 @@ theorem closedGraph_bestReplies :
             payoff F utility i (Profile.update z.1.1 i w) ≤
               payoff F utility i (Profile.update z.1.1 i (z.2 i))} := by
     ext z
-    simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_iInter, bestReplies, bestReply,
+    simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_iInter, bestReplies, bestReply,
       Set.mem_pi, Set.mem_univ, forall_const]
     exact forall_and
   rw [hset]

@@ -23,6 +23,7 @@ private def opponent (i : Fin 2) : Fin 2 := 1 - i
 
 /-! ## Dictator game -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The dictator's possible divisions of a ten-unit endowment. -/
 inductive Split
   | keepAll
@@ -86,6 +87,7 @@ theorem dictatorGivesAll_not_isNash :
 
 /-! ## Traveler's Dilemma -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The two claims in the small Traveler's Dilemma. -/
 inductive Claim
   | two
@@ -131,6 +133,7 @@ theorem travelersDilemma_bothClaimThree_isNash :
 
 /-! ## Cournot duopoly -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Available integer quantities in the discrete Cournot example. -/
 inductive Quantity
   | one
@@ -178,6 +181,7 @@ theorem cournotDuopoly_nashCount :
 
 /-! ## Bertrand competition -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Available prices in the discrete Bertrand example. -/
 inductive Price
   | one
@@ -238,12 +242,14 @@ theorem bertrandDuopoly_bothPriceOne_isNash :
 
 /-! ## Braess-style welfare loss -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Actions before the additional shortcut is available. -/
 inductive RestrictedRoute
   | a
   | b
   deriving DecidableEq, Fintype, Repr
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Actions after adding the shortcut `c`. -/
 inductive AugmentedRoute
   | a

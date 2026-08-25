@@ -57,7 +57,7 @@ theorem cylinderMass_eq_sum [Fintype Node] [DecidableEq Node]
     FinDist.expect_eq_sum]
   apply Finset.sum_congr rfl
   intro assignment _
-  simp only [Set.mem_setOf_eq]
+  simp only [Set.mem_ofPred_eq]
   by_cases hagrees : AgreeOn Value nodes assignment witness
   · simp [hagrees, mul_one]
   · simp [hagrees]
@@ -288,7 +288,7 @@ private theorem cylinderMass_eq_factorProduct_of_pending
       subst retained
       let emptyConfiguration : ComplementConfiguration Value Finset.univ :=
         fun node => False.elim (node.2 (Finset.mem_univ node.1))
-      letI : Unique (ComplementConfiguration Value Finset.univ) :=
+      let : Unique (ComplementConfiguration Value Finset.univ) :=
         { default := emptyConfiguration
           uniq := fun configuration => by
             funext node
@@ -511,6 +511,7 @@ theorem true_cylinderMass :
 
 namespace TwoNode
 
+set_option backward.isDefEq.respectTransparency false in
 inductive ChainNode
   | root
   | leaf

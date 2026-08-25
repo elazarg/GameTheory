@@ -18,6 +18,7 @@ namespace GameTheory.Tests.EFG
 open GameTheory GameTheory.Languages GameTheory.Protocol
 open GameTheory.Math.Probability
 
+set_option backward.isDefEq.respectTransparency false in
 /-- One player is enough to make the hidden-information test discriminating. -/
 inductive Player
   | player
@@ -163,6 +164,7 @@ theorem execution_singleMover (state : State) {first second : Player}
   cases second
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 /-- What the player observes. Both hidden decision states map to `acting`. -/
 inductive View
   | waiting
@@ -264,6 +266,7 @@ def decisionTrace (hidden : Bool) :
     execution.Trace (State.decision hidden execution.noop) :=
   .extend .start execution.noop initialLegal (decision_mem_support hidden)
 
+@[reducible]
 def decisionHistory (hidden : Bool) : execution.History :=
   ⟨.decision hidden execution.noop, decisionTrace hidden⟩
 
@@ -277,7 +280,7 @@ theorem acting_menu_contains_false :
 
 theorem decision_not_terminal (hidden : Bool) :
     ¬ execution.terminal (decisionHistory hidden).state := by
-  simp [decisionHistory]
+  simp
 
 @[reducible]
 def actingSite : information.InformationSite .player :=
@@ -305,7 +308,7 @@ theorem decisionInformationHistory_ne :
     congrArg
       (fun history : information.InformationHistory .player actingSite.1 =>
         history.1.state) hequal
-  simp [decisionHistory] at hstate
+  simp at hstate
 
 /-- Every history at the acting information state is one of nature's two
 decision histories. The proof uses reachability carried by the history rather
@@ -366,7 +369,7 @@ def actingHistoryEquivBool :
     apply Subtype.ext
     rfl
   right_inv hidden := by
-    simp [decisionHistory]
+    simp
 
 /-- The nondegenerate belief supported on the two hidden decision histories. -/
 def decisionBelief :
@@ -437,7 +440,7 @@ theorem randomizedChooser_initial :
     information.randomizedChooser fullyMixedBehavioralProfile
       execution.initHistory initial_not_terminal =
         FinDist.pure ⟨execution.noop, initialLegal⟩ := by
-  letI : Subsingleton
+  let : Subsingleton
       { joint : Player → Option Bool //
         execution.Legal execution.initHistory.state joint } :=
     ⟨fun first second => Subtype.ext (by
@@ -612,6 +615,7 @@ def matchingPayoff (_ : Player) (history : execution.History) : ℝ :=
       if action .player = some hidden then 1 else 0
   | _ => 0
 
+set_option backward.isDefEq.respectTransparency false in
 theorem runBehavioralFrom_decision_matchingPayoff
     (hidden : Bool)
     (alternative : information.BehavioralPolicy Player.player) :
@@ -708,6 +712,7 @@ theorem fullyMixedAssessment_isBayesConsistent :
     (information_decisionInformationAntichain .player site)
     (informationMass_fullyMixed_pos site) history
 
+set_option backward.isDefEq.respectTransparency false in
 /-- At the unique acting site, the canonical normalized Bayes belief is the
 explicit fair mixture over nature's two hidden histories. -/
 theorem fullyMixedAssessment_belief_acting :
@@ -728,8 +733,7 @@ theorem fullyMixedAssessment_belief_acting :
       FinDist.prob_pure_eq_ite]
   all_goals
     intro hequal
-    have hhidden := decisionHistory_injective hequal
-    cases hhidden
+    simp at hequal
 
 /-- Every whole continuation policy has value `1 / 2`: after projecting legal
 choices to their Boolean action, the two hidden states contribute

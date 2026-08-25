@@ -22,6 +22,7 @@ theorem prisonersDilemma_defect_isUniformEquilibrium :
 def permanentDefection : prisonersDilemmaGame.RepeatedStrategy 0 :=
   fun _ => .defect
 
+set_option backward.isDefEq.respectTransparency false in
 theorem prisonersDilemma_cooperate_not_oneStageApproximateNash :
     ¬ prisonersDilemmaGame.IsεFiniteRepeatedNash 1 1
       (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate) := by
@@ -47,6 +48,7 @@ theorem prisonersDilemma_cooperate_not_oneStageApproximateNash :
   rw [hdeviationPayoff, hcooperationPayoff] at hdeviation
   norm_num at hdeviation
 
+set_option backward.isDefEq.respectTransparency false in
 theorem prisonersDilemma_cooperate_not_approximateNash
     (horizon : ℕ) (hhorizon : 0 < horizon) :
     ¬ prisonersDilemmaGame.IsεFiniteRepeatedNash horizon 1

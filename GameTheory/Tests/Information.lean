@@ -179,6 +179,7 @@ theorem dealt_mem_support (card : Card) :
   · exact ⟨false, mem_support_fairCoin false, rfl⟩
 
 /-- The history in which the coin has been flipped and `card` came up. -/
+@[reducible]
 def dealHistory (card : Card) : Trace hiddenCard (.dealt card) :=
   .extend Trace.start hiddenCard.noop shuffle_noop_legal (dealt_mem_support card)
 
@@ -445,12 +446,14 @@ theorem callHistory_realized (card blindCall informedCall : Card) :
   FinDist.mem_support_pure.mpr rfl
 
 /-- The full history: the deal, then both calls. -/
+@[reducible]
 def callHistory (card blindCall informedCall : Card) :
     Trace hiddenCard (.settled card blindCall informedCall) :=
   .extend (dealHistory card) (callJoint blindCall informedCall)
     (callJoint_legal card blindCall informedCall)
     (callHistory_realized card blindCall informedCall)
 
+set_option backward.isDefEq.respectTransparency false in
 theorem infoOf_callHistory_blind (card blindCall informedCall : Card) :
     dealSignals.infoOf .blind (callHistory card blindCall informedCall) =
       (Phase.over, some blindCall) := by

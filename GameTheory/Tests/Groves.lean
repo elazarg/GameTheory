@@ -43,6 +43,7 @@ theorem publicChoice_isEfficient : publicChoice.IsEfficient := by
     dsimp only [publicChoice, reportedValue, playerWeight]
     norm_num [hfalse, htrue]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem publicChoice_offset_independent :
     ∀ (who : Bool) (reports : publicChoice.ReportProfile)
       (replacement : publicChoice.Θ who),

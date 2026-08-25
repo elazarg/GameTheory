@@ -58,9 +58,7 @@ theorem update_profile_zero (bits : Fin 2 → Bool) (bit : Bool) :
   funext i
   fin_cases i
   · simp [encodeProfile, profile]
-    rfl
   · simp [encodeProfile, profile]
-    rfl
 
 @[simp]
 theorem update_profile_one (bits : Fin 2 → Bool) (bit : Bool) :
@@ -70,9 +68,7 @@ theorem update_profile_one (bits : Fin 2 → Bool) (bit : Bool) :
   funext i
   fin_cases i
   · simp [encodeProfile, profile]
-    rfl
   · simp [encodeProfile, profile]
-    rfl
 
 private def bitsTT : Fin 2 → Bool := ![true, true]
 private def bitsTF : Fin 2 → Bool := ![true, false]

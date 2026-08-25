@@ -253,7 +253,7 @@ theorem shapleyValue_efficient
       G.value Finset.univ := by
   classical
   rcases isEmpty_or_nonempty Agent with hempty | hnonempty
-  · haveI := hempty
+  · have := hempty
     simp only [Finset.univ_eq_empty, Finset.sum_empty, G.value_empty]
   set agentCount := Fintype.card Agent with hcount
   have hcountPositive : 0 < agentCount := by

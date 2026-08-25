@@ -144,6 +144,7 @@ theorem hybridPolicy_respects_restoreAllAt
         Profile.update_of_ne _ _ howner, Pruning.expandOwnerPolicy]
       exact congrArg (policy other site) hkept
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Away from the restored target, a hybrid parent configuration is exactly a
 candidate-parent configuration. -/
 def candidateConfigurationOfHybrid [DecidableEq Node]

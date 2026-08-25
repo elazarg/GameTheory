@@ -60,7 +60,7 @@ private theorem conditionallyIndependent_map_equiv
       (secondEquiv ∘ second) (evidenceEquiv ∘ evidence) := by
   intro firstValue secondValue evidenceValue
   simpa [tripleAtom, pairAtom, atom, Function.comp_apply,
-    Equiv.apply_eq_iff_eq_symm_apply] using
+    Equiv.eq_symm_apply] using
     hindependent (firstEquiv.symm firstValue)
       (secondEquiv.symm secondValue) (evidenceEquiv.symm evidenceValue)
 
@@ -521,7 +521,7 @@ private theorem map_selector_fullTerm_prob_eq_triple
   rw [← FinDist.probOf_singleton, FinDist.probOf_map]
   congr 1
   ext state
-  simp only [tripleAtom, Set.mem_setOf_eq, Set.mem_preimage,
+  simp only [tripleAtom, Set.mem_ofPred_eq, Set.mem_preimage,
     Set.mem_singleton_iff, Prod.mk.injEq]
   tauto
 
@@ -535,7 +535,7 @@ private theorem map_fullTerm_prob_eq_pair
   rw [← FinDist.probOf_singleton, FinDist.probOf_map]
   congr 1
   ext state
-  simp only [pairAtom, Set.mem_setOf_eq, Set.mem_preimage,
+  simp only [pairAtom, Set.mem_ofPred_eq, Set.mem_preimage,
     Set.mem_singleton_iff, Prod.mk.injEq]
   tauto
 

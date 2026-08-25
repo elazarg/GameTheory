@@ -64,14 +64,14 @@ theorem IsConditionallyIndependent.symm
       tripleAtom second first evidence secondValue firstValue evidenceValue =
         tripleAtom first second evidence firstValue secondValue evidenceValue := by
     ext ω
-    simp only [tripleAtom, Set.mem_setOf_eq]
+    simp only [tripleAtom, Set.mem_ofPred_eq]
     tauto
   rw [hjoint, h firstValue secondValue evidenceValue, mul_comm]
 
 /-- Event mass is nonnegative. -/
 theorem probOf_nonneg (law : FinDist Ω) (event : Set Ω) :
     0 ≤ law.probOf event := by
-  letI : DecidablePred (· ∈ event) := Classical.decPred _
+  let : DecidablePred (· ∈ event) := Classical.decPred _
   rw [← FinDist.expect_indicator_eq_probOf]
   have hnonneg := FinDist.expect_mono
     (μ := law) (u := fun _ : Ω => 0)

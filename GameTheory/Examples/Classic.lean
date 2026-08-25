@@ -21,6 +21,7 @@ open GameTheory GameTheory.Finite GameTheory.Math.Probability
 
 /-! ## Prisoner's Dilemma -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Cooperate or defect. -/
 inductive Choice
   | cooperate
@@ -38,6 +39,7 @@ def dilemmaPayoff : Choice → Choice → ℚ
   | .defect, .defect => 1
 
 /-- The Prisoner's Dilemma. -/
+@[reducible]
 def prisonersDilemma : TableGame (Fin 2) where
   Action _ := Choice
   actionFintype _ := inferInstance
@@ -220,6 +222,7 @@ theorem prisonersDilemma_bothDefect_isNash_mixed :
 
 /-! ## Matching Pennies -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Heads or tails. -/
 inductive Side
   | heads
@@ -227,6 +230,7 @@ inductive Side
   deriving DecidableEq, Fintype, Repr
 
 /-- Player `0` wins when the coins match. -/
+@[reducible]
 def matchingPennies : TableGame (Fin 2) where
   Action _ := Side
   actionFintype _ := inferInstance
@@ -264,22 +268,16 @@ def matchingPenniesLike :
   scale_pos := by norm_num
   payoff_zero bits := by
     rw [TableGame.toForm_play, expectedUtility_pure]
-    simp only [TableGame.utility_apply, matchingPennies_payoff]
-    cases hzero : bits 0 <;> cases hone : bits 1 <;> split <;> norm_num
-    all_goals
-      rename_i hbad
-      first
-      | exact hbad rfl
-      | exact Bool.noConfusion (Side.boolEquiv.injective hbad)
+    simp only [TableGame.utility_apply]
+    rcases Bool.eq_false_or_eq_true (bits 0) with hzero | hzero <;>
+      rcases Bool.eq_false_or_eq_true (bits 1) with hone | hone <;>
+      norm_num +decide [hzero, hone, matchingPenniesAction, Side.boolEquiv]
   payoff_one bits := by
     rw [TableGame.toForm_play, expectedUtility_pure]
-    simp only [TableGame.utility_apply, matchingPennies_payoff]
-    cases hzero : bits 0 <;> cases hone : bits 1 <;> split <;> norm_num
-    all_goals
-      rename_i hbad
-      first
-      | exact hbad rfl
-      | exact Bool.noConfusion (Side.boolEquiv.injective hbad)
+    simp only [TableGame.utility_apply]
+    rcases Bool.eq_false_or_eq_true (bits 0) with hzero | hzero <;>
+      rcases Bool.eq_false_or_eq_true (bits 1) with hone | hone <;>
+      norm_num +decide [hzero, hone, matchingPenniesAction, Side.boolEquiv]
 
 /-- An arbitrary semantic mixed profile is Nash in Matching Pennies exactly
 when both players put probability one half on heads. -/
@@ -344,8 +342,7 @@ theorem sum_pennies (f : Profile matchingPennies.sig → ℚ) :
 theorem uniformPennies_expectedPayoff_zero (who : Fin 2) :
     matchingPennies.expectedPayoff uniformPennies who = 0 := by
   simp only [TableGame.expectedPayoff, sum_pennies, TableGame.mixedWeight,
-    Fin.prod_univ_two, matchingPennies_payoff, pennyProfile_zero,
-    pennyProfile_one]
+    Fin.prod_univ_two, pennyProfile_zero, pennyProfile_one]
   fin_cases who <;>
     norm_num +decide [uniformPennies]
 
@@ -357,8 +354,7 @@ theorem uniformPennies_pureDeviation_expectedPayoff_zero
         (Profile.update uniformPennies who
           (matchingPennies.pureMixed who action)) who = 0 := by
   simp only [TableGame.expectedPayoff, sum_pennies, TableGame.mixedWeight,
-    Fin.prod_univ_two, matchingPennies_payoff, pennyProfile_zero,
-    pennyProfile_one]
+    Fin.prod_univ_two, pennyProfile_zero, pennyProfile_one]
   fin_cases who <;> cases action <;>
     norm_num +decide [TableGame.pureMixed, uniformPennies]
 
@@ -437,6 +433,7 @@ theorem matchingPennies_isCorrelatedEq_iff
 
 /-! ## Stag Hunt -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Hunt stag together or take the safe hare. -/
 inductive Hunt
   | stag
@@ -444,6 +441,7 @@ inductive Hunt
   deriving DecidableEq, Fintype, Repr
 
 /-- The Stag Hunt coordination game, written as a symmetric payoff table. -/
+@[reducible]
 def stagHunt : TableGame (Fin 2) where
   Action _ := Hunt
   actionFintype _ := inferInstance
@@ -489,6 +487,7 @@ theorem stagHunt_stagHare_not_isNash :
 
 /-! ## Hawk–Dove -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Escalate as a hawk or accommodate as a dove. -/
 inductive Contest
   | hawk
@@ -496,6 +495,7 @@ inductive Contest
   deriving DecidableEq, Fintype, Repr
 
 /-- The symmetric Hawk–Dove anti-coordination game. -/
+@[reducible]
 def hawkDove : TableGame (Fin 2) where
   Action _ := Contest
   actionFintype _ := inferInstance
@@ -533,6 +533,7 @@ theorem doveHawkProfile_isNash :
 
 /-! ## Battle of the Sexes -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Where to spend the evening. -/
 inductive Venue
   | opera
@@ -540,6 +541,7 @@ inductive Venue
   deriving DecidableEq, Fintype, Repr
 
 /-- Both prefer agreeing, but disagree about where. -/
+@[reducible]
 def battleOfTheSexes : TableGame (Fin 2) where
   Action _ := Venue
   actionFintype _ := inferInstance
@@ -577,6 +579,7 @@ theorem battleOfTheSexes_bothFootball_isNash :
 /-! ## A three-player game -/
 
 /-- Three players are rewarded only for unanimity. -/
+@[reducible]
 def unanimity : TableGame (Fin 3) where
   Action _ := Bool
   actionFintype _ := inferInstance
@@ -631,6 +634,7 @@ theorem prisonersDilemmaGame_bothDefect_isNash :
 
 /-- A second play law over the *same* signature: with probability one half the
 intended profile is played, otherwise both players defect. -/
+@[reducible]
 noncomputable def noisyDilemma : GameForm (Fin 2) where
   sig := prisonersDilemma.sig
   play profile :=

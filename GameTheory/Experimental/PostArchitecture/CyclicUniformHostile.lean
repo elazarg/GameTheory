@@ -112,6 +112,7 @@ theorem shifted_constantFalse_apply (restart : Bool)
   apply Subtype.ext
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem run_support_state_false
     (initial : Bool)
     (policies : (i : Bool) →
@@ -447,6 +448,7 @@ def offPhaseHistory : (hostileGame.toExecution false).History :=
     (hostileGame.canonicalJoint false false offPhaseActions).2
     (hostileGame.canonicalRealized false realized)
 
+set_option backward.isDefEq.respectTransparency false in
 theorem offPhaseHistory_state : offPhaseHistory.state = true := by
   simp [offPhaseHistory, hostileGame]
 
@@ -662,6 +664,7 @@ theorem offPhase_not_uniform :
   exact offPhase_not_horizonNash (threshold + 1) hpositive
     (hthreshold (threshold + 1) (Nat.le_succ threshold))
 
+set_option backward.isDefEq.respectTransparency false in
 theorem constantFalse_not_allPhase_uniform :
     ¬ hostileGame.IsAllPhaseUniformεEquilibrium false 1
       constantFalseProfile := by

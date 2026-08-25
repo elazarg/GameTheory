@@ -176,6 +176,7 @@ theorem secondJoint_legal (publicBit hiddenActiveBit falseAction trueAction : Bo
   cases player <;> cases hiddenActiveBit <;>
     simp [secondJoint, active]
 
+@[reducible]
 def round2History (left right publicBit hiddenActiveBit : Bool) :
     execution.History :=
   ⟨.round2 publicBit hiddenActiveBit,
@@ -183,6 +184,7 @@ def round2History (left right publicBit hiddenActiveBit : Bool) :
       simpa [execution] using
         mem_support_firstResolution publicBit hiddenActiveBit)⟩
 
+@[reducible]
 def finishedHistory (left right publicBit hiddenActiveBit falseAction
     trueAction secondCoin : Bool) : execution.History :=
   let prior := round2History left right publicBit hiddenActiveBit
@@ -359,6 +361,7 @@ theorem infoOf_round2History (player left right publicBit hiddenActiveBit : Bool
     simp [round2History, InfoSignals.infoOf_extend, signals, pushView,
       publicOfTransition, privateOfTransition, firstJoint]
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem infoOf_finishedHistory (player left right publicBit hiddenActiveBit
     falseAction trueAction secondCoin : Bool) :
@@ -372,7 +375,7 @@ theorem infoOf_finishedHistory (player left right publicBit hiddenActiveBit
         ((secondJoint hiddenActiveBit falseAction trueAction) player) := by
   cases player <;> cases hiddenActiveBit <;>
     simp [finishedHistory, round2History, InfoSignals.infoOf_extend,
-      signals, pushView, publicOfTransition, privateOfTransition,
+      pushView, publicOfTransition, privateOfTransition,
       firstJoint, secondJoint]
 
 theorem round2_histories_merge (publicBit hiddenActiveBit : Bool) :
@@ -386,7 +389,7 @@ theorem round2_traces_distinct (publicBit hiddenActiveBit : Bool) :
   have hinfo := congrArg
     (fun trace : execution.Trace (.round2 publicBit hiddenActiveBit) =>
       information.infoOf false trace) hequal
-  simp [round2History, signals, InfoSignals.infoOf, pushView,
+  simp [signals, InfoSignals.infoOf, pushView,
     publicOfTransition, privateOfTransition, firstJoint] at hinfo
 
 theorem not_treeShaped : ¬ execution.IsTreeShaped := by
@@ -728,6 +731,7 @@ theorem predecessor_of_mem_resolve (first : Bool)
     cases first <;> simp [choiceOfSourceLegal, combine]
   rw [hfirst, hsecond]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem root_not_mem_step (first : Bool) (source : State first)
     (certified : { joint : Bool → Option Bool //
       (execution first).Legal source joint }) :
@@ -1049,6 +1053,7 @@ def signals (first : Bool) : InfoSignals (execution first) where
   pushInfo _ prior _ privateSignal publicSignal :=
     pushView prior privateSignal publicSignal
 
+set_option backward.isDefEq.respectTransparency false in
 theorem infoOf_eq_viewOfState (first player : Bool) :
     ∀ {state : State first} (trace : (execution first).Trace state),
       (signals first).infoOf player trace = viewOfState player state
@@ -1685,6 +1690,7 @@ theorem map_erase_runBehavioralFrom_ready (first : Bool)
     rw [FinDist.map_pure]
     rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem map_erase_runBehavioralFrom_afterFirst (first : Bool)
     (target : (player : Bool) →
       (information first).BehavioralPolicy player)
@@ -1782,6 +1788,7 @@ def boundaryChoiceAt (first : Bool)
     (boundary_info_eq_scheduled first history hterm trace)
     choice
 
+set_option backward.isDefEq.respectTransparency false in
 theorem map_erase_runBehavioralFrom_boundary (first : Bool)
     (target : (player : Bool) →
       (information first).BehavioralPolicy player)

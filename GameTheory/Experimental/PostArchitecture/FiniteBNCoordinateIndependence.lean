@@ -157,6 +157,7 @@ theorem sameWitness_cross_product
 
 /-! ## A dependent zero-evidence coordinate control -/
 
+set_option backward.isDefEq.respectTransparency false in
 inductive ControlNode
   | first
   | second

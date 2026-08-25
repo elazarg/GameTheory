@@ -93,7 +93,7 @@ theorem finiteDecisionChoices : information.HasFiniteDecisionChoices := by
     rw [← hdecision.2.2, infoOf_state, hstate]
     rfl
   subst info
-  letI := choice_zero_subsingleton
+  let := choice_zero_subsingleton
   exact Finite.of_surjective (fun _ : Unit => fallback () 0)
     (fun choice => ⟨(), Subsingleton.elim _ choice⟩)
 

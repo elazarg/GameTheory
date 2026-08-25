@@ -544,6 +544,7 @@ theorem sourceSelector_parentConfiguration
       (assignment .mechanism).down :=
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 /-- At every object, the mechanism kernel read from a full assignment is the
 selected component's canonical augmented kernel. -/
 theorem mechanismSelectorKernels_object_parentConfiguration

@@ -136,6 +136,7 @@ namespace GameTheory.Tests.ApproximateAgreement
 
 open GameTheory.Epistemic GameTheory.Math.Probability
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Three worlds supporting common `p`-belief without exact common knowledge. -/
 inductive World
   | center
@@ -143,6 +144,7 @@ inductive World
   | right
   deriving DecidableEq, Fintype
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Agent
   | first
   | second

@@ -29,11 +29,13 @@ open GameTheory.Languages.MAID.FrontierEquivalence
 open GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
 open GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Player
   | star
   | robot
   deriving DecidableEq, Fintype
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Node
   | sponsorship
   | starFirst
@@ -724,6 +726,7 @@ theorem expanded_constant_robot
   rw [hupdate]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem uniform_star_expectedUtility :
     expectedUtility
         (fun assignment player => semantics.utility player assignment)
@@ -735,6 +738,7 @@ theorem uniform_star_expectedUtility :
   simp_rw [fairBool_expect]
   norm_num [avoidScore, consistencyScore]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem constant_deviation_star_expectedUtility :
     expectedUtility
         (fun assignment player => semantics.utility player assignment)

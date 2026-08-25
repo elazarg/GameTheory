@@ -150,7 +150,9 @@ morphism is what makes "CE implies CCE" a theorem rather than a second proof. -/
 def constantToRecommendation (sig : GameSignature ι) :
     Hom id (unilateralConstant sig) (recommendation sig) where
   map _ replacement := fun _ => replacement
-  apply_eq statusQuo who replacement := by simp
+  apply_eq statusQuo who replacement := by
+    simp only [unilateralConstant_Dev] at replacement
+    simp
 
 /-- A player's constant replacement is the singleton coalition's joint
 replacement. -/
@@ -158,13 +160,17 @@ def constantToCoalition (sig : GameSignature ι) :
     Hom (fun who => ⟨{who}, Finset.singleton_nonempty who⟩)
       (unilateralConstant sig) (coalitionConstant sig) where
   map who replacement := Subprofile.single who replacement
-  apply_eq statusQuo who replacement := by simp
+  apply_eq statusQuo who replacement := by
+    simp only [unilateralConstant_Dev] at replacement
+    simp
 
 /-- A deterministic replacement is a point-mass randomized replacement. -/
 def constantToRandomized (sig : GameSignature ι) :
     Hom id (unilateralConstant sig) (unilateralRandomized sig) where
   map _ replacement := FinDist.pure replacement
-  apply_eq statusQuo who replacement := by simp [FinDist.map_eq_bind]
+  apply_eq statusQuo who replacement := by
+    simp only [unilateralConstant_Dev] at replacement
+    simp [FinDist.map_eq_bind]
 
 end Apply
 
@@ -245,6 +251,7 @@ theorem isStrongNash_iff (profile : Profile F.sig) :
   · intro h coalition hne replacement
     simpa [GameForm.outcomeLaw] using h ⟨coalition, hne⟩ replacement
   · rintro h ⟨coalition, hne⟩ replacement
+    simp only [DeviationScheme.coalitionConstant_Dev] at replacement
     simpa [GameForm.outcomeLaw] using h coalition hne replacement
 
 /-- Aumann's reading of strong Nash — "no nonempty coalition has a joint

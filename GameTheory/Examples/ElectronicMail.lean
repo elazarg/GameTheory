@@ -18,6 +18,7 @@ namespace GameTheory.Examples.ElectronicMail
 
 open GameTheory.Math.Probability GameTheory.Epistemic
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Finite endpoint worlds for the email exchange. -/
 inductive EmailWorld where
   | noMessage
@@ -25,12 +26,14 @@ inductive EmailWorld where
   | bothConfirmed
 deriving DecidableEq, Repr, Fintype
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A player's private email observation. -/
 inductive EmailView where
   | quiet
   | message
 deriving DecidableEq, Repr, Fintype
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The action in the coordinated-attack game. -/
 inductive EmailAction where
   | stay
@@ -85,6 +88,7 @@ def emailPayoff (types : Bool → EmailView)
   else -2
 
 /-- The finite Bayesian game induced by the email observations. -/
+@[reducible]
 def game : BayesianGame Bool where
   Ty _ := EmailView
   Act _ := EmailAction

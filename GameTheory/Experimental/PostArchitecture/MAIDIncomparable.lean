@@ -21,6 +21,7 @@ namespace GameTheory.Experimental.MAIDIncomparable
 open GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Agent
   | left
   | right

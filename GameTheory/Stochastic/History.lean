@@ -149,13 +149,17 @@ def chronologicalOfPublicHistory {horizon : ℕ}
     (history : G.PublicHistory) (hlength : history.length = horizon) :
     G.ChronologicalHistory horizon :=
   Equiv.vectorEquivFin G.StageRecord horizon
-    ⟨history.reverse, by simpa using hlength⟩
+    (⟨history.reverse, by simpa using hlength⟩ : List.Vector G.StageRecord horizon)
 
 /-- Return a chronological tuple to the public information-state convention. -/
 def publicHistoryOfChronological {horizon : ℕ}
     (history : G.ChronologicalHistory horizon) : G.PublicHistory :=
   ((Equiv.vectorEquivFin G.StageRecord horizon).symm history).toList.reverse
 
+-- `List.Vector` is a subtype synonym that the elaborator does not unfold when
+-- checking a rewrite motive, so the anonymous constructor below records the
+-- underlying subtype rather than the vector type.
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem publicHistoryOfChronological_chronologicalOfPublicHistory
     {horizon : ℕ} (history : G.PublicHistory)

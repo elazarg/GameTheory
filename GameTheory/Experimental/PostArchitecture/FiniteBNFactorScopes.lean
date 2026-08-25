@@ -131,6 +131,7 @@ theorem exists_partition_scores
 
 namespace Control
 
+set_option backward.isDefEq.respectTransparency false in
 inductive ControlNode where
   | left
   | evidence

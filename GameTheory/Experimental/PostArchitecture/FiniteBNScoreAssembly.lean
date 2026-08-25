@@ -494,6 +494,7 @@ theorem jointTable_crossMul [DecidableEq Node]
 
 namespace Control
 
+set_option backward.isDefEq.respectTransparency false in
 inductive ControlNode where
   | first
   | second

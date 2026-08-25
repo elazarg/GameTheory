@@ -243,8 +243,10 @@ theorem step_chooserOfRepeated_ofPlay (G : UtilityGame ι)
     rw [UtilityGame.repeatedPlay]
     rfl
   apply congrArg FinDist.pure
-  simpa [execution, chooserOfRepeated, hactions] using
-    Prefix.snoc_ofPlay G profile t
+  show (Prefix.ofPlay G profile t).snoc
+      (fun i => profile i (Prefix.ofPlay G profile t)) = _
+  rw [hactions]
+  exact Prefix.snoc_ofPlay G profile t
 
 /-- Running from a generated prefix to the fixed horizon returns exactly the
 corresponding longer generated prefix. -/

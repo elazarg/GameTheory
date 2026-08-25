@@ -38,6 +38,7 @@ example :
   intro who hwho
   simp [lowReports]
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem pivotOffset_highOpponent :
     (vcgSetup unitCapacityData unitCapacity_nonnegative).h 0 highOpponentReport = 3 := by
   simp only [pivotOffset]

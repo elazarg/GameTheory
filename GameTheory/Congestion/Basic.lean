@@ -47,6 +47,7 @@ abbrev Profile (C : CongestionGame ι) := ∀ i, C.Strategy i
 
 /-- The canonical strategy/outcome signature: a pure outcome records the
 whole pure congestion profile. -/
+@[reducible]
 def signature (C : CongestionGame ι) : GameSignature ι where
   Strategy := C.Strategy
   Outcome := C.Profile
@@ -101,6 +102,7 @@ def utility [Fintype ι] (C : CongestionGame ι) : Utility C.toGameForm.sig :=
   fun profile who => -C.playerCost profile who
 
 /-- The canonical bundled utility presentation. -/
+@[reducible]
 def toUtilityGame [Fintype ι] (C : CongestionGame ι) : UtilityGame ι where
   form := C.toGameForm
   utility := C.utility

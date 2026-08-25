@@ -149,7 +149,7 @@ theorem execution_step_some [∀ i, Nonempty (G.Action i)]
     G.execution.step state ⟨fun i => some (actions i), legal⟩ =
       G.nextLaw state actions := by
   simp only [execution]
-  rw [actionOfJoint_some]
+  congr 1
 
 /-- A player's observation of one completed round.  It contains the player's
 own choice, never the opponents' action profile. -/

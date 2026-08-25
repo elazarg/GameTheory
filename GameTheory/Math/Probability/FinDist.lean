@@ -140,7 +140,7 @@ theorem map_comp (g : β → γ) (f : α → β) (μ : FinDist α) :
 theorem map_injective {f : α → β} (hf : Function.Injective f) :
     Function.Injective (map f) := by
   intro first second hequal
-  letI : Nonempty α := ⟨first.support_nonempty.choose⟩
+  let : Nonempty α := ⟨first.support_nonempty.choose⟩
   have hback := congrArg (map (Function.invFun f)) hequal
   rw [map_comp, map_comp] at hback
   have hleft : Function.invFun f ∘ f = id := by
@@ -1308,7 +1308,7 @@ private theorem ennreal_tsum_pi_fin {n : ℕ} {A : Fin n → Type*}
     ∑' s : ((i : Fin n) → A i), ∏ i, g i (s i) = ∏ i, ∑' a, g i a := by
   induction n with
   | zero =>
-    haveI : Unique ((i : Fin 0) → A i) := Pi.uniqueOfIsEmpty _
+    have : Unique ((i : Fin 0) → A i) := Pi.uniqueOfIsEmpty _
     rw [tsum_eq_single default (fun s hs => absurd (Unique.eq_default s) hs)]
     simp [Finset.prod_eq_one (fun (i : Fin 0) _ => Fin.elim0 i)]
   | succ n ih =>
@@ -1361,7 +1361,7 @@ def pi (μ : ∀ i, FinDist (A i)) : FinDist (∀ i, A i) :=
   ⟨pmfPi fun i => (μ i).toPMF, by
     classical
     let embed : (∀ i, {a : A i // a ∈ (μ i).support}) → (∀ i, A i) := fun t i => (t i).1
-    letI (i : ι) : Fintype {a : A i // a ∈ (μ i).support} := (μ i).support_finite.fintype
+    let (i : ι) : Fintype {a : A i // a ∈ (μ i).support} := (μ i).support_finite.fintype
     apply (Set.finite_range embed).subset
     intro s hs
     have hcoord (i : ι) : s i ∈ (μ i).support := by

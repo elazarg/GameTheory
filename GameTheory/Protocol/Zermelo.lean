@@ -507,10 +507,10 @@ theorem backwardProfile_hasNoProfitableOneShotDeviation [DecidableEq ι]
         utility := by
   intro who history hterm choice
   by_cases hactive : E.active history.state who
-  · letI : Finite (M.Choice who (M.infoOf who history.trace)) :=
+  · let : Finite (M.Choice who (M.infoOf who history.trace)) :=
       finiteChoices who (M.infoOf who history.trace) history
         ⟨hterm, hactive, rfl⟩
-    letI : Nonempty (M.Choice who (M.infoOf who history.trace)) :=
+    let : Nonempty (M.Choice who (M.infoOf who history.trace)) :=
       ⟨fallback who (M.infoOf who history.trace)⟩
     let recurse : ∀ later : E.History,
         E.HistorySuccessor later history → ι → ℝ :=

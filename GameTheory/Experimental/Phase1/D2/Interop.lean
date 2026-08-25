@@ -29,7 +29,7 @@ def bToA {α : Type u} (μ : B.Law α) : A.Law α :=
   ⟨μ.toPMF, by
     apply (Set.finite_mem_finset μ.weight.support).subset
     intro a ha
-    simp only [Set.mem_setOf_eq, B.toPMF_apply, PMF.mem_support_iff,
+    simp only [Set.mem_ofPred_eq, B.toPMF_apply, PMF.mem_support_iff,
       ENNReal.coe_ne_zero, Finsupp.mem_support_iff] at ha ⊢
     exact ha⟩
 

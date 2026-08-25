@@ -84,6 +84,7 @@ theorem nontrivialDeviation_unique (who : Player)
   | false => exact False.elim (deviation.2 (by simp [base, haction]))
   | true => rfl
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Perfect profile observation has pairwise full rank at the base profile:
 the two players' deviations move probability mass to different public
 signals. -/
@@ -92,13 +93,13 @@ theorem perfect_pairwiseFullRank :
   rw [UtilityGame.PublicMonitoring.PairwiseFullRank,
     Fintype.linearIndependent_iff]
   intro coefficient hzero deviation
-  letI : Unique
+  let : Unique
       (UtilityGame.PublicMonitoring.NontrivialDeviation
         (G := game) base false) := {
     default := trueDeviation false
     uniq := nontrivialDeviation_unique false
   }
-  letI : Unique
+  let : Unique
       (UtilityGame.PublicMonitoring.NontrivialDeviation
         (G := game) base true) := {
     default := trueDeviation true
@@ -108,15 +109,6 @@ theorem perfect_pairwiseFullRank :
   have hsecond := congrFun hzero secondChanged
   simp only [Fintype.sum_sum_type, Fintype.sum_unique, Finset.sum_apply,
     Pi.smul_apply, smul_eq_mul] at hfirst hsecond
-  have hdefaultFalse :
-      (default : UtilityGame.PublicMonitoring.NontrivialDeviation
-        (G := game) base false) = trueDeviation false :=
-    nontrivialDeviation_unique false default
-  have hdefaultTrue :
-      (default : UtilityGame.PublicMonitoring.NontrivialDeviation
-        (G := game) base true) = trueDeviation true :=
-    nontrivialDeviation_unique true default
-  rw [hdefaultFalse, hdefaultTrue] at hfirst hsecond
   have hfirstCoefficient :
       coefficient (Sum.inl (trueDeviation false)) = 0 := by
     have hfirst' :
@@ -162,13 +154,13 @@ exercise the monitoring kernel.
 deviation direction for each player. -/
 theorem perfect_pairwiseDeviationRank_eq_two :
     perfectMonitoring.pairwiseDeviationRank base false true = 2 := by
-  letI : Unique
+  let : Unique
       (UtilityGame.PublicMonitoring.NontrivialDeviation
         (G := game) base false) := {
     default := trueDeviation false
     uniq := nontrivialDeviation_unique false
   }
-  letI : Unique
+  let : Unique
       (UtilityGame.PublicMonitoring.NontrivialDeviation
         (G := game) base true) := {
     default := trueDeviation true

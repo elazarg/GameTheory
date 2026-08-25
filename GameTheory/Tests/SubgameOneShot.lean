@@ -113,6 +113,7 @@ theorem first_mem_support (hidden : Bool) :
   rw [FinDist.support_map]
   exact ⟨hidden, mem_support_natureLaw hidden, rfl⟩
 
+@[reducible]
 def firstHistory (hidden : Bool) : twoStage.History :=
   ⟨.first hidden,
     .extend .start twoStage.noop root_noop_legal
@@ -144,6 +145,7 @@ theorem moveJoint_legal_second (hidden firstAction action : Bool) :
   cases who
   exact ⟨trivial, Set.mem_univ _⟩
 
+@[reducible]
 def secondHistory (hidden firstAction : Bool) : twoStage.History :=
   let isLegal := moveJoint_legal_first hidden firstAction
   ⟨.second hidden firstAction,
@@ -154,6 +156,7 @@ theorem second_active (hidden firstAction : Bool) :
     twoStage.active (secondHistory hidden firstAction).state () := by
   exact trivial
 
+@[reducible]
 def terminalHistory (hidden firstAction secondAction : Bool) :
     twoStage.History :=
   let isLegal := moveJoint_legal_second hidden firstAction secondAction
@@ -810,6 +813,7 @@ theorem update_unit_eq_profileOf
 theorem incumbent_eq_profileOf :
     incumbent = profileOf (prescribedPolicy false false) := rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem replace_first_value
     (choice : information.Choice () firstKnowledge) :
     continuationValue
@@ -822,6 +826,7 @@ theorem replace_first_value
     simp [policyAction, firstKnowledge, secondKnowledge, incumbent,
       prescribedPolicy, hchoice]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem replace_second_false_value
     (choice : information.Choice () (secondKnowledge false)) :
     continuationValue
@@ -832,6 +837,7 @@ theorem replace_second_false_value
   simp [policyAction, firstKnowledge, secondKnowledge, incumbent,
     prescribedPolicy]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem replace_second_true_value
     (choice : information.Choice () (secondKnowledge true)) :
     continuationValue
@@ -933,7 +939,7 @@ theorem nonterminal_subgameRoot_eq_init (root : twoStage.History)
       rcases hcross with ⟨fuel, hreach⟩
       have hequal := ReachesWithin.eq_of_trace_length_eq hreach (by rfl)
       have hstate := congrArg (fun history : twoStage.History => history.state) hequal
-      simp [firstHistory] at hstate
+      simp at hstate
   | second hidden firstAction =>
       have hhere :
           ({state := .second hidden firstAction, trace := trace} :
@@ -952,7 +958,7 @@ theorem nonterminal_subgameRoot_eq_init (root : twoStage.History)
       rcases hcross with ⟨fuel, hreach⟩
       have hequal := ReachesWithin.eq_of_trace_length_eq hreach (by rfl)
       have hstate := congrArg (fun history : twoStage.History => history.state) hequal
-      simp [secondHistory] at hstate
+      simp at hstate
   | done hidden firstAction secondAction =>
       exact False.elim (hterm trivial)
 

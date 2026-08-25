@@ -241,6 +241,7 @@ def game : Languages.EFG.Game Player where
   treeShaped := treeShaped
   singleMover := singleMover
 
+@[reducible]
 def purePolicy (action : Bool) (who : Player) : information.Policy who :=
   by
     classical
@@ -258,11 +259,13 @@ def behavioralProfile (firstAction secondAction : Bool) :
     Profile game.behavioralSignature :=
   fun who => (actionProfile firstAction secondAction who).toBehavioral
 
+@[reducible]
 def secondHistory (firstAction : Bool) : execution.History :=
   let isLegal := jointAt_legal_first firstAction
   execution.initHistory.extend isLegal (by
     exact FinDist.mem_support_pure.mpr rfl)
 
+@[reducible]
 def terminalHistory (firstAction secondAction : Bool) : execution.History :=
   let isLegal := jointAt_legal_second firstAction secondAction
   (secondHistory firstAction).extend isLegal (by
@@ -290,6 +293,7 @@ theorem step_secondChoice (firstAction secondAction : Bool) :
       FinDist.pure (.done firstAction secondAction) := by
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem historyChooser_first (firstAction secondAction : Bool) :
     information.historyChooser (actionProfile firstAction secondAction)
         execution.initHistory first_not_terminal =
@@ -301,6 +305,7 @@ theorem historyChooser_first (firstAction secondAction : Bool) :
       InformationModel.Policy.act, actionProfile, purePolicy, jointAt,
       firstChoice, infoOf_eq_state]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem historyChooser_second (firstAction secondAction : Bool) :
     information.historyChooser (actionProfile firstAction secondAction)
         (secondHistory firstAction) (second_not_terminal firstAction) =
@@ -317,6 +322,7 @@ theorem historyChooser_second (firstAction secondAction : Bool) :
     rw [infoOf_eq_state]
     simp [secondHistory, jointAt]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem run_actionProfile (firstAction secondAction : Bool) :
     information.run (actionProfile firstAction secondAction) 2 =
       FinDist.pure (terminalHistory firstAction secondAction) := by
@@ -447,6 +453,7 @@ theorem coinDeviation_nonDeviator_fixed :
       behavioralProfile true false true :=
   Profile.update_of_ne _ _ (by decide)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The fixed-nondeviator clause is semantically load-bearing: changing the
 second player's deterministic action changes the terminal history law. -/
 theorem changing_nonDeviator_changes_law :

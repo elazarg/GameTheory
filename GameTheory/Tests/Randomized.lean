@@ -26,6 +26,7 @@ namespace GameTheory.Tests.Randomized
 open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol (Trace History)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The player's two options. -/
 inductive Vote | up | down
   deriving DecidableEq, Repr, Fintype

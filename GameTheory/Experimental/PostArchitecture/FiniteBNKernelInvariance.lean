@@ -62,7 +62,7 @@ theorem restrictLaw_prob_eq_cylinderMass
   apply FinDist.expect_congr
   intro assignment _
   apply if_congr
-  · simp only [Set.mem_setOf_eq]
+  · simp only [Set.mem_ofPred_eq]
     constructor
     · intro heq node hnode
       calc

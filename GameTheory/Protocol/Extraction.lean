@@ -76,7 +76,7 @@ def DecisionSite : Type _ :=
 variable (E) in
 /-- A strategy indexed by the protocol's own decision sites, rather than by
 every syntactically possible state. -/
-def SiteStrategy : Type _ :=
+abbrev SiteStrategy : Type _ :=
   (site : E.DecisionSite) → { joint : ∀ i, Option (E.Action i) // E.Legal site.1 joint }
 
 /-- Every chooser restricts to the decision sites. -/

@@ -119,8 +119,8 @@ noncomputable def bundling (Q : Finset (Finset A)) (hQempty : ∅ ∈ Q)
         simpa using hCempty ha
       rw [hC_eq]
       simp
-    · simpa using Finset.le_sup' (fun C => v C)
-        (empty_mem_feasibleBundles hQempty (∅ : Finset A))
+    · exact v.empty.ge.trans (Finset.le_sup' (fun C => v C)
+        (empty_mem_feasibleBundles hQempty (∅ : Finset A)))
   monotone := by
     intro B C hBC
     apply Finset.sup'_le

@@ -169,6 +169,7 @@ theorem truthful_has_strict_deviation_loss :
         (Profile.update falseReports false true) false false = -1 := by
   norm_num [DirectQuasiLinear.trueUtility, falseReports]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem truthful_isDSIC : truthful.IsDSIC := by
   intro who types reports misreport
   cases who

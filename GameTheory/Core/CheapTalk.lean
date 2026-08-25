@@ -40,7 +40,7 @@ abbrev messageSignature : GameSignature.{uι, um, 0} ι where
 
 /-- A cheap-talk strategy sends a message and supplies a base strategy after
 every public message profile. -/
-def Strategy (i : ι) : Type (max uι um us) :=
+abbrev Strategy (i : ι) : Type (max uι um us) :=
   C.Message i × (Profile C.messageSignature → F.sig.Strategy i)
 
 /-- The enriched static signature. -/

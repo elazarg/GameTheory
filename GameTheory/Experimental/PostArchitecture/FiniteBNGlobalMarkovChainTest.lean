@@ -24,6 +24,7 @@ open GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
 
 abbrev Node := FiniteBNMoralSeparation.ControlNode
 
+set_option backward.isDefEq.respectTransparency false in
 deriving instance Fintype for FiniteBNMoralSeparation.ControlNode
 
 def Value : Node → Type

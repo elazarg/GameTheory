@@ -64,7 +64,7 @@ private theorem countable_stepEvent [Fintype ι] [Countable E.State]
 
 private theorem countable_stepEvent_list [Fintype ι] [Countable E.State]
     [∀ i, Countable (E.Action i)] : Countable (List E.StepEvent) := by
-  letI : Countable E.StepEvent := countable_stepEvent E
+  let : Countable E.StepEvent := countable_stepEvent E
   infer_instance
 
 private theorem history_code_injective [Fintype ι] [Countable E.State]
@@ -116,7 +116,7 @@ private theorem history_code_injective [Fintype ι] [Countable E.State]
 
 theorem historyCountable [Fintype ι] [Countable E.State]
     [∀ i, Countable (E.Action i)] : Countable E.History := by
-  letI : Countable E.StepEvent := countable_stepEvent E
+  let : Countable E.StepEvent := countable_stepEvent E
   exact Function.Injective.countable
     (f := fun history : E.History =>
       (Trace.reverseEvents E history.trace, history.state))
@@ -137,10 +137,10 @@ private def finiteUnitOptionBool : ExecutionProtocol Unit where
 /-- Concrete finite-carrier control for the countability seam. -/
 theorem finiteUnitOptionBool_historyCountable :
     Countable finiteUnitOptionBool.History := by
-  letI : Countable finiteUnitOptionBool.State := by
+  let : Countable finiteUnitOptionBool.State := by
     dsimp [finiteUnitOptionBool]
     infer_instance
-  letI : ∀ i, Countable (finiteUnitOptionBool.Action i) := by
+  let : ∀ i, Countable (finiteUnitOptionBool.Action i) := by
     intro i
     dsimp [finiteUnitOptionBool]
     infer_instance

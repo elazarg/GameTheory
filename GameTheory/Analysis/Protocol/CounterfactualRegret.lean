@@ -429,7 +429,7 @@ private theorem playerStepProb_eq_one_of_none
   have hinactive : ¬ E.active state who := by
     have hlegal := E.legalOption_of_legal joint.2 who
     simpa [hchoice, LegalOption] using hlegal
-  letI : Subsingleton (M.Choice who (M.infoOf who trace)) :=
+  let : Subsingleton (M.Choice who (M.infoOf who trace)) :=
     ⟨fun first second => by
       apply Subtype.ext
       have hfirst := (M.menu_adequate who trace first.1).mp first.2

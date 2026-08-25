@@ -94,7 +94,7 @@ private theorem payoff_against_defect_le_one
 private theorem opponentMinmax_lt_cooperation (who : Fin 2) :
     repeatedDilemma.mixed.opponentMinmaxLevel who < 3 := by
   let H := repeatedDilemma.mixed
-  letI : ∀ i, Nonempty (H.form.sig.Strategy i) :=
+  let : ∀ i, Nonempty (H.form.sig.Strategy i) :=
     fun _ => ⟨FinDist.pure Choice.cooperate⟩
   obtain ⟨bound, _hbound0, hbound⟩ :=
     H.exists_uniform_stagePayoff_abs_bound

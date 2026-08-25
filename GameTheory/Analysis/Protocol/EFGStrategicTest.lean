@@ -93,13 +93,6 @@ theorem runHistoryFor_one_decision_fixed (action hidden : Bool) :
   rw [ExecutionProtocol.runHistoryFor_succ_of_not_terminal
     _ 0 (decision_not_terminal hidden)]
   simp [execution, decisionHistory, preferFalse]
-  simp only [InformationModel.historyChooser, InformationModel.jointAt,
-    InformationModel.Policy.act, fixedProfile]
-  have hchoice :
-      ↑(fixedPolicy action
-        (signals.infoOf .player (decisionTrace hidden))) = some action := by
-    exact historyChooser_decision_fixed action hidden
-  simp [hchoice]
 
 theorem fixed_value (action : Bool) :
     expectedUtility preferFalse .player

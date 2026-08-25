@@ -78,6 +78,7 @@ variable (E : ExecutionProtocol ι)
 
 /-- A joint action is legal at a state when execution has not stopped there and
 every active player supplies an available action. -/
+@[reducible]
 def Legal (state : E.State) (joint : ∀ i, Option (E.Action i)) : Prop :=
   ¬ E.terminal state ∧ IsLegalJoint (E.active state) (E.available state) joint
 
@@ -170,7 +171,7 @@ legal joint action is known to exist. -/
 
 /-- A policy for the whole protocol. Terminal states are never queried, so no
 total legal-joint chooser is required anywhere. -/
-def Chooser : Type _ :=
+abbrev Chooser : Type _ :=
   (state : E.State) → ¬ E.terminal state →
     { joint : ∀ i, Option (E.Action i) // E.Legal state joint }
 

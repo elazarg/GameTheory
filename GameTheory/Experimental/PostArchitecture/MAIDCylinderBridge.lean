@@ -107,7 +107,7 @@ theorem cylinder_probOf_eq_cylinderMass
     law.probOf
         (cylinder nodes (Assignment.restrict diagram witness nodes)) =
       cylinderMass diagram.Value law nodes witness := by
-  rw [cylinderMass, cylinder_eq_agreeOn]
+  rw [cylinder_eq_agreeOn]
   rfl
 
 /-- The same-witness pair-cylinder mass is the generic mass on the union. -/
@@ -120,7 +120,7 @@ theorem pairCylinder_probOf_eq_cylinderMass
           (Assignment.restrict diagram witness first)
           (Assignment.restrict diagram witness second)) =
       cylinderMass diagram.Value law (first ∪ second) witness := by
-  rw [cylinderMass, pairCylinder_eq_agreeOn]
+  rw [pairCylinder_eq_agreeOn]
   rfl
 
 /-- The same-witness triple-cylinder mass is the generic mass on the
@@ -136,7 +136,7 @@ theorem tripleCylinder_probOf_eq_cylinderMass
           (Assignment.restrict diagram witness second)
           (Assignment.restrict diagram witness evidence)) =
       cylinderMass diagram.Value law (first ∪ second ∪ evidence) witness := by
-  rw [cylinderMass, tripleCylinder_eq_agreeOn]
+  rw [tripleCylinder_eq_agreeOn]
   rfl
 
 /-- The coordinate cross-product theorem reads directly as the four generic

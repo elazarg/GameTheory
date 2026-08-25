@@ -45,18 +45,21 @@ theorem response_eq_of_unique {Leader Follower : Type}
   hunique (response commitment) (hresponse candidate)
     (hcandidate (response commitment))
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The two strategic roles. -/
 inductive Player
   | leader
   | follower
   deriving DecidableEq, Fintype, Repr
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The incumbent's commitment. -/
 inductive LeaderAction
   | fight
   | accommodate
   deriving DecidableEq, Fintype, Repr
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The entrant's response. -/
 inductive FollowerAction
   | enter

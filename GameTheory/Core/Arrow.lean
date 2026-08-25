@@ -188,7 +188,7 @@ private theorem strictRanking_lt [LinearOrder α] :
 
 private theorem exists_strictRanking (α : Type uα) :
     ∃ relation : StrictRelation α, StrictRanking relation := by
-  letI : LinearOrder α := WellOrderingRel.isWellOrder.linearOrder
+  let : LinearOrder α := WellOrderingRel.isWellOrder.linearOrder
   exact ⟨(· < ·), strictRanking_lt⟩
 
 /-- Reflexive closure changes a strict ranking into the corresponding weak

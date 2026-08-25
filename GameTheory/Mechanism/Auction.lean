@@ -88,6 +88,7 @@ end QuasiLinear
 /-- Construct the deterministic utility game induced by an allocation rule,
 payments, and valuations.  This is the generic quasilinear construction; an
 auction-specific payoff model need not pretend to expose all of this data. -/
+@[reducible]
 def auctionGame {Bid : ι → Type} {Alloc : Type}
     (allocation : (∀ bidder, Bid bidder) → Alloc)
     (payment : (∀ bidder, Bid bidder) → ι → ℝ)
@@ -142,7 +143,7 @@ theorem auctionGame_ic_isNash {Bid : ι → Type} {Alloc : Type}
       (euPreference (auctionGame allocation payment valuation).utility) bids := by
   apply IsDominantProfile.isNash
   intro bidder alternative profile
-  simpa only [euPreference_apply, auctionGame_expectedUtility] using
+  simpa only [euPreference_apply, expectedUtility_pure] using
     hIC bidder profile alternative
 
 /-- The payoff of the strict-winner second-price presentation.  The price is
@@ -213,7 +214,7 @@ omit [DecidableEq ι] in
 theorem bid_le_bid_winner (bids : BidProfile ι) (bidder : ι) :
     bids bidder ≤ bids (winner bids) := by
   rw [bid_winner_eq_maxBid bids]
-  simpa [maxBid] using Finset.le_sup' bids (Finset.mem_univ bidder)
+  exact Finset.le_sup' bids (Finset.mem_univ bidder)
 
 omit [DecidableEq ι] in
 /-- A strictly highest bidder is the chosen winner. -/

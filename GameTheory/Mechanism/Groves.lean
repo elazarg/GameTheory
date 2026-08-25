@@ -121,6 +121,7 @@ theorem groves_truthful [Fintype ι] [DecidableEq ι]
 
 /-- The deterministic utility game at a fixed profile of true types. Reports
 are strategies and realized outcomes retain the report profile. -/
+@[reducible]
 def toUtilityGame [Fintype ι] [DecidableEq ι] (trueTypes : V.ReportProfile) : UtilityGame ι :=
   Auction.auctionGame V.alloc V.grovesPayment
     (fun i outcome => V.val i (trueTypes i) outcome)
@@ -150,7 +151,7 @@ theorem truthfulStrategy_isExPostNash [Fintype ι] [DecidableEq ι]
   rw [isNash_iff]
   intro who alternative
   rw [euPreference_apply]
-  simp only [toUtilityGame, Auction.auctionGame_expectedUtility]
+  simp only [toUtilityGame, expectedUtility_pure]
   have htruth := V.groves_truthful alloc_efficient h_independent trueTypes who
     (trueTypes who) alternative
   rw [Profile.update_eq_self] at htruth

@@ -121,7 +121,7 @@ theorem mem_orientedPredecessors_iff
     source ∈ orientedPredecessors view owner target ↔
       UtilityView.OrientedRelevance view source target := by
   classical
-  letI := decisionSiteFintype (diagram := diagram) owner
+  let := decisionSiteFintype (diagram := diagram) owner
   simp [orientedPredecessors]
 
 /-- `SReachAcyclic` is acyclicity of the predecessor-set presentation. -/
@@ -133,7 +133,7 @@ theorem orientedPredecessors_acyclic
       (fun source target : DecisionSite diagram owner =>
         source ∈ orientedPredecessors view owner target) := by
   classical
-  letI := decisionSiteFintype (diagram := diagram) owner
+  let := decisionSiteFintype (diagram := diagram) owner
   intro vertex hcycle
   have hconvert : ∀ {first second : DecisionSite diagram owner},
       Relation.TransGen
@@ -175,7 +175,7 @@ theorem later_not_oriented_source
     ¬ UtilityView.OrientedRelevance view
       (topological.order.get later) (topological.order.get earlier) := by
   classical
-  letI := decisionSiteFintype (diagram := diagram) owner
+  let := decisionSiteFintype (diagram := diagram) owner
   let earlierSite : DecisionSite diagram owner := topological.order.get earlier
   let laterSite : DecisionSite diagram owner := topological.order.get later
   have hnot : ¬ UtilityView.OrientedRelevance view laterSite earlierSite := by
@@ -261,7 +261,7 @@ theorem expand_uniformReducedOwnerPolicyOfSemantics_fullyMixedAt_all
         (pruning.expandOwnerPolicy owner
           (uniformReducedOwnerPolicyOfSemantics pruning semantics owner))
         target := by
-  letI : ∀ node, Nonempty (diagram.Value node) :=
+  let : ∀ node, Nonempty (diagram.Value node) :=
     nonemptyValue_of_semantics semantics
   simpa [uniformReducedOwnerPolicyOfSemantics] using
     expand_uniformReducedOwnerPolicy_fullyMixedAt_all pruning owner

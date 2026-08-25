@@ -143,6 +143,7 @@ theorem objective_update [Fintype Player] [DecidableEq Player]
 
 /-- The affine maximizer with Clarke externality payments, represented by the
 canonical quasilinear direct-mechanism owner. -/
+@[reducible]
 noncomputable def toQuasiLinearMechanism [Fintype Player]
     [DecidableEq Player] [Fintype Alternative] [Nonempty Alternative] :
     QuasiLinearMechanism Player Alternative where
@@ -164,7 +165,7 @@ theorem weight_mul_trueUtility [Fintype Player] [DecidableEq Player]
         A.toQuasiLinearMechanism.trueUtility reports who trueType =
       A.objective (Profile.update reports who trueType) (A.choose reports) -
         A.pivotObjective reports who := by
-  simp only [QuasiLinearMechanism.trueUtility, toQuasiLinearMechanism]
+  simp only [QuasiLinearMechanism.trueUtility]
   rw [A.objective_update]
   field_simp
   ring
@@ -175,7 +176,6 @@ theorem payment_nonneg [Fintype Player] [DecidableEq Player]
     [Fintype Alternative] [Nonempty Alternative]
     (reports : A.ReportProfile) (who : Player) (hweight : 0 < A.weight who) :
     0 ≤ A.toQuasiLinearMechanism.payment reports who := by
-  simp only [toQuasiLinearMechanism]
   refine mul_nonneg (le_of_lt (div_pos one_pos hweight)) ?_
   rw [sub_nonneg]
   exact Finset.le_sup' (A.othersObjective reports who)

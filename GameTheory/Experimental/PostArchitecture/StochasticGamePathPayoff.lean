@@ -131,6 +131,7 @@ theorem fairBit_nonconstant :
   have := congrArg (fun law => law.prob (some false)) h
   simp [FinDist.prob_pure_eq_ite] at this
 
+set_option backward.isDefEq.respectTransparency false in
 theorem pathGame_finite_average_two :
     pathGame.finiteAveragePayoff none 2 pathProfile () = (1 / 4 : ℝ) := by
   norm_num [Stochastic.Game.finiteAveragePayoff, Stochastic.Game.horizonUtility,

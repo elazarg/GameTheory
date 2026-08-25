@@ -40,10 +40,10 @@ structure Structure (Player : Type uPlayer) (Node : Type uNode) where
 variable {Player : Type uPlayer} {Node : Type uNode}
 variable (diagram : Structure Player Node)
 
-def Assignment :=
+abbrev Assignment :=
   (node : Node) → diagram.Value node
 
-def Config (nodes : Finset Node) :=
+abbrev Config (nodes : Finset Node) :=
   (node : {node // node ∈ nodes}) → diagram.Value node.1
 
 def Assignment.restrict (assignment : Assignment diagram)

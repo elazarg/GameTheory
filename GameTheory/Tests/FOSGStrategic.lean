@@ -55,7 +55,8 @@ theorem outcomeUtility_twoBit (actions : Bool → Bool) (who : Bool) :
         (GameTheory.Examples.FOSG.twoBitSource.outcome actions) who =
       if actions who then 1 else 0 := by
   cases who <;>
-    simp [outcomeUtility, GameTheory.Examples.FOSG.twoBitSource]
+    simp [outcomeUtility, GameTheory.Examples.FOSG.twoBitSource] <;>
+    rfl
 
 /-- Utility is external to FOSG syntax and rewards each player's own source
 action.  It is total on short histories through `utilityOfOutcome`. -/
@@ -64,6 +65,7 @@ def sourceUtility (history : source.History) (who : Bool) : ℝ :=
     outcomeUtility
     (outcomeOfState GameTheory.Examples.FOSG.twoBitSource history.state) who
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Updating one deterministic behavioral coordinate is the behavioral lift
 of updating that player's simultaneous source action. -/
 theorem behavioralProfile_update (actions : Bool → Bool)
@@ -81,6 +83,7 @@ theorem behavioralProfile_update (actions : Bool → Bool)
     simp [behavioralProfile, actionPolicy]
   · simp [behavioralProfile, actionPolicy, hplayer]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A deterministic behavioral source profile realizes the utility of the
 corresponding simultaneous action profile. -/
 theorem expectedUtility_behavioralProfile (actions : Bool → Bool)
@@ -150,6 +153,7 @@ theorem allTrue_isNash :
       rw [expectedUtility_behavioralProfile]
       simp [allTrueActions]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The all-false control is not Nash: player `false` can change only its own
 simultaneous action and raise its payoff from zero to one. -/
 theorem allFalse_not_isNash :

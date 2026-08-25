@@ -62,6 +62,7 @@ theorem hostile_horizon_nash_is_canonical (initial : Bool) (horizon : ℕ)
 /-! The same nondegenerate dynamics with zero stage utility provide an exact
 positive and negative check for the payoff-level uniformity definition. -/
 
+@[reducible]
 def zeroPayoff : Game Bool where
   State := Bool
   Action := fun _ => Bool
@@ -94,7 +95,7 @@ theorem zeroPayoff_historyAverageUtility (initial : Bool) (horizon : ℕ)
     | start => rfl
     | extend prior joint isLegal realized ih =>
         rw [Protocol.ExecutionProtocol.Trace.valueSum_extend, ih]
-        simp [Game.eventUtility, zeroPayoff]
+        simp [Game.eventUtility]
   show (horizon : ℝ)⁻¹ *
     trace.valueSum (fun event => zeroPayoff.eventUtility initial event who) = 0
   rw [hsum]
@@ -140,6 +141,7 @@ theorem one_not_isUniformEquilibriumPayoff (initial : Bool) :
 /-- The initial state pays one or two (depending on the player), then the game
 enters a zero-payoff absorbing state. Payoffs are nonconstant along every
 positive-horizon path, and the transient contribution vanishes uniformly. -/
+@[reducible]
 def transientPayoff : Game Bool where
   State := Bool
   Action := fun _ => Bool

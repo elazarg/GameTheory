@@ -159,7 +159,7 @@ private theorem exists_reducedOwnerPolicy_dominates_on_sourceFirst
           ((nativeBehavioralGameForm semantics).play
             (Profile.update (pruning.expandPolicy policy) owner
               (pruning.expandOwnerPolicy owner reducedReplacement))) := by
-  letI : Fintype (Assignment diagram) := by
+  let : Fintype (Assignment diagram) := by
     unfold Assignment
     infer_instance
   induction sites generalizing initial fullReplacement with
@@ -207,10 +207,10 @@ private theorem exists_reducedOwnerPolicy_dominates_on_sourceFirst
         exact List.mem_map.mpr ⟨entry, hentry, rfl⟩
       let changed := applySourceChanges
         (pruning.expandOwnerPolicy owner initial) changes
-      letI : Fintype (FullContext target) := by
+      let : Fintype (FullContext target) := by
         unfold FullContext Config
         infer_instance
-      letI : ∀ term : view.UtilitySite owner,
+      let : ∀ term : view.UtilitySite owner,
           Fintype (TermConfig view term) := fun _ => by
         unfold TermConfig Config
         infer_instance

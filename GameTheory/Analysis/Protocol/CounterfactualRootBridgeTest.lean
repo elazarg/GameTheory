@@ -308,9 +308,8 @@ theorem deviationPath_stepRootGain
             incumbentBehavioralStrategy () firstSite terminalPayoff 2
               (firstChoice true) by rfl,
       first_counterfactualActionRegret, mul_zero]
-  · simpa [deviationPath, pathLocalRegret, finalCommittedStrategy,
-      firstCommittedSecondTruePolicy] using
-        secondCommit_rootGain_eq_counterfactualActionRegret
+  · rw [one_mul]
+    exact secondCommit_rootGain_eq_counterfactualActionRegret
 
 /-- The two topologically ordered local bridges telescope to the exact whole
 behavioral-policy root gain, with both local regret terms visible. -/

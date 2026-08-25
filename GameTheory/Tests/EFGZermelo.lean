@@ -18,11 +18,13 @@ namespace GameTheory.Tests.EFGZermelo
 open GameTheory.Languages GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol
 
+set_option backward.isDefEq.respectTransparency false in
 inductive State
   | chance | left | second | right | exited | lnone | lpunish | lreward
   | punished | rewarded | snone | sexit | scontinue
   deriving DecidableEq, Fintype
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Action | exit | continue | punish | reward deriving DecidableEq, Fintype
 
 def fairCoin : FinDist State := FinDist.mix (1 / 2) (by norm_num) (by norm_num)
@@ -295,14 +297,16 @@ theorem left_mem_chance_step :
       (execution.step .chance ⟨execution.noop, chanceLegal⟩).support := by
   exact (fairCoin_support .left).mpr (Or.inl rfl)
 
+@[reducible]
 def leftTrace : execution.Trace .left :=
   .extend .start execution.noop chanceLegal left_mem_chance_step
 
+@[reducible]
 def leftHistory : execution.History := ⟨.left, leftTrace⟩
 
-theorem left_not_terminal : ¬ execution.terminal leftHistory.state := by simp [leftHistory]
+theorem left_not_terminal : ¬ execution.terminal leftHistory.state := by simp
 
-theorem left_active : execution.active leftHistory.state () := by simp [leftHistory]
+theorem left_active : execution.active leftHistory.state () := by simp
 
 def continueJoint : Unit → Option Action := fun _ => some .continue
 
@@ -310,13 +314,14 @@ theorem continueLegal : execution.Legal leftHistory.state continueJoint := by
   apply execution.legal_of_legalOption left_not_terminal
   intro who
   cases who
-  exact ⟨left_active, by simp [leftHistory, execution]⟩
+  exact ⟨left_active, by simp [execution]⟩
 
 theorem second_mem_continue_step :
     State.second ∈
       (execution.step leftHistory.state ⟨continueJoint, continueLegal⟩).support := by
-  simp [leftHistory, continueJoint, execution, next]
+  simp [continueJoint, execution, next]
 
+@[reducible]
 def secondHistory : execution.History :=
   leftHistory.extend continueLegal second_mem_continue_step
 
@@ -336,10 +341,10 @@ theorem second_active : execution.active secondHistory.state () := by
   simp [secondHistory]
 
 def exitChoice : information.Choice () (information.infoOf () leftHistory.trace) :=
-  ⟨some .exit, by rw [infoOf_state]; simp [menu, leftHistory]⟩
+  ⟨some .exit, by rw [infoOf_state]; simp [menu]⟩
 
 def continueChoice : information.Choice () (information.infoOf () leftHistory.trace) :=
-  ⟨some .continue, by rw [infoOf_state]; simp [menu, leftHistory]⟩
+  ⟨some .continue, by rw [infoOf_state]; simp [menu]⟩
 
 def punishChoice : information.Choice () (information.infoOf () secondHistory.trace) :=
   ⟨some .punish, by rw [infoOf_state]; simp [menu, secondHistory]⟩
@@ -435,6 +440,7 @@ theorem backwardChooser_second_action :
   rw [secondBestChoice_eq_rewardChoice]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Backward induction prescribes reward at the consequential off-path
 decision, rather than merely returning an opaque equilibrium witness. -/
 theorem bellmanProfile_chooses_reward :
@@ -579,7 +585,7 @@ theorem bellmanProfile_chooses_exit :
     _ = (information.backwardPolicy singleMover fallbackProfile
         finiteDecisionChoices wellFoundedPlay utility ()).act
         (information.infoOf () leftHistory.trace) := by
-          simp [infoOf_state, leftHistory]
+          simp [leftHistory]
     _ = (information.backwardChooser singleMover fallbackProfile
         finiteDecisionChoices wellFoundedPlay utility
         leftHistory left_not_terminal).1 () :=

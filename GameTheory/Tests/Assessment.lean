@@ -222,12 +222,12 @@ theorem exitLegal : execution.Legal leftHistory.state exitJoint := by
   apply execution.legal_of_legalOption left_not_terminal
   intro who
   cases who
-  exact ⟨left_active, by simp [leftHistory, execution]⟩
+  exact ⟨left_active, by simp [execution]⟩
 
 theorem exited_mem_exit_step :
     State.exited ∈
       (execution.step leftHistory.state ⟨exitJoint, exitLegal⟩).support := by
-  simp [leftHistory, exitJoint, execution, next]
+  simp [exitJoint, execution, next]
 
 def exitedHistory : execution.History :=
   leftHistory.extend exitLegal exited_mem_exit_step

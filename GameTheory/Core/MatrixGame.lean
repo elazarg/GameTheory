@@ -17,8 +17,9 @@ open GameTheory GameTheory.Math.Probability
 universe u
 
 /-- The dependent action family of a row/column matrix game. -/
-abbrev Action (I J : Type u) : Fin 2 → Type u :=
-  Fin.cons I (Fin.cons J fun k : Fin 0 => k.elim0)
+abbrev Action (I J : Type u) : Fin 2 → Type u
+  | 0 => I
+  | 1 => J
 
 /-- A matrix game as the canonical deterministic game form. -/
 @[reducible]
@@ -92,8 +93,8 @@ theorem mixedProfile_update_zero {I J : Type u}
     Profile.update (mixedProfile row col) 0 row' = mixedProfile row' col := by
   funext player
   rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) player with rfl | rfl
-  · simp
-  · simp [mixedProfile]
+  · rfl
+  · rfl
 
 @[simp]
 theorem mixedProfile_update_one {I J : Type u}
@@ -101,8 +102,8 @@ theorem mixedProfile_update_one {I J : Type u}
     Profile.update (mixedProfile row col) 1 col' = mixedProfile row col' := by
   funext player
   rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) player with rfl | rfl
-  · simp [mixedProfile]
-  · simp
+  · rfl
+  · rfl
 
 /-- Expected payoff to the row player under independent mixed play. -/
 def expectedPayoff {I J : Type u} (A : I → J → ℝ)
@@ -159,8 +160,8 @@ theorem isSaddlePoint_iff_guarantees_caps {I J : Type u}
   · rintro ⟨hrow, hcol⟩
     constructor
     · intro row'
-      simpa only [expectedPayoff, mixedProfile_update_zero] using hcol row'
+      exact hcol row'
     · intro col'
-      simpa only [expectedPayoff, mixedProfile_update_one] using hrow col'
+      exact hrow col'
 
 end GameTheory.MatrixGame

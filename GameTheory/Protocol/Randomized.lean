@@ -31,7 +31,7 @@ namespace ExecutionProtocol
 variable (E) in
 /-- A chooser that answers each history with a law over legal joint actions.
 Legality stays a typing constraint: no law can put mass on an illegal move. -/
-def RandomizedChooser : Type _ :=
+abbrev RandomizedChooser : Type _ :=
   (h : E.History) → ¬ E.terminal h.state →
     FinDist { joint : ∀ i, Option (E.Action i) // E.Legal h.state joint }
 

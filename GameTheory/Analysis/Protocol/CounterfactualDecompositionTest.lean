@@ -180,7 +180,7 @@ theorem counterfactualReach_second (hidden firstAction : Bool) :
     InformationModel.opponentsStepProb
   simp only [Finset.univ_unique, Finset.erase_singleton,
     Finset.prod_empty, one_mul]
-  simp [firstHistory, twoStage, chosenAction, moveJoint]
+  simp [chosenAction, moveJoint]
 
 /-- The alternative has unit own reach at the first decision. -/
 theorem alternativeOwnReach_first (hidden : Bool) :
@@ -211,6 +211,7 @@ theorem alternativeOwnReach_second (hidden firstAction : Bool) :
     simp [FinDist.prob_pure_eq_ite, firstChoice,
       InformationModel.ownPlayReachProbability]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A pure second-site commitment reaches the terminal complementarity payoff
 in one step. -/
 theorem behavioralContinuation_second_committed
@@ -374,6 +375,7 @@ theorem incumbentFirstCommit_secondLaw
     (infoOf_secondHistory hidden firstAction)
     (secondChoiceAtHistory hidden firstAction false) rfl
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Once the first commitment has selected a branch, the incumbent still plays
 `false` at the second site, so the remaining one-step payoff is zero. -/
 theorem behavioralContinuation_firstCommit_at_second

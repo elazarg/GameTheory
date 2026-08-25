@@ -117,10 +117,10 @@ theorem ofMeasure_map_cond_toMeasure {α : Type u} {β : Type v}
     FinDist.ofMeasure pushed = FinDist.map f (law.condOn event hmeet) := by
   classical
   let conditioned := ProbabilityTheory.cond law.toMeasure event
-  letI : IsProbabilityMeasure conditioned :=
+  let : IsProbabilityMeasure conditioned :=
     ProbabilityTheory.cond_isProbabilityMeasure hmass
   let pushed := conditioned.map f
-  letI : IsProbabilityMeasure pushed :=
+  let : IsProbabilityMeasure pushed :=
     Measure.isProbabilityMeasure_map hf.aemeasurable
   apply FinDist.ext_of_prob
   intro b

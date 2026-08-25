@@ -251,7 +251,7 @@ theorem mwSelfPlay_exists_isεCoarseCorrelatedEq_of_pos {L : ℝ}
   have heta₀epsilon' : eta₀ * (2 * width) ≤ epsilon :=
     (le_div_iff₀ htwiceWidth).1 heta₀epsilon
   obtain ⟨T', hT'⟩ := exists_nat_ge (2 * width * L / (eta₀ * epsilon))
-  haveI : NeZero (T' + 1) := ⟨Nat.succ_ne_zero _⟩
+  have : NeZero (T' + 1) := ⟨Nat.succ_ne_zero _⟩
   have hTpos : (0 : ℝ) < ((T' + 1 : ℕ) : ℝ) := by
     exact_mod_cast Nat.succ_pos T'
   refine ⟨G.form.timeAverage (fun round : Fin (T' + 1) =>

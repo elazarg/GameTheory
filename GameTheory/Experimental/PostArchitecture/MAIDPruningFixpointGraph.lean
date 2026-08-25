@@ -224,6 +224,7 @@ end UtilityView
 
 namespace TwoDecision
 
+set_option backward.isDefEq.respectTransparency false in
 inductive ExampleNode
   | signal
   | early
@@ -341,6 +342,7 @@ def cycleView : UtilityView (diagram := exampleDiagram) exampleSemantics where
 def jointSite : cycleView.UtilitySite () :=
   ⟨0, by simp [cycleView]⟩
 
+set_option backward.isDefEq.respectTransparency false in
 theorem early_relevant :
     cycleView.IsRelevantUtilityTerm earlySite jointSite := by
   apply Relation.TransGen.single
@@ -348,8 +350,8 @@ theorem early_relevant :
     MAIDRequisiteObservation.UtilityView.graphParents,
     MAIDRequisiteObservation.UtilityView.term,
     cycleView, jointSite, jointTerm, earlySite]
-  exact Finset.mem_insert_self _ _
 
+set_option backward.isDefEq.respectTransparency false in
 theorem late_relevant :
     cycleView.IsRelevantUtilityTerm lateSite jointSite := by
   apply Relation.TransGen.single
@@ -357,7 +359,6 @@ theorem late_relevant :
     MAIDRequisiteObservation.UtilityView.graphParents,
     MAIDRequisiteObservation.UtilityView.term,
     cycleView, jointSite, jointTerm, lateSite]
-  exact Finset.mem_insert.mpr (Or.inr (Finset.mem_singleton.mpr rfl))
 
 /-- In the shared-utility skeleton, the late decision's mechanism is
 s-reachable to the early decision. -/

@@ -24,6 +24,7 @@ open GameTheory.Languages.MAID.ToEFG
 open GameTheory.Languages.MAID.Order
 open GameTheory.Languages.MAID.FrontierEquivalence
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Node
   | signal
   | decision

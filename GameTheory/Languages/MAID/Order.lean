@@ -626,7 +626,7 @@ theorem behavioralJoint_eq_serialJointLaw
                 (diagram.observedParents node)) :=
         viewOf_eq_acting topological semantics owner state
           (pending_eq_some topological hpending) hkind
-      rw [hview, behavioralPolicy, ownerBehavioralPolicy,
+      rw [hview, behavioralPolicy, ownerBehavioralPolicy.eq_def,
         FinDist.map_comp,
         FinDist.map_comp]
       unfold serialJointLaw

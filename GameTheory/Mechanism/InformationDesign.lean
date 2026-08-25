@@ -228,7 +228,7 @@ theorem exists_optimalPersuasive [Finite Message] [Finite Action]
     (hfeasible : ∃ rule : P.DecisionRule, P.IsPersuasive rule) :
     ∃ rule : P.DecisionRule, P.IsOptimalPersuasive rule := by
   let FeasibleRule := {rule : P.DecisionRule // P.IsPersuasive rule}
-  letI : Nonempty FeasibleRule :=
+  let : Nonempty FeasibleRule :=
     ⟨⟨Classical.choose hfeasible, Classical.choose_spec hfeasible⟩⟩
   obtain ⟨best, hbest⟩ :=
     Finite.exists_max fun rule : FeasibleRule => P.senderEU rule.1

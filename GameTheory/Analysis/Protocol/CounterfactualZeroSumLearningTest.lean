@@ -221,6 +221,7 @@ theorem outcomeUtility_twoBit (actions : Bool → Bool) (who : Bool) :
   cases who <;>
     simp [outcomeUtility, GameTheory.Examples.FOSG.twoBitSource]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem expectedUtility_behavioralProfile (actions : Bool → Bool)
     (who : Bool) :
     expectedUtility protocolUtility who
@@ -299,13 +300,9 @@ theorem run_updatedBaseline_eq_behavioralProfile (who : Bool)
     rw [BehavioralPolicy.commit_self (M := information)]
     apply congrArg FinDist.pure
     apply Subtype.ext
-    calc
-      choice.1 = some (actionOfChoice who choice) :=
-        choice_eq_some_actionOfChoice who choice
-      _ = _ := by
-        show some (actionOfChoice who choice) =
-          some (committedActions who choice who)
-        simp [committedActions]
+    rw [choice_eq_some_actionOfChoice who choice]
+    simp [committedActions, Policy.ofAction]
+    rfl
   · rw [Profile.update_of_ne _ _ hplayer]
     show baselineProfile player (initialSite player).1 =
       behavioralProfile (committedActions who choice) player
@@ -399,6 +396,7 @@ theorem localVector_coordinate_eq_gain (who : Bool)
   rw [local_realization, regretPayoff_ofLp]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem learnedLaw_zero (who : Bool) :
     learnedLaw who 0 = FinDist.pure (fallbackChoice who) := by
   simp [learnedLaw, localAverage, counterfactualRegretMatchAverage,

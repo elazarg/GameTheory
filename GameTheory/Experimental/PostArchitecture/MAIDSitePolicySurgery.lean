@@ -206,6 +206,7 @@ theorem assignmentRun_site_surgery_eq
 
 namespace TwoSiteControl
 
+set_option backward.isDefEq.respectTransparency false in
 inductive ControlNode
   | bit
   | tri

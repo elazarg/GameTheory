@@ -25,6 +25,7 @@ variable {G : UtilityGame.{uι, us, uo} ι}
 /-- Strategic signature for public monitored strategies.  Its outcome is the
 chosen monitored profile itself, so utilities may evaluate its generated
 finite-history laws without adding a second equilibrium engine. -/
+@[reducible]
 def monitoredSignature (M : G.PublicMonitoring) : GameSignature ι where
   Strategy := M.MonitoredStrategy
   Outcome := M.MonitoredProfile

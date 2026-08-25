@@ -225,6 +225,7 @@ theorem truthful_weakly_dominant (value : ι → ℝ) (reserve : ℝ)
     · simp [hdeviation]
 
 /-- The deterministic canonical utility game induced by the reserve Vickrey rules. -/
+@[reducible]
 def reserveVickreyGame (value : ι → ℝ) (reserve : ℝ) : UtilityGame ι :=
   auctionGame (reserveVickreyAllocation reserve) (reserveVickreyPayment reserve)
     (reserveVickreyValue value)
@@ -236,14 +237,14 @@ theorem reserveVickreyGame_expectedUtility (value : ι → ℝ) (reserve : ℝ)
     expectedUtility (reserveVickreyGame value reserve).utility who
       ((reserveVickreyGame value reserve).form.play bids) =
         reserveVickreyUtility value reserve bids who := by
-  simp [reserveVickreyGame, reserveVickreyUtility, auctionGame_expectedUtility]
+  simp [reserveVickreyGame, reserveVickreyUtility]
 
 /-- Truthful bidding is dominant under the canonical expected-utility preference. -/
 theorem valuation_is_dominant (value : ι → ℝ) (reserve : ℝ) (who : ι) :
     IsDominant (reserveVickreyGame value reserve).form
       (euPreference (reserveVickreyGame value reserve).utility) who (value who) := by
   intro alternative bids
-  simp only [euPreference_apply, reserveVickreyGame_expectedUtility]
+  simp only [euPreference_apply, expectedUtility_pure]
   exact truthful_weakly_dominant value reserve who bids alternative
 
 /-- The reserve-price Vickrey mechanism is dominant-strategy incentive compatible. -/

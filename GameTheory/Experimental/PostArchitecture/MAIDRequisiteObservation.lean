@@ -248,6 +248,7 @@ end UtilityView
 
 /-! ## A one-edge hostile pair -/
 
+set_option backward.isDefEq.respectTransparency false in
 inductive ExampleNode
   | signal
   | decision
@@ -318,6 +319,7 @@ def utilityView : UtilityView (diagram := model) semantics where
   terms _ := [rewardTerm]
   utility_eq_sum _ _ := by
     simp [rewardTerm, UtilityTerm.value, Assignment.restrict]
+    rfl
 
 def rewardSite : utilityView.UtilitySite () :=
   ⟨0, by simp [utilityView]⟩
@@ -473,6 +475,7 @@ def utilityView : UtilityView (diagram := model) semantics where
   terms _ := [rewardTerm]
   utility_eq_sum _ _ := by
     simp [rewardTerm, UtilityTerm.value, Assignment.restrict]
+    rfl
 
 def rewardSite : utilityView.UtilitySite () :=
   ⟨0, by simp [utilityView]⟩

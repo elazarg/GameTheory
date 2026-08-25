@@ -134,6 +134,7 @@ different dealt states with positive probability, and the blind player cannot
 distinguish them. The compiled strategy type must preserve both facts.
 -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The first compiled step is exactly the existing deal law, after the
 ordinary projection from histories to their current states. No state evaluator
 was introduced to prove this. -/

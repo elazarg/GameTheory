@@ -48,6 +48,7 @@ def fairCoin : FinDist Bool :=
     (FinDist.pure false) (FinDist.pure true)
 
 /-- Only the coordinated all-false stage has noisy monitoring. -/
+@[reducible]
 def monitoring : coordination.PublicMonitoring where
   Signal := Bool
   signalLaw stage := if stage = allFalse then fairCoin else FinDist.pure true
@@ -279,8 +280,7 @@ theorem prescribed_hasNoProfitableOneShotDeviationAfterEveryHistory :
   intro t history
   cases t with
   | zero =>
-      simpa [UtilityGame.PublicMonitoring.after] using
-        prescribed_hasNoProfitableOneShotDeviation
+      exact prescribed_hasNoProfitableOneShotDeviation
   | succ t =>
       have hcontinuation :
           monitoring.after prescribed history =
@@ -375,7 +375,6 @@ theorem mismatchedProfile_not_isPerfectPublicEquilibrium :
   intro hppe
   apply mismatchedProfile_has_profitable_oneShotDeviation
   have hall := hppe.hasNoProfitableOneShotDeviationAfterEveryHistory
-  simpa [UtilityGame.PublicMonitoring.after] using
-    hall 0 (fun k => k.elim0)
+  exact hall 0 (fun k => k.elim0)
 
 end GameTheory.Tests.MonitoringEquilibrium

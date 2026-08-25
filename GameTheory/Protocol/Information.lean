@@ -767,7 +767,7 @@ theorem behavioralJoint_eq_pure_of_no_active
   have hpolicy (i : ι) :
       policies i (M.infoOf i trace) =
         FinDist.pure (idle i) := by
-    haveI : Subsingleton (M.Choice i (M.infoOf i trace)) :=
+    have : Subsingleton (M.Choice i (M.infoOf i trace)) :=
       M.subsingleton_choice_of_not_active trace (hinactive i)
     exact FinDist.eq_pure_of_subsingleton _ (idle i)
   unfold behavioralJoint
@@ -813,7 +813,7 @@ theorem behavioralJoint_eq_map_of_at_most_one_active
     have hinactive : ¬ E.active state other.1 := by
       intro hother
       exact other.2 (hunique other.1 hother)
-    haveI :
+    have :
         Subsingleton
           (M.Choice other.1 (M.infoOf other.1 trace)) :=
       M.subsingleton_choice_of_not_active trace hinactive
@@ -1934,7 +1934,7 @@ theorem answerAt_preimage_eq (h : E.History)
     (answer : (i : ι) → M.Choice i (M.infoOf i h.trace)) :
     M.answerAt h ⁻¹' {answer} = { p | ∀ i, p i ∈ M.AnsweredBy h answer i } := by
   ext policies
-  simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_setOf_eq, answerAt,
+  simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_ofPred_eq, answerAt,
     AnsweredBy, funext_iff]
 
 omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in

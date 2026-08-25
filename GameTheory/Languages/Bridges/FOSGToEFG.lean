@@ -385,6 +385,7 @@ theorem predecessor_of_mem_resolve {history : History G}
   simp only [predecessor]
   rw [Prefix.ofJoint_joint collected hterm]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A selection transition retreats to the preceding prefix. -/
 theorem predecessor_of_mem_advance [DecidableEq ι]
     {history : History G} {count : ℕ}
@@ -719,6 +720,7 @@ def signals [DecidableEq ι] : InfoSignals (execution G order) where
   pushInfo player prior _ privateSignal publicSignal :=
     pushView G player prior privateSignal publicSignal
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Every reached target information value is exactly its administrative
 phase paired with the information of the carried canonical source history. -/
 theorem infoOf_eq_viewOfState [DecidableEq ι] (player : ι) :
@@ -952,7 +954,7 @@ theorem translate_project_profile [DecidableEq ι]
           have hsecond : second.1 = none := by
             simpa [information, menu, Ne.symm howner] using second.2
           exact hfirst.trans hsecond.symm
-        letI := hsubsingleton
+        let := hsubsingleton
         have htranslation :
             translateBehavioral G order (projectBehavioral G order target)
               player ⟨.select owner, sourceInfo⟩ =
@@ -983,7 +985,7 @@ theorem translate_project_profile [DecidableEq ι]
             exact hmem
           exact Set.mem_singleton_iff.mp hsingleton
         exact hfirst.trans hsecond.symm
-      letI := hsubsingleton
+      let := hsubsingleton
       have htranslation :
           translateBehavioral G order (projectBehavioral G order target)
             player ⟨.resolve, sourceInfo⟩ =
@@ -1330,7 +1332,7 @@ private theorem map_erase_runBehavioralFrom_resolve [Fintype ι] [DecidableEq ι
   have hpolicy (player : ι) :
       target player ((information G order).infoOf player trace) =
         FinDist.pure (idle player) := by
-    haveI : Subsingleton
+    have : Subsingleton
         ((information G order).Choice player
           ((information G order).infoOf player trace)) := ⟨by
       intro first second
@@ -1786,6 +1788,7 @@ private theorem map_erase_runBehavioralFrom_boundary_any
   · exact map_erase_runBehavioralFrom_boundary G order target
       history hterm trace
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A complete serialized suffix always returns to a round boundary. -/
 private theorem state_of_mem_runBehavioralFrom_stage
     [Fintype ι] [DecidableEq ι]

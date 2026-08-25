@@ -53,11 +53,11 @@ theorem discounted_folk_theorem_approx
               |G.mixed.discountedPayoff discount profile who - value who| < ε := by
   classical
   let H : UtilityGame ι := G.mixed
-  letI : ∀ i, Nonempty (H.form.sig.Strategy i) :=
+  let : ∀ i, Nonempty (H.form.sig.Strategy i) :=
     fun i => ⟨FinDist.pure (Classical.arbitrary (G.form.sig.Strategy i))⟩
   have hprofileNonempty : Nonempty (Profile H.form.sig) :=
     inferInstance
-  letI : Nonempty (Profile H.form.sig) := hprofileNonempty
+  let : Nonempty (Profile H.form.sig) := hprofileNonempty
   intro ε hε
   obtain ⟨margin, hmargin, hvalueMargin⟩ :=
     G.exists_pos_margin_of_mem_strictIndividuallyRationalPayoffSet
@@ -90,7 +90,7 @@ theorem discounted_folk_theorem_approx
   obtain ⟨n, hn, cycle, hcycleClose⟩ :=
     G.exists_cycleAveragePayoff_close_of_mem_feasibleSet
       hvalue.1 hboundG' hbound0 haccuracy
-  letI : NeZero n := hn
+  let : NeZero n := hn
   let mixedCycle : Fin n → Profile H.form.sig :=
     fun t => G.form.purify (cycle t)
   have hcyclePayoff :

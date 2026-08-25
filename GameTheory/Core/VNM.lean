@@ -564,8 +564,8 @@ private theorem existsMaximalStrict {α : Type*} [Finite α] [Nonempty α]
     (hirrefl : ∀ a, ¬ strict a a) :
     ∃ maximal : α, ∀ other, ¬ strict other maximal := by
   classical
-  letI : IsTrans α strict := ⟨htrans⟩
-  letI : Std.Irrefl strict := ⟨hirrefl⟩
+  let : IsTrans α strict := ⟨htrans⟩
+  let : Std.Irrefl strict := ⟨hirrefl⟩
   have hwf : WellFounded strict := Finite.wellFounded_of_trans_of_irrefl strict
   let P : α → Prop := fun start =>
     ∃ maximal, (∀ other, ¬ strict other maximal) ∧
@@ -731,13 +731,13 @@ theorem exists_representsExpectedUtility [Finite Outcome]
   classical
   cases isEmpty_or_nonempty Outcome with
   | inl hempty =>
-      letI : IsEmpty Outcome := hempty
+      let : IsEmpty Outcome := hempty
       refine ⟨fun outcome => isEmptyElim outcome, ?_⟩
       intro _ preferred _
       obtain ⟨outcome, _⟩ := preferred.support_nonempty
       exact isEmptyElim outcome
   | inr hnonempty =>
-      letI : Nonempty Outcome := hnonempty
+      let : Nonempty Outcome := hnonempty
       have hagent : ∀ agent : Agent, ∃ u : Outcome → ℝ,
           ∀ preferred alternative,
             weaklyPrefers agent preferred alternative ↔

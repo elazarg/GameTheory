@@ -37,7 +37,7 @@ theorem matchingPennies_not_isNash (profile : Profile matchingPennies.sig) :
 statement asserts existence and the fixed-point argument delivers it. -/
 theorem matchingPennies_exists_isNash_mixed :
     ∃ μ, IsNash matchingPennies.toForm.mixed (euPreference matchingPennies.utility) μ := by
-  haveI : ∀ i, Nonempty (matchingPennies.toForm.sig.Strategy i) := fun _ => ⟨Side.heads⟩
+  have : ∀ i, Nonempty (matchingPennies.toForm.sig.Strategy i) := fun _ => ⟨Side.heads⟩
   exact exists_isNash_mixed _
 
 /-- **Matching pennies nevertheless has a correlated equilibrium.**  This
@@ -47,7 +47,7 @@ theorem matchingPennies_exists_isCorrelatedEq :
     ∃ law : GameTheory.Math.Probability.FinDist (Profile matchingPennies.sig),
       IsCorrelatedEq matchingPennies.toForm
         (euPreference matchingPennies.utility) law := by
-  haveI : ∀ i, Nonempty (matchingPennies.toForm.sig.Strategy i) := fun _ => ⟨Side.heads⟩
+  have : ∀ i, Nonempty (matchingPennies.toForm.sig.Strategy i) := fun _ => ⟨Side.heads⟩
   exact exists_isCorrelatedEq (ι := Fin 2) (F := matchingPennies.toForm)
     matchingPennies.utility
 

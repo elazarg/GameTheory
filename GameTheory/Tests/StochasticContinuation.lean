@@ -135,6 +135,7 @@ theorem chronologicalHistoryLaw_two_steps :
   rw [actionGame.map_publicHistoryOfChronological_chronologicalHistoryLaw,
     publicHistoryLaw_two_steps]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The arbitrary-horizon restart theorem reconstructs the complete two-stage
 history in the monitoring convention. -/
 theorem continuation_from_first_one_step :

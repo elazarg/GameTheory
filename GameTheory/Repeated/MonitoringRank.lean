@@ -101,7 +101,7 @@ theorem individualFullRank_iff_individualDeviationRank_eq_card
   constructor
   · exact LinearIndependent.rank_matrix
   · intro hrank
-    rw [linearIndependent_iff_card_eq_finrank_span]
+    refine linearIndependent_iff_card_eq_finrank_span.mpr ?_
     show Fintype.card (NontrivialDeviation profile who) =
       Module.finrank ℝ
         (Submodule.span ℝ (Set.range matrix.row))
@@ -130,7 +130,7 @@ theorem pairwiseFullRank_iff_pairwiseDeviationRank_eq_card
     simpa only [pairwiseDeviationSignalFamily, Fintype.card_sum] using
       hindependent.rank_matrix
   · intro hrank
-    rw [linearIndependent_iff_card_eq_finrank_span]
+    refine linearIndependent_iff_card_eq_finrank_span.mpr ?_
     show Fintype.card
         (NontrivialDeviation profile first ⊕
           NontrivialDeviation profile second) =

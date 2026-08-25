@@ -33,6 +33,7 @@ def weightedMatchingPayoff (history : execution.History) : ℝ :=
       if action .player = some hidden then if hidden then 2 else 1 else 0
   | _ => 0
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The canonical continuation runner reduces the weighted terminal payoff to
 the alternative policy's action law at the shared information state. -/
 theorem runBehavioralFrom_decision_weightedMatchingPayoff

@@ -59,7 +59,7 @@ noncomputable def historyEquivReachableState (htree : E.IsTreeShaped) :
   left_inv history := by
     rcases history with ⟨state, trace⟩
     dsimp [ExecutionProtocol.Reachable]
-    letI : Subsingleton (E.Trace state) := htree state
+    let : Subsingleton (E.Trace state) := htree state
     congr
     exact Subsingleton.elim _ _
   right_inv state := by
@@ -167,7 +167,7 @@ theorem History.exists_legal_of_not_terminal (h : E.History)
 
 variable (E) in
 /-- A chooser that may read the history, not only the state it reached. -/
-def HistoryChooser : Type _ :=
+abbrev HistoryChooser : Type _ :=
   (h : E.History) → ¬ E.terminal h.state →
     { joint : ∀ i, Option (E.Action i) // E.Legal h.state joint }
 

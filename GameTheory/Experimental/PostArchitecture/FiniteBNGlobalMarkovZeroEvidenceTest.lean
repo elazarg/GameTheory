@@ -22,6 +22,7 @@ open GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
 open GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
 open GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
 
+set_option backward.isDefEq.respectTransparency false in
 inductive ChainNode
   | left
   | middle

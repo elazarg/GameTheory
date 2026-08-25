@@ -116,3 +116,42 @@ for dependency or phase-gate validation.
 
 When an RFC choice fails its kill condition, record the failure and narrow or
 replace the design. Do not patch around it to preserve sunk work.
+
+## Toolchain-bump lessons (Lean 4.33 / mathlib v4.33.1)
+
+- **Two different failure modes, two different fixes.** Lean 4.33 stopped
+  unfolding semireducible definitions in two places, and they need opposite
+  responses. A `rw`/`simp` that reports *"Did not find an occurrence of the
+  pattern"* is a **matching** failure: fix it at the definition by marking the
+  type-synonym or fixture wrapper `@[reducible]` (or `abbrev`). An error whose
+  note says *"the target expression is not type-correct under the `implicit`
+  transparency level"* is a **different, stricter check that `@[reducible]`
+  does not satisfy**; only
+  `set_option backward.isDefEq.respectTransparency false in` on the
+  declaration clears it. Do not rewrite the proof for the second kind — keep
+  the original tactic script and add the option. Enumerate the sites with
+  `rg -n "respectTransparency" --type lean -g '!.lake'`.
+- **Try `exact` before reaching for either.** Many of these goals are `rfl`-true
+  (possibly after a trivial `rw [one_mul]`), and `exact` elaborates at default
+  transparency, so it sees through everything. It is smaller than a `simp` set,
+  needs no option, and is often shorter than the proof it replaces.
+- **A `whnf` heartbeat timeout may mean divergence, not slowness.** If raising
+  `maxHeartbeats` an order of magnitude still times out, the elaboration is
+  running away; replace the offending `simp`/`simpa`, do not raise the limit.
+- **Never bulk-apply `linter.unusedSimpArgs` suggestions.** It flags each
+  argument as individually removable when several are redundant with each
+  other, or when the real progress comes from beta/delta reduction rather than
+  any named lemma. Removing every flagged argument on a line can empty the simp
+  set and break the proof; for a single-element `simp only [X]` it often means
+  `dsimp only`, not deletion. Re-check every file whose simp set you touch.
+- **`deriving Fintype` on plain enums is broken at this toolchain.** It
+  reproduces in four lines with no project code. Mathlib's own
+  `MathlibTest/DeriveFintype.lean` works around it with
+  `set_option backward.isDefEq.respectTransparency false in` before each
+  inductive; this repo does the same at every enum site.
+- **Never edit files while `lake build` is running.** Lake reads each module's
+  source as it schedules that target, so a mid-build edit yields a mixed
+  snapshot whose failure list cannot be trusted. Finish editing, then build.
+- **`lake env lean` reads the *oleans* of imports.** After changing a module
+  that others import, `lake build <that module>` first or every downstream
+  single-file check is stale — a fix can look like it failed when it worked.

@@ -47,6 +47,7 @@ def tracePayoff (trace : RuntimeTrace) (who : Bool) : ℚ :=
 
 /-- The executable source game.  Player `false` wants its switch to predict
 whether mode two is selected; player `true` strictly prefers mode two. -/
+@[reducible]
 def runtimeGame : Finite.TableGame Bool where
   Action := RuntimeAction
   actionFintype := fun who => by cases who <;> infer_instance

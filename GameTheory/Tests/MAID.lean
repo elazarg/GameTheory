@@ -188,6 +188,7 @@ open GameTheory.Languages.MAID
 open GameTheory.Languages.MAID.Strategic
 open GameTheory.Languages.MAID.ToEFG
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Two sites belong to the first player; the rival owns the third. -/
 inductive Node
   | first

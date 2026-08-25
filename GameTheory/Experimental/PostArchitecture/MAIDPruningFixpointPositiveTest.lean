@@ -30,6 +30,7 @@ open GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
 open GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
 open GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Node
   | signal
   | early
@@ -104,6 +105,7 @@ def view : UtilityView (diagram := diagram) semantics where
   terms _ := [matchTerm]
   utility_eq_sum _ assignment := by
     simp [matchTerm, UtilityTerm.value, Assignment.restrict]
+    rfl
 
 def termSite : view.UtilitySite () := ⟨0, by simp [view]⟩
 
@@ -127,7 +129,7 @@ theorem early_relevant : view.IsRelevantUtilityTerm earlySite termSite := by
     MAIDRequisiteObservation.UtilityView.graphParents,
     MAIDRequisiteObservation.UtilityView.term, view, termSite, matchTerm,
     earlySite]
-  exact Finset.mem_insert_self _ _
+  exact Finset.mem_image_of_mem _ (Finset.mem_insert_self _ _)
 
 theorem late_relevant : view.IsRelevantUtilityTerm lateSite termSite := by
   apply Relation.TransGen.single
@@ -135,7 +137,8 @@ theorem late_relevant : view.IsRelevantUtilityTerm lateSite termSite := by
     MAIDRequisiteObservation.UtilityView.graphParents,
     MAIDRequisiteObservation.UtilityView.term, view, termSite, matchTerm,
     lateSite]
-  exact Finset.mem_insert.mpr (Or.inr (Finset.mem_singleton.mpr rfl))
+  exact Finset.mem_image_of_mem _
+    (Finset.mem_insert.mpr (Or.inr (Finset.mem_singleton.mpr rfl)))
 
 /-- In the original graph the signal at the early decision is requisite:
 the open route through the late decision reaches the shared utility leaf. -/
@@ -157,8 +160,8 @@ theorem original_signal_at_early_requisite :
       MAIDRequisiteObservation.UtilityView.graphParents,
       MAIDRequisiteObservation.UtilityView.term, late, utility,
       view, termSite, matchTerm]
-    exact Finset.mem_insert.mpr
-      (Or.inr (Finset.mem_singleton.mpr rfl))
+    exact Finset.mem_image_of_mem _
+      (Finset.mem_insert.mpr (Or.inr (Finset.mem_singleton.mpr rfl)))
   have signalOpen : signal ∉ evidence := by
     simp [signal, evidence, earlySite, diagram, parents]
   have lateOpen : late ∉ evidence := by

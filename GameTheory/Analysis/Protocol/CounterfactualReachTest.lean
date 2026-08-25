@@ -87,6 +87,7 @@ theorem focal_true_player_factor :
     InfoSignals.infoOf, NFG.OneShotFOSG.signals,
     NFG.OneShotFOSG.chooserOfProfile, ExecutionProtocol.initHistory]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem focal_false_player_factor :
     source.information.playerStepProb focalFalseOpponentTrue false
       source.execution.initHistory.trace chosenJoint = 0 := by
@@ -117,6 +118,7 @@ theorem counterfactual_factor_eq_one :
     NFG.OneShotFOSG.signals, NFG.OneShotFOSG.chooserOfProfile,
     ExecutionProtocol.initHistory]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem opponent_false_counterfactual_factor_eq_zero :
     source.information.counterfactualStepProb
       focalTrueOpponentFalse false source.execution.initHistory.trace
@@ -269,6 +271,7 @@ theorem secondRealized :
 def fullTrace : execution.Trace (.done .up .down) :=
   firstTrace.extend secondJoint.1 secondJoint.2 secondRealized
 
+set_option backward.isDefEq.respectTransparency false in
 theorem first_player_factor :
     information.playerStepProb profile () execution.initHistory.trace
       firstJoint = 1 / 2 := by
@@ -281,6 +284,7 @@ theorem first_player_factor :
     FinDist.prob_mix]
   simp [FinDist.prob_pure_eq_ite]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem second_player_factor :
       information.playerStepProb profile () firstTrace secondJoint = 1 / 2 := by
   classical

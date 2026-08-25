@@ -278,11 +278,11 @@ theorem siteReplacementLaw_eq_bind_pureSiteRules
           (independentPureSiteRuleLaw target rule).map
               (fun pureRule => pureRule context) =
             rule context := by
-        letI : Fintype
+        let : Fintype
             (Config diagram (diagram.observedParents target.1)) := by
           unfold Config
           infer_instance
-        letI : DecidableEq
+        let : DecidableEq
             (Config diagram (diagram.observedParents target.1)) := by
           unfold Config
           infer_instance
@@ -334,14 +334,14 @@ theorem exists_pureSiteRule_dominates_pure
             (behavioralRuleOfPure target alternative) ≤
           siteRuleExpectedUtility semantics base owner replacement target
             (behavioralRuleOfPure target best) := by
-  letI : Fintype
+  let : Fintype
       (Config diagram (diagram.observedParents target.1)) := by
     unfold Config
     infer_instance
-  letI : Finite (PureSiteRule target) := by
+  let : Finite (PureSiteRule target) := by
     unfold PureSiteRule
     infer_instance
-  letI : Nonempty (PureSiteRule target) :=
+  let : Nonempty (PureSiteRule target) :=
     ⟨fun _ => semantics.defaultValue target.1⟩
   exact Finite.exists_max fun rule : PureSiteRule target =>
     siteRuleExpectedUtility semantics base owner replacement target

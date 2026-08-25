@@ -52,6 +52,7 @@ theorem noInformation_isCausal :
 
 /-- A two-agent signaling model. `false` is the sender and observes nature;
 `true` is the receiver and observes the sender's message. -/
+@[reducible]
 def signaling : Model where
   Agent := Bool
   Nature := Bool

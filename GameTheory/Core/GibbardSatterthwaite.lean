@@ -86,7 +86,7 @@ theorem dictatorialChoice_isOnto [Fintype Alternative]
     (dictatorialChoice dictator : SocialChoiceFunction Voter Alternative).IsOnto := by
   intro target
   classical
-  letI : LinearOrder Alternative := WellOrderingRel.isWellOrder.linearOrder
+  let : LinearOrder Alternative := WellOrderingRel.isWellOrder.linearOrder
   let maximum : Alternative :=
     (Finset.univ : Finset Alternative).max' Finset.univ_nonempty
   let relabel : Alternative ≃ Alternative := Equiv.swap target maximum

@@ -279,7 +279,7 @@ regular probability measure. Finite stochastic games are the principal case. -/
 theorem protocolPureProfileMeasure_regular (initial : G.State)
     [Countable G.State] (behavioral : G.PublicProfile initial) :
     Measure.Regular (G.protocolPureProfileMeasure initial behavioral) := by
-  letI : Countable G.StageRecord :=
+  let : Countable G.StageRecord :=
     (show Function.Injective
         (fun record : G.StageRecord =>
           (record.source, record.joint, record.target)) by
@@ -287,8 +287,8 @@ theorem protocolPureProfileMeasure_regular (initial : G.State)
       cases first
       cases second
       simp_all).countable
-  letI : Countable G.PublicHistory := inferInstance
-  letI (i : ι) : Countable
+  let : Countable G.PublicHistory := inferInstance
+  let (i : ι) : Countable
       ((G.perfectMonitoring initial).InfoState i) :=
     inferInstanceAs (Countable G.PublicHistory)
   unfold protocolPureProfileMeasure

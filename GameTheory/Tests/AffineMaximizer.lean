@@ -81,7 +81,7 @@ theorem pivot_trueFirstReports :
 theorem payment_responds_to_report :
     mechanism.payment falseReports false = 1 / 4 ∧
       mechanism.payment trueFirstReports false = 0 := by
-  simp only [mechanism, Mechanism.AffineMaximizer.toQuasiLinearMechanism]
+  dsimp only
   rw [pivot_falseReports, pivot_trueFirstReports,
     choose_falseReports, choose_trueFirstReports]
   norm_num [Mechanism.AffineMaximizer.othersObjective, affine,
@@ -92,15 +92,11 @@ theorem truth_strictly_beats_deviation :
       mechanism.trueUtility trueFirstReports false false = 0 ∧
       mechanism.trueUtility trueFirstReports false true = 2 ∧
       mechanism.trueUtility falseReports false true = -(1 / 4) := by
-  have hchooseFalse : mechanism.choose falseReports = false :=
-    choose_falseReports
-  have hchooseTrue : mechanism.choose trueFirstReports = true :=
-    choose_trueFirstReports
   simp only [Mechanism.QuasiLinearMechanism.trueUtility]
-  rw [hchooseFalse, hchooseTrue,
-    payment_responds_to_report.1, payment_responds_to_report.2]
-  dsimp only [mechanism, Mechanism.AffineMaximizer.toQuasiLinearMechanism]
-  norm_num [affine]
+  rw [choose_falseReports, choose_trueFirstReports,
+    pivot_falseReports, pivot_trueFirstReports]
+  norm_num [Mechanism.AffineMaximizer.othersObjective, affine,
+    falseReports, trueFirstReports]
 
 theorem payment_is_nonnegative : 0 ≤ mechanism.payment falseReports false :=
   affine.payment_nonneg falseReports false (by norm_num [affine])

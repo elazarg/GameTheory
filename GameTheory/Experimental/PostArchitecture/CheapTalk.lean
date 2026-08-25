@@ -131,6 +131,7 @@ theorem form_play_update_embedProfile (profile : Profile F.sig)
     F.play (Profile.update profile who (C.project who deviation))
   rw [actionProfile_update_embedProfile]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Every base Nash equilibrium embeds as a babbling equilibrium. The
 preference is arbitrary; only the strategy enrichment is communication
 specific. -/

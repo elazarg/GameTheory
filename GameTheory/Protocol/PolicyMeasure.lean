@@ -111,9 +111,9 @@ theorem behavioralProfileMeasure_map_restrict [Fintype ι]
       ((sites i).restrict : M.Policy i →
         ((info : sites i) → M.Choice i info)) :=
     fun i => Finset.measurable_restrict (sites i)
-  letI (i : ι) (info : sites i) : Fintype (M.Choice i info) :=
+  let (i : ι) (info : sites i) : Fintype (M.Choice i info) :=
     inferInstance
-  letI (i : ι) : IsProbabilityMeasure
+  let (i : ι) : IsProbabilityMeasure
       ((policy i).toPureMeasure.map (sites i).restrict) :=
     Measure.isProbabilityMeasure_map (hmeasurable i).aemeasurable
   have hfactor (i : ι) :
@@ -595,8 +595,8 @@ theorem toMixedWithin_toPureMeasure {i : ι}
     PolicyMeasure.toMixedWithin (M := M) policy.toPureMeasure sites fallback =
       policy.toMixedWithin sites fallback := by
   classical
-  letI (info : sites) : Fintype (M.Choice i info) := inferInstance
-  letI : IsProbabilityMeasure (policy.toPureMeasure.map sites.restrict) :=
+  let (info : sites) : Fintype (M.Choice i info) := inferInstance
+  let : IsProbabilityMeasure (policy.toPureMeasure.map sites.restrict) :=
     Measure.isProbabilityMeasure_map
       (Finset.measurable_restrict sites).aemeasurable
   unfold PolicyMeasure.toMixedWithin
@@ -623,13 +623,13 @@ theorem toMixedWithin_toMeasure {i : ι} (law : M.PolicyMeasure i)
       law.map (fun policy =>
         Policy.assembleWithin M fallback sites (sites.restrict policy)) := by
   classical
-  letI (info : sites) : Fintype (M.Choice i info) := inferInstance
+  let (info : sites) : Fintype (M.Choice i info) := inferInstance
   have hassemble : Measurable (Policy.assembleWithin M fallback sites) :=
     measurable_of_finite _
   have hrestrict : Measurable
       (sites.restrict : M.Policy i → (info : sites) → M.Choice i info) :=
     Finset.measurable_restrict sites
-  letI : IsProbabilityMeasure (law.map sites.restrict) :=
+  let : IsProbabilityMeasure (law.map sites.restrict) :=
     Measure.isProbabilityMeasure_map hrestrict.aemeasurable
   show (FinDist.map (Policy.assembleWithin M fallback sites)
       (FinDist.ofMeasure (law.map sites.restrict))).toMeasure = _
@@ -652,14 +652,14 @@ theorem toMixedWithin_toBehavioralWith {i : ι} (law : M.PolicyMeasure i)
   classical
   let transform : M.Policy i → M.Policy i := fun policy =>
     Policy.assembleWithin M fallback sites (sites.restrict policy)
-  letI (site : sites) : Fintype (M.Choice i site) := inferInstance
+  let (site : sites) : Fintype (M.Choice i site) := inferInstance
   have hassemble : Measurable (Policy.assembleWithin M fallback sites) :=
     measurable_of_finite _
   have hrestrict : Measurable
       (sites.restrict : M.Policy i → (site : sites) → M.Choice i site) :=
     Finset.measurable_restrict sites
   have htransform : Measurable transform := hassemble.comp hrestrict
-  letI : IsProbabilityMeasure (law.map transform) :=
+  let : IsProbabilityMeasure (law.map transform) :=
     Measure.isProbabilityMeasure_map htransform.aemeasurable
   have hchoice (policy : M.Policy i) : transform policy info = policy info := by
     exact PolicyMeasure.assembleWithin_restrict_apply (M := M)
@@ -976,7 +976,7 @@ theorem runPolicyMeasure_update_eq_runBehavioral_update
   let updatedFallback : Profile M.strategicSignature :=
     Profile.update (sig := M.strategicSignature) fallback who
       replacementFallback
-  letI : ∀ i, IsProbabilityMeasure (updatedLaws i) := fun i => by
+  let : ∀ i, IsProbabilityMeasure (updatedLaws i) := fun i => by
     by_cases hi : i = who
     · subst i
       simpa only [updatedLaws, Profile.update_same] using
@@ -1056,7 +1056,7 @@ theorem runPolicyMeasure_update_toPureMeasure_eq_runBehavioral_update
   let updatedFallback : Profile M.strategicSignature :=
     Profile.update (sig := M.strategicSignature)
       fallback who replacementFallback
-  letI : ∀ i, IsProbabilityMeasure (updatedLaws i) := fun i => by
+  let : ∀ i, IsProbabilityMeasure (updatedLaws i) := fun i => by
     by_cases hi : i = who
     · subst i
       simpa only [updatedLaws, Profile.update_same] using
@@ -1170,7 +1170,7 @@ theorem runPolicyMeasure_toPureMeasure_update_eq_runBehavioral_update
   let updatedFallback : Profile M.strategicSignature :=
     Profile.update (sig := M.strategicSignature)
       fallback who replacementFallback
-  letI : ∀ i, IsProbabilityMeasure (updatedLaws i) := fun i => by
+  let : ∀ i, IsProbabilityMeasure (updatedLaws i) := fun i => by
     by_cases hi : i = who
     · subst i
       simpa only [updatedLaws, Profile.update_same] using

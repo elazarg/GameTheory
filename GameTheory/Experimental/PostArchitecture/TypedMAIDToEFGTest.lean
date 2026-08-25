@@ -334,6 +334,7 @@ theorem serialStep_leftInitial :
     leftInitial hpending hkind, hlaw, FinDist.map_pure]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem serialStep_afterLeftChance :
     serialStep leftFirst semantics responsive afterLeftChance (by decide) =
       FinDist.pure afterLeftFalse := by
@@ -379,6 +380,7 @@ theorem serialStep_afterLeftFalse :
     afterLeftFalse hpending hkind, hlaw, FinDist.map_pure]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem serialStep_beforeRightDecision :
     serialStep leftFirst semantics responsive
         beforeRightDecisionFalse (by decide) =
@@ -424,6 +426,7 @@ theorem serialStep_rightInitial :
     rightInitial hpending hkind, hlaw, FinDist.map_pure]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem serialStep_afterRightChance :
     serialStep rightFirst semantics responsive afterRightChance (by decide) =
       FinDist.pure afterRightTrue := by
@@ -469,6 +472,7 @@ theorem serialStep_afterRightTrue :
     afterRightTrue hpending hkind, hlaw, FinDist.map_pure]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 theorem serialStep_beforeLeftDecision :
     serialStep rightFirst semantics responsive
         beforeLeftDecisionTrue (by decide) =

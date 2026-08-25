@@ -20,6 +20,7 @@ open GameTheory.Languages.MAID.ObservationPruning
 open GameTheory.Languages.MAID.Strategic
 open GameTheory.Languages.MAID.ToEFG
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Node
   | signal
   | decision
