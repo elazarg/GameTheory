@@ -90,7 +90,7 @@ def initial (semantics : Semantics diagram) : FrontierState diagram where
   parentClosed := by simp
 
 @[reducible]
-def IsComplete [Fintype Node] [DecidableEq Node]
+def IsComplete [Fintype Node]
     (state : FrontierState diagram) : Prop :=
   state.resolved = Finset.univ
 

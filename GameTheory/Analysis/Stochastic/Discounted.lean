@@ -38,7 +38,6 @@ def auxiliaryMatrix (β : ℝ) (value : G.State → ℝ) (state : G.State) :
 
 /-- The auxiliary matrix's row utility is the normalized player-zero
 one-step return. -/
-@[simp]
 theorem auxiliaryUtility_zero (β : ℝ) (value : G.State → ℝ)
     (state : G.State) (row : G.Action 0) (col : G.Action 1) :
     MatrixGame.utility (G.auxiliaryMatrix β value state) (row, col) 0 =

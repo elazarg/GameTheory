@@ -36,7 +36,6 @@ profile records one independent mixed action per player. -/
 theorem discounted_folk_theorem_approx
     (G : UtilityGame ι)
     [Fintype ι] [DecidableEq ι]
-    [∀ i, Fintype (G.form.sig.Strategy i)]
     [∀ i, Nonempty (G.form.sig.Strategy i)]
     [Fintype G.form.sig.Outcome]
     {value : PayoffVector ι}

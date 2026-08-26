@@ -149,12 +149,12 @@ theorem mixed_play [Fintype ι] (F : GameForm ι) (μ : Profile F.sig.mixed) :
     F.mixed.play μ = (FinDist.pi μ).bind F.play := rfl
 
 /-- The canonical embedding of a pure profile into the mixed extension. -/
-def purify [Fintype ι] (F : GameForm ι) (σ : Profile F.sig) : Profile F.sig.mixed :=
+def purify (F : GameForm ι) (σ : Profile F.sig) : Profile F.sig.mixed :=
   fun i => FinDist.pure (σ i)
 
 /-- The mixed extension restricts to the original play law on pure profiles. -/
 @[simp]
-theorem mixed_play_purify [Fintype ι] [DecidableEq ι] (F : GameForm ι)
+theorem mixed_play_purify [Fintype ι] (F : GameForm ι)
     (σ : Profile F.sig) : F.mixed.play (F.purify σ) = F.play σ := by
   show (FinDist.pi fun i => FinDist.pure (σ i)).bind F.play = F.play σ
   rw [FinDist.pi_pure, FinDist.pure_bind]

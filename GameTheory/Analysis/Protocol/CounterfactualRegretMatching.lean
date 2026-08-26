@@ -32,7 +32,6 @@ def localCounterfactualRegretVector
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
-    [Fintype (M.Choice who site.1)]
     (payoff : E.History → ℝ) (fuel : ℕ) :
     EuclideanSpace ℝ (M.Choice who site.1) :=
   WithLp.toLp 2 fun choice =>
@@ -107,7 +106,6 @@ theorem localCounterfactualRegretVector_eq_regretPayoff_actionUtility
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
-    [Fintype (M.Choice who site.1)]
     (hallNonterminal : InformationSite.AllNonterminal M site)
     (payoff : E.History → ℝ) (fuel : ℕ) :
     localCounterfactualRegretVector M strategy who site payoff (fuel + 1) =
@@ -132,7 +130,6 @@ theorem localCounterfactualRegretVector_strategyWithLocalLaw
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
-    [Fintype (M.Choice who site.1)]
     (hallNonterminal : InformationSite.AllNonterminal M site)
     (law : FinDist (M.Choice who site.1))
     (payoff : E.History → ℝ) (fuel : ℕ) (environment : Q) :

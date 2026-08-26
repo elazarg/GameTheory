@@ -28,7 +28,6 @@ theorem load_natCast (weight : Agent → ℕ) (selected : Finset Agent) :
   simp [load, aggregate]
 
 omit [DecidableEq Agent] in
-@[simp]
 theorem welfare_natCast (value : Agent → ℕ) (selected : Finset Agent) :
     welfare (fun who => (value who : ℝ)) selected =
       ((aggregate value selected : ℕ) : ℝ) := by

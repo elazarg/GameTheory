@@ -58,7 +58,9 @@ theorem reserveVickreyWins_unique (reserve : ℝ) (bids : BidProfile ι) {i j : 
   unfold reserveVickreyWins at hi hj
   linarith
 
-local instance reserveVickreyWins_decidable (reserve : ℝ) (bids : BidProfile ι) :
+/-- Winning is decided classically: the predicate is real-valued and carries no
+computational content here. -/
+local instance reserveVickreyWinsDecidable (reserve : ℝ) (bids : BidProfile ι) :
     DecidablePred (reserveVickreyWins reserve bids) :=
   fun _ => Classical.propDecidable _
 
@@ -231,7 +233,6 @@ def reserveVickreyGame (value : ι → ℝ) (reserve : ℝ) : UtilityGame ι :=
     (reserveVickreyValue value)
 
 /-- Expected utility in the deterministic game is the displayed reserve payoff. -/
-@[simp]
 theorem reserveVickreyGame_expectedUtility (value : ι → ℝ) (reserve : ℝ)
     (bids : BidProfile ι) (who : ι) :
     expectedUtility (reserveVickreyGame value reserve).utility who

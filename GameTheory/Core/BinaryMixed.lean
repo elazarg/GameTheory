@@ -130,14 +130,12 @@ theorem probTrue_update_of_ne (mixedProfile : Profile F.sig.mixed)
       h.probTrue mixedProfile other := by
   simp [probTrue, hne]
 
-@[simp]
 private theorem probTrue_update_zero_one (mixedProfile : Profile F.sig.mixed)
     (replacement : FinDist (F.sig.Strategy 0)) :
     h.probTrue (Profile.update mixedProfile 0 replacement) 1 =
       h.probTrue mixedProfile 1 :=
   h.probTrue_update_of_ne mixedProfile replacement (by decide)
 
-@[simp]
 private theorem probTrue_update_one_zero (mixedProfile : Profile F.sig.mixed)
     (replacement : FinDist (F.sig.Strategy 1)) :
     h.probTrue (Profile.update mixedProfile 1 replacement) 0 =

@@ -296,7 +296,7 @@ theorem prob_pos_iff {μ : FinDist α} {a : α} : 0 < μ.prob a ↔ a ∈ μ.sup
    fun h => lt_of_le_of_ne (prob_nonneg μ a) fun h0 => prob_eq_zero_iff.1 h0.symm h⟩
 
 @[simp]
-theorem prob_pure_self [DecidableEq α] (a : α) : (pure a).prob a = 1 := by
+theorem prob_pure_self (a : α) : (pure a).prob a = 1 := by
   simp [prob_def, PMF.pure_apply]
 
 theorem prob_pure_of_ne {a b : α} (h : a ≠ b) : (pure b).prob a = 0 := by
@@ -902,7 +902,7 @@ theorem condOn_univ (μ : FinDist α) (hmeet : ∃ a ∈ Set.univ, a ∈ μ.supp
     simp [μ.toPMF.tsum_coe]
   rw [prob_condOn, if_pos (Set.mem_univ a), hmass, div_one]
 
-theorem probOf_pure_self [DecidableEq α] (a : α) (S : Set α) (ha : a ∈ S) :
+theorem probOf_pure_self (a : α) (S : Set α) (ha : a ∈ S) :
     (pure a).probOf S = 1 := by
   show (massOf (pure a) S).toReal = 1
   rw [massOf, tsum_eq_single a fun b hb => by
@@ -1282,7 +1282,7 @@ theorem mem_support_mix_iff (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
 
 /-- A nondegenerate mixture of two point masses supports exactly its named
 points. -/
-theorem mem_support_mix_pure_iff [DecidableEq α]
+theorem mem_support_mix_pure_iff
     (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (ht0 : 0 < t) (ht1 : t < 1)
     (first second a : α) :
     a ∈ (mix t h0 h1 (pure first) (pure second)).support ↔
@@ -1593,7 +1593,7 @@ theorem map_apply_pi [DecidableEq ι] (i : ι) (μ : ∀ j, FinDist (A j)) :
   exact map_fst_product _ _
 
 @[simp]
-theorem pi_pure [DecidableEq ι] (s : ∀ i, A i) :
+theorem pi_pure (s : ∀ i, A i) :
     pi (fun i => pure (s i)) = pure s := by
   classical
   apply ext

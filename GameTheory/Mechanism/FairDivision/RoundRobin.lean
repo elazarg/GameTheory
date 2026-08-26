@@ -37,12 +37,10 @@ private theorem updateBundle_apply [DecidableEq ι]
     (A : RawAllocation ι G) (i : ι) (B : Bundle G) (j : ι) :
     updateBundle A i B j = if j = i then B else A j := rfl
 
-@[simp]
 private theorem updateBundle_same [DecidableEq ι]
     (i : ι) (B : Bundle G) (A : RawAllocation ι G) :
     updateBundle A i B i = B := by simp [updateBundle]
 
-@[simp]
 private theorem updateBundle_of_ne [DecidableEq ι] {i j : ι}
     (hji : j ≠ i) (B : Bundle G) (A : RawAllocation ι G) :
     updateBundle A i B j = A j := by simp [updateBundle, hji]
@@ -679,14 +677,14 @@ private theorem rawRoundRobinAlloc_isEF1
 /-! ### Public API -/
 
 /-- `bestGood v i s hs` is a good in `s` maximizing agent `i`'s item value. -/
-noncomputable def bestGood [DecidableEq G]
+noncomputable def bestGood
     (v : AdditiveValuation (Fin n) G) (i : Fin n)
     (s : Finset G) (hs : s.Nonempty) : G :=
   rawBestGood v i s hs
 
 omit [NeZero n] in
 /-- `bestGood` lies in the candidate set. -/
-lemma bestGood_mem [DecidableEq G]
+lemma bestGood_mem
     (v : AdditiveValuation (Fin n) G) (i : Fin n)
     (s : Finset G) (hs : s.Nonempty) :
     bestGood v i s hs ∈ s :=
@@ -694,7 +692,7 @@ lemma bestGood_mem [DecidableEq G]
 
 omit [NeZero n] in
 /-- Every candidate good has no larger value than `bestGood`. -/
-lemma bestGood_le [DecidableEq G]
+lemma bestGood_le
     (v : AdditiveValuation (Fin n) G) (i : Fin n)
     (s : Finset G) (hs : s.Nonempty) {g : G} (hg : g ∈ s) :
     v i g ≤ v i (bestGood v i s hs) :=

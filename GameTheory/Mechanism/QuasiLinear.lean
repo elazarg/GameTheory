@@ -51,7 +51,7 @@ def trueUtility (report : M.ReportProfile) (who : Player)
 /-- Compile to the canonical Bayesian direct-mechanism language.  The outcome
 retains the report profile because payments may depend on every report. -/
 @[reducible]
-def toBayesianMechanism [DecidableEq Player] : BayesianMechanism Player where
+def toBayesianMechanism : BayesianMechanism Player where
   Ty := M.Ty
   Report := M.Ty
   Outcome := M.ReportProfile × Alternative
@@ -61,7 +61,7 @@ def toBayesianMechanism [DecidableEq Player] : BayesianMechanism Player where
     M.value who (types who) outcome.2 - M.payment outcome.1 who
 
 @[simp]
-theorem toBayesianMechanism_utility_choose [DecidableEq Player]
+theorem toBayesianMechanism_utility_choose
     (types : ∀ who, M.Ty who) (reports : M.ReportProfile) (who : Player) :
     M.toBayesianMechanism.utility types
         (M.toBayesianMechanism.choose reports) who =

@@ -1049,7 +1049,7 @@ private theorem dictator_reference_preferred
 /-! ## The private strict-order theorem -/
 
 private theorem strict_arrow_impossibility
-    [Nonempty Agent] [Fintype Agent]
+    [Fintype Agent]
     {aggregate : StrictAggregator Agent α}
     (hrational : IsStrictCollectivelyRational aggregate)
     (hpareto : IsStrictPareto aggregate)
@@ -1234,7 +1234,7 @@ linear-ranking profiles has an exact dictator.
 The alternative type need not be finite. The result quantifies over the
 canonical weak `Ranking` relation; the strict-order pivotal proof is private and
 connected to that relation by `Rank.strict`. -/
-theorem impossibility [Nonempty Agent] [Fintype Agent]
+theorem impossibility [Fintype Agent]
     {aggregate : Aggregator Agent α}
     (hrational : aggregate.IsCollectivelyRational)
     (hpareto : aggregate.IsPareto)
@@ -1272,7 +1272,7 @@ theorem impossibility [Nonempty Agent] [Fintype Agent]
 
 /-- Finite-cardinality convenience form of Arrow's theorem. -/
 theorem impossibility_of_card
-    [Nonempty Agent] [Fintype Agent] [Fintype α]
+    [Fintype Agent] [Fintype α]
     {aggregate : Aggregator Agent α}
     (hrational : aggregate.IsCollectivelyRational)
     (hpareto : aggregate.IsPareto)

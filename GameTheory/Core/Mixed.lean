@@ -38,6 +38,7 @@ def UtilityGame.mixed (G : UtilityGame ι) : UtilityGame ι where
   form := G.form.mixed
   utility := G.utility
 
+omit [Fintype ι] in
 /-- Embedding a pure profile and then replacing one coordinate by a point mass is
 the same as replacing that coordinate first. -/
 theorem purify_update (F : GameForm ι) (σ : Profile F.sig) (who : ι)
@@ -133,6 +134,7 @@ theorem IsNash.expectedUtility_eq_of_mem_support
     ?_ hs
   exact (expectedUtility_mixed_eq_expect F utility mixedProfile who).symm
 
+omit [DecidableEq ι] in
 /-- And the embedding is faithful on outcomes, so the two equilibria describe the
 same play. -/
 theorem play_purify (σ : Profile F.sig) : F.mixed.play (F.purify σ) = F.play σ :=

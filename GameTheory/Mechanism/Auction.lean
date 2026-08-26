@@ -101,7 +101,6 @@ def auctionGame {Bid : ι → Type} {Alloc : Type}
 omit [Fintype ι] [DecidableEq ι] in
 /-- Expected utility in a deterministic quasilinear auction is its displayed
 valuation-minus-payment expression. -/
-@[simp]
 theorem auctionGame_expectedUtility {Bid : ι → Type} {Alloc : Type}
     (allocation : (∀ bidder, Bid bidder) → Alloc)
     (payment : (∀ bidder, Bid bidder) → ι → ℝ)
@@ -112,7 +111,7 @@ theorem auctionGame_expectedUtility {Bid : ι → Type} {Alloc : Type}
   expectedUtility_pure ..
 
 /-- The canonical quasilinear witness on `auctionGame`. -/
-def auctionGame_quasiLinear {Bid : ι → Type} {Alloc : Type}
+def auctionGameQuasiLinear {Bid : ι → Type} {Alloc : Type}
     (allocation : (∀ bidder, Bid bidder) → Alloc)
     (payment : (∀ bidder, Bid bidder) → ι → ℝ)
     (valuation : ι → Alloc → ℝ) :

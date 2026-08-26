@@ -181,7 +181,7 @@ theorem IsSimpleGame.probabilisticBanzhafValue_eq_card_swingCoalitions
 /-- A simple game bundles its Boolean and monotonicity certificate with the
 coalitional game, so simple-game-only constructions need no ignored proof
 arguments. -/
-abbrev SimpleGame (Agent : Type ua) [Fintype Agent] [DecidableEq Agent] :=
+abbrev SimpleGame (Agent : Type ua) [Fintype Agent] :=
   {G : CoalitionalGame Agent // G.IsSimpleGame}
 
 end GameTheory.CoalitionalGame

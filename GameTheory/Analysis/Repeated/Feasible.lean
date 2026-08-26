@@ -293,7 +293,7 @@ theorem sum_stagePayoff_cycleOfCounts
 /-- Every feasible vector is approximated by the uniform average of a finite
 stage-profile cycle. -/
 theorem exists_cycleAveragePayoff_close_of_mem_feasibleSet
-    (G : UtilityGame ι) [Fintype ι]
+    (G : UtilityGame ι)
     {value : PayoffVector ι} (hvalue : value ∈ G.feasibleSet)
     {bound ε : ℝ}
     (hbound : ∀ (profile : Profile G.form.sig) (who : ι),

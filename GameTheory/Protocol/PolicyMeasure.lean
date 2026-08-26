@@ -84,7 +84,6 @@ def restrictPolicies (sites : (i : ι) → Finset (M.InfoState i))
 
 /-- The executable finite law of the choices at a finite family of sites. -/
 def finitePolicyDraws [Fintype ι]
-    [∀ i info, Fintype (M.Choice i info)]
     (policy : (i : ι) → M.BehavioralPolicy i)
     (sites : (i : ι) → Finset (M.InfoState i)) :
     FinDist ((i : ι) → (info : sites i) → M.Choice i info) :=
@@ -148,7 +147,6 @@ omit [∀ i info, MeasurableSpace (M.Choice i info)] in
 /-- Assembling the finite marginal coordinatewise gives exactly the bounded
 mixed profile already consumed by the Protocol runner. -/
 theorem finitePolicyDraws_map_assemble [Fintype ι]
-    [∀ i info, Fintype (M.Choice i info)]
     (policy : (i : ι) → M.BehavioralPolicy i)
     (sites : (i : ι) → Finset (M.InfoState i))
     (fallback : (i : ι) → M.Policy i) :
@@ -167,7 +165,7 @@ theorem finitePolicyDraws_map_assemble [Fintype ι]
 omit [∀ i info, MeasurableSpace (M.Choice i info)] in
 /-- A covered bounded run depends only on the corresponding finite restriction
 of a total deterministic profile. -/
-theorem run_assemble_restrict [Fintype ι]
+theorem run_assemble_restrict
     (sites : (i : ι) → Finset (M.InfoState i))
     (fallback policies : (i : ι) → M.Policy i) (horizon : ℕ)
     (hcover : M.CoversInformationSites sites horizon) :
@@ -304,7 +302,7 @@ def behavioralPrefixExpectation [Fintype ι] [MeasurableSpace E.History]
 
 /-- The same prefix observable, evaluated after the ex-ante draw of one total
 pure-policy profile. -/
-def pureMeasurePrefixExpectation [Fintype ι] [MeasurableSpace E.History]
+def pureMeasurePrefixExpectation [MeasurableSpace E.History]
     (policy : (i : ι) → M.BehavioralPolicy i)
     (observable : ℕ → E.History → ℝ) (time : ℕ) : ℝ :=
   ∫ history, observable time history ∂M.runPureMeasure policy (time + 1)

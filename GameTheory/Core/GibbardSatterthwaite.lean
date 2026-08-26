@@ -732,7 +732,7 @@ private theorem induced_iia [Fintype Voter]
       strict_weakOfStrict hstrict', strictInduced]
     rw [hreverse]
 
-private theorem dictator_transfer [Nonempty Voter] [Fintype Voter]
+private theorem dictator_transfer [Fintype Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto)
     {dictator : Voter}

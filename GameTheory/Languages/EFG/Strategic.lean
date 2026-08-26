@@ -38,8 +38,7 @@ the EFG. -/
 noncomputable def contingentPlanFintype (who : ι)
     [Fintype (G.information.InfoState who)]
     [DecidableEq (G.information.InfoState who)]
-    [∀ info, Fintype (G.information.Choice who info)]
-    [∀ info, DecidableEq (G.information.Choice who info)] :
+    [∀ info, Fintype (G.information.Choice who info)] :
     Fintype (G.ContingentPlan who) := by
   show
     Fintype

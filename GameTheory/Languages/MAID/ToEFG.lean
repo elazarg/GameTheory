@@ -142,7 +142,6 @@ theorem advance_path (state : Stage diagram topological)
         [⟨state.pendingNode topological hpending, value⟩] :=
   rfl
 
-@[simp]
 theorem advance_length (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     (value : diagram.Value (state.pendingNode topological hpending)) :
@@ -283,7 +282,9 @@ theorem selectedAction_spec
   Classical.choose_spec
     (exists_eq_some_of_active topological hlegal hactive)
 
-def transitionAt [DecidableEq Player] [DecidableEq Node]
+/-- Resolve the pending node: draw from nature at a chance node, or take the
+owner's contributed action at a decision node. -/
+def transitionAt [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
@@ -317,7 +318,9 @@ def transitionAt [DecidableEq Player] [DecidableEq Node]
         (state.advanceTagged topological hpending
           ⟨action.1.1, action.2⟩ hsite)
 
-def transition [DecidableEq Player] [DecidableEq Node]
+/-- The compiled protocol's step, taking the nonterminality and legality
+certificates the runner supplies. -/
+def transition [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological) :
     { joint : (owner : Player) → Option (Action diagram owner) //
@@ -505,7 +508,7 @@ def information [DecidableEq Player] [DecidableEq Node]
     rw [infoOf_eq_viewOf topological semantics owner trace]
     exact menu_adequate_at topological semantics owner state choice
 
-theorem mem_transition_path [DecidableEq Player] [DecidableEq Node]
+theorem mem_transition_path [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (source target : Stage diagram topological)
     (certified :
@@ -542,7 +545,6 @@ theorem eraseAction_injective {owner : Player} :
   rfl
 
 theorem legal_eq_none_of_chance
-    [DecidableEq Player] [DecidableEq Node]
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     (hkind :
@@ -569,7 +571,6 @@ theorem legal_eq_none_of_chance
       contradiction
 
 theorem legal_eq_none_of_ne_owner
-    [DecidableEq Player] [DecidableEq Node]
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     {activeOwner : Player}
@@ -598,7 +599,7 @@ theorem legal_eq_none_of_ne_owner
         (hne (GameTheory.Languages.MAID.NodeKind.decision.inj hactiveKind.symm))
 
 theorem mem_transition_decision_path
-    [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (source target : Stage diagram topological)
     (certified :
@@ -640,7 +641,7 @@ theorem mem_transition_decision_path
       certified.2.2 owner _
 
 theorem source_eq_of_same_target
-    [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     {firstSource secondSource target : Stage diagram topological}
     (first :
@@ -737,7 +738,7 @@ theorem joint_eq_of_same_target
             second.1 second.2.2 howner]
 
 theorem initial_not_mem_transition
-    [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (source : Stage diagram topological)
     (certified :
@@ -856,7 +857,7 @@ def behavioralProfile [DecidableEq Player] [DecidableEq Node]
   fun owner => behavioralPolicy topological semantics policy owner
 
 /-- The source-level law for resolving exactly the pending topological node. -/
-def serialNodeLaw [DecidableEq Player] [DecidableEq Node]
+def serialNodeLaw [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
@@ -873,7 +874,8 @@ def serialNodeLaw [DecidableEq Player] [DecidableEq Node]
         (state.configOf topological semantics
           (diagram.observedParents node))
 
-def serialStep [DecidableEq Player] [DecidableEq Node]
+/-- One source-level evaluation step against the serial schedule. -/
+def serialStep [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
@@ -883,7 +885,7 @@ def serialStep [DecidableEq Player] [DecidableEq Node]
     (serialNodeLaw topological semantics policy state hpending)
 
 theorem serialNodeLaw_of_chance
-    [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
@@ -906,7 +908,7 @@ theorem serialNodeLaw_of_chance
     contradiction
 
 theorem serialNodeLaw_of_decision
-    [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
@@ -935,7 +937,6 @@ theorem serialNodeLaw_of_decision
     rfl
 
 theorem inactive_of_pending_chance
-    [DecidableEq Player] [DecidableEq Node]
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     (hkind :
@@ -982,7 +983,7 @@ def serialJointLaw [DecidableEq Player] [DecidableEq Node]
             (diagram.observedParents node)))
 
 theorem transition_of_chance
-    [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological)
     (certified :

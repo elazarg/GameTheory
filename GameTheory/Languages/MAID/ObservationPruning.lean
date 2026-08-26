@@ -295,7 +295,7 @@ in the smaller policy space remains Nash against every original full-policy
 deviation after expansion. -/
 theorem isNash_expanded_of_isNash_reduced
     (pruning : Pruning diagram)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : ReducedPolicy pruning)
     (hcover : pruning.CoversFullDeviationsAt semantics policy)
@@ -319,7 +319,7 @@ is not merely a convenient sufficient certificate; together with reduced Nash
 it is the exact missing obligation at one reduced profile. -/
 theorem coversFullDeviationsAt_of_isNash_expanded
     (pruning : Pruning diagram)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : ReducedPolicy pruning)
     (hnash : IsNash (nativeBehavioralGameForm semantics)
@@ -338,7 +338,7 @@ without any coverage premise.  The converse above needs deviation coverage: a
 removed observation may otherwise enable a profitable full-space deviation. -/
 theorem isNash_reducedNative_of_isNash_expanded
     (pruning : Pruning diagram)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : ReducedPolicy pruning)
     (hnash : IsNash (nativeBehavioralGameForm semantics)
@@ -360,7 +360,7 @@ theorem isNash_reducedNative_of_isNash_expanded
 expansion identifies the full and reduced native Nash questions exactly. -/
 theorem isNash_expanded_iff_reducedNative_of_covers
     (pruning : Pruning diagram)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : ReducedPolicy pruning)
     (hcover : pruning.CoversFullDeviationsAt semantics policy) :
@@ -380,7 +380,7 @@ theorem isNash_expanded_iff_reducedNative_of_covers
 deviations removed from the policy domain. -/
 theorem isNash_expanded_iff_reducedNative_and_covers
     (pruning : Pruning diagram)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : ReducedPolicy pruning) :
     IsNash (nativeBehavioralGameForm semantics)

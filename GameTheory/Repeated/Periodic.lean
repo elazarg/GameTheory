@@ -22,7 +22,7 @@ variable {ι : Type uι}
 namespace UtilityGame
 
 /-- Average stage payoff of a nonempty finite cycle. -/
-def cycleAveragePayoff (G : UtilityGame ι) {n : ℕ} [NeZero n]
+def cycleAveragePayoff (G : UtilityGame ι) {n : ℕ}
     (cycle : Fin n → Profile G.form.sig) (who : ι) : ℝ :=
   (n : ℝ)⁻¹ * ∑ t : Fin n, G.stagePayoff (cycle t) who
 

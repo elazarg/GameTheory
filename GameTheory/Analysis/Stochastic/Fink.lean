@@ -66,24 +66,24 @@ abbrev FinkAmbient : Type _ :=
   Profile G.finkSignature.weights × (G.State → ι → ℝ)
 
 /-- Product of the stationary mixed-action polytope and a bounded value cube. -/
-def finkDomain [Fintype G.State] [Fintype ι]
+def finkDomain
     [∀ player, Fintype (G.Action player)] (bound : ℝ) : Set G.FinkAmbient :=
   mixedPolytope G.finkSignature ×ˢ
     Set.Icc (fun _ _ => -bound) (fun _ _ => bound)
 
-theorem convex_finkDomain [Fintype G.State] [Fintype ι]
+theorem convex_finkDomain
     [∀ player, Fintype (G.Action player)] (bound : ℝ) :
     Convex ℝ (G.finkDomain bound) :=
   (convex_mixedPolytope G.finkSignature).prod
     (convex_Icc (fun _ : G.State => fun _ : ι => -bound)
       (fun _ => fun _ => bound))
 
-theorem isCompact_finkDomain [Fintype G.State] [Fintype ι]
+theorem isCompact_finkDomain
     [∀ player, Fintype (G.Action player)] (bound : ℝ) :
     IsCompact (G.finkDomain bound) :=
   (isCompact_mixedPolytope G.finkSignature).prod isCompact_Icc
 
-theorem nonempty_finkDomain [Fintype G.State] [Fintype ι]
+theorem nonempty_finkDomain
     [∀ player, Fintype (G.Action player)]
     [∀ player, Nonempty (G.Action player)] {bound : ℝ}
     (hbound : 0 ≤ bound) : (G.finkDomain bound).Nonempty := by
@@ -93,13 +93,13 @@ theorem nonempty_finkDomain [Fintype G.State] [Fintype ι]
   · constructor <;> intro state who <;> simp [hbound]
 
 /-- The real action weights at one state. -/
-def finkStateWeights [Fintype G.State] [Fintype ι]
+def finkStateWeights
     [∀ player, Fintype (G.Action player)] {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) :
     Profile G.actionSignature.weights :=
   fun player => point.1.1 (state, player)
 
-theorem finkStateWeights_mem [Fintype G.State] [Fintype ι]
+theorem finkStateWeights_mem
     [∀ player, Fintype (G.Action player)] {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) :
     G.finkStateWeights point state ∈ mixedPolytope G.actionSignature := by
@@ -108,13 +108,13 @@ theorem finkStateWeights_mem [Fintype G.State] [Fintype ι]
   exact (mem_mixedPolytope G.finkSignature).1 point.2.1 (state, player)
 
 /-- Decode the stationary mixed profile represented by a domain point. -/
-def finkProfile [Fintype G.State] [Fintype ι]
+def finkProfile
     [∀ player, Fintype (G.Action player)] {bound : ℝ}
     (point : G.finkDomain bound) : G.StationaryMixedProfile :=
   fun state => ofPolytope G.actionSignature (G.finkStateWeights_mem point state)
 
 @[simp]
-theorem finkProfile_prob [Fintype G.State] [Fintype ι]
+theorem finkProfile_prob
     [∀ player, Fintype (G.Action player)] {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) (who : ι) :
     (G.finkProfile point state who).prob =
@@ -123,13 +123,13 @@ theorem finkProfile_prob [Fintype G.State] [Fintype ι]
     (G.finkStateWeights_mem point state)) who
 
 /-- Decode the continuation-value coordinate. -/
-def finkValue [Fintype G.State] [Fintype ι]
+def finkValue
     [∀ player, Fintype (G.Action player)] {bound : ℝ}
     (point : G.finkDomain bound) : G.State → ι → ℝ :=
   point.1.2
 
 /-- The on-profile auxiliary expected payoff in real simplex coordinates. -/
-def finkAuxPayoff [Fintype G.State] [Fintype ι] [DecidableEq ι]
+def finkAuxPayoff [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)] (β : ℝ) {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) (who : ι) : ℝ :=
   payoff G.actionForm
@@ -137,7 +137,7 @@ def finkAuxPayoff [Fintype G.State] [Fintype ι] [DecidableEq ι]
     (G.finkStateWeights point state)
 
 /-- The auxiliary payoff after one pure deviation, in finite coordinates. -/
-def finkDeviationPayoff [Fintype G.State] [Fintype ι] [DecidableEq ι]
+def finkDeviationPayoff [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)] (β : ℝ) {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) (who : ι)
     (action : G.Action who) : ℝ :=
@@ -147,7 +147,7 @@ def finkDeviationPayoff [Fintype G.State] [Fintype ι] [DecidableEq ι]
           G.finkStateWeights point state player (joint player)) *
         G.discountedAuxUtility β (G.finkValue point) state joint who)
 
-theorem finkDeviationPayoff_eq_payoff_update [Fintype G.State]
+theorem finkDeviationPayoff_eq_payoff_update
     [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)] (β : ℝ) {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) (who : ι)
@@ -161,7 +161,7 @@ theorem finkDeviationPayoff_eq_payoff_update [Fintype G.State]
   unfold finkDeviationPayoff actionForm expectedUtility
   simp
 
-theorem finkAuxPayoff_eq_expectedUtility [Fintype G.State]
+theorem finkAuxPayoff_eq_expectedUtility
     [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)] (β : ℝ) {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) (who : ι) :
@@ -175,7 +175,7 @@ theorem finkAuxPayoff_eq_expectedUtility [Fintype G.State]
   exact (probs_ofPolytope G.actionSignature
     (G.finkStateWeights_mem point state)).symm
 
-theorem finkDeviationPayoff_eq_expectedUtility [Fintype G.State]
+theorem finkDeviationPayoff_eq_expectedUtility
     [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)] (β : ℝ) {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) (who : ι)
@@ -195,14 +195,14 @@ theorem finkDeviationPayoff_eq_expectedUtility [Fintype G.State]
       (G.finkStateWeights_mem point state)).symm
 
 /-- Pure one-step gain in Fink's auxiliary game. -/
-def finkGain [Fintype G.State] [Fintype ι] [DecidableEq ι]
+def finkGain [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)] (β : ℝ) {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) (who : ι)
     (action : G.Action who) : ℝ :=
   G.finkDeviationPayoff β point state who action -
     G.finkAuxPayoff β point state who
 
-theorem finkGain_eq_mixedGain [Fintype G.State] [Fintype ι]
+theorem finkGain_eq_mixedGain [Fintype ι]
     [DecidableEq ι] [∀ player, Fintype (G.Action player)]
     (β : ℝ) {bound : ℝ} (point : G.finkDomain bound)
     (state : G.State) (who : ι) (action : G.Action who) :
@@ -214,12 +214,12 @@ theorem finkGain_eq_mixedGain [Fintype G.State] [Fintype ι]
     G.finkAuxPayoff_eq_expectedUtility]
 
 /-- Total positive auxiliary gain for one state-player agent. -/
-def finkGainSum [Fintype G.State] [Fintype ι] [DecidableEq ι]
+def finkGainSum [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)] (β : ℝ) {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) (who : ι) : ℝ :=
   ∑ action, max (G.finkGain β point state who action) 0
 
-theorem finkGainSum_nonneg [Fintype G.State] [Fintype ι]
+theorem finkGainSum_nonneg [Fintype ι]
     [DecidableEq ι] [∀ player, Fintype (G.Action player)]
     (β : ℝ) {bound : ℝ} (point : G.finkDomain bound)
     (state : G.State) (who : ι) :
@@ -227,7 +227,7 @@ theorem finkGainSum_nonneg [Fintype G.State] [Fintype ι]
   Finset.sum_nonneg fun _ _ => le_max_right _ _
 
 /-- One coordinate of Nash's positive-gain adjustment. -/
-def finkStrategyWeightUpdate [Fintype G.State] [Fintype ι]
+def finkStrategyWeightUpdate [Fintype ι]
     [DecidableEq ι] [∀ player, Fintype (G.Action player)]
     (β : ℝ) {bound : ℝ} (point : G.finkDomain bound)
     (state : G.State) (who : ι) (action : G.Action who) : ℝ :=
@@ -235,7 +235,7 @@ def finkStrategyWeightUpdate [Fintype G.State] [Fintype ι]
       max (G.finkGain β point state who action) 0) /
     (1 + G.finkGainSum β point state who)
 
-theorem finkStrategyUpdate_mem [Fintype G.State] [Fintype ι]
+theorem finkStrategyUpdate_mem [Fintype ι]
     [DecidableEq ι] [∀ player, Fintype (G.Action player)]
     (β : ℝ) {bound : ℝ} (point : G.finkDomain bound)
     (state : G.State) (who : ι) :
@@ -341,7 +341,7 @@ theorem abs_discountedAuxUtility_le (β bound : ℝ)
         (mul_le_mul_of_nonneg_left hexpect hβ0)
     _ = bound := by ring
 
-theorem abs_finkAuxPayoff_le [Fintype G.State] [Fintype ι]
+theorem abs_finkAuxPayoff_le [Fintype ι]
     [DecidableEq ι] [∀ player, Fintype (G.Action player)]
     (β bound : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
     (hstage : ∀ state joint who, |G.stageUtility state joint who| ≤ bound)
@@ -358,14 +358,14 @@ theorem abs_finkAuxPayoff_le [Fintype G.State] [Fintype ι]
     state joint who
 
 /-- The ambient-coordinate formula for Fink's joint strategy/value map. -/
-def finkAmbientUpdate [Fintype G.State] [Fintype ι] [DecidableEq ι]
+def finkAmbientUpdate [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)] (β : ℝ) {bound : ℝ}
     (point : G.finkDomain bound) : G.FinkAmbient :=
   (fun agent action =>
       G.finkStrategyWeightUpdate β point agent.1 agent.2 action,
     fun state who => G.finkAuxPayoff β point state who)
 
-theorem finkAmbientUpdate_mem [Fintype G.State] [Fintype ι]
+theorem finkAmbientUpdate_mem [Fintype ι]
     [DecidableEq ι] [∀ player, Fintype (G.Action player)]
     (β bound : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
     (hstage : ∀ state joint who, |G.stageUtility state joint who| ≤ bound)
@@ -382,7 +382,7 @@ theorem finkAmbientUpdate_mem [Fintype G.State] [Fintype ι]
         (G.abs_finkAuxPayoff_le β bound hβ0 hβ1 hstage point state who)).2
 
 /-- Fink's continuous self-map of the compact strategy/value domain. -/
-def finkMap [Fintype G.State] [Fintype ι] [DecidableEq ι]
+def finkMap [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)]
     (β bound : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
     (hstage : ∀ state joint who, |G.stageUtility state joint who| ≤ bound) :
@@ -431,7 +431,7 @@ def IsDiscountedStationaryBellmanEq [Fintype ι] [DecidableEq ι]
         (profile state)) = value state who
 
 theorem isDiscountedStationaryBellmanEq_of_finkMap_fixedPoint
-    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)]
     (β bound : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
     (hstage : ∀ state joint who, |G.stageUtility state joint who| ≤ bound)

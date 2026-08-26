@@ -77,14 +77,14 @@ theorem mutualPBelief_mono_threshold {ι : Type uι} [Fintype ι]
 
 /-- A `p`-evident event: whenever it occurs, every agent assigns probability
 at least `threshold` to it. -/
-def IsPEvident {ι : Type uι} [Fintype ι]
+def IsPEvident {ι : Type uι}
     (prior : FinDist Ω) (partition : ι → InfoPartition Ω)
     (threshold : ℝ) (event : Finset Ω) : Prop :=
   ∀ agent : ι,
     event ⊆ PBelief prior (partition agent) threshold event
 
 /-- Lowering the threshold preserves `p`-evidence. -/
-theorem IsPEvident.mono_threshold {ι : Type uι} [Fintype ι]
+theorem IsPEvident.mono_threshold {ι : Type uι}
     {prior : FinDist Ω} {partition : ι → InfoPartition Ω}
     {lower upper : ℝ} (hthreshold : lower ≤ upper)
     {event : Finset Ω}
@@ -160,7 +160,7 @@ theorem posterior_eq_one_of_cell_subset
 
 /-- An event self-evident for every agent is `p`-evident for every threshold
 at most one. -/
-theorem IsSelfEvident.isPEvident {ι : Type uι} [Fintype ι]
+theorem IsSelfEvident.isPEvident {ι : Type uι}
     {prior : FinDist Ω} (hfull : prior.FullSupport)
     {partition : ι → InfoPartition Ω} {threshold : ℝ}
     (hthreshold : threshold ≤ 1) {event : Finset Ω}

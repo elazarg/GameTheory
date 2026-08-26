@@ -369,7 +369,7 @@ theorem assignmentRun_topological_order_independent
 theorem serialNodeLaw_eq_assignmentNodeLaw
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
-    [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
@@ -421,7 +421,7 @@ theorem assignment_advance
 theorem map_assignment_serialStep
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
-    [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)

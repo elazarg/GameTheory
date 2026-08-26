@@ -307,7 +307,7 @@ theorem perfectRecall [∀ i, Nonempty (G.Action i)] :
 
 /-- Information-local menu: every player chooses a real action before the
 horizon and contributes the canonical no-op afterwards. -/
-def menu [∀ i, Nonempty (G.Action i)] (i : ι) :
+def menu (i : ι) :
     G.InformationState i → Set (Option (G.Action i))
   | info =>
       if info.rounds.length < G.horizon then

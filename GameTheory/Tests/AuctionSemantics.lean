@@ -27,7 +27,7 @@ abbrev binaryGame : UtilityGame (Fin 2) :=
   auctionGame binaryAllocation zeroPayment winnerValue
 
 abbrev binaryQuasiLinear : QuasiLinear binaryGame :=
-  auctionGame_quasiLinear binaryAllocation zeroPayment winnerValue
+  auctionGameQuasiLinear binaryAllocation zeroPayment winnerValue
 
 theorem allocation_responds_to_reports :
     binaryAllocation ![true, false] = 0 ∧
@@ -37,19 +37,19 @@ theorem allocation_responds_to_reports :
 theorem binary_nonnegativeUtility_everyOutcome :
     binaryQuasiLinear.HasNonnegativeUtilityAtEveryOutcome := by
   intro reports who
-  simp only [binaryQuasiLinear, auctionGame_quasiLinear, zeroPayment,
+  simp only [binaryQuasiLinear, auctionGameQuasiLinear, zeroPayment,
     winnerValue]
   split <;> norm_num
 
 theorem binary_noPositiveTransfers :
     binaryQuasiLinear.NoPositiveTransfers := by
   intro reports who
-  norm_num [binaryQuasiLinear, auctionGame_quasiLinear, zeroPayment]
+  norm_num [binaryQuasiLinear, auctionGameQuasiLinear, zeroPayment]
 
 theorem binary_isStronglyBudgetBalanced :
     binaryQuasiLinear.IsStronglyBudgetBalanced := by
   intro reports
-  norm_num [binaryQuasiLinear, auctionGame_quasiLinear, zeroPayment,
+  norm_num [binaryQuasiLinear, auctionGameQuasiLinear, zeroPayment,
     Fin.sum_univ_two]
 
 /-! ## Nonzero-transfer discrimination -/
@@ -65,7 +65,7 @@ abbrev feeGame : UtilityGame (Fin 2) :=
   auctionGame binaryAllocation positiveFee highValue
 
 abbrev feeQuasiLinear : QuasiLinear feeGame :=
-  auctionGame_quasiLinear binaryAllocation positiveFee highValue
+  auctionGameQuasiLinear binaryAllocation positiveFee highValue
 
 theorem positiveFee_is_nonzero :
     positiveFee ![true, false] 0 = 1 ∧
@@ -100,7 +100,7 @@ abbrev balancedGame : UtilityGame (Fin 2) :=
   auctionGame binaryAllocation balancedTransfer highValue
 
 abbrev balancedQuasiLinear : QuasiLinear balancedGame :=
-  auctionGame_quasiLinear binaryAllocation balancedTransfer highValue
+  auctionGameQuasiLinear binaryAllocation balancedTransfer highValue
 
 theorem balancedTransfer_is_nonzero :
     balancedTransfer ![false, true] 0 = 1 ∧
@@ -136,7 +136,7 @@ abbrev overchargeGame : UtilityGame (Fin 2) :=
   auctionGame binaryAllocation overcharge highValue
 
 abbrev overchargeQuasiLinear : QuasiLinear overchargeGame :=
-  auctionGame_quasiLinear binaryAllocation overcharge highValue
+  auctionGameQuasiLinear binaryAllocation overcharge highValue
 
 /-- A payment above value falsifies ex-post individual rationality. -/
 theorem overcharge_has_negativeUtility_outcome :

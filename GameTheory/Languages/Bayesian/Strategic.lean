@@ -33,7 +33,6 @@ def protocolUtility (B : BayesianGame ι) [∀ i, Nonempty (B.Act i)] :
 
 /-- Mapping a direct Bayesian outcome into the completed protocol carrier
 preserves every player's expected utility. -/
-@[simp]
 theorem expectedUtility_protocolUtility_map (B : BayesianGame ι)
     [∀ i, Nonempty (B.Act i)] (who : ι)
     (law : FinDist B.signature.Outcome) :
@@ -44,7 +43,6 @@ theorem expectedUtility_protocolUtility_map (B : BayesianGame ι)
 
 /-- The protocol-backed form evaluates exactly like the direct form after
 recovering the policy profile's contingent plans. -/
-@[simp]
 theorem expectedUtility_toProtocolForm (B : BayesianGame ι)
     [∀ i, Nonempty (B.Act i)] (who : ι)
     (policies : Profile (informationModel B).strategicSignature) :

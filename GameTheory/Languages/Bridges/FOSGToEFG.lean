@@ -1254,7 +1254,7 @@ private theorem behavioralJoint_stage [Fintype ι] [DecidableEq ι]
   · simp [targetJointOfViewChoice, selectedJoint, howner]
 
 @[simp]
-private theorem choiceOfJoint_targetJointOfChoice [Fintype ι] [DecidableEq ι]
+private theorem choiceOfJoint_targetJointOfChoice [DecidableEq ι]
     {history : History G} {count : ℕ}
     (collected : Prefix G order history count)
     (hslot : count < order.slots)
@@ -1275,7 +1275,7 @@ private theorem choiceOfJoint_targetJointOfChoice [Fintype ι] [DecidableEq ι]
 
 @[simp]
 private theorem choiceOfJoint_targetJointOfViewChoice
-    [Fintype ι] [DecidableEq ι]
+    [DecidableEq ι]
     {history : History G} {count : ℕ}
     (collected : Prefix G order history count)
     (hslot : count < order.slots)

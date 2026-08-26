@@ -670,7 +670,7 @@ produce the same complete typed-assignment law. -/
 theorem nativeRun_eq_serialRun
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :

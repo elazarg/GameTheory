@@ -37,7 +37,6 @@ def withProfileTransfer (G : UtilityGame.{uι, us, uo} ι)
   form := G.form.recordProfile
   utility observed who := G.utility observed.2 who + transfer observed.1 who
 
-@[simp]
 theorem expectedUtility_withProfileTransfer (G : UtilityGame.{uι, us, uo} ι)
     (transfer : G.ProfileTransfer) (profile : Profile G.form.sig) (who : ι) :
     expectedUtility (G.withProfileTransfer transfer).utility who

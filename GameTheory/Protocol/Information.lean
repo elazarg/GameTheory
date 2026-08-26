@@ -748,6 +748,7 @@ section SingleMoverBehavioralJoint
 
 variable [DecidableEq ι]
 
+omit [DecidableEq ι] in
 /-- If nobody acts, the behavioral product is the unique all-`none` joint
 action. -/
 theorem behavioralJoint_eq_pure_of_no_active
@@ -1015,7 +1016,7 @@ def runMixed (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) : FinDist E.His
 
 /-- **Behavioral play extends deterministic play.** Reading a deterministic
 profile as behavioral changes nothing about the law it induces. -/
-theorem runBehavioralFrom_toBehavioral [DecidableEq ι] (policies : (i : ι) → M.Policy i)
+theorem runBehavioralFrom_toBehavioral (policies : (i : ι) → M.Policy i)
     (fuel : ℕ) (h : E.History) :
     M.runBehavioralFrom (fun i => (policies i).toBehavioral) fuel h =
       M.runFrom policies fuel h := by
@@ -1029,7 +1030,7 @@ theorem runBehavioralFrom_toBehavioral [DecidableEq ι] (policies : (i : ι) →
 
 /-- **Mixed play extends deterministic play**, for the same reason and by the
 other route. -/
-theorem runMixedFrom_pure [DecidableEq ι] (policies : (i : ι) → M.Policy i)
+theorem runMixedFrom_pure (policies : (i : ι) → M.Policy i)
     (fuel : ℕ) (h : E.History) :
     M.runMixedFrom (fun i => FinDist.pure (policies i)) fuel h = M.runFrom policies fuel h := by
   rw [runMixedFrom, FinDist.pi_pure, FinDist.pure_bind]
@@ -1333,7 +1334,7 @@ variable {M} in
 /-- The construction is the right one in the degenerate case: a deterministic
 policy, randomized nowhere, comes back as the point mass at itself. -/
 theorem Policy.toBehavioral_toMixed {i : ι} [Fintype (M.InfoState i)]
-    [DecidableEq (M.InfoState i)] (policy : M.Policy i) :
+    (policy : M.Policy i) :
     policy.toBehavioral.toMixed = FinDist.pure policy :=
   FinDist.pi_pure policy
 

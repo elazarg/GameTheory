@@ -41,7 +41,7 @@ def IsPosteriorAssignment (S : SignalStructure State Message)
 /-- A Bayes-factorizing signal induces a Bayes-plausible posterior law. -/
 theorem inducedPosteriorLaw_isBayesPlausible
     [Fintype State] [DecidableEq State]
-    [Fintype Message] [DecidableEq Message]
+    [Fintype Message]
     (S : SignalStructure State Message) (prior : FinDist State)
     (posterior : Message → FinDist State)
     (hposterior : S.IsPosteriorAssignment prior posterior) :

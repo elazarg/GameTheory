@@ -190,7 +190,7 @@ theorem toGameForm_mixed_play (horizon : ℕ)
 /-- Behavioral play restricts to pure play when every local law is a point
 mass. -/
 @[simp]
-theorem toBehavioralGameForm_play_toBehavioral [DecidableEq ι]
+theorem toBehavioralGameForm_play_toBehavioral
     (profile : Profile M.strategicSignature) (horizon : ℕ) :
     (M.toBehavioralGameForm horizon).play (fun i => (profile i).toBehavioral) =
       (M.toGameForm horizon).play profile := by

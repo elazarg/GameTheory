@@ -29,7 +29,7 @@ abbrev Allocation (ι G : Type) := Combinatorial.Allocation ι G
 abbrev AdditiveValuation (ι G : Type) := ι → G → ℝ
 
 /-- Additive value of a finite bundle. -/
-noncomputable def value [DecidableEq G] (v : AdditiveValuation ι G) (i : ι)
+noncomputable def value (v : AdditiveValuation ι G) (i : ι)
     (S : Bundle G) : ℝ :=
   ∑ g ∈ S, v i g
 
@@ -43,7 +43,7 @@ def IsComplete (A : Allocation ι G) : Prop :=
   ∀ g : G, ∃ i : ι, g ∈ A i
 
 /-- Envy-freeness for additive valuations. -/
-def IsEnvyFree [DecidableEq G] (v : AdditiveValuation ι G)
+def IsEnvyFree (v : AdditiveValuation ι G)
     (A : Allocation ι G) : Prop :=
   ∀ i j, value v i (A i) ≥ value v i (A j)
 
@@ -60,17 +60,17 @@ def IsEFX [DecidableEq G] (v : AdditiveValuation ι G)
     value v i (A i) ≥ value v i ((A j).erase g)
 
 /-- Proportionality for a complete finite additive allocation. -/
-def IsProportional [Fintype ι] [Fintype G] [DecidableEq G]
+def IsProportional [Fintype ι] [Fintype G]
     (v : AdditiveValuation ι G) (A : Allocation ι G) : Prop :=
   ∀ i, (Fintype.card ι : ℝ) * value v i (A i) ≥ value v i Finset.univ
 
 /-- An allocation gives every agent at least an `alpha` fraction of a chosen
 maximin-share benchmark. -/
-def IsAlphaMMS [DecidableEq G] (v : AdditiveValuation ι G)
+def IsAlphaMMS (v : AdditiveValuation ι G)
     (A : Allocation ι G) (mms : ι → ℝ) (alpha : ℝ) : Prop :=
   ∀ i, value v i (A i) ≥ alpha * mms i
 
-theorem isEnvyFree_iff [DecidableEq G] (v : AdditiveValuation ι G)
+theorem isEnvyFree_iff (v : AdditiveValuation ι G)
     (A : Allocation ι G) :
     IsEnvyFree v A ↔ ∀ i j, value v i (A i) ≥ value v i (A j) :=
   Iff.rfl
@@ -87,18 +87,18 @@ theorem isEFX_iff [DecidableEq G] (v : AdditiveValuation ι G)
       value v i (A i) ≥ value v i ((A j).erase g) :=
   Iff.rfl
 
-theorem isProportional_iff [Fintype ι] [Fintype G] [DecidableEq G]
+theorem isProportional_iff [Fintype ι] [Fintype G]
     (v : AdditiveValuation ι G) (A : Allocation ι G) :
     IsProportional v A ↔
       ∀ i, (Fintype.card ι : ℝ) * value v i (A i) ≥ value v i Finset.univ :=
   Iff.rfl
 
 @[simp]
-theorem value_empty [DecidableEq G] (v : AdditiveValuation ι G) (i : ι) :
+theorem value_empty (v : AdditiveValuation ι G) (i : ι) :
     value v i (∅ : Bundle G) = 0 := by
   simp [value]
 
-theorem value_mono [DecidableEq G] {v : AdditiveValuation ι G}
+theorem value_mono {v : AdditiveValuation ι G}
     (hnonneg : Nonnegative v) (i : ι) {S T : Bundle G} (hST : S ⊆ T) :
     value v i S ≤ value v i T :=
   Finset.sum_le_sum_of_subset_of_nonneg hST fun g _ _ => hnonneg i g
@@ -118,12 +118,12 @@ theorem value_erase_add [DecidableEq G] (v : AdditiveValuation ι G)
     value v i S = value v i (S.erase g) + v i g := by
   rw [value, value, ← Finset.sum_erase_add (s := S) (f := fun good => v i good) hg]
 
-theorem value_nonneg [DecidableEq G] {v : AdditiveValuation ι G}
+theorem value_nonneg {v : AdditiveValuation ι G}
     (hnonneg : Nonnegative v) (i : ι) (S : Bundle G) :
     0 ≤ value v i S :=
   Finset.sum_nonneg fun g _ => hnonneg i g
 
-theorem value_eq_zero_of_forall_eq_zero [DecidableEq G]
+theorem value_eq_zero_of_forall_eq_zero
     (v : AdditiveValuation ι G) (i : ι) {S : Bundle G}
     (hzero : ∀ g ∈ S, v i g = 0) : value v i S = 0 := by
   rw [value]

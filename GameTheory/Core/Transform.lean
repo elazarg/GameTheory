@@ -122,7 +122,6 @@ theorem unreindex_update {ι : Type uι} {κ : Type uκ}
     simp [unreindexPlayers]
   · simp [unreindexPlayers, h, equiv.symm.injective.ne h]
 
-@[simp]
 theorem update_reindex {ι : Type uι} {κ : Type uκ}
     [DecidableEq ι] [DecidableEq κ]
     {sig : GameSignature ι} (equiv : ι ≃ κ)

@@ -29,6 +29,7 @@ def mixedPotential (G : GameForm ι) (potential : Profile G.sig → ℝ)
     (mixedProfile : Profile G.sig.mixed) : ℝ :=
   (FinDist.pi mixedProfile).expect potential
 
+omit [DecidableEq ι] in
 /-- The mixed potential agrees with the original potential on the canonical
 pure embedding. -/
 @[simp]
