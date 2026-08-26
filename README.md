@@ -2,59 +2,48 @@
 
 [![CI](https://github.com/elazarg/GameTheory/actions/workflows/ci.yml/badge.svg)](https://github.com/elazarg/GameTheory/actions/workflows/ci.yml)
 
-GameTheory is a Lean 4 library for finite and discrete game theory, built on
-Mathlib. It provides shared semantics for static and sequential games together
-with checked theorem families in equilibrium, learning, repeated and stochastic
-games, mechanisms, social choice, epistemics, evolutionary stability,
-cooperative games, matching, and congestion games.
+A Lean 4 library for finite and discrete game theory, built on Mathlib. Static
+and sequential games share one semantic core: a single deviation API carries
+Nash, correlated, Bayesian, and refinement results; the language encodings
+compile into that core; and the executable algorithms are tied to their
+specifications by correctness theorems.
 
-The library favors useful mathematical interfaces over source compatibility:
-one deviation API supports Nash, correlated, Bayesian, and refinement results;
-language encodings compile into those shared semantics; executable algorithms
-are connected to proof-level specifications by correctness theorems.
+## Getting started
 
-## Start here
-
-Add the repository to a Lake project:
+The library tracks Mathlib and is currently on Lean `v4.33.1`. Add it to your
+`lakefile.lean`:
 
 ```lean
-require GameTheory from git
-  "https://github.com/elazarg/GameTheory.git" @ "main"
+require "elazarg" / "GameTheory" @ git "v4.33.1"
 ```
 
-For reproducible work, replace `main` with a commit hash. Then run:
+Releases carry the toolchain they build against, so a downstream project moves
+GameTheory and Mathlib together by changing one version string.
 
 ```text
 lake update
 lake build
 ```
 
-The project pins Lean and Mathlib at `v4.32.2`.
-
-For the stable static, sequential, epistemic, evolutionary, and executable
-foundations:
-
-```lean
-import GameTheory
-```
-
-Specialized theorem families are explicit imports:
+`import GameTheory` gives the static, sequential, epistemic, evolutionary, and
+executable foundations. Everything else is an explicit import, which keeps each
+family's assumptions out of the basic one:
 
 | Goal | Import |
 |---|---|
 | Pure and mixed games, preferences, Nash, CE/CCE, Bayesian games, welfare, learning foundations | `GameTheory.Core` |
 | Protocol execution, histories, information, assessment, SPE, backward induction | `GameTheory.Protocol` |
-| Finite pure-Nash enumeration and checked rational algorithms | `GameTheory` or the focused `GameTheory.Finite.Algorithm` / `GameTheory.Finite.Correctness` modules |
+| Finite pure-Nash enumeration and checked rational algorithms | `GameTheory.Finite.Algorithm`, `GameTheory.Finite.Correctness` |
 | Mixed-Nash existence, minimax, refinements, approachability, convergence | `GameTheory.Analysis` |
 | Finite probability, DAGs, online learning, discounted sums, reusable geometry | `GameTheory.Math` |
 | Repeated games, public monitoring, PPE, self-generation, uniform equilibrium | `GameTheory.Repeated` |
 | Finite stochastic games, public policies, restart calculus, uniform payoffs | `GameTheory.Stochastic` |
 | Auctions, Groves mechanisms, information design, implementation, fair division | `GameTheory.Mechanism` |
 | Bargaining, matching, coalitional games, voting-power indices | `GameTheory.Cooperative` |
-| NFG, EFG, FOSG, MAID, Bayesian, intrinsic, and multi-round encodings | the relevant `GameTheory.Languages.*` root |
+| NFG, EFG, FOSG, MAID, Bayesian, intrinsic, and multi-round encodings | `GameTheory.Languages.*` |
 
-`GameTheory.Math` is also a separate Lake target. It can be imported and built
-without importing game definitions:
+`GameTheory.Math` is its own Lake target and stands alone, without any game
+definitions:
 
 ```lean
 import GameTheory.Math.Probability.Bounds
@@ -78,69 +67,61 @@ open GameTheory GameTheory.Examples
 #check matchingPennies_noPureNash
 ```
 
-Useful entry points include:
+Good entry points:
 
-- [`GameTheory/Examples/Classic.lean`](GameTheory/Examples/Classic.lean) for
-  Prisoner's Dilemma, Matching Pennies, Battle of the Sexes, and a potential
-  game;
-- [`GameTheory/Examples/NFG.lean`](GameTheory/Examples/NFG.lean) for a
-  countably infinite action carrier without executable enumeration;
-- [`GameTheory/Examples/StochasticUniform.lean`](GameTheory/Examples/StochasticUniform.lean)
-  for a nonconstant finite stochastic payoff and uniform bound;
-- [`GameTheory/Tests/StochasticContinuation.lean`](GameTheory/Tests/StochasticContinuation.lean)
-  for chronological histories and continuation/restart; and
-- [`GameTheory/Tests/Bayesian.lean`](GameTheory/Tests/Bayesian.lean) for direct
-  Bayesian and protocol-form Nash correspondence.
+- [`Examples/Classic.lean`](GameTheory/Examples/Classic.lean) — Prisoner's
+  Dilemma, Matching Pennies, Battle of the Sexes, and a potential game;
+- [`Examples/NFG.lean`](GameTheory/Examples/NFG.lean) — a countably infinite
+  action carrier, handled without enumeration;
+- [`Examples/StochasticUniform.lean`](GameTheory/Examples/StochasticUniform.lean)
+  — a nonconstant finite stochastic payoff and its uniform bound;
+- [`Tests/StochasticContinuation.lean`](GameTheory/Tests/StochasticContinuation.lean)
+  — chronological histories, continuation, and restart;
+- [`Tests/Bayesian.lean`](GameTheory/Tests/Bayesian.lean) — direct Bayesian and
+  protocol-form Nash agreeing.
 
-The [capability matrix](docs/CapabilityMatrix.md) indexes public workflows,
-their exact imports, compiled consumers, and limitations. Readers coming from
-the predecessor should use the [v1 capability map](docs/V1CapabilityMap.md),
-which redirects mathematical workflows rather than preserving old declaration
-names. The final predecessor revision remains available at tag `v1-final`.
+The [capability matrix](docs/CapabilityMatrix.md) indexes the public workflows
+with their exact imports and compiled consumers.
 
-## Mathematical organization
+## Organization
 
-- `GameTheory.Math` owns reusable mathematics, including the canonical
-  finite-support law `GameTheory.Math.Probability.FinDist`.
-- `GameTheory.Core` owns static forms, utility, deviations, preferences, and
-  solution concepts.
-- `GameTheory.Protocol` owns the single execution and behavioral-policy
-  semantics used by sequential languages.
-- `GameTheory.Analysis` is an opt-in boundary for fixed points, topology, and
-  other analytic existence arguments.
-- Domain and language roots remain opt-in so their specialized assumptions do
-  not enlarge the basic import.
+`GameTheory.Math` owns the reusable mathematics, including the canonical
+finite-support law `FinDist`. `GameTheory.Core` owns static forms, utility,
+deviations, preferences, and solution concepts. `GameTheory.Protocol` owns the
+single execution and behavioral-policy semantics the sequential languages share.
+`GameTheory.Analysis` is the one root that may reach fixed points, topology, and
+the other analytic existence arguments; the architecture audits check that
+boundary on every build.
 
-Assumptions are placed on the theorem or operation that needs them. Finite
-support belongs to a probability law; finiteness of players or actions is
-requested separately. Executable modules use explicit finite enumerations and
-computable scalars, while correctness modules connect them to real-valued
-semantics.
+Assumptions sit on the theorem or operation that needs them: finite support
+belongs to a probability law, and finiteness of players or actions is requested
+separately. Executable modules use explicit enumerations and computable scalars;
+correctness modules connect them to the real-valued semantics.
 
 ## Scope
 
-Current probability semantics use finite-support laws, including laws on
-infinite carriers. The library does not model a general measure on infinite
-play paths, and it does not claim general uniform-equilibrium existence for
-stochastic games. Measurable games, monitored public randomization, and other
-research-frontier surfaces are explored only through focused experiments.
+Probability is finite-support throughout, including laws on infinite carriers.
+This is the one boundary worth knowing before you build on the library: results
+needing a general measure over infinite play paths — measurable games, monitored
+public randomization — live in focused experiments under
+`GameTheory.Experimental`, not in the public roots.
 
-Known partial or queued theorem families are recorded in the
-[delivery ledger](docs/DeliveryLedger.md); a nearby module name is not treated
-as evidence that an entire literature has been formalized.
+Partial and queued theorem families are tracked in the
+[delivery ledger](docs/DeliveryLedger.md).
 
 ## Development
 
-The default build compiles all library modules, examples, tests, and recorded
-experiments with warnings as errors:
-
 ```text
-lake build
+lake build      # library, examples, tests, and experiments, warnings as errors
+lake lint       # Batteries environment linters over the public library
 pwsh -NoProfile -File scripts/phase1-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 ```
 
-The architecture and contribution rules are documented in
-[`docs/GameTheory2Design.md`](docs/GameTheory2Design.md) and [`AGENTS.md`](AGENTS.md).
-The project is licensed under the [Apache License 2.0](LICENSE).
+Architecture and contribution rules live in
+[`docs/GameTheory2Design.md`](docs/GameTheory2Design.md) and
+[`AGENTS.md`](AGENTS.md). The predecessor library is at tag `v1-final`, with its
+workflows mapped in the [v1 capability map](docs/V1CapabilityMap.md).
+
+Licensed under the [Apache License 2.0](LICENSE).
