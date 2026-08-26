@@ -30,6 +30,7 @@ variable {diagram : Structure Player Node}
 
 /-- A proposed smaller information domain for every decision site. -/
 structure Pruning (diagram : Structure Player Node) where
+  /-- The observations each site is proposed to retain. -/
   kept : Node → Finset Node
   kept_sub_observed : ∀ node,
     kept node ⊆ diagram.observedParents node

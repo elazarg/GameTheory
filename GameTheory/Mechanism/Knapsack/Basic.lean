@@ -18,7 +18,9 @@ variable {Agent : Type} [DecidableEq Agent]
 
 /-- Public real-valued weights and capacity. -/
 structure Data (Agent : Type) where
+  /-- How much capacity each agent consumes if selected. -/
   weight : Agent → ℝ
+  /-- The total capacity available. -/
   capacity : ℝ
 
 /-- Interpret finite-set selection as a real zero/one allocation coordinate. -/

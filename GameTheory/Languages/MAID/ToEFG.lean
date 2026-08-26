@@ -26,6 +26,8 @@ universe uPlayer uNode uValue
 variable {Player : Type uPlayer} {Node : Type uNode}
 variable {diagram : GameTheory.Languages.MAID.Structure Player Node}
 
+/-- A node paired with a value of that node's carrier. Serialization keeps the
+node index attached so a resolved prefix stays dependently typed. -/
 abbrev TaggedValue (diagram : GameTheory.Languages.MAID.Structure Player Node) :=
   Σ node, diagram.Value node
 
@@ -33,6 +35,7 @@ abbrev TaggedValue (diagram : GameTheory.Languages.MAID.Structure Player Node) :
 The values retain their dependent node indices. -/
 structure Stage (diagram : GameTheory.Languages.MAID.Structure Player Node)
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents) where
+  /-- The values resolved so far, in the order the schedule visits them. -/
   path : List (TaggedValue diagram)
   length_le : path.length ≤ topological.order.length
   follows :
@@ -43,15 +46,18 @@ namespace Stage
 variable
   (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
 
+/-- The stage before the schedule has resolved anything. -/
 def initial : Stage diagram topological where
   path := []
   length_le := by simp
   follows := rfl
 
+/-- The nodes the stage has already resolved. -/
 def resolved [DecidableEq Node]
     (state : Stage diagram topological) : Finset Node :=
   (state.path.map Sigma.fst).toFinset
 
+/-- The schedule has been exhausted, so every node carries a drawn value. -/
 def IsTerminal (state : Stage diagram topological) : Prop :=
   state.path.length = topological.order.length
 
@@ -63,13 +69,16 @@ theorem not_terminal_iff (state : Stage diagram topological) :
     exact Nat.lt_of_le_of_ne state.length_le hne
   · exact Nat.ne_of_lt
 
+/-- The next node the schedule will resolve, absent at a terminal stage. -/
 def pending (state : Stage diagram topological) : Option Node :=
   topological.order[state.path.length]?
 
+/-- The next scheduled node, given a proof that one remains. -/
 def pendingNode (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length) : Node :=
   topological.order[state.path.length]'hpending
 
+/-- Overwrite a single coordinate of an assignment with a tagged value. -/
 def Assignment.setOne [DecidableEq Node]
     (assignment : GameTheory.Languages.MAID.Assignment diagram)
     (entry : TaggedValue diagram) : GameTheory.Languages.MAID.Assignment diagram :=
@@ -83,6 +92,8 @@ def Assignment.setOne [DecidableEq Node]
         subst value
         exact entry.2
 
+/-- The total assignment a stage denotes: its drawn values, with the semantic
+defaults still standing at every unresolved node. -/
 def assignment [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological) : GameTheory.Languages.MAID.Assignment diagram :=
@@ -104,6 +115,7 @@ theorem pending_parents_resolved [DecidableEq Node]
   · simpa using hearlier
   · simpa [hearlier] using hnode
 
+/-- Read a stage's assignment on a named subset of nodes. -/
 def configOf [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological) (nodes : Finset Node) :
@@ -111,6 +123,8 @@ def configOf [DecidableEq Node]
   GameTheory.Languages.MAID.Assignment.restrict diagram
     (state.assignment topological semantics) nodes
 
+/-- Extend a stage by one already-tagged value, given that it names the
+pending node. -/
 def advanceTagged (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     (entry : TaggedValue diagram)
@@ -126,6 +140,7 @@ def advanceTagged (state : Stage diagram topological)
     exact (List.take_append_getElem
       (l := topological.order) hpending)
 
+/-- Extend a stage by a value for its pending node. -/
 def advance (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     (value : diagram.Value (state.pendingNode topological hpending)) :
@@ -172,10 +187,14 @@ def Action (diagram : GameTheory.Languages.MAID.Structure Player Node) (owner : 
 variable
   (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
 
+/-- The pending node is a decision this player owns, so only that player moves
+here. -/
 def Active (state : Stage diagram topological) (owner : Player) : Prop :=
   ∃ node, state.pending topological = some node ∧
     diagram.kind node = .decision owner
 
+/-- The actions a player may play at a stage: exactly the values of the
+pending node. -/
 def Available (state : Stage diagram topological) (owner : Player) :
     Set (Action diagram owner) :=
   { action | state.pending topological = some action.1.1 }
@@ -202,6 +221,8 @@ theorem pendingNode_eq_of_pending_eq
   Option.some.inj
     ((pending_eq_some topological hpending).symm.trans heq)
 
+/-- The joint contribution in which the pending node's owner plays the given
+value and every other player abstains. -/
 def jointFor [DecidableEq Player] (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     {owner : Player}
@@ -259,6 +280,7 @@ theorem exists_eq_some_of_active
       exact False.elim (hlegalOwner hactive)
   | some action => exact ⟨action, rfl⟩
 
+/-- The action an active player actually contributed in a legal joint move. -/
 noncomputable def selectedAction
     {state : Stage diagram topological}
     (joint : (owner : Player) → Option (Action diagram owner))
@@ -332,6 +354,8 @@ def transition [DecidableEq Node]
     ((state.not_terminal_iff topological).mp certified.2.1)
     certified.1 certified.2.2
 
+/-- The MAID compiled to an execution protocol: states are resolved prefixes
+of the schedule, and one player moves per decision node. -/
 @[reducible]
 def execution [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram) :
@@ -376,6 +400,8 @@ inductive View (diagram : GameTheory.Languages.MAID.Structure Player Node) (owne
       (observed :
         GameTheory.Languages.MAID.Config diagram (diagram.observedParents site.1))
 
+/-- What a player sees at a stage: either that it is not their move, or their
+own site together with that site's observed configuration. -/
 def viewOf [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (owner : Player) (state : Stage diagram topological) :
@@ -400,6 +426,8 @@ theorem viewOf_eq_acting [DecidableEq Player] [DecidableEq Node]
           (diagram.observedParents node)) := by
   simp [viewOf, hpending, hkind]
 
+/-- The choices a view permits: abstention when inactive, and any value of the
+owned site otherwise. -/
 def menu (owner : Player) :
     View diagram owner → Set (Option (Action diagram owner))
   | .inactive => {none}
@@ -469,6 +497,8 @@ theorem menu_adequate_at [DecidableEq Player] [DecidableEq Node]
       | some action =>
           simp [menu, LegalOption, hinactive]
 
+/-- What the compiled protocol broadcasts: nothing publicly, and privately
+each player's own view of the stage. -/
 @[reducible]
 def signals [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram) :
@@ -497,6 +527,8 @@ theorem infoOf_eq_viewOf [DecidableEq Player] [DecidableEq Node]
   | extend _ _ _ _ _ =>
       rw [InfoSignals.infoOf_extend]
 
+/-- The information model over the compiled protocol, carrying the signals
+above and the site-local menus. -/
 @[reducible]
 def information [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram) :
@@ -532,6 +564,7 @@ theorem mem_transition_path [DecidableEq Node]
     subst target
     exact ⟨_, rfl⟩
 
+/-- Forget which player owns an action, keeping the node and its value. -/
 def eraseAction {owner : Player}
     (action : Action diagram owner) : TaggedValue diagram :=
   ⟨action.1.1, action.2⟩
@@ -819,6 +852,8 @@ theorem execution_singleMover
   exact GameTheory.Languages.MAID.NodeKind.decision.inj
     (hfirstKind.symm.trans hsecondKind)
 
+/-- The compiled extensive-form game, with its tree-shape and single-mover
+certificates. -/
 @[reducible]
 def game [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram) :
@@ -849,6 +884,7 @@ def behavioralPolicy [DecidableEq Player] [DecidableEq Node]
     (information topological semantics).BehavioralPolicy owner :=
   ownerBehavioralPolicy topological semantics owner (policy owner)
 
+/-- Compile a whole source policy into the target behavioral profile. -/
 def behavioralProfile [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :
@@ -1103,6 +1139,8 @@ theorem serialJointLaw_bind_transition
       transition_jointFor topological semantics state hterminal
         hpending hkind value
 
+/-- Iterate the source-level serial step up to the given fuel, stopping once
+the schedule is exhausted. -/
 def serialRun [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :

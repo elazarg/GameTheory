@@ -41,6 +41,7 @@ end Acyclic
 /-- A list containing every vertex once, with each predecessor earlier than
 its successor. The certificate itself stores no finite-carrier instance. -/
 structure TopologicalOrder (predecessors : α → Finset α) where
+  /-- The vertices, each appearing once, in a predecessor-respecting order. -/
   order : List α
   nodup : order.Nodup
   complete : ∀ vertex, vertex ∈ order

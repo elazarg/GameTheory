@@ -30,7 +30,9 @@ universe uι us ua up uq uk
 /-- An operational player schedule, given without installing global finite
 typeclass data. -/
 structure ExplicitOrder (ι : Type uι) where
+  /-- How many slots one source round is serialized into. -/
   slots : ℕ
+  /-- Which player occupies each slot. -/
   player : Fin slots ≃ ι
 
 variable {ι : Type uι}
@@ -50,6 +52,8 @@ abbrev ChoiceAt (history : History G) (player : ι) :=
 source player's actual contribution and can legitimately be `none`. -/
 structure Prefix (history : History G) (count : ℕ) where
   count_le : count ≤ order.slots
+  /-- The contribution collected from each player, absent until that player's
+  slot has been visited. -/
   choices : (player : ι) → Option (ChoiceAt G history player)
   selected_iff : ∀ player,
     (choices player).isSome ↔ (order.player.symm player).1 < count
@@ -194,9 +198,11 @@ namespace State
 
 variable {G order}
 
+/-- The source history a target state carries. -/
 def history : State G order → History G
   | .stage history _ _ => history
 
+/-- How many schedule slots the target state has already visited. -/
 def count : State G order → ℕ
   | .stage _ count _ => count
 
@@ -619,7 +625,9 @@ inductive Phase (ι : Type uι)
 with canonical source information. -/
 structure View
     (G : FOSG.Game.{uι, us, ua, up, uq, uk} ι) (player : ι) where
+  /-- Where in the serialized round the target state sits. -/
   phase : Phase ι
+  /-- The source game's own information for this player. -/
   source : G.information.InfoState player
 
 /-- Read the phase from the fixed-width target prefix. -/
@@ -677,6 +685,9 @@ def sourceEventOfTarget [DecidableEq ι]
       some ⟨source, joint, hlegal, _, realized⟩
   | _ => none
 
+/-- The public signal a target step emits: bare administrative progress while
+the round is still being collected, and the source game's own public signal at
+the step that resolves it. -/
 def publicSignalOfEvent [DecidableEq ι]
     (event : (execution G order).StepEvent) : PublicSignal G :=
   match sourceEventOfTarget G order event with
@@ -685,6 +696,8 @@ def publicSignalOfEvent [DecidableEq ι]
       .resolve (phaseOfState G order event.target)
         (G.information.publicSignal sourceEvent)
 
+/-- The private signal a target step emits to one player, carrying that
+player's own contribution alongside the source game's private signal. -/
 def privateSignalOfEvent [DecidableEq ι] (player : ι)
     (event : (execution G order).StepEvent) :
     PrivateSignal G player :=
@@ -706,6 +719,8 @@ def pushView (player : ι) (prior : View G player)
         sourcePrivate sourcePublic⟩
   | _, _ => prior
 
+/-- What the serialized protocol broadcasts, lifting the source game's signals
+through the administrative phases. -/
 @[reducible]
 def signals [DecidableEq ι] : InfoSignals (execution G order) where
   PublicSignal := PublicSignal G
@@ -808,6 +823,7 @@ theorem menu_adequate [DecidableEq ι]
           simp [menu, viewOfState, phaseOfState, hcount,
             LegalOption, active]
 
+/-- The information model over the serialized protocol. -/
 @[reducible]
 def information [DecidableEq ι] : InformationModel (execution G order) where
   toInfoSignals := signals G order

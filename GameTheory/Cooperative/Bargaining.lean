@@ -26,7 +26,9 @@ universe uPlayer
 
 /-- A feasible utility set with an explicit feasible fallback profile. -/
 structure BargainingProblem (Player : Type uPlayer) where
+  /-- Which payoff profiles the players can jointly achieve. -/
   feasible : (Player → ℝ) → Prop
+  /-- The profile that results if no agreement is reached. -/
   disagreement : Player → ℝ
   disagreement_feasible : feasible disagreement
 

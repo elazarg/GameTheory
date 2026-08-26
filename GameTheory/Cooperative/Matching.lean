@@ -22,7 +22,9 @@ universe uLeft uRight
 /-- A two-sided market with ordinal preferences over possible partners and
 the explicit outside option `none`. -/
 structure MatchingMarket (Left : Type uLeft) (Right : Type uRight) where
+  /-- How each left agent ranks the right agents and staying unmatched. -/
   prefersLeft : Ranking Left (Option Right)
+  /-- How each right agent ranks the left agents and staying unmatched. -/
   prefersRight : Ranking Right (Option Left)
 
 namespace MatchingMarket

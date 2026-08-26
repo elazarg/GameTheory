@@ -20,16 +20,23 @@ universe uAgent uNature uDecision
 once.  It is not a Protocol history: no temporal order has yet been chosen. -/
 structure Config (Nature : Type uNature) (Agent : Type uAgent)
     (Decision : Agent → Type uDecision) where
+  /-- The state of nature. -/
   nature : Nature
+  /-- Every agent's decision, taken simultaneously. -/
   decision : (agent : Agent) → Decision agent
 
 /-- An intrinsic model provides decision agents, nature, decision carriers,
 and each agent's information equivalence relation on complete configurations.
 No finite or decidable-equality capability is stored in the syntax. -/
 structure Model where
+  /-- The decision agents. -/
   Agent : Type uAgent
+  /-- The states of nature. -/
   Nature : Type uNature
+  /-- Each agent's decision carrier. -/
   Decision : Agent → Type uDecision
+  /-- What each agent can distinguish: configurations related here are
+  indistinguishable to that agent. -/
   info : (agent : Agent) → Setoid (Config Nature Agent Decision)
 
 -- Agents, nature, and dependent decisions intentionally have independent
@@ -43,6 +50,7 @@ abbrev Configuration (M : Model.{uAgent, uNature, uDecision}) :=
 
 /-- One agent's decision rule, constant on that agent's information classes. -/
 structure PureStrategy (M : Model.{uAgent, uNature, uDecision}) (agent : M.Agent) where
+  /-- The decision taken at each configuration. -/
   act : M.Configuration → M.Decision agent
   respects : ∀ left right,
     (M.info agent).r left right → act left = act right
@@ -68,6 +76,8 @@ def IsSolvable (M : Model.{uAgent, uNature, uDecision}) : Prop :=
 /-- A configuration-dependent exhaustive order. The slot count is explicit;
 no global finite-agent capability is stored in the model. -/
 structure Schedule (M : Model.{uAgent, uNature, uDecision}) (slots : Nat) where
+  /-- The order agents are visited in, which may itself depend on the
+  configuration. -/
   orderAt : M.Configuration → Fin slots ≃ M.Agent
 
 /-- Two configurations choose the same schedule through the current slot. -/

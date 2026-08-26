@@ -19,9 +19,11 @@ open GameTheory GameTheory.Finite GameTheory.Math.Probability
 instance choiceNonempty : Nonempty Choice :=
   ⟨.cooperate⟩
 
+/-- The payoff vector both players receive under mutual cooperation. -/
 def cooperationPayoff : PayoffVector (Fin 2) :=
   fun _ => 3
 
+/-- The Prisoner's Dilemma as a utility game, ready to be repeated. -/
 @[reducible]
 noncomputable def repeatedDilemma : UtilityGame (Fin 2) where
   form := prisonersDilemma.toForm

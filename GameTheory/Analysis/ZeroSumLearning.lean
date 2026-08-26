@@ -20,6 +20,8 @@ open GameTheory GameTheory.Math.Probability
 
 universe u
 
+/-- A payoff matrix as a two-player utility game, with the column player's
+payoff the negation of the row player's. -/
 @[reducible]
 def utilityGame {I J : Type u} (A : I → J → ℝ) : UtilityGame (Fin 2) where
   form := form I J

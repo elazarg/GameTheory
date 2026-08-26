@@ -19,6 +19,7 @@ open GameTheory.Math.Probability
 
 universe uPlayer uNode uValue
 
+/-- Whether a node is resolved by nature or by a named decision maker. -/
 inductive NodeKind (Player : Type uPlayer)
   | chance
   | decision (owner : Player)
@@ -27,9 +28,14 @@ inductive NodeKind (Player : Type uPlayer)
 /-- Typed causal diagram. Operational finite capabilities are deliberately not
 stored here. -/
 structure Structure (Player : Type uPlayer) (Node : Type uNode) where
+  /-- Whether each node is a chance node or a decision owned by a player. -/
   kind : Node → NodeKind Player
+  /-- The causal inputs of a node: everything its value may depend on. -/
   parents : Node → Finset Node
+  /-- The inputs a decision at this node actually observes. Never larger than
+  `parents`, and equal to it at chance nodes. -/
   observedParents : Node → Finset Node
+  /-- The carrier of values each node ranges over. -/
   Value : Node → Type uValue
   observed_sub : ∀ node, observedParents node ⊆ parents node
   observed_eq_of_chance : ∀ node, kind node = .chance →
@@ -40,16 +46,21 @@ structure Structure (Player : Type uPlayer) (Node : Type uNode) where
 variable {Player : Type uPlayer} {Node : Type uNode}
 variable (diagram : Structure Player Node)
 
+/-- A value for every node of the diagram. -/
 abbrev Assignment :=
   (node : Node) → diagram.Value node
 
+/-- A value for every node of a named subset: the argument a site-local rule
+or a chance law receives. -/
 abbrev Config (nodes : Finset Node) :=
   (node : {node // node ∈ nodes}) → diagram.Value node.1
 
+/-- Read a total assignment on a named subset of nodes. -/
 def Assignment.restrict (assignment : Assignment diagram)
     (nodes : Finset Node) : Config diagram nodes :=
   fun node => assignment node.1
 
+/-- A decision node together with the proof that the given player owns it. -/
 def DecisionSite (owner : Player) :=
   {node : Node // diagram.kind node = .decision owner}
 
@@ -68,15 +79,21 @@ abbrev Policy :=
 /-- Numeric semantics. Defaults initialize semantically inaccessible unresolved
 coordinates; chance laws and utility are the actual mathematical content. -/
 structure Semantics where
+  /-- The value an unresolved coordinate carries. It is semantically
+  inaccessible: evaluation never reads a coordinate before resolving it. -/
   defaultValue : (node : Node) → diagram.Value node
+  /-- The law nature draws a chance node from, given its causal inputs. -/
   chanceLaw : (node : Node) → diagram.kind node = .chance →
     Config diagram (diagram.parents node) → FinDist (diagram.Value node)
+  /-- Each player's payoff at a completed assignment. -/
   utility : Player → Assignment diagram → ℝ
 
 /-- A partial evaluation state carries the named predecessor-closure
 certificate required by frontier evaluation. -/
 structure FrontierState where
+  /-- The nodes evaluated so far. -/
   resolved : Finset Node
+  /-- The values drawn so far, padded with defaults outside `resolved`. -/
   values : Assignment diagram
   parentClosed : ∀ node ∈ resolved, diagram.parents node ⊆ resolved
 
@@ -84,11 +101,13 @@ namespace FrontierState
 
 variable {diagram}
 
+/-- The state before any node has been evaluated. -/
 def initial (semantics : Semantics diagram) : FrontierState diagram where
   resolved := ∅
   values := semantics.defaultValue
   parentClosed := by simp
 
+/-- Every node has been resolved, so the state carries a total assignment. -/
 @[reducible]
 def IsComplete [Fintype Node]
     (state : FrontierState diagram) : Prop :=
@@ -140,6 +159,7 @@ theorem frontier_nonempty [Fintype Node] [DecidableEq Node]
   exact ⟨minimal,
     (state.mem_frontier_iff minimal).mpr ⟨hminimal, hparents⟩⟩
 
+/-- Read the already-drawn values on a resolved subset of nodes. -/
 def configOf (state : FrontierState diagram) (nodes : Finset Node)
     (_hresolved : nodes ⊆ state.resolved) :
     Config diagram nodes :=
@@ -184,6 +204,8 @@ namespace FrontierState
 
 variable {diagram}
 
+/-- Absorb one simultaneous frontier draw, resolving every frontier node at
+once. -/
 @[reducible]
 def extend [Fintype Node] [DecidableEq Node]
     (state : FrontierState diagram)
@@ -243,6 +265,8 @@ theorem resolved_ssubset_extend_of_incomplete
 
 end FrontierState
 
+/-- The law a single frontier node is drawn from: nature's chance law, or the
+owner's rule applied to that site's observed configuration. -/
 def nodeLaw [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram)
     (state : FrontierState diagram)
@@ -261,6 +285,9 @@ def nodeLaw [Fintype Node] [DecidableEq Node]
       exact policy owner ⟨node.1, hkind⟩
         (state.configOf _ hobserved)
 
+/-- The joint law of one whole frontier, as the independent product of its
+nodes' laws. Frontier nodes never depend on each other, so the product is
+exact. -/
 def frontierLaw [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram)
     (state : FrontierState diagram) :
@@ -268,12 +295,14 @@ def frontierLaw [Fintype Node] [DecidableEq Node]
       diagram.Value node.1) :=
   FinDist.pi fun node => nodeLaw diagram semantics policy state node
 
+/-- One evaluation step: draw the whole current frontier and absorb it. -/
 def step [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram)
     (state : FrontierState diagram) :
     FinDist (FrontierState diagram) :=
   (frontierLaw diagram semantics policy state).map state.extend
 
+/-- Iterate `step` up to the given fuel, stopping early once complete. -/
 def run [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram) :
     Nat → FrontierState diagram → FinDist (FrontierState diagram)
@@ -284,6 +313,8 @@ def run [Fintype Node] [DecidableEq Node]
       else (step diagram semantics policy state).bind
         (run semantics policy fuel)
 
+/-- Evaluation from this state resolves every node within the given fuel, on
+every branch. -/
 def CompletesWithin [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram)
     (horizon : Nat) (state : FrontierState diagram) : Prop :=

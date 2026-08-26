@@ -17,6 +17,7 @@ open GameTheory.Math.Probability Stochastic Protocol Protocol.ExecutionProtocol
 
 namespace Game
 
+/-- The unbiased law on the two states. -/
 def fairState : FinDist Bool :=
   FinDist.mix (1 / 2) (by norm_num) (by norm_num)
     (FinDist.pure false) (FinDist.pure true)
@@ -62,6 +63,8 @@ theorem hostile_horizon_nash_is_canonical (initial : Bool) (horizon : ℕ)
 /-! The same nondegenerate dynamics with zero stage utility provide an exact
 positive and negative check for the payoff-level uniformity definition. -/
 
+/-- The hostile dynamics with every stage payoff zero, isolating the payoff
+level from the dynamics. -/
 @[reducible]
 def zeroPayoff : Game Bool where
   State := Bool
@@ -73,6 +76,7 @@ local instance zeroPayoffActionNonempty :
     ∀ i : Bool, Nonempty (zeroPayoff.Action i) :=
   fun _ => ⟨false⟩
 
+/-- The constant profile in the zero-payoff game. -/
 def zeroProfile (initial : Bool) : zeroPayoff.BehaviorProfile initial :=
   fun _ _ => FinDist.pure ⟨some false, ⟨false, rfl⟩⟩
 
@@ -160,6 +164,7 @@ local instance transientPayoffActionNonempty :
     ∀ i : Bool, Nonempty (transientPayoff.Action i) :=
   fun _ => ⟨false⟩
 
+/-- The constant profile in the transient-payoff game. -/
 def transientProfile : transientPayoff.BehaviorProfile true :=
   fun _ _ => FinDist.pure ⟨some false, ⟨false, rfl⟩⟩
 

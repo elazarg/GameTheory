@@ -79,7 +79,9 @@ instance (who : Player) : DecidableEq (Action who) := by
 
 /-- The realized commitment and response. -/
 structure Outcome where
+  /-- The commitment the leader made. -/
   leader : LeaderAction
+  /-- The follower's best response to that commitment. -/
   follower : FollowerAction
   deriving DecidableEq, Repr
 

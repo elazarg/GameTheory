@@ -32,12 +32,20 @@ universe uι ua up uq
 action.  The signal law may depend on the complete prior joint-action history.
 No finiteness, decidable equality, utility, or equilibrium data is stored. -/
 structure MonitoringGame (ι : Type uι) where
+  /-- Each player's action carrier. -/
   Action : ι → Type ua
+  /-- The observation every player receives after a round. -/
   PublicSignal : Type up
+  /-- The observation only the given player receives after a round. -/
   PrivateSignal : ι → Type uq
+  /-- How many rounds are played. -/
   horizon : ℕ
+  /-- The public observation available before any round is played. -/
   initialPublic : PublicSignal
+  /-- Each player's private observation before any round is played. -/
   initialPrivate : (i : ι) → PrivateSignal i
+  /-- The law generating a round's observations, which may read the entire
+  prior joint-action history as well as the current profile. -/
   signalLaw :
     List ((i : ι) → Action i) →
       ((i : ι) → Action i) →
@@ -52,8 +60,11 @@ variable {ι : Type uι} (G : MonitoringGame ι)
 
 /-- One realized round in the hidden execution state. -/
 structure RoundRecord where
+  /-- The joint action played in the round. -/
   actions : (i : ι) → G.Action i
+  /-- The public observation the round emitted. -/
   publicSignal : G.PublicSignal
+  /-- The private observation each player received. -/
   privateSignal : (i : ι) → G.PrivateSignal i
 
 /-- Hidden finite execution state, in chronological order. -/
@@ -154,15 +165,21 @@ theorem execution_step_some [∀ i, Nonempty (G.Action i)]
 /-- A player's observation of one completed round.  It contains the player's
 own choice, never the opponents' action profile. -/
 structure RoundObservation (i : ι) where
+  /-- What this player played, absent once the horizon has passed. -/
   ownChoice : Option (G.Action i)
+  /-- The public observation the round emitted. -/
   publicSignal : G.PublicSignal
+  /-- The private observation this player received. -/
   privateSignal : G.PrivateSignal i
 
 /-- The local information supplied to policies: initial signals plus a
 chronological list of own choices and received round signals. -/
 structure InformationState (i : ι) where
+  /-- The public observation available before play. -/
   initialPublic : G.PublicSignal
+  /-- This player's private observation before play. -/
   initialPrivate : G.PrivateSignal i
+  /-- The rounds observed so far, in chronological order. -/
   rounds : List (G.RoundObservation i)
 
 @[ext]

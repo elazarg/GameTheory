@@ -19,8 +19,11 @@ universe uAction uOutcome
 /-- A hidden-action principal-agent environment. Each action induces a
 finite-support outcome law, while rewards and effort costs are real-valued. -/
 structure PrincipalAgent (Action : Type uAction) (Outcome : Type uOutcome) where
+  /-- The outcome law each hidden action induces. -/
   outcomeLaw : Action → FinDist Outcome
+  /-- What the principal earns at each outcome. -/
   reward : Outcome → ℝ
+  /-- The effort cost the agent bears for each action. -/
   cost : Action → ℝ
 
 namespace PrincipalAgent

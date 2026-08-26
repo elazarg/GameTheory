@@ -20,6 +20,7 @@ universe uω um ua
 
 /-- A public signal sampled conditionally on the realized state. -/
 structure SignalStructure (State : Type uω) (Message : Type um) where
+  /-- The law the public message is drawn from at each state. -/
   kernel : State → FinDist Message
 
 namespace SignalStructure
@@ -117,9 +118,13 @@ end SignalStructure
 
 /-- Finite-support Bayesian persuasion primitives for a single receiver. -/
 structure PersuasionProblem (State : Type uω) (Message : Type um) (Action : Type ua) where
+  /-- The common prior over states. -/
   prior : FinDist State
+  /-- The signal the sender commits to before the state is drawn. -/
   signal : SignalStructure State Message
+  /-- The sender's payoff at a state and the receiver's chosen action. -/
   senderUtility : State → Action → ℝ
+  /-- The receiver's payoff at a state and their own chosen action. -/
   receiverUtility : State → Action → ℝ
 
 namespace PersuasionProblem
