@@ -24,6 +24,8 @@ package GameTheory where
   license := "Apache-2.0"
   licenseFiles := #["LICENSE", "NOTICE"]
   fixedToolchain := true
+  lintDriver := "batteries/runLinter"
+  lintDriverArgs := #["GameTheory.LintAll"]
 
 require "leanprover-community" / "mathlib" @ git "v4.33.1"
 
@@ -39,6 +41,13 @@ gate: examples, architecture tests, and experiments must compile too. -/
 @[default_target]
 lean_lib GameTheory where
   globs := #[.andSubmodules `GameTheory]
+  leanOptions := gameTheoryLeanOptions
+
+/-- The lint scope. Not a default target: it exists so `lake lint` can see the
+whole public library through a single module, and is deliberately outside the
+`GameTheory` tree because it imports the analytic root. -/
+lean_lib GameTheory.LintAll where
+  srcDir := "lint"
   leanOptions := gameTheoryLeanOptions
 
 /-- Mathematical infrastructure used throughout the library. -/
