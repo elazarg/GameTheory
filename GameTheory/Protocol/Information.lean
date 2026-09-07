@@ -58,6 +58,7 @@ fields. `InformationModel extends InfoSignals` keeps that a private detail:
 -/
 
 import GameTheory.Protocol.Randomized
+import GameTheory.Core.Signature
 
 noncomputable section
 
@@ -673,6 +674,12 @@ constructions should inherit the canonical dependent-function API. -/
 abbrev BehavioralPolicy (i : ι) : Type _ :=
   (info : M.InfoState i) → FinDist (M.Choice i info)
 
+/-- The signature for local randomization at information states. It has the
+same history outcomes as the pure-policy strategic form. -/
+abbrev behavioralSignature : GameSignature ι where
+  Strategy := M.BehavioralPolicy
+  Outcome := E.History
+
 /-- Global randomization: one law over deterministic policies. -/
 abbrev MixedPolicy (i : ι) : Type _ := FinDist (M.Policy i)
 
@@ -922,6 +929,30 @@ theorem runBehavioralFrom_add
         (M.runBehavioralFrom policies secondFuel) :=
   E.runRandomizedFor_add (M.randomizedChooser policies)
     firstFuel secondFuel history
+
+/-- A certified horizon reaches only terminal histories, from any starting
+history. The horizon bounds total trace length, so it also suffices when some
+transitions have already occurred. -/
+theorem runBehavioralFrom_terminal_of_bound
+    (profile : (who : ι) → M.BehavioralPolicy who) {bound : ℕ}
+    (hbound : E.BoundedHorizon bound) (start next : E.History)
+    (hnext : next ∈ (M.runBehavioralFrom profile bound start).support) :
+    E.terminal next.state := by
+  rcases E.runRandomizedFor_terminal_or_length
+      (M.randomizedChooser profile) bound start next hnext with hterminal | hlength
+  · exact hterminal
+  · exact hbound next.state next.trace (by omega)
+
+/-- Fuel beyond a certified horizon leaves the complete history law unchanged. -/
+theorem runBehavioralFrom_bound_add
+    (profile : (who : ι) → M.BehavioralPolicy who) {bound : ℕ}
+    (hbound : E.BoundedHorizon bound) (extra : ℕ) (start : E.History) :
+    M.runBehavioralFrom profile (bound + extra) start =
+      M.runBehavioralFrom profile bound start := by
+  rw [M.runBehavioralFrom_add]
+  refine Eq.trans (FinDist.bind_congr fun next hnext => ?_) (FinDist.bind_pure _)
+  exact M.runBehavioralFrom_of_terminal profile extra
+    (M.runBehavioralFrom_terminal_of_bound profile hbound start next hnext)
 
 /-- Behavioral profiles that answer alike at every history a run of this length
 can pass through induce the same law. This is what makes a change to a
@@ -1428,7 +1459,8 @@ def CoversInformationSites
     (sites : (i : ι) → Finset (M.InfoState i)) (fuel : ℕ) : Prop :=
   M.CoversInformationSitesFrom sites fuel E.initHistory
 
-private theorem toMixedOn_factor {i : ι} [DecidableEq (M.InfoState i)]
+/-- Separate the draw at one information state from the remaining finite table. -/
+theorem toMixedOn_factor {i : ι} [DecidableEq (M.InfoState i)]
     (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
     (fallback : M.Policy i)
     (hfinite : ∀ info, info ∉ sites →
@@ -1445,7 +1477,8 @@ private theorem toMixedOn_factor {i : ι} [DecidableEq (M.InfoState i)]
   · exact FinDist.runDependent_factor_of_not_mem policy sites fallback info hinfo
       (hfinite info hinfo)
 
-private theorem toMixedOn_commit_erase {i : ι}
+/-- Committing a choice commutes with predrawing the other information states. -/
+theorem toMixedOn_commit_erase {i : ι}
     [DecidableEq (M.InfoState i)]
     (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
     (fallback : M.Policy i) (info : M.InfoState i)
@@ -1465,7 +1498,8 @@ private theorem toMixedOn_commit_erase {i : ι}
   subst other
   exact hnot hother
 
-private theorem commit_finiteSupport {i : ι}
+/-- After committing one choice, randomness is confined to the remaining sites. -/
+theorem commit_finiteSupport {i : ι}
     [DecidableEq (M.InfoState i)]
     (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
     (fallback : M.Policy i)
@@ -1609,7 +1643,9 @@ noncomputable def BehavioralPolicy.supportFallback {i : ι}
     (policy : M.BehavioralPolicy i) : M.Policy i :=
   fun info => (policy info).support_nonempty.choose
 
-private noncomputable def BehavioralPolicy.restrictRandomization {i : ι}
+/-- Retain randomization on the supplied sites and use a deterministic fallback
+elsewhere. This is the behavioral policy underlying `toMixedWithin`. -/
+noncomputable def BehavioralPolicy.restrictRandomization {i : ι}
     (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
     (fallback : M.Policy i) : M.BehavioralPolicy i := by
   classical

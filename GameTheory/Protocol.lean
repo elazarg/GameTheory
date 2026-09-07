@@ -52,6 +52,7 @@ import GameTheory.Protocol.History
 import GameTheory.Protocol.Randomized
 import GameTheory.Protocol.Backward
 import GameTheory.Protocol.Information
+import GameTheory.Protocol.Predraw
 import GameTheory.Protocol.Assessment
 import GameTheory.Protocol.SubgamePerfect
 import GameTheory.Protocol.Zermelo

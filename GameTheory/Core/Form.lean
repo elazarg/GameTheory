@@ -167,22 +167,16 @@ theorem pi_update_mixed [Fintype ι] [DecidableEq ι] (sig : GameSignature ι)
     FinDist.pi (Profile.update mixedProfile who replacement) =
       replacement.bind fun s =>
         FinDist.pi (Profile.update mixedProfile who (FinDist.pure s)) := by
-  refine FinDist.ext_of_prob fun profile => ?_
-  have split : ∀ law : FinDist (sig.Strategy who),
-      (∏ i, ((Profile.update mixedProfile who law) i).prob (profile i)) =
-        law.prob (profile who) *
-          ∏ i ∈ Finset.univ.erase who, (mixedProfile i).prob (profile i) := by
-    intro law
-    rw [← Finset.mul_prod_erase Finset.univ
-      (fun i => ((Profile.update mixedProfile who law) i).prob (profile i))
-      (Finset.mem_univ who)]
-    congr 1
-    · rw [Profile.update_same]
-    · exact Finset.prod_congr rfl fun i hi => by
-        rw [Profile.update_of_ne _ _ (Finset.ne_of_mem_erase hi)]
-  rw [FinDist.prob_bind]
-  simp only [FinDist.prob_pi, split]
-  rw [FinDist.expect_mul_const, FinDist.expect_prob_pure]
+  have hupdate (law : FinDist (sig.Strategy who)) :
+      FinDist.DependentAssignment.setOne mixedProfile ⟨who, law⟩ =
+        Profile.update mixedProfile who law := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      simp
+    · simp [FinDist.DependentAssignment.setOne_apply_of_ne, Profile.update_of_ne, hi]
+  simpa only [FinDist.bind_pure, hupdate] using
+    FinDist.pi_update_bind mixedProfile who replacement FinDist.pure
 
 /-- Mapping one coordinate of an independent profile law is the independent
 product with that marginal mapped. -/

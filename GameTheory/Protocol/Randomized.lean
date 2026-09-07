@@ -96,6 +96,34 @@ theorem runRandomizedFor_add (chooser : E.RandomizedChooser)
         exact FinDist.bindOnSupport_congr fun reached realized =>
           ih (history.extend draw.2 realized)
 
+/-- Every supported run either stops at a terminal history or consumes all its
+fuel. This holds from any starting history, including terminal ones. -/
+theorem runRandomizedFor_terminal_or_length
+    (chooser : E.RandomizedChooser) (fuel : ℕ)
+    (start next : E.History)
+    (hnext : next ∈ (E.runRandomizedFor chooser fuel start).support) :
+    E.terminal next.state ∨ start.trace.length + fuel ≤ next.trace.length := by
+  induction fuel generalizing start with
+  | zero =>
+      rw [runRandomizedFor_zero, FinDist.mem_support_pure] at hnext
+      subst next
+      exact Or.inr (by omega)
+  | succ fuel ih =>
+      by_cases hterm : E.terminal start.state
+      · rw [runRandomizedFor_of_terminal _ _ hterm,
+          FinDist.mem_support_pure] at hnext
+        subst next
+        exact Or.inl hterm
+      · rw [runRandomizedFor_succ_of_not_terminal chooser fuel hterm,
+          FinDist.support_bind] at hnext
+        obtain ⟨draw, _, hnext⟩ := Set.mem_iUnion₂.mp hnext
+        rw [FinDist.support_bindOnSupport] at hnext
+        obtain ⟨target, realized, hnext⟩ := Set.mem_iUnion₂.mp hnext
+        rcases ih (start.extend draw.2 realized) hnext with hterminal | hlength
+        · exact Or.inl hterminal
+        · exact Or.inr (by simpa only [History.extend, Trace.length,
+            Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hlength)
+
 /-- In a protocol that never terminates, every history in a `fuel`-step run
 has gained exactly `fuel` transitions.  This is the support invariant used by
 fixed-horizon proof views; it does not define another runner. -/

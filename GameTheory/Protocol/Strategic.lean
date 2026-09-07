@@ -142,12 +142,6 @@ theorem toGameForm_play (horizon : ℕ) (profile : Profile M.strategicSignature)
 theorem toGameForm_sig (horizon : ℕ) :
     (M.toGameForm horizon).sig = M.strategicSignature := rfl
 
-/-- The signature for local randomization at information states. It has the
-same history outcomes as the pure-policy strategic form. -/
-abbrev behavioralSignature : GameSignature ι where
-  Strategy := M.BehavioralPolicy
-  Outcome := E.History
-
 variable [Fintype ι]
 
 /-- Present behavioral strategies to the static core without defining another

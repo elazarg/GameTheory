@@ -704,4 +704,45 @@ theorem recall_kuhn (fuel : ℕ) :
     (recallModel.actsOnceWhereItMatters_of_perfectRecall recall_perfectRecall)
     (InformationModel.constrainsAlike_of_perfectRecall recall_perfectRecall) fuel
 
+/-! ## A certified horizon, including runs started partway through play -/
+
+/-- Every legal trace records exactly the number of votes in its state. -/
+theorem twice_trace_length {state : twice.State} (trace : Trace twice state) :
+    trace.length = match state with
+      | .start => 0
+      | .after _ => 1
+      | .done _ _ => 2 := by
+  induction trace with
+  | start => rfl
+  | @extend source target prior joint isLegal realized ih =>
+      have hstopped := stopped_eq_false_of_legal isLegal
+      cases source with
+      | start =>
+          cases hchoice : joint () <;>
+            simp only [twice, hchoice, FinDist.mem_support_pure] at realized <;>
+            subst target <;> simp [Trace.length, ih]
+      | after first =>
+          cases hchoice : joint () <;>
+            simp only [twice, hchoice, FinDist.mem_support_pure] at realized <;>
+            subst target <;> simp [Trace.length, ih]
+      | done first second => simp [Round.stopped] at hstopped
+
+/-- Two rounds suffice uniformly over every legal starting history. -/
+theorem twice_bounded : twice.BoundedHorizon 2 := by
+  intro state trace hlength
+  rw [twice_trace_length trace] at hlength
+  cases state <;> simp_all [Round.stopped]
+
+example (profile : (i : Unit) → model.BehavioralPolicy i)
+    (start next : History twice)
+    (hnext : next ∈ (model.runBehavioralFrom profile 2 start).support) :
+    twice.terminal next.state :=
+  model.runBehavioralFrom_terminal_of_bound profile twice_bounded start next hnext
+
+example (profile : (i : Unit) → model.BehavioralPolicy i)
+    (extra : ℕ) (start : History twice) :
+    model.runBehavioralFrom profile (2 + extra) start =
+      model.runBehavioralFrom profile 2 start :=
+  model.runBehavioralFrom_bound_add profile twice_bounded extra start
+
 end GameTheory.Tests.Randomized

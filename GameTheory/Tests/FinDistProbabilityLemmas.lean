@@ -61,4 +61,42 @@ theorem expect_product_on_infinite_carriers (μ ν : FinDist Nat) (u : Nat × Na
     (FinDist.product μ ν).expect u = μ.expect (fun a => ν.expect (fun b => u (a, b))) := by
   exact FinDist.expect_product μ ν u
 
+/-- Both inputs collapse to one summary. Their carriers differ, and the Nat
+continuation deliberately disagrees with the Bool continuation off support. -/
+theorem bind_matching_summaries_ignores_unreachable_branches :
+    (twoPointNat.bind fun n =>
+      if n = 1 ∨ n = 2 then FinDist.pure 7 else FinDist.pure 99) =
+      twoPointBool.bind (fun _ => FinDist.pure 7) := by
+  apply FinDist.bind_eq_of_map_eq twoPointNat twoPointBool
+    (fun _ => ()) (fun _ => ()) (by simp)
+  intro n hn _ _ _
+  have hreachable : n = 1 ∨ n = 2 := by
+    simpa [twoPointNat] using
+      (FinDist.mem_support_mix_pure_iff (1 / 2) (by norm_num) (by norm_num)
+        (by norm_num) (by norm_num) 1 2 n).mp hn
+  rw [if_pos hreachable]
+
+theorem projection_identity {ι : Type*} [Fintype ι] {A : ι → Type*}
+    (laws : ∀ i, FinDist (A i)) :
+    (FinDist.pi laws).map (fun values i => values i) = FinDist.pi laws :=
+  FinDist.pi_map_embedding (Function.Embedding.refl ι) laws
+
+theorem projection_proper_subset (laws : Fin 3 → FinDist Nat) :
+    (FinDist.pi laws).map (fun values (i : Fin 2) => values (i.castLE (by decide))) =
+      FinDist.pi (fun i : Fin 2 => laws (i.castLE (by decide))) :=
+  FinDist.pi_map_embedding
+    ⟨fun i : Fin 2 => i.castLE (show 2 ≤ 3 by decide),
+      Fin.castLE_injective (show 2 ≤ 3 by decide)⟩ laws
+
+theorem projection_empty {ι : Type*} [Fintype ι] {A : ι → Type*}
+    (laws : ∀ i, FinDist (A i)) (e : Fin 0 ↪ ι) :
+    (FinDist.pi laws).map (fun values i => values (e i)) =
+      FinDist.pure (fun i => Fin.elim0 i) := by
+  rw [FinDist.pi_map_embedding]
+  have hlaws : (fun i : Fin 0 => laws (e i)) =
+      (fun i : Fin 0 => FinDist.pure (Fin.elim0 i)) := by
+    funext i
+    exact Fin.elim0 i
+  rw [hlaws, FinDist.pi_pure]
+
 end GameTheory.Tests.FinDistProbabilityLemmas

@@ -654,6 +654,43 @@ theorem bind_congr {μ : FinDist α} {f g : α → FinDist β}
   rw [prob_bind, prob_bind]
   exact expect_congr fun a ha => by rw [h a ha]
 
+/-- Equal summary laws may be composed with continuations agreeing on every
+pair of supported inputs with the same summary. -/
+theorem bind_eq_of_map_eq (μ : FinDist α) (ν : FinDist β)
+    (f : α → γ) (g : β → γ) (hmap : μ.map f = ν.map g)
+    (F : α → FinDist δ) (H : β → FinDist δ)
+    (hagree : ∀ a ∈ μ.support, ∀ b ∈ ν.support,
+      f a = g b → F a = H b) :
+    μ.bind F = ν.bind H := by
+  classical
+  let representative (c : γ) : β :=
+    if h : ∃ b ∈ ν.support, g b = c then h.choose else ν.support_nonempty.choose
+  let kernel (c : γ) := H (representative c)
+  have hrep (c : γ) (hc : c ∈ (ν.map g).support) :
+      representative c ∈ ν.support ∧ g (representative c) = c := by
+    have hex : ∃ b ∈ ν.support, g b = c := by simpa using hc
+    simpa [representative, hex] using hex.choose_spec
+  have hfirst (a : α) (ha : a ∈ μ.support) : F a = kernel (f a) := by
+    have hc : f a ∈ (ν.map g).support := by
+      rw [← hmap, support_map]
+      exact ⟨a, ha, rfl⟩
+    exact hagree a ha _ (hrep _ hc).1 (hrep _ hc).2.symm
+  have hsecond (b : β) (hb : b ∈ ν.support) : H b = kernel (g b) := by
+    have hc : g b ∈ (μ.map f).support := by
+      rw [hmap, support_map]
+      exact ⟨b, hb, rfl⟩
+    obtain ⟨a, ha, hab⟩ := (show g b ∈ f '' μ.support by simpa using hc)
+    rw [← hagree a ha b hb hab, ← hab]
+    exact hfirst a ha
+  calc
+    μ.bind F = (μ.map f).bind kernel := by
+      rw [bind_map]
+      exact bind_congr hfirst
+    _ = (ν.map g).bind kernel := congrArg (fun law => law.bind kernel) hmap
+    _ = ν.bind H := by
+      rw [bind_map]
+      exact bind_congr fun b hb => (hsecond b hb).symm
+
 /-- Pushforwards agree when their functions agree everywhere the source law
 can actually draw. -/
 theorem map_congr_of_eq_on_support {μ : FinDist α} {f g : α → β}
@@ -1518,6 +1555,46 @@ theorem pi_reindex {κ : Type*} [Fintype κ] (A : ι → Type*)
   intro player _
   simp [profileEquiv]
 
+/-- Projecting onto injectively selected coordinates preserves their independent
+product law. The value carriers need not be finite. -/
+theorem pi_map_embedding {κ : Type*} [Fintype κ]
+    (e : κ ↪ ι) (laws : ∀ i, FinDist (A i)) :
+    (pi laws).map (fun values k => values (e k)) = pi (fun k => laws (e k)) := by
+  classical
+  refine ext_of_prob fun target => ?_
+  let C (i : ι) : Set (A i) := {value | ∀ k, e k = i →
+    (⟨i, value⟩ : Sigma A) = ⟨e k, target k⟩}
+  have hselected (k : κ) : C (e k) = {target k} := by
+    ext value
+    constructor
+    · intro hall
+      simpa using hall k rfl
+    · intro hequal other hother
+      obtain rfl := e.injective hother
+      simpa using hequal
+  have hother (i : ι) (hi : i ∉ Set.range e) : C i = Set.univ := by
+    ext value
+    simp only [C, Set.mem_ofPred_eq, Set.mem_univ, iff_true]
+    intro k hk
+    exact (hi ⟨k, hk⟩).elim
+  have hevent : (fun (values : ∀ i, A i) k => values (e k)) ⁻¹' {target} =
+      {values | ∀ i, values i ∈ C i} := by
+    ext values
+    constructor
+    · intro hequal i k hk
+      subst i
+      exact congrArg (Sigma.mk (e k)) (congrFun hequal k)
+    · intro hall
+      exact funext fun k => by simpa using hall (e k) k rfl
+  rw [prob_map_eq_probOf_preimage_singleton, hevent, probOf_pi, prob_pi]
+  symm
+  apply Fintype.prod_of_injective e e.injective
+  · intro i hi
+    rw [hother i hi]
+    simp [probOf, massOf, (laws i).toPMF.tsum_coe]
+  · intro k
+    rw [hselected k, probOf_singleton]
+
 /-- **Independent draws commute with coordinatewise pushforward.** Drawing a
 tuple and then relabelling each coordinate is drawing from the relabelled
 factors. -/
@@ -1889,6 +1966,27 @@ theorem setOne_apply_of_ne [DecidableEq ι]
   simp [setOne, resolve, hne]
 
 end DependentAssignment
+
+/-- Replacing one marginal by a mixture commutes with the independent product.
+The coordinate replacement uses the probability layer's dependent assignment
+operation, so no profile semantics is needed. -/
+theorem pi_update_bind [Fintype ι] [DecidableEq ι]
+    (laws : ∀ i, FinDist (A i)) (who : ι)
+    (μ : FinDist α) (choices : α → FinDist (A who)) :
+    pi (DependentAssignment.setOne laws ⟨who, μ.bind choices⟩) =
+      μ.bind (fun a => pi (DependentAssignment.setOne laws ⟨who, choices a⟩)) := by
+  have hsplit (law : FinDist (A who)) :
+      pi (DependentAssignment.setOne laws ⟨who, law⟩) =
+        map (Equiv.piSplitAt who A).symm
+          (product law (pi fun i : {i // i ≠ who} => laws i.1)) := by
+    rw [pi_eq_map_product who, DependentAssignment.setOne_apply_self]
+    have hrest : (fun i : {i // i ≠ who} =>
+        DependentAssignment.setOne laws ⟨who, law⟩ i.1) =
+        fun i : {i // i ≠ who} => laws i.1 := by
+      funext i
+      exact DependentAssignment.setOne_apply_of_ne laws law i.2
+    rw [hrest]
+  simp only [hsplit, product, bind_bind, map_bind]
 
 /-- Sequentially drawing point masses at any finite list of coordinates leaves
 the supplied dependent assignment unchanged. -/
