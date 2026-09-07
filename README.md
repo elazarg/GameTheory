@@ -119,6 +119,9 @@ pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 ```
 
+Before tagging a release, set the package `version` in `lakefile.lean` to the
+tag's version number (without the `v` prefix).
+
 Architecture and contribution rules live in
 [`docs/GameTheory2Design.md`](docs/GameTheory2Design.md) and
 [`AGENTS.md`](AGENTS.md). The predecessor library is at tag `v1-final`, with its

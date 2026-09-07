@@ -15,7 +15,7 @@ abbrev gameTheoryLeanOptions : Array LeanOption := #[
 ]
 
 package GameTheory where
-  version := v!"0.1.0"
+  version := v!"4.33.1"
   description :=
     "Formalized game theory: static forms, sequential execution protocols, \
     information models, mechanisms, and the standard equilibrium concepts."
