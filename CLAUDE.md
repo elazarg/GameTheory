@@ -20,7 +20,7 @@ the sequential layer under `GameTheory/Protocol`, native encodings under
 
 `GameTheory/Analysis` is a one-way boundary. It is the only root allowed to
 import the external fixed-point package, and no module outside it may import it
-back; a file that does can reach all of `stdSimplex` and `Polynomial`, which the
+back; a file that does can reach `Convexity.StdSimplex` and `Polynomial`, which the
 core and the executable frontend must never see. Both directions are checked by
 `scripts/phase2-audit.ps1`; its explicit `-DeepReachability` release mode also
 asserts that the analytic root *does* reach them. See
@@ -117,7 +117,17 @@ for dependency or phase-gate validation.
 When an RFC choice fails its kill condition, record the failure and narrow or
 replace the design. Do not patch around it to preserve sunk work.
 
+## Current toolchain-bump reference
+
+The completed Lean 4.34 / Mathlib v4.34.0 bump and its client migration lessons
+are in [docs/Lean434BumpLessons.md](docs/Lean434BumpLessons.md): published pins,
+mechanical renames, simplex and measure API changes, tooling limits, and final
+validation. Keep bump plans and raw diagnostics local.
+
 ## Toolchain-bump lessons (Lean 4.33 / mathlib v4.33.1)
+
+These notes describe the earlier 4.33 bump. Diagnose current failures before
+carrying its transparency or deriving workarounds into another release.
 
 - **Two different failure modes, two different fixes.** Lean 4.33 stopped
   unfolding semireducible definitions in two places, and they need opposite

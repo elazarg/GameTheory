@@ -10,15 +10,19 @@ specifications by correctness theorems.
 
 ## Getting started
 
-The library tracks Mathlib and is currently on Lean `v4.33.1`. Add it to your
-`lakefile.lean`:
+The library tracks Mathlib and is currently on Lean `v4.34.0`. Set your
+`lean-toolchain` to `leanprover/lean4:v4.34.0` and add the tested GameTheory
+revision to your `lakefile.lean`:
 
 ```lean
-require "elazarg" / "GameTheory" @ git "v4.33.1"
+require "elazarg" / "GameTheory" @ git
+  "f2a01b3015aec84605443e0275e822c2cdf7c5fc"
 ```
 
-Releases carry the toolchain they build against, so a downstream project moves
-GameTheory and Mathlib together by changing one version string.
+Align any direct Mathlib requirement with `v4.34.0`. The
+[4.34 bump lessons](docs/Lean434BumpLessons.md) give the dependency pins and
+client migration instructions. The tested revision above includes the updated
+fixed-point-theorems dependency.
 
 ```text
 lake update
