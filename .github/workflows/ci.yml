@@ -24,6 +24,14 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
+      - name: Verify package, toolchain, Mathlib, and release versions agree
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -match '^v\d+\.') {
+            ./scripts/check-release-version.ps1 -ExpectedVersion $env:GITHUB_REF_NAME
+          } else {
+            ./scripts/check-release-version.ps1
+          }
+
       # lean-action reads the repository's pinned lean-toolchain.  The build is
       # selected explicitly rather than inferred, and runs before the action
       # saves its `.lake` cache.
