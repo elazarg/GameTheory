@@ -200,8 +200,8 @@ if ($DeepReachability) {
   $unreachable = 0
   $reachable = @()
   foreach ($group in @(
-      @('GameTheory.Protocol.Execution', @('stdSimplex', 'Polynomial')),
-      @('GameTheory.Protocol.Information', @('stdSimplex')))) {
+      @('GameTheory.Protocol.Execution', @('Convexity.StdSimplex', 'Polynomial')),
+      @('GameTheory.Protocol.Information', @('Convexity.StdSimplex')))) {
     $output = Run-Probe $group[0] $group[1]
     foreach ($constant in $group[1]) {
       if (Is-Unreachable $output $constant) { $unreachable++ }
@@ -360,7 +360,7 @@ if ($DeepReachability) {
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsBayesConsistent',
       'GameTheory.Math.Probability.FinDistConvergesPointwise')
   $sequentialOutput = Run-Probe 'GameTheory.Analysis.Protocol.Sequential' `
-    ($sequentialBridgeConstants + @('stdSimplex', 'Polynomial'))
+    ($sequentialBridgeConstants + @('Convexity.StdSimplex', 'Polynomial'))
   foreach ($constant in $sequentialBridgeConstants) {
     if (-not (Is-Unreachable $sequentialOutput $constant)) {
       $sequentialBridgeInputsReached++
@@ -369,7 +369,7 @@ if ($DeepReachability) {
   Report 'SEQUENTIAL_BRIDGE_INPUTS_REACHED' $sequentialBridgeInputsReached
 
   $sequentialGeometryRejected = 0
-  foreach ($constant in @('stdSimplex', 'Polynomial')) {
+  foreach ($constant in @('Convexity.StdSimplex', 'Polynomial')) {
     if (Is-Unreachable $sequentialOutput $constant) {
       $sequentialGeometryRejected++
     }

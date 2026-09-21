@@ -168,7 +168,7 @@ theorem generatedFictitiousPlay_isFictitiousPlay
       G.generatedFictitiousPlay initial (t + 1) =
         G.pureBestResponse (G.form.empiricalBelief past (t + 1)) := by
     rw [generatedFictitiousPlay]
-    rw [dif_neg (by omega : t + 1 ≠ 0)]
+    rw [dite_eq_right (by omega : t + 1 ≠ 0)]
   have hpast :
       G.form.empiricalBelief past (t + 1) =
         G.form.empiricalBelief (G.generatedFictitiousPlay initial) (t + 1) := by
@@ -181,7 +181,7 @@ theorem generatedFictitiousPlay_isFictitiousPlay
           G.generatedFictitiousPlay initial earlier
         else initial) player =
         G.generatedFictitiousPlay initial earlier player
-    rw [dif_pos earlier.isLt]
+    rw [dite_eq_left earlier.isLt]
   rw [hnext, ← hpast]
   exact G.pureBestResponse_isBestResponse _ who
 

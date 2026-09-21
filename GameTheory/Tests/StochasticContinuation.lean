@@ -42,7 +42,6 @@ theorem transition_really_action_dependent :
   have hprob := congrArg (fun law => law.prob true) hequal
   norm_num [actionGame, firstActions, secondActions,
     FinDist.prob_pure_eq_ite] at hprob
-  cases hprob
 
 /-- At the empty history player `false` chooses `true`; after any observed
 stage both players choose `false`. -/

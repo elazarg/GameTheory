@@ -129,7 +129,7 @@ theorem truthful_interim_optimal :
   apply FinDist.expect_mono
   intro types _
   by_cases htype : types who = ownType
-  · simp only [htype, if_true]
+  · simp only [htype, ite_true]
     cases who <;>
       simp [coordinationGame, truthful, BayesianGame.actionsOf, htype]
     <;> split <;> norm_num

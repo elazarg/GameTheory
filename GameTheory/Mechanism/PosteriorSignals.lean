@@ -139,7 +139,7 @@ theorem joint_fromPosteriorLaw (prior : FinDist State)
             exact ⟨witness, by simpa using hcoordinate, hwitness⟩
           have hpairFiber : pair ∈ Prod.fst ⁻¹' {state} := by
             have hconditioned := hpair
-            simp only [FinDist.condOnFibre, dif_pos hfibre] at hconditioned
+            simp only [FinDist.condOnFibre, dite_eq_left hfibre] at hconditioned
             exact (FinDist.support_condOn law.coupling
               (Prod.fst ⁻¹' {state}) hfibre hconditioned).1
           have hcoordinate : pair.1 = state := by simpa using hpairFiber

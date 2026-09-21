@@ -111,13 +111,13 @@ theorem alternatingBlockStage_sum_Ico (k : ℕ) :
       if k % 2 = 0 then 0 else
         ((blockEndpoint (k + 1) - blockEndpoint k : ℕ) : ℝ) := by
   by_cases hk : k % 2 = 0
-  · simp only [if_pos hk]
+  · simp only [ite_eq_left hk]
     apply Finset.sum_eq_zero
     intro i hi
     rw [alternatingBlockStage_on_block
       (Finset.mem_Ico.mp hi).1 (Finset.mem_Ico.mp hi).2]
     simp [hk]
-  · simp only [if_neg hk]
+  · simp only [ite_eq_right hk]
     calc
       (∑ i ∈ Finset.Ico (blockEndpoint k) (blockEndpoint (k + 1)),
           alternatingBlockStage i) =
@@ -146,7 +146,7 @@ theorem alternatingBlockStage_sum_endpoint_even {k : ℕ}
   have hle : blockEndpoint k ≤ blockEndpoint (k + 1) :=
     (blockEndpoint_strictMono k).le
   have hdecomp := Finset.sum_range_add_sum_Ico alternatingBlockStage hle
-  rw [← hdecomp, alternatingBlockStage_sum_Ico, if_pos hk]
+  rw [← hdecomp, alternatingBlockStage_sum_Ico, ite_eq_left hk]
   have hprefix := alternatingBlockStage_sum_range_le (blockEndpoint k)
   norm_num at hprefix ⊢
   linarith
@@ -158,7 +158,7 @@ theorem alternatingBlockStage_sum_endpoint_odd {k : ℕ}
   have hle : blockEndpoint k ≤ blockEndpoint (k + 1) :=
     (blockEndpoint_strictMono k).le
   have hdecomp := Finset.sum_range_add_sum_Ico alternatingBlockStage hle
-  rw [← hdecomp, alternatingBlockStage_sum_Ico, if_neg hk]
+  rw [← hdecomp, alternatingBlockStage_sum_Ico, ite_eq_right hk]
   rw [Nat.cast_sub hle]
   have hprefix : 0 ≤
       ∑ i ∈ Finset.range (blockEndpoint k), alternatingBlockStage i := by

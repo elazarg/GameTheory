@@ -342,7 +342,7 @@ theorem oneStepValue_flip (move : Move) (payoff : Spot → ℝ) :
     oneStepValue (policy move) payoff Spot.flip =
       1 / 2 * payoff Spot.pick + 1 / 2 * payoff Spot.passed := by
   unfold oneStepValue
-  rw [dif_neg flip_not_terminal, step_flip, expect_coin]
+  rw [dite_eq_right flip_not_terminal, step_flip, expect_coin]
 
 /-- Probe 2 refutes implementation A: it reads the interior payoff, so the two
 payoff assignments that differ only at `pick` give `7/2` and `50`. -/

@@ -486,7 +486,7 @@ theorem map_assignment_serialRun
             (state.path.length + 1)).length = fuel := by
         simp only [List.length_drop] at hremaining ⊢
         omega
-      rw [serialRun, dif_neg hterminal, FinDist.map_bind,
+      rw [serialRun, dite_eq_right hterminal, FinDist.map_bind,
         hdrop, assignmentRun]
       unfold serialStep assignmentStep
       rw [FinDist.bind_map, FinDist.bind_map,
@@ -698,14 +698,14 @@ theorem map_state_runBehavioralFrom_eq_serialRun
               topological.order.length := hterminal
         rw [InformationModel.runBehavioralFrom,
           ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterminal,
-          FinDist.map_pure, serialRun, dif_pos hpath]
+          FinDist.map_pure, serialRun, dite_eq_left hpath]
       · have hpath :
             history.state.path.length ≠
               topological.order.length := hterminal
         rw [InformationModel.runBehavioralFrom_succ_of_not_terminal
             (information topological semantics)
             (behavioralProfile topological semantics policy) fuel hterminal,
-          FinDist.map_bind, serialRun, dif_neg hpath]
+          FinDist.map_bind, serialRun, dite_eq_right hpath]
         calc
           _ =
               ((information topological semantics).behavioralJoint

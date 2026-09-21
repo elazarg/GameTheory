@@ -152,7 +152,7 @@ theorem padSuccessorValues_of_successor {source target : E.State}
     {successorValue : (reached : E.State) → E.Successor reached source → ℝ}
     (hsucc : E.Successor target source) :
     E.padSuccessorValues source successorValue target = successorValue target hsucc :=
-  dif_pos hsucc
+  dite_eq_left hsucc
 
 variable (E) in
 open Classical in
@@ -187,7 +187,7 @@ theorem backwardValue_eq (source : E.State) :
 theorem backwardValue_of_terminal {source : E.State} (hterm : E.terminal source) :
     E.backwardValue certificate chooser payoff source = payoff source := by
   rw [backwardValue_eq]
-  exact dif_pos hterm
+  exact dite_eq_left hterm
 
 /-- **The computation rule that matters.** Away from terminal states the value is
 the expected successor value under the transition law, with no padding left in
@@ -201,7 +201,7 @@ theorem backwardValue_of_not_terminal {source : E.State} (hterm : ¬ E.terminal 
       (E.step source (chooser source hterm)).expect
         (E.padSuccessorValues source
           fun reached _ => E.backwardValue certificate chooser payoff reached) :=
-    dif_neg hterm
+    dite_eq_right hterm
   rw [backwardValue_eq, hstep]
   refine FinDist.expect_congr fun reached hreached => ?_
   exact padSuccessorValues_of_successor
@@ -293,14 +293,14 @@ theorem deviateAt_self {state : E.State}
     E.deviateAt state replacement chooser state hterm = replacement := by
   classical
   show (if hsame : state = state then _ else _) = _
-  rw [dif_pos rfl]
+  rw [dite_eq_left rfl]
 
 theorem deviateAt_of_ne {state source : E.State}
     {replacement : { joint : ∀ i, Option (E.Action i) // E.Legal state joint }}
     {chooser : E.Chooser} (hne : source ≠ state) (hterm : ¬ E.terminal source) :
     E.deviateAt state replacement chooser source hterm = chooser source hterm := by
   classical
-  exact dif_neg hne
+  exact dite_eq_right hne
 
 /-- Choosers agreeing everywhere the recursion can look from `start` give the
 same value there. -/

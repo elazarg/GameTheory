@@ -54,7 +54,7 @@ example :
   · norm_num [source, target, targetObserve, sourceObserve, booleanUtility, coin,
       Fin.isValue, Fin.reduceEq, FinDist.expect_map, FinDist.expect_mix] at bound
     simp only [show (2 : Fin 3) ≠ 0 by decide, show (2 : Fin 3) ≠ 1 by decide,
-      if_false] at bound
+      ite_false] at bound
     norm_num [coin, FinDist.expect_map, FinDist.expect_mix, targetObserve,
       booleanUtility] at bound
   · rfl
@@ -97,7 +97,7 @@ example :
   have hcompile : layeredUtility.compileStrategy () true = (1 : Fin 3) := rfl
   constructor
   · simp only [target, Profile.update_same, show (2 : Fin 3) ≠ 0 by decide,
-      show (2 : Fin 3) ≠ 1 by decide, if_false]
+      show (2 : Fin 3) ≠ 1 by decide, ite_false]
     norm_num [targetObserve, booleanUtility, coin, expectedUtility,
       FinDist.expect_map, FinDist.expect_mix]
   · rw [hcompile]

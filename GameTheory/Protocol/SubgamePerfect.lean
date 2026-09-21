@@ -183,7 +183,7 @@ theorem historyBackwardValue_of_terminal
     {history : E.History} (_hterm : E.terminal history.state) :
     E.historyBackwardValue certificate chooser payoff history =
       payoff history := by
-  rw [historyBackwardValue_eq, dif_pos _hterm]
+  rw [historyBackwardValue_eq, dite_eq_left _hterm]
 
 /-- At a nonterminal history, backward value is the expected value of its
 realized successor histories. -/
@@ -196,7 +196,7 @@ theorem historyBackwardValue_of_not_terminal
       E.historyStepValue history chosen fun _target realized =>
         E.historyBackwardValue certificate chooser payoff
           (history.extend chosen.2 realized) := by
-  rw [historyBackwardValue_eq, dif_neg hterm]
+  rw [historyBackwardValue_eq, dite_eq_right hterm]
 
 /-- A history-dependent chooser has stopped within `horizon` when every history
 in the forward runner's support at that fuel is terminal. -/

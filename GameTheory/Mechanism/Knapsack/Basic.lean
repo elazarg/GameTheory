@@ -8,7 +8,7 @@ mechanism needs the full player universe.
 import GameTheory.Mechanism.Knapsack.Aggregate
 import Mathlib.Data.Finset.Max
 import Mathlib.Data.Finset.Powerset
-import Mathlib.Data.Real.Basic
+import Mathlib.Basic.Real.Basic
 
 noncomputable section
 

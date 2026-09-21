@@ -341,7 +341,7 @@ private theorem pathwiseAverage_formula_of_coherent
       ((n : ℝ) / ((n : ℝ) + 1)) * pathBitUtility play := by
   rw [pathwiseAverage_canonicalStageUtility]
   unfold canonicalPathAverage
-  rw [if_neg (Nat.add_one_ne_zero n)]
+  rw [ite_eq_right (Nat.add_one_ne_zero n)]
   rw [pathStageUtility_sum_of_coherent play hcoh n]
   simp only [Nat.cast_add, Nat.cast_one, div_eq_mul_inv]
   ring

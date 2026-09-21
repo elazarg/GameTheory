@@ -197,14 +197,14 @@ theorem runHistoryFor_of_terminal (chooser : E.HistoryChooser) (fuel : ℕ) {h :
     (hterm : E.terminal h.state) : E.runHistoryFor chooser fuel h = FinDist.pure h := by
   cases fuel with
   | zero => rfl
-  | succ fuel => rw [runHistoryFor, dif_pos hterm]
+  | succ fuel => rw [runHistoryFor, dite_eq_left hterm]
 
 theorem runHistoryFor_succ_of_not_terminal (chooser : E.HistoryChooser) (fuel : ℕ)
     {h : E.History} (hterm : ¬ E.terminal h.state) :
     E.runHistoryFor chooser (fuel + 1) h =
       (E.step h.state (chooser h hterm)).bindOnSupport fun _ realized =>
         E.runHistoryFor chooser fuel (h.extend (chooser h hterm).2 realized) := by
-  rw [runHistoryFor, dif_neg hterm]
+  rw [runHistoryFor, dite_eq_right hterm]
 
 /-- **The state law is the history law's shadow.** For a chooser that ignores
 the history, forgetting the history turns the history run law into the state run

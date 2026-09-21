@@ -196,37 +196,35 @@ def toPMF (μ : Law α) : PMF α :=
 theorem toPMF_apply (μ : Law α) (a : α) : μ.toPMF a = μ.weight a := rfl
 
 /-- On a finite carrier, normalized weights are exactly Mathlib's real simplex. -/
-def toSimplex [Fintype α] (μ : Law α) : stdSimplex ℝ α :=
-  ⟨fun a => μ.weight a, by
-    constructor
-    · intro a
-      exact NNReal.zero_le_coe
-    · simpa [Finsupp.sum_fintype] using congrArg ((↑) : ℝ≥0 → ℝ) μ.mass_one⟩
+def toSimplex [Fintype α] (μ : Law α) : Convexity.StdSimplex ℝ α where
+  weights := Finsupp.equivFunOnFinite.symm fun a => (μ.weight a : ℝ)
+  nonneg a := NNReal.zero_le_coe
+  total := by
+    simpa [Finsupp.sum_fintype] using congrArg ((↑) : ℝ≥0 → ℝ) μ.mass_one
 
 /-- Turn simplex coordinates into a normalized `Finsupp`. -/
-def ofSimplex [Fintype α] (x : stdSimplex ℝ α) : Law α where
-  weight := Finsupp.equivFunOnFinite.symm fun a => ⟨x a, stdSimplex.zero_le x a⟩
+def ofSimplex [Fintype α] (x : Convexity.StdSimplex ℝ α) : Law α where
+  weight := Finsupp.equivFunOnFinite.symm fun a => ⟨x.weights a, x.weights_nonneg a⟩
   mass_one := by
     rw [Finsupp.sum_fintype]
     · apply NNReal.eq
       rw [NNReal.coe_sum]
-      change ∑ i, x i = (1 : ℝ)
-      exact stdSimplex.sum_eq_one x
+      change ∑ i, x.weights i = (1 : ℝ)
+      exact x.total_of_fintype
     · intro
       rfl
 
 @[simp]
-theorem toSimplex_apply [Fintype α] (μ : Law α) (a : α) : μ.toSimplex a = μ.weight a := rfl
+theorem toSimplex_apply [Fintype α] (μ : Law α) (a : α) :
+    μ.toSimplex.weights a = μ.weight a := rfl
 
 @[simp]
-theorem ofSimplex_weight [Fintype α] (x : stdSimplex ℝ α) (a : α) :
-    ((ofSimplex x).weight a : ℝ) = x a := by
-  change (↑((Finsupp.equivFunOnFinite.symm fun a =>
-    (⟨x a, stdSimplex.zero_le x a⟩ : ℝ≥0)) a) : ℝ) = x a
+theorem ofSimplex_weight [Fintype α] (x : Convexity.StdSimplex ℝ α) (a : α) :
+    ((ofSimplex x).weight a : ℝ) = x.weights a := by
   rfl
 
 /-- Candidate B's finite-carrier Analysis bridge. -/
-def simplexEquiv [Fintype α] : Law α ≃ stdSimplex ℝ α where
+def simplexEquiv [Fintype α] : Law α ≃ Convexity.StdSimplex ℝ α where
   toFun := toSimplex
   invFun := ofSimplex
   left_inv μ := by
@@ -234,25 +232,24 @@ def simplexEquiv [Fintype α] : Law α ≃ stdSimplex ℝ α where
     ext a
     simp
   right_inv x := by
-    apply stdSimplex.ext
-    funext a
+    apply Convexity.StdSimplex.ext
+    ext a
     simp
 
 @[simp]
 theorem simplexEquiv_pure [Fintype α] [DecidableEq α] (a : α) :
-    simplexEquiv (pure a) = stdSimplex.vertex (S := ℝ) a := by
+    simplexEquiv (pure a) = Convexity.StdSimplex.single (R := ℝ) a := by
   have h : simplexEquiv (α := α) (pure a) = toSimplex (pure a) := rfl
   rw [h]
-  apply stdSimplex.ext
-  funext b
-  simp only [toSimplex_apply, stdSimplex.vertex_coe]
+  apply Convexity.StdSimplex.ext
+  ext b
+  simp only [toSimplex_apply, Convexity.StdSimplex.weights_single, Finsupp.single_apply]
   rw [pure_weight]
-  by_cases hab : a = b <;> simp [hab, eq_comm]
+  by_cases hab : a = b <;> simp [hab]
 
 theorem simplexEquiv_expect [Fintype α] (μ : Law α) (u : α → ℝ) :
-    expect μ u = ∑ a, simplexEquiv μ a * u a := by
+    expect μ u = ∑ a, (simplexEquiv μ).weights a * u a := by
   rw [expect, Finsupp.sum_fintype (h := fun i => by simp)]
-  change (∑ i, (μ.weight i : ℝ) * u i) = ∑ a, (μ.weight a : ℝ) * u a
   rfl
 
 end Law

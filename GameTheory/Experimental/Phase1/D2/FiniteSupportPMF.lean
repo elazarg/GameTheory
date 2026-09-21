@@ -326,34 +326,37 @@ theorem pmf_toReal_sum_one [Fintype α] (μ : PMF α) :
     ∑ a, (μ a).toReal = 1 := by
   simpa [tsum_fintype] using pmf_toReal_tsum_one μ
 
-theorem pmfToVector_mem [Fintype α] (μ : PMF α) :
-    pmfToVector μ ∈ stdSimplex ℝ α :=
-  ⟨fun _ => ENNReal.toReal_nonneg, pmf_toReal_sum_one μ⟩
-
-def pmfOfVector [Fintype α] (x : stdSimplex ℝ α) : PMF α :=
-  ⟨fun a => ENNReal.ofReal (x a), by
-    have hsum : ∑ a, ENNReal.ofReal (x a) = 1 := by
-      rw [← ENNReal.ofReal_sum_of_nonneg (fun a _ => stdSimplex.zero_le x a),
-        stdSimplex.sum_eq_one]
+def pmfOfVector [Fintype α] (x : Convexity.StdSimplex ℝ α) : PMF α :=
+  ⟨fun a => ENNReal.ofReal (x.weights a), by
+    have hsum : ∑ a, ENNReal.ofReal (x.weights a) = 1 := by
+      rw [← ENNReal.ofReal_sum_of_nonneg (fun a _ => x.weights_nonneg a),
+        x.total_of_fintype]
       norm_num
-    simpa [tsum_fintype, hsum] using (hasSum_fintype fun a => ENNReal.ofReal (x a))⟩
+    simpa [tsum_fintype, hsum] using
+      (hasSum_fintype fun a => ENNReal.ofReal (x.weights a))⟩
 
 @[simp]
-theorem pmfOfVector_toReal [Fintype α] (x : stdSimplex ℝ α) (a : α) :
-    (pmfOfVector x a).toReal = x a := ENNReal.toReal_ofReal (stdSimplex.zero_le x a)
+theorem pmfOfVector_toReal [Fintype α] (x : Convexity.StdSimplex ℝ α) (a : α) :
+    (pmfOfVector x a).toReal = x.weights a := ENNReal.toReal_ofReal (x.weights_nonneg a)
 
-def toSimplex [Fintype α] (μ : Law α) : stdSimplex ℝ α :=
-  ⟨pmfToVector μ.toPMF, pmfToVector_mem μ.toPMF⟩
+def toSimplex [Fintype α] (μ : Law α) : Convexity.StdSimplex ℝ α where
+  weights := Finsupp.equivFunOnFinite.symm (pmfToVector μ.toPMF)
+  nonneg a := ENNReal.toReal_nonneg
+  total := by
+    rw [Finsupp.sum_fintype]
+    · exact pmf_toReal_sum_one μ.toPMF
+    · intro
+      rfl
 
 @[simp]
 theorem toSimplex_apply [Fintype α] (μ : Law α) (a : α) :
-    toSimplex μ a = (μ.toPMF a).toReal := rfl
+    (toSimplex μ).weights a = (μ.toPMF a).toReal := rfl
 
-def ofSimplex [Fintype α] (x : stdSimplex ℝ α) : Law α :=
+def ofSimplex [Fintype α] (x : Convexity.StdSimplex ℝ α) : Law α :=
   ⟨pmfOfVector x, Set.toFinite _⟩
 
 /-- Candidate A's finite-carrier Analysis bridge. -/
-def simplexEquiv [Fintype α] : Law α ≃ stdSimplex ℝ α where
+def simplexEquiv [Fintype α] : Law α ≃ Convexity.StdSimplex ℝ α where
   toFun := toSimplex
   invFun := ofSimplex
   left_inv μ := by
@@ -363,31 +366,30 @@ def simplexEquiv [Fintype α] : Law α ≃ stdSimplex ℝ α where
     apply ENNReal.toReal_eq_toReal_iff' (PMF.apply_ne_top _ _) (PMF.apply_ne_top _ _)|>.mp
     exact pmfOfVector_toReal (toSimplex μ) a
   right_inv x := by
-    apply stdSimplex.ext
-    funext a
+    apply Convexity.StdSimplex.ext
+    ext a
     exact pmfOfVector_toReal x a
 
 @[simp]
 theorem simplexEquiv_pure [Fintype α] [DecidableEq α] (a : α) :
-    simplexEquiv (pure a) = stdSimplex.vertex (S := ℝ) a := by
-  apply stdSimplex.ext
-  funext b
+    simplexEquiv (pure a) = Convexity.StdSimplex.single (R := ℝ) a := by
+  apply Convexity.StdSimplex.ext
+  ext b
   by_cases hab : a = b
   · subst b
     simp [simplexEquiv, PMF.pure_apply]
   · simp [simplexEquiv, PMF.pure_apply, hab, eq_comm]
 
 theorem simplexEquiv_expect [Fintype α] (μ : Law α) (u : α → ℝ) :
-    expect μ u = ∑ a, simplexEquiv μ a * u a := by
+    expect μ u = ∑ a, (simplexEquiv μ).weights a * u a := by
   rw [expect, tsum_fintype]
-  change (∑ a, (μ.toPMF a).toReal * u a) = ∑ a, (μ.toPMF a).toReal * u a
   rfl
 
 /-- The simplex bridge preserves convex combinations coordinatewise. -/
 theorem simplexEquiv_mix_apply [Fintype α] (t : ℝ≥0) (ht : t ≤ 1)
     (μ ν : Law α) (a : α) :
-    simplexEquiv (mix t ht μ ν) a =
-      (t : ℝ) * simplexEquiv μ a + (1 - (t : ℝ)) * simplexEquiv ν a := by
+    (simplexEquiv (mix t ht μ ν)).weights a =
+      (t : ℝ) * (simplexEquiv μ).weights a + (1 - (t : ℝ)) * (simplexEquiv ν).weights a := by
   change ((mix t ht μ ν).toPMF a).toReal =
     (t : ℝ) * (μ.toPMF a).toReal + (1 - (t : ℝ)) * (ν.toPMF a).toReal
   rw [toPMF_mix_apply,

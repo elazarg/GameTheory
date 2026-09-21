@@ -350,7 +350,7 @@ theorem sum_pos_falseRegretVector :
 puts all mass on the profitable action. -/
 theorem regretMatch_falseRegret_prob_true :
     (regretMatch falseRegretVector).prob (localChoice true) = 1 := by
-  rw [regretMatch, dif_pos (by
+  rw [regretMatch, dite_eq_left (by
     rw [sum_pos_falseRegretVector]
     norm_num), FinDist.prob_ofWeights, sum_pos_falseRegretVector,
     falseRegretVector_true]

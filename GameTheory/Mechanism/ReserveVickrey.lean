@@ -40,7 +40,7 @@ theorem bid_le_maxOtherBid_of_ne (bids : BidProfile ι) {who other : ι}
   have hmem : other ∈ Finset.univ.erase who :=
     Finset.mem_erase.mpr ⟨hne, Finset.mem_univ _⟩
   have hnonempty : (Finset.univ.erase who).Nonempty := ⟨other, hmem⟩
-  rw [dif_pos hnonempty]
+  rw [dite_eq_left hnonempty]
   exact Finset.le_sup' bids hmem
 
 /-- Strict clearing makes the winning bidder unique. -/
@@ -77,15 +77,15 @@ theorem allocation_eq_some_iff (reserve : ℝ) (bids : BidProfile ι) (who : ι)
   · intro halloc
     unfold reserveVickreyAllocation at halloc
     by_cases h : ∃ i, reserveVickreyWins reserve bids i
-    · rw [dif_pos h] at halloc
+    · rw [dite_eq_left h] at halloc
       injection halloc with hchoose
       simpa [hchoose] using h.choose_spec
-    · rw [dif_neg h] at halloc
+    · rw [dite_eq_right h] at halloc
       contradiction
   · intro hwin
     unfold reserveVickreyAllocation
     have h : ∃ i, reserveVickreyWins reserve bids i := ⟨who, hwin⟩
-    rw [dif_pos h]
+    rw [dite_eq_left h]
     have hchoose : h.choose = who := reserveVickreyWins_unique reserve bids h.choose_spec hwin
     simp [hchoose]
 
@@ -181,10 +181,10 @@ theorem reserveVickreyUtility_eq_if_wins (value : ι → ℝ) (reserve : ℝ)
   classical
   by_cases hwin : reserveVickreyWins reserve bids who
   · have halloc := (allocation_eq_some_iff reserve bids who).2 hwin
-    rw [if_pos hwin, utility_winner value reserve bids who halloc]
+    rw [ite_eq_left hwin, utility_winner value reserve bids who halloc]
   · have halloc : reserveVickreyAllocation reserve bids ≠ some who := fun hsome =>
       hwin ((allocation_eq_some_iff reserve bids who).1 hsome)
-    rw [if_neg hwin, utility_loser value reserve bids who halloc]
+    rw [ite_eq_right hwin, utility_loser value reserve bids who halloc]
 
 /-- At zero reserve, when the opponents' maximum is nonnegative, the explicit
 allocation-and-payment presentation has exactly the payoff of the generic

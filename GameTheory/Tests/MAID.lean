@@ -127,7 +127,7 @@ theorem native_law (value : Bool) :
       rw [hempty]
       simp
     simp at hmem
-  rw [if_neg hincomplete, step_initial]
+  rw [ite_eq_right hincomplete, step_initial]
   rw [FinDist.pure_bind, run, FinDist.map_pure]
 
 /-- The two policies have distinct native laws; the decision coordinate is

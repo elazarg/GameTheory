@@ -20,7 +20,7 @@ which is why cooperative solution concepts other than the core exist.
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Data.Fintype.BigOperators
-import Mathlib.Data.Real.Basic
+import Mathlib.Basic.Real.Basic
 import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.Linarith
 

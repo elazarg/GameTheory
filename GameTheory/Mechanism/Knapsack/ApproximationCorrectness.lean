@@ -27,7 +27,7 @@ private theorem densityLE_total (weight value : Agent → ℕ) (left right : Age
   · simp [densityLE, hleft]
   · by_cases hright : weight right = 0
     · simp [densityLE, hright]
-    · simp only [densityLE, hleft, hright, if_false, Bool.or_eq_true,
+    · simp only [densityLE, hleft, hright, ite_false, Bool.or_eq_true,
         decide_eq_true_eq]
       exact le_total _ _
 
@@ -111,7 +111,7 @@ theorem greedySplit_decomposition (weight : Agent → ℕ)
   | nil => simp [greedySplit]
   | cons item items ih =>
       by_cases hfit : weight item ≤ capacity
-      · simpa only [greedySplit, hfit, if_true, List.cons_append] using
+      · simpa only [greedySplit, hfit, ite_true, List.cons_append] using
           congrArg (List.cons item) (ih (capacity - weight item))
       · simp [greedySplit, hfit]
 
@@ -126,7 +126,7 @@ theorem greedySplit_sum_weight_add_remaining (weight : Agent → ℕ)
   | nil => simp [greedySplit]
   | cons item items ih =>
       by_cases hfit : weight item ≤ capacity
-      · simp only [greedySplit, hfit, if_true, List.map_cons, List.sum_cons]
+      · simp only [greedySplit, hfit, ite_true, List.map_cons, List.sum_cons]
         have htail := ih (capacity - weight item)
         omega
       · simp [greedySplit, hfit]
@@ -140,7 +140,7 @@ theorem greedySplit_taken_sublist (weight : Agent → ℕ)
   | nil => simp [greedySplit]
   | cons item items ih =>
       by_cases hfit : weight item ≤ capacity
-      · simp only [greedySplit, hfit, if_true]
+      · simp only [greedySplit, hfit, ite_true]
         exact List.Sublist.cons_cons _ (ih (capacity - weight item))
       · simp [greedySplit, hfit]
 
@@ -178,9 +178,9 @@ theorem greedySplit_rejected_tooHeavy (weight : Agent → ℕ)
   | nil => simp [greedySplit] at hrejected
   | cons item items ih =>
       by_cases hfit : weight item ≤ capacity
-      · simp only [greedySplit, hfit, if_true] at hrejected ⊢
+      · simp only [greedySplit, hfit, ite_true] at hrejected ⊢
         exact ih (capacity - weight item) hrejected
-      · simp only [greedySplit, hfit, if_false] at hrejected ⊢
+      · simp only [greedySplit, hfit, ite_false] at hrejected ⊢
         cases hrejected
         omega
 

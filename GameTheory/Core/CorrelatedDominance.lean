@@ -118,7 +118,7 @@ theorem isCorrelatedEq_iff_conditional_obedience
         ∃ profile ∈ (fun candidate => candidate who) ⁻¹' {witness who},
           profile ∈ law.support :=
       ⟨witness, Set.mem_preimage.mpr (Set.mem_singleton _), hwitness⟩
-    rw [FinDist.condOnFibre, dif_pos hfibre]
+    rw [FinDist.condOnFibre, dite_eq_left hfibre]
     calc
       (law.condOn {profile | profile who = witness who} hrecommended).expect
           (fun profile => expectedUtility utility who

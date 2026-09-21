@@ -76,7 +76,7 @@ theorem fullJoint_eq_averagedJoint (contextLaw : FinDist Context)
         exact ⟨witness, by simpa using hkeep, hwitness⟩
       have hcontextFibre : context ∈ keep ⁻¹' {kept} := by
         have hconditioned := hcontext
-        simp only [FinDist.condOnFibre, dif_pos hfibre] at hconditioned
+        simp only [FinDist.condOnFibre, dite_eq_left hfibre] at hconditioned
         exact (FinDist.support_condOn contextLaw
           (keep ⁻¹' {kept}) hfibre hconditioned).1
       have hkeep : keep context = kept := by
@@ -207,7 +207,7 @@ theorem averagedKernel_copySignal :
     rw [← FinDist.prob_pos_iff]
     norm_num [fairSignal, FinDist.prob_mix,
       FinDist.prob_pure_eq_ite]
-  rw [FinDist.condOnFibre, dif_pos hfibre]
+  rw [FinDist.condOnFibre, dite_eq_left hfibre]
   have hfibreUniv : (fun _ : Bool => ()) ⁻¹' {()} = Set.univ := by
     ext signal
     simp

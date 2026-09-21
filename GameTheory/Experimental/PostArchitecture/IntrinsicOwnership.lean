@@ -244,7 +244,7 @@ theorem branchingOrder_one_of (configuration : branchingModel.Configuration)
     branchingOrder.orderAt configuration 1 = (2 : Fin 3) := by
   show (if branchingCondition configuration then Equiv.swap 1 2
     else Equiv.refl (Fin 3)) 1 = 2
-  rw [if_pos hbranch]
+  rw [ite_eq_left hbranch]
   exact Equiv.swap_apply_left 1 2
 
 theorem branchingOrder_one_of_not
@@ -253,7 +253,7 @@ theorem branchingOrder_one_of_not
     branchingOrder.orderAt configuration 1 = (1 : Fin 3) := by
   show (if branchingCondition configuration then Equiv.swap 1 2
     else Equiv.refl (Fin 3)) 1 = 1
-  rw [if_neg hbranch]
+  rw [ite_eq_right hbranch]
   rfl
 
 theorem branchingOrder_two_of (configuration : branchingModel.Configuration)
@@ -261,7 +261,7 @@ theorem branchingOrder_two_of (configuration : branchingModel.Configuration)
     branchingOrder.orderAt configuration 2 = (1 : Fin 3) := by
   show (if branchingCondition configuration then Equiv.swap 1 2
     else Equiv.refl (Fin 3)) 2 = 1
-  rw [if_pos hbranch]
+  rw [ite_eq_left hbranch]
   exact Equiv.swap_apply_right 1 2
 
 theorem branchingOrder_two_of_not
@@ -270,7 +270,7 @@ theorem branchingOrder_two_of_not
     branchingOrder.orderAt configuration 2 = (2 : Fin 3) := by
   show (if branchingCondition configuration then Equiv.swap 1 2
     else Equiv.refl (Fin 3)) 2 = 2
-  rw [if_neg hbranch]
+  rw [ite_eq_right hbranch]
   rfl
 
 theorem branchingOrder_zero (configuration : branchingModel.Configuration) :
@@ -278,12 +278,12 @@ theorem branchingOrder_zero (configuration : branchingModel.Configuration) :
   by_cases hbranch : branchingCondition configuration
   · show (if branchingCondition configuration then Equiv.swap 1 2
       else Equiv.refl (Fin 3)) 0 = 0
-    rw [if_pos hbranch]
+    rw [ite_eq_left hbranch]
     exact Equiv.swap_apply_of_ne_of_ne (a := (1 : Fin 3)) (b := 2) (x := 0)
       (by decide) (by decide)
   · show (if branchingCondition configuration then Equiv.swap 1 2
       else Equiv.refl (Fin 3)) 0 = 0
-    rw [if_neg hbranch]
+    rw [ite_eq_right hbranch]
     rfl
 
 def branchingAllFalse : branchingModel.Configuration :=
@@ -334,7 +334,7 @@ theorem branchingPremises_independent :
         else Equiv.refl (Fin 3)) earlier =
         (if branchingCondition branchingZeroOneTrue then Equiv.swap 1 2
         else Equiv.refl (Fin 3)) earlier
-      rw [if_pos hall, if_pos hboth]
+      rw [ite_eq_left hall, ite_eq_left hboth]
     · intro hagree
       have hzero := hagree.2 (0 : Fin 3) (by omega)
       rw [branchingOrder_zero] at hzero

@@ -36,23 +36,24 @@ variable (sig : GameSignature ι) [∀ i, Fintype (sig.Strategy i)]
 
 /-- The mixed profiles, as a subset of the ambient space of weight vectors. -/
 def mixedPolytope : Set (Profile sig.weights) :=
-  Set.pi Set.univ fun i => stdSimplex ℝ (sig.Strategy i)
+  Set.pi Set.univ fun i => simplexWeights (sig.Strategy i)
 
+omit [∀ i, Fintype (sig.Strategy i)] in
 theorem mem_mixedPolytope {x : Profile sig.weights} :
-    x ∈ mixedPolytope sig ↔ ∀ i, x i ∈ stdSimplex ℝ (sig.Strategy i) := by
+    x ∈ mixedPolytope sig ↔ ∀ i, x i ∈ simplexWeights (sig.Strategy i) := by
   simp [mixedPolytope]
 
 theorem convex_mixedPolytope : Convex ℝ (mixedPolytope sig) :=
-  convex_pi fun i _ => convex_stdSimplex ℝ (sig.Strategy i)
+  convex_pi fun i _ => convex_simplexWeights (sig.Strategy i)
 
 theorem isCompact_mixedPolytope : IsCompact (mixedPolytope sig) :=
-  isCompact_univ_pi fun i => isCompact_stdSimplex ℝ (sig.Strategy i)
+  isCompact_univ_pi fun i => isCompact_simplexWeights (sig.Strategy i)
 
 /-- The probability vectors of a mixed profile. -/
 def probs (μ : Profile sig.mixed) : Profile sig.weights := fun i => (μ i).prob
 
 theorem probs_mem_mixedPolytope (μ : Profile sig.mixed) : probs sig μ ∈ mixedPolytope sig :=
-  (mem_mixedPolytope sig).2 fun i => (μ i).prob_mem_stdSimplex
+  (mem_mixedPolytope sig).2 fun i => (μ i).prob_mem_simplexWeights
 
 /-- And back: a point of the polytope is the probability vectors of a unique
 mixed profile. -/

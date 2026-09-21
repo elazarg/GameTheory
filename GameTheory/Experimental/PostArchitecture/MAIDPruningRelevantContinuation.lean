@@ -920,7 +920,7 @@ private theorem nested_bind_tagged_prob
       intro candidate _
       by_cases heq : full = candidate
       · subst candidate
-        rw [if_pos rfl]
+        rw [ite_eq_left rfl]
         exact FinDist.prob_map_of_injective
           (fun pair => ((full, pair.1), pair.2)) (by
             intro first second hequal
@@ -930,7 +930,7 @@ private theorem nested_bind_tagged_prob
           ((rule full).bind fun chosen =>
             (kernel (keep full) chosen).map fun termValue =>
               (chosen, termValue)) (action, term)
-      · rw [if_neg heq, FinDist.prob_eq_zero_iff]
+      · rw [ite_eq_right heq, FinDist.prob_eq_zero_iff]
         intro hsupport
         rw [FinDist.support_map] at hsupport
         obtain ⟨pair, _, hpair⟩ := hsupport

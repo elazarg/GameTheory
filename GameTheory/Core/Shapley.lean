@@ -537,7 +537,7 @@ def unanimityGame
   value present :=
     if coalition ⊆ present then 1 else 0
   value_empty := by
-    rw [if_neg]
+    rw [ite_eq_right]
     intro hsubset
     obtain ⟨agent, hmem⟩ := hnonempty
     exact Finset.notMem_empty agent (hsubset hmem)
@@ -747,13 +747,13 @@ theorem unanimity_decomposition
       · rintro rfl
         exact Finset.sdiff_self _
     by_cases hequal : smaller = coalition
-    · rw [if_pos hequal, if_pos (hempty.mpr hequal)]
-    · rw [if_neg hequal,
-        if_neg (fun h => hequal (hempty.mp h))]
+    · rw [ite_eq_left hequal, ite_eq_left (hempty.mpr hequal)]
+    · rw [ite_eq_right hequal,
+        ite_eq_right (fun h => hequal (hempty.mp h))]
   rw [Finset.sum_congr rfl hinner]
   simp_rw [mul_ite, mul_one, mul_zero]
   rw [Finset.sum_ite_eq' coalition.powerset coalition G.value,
-    if_pos (Finset.mem_powerset.mpr Finset.Subset.rfl)]
+    ite_eq_left (Finset.mem_powerset.mpr Finset.Subset.rfl)]
 
 /-! ## Allocation rules and uniqueness -/
 
@@ -884,8 +884,8 @@ private theorem allocation_on_unanimityGame
         share = 1 / coalition.card := by
       field_simp at heff ⊢
       linarith
-    rw [if_pos hmember, hshare agent hmember, hshareValue]
-  · rw [if_neg hmember]
+    rw [ite_eq_left hmember, hshare agent hmember, hshareValue]
+  · rw [ite_eq_right hmember]
     exact
       hnull G
         (unanimityGame_isNull_of_notMem
@@ -965,8 +965,8 @@ private theorem allocation_on_smul_unanimityGame
         share = scalar / coalition.card := by
       field_simp at heff ⊢
       linarith
-    rw [if_pos hmember, hshare agent hmember, hshareValue]
-  · rw [if_neg hmember]
+    rw [ite_eq_left hmember, hshare agent hmember, hshareValue]
+  · rw [ite_eq_right hmember]
     exact
       hnull G
         (smul_isNull
@@ -1059,8 +1059,8 @@ private theorem eq_sumGames_decomposition
     intro basis
     simp only [decompositionTerm]
     by_cases hnonempty : basis.Nonempty
-    · simp only [hnonempty, dif_pos, smul, unanimityGame]
-    · simp only [hnonempty, dif_neg, zeroGame, not_false_iff]
+    · simp only [hnonempty, dite_eq_left, smul, unanimityGame]
+    · simp only [hnonempty, dite_eq_right, zeroGame, not_false_iff]
       have hempty : basis = ∅ :=
         Finset.not_nonempty_iff_eq_empty.mp hnonempty
       have hcoefficient :
@@ -1123,7 +1123,7 @@ theorem shapleyValue_unique
   refine Finset.sum_congr rfl (fun basis _ => ?_)
   simp only [decompositionTerm]
   by_cases hnonempty : basis.Nonempty
-  · simp only [hnonempty, dif_pos]
+  · simp only [hnonempty, dite_eq_left]
     rw [allocation_on_smul_unanimityGame
         rule hefficient hsymmetric hnull
         basis hnonempty _ agent,
@@ -1133,7 +1133,7 @@ theorem shapleyValue_unique
         shapleyValue_isSymmetric
         shapleyValue_respectsNull
         basis hnonempty _ agent]
-  · simp only [hnonempty, dif_neg, not_false_iff]
+  · simp only [hnonempty, dite_eq_right, not_false_iff]
     have hnullAgent : zeroGame.IsNull agent := by
       intro coalition _
       simp [marginalContribution, zeroGame]

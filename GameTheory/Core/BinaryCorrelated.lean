@@ -102,8 +102,8 @@ private theorem ce_prob_true_true_ge_true_false
   rw [euPreference_apply, expectedUtility_outcomeLaw, expectedUtility_bind,
     h.expect_eq_four, h.expect_eq_four] at hineq
   simp only [profile, bitsTT, bitsTF, bitsFT, bitsFF,
-    Matrix.cons_val_zero, dev, Equiv.symm_apply_apply, if_true,
-    Bool.false_eq_true, if_false, h.update_profile_zero] at hineq
+    Matrix.cons_val_zero, dev, Equiv.symm_apply_apply, ite_true,
+    Bool.false_eq_true, ite_false, h.update_profile_zero] at hineq
   simp_rw [h.expectedUtility_profile_zero] at hineq
   norm_num at hineq
   simp only [bitsTT, bitsTF] at ⊢
@@ -121,8 +121,8 @@ private theorem ce_prob_true_false_ge_false_false
     h.expect_eq_four, h.expect_eq_four] at hineq
   simp only [profile, bitsTT, bitsTF, bitsFT, bitsFF,
     Matrix.cons_val_zero, Matrix.cons_val_one, dev,
-    Equiv.symm_apply_apply, if_true,
-    Bool.false_eq_true, if_false, h.update_profile_one] at hineq
+    Equiv.symm_apply_apply, ite_true,
+    Bool.false_eq_true, ite_false, h.update_profile_one] at hineq
   simp_rw [h.expectedUtility_profile_one] at hineq
   norm_num at hineq
   simp only [bitsTF, bitsFF] at ⊢
@@ -139,8 +139,8 @@ private theorem ce_prob_false_false_ge_false_true
   rw [euPreference_apply, expectedUtility_outcomeLaw, expectedUtility_bind,
     h.expect_eq_four, h.expect_eq_four] at hineq
   simp only [profile, bitsTT, bitsTF, bitsFT, bitsFF,
-    Matrix.cons_val_zero, dev, Equiv.symm_apply_apply, if_true,
-    Bool.false_eq_true, if_false, h.update_profile_zero] at hineq
+    Matrix.cons_val_zero, dev, Equiv.symm_apply_apply, ite_true,
+    Bool.false_eq_true, ite_false, h.update_profile_zero] at hineq
   simp_rw [h.expectedUtility_profile_zero] at hineq
   norm_num at hineq
   simp only [bitsFF, bitsFT] at ⊢
@@ -158,8 +158,8 @@ private theorem ce_prob_false_true_ge_true_true
     h.expect_eq_four, h.expect_eq_four] at hineq
   simp only [profile, bitsTT, bitsTF, bitsFT, bitsFF,
     Matrix.cons_val_zero, Matrix.cons_val_one, dev,
-    Equiv.symm_apply_apply, if_true,
-    Bool.false_eq_true, if_false, h.update_profile_one] at hineq
+    Equiv.symm_apply_apply, ite_true,
+    Bool.false_eq_true, ite_false, h.update_profile_one] at hineq
   simp_rw [h.expectedUtility_profile_one] at hineq
   norm_num at hineq
   simp only [bitsFT, bitsTT] at ⊢

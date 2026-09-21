@@ -442,8 +442,8 @@ if ($DeepReachability) {
   $reachable = @()
   foreach ($group in @(
       @('GameTheory.Finite.Algorithm',
-        @('Real.instAdd', 'PMF', 'MeasureTheory.Measure', 'stdSimplex')),
-      @('GameTheory.Core', @('stdSimplex', 'Polynomial')))) {
+        @('Real.instAdd', 'PMF', 'MeasureTheory.Measure', 'Convexity.StdSimplex')),
+      @('GameTheory.Core', @('Convexity.StdSimplex', 'Polynomial')))) {
     $output = Run-Probe $group[0] $group[1]
     foreach ($constant in $group[1]) {
       if (Is-Unreachable $output $constant) { $unreachable++ }
@@ -460,7 +460,7 @@ if ($DeepReachability) {
     'Real.instAdd',
     'PMF',
     'MeasureTheory.Measure',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial',
     'GameTheory.GameForm',
     'GameTheory.Mechanism.Auction.auctionGame')
@@ -483,7 +483,7 @@ if ($DeepReachability) {
     'Real.instAdd',
     'PMF',
     'MeasureTheory.Measure',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial',
     'GameTheory.GameForm',
     'GameTheory.Mechanism.Auction.auctionGame')
@@ -506,7 +506,7 @@ if ($DeepReachability) {
     'Real.instAdd',
     'PMF',
     'MeasureTheory.Measure',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial',
     'GameTheory.GameForm',
     'GameTheory.IsNash',
@@ -531,7 +531,7 @@ if ($DeepReachability) {
     'GameTheory.IsNash',
     'GameTheory.Protocol.ExecutionProtocol',
     'GameTheory.Analysis.nash_exists',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial')
   $knapsackBasicOutput =
     Run-Probe 'GameTheory.Mechanism.Knapsack.Basic' $knapsackBasicBoundary
@@ -692,7 +692,7 @@ if ($DeepReachability) {
     'GameTheory.Math.Probability.FinDist',
     'GameTheory.Protocol.ExecutionProtocol',
     'MeasureTheory.Measure',
-    'stdSimplex')
+    'Convexity.StdSimplex')
   $balancednessOutput = Run-Probe 'GameTheory.Cooperative' $balancednessInputs
   $balancednessInputsReached = 0
   foreach ($constant in $balancednessInputs) {
@@ -727,8 +727,8 @@ if ($DeepReachability) {
   # The analytic root is the one place the budget is spent, and a probe that
   # only ever asserts absence would not notice if it stopped being spent there.
   $reached = 0
-  $analysisOutput = Run-Probe 'GameTheory.Analysis.Nash' @('stdSimplex', 'Polynomial')
-  foreach ($constant in @('stdSimplex', 'Polynomial')) {
+  $analysisOutput = Run-Probe 'GameTheory.Analysis.Nash' @('Convexity.StdSimplex', 'Polynomial')
+  foreach ($constant in @('Convexity.StdSimplex', 'Polynomial')) {
     if (-not (Is-Unreachable $analysisOutput $constant)) { $reached++ }
   }
   Report 'ANALYSIS_PROBES_REACHED' $reached
@@ -900,7 +900,7 @@ if ($DeepReachability) {
     'GameTheory.GameForm',
     'GameTheory.IsNash',
     'GameTheory.Protocol.ExecutionProtocol',
-    'stdSimplex')
+    'Convexity.StdSimplex')
   $gibbardCoreOutput = Run-Probe 'GameTheory.Core' $gibbardInputs
   $gibbardInputsReached = 0
   foreach ($constant in $gibbardInputs) {
@@ -936,7 +936,7 @@ if ($DeepReachability) {
     'GameTheory.IsNash',
     'GameTheory.Protocol.ExecutionProtocol',
     'GameTheory.Analysis.nash_exists',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial')
   $vnmCoreOutput = Run-Probe 'GameTheory.Core' $vnmInputs
   $vnmInputsReached = 0
@@ -992,8 +992,8 @@ if ($DeepReachability) {
   # `Polynomial` was an effective proxy for the fixed-point dependency when
   # EXP-031 ran, but public-monitoring rank now reaches it legitimately through
   # Mathlib's matrix-rank implementation. Probe the actual forbidden theorem
-  # instead, while retaining `stdSimplex` as the convex-analysis sentinel.
-  $repeatedAnalysisConstants = @('stdSimplex', 'kakutani_fixed_point')
+  # instead, while retaining `Convexity.StdSimplex` as the convex-analysis sentinel.
+  $repeatedAnalysisConstants = @('Convexity.StdSimplex', 'kakutani_fixed_point')
   $repeatedAnalysisRejected = 0
   foreach ($root in @(
       'GameTheory.Repeated.Basic',
@@ -1355,7 +1355,7 @@ if ($DeepReachability) {
     'GameTheory.IsNash',
     'GameTheory.Protocol.InformationModel',
     'GameTheory.Math.Probability.FinDistConvergesPointwise',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial')
   $epistemicOutput =
     Run-Probe 'GameTheory.Epistemic' ($epistemicInputs + $epistemicBoundary)
@@ -1384,7 +1384,7 @@ if ($DeepReachability) {
   $electronicMailBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
     'GameTheory.Analysis.nash_exists',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial')
   $electronicMailOutput = Run-Probe 'GameTheory.Examples.ElectronicMail' `
     ($electronicMailInputs + $electronicMailBoundary)
@@ -1424,7 +1424,7 @@ if ($DeepReachability) {
     'GameTheory.IsNash',
     'GameTheory.Protocol.ExecutionProtocol',
     'GameTheory.Analysis.nash_exists',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial')
   $evolutionaryBasicOutput = Run-Probe 'GameTheory.Evolutionary.Basic' `
     ($evolutionaryBasicInputs + $evolutionaryBasicBoundary)
@@ -1452,7 +1452,7 @@ if ($DeepReachability) {
   $evolutionaryBridgeBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
     'GameTheory.Analysis.nash_exists',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial')
   $evolutionaryBridgeOutput = Run-Probe 'GameTheory.Evolutionary' `
     ($evolutionaryBridgeInputs + $evolutionaryBridgeBoundary)
@@ -1495,7 +1495,7 @@ if ($DeepReachability) {
   $cheapTalkBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
     'GameTheory.Analysis.nash_exists',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial')
   $cheapTalkOutput =
     Run-Probe 'GameTheory.Core' ($cheapTalkInputs + $cheapTalkBoundary)
@@ -1522,7 +1522,7 @@ if ($DeepReachability) {
   $cheapTalkRandomizationBoundary = @(
     'GameTheory.Protocol.ExecutionProtocol',
     'GameTheory.Analysis.nash_exists',
-    'stdSimplex',
+    'Convexity.StdSimplex',
     'Polynomial')
   $cheapTalkRandomizationOutput =
     Run-Probe 'GameTheory.Core' `

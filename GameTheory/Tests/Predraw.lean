@@ -95,7 +95,6 @@ theorem opponent_has_both_answers (action : Bool) :
     choice false () action ∈ (profile false ()).support := by
   apply FinDist.prob_pos_iff.mp
   cases action <;> norm_num [profile, coin, FinDist.prob_pure_eq_ite, choice]
-  all_goals split_ifs <;> norm_num
 
 def firstHistory : rounds.History :=
   rounds.initHistory.extend

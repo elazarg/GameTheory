@@ -228,7 +228,7 @@ theorem integral_canonicalPathAverage_eq_marginal_sum
   classical
   by_cases hhorizon : horizon = 0
   · simp [hhorizon, canonicalPathAverage]
-  · simp only [canonicalPathAverage, if_neg hhorizon]
+  · simp only [canonicalPathAverage, ite_eq_right hhorizon]
     rw [integral_const_mul]
     rw [integral_finsetSum]
     · congr 1

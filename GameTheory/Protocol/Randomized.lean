@@ -60,7 +60,7 @@ theorem runRandomizedFor_of_terminal (chooser : E.RandomizedChooser) (fuel : ℕ
     (hterm : E.terminal h.state) : E.runRandomizedFor chooser fuel h = FinDist.pure h := by
   cases fuel with
   | zero => rfl
-  | succ fuel => rw [runRandomizedFor, dif_pos hterm]
+  | succ fuel => rw [runRandomizedFor, dite_eq_left hterm]
 
 theorem runRandomizedFor_succ_of_not_terminal (chooser : E.RandomizedChooser) (fuel : ℕ)
     {h : E.History} (hterm : ¬ E.terminal h.state) :
@@ -68,7 +68,7 @@ theorem runRandomizedFor_succ_of_not_terminal (chooser : E.RandomizedChooser) (f
       (chooser h hterm).bind fun draw =>
         (E.step h.state draw).bindOnSupport fun _ realized =>
           E.runRandomizedFor chooser fuel (h.extend draw.2 realized) := by
-  rw [runRandomizedFor, dif_neg hterm]
+  rw [runRandomizedFor, dite_eq_right hterm]
 
 /-- Running for `m + n` randomized history steps is running for `m` steps
 and then independently continuing for `n` more. -/

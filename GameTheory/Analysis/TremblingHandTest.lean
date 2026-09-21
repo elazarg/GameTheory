@@ -123,7 +123,7 @@ theorem weakMixedProfile_not_isTremblingHandPerfect :
   have hshiftedNonneg (n : ℕ) (action : Bool) :
       0 ≤ shiftedWeight n action := by
     cases action <;> simp only [shiftedWeight, Bool.false_eq_true,
-      if_false, if_true]
+      ite_false, ite_true]
     · exact (hequilibria n).1 0 false |>.le
     · linarith [hmassLe n, (hequilibria n).1 0 true]
   have hshiftedSum (n : ℕ) : ∑ action, shiftedWeight n action = 1 := by
@@ -137,7 +137,7 @@ theorem weakMixedProfile_not_isTremblingHandPerfect :
     rw [show (shifted n).prob action = shiftedWeight n action by
       exact FinDist.prob_ofWeights ..]
     cases action <;> simp only [shiftedWeight, Bool.false_eq_true,
-      if_false, if_true]
+      ite_false, ite_true]
     · exact le_rfl
     · linarith [hmassLe n]
   have hfalseEq (n : ℕ) :

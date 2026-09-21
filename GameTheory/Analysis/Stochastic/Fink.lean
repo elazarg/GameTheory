@@ -66,8 +66,7 @@ abbrev FinkAmbient : Type _ :=
   Profile G.finkSignature.weights × (G.State → ι → ℝ)
 
 /-- Product of the stationary mixed-action polytope and a bounded value cube. -/
-def finkDomain
-    [∀ player, Fintype (G.Action player)] (bound : ℝ) : Set G.FinkAmbient :=
+def finkDomain (bound : ℝ) : Set G.FinkAmbient :=
   mixedPolytope G.finkSignature ×ˢ
     Set.Icc (fun _ _ => -bound) (fun _ _ => bound)
 
@@ -93,14 +92,12 @@ theorem nonempty_finkDomain
   · constructor <;> intro state who <;> simp [hbound]
 
 /-- The real action weights at one state. -/
-def finkStateWeights
-    [∀ player, Fintype (G.Action player)] {bound : ℝ}
+def finkStateWeights {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) :
     Profile G.actionSignature.weights :=
   fun player => point.1.1 (state, player)
 
-theorem finkStateWeights_mem
-    [∀ player, Fintype (G.Action player)] {bound : ℝ}
+theorem finkStateWeights_mem {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) :
     G.finkStateWeights point state ∈ mixedPolytope G.actionSignature := by
   rw [mem_mixedPolytope]
@@ -123,8 +120,7 @@ theorem finkProfile_prob
     (G.finkStateWeights_mem point state)) who
 
 /-- Decode the continuation-value coordinate. -/
-def finkValue
-    [∀ player, Fintype (G.Action player)] {bound : ℝ}
+def finkValue {bound : ℝ}
     (point : G.finkDomain bound) : G.State → ι → ℝ :=
   point.1.2
 
@@ -240,13 +236,14 @@ theorem finkStrategyUpdate_mem [Fintype ι]
     (β : ℝ) {bound : ℝ} (point : G.finkDomain bound)
     (state : G.State) (who : ι) :
     (fun action => G.finkStrategyWeightUpdate β point state who action) ∈
-      stdSimplex ℝ (G.Action who) := by
+      simplexWeights (G.Action who) := by
+  rw [mem_simplexWeights]
   constructor
   · intro action
     apply div_nonneg
     · exact add_nonneg
-        (((mem_mixedPolytope G.actionSignature).1
-          (G.finkStateWeights_mem point state) who).1 action)
+        ((mem_simplexWeights.mp ((mem_mixedPolytope G.actionSignature).1
+          (G.finkStateWeights_mem point state) who)).1 action)
         (le_max_right _ _)
     · linarith [G.finkGainSum_nonneg β point state who]
   · have hden : 1 + G.finkGainSum β point state who ≠ 0 := by
@@ -255,8 +252,8 @@ theorem finkStrategyUpdate_mem [Fintype ι]
     rw [← Finset.sum_div, Finset.sum_add_distrib]
     rw [show ∑ action : G.Action who,
         G.finkStateWeights point state who action = 1 by
-      exact ((mem_mixedPolytope G.actionSignature).1
-        (G.finkStateWeights_mem point state) who).2]
+      exact (mem_simplexWeights.mp ((mem_mixedPolytope G.actionSignature).1
+        (G.finkStateWeights_mem point state) who)).2]
     exact div_self hden
 
 theorem continuous_finkAuxPayoff [Fintype G.State] [Fintype ι]

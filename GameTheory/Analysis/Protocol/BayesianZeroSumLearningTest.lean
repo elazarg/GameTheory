@@ -1273,7 +1273,7 @@ theorem learnedLaw_one_prob_pos_of_gain_pos (who : Fin 2) (ty : Bool)
         (Finset.mem_univ deviation)
     rw [max_eq_left hcoordinate.le] at hle
     exact lt_of_lt_of_le hcoordinate hle
-  rw [learnedLaw, regretMatch, dif_pos hsum, FinDist.prob_ofWeights]
+  rw [learnedLaw, regretMatch, dite_eq_left hsum, FinDist.prob_ofWeights]
   exact div_pos (by rw [max_eq_left hcoordinate.le]; exact hcoordinate) hsum
 
 theorem localGain_fallback_zero (who : Fin 2) (ty : Bool) :

@@ -36,7 +36,7 @@ theorem residualFloorCounts_ne {base k : κ} (hk : k ≠ base)
     (weight : κ → ℝ) (denominator : ℕ) :
     residualFloorCounts base weight denominator k =
       ⌊(denominator : ℝ) * weight k⌋₊ := by
-  rw [residualFloorCounts, if_neg hk]
+  rw [residualFloorCounts, ite_eq_right hk]
 
 theorem sum_floor_erase_le_denominator (base : κ) {weight : κ → ℝ}
     (hweight : ∀ k, 0 ≤ weight k) (hsum : ∑ k, weight k = 1)

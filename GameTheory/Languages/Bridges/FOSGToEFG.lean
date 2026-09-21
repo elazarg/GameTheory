@@ -169,7 +169,7 @@ theorem retreat_advance [DecidableEq ι] {history : History G} {count : ℕ}
       intro heq
       subst player
       simp at hselected
-    simp only [retreat, if_pos hselected, advance, hplayer, dite_false]
+    simp only [retreat, ite_eq_left hselected, advance, hplayer, dite_false]
   · have hnone : collected.choices player = none := by
       apply Option.not_isSome_iff_eq_none.mp
       simpa [collected.selected_iff] using hselected
@@ -809,13 +809,13 @@ theorem menu_adequate [DecidableEq ι]
             player = scheduledPlayer G order collected hcount
         · subst player
           simp only [menu, viewOfState,
-            phaseOfState_select G order collected hcount, if_pos,
+            phaseOfState_select G order collected hcount, ite_eq_left,
             State.history]
           rw [G.information.menu_adequate]
           exact (legalOption_scheduled G order collected hcount choice).symm
         · simp only [menu, viewOfState,
             phaseOfState_select G order collected hcount, howner,
-            if_false, Set.mem_singleton_iff]
+            ite_false, Set.mem_singleton_iff]
           cases choice <;>
             simp [LegalOption, execution, active, hcount, howner,
               State.history]
@@ -1372,7 +1372,7 @@ private theorem map_erase_runBehavioralFrom_resolve [Fintype ι] [DecidableEq ι
       rw [ExecutionProtocol.runRandomizedFor_zero, FinDist.map_pure]
       rfl)]
   rw [← FinDist.map_eq_bind]
-  rw [dif_neg (Nat.lt_irrefl order.slots)]
+  rw [dite_eq_right (Nat.lt_irrefl order.slots)]
   show FinDist.map (fun state : State G order => state.history)
       (resolve G order collected hterm) =
     extendCompletedLaw G order collected hterm
@@ -1450,7 +1450,7 @@ private theorem map_erase_runBehavioralFrom_stage
               actualView hview choice)).support := by
         simpa only using realized
       simp only [execution] at realized'
-      rw [dif_pos hslot, FinDist.mem_support_pure] at realized'
+      rw [dite_eq_left hslot, FinDist.mem_support_pure] at realized'
       subst state
       rw [← choiceOfJoint_targetJointOfViewChoice G order collected
         hslot hterm actualView hview choice]
@@ -1539,7 +1539,7 @@ private theorem advance_matches_setOne [DecidableEq ι]
     rw [show (collected.advance hslot choice).choices
           (scheduledPlayer G order collected hslot) = some choice by
         simp [advance, scheduledPlayer]]
-    rw [if_pos hnext, hset]
+    rw [ite_eq_left hnext, hset]
   · have howner' :
         player ≠ order.player ⟨count, hslot⟩ := by
       simpa [scheduledPlayer] using howner
@@ -1852,7 +1852,7 @@ private theorem state_of_mem_runBehavioralFrom_stage
             (.stage history order.slots collected) draw).support := by
         simpa only using hstate
       simp only [execution] at hstate'
-      rw [dif_neg (Nat.lt_irrefl order.slots)] at hstate'
+      rw [dite_eq_right (Nat.lt_irrefl order.slots)] at hstate'
       rw [mem_support_resolve_iff] at hstate'
       rcases hstate' with ⟨sourceState, realized, rfl⟩
       exact ⟨history.extend (collected.joint_legal draw.2.1) realized, rfl⟩
@@ -1878,7 +1878,7 @@ private theorem state_of_mem_runBehavioralFrom_stage
             (.stage history count collected) draw).support := by
         simpa only using hstate
       simp only [execution] at hstate'
-      rw [dif_pos hslot, FinDist.mem_support_pure] at hstate'
+      rw [dite_eq_left hslot, FinDist.mem_support_pure] at hstate'
       subst state
       exact ih (count + 1) (by omega)
         (collected.advance hslot

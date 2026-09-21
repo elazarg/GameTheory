@@ -6,7 +6,7 @@ real-arithmetic facts used by an eventual allocation model; they make no
 dominance or equilibrium claim by themselves.
 -/
 
-import Mathlib.Data.Real.Basic
+import Mathlib.Basic.Real.Basic
 import Mathlib.Tactic.Linarith
 
 namespace GameTheory.Mechanism.Auction

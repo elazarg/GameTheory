@@ -198,7 +198,7 @@ theorem holder_eq_of_isBest
   obtain ⟨held, hheld⟩ :
       ∃ held, market.holder linear rejected right = some held := by
     unfold holder
-    rw [dif_pos hne]
+    rw [dite_eq_left hne]
     exact ⟨_, rfl⟩
   obtain ⟨hheldMem, hheldBest⟩ := market.holder_spec linear hheld
   have heq : held = left := Option.some.inj <|
@@ -368,7 +368,7 @@ theorem topChoice_eq_of_isBest
   obtain ⟨chosen, hchosen⟩ :
       ∃ chosen, market.topChoice linear rejected left = some chosen := by
     unfold topChoice
-    rw [dif_pos hne]
+    rw [dite_eq_left hne]
     exact ⟨_, rfl⟩
   obtain ⟨hchosenMem, hchosenBest⟩ := market.topChoice_spec linear hchosen
   have heq : chosen = right := Option.some.inj <|
@@ -510,7 +510,7 @@ theorem no_blocking_at_fixedPoint
     obtain ⟨current, hcurrent⟩ : ∃ current,
         market.topChoice linear rejected left = some current := by
       unfold topChoice
-      rw [dif_pos ⟨right, havailable⟩]
+      rw [dite_eq_left ⟨right, havailable⟩]
       exact ⟨_, rfl⟩
     have hleftCurrent : Preference.strict market.prefersLeft left
         (some right) (some current) := by

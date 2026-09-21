@@ -126,8 +126,9 @@ local instance fairProtocolBehavioral_isProbability :
     (M := offPathGame.perfectMonitoring false) fairProtocolBehavioral
 
 local instance correlatedPolicyMeasure_isProbability :
-    IsProbabilityMeasure correlatedPolicyMeasure :=
-  Measure.isProbabilityMeasure_map correlateFirstTwo_measurable.aemeasurable
+    IsProbabilityMeasure correlatedPolicyMeasure := by
+  unfold correlatedPolicyMeasure
+  infer_instance
 
 /-- The transformation really enforces the advertised correlation. -/
 theorem correlateFirstTwo_agree

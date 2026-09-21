@@ -196,13 +196,13 @@ theorem runFor_of_terminal (chooser : E.Chooser) (fuel : ℕ) {state : E.State}
     (hterm : E.terminal state) : E.runFor chooser fuel state = FinDist.pure state := by
   cases fuel with
   | zero => rfl
-  | succ fuel => rw [runFor, dif_pos hterm]
+  | succ fuel => rw [runFor, dite_eq_left hterm]
 
 theorem runFor_succ_of_not_terminal (chooser : E.Chooser) (fuel : ℕ) {state : E.State}
     (hterm : ¬ E.terminal state) :
     E.runFor chooser (fuel + 1) state =
       (E.step state (chooser state hterm)).bind (E.runFor chooser fuel) := by
-  rw [runFor, dif_neg hterm]
+  rw [runFor, dite_eq_right hterm]
 
 /-- A chance state is stepped through, not stopped at. -/
 theorem runFor_succ_of_chance (chooser : E.Chooser) (fuel : ℕ) {state : E.State}

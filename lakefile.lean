@@ -15,7 +15,7 @@ abbrev gameTheoryLeanOptions : Array LeanOption := #[
 ]
 
 package GameTheory where
-  version := v!"4.33.1"
+  version := v!"4.34.0"
   description :=
     "Formalized game theory: static forms, sequential execution protocols, \
     information models, mechanisms, and the standard equilibrium concepts."
@@ -27,14 +27,14 @@ package GameTheory where
   lintDriver := "batteries/runLinter"
   lintDriverArgs := #["GameTheory.LintAll"]
 
-require "leanprover-community" / "mathlib" @ git "v4.33.1"
+require "leanprover-community" / "mathlib" @ git "v4.34.0"
 
 /-- Brouwer's and Kakutani's fixed-point theorems, which Mathlib does not carry.
 Only the analytic root may import from it; the semantic core and the sequential
 layer are kept free of it, and that separation is checked rather than trusted. -/
 require «fixed-point-theorems» from git
   "https://github.com/elazarg/fixed-point-theorems-lean4" @
-    "8506daa06b98520a97e36a90abe7c314d53af626"
+    "d9c3aba7340f21a13df59c61d92bfe9622e40da2"
 
 /-- The public library target. `andSubmodules` makes `lake build` a real phase
 gate: examples, architecture tests, and experiments must compile too. -/

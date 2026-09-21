@@ -230,7 +230,7 @@ theorem isBayesCorrelatedEq_iff_interim_obedience
             {(witness.1 who, witness.2 who)},
           rec ∈ recommendation.support :=
       ⟨witness, Set.mem_preimage.mpr (Set.mem_singleton _), hwitness⟩
-    rw [FinDist.condOnFibre, dif_pos hfibre]
+    rw [FinDist.condOnFibre, dite_eq_left hfibre]
     calc
       (recommendation.condOn
           (B.obedienceEvent who (witness.1 who) (witness.2 who))

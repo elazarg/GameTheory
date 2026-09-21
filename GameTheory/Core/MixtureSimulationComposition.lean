@@ -63,7 +63,7 @@ def transOn
     have hconsidered := hsupported alternative halternative
     have hlaw := Classical.choose_spec
       (left.deviation_mixture profile who alternative hconsidered)
-    simpa only [sourceAlternatives, dif_pos hconsidered] using hlaw
+    simpa only [sourceAlternatives, dite_eq_left hconsidered] using hlaw
 
 /-- Composition when every middle strategy is considered by the left
 simulation. Any deviation mixture supplied by the right simulation can then

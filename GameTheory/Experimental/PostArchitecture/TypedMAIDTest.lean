@@ -335,8 +335,8 @@ theorem afterChance_not_complete :
 theorem run_two_responsive :
     run diagram semantics responsive 2 initial =
       FinDist.pure completeResponsive := by
-  rw [run, if_neg initial_not_complete, step_initial responsive,
-    FinDist.pure_bind, run, if_neg afterChance_not_complete,
+  rw [run, ite_eq_right initial_not_complete, step_initial responsive,
+    FinDist.pure_bind, run, ite_eq_right afterChance_not_complete,
     step_afterChance, FinDist.pure_bind, run]
 
 theorem decisions_commit_together :
@@ -426,8 +426,8 @@ theorem step_afterChance_constantFalse :
 theorem run_two_constantFalse :
     run diagram semantics (constant false) 2 initial =
       FinDist.pure completeConstantFalse := by
-  rw [run, if_neg initial_not_complete, step_initial (constant false),
-    FinDist.pure_bind, run, if_neg afterChance_not_complete,
+  rw [run, ite_eq_right initial_not_complete, step_initial (constant false),
+    FinDist.pure_bind, run, ite_eq_right afterChance_not_complete,
     step_afterChance_constantFalse, FinDist.pure_bind, run]
 
 theorem completeConstantFalse_left_value :
@@ -514,8 +514,8 @@ theorem step_afterChance_constantTrue :
 theorem run_two_constantTrue :
     run diagram semantics (constant true) 2 initial =
       FinDist.pure completeConstantTrue := by
-  rw [run, if_neg initial_not_complete, step_initial (constant true),
-    FinDist.pure_bind, run, if_neg afterChance_not_complete,
+  rw [run, ite_eq_right initial_not_complete, step_initial (constant true),
+    FinDist.pure_bind, run, ite_eq_right afterChance_not_complete,
     step_afterChance_constantTrue, FinDist.pure_bind, run]
 
 theorem completeConstantTrue_left_value :

@@ -74,7 +74,7 @@ theorem bind_matching_summaries_ignores_unreachable_branches :
     simpa [twoPointNat] using
       (FinDist.mem_support_mix_pure_iff (1 / 2) (by norm_num) (by norm_num)
         (by norm_num) (by norm_num) 1 2 n).mp hn
-  rw [if_pos hreachable]
+  rw [ite_eq_left hreachable]
 
 theorem projection_identity {ι : Type*} [Fintype ι] {A : ι → Type*}
     (laws : ∀ i, FinDist (A i)) :

@@ -73,18 +73,18 @@ theorem prob_joint [DecidableEq State] [DecidableEq Message]
     funext state'
     by_cases hstate : state = state'
     · subst state'
-      rw [if_pos rfl]
+      rw [ite_eq_left rfl]
       exact FinDist.prob_map_of_injective
         (fun message' => (state, message'))
         (fun _ _ h => (Prod.mk.inj h).2) (S.kernel state) message
-    · rw [if_neg hstate, FinDist.prob_map]
+    · rw [ite_eq_right hstate, FinDist.prob_map]
       calc
         (S.kernel state').expect
               (fun message' => if (state, message) = (state', message') then 1 else 0) =
             (S.kernel state').expect (fun _ => 0) := by
           apply FinDist.expect_congr
           intro message' _
-          rw [if_neg fun hpair => hstate (congrArg Prod.fst hpair)]
+          rw [ite_eq_right fun hpair => hstate (congrArg Prod.fst hpair)]
         _ = 0 := FinDist.expect_const (S.kernel state') 0]
   exact FinDist.expect_ite_eq prior state ((S.kernel state).prob message)
 

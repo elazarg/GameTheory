@@ -474,7 +474,7 @@ private theorem componentPolicy_apply_of_ne_source
   unfold componentPolicy
   by_cases hselector : selector = 0
   · simp [hselector]
-  · simp only [hselector, if_false, baselinePolicy]
+  · simp only [hselector, ite_false, baselinePolicy]
     by_cases howner : otherOwner = owner
     · subst otherOwner
       rw [Profile.update_same, Profile.update_same]

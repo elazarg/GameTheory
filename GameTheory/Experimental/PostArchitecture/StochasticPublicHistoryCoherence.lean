@@ -255,7 +255,6 @@ theorem live_first_action_differs :
   have hprob := congrArg (fun law => law.prob true) h
   norm_num [livePublicProfile, publicProfile, firstActions,
     FinDist.prob_pure_eq_ite] at hprob
-  exact Bool.noConfusion hprob
 
 end HostileFixture
 

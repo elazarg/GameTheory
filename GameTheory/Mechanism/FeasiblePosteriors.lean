@@ -55,18 +55,18 @@ theorem prob_coupling [DecidableEq State] (law : PosteriorLaw State)
     funext belief'
     by_cases hbelief : belief = belief'
     · subst belief'
-      rw [if_pos rfl]
+      rw [ite_eq_left rfl]
       exact FinDist.prob_map_of_injective
         (fun state' => (state', belief))
         (fun _ _ h => (Prod.mk.inj h).1) belief state
-    · rw [if_neg hbelief, FinDist.prob_map]
+    · rw [ite_eq_right hbelief, FinDist.prob_map]
       calc
         belief'.expect
               (fun state' => if (state, belief) = (state', belief') then 1 else 0) =
             belief'.expect (fun _ => 0) := by
           apply FinDist.expect_congr
           intro state' _
-          rw [if_neg fun hpair => hbelief (congrArg Prod.snd hpair)]
+          rw [ite_eq_right fun hpair => hbelief (congrArg Prod.snd hpair)]
         _ = 0 := FinDist.expect_const belief' 0]
   exact FinDist.expect_ite_eq law belief (belief.prob state)
 

@@ -12,7 +12,7 @@ Conditions for Simple Majority Decision,” *Econometrica* 20 (1952).
 
 import GameTheory.Core.Rank
 import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Data.Sign.Basic
+import Mathlib.Basic.Sign.Basic
 import Mathlib.Tactic.Order
 
 namespace GameTheory.May
@@ -121,12 +121,12 @@ theorem exists_neg_perm (ballot : Voter → SignType)
     intro voter
     dsimp only [swap]
     by_cases hpos : ballot voter = 1
-    · rw [dif_pos hpos, hpos, (exchange ⟨voter, hpos⟩).2]
-    · rw [dif_neg hpos]
+    · rw [dite_eq_left hpos, hpos, (exchange ⟨voter, hpos⟩).2]
+    · rw [dite_eq_right hpos]
       by_cases hneg : ballot voter = -1
-      · rw [dif_pos hneg, hneg, (exchange.symm ⟨voter, hneg⟩).2]
+      · rw [dite_eq_left hneg, hneg, (exchange.symm ⟨voter, hneg⟩).2]
         decide
-      · rw [dif_neg hneg]
+      · rw [dite_eq_right hneg]
         have hzero : ballot voter = 0 := by
           revert hpos hneg
           cases ballot voter <;> decide
@@ -143,7 +143,7 @@ theorem exists_neg_perm (ballot : Voter → SignType)
     by_cases hpos : ballot voter = 1
     · have hswap : swap voter = (exchange ⟨voter, hpos⟩ : Voter) := by
         rw [hdefinition]
-        exact dif_pos hpos
+        exact dite_eq_left hpos
       have hnegative : ballot (swap voter) = -1 := by
         rw [hswap]
         exact (exchange ⟨voter, hpos⟩).2
@@ -153,8 +153,8 @@ theorem exists_neg_perm (ballot : Voter → SignType)
       have htwice :
           swap (swap voter) =
             (exchange.symm ⟨swap voter, hnegative⟩ : Voter) := by
-        rw [hdefinition (swap voter), dif_neg hnotpositive,
-          dif_pos hnegative]
+        rw [hdefinition (swap voter), dite_eq_right hnotpositive,
+          dite_eq_left hnegative]
       have hinverse : exchange.symm ⟨swap voter, hnegative⟩ =
           ⟨voter, hpos⟩ :=
         exchange.symm_apply_eq.mpr (Subtype.ext hswap)
@@ -162,13 +162,13 @@ theorem exists_neg_perm (ballot : Voter → SignType)
     · by_cases hneg : ballot voter = -1
       · have hswap : swap voter =
             (exchange.symm ⟨voter, hneg⟩ : Voter) := by
-          rw [hdefinition, dif_neg hpos, dif_pos hneg]
+          rw [hdefinition, dite_eq_right hpos, dite_eq_left hneg]
         have hpositive : ballot (swap voter) = 1 := by
           rw [hswap]
           exact (exchange.symm ⟨voter, hneg⟩).2
         have htwice : swap (swap voter) =
             (exchange ⟨swap voter, hpositive⟩ : Voter) := by
-          rw [hdefinition (swap voter), dif_pos hpositive]
+          rw [hdefinition (swap voter), dite_eq_left hpositive]
         have hsubtype : (⟨swap voter, hpositive⟩ :
             {voter // ballot voter = 1}) = exchange.symm ⟨voter, hneg⟩ :=
           Subtype.ext hswap
@@ -180,7 +180,7 @@ theorem exists_neg_perm (ballot : Voter → SignType)
           revert hpos hneg
           cases ballot voter <;> decide
         have hswap : swap voter = voter := by
-          rw [hdefinition, dif_neg hpos, dif_neg hneg]
+          rw [hdefinition, dite_eq_right hpos, dite_eq_right hneg]
         rw [hswap, hswap]
   exact ⟨hinvolutive.toPerm swap, hvalue⟩
 
@@ -227,7 +227,7 @@ theorem eq_one_of_tally_pos {rule : (Voter → SignType) → SignType}
     have hpositive : ballot witness = 1 :=
       (Finset.mem_filter.mp (hsubset hwitness)).2
     have hvalue : tie witness = ballot witness := by rw [heq]
-    simp only [tie, if_pos hwitness, hpositive] at hvalue
+    simp only [tie, ite_eq_left hwitness, hpositive] at hvalue
     exact absurd hvalue (by decide)
   have htie : tally tie = 0 := by
     have hdifference : ∀ voter,
@@ -237,9 +237,9 @@ theorem eq_one_of_tally_pos {rule : (Voter → SignType) → SignType}
       by_cases hmem : voter ∈ shifted
       · have hpositive : ballot voter = 1 :=
           (Finset.mem_filter.mp (hsubset hmem)).2
-        simp only [tie, if_pos hmem, hpositive]
+        simp only [tie, ite_eq_left hmem, hpositive]
         decide
-      · simp only [tie, if_neg hmem, sub_self]
+      · simp only [tie, ite_eq_right hmem, sub_self]
     have hsum : tally ballot - tally tie = (shifted.card : ℤ) := by
       simp only [tally]
       rw [← Finset.sum_sub_distrib,

@@ -342,7 +342,7 @@ theorem run_of_complete [Fintype Node] [DecidableEq Node]
     run diagram semantics policy fuel state = FinDist.pure state := by
   cases fuel with
   | zero => rfl
-  | succ fuel => rw [run, if_pos hcomplete]
+  | succ fuel => rw [run, ite_eq_left hcomplete]
 
 /-- One step per node is a uniform completion bound. A frontier may resolve
 several nodes, so the actual run can finish earlier. -/
@@ -370,10 +370,10 @@ theorem run_complete_of_remaining_le
   | succ fuel ih =>
       intro reached hreached
       by_cases hcomplete : state.IsComplete
-      · rw [run, if_pos hcomplete,
+      · rw [run, ite_eq_left hcomplete,
           FinDist.mem_support_pure] at hreached
         simpa [hreached] using hcomplete
-      · rw [run, if_neg hcomplete,
+      · rw [run, ite_eq_right hcomplete,
           FinDist.support_bind] at hreached
         obtain ⟨next, hnext⟩ := Set.mem_iUnion.mp hreached
         obtain ⟨hnextStep, hnextRun⟩ :=

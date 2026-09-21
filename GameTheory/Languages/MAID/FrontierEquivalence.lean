@@ -581,9 +581,9 @@ theorem map_values_run_eq_assignmentRun_unresolved
       · have hremaining :
             unresolvedOrder topological state = [] := by
           simp [unresolvedOrder, hcomplete]
-        rw [GameTheory.Languages.MAID.run, if_pos hcomplete, FinDist.map_pure,
+        rw [GameTheory.Languages.MAID.run, ite_eq_left hcomplete, FinDist.map_pure,
           hremaining, assignmentRun]
-      · rw [GameTheory.Languages.MAID.run, if_neg hcomplete, FinDist.map_bind]
+      · rw [GameTheory.Languages.MAID.run, ite_eq_right hcomplete, FinDist.map_bind]
         calc
           (GameTheory.Languages.MAID.step diagram semantics policy state).bind
               (fun next =>

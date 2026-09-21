@@ -67,21 +67,16 @@ theorem third_not_strictlyDominatedByPure (preferred : Fin 3) :
     rw [euPreference_strict_iff] at h
     norm_num [mixedDominanceGame, rowPayoff, atColumn,
       expectedUtility_pure] at h
-    simp at h
-    linarith
   · intro hdom
     have h := hdom (atColumn 0) (fun _ => Set.mem_univ _)
     rw [euPreference_strict_iff] at h
     norm_num [mixedDominanceGame, rowPayoff, atColumn,
       expectedUtility_pure] at h
-    simp at h
-    linarith
   · intro hdom
     have h := hdom (atColumn 0) (fun _ => Set.mem_univ _)
     rw [euPreference_strict_iff] at h
     norm_num [mixedDominanceGame, rowPayoff, atColumn,
       expectedUtility_pure] at h
-    simp at h
 
 /-- The third action survives the first pure-elimination round. -/
 theorem third_mem_pureSurvivors_one :
@@ -318,8 +313,6 @@ theorem expectedUtility_action_two (beliefs : Profile sig.mixed) :
     Bool.not_false]
   rw [probFalse, probFalse]
   norm_num [utility, focalPayoff, probTrue]
-  simp only [if_neg (by decide : (2 : Fin 3) ≠ 0),
-    if_neg (by decide : (2 : Fin 3) ≠ 1)]
   ring
 
 theorem expectedUtility_action_zero (beliefs : Profile sig.mixed) :

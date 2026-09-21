@@ -55,7 +55,7 @@ private theorem pivotOffset_highOpponent :
         if (1 : Fin 2) ∈ selected then 3 else 0 := by
     unfold welfare aggregate
     by_cases hone : (1 : Fin 2) ∈ selected
-    · rw [if_pos hone, ← Finset.add_sum_erase selected _ hone]
+    · rw [ite_eq_left hone, ← Finset.add_sum_erase selected _ hone]
       simp only [highOpponentReport]
       have hzero :
           (∑ x ∈ selected.erase 1,
@@ -68,7 +68,7 @@ private theorem pivotOffset_highOpponent :
         fin_cases who <;> simp_all
       rw [hzero]
       norm_num
-    · rw [if_neg hone]
+    · rw [ite_eq_right hone]
       apply Finset.sum_eq_zero
       intro who hwho
       fin_cases who <;> simp_all [highOpponentReport]
@@ -77,13 +77,13 @@ private theorem pivotOffset_highOpponent :
     hwelfare (welfareMaximizer unitCapacityData highOpponentReport Finset.univ
       unitCapacity_nonnegative)] at hge
   rw [hwelfare]
-  simp only [Finset.mem_singleton, if_true] at hge
+  simp only [Finset.mem_singleton, ite_true] at hge
   by_cases hchosen :
       (1 : Fin 2) ∈
         welfareMaximizer unitCapacityData highOpponentReport Finset.univ
           unitCapacity_nonnegative
-  · rw [if_pos hchosen]
-  · rw [if_neg hchosen] at hge
+  · rw [ite_eq_left hchosen]
+  · rw [ite_eq_right hchosen] at hge
     norm_num at hge
 
 example (replacement : ℝ) :

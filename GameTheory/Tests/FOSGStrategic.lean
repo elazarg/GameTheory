@@ -144,7 +144,7 @@ theorem allTrue_isNash :
         | finished actions =>
             cases who <;>
               simp only [sourceUtility, utilityOfOutcome, outcomeOfState,
-                outcomeUtility, Bool.false_eq_true, if_false, if_true]
+                outcomeUtility, Bool.false_eq_true, ite_false, ite_true]
             · split <;> norm_num
             · split <;> norm_num
     _ = expectedUtility sourceUtility who

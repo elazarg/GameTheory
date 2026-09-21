@@ -294,7 +294,7 @@ theorem bindOnSupport_map (law : FinDist α) (f : α → β)
       next value supported = total value := by
     intro value supported
     dsimp only [total]
-    rw [dif_pos supported]
+    rw [dite_eq_left supported]
   rw [bindOnSupport_eq_bind_of_eq_on_support agrees, bind_map]
   symm
   apply bindOnSupport_eq_bind_of_eq_on_support
@@ -842,7 +842,7 @@ theorem prob_bind_of_unique_branch (law : FinDist α) (branch : α → FinDist �
   by_cases heq : selected = value
   · subst value
     simp only [↓reduceIte]
-  · rw [if_neg heq, prob_eq_zero_iff]
+  · rw [ite_eq_right heq, prob_eq_zero_iff]
     exact fun hbranch => heq (hunique value hvalue hbranch).symm
 
 /-- An injective pushforward carries each mass to its image untouched. -/
@@ -862,11 +862,11 @@ theorem prob_product [DecidableEq α] [DecidableEq β] (μ : FinDist α) (ν : F
   · exact expect_ite_eq μ p.1 (ν.prob p.2)
   · by_cases h : p.1 = a
     · subst h
-      rw [if_pos rfl, show p = ((fun b => (p.1, b)) p.2) from rfl,
+      rw [ite_eq_left rfl, show p = ((fun b => (p.1, b)) p.2) from rfl,
         prob_map_of_injective _ (fun x y hxy => (Prod.mk.inj hxy).2) ν p.2]
-    · rw [if_neg h, prob_map,
+    · rw [ite_eq_right h, prob_map,
         show (fun b => if p = (a, b) then (1:ℝ) else 0) = fun _ => (0:ℝ) from
-          funext fun b => if_neg fun hcontra => h (congrArg Prod.fst hcontra),
+          funext fun b => ite_eq_right fun hcontra => h (congrArg Prod.fst hcontra),
         expect_const]
 
 /-- Tagging the output of a dependent kernel retains exactly the selected
@@ -888,11 +888,11 @@ theorem prob_bind_map_prod
       intro candidate _
       by_cases h : a = candidate
       · subst candidate
-        rw [if_pos rfl]
+        rw [ite_eq_left rfl]
         exact prob_map_of_injective
           (fun value => (a, value)) (fun _ _ hxy => (Prod.mk.inj hxy).2)
           (kernel a) b
-      · rw [if_neg h, prob_eq_zero_iff]
+      · rw [ite_eq_right h, prob_eq_zero_iff]
         intro hsupport
         rw [support_map] at hsupport
         obtain ⟨value, _, hvalue⟩ := hsupport
@@ -1006,8 +1006,8 @@ theorem prob_condOn (μ : FinDist α) (S : Set α) (hmeet : ∃ a ∈ S, a ∈ �
   show (S.indicator μ.toPMF a / massOf μ S).toReal = _
   rw [div_eq_mul_inv, ENNReal.toReal_mul, ENNReal.toReal_inv]
   by_cases haS : a ∈ S
-  · rw [if_pos haS, Set.indicator_of_mem haS, probOf, div_eq_mul_inv, prob_def]
-  · rw [if_neg haS, Set.indicator_of_notMem haS]
+  · rw [ite_eq_left haS, Set.indicator_of_mem haS, probOf, div_eq_mul_inv, prob_def]
+  · rw [ite_eq_right haS, Set.indicator_of_notMem haS]
     simp
 
 theorem support_condOn (μ : FinDist α) (S : Set α) (hmeet : ∃ a ∈ S, a ∈ μ.support) :
@@ -1017,13 +1017,13 @@ theorem support_condOn (μ : FinDist α) (S : Set α) (hmeet : ∃ a ∈ S, a �
   have hpos : 0 < (μ.condOn S hmeet).prob a := prob_pos_iff.mpr ha
   rw [prob_condOn] at hpos
   by_cases haS : a ∈ S
-  · rw [if_pos haS] at hpos
+  · rw [ite_eq_left haS] at hpos
     refine ⟨haS, prob_pos_iff.mp ?_⟩
     rcases (prob_nonneg μ a).lt_or_eq with hlt | hzero
     · exact hlt
     · rw [← hzero, zero_div] at hpos
       exact absurd hpos (lt_irrefl 0)
-  · rw [if_neg haS] at hpos
+  · rw [ite_eq_right haS] at hpos
     exact absurd hpos (lt_irrefl 0)
 
 /-- Conditioning on everything changes nothing. -/
@@ -1035,7 +1035,7 @@ theorem condOn_univ (μ : FinDist α) (hmeet : ∃ a ∈ Set.univ, a ∈ μ.supp
     show (massOf μ Set.univ).toReal = 1
     rw [massOf]
     simp [μ.toPMF.tsum_coe]
-  rw [prob_condOn, if_pos (Set.mem_univ a), hmass, div_one]
+  rw [prob_condOn, ite_eq_left (Set.mem_univ a), hmass, div_one]
 
 theorem probOf_pure_self (a : α) (S : Set α) (ha : a ∈ S) :
     (pure a).probOf S = 1 := by
@@ -1055,8 +1055,8 @@ theorem condOn_pure (a : α) (S : Set α) (hmeet : ∃ b ∈ S, b ∈ (pure a).s
   refine ext_of_prob fun x => ?_
   rw [prob_condOn, probOf_pure_self b S hbS, div_one]
   by_cases hxS : x ∈ S
-  · rw [if_pos hxS]
-  · rw [if_neg hxS, prob_pure_eq_ite, if_neg]
+  · rw [ite_eq_left hxS]
+  · rw [ite_eq_right hxS, prob_pure_eq_ite, ite_eq_right]
     exact fun hxb => hxS (by rw [hxb]; exact hbS)
 
 private theorem massOf_eq_one_of_support_subset {μ : FinDist α} {S : Set α}
@@ -1118,7 +1118,7 @@ theorem mem_support_condOn (μ : FinDist α) (S : Set α) (hmeet : ∃ a ∈ S, 
     {a : α} (haS : a ∈ S) (ha : a ∈ μ.support) : a ∈ (μ.condOn S hmeet).support := by
   classical
   refine prob_pos_iff.mp ?_
-  rw [prob_condOn, if_pos haS]
+  rw [prob_condOn, ite_eq_left haS]
   exact div_pos (prob_pos_iff.mpr ha) (probOf_pos hmeet)
 
 /-- Conditioning depends on the event, not on the proof that it has mass. -/
@@ -1148,14 +1148,14 @@ theorem condOn_condOn (μ : FinDist α) {C D : Set α} (hC : ∃ a ∈ C, a ∈ 
   refine ext_of_prob fun a => ?_
   rw [prob_condOn, prob_condOn, prob_condOn, probOf_condOn hC hDC]
   by_cases haD : a ∈ D
-  · rw [if_pos haD, if_pos haD]
+  · rw [ite_eq_left haD, ite_eq_left haD]
     by_cases hasupp : a ∈ μ.support
-    · rw [if_pos (hDC ⟨haD, hasupp⟩)]
+    · rw [ite_eq_left (hDC ⟨haD, hasupp⟩)]
       have hc := (probOf_pos hC).ne'
       have hd := (probOf_pos hD).ne'
       field_simp
     · simp [prob_eq_zero_iff.mpr hasupp]
-  · rw [if_neg haD, if_neg haD]
+  · rw [ite_eq_right haD, ite_eq_right haD]
 
 /-- An event's mass is the expectation of its indicator, which is how a
 conditioning meets the real-valued interface. -/
@@ -1165,8 +1165,8 @@ theorem expect_indicator_eq_probOf (μ : FinDist α) (S : Set α) [DecidablePred
   rw [massOf, ENNReal.tsum_toReal_eq fun a => ?_]
   · refine tsum_congr fun a => ?_
     by_cases haS : a ∈ S
-    · rw [if_pos haS, mul_one, Set.indicator_of_mem haS, prob_def]
-    · rw [if_neg haS, mul_zero, Set.indicator_of_notMem haS, ENNReal.toReal_zero]
+    · rw [ite_eq_left haS, mul_one, Set.indicator_of_mem haS, prob_def]
+    · rw [ite_eq_right haS, mul_zero, Set.indicator_of_notMem haS, ENNReal.toReal_zero]
   · by_cases haS : a ∈ S
     · rw [Set.indicator_of_mem haS]
       exact PMF.apply_ne_top _ _
@@ -1265,9 +1265,9 @@ theorem expect_condOn_eq_div_of_eq_zero_off (μ : FinDist α) (S : Set α)
   · refine Finset.sum_congr rfl fun a ha => ?_
     rw [prob_condOn]
     by_cases haS : a ∈ S
-    · rw [if_pos haS]
+    · rw [ite_eq_left haS]
       ring
-    · rw [if_neg haS, zero_mul, hzero a (mem_supportFinset.mp ha) haS, mul_zero]
+    · rw [ite_eq_right haS, zero_mul, hzero a (mem_supportFinset.mp ha) haS, mul_zero]
       simp
   · intro a ha
     apply mem_supportFinset.mpr
@@ -1315,10 +1315,10 @@ theorem eq_bind_condOnFibre (μ : FinDist α) (f : α → β) :
     · intro a ha
       by_cases hfa : a ∈ f ⁻¹' {f x}
       · have hfa' : f a = f x := hfa
-        rw [if_pos hfa, mul_one, condOnFibre, hfa', dif_pos hfibre, prob_condOn]
-        exact if_pos (Set.mem_preimage.mpr rfl)
-      · rw [if_neg hfa, mul_zero, condOnFibre, dif_pos ⟨a, Set.mem_preimage.mpr rfl, ha⟩,
-          prob_condOn, if_neg]
+        rw [ite_eq_left hfa, mul_one, condOnFibre, hfa', dite_eq_left hfibre, prob_condOn]
+        exact ite_eq_left (Set.mem_preimage.mpr rfl)
+      · rw [ite_eq_right hfa, mul_zero, condOnFibre, dite_eq_left ⟨a, Set.mem_preimage.mpr rfl, ha⟩,
+          prob_condOn, ite_eq_right]
         exact fun hmem => hfa (Set.mem_preimage.mpr (Set.mem_preimage.mp hmem).symm)
     · rw [expect_smul, expect_indicator_eq_probOf, div_mul_cancel₀ _ (probOf_pos hfibre).ne']
   · have hzero : μ.prob x = 0 := prob_eq_zero_iff.mpr hx
@@ -1374,17 +1374,17 @@ theorem ext_of_prob_on_support {first second : FinDist α}
     rw [tsum_eq_sum (s := first.supportFinset)]
     · simp only [onFirstSupport]
       rw [Finset.sum_congr rfl fun x hx => by
-        rw [if_pos (mem_supportFinset.mp hx), ← h x (mem_supportFinset.mp hx)]]
+        rw [ite_eq_left (mem_supportFinset.mp hx), ← h x (mem_supportFinset.mp hx)]]
       simpa only [mul_one] using sum_prob_supportFinset first
     · intro x hx
       dsimp only [onFirstSupport]
-      rw [if_neg (fun hmem => hx (mem_supportFinset.mpr hmem)), mul_zero]
+      rw [ite_eq_right (fun hmem => hx (mem_supportFinset.mpr hmem)), mul_zero]
   have hsupport : second.support ⊆ first.support := by
     intro x hx
     have hone := second.eq_of_expect_eq_of_le onFirstSupport 1
       (fun y _ => by simp only [onFirstSupport]; split <;> norm_num) hexpect hx
     by_contra hnot
-    simp only [onFirstSupport, if_neg hnot, zero_ne_one] at hone
+    simp only [onFirstSupport, ite_eq_right hnot, zero_ne_one] at hone
   apply ext_of_prob
   intro x
   by_cases hx : x ∈ first.support
@@ -1675,11 +1675,11 @@ theorem condOn_pi (μ : ∀ i, FinDist (A i)) (C : ∀ i, Set (A i))
   refine ext_of_prob fun s => ?_
   rw [prob_condOn, prob_pi, probOf_pi]
   by_cases hmem : ∀ i, s i ∈ C i
-  · rw [if_pos (show s ∈ { s | ∀ i, s i ∈ C i } from hmem), prob_pi, ← Finset.prod_div_distrib]
-    exact Finset.prod_congr rfl fun i _ => by rw [prob_condOn, if_pos (hmem i)]
+  · rw [ite_eq_left (show s ∈ { s | ∀ i, s i ∈ C i } from hmem), prob_pi, ← Finset.prod_div_distrib]
+    exact Finset.prod_congr rfl fun i _ => by rw [prob_condOn, ite_eq_left (hmem i)]
   · obtain ⟨i, hi⟩ := not_forall.mp hmem
-    rw [if_neg (show ¬ s ∈ { s | ∀ i, s i ∈ C i } from hmem), prob_pi,
-      Finset.prod_eq_zero (Finset.mem_univ i) (by rw [prob_condOn, if_neg hi])]
+    rw [ite_eq_right (show ¬ s ∈ { s | ∀ i, s i ∈ C i } from hmem), prob_pi,
+      Finset.prod_eq_zero (Finset.mem_univ i) (by rw [prob_condOn, ite_eq_right hi])]
 
 theorem support_pi_subset [DecidableEq ι] (μ : ∀ i, FinDist (A i)) :
     (pi μ).support ⊆ ↑(Fintype.piFinset fun i => (μ i).supportFinset) := by
@@ -1801,11 +1801,11 @@ theorem pi_map {B : ι → Type*} (f : ∀ i, A i → B i) (μ : ∀ i, FinDist 
   rw [prob_pi, Finset.prod_mul_distrib]
   refine congrArg _ ?_
   by_cases hall : ∀ i, t i = f i (s i)
-  · rw [if_pos (funext hall)]
-    exact Finset.prod_eq_one fun i _ => if_pos (hall i)
+  · rw [ite_eq_left (funext hall)]
+    exact Finset.prod_eq_one fun i _ => ite_eq_left (hall i)
   · obtain ⟨i, hi⟩ := not_forall.mp hall
-    rw [if_neg fun hcontra => hi (congrFun hcontra i)]
-    exact Finset.prod_eq_zero (Finset.mem_univ i) (if_neg hi)
+    rw [ite_eq_right fun hcontra => hi (congrFun hcontra i)]
+    exact Finset.prod_eq_zero (Finset.mem_univ i) (ite_eq_right hi)
 
 /-- **Independent draws of pairs are a pair of independent draws.** The two
 families are drawn independently of each other as well as across coordinates,

@@ -1143,7 +1143,7 @@ theorem menu_adequate (first player : Bool) {state : State first}
           by_cases howner : player = first
           · subst player
             simp only [menu, viewOfState, phaseOfState, State.history,
-              hstate, if_pos]
+              hstate, ite_eq_left]
             rw [Source.menu_adequate]
             exact (legalOption_boundary_owner first history choice).symm
           · cases choice <;>
@@ -1159,7 +1159,7 @@ theorem menu_adequate (first player : Bool) {state : State first}
           by_cases howner : player = !first
           · rw [howner]
             simp only [menu, viewOfState, phaseOfState, State.history,
-              hstate, if_pos]
+              hstate, ite_eq_left]
             rw [Source.menu_adequate]
             exact (legalOption_afterFirst_owner first history prior choice).symm
           · cases choice <;>
@@ -1391,7 +1391,7 @@ theorem project_translate (first player : Bool) (sourceView : Source.View)
         player sourceView =
       source player sourceView := by
   unfold projectBehavioral translateBehavioral
-  rw [dif_pos (by simp), FinDist.map_comp]
+  rw [dite_eq_left (by simp), FinDist.map_comp]
   show FinDist.map _ (source player sourceView) = source player sourceView
   convert FinDist.map_id (source player sourceView) using 1
   apply congrArg (fun f => FinDist.map f (source player sourceView))

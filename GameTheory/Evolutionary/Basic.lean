@@ -11,7 +11,7 @@ Primary reference: J. Maynard Smith and G. R. Price, “The Logic of Animal
 Conflict,” *Nature* 246 (1973).
 -/
 
-import Mathlib.Data.Real.Basic
+import Mathlib.Basic.Real.Basic
 
 namespace GameTheory.Evolutionary
 

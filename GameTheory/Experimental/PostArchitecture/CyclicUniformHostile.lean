@@ -537,7 +537,7 @@ theorem trace_valueSum_two_of_traceTrue :
       have hevent : hostileGame.eventUtility true event true = 2 := by
         simp only [eventUtility, hostileGame]
         dsimp only [event] at hrecord ⊢
-        rw [if_pos True.intro, if_pos ⟨hsource, hrecord⟩]
+        rw [ite_eq_left True.intro, ite_eq_left ⟨hsource, hrecord⟩]
       have hevent' : hostileGame.eventUtility true
           { source := _
             joint := joint

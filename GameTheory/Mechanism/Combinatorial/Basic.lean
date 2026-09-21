@@ -8,7 +8,7 @@ allocations.  It does not commit the core to an auction-specific outcome type.
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Finset.Lattice.Fold
 import Mathlib.Data.Finset.Powerset
-import Mathlib.Data.Real.Basic
+import Mathlib.Basic.Real.Basic
 
 namespace GameTheory.Mechanism.Combinatorial
 
@@ -233,20 +233,20 @@ noncomputable def giveResidualTo (i : ι) : Allocation ι A where
     · have hki : k ≠ i := by
         intro hk
         exact hjk (hji.trans hk.symm)
-      rw [if_pos hji, if_neg hki, Finset.disjoint_left]
+      rw [ite_eq_left hji, ite_eq_right hki, Finset.disjoint_left]
       intro x hx hxk
       simp only [residualAfterOpponents, Finset.mem_sdiff] at hx
       have hkOpp : k ∈ Finset.univ.filter fun j => j ≠ i :=
         Finset.mem_filter.mpr ⟨Finset.mem_univ k, hki⟩
       exact hx.2 (Finset.mem_biUnion.mpr ⟨k, hkOpp, hxk⟩)
     · by_cases hki : k = i
-      · rw [if_neg hji, if_pos hki, Finset.disjoint_left]
+      · rw [ite_eq_right hji, ite_eq_left hki, Finset.disjoint_left]
         intro x hxj hx
         simp only [residualAfterOpponents, Finset.mem_sdiff] at hx
         have hjOpp : j ∈ Finset.univ.filter fun j => j ≠ i :=
           Finset.mem_filter.mpr ⟨Finset.mem_univ j, hji⟩
         exact hx.2 (Finset.mem_biUnion.mpr ⟨j, hjOpp, hxj⟩)
-      · rw [if_neg hji, if_neg hki]
+      · rw [ite_eq_right hji, ite_eq_right hki]
         exact γ.pairwise_disjoint hjk
 
 @[simp]

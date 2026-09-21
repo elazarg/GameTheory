@@ -34,13 +34,13 @@ private theorem score_positive :
 
 theorem regretMatch_score_prob_zero :
     (regretMatch score).prob 0 = 1 / 4 := by
-  rw [regretMatch, dif_pos score_positive, FinDist.prob_ofWeights]
+  rw [regretMatch, dite_eq_left score_positive, FinDist.prob_ofWeights]
   rw [Fin.sum_univ_two]
   norm_num [score]
 
 theorem regretMatch_score_prob_one :
     (regretMatch score).prob 1 = 3 / 4 := by
-  rw [regretMatch, dif_pos score_positive, FinDist.prob_ofWeights]
+  rw [regretMatch, dite_eq_left score_positive, FinDist.prob_ofWeights]
   rw [Fin.sum_univ_two]
   norm_num [score]
 

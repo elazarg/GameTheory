@@ -96,6 +96,7 @@ structure MixtureSimulationOn {Player : Type uι} [DecidableEq Player]
     {Observation : Type uv} (sourceObserve : source.sig.Outcome → Observation)
     (targetObserve : target.sig.Outcome → Observation)
     (Considered : (who : Player) → target.sig.Strategy who → Prop) where
+  /-- Translate each player's source strategy into a target strategy. -/
   compileStrategy : (who : Player) → source.sig.Strategy who → target.sig.Strategy who
   honest_law : ∀ profile,
     (target.play (fun who => compileStrategy who (profile who))).map targetObserve =
@@ -117,6 +118,7 @@ variable {targetObserve : target.sig.Outcome → Observation}
 variable {Considered : (who : Player) → target.sig.Strategy who → Prop}
 variable (simulation : MixtureSimulationOn source target sourceObserve targetObserve Considered)
 
+/-- Translate a complete source profile player by player. -/
 def compileProfile (profile : Profile source.sig) : Profile target.sig :=
   Profile.map simulation.compileStrategy profile
 

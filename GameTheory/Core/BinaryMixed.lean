@@ -221,7 +221,7 @@ theorem mixedExpectedUtility_zero (mixedProfile : Profile F.sig.mixed) :
   simp only [bitsTT, bitsTF, bitsFT, bitsFF, Matrix.cons_val_zero,
     Matrix.cons_val_one]
   rw [h.probFalse mixedProfile 0, h.probFalse mixedProfile 1]
-  simp only [probTrue, Bool.true_eq_false, Bool.false_eq_true, if_false, if_true]
+  simp only [probTrue, Bool.true_eq_false, Bool.false_eq_true, ite_false, ite_true]
   ring
 
 /-- Expected utility of player one is the negative of player zero's
@@ -239,7 +239,7 @@ theorem mixedExpectedUtility_one (mixedProfile : Profile F.sig.mixed) :
   simp only [bitsTT, bitsTF, bitsFT, bitsFF, Matrix.cons_val_zero,
     Matrix.cons_val_one]
   rw [h.probFalse mixedProfile 0, h.probFalse mixedProfile 1]
-  simp only [probTrue, Bool.true_eq_false, Bool.false_eq_true, if_false, if_true]
+  simp only [probTrue, Bool.true_eq_false, Bool.false_eq_true, ite_false, ite_true]
   ring
 
 /-- **Exact mixed Nash characterization for Matching-Pennies-like games.**

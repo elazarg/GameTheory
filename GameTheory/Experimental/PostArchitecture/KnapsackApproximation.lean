@@ -35,7 +35,6 @@ private def hostileItems : List (Fin 5) := [0, 1, 2, 3, 4]
 private theorem hostile_frontend_succeeds :
     (approximate? hostileWeight hostileValue hostileItems 10).isSome = true := by
   norm_num [approximate?, approximationInputValid, hostileItems, hostileWeight]
-  decide
 
 private theorem zeroWeight_frontend_succeeds :
     (approximate? (fun _ : Unit => 0) (fun _ => 1) [()] 0).isSome = true := by

@@ -14,7 +14,7 @@ Primary reference: J. F. Nash Jr., “The Bargaining Problem,” *Econometrica*
 import Mathlib.Algebra.Order.BigOperators.GroupWithZero.Finset
 import Mathlib.Algebra.BigOperators.GroupWithZero.Finset
 import Mathlib.Data.Fintype.BigOperators
-import Mathlib.Data.Real.Basic
+import Mathlib.Basic.Real.Basic
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
 
@@ -101,7 +101,7 @@ theorem IsNashSolution.isWeaklyPareto
   · have hproductStrict :
         (∏ player, (utility player - problem.disagreement player)) <
           ∏ player, (alternative player - problem.disagreement player) :=
-      Finset.prod_lt_prod_of_nonempty
+      Finset.prod_lt_prod_of_nonempty₀
         (fun player _ => hpositive player)
         (fun player _ => sub_lt_sub_right (hstrict player) _)
         Finset.univ_nonempty

@@ -136,7 +136,7 @@ private lemma roundRobinAux_step [DecidableEq G]
         ⟨(turn.val + 1) % n, Nat.mod_lt _ (NeZero.pos n)⟩
         (remaining.erase (rawBestGood w turn remaining h))
         (updateBundle A turn (insert (rawBestGood w turn remaining h) (A turn))) := by
-  rw [rawRoundRobinAux.eq_1]; exact dif_pos h
+  rw [rawRoundRobinAux.eq_1]; exact dite_eq_left h
 
 /-! ### Partition properties -/
 
@@ -174,31 +174,31 @@ private lemma roundRobinAux_disjoint [DecidableEq G]
       simp only [updateBundle_apply]
       by_cases hp : p = turn <;> by_cases hq : q = turn
       · exact absurd (hp.trans hq.symm) hpq
-      · rw [if_pos hp, if_neg hq]
+      · rw [ite_eq_left hp, ite_eq_right hq]
         rw [Finset.disjoint_left]
         intro x hx
         simp only [Finset.mem_insert] at hx
         rcases hx with rfl | hx
         · exact fun hxq => hrem _ (rawBestGood_mem w turn s hne) q hxq
         · exact Finset.disjoint_left.mp (hdisj turn q (by simpa [hp] using hpq)) hx
-      · rw [if_neg hp, if_pos hq]
+      · rw [ite_eq_right hp, ite_eq_left hq]
         rw [Finset.disjoint_left]
         intro x hx
         simp only [Finset.mem_insert]
         rintro (rfl | hxins)
         · exact hrem _ (rawBestGood_mem w turn s hne) p hx
         · exact Finset.disjoint_left.mp (hdisj p turn (by simpa [hq] using hpq)) hx hxins
-      · rw [if_neg hp, if_neg hq]
+      · rw [ite_eq_right hp, ite_eq_right hq]
         exact hdisj p q hpq
     · intro g' hg' i
       simp only [updateBundle_apply]
       by_cases hi : i = turn
-      · rw [if_pos hi]
+      · rw [ite_eq_left hi]
         simp only [Finset.mem_insert]
         rintro (rfl | hins)
         · exact (Finset.mem_erase.mp hg').1 rfl
         · exact hrem g' (Finset.erase_subset _ _ hg') turn (by simpa [hi] using hins)
-      · rw [if_neg hi]
+      · rw [ite_eq_right hi]
         exact hrem g' (Finset.erase_subset _ _ hg') i
   · rw [Finset.not_nonempty_iff_eq_empty.mp hne, roundRobinAux_empty]
     exact hdisj
@@ -223,23 +223,23 @@ private lemma roundRobinAux_biUnion [DecidableEq G]
       intro p q hpq; simp only [updateBundle_apply]
       by_cases hp : p = turn <;> by_cases hq : q = turn
       · exact absurd (hp.trans hq.symm) hpq
-      · rw [if_pos hp, if_neg hq]; rw [Finset.disjoint_left]; intro x hx
+      · rw [ite_eq_left hp, ite_eq_right hq]; rw [Finset.disjoint_left]; intro x hx
         simp only [Finset.mem_insert] at hx; rcases hx with rfl | hx
         · exact fun hxq => hrem _ hgmem q hxq
         · exact Finset.disjoint_left.mp (hdisj turn q (by simpa [hp] using hpq)) hx
-      · rw [if_neg hp, if_pos hq]; rw [Finset.disjoint_left]; intro x hx
+      · rw [ite_eq_right hp, ite_eq_left hq]; rw [Finset.disjoint_left]; intro x hx
         simp only [Finset.mem_insert]; rintro (rfl | hxins)
         · exact hrem _ hgmem p hx
         · exact Finset.disjoint_left.mp (hdisj p turn (by simpa [hq] using hpq)) hx hxins
-      · rw [if_neg hp, if_neg hq]; exact hdisj p q hpq
+      · rw [ite_eq_right hp, ite_eq_right hq]; exact hdisj p q hpq
     have hrem' : ∀ g' ∈ s.erase g, ∀ i : Fin n,
         g' ∉ updateBundle A turn (insert g (A turn)) i := by
       intro g' hg' i; simp only [updateBundle_apply]
       by_cases hi : i = turn
-      · rw [if_pos hi]; simp only [Finset.mem_insert]; rintro (rfl | hins)
+      · rw [ite_eq_left hi]; simp only [Finset.mem_insert]; rintro (rfl | hins)
         · exact (Finset.mem_erase.mp hg').1 rfl
         · exact hrem g' (Finset.erase_subset _ _ hg') turn (by simpa [hi] using hins)
-      · rw [if_neg hi]; exact hrem g' (Finset.erase_subset _ _ hg') i
+      · rw [ite_eq_right hi]; exact hrem g' (Finset.erase_subset _ _ hg') i
     rw [ih _ (Finset.erase_ssubset hgmem) _ _ hdisj' hrem']
     have hbij : Finset.univ.biUnion (updateBundle A turn (insert g (A turn))) =
         {g} ∪ Finset.univ.biUnion A := by
@@ -249,11 +249,11 @@ private lemma roundRobinAux_biUnion [DecidableEq G]
       constructor
       · rintro ⟨i, hi⟩
         by_cases h : i = turn
-        · simp only [h, if_true] at hi; simp only [Finset.mem_insert] at hi
+        · simp only [h, ite_true] at hi; simp only [Finset.mem_insert] at hi
           rcases hi with rfl | hmem
           · exact Or.inl rfl
           · exact Or.inr ⟨turn, by simpa [h] using hmem⟩
-        · simp only [h, if_false] at hi; exact Or.inr ⟨i, hi⟩
+        · simp only [h, ite_false] at hi; exact Or.inr ⟨i, hi⟩
       · rintro (rfl | ⟨i, hi⟩)
         · exact ⟨turn, by simp [Finset.mem_insert]⟩
         · by_cases h : i = turn
@@ -339,25 +339,25 @@ private lemma roundRobin_noEnvy_of_earlier
     · intro p q hpq; simp only [updateBundle_apply]
       by_cases hp : p = turn <;> by_cases hq : q = turn
       · exact absurd (hp.trans hq.symm) hpq
-      · rw [if_pos hp, if_neg hq, Finset.disjoint_left]
+      · rw [ite_eq_left hp, ite_eq_right hq, Finset.disjoint_left]
         intro x hx; simp only [Finset.mem_insert] at hx
         rcases hx with rfl | hx
         · exact fun hxq => (hg_not q) hxq
         · exact Finset.disjoint_left.mp (hdisj turn q (by simpa [hp] using hpq)) hx
-      · rw [if_neg hp, if_pos hq, Finset.disjoint_left]
+      · rw [ite_eq_right hp, ite_eq_left hq, Finset.disjoint_left]
         intro x hx; simp only [Finset.mem_insert]
         rintro (rfl | hxins)
         · exact (hg_not p) hx
         · exact Finset.disjoint_left.mp (hdisj p turn (by simpa [hq] using hpq)) hx hxins
-      · rw [if_neg hp, if_neg hq]; exact hdisj p q hpq
+      · rw [ite_eq_right hp, ite_eq_right hq]; exact hdisj p q hpq
     -- Remaining goods not in bundles
     · intro g' hg' k; simp only [updateBundle_apply]
       by_cases hk : k = turn
-      · rw [if_pos hk]; simp only [Finset.mem_insert]
+      · rw [ite_eq_left hk]; simp only [Finset.mem_insert]
         rintro (rfl | hins)
         · exact (Finset.mem_erase.mp hg').1 rfl
         · exact hrem g' (Finset.erase_subset _ _ hg') turn (by simpa [hk] using hins)
-      · rw [if_neg hk]; exact hrem g' (Finset.erase_subset _ _ hg') k
+      · rw [ite_eq_right hk]; exact hrem g' (Finset.erase_subset _ _ hg') k
     -- hinvI': no-envy invariant maintained
     · by_cases hi : i = turn <;> by_cases hj : j = turn
       · exact absurd (hi.trans hj.symm) hij_ne
@@ -499,25 +499,25 @@ private lemma roundRobin_ef1_of_later
     · intro p q hpq; simp only [updateBundle_apply]
       by_cases hp : p = turn <;> by_cases hq : q = turn
       · exact absurd (hp.trans hq.symm) hpq
-      · rw [if_pos hp, if_neg hq, Finset.disjoint_left]
+      · rw [ite_eq_left hp, ite_eq_right hq, Finset.disjoint_left]
         intro x hx; simp only [Finset.mem_insert] at hx
         rcases hx with rfl | hx
         · exact fun hxq => (hg_not q) hxq
         · exact Finset.disjoint_left.mp (hdisj turn q (by simpa [hp] using hpq)) hx
-      · rw [if_neg hp, if_pos hq, Finset.disjoint_left]
+      · rw [ite_eq_right hp, ite_eq_left hq, Finset.disjoint_left]
         intro x hx; simp only [Finset.mem_insert]
         rintro (rfl | hxins)
         · exact (hg_not p) hx
         · exact Finset.disjoint_left.mp (hdisj p turn (by simpa [hq] using hpq)) hx hxins
-      · rw [if_neg hp, if_neg hq]; exact hdisj p q hpq
+      · rw [ite_eq_right hp, ite_eq_right hq]; exact hdisj p q hpq
     -- Remaining goods not in bundles
     · intro g' hg' k; simp only [updateBundle_apply]
       by_cases hk : k = turn
-      · rw [if_pos hk]; simp only [Finset.mem_insert]
+      · rw [ite_eq_left hk]; simp only [Finset.mem_insert]
         rintro (rfl | hins)
         · exact (Finset.mem_erase.mp hg').1 rfl
         · exact hrem g' (Finset.erase_subset _ _ hg') turn (by simpa [hk] using hins)
-      · rw [if_neg hk]; exact hrem g' (Finset.erase_subset _ _ hg') k
+      · rw [ite_eq_right hk]; exact hrem g' (Finset.erase_subset _ _ hg') k
     -- Phase invariant maintained
     · rcases hphase with ⟨hempty, hturn_le⟩ | ⟨g0, hg0mem, hef1, hhead⟩
       · -- Phase 1: A[j] = ∅, turn.val ≤ j.val

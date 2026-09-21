@@ -879,8 +879,6 @@ theorem wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff :
     wrongAssessment_continuationContext_value] at hdeviation
   norm_num [alwaysTruePolicy, wrongAssessment, behavioralProfile,
     behavioralPolicy] at hdeviation
-  simp at hdeviation
-  norm_num at hdeviation
 
 /-- Failed sequential rationality is already enough to refute sequential
 equilibrium, independently of the assessment's consistency status. -/

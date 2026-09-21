@@ -106,8 +106,8 @@ theorem inspect_infiniteCarrierB : B.expect infiniteCarrierB (fun n => (n : ℝ)
 
 theorem a_simplex_product [Fintype α] [Fintype β]
     (μ : A.Law α) (ν : A.Law β) (a : α) (b : β) :
-    A.simplexEquiv (A.product μ ν) (a, b) =
-      A.simplexEquiv μ a * A.simplexEquiv ν b := by
+    (A.simplexEquiv (A.product μ ν)).weights (a, b) =
+      (A.simplexEquiv μ).weights a * (A.simplexEquiv ν).weights b := by
   change ((A.product μ ν).toPMF (a, b)).toReal =
     (μ.toPMF a).toReal * (ν.toPMF b).toReal
   rw [A.product_apply, ENNReal.toReal_mul]
@@ -115,7 +115,7 @@ theorem a_simplex_product [Fintype α] [Fintype β]
 theorem b_simplex_pure_product [Fintype α] [Fintype β]
     [DecidableEq α] [DecidableEq β] (a : α) (b : β) :
     B.simplexEquiv (B.product (B.pure a) (B.pure b)) =
-      stdSimplex.vertex (S := ℝ) (a, b) := by
+      Convexity.StdSimplex.single (R := ℝ) (a, b) := by
   simp [B.product]
 
 end GameTheory.Experimental.Phase1.D2.Interop

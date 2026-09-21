@@ -59,7 +59,7 @@ private theorem condOnFibre_fst_map_snd_prob
   have hconditional :
       joint.condOnFibre Prod.fst kept =
         joint.condOn (Prod.fst ⁻¹' {kept}) hfibre := by
-    rw [FinDist.condOnFibre, dif_pos hfibre]
+    rw [FinDist.condOnFibre, dite_eq_left hfibre]
   rw [hconditional, FinDist.prob_map]
   let conditional := joint.condOn (Prod.fst ⁻¹' {kept}) hfibre
   calc
@@ -81,7 +81,7 @@ private theorem condOnFibre_fst_map_snd_prob
     _ = joint.prob (kept, termValue) /
         joint.probOf (Prod.fst ⁻¹' {kept}) := by
       unfold conditional
-      rw [FinDist.prob_condOn, if_pos]
+      rw [FinDist.prob_condOn, ite_eq_left]
       simp
     _ = joint.prob (kept, termValue) / (joint.map Prod.fst).prob kept := by
       rw [map_prob_eq_probOf_atom joint Prod.fst kept]

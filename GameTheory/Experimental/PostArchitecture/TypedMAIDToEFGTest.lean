@@ -488,21 +488,21 @@ theorem serialStep_beforeLeftDecision :
 theorem serialRun_leftFirst :
     serialRun leftFirst semantics responsive 4 leftInitial =
       FinDist.pure leftCompleteResponsive := by
-  rw [serialRun, dif_neg (by decide), serialStep_leftInitial,
-    FinDist.pure_bind, serialRun, dif_neg (by decide),
+  rw [serialRun, dite_eq_right (by decide), serialStep_leftInitial,
+    FinDist.pure_bind, serialRun, dite_eq_right (by decide),
     serialStep_afterLeftChance, FinDist.pure_bind, serialRun,
-    dif_neg (by decide), serialStep_afterLeftFalse,
-    FinDist.pure_bind, serialRun, dif_neg (by decide),
+    dite_eq_right (by decide), serialStep_afterLeftFalse,
+    FinDist.pure_bind, serialRun, dite_eq_right (by decide),
     serialStep_beforeRightDecision, FinDist.pure_bind, serialRun]
 
 theorem serialRun_rightFirst :
     serialRun rightFirst semantics responsive 4 rightInitial =
       FinDist.pure rightCompleteResponsive := by
-  rw [serialRun, dif_neg (by decide), serialStep_rightInitial,
-    FinDist.pure_bind, serialRun, dif_neg (by decide),
+  rw [serialRun, dite_eq_right (by decide), serialStep_rightInitial,
+    FinDist.pure_bind, serialRun, dite_eq_right (by decide),
     serialStep_afterRightChance, FinDist.pure_bind, serialRun,
-    dif_neg (by decide), serialStep_afterRightTrue,
-    FinDist.pure_bind, serialRun, dif_neg (by decide),
+    dite_eq_right (by decide), serialStep_afterRightTrue,
+    FinDist.pure_bind, serialRun, dite_eq_right (by decide),
     serialStep_beforeLeftDecision, FinDist.pure_bind, serialRun]
 
 theorem serial_assignment_law_order_independent :

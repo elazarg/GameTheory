@@ -464,7 +464,7 @@ private theorem componentPolicy_one_eq_siteReplacement
         (replaceSiteRule (replaceSiteRule replacement source sourceRule)
           target targetRule) := by
   unfold componentPolicy
-  rw [if_neg (by decide : (1 : Fin 2) ≠ 0)]
+  rw [ite_eq_right (by decide : (1 : Fin 2) ≠ 0)]
   apply congrArg
     (Profile.update (sig := nativeBehavioralSignature diagram) base owner)
   exact replaceSiteRule_commute_of_ne replacement target source hneq.symm
@@ -786,7 +786,7 @@ private theorem siteRelevantProbeScore_le_of_optimal
       siteRelevantProbeScore semantics base owner replacement target view
         context action := by
     unfold alternativeAt alternative replaceContextWithPure
-    rw [if_pos rfl, ← FinDist.expect_eq_sum, FinDist.expect_pure]
+    rw [ite_eq_left rfl, ← FinDist.expect_eq_sum, FinDist.expect_pure]
   rw [halternative] at hlocal
   exact hlocal
 

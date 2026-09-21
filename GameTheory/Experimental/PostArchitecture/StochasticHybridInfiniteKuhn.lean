@@ -118,9 +118,9 @@ local instance fairProtocolBehavioral_isProbability (i : Bool) :
     (M := hybridGame.perfectMonitoring false) (fairProtocolBehavioral i)
 
 local instance correlatedPolicyMeasure_isProbability (i : Bool) :
-    IsProbabilityMeasure (correlatedPolicyMeasure i) :=
-  Measure.isProbabilityMeasure_map
-    (correlateFirstTwo_measurable i).aemeasurable
+    IsProbabilityMeasure (correlatedPolicyMeasure i) := by
+  unfold correlatedPolicyMeasure
+  infer_instance
 
 /-- The opponent `true` uses the correlated law; the focal player starts from
 an independent fair law before being replaced behaviorally. -/

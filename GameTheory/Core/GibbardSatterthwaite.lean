@@ -44,7 +44,7 @@ theorem dictatorialChoice_isDictator [Fintype Alternative]
     (dictatorialChoice dictator : SocialChoiceFunction Voter Alternative).IsDictator
       dictator := by
   intro ranks hlinear alternative
-  rw [dictatorialChoice, dif_pos (hlinear dictator)]
+  rw [dictatorialChoice, dite_eq_left (hlinear dictator)]
   exact (Classical.choose_spec <| Rank.exists_best_finset
     (hlinear dictator).2.1 (hlinear dictator).2.2.1
       (Finset.univ_nonempty : (Finset.univ : Finset Alternative).Nonempty)).2
@@ -177,13 +177,13 @@ private theorem mixedRankings_mem [DecidableEq Voter]
     {ranks ranks' : Ranking Voter Alternative} {switched : Finset Voter}
     {voter : Voter} (hmem : voter ∈ switched) :
     mixedRankings ranks ranks' switched voter = ranks' voter :=
-  if_pos hmem
+  ite_eq_left hmem
 
 private theorem mixedRankings_not_mem [DecidableEq Voter]
     {ranks ranks' : Ranking Voter Alternative} {switched : Finset Voter}
     {voter : Voter} (hnot : voter ∉ switched) :
     mixedRankings ranks ranks' switched voter = ranks voter :=
-  if_neg hnot
+  ite_eq_right hnot
 
 private theorem mixedRankings_empty [DecidableEq Voter]
     (ranks ranks' : Ranking Voter Alternative) :

@@ -109,7 +109,7 @@ theorem expect_regretMatch_pos [Nonempty ι] {x : EuclideanSpace ℝ ι}
     (h : 0 < ∑ i, max (x.ofLp i) 0) (g : ι → ℝ) :
     (regretMatch x).expect g =
       (∑ i, max (x.ofLp i) 0 * g i) / ∑ i, max (x.ofLp i) 0 := by
-  rw [FinDist.expect_eq_sum, regretMatch, dif_pos h, Finset.sum_div]
+  rw [FinDist.expect_eq_sum, regretMatch, dite_eq_left h, Finset.sum_div]
   refine Finset.sum_congr rfl fun i _ => ?_
   rw [FinDist.prob_ofWeights]
   ring

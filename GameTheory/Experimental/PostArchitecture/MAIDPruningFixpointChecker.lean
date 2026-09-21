@@ -352,16 +352,16 @@ theorem edgeAdditionFixpoint?_eq_true_iff [DecidableEq Node] [DecidableEq Player
   · intro h owner site
     have howner := h owner (hplayers owner)
     have hsite := howner site.1 (topological.complete site.1)
-    simp only [dif_pos site.2] at hsite
+    simp only [dite_eq_left site.2] at hsite
     exact (edgeAdditionStableAt?_eq_true_iff view topological pruning site).mp hsite
   · intro h owner _ node _
     if hkind : diagram.kind node = .decision owner then
-      simp only [dif_pos hkind]
+      simp only [dite_eq_left hkind]
       exact (edgeAdditionStableAt?_eq_true_iff view topological pruning
         (⟨node, hkind⟩ : DecisionSite diagram owner)).mpr
         (h owner ⟨node, hkind⟩)
     else
-      simp only [dif_neg hkind]
+      simp only [dite_eq_right hkind]
 
 end UtilityView
 

@@ -132,7 +132,7 @@ theorem triggerStatus_ofFn_eq_some_of_first
       have hspec := (G.mismatchAt_ofFn_iff path play horizon
         (Nat.find hexists)).1 (Nat.find_spec hexists)
       exact hspec.2 (hbefore _ hlt)
-  rw [triggerStatus, dif_pos hexists]
+  rw [triggerStatus, dite_eq_left hexists]
   dsimp
   have hselected :
       G.profileMismatchPlayer

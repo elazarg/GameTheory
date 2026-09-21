@@ -725,10 +725,10 @@ theorem picnic_payoff : picnic.payoff = picnicPayoff := rfl
 /-- A decision rule that ignores the forecast. -/
 def constantRule (venue : Venue) : (model picnic).Policy Agent.planner := fun view =>
   if hpending : view.1 = some Node.plan then
-    ⟨some venue, by simp only [menuAt, if_pos hpending, Set.mem_ofPred_eq]
+    ⟨some venue, by simp only [menuAt, ite_eq_left hpending, Set.mem_ofPred_eq]
                     exact ⟨venue, rfl⟩⟩
   else
-    ⟨none, by simp only [menuAt, if_neg hpending]; rfl⟩
+    ⟨none, by simp only [menuAt, ite_eq_right hpending]; rfl⟩
 
 /-- The venue a forecast-responsive rule picks. -/
 def responsiveVenue : Option Sky → Venue
@@ -740,10 +740,10 @@ def responsiveVenue : Option Sky → Venue
 def responsiveRule : (model picnic).Policy Agent.planner := fun view =>
   if hpending : view.1 = some Node.plan then
     ⟨some (responsiveVenue view.2), by
-      simp only [menuAt, if_pos hpending, Set.mem_ofPred_eq]
+      simp only [menuAt, ite_eq_left hpending, Set.mem_ofPred_eq]
       exact ⟨responsiveVenue view.2, rfl⟩⟩
   else
-    ⟨none, by simp only [menuAt, if_neg hpending]; rfl⟩
+    ⟨none, by simp only [menuAt, ite_eq_right hpending]; rfl⟩
 
 theorem ruleOf_constantRule (venue : Venue) (sky : Sky) :
     ruleOf picnic (constantRule venue) sky = venue := rfl

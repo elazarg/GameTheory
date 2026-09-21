@@ -186,7 +186,7 @@ theorem backwardJoint_of_active [DecidableEq ι]
           exact M.bestHistoryChoice singleMover history hterm recurse who hactive) := by
   classical
   let hexists : ∃ player, E.active history.state player := ⟨who, hactive⟩
-  simp only [backwardJoint, dif_pos hexists]
+  simp only [backwardJoint, dite_eq_left hexists]
   let selected := Classical.choose hexists
   have hselected := Classical.choose_spec hexists
   have heq : selected = who := singleMover history.state hselected hactive
@@ -233,7 +233,7 @@ theorem backwardOutcome_of_terminal [DecidableEq ι]
     {history : E.History} (hterm : E.terminal history.state) :
     M.backwardOutcome singleMover fallback finiteChoices certificate utility history =
       utility history := by
-  rw [backwardOutcome, E.historyBackwardRec_eq, dif_pos hterm]
+  rw [backwardOutcome, E.historyBackwardRec_eq, dite_eq_left hterm]
 
 theorem backwardOutcome_of_not_terminal [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
@@ -249,7 +249,7 @@ theorem backwardOutcome_of_not_terminal [DecidableEq ι]
         E.historyStepValue history chosen fun _target realized =>
           M.backwardOutcome singleMover fallback finiteChoices certificate utility
             (history.extend chosen.2 realized) who := by
-  rw [backwardOutcome, E.historyBackwardRec_eq, dif_neg hterm]
+  rw [backwardOutcome, E.historyBackwardRec_eq, dite_eq_right hterm]
   rfl
 
 /-- The pure policy assembled from the Bellman chooser. At a genuine decision
@@ -340,7 +340,7 @@ theorem backwardPolicy_act_at_decision [DecidableEq ι]
   let hreached : ∃ prior,
       M.IsDecisionHistory who (M.infoOf who history.trace) prior :=
     ⟨history, hterm, hactive, rfl⟩
-  simp only [backwardPolicy, dif_pos hreached, Policy.act]
+  simp only [backwardPolicy, dite_eq_left hreached, Policy.act]
   let prior := Classical.choose hreached
   have hprior := Classical.choose_spec hreached
   have heq : prior = history :=

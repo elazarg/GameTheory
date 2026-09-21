@@ -142,11 +142,14 @@ if ($VerifyExpected) {
     D1_STRESS_TOREAL = 0
     D1_STRESS_ENNREAL = 0
     D1_STRESS_CLASSICAL = 1
-    D2_PMF_TRANSPORT = 3
-    D2_PMF_TOREAL = 24
+    # The canonical StdSimplex weights make the old coordinate `change`
+    # steps definitional: one fewer in PMF (including two .toReal tokens),
+    # and two fewer in Finsupp. Keep the source counters exact.
+    D2_PMF_TRANSPORT = 2
+    D2_PMF_TOREAL = 22
     D2_PMF_ENNREAL = 41
     D2_PMF_CLASSICAL = 5
-    D2_FINSUPP_TRANSPORT = 4
+    D2_FINSUPP_TRANSPORT = 2
     D2_FINSUPP_TOREAL = 0
     D2_FINSUPP_ENNREAL = 1
     D2_FINSUPP_CLASSICAL = 8

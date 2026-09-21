@@ -606,7 +606,7 @@ private theorem pivotal_mem [DecidableEq Agent]
     (hmem : agent ∈ coalition) :
     pivotal item background coalition agent =
       putTop item background :=
-  if_pos hmem
+  ite_eq_left hmem
 
 private theorem pivotal_not_mem [DecidableEq Agent]
     {item : α} {background : StrictRelation α}
@@ -614,7 +614,7 @@ private theorem pivotal_not_mem [DecidableEq Agent]
     (hmem : agent ∉ coalition) :
     pivotal item background coalition agent =
       putBottom item background :=
-  if_neg hmem
+  ite_eq_right hmem
 
 private theorem pivotal_ranking [DecidableEq Agent]
     {item : α} {background : StrictRelation α}
@@ -656,7 +656,7 @@ private theorem starProfile_pivot [DecidableEq Agent]
     starProfile item preferred alternative background ranks pivot
         lowerCoalition pivot =
       putBottom alternative (putTop preferred background) :=
-  if_pos rfl
+  ite_eq_left rfl
 
 private theorem starProfile_mem [DecidableEq Agent]
     {item preferred alternative : α}
@@ -667,7 +667,7 @@ private theorem starProfile_mem [DecidableEq Agent]
     starProfile item preferred alternative background ranks pivot
         lowerCoalition agent =
       putTop item (ranks agent) := by
-  rw [starProfile, if_neg hne, if_pos hmem]
+  rw [starProfile, ite_eq_right hne, ite_eq_left hmem]
 
 private theorem starProfile_not_mem [DecidableEq Agent]
     {item preferred alternative : α}
@@ -678,7 +678,7 @@ private theorem starProfile_not_mem [DecidableEq Agent]
     starProfile item preferred alternative background ranks pivot
         lowerCoalition agent =
       putBottom item (ranks agent) := by
-  rw [starProfile, if_neg hne, if_neg hmem]
+  rw [starProfile, ite_eq_right hne, ite_eq_right hmem]
 
 private theorem dictator_pair [DecidableEq Agent]
     {aggregate : StrictAggregator Agent α}
@@ -867,7 +867,7 @@ private theorem preferredReferenceProfile_pivot [DecidableEq Agent]
     {ranks : StrictProfile Agent α} {pivot : Agent} :
     preferredReferenceProfile reference preferred bridge ranks pivot pivot =
       putBottom reference (putTop preferred (ranks pivot)) :=
-  if_pos rfl
+  ite_eq_left rfl
 
 private theorem preferredReferenceProfile_ne [DecidableEq Agent]
     {reference preferred bridge : α}
@@ -875,14 +875,14 @@ private theorem preferredReferenceProfile_ne [DecidableEq Agent]
     (hne : agent ≠ pivot) :
     preferredReferenceProfile reference preferred bridge ranks pivot agent =
       putTop bridge (ranks agent) :=
-  if_neg hne
+  ite_eq_right hne
 
 private theorem referencePreferredProfile_pivot [DecidableEq Agent]
     {reference preferred bridge : α}
     {ranks : StrictProfile Agent α} {pivot : Agent} :
     referencePreferredProfile reference preferred bridge ranks pivot pivot =
       putTop reference (putBottom preferred (ranks pivot)) :=
-  if_pos rfl
+  ite_eq_left rfl
 
 private theorem referencePreferredProfile_ne [DecidableEq Agent]
     {reference preferred bridge : α}
@@ -890,7 +890,7 @@ private theorem referencePreferredProfile_ne [DecidableEq Agent]
     (hne : agent ≠ pivot) :
     referencePreferredProfile reference preferred bridge ranks pivot agent =
       putBottom bridge (ranks agent) :=
-  if_neg hne
+  ite_eq_right hne
 
 private theorem dictator_preferred_reference
     {aggregate : StrictAggregator Agent α}

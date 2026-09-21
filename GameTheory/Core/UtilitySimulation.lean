@@ -43,6 +43,7 @@ structure UtilitySimulation
     (sourceUtility : source.sig.Outcome → Player → ℝ)
     (targetUtility : target.sig.Outcome → Player → ℝ)
     (groups : Set (Finset Player)) where
+  /-- Translate each player's source strategy into a target strategy. -/
   compileStrategy : (who : Player) → source.sig.Strategy who → target.sig.Strategy who
   honest_utility : ∀ profile who,
     (target.play (fun player => compileStrategy player (profile player))).expect
@@ -66,6 +67,7 @@ namespace UtilitySimulation
 
 variable {groups : Set (Finset Player)}
 
+/-- Translate a complete source profile player by player. -/
 def compileProfile
     (simulation : UtilitySimulation source target sourceUtility targetUtility groups)
     (profile : Profile source.sig) : Profile target.sig :=

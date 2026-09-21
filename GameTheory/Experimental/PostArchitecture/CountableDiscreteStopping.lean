@@ -90,7 +90,7 @@ theorem halfStoppingLaw_some (n : ℕ) :
     halfStoppingLaw (some n) = ENNReal.ofReal (halfMass n) := by
   rw [halfStoppingLaw, PMF.map_apply]
   rw [tsum_eq_single n]
-  · rw [if_pos rfl]
+  · rw [ite_eq_left rfl]
     rfl
   · intro b hbn
     have hne : some n ≠ some b := fun h => hbn (Option.some_injective ℕ h).symm

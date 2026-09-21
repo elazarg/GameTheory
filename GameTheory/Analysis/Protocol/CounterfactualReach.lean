@@ -297,13 +297,13 @@ theorem runBehavioralFrom_one_prob_extend [Fintype ι]
         ExecutionProtocol.runRandomizedFor_zero]
       by_cases heq : joint = draw
       · subst draw
-        rw [if_pos rfl]
+        rw [ite_eq_left rfl]
         exact prob_bindOnSupport_pure_of_injective
           (E.step history.state joint)
           (fun reached realized' => history.extend joint.2 realized')
           (fun first _ second _ hext => congrArg ExecutionProtocol.History.state hext)
           target realized
-      · rw [if_neg heq, FinDist.prob_eq_zero_iff]
+      · rw [ite_eq_right heq, FinDist.prob_eq_zero_iff]
         intro hmem
         rw [FinDist.support_bindOnSupport] at hmem
         simp only [Set.mem_iUnion] at hmem
@@ -348,10 +348,10 @@ theorem historyReachProbability_extend [Fintype ι]
       intro history hhistory
       by_cases heq : previous = history
       · subst history
-        rw [if_pos rfl]
+        rw [ite_eq_left rfl]
         exact runBehavioralFrom_one_prob_extend M policies previous
           isLegal.1 ⟨joint, isLegal⟩ target realized
-      · rw [if_neg heq, FinDist.prob_eq_zero_iff]
+      · rw [ite_eq_right heq, FinDist.prob_eq_zero_iff]
         intro hbranch
         by_cases hterm : E.terminal history.state
         · rw [M.runBehavioralFrom_of_terminal policies 1 hterm,

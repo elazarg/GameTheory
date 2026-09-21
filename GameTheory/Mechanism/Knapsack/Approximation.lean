@@ -41,7 +41,7 @@ private theorem greedySplit_taken_eq_of_rejected_eq_none (weight : Agent → ℕ
   | nil => simp [greedySplit]
   | cons item items ih =>
       by_cases hfit : weight item ≤ capacity
-      · simp only [greedySplit, hfit, if_true] at hrejected ⊢
+      · simp only [greedySplit, hfit, ite_true] at hrejected ⊢
         exact congrArg (List.cons item)
           (ih (capacity - weight item) hrejected)
       · simp [greedySplit, hfit] at hrejected

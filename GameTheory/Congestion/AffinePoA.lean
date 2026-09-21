@@ -79,7 +79,7 @@ theorem sum_deviation_cost_le [DecidableEq ι] (C : CongestionGame ι)
     intro i
     rw [playerCost, Profile.update_same]
     refine Finset.sum_le_sum fun r hr => ?_
-    rw [C.congestion_update statusQuo i (target i) r, if_pos hr]
+    rw [C.congestion_update statusQuo i (target i) r, ite_eq_left hr]
     exact h.delay_mono r
       (Nat.add_le_add_right (C.congestionWithout_le_congestion statusQuo i r) 1)
   calc

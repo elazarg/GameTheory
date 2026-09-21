@@ -70,13 +70,13 @@ variable (F) in
 stated against every point of the simplex rather than against every law, so that
 the set lives in the vector space the fixed-point theorem works in. -/
 def bestReply (who : ι) (x : Profile F.sig.weights) : Set (F.sig.Strategy who → ℝ) :=
-  {v | v ∈ stdSimplex ℝ (F.sig.Strategy who) ∧
-    ∀ w ∈ stdSimplex ℝ (F.sig.Strategy who),
+  {v | v ∈ simplexWeights (F.sig.Strategy who) ∧
+    ∀ w ∈ simplexWeights (F.sig.Strategy who),
       payoff F utility who (Profile.update x who w) ≤
         payoff F utility who (Profile.update x who v)}
 
 theorem bestReply_subset (who : ι) (x : Profile F.sig.weights) :
-    bestReply F utility who x ⊆ stdSimplex ℝ (F.sig.Strategy who) := fun _ hv => hv.1
+    bestReply F utility who x ⊆ simplexWeights (F.sig.Strategy who) := fun _ hv => hv.1
 
 /-- **A best reply set is convex**, because the payoff is affine in the
 deviator's own weights: a mixture of two best replies is worth their mixed
@@ -84,7 +84,7 @@ value, which is still at least anything else. -/
 theorem convex_bestReply (who : ι) (x : Profile F.sig.weights) :
     Convex ℝ (bestReply F utility who x) := by
   rintro v ⟨hv, hvmax⟩ w ⟨hw, hwmax⟩ a b ha hb hab
-  refine ⟨convex_stdSimplex ℝ _ hv hw ha hb hab, fun u hu => ?_⟩
+  refine ⟨convex_simplexWeights _ hv hw ha hb hab, fun u hu => ?_⟩
   rw [payoff_update_mix]
   calc payoff F utility who (Profile.update x who u)
       = a * payoff F utility who (Profile.update x who u) +
@@ -98,8 +98,8 @@ theorem convex_bestReply (who : ι) (x : Profile F.sig.weights) :
 the compact simplex. -/
 theorem bestReply_nonempty [∀ i, Nonempty (F.sig.Strategy i)] (who : ι)
     (x : Profile F.sig.weights) : (bestReply F utility who x).Nonempty := by
-  obtain ⟨v, hv, hmax⟩ := (isCompact_stdSimplex ℝ (F.sig.Strategy who)).exists_isMaxOn
-    FinDist.stdSimplex_nonempty
+  obtain ⟨v, hv, hmax⟩ := (isCompact_simplexWeights (F.sig.Strategy who)).exists_isMaxOn
+    FinDist.simplexWeights_nonempty
     ((continuous_payoff who).comp (continuous_update_reply who x)).continuousOn
   exact ⟨v, hv, fun w hw => hmax hw⟩
 
@@ -128,7 +128,7 @@ theorem prob_mem_bestReply_iff_isBestResponse (opponents : Profile F.sig.mixed)
       IsBestResponse F.mixed (euPreference utility) who opponents candidate := by
   constructor
   · rintro ⟨_, hmax⟩ alternative
-    have hle := hmax alternative.prob alternative.prob_mem_stdSimplex
+    have hle := hmax alternative.prob alternative.prob_mem_simplexWeights
     show expectedUtility utility who
         (F.mixed.play (Profile.update opponents who alternative)) ≤
       expectedUtility utility who
@@ -136,7 +136,7 @@ theorem prob_mem_bestReply_iff_isBestResponse (opponents : Profile F.sig.mixed)
     rw [← payoff_probs, ← payoff_probs, probs_update, probs_update]
     exact hle
   · intro hbest
-    refine ⟨candidate.prob_mem_stdSimplex, fun weights hweights => ?_⟩
+    refine ⟨candidate.prob_mem_simplexWeights, fun weights hweights => ?_⟩
     let alternative : FinDist (F.sig.Strategy who) := FinDist.ofSimplex hweights
     have hle := hbest alternative
     rw [euPreference_apply, ← payoff_probs, ← payoff_probs,
@@ -191,8 +191,8 @@ theorem closedGraph_bestReplies :
   have hset : {z : mixedPolytope F.sig × Profile F.sig.weights |
         z.2 ∈ bestReplies F utility z.1.1} =
       (⋂ i : ι, {z : mixedPolytope F.sig × Profile F.sig.weights |
-          z.2 i ∈ stdSimplex ℝ (F.sig.Strategy i)}) ∩
-        ⋂ i : ι, ⋂ w ∈ stdSimplex ℝ (F.sig.Strategy i),
+          z.2 i ∈ simplexWeights (F.sig.Strategy i)}) ∩
+        ⋂ i : ι, ⋂ w ∈ simplexWeights (F.sig.Strategy i),
           {z : mixedPolytope F.sig × Profile F.sig.weights |
             payoff F utility i (Profile.update z.1.1 i w) ≤
               payoff F utility i (Profile.update z.1.1 i (z.2 i))} := by
@@ -203,7 +203,7 @@ theorem closedGraph_bestReplies :
   rw [hset]
   refine IsClosed.inter (isClosed_iInter fun i => ?_)
     (isClosed_iInter fun i => isClosed_iInter fun w => isClosed_iInter fun _ => ?_)
-  · exact (isClosed_stdSimplex ℝ _).preimage ((continuous_apply i).comp continuous_snd)
+  · exact (isClosed_simplexWeights _).preimage ((continuous_apply i).comp continuous_snd)
   · refine isClosed_le ?_ ?_
     · exact ((continuous_payoff i).comp (continuous_update_profile i w)).comp
         (continuous_subtype_val.comp continuous_fst)

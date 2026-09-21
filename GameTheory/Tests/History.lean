@@ -365,7 +365,7 @@ theorem run_follow_ne_runFor (chooser : merge.Chooser) :
     exact Set.mem_biUnion hbranch (FinDist.mem_support_pure.mpr rfl)
   have hL := hmem _ mem_support_coin_lft
   have hR := hmem _ mem_support_coin_rgt
-  rw [if_neg (by simp), ← hR] at hL
+  rw [ite_eq_right (by simp), ← hR] at hL
   exact Stage.noConfusion hL
 
 /-! ## The positive control
@@ -388,8 +388,8 @@ def alwaysLeft : merge.Chooser := fun state hterm =>
   ⟨fun _ => if state = Stage.mid then some Move.l else none, by
     refine ExecutionProtocol.legal_of_legalOption hterm fun _ => ?_
     by_cases hmid : state = Stage.mid
-    · rw [if_pos hmid]; exact ⟨hmid, Set.mem_univ _⟩
-    · rw [if_neg hmid]; exact hmid⟩
+    · rw [ite_eq_left hmid]; exact ⟨hmid, Set.mem_univ _⟩
+    · rw [ite_eq_right hmid]; exact hmid⟩
 
 theorem runFor_alwaysLeft_mid : merge.runFor alwaysLeft 1 Stage.mid = FinDist.pure Stage.endL := by
   have hterm : ¬ merge.terminal Stage.mid := by simp

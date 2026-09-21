@@ -114,7 +114,7 @@ theorem behavioralProfileMeasure_map_restrict [Fintype ι]
     inferInstance
   let (i : ι) : IsProbabilityMeasure
       ((policy i).toPureMeasure.map (sites i).restrict) :=
-    Measure.isProbabilityMeasure_map (hmeasurable i).aemeasurable
+    inferInstance
   have hfactor (i : ι) :
       (policy i).toPureMeasure.map (sites i).restrict =
         (FinDist.pi fun info : sites i => policy i info).toMeasure := by
@@ -447,8 +447,7 @@ noncomputable def toBehavioralWith {i : ι} (law : M.PolicyMeasure i)
       ProbabilityTheory.cond_isProbabilityMeasure hpos
     let pushed := conditioned.map (fun policy => policy info)
     letI : IsProbabilityMeasure pushed :=
-      Measure.isProbabilityMeasure_map
-        (measurable_pi_apply info).aemeasurable
+      inferInstance
     FinDist.ofMeasure pushed
   else
     FinDist.pure (fallback info)
@@ -480,7 +479,7 @@ theorem toBehavioralWith_toMeasure {i : ι} (mixed : M.MixedPolicy i)
         mixed hconsistent]
       exact (FinDist.probOf_pos hmeet).ne'
     rw [PolicyMeasure.toBehavioralWith, MixedPolicy.toBehavioralWith,
-      dif_pos hmass, dif_pos hmeet]
+      dite_eq_left hmass, dite_eq_left hmeet]
     exact GameTheory.Math.Probability.FinDist.ofMeasure_map_cond_toMeasure
       mixed consistent hconsistent hmeet hmass (fun policy => policy info)
       (measurable_pi_apply info)
@@ -490,7 +489,7 @@ theorem toBehavioralWith_toMeasure {i : ι} (mixed : M.MixedPolicy i)
       exact Set.disjoint_left.mpr fun policy hsupport hcons =>
         hmeet ⟨policy, hcons, hsupport⟩
     rw [PolicyMeasure.toBehavioralWith, MixedPolicy.toBehavioralWith,
-      dif_neg hmeet, dif_neg (not_ne_iff.mpr hmass)]
+      dite_eq_right hmeet, dite_eq_right (not_ne_iff.mpr hmass)]
 
 /-- The behavioral reading depends only on the own-record cylinder and the
 current choice coordinate. Any measurable policy transformation preserving
@@ -520,7 +519,7 @@ theorem toBehavioralWith_map_eq_of_preserves {i : ι}
       rw [hmass]
       exact hpos
     dsimp only [consistent] at hmass hpos hmappos ⊢
-    simp only [PolicyMeasure.toBehavioralWith, dif_pos hmappos, dif_pos hpos]
+    simp only [PolicyMeasure.toBehavioralWith, dite_eq_left hmappos, dite_eq_left hpos]
     apply FinDist.ext_of_prob
     intro choice
     let answer := (fun policy : M.Policy i => policy info) ⁻¹'
@@ -553,8 +552,8 @@ theorem toBehavioralWith_map_eq_of_preserves {i : ι}
       rw [hmass]
       exact not_ne_iff.mp hpos
     dsimp only [consistent] at hpos hmapzero ⊢
-    simp only [PolicyMeasure.toBehavioralWith, dif_neg hpos,
-      dif_neg (not_ne_iff.mpr hmapzero)]
+    simp only [PolicyMeasure.toBehavioralWith, dite_eq_right hpos,
+      dite_eq_right (not_ne_iff.mpr hmapzero)]
 
 omit [∀ i info, MeasurableSpace (M.Choice i info)]
   [∀ i info, Fintype (M.Choice i info)]
@@ -580,8 +579,7 @@ noncomputable def toMixedWithin {i : ι} (law : M.PolicyMeasure i)
   letI (info : sites) : Fintype (M.Choice i info) := inferInstance
   let restricted := law.map sites.restrict
   letI : IsProbabilityMeasure restricted :=
-    Measure.isProbabilityMeasure_map
-      (Finset.measurable_restrict sites).aemeasurable
+    inferInstance
   exact FinDist.map (Policy.assembleWithin M fallback sites)
     (FinDist.ofMeasure restricted)
 
@@ -595,8 +593,7 @@ theorem toMixedWithin_toPureMeasure {i : ι}
   classical
   let (info : sites) : Fintype (M.Choice i info) := inferInstance
   let : IsProbabilityMeasure (policy.toPureMeasure.map sites.restrict) :=
-    Measure.isProbabilityMeasure_map
-      (Finset.measurable_restrict sites).aemeasurable
+    inferInstance
   unfold PolicyMeasure.toMixedWithin
   show FinDist.map (Policy.assembleWithin M fallback sites)
       (FinDist.ofMeasure (policy.toPureMeasure.map sites.restrict)) =
@@ -628,7 +625,7 @@ theorem toMixedWithin_toMeasure {i : ι} (law : M.PolicyMeasure i)
       (sites.restrict : M.Policy i → (info : sites) → M.Choice i info) :=
     Finset.measurable_restrict sites
   let : IsProbabilityMeasure (law.map sites.restrict) :=
-    Measure.isProbabilityMeasure_map hrestrict.aemeasurable
+    inferInstance
   show (FinDist.map (Policy.assembleWithin M fallback sites)
       (FinDist.ofMeasure (law.map sites.restrict))).toMeasure = _
   rw [← GameTheory.Math.Probability.FinDist.toMeasure_map _ _ hassemble,
@@ -658,7 +655,7 @@ theorem toMixedWithin_toBehavioralWith {i : ι} (law : M.PolicyMeasure i)
     Finset.measurable_restrict sites
   have htransform : Measurable transform := hassemble.comp hrestrict
   let : IsProbabilityMeasure (law.map transform) :=
-    Measure.isProbabilityMeasure_map htransform.aemeasurable
+    inferInstance
   have hchoice (policy : M.Policy i) : transform policy info = policy info := by
     exact PolicyMeasure.assembleWithin_restrict_apply (M := M)
       policy fallback sites hinfo
@@ -764,8 +761,7 @@ noncomputable def finitePolicyMeasureDraws
     inferInstance
   let restricted := fun i => (laws i).map (sites i).restrict
   letI (i : ι) : IsProbabilityMeasure (restricted i) :=
-    Measure.isProbabilityMeasure_map
-      (Finset.measurable_restrict (sites i)).aemeasurable
+    inferInstance
   exact FinDist.pi fun i => FinDist.ofMeasure (restricted i)
 
 /-- Restricting the independent profile measure to any finite family of sites

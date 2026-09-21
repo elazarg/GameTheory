@@ -118,10 +118,10 @@ theorem cylinderMass_eq_sum_retained
   apply Finset.sum_congr rfl
   intro assignment _
   by_cases hfixed : AgreeOn Value fixed assignment witness
-  · simp only [hfixed, if_true]
+  · simp only [hfixed, ite_true]
     let matching := retainedConfiguration Value fixed retained assignment
     rw [Finset.sum_eq_single matching]
-    · rw [if_pos]
+    · rw [ite_eq_left]
       exact agreeOn_retained_fillRetained Value fixed retained
         witness assignment hfixed
     · intro configuration _ hne
@@ -132,7 +132,7 @@ theorem cylinderMass_eq_sum_retained
           witness assignment hagrees).symm
       simp [hnotAgree]
     · simp
-  · simp only [hfixed, if_false]
+  · simp only [hfixed, ite_false]
     symm
     apply Finset.sum_eq_zero
     intro configuration _

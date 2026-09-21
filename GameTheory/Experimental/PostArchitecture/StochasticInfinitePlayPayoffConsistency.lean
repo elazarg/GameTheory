@@ -255,7 +255,7 @@ theorem ae_stagewiseConsistency (who : ι) (horizon : ℕ) :
       exact canonicalStageUtility_eq_projected_of_coherent G initial who play
         horizon n n.isLt (fun k => hcoh k)
     unfold canonicalPathAverage canonicalProjectedAverage
-    rw [if_neg hhorizon, hsumStage]
+    rw [ite_eq_right hhorizon, hsumStage]
     unfold GameTheory.Stochastic.Game.publicHistoryAverageUtility
     rw [publicHistoryOfChronological_sum]
 

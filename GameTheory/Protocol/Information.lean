@@ -1092,7 +1092,7 @@ no choice at all. -/
 theorem recordAt_eq_ownPlay (hrecall : M.PerfectRecall) (i : ι) (h : E.History) :
     M.recordAt i (M.infoOf i h.trace) = M.ownPlay i h.trace := by
   have hreached : ∃ g : E.History, M.infoOf i g.trace = M.infoOf i h.trace := ⟨h, rfl⟩
-  rw [recordAt, dif_pos hreached]
+  rw [recordAt, dite_eq_left hreached]
   exact hrecall i _ _ (Classical.choose_spec hreached)
 
 /-- The pure policies whose own choices match a record of past moves. -/
@@ -1140,7 +1140,7 @@ theorem consistentAt_eq_consistent_ownPlay (hconstrain : M.ConstrainsAlike) (i :
     (h : E.History) :
     M.ConsistentAt i (M.infoOf i h.trace) = M.Consistent i (M.ownPlay i h.trace) := by
   have hreached : ∃ g : E.History, M.infoOf i g.trace = M.infoOf i h.trace := ⟨h, rfl⟩
-  rw [ConsistentAt, recordAt, dif_pos hreached]
+  rw [ConsistentAt, recordAt, dite_eq_left hreached]
   exact hconstrain i _ _ (Classical.choose_spec hreached)
 
 /-- A longer record is a stronger constraint. -/
@@ -1949,7 +1949,7 @@ theorem toBehavioralWith_eq_map_of_support_subset {i : ι} (mixed : M.MixedPolic
     mixed.toBehavioralWith fallback info = FinDist.map (fun policy => policy info) mixed := by
   classical
   obtain ⟨policy, hpolicy⟩ := mixed.support_nonempty
-  rw [MixedPolicy.toBehavioralWith, dif_pos ⟨policy, hsub hpolicy, hpolicy⟩,
+  rw [MixedPolicy.toBehavioralWith, dite_eq_left ⟨policy, hsub hpolicy, hpolicy⟩,
     FinDist.condOn_of_support_subset _ _ _ hsub]
 
 section Recall
@@ -2018,14 +2018,14 @@ theorem toBehavioralWith_condOn_answered (hconstrain : M.ConstrainsAlike) (i : �
     have hcond : ∃ p ∈ M.ConsistentAt i (M.infoOf i later.trace),
         p ∈ (mixed.condOn (M.AnsweredBy h answer i) hmass).support :=
       ⟨policy, hpolicy, FinDist.mem_support_condOn _ _ _ (hnarrow hpolicy) hmem⟩
-    rw [dif_pos hcond, dif_pos ⟨policy, hpolicy, hmem⟩,
+    rw [dite_eq_left hcond, dite_eq_left ⟨policy, hpolicy, hmem⟩,
       FinDist.condOn_condOn mixed hmass ⟨policy, hpolicy, hmem⟩
         (Set.inter_subset_left.trans hnarrow) hcond]
   · have hcond : ¬ ∃ p ∈ M.ConsistentAt i (M.infoOf i later.trace),
         p ∈ (mixed.condOn (M.AnsweredBy h answer i) hmass).support := by
       rintro ⟨p, hp, hmem⟩
       exact hex ⟨p, hp, (FinDist.support_condOn _ _ hmass hmem).2⟩
-    rw [dif_neg hcond, dif_neg hex]
+    rw [dite_eq_right hcond, dite_eq_right hex]
 
 omit [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
 /-- Conditioning on the answer changes nothing for a player that did not move:
@@ -2088,7 +2088,7 @@ theorem runMixedFrom_toBehavioralWith (hconstrain : M.ConstrainsAlike)
       have hlegal : E.Legal h.state (fun i => ((M.answerAt h p) i).1) :=
         ExecutionProtocol.legal_of_legalOption hterm fun i =>
           (M.menu_adequate i h.trace ((M.answerAt h p) i).1).mp ((M.answerAt h p) i).2
-      rw [FinDist.condOnFibre, dif_pos hfib,
+      rw [FinDist.condOnFibre, dite_eq_left hfib,
         M.condOn_answerAt mixed h (M.answerAt h p) hfib hcoord]
       have hstep : (FinDist.pi fun i =>
             (mixed i).condOn (M.AnsweredBy h (M.answerAt h p) i) (hcoord i)).bind

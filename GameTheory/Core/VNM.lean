@@ -310,7 +310,7 @@ private theorem probOf_compl_singleton [DecidableEq Outcome]
           by_cases hxo : x = outcome
           · subst hxo
             simp
-          · rw [if_pos (by simpa using hxo),
+          · rw [ite_eq_left (by simpa using hxo),
               FinDist.prob_pure_of_ne (Ne.symm hxo)]
             ring
     _ = outer.expect (fun _ => 1) -
@@ -331,9 +331,9 @@ private theorem eq_mix_pure_condOn_compl (outer : FinDist Outcome) (outcome : Ou
   by_cases hxo : x = outcome
   · subst hxo
     rw [FinDist.prob_pure_self, FinDist.prob_condOn,
-      if_neg (by simp), mul_one, mul_zero, add_zero]
+      ite_eq_right (by simp), mul_one, mul_zero, add_zero]
   · rw [FinDist.prob_pure_of_ne hxo, mul_zero, zero_add,
-      FinDist.prob_condOn, if_pos (by simpa using hxo),
+      FinDist.prob_condOn, ite_eq_left (by simpa using hxo),
       probOf_compl_singleton]
     have hpositive : 0 < 1 - outer.prob outcome := by
       rw [← probOf_compl_singleton]
