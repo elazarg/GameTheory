@@ -46,6 +46,13 @@ namespace DeviationScheme
 
 variable {Deviator : Type ud} {Deviator' : Type ud'}
 
+/-- Select or reindex deviating units without changing their local actions. -/
+def comap (D : DeviationScheme sig Deviator) (agents : Deviator' → Deviator) :
+    DeviationScheme sig Deviator' where
+  members who := D.members (agents who)
+  Dev who := D.Dev (agents who)
+  actLocal who := D.actLocal (agents who)
+
 /-- Two profiles agreeing on the deviating group induce the same law of local
 replacements. Locality holds by construction: the statement is a congruence, not
 an extra hypothesis on the scheme. -/

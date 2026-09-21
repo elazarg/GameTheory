@@ -12,6 +12,10 @@ strategies or outcome law and is deliberately a parallel primitive. Core
 imports no protocol, language front-end, executable frontend, or fixed-point
 and topology dependencies. Analytic existence results live above it, so reading
 a definition never costs the machinery a later theorem happens to need.
+
+Uniform utility-transfer certificates and their mixture bridge are stable
+opt-in leaves: `Core.UtilitySimulation` and `Core.MixtureUtilitySimulation`.
+The direct profile-local transfer theorems are included here.
 -/
 
 import GameTheory.Core.Signature
@@ -36,8 +40,12 @@ import GameTheory.Core.CorrelatedDominance
 import GameTheory.Core.Rationalizability
 import GameTheory.Core.UtilityInvariance
 import GameTheory.Core.Approximate
+import GameTheory.Core.CoalitionEquilibrium
+import GameTheory.Core.UtilityTransfer
+import GameTheory.Core.MixtureSimulationComposition
 import GameTheory.Core.Potential
 import GameTheory.Core.Mixed
+import GameTheory.Core.MixedSimulation
 import GameTheory.Core.TremblingHand
 import GameTheory.Core.MixedImprovement
 import GameTheory.Core.MixedPotential

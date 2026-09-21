@@ -4,6 +4,15 @@
 - **Date:** 2026-07-30
 - **Experiment IDs:** EXP-020, EXP-045, EXP-106
 
+**Scoped extension:** EXP-120/[D60](D60-noninvertible-strategic-transfer.md)
+admits finite-mixture deviation laws and coalition utility coverage as two
+narrow records, supported by independent native consumers and checked
+composition. Direct profile-local theorems remain the default for isolated
+transfers; uniform utility certificates and their bridge are explicit opt-in
+imports after their initial default-root admission failed the cold cost budget.
+The prohibition below continues to apply to a universal morphism or
+adequacy hierarchy; D60 records the measured exception and its exact limits.
+
 ## Decision / question
 
 What transformation surface remains public after D7 rejected generic language

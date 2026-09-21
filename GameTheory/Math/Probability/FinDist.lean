@@ -268,6 +268,88 @@ theorem map_bindOnSupport (g : β → γ) (μ : FinDist α) (f : ∀ a ∈ μ.su
   simp only [map_eq_bind, bind_bindOnSupport]
 
 
+/-- Support-dependent binds transport across equality of their source laws
+when corresponding branches agree. -/
+theorem bindOnSupport_congr_law {μ ν : FinDist α} (same : μ = ν)
+    (f : ∀ a ∈ μ.support, FinDist β) (g : ∀ a ∈ ν.support, FinDist β)
+    (agree : ∀ a ha hb, f a ha = g a hb) :
+    μ.bindOnSupport f = ν.bindOnSupport g := by
+  subst ν
+  apply bindOnSupport_congr
+  intro a ha
+  exact agree a ha ha
+
+/-- A support-dependent continuation after a pushforward can instead be
+evaluated at each original draw. The pushforward need not be injective. -/
+theorem bindOnSupport_map (law : FinDist α) (f : α → β)
+    (next : ∀ value ∈ (law.map f).support, FinDist γ) :
+    (law.map f).bindOnSupport next = law.bindOnSupport fun value supported =>
+      next (f value) (by rw [support_map]; exact ⟨value, supported, rfl⟩) := by
+  classical
+  obtain ⟨someValue, someSupported⟩ := (law.map f).support_nonempty
+  let total : β → FinDist γ := fun value =>
+    if supported : value ∈ (law.map f).support then next value supported
+    else next someValue someSupported
+  have agrees : ∀ value (supported : value ∈ (law.map f).support),
+      next value supported = total value := by
+    intro value supported
+    dsimp only [total]
+    rw [dif_pos supported]
+  rw [bindOnSupport_eq_bind_of_eq_on_support agrees, bind_map]
+  symm
+  apply bindOnSupport_eq_bind_of_eq_on_support
+  intro value supported
+  exact agrees (f value) (by rw [support_map]; exact ⟨value, supported, rfl⟩)
+
+/-- Support-dependent composition is associative.  The evidence for the final
+continuation is constructed from the two realized support witnesses, so no
+arbitrary off-support continuation is needed. -/
+@[simp]
+theorem bindOnSupport_bindOnSupport (law : FinDist α)
+    (first : ∀ value ∈ law.support, FinDist β)
+    (next : ∀ value ∈ (law.bindOnSupport first).support, FinDist γ) :
+    (law.bindOnSupport first).bindOnSupport next =
+      law.bindOnSupport fun value valueMem =>
+        (first value valueMem).bindOnSupport fun result resultMem =>
+          next result (by
+            rw [support_bindOnSupport]
+            exact Set.mem_iUnion_of_mem value
+              (Set.mem_iUnion_of_mem valueMem resultMem)) := by
+  apply ext
+  exact PMF.bindOnSupport_bindOnSupport law.toPMF
+    (fun value valueMem => (first value valueMem).toPMF)
+    (fun value valueMem => (next value valueMem).toPMF)
+
+/-- Associativity when the first continuation is total but the final one uses
+support evidence. -/
+theorem bind_bindOnSupport_assoc (law : FinDist α)
+    (first : α → FinDist β)
+    (next : ∀ value ∈ (law.bind first).support, FinDist γ) :
+    (law.bind first).bindOnSupport next =
+      law.bindOnSupport fun value valueMem =>
+        (first value).bindOnSupport fun result resultMem =>
+          next result (by
+            rw [support_bind]
+            exact Set.mem_iUnion_of_mem value
+              (Set.mem_iUnion_of_mem valueMem resultMem)) := by
+  let dependentFirst : ∀ value ∈ law.support, FinDist β := fun value _ => first value
+  have sourceEq : law.bindOnSupport dependentFirst = law.bind first :=
+    bindOnSupport_eq_bind law first
+  calc
+    (law.bind first).bindOnSupport next =
+        (law.bindOnSupport dependentFirst).bindOnSupport
+          (fun value valueMem => next value (by rwa [sourceEq] at valueMem)) := by
+      apply bindOnSupport_congr_law sourceEq.symm
+      intro value _ _
+      congr
+    _ = law.bindOnSupport fun value valueMem =>
+          (first value).bindOnSupport fun result resultMem =>
+            next result (by
+              rw [support_bind]
+              exact Set.mem_iUnion_of_mem value
+                (Set.mem_iUnion_of_mem valueMem resultMem)) := by
+      exact bindOnSupport_bindOnSupport law dependentFirst _
+
 /-! ## Real masses -/
 
 /-- The real probability of a single outcome. Finite support keeps this an
@@ -747,6 +829,22 @@ theorem prob_map [DecidableEq β] (f : α → β) (μ : FinDist α) (b : β) :
   rw [map_eq_bind, prob_bind]
   exact expect_congr fun a _ => by rw [prob_pure_eq_ite]
 
+/-- If an outcome identifies the first draw, its probability is the draw's
+mass times the conditional branch mass. The outcome may have probability zero. -/
+theorem prob_bind_of_unique_branch (law : FinDist α) (branch : α → FinDist β)
+    (outcome : β) (selected : α)
+    (hunique : ∀ value ∈ law.support, outcome ∈ (branch value).support → value = selected) :
+    (law.bind branch).prob outcome = law.prob selected * (branch selected).prob outcome := by
+  classical
+  rw [prob_bind, ← expect_ite_eq]
+  apply expect_congr
+  intro value hvalue
+  by_cases heq : selected = value
+  · subst value
+    simp only [↓reduceIte]
+  · rw [if_neg heq, prob_eq_zero_iff]
+    exact fun hbranch => heq (hunique value hvalue hbranch).symm
+
 /-- An injective pushforward carries each mass to its image untouched. -/
 theorem prob_map_of_injective [DecidableEq α] [DecidableEq β] (f : α → β)
     (hf : Function.Injective f) (μ : FinDist α) (a : α) :
@@ -1075,6 +1173,52 @@ theorem expect_indicator_eq_probOf (μ : FinDist α) (S : Set α) [DecidablePred
     · rw [Set.indicator_of_notMem haS]
       exact ENNReal.zero_ne_top
 
+/-- Events that agree on a law's support have the same probability. -/
+theorem probOf_congr (law : FinDist α) {first second : Set α}
+    (hagrees : ∀ outcome ∈ law.support, outcome ∈ first ↔ outcome ∈ second) :
+    law.probOf first = law.probOf second := by
+  classical
+  rw [← expect_indicator_eq_probOf, ← expect_indicator_eq_probOf]
+  apply expect_congr
+  intro outcome hmem
+  simp only [hagrees outcome hmem]
+
+/-- A pointwise weighting identity computes an event mass using a normalized
+reference law. Neither positive event probability nor division is required.
+The identity also controls the reference mass outside the event. -/
+theorem probOf_eq_expect_of_weighting (law reference : FinDist α) (event : Set α)
+    (weight : α → ℝ)
+    (hweight : ∀ outcome, event.indicator law.prob outcome =
+      weight outcome * reference.prob outcome) :
+    law.probOf event = reference.expect weight := by
+  classical
+  rw [← expect_indicator_eq_probOf, expect, expect]
+  apply tsum_congr
+  intro outcome
+  rw [mul_comm (reference.prob outcome), ← hweight]
+  by_cases hmem : outcome ∈ event <;> simp [hmem]
+
+/-- An observable's expectation is the sum of its unnormalized expectations
+on the fibers of any information map. Only supported information values enter
+the finite sum; no finite carrier or positive fiber mass is assumed. -/
+theorem expect_eq_sum_fibers (law : FinDist α) (information : α → β)
+    (value : α → ℝ) :
+    law.expect value = ∑ observed ∈ (law.map information).supportFinset,
+      law.expect ((information ⁻¹' {observed}).indicator value) := by
+  classical
+  simp_rw [expect_eq_sum_support]
+  rw [Finset.sum_comm]
+  apply Finset.sum_congr rfl
+  intro state hstate
+  have hmem : information state ∈ (law.map information).supportFinset := by
+    rw [mem_supportFinset, support_map]
+    exact ⟨state, mem_supportFinset.mp hstate, rfl⟩
+  rw [Finset.sum_eq_single (information state)]
+  · simp
+  · intro observed _ hne
+    simp [Set.indicator_of_notMem, hne.symm]
+  · exact fun hnot => (hnot hmem).elim
+
 /-- Event probability on a singleton is the corresponding point mass. -/
 theorem probOf_singleton (μ : FinDist α) (a : α) :
     μ.probOf ({a} : Set α) = μ.prob a := by
@@ -1217,6 +1361,48 @@ theorem eq_of_expect_eq_of_le (μ : FinDist α) (observable : α → ℝ) (bound
       (lt_of_le_of_ne (hle a ha) hne)))
 
 /-! ## Convex mixing -/
+
+/-- Agreement on the support of one normalized finite law determines the
+other law everywhere. In particular, the other law cannot carry additional
+mass outside that support. -/
+theorem ext_of_prob_on_support {first second : FinDist α}
+    (h : ∀ x ∈ first.support, first.prob x = second.prob x) : first = second := by
+  classical
+  let onFirstSupport : α → ℝ := fun x => if x ∈ first.support then 1 else 0
+  have hexpect : second.expect onFirstSupport = 1 := by
+    unfold expect
+    rw [tsum_eq_sum (s := first.supportFinset)]
+    · simp only [onFirstSupport]
+      rw [Finset.sum_congr rfl fun x hx => by
+        rw [if_pos (mem_supportFinset.mp hx), ← h x (mem_supportFinset.mp hx)]]
+      simpa only [mul_one] using sum_prob_supportFinset first
+    · intro x hx
+      dsimp only [onFirstSupport]
+      rw [if_neg (fun hmem => hx (mem_supportFinset.mpr hmem)), mul_zero]
+  have hsupport : second.support ⊆ first.support := by
+    intro x hx
+    have hone := second.eq_of_expect_eq_of_le onFirstSupport 1
+      (fun y _ => by simp only [onFirstSupport]; split <;> norm_num) hexpect hx
+    by_contra hnot
+    simp only [onFirstSupport, if_neg hnot, zero_ne_one] at hone
+  apply ext_of_prob
+  intro x
+  by_cases hx : x ∈ first.support
+  · exact h x hx
+  · rw [prob_eq_zero_iff.mpr hx, prob_eq_zero_iff.mpr (fun hmem => hx (hsupport hmem))]
+
+/-- Some supported outcome attains at least the expectation of any real
+observable under a finite distribution. -/
+theorem exists_expect_le_support (law : FinDist α) (value : α → ℝ) :
+    ∃ a ∈ law.support, law.expect value ≤ value a := by
+  by_contra h
+  have hstrict : ∀ a ∈ law.support, value a < law.expect value := by
+    intro a ha
+    exact lt_of_not_ge (fun hle => h ⟨a, ha, hle⟩)
+  obtain ⟨a, ha⟩ := law.support_nonempty
+  exact (lt_irrefl _)
+    (law.expect_lt_of_mem_support value (law.expect value)
+      (fun b hb => (hstrict b hb).le) ha (hstrict a ha))
 
 /-- Mix two laws, with weight `t` on the first. The interface is real-valued;
 the nonnegative representation stays internal. -/
@@ -2023,6 +2209,34 @@ theorem runDependent_factor_of_mem [DecidableEq ι]
   rw [runDependent_setOne_of_not_mem laws _ assignment index value hrest,
     map_comp]
   rfl
+
+/-! ## Reading one site of a dependent draw
+
+`runDependent` draws the listed sites in order, writing each draw into an
+assignment. A decision point read once per run needs exactly that: a law over
+whole assignments whose marginal at the site read is the law there. Nothing
+constrains how the draws at different sites relate, because only one of them is
+ever read. Finitely many sites is what makes the construction work for
+arbitrary kernels; it is sufficient and not necessary, since one law over the
+two constant assignments already supplies a fair coin at every site of an
+infinite family. What fails in general is infinitely many *arbitrary* kernels: a
+finite law has finitely many atoms, so every marginal's weights are sums over
+one fixed finite set of numbers. -/
+
+/-- A continuation that reads one drawn site sees exactly the law there,
+whatever the draws at the other sites do. -/
+theorem runDependent_bind_apply [DecidableEq ι]
+    (laws : (index : ι) → FinDist (A index)) (sites : Finset ι)
+    (assignment : (index : ι) → A index) (index : ι) (member : index ∈ sites)
+    (continuation : A index → FinDist γ) :
+    (runDependent laws sites.toList assignment).bind
+        (fun draw => continuation (draw index)) =
+      (laws index).bind continuation := by
+  rw [runDependent_factor_of_mem laws sites assignment index member, bind_map, product,
+    bind_bind]
+  refine bind_congr fun value _ => ?_
+  rw [bind_map]
+  simpa only [DependentAssignment.setOne_apply_self] using bind_const _ (continuation value)
 
 /-- A coordinate omitted from the finite draw can still be factored when its
 law is the point mass supplied by the fallback assignment. -/

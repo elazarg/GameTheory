@@ -15,6 +15,38 @@ namespace GameTheory.Math.Probability.FinDist
 
 universe u
 
+/-- A pointwise discrepancy confined to an event costs at most its size times
+the event's probability. The discrepancy may have either sign. -/
+theorem expect_le_add_event_gap {α : Type u}
+    (law : FinDist α) (event : Set α)
+    (sourceValue targetValue : α → ℝ) (gap : ℝ)
+    (houtside : ∀ state ∈ law.support, state ∉ event →
+      targetValue state ≤ sourceValue state)
+    (hinside : ∀ state ∈ law.support, state ∈ event →
+      targetValue state ≤ sourceValue state + gap) :
+    law.expect targetValue ≤ law.expect sourceValue + gap * law.probOf event := by
+  classical
+  have hpointwise : law.expect targetValue ≤
+      law.expect (fun state => sourceValue state + gap * if state ∈ event then 1 else 0) := by
+    apply expect_mono
+    intro state hstate
+    by_cases hevent : state ∈ event
+    · simpa [hevent] using hinside state hstate hevent
+    · simpa [hevent] using houtside state hstate hevent
+  simpa only [expect_add, expect_smul, expect_indicator_eq_probOf] using hpointwise
+
+/-- Comparison on every supported information fiber implies comparison of
+expectations. The fiber expectations are unnormalized. -/
+theorem expect_le_of_fiber_expect_le {α β : Type*}
+    (law : FinDist α) (information : α → β) (sourceValue targetValue : α → ℝ)
+    (hfiber : ∀ observed ∈ (law.map information).support,
+      law.expect ((information ⁻¹' {observed}).indicator targetValue) ≤
+        law.expect ((information ⁻¹' {observed}).indicator sourceValue)) :
+    law.expect targetValue ≤ law.expect sourceValue := by
+  rw [expect_eq_sum_fibers law information targetValue,
+    expect_eq_sum_fibers law information sourceValue]
+  exact Finset.sum_le_sum fun observed hmem => hfiber observed (mem_supportFinset.mp hmem)
+
 /-- A finite-support event bound. If a nonnegative observable is at least a
 positive threshold throughout an event, that event's probability is at most
 the observable's expectation divided by the threshold. -/

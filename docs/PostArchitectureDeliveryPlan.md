@@ -42,6 +42,15 @@ The two repository-wide reviews sharpen how those admission rules are applied:
 
 ## 2. Active dependency queue
 
+EXP-120/D60 admits the finite-law composition and informed-stopping tools plus
+two narrow noninvertible strategic-transfer certificates. Direct profile-local
+utility bounds remain the MAID pruning interface; the records support reused
+mixture/coalition bounds and composition. Uniform utility certificates and
+their mixture bridge are explicit imports: their cold construction cost failed
+default-root admission. The pure/mixed, restricted-composition,
+and communication-channel controls delimit this delivered surface. This does
+not reopen a universal adequacy hierarchy or imply CE/CCE transfer.
+
 ### A. Proper-subgame semantics boundary — resolved
 
 EXP-075/D42 corrected textbook SPE to quantify whole-policy deviations only at

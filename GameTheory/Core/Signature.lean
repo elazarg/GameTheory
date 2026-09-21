@@ -5,8 +5,8 @@ A `GameSignature` owns the strategy and outcome carriers. Profiles are bound to
 the signature, never to a play law or a payoff package, so one profile theorem
 serves every game built over the same signature.
 
-`Profile.update`, `Profile.override`, and `Profile.restrict` are the *only*
-public profile operations. `Function.update` is used here, in the profile
+`Profile.update`, `Profile.override`, `Profile.restrict`, and coordinatewise
+`Profile.map` own the public profile operations. `Function.update` is used here, in the profile
 implementation, and nowhere else in the library. `Subprofile` and
 `Profile.restrict` deliberately carry no `DecidableEq` instance: only the
 operations that branch on membership need one.
@@ -21,7 +21,7 @@ import Mathlib.Logic.Function.Basic
 
 namespace GameTheory
 
-universe uι us uo
+universe uι us uo us' uo'
 
 /-- Strategy and outcome carriers. Strategy and outcome universes stay
 independent by design, so a signature may pair small strategies with large
@@ -182,6 +182,43 @@ theorem override_single [DecidableEq ι] (profile : Profile sig) (i : ι)
     (s : sig.Strategy i) :
     override {i} (Subprofile.single i s) profile = update profile i s :=
   override_singleton i (Subprofile.single i s) profile
+
+section Map
+
+variable {target : GameSignature.{uι, us', uo'} ι}
+
+/-- Translate each player's strategy without inspecting another coordinate. -/
+def map (translate : ∀ player, sig.Strategy player → target.Strategy player)
+    (profile : Profile sig) : Profile target :=
+  fun player => translate player (profile player)
+
+@[simp]
+theorem map_apply (translate : ∀ player, sig.Strategy player → target.Strategy player)
+    (profile : Profile sig) (player : ι) :
+    map translate profile player = translate player (profile player) := rfl
+
+/-- A coordinatewise translation preserves unilateral replacement. -/
+theorem map_update [DecidableEq ι]
+    (translate : ∀ player, sig.Strategy player → target.Strategy player)
+    (profile : Profile sig) (who : ι) (replacement : sig.Strategy who) :
+    map translate (update profile who replacement) =
+      update (map translate profile) who (translate who replacement) := by
+  funext player
+  by_cases h : player = who
+  · subst player; simp
+  · simp [update_of_ne, h]
+
+/-- A coordinatewise translation preserves a coalition's joint replacement. -/
+theorem map_override [DecidableEq ι]
+    (translate : ∀ player, sig.Strategy player → target.Strategy player)
+    (members : Finset ι) (replacement : Subprofile sig members) (profile : Profile sig) :
+    map translate (override members replacement profile) =
+      override members (fun player => translate player.1 (replacement player))
+        (map translate profile) := by
+  funext player
+  by_cases h : player ∈ members <;> simp [map, override, h]
+
+end Map
 
 end Profile
 

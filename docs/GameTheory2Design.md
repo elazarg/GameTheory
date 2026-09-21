@@ -1243,6 +1243,19 @@ Initial vocabulary:
 Expected-utility preservation is a theorem derived from payoff-law
 preservation, not a new structure. Do not create `EUMorphism`.
 
+EXP-120/D60 admits two scoped exceptions to the theorem-only transformation
+surface: `GameForm.MixtureSimulationOn` for finite-mixture deviation laws and
+`GameForm.UtilitySimulation` for coalition-indexed deviation coverage. Their
+fields add the noninvertible deviation obligations absent from honest-law or
+utility equality. Direct profile-local theorems remain public, and MAID pruning
+uses them through `Core.UtilityTransfer`. The measured cold utility cost
+narrows the uniform record and its bridge to explicit stable imports, absent
+from the default Core root. Restricted composition explicitly checks support
+coverage; no
+generic adequacy hierarchy, arbitrary-preference transfer, or CE/CCE transfer
+is implied. `IsεGroupNash` specializes the sole `IsEquilibrium` predicate and
+excludes empty coalitions in its deviator type.
+
 Not every form homomorphism preserves Nash: target deviations may not lift to
 source deviations. Equilibrium transport must state the required deviation
 reflection/surjectivity explicitly rather than hiding it behind an optimistic

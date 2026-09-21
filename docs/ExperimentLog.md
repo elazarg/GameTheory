@@ -7570,3 +7570,79 @@ memory.
   laws now support transport of the Nash deviation quantifier without adding
   another equilibrium predicate. Keep correlated joint player laws and
   infinite-path outcome semantics outside this API.
+
+### EXP-120: noninvertible strategic transfer by mixtures and utility coverage
+
+- **Date / revision:** 2026-09-21, started at `3dd93bf0`
+- **Status:** complete; supports D60 with narrowed utility-certificate admission
+- **Question:** whether narrow reusable mixture and utility-coverage records
+  earn admission beyond D8's direct theorem API for noninvertible strategy maps.
+- **Competing designs:** direct theorem hypotheses and bespoke composition;
+  two concrete records over canonical forms; a universal transformation hierarchy.
+- **Representative slice:** a target lottery with no single source law;
+  restricted composition with necessary support coverage; canonical mixed
+  extension; profile-local MAID pruning; and a communication channel preserving
+  unilateral incentives while refuting coalition transfer.
+- **Measurements:** declaration/construction size against direct baselines,
+  elaboration cost, independent consumers and composition, imports, canonical
+  equilibrium reuse, focused/full builds, and axiom profile.
+- **Kill conditions:** duplicate equilibrium semantics, losing a member's
+  coalition bound or restriction-support premise, unsupported ordinal/CE
+  transfer, public transport plumbing, a single-consumer record, declaration
+  plus construction above twice its direct baseline, or more than 25 percent
+  elaboration overhead in the representative comparison.
+- **Observations:** the genuine-mixture law, restricted positive composition,
+  missing-support-coverage counterexample, same-epsilon pure/mixed theorem,
+  utility composition, positive joint-replacement witness, and unilateral-only
+  communication counterexample all compile. `IsεGroupNash` uses canonical
+  `IsEquilibrium` and ignores empty coalitions by its deviator type. MAID's
+  profile-local coverage consumes the direct exact/approximate transfer theorem.
+  No VegasCore import or runtime dependency is introduced. The finite-law ports
+  reuse existing probability semantics and extract general event/fiber tools.
+  A shared fair coin at infinitely many sites machine-refutes the source's
+  claimed impossibility of finite-support coupling. A separate stopping control
+  refutes the sufficiency of unconditional quit/continue expectation equality.
+- **Size measurements:** the native mixed comparison has 18 nonblank direct
+  client lines versus 16 record plus 12 bundled client lines. Reused utility
+  composition has 30 direct versus 19 bundled client lines; adding the record,
+  profile helper, and composition gives 58 bundled lines, a 1.93 ratio. One
+  utility equilibrium consumer alone instead gives 50 versus 18, failing the
+  two-times budget. Shared per-layer laws and the common strategy map are
+  excluded equally; these counts concern the selected comparison, not every
+  declaration in the API.
+- **Timing measurements:** three alternating native mixed whole-process runs
+  gave direct seconds 8.8095/8.7589/8.7866 and bundled seconds
+  8.7883/8.7765/8.8125. Both include imports and common laws; the bundled file
+  also elaborates a fresh record declaration. Five serialized utility client
+  command totals gave direct milliseconds
+  31.102/29.303/33.620/28.331/29.572 and bundled milliseconds
+  18.721/20.471/20.307/20.284/19.768. Separately measured utility record,
+  profile-helper, and composition totals were 74.681/71.802/70.823 ms. Charging
+  that initial infrastructure to the two-client slice gives about 92.086 ms
+  versus 29.572 ms, failing the 25-percent budget. The client savings do not
+  erase this failure or imply faster first-time elaboration.
+- **Artifacts / commands:** comparison alternatives remain in
+  `Experimental/PostArchitecture/MixtureSimulationComparison.lean` and
+  `Tests/UtilityTransferComparison.lean`; their production owners are
+  `Core/{MixtureSimulation,MixtureSimulationComposition,MixedSimulation,
+  UtilityTransfer,UtilitySimulation,MixtureUtilitySimulation}.lean` and
+  `Core.CoalitionEquilibrium`. The named fixtures are
+  `Tests/{MixtureSimulation,UtilitySimulation,CoalitionSimulation,
+  UtilityTransferBoundary,FinDistExtensions,SelectiveStopping}.lean`.
+  D60 records timing commands and local raw-log locations. Focused probability
+  and transfer/MAID builds passed, followed by
+  `lake build GameTheory GameTheory.Math GameTheory.LintAll` (4,028 jobs).
+  `pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected` and the
+  corresponding Phase 3 audit report `VERIFIED=1`; zero placeholders, custom
+  axioms, forbidden imports, and new public transport. A 102-column line found
+  by the final audit was wrapped; the rerun reports maximum line length 100.
+  Thirteen representative axiom prints use only `propext`, `Classical.choice`,
+  and `Quot.sound`.
+- **Outcome / next action:** adopt finite-mixture transfer and checked
+  composition. Narrow the failed default-root utility-record proposal to
+  stable explicit imports for reused uniform bounds. `Core.UtilityTransfer`
+  owns the direct API and is what Core and MAID import; `UtilitySimulation`
+  and its mixture bridge require an explicit additional import. The committed
+  root-boundary test enforces that split. Keep direct theorems as the default
+  for isolated transfers. No universal hierarchy, CE/CCE claim, or new
+  probability representation is admitted.

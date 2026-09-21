@@ -14,6 +14,7 @@ native and compiled forms.
 -/
 
 import GameTheory.Languages.MAID.Strategic
+import GameTheory.Core.UtilityTransfer
 
 noncomputable section
 
@@ -306,13 +307,29 @@ theorem isNash_expanded_of_isNash_reduced
     IsNash (nativeBehavioralGameForm semantics)
       (euPreference fun assignment owner => semantics.utility owner assignment)
       (pruning.expandPolicy policy) := by
-  rw [isNash_iff] at hnash ⊢
-  intro owner fullReplacement
-  obtain ⟨reducedReplacement, hcovered⟩ :=
-    hcover owner fullReplacement
-  have hreduced := hnash owner reducedReplacement
-  rw [euPreference_apply] at hcovered hreduced ⊢
-  exact hcovered.trans hreduced
+  exact GameForm.isNash_of_deviation_bounds
+    (source := pruning.reducedNativeGameForm semantics)
+    (target := nativeBehavioralGameForm semantics)
+    policy (pruning.expandPolicy policy) (fun _ => rfl)
+    (fun owner replacement => hcover owner replacement) hnash
+
+/-- Profile-local coverage preserves the same approximate-Nash tolerance. -/
+theorem isεNash_expanded_of_isεNash_reduced
+    (pruning : Pruning diagram)
+    [DecidableEq Player] [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : ReducedPolicy pruning)
+    (hcover : pruning.CoversFullDeviationsAt semantics policy)
+    (ε : ℝ)
+    (hnash : IsεNash (pruning.reducedNativeGameForm semantics)
+      (fun assignment owner => semantics.utility owner assignment) ε policy) :
+    IsεNash (nativeBehavioralGameForm semantics)
+      (fun assignment owner => semantics.utility owner assignment) ε
+      (pruning.expandPolicy policy) := by
+  exact GameForm.isεNash_of_deviation_bounds
+    (source := pruning.reducedNativeGameForm semantics)
+    (target := nativeBehavioralGameForm semantics)
+    policy (pruning.expandPolicy policy) (fun _ => rfl)
+    (fun owner replacement => hcover owner replacement) ε hnash
 
 /-- Every expanded full-space Nash profile covers all full deviations: choose
 the owner's current reduced policy as the covering replacement.  Thus coverage

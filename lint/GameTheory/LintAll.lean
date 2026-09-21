@@ -68,6 +68,7 @@ import GameTheory.Core.BinaryMixed
 import GameTheory.Core.CheapTalk
 import GameTheory.Core.CheapTalkRandomization
 import GameTheory.Core.Coalitional
+import GameTheory.Core.CoalitionEquilibrium
 import GameTheory.Core.CorrelatedDominance
 import GameTheory.Core.Deviation
 import GameTheory.Core.Equilibrium
@@ -79,6 +80,10 @@ import GameTheory.Core.Learning
 import GameTheory.Core.MatrixGame
 import GameTheory.Core.May
 import GameTheory.Core.Mixed
+import GameTheory.Core.MixedSimulation
+import GameTheory.Core.MixtureSimulation
+import GameTheory.Core.MixtureSimulationComposition
+import GameTheory.Core.MixtureUtilitySimulation
 import GameTheory.Core.MixedImprovement
 import GameTheory.Core.MixedPotential
 import GameTheory.Core.Potential
@@ -94,6 +99,8 @@ import GameTheory.Core.Transform
 import GameTheory.Core.TremblingHand
 import GameTheory.Core.Utility
 import GameTheory.Core.UtilityInvariance
+import GameTheory.Core.UtilitySimulation
+import GameTheory.Core.UtilityTransfer
 import GameTheory.Core.VNM
 import GameTheory.Core.Welfare
 import GameTheory.Core.ZeroSum
@@ -163,6 +170,7 @@ import GameTheory.Math.Probability.Convergence
 import GameTheory.Math.Probability.FinDist
 import GameTheory.Math.Probability.Measure
 import GameTheory.Math.Probability.OnlineLearning
+import GameTheory.Math.Probability.SelectiveStopping
 import GameTheory.Math.Probability.Simplex
 import GameTheory.Math.RegretAggregation
 import GameTheory.Math.SimplexApproximation
