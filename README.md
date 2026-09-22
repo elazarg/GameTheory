@@ -1,4 +1,4 @@
-# GameTheory
+# Game Theory in Lean4
 
 [![CI](https://github.com/elazarg/GameTheory/actions/workflows/ci.yml/badge.svg)](https://github.com/elazarg/GameTheory/actions/workflows/ci.yml)
 
