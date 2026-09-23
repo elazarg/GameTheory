@@ -923,6 +923,17 @@ policy has continuation value `1 / 2`, so the same assessment is sequentially
 rational for a nonconstant payoff. These are concrete witnesses, not a general
 finite-EFG existence theorem.
 
+EXP-121/D61 supplies that general theorem in the explicit analytic leaf
+`GameTheory.Analysis.Protocol.EFGExistence`. Finite players, states, actions,
+and raw information states, perfect recall, and legal total policies suffice
+at a positive certified terminal horizon; finite EFG histories also supply
+such a horizon automatically. Positive perturbations, full-policy optimality,
+and joint strategy/belief compactness use the existing assessment and runner.
+The hostile consumer has unequal-depth histories in one information set.
+A separate counterexample refutes existence for arbitrary rolling fuel, while
+the same game satisfies the theorem at its sufficient horizon. The lightweight
+consistency definition does not acquire the fixed-point dependency.
+
 Information locality must hold by construction. A player's policy may receive
 its `InfoState`, recommendation, and a legal-menu value determined by that
 `InfoState`, but not the hidden execution state or a proof from which that state

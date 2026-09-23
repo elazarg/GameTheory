@@ -361,7 +361,7 @@ foreach ($f in @($AllFiles | Where-Object { -not $_.StartsWith('GameTheory/Analy
   }
 }
 Report 'ANALYSIS_IMPORTED_OUTSIDE_ROOT' $analysisLeak
-# Inside the root only the module that applies the theorem may name the package.
+# Inside the root only modules applying a fixed-point theorem may name the package.
 $fixedPointNamers = 0
 foreach ($f in $AnalysisFiles) {
   foreach ($imp in Get-Imports $f) { if ($imp -match '^FixedPointTheorems') { $fixedPointNamers++ } }
@@ -1762,8 +1762,8 @@ if ($VerifyExpected) {
     TRANSPORT_MATH_SOURCE = 1
     TRANSPORT_POST_ARCHITECTURE = 0
     ANALYSIS_IMPORTED_OUTSIDE_ROOT = 0
-    # One: the module that applies the fixed-point theorem, and nothing else.
-    FIXED_POINT_IMPORTERS = 1
+    # EXP-121: static Nash and the local-score fixed point used by sequential existence.
+    FIXED_POINT_IMPORTERS = 2
     UNBUCKETED_FILES = 0
     CARRIER_INSTANCES_NOT_REDUCIBLE = 0
     FINTYPE_OF_FINITE = 0

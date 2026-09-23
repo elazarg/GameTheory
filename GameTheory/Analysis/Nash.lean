@@ -14,8 +14,8 @@ convex because the payoff is affine in the deviator's own weights; the whole
 best-reply correspondence has a closed graph; and a fixed point of it is exactly
 a profile no player wants to move away from.
 
-This is the module the fixed-point dependency exists for, and it is the only
-place a set-valued fixed-point theorem is used.
+The fixed-point dependency stays in Analysis. Finite sequential-equilibrium
+existence also uses it through `Analysis.LocalChoiceFixedPoint`.
 -/
 
 import GameTheory.Analysis.Payoff

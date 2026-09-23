@@ -87,7 +87,7 @@ all verified:
 | Check | Expected |
 |---|---:|
 | `ANALYSIS_IMPORTED_OUTSIDE_ROOT` | 0 |
-| `FIXED_POINT_IMPORTERS` | 1 |
+| `FIXED_POINT_IMPORTERS` | 2 |
 | `UNREACHABLE_PROBES_PASSED` | 6 |
 | `ANALYSIS_PROBES_REACHED` | 2 |
 
@@ -272,3 +272,18 @@ the canonical runner gives both decision histories probability `1 / 2`, and the
 resulting assessment is a sequential equilibrium for zero continuation payoff.
 This is a concrete witness, not a general finite-EFG existence theorem, and it
 does not change the dependency direction.
+
+## Finite sequential-existence amendment
+
+EXP-121/[D61](D61-sequential-equilibrium-existence.md) proves general finite
+perfect-recall existence through the explicit
+`GameTheory.Analysis.Protocol.EFGExistence` leaf. Positive perturbations need
+a local-score Kakutani theorem, so the direct importer budget increases from
+one to two: `Analysis.Nash` and `Analysis.LocalChoiceFixedPoint`. The original
+measurement above had one; the table now records the current enforced budget.
+
+The lightweight `Analysis.Protocol.Sequential` definition and EFG assessment
+adapter retain their imports. Stable Protocol and language syntax acquire no
+Analysis dependency. All zero budgets for forbidden imports, transport,
+placeholders, and custom axioms remain unchanged. The hostile existence
+consumers live under the analytic root, alongside the existing analytic tests.

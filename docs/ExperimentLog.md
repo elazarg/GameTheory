@@ -125,6 +125,7 @@ becomes difficult to scan.
 | EXP-117 | 2026-08-20 | D6/D22/D57 / infinite-policy Kuhn | Can one regular probability law over pure policies reproduce every finite-prefix behavioral and unilateral-deviation law and hence discounted payoff, without misusing `FinDist` or the behavioral path measure? | Complete; supports and promoted | `GameTheory/Math/Probability/Measure.lean`; `GameTheory/Protocol/PolicyMeasure.lean`; `GameTheory/Stochastic/Kuhn.lean`; hostile infinite-carrier discounted consumer |
 | EXP-118 | 2026-08-20 | D6/D22/D58 / reverse infinite-policy Kuhn | Can independent regular probability laws over total pure policies be read as one behavioral profile preserving every finite-prefix, unilateral-deviation, and discounted law under perfect recall? | Complete; supports and promoted | finite discrete measure bridge; own-record cylinder conditioning; hostile correlated within-policy law on infinite public histories |
 | EXP-119 | 2026-08-20 | D6/D22/D59 / hybrid infinite-policy Kuhn | Do the two infinite-policy directions preserve heterogeneous unilateral deviations strongly enough to transport the Nash deviation quantifier? | Complete; supports and promoted | Protocol hybrid update/discounted laws; stochastic corollaries; two-player hostile infinite-history consumer |
+| EXP-121 | 2026-09-24 | D12/D61 / sequential-equilibrium existence | Can perturbations and joint assessment limits establish canonical finite perfect-recall existence without equal-depth information sets? | Complete; supports finite terminal-horizon existence and refutes arbitrary-fuel existence | `Analysis.Protocol.EFGExistence`; unequal-depth and insufficient/sufficient-horizon consumers |
 
 ## Entry template
 
@@ -7646,3 +7647,55 @@ memory.
   root-boundary test enforces that split. Keep direct theorems as the default
   for isolated transfers. No universal hierarchy, CE/CCE claim, or new
   probability representation is admitted.
+
+### EXP-121: finite perfect-recall sequential-equilibrium existence
+
+- **Date / status:** 2026-09-24; complete, supports and promoted.
+- **Question:** can finite perturbations and compactness prove existence for
+  the canonical behavioral-assessment predicate without assuming equilibria,
+  equal-depth information fibers, or a second extensive-game evaluator?
+- **Representative slice:** a finite perfect-recall EFG with explicit legal
+  policy inhabitation and a certified terminal horizon; a shorter-horizon
+  control must reject an unconditional existence statement.
+- **Competing routes:** perturbed strategic equilibria plus conditional
+  optimality; perturbed information-site fixed points plus the perfect-recall
+  local-to-whole-policy theorem. Both reuse existing finite-law semantics.
+- **Kill conditions:** a hidden existence/optimality premise, a same-depth
+  assumption inferred from recall, placeholders, or fixed-point dependencies
+  leaking into Protocol or the existing lightweight consistency definition.
+- **Observations:** the existing counterfactual root decomposition needs
+  `CommonDepth`, which perfect recall does not imply. A variable-depth
+  information cut and occupation telescope instead upgrade local perturbed
+  optimality to every feasible whole-policy deviation. One subsequence retains
+  strategy convergence at all raw information values and joint belief
+  convergence; uniformly perturbed deviations converge to every unrestricted
+  deviation. The limit satisfies the unchanged assessment predicate.
+- **Hostile controls:** the hidden-bit consumer has a proved failure of
+  `CommonDepth` and a nonconstant matching payoff. A separate finite
+  perfect-information game has no sequentially rational assessment with fuel
+  two; the general theorem supplies an equilibrium at its certified horizon
+  three. Arbitrary-fuel existence is refuted, not left open.
+- **Artifacts / commands:** the public endpoint is
+  `Analysis.Protocol.EFGExistence`; proof and ownership details are in
+  [D61](decisions/D61-sequential-equilibrium-existence.md). The consumers are
+  `Analysis.Protocol.SequentialExistenceTest` and
+  `Analysis.Protocol.SequentialExistenceBoundaryTest`.
+  `lake build GameTheory GameTheory.Math GameTheory.LintAll` passed (4,163
+  jobs), followed by `lake lint`. Thirteen prints using
+  `lake env lean ephemeral/sequential-axioms.lean` report only `propext`,
+  `Classical.choice`, and `Quot.sound`; local output is retained in
+  `ephemeral/sequential-axioms.log`.
+- **Integration measurements:** both
+  `pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected -DeepReachability`
+  and the corresponding Phase 3 command report `VERIFIED=1`; local logs are
+  `ephemeral/sequential-phase2-audit.log` and
+  `ephemeral/sequential-phase3-audit.log`. Zero placeholders, custom axioms,
+  forbidden imports, and new transport; maximum Lean line length 100.
+  The only changed dependency budget is two direct fixed-point importers
+  instead of one, documented in D12/D61. The lightweight consistency leaf
+  still rejects simplex and polynomial geometry. `git diff --check` passed.
+- **Outcome / next action:** adopt finite perfect-recall existence with
+  explicit legal total policies and a sufficient terminal horizon. Keep
+  broader refinement/payoff-correspondence results and infinite ambient
+  information/action coverage as separate work; do not reopen the disproved
+  arbitrary-fuel claim.

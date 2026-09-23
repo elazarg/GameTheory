@@ -51,7 +51,18 @@ default-root admission. The pure/mixed, restricted-composition,
 and communication-channel controls delimit this delivered surface. This does
 not reopen a universal adequacy hierarchy or imply CE/CCE transfer.
 
-### A. Proper-subgame semantics boundary — resolved
+### A. Sequential refinements — finite existence and proper-subgame boundary resolved
+
+Finite sequential-equilibrium existence is separately delivered by
+EXP-121/D61 through the explicit `Analysis.Protocol.EFGExistence` import.
+The theorem requires finite players, states, actions, and raw information
+carriers, perfect recall, and a legal total fallback. A certified terminal
+horizon can be supplied or obtained from finite EFG histories. Perturbed local
+optimality is upgraded to full-policy optimality before taking joint limits;
+neither common-depth information sets nor a fully mixed target is assumed.
+The unequal-depth hidden-information consumer and the fuel-two/fuel-three
+counterexample pair delimit the result. This does not change the SPE
+one-shot boundary below.
 
 EXP-075/D42 corrected textbook SPE to quantify whole-policy deviations only at
 information-set-closed roots. EXP-078 then machine-refuted the proposed
