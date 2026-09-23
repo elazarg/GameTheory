@@ -85,38 +85,6 @@ private theorem historyPrior?_extend (history : E.History)
     historyPrior? (history.extend isLegal realized) = some history :=
   rfl
 
-private theorem reachesWithin_of_mem_support_runBehavioralFrom
-    [Fintype ι]
-    (policies : (player : ι) → M.BehavioralPolicy player) :
-    ∀ (fuel : ℕ) (start target : E.History),
-      target ∈ (M.runBehavioralFrom policies fuel start).support →
-        E.ReachesWithin fuel start target := by
-  intro fuel
-  induction fuel with
-  | zero =>
-      intro start target htarget
-      rw [InformationModel.runBehavioralFrom,
-        ExecutionProtocol.runRandomizedFor_zero,
-        FinDist.mem_support_pure] at htarget
-      subst target
-      exact .refl 0 start
-  | succ fuel ih =>
-      intro start target htarget
-      by_cases hterm : E.terminal start.state
-      · rw [M.runBehavioralFrom_of_terminal policies (fuel + 1) hterm,
-          FinDist.mem_support_pure] at htarget
-        subst target
-        exact .refl (fuel + 1) start
-      · rw [M.runBehavioralFrom_succ_of_not_terminal policies fuel hterm,
-          FinDist.support_bind] at htarget
-        simp only [Set.mem_iUnion] at htarget
-        obtain ⟨draw, _hdraw, hinner⟩ := htarget
-        rw [FinDist.support_bindOnSupport] at hinner
-        simp only [Set.mem_iUnion] at hinner
-        obtain ⟨reached, realized, hrest⟩ := hinner
-        exact .step draw.1 draw.2 realized
-          (ih (start.extend draw.2 realized) target hrest)
-
 private theorem trace_length_le_of_reachesWithin {fuel : ℕ}
     {start target : E.History} (hreach : E.ReachesWithin fuel start target) :
     target.trace.length ≤ start.trace.length + fuel := by
@@ -357,7 +325,7 @@ theorem historyReachProbability_extend [Fintype ι]
         · rw [M.runBehavioralFrom_of_terminal policies 1 hterm,
             FinDist.mem_support_pure] at hbranch
           have hreach : E.ReachesWithin prior.length E.initHistory history :=
-            reachesWithin_of_mem_support_runBehavioralFrom M policies
+            E.runRandomizedFor_reachesWithin (M.randomizedChooser policies)
               prior.length E.initHistory history hhistory
           have hbound := trace_length_le_of_reachesWithin hreach
           have hlength := congrArg

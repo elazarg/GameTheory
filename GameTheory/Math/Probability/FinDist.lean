@@ -267,6 +267,24 @@ theorem map_bindOnSupport (g : β → γ) (μ : FinDist α) (f : ∀ a ∈ μ.su
     map g (μ.bindOnSupport f) = μ.bindOnSupport fun a ha => map g (f a ha) := by
   simp only [map_eq_bind, bind_bindOnSupport]
 
+/-- Retype a law whose entire support satisfies a predicate. This does not
+condition or renormalize the law. -/
+def toSubtype (law : FinDist α) {P : α → Prop}
+    (supported : ∀ value ∈ law.support, P value) : FinDist {value // P value} :=
+  law.bindOnSupport fun value member => pure ⟨value, supported value member⟩
+
+@[simp] theorem map_val_toSubtype (law : FinDist α) {P : α → Prop}
+    (supported : ∀ value ∈ law.support, P value) :
+    (law.toSubtype supported).map Subtype.val = law := by
+  simp only [toSubtype, map_bindOnSupport, map_pure]
+  rw [bindOnSupport_eq_bind, bind_pure]
+
+theorem map_toSubtype (law : FinDist α) {P : α → Prop}
+    (supported : ∀ value ∈ law.support, P value) (f : α → β) :
+    (law.toSubtype supported).map (fun value => f value.1) = law.map f := by
+  show (law.toSubtype supported).map (f ∘ Subtype.val) = law.map f
+  rw [← map_comp, map_val_toSubtype]
+
 
 /-- Support-dependent binds transport across equality of their source laws
 when corresponding branches agree. -/
@@ -1298,6 +1316,38 @@ that fibre carries no mass. The fallback is never reached along a draw, and
 naming it here keeps the disintegration below a total `bind`. -/
 noncomputable def condOnFibre (μ : FinDist α) (f : α → β) (b : β) : FinDist α :=
   if hfibre : ∃ a ∈ f ⁻¹' {b}, a ∈ μ.support then μ.condOn (f ⁻¹' {b}) hfibre else μ
+
+/-- Fibre conditioning introduces no new supported outcome, including at
+zero-mass fibres where the original law is used as the fallback. -/
+theorem support_condOnFibre (law : FinDist α) (f : α → β) (b : β) :
+    (law.condOnFibre f b).support ⊆ law.support := by
+  classical
+  unfold condOnFibre
+  split
+  · exact fun _ member => (support_condOn _ _ _ member).2
+  · exact Set.Subset.refl _
+
+/-- Conditioning on an observed value of positive mass stays in its fibre.
+The positive-mass premise is necessary because null fibres use a fallback. -/
+theorem condOnFibre_mem_fibre (law : FinDist α) (f : α → β) (b : β)
+    (supported : b ∈ (law.map f).support) :
+    ∀ a ∈ (law.condOnFibre f b).support, f a = b := by
+  classical
+  rw [support_map] at supported
+  obtain ⟨witness, member, rfl⟩ := supported
+  have meets : ∃ a ∈ f ⁻¹' {f witness}, a ∈ law.support := ⟨witness, rfl, member⟩
+  rw [condOnFibre, dite_eq_left meets]
+  exact fun _ reached => (support_condOn _ _ _ reached).1
+
+/-- The specified total fallback at an observation of zero probability. -/
+theorem condOnFibre_eq_self_of_not_mem_support (law : FinDist α) (f : α → β) (b : β)
+    (unsupported : b ∉ (law.map f).support) : law.condOnFibre f b = law := by
+  classical
+  apply dite_eq_right
+  rintro ⟨a, equal, member⟩
+  apply unsupported
+  rw [support_map]
+  exact ⟨a, member, equal⟩
 
 /-- **Disintegration.** Drawing from a law is drawing its image and then drawing
 from what remains. This is how a conditioning is introduced with nothing

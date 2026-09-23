@@ -101,6 +101,21 @@ consumes `StepEvent` and never redefines a transition. `Trace` is `Type`-valued,
 so `IsTreeShaped` is a real statement and a merging arena refutes it.
 `BoundedHorizon` is a predicate over reachable traces, never a stored field.
 
+`Protocol.SingleMover` samples only the active coordinate and therefore needs
+no finiteness assumption on the player carrier. Its finite-player comparison
+and pure embedding identify its laws with the existing canonical runners.
+`jointOfChoice` belongs to Information, below Zermelo, so this execution
+construction does not import backward induction or equilibrium theory.
+
+The randomized runner also exposes support reachability and arbitrary-prefix
+fuel absorption under a certified bound. `Protocol.StateKernel` identifies
+the state pushforward when the induced next-state law depends only on state;
+the chooser itself may still depend on history. `Protocol.ContinuationLaw`
+identifies terminal readout laws by a decreasing rank and a one-step law.
+Both theorems consume the existing runner. `Tests.SingleMover` and
+`Tests.ExecutionLaws` check infinite-player randomization, chance, retained
+prefixes, merging-history failure of state sufficiency, and insufficient fuel.
+
 The strategy types are deliberately attached to the operation that needs them.
 `SiteStrategy` is the finite extracted strategy over reachable decision sites;
 `Chooser` drives the state-indexed runner; `HistoryChooser` drives the

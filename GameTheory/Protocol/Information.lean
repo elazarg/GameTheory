@@ -390,6 +390,26 @@ information state.  This is a transparent presentation so generic product
 constructions can reuse the canonical dependent-function instances. -/
 abbrev Policy (i : ι) : Type _ := (info : M.InfoState i) → M.Choice i info
 
+/-- Turn one information-local choice by the unique mover into a legal joint
+action.  Every other coordinate is inactive and therefore contributes `none`.
+-/
+def jointOfChoice [DecidableEq ι]
+    (singleMover : ∀ (state : E.State) {first second : ι},
+      E.active state first → E.active state second → first = second)
+    (history : E.History) (hterm : ¬ E.terminal history.state)
+    (who : ι) (hactive : E.active history.state who)
+    (choice : M.Choice who (M.infoOf who history.trace)) :
+    {joint : ∀ i, Option (E.Action i) // E.Legal history.state joint} := by
+  let joint := E.singletonJoint who choice.1
+  refine ⟨joint, ExecutionProtocol.legal_of_legalOption hterm fun i => ?_⟩
+  by_cases hi : i = who
+  · subst i
+    simpa [joint] using
+      (M.menu_adequate who history.trace choice.1).mp choice.2
+  · have hinactive : ¬ E.active history.state i := fun hactive' =>
+      hi (singleMover history.state hactive' hactive)
+    simpa [joint, hi, LegalOption] using hinactive
+
 variable {M}
 
 /-- The action a policy takes, forgetting the menu certificate. Its codomain

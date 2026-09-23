@@ -60,4 +60,38 @@ theorem empty_event_weighting (law reference : FinDist ℕ) :
   intro outcome
   simp
 
+/-- Subtype transport on an infinite carrier retains the original law and
+therefore every observable, rather than conditioning away any mass. -/
+theorem infinite_subtype_preserves_law (law : FinDist ℕ)
+    (supported : ∀ value ∈ law.support, Even value) :
+    (law.toSubtype supported).map Subtype.val = law ∧
+      (law.toSubtype supported).map (fun value => value.1 / 2) =
+        law.map (fun value => value / 2) :=
+  ⟨FinDist.map_val_toSubtype law supported,
+    FinDist.map_toSubtype law supported (fun value : ℕ => value / 2)⟩
+
+private def mayFail : FinDist (Option ℕ) :=
+  coin.map fun value => if value then some 7 else none
+
+/-- A positive failure branch cannot be discarded by retyping to successful
+values. A support proof required by `toSubtype` is impossible in this case. -/
+theorem positive_failure_rejects_value_subtype :
+    ¬ ∀ result ∈ mayFail.support, result.isSome = true := by
+  intro supported
+  have failed : none ∈ mayFail.support := by
+    rw [mayFail, FinDist.support_map]
+    refine ⟨false, ?_, rfl⟩
+    rw [← FinDist.prob_pos_iff]
+    norm_num [coin, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+  exact Bool.false_ne_true (supported none failed)
+
+/-- Null-fibre conditioning deliberately returns the source law; claiming
+unconditional concentration on the named fibre would be false. -/
+theorem null_fibre_retains_source :
+    (FinDist.pure false).condOnFibre id true = FinDist.pure false ∧
+      false ∈ ((FinDist.pure false).condOnFibre id true).support := by
+  have equal := FinDist.condOnFibre_eq_self_of_not_mem_support
+    (FinDist.pure false) id true (by simp)
+  exact ⟨equal, by rw [equal]; simp⟩
+
 end GameTheory.Tests.FinDistExtensions

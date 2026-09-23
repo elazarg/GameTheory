@@ -76,3 +76,35 @@ Assessment-local and historywise one-shot theorems remain separate because
 they answer different useful questions. Any narrower future equivalence must
 state a premise that excludes the EXP-078 complementarity pattern and have a
 consumer that needs it.
+
+## Continuation forms and behavioral play
+
+`Protocol.Continuation` exposes a retained-history game form and identifies
+bounded pure SPE with canonical Nash at each proper root. `IsContinuationNash`
+is the transparent common specialization: a fixed signature and a supplied
+continuation law, quantified at `IsSubgameRoot`. It adds neither a runner nor
+a deviation predicate. The well-founded pure evaluator still requires its
+own certificate; a horizon bound only constrains legal histories from the
+initial state and does not assert global well-foundedness of unreachable states.
+
+`Protocol.BehavioralContinuation` specializes this same quantification to
+canonical finite-player behavioral play, including simultaneous moves, and
+to single-mover behavioral play without ambient player finiteness. The two
+specializations agree when both apply. Certified evaluation bounds can be
+enlarged without changing either predicate. A point-mass behavioral SPE is a
+pure SPE; the converse is not asserted without a realization argument for
+behavioral deviations.
+
+Continuation transfer uses D60's existing Core mixture/honest-law theorems.
+Preservation matches every proper target root to a proper source root before
+the deviator and replacement are selected, including off-path roots.
+Reflection instead covers proper source roots and needs only honest compiled
+laws. No new simulation record or assumption that initial-law equality
+preserves subgames is introduced.
+
+`Tests.ContinuationMixture` supplies a nonidentity transfer with a genuinely
+random target deviation at an off-path proper root. `Tests.ContinuationTransfer`
+and `Tests.IrreversibleFailure` retain the obstruction to a uniform compiler
+after adding an irreversible-failure interface. `Tests.BehavioralContinuation`
+checks simultaneous play, the infinite-player specialization, horizon
+independence, and a profitable-deviation control.

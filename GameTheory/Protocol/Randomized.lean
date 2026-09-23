@@ -151,6 +151,47 @@ theorem trace_length_eq_of_mem_support_runRandomizedFor
       simpa only [History.extend, Trace.length, Nat.add_assoc,
         Nat.add_comm, Nat.add_left_comm] using hlength
 
+/-- Every history in a randomized run is reachable within the supplied fuel. -/
+theorem runRandomizedFor_reachesWithin (chooser : E.RandomizedChooser) :
+    ∀ (fuel : ℕ) (history final : E.History),
+      final ∈ (E.runRandomizedFor chooser fuel history).support →
+        E.ReachesWithin fuel history final := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro history final supported
+      cases FinDist.mem_support_pure.mp supported
+      exact .refl 0 history
+  | succ fuel ih =>
+      intro history final supported
+      by_cases stopped : E.terminal history.state
+      · rw [runRandomizedFor_of_terminal chooser _ stopped] at supported
+        cases FinDist.mem_support_pure.mp supported
+        exact .refl _ history
+      · rw [runRandomizedFor_succ_of_not_terminal chooser fuel stopped,
+          FinDist.support_bind] at supported
+        obtain ⟨joint, _, supported⟩ := Set.mem_iUnion₂.mp supported
+        rw [FinDist.support_bindOnSupport] at supported
+        obtain ⟨target, realized, supported⟩ := Set.mem_iUnion₂.mp supported
+        exact .step joint.1 joint.2 realized (ih _ final supported)
+
+/-- Fuel above a global legal-history bound does not change the run, from any
+canonical starting history. -/
+theorem runRandomizedFor_eq_of_bound {bound : ℕ} (bounded : E.BoundedHorizon bound)
+    (chooser : E.RandomizedChooser) (history : E.History) (fuel : ℕ) (enough : bound ≤ fuel) :
+    E.runRandomizedFor chooser fuel history = E.runRandomizedFor chooser bound history := by
+  obtain ⟨extra, rfl⟩ := Nat.exists_eq_add_of_le enough
+  rw [E.runRandomizedFor_add]
+  calc
+    _ = (E.runRandomizedFor chooser bound history).bind FinDist.pure := by
+      apply FinDist.bind_congr
+      intro final reached
+      apply E.runRandomizedFor_of_terminal
+      rcases E.runRandomizedFor_terminal_or_length _ _ _ _ reached with stopped | consumed
+      · exact stopped
+      · exact bounded final.state final.trace (by omega)
+    _ = _ := FinDist.bind_pure _
+
 /-- **Deterministic play is the degenerate case.** A chooser that answers with
 point masses induces exactly the law the deterministic runner induces, so
 randomizing is an extension of committing rather than a rival account of it. -/

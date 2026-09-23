@@ -205,6 +205,17 @@ def StopsHistoryWithin (chooser : E.HistoryChooser)
   ∀ final ∈ (E.runHistoryFor chooser horizon history).support,
     E.terminal final.state
 
+/-- A global bound on legal history length bounds continuation from every prefix. -/
+theorem stopsHistoryWithin_of_bound {bound : ℕ} (bounded : E.BoundedHorizon bound)
+    (chooser : E.HistoryChooser) (history : E.History) :
+    E.StopsHistoryWithin chooser bound history := by
+  intro final reached
+  have randomized := reached
+  rw [← E.runRandomizedFor_toRandomized] at randomized
+  rcases E.runRandomizedFor_terminal_or_length _ _ _ _ randomized with stopped | consumed
+  · exact stopped
+  · exact bounded final.state final.trace (by omega)
+
 /-- Wherever the forward history runner has stopped, history-indexed backward
 value computes its expected terminal payoff. -/
 theorem historyBackwardValue_eq_expect_runHistoryFor

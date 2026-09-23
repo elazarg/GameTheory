@@ -171,6 +171,7 @@ import GameTheory.Math.Probability.FinDist
 import GameTheory.Math.Probability.Measure
 import GameTheory.Math.Probability.OnlineLearning
 import GameTheory.Math.Probability.SelectiveStopping
+import GameTheory.Math.Probability.SequentialSampling
 import GameTheory.Math.Probability.Simplex
 import GameTheory.Math.RegretAggregation
 import GameTheory.Math.SimplexApproximation
@@ -214,12 +215,17 @@ import GameTheory.Protocol
 import GameTheory.Protocol.Assessment
 import GameTheory.Protocol.Backward
 import GameTheory.Protocol.BehavioralAssessment
+import GameTheory.Protocol.BehavioralContinuation
+import GameTheory.Protocol.Continuation
+import GameTheory.Protocol.ContinuationLaw
 import GameTheory.Protocol.Execution
 import GameTheory.Protocol.Extraction
 import GameTheory.Protocol.History
 import GameTheory.Protocol.Information
 import GameTheory.Protocol.PolicyMeasure
 import GameTheory.Protocol.Randomized
+import GameTheory.Protocol.SingleMover
+import GameTheory.Protocol.StateKernel
 import GameTheory.Protocol.Strategic
 import GameTheory.Protocol.SubgamePerfect
 import GameTheory.Protocol.Tree

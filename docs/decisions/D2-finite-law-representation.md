@@ -126,3 +126,21 @@ produces a `FinDist` of finite public prefixes. No declaration pretends that
 This is the boundary D2 and D11 predicted: finite support is used at each
 operation that is actually finite, and no countable or measurable abstraction
 is introduced merely because discounted utility contains an infinite series.
+
+## Subtypes and sequential transcripts
+
+Support-preserving subtype transport stays within this finite-law API:
+`toSubtype` retypes an already supported law without conditioning or changing
+mass. Fibre conditioning exposes separate support containment, positive-fibre
+membership, and zero-mass fallback laws.
+
+`Math.Probability.SequentialSampling` uses one finite transcript sampler
+parameterized by a local view update and policy. Its endpoint theorem takes
+an observation-preservation equation for deterministic state steps. Conditional
+prefix reconstruction uses the same sampler and preserves arbitrary
+correlations in a fixed-length law. No player, protocol, new probability
+representation, or general simulation structure is required. Hidden-state,
+incoming-information, correlated, off-path, and zero-length controls live in
+`Tests.SequentialSampling`; subtype mass preservation is exercised by
+`Tests.FinDistExtensions`. Endpoint equality does not assert preservation of
+intermediate subgames.

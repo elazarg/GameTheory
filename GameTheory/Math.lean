@@ -17,6 +17,7 @@ import GameTheory.Math.Probability.Convergence
 import GameTheory.Math.Probability.Measure
 import GameTheory.Math.Probability.OnlineLearning
 import GameTheory.Math.Probability.SelectiveStopping
+import GameTheory.Math.Probability.SequentialSampling
 import GameTheory.Math.Probability.Simplex
 import GameTheory.Math.PositivePartFixedPoint
 import GameTheory.Math.RegretAggregation
