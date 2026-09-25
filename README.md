@@ -16,13 +16,13 @@ revision to your `lakefile.lean`:
 
 ```lean
 require "elazarg" / "GameTheory" @ git
-  "f2a01b3015aec84605443e0275e822c2cdf7c5fc"
+  "a447ebc845c39a4de137036b77c5f58bba89eb37"
 ```
 
 Align any direct Mathlib requirement with `v4.34.0`. The
 [4.34 bump lessons](docs/Lean434BumpLessons.md) give the dependency pins and
-client migration instructions. The tested revision above includes the updated
-fixed-point-theorems dependency.
+client migration instructions. The tested revision above includes general PMF
+semantics and the updated fixed-point-theorems dependency.
 
 ```text
 lake update
